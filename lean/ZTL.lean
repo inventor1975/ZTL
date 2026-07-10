@@ -134,9 +134,90 @@ theorem ui_law : ∀ v : V, zimp (allq v) v = T := by decide
 /-- ...а EG как закон пал (P(a)=Z не даёт ∃): строгий свидетель обязателен. -/
 theorem eg_law_fails : ¬ ∀ v : V, zimp v (exq v) = T := by decide
 
+/-! ## Часть II: следование, два регистра, неподвижная точка -/
+
+/-! ### Правила вывода как следования (выделенное значение {T}) -/
+
+theorem rule_modus_tollens : ∀ p q, zimp p q = T → znot q = T → znot p = T := by decide
+theorem rule_contraposition : ∀ p q, zimp p q = T → zimp (znot q) (znot p) = T := by decide
+theorem rule_disj_syllogism : ∀ p q, zor p q = T → znot p = T → q = T := by decide
+theorem rule_and_intro : ∀ p q, p = T → q = T → zand p q = T := by decide
+theorem rule_and_elim : ∀ p q, zand p q = T → p = T := by decide
+theorem rule_or_intro : ∀ p q, p = T → zor p q = T := by decide
+theorem rule_dn_intro : ∀ p, p = T → znot (znot p) = T := by decide
+theorem rule_transitivity : ∀ p q r, zimp p q = T → zimp q r = T → zimp p r = T := by decide
+theorem rule_K : ∀ p q, q = T → zimp p q = T := by decide
+theorem rule_explosion : ∀ p q, p = T → znot p = T → q = T := by decide
+theorem rule_resolution : ∀ p q r, zor p q = T → zor (znot p) r = T → zor q r = T := by decide
+
+/-- Павшее правило: ¬¬-удаление (Z протекает сквозь двойное отрицание). -/
+theorem rule_dn_elim_fails : ¬ ∀ p, znot (znot p) = T → p = T := by decide
+/-- Павшее правило: тавтология в заключении (свежий атом не заслуживает T). -/
+theorem rule_taut_concl_fails : ¬ ∀ p q, p = T → zor q (znot q) = T := by decide
+
+/-! Раскол «правила против законов»: контрапозиция-ПРАВИЛО жива
+(rule_contraposition), контрапозиция-ЗАКОН пала (contraposition_fails).
+Классика склеивает их теоремой дедукции; у ZTL она односторонняя
+(dt_one_way: zimp Z Z = F при тривиальном p⊨p). -/
+
+/-! ### Паракомплектность, не параконсистентность -/
+
+theorem no_gluts : ∀ p, ¬(p = T ∧ znot p = T) := by decide
+
+/-! ### Ленивый регистр (сильный Клини) и информационный порядок -/
+
+def knot : V → V
+  | T => F | F => T | Z => Z
+
+def kand : V → V → V
+  | F, _ => F | _, F => F
+  | Z, _ => Z | _, Z => Z
+  | T, T => T
+
+def kor : V → V → V
+  | T, _ => T | _, T => T
+  | Z, _ => Z | _, Z => Z
+  | F, F => F
+
+/-- Информационный порядок: Z ⊑ всё, T и F несравнимы. -/
+def leqb (a b : V) : Bool := a == b || a == Z
+
+theorem kleene_not_monotone : ∀ a b, leqb a b = true →
+    leqb (knot a) (knot b) = true := by decide
+theorem kleene_and_monotone : ∀ a b c d, leqb a c = true → leqb b d = true →
+    leqb (kand a b) (kand c d) = true := by decide
+theorem kleene_or_monotone : ∀ a b c d, leqb a c = true → leqb b d = true →
+    leqb (kor a b) (kor c d) = true := by decide
+
+/-- Жадный регистр немонотонен — аргумент Кнастера–Тарского неприменим. -/
+theorem eager_and_not_monotone : ¬ ∀ a b c d, leqb a c = true →
+    leqb b d = true → leqb (zand a b) (zand c d) = true := by decide
+theorem eager_not_not_monotone : ¬ ∀ a b, leqb a b = true →
+    leqb (znot a) (znot b) = true := by decide
+
+/-! ### Лжец, карусель, мститель — неподвижные точки -/
+
+/-- Лжец находит дом в ленивом регистре... -/
+theorem liar_kleene_home : knot Z = Z := rfl
+
+/-- ...а карусель Журдена не имеет жадной модели ни при каких значениях:
+требование v(A)=v(B) и v(B)=v(¬A) невыполнимо (все 9 пар). -/
+theorem carousel_no_model : ∀ a b : V, ¬(a = b ∧ b = znot a) := by decide
+
+/-- Ленивое заземление карусели: (Z,Z) — неподвижная точка. -/
+theorem carousel_kleene_fp : (Z : V) = Z ∧ knot Z = Z := ⟨rfl, rfl⟩
+
+/-- Пуля мстителя, вычисленная: содержание μ = ¬Tr(μ) ∨ isZ(μ) при
+заземлённом μ=Z жадно даёт T — а истина предложению не выдаётся. -/
+theorem revenge_bullet : zor (znot Z) (isZ Z) = T := by decide
+
 #print axioms modus_ponens
 #print axioms lem_fails
 #print axioms liar_homeless
 #print axioms lift2_classical
+#print axioms rule_contraposition
+#print axioms eager_and_not_monotone
+#print axioms carousel_no_model
+#print axioms revenge_bullet
 
 end V

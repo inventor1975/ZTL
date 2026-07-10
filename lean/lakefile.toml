@@ -1,0 +1,5 @@
+name = "ztl"
+defaultTargets = ["ZTL"]
+
+[[lean_lib]]
+name = "ZTL"

@@ -14,9 +14,9 @@ E9 (probability): verdicts as the {0,1}-thresholds of Bel/Pl.
 E10 (modal): atom verdicts are the □/◇ thresholds over completions;
 the ¬¬-cell separates the local ladder from global supervaluation.
 
-E11 (Russell): the greedy/parity side is in Facts.lean; the grounding
-side (8 of 9 facts classical) needs constants ⊤/⊥ in Fm — recorded as
-an honest remainder, not silently skipped.
+E11 (Russell): with the constants ⊤/⊥ now in the certified language,
+the grounding half is kernel-COMPUTED — the lazy lfp of the nine-fact
+membership system grounds 8 of 9 facts and quarantines exactly R∈R.
 -/
 
 namespace V
@@ -251,6 +251,36 @@ theorem ladder_vs_global :
     znot (znot Z) = T ∧ supDN Z = Z ∧ supDN T = T ∧ supDN F = F :=
   ⟨rfl, rfl, rfl, rfl⟩
 
+/-! ## E11: Russell, the grounding half — kernel-computed
+
+Atom indices: 0 a∈a, 1 a∈b, 2 a∈R, 3 b∈a, 4 b∈b, 5 b∈R,
+6 R∈a, 7 R∈b, 8 R∈R. Definitions: x∈a := ⊥ (a = ∅), x∈b := ⊤ iff
+x = b, x∈R := ¬(x∈x) (Russell). -/
+
+def RUSSELL : Sys :=
+  [.bot, .bot, .neg (.atom 0),
+   .bot, .top, .neg (.atom 4),
+   .bot, .bot, .neg (.atom 8)]
+
+/-- 8 of 9 membership facts ground to classical values; exactly the
+one cell R∈R stays in quarantine — computed by the certified lfp of
+ZGround, checked by the kernel. -/
+theorem russell_grounded :
+    lfp RUSSELL = [F, F, T, F, T, F, F, F, Z] := by rfl
+
+/-- Russell works as a set for everyone except himself:
+a∈R earned T, b∈R earned F, R∈R not earned. -/
+theorem russell_verdicts :
+    getZ (lfp RUSSELL) 2 = T ∧ getZ (lfp RUSSELL) 5 = F ∧
+    getZ (lfp RUSSELL) 8 = Z := ⟨rfl, rfl, rfl⟩
+
+-- the constants behave in the certified engine: ⊢ ⊤, ⊥ ⊢ anything, ⊬ ⊥
+example : tproves [] (.top : Fm) = true := rfl
+example : tproves [(.bot : Fm)] (.atom 0) = true := rfl
+example : tproves [] (.bot : Fm) = false := rfl
+
+#print axioms russell_grounded
+#print axioms russell_verdicts
 #print axioms eqStream_never_T
 #print axioms eqStream_self
 #print axioms eqStream_apart

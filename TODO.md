@@ -44,11 +44,11 @@
 
 ## Seams
 
-5. MOSTLY DONE: ✅ general lazy-grounding theorem — ZGround.lean;
-   ✅ E6–E10 Lean twins — ZExped.lean (streams/taint/intervals/DS/
-   modal, zero axioms). REMAINS: E11 grounding half needs constants
-   ⊤/⊥ in Fm (engine surgery — v2); C-extension of sets is examples
-   only.
+5. ✅ DONE: general lazy-grounding theorem (ZGround.lean); E6–E11
+   Lean twins (ZExped.lean) — the constants ⊤/⊥ added to Fm (engine
+   surgery: both certificates extended), Russell's grounding half
+   kernel-computed (russell_grounded). Minor remainder: C-extension
+   of sets is examples only.
 6. ✅ DONE (bridge.py): the stitch — 136 kernel-computed answers
    (tables of both registers, J-ops, E/Δ, certified tproves on a
    shared battery, lfp of the zoo) auto-compared with the Python

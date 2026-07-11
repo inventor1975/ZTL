@@ -197,17 +197,20 @@ contradiction.
   overlapping wildcard match rows taint DEFINITIONS with propext
   through the matcher (kand/kor rewritten with explicit cells;
   definition-level #print axioms added); core List.length_map /
-  length_replicate are simp-proved (propext) — hand-rolled.   `ZExped.lean` — Lean twins of E6–E10: streams (never-T, earned and
+  length_replicate are simp-proved (propext) — hand-rolled.   `ZExped.lean` — Lean twins of E6–E11: streams (never-T, earned and
   persistent apartness, the diagonal's earned non-membership), taint
   vs injectivity, intervals (Nat twin for general lemmas — core Int
   order lemmas are omega-tainted), DS thresholds, modal thresholds +
-  the ladder/supervaluation cell. E11-grounding needs Fm constants —
-  honest remainder. THE WHOLE Lean corpus — 11 modules — on the empty
+  the ladder/supervaluation cell, and Russell's grounding half
+  kernel-computed (lfp of the nine-fact system: 8 grounded, R∈R = Z).
+  Fm now carries the constants ⊤/⊥ (engines + both certificates
+  extended). THE WHOLE Lean corpus — 11 modules — on the empty
   axiom list, definitions included.
 * `bridge.py` — the seam-#6 stitch: generates a Lean questionnaire
-  (136 #eval queries: both registers, J-ops, E/Δ, tproves battery,
-  lfp of the zoo), runs it through `lake env lean`, compares every
-  kernel answer with the Python stands. Zero divergences required.
+  (141 #eval queries: both registers, J-ops, E/Δ, tproves battery
+  with constants, lfp of the zoo up to Russell), runs it through
+  `lake env lean`, compares every kernel answer with the Python
+  stands. Zero divergences required.
 
 * `fixedpoint.py` — quarantine as a fixed point: the greedy jump is
   non-monotone and has no fixed points on odd cycles (liar period 2,

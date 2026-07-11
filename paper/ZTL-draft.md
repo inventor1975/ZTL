@@ -540,14 +540,19 @@ collapses the injectivity certificate for every function including the
 identity (§14); interval decorrelation and unearned self-identity of a
 nondegenerate mark (§15); Dempster–Shafer thresholds (§16); atom
 verdicts as □/◇ thresholds with the ¬¬-cell separating the local
-ladder from global supervaluation (§17). The grounding half of Russell
-(§18) needs constants ⊤/⊥ in the certified language — an honest
-remainder. **The stitch (`bridge.py`):** one questionnaire, two
-engines — 136 kernel-computed answers (both registers cell by cell,
+ladder from global supervaluation (§17). The certified language now carries the
+constants ⊤/⊥ (the engines and both certificates extended, the
+sequent/quantifier/algebra modules unaffected), which closes the last
+expedition remainder: **Russell's grounding half is kernel-computed**
+— `lfp RUSSELL = [F,F,T,F,T,F,F,F,Z]` by the certified iteration of
+§9: eight membership facts ground, exactly R∈R stays quarantined
+(`russell_grounded`, `russell_verdicts`); ⊢ ⊤, ⊥ ⊢ φ and ⊬ ⊥ run
+through the certified engine. **The stitch (`bridge.py`):** one questionnaire, two
+engines — 141 kernel-computed answers (both registers cell by cell,
 the J-operators, E and Δ, certified-engine verdicts on a shared
-propositional and quantified battery, lazy lfp of the constant-free
-zoo) compared mechanically against the Python stands on every
-regression run: zero divergences. Two further disinfection
+propositional and quantified battery with constants, lazy lfp of the
+zoo up to the nine-fact Russell system) compared mechanically against
+the Python stands on every regression run: zero divergences. Two further disinfection
 pitfalls surfaced here: an overlapping wildcard row in a match taints
 the DEFINITION itself with propext through the compiled matcher
 (invisible to theorem-level axiom prints — `kand`/`kor` were rewritten
@@ -936,7 +941,11 @@ The contrast with the classical outcome is maximal: for Frege one cell
 R∈R blew up the whole system (from an asserted contradiction everything
 follows). In ZTL the same cell goes into quarantine and the rest of the
 universe stays grounded: **explosion requires an asserted
-contradiction, and quarantine asserts nothing**. A comparison with an
+contradiction, and quarantine asserts nothing**. The grounding is
+kernel-checked: the certified least-fixed-point iteration of §9
+computes the nine-fact system to [F,F,T,F,T,F,F,F,Z] — eight facts
+classical, quarantine exactly at R∈R (Lean `russell_grounded`, zero
+axioms). A comparison with an
 earlier system of the author is instructive: in VR-Sets [Zenodo
 10.5281/zenodo.20592428] Russell is excluded by grammar (forbidden to
 write), in ZTL he is admitted and defused pointwise. Two honest answers

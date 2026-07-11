@@ -123,6 +123,8 @@ def upd (e : Env) (n : Nat) (s : Sign) : Env := fun m => if m = n then s else e 
 reduction to the basis strictly decreases the weight. -/
 def Fm.size : Fm → Nat
   | .atom _   => 1
+  | .top      => 1
+  | .bot      => 1
   | .neg φ    => φ.size + 1
   | .conj φ ψ => φ.size + ψ.size + 1
   | .disj φ ψ => φ.size + ψ.size + 1
@@ -134,6 +136,8 @@ theorem Fm.size_pos : ∀ φ : Fm, 1 ≤ φ.size := by
   intro φ
   cases φ
   case atom n => exact Nat.le_refl 1
+  case top => exact Nat.le_refl 1
+  case bot => exact Nat.le_refl 1
   case neg φ => exact Nat.le_add_left 1 _
   case conj φ ψ => exact Nat.le_add_left 1 _
   case disj φ ψ => exact Nat.le_add_left 1 _
@@ -155,6 +159,10 @@ def closes (fuel : Nat) (e : Env) (ws : List Node) : Bool :=
   | fuel + 1, (s, .atom n) :: rest =>
       if sIsEmpty (inter (e n) s) = true then true
       else closes fuel (upd e n (inter (e n) s)) rest
+  | fuel + 1, (s, .top) :: rest =>
+      if s T = true then closes fuel e rest else true
+  | fuel + 1, (s, .bot) :: rest =>
+      if s F = true then closes fuel e rest else true
   | fuel + 1, (s, .neg φ) :: rest =>
       if s T = true then
         if s F = true then closes fuel e rest
@@ -343,6 +351,36 @@ theorem closes_iff : ∀ (fuel : Nat) (e : Env) (ws : List Node),
             rw [hu]
             exact he m
         exact (ih _ rest hle' he').trans (notCongr SAT_atom.symm)
+    | (s, .top) :: rest =>
+      have hb : Fm.size .top + wsize rest < fuel + 1 := hle
+      have hle' : wsize rest < fuel :=
+        boundStep (Nat.le_of_eq (Nat.add_comm _ 1)) hb
+      show (if s T = true then closes fuel e rest else true) = true ↔ _
+      split
+      · next hT =>
+        have hdrop : SAT e ((s, .top) :: rest) ↔ SAT e rest :=
+          SAT_head_true fun _ => hT
+        exact (ih _ rest hle' he).trans (notCongr hdrop.symm)
+      · next hT =>
+        constructor
+        · intro _
+          exact SAT_head_false fun _ h1 => hT h1
+        · intro _; rfl
+    | (s, .bot) :: rest =>
+      have hb : Fm.size .bot + wsize rest < fuel + 1 := hle
+      have hle' : wsize rest < fuel :=
+        boundStep (Nat.le_of_eq (Nat.add_comm _ 1)) hb
+      show (if s F = true then closes fuel e rest else true) = true ↔ _
+      split
+      · next hF =>
+        have hdrop : SAT e ((s, .bot) :: rest) ↔ SAT e rest :=
+          SAT_head_true fun _ => hF
+        exact (ih _ rest hle' he).trans (notCongr hdrop.symm)
+      · next hF =>
+        constructor
+        · intro _
+          exact SAT_head_false fun _ h1 => hF h1
+        · intro _; rfl
     | (s, .neg φ) :: rest =>
       have hcls : ∀ v, znot (evalF v φ) = T ∨ znot (evalF v φ) = F :=
         fun v => lift1_classical _ _

@@ -32,6 +32,10 @@ def to_lean_fm(phi):
         return "(.atom 0)"
     if phi == "q":
         return "(.atom 1)"
+    if phi == "T":
+        return "(.top)"
+    if phi == "F":
+        return "(.bot)"
     op = phi[0]
     if op == "not":
         return f"(.neg {to_lean_fm(phi[1])})"
@@ -64,6 +68,9 @@ BATTERY = [
      ("imp", ("not", q), ("not", p))),
     ("dn-elimination", [("not", ("not", p))], p),
     ("non-contradiction", [], ("not", ("and", p, ("not", p)))),
+    ("verum", [], "T"),
+    ("ex falso", ["F"], p),
+    ("falsum underivable", [], "F"),
     ("UI rule", [ALLP], p),
     ("EG law", [], ("imp", p, EXP)),
     ("drinker dom-2", [], exF_py(("imp", p, ALLP), [("imp", q, ALLP)])),
@@ -76,6 +83,14 @@ ZOO = [
      "[.atom 1, .neg (.atom 0)]"),
     ("even cycle", {"s0": ("not", "s1"), "s1": ("not", "s0")},
      "[.neg (.atom 1), .neg (.atom 0)]"),
+    ("russell", {"s0": "F", "s1": "F", "s2": ("not", "s0"),
+                 "s3": "F", "s4": "T", "s5": ("not", "s4"),
+                 "s6": "F", "s7": "F", "s8": ("not", "s8")},
+     "[.bot, .bot, .neg (.atom 0), .bot, .top, .neg (.atom 4), "
+     ".bot, .bot, .neg (.atom 8)]"),
+    ("grounded chain", {"s0": "T", "s1": "s0",
+                        "s2": ("or", ("not", "s1"), "s0")},
+     "[.top, .atom 0, .disj (.neg (.atom 1)) (.atom 0)]"),
 ]
 
 K_PY = {"not": LAZY["not"], "and": LAZY["and"], "or": LAZY["or"],

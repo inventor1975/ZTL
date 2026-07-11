@@ -38,10 +38,13 @@ theorem kxor_monotone : ∀ a b c d, leqb a c = true → leqb b d = true →
     leqb (kxor a b) (kxor c d) = true := by decide
 theorem kxnor_monotone : ∀ a b c d, leqb a c = true → leqb b d = true →
     leqb (kxnor a b) (kxnor c d) = true := by decide
+theorem leqb_refl : ∀ a : V, leqb a a = true := by decide
 
 /-- Lazy (strong Kleene) evaluation of the full language. -/
 def evalK (v : Nat → V) : Fm → V
   | .atom n   => v n
+  | .top      => T
+  | .bot      => F
   | .neg φ    => knot (evalK v φ)
   | .conj φ ψ => kand (evalK v φ) (evalK v ψ)
   | .disj φ ψ => kor (evalK v φ) (evalK v ψ)
@@ -55,6 +58,8 @@ theorem evalK_mono {v w : Nat → V} (h : ∀ n, leqb (v n) (w n) = true) :
   intro φ
   induction φ with
   | atom n => exact h n
+  | top => exact leqb_refl T
+  | bot => exact leqb_refl F
   | neg φ ih => exact kleene_not_monotone _ _ ih
   | conj φ ψ ih1 ih2 => exact kleene_and_monotone _ _ _ _ ih1 ih2
   | disj φ ψ ih1 ih2 => exact kleene_or_monotone _ _ _ _ ih1 ih2

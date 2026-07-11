@@ -133,6 +133,8 @@ theorem not_selfextensional :
 /-- Uniform substitution on formulas. -/
 def substF (σ : Nat → Fm) : Fm → Fm
   | .atom n   => σ n
+  | .top      => .top
+  | .bot      => .bot
   | .neg φ    => .neg (substF σ φ)
   | .conj φ ψ => .conj (substF σ φ) (substF σ ψ)
   | .disj φ ψ => .disj (substF σ φ) (substF σ ψ)
@@ -151,6 +153,8 @@ theorem evalF_subst (σ : Nat → Fm) (v : Nat → V) :
   intro φ
   induction φ with
   | atom n => rfl
+  | top => rfl
+  | bot => rfl
   | neg φ ih => exact congrArg znot ih
   | conj φ ψ ih1 ih2 => exact congr2 zand ih1 ih2
   | disj φ ψ ih1 ih2 => exact congr2 zor ih1 ih2

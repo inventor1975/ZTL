@@ -251,3 +251,11 @@
   marked pair collapses the injectivity certificate; a nondegenerate
   mark does not equal itself; atom verdicts are the modal thresholds.
 \end{theorem}
+
+\begin{theorem}[Russell grounded, kernel-computed]\label{thm:russellkt}
+  \uses{thm:kt}\lean{V.russell_grounded, V.russell_verdicts}\leanok
+  With the constants $\top/\bot$ in the certified language, the lazy
+  lfp of the nine-fact membership system computes to
+  $[F,F,T,F,T,F,F,F,Z]$: eight facts grounded, quarantine exactly at
+  $R\in R$ --- containment instead of explosion, by the kernel.
+\end{theorem}

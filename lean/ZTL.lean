@@ -232,9 +232,13 @@ inductive Fm where
   | imp  : Fm → Fm → Fm
   | xor  : Fm → Fm → Fm
   | xnor : Fm → Fm → Fm
+  | top  : Fm
+  | bot  : Fm
 
 def evalF (v : Nat → V) : Fm → V
   | .atom n   => v n
+  | .top      => T
+  | .bot      => F
   | .neg φ    => znot (evalF v φ)
   | .conj φ ψ => zand (evalF v φ) (evalF v ψ)
   | .disj φ ψ => zor (evalF v φ) (evalF v ψ)
@@ -255,6 +259,8 @@ theorem evalF_classical (v : Nat → V) :
   | imp φ ψ  => exact Or.inr (lift2_classical _ _ _)
   | xor φ ψ  => exact Or.inr (lift2_classical _ _ _)
   | xnor φ ψ => exact Or.inr (lift2_classical _ _ _)
+  | top => exact Or.inr (Or.inl rfl)
+  | bot => exact Or.inr (Or.inr rfl)
 
 /-! Pillar 2. Preimage coverage: every tableau rule is ⟺-exact.
 Signs: strict T/F; weak P = {T,Z} ("possibly T"), N = {F,Z}. -/

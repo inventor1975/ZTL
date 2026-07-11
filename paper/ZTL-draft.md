@@ -725,6 +725,24 @@ and factorizes into our two registers ({T,F,Z} fragment = ZTL, {T,F,N}
 fragment = Kleene), but it packs two phases into one type — a monolith
 instead of modules; it is kept as a possible appendix, not as the core.
 
+**Kleene, read through this passport.** Kleene's third element was
+epistemic by intent — "undefined, not yet computed" — but his logic
+has a single register, so the status had no home except inside the
+value algebra, where it was forced to flow (¬N = N: negation passes
+the unknown on). Typed by our passport, his element conflates the two
+non-values: the *mark* on a datum (external, static, lifted only by
+the act of verification) and the *phase* of a computation (internal,
+dynamic, lifted by the iteration itself — and hardening, when it never
+resolves, into the quarantine mark with its own passport of kinds,
+§9). Strong Kleene logic is what results when both non-values are
+made to share one symbol *as a value of assertions*; SQL NULL's
+notorious ambiguity — "unknown", "not applicable", "pending" in one
+symbol — is the same conflation observed in the wild. The fault is
+not the shared symbol (our own solver reuses Z positionally during
+iteration) but the promotion of a status to a truth value: ZTL splits
+the *role*, not the alphabet, and revokes the status's right to be
+what a statement evaluates to.
+
 Consequence for positioning: ZTL's neighbours are not the many-valued
 logics but the two-valued assertability policies of the supervaluation
 family — from which it differs by locality, tabularity, and greedy

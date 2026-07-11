@@ -212,6 +212,71 @@ theorem carousel_kleene_fp : (Z : V) = Z ∧ knot Z = Z := ⟨rfl, rfl⟩
 заземлённом μ=Z жадно даёт T — а истина предложению не выдаётся. -/
 theorem revenge_bullet : zor (znot Z) (isZ Z) = T := by decide
 
+/-! ## Часть III: язык формул и опоры таблó
+
+Долг чести по исчислению: две несущие опоры знаковых таблó, дословно.
+Опора 1 — жадность на всём языке формул (не на конечной батарее).
+Опора 2 — точное покрытие прообразов каждым правилом, для произвольных
+значений подформул (⟺, обе стороны). Несформализованной остаётся только
+учебная склейка (индукция движка по размеру формулы) — Hähnle, стандарт. -/
+
+inductive Fm where
+  | atom : Nat → Fm
+  | neg  : Fm → Fm
+  | conj : Fm → Fm → Fm
+  | disj : Fm → Fm → Fm
+  | imp  : Fm → Fm → Fm
+  | xor  : Fm → Fm → Fm
+  | xnor : Fm → Fm → Fm
+
+def evalF (v : Nat → V) : Fm → V
+  | .atom n   => v n
+  | .neg φ    => znot (evalF v φ)
+  | .conj φ ψ => zand (evalF v φ) (evalF v ψ)
+  | .disj φ ψ => zor (evalF v φ) (evalF v ψ)
+  | .imp φ ψ  => zimp (evalF v φ) (evalF v ψ)
+  | .xor φ ψ  => zxor (evalF v φ) (evalF v ψ)
+  | .xnor φ ψ => zxnor (evalF v φ) (evalF v ψ)
+
+/-- Опора 1. Жадность на всём языке: всякая СОСТАВНАЯ формула классична
+при любой оценке — Z живёт только на атомах. -/
+theorem evalF_classical (v : Nat → V) :
+    ∀ φ : Fm, (∃ n, φ = .atom n) ∨ evalF v φ = T ∨ evalF v φ = F := by
+  intro φ
+  cases φ with
+  | atom n   => exact Or.inl ⟨n, rfl⟩
+  | neg φ    => exact Or.inr (lift1_classical _ _)
+  | conj φ ψ => exact Or.inr (lift2_classical _ _ _)
+  | disj φ ψ => exact Or.inr (lift2_classical _ _ _)
+  | imp φ ψ  => exact Or.inr (lift2_classical _ _ _)
+  | xor φ ψ  => exact Or.inr (lift2_classical _ _ _)
+  | xnor φ ψ => exact Or.inr (lift2_classical _ _ _)
+
+/-! Опора 2. Покрытие прообразов: каждое правило таблó ⟺-точно.
+Знаки: строгие T/F; ослабленные P = {T,Z} («возможно T»), N = {F,Z}. -/
+
+theorem cover_not_T  : ∀ a : V, znot a = T ↔ a = F := by decide
+theorem cover_not_F  : ∀ a : V, znot a = F ↔ (a = T ∨ a = Z) := by decide
+theorem cover_and_T  : ∀ a b : V, zand a b = T ↔ (a = T ∧ b = T) := by decide
+theorem cover_and_F  : ∀ a b : V,
+    zand a b = F ↔ ((a = F ∨ a = Z) ∨ (b = F ∨ b = Z)) := by decide
+theorem cover_or_T   : ∀ a b : V, zor a b = T ↔ (a = T ∨ b = T) := by decide
+theorem cover_or_F   : ∀ a b : V,
+    zor a b = F ↔ ((a = F ∨ a = Z) ∧ (b = F ∨ b = Z)) := by decide
+theorem cover_imp_T  : ∀ a b : V, zimp a b = T ↔ (a = F ∨ b = T) := by decide
+theorem cover_imp_F  : ∀ a b : V,
+    zimp a b = F ↔ ((a = T ∨ a = Z) ∧ (b = F ∨ b = Z)) := by decide
+theorem cover_xor_T  : ∀ a b : V,
+    zxor a b = T ↔ ((a = T ∧ b = F) ∨ (a = F ∧ b = T)) := by decide
+theorem cover_xor_F  : ∀ a b : V,
+    zxor a b = F ↔ (((a = T ∨ a = Z) ∧ (b = T ∨ b = Z)) ∨
+                    ((a = F ∨ a = Z) ∧ (b = F ∨ b = Z))) := by decide
+theorem cover_xnor_T : ∀ a b : V,
+    zxnor a b = T ↔ ((a = T ∧ b = T) ∨ (a = F ∧ b = F)) := by decide
+theorem cover_xnor_F : ∀ a b : V,
+    zxnor a b = F ↔ (((a = T ∨ a = Z) ∧ (b = F ∨ b = Z)) ∨
+                     ((a = F ∨ a = Z) ∧ (b = T ∨ b = Z))) := by decide
+
 #print axioms modus_ponens
 #print axioms lem_fails
 #print axioms liar_homeless
@@ -220,5 +285,7 @@ theorem revenge_bullet : zor (znot Z) (isZ Z) = T := by decide
 #print axioms eager_and_not_monotone
 #print axioms carousel_no_model
 #print axioms revenge_bullet
+#print axioms evalF_classical
+#print axioms cover_imp_F
 
 end V

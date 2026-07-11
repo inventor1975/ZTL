@@ -3,45 +3,119 @@ import ZTL
 /-!
 # Торговый сертификат: корректность и полнота движка таблó ZTL
 
-Движок работает на порождающем базисе {¬,∧,∨}; связки →,⊕,↔ сводятся
-к базису живыми тождествами (imp_def, xor_def, xnor_def — теоремы ZTL).
-Главная теорема closes_iff: таблó закрывается ⟺ узлы невыполнимы.
-Следствие tproves_iff: выводимость Γ ⊢ φ ⟺ семантическое следование.
+Ноль аксиом. Для этого: знаки — функции V → Bool (никаких списочных
+лемм ядра), satL — рекурсивная конъюнкция (никакого ∀-членства),
+движок — структурная рекурсия по топливу (никакой WF-машинерии),
+доказательства — комбинаторные цепочки Iff (никаких rw по эквивалент-
+ностям), границы размеров — defeq-переформулировки + omega (никакого
+simp по уравнениям match). Связки →,⊕,↔ сводятся к базису {¬,∧,∨}
+живыми тождествами (imp_def, xor_def, xnor_def — теоремы ядра).
 -/
 
 namespace V
 
-abbrev Sign := List V
+/-! ## Собственные комбинаторы (нулевой зависимости) -/
 
-abbrev SignT : Sign := [T]
-abbrev SignF : Sign := [F]
-abbrev SignP : Sign := [T, Z]
-abbrev SignN : Sign := [F, Z]
+theorem iffOfEq {a b : Prop} (h : a = b) : a ↔ b := h ▸ Iff.rfl
+
+theorem notCongr {a b : Prop} (h : a ↔ b) : ¬a ↔ ¬b :=
+  ⟨fun na hb => na (h.mpr hb), fun nb ha => nb (h.mp ha)⟩
+
+theorem andCongr {a b c d : Prop} (h1 : a ↔ c) (h2 : b ↔ d) :
+    (a ∧ b) ↔ (c ∧ d) :=
+  ⟨fun ⟨x, y⟩ => ⟨h1.mp x, h2.mp y⟩, fun ⟨x, y⟩ => ⟨h1.mpr x, h2.mpr y⟩⟩
+
+theorem orCongr {a b c d : Prop} (h1 : a ↔ c) (h2 : b ↔ d) :
+    (a ∨ b) ↔ (c ∨ d) :=
+  ⟨fun h => h.elim (fun x => Or.inl (h1.mp x)) (fun y => Or.inr (h2.mp y)),
+   fun h => h.elim (fun x => Or.inl (h1.mpr x)) (fun y => Or.inr (h2.mpr y))⟩
+
+theorem notOr {a b : Prop} : ¬(a ∨ b) ↔ (¬a ∧ ¬b) :=
+  ⟨fun h => ⟨fun ha => h (Or.inl ha), fun hb => h (Or.inr hb)⟩,
+   fun ⟨na, nb⟩ h => h.elim na nb⟩
+
+theorem andEqTrue : ∀ a b : Bool, (a && b) = true ↔ (a = true ∧ b = true) := by
+  decide
+
+theorem boundStep {a b f : Nat} (h1 : a + 1 ≤ b) (h2 : b < f + 1) : a < f :=
+  Nat.le_trans h1 (Nat.le_of_lt_succ h2)
+
+theorem bNotTrue : ∀ b : Bool, ¬(b = true) → b = false := by
+  intro b h
+  cases b
+  · rfl
+  · exact absurd rfl h
+
+/-! ## Знаки как функции V → Bool -/
+
+abbrev Sign := V → Bool
+
+def SignT : Sign := fun x => decide (x = T)
+def SignF : Sign := fun x => decide (x = F)
+def SignP : Sign := fun x => decide (x = T ∨ x = Z)
+def SignN : Sign := fun x => decide (x = F ∨ x = Z)
+
+theorem vT : ∀ x : V, SignT x = true ↔ x = T := by decide
+theorem vF : ∀ x : V, SignF x = true ↔ x = F := by decide
+theorem vP : ∀ x : V, SignP x = true ↔ (x = T ∨ x = Z) := by decide
+theorem vN : ∀ x : V, SignN x = true ↔ (x = F ∨ x = Z) := by decide
+theorem vN_neq : ∀ x : V, (x = F ∨ x = Z) ↔ ¬(x = T) := by decide
+
+def inter (a b : Sign) : Sign := fun x => a x && b x
+
+def sIsEmpty (s : Sign) : Bool := !(s T || s F || s Z)
+
+theorem bNotOr1 : ∀ a b c : Bool, a = true → (!(a || b || c)) = false := by decide
+theorem bNotOr2 : ∀ a b c : Bool, b = true → (!(a || b || c)) = false := by decide
+theorem bNotOr3 : ∀ a b c : Bool, c = true → (!(a || b || c)) = false := by decide
+theorem bAllFalse : ∀ a b c : Bool, a = false → b = false → c = false →
+    (!(a || b || c)) = true := by decide
+
+theorem sNonempty_of_mem {s : Sign} {x : V} (h : s x = true) :
+    sIsEmpty s = false := by
+  cases x
+  · exact bNotOr1 (s T) (s F) (s Z) h
+  · exact bNotOr2 (s T) (s F) (s Z) h
+  · exact bNotOr3 (s T) (s F) (s Z) h
+
+/-- Выбор представителя из непустого знака. -/
+def sPick (s : Sign) : V :=
+  if s T = true then T else if s F = true then F else Z
+
+theorem sPick_mem {s : Sign} (h : sIsEmpty s = false) : s (sPick s) = true := by
+  by_cases hT : s T = true
+  · have hp : sPick s = T := if_pos hT
+    rw [hp]; exact hT
+  · have h1 : sPick s = if s F = true then F else Z := if_neg hT
+    by_cases hF : s F = true
+    · rw [h1, if_pos hF]; exact hF
+    · rw [h1, if_neg hF]
+      cases hZ : s Z
+      · exfalso
+        have hT' : s T = false := bNotTrue _ hT
+        have hF' : s F = false := bNotTrue _ hF
+        have : sIsEmpty s = true := bAllFalse (s T) (s F) (s Z) hT' hF' hZ
+        rw [this] at h
+        cases h
+      · rfl
+
+/-! ## Узлы, оценки, выполнимость -/
 
 abbrev Node := Sign × Fm
 
 /-- Оценка удовлетворяет узлу: значение формулы лежит в знаке. -/
-def satN (v : Nat → V) (nd : Node) : Prop := evalF v nd.2 ∈ nd.1
+def satN (v : Nat → V) (nd : Node) : Prop := nd.1 (evalF v nd.2) = true
 
-def satL (v : Nat → V) (ns : List Node) : Prop := ∀ nd ∈ ns, satN v nd
+/-- Рекурсивная конъюнкция (никакого членства в списках). -/
+def satL (v : Nat → V) : List Node → Prop
+  | [] => True
+  | nd :: ns => satN v nd ∧ satL v ns
 
-/-- Накопленные ограничения на атомы. -/
 abbrev Env := Nat → Sign
 
-def envOK (v : Nat → V) (e : Env) : Prop := ∀ n, v n ∈ e n
+def envOK (v : Nat → V) (e : Env) : Prop := ∀ n, e n (v n) = true
 
-/-- Выполнимость набора узлов при ограничениях. -/
 def SAT (e : Env) (ws : List Node) : Prop := ∃ v, envOK v e ∧ satL v ws
-
-def inter (l s : Sign) : Sign := l.filter (fun a => decide (a ∈ s))
-
-theorem mem_inter {x : V} {l s : Sign} : x ∈ inter l s ↔ x ∈ l ∧ x ∈ s := by
-  constructor
-  · intro h
-    have h' := List.mem_filter.mp h
-    exact ⟨h'.1, of_decide_eq_true h'.2⟩
-  · intro ⟨h1, h2⟩
-    exact List.mem_filter.mpr ⟨h1, decide_eq_true h2⟩
 
 def upd (e : Env) (n : Nat) (s : Sign) : Env := fun m => if m = n then s else e m
 
@@ -52,471 +126,469 @@ def Fm.size : Fm → Nat
   | .neg φ    => φ.size + 1
   | .conj φ ψ => φ.size + ψ.size + 1
   | .disj φ ψ => φ.size + ψ.size + 1
-  | .imp φ ψ  => φ.size + ψ.size + 3
-  | .xor φ ψ  => 2 * φ.size + 2 * ψ.size + 6
-  | .xnor φ ψ => 2 * φ.size + 2 * ψ.size + 6
+  | .imp φ ψ  => φ.size + 1 + ψ.size + 1 + 2
+  | .xor φ ψ  => φ.size + (ψ.size + 1) + 1 + (φ.size + 1 + ψ.size + 1) + 3
+  | .xnor φ ψ => φ.size + ψ.size + 1 + (φ.size + 1 + (ψ.size + 1) + 1) + 3
 
 theorem Fm.size_pos : ∀ φ : Fm, 1 ≤ φ.size := by
-  intro φ; cases φ <;> simp only [Fm.size] <;> omega
+  intro φ
+  cases φ
+  case atom n => exact Nat.le_refl 1
+  case neg φ => exact Nat.le_add_left 1 _
+  case conj φ ψ => exact Nat.le_add_left 1 _
+  case disj φ ψ => exact Nat.le_add_left 1 _
+  case imp φ ψ => exact Nat.le_add_left 1 _
+  case xor φ ψ => exact Nat.le_add_left 1 _
+  case xnor φ ψ => exact Nat.le_add_left 1 _
 
 def wsize : List Node → Nat
   | [] => 0
   | nd :: rest => nd.2.size + wsize rest
 
-/-- Движок таблó: атом — пересечение ограничений; ¬,∧,∨ — знаковые
-правила (ослабленные знаки только в F-полярности); →,⊕,↔ — сведение
-к базису каноническими тождествами. -/
-def closes (e : Env) : List Node → Bool
-  | [] => false
-  | (s, .atom n) :: rest =>
-      if inter (e n) s = [] then true
-      else closes (upd e n (inter (e n) s)) rest
-  | (s, .neg φ) :: rest =>
-      if T ∈ s then
-        if F ∈ s then closes e rest
-        else closes e ((SignF, φ) :: rest)
+/-- Движок таблó: структурная рекурсия по топливу. Атом — пересечение
+ограничений; ¬,∧,∨ — знаковые правила (ослабленные знаки только в
+F-полярности); →,⊕,↔ — сведение к базису. -/
+def closes (fuel : Nat) (e : Env) (ws : List Node) : Bool :=
+  match fuel, ws with
+  | 0, _ => false
+  | _ + 1, [] => false
+  | fuel + 1, (s, .atom n) :: rest =>
+      if sIsEmpty (inter (e n) s) = true then true
+      else closes fuel (upd e n (inter (e n) s)) rest
+  | fuel + 1, (s, .neg φ) :: rest =>
+      if s T = true then
+        if s F = true then closes fuel e rest
+        else closes fuel e ((SignF, φ) :: rest)
       else
-        if F ∈ s then closes e ((SignP, φ) :: rest)
+        if s F = true then closes fuel e ((SignP, φ) :: rest)
         else true
-  | (s, .conj φ ψ) :: rest =>
-      if T ∈ s then
-        if F ∈ s then closes e rest
-        else closes e ((SignT, φ) :: (SignT, ψ) :: rest)
+  | fuel + 1, (s, .conj φ ψ) :: rest =>
+      if s T = true then
+        if s F = true then closes fuel e rest
+        else closes fuel e ((SignT, φ) :: (SignT, ψ) :: rest)
       else
-        if F ∈ s then
-          closes e ((SignN, φ) :: rest) && closes e ((SignN, ψ) :: rest)
+        if s F = true then
+          closes fuel e ((SignN, φ) :: rest) && closes fuel e ((SignN, ψ) :: rest)
         else true
-  | (s, .disj φ ψ) :: rest =>
-      if T ∈ s then
-        if F ∈ s then closes e rest
-        else closes e ((SignT, φ) :: rest) && closes e ((SignT, ψ) :: rest)
+  | fuel + 1, (s, .disj φ ψ) :: rest =>
+      if s T = true then
+        if s F = true then closes fuel e rest
+        else closes fuel e ((SignT, φ) :: rest) && closes fuel e ((SignT, ψ) :: rest)
       else
-        if F ∈ s then closes e ((SignN, φ) :: (SignN, ψ) :: rest)
+        if s F = true then closes fuel e ((SignN, φ) :: (SignN, ψ) :: rest)
         else true
-  | (s, .imp φ ψ) :: rest =>
-      closes e ((s, .disj (.neg φ) ψ) :: rest)
-  | (s, .xor φ ψ) :: rest =>
-      closes e ((s, .disj (.conj φ (.neg ψ)) (.conj (.neg φ) ψ)) :: rest)
-  | (s, .xnor φ ψ) :: rest =>
-      closes e ((s, .disj (.conj φ ψ) (.conj (.neg φ) (.neg ψ))) :: rest)
-  termination_by ws => wsize ws
-  decreasing_by
-    all_goals simp only [wsize, Fm.size]
-    all_goals omega
-
-/-! ## Значные леммы (перебором) -/
-
-theorem vT : ∀ x : V, x ∈ SignT ↔ x = T := by decide
-theorem vF : ∀ x : V, x ∈ SignF ↔ x = F := by decide
-theorem vP : ∀ x : V, x ∈ SignP ↔ (x = T ∨ x = Z) := by decide
-theorem vN : ∀ x : V, x ∈ SignN ↔ (x = F ∨ x = Z) := by decide
-theorem vFull : ∀ x : V, x ∈ ([T, F, Z] : Sign) := by decide
-theorem vN_neq : ∀ x : V, (x = F ∨ x = Z) ↔ ¬(x = T) := by decide
+  | fuel + 1, (s, .imp φ ψ) :: rest =>
+      closes fuel e ((s, .disj (.neg φ) ψ) :: rest)
+  | fuel + 1, (s, .xor φ ψ) :: rest =>
+      closes fuel e ((s, .disj (.conj φ (.neg ψ)) (.conj (.neg φ) ψ)) :: rest)
+  | fuel + 1, (s, .xnor φ ψ) :: rest =>
+      closes fuel e ((s, .disj (.conj φ ψ) (.conj (.neg φ) (.neg ψ))) :: rest)
+  termination_by structural fuel
 
 /-! ## Знак против классического значения -/
 
 theorem mem_cls_T {x : V} {s : Sign} (hx : x = T ∨ x = F)
-    (hT : T ∈ s) (hF : F ∉ s) : x ∈ s ↔ x = T := by
+    (hT : s T = true) (hF : s F = false) : s x = true ↔ x = T := by
   constructor
-  · intro h; rcases hx with rfl | rfl
+  · intro h
+    rcases hx with rfl | rfl
     · rfl
-    · exact absurd h hF
+    · rw [hF] at h; cases h
   · rintro rfl; exact hT
 
 theorem mem_cls_F {x : V} {s : Sign} (hx : x = T ∨ x = F)
-    (hT : T ∉ s) (hF : F ∈ s) : x ∈ s ↔ x = F := by
+    (hT : s T = false) (hF : s F = true) : s x = true ↔ x = F := by
   constructor
-  · intro h; rcases hx with rfl | rfl
-    · exact absurd h hT
+  · intro h
+    rcases hx with rfl | rfl
+    · rw [hT] at h; cases h
     · rfl
   · rintro rfl; exact hF
 
 theorem mem_cls_both {x : V} {s : Sign} (hx : x = T ∨ x = F)
-    (hT : T ∈ s) (hF : F ∈ s) : x ∈ s := by
+    (hT : s T = true) (hF : s F = true) : s x = true := by
   rcases hx with rfl | rfl
   · exact hT
   · exact hF
 
 theorem not_mem_cls {x : V} {s : Sign} (hx : x = T ∨ x = F)
-    (hT : T ∉ s) (hF : F ∉ s) : x ∉ s := by
+    (hT : s T = false) (hF : s F = false) : ¬(s x = true) := by
+  intro h
   rcases hx with rfl | rfl
-  · exact hT
-  · exact hF
+  · rw [hT] at h; cases h
+  · rw [hF] at h; cases h
 
 /-! ## Инструменты для satL и SAT -/
 
-theorem satL_nil (v : Nat → V) : satL v [] := by
-  intro nd h; cases h
+theorem satL_nil (v : Nat → V) : satL v [] := trivial
 
 theorem satL_cons {v : Nat → V} {nd : Node} {ns : List Node} :
-    satL v (nd :: ns) ↔ satN v nd ∧ satL v ns := by
-  constructor
-  · intro h
-    exact ⟨h nd (List.mem_cons_self ..),
-           fun x hx => h x (List.mem_cons_of_mem _ hx)⟩
-  · rintro ⟨h1, h2⟩ x hx
-    rcases List.mem_cons.mp hx with rfl | hx
-    · exact h1
-    · exact h2 x hx
+    satL v (nd :: ns) ↔ satN v nd ∧ satL v ns := Iff.rfl
 
 theorem SAT_head_congr {e : Env} {nd nd' : Node} {ws : List Node}
     (h : ∀ v, satN v nd ↔ satN v nd') :
     SAT e (nd :: ws) ↔ SAT e (nd' :: ws) := by
   constructor
-  · rintro ⟨v, hOK, hs⟩
-    have ⟨h1, h2⟩ := satL_cons.mp hs
-    exact ⟨v, hOK, satL_cons.mpr ⟨(h v).mp h1, h2⟩⟩
-  · rintro ⟨v, hOK, hs⟩
-    have ⟨h1, h2⟩ := satL_cons.mp hs
-    exact ⟨v, hOK, satL_cons.mpr ⟨(h v).mpr h1, h2⟩⟩
+  · rintro ⟨v, hOK, h1, h2⟩
+    exact ⟨v, hOK, (h v).mp h1, h2⟩
+  · rintro ⟨v, hOK, h1, h2⟩
+    exact ⟨v, hOK, (h v).mpr h1, h2⟩
 
 theorem SAT_head_split2 {e : Env} {nd a b : Node} {ws : List Node}
     (h : ∀ v, satN v nd ↔ (satN v a ∧ satN v b)) :
     SAT e (nd :: ws) ↔ SAT e (a :: b :: ws) := by
   constructor
-  · rintro ⟨v, hOK, hs⟩
-    have ⟨h1, h2⟩ := satL_cons.mp hs
+  · rintro ⟨v, hOK, h1, h2⟩
     have ⟨ha, hb⟩ := (h v).mp h1
-    exact ⟨v, hOK, satL_cons.mpr ⟨ha, satL_cons.mpr ⟨hb, h2⟩⟩⟩
-  · rintro ⟨v, hOK, hs⟩
-    have ⟨ha, hs'⟩ := satL_cons.mp hs
-    have ⟨hb, h2⟩ := satL_cons.mp hs'
-    exact ⟨v, hOK, satL_cons.mpr ⟨(h v).mpr ⟨ha, hb⟩, h2⟩⟩
+    exact ⟨v, hOK, ha, hb, h2⟩
+  · rintro ⟨v, hOK, ha, hb, h2⟩
+    exact ⟨v, hOK, (h v).mpr ⟨ha, hb⟩, h2⟩
 
 theorem SAT_head_or {e : Env} {nd a b : Node} {ws : List Node}
     (h : ∀ v, satN v nd ↔ (satN v a ∨ satN v b)) :
     SAT e (nd :: ws) ↔ (SAT e (a :: ws) ∨ SAT e (b :: ws)) := by
   constructor
-  · rintro ⟨v, hOK, hs⟩
-    have ⟨h1, h2⟩ := satL_cons.mp hs
+  · rintro ⟨v, hOK, h1, h2⟩
     rcases (h v).mp h1 with ha | hb
-    · exact Or.inl ⟨v, hOK, satL_cons.mpr ⟨ha, h2⟩⟩
-    · exact Or.inr ⟨v, hOK, satL_cons.mpr ⟨hb, h2⟩⟩
-  · rintro (⟨v, hOK, hs⟩ | ⟨v, hOK, hs⟩)
-    · have ⟨h1, h2⟩ := satL_cons.mp hs
-      exact ⟨v, hOK, satL_cons.mpr ⟨(h v).mpr (Or.inl h1), h2⟩⟩
-    · have ⟨h1, h2⟩ := satL_cons.mp hs
-      exact ⟨v, hOK, satL_cons.mpr ⟨(h v).mpr (Or.inr h1), h2⟩⟩
+    · exact Or.inl ⟨v, hOK, ha, h2⟩
+    · exact Or.inr ⟨v, hOK, hb, h2⟩
+  · rintro (⟨v, hOK, h1, h2⟩ | ⟨v, hOK, h1, h2⟩)
+    · exact ⟨v, hOK, (h v).mpr (Or.inl h1), h2⟩
+    · exact ⟨v, hOK, (h v).mpr (Or.inr h1), h2⟩
 
 theorem SAT_head_true {e : Env} {nd : Node} {ws : List Node}
     (h : ∀ v, satN v nd) : SAT e (nd :: ws) ↔ SAT e ws := by
   constructor
-  · rintro ⟨v, hOK, hs⟩; exact ⟨v, hOK, (satL_cons.mp hs).2⟩
-  · rintro ⟨v, hOK, hs⟩; exact ⟨v, hOK, satL_cons.mpr ⟨h v, hs⟩⟩
+  · rintro ⟨v, hOK, _, h2⟩; exact ⟨v, hOK, h2⟩
+  · rintro ⟨v, hOK, h2⟩; exact ⟨v, hOK, h v, h2⟩
 
 theorem SAT_head_false {e : Env} {nd : Node} {ws : List Node}
     (h : ∀ v, ¬ satN v nd) : ¬ SAT e (nd :: ws) := by
-  rintro ⟨v, _, hs⟩; exact h v (satL_cons.mp hs).1
+  rintro ⟨v, _, h1, _⟩; exact h v h1
 
 /-- Атомный шаг: голова-атом эквивалентна сужению ограничений. -/
 theorem SAT_atom {e : Env} {s : Sign} {n : Nat} {ws : List Node} :
     SAT e ((s, .atom n) :: ws) ↔ SAT (upd e n (inter (e n) s)) ws := by
   constructor
-  · rintro ⟨v, hOK, hs⟩
-    have ⟨h1, h2⟩ := satL_cons.mp hs
+  · rintro ⟨v, hOK, h1, h2⟩
     refine ⟨v, fun m => ?_, h2⟩
     by_cases hm : m = n
     · subst hm
-      simp only [upd, if_pos rfl]
-      exact mem_inter.mpr ⟨hOK m, h1⟩
-    · simp only [upd, if_neg hm]
-      exact hOK m
+      have hu : upd e m (inter (e m) s) m = inter (e m) s := if_pos rfl
+      rw [hu]
+      exact (andEqTrue _ _).mpr ⟨hOK m, h1⟩
+    · have hu : upd e n (inter (e n) s) m = e m := if_neg hm
+      exact hu ▸ hOK m
   · rintro ⟨v, hOK, hs⟩
-    have hn : v n ∈ inter (e n) s := by
+    have hn : inter (e n) s (v n) = true := by
       have h := hOK n
-      simp only [upd, if_pos rfl] at h
+      have hu : upd e n (inter (e n) s) n = inter (e n) s := if_pos rfl
+      rw [hu] at h
       exact h
-    refine ⟨v, fun m => ?_, satL_cons.mpr ⟨(mem_inter.mp hn).2, hs⟩⟩
+    have hpair := (andEqTrue _ _).mp hn
+    refine ⟨v, fun m => ?_, hpair.2, hs⟩
     by_cases hm : m = n
-    · subst hm; exact (mem_inter.mp hn).1
+    · subst hm; exact hpair.1
     · have h := hOK m
-      simp only [upd, if_neg hm] at h
+      have hu : upd e n (inter (e n) s) m = e m := if_neg hm
+      rw [hu] at h
       exact h
 
 /-! ## Главная теорема -/
 
-theorem closes_iff : ∀ (N : Nat) (e : Env) (ws : List Node),
-    wsize ws ≤ N → (∀ n, e n ≠ []) →
-    (closes e ws = true ↔ ¬ SAT e ws) := by
-  intro N
-  induction N with
+theorem closes_iff : ∀ (fuel : Nat) (e : Env) (ws : List Node),
+    wsize ws < fuel → (∀ n, sIsEmpty (e n) = false) →
+    (closes fuel e ws = true ↔ ¬ SAT e ws) := by
+  intro fuel
+  induction fuel with
   | zero =>
     intro e ws hle he
-    match ws with
-    | [] =>
-      simp only [closes]
-      constructor
-      · intro h; exact nomatch h
-      · intro h
-        exact absurd ⟨fun n => (e n).head (he n),
-          fun n => List.head_mem (he n), satL_nil _⟩ h
-    | nd :: rest =>
-      exfalso
-      have := Fm.size_pos nd.2
-      simp only [wsize] at hle
-      omega
-  | succ N ih =>
+    exact absurd hle (Nat.not_lt_zero _)
+  | succ fuel ih =>
     intro e ws hle he
     match ws with
     | [] =>
-      simp only [closes]
       constructor
       · intro h; exact nomatch h
       · intro h
-        exact absurd ⟨fun n => (e n).head (he n),
-          fun n => List.head_mem (he n), satL_nil _⟩ h
+        exact absurd ⟨fun n => sPick (e n),
+          fun n => sPick_mem (he n), satL_nil _⟩ h
     | (s, .atom n) :: rest =>
-      have hle' : wsize rest ≤ N := by
-        simp only [wsize, Fm.size] at hle; omega
-      simp only [closes]
+      have hb : Fm.size (.atom n) + wsize rest < fuel + 1 := hle
+      have hb1 : (1 : Nat) + wsize rest < fuel + 1 := hb
+      have hle' : wsize rest < fuel :=
+        boundStep (Nat.le_of_eq (Nat.add_comm _ 1)) hb1
+      show (if sIsEmpty (inter (e n) s) = true then true
+            else closes fuel (upd e n (inter (e n) s)) rest) = true ↔ _
       split
       · next hemp =>
         constructor
         · intro _
-          rw [SAT_atom, hemp]
-          rintro ⟨v, hOK, -⟩
-          have h := hOK n
-          simp only [upd, if_pos rfl] at h
-          cases h
+          rintro ⟨v, hOK, h1, _⟩
+          have hmem : inter (e n) s (v n) = true :=
+            (andEqTrue _ _).mpr ⟨hOK n, h1⟩
+          have := sNonempty_of_mem hmem
+          rw [hemp] at this
+          cases this
         · intro _; rfl
       · next hemp =>
-        have he' : ∀ m, upd e n (inter (e n) s) m ≠ [] := by
+        have he' : ∀ m, sIsEmpty (upd e n (inter (e n) s) m) = false := by
           intro m
           by_cases hm : m = n
-          · subst hm; simp only [upd, if_pos rfl]; exact hemp
-          · simp only [upd, if_neg hm]; exact he m
-        rw [ih _ rest hle' he']
-        exact not_congr SAT_atom.symm
+          · subst hm
+            have hu : upd e m (inter (e m) s) m = inter (e m) s := if_pos rfl
+            rw [hu]
+            exact bNotTrue _ hemp
+          · have hu : upd e n (inter (e n) s) m = e m := if_neg hm
+            rw [hu]
+            exact he m
+        exact (ih _ rest hle' he').trans (notCongr SAT_atom.symm)
     | (s, .neg φ) :: rest =>
       have hcls : ∀ v, znot (evalF v φ) = T ∨ znot (evalF v φ) = F :=
         fun v => lift1_classical _ _
-      simp only [closes]
+      have hb : Fm.size φ + 1 + wsize rest < fuel + 1 := hle
+      show (if s T = true then
+              if s F = true then closes fuel e rest
+              else closes fuel e ((SignF, φ) :: rest)
+            else
+              if s F = true then closes fuel e ((SignP, φ) :: rest)
+              else true) = true ↔ _
       split
       · next hT =>
         split
         · next hF =>
-          have hle' : wsize rest ≤ N := by
-            simp only [wsize, Fm.size] at hle
-            have := Fm.size_pos φ; omega
+          have hle' : wsize rest < fuel :=
+            boundStep (Nat.le_trans (Nat.le_of_eq (Nat.add_comm _ 1))
+              (Nat.add_le_add_right (Nat.le_add_left 1 _) _)) hb
           have hdrop : SAT e ((s, .neg φ) :: rest) ↔ SAT e rest :=
             SAT_head_true fun v => mem_cls_both (hcls v) hT hF
-          rw [ih _ rest hle' he]
-          exact not_congr hdrop.symm
+          exact (ih _ rest hle' he).trans (notCongr hdrop.symm)
         · next hF =>
-          have hle' : wsize ((SignF, φ) :: rest) ≤ N := by
-            simp only [wsize, Fm.size] at hle ⊢; omega
-          rw [ih _ _ hle' he]
-          refine not_congr (SAT_head_congr fun v => ?_).symm
-          show znot (evalF v φ) ∈ s ↔ evalF v φ ∈ SignF
-          rw [mem_cls_T (hcls v) hT hF, cover_not_T, vF]
+          have hle' : wsize ((SignF, φ) :: rest) < fuel :=
+            boundStep (Nat.le_of_eq (Nat.add_right_comm _ _ 1)) hb
+          have hpt : ∀ v, satN v (s, .neg φ) ↔ satN v (SignF, φ) := fun v =>
+            (mem_cls_T (hcls v) hT (bNotTrue _ hF)).trans
+              ((cover_not_T _).trans (vF _).symm)
+          exact (ih _ _ hle' he).trans (notCongr (SAT_head_congr hpt).symm)
       · next hT =>
         split
         · next hF =>
-          have hle' : wsize ((SignP, φ) :: rest) ≤ N := by
-            simp only [wsize, Fm.size] at hle ⊢; omega
-          rw [ih _ _ hle' he]
-          refine not_congr (SAT_head_congr fun v => ?_).symm
-          show znot (evalF v φ) ∈ s ↔ evalF v φ ∈ SignP
-          rw [mem_cls_F (hcls v) hT hF, cover_not_F, vP]
+          have hle' : wsize ((SignP, φ) :: rest) < fuel :=
+            boundStep (Nat.le_of_eq (Nat.add_right_comm _ _ 1)) hb
+          have hpt : ∀ v, satN v (s, .neg φ) ↔ satN v (SignP, φ) := fun v =>
+            (mem_cls_F (hcls v) (bNotTrue _ hT) hF).trans
+              ((cover_not_F _).trans (vP _).symm)
+          exact (ih _ _ hle' he).trans (notCongr (SAT_head_congr hpt).symm)
         · next hF =>
           constructor
           · intro _
-            exact SAT_head_false fun v => not_mem_cls (hcls v) hT hF
+            exact SAT_head_false fun v =>
+              not_mem_cls (hcls v) (bNotTrue _ hT) (bNotTrue _ hF)
           · intro _; rfl
     | (s, .conj φ ψ) :: rest =>
       have hcls : ∀ v, zand (evalF v φ) (evalF v ψ) = T ∨
           zand (evalF v φ) (evalF v ψ) = F :=
         fun v => lift2_classical _ _ _
-      simp only [closes]
+      have hb : Fm.size φ + Fm.size ψ + 1 + wsize rest < fuel + 1 := hle
+      show (if s T = true then
+              if s F = true then closes fuel e rest
+              else closes fuel e ((SignT, φ) :: (SignT, ψ) :: rest)
+            else
+              if s F = true then
+                closes fuel e ((SignN, φ) :: rest) &&
+                closes fuel e ((SignN, ψ) :: rest)
+              else true) = true ↔ _
       split
       · next hT =>
         split
         · next hF =>
-          have hle' : wsize rest ≤ N := by
-            simp only [wsize, Fm.size] at hle
-            have := Fm.size_pos φ; omega
+          have hle' : wsize rest < fuel :=
+            boundStep (Nat.le_trans (Nat.le_of_eq (Nat.add_comm _ 1))
+              (Nat.add_le_add_right (Nat.le_add_left 1 _) _)) hb
           have hdrop : SAT e ((s, .conj φ ψ) :: rest) ↔ SAT e rest :=
             SAT_head_true fun v => mem_cls_both (hcls v) hT hF
-          rw [ih _ rest hle' he]
-          exact not_congr hdrop.symm
+          exact (ih _ rest hle' he).trans (notCongr hdrop.symm)
         · next hF =>
-          have hle' : wsize ((SignT, φ) :: (SignT, ψ) :: rest) ≤ N := by
-            simp only [wsize, Fm.size] at hle ⊢; omega
-          rw [ih _ _ hle' he]
-          refine not_congr (SAT_head_split2 fun v => ?_).symm
-          show zand (evalF v φ) (evalF v ψ) ∈ s ↔
-            (evalF v φ ∈ SignT ∧ evalF v ψ ∈ SignT)
-          rw [mem_cls_T (hcls v) hT hF, cover_and_T, vT, vT]
+          have e1 : Fm.size φ + (Fm.size ψ + wsize rest) + 1
+              = Fm.size φ + Fm.size ψ + 1 + wsize rest := by
+            rw [← Nat.add_assoc,
+                Nat.add_right_comm (Fm.size φ + Fm.size ψ) (wsize rest) 1]
+          have hle' : wsize ((SignT, φ) :: (SignT, ψ) :: rest) < fuel :=
+            boundStep (Nat.le_of_eq e1) hb
+          have hpt : ∀ v, satN v (s, .conj φ ψ) ↔
+              (satN v (SignT, φ) ∧ satN v (SignT, ψ)) := fun v =>
+            (mem_cls_T (hcls v) hT (bNotTrue _ hF)).trans
+              ((cover_and_T _ _).trans (andCongr (vT _).symm (vT _).symm))
+          exact (ih _ _ hle' he).trans (notCongr (SAT_head_split2 hpt).symm)
       · next hT =>
         split
         · next hF =>
-          have hle1 : wsize ((SignN, φ) :: rest) ≤ N := by
-            simp only [wsize, Fm.size] at hle ⊢
-            have := Fm.size_pos ψ; omega
-          have hle2 : wsize ((SignN, ψ) :: rest) ≤ N := by
-            simp only [wsize, Fm.size] at hle ⊢
-            have := Fm.size_pos φ; omega
+          have hle1 : wsize ((SignN, φ) :: rest) < fuel :=
+            boundStep (Nat.le_trans (Nat.le_of_eq (Nat.add_right_comm _ _ 1))
+              (Nat.add_le_add_right
+                (Nat.add_le_add_right (Nat.le_add_right _ _) 1) _)) hb
+          have hle2 : wsize ((SignN, ψ) :: rest) < fuel :=
+            boundStep (Nat.le_trans (Nat.le_of_eq (Nat.add_right_comm _ _ 1))
+              (Nat.add_le_add_right
+                (Nat.add_le_add_right (Nat.le_add_left _ _) 1) _)) hb
           have hpt : ∀ v, satN v (s, .conj φ ψ) ↔
-              (satN v (SignN, φ) ∨ satN v (SignN, ψ)) := by
-            intro v
-            show zand (evalF v φ) (evalF v ψ) ∈ s ↔
-              (evalF v φ ∈ SignN ∨ evalF v ψ ∈ SignN)
-            rw [mem_cls_F (hcls v) hT hF, cover_and_F, vN, vN]
-          rw [Bool.and_eq_true, ih _ _ hle1 he, ih _ _ hle2 he,
-              SAT_head_or hpt, not_or]
+              (satN v (SignN, φ) ∨ satN v (SignN, ψ)) := fun v =>
+            (mem_cls_F (hcls v) (bNotTrue _ hT) hF).trans
+              ((cover_and_F _ _).trans (orCongr (vN _).symm (vN _).symm))
+          exact (andEqTrue _ _).trans
+            ((andCongr (ih _ _ hle1 he) (ih _ _ hle2 he)).trans
+              (notOr.symm.trans (notCongr (SAT_head_or hpt).symm)))
         · next hF =>
           constructor
           · intro _
-            exact SAT_head_false fun v => not_mem_cls (hcls v) hT hF
+            exact SAT_head_false fun v =>
+              not_mem_cls (hcls v) (bNotTrue _ hT) (bNotTrue _ hF)
           · intro _; rfl
     | (s, .disj φ ψ) :: rest =>
       have hcls : ∀ v, zor (evalF v φ) (evalF v ψ) = T ∨
           zor (evalF v φ) (evalF v ψ) = F :=
         fun v => lift2_classical _ _ _
-      simp only [closes]
+      have hb : Fm.size φ + Fm.size ψ + 1 + wsize rest < fuel + 1 := hle
+      show (if s T = true then
+              if s F = true then closes fuel e rest
+              else closes fuel e ((SignT, φ) :: rest) &&
+                   closes fuel e ((SignT, ψ) :: rest)
+            else
+              if s F = true then
+                closes fuel e ((SignN, φ) :: (SignN, ψ) :: rest)
+              else true) = true ↔ _
       split
       · next hT =>
         split
         · next hF =>
-          have hle' : wsize rest ≤ N := by
-            simp only [wsize, Fm.size] at hle
-            have := Fm.size_pos φ; omega
+          have hle' : wsize rest < fuel :=
+            boundStep (Nat.le_trans (Nat.le_of_eq (Nat.add_comm _ 1))
+              (Nat.add_le_add_right (Nat.le_add_left 1 _) _)) hb
           have hdrop : SAT e ((s, .disj φ ψ) :: rest) ↔ SAT e rest :=
             SAT_head_true fun v => mem_cls_both (hcls v) hT hF
-          rw [ih _ rest hle' he]
-          exact not_congr hdrop.symm
+          exact (ih _ rest hle' he).trans (notCongr hdrop.symm)
         · next hF =>
-          have hle1 : wsize ((SignT, φ) :: rest) ≤ N := by
-            simp only [wsize, Fm.size] at hle ⊢
-            have := Fm.size_pos ψ; omega
-          have hle2 : wsize ((SignT, ψ) :: rest) ≤ N := by
-            simp only [wsize, Fm.size] at hle ⊢
-            have := Fm.size_pos φ; omega
+          have hle1 : wsize ((SignT, φ) :: rest) < fuel :=
+            boundStep (Nat.le_trans (Nat.le_of_eq (Nat.add_right_comm _ _ 1))
+              (Nat.add_le_add_right
+                (Nat.add_le_add_right (Nat.le_add_right _ _) 1) _)) hb
+          have hle2 : wsize ((SignT, ψ) :: rest) < fuel :=
+            boundStep (Nat.le_trans (Nat.le_of_eq (Nat.add_right_comm _ _ 1))
+              (Nat.add_le_add_right
+                (Nat.add_le_add_right (Nat.le_add_left _ _) 1) _)) hb
           have hpt : ∀ v, satN v (s, .disj φ ψ) ↔
-              (satN v (SignT, φ) ∨ satN v (SignT, ψ)) := by
-            intro v
-            show zor (evalF v φ) (evalF v ψ) ∈ s ↔
-              (evalF v φ ∈ SignT ∨ evalF v ψ ∈ SignT)
-            rw [mem_cls_T (hcls v) hT hF, cover_or_T, vT, vT]
-          rw [Bool.and_eq_true, ih _ _ hle1 he, ih _ _ hle2 he,
-              SAT_head_or hpt, not_or]
+              (satN v (SignT, φ) ∨ satN v (SignT, ψ)) := fun v =>
+            (mem_cls_T (hcls v) hT (bNotTrue _ hF)).trans
+              ((cover_or_T _ _).trans (orCongr (vT _).symm (vT _).symm))
+          exact (andEqTrue _ _).trans
+            ((andCongr (ih _ _ hle1 he) (ih _ _ hle2 he)).trans
+              (notOr.symm.trans (notCongr (SAT_head_or hpt).symm)))
       · next hT =>
         split
         · next hF =>
-          have hle' : wsize ((SignN, φ) :: (SignN, ψ) :: rest) ≤ N := by
-            simp only [wsize, Fm.size] at hle ⊢; omega
-          rw [ih _ _ hle' he]
-          refine not_congr (SAT_head_split2 fun v => ?_).symm
-          show zor (evalF v φ) (evalF v ψ) ∈ s ↔
-            (evalF v φ ∈ SignN ∧ evalF v ψ ∈ SignN)
-          rw [mem_cls_F (hcls v) hT hF, cover_or_F, vN, vN]
+          have e1 : Fm.size φ + (Fm.size ψ + wsize rest) + 1
+              = Fm.size φ + Fm.size ψ + 1 + wsize rest := by
+            rw [← Nat.add_assoc,
+                Nat.add_right_comm (Fm.size φ + Fm.size ψ) (wsize rest) 1]
+          have hle' : wsize ((SignN, φ) :: (SignN, ψ) :: rest) < fuel :=
+            boundStep (Nat.le_of_eq e1) hb
+          have hpt : ∀ v, satN v (s, .disj φ ψ) ↔
+              (satN v (SignN, φ) ∧ satN v (SignN, ψ)) := fun v =>
+            (mem_cls_F (hcls v) (bNotTrue _ hT) hF).trans
+              ((cover_or_F _ _).trans (andCongr (vN _).symm (vN _).symm))
+          exact (ih _ _ hle' he).trans (notCongr (SAT_head_split2 hpt).symm)
         · next hF =>
           constructor
           · intro _
-            exact SAT_head_false fun v => not_mem_cls (hcls v) hT hF
+            exact SAT_head_false fun v =>
+              not_mem_cls (hcls v) (bNotTrue _ hT) (bNotTrue _ hF)
           · intro _; rfl
     | (s, .imp φ ψ) :: rest =>
-      have hle' : wsize ((s, .disj (.neg φ) ψ) :: rest) ≤ N := by
-        simp only [wsize, Fm.size] at hle ⊢; omega
-      have step : closes e ((s, .imp φ ψ) :: rest) =
-          closes e ((s, .disj (.neg φ) ψ) :: rest) := by
-        simp only [closes]
+      have hb : Fm.size (.disj (.neg φ) ψ) + 2 + wsize rest < fuel + 1 := hle
+      have hle' : wsize ((s, .disj (.neg φ) ψ) :: rest) < fuel :=
+        boundStep (Nat.le_trans (Nat.le_of_eq (Nat.add_right_comm _ _ 1))
+          (Nat.add_le_add_right (Nat.le_succ _) _)) hb
       have hpt : ∀ v, satN v (s, .imp φ ψ) ↔
-          satN v (s, .disj (.neg φ) ψ) := by
-        intro v
-        show zimp (evalF v φ) (evalF v ψ) ∈ s ↔
-          zor (znot (evalF v φ)) (evalF v ψ) ∈ s
-        rw [imp_def]
-      rw [step, ih _ _ hle' he]
-      exact not_congr (SAT_head_congr hpt).symm
+          satN v (s, .disj (.neg φ) ψ) := fun v =>
+        iffOfEq (congrArg (fun x => s x = true)
+          (imp_def (evalF v φ) (evalF v ψ)))
+      exact (ih _ _ hle' he).trans (notCongr (SAT_head_congr hpt).symm)
     | (s, .xor φ ψ) :: rest =>
+      have hb : Fm.size (.disj (.conj φ (.neg ψ)) (.conj (.neg φ) ψ)) + 2
+          + wsize rest < fuel + 1 := hle
       have hle' : wsize ((s, .disj (.conj φ (.neg ψ))
-          (.conj (.neg φ) ψ)) :: rest) ≤ N := by
-        simp only [wsize, Fm.size] at hle ⊢; omega
-      have step : closes e ((s, .xor φ ψ) :: rest) =
-          closes e ((s, .disj (.conj φ (.neg ψ)) (.conj (.neg φ) ψ)) :: rest) := by
-        simp only [closes]
+          (.conj (.neg φ) ψ)) :: rest) < fuel :=
+        boundStep (Nat.le_trans (Nat.le_of_eq (Nat.add_right_comm _ _ 1))
+          (Nat.add_le_add_right (Nat.le_succ _) _)) hb
       have hpt : ∀ v, satN v (s, .xor φ ψ) ↔
-          satN v (s, .disj (.conj φ (.neg ψ)) (.conj (.neg φ) ψ)) := by
-        intro v
-        show zxor (evalF v φ) (evalF v ψ) ∈ s ↔
-          zor (zand (evalF v φ) (znot (evalF v ψ)))
-              (zand (znot (evalF v φ)) (evalF v ψ)) ∈ s
-        rw [xor_def]
-      rw [step, ih _ _ hle' he]
-      exact not_congr (SAT_head_congr hpt).symm
+          satN v (s, .disj (.conj φ (.neg ψ)) (.conj (.neg φ) ψ)) := fun v =>
+        iffOfEq (congrArg (fun x => s x = true)
+          (xor_def (evalF v φ) (evalF v ψ)))
+      exact (ih _ _ hle' he).trans (notCongr (SAT_head_congr hpt).symm)
     | (s, .xnor φ ψ) :: rest =>
+      have hb : Fm.size (.disj (.conj φ ψ) (.conj (.neg φ) (.neg ψ))) + 2
+          + wsize rest < fuel + 1 := hle
       have hle' : wsize ((s, .disj (.conj φ ψ)
-          (.conj (.neg φ) (.neg ψ))) :: rest) ≤ N := by
-        simp only [wsize, Fm.size] at hle ⊢; omega
-      have step : closes e ((s, .xnor φ ψ) :: rest) =
-          closes e ((s, .disj (.conj φ ψ) (.conj (.neg φ) (.neg ψ))) :: rest) := by
-        simp only [closes]
+          (.conj (.neg φ) (.neg ψ))) :: rest) < fuel :=
+        boundStep (Nat.le_trans (Nat.le_of_eq (Nat.add_right_comm _ _ 1))
+          (Nat.add_le_add_right (Nat.le_succ _) _)) hb
       have hpt : ∀ v, satN v (s, .xnor φ ψ) ↔
-          satN v (s, .disj (.conj φ ψ) (.conj (.neg φ) (.neg ψ))) := by
-        intro v
-        show zxnor (evalF v φ) (evalF v ψ) ∈ s ↔
-          zor (zand (evalF v φ) (evalF v ψ))
-              (zand (znot (evalF v φ)) (znot (evalF v ψ))) ∈ s
-        rw [xnor_def]
-      rw [step, ih _ _ hle' he]
-      exact not_congr (SAT_head_congr hpt).symm
+          satN v (s, .disj (.conj φ ψ) (.conj (.neg φ) (.neg ψ))) := fun v =>
+        iffOfEq (congrArg (fun x => s x = true)
+          (xnor_def (evalF v φ) (evalF v ψ)))
+      exact (ih _ _ hle' he).trans (notCongr (SAT_head_congr hpt).symm)
 
 /-! ## Следствие: выводимость = следование -/
 
-def e0 : Env := fun _ => [T, F, Z]
+def e0 : Env := fun _ => fun _ => true
 
 /-- Γ ⊢ φ: посылки со строгим знаком T, заключение — с ослабленным N. -/
 def tproves (ps : List Fm) (c : Fm) : Bool :=
-  closes e0 (ps.map (fun p => (SignT, p)) ++ [(SignN, c)])
+  closes (wsize (ps.map (fun p => (SignT, p)) ++ [(SignN, c)]) + 1) e0
+    (ps.map (fun p => (SignT, p)) ++ [(SignN, c)])
 
-theorem satL_append {v : Nat → V} {xs ys : List Node} :
-    satL v (xs ++ ys) ↔ satL v xs ∧ satL v ys := by
-  constructor
-  · intro h
-    exact ⟨fun nd hnd => h nd (List.mem_append.mpr (Or.inl hnd)),
-           fun nd hnd => h nd (List.mem_append.mpr (Or.inr hnd))⟩
-  · rintro ⟨h1, h2⟩ nd hnd
-    rcases List.mem_append.mp hnd with h | h
-    · exact h1 nd h
-    · exact h2 nd h
+theorem satL_bridge {v : Nat → V} (c : Fm) : ∀ (ps : List Fm),
+    satL v (ps.map (fun p => (SignT, p)) ++ [(SignN, c)]) ↔
+    ((∀ p, p ∈ ps → evalF v p = T) ∧ SignN (evalF v c) = true) := by
+  intro ps
+  induction ps with
+  | nil =>
+    constructor
+    · rintro ⟨h1, -⟩
+      exact ⟨(fun p hp => nomatch hp), h1⟩
+    · rintro ⟨-, h2⟩
+      exact ⟨h2, trivial⟩
+  | cons q ps ihp =>
+    constructor
+    · rintro ⟨h1, h2⟩
+      have ⟨hall, hc⟩ := ihp.mp h2
+      refine ⟨fun p hp => ?_, hc⟩
+      cases hp with
+      | head => exact (vT _).mp h1
+      | tail _ hp' => exact hall p hp'
+    · rintro ⟨hall, hc⟩
+      exact ⟨(vT _).mpr (hall q (List.Mem.head _)),
+             ihp.mpr ⟨fun p hp => hall p (List.Mem.tail _ hp), hc⟩⟩
 
 /-- Сертификат: движок выдаёт ⊢ ⟺ семантическое следование по {T}. -/
 theorem tproves_iff (ps : List Fm) (c : Fm) :
     tproves ps c = true ↔
     ∀ v, (∀ p ∈ ps, evalF v p = T) → evalF v c = T := by
-  have he0 : ∀ n : Nat, e0 n ≠ [] := fun _ h => nomatch h
+  have he0 : ∀ n : Nat, sIsEmpty (e0 n) = false := fun _ => rfl
   have key := closes_iff
-      (wsize (ps.map (fun p => (SignT, p)) ++ [(SignN, c)])) e0
+      (wsize (ps.map (fun p => (SignT, p)) ++ [(SignN, c)]) + 1) e0
       (ps.map (fun p => (SignT, p)) ++ [(SignN, c)])
-      (Nat.le_refl _) he0
-  unfold tproves
-  rw [key]
-  constructor
-  · intro h v hp
-    by_cases hc : evalF v c = T
+      (Nat.lt_succ_self _) he0
+  refine key.trans ⟨fun h v hp => ?_, fun h => ?_⟩
+  · by_cases hc : evalF v c = T
     · exact hc
     exfalso
     apply h
-    refine ⟨v, fun n => vFull _, ?_⟩
-    rw [satL_append, satL_cons]
-    refine ⟨fun nd hnd => ?_, ?_, satL_nil _⟩
-    · obtain ⟨p, hp', rfl⟩ := List.mem_map.mp hnd
-      show evalF v p ∈ SignT
-      rw [vT]; exact hp p hp'
-    · show evalF v c ∈ SignN
-      rw [vN, vN_neq]; exact hc
-  · rintro h ⟨v, _, hs⟩
-    rw [satL_append, satL_cons] at hs
-    obtain ⟨h1, h2, -⟩ := hs
-    have hc : evalF v c ∈ SignN := h2
-    rw [vN, vN_neq] at hc
-    apply hc
-    apply h v
-    intro p hp'
-    have hm : evalF v p ∈ SignT :=
-      h1 (SignT, p) (List.mem_map.mpr ⟨p, hp', rfl⟩)
-    rwa [vT] at hm
+    exact ⟨v, fun n => rfl,
+      (satL_bridge c ps).mpr ⟨hp, (vN _).mpr ((vN_neq _).mpr hc)⟩⟩
+  · rintro ⟨v, _, hs⟩
+    have ⟨hall, hc⟩ := (satL_bridge c ps).mp hs
+    exact (vN_neq _).mp ((vN _).mp hc) (h v hall)
 
 /-! ## Дымовые прогоны сертифицированного движка -/
 

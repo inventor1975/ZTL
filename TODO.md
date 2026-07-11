@@ -37,18 +37,22 @@
    ✅ Lean port of the finite-domain quantifier tableaux (ZQuant.lean:
    folds + cover theorems + ui_mem/eg_mem + 8 kernel-evaluated
    verdicts).
-   REMAINS: a syntactic cut-elimination procedure with bounds;
-   description of the equivalent quasivariety (if it grows — a
-   separate paper, curator's decision 2026-07-11); Lean port of the
-   PARAMETER (arbitrary-domain) tableaux.
+   ✅ quasivariety RECONNAISSANCE (E19, zquasi.py): A subdirectly
+   irreducible, monolith = greediness kernel; exact clone theorem;
+   NOT a Plonka sum (regular identities fail) — foreign to the BCA
+   landscape. The recon confirms: paper-sized; the MINING (quasi-
+   equational axiomatization, subquasivariety lattice, representation
+   theorem) = the separate paper, curator's call.
+   REMAINS: a syntactic cut-elimination procedure with bounds; Lean
+   port of the PARAMETER (arbitrary-domain) tableaux.
 
 ## Seams
 
 5. ✅ DONE: general lazy-grounding theorem (ZGround.lean); E6–E11
    Lean twins (ZExped.lean) — the constants ⊤/⊥ added to Fm (engine
    surgery: both certificates extended), Russell's grounding half
-   kernel-computed (russell_grounded). Minor remainder: C-extension
-   of sets is examples only.
+   kernel-computed (russell_grounded); C-extension of clean sets now
+   general theorems (subL_refl_clean / seteq_refl_clean / memL_self).
 6. ✅ DONE (bridge.py): the stitch — 136 kernel-computed answers
    (tables of both registers, J-ops, E/Δ, certified tproves on a
    shared battery, lfp of the zoo) auto-compared with the Python

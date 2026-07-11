@@ -259,3 +259,10 @@
   $[F,F,T,F,T,F,F,F,Z]$: eight facts grounded, quarantine exactly at
   $R\in R$ --- containment instead of explosion, by the kernel.
 \end{theorem}
+
+\begin{theorem}[Clean sets: C-extension]\label{thm:cleansets}
+  \uses{thm:marked}\lean{V.memL_self, V.subL_refl_clean, V.seteq_refl_clean}\leanok
+  On mark-free lists a verified element certifies its membership and
+  $S \subseteq S$, $S = S$ hold --- the inheritance boundary is drawn
+  at the mark, kernel-checked from both sides.
+\end{theorem}

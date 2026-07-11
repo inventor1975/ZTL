@@ -101,8 +101,91 @@ example : cardLo 2 1 = 2 ∧ cardHi 2 1 = 3 := ⟨rfl, rfl⟩   -- |{1,2,Z}| = [
 example : cardLo 0 1 = 1 ∧ cardHi 0 1 = 1 := ⟨rfl, rfl⟩   -- |{Z}| = [1,1] (!)
 example : cardLo 0 2 = 1 ∧ cardHi 0 2 = 2 := ⟨rfl, rfl⟩   -- |{Z,Z}| = [1,2]
 
+/-! ## C-extension, general: clean sets behave classically
+
+The finitely-presented contrast to E6's streams: a registry of
+VERIFIED elements certifies each of its own members (memL = T), and
+reflexivity of ⊆ and = holds on every mark-free list — against
+sub_marked_false / seteq_self_marked above, this is the inheritance
+boundary drawn exactly at the mark. -/
+
+/-- Mark-free check. -/
+def cleanL : List El → Bool
+  | [] => true
+  | .v _ :: es => cleanL es
+  | .z _ :: es => false
+
+theorem zorTX : ∀ x : V, zor T x = T := by decide
+theorem zorXT : ∀ x : V, zor x T = T := by decide
+
+/-- Hand-rolled: core's Nat.beq_refl is simp-proved (propext); here
+`==` on Nat is decide-based, so reflexivity is one clean line. -/
+theorem beqRefl (n : Nat) : (n == n) = true := decide_eq_true rfl
+
+theorem eqAtom_refl_v (a : Nat) : eqAtom (.v a) (.v a) = T := by
+  show cond (a == a) T F = T
+  rw [beqRefl a]
+  rfl
+
+/-- A verified element certifies its membership wherever it stands. -/
+theorem memL_self (a : Nat) : ∀ (pre post : List El),
+    memL (.v a) (pre ++ .v a :: post) = T := by
+  intro pre post
+  induction pre with
+  | nil =>
+    show zor (eqAtom (.v a) (.v a)) (memL (.v a) post) = T
+    rw [eqAtom_refl_v a]
+    exact zorTX _
+  | cons e pre ih =>
+    show zor (eqAtom (.v a) e) (memL (.v a) (pre ++ .v a :: post)) = T
+    rw [ih]
+    exact zorXT _
+
+theorem append_cons_el : ∀ (pre : List El) (x : El) (S : List El),
+    (pre ++ [x]) ++ S = pre ++ x :: S := by
+  intro pre
+  induction pre with
+  | nil => intro x S; rfl
+  | cons e pre ih =>
+    intro x S
+    exact congrArg (e :: ·) (ih x S)
+
+/-- Reflexivity of inclusion on clean lists (with an accumulator). -/
+theorem subL_refl_aux : ∀ (S pre : List El), cleanL S = true →
+    subL S (pre ++ S) = T := by
+  intro S
+  induction S with
+  | nil => intro pre _; rfl
+  | cons e S ih =>
+    intro pre hc
+    cases e with
+    | z i => exact nomatch hc
+    | v a =>
+      have hm := memL_self a pre S
+      have hs := ih (pre ++ [El.v a]) hc
+      rw [append_cons_el] at hs
+      show zand (memL (.v a) (pre ++ .v a :: S))
+                (subL S (pre ++ .v a :: S)) = T
+      rw [hm, hs]
+      rfl
+
+/-- S ⊆ S holds on every clean list — C-extension as a theorem. -/
+theorem subL_refl_clean (S : List El) (h : cleanL S = true) :
+    subL S S = T :=
+  subL_refl_aux S [] h
+
+/-- S = S holds on every clean list — against seteq_self_marked. -/
+theorem seteq_refl_clean (S : List El) (h : cleanL S = true) :
+    seteq S S = T := by
+  show zand (subL S S) (subL S S) = T
+  rw [subL_refl_clean S h]
+  rfl
+
 #print axioms memZ
 #print axioms sub_marked_false
 #print axioms seteq_self_marked
+#print axioms memL_self
+#print axioms subL_refl_clean
+#print axioms seteq_refl_clean
 
 end V

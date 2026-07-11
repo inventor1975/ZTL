@@ -35,6 +35,8 @@ STANDS = [
     ("zpassport.py",   ["✓ STIPULATION THEOREM: total",
                         "parity cross-check: 62 of 62 ✓"]),
     ("bridge.py",      ["ALL ANSWERS COINCIDE"]),
+    ("zquasi.py",      ["SUBDIRECTLY IRREDUCIBLE", "= 2 + 512, ALL externals",
+                        "NOT a"]),
 ]
 
 

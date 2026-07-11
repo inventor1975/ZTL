@@ -168,7 +168,10 @@ contradiction.
   two-node branches via SAT_head_or2) with the certificate closesN_iff
   and the theorem **engines_agree**: both engines return identical
   verdicts — the former equivalence footnote is closed by a theorem.
-  `ZSets.lean` — the Lean port of E5: memZ (Z ∉ anything),
+  `ZSets.lean` — the Lean port of E5 + general C-extension:
+  clean lists certify their members (memL_self) and satisfy ⊆/= 
+  reflexivity (subL_refl_clean, seteq_refl_clean) — the inheritance
+  boundary drawn at the mark from both sides. Also: memZ (Z ∉ anything),
   sub_marked_false (a marked S ⊄ S), seteq_self_marked, the concrete
   {Z,Z}≠{Z}, |{Z}|=[1,1]. Lean pitfall: an overlapping wildcard in a
   two-argument match pulls in propext through the matcher — write
@@ -206,6 +209,14 @@ contradiction.
   Fm now carries the constants ⊤/⊥ (engines + both certificates
   extended). THE WHOLE Lean corpus — 11 modules — on the empty
   axiom list, definitions included.
+* `zquasi.py` — E19 quasivariety reconnaissance: subalgebras (exactly
+  the Boolean core + A), congruences (A subdirectly irreducible, the
+  monolith = the greediness kernel {T,F}|{Z}; quotient: the mark
+  evaporates), the exact clone theorem (projections + ALL externals:
+  1+8 unary, 2+512 binary), the Plonka probe (regular identities
+  p∧p=p etc. FAIL ⟹ not a Plonka sum ⟹ structurally foreign to the
+  BCA landscape). Verdict: paper-sized ore, mining deferred.
+  Preprint §3.7.
 * `bridge.py` — the seam-#6 stitch: generates a Lean questionnaire
   (141 #eval queries: both registers, J-ops, E/Δ, tproves battery
   with constants, lfp of the zoo up to Russell), runs it through

@@ -28,9 +28,13 @@
    400/400 + 32/32); ✅ sequent presentation + cut ADMISSIBILITY
    (E16, zsequent.py + ZSequent.lean: semantic cut elimination,
    kernel-checked).
+   ✅ first order over ARBITRARY domains (E17, zfo.py: parameter
+   tableaux, γ/δ with the sign discipline; soundness measured 13/13,
+   completeness = Hintikka argued; undecidability via the J-guard
+   embedding).
    REMAINS: a syntactic cut-elimination procedure with bounds;
-   description of the equivalent quasivariety; first order beyond
-   finite domains.
+   description of the equivalent quasivariety; Lean port of the
+   quantifier/parameter tableaux.
 
 ## Seams
 

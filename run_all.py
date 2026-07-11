@@ -31,6 +31,7 @@ STANDS = [
                         "512 of 512"]),
     ("zinterp.py",     ["✓ INTERPOLATION HOLDS, total on the pool"]),
     ("zsequent.py",    ["✓ CUT IS ADMISSIBLE (semantic cut elimination), total"]),
+    ("zfo.py",         ["ALL verdicts cross-checked ✓", "guarded drinker"]),
 ]
 
 

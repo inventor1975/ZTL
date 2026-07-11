@@ -275,6 +275,13 @@ contradiction.
   elimination. Lean twin: `ZSequent.lean` (zero axioms:
   cut_admissible, weakening_admissible, identity_refutable on top of
   closes_iff). Preprint §5.
+* `zfo.py` — E17 first order over arbitrary domains: parameter
+  tableaux, γ (T:∀, F:∃ — reusable) / δ (F:∀, T:∃ — fresh parameter);
+  fresh witnesses live exactly where weak signs live. Soundness
+  MEASURED (13/13: proved ⇒ no finite counterexample; open ⇒
+  countermodel verified; non-terminating branches ⇒ finite
+  certificate), completeness = Hintikka saturation (argued);
+  undecidable via the J-guard embedding of classical FO. Preprint §6.
 
 ## The road ahead (not started)
 

@@ -399,6 +399,33 @@ coincide with semantic enumeration on 28 sequents (domains 1–2).
 A by-product: ¬∀yP ⊭ ∃y¬P even as a rule — the second fallen quantifier
 bridge, symmetric to ¬∃ ⊭ ∀¬ (negation hides Z in both directions).
 
+**Arbitrary domains: parameter tableaux (MEASURED).** Over arbitrary
+domains the finite unfolding is unavailable; the standard cure —
+parameter (free-variable) tableaux with γ/δ rules — carries the
+zero-trust sign discipline over exactly:
+
+    γ (reusable, every parameter):   T:∀xφ → T:φ(c)     F:∃xφ → N:φ(c)
+    δ (fresh parameter, once):       F:∀xφ → N:φ(c*)    T:∃xφ → T:φ(c*)
+
+Fresh witnesses appear exactly where the propositional calculus allows
+weak signs (F-polarity) or demands a strict witness (T:∃). Status,
+honestly split: **soundness is measured** — every sequent the engine
+proves is re-checked by total enumeration over finite domains, every
+saturated open branch yields a countermodel that is verified by
+evaluation (battery of 13: UI/EG, distribution, quantifier bridges,
+swap and its failing converse, the failing unguarded drinker and
+quantified LEM — all 13 verdicts confirmed). **Completeness is the
+standard Hintikka-saturation argument** for finitely-valued signed
+tableaux [27] — argued, not measured. Two honest FO phenomena appear on
+cue: on invalid sequents whose branches spawn witnesses forever
+(the unguarded drinker; the converse quantifier swap) the tableau does
+not terminate and invalidity is certified by a finite countermodel
+instead; and FO-ZTL is **undecidable** — the J-guard translation
+P ↦ P∧P (§3.6) makes every atom classical, embedding classical
+first-order validity (the guarded drinker is ZTL-valid and needs the
+classic two γ-rounds). The tableaux give semi-decidability, as
+classically.
+
 ## 7. Limitations and honest caveats
 
 * No new three-valued functions exist or are claimed (functional

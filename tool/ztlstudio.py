@@ -165,7 +165,13 @@ class Handler(BaseHTTPRequestHandler):
         except json.JSONDecodeError:
             self._send(400, {"error": "bad json"})
             return
-        self._send(200, fn(payload))
+        try:
+            self._send(200, fn(payload))
+        except Exception as e:                      # никогда не умирать
+            self._send(200, {"ok": False, "issues": [{
+                "level": "error", "code": "E_INTERNAL",
+                "where": type(e).__name__,
+                "hint": f"внутренняя ошибка студии: {e}"}]})
 
 
 if __name__ == "__main__":

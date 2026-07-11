@@ -5,10 +5,16 @@ const chatBox = $("chat"), zflBox = $("zfl");
 let history = [];
 
 async function api(path, payload) {
-  const r = await fetch(path, payload === undefined ? {} : {
-    method: "POST", headers: {"Content-Type": "application/json"},
-    body: JSON.stringify(payload)});
-  return r.json();
+  try {
+    const r = await fetch(path, payload === undefined ? {} : {
+      method: "POST", headers: {"Content-Type": "application/json"},
+      body: JSON.stringify(payload)});
+    return await r.json();
+  } catch (e) {
+    return {ok: false, error: "связь со студией потеряна: " + e,
+            issues: [{level: "error", code: "E_NET", where: path,
+                      hint: String(e)}]};
+  }
 }
 
 function addMsg(role, text) {
@@ -78,8 +84,14 @@ $("btn-validate").onclick = validate;
 
 $("btn-repair").onclick = async () => {
   $("vstatus").textContent = "ремонт…";
+  $("vstatus").style.color = "var(--dim)";
   const r = await api("/api/repair", {zfl: zflBox.value});
-  if (!r.ok) { $("vstatus").textContent = r.error; $("vstatus").style.color = "var(--bad)"; return; }
+  if (!r.ok) {
+    showIssues(r.issues);
+    $("vstatus").textContent = r.error || "✗ ремонт не удался";
+    $("vstatus").style.color = "var(--bad)";
+    return;
+  }
   zflBox.value = pretty(r.zfl);
   validate();
 };

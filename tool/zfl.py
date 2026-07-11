@@ -158,15 +158,22 @@ def validate(text):
             issues.append(err("E_ATOM_STATUS", a,
                               'у атома нужен "status": "T" | "F" | "Z"'))
 
-    for a in doc.get("ask", []):
+    ask = doc.get("ask", [])
+    if not isinstance(ask, list):
+        issues.append(err("E_TYPE", "ask", "нужен список строк"))
+        ask = []
+    for a in ask:
         if a not in ASKS:
-            issues.append(warn("W_ASK", a, f"неизвестный вопрос; знаю {ASKS}"))
+            issues.append(warn("W_ASK", str(a),
+                               f"неизвестный вопрос; знаю {ASKS}"))
 
     parsed = {}
     if genre == "statement":
         if "assert" not in doc:
             issues.append(err("E_EMPTY", "assert",
                               "в жанре statement нужна формула assert"))
+        elif not isinstance(doc["assert"], str):
+            issues.append(err("E_TYPE", "assert", "формула — строка"))
         else:
             try:
                 tree = parse_formula(doc["assert"])
@@ -200,6 +207,9 @@ def validate(text):
                                   "имя и в atoms, и в sentences"))
         parsed["sentences"] = {}
         for n, f in sentences.items():
+            if not isinstance(f, str):
+                issues.append(err("E_TYPE", n, "формула — строка"))
+                continue
             try:
                 tree = parse_formula(f)
                 parsed["sentences"][n] = tree

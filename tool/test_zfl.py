@@ -71,6 +71,15 @@ if __name__ == "__main__":
         ("formula syntax",
          '{"genre":"statement","atoms":{},"assert":"and(T"}',
          {"E_FORMULA"}),
+        ("formula is a number",
+         '{"genre":"system","sentences":{"L": 123}}',
+         {"E_TYPE"}),
+        ("assert is a list",
+         '{"genre":"statement","atoms":{},"assert":["not"]}',
+         {"E_TYPE"}),
+        ("ask is a string",
+         '{"genre":"system","sentences":{"L":"not(Tr(L))"},"ask": 5}',
+         {"E_TYPE"}),
     ]
     for name, text, want in bad:
         _, p, iss = zfl.validate(text)

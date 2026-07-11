@@ -7,7 +7,7 @@ with no further questions. A ZFL document is JSON:
 
 {
   "genre": "statement" | "system",
-  "atoms":     { "rain": {"status": "Z", "note": "прогноз не поверен"} },
+  "atoms":     { "rain": {"status": "Z", "note": "forecast unverified"} },
   "assert":    "imp(rain, umbrella)",          # statement genre
   "sentences": { "L": "not(Tr(L))" },          # system genre
   "ask": ["verdict", "warranty", "passport", "stipulations"]   # optional
@@ -19,9 +19,9 @@ In the system genre declared atoms become INPUT sentences (defined by
 their own status constant) — unverified inputs imported into the system.
 
 This module is deliberately AI-free: parser, validator with
-machine-readable errors (the repair loop feeds on them), deterministic
-back-reading in Russian (the second, non-hallucinating auditor), and
-converters into the ZTL core's native structures.
+machine-readable errors (the repair loop feeds on them), a
+deterministic back-reading (the second, non-hallucinating auditor),
+and converters into the ZTL core's native structures.
 """
 
 import json
@@ -33,6 +33,7 @@ RESERVED = {"T", "F", "Z", "Tr", "not", "and", "or", "imp", "xor", "xnor"}
 STATUSES = ("T", "F", "Z")
 ASKS = ("verdict", "warranty", "passport", "stipulations")
 
+# Cyrillic stays in NAME_RE on purpose: atom names may be in any language
 NAME_RE = re.compile(r"[A-Za-zА-Яа-яЁё_][A-Za-zА-Яа-яЁё_0-9]*")
 
 
@@ -65,7 +66,7 @@ def tokenize(s):
             continue
         m = NAME_RE.match(s, i)
         if not m:
-            raise FormulaError(i, f"неожиданный символ «{c}»")
+            raise FormulaError(i, f"unexpected character '{c}'")
         toks.append((m.group(0), i))
         i = m.end()
     return toks
@@ -83,16 +84,16 @@ def parse_formula(s):
     def eat(expected=None):
         t, p = peek()
         if t is None:
-            raise FormulaError(p, "формула оборвана")
+            raise FormulaError(p, "formula ends abruptly")
         if expected and t != expected:
-            raise FormulaError(p, f"ожидалось «{expected}», найдено «{t}»")
+            raise FormulaError(p, f"expected '{expected}', found '{t}'")
         pos[0] += 1
         return t, p
 
     def expr():
         t, p = eat()
         if t in ("(", ")", ","):
-            raise FormulaError(p, f"ожидалось имя или связка, найдено «{t}»")
+            raise FormulaError(p, f"expected a name or a connective, found '{t}'")
         if t in CONNECTIVES:
             eat("(")
             args = [expr()]
@@ -105,19 +106,19 @@ def parse_formula(s):
             eat("(")
             name, np = eat()
             if not NAME_RE.fullmatch(name):
-                raise FormulaError(np, "Tr ожидает имя предложения")
+                raise FormulaError(np, "Tr expects a sentence name")
             eat(")")
             return ("tr", name)
         if t in ("T", "F"):
             return ("const", t)
         if t == "Z":
-            raise FormulaError(p, "Z — не константа формул: метку носит атом"
-                                  " (объяви атом со status: Z)")
+            raise FormulaError(p, "Z is not a formula constant: the mark lives on an atom"
+                                  " (declare an atom with status: Z)")
         return ("atom", t)
 
     tree = expr()
     if pos[0] != len(toks):
-        raise FormulaError(toks[pos[0]][1], "лишний хвост после формулы")
+        raise FormulaError(toks[pos[0]][1], "trailing garbage after the formula")
     return tree
 
 
@@ -137,78 +138,78 @@ def validate(text):
     try:
         doc = json.loads(text)
     except json.JSONDecodeError as e:
-        return None, None, [err("E_JSON", f"строка {e.lineno}", str(e.msg))]
+        return None, None, [err("E_JSON", f"line {e.lineno}", str(e.msg))]
     if not isinstance(doc, dict):
-        return None, None, [err("E_SCHEMA", "корень", "нужен JSON-объект")]
+        return None, None, [err("E_SCHEMA", "root", "a JSON object is required")]
 
     genre = doc.get("genre")
     if genre not in GENRES:
         return doc, None, [err("E_GENRE", "genre",
-                               f"нужно одно из {GENRES}")]
+                               f"must be one of {GENRES}")]
 
     atoms = doc.get("atoms", {})
     if not isinstance(atoms, dict):
-        return doc, None, [err("E_SCHEMA", "atoms", "нужен объект")]
+        return doc, None, [err("E_SCHEMA", "atoms", "an object is required")]
     for a, spec in atoms.items():
         if a in RESERVED or not NAME_RE.fullmatch(a):
             issues.append(err("E_RESERVED", a,
-                              "имя атома: буквы/цифры/_, не зарезервировано"))
+                              "atom name: letters/digits/_, not a reserved word"))
         st = spec.get("status") if isinstance(spec, dict) else None
         if st not in STATUSES:
             issues.append(err("E_ATOM_STATUS", a,
-                              'у атома нужен "status": "T" | "F" | "Z"'))
+                              'an atom needs "status": "T" | "F" | "Z"'))
 
     ask = doc.get("ask", [])
     if not isinstance(ask, list):
-        issues.append(err("E_TYPE", "ask", "нужен список строк"))
+        issues.append(err("E_TYPE", "ask", "a list of strings is required"))
         ask = []
     for a in ask:
         if a not in ASKS:
             issues.append(warn("W_ASK", str(a),
-                               f"неизвестный вопрос; знаю {ASKS}"))
+                               f"unknown ask; I know {ASKS}"))
 
     parsed = {}
     if genre == "statement":
         if "assert" not in doc:
             issues.append(err("E_EMPTY", "assert",
-                              "в жанре statement нужна формула assert"))
+                              "the statement genre requires an assert formula"))
         elif not isinstance(doc["assert"], str):
-            issues.append(err("E_TYPE", "assert", "формула — строка"))
+            issues.append(err("E_TYPE", "assert", "a formula must be a string"))
         else:
             try:
                 tree = parse_formula(doc["assert"])
                 parsed["assert"] = tree
                 for name in walk(tree, "tr"):
                     issues.append(err("E_TR_IN_STATEMENT", f"Tr({name})",
-                                      "Tr() живёт только в жанре system"))
+                                      "Tr() lives only in the system genre"))
                 used = set(walk(tree, "atom"))
                 for name in used - set(atoms):
                     issues.append(err("E_UNDEF_ATOM", name,
-                                      "объяви атом в atoms со status"))
+                                      "declare the atom in atoms with a status"))
                 for name in set(atoms) - used:
                     issues.append(warn("W_UNUSED_ATOM", name,
-                                       "атом объявлен, но не используется"))
+                                       "the atom is declared but unused"))
             except FormulaError as e:
-                issues.append(err("E_FORMULA", f"assert, позиция {e.pos}",
+                issues.append(err("E_FORMULA", f"assert, position {e.pos}",
                                   e.msg))
     else:  # system
         sentences = doc.get("sentences", {})
         if not isinstance(sentences, dict) or not sentences:
             issues.append(err("E_EMPTY", "sentences",
-                              "в жанре system нужны sentences"))
+                              "the system genre requires sentences"))
             sentences = {}
         names = set(sentences) | set(atoms)
         for n in sentences:
             if n in RESERVED or not NAME_RE.fullmatch(n):
-                issues.append(err("E_RESERVED", n, "имя предложения"
-                                  " не должно быть зарезервированным"))
+                issues.append(err("E_RESERVED", n, "a sentence name"
+                                  " must not be a reserved word"))
             if n in atoms:
                 issues.append(err("E_NAME_CLASH", n,
-                                  "имя и в atoms, и в sentences"))
+                                  "the name is both in atoms and in sentences"))
         parsed["sentences"] = {}
         for n, f in sentences.items():
             if not isinstance(f, str):
-                issues.append(err("E_TYPE", n, "формула — строка"))
+                issues.append(err("E_TYPE", n, "a formula must be a string"))
                 continue
             try:
                 tree = parse_formula(f)
@@ -216,13 +217,13 @@ def validate(text):
                 for m in walk(tree, "tr"):
                     if m not in names:
                         issues.append(err("E_UNDEF_SENTENCE", f"Tr({m})",
-                                          "нет такого предложения или атома"))
+                                          "no such sentence or atom"))
                 for m in walk(tree, "atom"):
                     issues.append(err("E_BARE_ATOM", f"{n}: {m}",
-                                      "в system ссылки пишутся как Tr(имя);"
-                                      " голые атомы запрещены"))
+                                      "in the system genre references are written as"
+                                      " Tr(name); bare atoms are forbidden"))
             except FormulaError as e:
-                issues.append(err("E_FORMULA", f"{n}, позиция {e.pos}",
+                issues.append(err("E_FORMULA", f"{n}, position {e.pos}",
                                   e.msg))
 
     fatal = [i for i in issues if i["level"] == "error"]
@@ -230,30 +231,30 @@ def validate(text):
 
 
 # ----------------------------------------------- deterministic back-reading
-RU_STATUS = {"T": "поверен: истина", "F": "поверен: ложь",
-             "Z": "НЕ поверен (метка Z)"}
+STATUS_TXT = {"T": "verified: true", "F": "verified: false",
+              "Z": "UNVERIFIED (mark Z)"}
 
 
 def say(tree, system=False):
     op = tree[0]
     if op == "const":
-        return "истина" if tree[1] == "T" else "ложь"
+        return "truth" if tree[1] == "T" else "falsehood"
     if op == "atom":
-        return f"«{tree[1]}»"
+        return f"\u201c{tree[1]}\u201d"
     if op == "tr":
-        return f"истинно «{tree[1]}»"
+        return f"\u201c{tree[1]}\u201d is true"
     a = [say(x, system) for x in tree[1:]]
     if op == "not":
-        return f"не ({a[0]})"
+        return f"not ({a[0]})"
     if op == "and":
-        return f"({a[0]} и {a[1]})"
+        return f"({a[0]} and {a[1]})"
     if op == "or":
-        return f"({a[0]} или {a[1]})"
+        return f"({a[0]} or {a[1]})"
     if op == "imp":
-        return f"(если {a[0]}, то {a[1]})"
+        return f"(if {a[0]} then {a[1]})"
     if op == "xor":
-        return f"({a[0]} либо {a[1]}, но не оба)"
-    return f"({a[0]} тогда и только тогда, когда {a[1]})"
+        return f"({a[0]} or {a[1]}, but not both)"
+    return f"({a[0]} if and only if {a[1]})"
 
 
 def back_reading(doc, parsed):
@@ -262,18 +263,20 @@ def back_reading(doc, parsed):
     atoms = doc.get("atoms", {})
     for a, spec in atoms.items():
         note = spec.get("note", "")
-        lines.append(f"Атом «{a}» — {RU_STATUS.get(spec.get('status'), '?')}"
+        lines.append(f"Atom \u201c{a}\u201d \u2014 "
+                     f"{STATUS_TXT.get(spec.get('status'), '?')}"
                      + (f" ({note})" if note else "") + ".")
     if doc["genre"] == "statement":
-        lines.append(f"Утверждается: {say(parsed['assert'])}.")
+        lines.append(f"Asserted: {say(parsed['assert'])}.")
     else:
         for n, tree in parsed["sentences"].items():
-            lines.append(f"Предложение «{n}» утверждает: {say(tree, True)}.")
+            lines.append(f"Sentence \u201c{n}\u201d asserts: "
+                         f"{say(tree, True)}.")
         if atoms:
-            lines.append("Атомы входят в систему как непроверенные/поверенные"
-                         " входы.")
+            lines.append("The atoms enter the system as"
+                         " verified/unverified inputs.")
     ask = doc.get("ask") or list(ASKS)
-    lines.append("Вопрос: " + ", ".join(ask) + ".")
+    lines.append("Asked: " + ", ".join(ask) + ".")
     return "\n".join(lines)
 
 

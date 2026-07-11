@@ -11,7 +11,7 @@ async function api(path, payload) {
       body: JSON.stringify(payload)});
     return await r.json();
   } catch (e) {
-    return {ok: false, error: "связь со студией потеряна: " + e,
+    return {ok: false, error: "connection to the studio lost: " + e,
             issues: [{level: "error", code: "E_NET", where: path,
                       hint: String(e)}]};
   }
@@ -45,13 +45,13 @@ $("chat-input").addEventListener("keydown", e => {
 
 $("btn-agree").onclick = async () => {
   const last = [...history].reverse().find(m => m.role === "assistant");
-  if (!last) { addMsg("err", "сначала получите понимание от ИИ"); return; }
-  addMsg("ai", "компилирую в ZFL…");
+  if (!last) { addMsg("err", "get an understanding from the AI first"); return; }
+  addMsg("ai", "compiling to ZFL…");
   const r = await api("/api/emit", {understanding: last.content});
   chatBox.lastChild.remove();
   if (!r.ok) { addMsg("err", r.error); return; }
   zflBox.value = pretty(r.zfl);
-  addMsg("ai", "ZFL готов — окно 2. Проверьте читку и запускайте.");
+  addMsg("ai", "ZFL is ready — panel 2. Check the back-reading and run.");
   validate();
 };
 
@@ -73,7 +73,7 @@ function showIssues(issues) {
 async function validate() {
   const r = await api("/api/validate", {zfl: zflBox.value});
   showIssues(r.issues);
-  $("vstatus").textContent = r.ok ? "✓ валидно" : "✗ есть ошибки";
+  $("vstatus").textContent = r.ok ? "✓ valid" : "✗ errors";
   $("vstatus").style.color = r.ok ? "var(--ok)" : "var(--bad)";
   const br = $("backread");
   if (r.back_reading) { br.textContent = r.back_reading; br.classList.remove("hidden"); }
@@ -83,12 +83,12 @@ async function validate() {
 $("btn-validate").onclick = validate;
 
 $("btn-repair").onclick = async () => {
-  $("vstatus").textContent = "ремонт…";
+  $("vstatus").textContent = "repairing…";
   $("vstatus").style.color = "var(--dim)";
   const r = await api("/api/repair", {zfl: zflBox.value});
   if (!r.ok) {
     showIssues(r.issues);
-    $("vstatus").textContent = r.error || "✗ ремонт не удался";
+    $("vstatus").textContent = r.error || "✗ repair failed";
     $("vstatus").style.color = "var(--bad)";
     return;
   }
@@ -102,7 +102,7 @@ $("btn-run").onclick = async () => {
   showIssues(r.issues);
   const out = $("report");
   out.innerHTML = "";
-  if (!r.ok) { $("vstatus").textContent = "✗ исправьте ошибки"; $("vstatus").style.color = "var(--bad)"; return; }
+  if (!r.ok) { $("vstatus").textContent = "✗ fix the errors first"; $("vstatus").style.color = "var(--bad)"; return; }
   if (r.back_reading) { $("backread").textContent = r.back_reading; $("backread").classList.remove("hidden"); }
   const rep = r.report;
   if (rep.genre === "statement") renderStatement(rep, out);
@@ -114,15 +114,15 @@ function esc(s) { return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;"); }
 
 function renderStatement(rep, out) {
   out.appendChild(el("div",
-    `<div class="verdict">вердикт: <span class="${rep.verdict}">${rep.verdict}</span>
-     <small>· гарантия: ${esc(rep.warranty)}</small></div>`));
+    `<div class="verdict">verdict: <span class="${rep.verdict}">${rep.verdict}</span>
+     <small>· warranty: ${esc(rep.warranty)}</small></div>`));
   out.appendChild(el("p", esc(rep.verdict_class)));
-  out.appendChild(el("p", `паспорт: ${esc(rep.passport)}`));
+  out.appendChild(el("p", `passport: ${esc(rep.passport)}`));
   if (rep.completions.length) {
     let rows = rep.completions.map(c =>
       `<tr><td>${esc(c.case)}</td><td class="verdict"><span class="${c.value}">${c.value}</span></td></tr>`).join("");
     out.appendChild(el("table",
-      `<tr><th>дочитка непроверенных</th><th>значение</th></tr>${rows}`));
+      `<tr><th>completion of the unverified</th><th>value</th></tr>${rows}`));
   }
 }
 
@@ -130,19 +130,19 @@ function renderSystem(rep, out) {
   out.appendChild(el("p", `<b>${esc(rep.summary)}</b>`));
   const g = Object.entries(rep.grounded);
   if (g.length) {
-    out.appendChild(el("div", "заземлено: " + g.map(([k, v]) =>
+    out.appendChild(el("div", "grounded: " + g.map(([k, v]) =>
       `<span class="pill">${esc(k)} = <b class="${v}">${v}</b></span>`).join("")));
   }
   let rows = rep.passports.map(p =>
     `<tr><td>${esc(p.component.join(", "))}</td>
-     <td class="kind-${p.kind}">${esc(p.kind_ru)}</td>
+     <td class="kind-${p.kind}">${esc(p.kind_txt)}</td>
      <td>${esc(p.detail)}</td></tr>`).join("");
   if (rows) out.appendChild(el("table",
-    `<tr><th>компонента</th><th>паспорт</th><th>детали</th></tr>${rows}`));
+    `<tr><th>component</th><th>passport</th><th>details</th></tr>${rows}`));
   for (const s of rep.stipulations) {
     out.appendChild(el("p",
-      `выбор для {${esc(s.component.join(", "))}}: ` +
-      s.models.map(m => `<span class="pill">${esc(m)}</span>`).join(" или ")));
+      `stipulations for {${esc(s.component.join(", "))}}: ` +
+      s.models.map(m => `<span class="pill">${esc(m)}</span>`).join(" or ")));
   }
 }
 

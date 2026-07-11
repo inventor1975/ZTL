@@ -1,53 +1,53 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
 <meta charset="utf-8">
-<title>ZTLStudio — истина не в кредит</title>
+<title>ZTLStudio — truth is not granted on credit</title>
 <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
 <header>
   <h1>ZTL<span>Studio</span></h1>
-  <p class="motto">человек → понимание → ZFL → ядро · истина не выдаётся в кредит</p>
-  <select id="examples"><option value="">— примеры —</option></select>
+  <p class="motto">human → understanding → ZFL → the core · truth is never granted on credit</p>
+  <select id="examples"><option value="">— examples —</option></select>
 </header>
 
 <main>
-  <!-- 1. Мета-чат -->
+  <!-- 1. Meta-chat -->
   <section id="panel-chat">
-    <h2>1 · Мета-чат <small>торг о смысле; ИИ только переводит, не судит</small></h2>
+    <h2>1 · Meta-chat <small>negotiating the meaning; the AI only translates, never judges</small></h2>
     <div id="chat"></div>
     <div class="row">
       <textarea id="chat-input" rows="2"
-        placeholder="Опишите высказывание, парадокс, ситуацию…"></textarea>
-      <button id="btn-send">Понять</button>
-      <button id="btn-agree" class="accent" title="Согласен с последним пониманием — компилируй в ZFL">Согласен → ZFL</button>
+        placeholder="Describe a claim, a paradox, a situation — any language…"></textarea>
+      <button id="btn-send">Understand</button>
+      <button id="btn-agree" class="accent" title="I agree with the last understanding — compile to ZFL">Agree → ZFL</button>
     </div>
   </section>
 
   <!-- 2. ZFL -->
   <section id="panel-zfl">
-    <h2>2 · ZFL <small>формальный язык; можно править руками</small></h2>
+    <h2>2 · ZFL <small>the formal language; hand-editable</small></h2>
     <textarea id="zfl" rows="10" spellcheck="false"
       placeholder='{"genre": "system", "sentences": {"L": "not(Tr(L))"}}'></textarea>
     <div class="row">
-      <button id="btn-validate">Проверить</button>
-      <button id="btn-repair">Починить ИИ по ошибкам</button>
-      <button id="btn-run" class="accent">Запустить на ядре</button>
+      <button id="btn-validate">Validate</button>
+      <button id="btn-repair">AI repair from errors</button>
+      <button id="btn-run" class="accent">Run on the core</button>
       <span id="vstatus"></span>
     </div>
     <div id="backread" class="card hidden"></div>
   </section>
 
-  <!-- 3. Результаты -->
+  <!-- 3. Results -->
   <section id="panel-out">
-    <h2>3 · Результаты <small>ошибки валидатора и вердикт ядра</small></h2>
+    <h2>3 · Results <small>validator errors and the core’s verdict</small></h2>
     <div id="issues"></div>
     <div id="report"></div>
   </section>
 </main>
 
-<footer>ядро: 26 стендов + 10 Lean-модулей на пустом списке аксиом ·
+<footer>the core: 27 stands + 10 Lean modules on the empty axiom list ·
   <a href="https://github.com/inventor1975/ZTL" target="_blank">github.com/inventor1975/ZTL</a></footer>
 
 <script src="/static/app.js"></script>

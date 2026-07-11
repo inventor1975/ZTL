@@ -16,12 +16,12 @@ from zverify import stable_bit, ztl_eval                 # noqa: E402
 from zpassport import passports, deps, component_models  # noqa: E402
 from zfl import to_statement, to_system                  # noqa: E402
 
-RU_KIND = {
-    "PARADOX": "ПАРАДОКС — классических решений нет; отказ ВЕЧНЫЙ",
-    "UNDERDETERMINED": "НЕДООПРЕДЕЛЁННОСТЬ — отказ до внешнего выбора",
-    "INPUT": "непроверенный вход — отказ до верификации",
-    "DOWNSTREAM": "заражение сверху (см. виновных)",
-    "GROUNDED": "заземлено",
+KIND_TXT = {
+    "PARADOX": "PARADOX — no classical solutions; refusal PERMANENT",
+    "UNDERDETERMINED": "UNDERDETERMINED — refusal until an external choice",
+    "INPUT": "unverified input — refusal until verification",
+    "DOWNSTREAM": "inherited from above (see the culprits)",
+    "GROUNDED": "grounded",
 }
 
 
@@ -33,11 +33,13 @@ def run_statement(doc, parsed):
     z_atoms = sorted(a for a, v in env.items() if v == Z)
 
     if value == T:
-        cls = ("стабильное T — можно строить дом" if stable
-               else "T до-верификации — лестничный рапорт, живёт до первой проверки")
+        cls = ("stable T — build on it" if stable
+               else "T until verification — a ladder report,"
+                    " alive till the first check")
     else:
-        cls = ("стабильное F — заработанное опровержение" if stable
-               else "F до-верификации — default deny, отказ до проверки входов")
+        cls = ("stable F — an earned refutation" if stable
+               else "F until verification — default deny,"
+                    " refusal until the inputs are checked")
 
     completions = []
     if 0 < len(z_atoms) <= 3:
@@ -51,13 +53,13 @@ def run_statement(doc, parsed):
     return {
         "genre": "statement",
         "verdict": value,
-        "warranty": "стабильный" if stable else "до-верификации",
+        "warranty": "stable" if stable else "until-verification",
         "verdict_class": cls,
         "z_atoms": z_atoms,
-        "passport": ("все атомы поверены — вердикт классический"
+        "passport": ("all atoms verified — the verdict is classical"
                      if not z_atoms else
-                     f"непроверенные входы: {', '.join(z_atoms)}"
-                     " — отказные части снимаются верификацией"),
+                     f"unverified inputs: {', '.join(z_atoms)}"
+                     " — the refusals are liftable by verification"),
         "completions": completions,
     }
 
@@ -74,7 +76,7 @@ def run_system(doc, parsed):
     for comp, kind, detail in reports:
         passport_rows.append({
             "component": comp, "kind": kind,
-            "kind_ru": RU_KIND.get(kind, kind), "detail": detail})
+            "kind_txt": KIND_TXT.get(kind, kind), "detail": detail})
         if kind == "UNDERDETERMINED":
             names = set(comp)
             env_names = set()
@@ -93,8 +95,8 @@ def run_system(doc, parsed):
         "quarantined": quarantined,
         "passports": passport_rows,
         "stipulations": stipulations,
-        "summary": (f"заземлено {len(grounded)} из {len(lfp)};"
-                    f" в карантине: {', '.join(quarantined) or 'никого'}"),
+        "summary": (f"grounded {len(grounded)} of {len(lfp)};"
+                    f" quarantined: {', '.join(quarantined) or 'none'}"),
     }
 
 

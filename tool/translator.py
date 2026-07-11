@@ -31,73 +31,76 @@ def get_key():
             return f.read().strip()
     return None
 
-ZFL_SPEC = """ZFL — формальный язык для ядра ZTL. Строго JSON:
+ZFL_SPEC = """ZFL is the formal language of the ZTL core. Strict JSON:
 {"genre": "statement"|"system",
- "atoms": {"имя": {"status": "T"|"F"|"Z", "note": "пояснение"}},
- "assert": "формула",                  // только в genre=statement
- "sentences": {"имя": "формула"},      // только в genre=system
+ "atoms": {"name": {"status": "T"|"F"|"Z", "note": "explanation"}},
+ "assert": "formula",                  // statement genre only
+ "sentences": {"name": "formula"},     // system genre only
  "ask": ["verdict","warranty","passport","stipulations"]}
-Формулы: not(x), and(x,y), or(x,y), imp(x,y), xor(x,y), xnor(x,y),
-константы T и F, имена атомов; в genre=system ссылки на предложения
-ТОЛЬКО через Tr(имя), голые атомы в формулах system запрещены.
-status: T = проверено-истина, F = проверено-ложь, Z = НЕ проверено.
-statement = вопрос о вердикте высказывания над (не)проверенными атомами.
-system = самореферентная система (парадоксы: предложения о истинности
-друг друга и себя)."""
+Formulas: not(x), and(x,y), or(x,y), imp(x,y), xor(x,y), xnor(x,y),
+constants T and F, atom names; in genre=system references to sentences
+go ONLY through Tr(name); bare atoms inside system formulas are
+forbidden. status: T = verified-true, F = verified-false,
+Z = UNVERIFIED. statement = a verdict question about a claim over
+(un)verified atoms. system = a self-referential system (paradoxes:
+sentences about the truth of each other and themselves)."""
 
-FEWSHOT = """Примеры.
-1) «Лжец: это предложение ложно» →
+FEWSHOT = """Examples.
+1) "The liar: this sentence is false" ->
 {"genre":"system","sentences":{"L":"not(Tr(L))"},
  "ask":["passport"]}
-2) «Крокодил вернёт ребёнка тогда и только тогда, когда мать угадает его
-действие; мать говорит: не вернёшь» →
+2) "The crocodile returns the child iff the mother guesses his action;
+the mother says: you will not return it" ->
 {"genre":"system","sentences":{"R":"Tr(M)","M":"not(Tr(R))"},
  "ask":["passport","stipulations"]}
-3) «Датчик (не поверен) показывает перегрев; если перегрев, защита
-сработает. Сработает ли защита?» →
+3) "An unverified sensor reports overheating; if overheating, the
+shutdown fires. Will it fire?" ->
 {"genre":"statement",
- "atoms":{"overheat":{"status":"Z","note":"датчик не поверен"},
-          "shutdown":{"status":"Z","note":"следствие"}},
+ "atoms":{"overheat":{"status":"Z","note":"sensor unverified"},
+          "shutdown":{"status":"Z","note":"consequence"}},
  "assert":"imp(overheat, shutdown)","ask":["verdict","warranty"]}"""
 
-UNDERSTAND_SYS = """Ты — переводчик смыслов для логической студии ZTL
-(двузначные вердикты + метка Z «не проверено»; парадоксы уходят в
-карантин, а не взрываются). Твоя задача — ТОЛЬКО понять человека, не
-судить.
+UNDERSTAND_SYS = """You are the meaning translator for the ZTL logic
+studio (two-valued verdicts + the mark Z "unverified"; paradoxes go
+into quarantine instead of exploding). Your job is ONLY to understand
+the human, never to judge. ALWAYS reply in the language the user
+writes in.
 
-СНАЧАЛА — ГРАНИЦА КОМПЕТЕНЦИИ. ZTL v1 формализует только:
-(а) утверждения из логических связок над атомами-утверждениями
-    (каждый атом проверен-истина / проверен-ложь / НЕ проверен);
-(б) самореферентные системы — И ТОЛЬКО когда предложения говорят об
-    ИСТИННОСТИ предложений (своей или чужих). Конфликт точек зрения,
-    физика движения, восприятие — НЕ самореференция.
-Если суть — арифметика, количества, игра слов о числах, время,
-вероятности с числами — скажи ЧЕСТНО: «Это не формализуется в
-пропозициональную ZTL без потери сути (здесь …)», объясни в одну
-строку почему, и спроси: остановиться или согласовать огрублённую
-логическую тень (явно перечислив, что теряется). НИКОГДА не выдумывай
-атомы ради формализуемости. Атом — повествовательное утверждение;
-вопрос атомом быть не может.
+FIRST — THE BOUNDARY OF COMPETENCE. ZTL v1 formalizes only:
+(a) claims built from logical connectives over declarative atoms
+    (each atom verified-true / verified-false / UNVERIFIED);
+(b) self-referential systems — and ONLY when sentences speak about
+    the TRUTH of sentences (their own or others'). Conflicting
+    viewpoints, physics of motion, perception are NOT self-reference.
+If the essence is arithmetic, quantities, wordplay about numbers,
+time, or numeric probabilities — say HONESTLY: "This does not
+formalize into propositional ZTL without losing the point (here: …)",
+explain why in one line, and ask: stop, or agree on a coarsened
+logical shadow (listing explicitly what is lost). NEVER invent atoms
+for the sake of formalizability. An atom is a declarative statement;
+a question cannot be an atom.
 
-Если в границе — ответь по-русски структурированным пересказом:
-— СУЩНОСТИ/АТОМЫ: элементарные утверждения; что проверено, что нет;
-— УТВЕРЖДАЕТСЯ: кто/что что утверждает (самоссылки на истинность — скажи);
-— ЖАНР: простое высказывание или самореферентная система;
-— ВОПРОС: что человек хочет узнать.
-Уточняющий вопрос задавай ТОЛЬКО если без ответа нельзя формализовать.
-НЕ предлагай объяснить, разрешить или проанализировать — судит ядро,
-не ты. Если понимание полное, закончи ровно фразой:
-«Если понимание верное — нажмите кнопку "Согласен → ZFL".» Кратко."""
+If within the boundary — reply with a structured summary:
+— ENTITIES/ATOMS: the elementary claims; what is verified, what is not;
+— ASSERTED: who/what asserts what (flag self-references to truth);
+— GENRE: a plain statement or a self-referential system;
+— ASKED: what the human wants to know.
+Ask a clarifying question ONLY if formalization is impossible without
+the answer. Do NOT offer to explain, resolve or analyze — the core
+judges, not you. If the understanding is complete, end with exactly
+this sentence (translated into the user's language, quoting the
+button name verbatim):
+"If the understanding is correct — press the \u00abAgree \u2192 ZFL\u00bb button." Be brief."""
 
-EMIT_SYS = ("Ты — компилятор в ZFL. По согласованному пониманию выдай "
-            "ТОЛЬКО валидный JSON ZFL, без пояснений и без markdown. "
-            "Атомы — только повествовательные утверждения; НИКОГДА не "
-            "создавай атом для вопроса. Жанр system — только если "
-            "предложения говорят об истинности предложений.\n\n"
+EMIT_SYS = ("You are the ZFL compiler. From the agreed understanding "
+            "emit ONLY valid ZFL JSON, no explanations, no markdown. "
+            "Atoms are declarative statements only; NEVER create an "
+            "atom for a question. The system genre only when sentences "
+            "speak about the truth of sentences.\n\n"
             + ZFL_SPEC + "\n\n" + FEWSHOT)
 
-REPAIR_SYS = ("Ты — ремонт ZFL по ошибкам валидатора. Выдай ТОЛЬКО "
-              "исправленный JSON ZFL, без пояснений.\n\n" + ZFL_SPEC)
+REPAIR_SYS = ("You repair ZFL against validator errors. Emit ONLY the "
+              "corrected ZFL JSON, no explanations.\n\n" + ZFL_SPEC)
 
 
 class TranslatorError(Exception):
@@ -108,9 +111,9 @@ def groq(messages, temperature=0.2):
     key = get_key()
     if not key:
         raise TranslatorError(
-            "Ключ Groq не найден: задайте GROQ_API_KEY или положите ключ "
-            "в файл tool/.groq_key (он в .gitignore) — пока работаю без "
-            "ИИ (режим профи: пишите ZFL руками в среднем окне).")
+            "No Groq key: set GROQ_API_KEY or put the key into "
+            "tool/.groq_key (gitignored). Running without AI for now "
+            "(pro mode: write ZFL by hand in the middle panel).")
     body = json.dumps({"model": MODEL, "messages": messages,
                        "temperature": temperature}).encode()
     req = urllib.request.Request(API, data=body, headers={
@@ -121,7 +124,7 @@ def groq(messages, temperature=0.2):
         with urllib.request.urlopen(req, timeout=60) as r:
             data = json.loads(r.read().decode())
     except Exception as e:
-        raise TranslatorError(f"Groq недоступен: {e}")
+        raise TranslatorError(f"Groq is unreachable: {e}")
     return data["choices"][0]["message"]["content"].strip()
 
 
@@ -142,7 +145,8 @@ def strip_fences(s):
 def emit(understanding):
     out = groq([{"role": "system", "content": EMIT_SYS},
                 {"role": "user", "content":
-                 f"Согласованное понимание:\n{understanding}\n\nВыдай ZFL."}])
+                 f"The agreed understanding:\n{understanding}\n\n"
+                 "Emit the ZFL."}])
     return strip_fences(out)
 
 
@@ -151,6 +155,6 @@ def repair(zfl_text, issues):
                      for i in issues if i["level"] == "error")
     out = groq([{"role": "system", "content": REPAIR_SYS},
                 {"role": "user", "content":
-                 f"ZFL:\n{zfl_text}\n\nОшибки валидатора:\n{errs}\n\n"
-                 "Исправь и выдай ZFL."}])
+                 f"ZFL:\n{zfl_text}\n\nValidator errors:\n{errs}\n\n"
+                 "Fix it and emit the ZFL."}])
     return strip_fences(out)

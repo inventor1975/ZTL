@@ -1,7 +1,7 @@
 [Desktop Entry]
 Type=Application
 Name=ZTLStudio
-Comment=Истина не в кредит: высказывания, парадоксы, вердикты
+Comment=Truth is not granted on credit: claims, paradoxes, verdicts
 Exec=python3 /media/vitaly/SSD_1000GB/Projects/ZTL/tool/ztlstudio.py
 Terminal=false
 Icon=applications-science

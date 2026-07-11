@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
 """
-ZTLStudio — локальная студия: человек ↔ ИИ-переводчик ↔ ZFL ↔ ядро ZTL.
+ZTLStudio — a local studio: human <-> AI translator <-> ZFL <-> ZTL core.
 
-Три окна: мета-чат (торг о смысле), ZFL-редактор (правится руками —
-профи может миновать ИИ), результаты (ошибки валидатора + ответ ядра).
+Three stacked panels: meta-chat (negotiating the meaning), the ZFL
+editor (hand-editable — a pro can bypass the AI), results (validator
+errors + the core's answer).
 
-Запуск: python3 tool/ztlstudio.py   → http://localhost:8190
-Zero cold start: без зависимостей, ИИ опционален (нет GROQ_API_KEY —
-студия работает в режиме профи).
+Run: python3 tool/ztlstudio.py   -> http://localhost:8190
+Zero cold start: no dependencies; the AI is optional (without a Groq
+key the studio runs in pro mode).
 """
 
 import json
@@ -27,39 +28,39 @@ import translator             # noqa: E402
 PORT = 8190
 
 EXAMPLES = [
-    {"name": "Лжец",
-     "intent": "Это предложение ложно.",
+    {"name": "Liar",
+     "intent": "This sentence is false.",
      "zfl": json.dumps({"genre": "system",
                         "sentences": {"L": "not(Tr(L))"},
                         "ask": ["passport"]},
                        ensure_ascii=False, indent=1)},
-    {"name": "Крокодил",
-     "intent": "Крокодил вернёт ребёнка тогда и только тогда, когда мать "
-               "угадает, что он сделает. Мать: «ты не вернёшь».",
+    {"name": "Crocodile",
+     "intent": "The crocodile returns the child if and only if the mother "
+               "guesses what he will do. The mother: 'you will not return it'.",
      "zfl": json.dumps({"genre": "system",
                         "sentences": {"R": "Tr(M)", "M": "not(Tr(R))"},
                         "ask": ["passport", "stipulations"]},
                        ensure_ascii=False, indent=1)},
-    {"name": "Правдолюб",
-     "intent": "Это предложение истинно.",
+    {"name": "Truth-teller",
+     "intent": "This sentence is true.",
      "zfl": json.dumps({"genre": "system",
                         "sentences": {"tau": "Tr(tau)"},
                         "ask": ["passport", "stipulations"]},
                        ensure_ascii=False, indent=1)},
-    {"name": "Датчик",
-     "intent": "Непроверенный датчик показывает перегрев; если перегрев, "
-               "то сработает защита. Сработает?",
+    {"name": "Sensor",
+     "intent": "An unverified sensor reports overheating; if overheating, "
+               "the shutdown fires. Will it fire?",
      "zfl": json.dumps({"genre": "statement",
                         "atoms": {"overheat": {"status": "Z",
-                                               "note": "датчик не поверен"},
+                                               "note": "sensor unverified"},
                                   "shutdown": {"status": "Z",
-                                               "note": "не наблюдалось"}},
+                                               "note": "not observed"}},
                         "assert": "imp(overheat, shutdown)",
                         "ask": ["verdict", "warranty"]},
                        ensure_ascii=False, indent=1)},
-    {"name": "Рассел",
-     "intent": "Множество всех множеств, не содержащих себя: содержит ли "
-               "оно себя? Вселенная: a = ∅, b = {b}, R.",
+    {"name": "Russell",
+     "intent": "The set of all sets not containing themselves: does it "
+               "contain itself? Universe: a = empty, b = {b}, R.",
      "zfl": json.dumps({"genre": "system",
                         "sentences": {
                             "a_in_a": "F", "a_in_b": "F",
@@ -109,7 +110,8 @@ def api_emit(payload):
 def api_repair(payload):
     doc, parsed, issues = zfl.validate(payload.get("zfl", ""))
     if parsed is not None:
-        return {"ok": True, "zfl": payload.get("zfl", ""), "note": "уже валидно"}
+        return {"ok": True, "zfl": payload.get("zfl", ""),
+                "note": "already valid"}
     try:
         return {"ok": True, "zfl": translator.repair(
             payload.get("zfl", ""), issues)}
@@ -167,17 +169,17 @@ class Handler(BaseHTTPRequestHandler):
             return
         try:
             self._send(200, fn(payload))
-        except Exception as e:                      # никогда не умирать
+        except Exception as e:                      # never die on input
             self._send(200, {"ok": False, "issues": [{
                 "level": "error", "code": "E_INTERNAL",
                 "where": type(e).__name__,
-                "hint": f"внутренняя ошибка студии: {e}"}]})
+                "hint": f"internal studio error: {e}"}]})
 
 
 if __name__ == "__main__":
     print(f"ZTLStudio: http://localhost:{PORT}")
     if not translator.get_key():
-        print("Ключ Groq не найден (env GROQ_API_KEY или tool/.groq_key) — "
-              "режим профи (ZFL руками), ИИ выключен.")
+        print("No Groq key found (env GROQ_API_KEY or tool/.groq_key) — "
+              "pro mode (hand-written ZFL), the AI is off.")
     Timer(0.7, lambda: webbrowser.open(f"http://localhost:{PORT}")).start()
     HTTPServer(("127.0.0.1", PORT), Handler).serve_forever()

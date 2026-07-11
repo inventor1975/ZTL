@@ -88,10 +88,11 @@ if __name__ == "__main__":
 
     print("\n### Back-reading: the non-hallucinating auditor")
     br = zfl.back_reading(doc, parsed)
-    check("liar reads back", "не (истинно «L»)" in br, br)
+    check("liar reads back", "not (\u201cL\u201d is true)" in br, br)
     br2 = zfl.back_reading(doc2, parsed2)
     check("sensor reads back",
-          "если «a», то «b»" in br2 and "НЕ поверен" in br2, br2)
+          "if \u201ca\u201d then \u201cb\u201d" in br2
+          and "UNVERIFIED" in br2, br2)
 
     print("\n### Engine: the zoo through ZFL end to end")
     rep = engine.run(doc, parsed)
@@ -102,7 +103,7 @@ if __name__ == "__main__":
     rep2 = engine.run(doc2, parsed2)
     check("sensor → verdict F (Z→Z is not forced)", rep2["verdict"] == "F")
     check("sensor → warranty until-verification",
-          rep2["warranty"] == "до-верификации")
+          rep2["warranty"] == "until-verification")
     check("sensor completions listed", len(rep2["completions"]) == 4)
 
     croc = json.dumps({"genre": "system",

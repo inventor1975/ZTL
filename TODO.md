@@ -32,9 +32,13 @@
    tableaux, γ/δ with the sign discipline; soundness measured 13/13,
    completeness = Hintikka argued; undecidability via the J-guard
    embedding).
+   ✅ Lean port of the finite-domain quantifier tableaux (ZQuant.lean:
+   folds + cover theorems + ui_mem/eg_mem + 8 kernel-evaluated
+   verdicts).
    REMAINS: a syntactic cut-elimination procedure with bounds;
-   description of the equivalent quasivariety; Lean port of the
-   quantifier/parameter tableaux.
+   description of the equivalent quasivariety (if it grows — a
+   separate paper, curator's decision 2026-07-11); Lean port of the
+   PARAMETER (arbitrary-domain) tableaux.
 
 ## Seams
 

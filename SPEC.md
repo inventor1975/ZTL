@@ -185,8 +185,12 @@ contradiction.
   (`entails_structural`).
   `ZSequent.lean` — the sequent reading: cut admissibility, admissible
   weakening, derivable identity on top of closes_iff (semantic cut
-  elimination, kernel-checked). THE WHOLE Lean corpus — 8 modules —
-  on the empty axiom list.
+  elimination, kernel-checked).
+  `ZQuant.lean` — finite-domain quantifier tableaux: ∀/∃ as strict
+  folds in Fm (singleton = the J_T guard), n-ary signed rules as
+  cover theorems, ui_mem/eg_mem over the whole language, 8 battery
+  verdicts as kernel evaluations of the certified engine. THE WHOLE
+  Lean corpus — 9 modules — on the empty axiom list.
 
 * `fixedpoint.py` — quarantine as a fixed point: the greedy jump is
   non-monotone and has no fixed points on odd cycles (liar period 2,

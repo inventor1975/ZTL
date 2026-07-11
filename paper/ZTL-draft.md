@@ -398,6 +398,15 @@ F:∀ into weak N:φ(aᵢ) across branches; ∃ mirrors. Tableau decisions
 coincide with semantic enumeration on 28 sequents (domains 1–2).
 A by-product: ¬∀yP ⊭ ∃y¬P even as a rule — the second fallen quantifier
 bridge, symmetric to ¬∃ ⊭ ∀¬ (negation hides Z in both directions).
+The finite-domain quantifier tableaux are now **kernel-checked** (Lean
+module `ZQuant`, zero axioms): over a finite domain the quantifiers are
+strict folds expressible in the certified language (∀ as a conj-fold,
+∃ as a disj-fold — on a singleton domain both collapse to the J_T guard
+φ∧φ of §3.6), the n-ary signed rules are theorems about the folds
+(`cover_allF_T/F`, `cover_exF_T/F`), UI/EG hold in membership form over
+the whole language (`ui_mem`, `eg_mem`), and eight battery verdicts —
+including the failing drinker and quantified LEM — are kernel
+evaluations of the certified engine itself.
 
 **Arbitrary domains: parameter tableaux (MEASURED).** Over arbitrary
 domains the finite unfolding is unavailable; the standard cure —
@@ -516,7 +525,11 @@ self-extensionality, the substitution lemma and structurality of ⊨
 (`entails_structural`). **The sequent reading (`ZSequent`, zero
 axioms):** cut admissibility on top of the engine certificate
 (`cut_admissible`), admissible weakening, derivable identity — the
-semantic cut elimination of §5, kernel-checked.
+semantic cut elimination of §5, kernel-checked. **Quantifier tableaux
+(`ZQuant`, zero axioms):** finite-domain quantifiers as strict folds,
+the n-ary signed rules as preimage-coverage theorems, UI/EG in
+membership form, and the battery of eight tableau verdicts as kernel
+evaluations of the certified engine (§6).
 
 ## 9. Quarantine as a fixed point: the two-register architecture
 (MEASURED)
@@ -947,8 +960,9 @@ non-registrability of streams (§13), and the NaN signature x ≠ x.
 
 ## 22. Roadmap
 
-A Lean port of the quantifier tableaux; a general Knaster–Tarski
-theorem for the lazy jump over finite systems; a syntactic
+A general Knaster–Tarski theorem for the lazy jump over finite
+systems; a Lean port of the parameter (arbitrary-domain) tableaux of
+§6; a syntactic
 cut-elimination procedure with complexity bounds (admissibility is
 settled — §5) and a description of the equivalent quasivariety
 (algebraizability is settled — §3.6); first-order semantics over

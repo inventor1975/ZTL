@@ -216,3 +216,12 @@
   saturation (argued); undecidability via the J-guard embedding of
   classical FO. Lean port on the roadmap.
 \end{theorem}
+
+\begin{theorem}[Quantifier tableaux, finite domains]\label{thm:quant}
+  \uses{thm:closesiff, def:jops}\lean{V.cover_allF_T, V.cover_allF_F, V.cover_exF_T, V.cover_exF_F, V.ui_mem, V.eg_mem, V.tab_ui, V.tab_drinker_fails}\leanok
+  Finite-domain quantifiers are strict folds in the certified language
+  (a singleton domain collapses both to the $J_T$ guard); the $n$-ary
+  signed rules are preimage-coverage theorems; UI/EG hold in membership
+  form; eight battery verdicts are kernel evaluations of the certified
+  engine.
+\end{theorem}

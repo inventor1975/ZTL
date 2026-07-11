@@ -326,6 +326,16 @@ contradiction.
   re-derived; Russell/twin distinguished. Logic untouched:
   quarantine = (Z, passport). Preprint §9.
 
+* `tool/` — ZTLStudio: zfl.py (the Zero-trust Formal Language:
+  parser, validator with machine-readable errors for the AI repair
+  loop, deterministic RU back-reading), engine.py (AI-free arbiter
+  over ztl/zverify/zpassport), translator.py (Groq: understanding
+  negotiation → ZFL emission → error-driven repair), ztlstudio.py +
+  static/ (three stacked panels: meta-chat / ZFL editor / results),
+  test_zfl.py (foundation stand, 21 checks). The pipeline embodies
+  the logic: the LLM's output is an unverified input; the core is
+  the customs.
+
 ## The road ahead (not started)
 
 * The lazy mode (Z flows, collapse at the boundary) as the second

@@ -37,6 +37,7 @@ STANDS = [
     ("bridge.py",      ["ALL ANSWERS COINCIDE"]),
     ("zquasi.py",      ["SUBDIRECTLY IRREDUCIBLE", "= 2 + 512, ALL externals",
                         "NOT a"]),
+    ("tool/test_zfl.py", ["ZFL FOUNDATION GREEN"]),
 ]
 
 

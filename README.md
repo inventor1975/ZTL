@@ -49,7 +49,16 @@ python3 zquasi.py      # quasivariety recon: SI generator, clone theorem, Plonka
 cd lean && lake build  # machine check of the core: zero axioms
 ```
 
-Full regression: `python3 run_all.py` (26 stands + Lean build).
+Full regression: `python3 run_all.py` (27 stands + Lean build).
+
+**ZTLStudio** (`tool/`): a local studio — a human states a paradox or
+a claim in natural language, the AI only *translates* (negotiated
+understanding → ZFL, the Zero-trust Formal Language, with a
+deterministic Russian back-reading as the non-hallucinating auditor and
+a validator-driven repair loop), and the measured ZTL core *judges*:
+verdicts with warranties, quarantine passports, stipulation options.
+`python3 tool/ztlstudio.py` → http://localhost:8190 (no dependencies;
+without GROQ_API_KEY it runs in pro mode — write ZFL by hand).
 
 The specification and all design decisions are in `SPEC.md`; the working
 preprint draft is `paper/ZTL-draft.md`. **Formalization blueprint**

@@ -189,8 +189,17 @@ contradiction.
   `ZQuant.lean` — finite-domain quantifier tableaux: ∀/∃ as strict
   folds in Fm (singleton = the J_T guard), n-ary signed rules as
   cover theorems, ui_mem/eg_mem over the whole language, 8 battery
-  verdicts as kernel evaluations of the certified engine. THE WHOLE
-  Lean corpus — 9 modules — on the empty axiom list.
+  verdicts as kernel evaluations of the certified engine.
+  `ZGround.lean` — the general Knaster–Tarski theorem: lazy evalK
+  monotone over the whole language, jumpL monotone, lfp by bounded
+  iteration (info-measure pigeonhole, no WF machinery), kt_least,
+  grounded_absolute (quarantine well-defined). New pitfalls fixed:
+  overlapping wildcard match rows taint DEFINITIONS with propext
+  through the matcher (kand/kor rewritten with explicit cells;
+  definition-level #print axioms added); core List.length_map /
+  length_replicate are simp-proved (propext) — hand-rolled. THE WHOLE
+  Lean corpus — 10 modules — on the empty axiom list, definitions
+  included.
 
 * `fixedpoint.py` — quarantine as a fixed point: the greedy jump is
   non-monotone and has no fixed points on odd cycles (liar period 2,

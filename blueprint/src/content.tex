@@ -234,3 +234,12 @@
   stipulation theorem measured totally; parity re-derived $62/62$.
   The even two-cycle's two classical models are kernel-checked.
 \end{theorem}
+
+\begin{theorem}[Knaster--Tarski for the lazy jump]\label{thm:kt}
+  \uses{thm:kleene}\lean{V.evalK_mono, V.jumpL_mono, V.kt_fixed, V.kt_least, V.grounded_absolute}\leanok
+  For every finite system: lazy evaluation is monotone over the whole
+  language, the jump is monotone, the iteration from $\bot$ stabilizes
+  within $n{+}1$ steps at the least fixed point, and the grounded part
+  is identical in every fixed point --- quarantine is well-defined.
+  Zero axioms (information-measure pigeonhole, no WF machinery).
+\end{theorem}

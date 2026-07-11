@@ -171,15 +171,17 @@ theorem no_gluts : ∀ p, ¬(p = T ∧ znot p = T) := by decide
 def knot : V → V
   | T => F | F => T | Z => Z
 
+-- Non-overlapping matches: an overlapping wildcard row pulls propext
+-- in through the compiled matcher (measured; same pitfall as eqAtom).
 def kand : V → V → V
-  | F, _ => F | _, F => F
-  | Z, _ => Z | _, Z => Z
-  | T, T => T
+  | T, T => T | T, F => F | T, Z => Z
+  | F, T => F | F, F => F | F, Z => F
+  | Z, T => Z | Z, F => F | Z, Z => Z
 
 def kor : V → V → V
-  | T, _ => T | _, T => T
-  | Z, _ => Z | _, Z => Z
-  | F, F => F
+  | T, T => T | T, F => T | T, Z => T
+  | F, T => T | F, F => F | F, Z => Z
+  | Z, T => T | Z, F => Z | Z, Z => Z
 
 /-- The information order: Z ⊑ everything, T and F incomparable. -/
 def leqb (a b : V) : Bool := a == b || a == Z
@@ -279,6 +281,8 @@ theorem cover_xnor_F : ∀ a b : V,
     zxnor a b = F ↔ (((a = T ∨ a = Z) ∧ (b = F ∨ b = Z)) ∨
                      ((a = F ∨ a = Z) ∧ (b = T ∨ b = Z))) := by decide
 
+#print axioms kand
+#print axioms kor
 #print axioms modus_ponens
 #print axioms lem_fails
 #print axioms liar_homeless

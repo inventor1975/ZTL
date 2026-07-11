@@ -529,7 +529,16 @@ semantic cut elimination of §5, kernel-checked. **Quantifier tableaux
 (`ZQuant`, zero axioms):** finite-domain quantifiers as strict folds,
 the n-ary signed rules as preimage-coverage theorems, UI/EG in
 membership form, and the battery of eight tableau verdicts as kernel
-evaluations of the certified engine (§6).
+evaluations of the certified engine (§6). **General Knaster–Tarski
+(`ZGround`, zero axioms):** the lazy register over the whole language,
+monotonicity, the least fixed point by bounded iteration, and the
+absoluteness of the grounded part (§9). Two further disinfection
+pitfalls surfaced here: an overlapping wildcard row in a match taints
+the DEFINITION itself with propext through the compiled matcher
+(invisible to theorem-level axiom prints — `kand`/`kor` were rewritten
+with explicit cells, and the corpus now prints definition-level axiom
+checks too), and core's `List.length_map`/`length_replicate` are
+simp-proved and carry propext — replaced by hand-rolled inductions.
 
 ## 9. Quarantine as a fixed point: the two-register architecture
 (MEASURED)
@@ -599,6 +608,21 @@ This is Kripke's taxonomy plus revision-theoretic signatures
 mirror §19, and quarantine = (Z, passport). Honest caveat: Yablo stays
 invisible — every finite truncation is grounded (§11), so the passport
 of infinite regress needs an infinite instrument.
+
+**The architecture, kernel-checked in general form.** The two-register
+theorem no longer rests on per-instance measurements: the Lean module
+`ZGround` (zero axioms) proves, for EVERY finite system of definitions,
+that lazy evaluation is monotone over the whole language
+(`evalK_mono`), hence the lazy jump is monotone (`jumpL_mono`); the
+iteration from ⊥ ascends and stabilizes within n+1 steps at the least
+fixed point (`kt_fixed`, via an information-measure pigeonhole — no
+classical choice, no well-founded machinery); the least point lies
+below every fixed point (`kt_least`); and a coordinate grounded in the
+least point carries the same classical value in every fixed point
+(`grounded_absolute`) — quarantine is well-defined, machine-checked.
+Together with the greedy register's kernel-checked non-monotonicity
+(§8, Part II), the necessity of two registers is now a theorem end to
+end.
 
 ## 10. The ontological status of Z: the system's passport
 
@@ -987,9 +1011,8 @@ non-registrability of streams (§13), and the NaN signature x ≠ x.
 
 ## 22. Roadmap
 
-A general Knaster–Tarski theorem for the lazy jump over finite
-systems; a Lean port of the parameter (arbitrary-domain) tableaux of
-§6; a syntactic
+A Lean port of the parameter (arbitrary-domain) tableaux of §6; a
+syntactic
 cut-elimination procedure with complexity bounds (admissibility is
 settled — §5) and a description of the equivalent quasivariety
 (algebraizability is settled — §3.6); first-order semantics over

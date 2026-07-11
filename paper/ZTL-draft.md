@@ -573,6 +573,33 @@ The engineering precedent — SQL (Kleene inside expressions, forced
 falsehood at the WHERE boundary) — turns out to be not an analogy but
 the same theorem, found by practice.
 
+**The quarantine passport (MEASURED).** Z alone is blind: the liar and
+the truth-teller land in quarantine with the same mark. The passport
+cures the blindness without touching the logic — verdicts, tables and
+greediness are intact; it is solver-side metadata computed per strongly
+connected component of the dependency graph. Kinds: **PARADOX** — the
+component has no classical model consistent with its grounded
+environment (odd cycles; the greedy oscillation period is recorded:
+liar 2, carousel 4) — the refusal is *permanent*; **UNDERDETERMINED** —
+classical models exist (even cycles, the truth-teller) — the refusal
+stands *until stipulation*; **INPUT** — a plain unverified datum — the
+refusal stands *until verification* (§19); **DOWNSTREAM** — inherited
+quarantine with the culprits listed (the provenance of refusal, §14
+again). The operational content is the **stipulation theorem**
+(MEASURED totally on a mixed zoo carrying every kind at once, with the
+grounded part untouched): a component is UNDERDETERMINED iff
+stipulating any of its classical models grounds it cleanly, and PARADOX
+iff every decree contradicts the component's own definitions —
+liftable-by-choice versus permanent, mechanically separated. The parity
+theorem of §11 re-derives through the passport (62 of 62 cycles), and
+Russell (§18) reads: R∈R — PARADOX, permanent; the twin S∈S —
+UNDERDETERMINED, awaiting an external decision; eight facts grounded.
+This is Kripke's taxonomy plus revision-theoretic signatures
+[5, 7], packaged as a computable instrument; the refusal classes now
+mirror §19, and quarantine = (Z, passport). Honest caveat: Yablo stays
+invisible — every finite truncation is grounded (§11), so the passport
+of infinite regress needs an infinite instrument.
+
 ## 10. The ontological status of Z: the system's passport
 
 The final and most precise formulation of what has been built:
@@ -966,8 +993,7 @@ systems; a Lean port of the parameter (arbitrary-domain) tableaux of
 cut-elimination procedure with complexity bounds (admissibility is
 settled — §5) and a description of the equivalent quasivariety
 (algebraizability is settled — §3.6); first-order semantics over
-arbitrary domains; a mark "passport" distinguishing kinds of
-ungroundedness; a practical zero-trust validation library (verdicts
+arbitrary domains; a practical zero-trust validation library (verdicts
 with warranties + evidence combination + provenance) — and a possible
 essay, "Reinventing Bochvar through NaN".
 

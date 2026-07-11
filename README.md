@@ -43,10 +43,11 @@ python3 zalgebra.py    # algebraic passport: J-operators, DDT for E, Blok–Pigo
 python3 zinterp.py     # Craig interpolation via expressive completeness
 python3 zsequent.py    # sequent reading: cut admissibility (semantic cut elimination)
 python3 zfo.py         # first order over arbitrary domains: parameter tableaux
+python3 zpassport.py   # quarantine passport: paradox / underdetermined / input
 cd lean && lake build  # machine check of the core: zero axioms
 ```
 
-Full regression: `python3 run_all.py` (23 stands + Lean build).
+Full regression: `python3 run_all.py` (24 stands + Lean build).
 
 The specification and all design decisions are in `SPEC.md`; the working
 preprint draft is `paper/ZTL-draft.md`. **Formalization blueprint**

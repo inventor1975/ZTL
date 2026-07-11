@@ -14,10 +14,12 @@
    **Evidence combination** — two sources about one value: fusion of
    intervals/masses (they have Dempster's rule, we don't). Candidate
    for twin #6: provenance algebra (Green–Tannen semirings).
-3. **Z is blind to the kinds of ungroundedness** — the liar and the
-   truth-teller are both Z; revision theory distinguishes them by
-   patterns. Enrich the mark with a "passport" without killing
-   greediness?
+3. ✅ DONE (E18, zpassport.py): the quarantine passport — per-SCC
+   kinds (PARADOX permanent / UNDERDETERMINED until stipulation /
+   INPUT until verification / DOWNSTREAM with culprits); stipulation
+   theorem total; parity re-derived 62/62; Russell: R∈R paradox, twin
+   underdetermined; greediness and verdicts untouched. Lean
+   discriminator passport_even2 in Facts.lean. Preprint §9.
 4. PARTIALLY DONE (E14, zalgebra.py + ZAlgebra.lean, 2026-07-11):
    ✅ algebraic semantics EXISTS — Blok–Pigozzi conditions verified on
    the matrix (Δ, truth equation, (i)–(iv)) ⟹ ZTL algebraizable;

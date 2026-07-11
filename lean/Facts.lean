@@ -76,11 +76,19 @@ theorem yablo3_unique : ∀ a b c : V,
 earn truth — the contract is void. -/
 theorem crocodile_deal_void : zxnor Z Z = F := rfl
 
+/-- Passport discriminator (E18): the even two-cycle has EXACTLY two
+classical models — underdetermined, liftable by stipulation; the odd
+loop has none (liar_period2, carousel_no_fp) — paradox, permanent. -/
+theorem passport_even2 : ∀ a b : V, (a = T ∨ a = F) → (b = T ∨ b = F) →
+    ((a = znot b ∧ b = znot a) ↔
+     ((a = T ∧ b = F) ∨ (a = F ∧ b = T))) := by decide
+
 #print axioms ui_law_dom2
 #print axioms notex_allnot_dom2_fails
 #print axioms liar_period2
 #print axioms carousel_period4
 #print axioms curry_homeless
 #print axioms yablo3_unique
+#print axioms passport_even2
 
 end V

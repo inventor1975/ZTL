@@ -286,6 +286,14 @@ contradiction.
   countermodel verified; non-terminating branches ⇒ finite
   certificate), completeness = Hintikka saturation (argued);
   undecidable via the J-guard embedding of classical FO. Preprint §6.
+* `zpassport.py` — E18 the quarantine passport: per-SCC diagnosis of
+  ungroundedness (PARADOX with oscillation period — permanent /
+  UNDERDETERMINED — until stipulation / INPUT — until verification /
+  DOWNSTREAM — inherited, culprits listed); the stipulation theorem
+  (underdetermined ⟺ liftable by choice, paradox ⟺ every decree
+  self-contradicts) measured totally on a mixed zoo; parity 62/62
+  re-derived; Russell/twin distinguished. Logic untouched:
+  quarantine = (Z, passport). Preprint §9.
 
 ## The road ahead (not started)
 

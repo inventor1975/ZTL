@@ -32,6 +32,8 @@ STANDS = [
     ("zinterp.py",     ["✓ INTERPOLATION HOLDS, total on the pool"]),
     ("zsequent.py",    ["✓ CUT IS ADMISSIBLE (semantic cut elimination), total"]),
     ("zfo.py",         ["ALL verdicts cross-checked ✓", "guarded drinker"]),
+    ("zpassport.py",   ["✓ STIPULATION THEOREM: total",
+                        "parity cross-check: 62 of 62 ✓"]),
 ]
 
 

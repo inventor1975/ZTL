@@ -1,0 +1,143 @@
+% ZTL Blueprint: formalization map. All \leanok items are proven in the
+% repository's Lean corpus with an empty axiom list.
+
+\chapter{Semantics}
+
+\begin{definition}[Values and the mark]\label{def:values}
+  \lean{V}\leanok
+  Truth values are $T$ and $F$; the third symbol $Z$ is a mark for an
+  unverified input, not a truth value.
+\end{definition}
+
+\begin{definition}[Generating principle: the lift]\label{def:lift}
+  \uses{def:values}\lean{V.lift1, V.lift2}\leanok
+  For a classical connective $f$, its ZTL lift returns $T$ iff $f$ is
+  forced to $T$ under \emph{every} classical reading of $Z$; otherwise
+  $F$. Truth is never granted on credit.
+\end{definition}
+
+\begin{definition}[Connectives]\label{def:ops}
+  \uses{def:lift}\lean{V.znot, V.zand, V.zor, V.zimp, V.zxor, V.zxnor}\leanok
+  All six connectives are lifts of their classical cores; no table is
+  postulated.
+\end{definition}
+
+\begin{theorem}[Anchor cells]\label{thm:anchors}
+  \uses{def:ops}\lean{V.ax_not_Z, V.ax_notnot_Z, V.ax_xnor_ZZ, V.ax_xor_ZT}\leanok
+  The design anchor cells hold: $\neg Z=F$, $\neg\neg Z=T$,
+  $Z\leftrightarrow Z=F$, $Z\oplus T=F$, etc.
+\end{theorem}
+
+\begin{theorem}[Greediness]\label{thm:greedy}
+  \uses{def:ops}\lean{V.evalF_classical}\leanok
+  Every compound formula is classical under every valuation: $Z$ lives
+  only on atoms.
+\end{theorem}
+
+\chapter{Laws and rules}
+
+\begin{theorem}[Modus ponens]\label{thm:mp}
+  \uses{def:ops}\lean{V.modus_ponens}\leanok
+  From $p=T$ and $p\to q=T$ follows $q=T$: earned truth is transported.
+\end{theorem}
+
+\begin{theorem}[Fallen laws]\label{thm:fallen}
+  \uses{def:ops}\lean{V.lem_fails, V.deMorgan1_fails, V.contraposition_fails, V.imp_refl_fails}\leanok
+  Excluded middle, De Morgan, contraposition-as-identity and $p\to p$
+  fail --- all only on $Z$, all are ``truth from form''.
+\end{theorem}
+
+\begin{theorem}[Rules vs laws split]\label{thm:split}
+  \uses{thm:mp, thm:fallen}\lean{V.rule_contraposition, V.rule_dn_elim_fails}\leanok
+  Contraposition survives as an inference rule while failing as an
+  identity; double-negation elimination fails even as a rule. The
+  deduction theorem holds only left-to-right.
+\end{theorem}
+
+\begin{theorem}[No gluts]\label{thm:nogluts}
+  \uses{def:ops}\lean{V.no_gluts}\leanok
+  $v(p)=v(\neg p)=T$ is unsatisfiable: ZTL is paracomplete, not
+  paraconsistent.
+\end{theorem}
+
+\chapter{Tableau calculus, certified}
+
+\begin{definition}[Signs]\label{def:signs}
+  \uses{def:values}\lean{V.SignT, V.SignF, V.SignP, V.SignN}\leanok
+  Strict signs $T,F$ and weak signs $P=\{T,Z\}$, $N=\{F,Z\}$; weak signs
+  occur only in refutation polarity.
+\end{definition}
+
+\begin{definition}[Engine]\label{def:closes}
+  \uses{def:signs, thm:greedy}\lean{V.closes}\leanok
+  Fuel-indexed structural tableau engine over the generating basis
+  $\{\neg,\wedge,\vee\}$; heavy connectives reduce by the living
+  identities.
+\end{definition}
+
+\begin{theorem}[Soundness and completeness]\label{thm:closesiff}
+  \uses{def:closes}\lean{V.closes_iff}\leanok
+  The tableau closes iff the signed nodes are unsatisfiable --- for all
+  formulas, by induction on weighted size. Zero axioms.
+\end{theorem}
+
+\begin{theorem}[Entailment certificate]\label{thm:tproves}
+  \uses{thm:closesiff}\lean{V.tproves_iff}\leanok
+  $\Gamma\vdash\varphi$ by the engine iff every valuation making all
+  premises $T$ makes $\varphi$ $T$.
+\end{theorem}
+
+\begin{theorem}[Native engine agrees]\label{thm:agree}
+  \uses{thm:tproves}\lean{V.closesN_iff, V.engines_agree}\leanok
+  The engine with native signed rules for $\to,\oplus,\leftrightarrow$
+  is certified by the same induction and returns identical verdicts.
+\end{theorem}
+
+\chapter{Registers and paradoxes}
+
+\begin{theorem}[Liar is homeless]\label{thm:liar}
+  \uses{def:ops}\lean{V.liar_homeless}\leanok
+  Negation has no fixed point: no value seats the liar; quarantine is
+  irremovable.
+\end{theorem}
+
+\begin{theorem}[Kleene register]\label{thm:kleene}
+  \uses{thm:liar}\lean{V.kleene_and_monotone, V.eager_and_not_monotone, V.liar_kleene_home}\leanok
+  The lazy register is monotone and homes the liar ($\neg Z=Z$); the
+  eager register is not monotone: grounding and verdicts require two
+  different registers.
+\end{theorem}
+
+\begin{theorem}[Carousel and revenge]\label{thm:carousel}
+  \uses{thm:kleene}\lean{V.carousel_no_model, V.revenge_bullet}\leanok
+  The two-sentence cycle has no eager model over all nine value pairs;
+  the revenge sentence's content evaluates to $T$ while the sentence
+  stays quarantined --- the price is paid explicitly.
+\end{theorem}
+
+\begin{theorem}[Dynamics]\label{thm:dynamics}
+  \uses{thm:liar}\lean{V.liar_period2, V.carousel_period4, V.curry_homeless, V.yablo3_unique}\leanok
+  Liar oscillates with period 2, the carousel with period 4; Curry is
+  homeless without using negation; the finite Yablo truncation has a
+  unique grounded model.
+\end{theorem}
+
+\chapter{Sets with unverified elements}
+
+\begin{definition}[Marked elements]\label{def:el}
+  \uses{def:values}\lean{V.El, V.eqAtom}\leanok
+  Elements are verified values or marks; the equality atom yields $Z$
+  whenever a mark is involved --- even a mark with itself.
+\end{definition}
+
+\begin{theorem}[Marks earn no membership]\label{thm:memz}
+  \uses{def:el}\lean{V.memZ}\leanok
+  $\mathrm{mem}(z, S)=F$ for every mark $z$ and every list $S$:
+  membership is an existential fold with strict witnesses.
+\end{theorem}
+
+\begin{theorem}[Identity laws fall on marked sets]\label{thm:marked}
+  \uses{thm:memz}\lean{V.sub_marked_false, V.seteq_self_marked}\leanok
+  A marked set is not provably a subset of itself; reflexivity of set
+  equality fails --- inherited from the tables, not postulated.
+\end{theorem}

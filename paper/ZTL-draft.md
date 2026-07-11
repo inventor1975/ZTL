@@ -38,8 +38,11 @@ supervaluation); a probabilistic identification (verdicts are the
 {0,1}-threshold of Dempster–Shafer belief functions); a theory of
 verification (a verdict is a pair "value + stability warranty") and of
 evidence combination (conflict is never renormalized — Zadeh's paradox
-is resolved in Smets' favor). The entire core and both engine
-certificates are formalized in Lean 4 **with an empty axiom list**. As a
+is resolved in Smets' favor). The entire development — the core,
+both engine certificates with cut admissibility, the algebraic
+witnesses, the general fixed-point theorem and the expedition twins,
+ten modules in all — is formalized in Lean 4 **with an empty axiom
+list, definitions included**. As a
 test bench the logic is run over the classical paradoxes — the liar,
 Jourdain's carousel, Curry, Yablo, the crocodile, Russell — and in every
 case explosion is replaced by pointwise quarantine (for Russell, 8 of 9

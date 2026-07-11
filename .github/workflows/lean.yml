@@ -1,0 +1,25 @@
+name: lean
+
+on:
+  push:
+    paths:
+      - "lean/**"
+      - ".github/workflows/lean.yml"
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: leanprover/lean-action@v1
+        with:
+          lake-package-directory: lean
+      - name: zero-axiom ledger
+        working-directory: lean
+        run: |
+          lake build > build.log 2>&1
+          clean=$(grep -c "does not depend on any axioms" build.log || true)
+          dirty=$(grep -c "depends on axioms" build.log || true)
+          echo "zero-axiom checks: $clean; dirty: $dirty"
+          test "$dirty" -eq 0 && test "$clean" -ge 60

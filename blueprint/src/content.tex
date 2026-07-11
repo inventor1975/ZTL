@@ -199,6 +199,8 @@
   roadmap.
 \end{theorem}
 
+\chapter{Proof theory and quantifiers}
+
 \begin{theorem}[Cut admissibility]\label{thm:cut}
   \uses{thm:closesiff}\lean{V.cut_admissible, V.weakening_admissible, V.identity_refutable}\leanok
   The tableau engine read bottom-up is a cut-free sequent calculus;
@@ -226,6 +228,8 @@
   engine.
 \end{theorem}
 
+\chapter{Grounding, general}
+
 \begin{theorem}[Quarantine passport]\label{thm:passport}
   \uses{thm:kleene, thm:dynamics}\lean{V.passport_even2}\leanok
   Per-component diagnosis of ungroundedness: PARADOX (no classical
@@ -243,6 +247,8 @@
   is identical in every fixed point --- quarantine is well-defined.
   Zero axioms (information-measure pigeonhole, no WF machinery).
 \end{theorem}
+
+\chapter{Expedition twins}
 
 \begin{theorem}[Expedition twins]\label{thm:exped}
   \uses{thm:memz, def:jops}\lean{V.eqStream_never_T, V.eqStream_apart, V.diag_not_member, V.inj_cert_marked, V.mark_self_not_earned, V.atom_thresholds}\leanok

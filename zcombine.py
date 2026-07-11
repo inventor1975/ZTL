@@ -1,18 +1,17 @@
 # -*- coding: utf-8 -*-
 """
-Экспедиция Э13: комбинирование свидетельств.
+Expedition E13: evidence combination.
 
-Свидетельства об одном значении = ограничения; комбинация = пересечение.
-Пустое пересечение = ЗАРАБОТАННОЕ противоречие источников — не
-перенормируется, а предъявляется. Промеры:
-  1. Пересечение интервалов; ТЕОРЕМА ОБЪЕДИНЕНИЯ: verify(m, v) =
-     combine(m, свидетельство-синглтон [v,v]) — Э12 есть частный
-     случай Э13.
-  2. Парадокс Заде: правило Демпстера (перенормировка конфликта)
-     против конъюнктивного правила Сметса (конфликт хранится в m(∅));
-     ZTL-вердикты поверх обоих.
-  3. Полиномы провенанса (Green–Tannen 2007, близнец №6): родословная
-     факта = A·B + C; отзыв источника = обнуление переменной.
+Pieces of evidence about one value = constraints; combination =
+intersection. An empty intersection = an EARNED contradiction of
+sources — not renormalized but exhibited. Measurements:
+  1. Interval intersection; THE UNIFICATION THEOREM: verify(m, v) =
+     combine(m, singleton witness [v,v]) — E12 is a special case of E13.
+  2. Zadeh's paradox: Dempster's rule (conflict renormalization)
+     against Smets' conjunctive rule (conflict kept in m(∅));
+     ZTL verdicts on top of both.
+  3. Provenance polynomials (Green–Tannen 2007, twin #6): a fact's
+     pedigree = A·B + C; source retraction = zeroing a variable.
 """
 
 from fractions import Fraction
@@ -20,40 +19,40 @@ from itertools import product
 
 from ztl import T, F, Z
 
-# ------------------------------------------- 1. интервальные свидетельства
+# ------------------------------------------- 1. interval evidence
 def combine(iv1, iv2):
-    """Пересечение ограничений; None = заработанный конфликт."""
+    """Intersection of constraints; None = an earned conflict."""
     lo, hi = max(iv1[0], iv2[0]), min(iv1[1], iv2[1])
     return (lo, hi) if lo <= hi else None
 
 
 def verify_iv(iv, v):
-    """Верификация из Э12 как комбинация со свидетелем-синглтоном."""
+    """The verification of E12 as combination with a singleton witness."""
     return combine(iv, (v, v))
 
 
 def intervals():
-    print("### 1. Интервалы: комбинация = пересечение; verify = частный случай")
+    print("### 1. Intervals: combination = intersection; verify = a special case")
     a, b = (0, 5), (3, 9)
-    print(f"  A: m∈{a};  B: m∈{b};  A⊗B: m∈{combine(a, b)} — сужение,")
-    print("  комбинация свидетельств и есть ход верификации (Э8/Э12).")
+    print(f"  A: m∈{a};  B: m∈{b};  A⊗B: m∈{combine(a, b)} — narrowing,")
+    print("  combining evidence IS the verification move (E8/E12).")
     c, d = (0, 2), (5, 9)
     r = combine(c, d)
-    print(f"  A: m∈{c};  B: m∈{d};  A⊗B: {r} — ПУСТО: противоречие")
-    print("  источников ЗАРАБОТАНО (вердикт «оба честны» = F, стабильное).")
-    # теорема объединения: verify = combine с синглтоном
+    print(f"  A: m∈{c};  B: m∈{d};  A⊗B: {r} — EMPTY: the contradiction")
+    print("  of the sources is EARNED (the verdict \"both honest\" = F, stable).")
+    # the unification theorem: verify = combine with a singleton
     cases = [((0, 9), 4), ((3, 7), 5), ((0, 5), 7)]
     ok = all(verify_iv(iv, v) == combine(iv, (v, v)) for iv, v in cases)
-    print(f"  Теорема объединения verify=combine∘синглтон: "
-          f"{'✓ на всех случаях' if ok else '✗'}")
-    print(f"  (в т.ч. провальная верификация: m∈(0,5), verify 7 → "
-          f"{verify_iv((0, 5), 7)} — сам акт проверки может заработать")
-    print("  конфликт: проверяющий против прежних свидетельств)\n")
+    print(f"  Unification theorem verify=combine∘singleton: "
+          f"{'✓ on all cases' if ok else '✗'}")
+    print(f"  (including a failing verification: m∈(0,5), verify 7 → "
+          f"{verify_iv((0, 5), 7)} — the act of checking can itself earn")
+    print("  a conflict: the checker against the prior evidence)\n")
 
 
-# --------------------------------------------------- 2. массы и Заде
+# --------------------------------------------------- 2. masses and Zadeh
 def dempster(m1, m2, frame):
-    """Классическое правило Демпстера (с перенормировкой конфликта)."""
+    """The classical Dempster rule (with conflict renormalization)."""
     raw = {}
     conflict = Fraction(0)
     for s1, w1 in m1.items():
@@ -68,7 +67,7 @@ def dempster(m1, m2, frame):
 
 
 def smets(m1, m2):
-    """Конъюнктивное правило Сметса: конфликт хранится в m(∅)."""
+    """Smets' conjunctive rule: the conflict is kept in m(∅)."""
     raw = {}
     for s1, w1 in m1.items():
         for s2, w2 in m2.items():
@@ -78,61 +77,61 @@ def smets(m1, m2):
 
 
 def zadeh():
-    print("### 2. Парадокс Заде: два врача, три диагноза (M, C, O)")
-    m1 = {"M": Fraction(99, 100), "O": Fraction(1, 100)}   # врач 1
-    m2 = {"C": Fraction(99, 100), "O": Fraction(1, 100)}   # врач 2
-    print("  Врач 1: менингит 0.99, опухоль 0.01")
-    print("  Врач 2: сотрясение 0.99, опухоль 0.01")
+    print("### 2. Zadeh's paradox: two doctors, three diagnoses (M, C, O)")
+    m1 = {"M": Fraction(99, 100), "O": Fraction(1, 100)}   # doctor 1
+    m2 = {"C": Fraction(99, 100), "O": Fraction(1, 100)}   # doctor 2
+    print("  Doctor 1: meningitis 0.99, tumor 0.01")
+    print("  Doctor 2: concussion 0.99, tumor 0.01")
     d, conf = dempster(m1, m2, "MCO")
-    print(f"  ДЕМПСТЕР (перенормировка): опухоль = {d.get('O')} — уверенность")
-    print(f"  из ниоткуда (оба врача её почти исключали); конфликт "
-          f"{conf} отмыт.")
+    print(f"  DEMPSTER (renormalization): tumor = {d.get('O')} — certainty")
+    print(f"  out of nowhere (both doctors nearly excluded it); the conflict "
+          f"{conf} laundered.")
     s = smets(m1, m2)
-    print(f"  СМЕТС/ZTL (конфликт предъявлен): m(∅) = {s.get('', 0)},"
-          f" m(опухоль) = {s.get('O', 0)}")
-    print("  ZTL-вердикты: «опухоль» по Демпстеру — стабильное T (ЛОЖНО");
-    print("  уверенное); по-нашему — конфликт источников заработан (0.9999),")
-    print("  вердикт о диагнозе: ОТКАЗ до разбирательства с врачами.")
-    print("  Перенормировка конфликта = отмывание Z в число — та же болезнь,")
-    print("  что у равномерного приора (Э9), в комбинировании.\n")
+    print(f"  SMETS/ZTL (conflict exhibited): m(∅) = {s.get('', 0)},"
+          f" m(tumor) = {s.get('O', 0)}")
+    print("  ZTL verdicts: \"tumor\" by Dempster — a stable T (FALSELY");
+    print("  confident); our way — the source conflict is earned (0.9999),")
+    print("  the diagnostic verdict: REFUSAL until the doctors are sorted out.")
+    print("  Renormalizing conflict = laundering Z into a number — the same")
+    print("  disease as the uniform prior (E9), now in combination.\n")
 
 
-# ------------------------------------------- 3. полиномы провенанса
+# ------------------------------------------- 3. provenance polynomials
 def poly_eval(poly, trust):
-    """poly: список моноромов (кортежи источников); trust: источник→бул.
-    Факт заслужен ⟺ есть моном, все источники которого проверены."""
+    """poly: list of monomials (tuples of sources); trust: source→bool.
+    A fact is earned ⟺ some monomial has all its sources verified."""
     return T if any(all(trust[s] for s in mono) for mono in poly) else F
 
 
 def provenance():
-    print("### 3. Провенанс-полиномы (близнец №6: Green–Tannen 2007)")
-    fact = [("A", "B"), ("C",)]          # факт выводим как A·B + C
-    print("  Факт с родословной A·B + C (два независимых вывода)")
+    print("### 3. Provenance polynomials (twin #6: Green–Tannen 2007)")
+    fact = [("A", "B"), ("C",)]          # the fact derivable as A·B + C
+    print("  A fact with pedigree A·B + C (two independent derivations)")
     scenarios = [
-        ("все источники проверены", {"A": 1, "B": 1, "C": 1}),
-        ("C отозван", {"A": 1, "B": 1, "C": 0}),
-        ("A отозван", {"A": 0, "B": 1, "C": 1}),
-        ("A и C отозваны", {"A": 0, "B": 1, "C": 0}),
+        ("all sources verified", {"A": 1, "B": 1, "C": 1}),
+        ("C retracted", {"A": 1, "B": 1, "C": 0}),
+        ("A retracted", {"A": 0, "B": 1, "C": 1}),
+        ("A and C retracted", {"A": 0, "B": 1, "C": 0}),
     ]
     for nm, trust in scenarios:
-        print(f"  {nm:28s} → вердикт факта: {poly_eval(fact, trust)}")
-    print("  Отзыв источника = обнуление переменной; факт жив, пока жив")
-    print("  хоть один моном. Наши родословные меток (Э7) — это мономы;")
-    print("  комбинация свидетельств строит полиномы. Шестой близнец:")
-    print("  semiring provenance (Green–Tannen) — алгебра доверия выводам.")
+        print(f"  {nm:28s} → fact verdict: {poly_eval(fact, trust)}")
+    print("  Source retraction = zeroing a variable; the fact lives while at")
+    print("  least one monomial lives. Our mark pedigrees (E7) are monomials;")
+    print("  evidence combination builds polynomials. The sixth twin:")
+    print("  semiring provenance (Green–Tannen) — an algebra of trust in derivations.")
 
 
 if __name__ == "__main__":
     print("=" * 72)
-    print("Э13. КОМБИНИРОВАНИЕ СВИДЕТЕЛЬСТВ: конфликт не отмывается")
+    print("E13. EVIDENCE COMBINATION: conflict is not laundered")
     print("=" * 72 + "\n")
     intervals()
     zadeh()
     provenance()
-    print("\n### Итог")
-    print("  Комбинация = пересечение ограничений; verify (Э12) — её частный")
-    print("  случай (свидетель-синглтон): операции слились в одну. Конфликт —")
-    print("  заработанный факт, не шум для перенормировки (Заде решается")
-    print("  в сторону Сметса). Родословные доросли до полиномов источников.")
-    print("  Незнание нельзя отмыть ни приором (Э9), ни перенормировкой (Э13):")
-    print("  один принцип, две главы.")
+    print("\n### Summary")
+    print("  Combination = intersection of constraints; verify (E12) is its")
+    print("  special case (a singleton witness): the operations merged into")
+    print("  one. Conflict is an earned fact, not noise for renormalization")
+    print("  (Zadeh is resolved in Smets' favor). Pedigrees grew into source")
+    print("  polynomials. Ignorance can be laundered neither by a prior (E9)")
+    print("  nor by renormalization (E13): one principle, two chapters.")

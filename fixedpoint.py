@@ -1,31 +1,34 @@
 # -*- coding: utf-8 -*-
 """
-Карантин как неподвижная точка (à la Крипке) над ZTL.
+Quarantine as a fixed point (à la Kripke) over ZTL.
 
-Язык с предикатом истинности: система предложений s_i, каждое определено
-формулой над атомами Tr(s_j) (и константами). «Скачок» J переоценивает
-все предложения по текущей оценке v. Неподвижные точки J — само-
-согласованные оценки; Z-множество наименьшей точки = карантин.
+A language with a truth predicate: a system of sentences s_i, each
+defined by a formula over atoms Tr(s_j) (and constants). The "jump" J
+re-evaluates all sentences under the current valuation v. Fixed points
+of J are self-consistent valuations; the Z-set of the least point =
+quarantine.
 
-Два регистра:
-  * ЖАДНЫЙ (ZTL): Z испаряется на каждом операторе — регистр вердиктов;
-  * ЛЕНИВЫЙ (сильный Клини): Z течёт (¬Z=Z и т.д.) — регистр заземления.
+Two registers:
+  * GREEDY (ZTL): Z evaporates at every operator — the verdict register;
+  * LAZY (strong Kleene): Z flows (¬Z=Z etc.) — the grounding register.
 
-Гипотезы (проверяются перебором, MEASURED):
-  H1. Жадный регистр немонотонен по информационному порядку (Z ⊑ T, Z ⊑ F);
-  H2. На лжеце (и любом нечётном цикле) жадный скачок НЕ имеет неподвижных
-      точек — итерация осциллирует (карусель, формально);
-  H3. Ленивый скачок монотонен и всюду имеет наименьшую неподвижную точку
-      (Кнастер–Тарский), парадоксы получают Z;
-  H4. Двухрегистровая архитектура обязательна: заземление — лениво,
-      вердикты (в т.ч. пуля мстителя «содержание T, истины нет») — жадно.
+Hypotheses (checked by enumeration, MEASURED):
+  H1. The greedy register is non-monotone in the information order
+      (Z ⊑ T, Z ⊑ F);
+  H2. On the liar (and any odd cycle) the greedy jump has NO fixed
+      points — the iteration oscillates (the carousel, formally);
+  H3. The lazy jump is monotone and has a least fixed point everywhere
+      (Knaster–Tarski), paradoxes receive Z;
+  H4. The two-register architecture is mandatory: grounding is lazy,
+      verdicts (including the avenger's bullet "content T, no truth")
+      are greedy.
 """
 
 from itertools import product
 
 from ztl import T, F, Z, VALUES, OPS2, NOT
 
-# --- ленивый регистр: сильный Клини ---
+# --- the lazy register: strong Kleene ---
 def k_not(a):
     return {T: F, F: T, Z: Z}[a]
 
@@ -50,9 +53,9 @@ EAGER = {"not": NOT, **OPS2}
 
 
 def ev_reg(phi, v, ops):
-    """Значение формулы при оценке v (имя предложения -> значение)."""
+    """Value of a formula under valuation v (sentence name -> value)."""
     if isinstance(phi, str):
-        return phi if phi in VALUES else v[phi]   # константа или Tr(имя)
+        return phi if phi in VALUES else v[phi]   # constant or Tr(name)
     op = phi[0]
     if op == "not":
         return ops["not"](ev_reg(phi[1], v, ops))
@@ -74,7 +77,7 @@ def fixed_points(system, ops):
 
 
 def leq_info(a, b):
-    """Информационный порядок: Z ⊑ всё, T и F несравнимы."""
+    """Information order: Z ⊑ everything, T and F incomparable."""
     return a == b or a == Z
 
 
@@ -83,7 +86,7 @@ def v_leq(v, w):
 
 
 def monotone_witness(system, ops):
-    """Пара оценок v ⊑ w с J(v) ⋢ J(w), если есть."""
+    """A pair of valuations v ⊑ w with J(v) ⋢ J(w), if one exists."""
     names = sorted(system)
     vals = [dict(zip(names, c)) for c in product(VALUES, repeat=len(names))]
     for v in vals:
@@ -95,38 +98,38 @@ def monotone_witness(system, ops):
 
 
 def iterate(system, ops, steps=12):
-    """Итерация скачка из всюду-Z; хвост траектории."""
+    """Iterate the jump from all-Z; tail of the trajectory."""
     v = {name: Z for name in system}
     trace = [v]
     for _ in range(steps):
         v = jump(system, v, ops)
         if v in trace:
             i = trace.index(v)
-            return trace, i          # цикл: trace[i:] повторяется
+            return trace, i          # cycle: trace[i:] repeats
         trace.append(v)
     return trace, None
 
 
 def least_fp_lazy(system):
-    """Наименьшая неподвижная точка ленивого скачка (итерацией из Z)."""
+    """Least fixed point of the lazy jump (by iteration from Z)."""
     trace, loop = iterate(system, LAZY, steps=64)
-    assert loop == len(trace) - 1 or loop is None, "ленивый скачок зациклился?"
+    assert loop == len(trace) - 1 or loop is None, "lazy jump cycled?"
     return trace[-1]
 
 
-# --- зоопарк систем ---
+# --- the zoo of systems ---
 ZOO = {
-    "лжец            λ: ¬Tr(λ)": {
+    "liar            λ: ¬Tr(λ)": {
         "λ": ("not", "λ")},
-    "правдолюб       τ: Tr(τ)": {
+    "truth-teller    τ: Tr(τ)": {
         "τ": "τ"},
-    "карусель        A: Tr(B); B: ¬Tr(A)": {
+    "carousel        A: Tr(B); B: ¬Tr(A)": {
         "A": "B", "B": ("not", "A")},
-    "чётный цикл     A: ¬Tr(B); B: ¬Tr(A)": {
+    "even cycle      A: ¬Tr(B); B: ¬Tr(A)": {
         "A": ("not", "B"), "B": ("not", "A")},
-    "заземлённые     g0: T; g1: Tr(g0); g2: ¬Tr(g1)∨Tr(g0)": {
+    "grounded        g0: T; g1: Tr(g0); g2: ¬Tr(g1)∨Tr(g0)": {
         "g0": "T", "g1": "g0", "g2": ("or", ("not", "g1"), "g0")},
-    "мститель        μ: ¬Tr(μ) ∨ ¬(Tr(μ)↔Tr(μ))": {
+    "avenger         μ: ¬Tr(μ) ∨ ¬(Tr(μ)↔Tr(μ))": {
         "μ": ("or", ("not", "μ"), ("not", ("xnor", "μ", "μ")))},
 }
 
@@ -137,7 +140,7 @@ def fmt_v(v):
 
 if __name__ == "__main__":
     print("=" * 74)
-    print("КАРАНТИН КАК НЕПОДВИЖНАЯ ТОЧКА: жадный и ленивый скачки")
+    print("QUARANTINE AS A FIXED POINT: the greedy and lazy jumps")
     print("=" * 74)
 
     for title, system in ZOO.items():
@@ -145,44 +148,44 @@ if __name__ == "__main__":
 
         fps_e = fixed_points(system, EAGER)
         fps_l = fixed_points(system, LAZY)
-        print(f"  неподвижные точки ЖАДНОГО скачка: "
-              + (", ".join(map(fmt_v, fps_e)) if fps_e else "НЕТ"))
-        print(f"  неподвижные точки ЛЕНИВОГО скачка: "
-              + (", ".join(map(fmt_v, fps_l)) if fps_l else "НЕТ"))
+        print(f"  fixed points of the GREEDY jump: "
+              + (", ".join(map(fmt_v, fps_e)) if fps_e else "NONE"))
+        print(f"  fixed points of the LAZY jump: "
+              + (", ".join(map(fmt_v, fps_l)) if fps_l else "NONE"))
 
         mw = monotone_witness(system, EAGER)
         ml = monotone_witness(system, LAZY)
         if mw:
             v, w = mw
-            print(f"  жадный скачок НЕмонотонен: {fmt_v(v)} ⊑ {fmt_v(w)}, "
-                  f"но J(v)={fmt_v(jump(system, v, EAGER))} ⋢ "
+            print(f"  the greedy jump is NON-monotone: {fmt_v(v)} ⊑ {fmt_v(w)}, "
+                  f"but J(v)={fmt_v(jump(system, v, EAGER))} ⋢ "
                   f"J(w)={fmt_v(jump(system, w, EAGER))}")
         if ml:
-            print("  !! ленивый скачок немонотонен — противоречит H3")
+            print("  !! the lazy jump is non-monotone — contradicts H3")
 
         trace, loop = iterate(system, EAGER)
         if loop is None:
-            print("  итерация жадного из Z: не сошлась за лимит")
+            print("  greedy iteration from Z: did not converge within the limit")
         else:
             period = len(trace) - loop
             if period == 1:
-                print(f"  итерация жадного из Z: сошлась к {fmt_v(trace[-1])}")
+                print(f"  greedy iteration from Z: converged to {fmt_v(trace[-1])}")
             else:
                 cyc = trace[loop:]
-                print(f"  итерация жадного из Z: ЦИКЛ периода {period}: "
+                print(f"  greedy iteration from Z: CYCLE of period {period}: "
                       + " → ".join(fmt_v(x) for x in cyc))
 
         lfp = least_fp_lazy(system)
         quarantine = [k for k, val in lfp.items() if val == Z]
-        print(f"  ленивое заземление (наименьшая т.): {fmt_v(lfp)}"
-              + (f"   карантин: {{{', '.join(quarantine)}}}" if quarantine
-                 else "   карантин пуст"))
+        print(f"  lazy grounding (least point): {fmt_v(lfp)}"
+              + (f"   quarantine: {{{', '.join(quarantine)}}}" if quarantine
+                 else "   quarantine empty"))
 
-        # жадный вердикт-читка поверх ленивой точки
+        # greedy verdict reading on top of the lazy point
         for name in sorted(system):
             content = ev_reg(system[name], lfp, EAGER)
             if lfp[name] == Z:
-                bullet = " ← ПУЛЯ: содержание T, истины нет" \
+                bullet = " ← BULLET: content T, no truth" \
                     if content == T else ""
-                print(f"    вердикт ZTL по содержанию {name}: {content}"
-                      f" (само предложение в карантине){bullet}")
+                print(f"    ZTL verdict on the content of {name}: {content}"
+                      f" (the sentence itself is quarantined){bullet}")

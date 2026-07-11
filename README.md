@@ -1,50 +1,12 @@
-# ZTL — Zero-Trust Logic / логика нулевого доверия
+# ZTL — Zero-Trust Logic
 
-Логика с принципом **«истина не выдаётся в кредит»**: вердикты всегда
-двузначны (T/F), а третий символ Z (zero-trust, «истина не заслужена») —
-метка непроверенного входа: она никогда не порождает T, если T не
-вынуждена при любом классическом прочтении. Default deny, перенесённый
-из безопасности в таблицы истинности; трёхсимвольные таблицы — рабочий
-калькулятор этой политики (онтологический паспорт — препринт, §10).
-
-Запуск (Python 3, без зависимостей):
-
-```
-python3 ztl.py         # таблицы + проверка опорных аксиом
-python3 audit.py       # аудит тождеств: живые/павшие законы, MP, жадность
-python3 entailment.py  # следование ⊨: правила против законов, теорема дедукции
-python3 tableau.py     # исчисление: знаковые таблó + сверка с ⊨ (2462 пары)
-python3 quantifiers.py # кванторы: строгие свидетели, UI/EG-асимметрия
-python3 tableau_fo.py  # кванторные таблó + сверка с перебором (28 пар)
-python3 paradoxes.py   # лжец, карусель, мститель
-python3 fixedpoint.py  # карантин как неподвижная точка, два регистра
-cd lean && lake build  # машинная проверка ядра: ноль аксиом
-```
-
-Спецификация и все проектные решения — в `SPEC.md`; рабочий черновик
-препринта — `paper/ZTL-draft.md`. **Блюпринт формализации** (карта
-теорем с графом зависимостей): https://inventor1975.github.io/ZTL/ Родословная честная: функционально
-ZTL — фрагмент внешнего слоя логики Бочвара B3 (1938), ядро {¬,∧,∨} —
-в классе 8Kb*; своё — импликативный этаж (7 клеток дельты, вне условий
-стандартности Россера–Тюркетта), порождающий принцип и двухрегистровая
-теорема о карантине.
-
-Проект возник 2026-07-10 из разбора парадокса лжеца; предшественник по
-верфи — VSPL (временная параконсистентная логика потоков).
-
-*AI-участие: проектировалось и написано в диалоге куратора (Виталий
-Резник) с Claude (Anthropic); решения по развилкам — куратора.*
-
----
-
-## English summary
-
-**ZTL — Zero-Trust Logic.** A two-valued logic over marked (unverified)
-inputs with one generating principle: *truth is never granted on credit* —
-a connective returns T only if T is forced under every classical reading
-of the unverified. Verdicts are always classical (T/F); the third symbol
-Z is an input mark, not a truth value. Default deny, ported from security
-into truth tables.
+A logic built on one principle: **truth is never granted on credit**.
+Verdicts are always two-valued (T/F); the third symbol Z (zero-trust,
+"truth not earned") is a mark on an unverified input: it never produces
+T unless T is forced under every classical reading of the unverified.
+Default deny, ported from security into truth tables; the three-symbol
+tables are the working calculator of this policy (ontological passport —
+preprint, §10).
 
 Highlights: machine-checked core in Lean 4 with **zero axioms** (no
 propext, no Quot.sound, no choice), including a certified tableau engine
@@ -55,7 +17,37 @@ probabilities, provenance semirings; quarantine treatment of the liar,
 Curry, Yablo and Russell (containment instead of explosion); verdicts
 carry a stability warranty (local answer + supervaluational guarantee).
 
-Run `python3 run_all.py` for the full regression (19 stands + Lean build).
-Formalization blueprint (theorem map with dependency graph):
-https://inventor1975.github.io/ZTL/ — License: MIT. Working draft of
-the preprint: `paper/ZTL-draft.md` (RU).
+Honest pedigree: functionally ZTL is a fragment of the external layer of
+Bochvar's B3 (1938); the {¬,∧,∨} core falls in the 8Kb* class. What is
+ours: the implication floor (a 7-cell delta, outside the
+Rosser–Turquette standardness conditions), the generating principle, and
+the two-register quarantine theorem.
+
+Run (Python 3, no dependencies):
+
+```
+python3 ztl.py         # tables + verification of the anchor axioms
+python3 audit.py       # identity audit: alive/fallen laws, MP, greediness
+python3 entailment.py  # entailment ⊨: rules vs laws, deduction theorem
+python3 tableau.py     # calculus: signed tableaux + check against ⊨ (2462 pairs)
+python3 quantifiers.py # quantifiers: strict witnesses, UI/EG asymmetry
+python3 tableau_fo.py  # quantifier tableaux + check against enumeration (28 pairs)
+python3 paradoxes.py   # liar, carousel, avenger
+python3 fixedpoint.py  # quarantine as a fixed point, two registers
+cd lean && lake build  # machine check of the core: zero axioms
+```
+
+Full regression: `python3 run_all.py` (19 stands + Lean build).
+
+The specification and all design decisions are in `SPEC.md`; the working
+preprint draft is `paper/ZTL-draft.md`. **Formalization blueprint**
+(theorem map with dependency graph):
+https://inventor1975.github.io/ZTL/
+
+The project originated on 2026-07-10 from an analysis of the liar
+paradox; its shipyard predecessor is VSPL (a temporal paraconsistent
+logic of streams). License: MIT.
+
+*AI participation: designed and written in a dialogue between the
+curator (Vitaly Reznik) and Claude (Anthropic); all fork decisions are
+the curator's.*

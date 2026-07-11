@@ -1,26 +1,30 @@
 # -*- coding: utf-8 -*-
 """
-Знаковые таблó для ZTL (архитектура Rousseau/Hähnle для конечнозначных логик).
+Signed tableaux for ZTL (the Rousseau/Hähnle architecture for
+finitely-valued logics).
 
-Знаки — множества значений:
-    T = {T}        строгая истина
-    F = {F}        строгая ложь
-    P = {T, Z}     «возможно T» (не-ложь)
-    N = {F, Z}     «не заслужил T» (не-истина)
+Signs are sets of values:
+    T = {T}        strict truth
+    F = {F}        strict falsehood
+    P = {T, Z}     "possibly T" (non-falsehood)
+    N = {F, Z}     "did not earn T" (non-truth)
 
-Правила выведены из прообразов таблиц ZTL и НЕСУТ подпись нулевого доверия:
-T-полярность требует строгих сертификатов (только знаки T/F),
-F-полярность довольствуется ослабленными (P/N). Классические таблó — это
-то же самое с P≡T и N≡F; ослабление — весь вклад Z.
+The rules are derived from the preimages of the ZTL tables and CARRY the
+zero-trust signature: T-polarity demands strict certificates (signs T/F
+only), F-polarity settles for weak ones (P/N). Classical tableaux are
+the same rules with P≡T and N≡F; the unglueing is Z's entire
+contribution.
 
-Теорема жадности вырождает знаки на составных формулах: P≡T, N≡F
-(составная не бывает Z); Z выживает только на атомах — открытая ветвь
-с парой знаков P и N на атоме даёт Z-контрмодель.
+The greediness theorem degenerates the signs on compound formulas: P≡T,
+N≡F (a compound is never Z); Z survives only on atoms — an open branch
+with the sign pair P and N on an atom yields a Z-countermodel.
 
-Проверки (MEASURED):
-  * rule_coverage_check — каждое правило точно покрывает прообраз таблицы;
-  * cross_check — решения таблó совпадают с ⊨ (перебором) на батарее
-    из entailment.py и на всех парах формул порождённого пула.
+Checks (MEASURED):
+  * rule_coverage_check — every rule covers the preimage of its table
+    exactly;
+  * cross_check — tableau decisions coincide with ⊨ (by enumeration) on
+    the entailment.py battery and on all pairs from the generated
+    formula pool.
 """
 
 from itertools import product
@@ -30,12 +34,12 @@ from entailment import entails, RULES as RULE_BATTERY
 
 ST = frozenset({T})
 SF = frozenset({F})
-SP = frozenset({T, Z})   # P: «возможно T»
-SN = frozenset({F, Z})   # N: «не заслужил T»
+SP = frozenset({T, Z})   # P: "possibly T"
+SN = frozenset({F, Z})   # N: "did not earn T"
 CLASSIC = frozenset({T, F})
 
-# Правила: op -> полярность ('T'/'F') -> список ветвей;
-# ветвь = список пар (номер аргумента, знак).
+# Rules: op -> polarity ('T'/'F') -> list of branches;
+# a branch = list of pairs (argument slot, sign).
 TABLEAU_RULES = {
     "not": {
         T: [[(0, SF)]],
@@ -65,9 +69,9 @@ TABLEAU_RULES = {
 
 
 def rule_coverage_check():
-    """Каждое правило обязано ТОЧНО покрывать прообраз своей таблицы:
-    ветви ∪-покрывают все комбинации значений с нужным выходом и не
-    задевают ни одной с ненужным."""
+    """Every rule must cover the preimage of its table EXACTLY: the
+    branches ∪-cover all value combinations with the target output and
+    touch none with a different output."""
     problems = []
     for op, per_sign in TABLEAU_RULES.items():
         arity = 1 if op == "not" else 2
@@ -90,8 +94,8 @@ def _is_atom(phi):
 
 
 def tableau_closes(nodes):
-    """True, если таблó закрывается (нет модели для набора знаковых формул).
-    nodes: список пар (знак, формула)."""
+    """True if the tableau closes (no model for the signed formula set).
+    nodes: list of pairs (sign, formula)."""
     atom_signs = {}
     first_compound = None
     rest = []
@@ -101,21 +105,21 @@ def tableau_closes(nodes):
             if not cur:
                 return True
             atom_signs[phi] = cur
-        elif isinstance(phi, str):           # константа T/F/Z
+        elif isinstance(phi, str):           # constant T/F/Z
             if phi not in sign:
                 return True
         else:
-            s = sign & CLASSIC               # жадность: составная не Z
+            s = sign & CLASSIC               # greediness: a compound is never Z
             if not s:
                 return True
-            if s == CLASSIC:                 # неинформативный знак — отбросить
+            if s == CLASSIC:                 # uninformative sign — drop
                 continue
             if first_compound is None:
                 first_compound = (s, phi)
             else:
                 rest.append((s, phi))
     if first_compound is None:
-        return False                          # насыщенная открытая ветвь
+        return False                          # saturated open branch
     s, phi = first_compound
     polarity = T if s == ST else F
     args = phi[1:]
@@ -128,13 +132,14 @@ def tableau_closes(nodes):
 
 
 def prove(premises, conclusion):
-    """Γ ⊢ φ по таблó: старт T:Γ и N:φ; True = выводимо (все ветви закрыты)."""
+    """Γ ⊢ φ by tableau: start with T:Γ and N:φ; True = derivable (all
+    branches closed)."""
     nodes = [(ST, g) for g in premises] + [(SN, conclusion)]
     return tableau_closes(nodes)
 
 
 def _pool():
-    """Пул формул для перекрёстной сверки: глубина ≤ 2 над p, q."""
+    """Formula pool for the cross-check: depth ≤ 2 over p, q."""
     a = ["p", "q", ("not", "p"), ("not", "q")]
     pool = list(a)
     for op in ("and", "or", "imp", "xor", "xnor"):
@@ -145,7 +150,8 @@ def _pool():
 
 
 def cross_check():
-    """Совпадение таблó с ⊨ (перебором): батарея правил + пул пар."""
+    """Agreement of the tableaux with ⊨ (enumeration): the rule battery
+    + the pool of pairs."""
     mismatches = []
     for name, prems, concl in RULE_BATTERY:
         sem = entails(prems, concl) is None
@@ -174,24 +180,24 @@ def cross_check():
 
 if __name__ == "__main__":
     print("=" * 72)
-    print("ЗНАКОВЫЕ ТАБЛÓ ZTL: T, F, P={T,Z}, N={F,Z}")
+    print("ZTL SIGNED TABLEAUX: T, F, P={T,Z}, N={F,Z}")
     print("=" * 72)
 
     probs = rule_coverage_check()
-    print("\n-- ПОКРЫТИЕ ПРООБРАЗОВ ПРАВИЛАМИ --")
+    print("\n-- RULE COVERAGE OF TABLE PREIMAGES --")
     if not probs:
-        print("  ✓ все 12 правил точно совпадают с прообразами таблиц")
+        print("  ✓ all 12 rules coincide exactly with the table preimages")
     else:
         for pr in probs:
             print("  ✗", pr)
-        raise SystemExit("Правила не совпадают с таблицами — стоп.")
+        raise SystemExit("Rules do not match the tables — stop.")
 
     total, mism = cross_check()
-    print("\n-- ПЕРЕКРЁСТНАЯ СВЕРКА ТАБЛÓ ПРОТИВ ⊨ --")
-    print(f"  проверено следований: {total}")
+    print("\n-- CROSS-CHECK OF TABLEAUX AGAINST ⊨ --")
+    print(f"  entailments checked: {total}")
     if not mism:
-        print("  ✓ решения совпали ВСЕ: исчисление корректно и полно на батарее")
+        print("  ✓ ALL decisions coincided: the calculus is sound and complete on the battery")
     else:
         for m in mism[:10]:
             print("  ✗", m)
-        raise SystemExit("Расхождение таблó и семантики — стоп.")
+        raise SystemExit("Tableau/semantics divergence — stop.")

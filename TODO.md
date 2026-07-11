@@ -1,40 +1,44 @@
-# ZTL — недоделанное (ревизия 2026-07-11, порядок: от сложного к простому)
+# ZTL — remaining work (revision 2026-07-11, order: hard to easy)
 
-## Дыры (содержательные)
+## Gaps (substantive)
 
-1. ✅ СДЕЛАНО (Э12, zverify.py): бит стабильности = глобальная
-   супервалюация; теорема 90/90; вердикт = пара (значение, гарантия).
-   **Операция «верифицировать»** — акт Z→T/F вне системы: кто санкционирует,
-   как записывается, что происходит с вынесенными вердиктами после
-   дозаземления. УЗКОЕ МЕСТО: жадные вердикты немонотонны относительно
-   верификации (могут перевернуться) — нужен бит стабильности.
-   → zverify.py (Э12).
-2. ✅ СДЕЛАНО (Э13, zcombine.py): пересечение ограничений; verify =
-   частный случай; Заде → Сметс; близнец №6 Green–Tannen.
-   **Комбинирование свидетельств** — два источника про одно значение:
-   слияние интервалов/масс (правило Демпстера у них есть, у нас нет).
-   Кандидат на близнеца №6: алгебра провенанса (Green–Tannen semirings).
-3. **Z слеп к сортам незаземлённости** — лжец и правдолюб оба Z; ревизионная
-   различает паттернами. Обогатить метку «паспортом», не убив жадность?
-4. **Теория доказательств тонкая** — нет секвенций/cut-elimination/
-   интерполяции; нет алгебраической семантики; первый порядок только
-   конечные домены. Для v1 — честная оговорка; для полноты — дыра.
+1. ✅ DONE (E12, zverify.py): stability bit = global supervaluation;
+   the 90/90 theorem; verdict = pair (value, warranty).
+   **The "verify" operation** — the act Z→T/F outside the system: who
+   sanctions it, how it is recorded, what happens to already-issued
+   verdicts after further grounding. NARROW PLACE: greedy verdicts are
+   non-monotone under verification (can flip) — a stability bit is
+   needed. → zverify.py (E12).
+2. ✅ DONE (E13, zcombine.py): intersection of constraints; verify =
+   special case; Zadeh → Smets; twin #6 Green–Tannen.
+   **Evidence combination** — two sources about one value: fusion of
+   intervals/masses (they have Dempster's rule, we don't). Candidate
+   for twin #6: provenance algebra (Green–Tannen semirings).
+3. **Z is blind to the kinds of ungroundedness** — the liar and the
+   truth-teller are both Z; revision theory distinguishes them by
+   patterns. Enrich the mark with a "passport" without killing
+   greediness?
+4. **Proof theory is thin** — no sequents/cut-elimination/
+   interpolation; no algebraic semantics; first order only on finite
+   domains. For v1 — an honest caveat; for completeness — a gap.
 
-## Швы
+## Seams
 
-5. Lean отстал от экспедиций: Э6–Э11 без Lean-двойников; нет общей
-   теоремы ленивого заземления (Кнастер–Тарский конечный); C-расширяемость
-   множеств только examples.
-6. Python и Lean не сшиты (нет автосверки против Lean-эталона).
-7. ✅ СДЕЛАНО: run_all.py — 19 стендов + Lean, маркеры, exit-код.
+5. Lean lags behind the expeditions: E6–E11 have no Lean twins; no
+   general lazy-grounding theorem (finite Knaster–Tarski);
+   C-extension of sets is examples only.
+6. Python and Lean are not stitched (no auto-check against the Lean
+   reference).
+7. ✅ DONE: run_all.py — 19 stands + Lean, markers, exit code.
 
-## Косметика перед портом (Zenodo)
+## Cosmetics before the port (Zenodo)
 
-8. ✅ СДЕЛАНО: «Литература» в препринте — 30 позиций.
-9. ЧАСТИЧНО: ✅ LICENSE (MIT), ✅ CITATION.cff, ✅ EN-блок README.
-   Решения куратора: язык препринта (EN?), открытие репо / архив, тег.
-10. Прувер наивен (экспоненциальный без эвристик) — не срочно, для
-    инструмента.
+8. ✅ DONE: "References" in the preprint — 30 entries.
+9. ✅ DONE: LICENSE (MIT), CITATION.cff, README; language decided —
+   everything public is English (Russian originals archived locally
+   in OLD/, untracked).
+10. The prover is naive (exponential, no heuristics) — not urgent,
+    matters for the tool.
 
-Порядок движения (решение куратора): от сложного к простому, узкие места
-первыми: 1 → 2 → (издательская гигиена 7–9) → порт; 3–6, 10 — после v1.
+Order of movement (curator's decision): hard to easy, narrow places
+first: 1 → 2 → (publishing hygiene 7–9) → port; 3–6, 10 — after v1.

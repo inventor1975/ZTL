@@ -1,17 +1,18 @@
 # -*- coding: utf-8 -*-
 """
-Экспедиция Э4: парадокс крокодила.
+Expedition E4: the crocodile paradox.
 
-Крокодил: «Верну ребёнка ⟺ ты угадаешь, что я сделаю».
-Мать: «Ты НЕ вернёшь ребёнка».
+The crocodile: "I shall return the child ⟺ you guess what I will do."
+The mother: "You will NOT return the child."
 
-Формализация: R = «вернёт»; M = предсказание с содержанием ¬R;
-сделка: R ↔ M. Система: R копирует M, M инвертирует R — карусель
-Журдена (цикл 2, одна инверсия, нечёт). Контроль: мать-оптимистка
-(«вернёшь»): M = R — ноль инверсий, чёт.
+Formalization: R = "will return"; M = the prediction with content ¬R;
+the deal: R ↔ M. The system: R copies M, M inverts R — Jourdain's
+carousel (cycle 2, one inversion, odd). Control: an optimistic mother
+("you will return"): M = R — zero inversions, even.
 
-Вопросы к приборам: модели? осцилляция? заземление? и главный —
-жадный вердикт по САМОЙ СДЕЛКЕ (R ↔ M) на заземлённой точке.
+Questions for the instruments: models? oscillation? grounding? and the
+main one — the greedy verdict on the DEAL ITSELF (R ↔ M) at the
+grounded point.
 """
 
 from ztl import T, F, Z, VALUES
@@ -19,38 +20,39 @@ from fixedpoint import EAGER, LAZY, fixed_points, iterate, least_fp_lazy, \
     ev_reg, fmt_v
 
 CASES = {
-    "мать-пессимистка: M = ¬Tr(R)  [классический парадокс]":
+    "pessimistic mother: M = ¬Tr(R)  [the classical paradox]":
         {"R": "M", "M": ("not", "R")},
-    "мать-оптимистка:  M = Tr(R)   [контроль]":
+    "optimistic mother:  M = Tr(R)   [control]":
         {"R": "M", "M": "R"},
 }
 
-DEAL = ("xnor", "R", "M")   # сделка крокодила: «верну ⟺ угадала»
+DEAL = ("xnor", "R", "M")   # the crocodile's deal: "I return ⟺ you guessed"
 
 for title, system in CASES.items():
     print(f"### {title}")
     fe = fixed_points(system, EAGER)
-    print(f"  жадные модели: {', '.join(map(fmt_v, fe)) or 'НЕТ'}")
+    print(f"  greedy models: {', '.join(map(fmt_v, fe)) or 'NONE'}")
     trace, loop = iterate(system, EAGER)
     period = len(trace) - loop if loop is not None else None
     if period and period > 1:
-        print(f"  жадная итерация из Z: ЦИКЛ периода {period}: "
+        print(f"  greedy iteration from Z: CYCLE of period {period}: "
               + " → ".join(fmt_v(v) for v in trace[loop:]))
     else:
-        print(f"  жадная итерация из Z: сошлась к {fmt_v(trace[-1])}")
+        print(f"  greedy iteration from Z: converged to {fmt_v(trace[-1])}")
     lfp = least_fp_lazy(system)
     q = [k for k, v in lfp.items() if v == Z]
-    print(f"  ленивое заземление: {fmt_v(lfp)}   карантин: {q or 'пуст'}")
+    print(f"  lazy grounding: {fmt_v(lfp)}   quarantine: {q or 'empty'}")
     verdict = ev_reg(DEAL, lfp, EAGER)
-    print(f"  жадный вердикт по сделке R↔M на точке: {verdict}"
-          + ("  ← СДЕЛКА НЕ ЗАСЛУЖИВАЕТ ИСТИНЫ" if verdict != T else
-             "  (сделка исполнима)"))
+    print(f"  greedy verdict on the deal R↔M at the point: {verdict}"
+          + ("  ← THE DEAL DOES NOT EARN TRUTH" if verdict != T else
+             "  (the deal is enforceable)"))
     print()
 
-print("Вывод: пессимистка замыкает нечётный цикл (инверсий 1) — по теореме")
-print("чётности моделей нет; крокодил не может ни сдержать слово, ни")
-print("нарушить его. Zero-trust-диагноз: условие сделки («угадала») не")
-print("заземляемо, сделка R↔M жадно оценивается в F — ДОГОВОР НИЧТОЖЕН,")
-print("обязательство не возникло. Оптимистка даёт чётный цикл: две честные")
-print("модели (вернёт/не вернёт, слово сдержано в обеих) — но какая из них")
-print("реализуется, сделка не определяет: крокодил выбирает сам.")
+print("Conclusion: the pessimist closes an odd cycle (1 inversion) — by the")
+print("parity theorem there are no models; the crocodile can neither keep")
+print("his word nor break it. The zero-trust diagnosis: the deal's condition")
+print("(\"you guessed\") cannot be grounded, the deal R↔M evaluates greedily")
+print("to F — THE CONTRACT IS VOID, no obligation ever arose. The optimist")
+print("gives an even cycle: two honest models (returns / does not return,")
+print("the word kept in both) — but which one realizes, the deal does not")
+print("determine: the crocodile chooses himself.")

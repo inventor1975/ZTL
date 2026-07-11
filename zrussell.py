@@ -1,84 +1,84 @@
 # -*- coding: utf-8 -*-
 """
-Экспедиция Э11: парадокс Рассела на ZTL-множествах.
+Expedition E11: Russell's paradox on ZTL-sets.
 
-Рассел — лжец в одежде членства: R = {x : x ∉ x} ⇒ R∈R ⟺ ¬(R∈R).
-Моделируем вселенную множеств СИСТЕМОЙ ФАКТОВ ЧЛЕНСТВА (те же приборы,
-что для лжеца: fixedpoint.py). Вселенная:
-    a = ∅        (никого не содержит)
-    b = {b}      (содержит себя — законный чудак)
-    R = {x : x ∉ x}   (Рассел)
-    S = {x : x ∈ x}   (двойник-правдолюб)
-Факты: x∈y для всех пар; определения Рассела/двойника ссылаются на
-факты x∈x. Вопросы: модели? осцилляция? заземление? вердикты?
+Russell is the liar dressed in membership: R = {x : x ∉ x} ⇒ R∈R ⟺
+¬(R∈R). We model a universe of sets as a SYSTEM OF MEMBERSHIP FACTS
+(the same instruments as for the liar: fixedpoint.py). The universe:
+    a = ∅        (contains no one)
+    b = {b}      (contains itself — a lawful eccentric)
+    R = {x : x ∉ x}   (Russell)
+    S = {x : x ∈ x}   (the truth-teller twin)
+Facts: x∈y for all pairs; the definitions of Russell/the twin refer to
+the facts x∈x. Questions: models? oscillation? grounding? verdicts?
 """
 
 from ztl import T, F, Z, NOT, OPS2
 from fixedpoint import EAGER, LAZY, fixed_points, iterate, least_fp_lazy, \
     ev_reg, fmt_v
 
-# Вселенная: a=∅, b={b}, R={x: x∉x}, S={x: x∈x}
-# Факты-предложения: 'x∈y'. Константные факты — литералы T/F.
+# The universe: a=∅, b={b}, R={x: x∉x}, S={x: x∈x}
+# Fact-sentences: 'x∈y'. Constant facts are literals T/F.
 SETS = ["a", "b", "R"]
 
 system = {}
 for x in SETS:
     system[f"{x}∈a"] = "F"                        # a = ∅
     system[f"{x}∈b"] = "T" if x == "b" else "F"    # b = {b}
-    system[f"{x}∈R"] = ("not", f"{x}∈{x}")         # Рассел
+    system[f"{x}∈R"] = ("not", f"{x}∈{x}")         # Russell
 
-sysS = {"S∈S": "S∈S"}                              # двойник — отдельно
+sysS = {"S∈S": "S∈S"}                              # the twin — separately
 
 if __name__ == "__main__":
     print("=" * 72)
-    print("Э11. РАССЕЛ НА ZTL-МНОЖЕСТВАХ: одна карантинная клетка, не крах")
+    print("E11. RUSSELL ON ZTL-SETS: one quarantine cell, not a collapse")
     print("=" * 72)
 
-    print("\n### Жадный скачок: моделей нет (Рассел бездомен, как лжец)")
+    print("\n### The greedy jump: no models (Russell is homeless, like the liar)")
     fe = fixed_points(system, EAGER)
-    print(f"  жадных неподвижных точек: {len(fe)}")
+    print(f"  greedy fixed points: {len(fe)}")
     trace, loop = iterate(system, EAGER)
     period = len(trace) - loop if loop is not None else None
-    print(f"  итерация из Z: цикл периода {period}")
+    print(f"  iteration from Z: cycle of period {period}")
     if period and period > 1:
         diffs = [k for k in trace[loop] if trace[loop][k] != trace[loop + 1][k]]
-        print(f"  осциллируют только: {diffs} — весь шторм в двух клетках")
+        print(f"  only these oscillate: {diffs} — the whole storm in two cells")
 
-    print("\n### Ленивое заземление: вселенная стоит, карантин точечен")
+    print("\n### Lazy grounding: the universe stands, quarantine is pointwise")
     lfp = least_fp_lazy(system)
     q = sorted(k for k, v in lfp.items() if v == Z)
     g = sorted(k for k, v in lfp.items() if v != Z)
-    print("  заземлено фактов: %d из %d" % (len(g), len(lfp)))
+    print("  facts grounded: %d of %d" % (len(g), len(lfp)))
     for k in sorted(lfp):
-        mark = "  ← КАРАНТИН" if lfp[k] == Z else ""
+        mark = "  ← QUARANTINE" if lfp[k] == Z else ""
         print(f"    {k} = {lfp[k]}{mark}")
 
-    print("\n### Членство в R для обычных жителей — заземлено и честно")
-    print(f"  a∈R = {lfp['a∈R']} (a не содержит себя ⇒ Рассел его берёт)")
-    print(f"  b∈R = {lfp['b∈R']} (b содержит себя ⇒ Рассел его не берёт)")
-    print("  Рассел РАБОТАЕТ как множество для всех, кроме самого себя.")
+    print("\n### Membership in R for ordinary residents — grounded and honest")
+    print(f"  a∈R = {lfp['a∈R']} (a does not contain itself ⇒ Russell admits it)")
+    print(f"  b∈R = {lfp['b∈R']} (b contains itself ⇒ Russell rejects it)")
+    print("  Russell WORKS as a set for everyone except himself.")
 
-    print("\n### Вердикты таможни по больным вопросам")
+    print("\n### Customs verdicts on the sore questions")
     v_notin = ev_reg(("not", "R∈R"), lfp, EAGER)
-    print(f"  «R ∈ R?» — атом в карантине ({lfp['R∈R']}): не заработано → отказ")
-    print(f"  «R ∉ R?» — жадная читка ¬(R∈R): {v_notin} → тоже отказ")
-    print("  Оба вопроса получают отказ — NaN-подпись на множествах:")
-    print("  ни членство, ни не-членство Рассела в себе не зарабатываются.")
+    print(f"  \"R ∈ R?\" — the atom is quarantined ({lfp['R∈R']}): not earned → refusal")
+    print(f"  \"R ∉ R?\" — the greedy reading of ¬(R∈R): {v_notin} → also refusal")
+    print("  Both questions get a refusal — the NaN signature on sets:")
+    print("  neither Russell's membership nor non-membership in himself is earned.")
 
-    print("\n### Двойник S = {x : x ∈ x} — правдолюб теории множеств")
+    print("\n### The twin S = {x : x ∈ x} — the truth-teller of set theory")
     fpS = fixed_points(sysS, EAGER)
     lfpS = least_fp_lazy(sysS)
-    print(f"  S∈S: жадных моделей {len(fpS)} ({', '.join(fmt_v(v) for v in fpS)}),")
-    print(f"  ленивое заземление: {fmt_v(lfpS)} — недоопределённость (ID-петля):")
-    print("  классических решений ДВА (принять/не принять себя — оба честны),")
-    print("  у R∈R — НОЛЬ. Чёт и нечет, теперь в множествах.")
+    print(f"  S∈S: greedy models {len(fpS)} ({', '.join(fmt_v(v) for v in fpS)}),")
+    print(f"  lazy grounding: {fmt_v(lfpS)} — underdetermination (the ID loop):")
+    print("  classical solutions: TWO (admit/reject itself — both honest),")
+    print("  for R∈R — ZERO. Even and odd, now in sets.")
 
-    print("\n### Итог")
-    print("  Классика (Фреге): одна клетка R∈R взрывает ВСЮ систему —")
-    print("  из противоречия выводимо всё, наивная теория множеств мертва.")
-    print("  ZTL: та же клетка уходит в карантин, остальная вселенная")
-    print("  заземлена и работает; Рассел существует как множество с одним")
-    print("  незаработанным битом. Сдерживание вместо взрыва — потому что")
-    print("  взрыв требует УТВЕРЖДЁННОГО противоречия, а карантин не")
-    print("  утверждает. Ср. VR-Sets того же куратора: там Рассел исключён")
-    print("  ГРАММАТИКОЙ (запрет писать); здесь — принят и обезврежен.")
+    print("\n### Summary")
+    print("  Classically (Frege): one cell R∈R blows up the WHOLE system —")
+    print("  from a contradiction everything follows, naive set theory is dead.")
+    print("  ZTL: the same cell goes into quarantine, the rest of the universe")
+    print("  is grounded and works; Russell exists as a set with one unearned")
+    print("  bit. Containment instead of explosion — because explosion demands")
+    print("  an ASSERTED contradiction, and quarantine asserts nothing.")
+    print("  Cf. the same author's VR-Sets: there Russell is excluded by")
+    print("  GRAMMAR (forbidden to write); here he is admitted and defused.")

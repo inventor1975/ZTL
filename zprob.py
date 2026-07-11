@@ -1,42 +1,43 @@
 # -*- coding: utf-8 -*-
 """
-Экспедиция Э9: вероятностный мост. Чем Z не является p=0.5.
+Expedition E9: the probabilistic bridge. Why Z is not p=0.5.
 
-Три промера:
-  1. РЕПАРАМЕТРИЗАЦИЯ (Бертран): равномерный prior из незнания даёт
-     разные ответы в разных параметризациях того же незнания; Z — нет.
-  2. ДЕМПСТЕР–ШЕЙФЕР: вердикты ZTL = пороговый случай Bel/Pl
-     (T ⟺ Bel=1 «вынуждено всеми», F ⟺ Pl=0 «исключено всеми», иначе Z);
-     интервальная мощность Э5 = [Bel-счёт, Pl-счёт].
-  3. ЭЛЛСБЕРГ: «иррациональное» предпочтение известного риска
-     неизвестной неопределённости — это zero-trust-рациональность.
+Three measurements:
+  1. REPARAMETRIZATION (Bertrand): a uniform prior made from ignorance
+     gives different answers in different parametrizations of the same
+     ignorance; Z does not.
+  2. DEMPSTER–SHAFER: ZTL verdicts = the threshold case of Bel/Pl
+     (T ⟺ Bel=1 "forced by all", F ⟺ Pl=0 "excluded by all", else Z);
+     the interval cardinality of E5 = [Bel-count, Pl-count].
+  3. ELLSBERG: the "irrational" preference of known risk over unknown
+     uncertainty is zero-trust rationality.
 
-Близнец №5: imprecise probabilities (Walley 1991, lower/upper
-previsions) — ленивый регистр вероятностей.
+Twin #5: imprecise probabilities (Walley 1991, lower/upper previsions)
+— the lazy register of probabilities.
 """
 
 from fractions import Fraction
 
 from ztl import T, F, Z
 
-# ------------------------------------------------------- 1. Бертран
+# ------------------------------------------------------- 1. Bertrand
 def bertrand():
-    print("### 1. Репараметризация: prior отмывает незнание, Z — нет")
-    print("  Дано: про w известно ТОЛЬКО w ∈ [0,1]. Вопрос: «w ≤ 0.25?»")
-    p_w = Fraction(1, 4)              # равномерный prior на w
-    # тот же незнающий, но думает в параметре y = w² (тоже ∈ [0,1]):
+    print("### 1. Reparametrization: a prior launders ignorance, Z does not")
+    print("  Given: about w we know ONLY w ∈ [0,1]. Question: \"w ≤ 0.25?\"")
+    p_w = Fraction(1, 4)              # uniform prior on w
+    # the same ignoramus, but thinking in the parameter y = w² (also ∈ [0,1]):
     p_y = Fraction(1, 16)             # P(w ≤ 1/4) = P(y ≤ 1/16)
-    print(f"  Байесовец в параметре w  (uniform на w):  P = {p_w}")
-    print(f"  Байесовец в параметре w² (uniform на w²): P = {p_y}")
-    print("  Одно незнание — ДВА разных числа: prior внёс информацию,")
-    print("  которой не было (выбор параметризации = скрытое знание).")
-    verdict = Z                        # атом «w ≤ 0.25» при w∈[0,1]: не вынуждено
-    print(f"  ZTL-атом «w ≤ 0.25» при w∈[0,1]: {verdict} — и в параметре w,")
-    print("  и в параметре w² (интервал [0,1] ↔ [0,1]): инвариантно.")
-    print("  Незнание не конвертируется в число, не внося информации.\n")
+    print(f"  Bayesian in parameter w  (uniform on w):  P = {p_w}")
+    print(f"  Bayesian in parameter w² (uniform on w²): P = {p_y}")
+    print("  One ignorance — TWO different numbers: the prior imported")
+    print("  information that was not there (parametrization choice = hidden knowledge).")
+    verdict = Z                        # the atom "w ≤ 0.25" at w∈[0,1]: not forced
+    print(f"  ZTL atom \"w ≤ 0.25\" at w∈[0,1]: {verdict} — both in parameter w")
+    print("  and in parameter w² (the interval [0,1] ↔ [0,1]): invariant.")
+    print("  Ignorance does not convert into a number without importing information.\n")
 
 
-# ------------------------------------------------- 2. Демпстер–Шейфер
+# ------------------------------------------------- 2. Dempster–Shafer
 def ds_bel_pl(masses, event, frame):
     bel = sum(m for s, m in masses.items() if set(s) <= set(event))
     pl = sum(m for s, m in masses.items() if set(s) & set(event))
@@ -44,10 +45,10 @@ def ds_bel_pl(masses, event, frame):
 
 
 def dempster_shafer():
-    print("### 2. Демпстер–Шейфер: вердикты ZTL = пороги Bel/Pl")
+    print("### 2. Dempster–Shafer: ZTL verdicts = Bel/Pl thresholds")
     frame = "abc"
-    masses = {"a": Fraction(1, 2), "abc": Fraction(1, 2)}  # полузнание
-    print("  Массы: m({a})=1/2, m({a,b,c})=1/2 (частичное незнание)")
+    masses = {"a": Fraction(1, 2), "abc": Fraction(1, 2)}  # half-knowledge
+    print("  Masses: m({a})=1/2, m({a,b,c})=1/2 (partial ignorance)")
     for event in ("abc", "a", "b", "bc", ""):
         bel, pl = ds_bel_pl(masses, event, frame)
         if bel == 1:
@@ -57,45 +58,46 @@ def dempster_shafer():
         else:
             v = Z
         shown = "{" + ",".join(event) + "}"
-        print(f"  событие {shown:8s} Bel={str(bel):4s} Pl={str(pl):4s}"
-              f"  ZTL-вердикт: {v}")
-    print("  T ⟺ Bel=1 (вынуждено всеми прочтениями незнания),")
-    print("  F ⟺ Pl=0 (исключено всеми), иначе Z. Порождающий принцип —")
-    print("  это {0,1}-порог теории Демпстера–Шейфера; интервальная")
-    print("  мощность Э5 = [Bel-счёт, Pl-счёт] поэлементно.\n")
+        print(f"  event {shown:8s} Bel={str(bel):4s} Pl={str(pl):4s}"
+              f"  ZTL verdict: {v}")
+    print("  T ⟺ Bel=1 (forced by all readings of the ignorance),")
+    print("  F ⟺ Pl=0 (excluded by all), else Z. The generating principle")
+    print("  is the {0,1}-threshold of Dempster–Shafer theory; the interval")
+    print("  cardinality of E5 = [Bel-count, Pl-count] elementwise.\n")
 
 
-# ------------------------------------------------------ 3. Эллсберг
+# ------------------------------------------------------ 3. Ellsberg
 def ellsberg():
-    print("### 3. Эллсберг: zero-trust-рациональность «иррациональности»")
-    print("  Урна K: 50 красных / 50 чёрных (ПРОВЕРЕНО). Урна U: 100 шаров,")
-    print("  состав неизвестен (метка p_red ∈ [0,1]). Ставка на красный: +100.")
+    print("### 3. Ellsberg: the zero-trust rationality of \"irrationality\"")
+    print("  Urn K: 50 red / 50 black (VERIFIED). Urn U: 100 balls,")
+    print("  composition unknown (mark p_red ∈ [0,1]). Bet on red: +100.")
     ev_K = (Fraction(1, 2) * 100, Fraction(1, 2) * 100)   # [50,50]
     ev_U = (Fraction(0), Fraction(100))                     # [0,100]
-    print(f"  EV(K) ∈ [{ev_K[0]},{ev_K[1]}] — заработанное число")
-    print(f"  EV(U) ∈ [{ev_U[0]},{ev_U[1]}] — интервал незнания")
+    print(f"  EV(K) ∈ [{ev_K[0]},{ev_K[1]}] — an earned number")
+    print(f"  EV(U) ∈ [{ev_U[0]},{ev_U[1]}] — an interval of ignorance")
     atom = Z if not (ev_U[0] >= ev_K[1] or ev_U[1] < ev_K[0]) else T
-    print(f"  Атом «U не хуже K»: {atom} — не вынуждено ⇒ default deny ⇒")
-    print("  выбор K. Люди в эксперименте Эллсберга (1961) выбирают K и")
-    print("  объявлены «иррациональными» относительно байесовской нормы —")
-    print("  но они просто различают риск (проверенное p) и незнание")
-    print("  (метку), чего точечный prior различить не может.\n")
+    print(f"  Atom \"U is no worse than K\": {atom} — not forced ⇒ default deny ⇒")
+    print("  choose K. The subjects of Ellsberg's experiment (1961) choose K and")
+    print("  are declared \"irrational\" relative to the Bayesian norm —")
+    print("  but they simply distinguish risk (a verified p) from ignorance")
+    print("  (a mark), which a point prior cannot distinguish.\n")
 
 
 if __name__ == "__main__":
     print("=" * 72)
-    print("Э9. ВЕРОЯТНОСТНЫЙ МОСТ: Z ≠ p=0.5")
+    print("E9. THE PROBABILISTIC BRIDGE: Z ≠ p=0.5")
     print("=" * 72 + "\n")
     bertrand()
     dempster_shafer()
     ellsberg()
-    print("### Итог: вторая «SQL-теорема» — про байесовцев")
-    print("  Точечный prior из незнания = жадное отмывание Z в число:")
-    print("  та же подмена, что DISTINCT у SQL (равенство меток вместо")
-    print("  равенства значений), и она наказуема (репараметризация даёт")
-    print("  противоречащие ответы). Честная архитектура — двухрегистровая:")
-    print("  незнание живёт интервалами масс (ленивый регистр: Демпстер–")
-    print("  Шейфер, imprecise probabilities Уолли — БЛИЗНЕЦ №5), решения")
-    print("  принимаются вердиктами по вынужденности (жадный регистр).")
-    print("  Байес остаётся честным на ПРОВЕРЕННЫХ вероятностях — это его")
-    print("  C-расширяемость; запрещено лишь чеканить числа из пустоты.")
+    print("### Summary: the second \"SQL theorem\" — about Bayesians")
+    print("  A point prior from ignorance = greedy laundering of Z into a")
+    print("  number: the same substitution as SQL's DISTINCT (equality of")
+    print("  marks instead of equality of values), and it is punishable")
+    print("  (reparametrization gives contradicting answers). The honest")
+    print("  architecture is two-registered: ignorance lives in mass intervals")
+    print("  (the lazy register: Dempster–Shafer, Walley's imprecise")
+    print("  probabilities — TWIN #5), decisions are made by forcedness")
+    print("  verdicts (the greedy register). Bayes stays honest on VERIFIED")
+    print("  probabilities — that is his C-extension; only minting numbers")
+    print("  out of emptiness is forbidden.")

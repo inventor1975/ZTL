@@ -1,32 +1,36 @@
 # -*- coding: utf-8 -*-
 """
-ZTL — Zero-Trust Logic / логика нулевого доверия.
+ZTL — Zero-Trust Logic.
 
-Значения истинности: T (истина), F (ложь) — вердикты всегда двузначны.
-Метка входа: Z (zero-trust: «истина не заслужена») — третий символ
-таблиц-калькуляторов, не значение (паспорт: paper/ZTL-draft.md §10).
+Truth values: T (truth), F (falsehood) — verdicts are always two-valued.
+Input mark: Z (zero-trust: "truth not earned") — the third symbol of the
+calculating tables, not a value (passport: paper/ZTL-draft.md §10).
 
-Порождающий принцип (один на все связки):
-    op(...Z...) = И по всем классическим подстановкам {T,F} вместо Z,
-    каждое вхождение Z подставляется независимо; результат всегда классичен.
-Иначе: истина не выдаётся в кредит — связка возвращает T, только если T
-вынуждена при ЛЮБОЙ классической расшифровке Z; иначе F.
-Z испаряется при первом касании оператора (жадный коллапс): ни одна
-составная формула не имеет значения Z — Z живёт только на атомах.
+Generating principle (one for all connectives):
+    op(...Z...) = AND over all classical substitutions {T,F} for Z,
+    each occurrence of Z substituted independently; the result is always
+    classical.
+In other words: truth is never granted on credit — a connective returns
+T only if T is forced under EVERY classical reading of Z; otherwise F.
+Z evaporates at the first touch of an operator (greedy collapse): no
+compound formula ever takes the value Z — Z lives only on atoms.
 
-Опорные клетки (аксиомы, продиктованы куратором 2026-07-10, MEASURED):
+Anchor cells (axioms, fixed at design time 2026-07-10, MEASURED):
     NOT(Z)=F, NOT(NOT(Z))=T,
     (Z nxor Z)=F, (Z nxor T)=F,
     (Z xor Z)=F, (Z xor F)=F, (Z xor T)=F.
-Все они — следствия порождающего принципа (проверяется в tests_axioms()).
+All of them are consequences of the generating principle (checked in
+tests_axioms()).
 
-Зафиксированные развилки (см. SPEC.md):
-  1. ¬Z = F (а не схлопывание Z→F на атоме) — теорема: вместе с T→Z=F это
-     несовместимо с контрапозицией; контрапозицией жертвуем сознательно.
-  2. Жадный коллапс (а не ленивое протекание Z а-ля SQL NULL).
-  3. (Z↔Z)=F — карантин детектируем изнутри: isZ(x) = ¬(x↔x).
-  4. Парадоксы гасятся карантинным флагом (схема Тарского приостановлена
-     для Z-предложений), не таблицами: у ¬ нет неподвижной точки.
+Fixed forks (see SPEC.md):
+  1. ¬Z = F (not a Z→F collapse at the atom) — theorem: together with
+     T→Z=F this is incompatible with contraposition; contraposition is
+     sacrificed deliberately.
+  2. Greedy collapse (not lazy flow of Z à la SQL NULL).
+  3. (Z↔Z)=F — quarantine is detectable from inside: isZ(x) = ¬(x↔x).
+  4. Paradoxes are extinguished by the quarantine flag (the Tarski
+     schema is suspended for Z-sentences), not by the tables: ¬ has no
+     fixed point.
 """
 
 T, F, Z = "T", "F", "Z"
@@ -35,25 +39,25 @@ CLASSICAL = (T, F)
 
 
 def _subs(x):
-    """Классические расшифровки значения: Z читается и как T, и как F."""
+    """Classical readings of a value: Z reads both as T and as F."""
     return CLASSICAL if x == Z else (x,)
 
 
 def lift1(f):
-    """Поднять классическую унарную связку в ZTL по принципу нулевого доверия."""
+    """Lift a classical unary connective into ZTL by the zero-trust principle."""
     def g(x):
         return T if all(f(a) == T for a in _subs(x)) else F
     return g
 
 
 def lift2(f):
-    """Поднять классическую бинарную связку в ZTL по принципу нулевого доверия."""
+    """Lift a classical binary connective into ZTL by the zero-trust principle."""
     def g(x, y):
         return T if all(f(a, b) == T for a in _subs(x) for b in _subs(y)) else F
     return g
 
 
-# --- классические ядра ---
+# --- classical kernels ---
 def _not(a):    return F if a == T else T
 def _and(a, b): return T if a == T and b == T else F
 def _or(a, b):  return T if a == T or b == T else F
@@ -62,7 +66,7 @@ def _xor(a, b): return T if a != b else F
 def _xnor(a, b): return T if a == b else F
 
 
-# --- связки ZTL ---
+# --- ZTL connectives ---
 NOT = lift1(_not)
 AND = lift2(_and)
 OR = lift2(_or)
@@ -75,9 +79,9 @@ OPS2 = {"and": AND, "or": OR, "imp": IMP, "xor": XOR, "xnor": XNOR}
 OP_SIGNS = {"not": "¬", "and": "∧", "or": "∨", "imp": "→", "xor": "⊕", "xnor": "↔"}
 
 
-# --- формулы: атом = строка; составная = кортеж (op, ...) ---
+# --- formulas: atom = string; compound = tuple (op, ...) ---
 def ev(phi, env):
-    """Значение формулы. Константы 'T'/'F'/'Z' — сами себе значение."""
+    """Value of a formula. Constants 'T'/'F'/'Z' are their own value."""
     if isinstance(phi, str):
         return phi if phi in VALUES else env[phi]
     op = phi[0]
@@ -87,7 +91,7 @@ def ev(phi, env):
 
 
 def atoms(phi, acc=None):
-    """Множество атомов формулы (константы T/F/Z атомами не считаются)."""
+    """Set of atoms of a formula (constants T/F/Z do not count as atoms)."""
     if acc is None:
         acc = set()
     if isinstance(phi, str):
@@ -100,7 +104,7 @@ def atoms(phi, acc=None):
 
 
 def all_envs(names):
-    """Все распределения значений VALUES по атомам."""
+    """All assignments of VALUES to the atoms."""
     names = sorted(names)
     if not names:
         yield {}
@@ -111,7 +115,7 @@ def all_envs(names):
 
 
 def show(phi):
-    """Формула в человеческой записи."""
+    """Human-readable notation of a formula."""
     if isinstance(phi, str):
         return phi
     if phi[0] == "not":
@@ -120,12 +124,12 @@ def show(phi):
 
 
 def isZ(x):
-    """Детектор карантина, выразим внутри самой ZTL: isZ(x) = ¬(x↔x)."""
+    """Quarantine detector, expressible inside ZTL itself: isZ(x) = ¬(x↔x)."""
     return NOT(XNOR(x, x))
 
 
 def print_tables():
-    print("Таблицы ZTL (порождены принципом нулевого доверия):\n")
+    print("ZTL tables (generated by the zero-trust principle):\n")
     print("  x  | ¬x")
     for x in VALUES:
         print(f"  {x}  |  {NOT(x)}")
@@ -137,7 +141,7 @@ def print_tables():
 
 
 def tests_axioms():
-    """Опорные клетки куратора — якорь: принцип обязан их воспроизводить."""
+    """The anchor cells — the anchor: the principle must reproduce them."""
     checks = [
         ("NOT(Z) = F",        NOT(Z),        F),
         ("NOT(NOT(Z)) = T",   NOT(NOT(Z)),   T),
@@ -156,7 +160,7 @@ if __name__ == "__main__":
     print()
     checks, bad = tests_axioms()
     for name, got, want in checks:
-        mark = "ok" if got == want else f"FAIL (получено {got})"
-        print(f"  аксиома {name:20s} {mark}")
+        mark = "ok" if got == want else f"FAIL (got {got})"
+        print(f"  axiom {name:20s} {mark}")
     if bad:
-        raise SystemExit("ПРИНЦИП НЕ ВОСПРОИЗВОДИТ АКСИОМЫ — стоп.")
+        raise SystemExit("THE PRINCIPLE DOES NOT REPRODUCE THE AXIOMS — stop.")

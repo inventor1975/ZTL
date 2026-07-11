@@ -1,31 +1,31 @@
 # -*- coding: utf-8 -*-
 """
-Экспедиция Э10: модальный слой ZTL.
+Expedition E10: the modal layer of ZTL.
 
-Миры = классические дочитки непроверенных атомов. □φ = во всех мирах,
-◇φ = хоть в одном. Промеры:
-  1. Вердикты атомов = модальные пороги (T⟺□, F⟺□¬, Z⟺контингентно) +
-     дуальность ◇ = ¬□¬ и S5-коллапс (□□=□).
-  2. Таблó-знаки = модальные заявки: T/F строгие = □, P/N = ◇.
-  3. Столбцы: классика | глобальный □ (супервалюация) | ZTL (локальный
-     □ за каждым оператором) — три разных логики на одной формуле.
-Бочваровские трансляции (наша → = ◇A⊃□B) получают семантику миров.
+Worlds = classical completions of the unverified atoms. □φ = in all
+worlds, ◇φ = in at least one. Measurements:
+  1. Atom verdicts = modal thresholds (T⟺□, F⟺□¬, Z⟺contingent) +
+     the duality ◇ = ¬□¬ and the S5 collapse (□□=□).
+  2. Tableau signs = modal claims: strict T/F = □, P/N = ◇.
+  3. Columns: classical | global □ (supervaluation) | ZTL (a local □
+     behind every operator) — three different logics on one formula.
+Bochvar's translations (our → = ◇A⊃□B) acquire world semantics.
 """
 
 from itertools import product
 
 from ztl import T, F, Z, OPS2, NOT, ev, atoms, all_envs
 
-# ------------------------------------------------- миры и модальности
+# ------------------------------------------------- worlds and modalities
 def worlds(marked):
-    """Все классические дочитки: marked — dict атом → 'V:T'/'V:F'/'M'."""
+    """All classical completions: marked — dict atom → 'V:T'/'V:F'/'M'."""
     names = sorted(marked)
     opts = [[marked[n]] if marked[n] in (T, F) else [T, F] for n in names]
     return [dict(zip(names, combo)) for combo in product(*opts)]
 
 
 def classical_eval(phi, world):
-    return ev(phi, world)          # на классических мирах ev классичен
+    return ev(phi, world)          # on classical worlds ev is classical
 
 
 def box(phi, marked):
@@ -42,22 +42,22 @@ def ztl_eval(phi, marked):
 
 
 def global_super(phi, marked):
-    """Глобальная супервалюация: один □ на всю формулу."""
+    """Global supervaluation: one □ over the whole formula."""
     if box(phi, marked):
         return T
     if not dia(phi, marked):
         return F
-    return Z                        # супер-пробел
+    return Z                        # super-gap
 
 
 if __name__ == "__main__":
     print("=" * 72)
-    print("Э10. МОДАЛЬНЫЙ СЛОЙ: миры-дочитки, локальный □ против глобального")
+    print("E10. THE MODAL LAYER: completion worlds, local □ versus global")
     print("=" * 72)
 
     p, q = "p", "q"
 
-    print("\n### 1. Атомы: вердикты = модальные пороги (тотально)")
+    print("\n### 1. Atoms: verdicts = modal thresholds (totally)")
     ok = True
     for st in (T, F, "M"):
         marked = {p: st}
@@ -65,24 +65,24 @@ if __name__ == "__main__":
         b, d = box(p, marked), dia(p, marked)
         expect = T if b else (F if not d else Z)
         ok &= (v == expect)
-        print(f"  атом p[{'метка' if st == 'M' else st}]: вердикт {v},"
-              f"  □p={b}, ◇p={d}  → порог {'совпал' if v == expect else 'РАСХОЖДЕНИЕ'}")
-    # дуальность и S5-коллапс
+        print(f"  atom p[{'mark' if st == 'M' else st}]: verdict {v},"
+              f"  □p={b}, ◇p={d}  → threshold {'coincided' if v == expect else 'DIVERGENCE'}")
+    # duality and the S5 collapse
     dual = all(dia(p, {p: st}) == (not box(("not", p), {p: st}))
                for st in (T, F, "M"))
-    print(f"  дуальность ◇p = ¬□¬p: {'✓' if dual else '✗'};"
-          f"  □□ = □ тривиально (□p классичен) — S5-коллапс вложенности")
+    print(f"  duality ◇p = ¬□¬p: {'✓' if dual else '✗'};"
+          f"  □□ = □ trivially (□p is classical) — S5 collapse of nesting")
 
-    print("\n### 2. Таблó-знаки как модальные заявки")
+    print("\n### 2. Tableau signs as modal claims")
     marked = {p: "M"}
-    print("  знак T:φ  = □φ   (строгая заявка: вынуждено всеми дочитками)")
-    print("  знак F:φ  = □¬φ  (строгое опровержение)")
-    print(f"  знак P:φ = ◇φ:  для метки ◇p = {dia(p, marked)} — заявка возможности")
-    print(f"  знак N:φ = ◇¬φ: для метки ◇¬p = {dia(('not', p), marked)}")
-    print("  «Ослабленные знаки только в F-полярности» = опровержение")
-    print("  довольствуется возможностью, доказательство требует необходимости.")
+    print("  sign T:φ  = □φ   (a strict claim: forced by all completions)")
+    print("  sign F:φ  = □¬φ  (a strict refutation)")
+    print(f"  sign P:φ = ◇φ:  for a mark ◇p = {dia(p, marked)} — a possibility claim")
+    print(f"  sign N:φ = ◇¬φ: for a mark ◇¬p = {dia(('not', p), marked)}")
+    print("  \"Weak signs only in F-polarity\" = refutation settles for")
+    print("  possibility, proof demands necessity.")
 
-    print("\n### 3. Три логики на одних формулах: классика | глобальный □ | ZTL")
+    print("\n### 3. Three logics on the same formulas: classical | global □ | ZTL")
     battery = [
         ("¬¬p",        ("not", ("not", p))),
         ("p → p",      ("imp", p, p)),
@@ -92,23 +92,23 @@ if __name__ == "__main__":
         ("(p∧q)→p",    ("imp", ("and", p, q), p)),
     ]
     marked = {p: "M", q: "M"}
-    print(f"  {'формула':14s} {'классика(p=T)':14s} {'глобальный □':13s} {'ZTL':4s}")
+    print(f"  {'formula':14s} {'classical(p=T)':14s} {'global □':13s} {'ZTL':4s}")
     for nm, phi in battery:
         cl = classical_eval(phi, {p: T, q: T})
         gs = global_super(phi, marked)
         zt = ztl_eval(phi, marked)
         print(f"  {nm:14s} {cl:14s} {gs:13s} {zt:4s}")
-    print("  Глобальный □ (супервалюация) сохраняет ВСЕ классические")
-    print("  тавтологии (p→p, LEM — истинны «в целом», не зная p);")
-    print("  ZTL ставит □ ЛОКАЛЬНО за каждым оператором — и тавтологии")
-    print("  формы падают, а ¬¬p наоборот зарабатывает T (лестница этажей).")
-    print("  Расщепление супервалюация/ZTL = глобальная/локальная модальность.")
+    print("  The global □ (supervaluation) preserves ALL classical")
+    print("  tautologies (p→p, LEM — true \"as a whole\" without knowing p);")
+    print("  ZTL puts the □ LOCALLY behind every operator — the tautologies")
+    print("  of form fall, while ¬¬p conversely earns T (the ladder of floors).")
+    print("  The supervaluation/ZTL split = global/local modality.")
 
-    print("\n### Итог")
-    print("  ZTL — локально-модальная логика над S5-рамкой миров-дочиток:")
-    print("  каждый оператор несёт собственный □-коллапс. Бочваровские")
-    print("  трансляции (наша → = ◇A⊃□B, ¬ = □¬) — это её модальная запись,")
-    print("  теперь с семантикой миров. Знаки таблó = {□, □¬, ◇, ◇¬}.")
-    print("  Родич-теоретик: эпистемическая S5 Хинтикки (□ = «знаю») —")
-    print("  ZTL утверждает только знаемое, но модальность у неё")
-    print("  по-операторная, а не пропозициональная.")
+    print("\n### Summary")
+    print("  ZTL is a locally-modal logic over the S5 frame of completion")
+    print("  worlds: every operator carries its own □-collapse. Bochvar's")
+    print("  translations (our → = ◇A⊃□B, ¬ = □¬) are its modal notation,")
+    print("  now with world semantics. Tableau signs = {□, □¬, ◇, ◇¬}.")
+    print("  The theoretical relative: Hintikka's epistemic S5 (□ = \"known\") —")
+    print("  ZTL asserts only the known, but its modality is per-operator,")
+    print("  not propositional.")

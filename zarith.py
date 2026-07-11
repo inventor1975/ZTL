@@ -1,16 +1,16 @@
 # -*- coding: utf-8 -*-
 """
-Экспедиция Э8: арифметика с метками.
+Expedition E8: arithmetic with marks.
 
-Числа: проверенные ('V', n) и метки ('M', id, lo, hi) — непроверенные
-с интервалом частичного знания (None = неограничено). Операции —
-вычисления ⇒ ленивые: интервалы ТЕКУТ (интервальная арифметика,
-декоррелированно — каждое вхождение метки читается независимо).
-Атомы сравнения — по порождающему принципу: T, если вынуждено при
-всех прочтениях; F, если вынуждена ложь; иначе Z.
+Numbers: verified ('V', n) and marks ('M', id, lo, hi) — unverified
+with an interval of partial knowledge (None = unbounded). Operations
+are computations ⇒ lazy: intervals FLOW (interval arithmetic,
+decorrelated — each occurrence of a mark reads independently).
+Comparison atoms follow the generating principle: T if forced under
+all readings; F if falsehood is forced; else Z.
 
-Близнец №4: абстрактная интерпретация (Cousot & Cousot 1977) —
-интервальный анализ значений + проверка ассертов.
+Twin #4: abstract interpretation (Cousot & Cousot 1977) — interval
+value analysis + assertion checking.
 """
 
 from ztl import T, F, Z, OPS2
@@ -46,7 +46,7 @@ def name(x):
     return f"{x[1]}{rng}"
 
 
-# --- операции: интервалы текут (лениво), родословная растёт ---
+# --- operations: intervals flow (lazily), the pedigree grows ---
 def add(x, y):
     lo, hi = x[2] + y[2], x[3] + y[3]
     if is_verified(x) and is_verified(y):
@@ -55,32 +55,32 @@ def add(x, y):
 
 
 def sub_(x, y):
-    lo, hi = x[2] - y[3], x[3] - y[2]      # декорреляция!
+    lo, hi = x[2] - y[3], x[3] - y[2]      # decorrelation!
     if is_verified(x) and is_verified(y):
         return V_(x[1] - y[1])
-    if lo == hi:                            # вынужденное значение — заработано
+    if lo == hi:                            # a forced value — earned
         return V_(lo)
     return ("M", f"({name(x)}-{name(y)})", lo, hi)
 
 
 def mul(x, y):
-    # на ℤ: 0·x = 0 всегда (в т.ч. для неограниченных меток)
+    # over ℤ: 0·x = 0 always (including unbounded marks)
     cands = [0 if (a == 0 or b == 0) else a * b
              for a in (x[2], x[3]) for b in (y[2], y[3])]
     lo, hi = min(cands), max(cands)
     if is_verified(x) and is_verified(y):
         return V_(x[1] * y[1])
-    if lo == hi:                            # вынуждено (например, 0·m)
+    if lo == hi:                            # forced (e.g. 0·m)
         return V_(int(lo))
     return ("M", f"({name(x)}·{name(y)})", lo, hi)
 
 
-# --- атомы сравнения: порождающий принцип на интервалах ---
+# --- comparison atoms: the generating principle on intervals ---
 def lt_atom(x, y):
     if x[3] < y[2]:
-        return T                            # вынуждено при всех прочтениях
+        return T                            # forced under all readings
     if x[2] >= y[3]:
-        return F                            # вынуждена ложь
+        return F                            # falsehood forced
     return Z
 
 
@@ -88,69 +88,68 @@ def eq_atom(x, y):
     if is_verified(x) and is_verified(y):
         return T if x[1] == y[1] else F
     if x[3] < y[2] or y[3] < x[2]:
-        return F                            # апартность ЗАРАБОТАНА интервалами
+        return F                            # apartness EARNED by intervals
     return Z
 
 
 if __name__ == "__main__":
     print("=" * 72)
-    print("Э8. АРИФМЕТИКА С МЕТКАМИ (интервалы текут, вердикты зарабатываются)")
+    print("E8. ARITHMETIC WITH MARKS (intervals flow, verdicts are earned)")
     print("=" * 72)
 
-    m = M_("m", 0, 9)         # сенсор, частично проверен: [0,9]
-    w = M_("w")               # дикая метка, ничего не известно
+    m = M_("m", 0, 9)         # a sensor, partially verified: [0,9]
+    w = M_("w")               # a wild mark, nothing known
     five = V_(5)
     zero = V_(0)
 
-    print("\n### Течение интервалов (ленивый регистр)")
+    print("\n### Interval flow (the lazy register)")
     s1 = add(five, m)
     print(f"  5 + m∈[0,9] = {name(s1)}")
     s2 = add(five, w)
-    print(f"  5 + w(∅ информации) = {name(s2)} — голый NaN-режим")
+    print(f"  5 + w(∅ information) = {name(s2)} — bare NaN mode")
 
-    print("\n### Вынужденность зарабатывает даже на метках")
+    print("\n### Forcedness earns even on marks")
     p = mul(zero, w)
-    print(f"  0 · w = {name(p)}  ← ЗАРАБОТАННЫЙ ноль (вынужден при всех")
-    print("  прочтениях; IEEE тут отвечает NaN — их домен с inf/nan, наш ℤ)")
+    print(f"  0 · w = {name(p)}  ← an EARNED zero (forced under all")
+    print("  readings; IEEE answers NaN here — their domain has inf/nan, ours is ℤ)")
     d = sub_(m, m)
-    print(f"  m − m = {name(d)} — НЕ ноль: декорреляция (два независимых")
-    print("  прочтения одной метки; ровно как NaN−NaN и как {Z,Z}≠{Z})")
+    print(f"  m − m = {name(d)} — NOT zero: decorrelation (two independent")
+    print("  readings of one mark; exactly like NaN−NaN and like {Z,Z}≠{Z})")
 
-    print("\n### Атомы сравнения: три судьбы (T заработано / F заработано / Z)")
+    print("\n### Comparison atoms: three fates (T earned / F earned / Z)")
     a, b = M_("a", 3, 5), M_("b", 10, 12)
-    print(f"  a∈[3,5] < b∈[10,12]: {lt_atom(a, b)} — заработано (разнесены)")
-    print(f"  a∈[3,5] = b∈[10,12]: {eq_atom(a, b)} — апартность заработана!")
+    print(f"  a∈[3,5] < b∈[10,12]: {lt_atom(a, b)} — earned (separated)")
+    print(f"  a∈[3,5] = b∈[10,12]: {eq_atom(a, b)} — apartness earned!")
     c = M_("c", 4, 6)
-    print(f"  a∈[3,5] < c∈[4,6]: {lt_atom(a, c)} — не вынуждено (перекрытие)")
-    print(f"  a∈[3,5] = a∈[3,5] (та же метка): {eq_atom(a, a)} — тождество")
-    print("  не зарабатывается интервалами (совпадение границ ≠ совпадение)")
+    print(f"  a∈[3,5] < c∈[4,6]: {lt_atom(a, c)} — not forced (overlap)")
+    print(f"  a∈[3,5] = a∈[3,5] (the same mark): {eq_atom(a, a)} — identity")
+    print("  is not earned by intervals (coinciding bounds ≠ coincidence)")
 
-    print("\n### Верификация = сужение интервала: вердикты зарабатываются")
+    print("\n### Verification = interval narrowing: verdicts are earned")
     four = V_(4)
     for lo, hi in [(0, 9), (3, 7), (5, 7), (5, 5)]:
         mm = M_("m", lo, hi)
-        atom = lt_atom(four, mm)   # «4 < m»
-        note = {T: "заработано T", F: "заработана ложь", Z: "ещё не вынуждено"}[atom]
-        print(f"  m∈[{lo},{hi}]:  атом «4 < m» = {atom}  ({note})")
-    print("  Сужение никогда не отменяет заработанное — монотонность")
-    print("  ленивого регистра, теперь в числах.")
+        atom = lt_atom(four, mm)   # "4 < m"
+        note = {T: "T earned", F: "falsehood earned", Z: "not yet forced"}[atom]
+        print(f"  m∈[{lo},{hi}]:  atom \"4 < m\" = {atom}  ({note})")
+    print("  Narrowing never revokes what is earned — the monotonicity of")
+    print("  the lazy register, now in numbers.")
 
-    print("\n### Законы: наследование прейскуранта")
+    print("\n### Laws: price-list inheritance")
     x, y = M_("x", 1, 3), M_("y", 2, 4)
     lhs, rhs = add(x, y), add(y, x)
     print(f"  x+y = {name(lhs)};  y+x = {name(rhs)}")
-    print(f"  коммутативность: интервалы совпали ({bounds(lhs) == bounds(rhs)}),")
-    print(f"  вердикт eq(x+y, y+x): {eq_atom(lhs, rhs)} — два уровня, снова")
+    print(f"  commutativity: intervals coincided ({bounds(lhs) == bounds(rhs)}),")
+    print(f"  verdict eq(x+y, y+x): {eq_atom(lhs, rhs)} — two levels, again")
     xz = add(x, zero)
-    print(f"  x+0 = {name(xz)}: интервал тот же ({bounds(xz) == bounds(x)}),")
-    print(f"  вердикт eq(x+0, x): {eq_atom(xz, x)} — нейтраль пала вердиктно")
+    print(f"  x+0 = {name(xz)}: the interval is the same ({bounds(xz) == bounds(x)}),")
+    print(f"  verdict eq(x+0, x): {eq_atom(xz, x)} — the unit fell verdict-wise")
 
-    print("\n### Итог")
-    print("  Арифметика ZTL = интервальная арифметика (решатель) + вердикты")
-    print("  порождающего принципа (таможня). Всё унаследовано, ничего не")
-    print("  постулировано. Близнец №4 — абстрактная интерпретация (Cousot):")
-    print("  анализ значений интервалами + проверка ассертов = наш ленивый")
-    print("  регистр + жадные вердикты. Дополнение к Э6: апартность чисел")
-    print("  зарабатывается интервалами — как апартность вещественных")
-    print("  префиксами; тождество не зарабатывается ничем, кроме полной")
-    print("  верификации ([x,x] — метка становится значением).")
+    print("\n### Summary")
+    print("  ZTL arithmetic = interval arithmetic (the solver) + verdicts of")
+    print("  the generating principle (customs). All inherited, nothing")
+    print("  postulated. Twin #4 — abstract interpretation (Cousot): interval")
+    print("  value analysis + assertion checking = our lazy register + greedy")
+    print("  verdicts. Addendum to E6: apartness of numbers is earned by")
+    print("  intervals — as apartness of reals by prefixes; identity is earned")
+    print("  by nothing short of full verification ([x,x] — the mark becomes a value).")

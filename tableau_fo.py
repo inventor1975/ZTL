@@ -1,16 +1,17 @@
 # -*- coding: utf-8 -*-
 """
-Кванторные таблó ZTL (конечный домен).
+ZTL quantifier tableaux (finite domain).
 
-Правила — продолжение подписи нулевого доверия: ослабленные знаки
-(N={F,Z}) только в F-полярности, T-полярность требует строгих:
+The rules continue the zero-trust signature: weak signs (N={F,Z}) only
+in F-polarity, T-polarity demands strict ones:
 
     T:∀xφ → T:φ(a₁),…,T:φ(aₙ)      F:∀xφ → N:φ(a₁) | … | N:φ(aₙ)
     T:∃xφ → T:φ(a₁) | … | T:φ(aₙ)  F:∃xφ → N:φ(a₁),…,N:φ(aₙ)
 
-Жадность: кванторные формулы классичны (P≡T, N≡F на составных).
-Сверка (MEASURED): решения таблó против семантического перебора всех
-интерпретаций (fo-батарея из quantifiers.py + дополнения), домены 1–2.
+Greediness: quantified formulas are classical (P≡T, N≡F on compounds).
+Check (MEASURED): tableau decisions against semantic enumeration of all
+interpretations (the fo-battery from quantifiers.py + additions),
+domains 1–2.
 """
 
 from itertools import product
@@ -24,7 +25,7 @@ def subst(phi, var, val):
     op = phi[0]
     if op in ("all", "ex"):
         if phi[1] == var:
-            return phi                      # переменная затенена
+            return phi                      # variable shadowed
         return (op, phi[1], subst(phi[2], var, val))
     if op == "not":
         return ("not", subst(phi[1], var, val))
@@ -34,36 +35,36 @@ def subst(phi, var, val):
 
 
 def closes(nodes, dom):
-    """True, если таблó закрывается. nodes: список (знак, замкнутая формула)."""
+    """True if the tableau closes. nodes: list of (sign, closed formula)."""
     atom_signs = {}
     first = None
     rest = []
     for sign, phi in nodes:
         op = phi[0]
         if op == "not" or op in OPS2 or op in ("all", "ex"):
-            s = sign & CLASSIC              # жадность: составная не Z
+            s = sign & CLASSIC              # greediness: a compound is never Z
             if not s:
                 return True
             if s == CLASSIC:
-                continue                    # неинформативный знак
+                continue                    # uninformative sign
             if first is None:
                 first = (s, phi)
             else:
                 rest.append((s, phi))
-        else:                               # атомарный факт P(a…)
+        else:                               # atomic fact P(a…)
             cur = atom_signs.get(phi, frozenset(VALUES)) & sign
             if not cur:
                 return True
             atom_signs[phi] = cur
     if first is None:
-        return False                        # насыщенная открытая ветвь
+        return False                        # saturated open branch
     s, phi = first
     base = rest + [(sg, at) for at, sg in sorted(atom_signs.items())]
     op = phi[0]
     if op in ("all", "ex"):
         v, body = phi[1], phi[2]
         insts = [subst(body, v, d) for d in dom]
-        strict_all = (op == "all") == (s == ST)   # ∀ при T и ∃ при F — одной ветвью
+        strict_all = (op == "all") == (s == ST)   # ∀ under T and ∃ under F — one branch
         lax = SN if s == SF else ST
         if strict_all:
             sg = ST if s == ST else SN
@@ -85,14 +86,14 @@ def closes(nodes, dom):
 
 
 def prove_fo(premises, conclusion, dom, const=0):
-    """Γ ⊢ φ на домене dom; свободная переменная x читается как элемент const."""
+    """Γ ⊢ φ on domain dom; the free variable x reads as element const."""
     g = lambda f: subst(f, x, const)
     nodes = [(ST, g(p)) for p in premises] + [(SN, g(conclusion))]
     return closes(nodes, dom)
 
 
 def sem_entails(premises, conclusion, dom):
-    """Семантическое следование на фиксированном домене (перебор)."""
+    """Semantic entailment on a fixed domain (enumeration)."""
     for interp in interps_for(premises + [conclusion], dom):
         env = {x: 0}
         if all(ev_fo(p, dom, interp, env) == T for p in premises) \
@@ -103,19 +104,19 @@ def sem_entails(premises, conclusion, dom):
 
 BATTERY = [(name, prems, concl) for name, prems, concl, _ in RULES_FO] + \
           [(name, [], phi) for name, phi in VALIDITIES_C] + [
-    ("дистрибуция ∀∧ туда", [("all", y, ("and", (P, y), (Q, y)))],
+    ("distribution ∀∧ forward", [("all", y, ("and", (P, y), (Q, y)))],
      ("and", ("all", y, (P, y)), ("all", y, (Q, y)))),
-    ("дистрибуция ∀∧ обратно", [("and", ("all", y, (P, y)), ("all", y, (Q, y)))],
+    ("distribution ∀∧ backward", [("and", ("all", y, (P, y)), ("all", y, (Q, y)))],
      ("all", y, ("and", (P, y), (Q, y)))),
-    ("∃ из ∀", [("all", y, (P, y))], ("ex", y, (P, y))),
-    ("кв. Де Морган как правило", [("not", ("all", y, (P, y)))],
+    ("∃ from ∀", [("all", y, (P, y))], ("ex", y, (P, y))),
+    ("quant. De Morgan as a rule", [("not", ("all", y, (P, y)))],
      ("ex", y, ("not", (P, y)))),
 ]
 
 
 if __name__ == "__main__":
     print("=" * 72)
-    print("КВАНТОРНЫЕ ТАБЛÓ ZTL: сверка с семантикой по доменам 1–2")
+    print("ZTL QUANTIFIER TABLEAUX: check against semantics on domains 1–2")
     print("=" * 72)
     total, mism = 0, []
     for n in (1, 2):
@@ -125,15 +126,15 @@ if __name__ == "__main__":
             sem = sem_entails(prems, concl, dom)
             syn = prove_fo(prems, concl, dom)
             total += 1
-            mark = "✓" if sem == syn else "✗ РАСХОЖДЕНИЕ"
+            mark = "✓" if sem == syn else "✗ DIVERGENCE"
             if sem != syn:
                 mism.append((n, name, sem, syn))
             if n == 2:
-                verdict = "выводимо" if syn else "не выводимо"
+                verdict = "derivable" if syn else "not derivable"
                 print(f"  |D|={n}  {mark} {name}: {verdict}")
-    print(f"\nПроверено пар (таблó против перебора): {total}")
+    print(f"\nPairs checked (tableaux against enumeration): {total}")
     if mism:
         for m in mism:
             print("  ✗", m)
-        raise SystemExit("Расхождение — стоп.")
-    print("  ✓ решения совпали ВСЕ: кванторные таблó корректны и полны на батарее")
+        raise SystemExit("Divergence — stop.")
+    print("  ✓ ALL decisions coincided: the quantifier tableaux are sound and complete on the battery")

@@ -1,23 +1,24 @@
 import TableauCert
 
 /-!
-# Родной движок: прямые правила для →, ⊕, ↔ — и эквивалентность движков
+# The native engine: direct rules for →, ⊕, ↔ — and engine equivalence
 
-closesN — движок с родными знаковыми правилами тяжёлых связок (без
-сведения к базису). Доказываются closesN_iff (корректность+полнота) и
-engines_agree: оба движка выдают одинаковые вердикты. Ноль аксиом.
+closesN is the engine with native signed rules for the heavy
+connectives (no reduction to the basis). Proven: closesN_iff
+(soundness + completeness) and engines_agree: both engines return
+identical verdicts. Zero axioms.
 -/
 
 namespace V
 
-/-- Перестановка для двухузловых ветвей: a+(b+r)+1 = a+b+1+r. -/
+/-- A permutation for two-node branches: a+(b+r)+1 = a+b+1+r. -/
 theorem addShuffle (a b r : Nat) : a + (b + r) + 1 = a + b + 1 + r := by
   rw [← Nat.add_assoc, Nat.add_right_comm]
 
 theorem boolEqOfIff : ∀ a b : Bool, ((a = true) ↔ (b = true)) → a = b := by
   decide
 
-/-- Двухузловое ИЛИ-ветвление. -/
+/-- Two-node OR branching. -/
 theorem SAT_head_or2 {e : Env} {nd a1 a2 b1 b2 : Node} {ws : List Node}
     (h : ∀ v, satN v nd ↔
       ((satN v a1 ∧ satN v a2) ∨ (satN v b1 ∧ satN v b2))) :
@@ -31,7 +32,7 @@ theorem SAT_head_or2 {e : Env} {nd a1 a2 b1 b2 : Node} {ws : List Node}
     · exact ⟨v, hOK, (h v).mpr (Or.inl ⟨x, y⟩), h2⟩
     · exact ⟨v, hOK, (h v).mpr (Or.inr ⟨x, y⟩), h2⟩
 
-/-- Родной движок: атом/¬/∧/∨ как в closes; →,⊕,↔ — прямыми правилами. -/
+/-- The native engine: atom/¬/∧/∨ as in closes; →,⊕,↔ by direct rules. -/
 def closesN (fuel : Nat) (e : Env) (ws : List Node) : Bool :=
   match fuel, ws with
   | 0, _ => false
@@ -93,12 +94,12 @@ def closesN (fuel : Nat) (e : Env) (ws : List Node) : Bool :=
         else true
   termination_by structural fuel
 
-/-! ## Границы убывания для тяжёлых голов (чистая Nat-арифметика) -/
+/-! ## Decrease bounds for the heavy heads (pure Nat arithmetic) -/
 
 section Bounds
 variable (Sφ Sψ R : Nat)
 
--- imp-размер: ((Sφ+1)+Sψ+1)+2
+-- imp size: ((Sφ+1)+Sψ+1)+2
 theorem impB1 : Sφ + R + 1 ≤ Sφ + 1 + Sψ + 1 + 2 + R :=
   Nat.le_trans (Nat.le_of_eq (Nat.add_right_comm Sφ R 1))
     (Nat.add_le_add_right
@@ -120,7 +121,7 @@ theorem impB3 : Sφ + (Sψ + R) + 1 ≤ Sφ + 1 + Sψ + 1 + 2 + R :=
           (Nat.add_le_add_right (Nat.le_add_right Sφ 1) Sψ) 1)
         (Nat.le_add_right _ 2)) R)
 
--- xor-размер: (Sφ+(Sψ+1)+1)+((Sφ+1)+Sψ+1)+3
+-- xor size: (Sφ+(Sψ+1)+1)+((Sφ+1)+Sψ+1)+3
 theorem xorB : Sφ + (Sψ + R) + 1 ≤
     Sφ + (Sψ + 1) + 1 + (Sφ + 1 + Sψ + 1) + 3 + R :=
   Nat.le_trans (Nat.le_of_eq (addShuffle Sφ Sψ R))
@@ -130,7 +131,7 @@ theorem xorB : Sφ + (Sψ + R) + 1 ≤
           (Nat.le_trans (Nat.le_add_right _ _)
             (Nat.le_add_right _ 3)))) R)
 
--- xnor-размер: (Sφ+Sψ+1)+((Sφ+1)+(Sψ+1)+1)+3
+-- xnor size: (Sφ+Sψ+1)+((Sφ+1)+(Sψ+1)+1)+3
 theorem xnorB : Sφ + (Sψ + R) + 1 ≤
     Sφ + Sψ + 1 + (Sφ + 1 + (Sψ + 1) + 1) + 3 + R :=
   Nat.le_trans (Nat.le_of_eq (addShuffle Sφ Sψ R))
@@ -140,13 +141,13 @@ theorem xnorB : Sφ + (Sψ + R) + 1 ≤
 
 end Bounds
 
-/-- Универсальный сброс головы (для drop-случаев): R < fuel. -/
+/-- Universal head drop (for the drop cases): R < fuel. -/
 theorem dropBound {hd : Fm} {R fuel : Nat}
     (hb : Fm.size hd + R < fuel + 1) : R < fuel :=
   boundStep (Nat.le_trans (Nat.le_of_eq (Nat.add_comm R 1))
     (Nat.add_le_add_right (Fm.size_pos hd) R)) hb
 
-/-! ## Сертификат родного движка -/
+/-! ## The native engine's certificate -/
 
 theorem closesN_iff : ∀ (fuel : Nat) (e : Env) (ws : List Node),
     wsize ws < fuel → (∀ n, sIsEmpty (e n) = false) →
@@ -518,7 +519,7 @@ theorem closesN_iff : ∀ (fuel : Nat) (e : Env) (ws : List Node),
               not_mem_cls (hcls v) (bNotTrue _ hT) (bNotTrue _ hF)
           · intro _; rfl
 
-/-! ## Эквивалентность движков -/
+/-! ## Engine equivalence -/
 
 def tprovesN (ps : List Fm) (c : Fm) : Bool :=
   closesN (wsize (ps.map (fun p => (SignT, p)) ++ [(SignN, c)]) + 1) e0
@@ -543,7 +544,7 @@ theorem tprovesN_iff (ps : List Fm) (c : Fm) :
     have ⟨hall, hc⟩ := (satL_bridge c ps).mp hs
     exact (vN_neq _).mp ((vN _).mp hc) (h v hall)
 
-/-- Родной движок и движок-на-базисе выдают ОДИНАКОВЫЕ вердикты. -/
+/-- The native engine and the basis engine return IDENTICAL verdicts. -/
 theorem engines_agree (ps : List Fm) (c : Fm) :
     tprovesN ps c = tproves ps c :=
   boolEqOfIff _ _ ((tprovesN_iff ps c).trans (tproves_iff ps c).symm)

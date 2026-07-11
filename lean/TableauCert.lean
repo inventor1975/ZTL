@@ -1,20 +1,20 @@
 import ZTL
 
 /-!
-# Торговый сертификат: корректность и полнота движка таблó ZTL
+# The trade certificate: soundness and completeness of the ZTL tableau engine
 
-Ноль аксиом. Для этого: знаки — функции V → Bool (никаких списочных
-лемм ядра), satL — рекурсивная конъюнкция (никакого ∀-членства),
-движок — структурная рекурсия по топливу (никакой WF-машинерии),
-доказательства — комбинаторные цепочки Iff (никаких rw по эквивалент-
-ностям), границы размеров — defeq-переформулировки + omega (никакого
-simp по уравнениям match). Связки →,⊕,↔ сводятся к базису {¬,∧,∨}
-живыми тождествами (imp_def, xor_def, xnor_def — теоремы ядра).
+Zero axioms. To achieve this: signs are functions V → Bool (no core
+list lemmas), satL is a recursive conjunction (no ∀-membership), the
+engine is structural recursion on fuel (no WF machinery), the proofs
+are combinator chains of Iff (no rw by equivalences), the size bounds
+are defeq restatements + omega-free arithmetic (no simp over match
+equations). The connectives →,⊕,↔ reduce to the basis {¬,∧,∨} by the
+surviving identities (imp_def, xor_def, xnor_def — theorems of the core).
 -/
 
 namespace V
 
-/-! ## Собственные комбинаторы (нулевой зависимости) -/
+/-! ## In-house combinators (zero dependencies) -/
 
 theorem iffOfEq {a b : Prop} (h : a = b) : a ↔ b := h ▸ Iff.rfl
 
@@ -46,7 +46,7 @@ theorem bNotTrue : ∀ b : Bool, ¬(b = true) → b = false := by
   · rfl
   · exact absurd rfl h
 
-/-! ## Знаки как функции V → Bool -/
+/-! ## Signs as functions V → Bool -/
 
 abbrev Sign := V → Bool
 
@@ -78,7 +78,7 @@ theorem sNonempty_of_mem {s : Sign} {x : V} (h : s x = true) :
   · exact bNotOr2 (s T) (s F) (s Z) h
   · exact bNotOr3 (s T) (s F) (s Z) h
 
-/-- Выбор представителя из непустого знака. -/
+/-- Picking a representative from a non-empty sign. -/
 def sPick (s : Sign) : V :=
   if s T = true then T else if s F = true then F else Z
 
@@ -99,14 +99,14 @@ theorem sPick_mem {s : Sign} (h : sIsEmpty s = false) : s (sPick s) = true := by
         cases h
       · rfl
 
-/-! ## Узлы, оценки, выполнимость -/
+/-! ## Nodes, valuations, satisfiability -/
 
 abbrev Node := Sign × Fm
 
-/-- Оценка удовлетворяет узлу: значение формулы лежит в знаке. -/
+/-- A valuation satisfies a node: the formula's value lies in the sign. -/
 def satN (v : Nat → V) (nd : Node) : Prop := nd.1 (evalF v nd.2) = true
 
-/-- Рекурсивная конъюнкция (никакого членства в списках). -/
+/-- A recursive conjunction (no list membership). -/
 def satL (v : Nat → V) : List Node → Prop
   | [] => True
   | nd :: ns => satN v nd ∧ satL v ns
@@ -119,8 +119,8 @@ def SAT (e : Env) (ws : List Node) : Prop := ∃ v, envOK v e ∧ satL v ws
 
 def upd (e : Env) (n : Nat) (s : Sign) : Env := fun m => if m = n then s else e m
 
-/-- Взвешенный размер: тяжёлые связки весят столько, чтобы сведение
-к базису строго уменьшало вес. -/
+/-- Weighted size: the heavy connectives weigh just enough that the
+reduction to the basis strictly decreases the weight. -/
 def Fm.size : Fm → Nat
   | .atom _   => 1
   | .neg φ    => φ.size + 1
@@ -145,9 +145,9 @@ def wsize : List Node → Nat
   | [] => 0
   | nd :: rest => nd.2.size + wsize rest
 
-/-- Движок таблó: структурная рекурсия по топливу. Атом — пересечение
-ограничений; ¬,∧,∨ — знаковые правила (ослабленные знаки только в
-F-полярности); →,⊕,↔ — сведение к базису. -/
+/-- The tableau engine: structural recursion on fuel. An atom —
+constraint intersection; ¬,∧,∨ — the signed rules (weak signs only in
+F-polarity); →,⊕,↔ — reduction to the basis. -/
 def closes (fuel : Nat) (e : Env) (ws : List Node) : Bool :=
   match fuel, ws with
   | 0, _ => false
@@ -185,7 +185,7 @@ def closes (fuel : Nat) (e : Env) (ws : List Node) : Bool :=
       closes fuel e ((s, .disj (.conj φ ψ) (.conj (.neg φ) (.neg ψ))) :: rest)
   termination_by structural fuel
 
-/-! ## Знак против классического значения -/
+/-! ## A sign against a classical value -/
 
 theorem mem_cls_T {x : V} {s : Sign} (hx : x = T ∨ x = F)
     (hT : s T = true) (hF : s F = false) : s x = true ↔ x = T := by
@@ -218,7 +218,7 @@ theorem not_mem_cls {x : V} {s : Sign} (hx : x = T ∨ x = F)
   · rw [hT] at h; cases h
   · rw [hF] at h; cases h
 
-/-! ## Инструменты для satL и SAT -/
+/-! ## Tools for satL and SAT -/
 
 theorem satL_nil (v : Nat → V) : satL v [] := trivial
 
@@ -266,7 +266,7 @@ theorem SAT_head_false {e : Env} {nd : Node} {ws : List Node}
     (h : ∀ v, ¬ satN v nd) : ¬ SAT e (nd :: ws) := by
   rintro ⟨v, _, h1, _⟩; exact h v h1
 
-/-- Атомный шаг: голова-атом эквивалентна сужению ограничений. -/
+/-- The atom step: an atom head is equivalent to narrowing the constraints. -/
 theorem SAT_atom {e : Env} {s : Sign} {n : Nat} {ws : List Node} :
     SAT e ((s, .atom n) :: ws) ↔ SAT (upd e n (inter (e n) s)) ws := by
   constructor
@@ -294,7 +294,7 @@ theorem SAT_atom {e : Env} {s : Sign} {n : Nat} {ws : List Node} :
       rw [hu] at h
       exact h
 
-/-! ## Главная теорема -/
+/-! ## The main theorem -/
 
 theorem closes_iff : ∀ (fuel : Nat) (e : Env) (ws : List Node),
     wsize ws < fuel → (∀ n, sIsEmpty (e n) = false) →
@@ -538,11 +538,11 @@ theorem closes_iff : ∀ (fuel : Nat) (e : Env) (ws : List Node),
           (xnor_def (evalF v φ) (evalF v ψ)))
       exact (ih _ _ hle' he).trans (notCongr (SAT_head_congr hpt).symm)
 
-/-! ## Следствие: выводимость = следование -/
+/-! ## Corollary: derivability = entailment -/
 
 def e0 : Env := fun _ => fun _ => true
 
-/-- Γ ⊢ φ: посылки со строгим знаком T, заключение — с ослабленным N. -/
+/-- Γ ⊢ φ: premises under the strict sign T, the conclusion under the weak N. -/
 def tproves (ps : List Fm) (c : Fm) : Bool :=
   closes (wsize (ps.map (fun p => (SignT, p)) ++ [(SignN, c)]) + 1) e0
     (ps.map (fun p => (SignT, p)) ++ [(SignN, c)])
@@ -570,7 +570,7 @@ theorem satL_bridge {v : Nat → V} (c : Fm) : ∀ (ps : List Fm),
       exact ⟨(vT _).mpr (hall q (List.Mem.head _)),
              ihp.mpr ⟨fun p hp => hall p (List.Mem.tail _ hp), hc⟩⟩
 
-/-- Сертификат: движок выдаёт ⊢ ⟺ семантическое следование по {T}. -/
+/-- The certificate: the engine returns ⊢ ⟺ semantic entailment over {T}. -/
 theorem tproves_iff (ps : List Fm) (c : Fm) :
     tproves ps c = true ↔
     ∀ v, (∀ p ∈ ps, evalF v p = T) → evalF v c = T := by
@@ -590,15 +590,15 @@ theorem tproves_iff (ps : List Fm) (c : Fm) :
     have ⟨hall, hc⟩ := (satL_bridge c ps).mp hs
     exact (vN_neq _).mp ((vN _).mp hc) (h v hall)
 
-/-! ## Дымовые прогоны сертифицированного движка -/
+/-! ## Smoke runs of the certified engine -/
 
 #eval tproves [] (.imp (.atom 0) (.atom 0))                      -- false: ⊬ p→p
 #eval tproves [.atom 0, .imp (.atom 0) (.atom 1)] (.atom 1)      -- true: MP
 #eval tproves [] (.neg (.conj (.atom 0) (.neg (.atom 0))))       -- true: ¬(p∧¬p)
 #eval tproves [] (.disj (.atom 0) (.neg (.atom 0)))              -- false: ⊬ LEM
 #eval tproves [.imp (.atom 0) (.atom 1)]
-      (.imp (.neg (.atom 1)) (.neg (.atom 0)))                   -- true: контрапозиция-правило
-#eval tproves [.neg (.neg (.atom 0))] (.atom 0)                  -- false: ¬¬-удаление пало
+      (.imp (.neg (.atom 1)) (.neg (.atom 0)))                   -- true: contraposition-rule
+#eval tproves [.neg (.neg (.atom 0))] (.atom 0)                  -- false: ¬¬-elimination fell
 
 #print axioms closes_iff
 #print axioms tproves_iff

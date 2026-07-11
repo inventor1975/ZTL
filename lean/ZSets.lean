@@ -1,11 +1,11 @@
 import ZTL
 
 /-!
-# Lean-порт Э5: множества с непроверенными элементами. Ноль аксиом.
+# Lean port of E5: sets with unverified elements. Zero axioms.
 
-Равенство элементов — атом (T/F для проверенных, Z при любой метке);
-членство/включение — рекурсивные свёртки zor/zand. Законы тождества
-падают на мечеными — унаследовано от таблиц, теоремами.
+Element equality is an atom (T/F for verified, Z with any mark);
+membership/inclusion are recursive zor/zand folds. The identity laws
+fall on marked sets — inherited from the tables, as theorems.
 -/
 
 namespace V
@@ -14,19 +14,19 @@ inductive El where
   | v : Nat → El
   | z : Nat → El
 
-/-- Атом равенства: тождество меток не зарабатывается (даже с собой). -/
+/-- The equality atom: mark identity is never earned (not even with itself). -/
 def eqAtom : El → El → V
   | .v a, .v b => cond (a == b) T F
   | .v _, .z _ => Z
   | .z _, .v _ => Z
   | .z _, .z _ => Z
 
-/-- Членство: ∃-свёртка (строгий свидетель). -/
+/-- Membership: an ∃-fold (a strict witness). -/
 def memL (x : El) : List El → V
   | [] => F
   | e :: es => zor (eqAtom x e) (memL x es)
 
-/-- Включение: ∀-свёртка (все строго T). -/
+/-- Inclusion: an ∀-fold (all strictly T). -/
 def subL (S₁ S₂ : List El) : V :=
   match S₁ with
   | [] => T
@@ -34,7 +34,7 @@ def subL (S₁ S₂ : List El) : V :=
 
 def seteq (S₁ S₂ : List El) : V := zand (subL S₁ S₂) (subL S₂ S₁)
 
-/-! ## Служебные значные леммы (перебором, чисто) -/
+/-! ## Auxiliary value lemmas (by enumeration, clean) -/
 
 theorem zorZ : ∀ x : V, (x = T ∨ x = F) → zor x Z = x := by decide
 theorem zorF : ∀ x : V, (x = T ∨ x = F) → zor F x = x := by decide
@@ -49,7 +49,7 @@ theorem memL_classical : ∀ (x : El) (es : List El),
     show zor (eqAtom x e) (memL x es) = T ∨ zor (eqAtom x e) (memL x es) = F
     exact lift2_classical _ _ _
 
-/-! ## Теорема 1: метка не зарабатывает членства НИГДЕ (Z ∉ что угодно) -/
+/-! ## Theorem 1: a mark earns membership NOWHERE (Z ∉ anything) -/
 
 theorem memZ : ∀ (i : Nat) (es : List El), memL (.z i) es = F := by
   intro i es
@@ -61,7 +61,7 @@ theorem memZ : ∀ (i : Nat) (es : List El), memL (.z i) es = F := by
     have h2 : zor (eqAtom (.z i) e) F = F := by cases e <;> rfl
     exact h1.trans h2
 
-/-! ## Теорема 2: меченое множество не влезает даже в себя (S ⊆ S падает) -/
+/-! ## Theorem 2: a marked set does not fit even into itself (S ⊆ S falls) -/
 
 theorem sub_marked_false : ∀ (i : Nat) (pre S : List El),
     subL (pre ++ [.z i]) S = F := by
@@ -72,26 +72,26 @@ theorem sub_marked_false : ∀ (i : Nat) (pre S : List El),
   | cons e pre ih =>
     exact (congrArg (zand (memL e S)) ih).trans (zandXF _)
 
-/-- Следствие: рефлексивность равенства множеств падает на мечеными. -/
+/-- Corollary: reflexivity of set equality falls on marked sets. -/
 theorem seteq_self_marked (i : Nat) (pre : List El) :
     seteq (pre ++ [El.z i]) (pre ++ [El.z i]) = F :=
   (congrArg (fun x => zand x (subL (pre ++ [El.z i]) (pre ++ [El.z i])))
     (sub_marked_false i pre (pre ++ [El.z i]))).trans (zandFX _)
 
-/-! ## Конкретика Э5 (вычислением, как в Python-стенде) -/
+/-! ## Concrete E5 facts (by computation, as in the Python stand) -/
 
--- {Z,Z} = {Z}: склейка не заработана
+-- {Z,Z} = {Z}: merging is not earned
 example : seteq [.z 1, .z 1] [.z 1] = F := rfl
--- Z ∈ {Z} — та же метка! — членство не заработано
+-- Z ∈ {Z} — the same mark! — membership is not earned
 example : memL (.z 1) [.z 1] = F := rfl
--- проверенные — классика: 1 ∈ {1,2,Z}, 3 ∉ {1,2,Z}
+-- verified elements — classical: 1 ∈ {1,2,Z}, 3 ∉ {1,2,Z}
 example : memL (.v 1) [.v 1, .v 2, .z 7] = T := rfl
 example : memL (.v 3) [.v 1, .v 2, .z 7] = F := rfl
--- чистая рефлексивность жива, меченая пала
+-- clean reflexivity is alive, marked reflexivity fell
 example : seteq [.v 1, .v 2] [.v 1, .v 2] = T := rfl
 example : seteq [.v 1, .v 2, .z 7] [.v 1, .v 2, .z 7] = F := rfl
 
-/-! ## Мощность: интервал; |{Z}| = [1,1] — мощность без тождества -/
+/-! ## Cardinality: an interval; |{Z}| = [1,1] — cardinality without identity -/
 
 def cardLo (core quar : Nat) : Nat := if core = 0 then min quar 1 else core
 def cardHi (core quar : Nat) : Nat := core + quar

@@ -1,17 +1,17 @@
 # -*- coding: utf-8 -*-
 """
-Кванторы ZTL на конечных доменах.
+ZTL quantifiers on finite domains.
 
-По порождающему принципу:
-    ∀x φ = большая конъюнкция: T, если КАЖДЫЙ экземпляр строго T, иначе F
-           (один Z-свидетель отравляет универсалию — она не заслужена);
-    ∃x φ = большая дизъюнкция: T, если ХОТЬ ОДИН экземпляр строго T, иначе F
-           (Z-кандидат свидетелем не считается).
-Жадность распространяется: составные формулы (в т.ч. кванторные) не
-принимают Z; Z живёт только на атомарных фактах P(a).
+By the generating principle:
+    ∀x φ = a big conjunction: T if EVERY instance is strictly T, else F
+           (one Z-witness poisons the universal — it is not earned);
+    ∃x φ = a big disjunction: T if AT LEAST ONE instance is strictly T,
+           else F (a Z-candidate does not count as a witness).
+Greediness extends: compound formulas (including quantified ones) never
+take Z; Z lives only on atomic facts P(a).
 
-Промеры (MEASURED): законы и правила с кванторами на всех интерпретациях
-унарных P,Q (домены 1..3) и бинарного R (домены 1..2).
+Measurements (MEASURED): quantifier laws and rules over all
+interpretations of unary P,Q (domains 1..3) and binary R (domains 1..2).
 """
 
 from itertools import product
@@ -20,9 +20,9 @@ from ztl import T, F, Z, VALUES, NOT, OPS2
 
 
 def ev_fo(phi, dom, interp, env):
-    """Значение формулы первого порядка.
-    interp: имя предиката -> кортеж значений (унарный: по элементам;
-    бинарный: interp[имя][i][j]). env: переменная -> индекс элемента."""
+    """Value of a first-order formula.
+    interp: predicate name -> tuple of values (unary: by element;
+    binary: interp[name][i][j]). env: variable -> element index."""
     op = phi[0]
     if op == "all":
         vals = [ev_fo(phi[2], dom, interp, {**env, phi[1]: d}) for d in dom]
@@ -35,21 +35,21 @@ def ev_fo(phi, dom, interp, env):
     if op in OPS2:
         return OPS2[op](ev_fo(phi[1], dom, interp, env),
                         ev_fo(phi[2], dom, interp, env))
-    # атомарный факт: ('P', 'x') или ('R', 'x', 'y')
+    # atomic fact: ('P', 'x') or ('R', 'x', 'y')
     if len(phi) == 2:
         return interp[op][env[phi[1]]]
     return interp[op][env[phi[1]]][env[phi[2]]]
 
 
 def unary_interps(dom, names):
-    """Все интерпретации унарных предикатов names на домене."""
+    """All interpretations of the unary predicates names on the domain."""
     per_pred = list(product(VALUES, repeat=len(dom)))
     for combo in product(per_pred, repeat=len(names)):
         yield dict(zip(names, combo))
 
 
 def binary_interps(dom, name):
-    """Все интерпретации одного бинарного предиката."""
+    """All interpretations of one binary predicate."""
     n = len(dom)
     for flat in product(VALUES, repeat=n * n):
         yield {name: tuple(tuple(flat[i * n + j] for j in range(n))
@@ -73,13 +73,13 @@ def preds_of(phi, acc=None):
 
 
 def interps_for(formulas, dom):
-    """Все совместные интерпретации всех предикатов набора формул."""
+    """All joint interpretations of all predicates of a formula set."""
     arity = {}
     for f in formulas:
         arity.update(preds_of(f))
     unary = sorted(n for n, a in arity.items() if a == 1)
     binary = sorted(n for n, a in arity.items() if a == 2)
-    assert len(binary) <= 1, "поддержан один бинарный предикат"
+    assert len(binary) <= 1, "one binary predicate supported"
     if binary:
         for bi in binary_interps(dom, binary[0]):
             if unary:
@@ -92,7 +92,7 @@ def interps_for(formulas, dom):
 
 
 def fo_equal(lhs, rhs, max_dom=3):
-    """Первый контрпример к тождеству, иначе None."""
+    """First counterexample to the identity, else None."""
     for n in range(1, max_dom + 1):
         dom = list(range(n))
         for interp in interps_for([lhs, rhs], dom):
@@ -121,13 +121,13 @@ def fo_entails(premises, conclusion, max_dom=3):
     return None
 
 
-# --- батарея: P(a) кодируем атомом (P, x) при env {x: 0} — «a» = элемент 0 ---
+# --- battery: P(a) coded as atom (P, x) with env {x: 0} — "a" = element 0 ---
 P, Q = "P", "Q"
 x, y = "x", "y"
 
 
 def fo_entails_const(premises, conclusion, max_dom=3):
-    """Как fo_entails, но свободная переменная x читается как константа 0."""
+    """Like fo_entails, but the free variable x reads as the constant 0."""
     for n in range(1, max_dom + 1):
         dom = list(range(n))
         for interp in interps_for(premises + [conclusion], dom):
@@ -148,41 +148,41 @@ def fo_valid_const(phi, max_dom=3):
 
 
 IDENTITIES = [
-    ("Де Морган ∀:  ¬∀xP = ∃x¬P",
+    ("De Morgan ∀:  ¬∀xP = ∃x¬P",
      ("not", ("all", x, (P, x))), ("ex", x, ("not", (P, x)))),
-    ("Де Морган ∃:  ¬∃xP = ∀x¬P",
+    ("De Morgan ∃:  ¬∃xP = ∀x¬P",
      ("not", ("ex", x, (P, x))), ("all", x, ("not", (P, x)))),
-    ("дистрибуция ∀ по ∧: ∀x(P∧Q) = ∀xP ∧ ∀xQ",
+    ("distribution of ∀ over ∧: ∀x(P∧Q) = ∀xP ∧ ∀xQ",
      ("all", x, ("and", (P, x), (Q, x))),
      ("and", ("all", x, (P, x)), ("all", x, (Q, x)))),
-    ("дистрибуция ∃ по ∨: ∃x(P∨Q) = ∃xP ∨ ∃xQ",
+    ("distribution of ∃ over ∨: ∃x(P∨Q) = ∃xP ∨ ∃xQ",
      ("ex", x, ("or", (P, x), (Q, x))),
      ("or", ("ex", x, (P, x)), ("ex", x, (Q, x)))),
 ]
 
 VALIDITIES_C = [
-    ("UI-закон: ∀yP(y) → P(a)",
+    ("UI law: ∀yP(y) → P(a)",
      ("imp", ("all", y, (P, y)), (P, x))),
-    ("EG-закон: P(a) → ∃yP(y)",
+    ("EG law: P(a) → ∃yP(y)",
      ("imp", (P, x), ("ex", y, (P, y)))),
-    ("непустота: ∀yP(y) → ∃yP(y)",
+    ("non-emptiness: ∀yP(y) → ∃yP(y)",
      ("imp", ("all", y, (P, y)), ("ex", y, (P, y)))),
-    ("кв. LEM: ∀y(P(y)∨¬P(y))",
+    ("quant. LEM: ∀y(P(y)∨¬P(y))",
      ("all", y, ("or", (P, y), ("not", (P, y))))),
-    ("пьяница: ∃y(P(y)→∀zP(z))",
+    ("the drinker: ∃y(P(y)→∀zP(z))",
      ("ex", y, ("imp", (P, y), ("all", "z", (P, "z"))))),
 ]
 
 RULES_FO = [
-    ("UI-правило: ∀yP ⊨ P(a)",
+    ("UI rule: ∀yP ⊨ P(a)",
      [("all", y, (P, y))], (P, x), fo_entails_const),
-    ("EG-правило: P(a) ⊨ ∃yP",
+    ("EG rule: P(a) ⊨ ∃yP",
      [(P, x)], ("ex", y, (P, y)), fo_entails_const),
     ("∀¬ ⊨ ¬∃:  ∀y¬P ⊨ ¬∃yP",
      [("all", y, ("not", (P, y)))], ("not", ("ex", y, (P, y))), fo_entails),
     ("¬∃ ⊨ ∀¬:  ¬∃yP ⊨ ∀y¬P",
      [("not", ("ex", y, (P, y)))], ("all", y, ("not", (P, y))), fo_entails),
-    ("смена кванторов: ∃x∀yR(x,y) ⊨ ∀y∃xR(x,y)",
+    ("quantifier swap: ∃x∀yR(x,y) ⊨ ∀y∃xR(x,y)",
      [("ex", x, ("all", y, ("R", x, y)))],
      ("all", y, ("ex", x, ("R", x, y))),
      lambda p, c, max_dom=2: fo_entails(p, c, max_dom)),
@@ -198,10 +198,10 @@ def fmt_interp(dom, interp):
 
 if __name__ == "__main__":
     print("=" * 72)
-    print("КВАНТОРЫ ZTL: ∀ = все строго T; ∃ = есть строгий T-свидетель")
+    print("ZTL QUANTIFIERS: ∀ = all strictly T; ∃ = a strict T-witness exists")
     print("=" * 72)
 
-    print("\n-- ТОЖДЕСТВА --")
+    print("\n-- IDENTITIES --")
     for name, lhs, rhs in IDENTITIES:
         cex = fo_equal(lhs, rhs)
         if cex is None:
@@ -210,7 +210,7 @@ if __name__ == "__main__":
             dom, interp, a, b = cex
             print(f"  ✗ {name}   [{fmt_interp(dom, interp)} → {a} vs {b}]")
 
-    print("\n-- ЗАКОНЫ (общезначимость; a — элемент 0) --")
+    print("\n-- LAWS (validity; a = element 0) --")
     for name, phi in VALIDITIES_C:
         cex = fo_valid_const(phi)
         if cex is None:
@@ -219,7 +219,7 @@ if __name__ == "__main__":
             dom, interp = cex
             print(f"  ✗ {name}   [{fmt_interp(dom, interp)}]")
 
-    print("\n-- ПРАВИЛА (следования) --")
+    print("\n-- RULES (entailments) --")
     for name, prems, concl, checker in RULES_FO:
         cex = checker(prems, concl)
         if cex is None:

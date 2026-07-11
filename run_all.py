@@ -1,32 +1,32 @@
 # -*- coding: utf-8 -*-
 """
-Единый регрессионный раннер ZTL: все стенды + Lean.
-Выход 0 = всё зелёное. Ключевые маркеры проверяются по выводу.
+Unified ZTL regression runner: all stands + Lean.
+Exit 0 = all green. Key markers are checked against the output.
 """
 
 import subprocess
 import sys
 
 STANDS = [
-    ("ztl.py",         ["аксиома NOT(Z) = F"]),
-    ("audit.py",       ["Итого: живых 12, павших 14"]),
-    ("entailment.py",  ["Итого правил: живых 12, павших 2"]),
-    ("tableau.py",     ["решения совпали ВСЕ"]),
-    ("quantifiers.py", ["UI-правило", "✗ ¬∃ ⊨ ∀¬"]),
-    ("tableau_fo.py",  ["совпали ВСЕ"]),
-    ("paradoxes.py",   ["Неподвижной точки нет"]),
-    ("fixedpoint.py",  ["НЕмонотонен", "карантин: {λ}"]),
-    ("expeditions.py", ["ГИПОТЕЗА ПОДТВЕРЖДЕНА ТОТАЛЬНО"]),
-    ("crocodile.py",   ["СДЕЛКА НЕ ЗАСЛУЖИВАЕТ ИСТИНЫ"]),
-    ("zsets.py",       ["склейка не заработана"]),
-    ("reals.py",       ["апартность заработана за t=1"]),
-    ("zfuncs.py",      ["даже id не сертифицируется"]),
-    ("zarith.py",      ["ЗАРАБОТАННЫЙ ноль"]),
-    ("zprob.py",       ["ZTL-вердикт: Z"]),
-    ("zmodal.py",      ["порог совпал"]),
-    ("zrussell.py",    ["заземлено фактов: 8 из 9"]),
-    ("zverify.py",     ["расхождений: 0", "нарушений монотонности стабильных вердиктов: 0"]),
-    ("zcombine.py",    ["✓ на всех случаях"]),
+    ("ztl.py",         ["axiom NOT(Z) = F"]),
+    ("audit.py",       ["Total: alive 12, fallen 14"]),
+    ("entailment.py",  ["Rules total: alive 12, fallen 2"]),
+    ("tableau.py",     ["ALL decisions coincided"]),
+    ("quantifiers.py", ["UI rule", "✗ ¬∃ ⊨ ∀¬"]),
+    ("tableau_fo.py",  ["ALL decisions coincided"]),
+    ("paradoxes.py",   ["No fixed point"]),
+    ("fixedpoint.py",  ["NON-monotone", "quarantine: {λ}"]),
+    ("expeditions.py", ["HYPOTHESIS CONFIRMED TOTALLY"]),
+    ("crocodile.py",   ["THE DEAL DOES NOT EARN TRUTH"]),
+    ("zsets.py",       ["merging not earned"]),
+    ("reals.py",       ["apartness earned by t=1"]),
+    ("zfuncs.py",      ["even id is not certified"]),
+    ("zarith.py",      ["EARNED zero"]),
+    ("zprob.py",       ["ZTL verdict: Z"]),
+    ("zmodal.py",      ["threshold coincided"]),
+    ("zrussell.py",    ["facts grounded: 8 of 9"]),
+    ("zverify.py",     ["divergences: 0", "violations of stable-verdict monotonicity: 0"]),
+    ("zcombine.py",    ["✓ on all cases"]),
 ]
 
 
@@ -38,8 +38,8 @@ def main():
         missing = [m for m in markers if m not in r.stdout]
         status = "OK " if r.returncode == 0 and not missing else "FAIL"
         print(f"  [{status}] {script}"
-              + (f"  — нет маркеров: {missing}" if missing else "")
-              + (f"  — код {r.returncode}" if r.returncode else ""))
+              + (f"  — missing markers: {missing}" if missing else "")
+              + (f"  — exit code {r.returncode}" if r.returncode else ""))
         if status == "FAIL":
             failures.append(script)
 
@@ -48,16 +48,16 @@ def main():
                        capture_output=True, text=True, timeout=900)
     lean_ok = r.returncode == 0 and \
         "does not depend on any axioms" in r.stdout + r.stderr
-    print(f"  [{'OK ' if lean_ok else 'FAIL'}] lean (ноль аксиом: "
-          f"{'подтверждён' if lean_ok else 'НЕ ПОДТВЕРЖДЁН'})")
+    print(f"  [{'OK ' if lean_ok else 'FAIL'}] lean (zero axioms: "
+          f"{'confirmed' if lean_ok else 'NOT CONFIRMED'})")
     if not lean_ok:
         failures.append("lean")
 
     print()
     if failures:
-        print(f"КРАСНОЕ: {failures}")
+        print(f"RED: {failures}")
         return 1
-    print(f"ВСЁ ЗЕЛЁНОЕ: {len(STANDS)} стендов + Lean.")
+    print(f"ALL GREEN: {len(STANDS)} stands + Lean.")
     return 0
 
 

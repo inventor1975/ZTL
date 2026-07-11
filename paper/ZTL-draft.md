@@ -1,101 +1,107 @@
-# ZTL — логика нулевого доверия
+# ZTL — Zero-Trust Logic
 
-**В. Резник. Рабочий черновик препринта, v0.3 — 2026-07-11.**
-Пометка MEASURED означает «проверено машинным перебором» (код в
-репозитории), в отличие от «аргументировано»; пометки о Lean означают
-доказательства, проверенные ядром Lean 4 с пустым списком аксиом.
+**V. Reznik. Working preprint draft, v0.4 — 2026-07-11.**
+The tag MEASURED means "verified by machine enumeration" (code in this
+repository), as opposed to "argued"; references to Lean mean proofs
+checked by the Lean 4 kernel with an **empty axiom list**.
 
 ---
 
-## Аннотация
+## Abstract
 
-Шесть независимых инженерных традиций — арифметика IEEE 754 (NaN),
-трёхзначная логика SQL (NULL), taint tracking в безопасности,
-абстрактная интерпретация в статическом анализе, imprecise
-probabilities в теории решений и provenance semirings в теории баз
-данных — десятилетиями решают одну и ту же задачу: как честно вычислять
-над непроверенными данными. В работе показано (MEASURED), что все шесть
-реализуют фрагменты одной логики, и эта логика построена целиком из
-единственного порождающего принципа: **истина не выдаётся в кредит** —
-связка возвращает T, только если T вынуждена при каждом классическом
-прочтении непроверенного. Значений истинности два (вердикты всегда
-классичны); третий символ Z — метка непроверенного входа, не значение.
+Six independent engineering traditions — IEEE 754 arithmetic (NaN),
+SQL's three-valued logic (NULL), taint tracking in security, abstract
+interpretation in static analysis, imprecise probabilities in decision
+theory, and provenance semirings in database theory — have spent decades
+solving one and the same problem: how to compute honestly over
+unverified data. We show (MEASURED) that all six implement fragments of
+a single logic, and that this logic is generated in its entirety by one
+principle: **truth is never granted on credit** — a connective returns T
+only if T is forced under every classical reading of the unverified.
+There are exactly two truth values (verdicts are always classical); the
+third symbol Z is a mark on an unverified input, not a truth value.
 
-Для этой логики (ZTL, Zero-Trust Logic) построены: полное семантическое
-описание с измеренным прейскурантом (12 живых законов, включая modus
-ponens, и 14 павших — все павшие суть «истина из формы»); обнаруженный
-раскол «правила против законов» с односторонней теоремой дедукции;
-знаковое таблó-исчисление с машинно доказанными корректностью и
-полнотой; кванторы; модальная идентификация (локальная модальность над
-S5-рамкой дочиток — против глобальной супервалюации); вероятностная
-идентификация (вердикты = {0,1}-порог функций доверия Демпстера–Шейфера);
-теория верификации (вердикт = пара «значение + гарантия стабильности»)
-и комбинирования свидетельств (конфликт не перенормируется — парадокс
-Заде решается в сторону Сметса). Всё ядро и сертификаты движков
-формализованы в Lean 4 **с пустым списком аксиом**. В качестве
-испытательного стенда логика прогнана по классическим парадоксам:
-лжец, карусель Журдена, Карри, Ябло, крокодил, Рассел — во всех случаях
-взрыв заменяется точечным карантином (у Рассела заземляется 8 из 9
-фактов членства; несчётность континуума расщепляется на два независимых
-провала). Функционально пропозициональное ядро — фрагмент внешнего слоя
-логики Бочвара (1938); вклад работы — порождающий принцип, импликативный
-этаж вне условий стандартности Россера–Тюркетта, исчисление,
-машинная верификация и мосты к инженерным традициям.
+For this logic (ZTL, Zero-Trust Logic) we build: a complete semantic
+account with a measured price list (12 surviving laws, including modus
+ponens, and 14 fallen ones — all the fallen laws are "truth from form");
+the discovered split between *rules* and *laws*, with a one-directional
+deduction theorem; a signed tableau calculus with machine-proven
+soundness and completeness; quantifiers; a modal identification (local
+modality over the S5 frame of completions — versus global
+supervaluation); a probabilistic identification (verdicts are the
+{0,1}-threshold of Dempster–Shafer belief functions); a theory of
+verification (a verdict is a pair "value + stability warranty") and of
+evidence combination (conflict is never renormalized — Zadeh's paradox
+is resolved in Smets' favor). The entire core and both engine
+certificates are formalized in Lean 4 **with an empty axiom list**. As a
+test bench the logic is run over the classical paradoxes — the liar,
+Jourdain's carousel, Curry, Yablo, the crocodile, Russell — and in every
+case explosion is replaced by pointwise quarantine (for Russell, 8 of 9
+membership facts stay grounded; the uncountability of the continuum
+splits into two independent failures). Functionally the propositional
+core is a fragment of the external layer of Bochvar's logic (1938); the
+contribution of this work is the generating principle, an implicational
+floor lying outside the Rosser–Turquette standardness conditions, the
+calculus, the machine verification, and the bridges to the engineering
+traditions.
 
-## 1. Мотивировка: одна задача, шесть независимых решений
+## 1. Motivation: one problem, six independent solutions
 
-Большая часть данных, над которыми вычисляет современный софт, — не
-проверена: показания датчиков, пользовательский ввод, чужие базы,
-ответы сетевых сервисов. Инженерия отвечала на это не единой теорией,
-а локальными изобретениями:
+Most of the data over which modern software computes is unverified:
+sensor readings, user input, third-party databases, answers of network
+services. Engineering answered not with a single theory but with local
+inventions:
 
-* IEEE 754 (1985): NaN — арифметика заражается, сравнения отказывают;
-* SQL (1986): NULL — трёхзначная логика внутри выражений, принудительная
-  ложь на границе WHERE;
-* taint tracking (Деннинг, 1976; Perl, TaintDroid): метка недоверия
-  течёт сквозь вычисления, санитайзер — только явная проверка;
-* абстрактная интерпретация (Кузо и Кузо, 1977): значения-интервалы
-  текут, ассерты проверяются на вынужденность;
-* imprecise probabilities (Уолли, 1991) и теория Демпстера–Шейфера:
-  незнание — интервал [Bel, Pl], а не точечная вероятность;
-* provenance semirings (Грин–Таннен, 2007): доверие факту — полином
-  его источников.
+* IEEE 754 (1985): NaN — arithmetic is infected, comparisons refuse;
+* SQL (1986): NULL — three-valued logic inside expressions, forced
+  falsehood at the WHERE boundary;
+* taint tracking (Denning, 1976; Perl taint mode, TaintDroid): a
+  distrust mark flows through computations, and only an explicit check
+  sanitizes;
+* abstract interpretation (Cousot & Cousot, 1977): interval values flow,
+  assertions are checked for being forced;
+* imprecise probabilities (Walley, 1991) and Dempster–Shafer theory:
+  ignorance is an interval [Bel, Pl], not a point probability;
+* provenance semirings (Green–Karvounarakis–Tannen, 2007): trust in a
+  fact is a polynomial over its sources.
 
-Каждое из этих решений парировало свой частный случай одной беды:
-наивное обращение с непроверенным производит уверенность из ниоткуда.
-В работе показано, что у шести практик есть общий знаменатель —
-двузначная логика над помеченными входами с одним порождающим
-принципом, — и что этот знаменатель выдерживает полную
-логическую разработку: исчисление, кванторы, модальную и вероятностную
-семантику, машинную верификацию. Попутно классические парадоксы
-самореференции, от лжеца до Рассела, получают единообразную
-диагностику (карантин вместо взрыва) — они служат испытательным
-стендом, а не отправной точкой.
+Each of these inventions parried its own special case of one disease:
+naive treatment of the unverified manufactures confidence out of
+nothing. We show that the six practices share a common denominator — a
+two-valued logic over marked inputs with a single generating principle —
+and that this denominator survives a full logical development: a
+calculus, quantifiers, modal and probabilistic semantics, machine
+verification. Along the way the classical paradoxes of self-reference,
+from the liar to Russell, receive a uniform diagnosis (quarantine
+instead of explosion) — they serve as a test bench, not as the point of
+departure.
 
-Принцип, из которого всё строится, заимствует у безопасности имя
-default deny: дефектному входу нельзя выдать ни одно классическое
-значение, но любое составное утверждение о нём обязано получить
-классический вердикт — «истина, только если вынуждена».
+The principle from which everything is built borrows its name from
+security: default deny. A defective input may be granted neither
+classical value, but every compound assertion about it must receive a
+classical verdict — "true only if forced".
 
-## 2. Определения
+## 2. Definitions
 
-**Значения истинности:** T (заслужена), F (ложь). **Метка входа:**
-Z (zero-trust, «не заслужена») — свойство атома-данных, не истинность;
-в таблицах-калькуляторах участвует как третий символ.
+**Truth values:** T (earned truth), F (falsehood). **Input mark:**
+Z (zero-trust, "not earned") — a property of an atomic datum, not a
+truth value; it participates in the calculating tables as a third
+symbol.
 
-**Порождающий принцип.** Для любой классической связки f её ZTL-подъём:
+**Generating principle.** For any classical connective f, its ZTL lift:
 
     f*(x₁,…,xₙ) = ⋀ { f(v₁,…,vₙ) : vᵢ ∈ subs(xᵢ) },
-    где subs(Z) = {T,F}, subs(v) = {v} иначе;
-    ⋀ — классическая конъюнкция по всем комбинациям.
+    where subs(Z) = {T,F}, subs(v) = {v} otherwise;
+    ⋀ is classical conjunction over all combinations.
 
-Каждое вхождение Z подставляется независимо; результат всегда классичен.
+Every occurrence of Z is substituted independently; the result is always
+classical.
 
-**Следствие (теорема жадности, MEASURED):** ни одна составная формула
-не принимает значение Z; Z живёт только на атомах.
+**Corollary (greediness theorem, MEASURED):** no compound formula ever
+takes the value Z; Z lives only on atoms.
 
-**Таблицы** (порождены принципом; опорные клетки постулированы при
-проектировании и воспроизводятся принципом — `ztl.py::tests_axioms`):
+**Tables** (generated by the principle; the anchor cells were postulated
+at design time and are reproduced by the principle — `ztl.py`):
 
 | x | ¬x |   | ∧ | T | F | Z |   | ∨ | T | F | Z |   | → | T | F | Z |
 |---|----|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
@@ -103,130 +109,138 @@ Z (zero-trust, «не заслужена») — свойство атома-да
 | F | T  |   | F | F | F | F |   | F | T | F | F |   | F | T | T | T |
 | Z | F  |   | Z | F | F | F |   | Z | T | F | F |   | Z | T | F | F |
 
-⊕ и ↔: любые клетки с участием Z равны F; на классике — классические.
+⊕ and ↔: every cell involving Z equals F; on classical inputs —
+classical.
 
-**Порождающий базис (MEASURED):** {¬,∧,∨} порождает всё:
-p→q = ¬p∨q, p⊕q = (p∧¬q)∨(¬p∧q), p↔q = (p∧q)∨(¬p∧¬q) — живые тождества.
+**Generating basis (MEASURED):** {¬,∧,∨} generates everything:
+p→q = ¬p∨q, p⊕q = (p∧¬q)∨(¬p∧q), p↔q = (p∧q)∨(¬p∧¬q) are surviving
+identities.
 
-**Следование:** Γ ⊨ φ ⟺ всякое распределение, делающее все посылки T,
-делает T заключение. Тарскианское по построению.
+**Entailment:** Γ ⊨ φ iff every valuation making all premises T makes
+the conclusion T. Tarskian by construction.
 
-## 3. Результаты (все MEASURED)
+## 3. Results (all MEASURED)
 
-### 3.1 Законы: 12 живых, 14 павших
+### 3.1 Laws: 12 alive, 14 fallen
 
-Живые: MP, непротиворечие, транзитивность →, коммутативность и
-ассоциативность ∧/∨, обе дистрибутивности, три канонических определения
-производных связок. Павшие: ¬¬p=p, оба Де Моргана, контрапозиция-закон,
-⊕=¬(↔), идемпотентность ∧/∨, поглощение, нейтрали, LEM, p→p, закон
-Пирса, q→(p→q). Общий признак павших: все ломаются только на Z и все —
-законы «бесплатной истины» (истина из формы или из смены полярности).
+Alive: MP, non-contradiction, transitivity of →, commutativity and
+associativity of ∧/∨, both distributivities, and the three canonical
+definitions of the derived connectives. Fallen: ¬¬p=p, both De Morgan
+laws, contraposition-as-identity, ⊕=¬(↔), idempotence of ∧/∨,
+absorption, the units (p∧T=p, p∨F=p), excluded middle, p→p, Peirce's
+law, q→(p→q). The common trait of the fallen: each fails only on Z, and
+each is a law of "free truth" (truth from form or from polarity flip).
 
-### 3.2 Раскол «правила против законов»
+### 3.2 The split between rules and laws
 
-Из 14 классических правил вывода как следований выжили 12 — включая
-контрапозицию-правило (p→q ⊨ ¬q→¬p) и K-правило (q ⊨ p→q), чьи
-законы-двойники пали. Пали два: ¬¬-удаление (¬¬p ⊨ p; Z протекает
-сквозь двойное отрицание) и «тавтология в заключении» (p ⊨ q∨¬q; свежий
-атом не заслуживает истины). Классика раскола не видит, потому что его
-склеивает теорема дедукции; в ZTL она работает **только слева направо**:
-⊨A→B ⇒ A⊨B, но p⊨p при ⊭p→p. Импликация строже следования: следование —
-транспорт заслуженной истины, стрелка — вердикт, который сам должен её
-заслужить.
+Of 14 classical inference rules taken as entailments, 12 survive —
+including contraposition-as-a-rule (p→q ⊨ ¬q→¬p) and the K-rule
+(q ⊨ p→q), whose law twins fell. Two fall: ¬¬-elimination (¬¬p ⊨ p; Z
+leaks through double negation) and "tautology in the conclusion"
+(p ⊨ q∨¬q; a fresh atom earns no truth). Classical logic cannot see the
+split because the deduction theorem glues it shut; in ZTL the deduction
+theorem works **left-to-right only**: ⊨A→B implies A⊨B, but p⊨p while
+⊭p→p. The arrow is stricter than entailment: entailment transports
+earned truth, the arrow is a verdict that must earn its own.
 
-### 3.3 Классификация: паракомплектность
+### 3.3 Classification: paracompleteness
 
-ZTL паракомплетна (LEM пал), но не параконсистентна в ⊨-смысле:
-v(p)=v(¬p)=T недостижимо, глатов нет, взрыв валиден вакуумно. При этом
-семантический MP цел — ZTL сильнее по выводу, чем LP Приста.
+ZTL is paracomplete (LEM fell) but not paraconsistent in the ⊨ sense:
+v(p)=v(¬p)=T is unsatisfiable, there are no gluts, explosion is
+vacuously valid. Semantic MP is intact — ZTL is stronger in inference
+than Priest's LP.
 
-### 3.4 Парадоксы: карантин, не таблицы
+### 3.4 Paradoxes: quarantine, not tables
 
-У ¬ нет неподвижной точки (¬Z=F) — лжец таблично не усиживается
-(MEASURED: перебор всех значений). Парадоксы гасятся карантинным флагом:
-Z-предложения изъяты из-под схемы Тарского. Карантин детектируем изнутри:
-isZ(x) = ¬(x↔x). Той же формулой выразим лжец-мститель; его содержание
-вычисляется в T, а истина предложению не выдаётся — счёт, оплаченный
-сознательно (это стандартная плата всех карантинных теорий, у нас она
-выписана явно).
+Negation has no fixed point (¬Z=F) — the liar cannot be seated by the
+tables (MEASURED: enumeration of all values). Paradoxes are extinguished
+by the quarantine flag: Z-sentences are exempted from the Tarski schema.
+Quarantine is detectable from inside: isZ(x) = ¬(x↔x). The same formula
+expresses the revenge liar; its content evaluates to T while the
+sentence is denied truth — a price paid deliberately (it is the standard
+price of all quarantine theories; here it is written out explicitly).
 
-### 3.5 Несовместимости (мини-теоремы)
+### 3.5 Incompatibilities (mini-theorems)
 
-1. {¬Z=F, T→Z=F} ⟹ контрапозиция-закон невозможна (проверка подстановкой).
-2. Значение, вмещающее лжеца, обязано быть неподвижной точкой ¬;
-   пессимизм (¬Z=F) исключает это ⟹ карантинный флаг не устраним.
-3. Схлопывание Z→F на атоме (вместо оператора) восстанавливает все
-   классические законы и превращает систему дословно в изоморф B3□
-   Бочвара — новизна и раскол правил/законов исчезают.
+1. {¬Z=F, T→Z=F} ⟹ contraposition-as-identity is impossible
+   (verified by substitution).
+2. A value housing the liar must be a fixed point of ¬; pessimism
+   (¬Z=F) excludes this ⟹ the quarantine flag is irremovable.
+3. Collapsing Z→F at the atom (instead of at the operator) restores all
+   classical laws and turns the system verbatim into Bochvar's isomorph
+   B3□ — the novelty and the rules/laws split vanish.
 
-## 4. Место в литературе
+## 4. Place in the literature
 
-Функционально ZTL — фрагмент внешнего слоя B3 Бочвара (1938; построена
-против парадоксов). Совпадают дословно: ¬ = ⌉ (◇-отрицание), ∧ = ∩□,
-∨ = ∪□. Дельта — 7 клеток в →, ↔, ⊕: систематическое закрытие мест, где
-у Бочвара карантин порождает вакуумную истину (у него ½⊃0 = 1, у нас
-Z→F = F). Импликация ZTL = ◇A⊃□B, взятая как примитив; полярностно-
-адаптивная трансляция (□ на позитивных местах, ◇ на негативных) вместо
-равномерной. ZTL выпадает из классификации «естественных импликаций»
-Томовой (валит p→p) и не совпадает ни с одной из литеральных паралогик
-решётки Карпенко–Томовой (2017). Родичи по духу: супервалюационизм
-(жёсткий, непотабличный), субвалюационизм/Яськовский (двойственный),
-SQL NULL (ленивый), IEEE NaN (сравнения), исключения с try/catch на
-каждом узле (жадность). Мотивировка «жадная локальная супервалюация / default deny» в
-просмотренной литературе не встречена.
+Functionally ZTL is a fragment of the external layer of Bochvar's B3
+(1938; built against the paradoxes). Verbatim coincidences: ¬ = ⌉ (the
+◇-negation), ∧ = ∩□, ∨ = ∪□. The delta is 7 cells in →, ↔, ⊕: a
+systematic closing of the places where Bochvar's quarantine begets
+vacuous truth (his ½⊃0 = 1, our Z→F = F). ZTL's implication is his
+◇A⊃□B taken as a primitive; a polarity-adaptive translation (□ in
+positive positions, ◇ in negative ones) instead of a uniform one. ZTL
+falls outside Tomova's classification of "natural implications" (it
+fails p→p) and coincides with none of the literal paralogics of the
+Karpenko–Tomova lattice (2017). Kindred in spirit: supervaluationism
+(rigid, non-tabular), subvaluationism/Jaśkowski (its dual), SQL NULL
+(lazy), IEEE NaN (comparisons), exceptions with try/catch at every node
+(greediness). The motivation "greedy local supervaluation / default
+deny" was not found in the surveyed literature.
 
-**Девяткин (2016, «Неклассические модификации многозначных матриц», ЛИ
-22-2) — прочитано.** Ядро {¬,∧,∨} ZTL укладывается в шаблоны его класса
-8Kb* — параполных дуалов семейства 8Kb (Карнейли–Маркос, 8192 матрицы):
-¬Z=F, Z∧x=F, Z∨T=T попадают в разрешённые клетки «0 или 1». То есть
-наша тройка ¬∧∨ — член каталогизированного класса, это более сильная
-родословная, чем знали ранее. Однако весь каталог строится при
-условиях стандартности Россера–Тюркетта для импликации: middle→0
-обязано быть выделенным (у любой C-расширяющей стандартной импликации
-1→0 = 2). ZTL с Z→F = F и Z→Z = F эти условия нарушает намеренно —
-импликативно-эквивалентностный этаж ZTL лежит вне каталога, и именно
-он несёт все подписи системы. Significance logics Годдарда–Раутли
-(проверено на уровне обзора AJL): заразное «бессмысленное» (слабый
-Клини внутри) + классические внешние операторы — бочваровская
-архитектура, не пооператорный коллапс.
+**Devyatkin (2016, "Non-classical modifications of many-valued
+matrices", read in full).** The {¬,∧,∨} core of ZTL fits the templates
+of his class 8Kb* — the paracomplete duals of the 8Kb family
+(Carnielli–Marcos, 8192 matrices): ¬Z=F, Z∧x=F, Z∨T=T land in the
+permitted "0 or 1" cells. So our triple is a member of a catalogued
+class — a stronger pedigree than previously known. However, the entire
+catalogue is built under the Rosser–Turquette standardness conditions
+for implication: middle→0 must be designated. ZTL with Z→F = F and
+Z→Z = F violates these conditions deliberately — the
+implication/equivalence floor of ZTL lies outside the catalogue, and it
+is precisely this floor that carries all the system's signatures. The
+significance logics of Goddard–Routley (checked at survey level) use
+infectious nonsense plus classical external operators — Bochvar's
+architecture, not per-operator collapse.
 
-**Соседи из теории баз данных (проверено 2026-07-10).** Ближайшая
-родня — линия Либкина: (а) certain answers («истинно во всех дополнениях
-неполной базы») = глобальная супервалюация, теоретический эталон с
-высокой сложностью (Libkin, ICDT'15/TODS'16); (б) Libkin–Peterfreund
-«SQL Nulls and Two-Valued Logic» (PODS'23): SQL без третьего значения —
-атомарные сравнения с NULL дают false (обе полярности: и =, и ≠ — та же
-NaN-несимметричность), а булев слой ПОЛНОСТЬЮ классичен; все законы
-восстановлены (их цель — оптимизации). Итого на «шкале места коллапса»
-занято три из четырёх позиций:
+**Database-theory neighbours.** The closest kin is Libkin's line:
+(a) certain answers ("true in every completion of an incomplete
+database") = global supervaluation, the high-complexity theoretical
+gold standard (Libkin, ICDT'15/TODS'16); (b) Libkin–Peterfreund, "SQL
+Nulls and Two-Valued Logic" (PODS'23): SQL without the third value —
+atomic comparisons with NULL yield false (in both polarities, the same
+NaN asymmetry), while the Boolean layer is fully classical, restoring
+all laws (their goal is optimization). On the "where does indeterminacy
+collapse" scale, three of four positions are taken:
 
-| где схлопывается неопределённость | система |
+| where the indeterminacy collapses | system |
 |---|---|
-| на атоме (предикате) | Libkin–Peterfreund 2VL ≈ изоморф B3□ Бочвара |
-| **на каждом операторе** | **ZTL — позиция не занята (насколько найдено)** |
-| на всей формуле разом | certain answers / супервалюация |
-| никогда (течёт) | Клини / SQL 3VL внутри выражений |
+| at the atom (predicate) | Libkin–Peterfreund 2VL ≈ Bochvar's B3□ |
+| **at every operator** | **ZTL — position not found occupied** |
+| over the whole formula at once | certain answers / supervaluation |
+| never (it flows) | Kleene / SQL 3VL inside expressions |
 
-Пооператорная позиция — единственная, дающая одновременно табличность,
-двузначные вердикты и внутренние подписи (¬¬Z=T, Z↔Z=F); платой служат
-законы переписывания, которые атомарная позиция сохраняет (потому её и
-выбрали оптимизаторы). Терминологическое предостережение: «локальная/
-глобальная валидность» в философии супервалюационизма (McGee–McLaughlin,
-Varzi) — различение на уровне выводов, не операторов; наша «локальность»
-с ней не совпадает.
+The per-operator position is the only one that yields tabularity,
+two-valued verdicts and the internal signatures (¬¬Z=T, Z↔Z=F) at once;
+the price is the rewriting laws, which the atomic position preserves
+(which is why the optimizers chose it). A terminological caution:
+"local/global validity" in the philosophy of supervaluationism
+(McGee–McLaughlin, Varzi) is a distinction at the level of inferences,
+not of operators; our "locality" is a different notion.
 
-## 5. Исчисление: знаковые таблó (MEASURED tableau.py)
+## 5. The calculus: signed tableaux (MEASURED)
 
-Гильбертовский стиль закрыт (аксиома K пала, валидных формул мало),
-теорема дедукции односторонняя — исчисление строится знаковыми таблó
-(архитектура Rousseau/Hähnle для конечнозначных логик).
+Hilbert style is closed off (axiom K fell, valid formulas are scarce),
+the deduction theorem is one-directional — the calculus is built as
+signed tableaux (the Rousseau–Hähnle architecture for finitely-valued
+logics).
 
-**Знаки** — четыре множества значений:
+**Signs** — four sets of values:
 
-* строгие: **T** = {T}, **F** = {F};
-* ослабленные: **P** = {T,Z} («возможно T»), **N** = {F,Z} («не заслужил T»).
+* strict: **T** = {T}, **F** = {F};
+* weak: **P** = {T,Z} ("possibly T"), **N** = {F,Z} ("did not earn T").
 
-**Правила** (ветви разделены «|», запятая — оба узла в одну ветвь):
+**Rules** (branches separated by "|", a comma puts both nodes on one
+branch):
 
 ```
 T:¬φ  →  F:φ                       F:¬φ  →  P:φ
@@ -237,629 +251,658 @@ T:(φ⊕ψ) →  T:φ,F:ψ | F:φ,T:ψ       F:(φ⊕ψ) →  P:φ,P:ψ | N:φ,N
 T:(φ↔ψ) →  T:φ,T:ψ | F:φ,F:ψ       F:(φ↔ψ) →  P:φ,N:ψ | N:φ,P:ψ
 ```
 
-На составных формулах P≡T и N≡F (теорема жадности: составная не бывает Z).
-**Закрытие ветви:** пересечение знаков какой-либо формулы пусто (T против
-N, F против P, T против F); пара P и N на атоме ветвь НЕ закрывает — их
-пересечение {Z} даёт Z-контрмодель. **Процедура:** Γ ⊢ φ ⟺ таблó из
-{T:γ | γ∈Γ} ∪ {N:φ} закрывается целиком.
+On compound formulas P≡T and N≡F (the greediness theorem: a compound is
+never Z). **Branch closure:** the intersection of some formula's signs
+is empty (T against N, F against P, T against F); a pair P and N on an
+atom does *not* close the branch — their intersection {Z} yields a
+Z-countermodel. **Procedure:** Γ ⊢ φ ⟺ the tableau from
+{T:γ | γ∈Γ} ∪ {N:φ} closes entirely.
 
-**Подпись нулевого доверия в исчислении.** Правила T-полярности требуют
-строгих сертификатов (только T/F); ослабленные знаки появляются
-исключительно в F-полярности. Классические таблó получаются из этих же
-правил склейкой P≡T, N≡F — весь вклад Z состоит в расклейке
-отрицательных знаков. Доказать истину в ZTL стоит столько же, сколько
-в классике; опровергнуть — дешевле, потому что контрмодель может
-прятаться в Z.
+**The zero-trust signature inside the calculus.** T-polarity rules
+demand strict certificates (only T/F); weak signs appear exclusively in
+F-polarity. Classical tableaux are these same rules with P≡T, N≡F
+glued — the whole contribution of Z is the unglueing of the negative
+signs. Proving truth in ZTL costs the same as classically; refuting is
+cheaper, because a countermodel may hide in Z.
 
-**Корректность и полнота (MEASURED):** (а) каждое правило машинно сверено
-с прообразом своей таблицы — ветви покрывают прообраз точно
-(`rule_coverage_check`); (б) решения таблó совпали с семантическим ⊨ на
-2462 следованиях (батарея правил + все пары порождённого пула формул +
-выборка двухпосылочных). Для конечнозначных таблó с точным покрытием
-прообразов корректность/полнота — стандартный конструктивный результат;
-машинная сверка здесь — независимый контроль реализации.
+**Soundness and completeness (MEASURED):** (a) each rule is
+machine-checked against the preimage of its table — the branches cover
+the preimage exactly; (b) the tableau decisions coincide with semantic
+⊨ on 2462 entailments (the rule battery + all pairs of a generated
+formula pool + a sample of two-premise sequents). For finitely-valued
+tableaux with exact preimage coverage, soundness/completeness is the
+standard constructive result; the machine cross-check is an independent
+control of the implementation (and §8 upgrades it to a kernel-checked
+proof).
 
-## 6. Кванторы на конечных доменах (MEASURED quantifiers.py)
+## 6. Quantifiers over finite domains (MEASURED)
 
-По порождающему принципу: **∀xφ = T, если каждый экземпляр строго T,
-иначе F** (один Z-свидетель отравляет универсалию); **∃xφ = T, если есть
-строгий T-свидетель, иначе F** (Z-кандидат свидетелем не считается).
-Жадность распространяется: кванторные формулы не принимают Z.
+By the generating principle: **∀xφ = T if every instance is strictly T,
+else F** (one Z-witness poisons the universal); **∃xφ = T if some
+instance is strictly T, else F** (a Z-candidate does not count as a
+witness). Greediness extends: quantified formulas never take Z.
 
-Промеры на всех интерпретациях (унарные P,Q — домены 1..3; бинарный R —
-домены 1..2):
+Measured over all interpretations (unary P,Q — domains 1..3; binary R —
+domains 1..2):
 
-* **Тождества:** обе дистрибуции живы (∀ по ∧, ∃ по ∨); оба кванторных
-  Де Моргана пали (¬∀xP = ∃x¬P и ¬∃xP = ∀x¬P; контрпример — одноэлементный
-  домен с P=Z: Z прячется под отрицанием).
-* **Асимметрия инстанцирования:** UI жив даже как **закон**
-  (⊨ ∀yP(y)→P(a) — универсалия заслужена, трать свободно), EG как закон
-  пал (⊭ P(a)→∃yP(y) при P(a)=Z), живо только EG-правило.
-* **Раскол правил/законов продолжается на кванторном этаже, и появляется
-  первая жертва среди правил:** ¬∃yP ⊭ ∀y¬P — из «нет строгого свидетеля»
-  не следует «все строго ложны»: Z-элементы остаются. Это кванторный
-  двойник павшего ¬¬-удаления. Обратное правило ∀y¬P ⊨ ¬∃yP живо, как и
-  смена кванторов ∃x∀yR ⊨ ∀y∃xR.
-* **Классические украшения:** кв. LEM пал; «парадокс пьяницы»
-  ∃y(P(y)→∀zP(z)) — классическая общезначимость — в ZTL пал (в баре
-  с одним Z-посетителем пьяницы нет).
+* **Identities:** both distributions survive (∀ over ∧, ∃ over ∨); both
+  quantifier De Morgan laws fell (counterexample: a one-element domain
+  with P=Z — Z hides under negation).
+* **Instantiation asymmetry:** UI survives even as a **law**
+  (⊨ ∀yP(y)→P(a) — the universal has earned its truth, spend it
+  freely), EG as a law fell (⊭ P(a)→∃yP(y) at P(a)=Z); only the EG rule
+  survives.
+* **The rules/laws split continues on the quantifier floor, and the
+  first rule casualty appears:** ¬∃yP ⊭ ∀y¬P — from "no strict witness"
+  it does not follow that "all are strictly false": Z-elements remain.
+  This is the quantifier twin of fallen ¬¬-elimination. The converse
+  rule ∀y¬P ⊨ ¬∃yP survives, as does the quantifier swap ∃x∀yR ⊨ ∀y∃xR.
+* **Classical ornaments:** quantified LEM fell; the "drinker paradox"
+  ∃y(P(y)→∀zP(z)) — a classical validity — fell in ZTL (in a bar with
+  one Z-patron there is no drinker).
 
-**Кванторные таблó** (tableau_fo.py, MEASURED): правила для конечного
-домена продолжают подпись знаков — T:∀ раскрывается строгими T:φ(aᵢ)
-одной ветвью, F:∀ — ослабленными N:φ(aᵢ) по ветвям; ∃ зеркально.
-Сверка решений таблó с семантическим перебором интерпретаций: 28 пар
-(вся fo-батарея + дистрибуции), домены 1–2 — совпали все. Попутно:
-¬∀yP ⊭ ∃y¬P даже как правило — второй павший кванторный мостик,
-симметричный ¬∃ ⊭ ∀¬ (отрицание прячет Z в обе стороны).
+**Quantifier tableaux** (MEASURED): the finite-domain rules continue
+the sign signature — T:∀ unfolds into strict T:φ(aᵢ) on one branch,
+F:∀ into weak N:φ(aᵢ) across branches; ∃ mirrors. Tableau decisions
+coincide with semantic enumeration on 28 sequents (domains 1–2).
+A by-product: ¬∀yP ⊭ ∃y¬P even as a rule — the second fallen quantifier
+bridge, symmetric to ¬∃ ⊭ ∀¬ (negation hides Z in both directions).
 
-## 7. Ограничения и честные оговорки
+## 7. Limitations and honest caveats
 
-* Новых трёхзначных функций не существует и не заявляется (функциональная
-  полнота — Финн); вклад — выбор примитивов и принцип.
-* «Логическое отклонение от классики» здесь товар, а не дефект: на
-  классических входах отклонений ноль (C-extension), вся экзотика — цена
-  политики по отношению к Z.
-* Прейскурант не торгуется постатейно: павшие законы — следствия трёх
-  зафиксированных развилок (¬Z=F; жадный коллапс; Z↔Z=F), возврат любого
-  закона требует смены развилки (см. §3.5).
+* No new three-valued functions exist or are claimed (functional
+  completeness — Finn); the contribution is the choice of primitives
+  and the principle.
+* "Deviation from classical logic" is merchandise here, not defect: on
+  classical inputs the deviation is zero (C-extension); all exotica is
+  the price of the policy toward Z.
+* The price list is not negotiable item by item: the fallen laws are
+  consequences of three fixed design forks (¬Z=F; greedy collapse;
+  Z↔Z=F); regaining any law requires flipping a fork (see §3.5).
 
-## 8. Машинная проверка в Lean 4 (lean/ZTL.lean)
+## 8. Machine verification in Lean 4
 
-Ядро портировано в Lean 4 (v4.29.1, без mathlib): связки порождаются
-lift-подъёмом (таблицы не постулируются — вычисляются), опорные клетки
-превращены из постулатов в теоремы, 12 живых и 14 павших законов,
-семантический MP, теорема жадности, бездомность лжеца (∀v, ¬v ≠ v), детектор isZ и кванторная
-UI/EG-асимметрия — всё доказано.
+The core is ported to Lean 4 (v4.29.1, no mathlib): the connectives are
+generated by the lift (tables are not postulated — computed), the anchor
+cells are turned from postulates into theorems, the 12 alive and 14
+fallen laws, semantic MP, the greediness theorem, the homelessness of
+the liar (∀v, ¬v ≠ v), the isZ detector and the quantifier UI/EG
+asymmetry — all proven.
 
-**Аксиомный статус: пустой список.** `#print axioms` для всего корпуса —
-«does not depend on any axioms»: ни Classical.choice, ни Quot.sound,
-ни даже propext; чистое вычисление. По шкале аксиомных ярусов VR-цикла
-это высший ярус [] — редкий для содержательной логической системы.
+**Axiom status: the empty list.** `#print axioms` over the whole corpus
+returns "does not depend on any axioms": no Classical.choice, no
+Quot.sound, not even propext; pure computation. This is the strictest
+possible tier — rare for a substantial logical system.
 
-**Часть II** (тот же файл): батарея правил следования (11 живых + 2
-павших, включая раскол контрапозиция-правило/контрапозиция-закон),
-отсутствие глатов, ленивый регистр Клини с доказанной монотонностью
-всех связок по информационному порядку, немонотонность жадного
-регистра, дом лжеца в ленивом (knot Z = Z — rfl), отсутствие жадной
-модели карусели (все 9 пар), ленивое заземление и вычисленная пуля
-мстителя. Аксиомный статус Части II — тот же пустой список.
+**Part II** (same file): the entailment rule battery (11 alive + 2
+fallen, including the split contraposition-rule vs contraposition-law),
+no-gluts, the lazy Kleene register with proven monotonicity of all
+connectives in the information order, non-monotonicity of the greedy
+register, the liar's home in the lazy register (knot Z = Z — rfl), the
+absence of a greedy carousel model (all 9 pairs), lazy grounding, and
+the computed revenge bullet.
 
-**Часть III — опоры таблó на всём языке.** Индуктивный тип формул Fm,
-оценка evalF; **опора 1**: жадность доказана для всего языка (всякая
-составная формула классична при любой оценке — теорема по разбору
-конструкторов, не батарея); **опора 2**: покрытие прообразов каждым
-из 12 правил таблó — как ⟺-теоремы для произвольных значений
-подформул (`cover_*`, decide). Ноль аксиом сохранён.
+**Part III — the tableau pillars over the whole language.** An
+inductive formula type Fm with evaluation; **pillar 1**: greediness is
+proven for the entire language (every compound formula is classical
+under every valuation — by constructor analysis, not by battery);
+**pillar 2**: the preimage coverage of each of the 12 tableau rules — as
+⟺-theorems for arbitrary subformula values (`cover_*`).
 
-**Торговый сертификат (lean/TableauCert.lean).** Движок таблó
-формализован целиком: рабочие правила на порождающем базисе {¬,∧,∨}
-(ослабленные знаки только в F-полярности), атомы — пересечением
-ограничений, связки →,⊕,↔ сводятся к базису живыми тождествами
-(imp_def/xor_def/xnor_def — теоремы ядра). Доказаны:
+**The trade certificate (lean/TableauCert.lean).** The tableau engine
+is formalized in full: working rules over the generating basis
+{¬,∧,∨} (weak signs only in F-polarity), atoms handled by constraint
+intersection, the heavy connectives →,⊕,↔ reduced to the basis by the
+surviving identities (imp_def/xor_def/xnor_def — theorems of the core).
+Proven:
 
-* `closes_iff` — **корректность и полнота**: таблó закрывается ⟺ узлы
-  невыполнимы (индукция по взвешенному размеру, для всех формул);
-* `tproves_iff` — **сертификат следования**: Γ ⊢ φ по движку ⟺
-  всякая оценка, делающая посылки T, делает T заключение.
+* `closes_iff` — **soundness and completeness**: the tableau closes ⟺
+  the signed nodes are unsatisfiable (induction on weighted size, for
+  all formulas);
+* `tproves_iff` — **the entailment certificate**: Γ ⊢ φ by the engine ⟺
+  every valuation making the premises T makes the conclusion T.
 
-Шесть дымовых прогонов сертифицированного движка совпадают с
-измеренным (⊬ p→p, MP ⊢, ¬(p∧¬p) ⊢, ⊬ LEM, контрапозиция-правило ⊢,
-¬¬-удаление ⊬). **Аксиомный статус сертификата: пустой список** —
-как и у ядра. Достигнуто дезинфекцией всех известных источников:
-структурная рекурсия по топливу вместо вполне-обоснованной (WF-машинерия
-тянет propext/Quot.sound), знаки как функции V→Bool вместо списков
-(решатель членства в списках ядра Lean несёт propext), рекурсивный satL
-вместо ∀-членства, комбинаторные цепочки Iff вместо rw по эквивалентностям
-(rw по Iff применяет propext), ручная Nat-арифметика вместо omega
-(omega несёт propext и Quot.sound). Весь Lean-корпус ZTL — семантика,
-законы, следование, движок с корректностью и полнотой — держится на
-нуле аксиом: чистое вычисление и конструктивная логика ядра. **Родной движок
-(TableauCertN.lean):** движок с прямыми правилами →,⊕,↔ сертифицирован
-той же индукцией (closesN_iff), и доказана теорема engines_agree — оба
-движка выдают одинаковые вердикты; былая сноска об эквивалентности
-закрыта теоремой. Дополнительно (всё — ноль аксиом): Lean-порт множеств
-Э5 (Z ∉ что угодно, меченое множество не включается даже в себя,
-{Z,Z}≠{Z}, |{Z}|=[1,1]) и корпус фактов — кванторы дома 2 (∀=zand,
-∃=zor: UI-закон жив; EG, ¬∃⊭∀¬, ¬∀⊭∃¬, кв.LEM, пьяница — пали) и
-динамика (лжец период 2, карусель период 4 без неподвижных точек,
-Карри бездомен жадно и заземлён лениво, чётность циклов, Ябло-3 с
-единственной заземлённой моделью, ничтожность крокодильей сделки).
+Six smoke runs of the certified engine coincide with the measured
+results (⊬ p→p, MP ⊢, ¬(p∧¬p) ⊢, ⊬ LEM, contraposition-rule ⊢,
+¬¬-elimination ⊬). **The certificate's axiom status: the empty list** —
+same as the core. This was achieved by disinfecting every known source:
+structural recursion on fuel instead of well-founded recursion (the WF
+machinery pulls in propext/Quot.sound), signs as functions V→Bool
+instead of lists (Lean core's list-membership decision procedure
+carries propext), a recursive satisfaction predicate instead of
+∀-membership, combinator chains of Iff instead of rewriting by
+equivalences (rw with an Iff applies propext), and hand-rolled Nat
+arithmetic instead of omega (omega carries propext and Quot.sound).
+**The native engine (TableauCertN.lean):** the engine with the native
+signed rules for →,⊕,↔ is certified by the same induction
+(closesN_iff), and the theorem engines_agree shows both engines return
+identical verdicts; the former footnote about their equivalence is
+closed by a theorem. Additionally (all with zero axioms): the Lean port
+of marked sets (§12: a mark earns membership nowhere; a marked set is
+not provably a subset of itself; {Z,Z}≠{Z}; |{Z}|=[1,1]) and a corpus of
+facts — domain-2 quantifiers (∀=zand, ∃=zor: the UI law alive; EG,
+¬∃⊭∀¬, ¬∀⊭∃¬, quantified LEM, the drinker — fallen) and dynamics (liar
+period 2, carousel period 4 with no fixed points, Curry homeless
+greedily and grounded lazily, cycle parity for lengths 2/3, the Yablo-3
+truncation with a unique grounded model, the nullity of the crocodile's
+deal).
 
-## 9. Карантин как неподвижная точка: двухрегистровая архитектура
-(MEASURED fixedpoint.py)
+## 9. Quarantine as a fixed point: the two-register architecture
+(MEASURED)
 
-Карантинный флаг развилки 4 формализован конструкцией à la Крипке.
-Система предложений с предикатом истинности (λ: ¬Tr(λ) и т.п.); «скачок»
-J переоценивает предложения по текущей оценке; неподвижные точки J —
-самосогласованные оценки. Испытаны два регистра с РАЗНЫМИ
-отрицаниями: жадный (таблицы ZTL, вердикты: ¬Z = F — «не заработано»)
-и ленивый (сильный Клини, решатель: ¬Z = Z — «не суди недосчитанное»;
-Z течёт сквозь связки). Ниже показано, что это не два кандидата на одну
-роль, а две обязательные разные роли.
+The quarantine flag of fork 2 in §3.5 is formalized à la Kripke. A
+system of sentences with a truth predicate (λ: ¬Tr(λ) etc.); the "jump"
+J re-evaluates the sentences under the current valuation; fixed points
+of J are self-consistent valuations. Two registers with DIFFERENT
+negations are put on trial: the greedy one (ZTL tables, verdicts:
+¬Z = F — "not earned") and the lazy one (strong Kleene, the solver:
+¬Z = Z — "do not judge the uncomputed"; Z flows through connectives).
+What follows shows these are not two candidates for one role but two
+mandatory different roles.
 
-**Результаты перебора** (зоопарк: лжец, правдолюб, карусель Журдена,
-чётный цикл, заземлённая цепочка, мститель):
+**Enumeration results** (the zoo: liar, truth-teller, Jourdain's
+carousel, the even cycle, a grounded chain, the avenger):
 
-1. **Жадный скачок немонотонен** по информационному порядку (свидетели
-   найдены на каждой системе) — аргумент Кнастера–Тарского к нему
-   неприменим.
-2. **На нечётных циклах жадный скачок не имеет неподвижных точек
-   вовсе**; итерация осциллирует: лжец — период 2 (F→T→F...), карусель —
-   период 4 (FF→FT→TT→TF), мститель — период 2. Осцилляции ревизионной
-   теории истины (Гупта–Белнап) возникают здесь не как постулат, а как
-   поведение жадной итерации.
-3. **Ленивый скачок монотонен** и всюду имеет наименьшую неподвижную
-   точку: заземлённые предложения получают классические значения,
-   парадоксальные — Z. Чётный цикл: три точки ({T,F}, {F,T}, {Z,Z}),
-   наименьшая — обоюдный карантин (недоопределённость, не парадокс).
-4. **Вердикты — жадные, поверх готовой точки**: содержание мстителя μ
-   при заземлённом μ=Z вычисляется жадно в T, а истина μ не выдаётся —
-   «пуля» оплачивается внутри формальной конструкции, не оговоркой.
+1. **The greedy jump is non-monotone** in the information order
+   (witnesses found on every system) — the Knaster–Tarski argument does
+   not apply to it.
+2. **On odd cycles the greedy jump has no fixed points at all**; the
+   iteration oscillates: liar — period 2 (F→T→F...), carousel — period
+   4 (FF→FT→TT→TF), avenger — period 2. The oscillations of revision
+   theory (Gupta–Belnap) arise here not as a postulate but as the
+   behavior of the greedy iteration.
+3. **The lazy jump is monotone** and has a least fixed point
+   everywhere: grounded sentences receive classical values, paradoxical
+   ones — Z. The even cycle: three fixed points ({T,F}, {F,T}, {Z,Z}),
+   the least being mutual quarantine (underdetermination, not paradox).
+4. **Verdicts are greedy, read over the finished point**: the content
+   of the avenger μ at grounded μ=Z evaluates greedily to T, while μ is
+   denied truth — the "bullet" is paid inside the formal construction,
+   not by a disclaimer.
 
-**Вывод (архитектурная теорема этапа):** двухрегистровое устройство —
-не удобство, а необходимость. Жадный регистр не может заземлить сам
-себя (нет неподвижных точек на лжеце); ленивый не умеет выносить
-вердикты («именно ложь»). Карантин := Z-множество наименьшей точки
-ленивого скачка; ZTL := жадная читка поверх. Инженерный прецедент —
-SQL (Клини внутри выражений, принудительная ложь на границе WHERE) —
-оказывается не аналогией, а той же теоремой, найденной практикой.
+**Conclusion (the architectural theorem of this stage):** the
+two-register design is a necessity, not a convenience. The greedy
+register cannot ground itself (no fixed points on the liar); the lazy
+one cannot pass verdicts ("exactly falsehood"). Quarantine := the Z-set
+of the lazy jump's least fixed point; ZTL := the greedy reading on top.
+The engineering precedent — SQL (Kleene inside expressions, forced
+falsehood at the WHERE boundary) — turns out to be not an analogy but
+the same theorem, found by practice.
 
-## 10. Онтологический статус Z: паспорт системы
+## 10. The ontological status of Z: the system's passport
 
-Финальная и самая точная формулировка того, что построено:
+The final and most precise formulation of what has been built:
 
 ```
-Значения истинности:  T, F                    (вердикты всегда двузначны)
-Метка входа:          Z «не проверено»         (свойство данных, не истинность)
-Состояние решателя:   N «не досчитано»         (фаза вычисления при циклах;
-                                                в вердикты не выходит)
-Политика чтения:      локальная, default deny  (трёхсимвольные таблицы —
-                                                калькулятор политики)
+Truth values:      T, F                    (verdicts are always two-valued)
+Input mark:        Z "unverified"           (a property of data, not truth)
+Solver state:      N "not yet computed"     (a computation phase, present
+                                             only under self-reference,
+                                             never escapes outward)
+Reading policy:    local, default deny      (the three-symbol tables are
+                                             the policy's calculator)
 ```
 
-**ZTL — двузначная логика, которая отказывается врать о непроверенном.**
-Двузначность значений не означает классичности: отношение следования
-доказуемо иное (LEM пал, теорема дедукции односторонняя, ¬¬p ⊭ p —
-§3–§5). Логика определяется следованием, не палитрой.
+**ZTL is a two-valued logic that refuses to lie about the unverified.**
+Two-valuedness of the values does not mean classicality: the entailment
+relation is provably different (LEM fell, the deduction theorem is
+one-directional, ¬¬p ⊭ p — §§3–5). A logic is defined by its
+entailment, not by its palette.
 
-**Локальное против глобального чтения метки.** «Z — метка на атоме»
-допускает два прочтения вердикта: глобальное («формула утверждаема,
-если истинна при всех подстановках в помеченные атомы разом» —
-классическая супервалюация) и локальное («каждый оператор консультируется
-с меткой на месте» — ZTL). Опорные аксиомы системы различают их
-однозначно: на ¬¬Z (ZTL: T, глобально: F) и Z↔Z (ZTL: F, глобально: T);
-остальные пять клеток совпадают. Глобальное чтение возвращает все
-классические тавтологии, но теряет таблицы (нетабличность супервалюации)
-и обе фирменные клетки — лестницу этажей и NaN-подпись «не равен себе».
-Аксиомы выбирают локальность.
+**Local versus global reading of the mark.** "Z is a mark on the atom"
+admits two readings of verdicts: the global one ("a formula is
+assertable if true under all substitutions into the marked atoms at
+once" — classical supervaluation) and the local one ("every operator
+consults the mark on the spot" — ZTL). The anchor cells separate them
+unambiguously: on ¬¬Z (ZTL: T, globally: F) and on Z↔Z (ZTL: F,
+globally: T); the other five cells coincide. The global reading returns
+all classical tautologies but loses tabularity (supervaluation is not
+truth-functional) and both signature cells — the ladder of floors and
+the NaN signature "not equal to itself". The anchors choose locality.
 
-**Почему не четыре значения.** Соблазн включить N четвёртым значением
-(прецедент: два NULL Кодда для RM/V2, отвергнутые практикой) отклонён:
-значения не размножаются, не-значения типизируются. N — это ⊥
-неподвижно-точечной итерации (§9), pending любого промиса: существует
-только внутри решателя, наружу не возвращается. Четырёхзначная алгебра
-{T,F,Z,N} с ленивым лифтом над ZTL корректна и факторизуется на наши два
-регистра ({T,F,Z}-фрагмент = ZTL, {T,F,N}-фрагмент = Клини), но это
-упаковка двух фаз в один тип — монолит вместо модулей; оставлена как
-возможное приложение, не как ядро.
+**Why not four values.** The temptation to include N as a fourth value
+(precedent: Codd's two NULLs for RM/V2, rejected by industry) is
+declined: values are not multiplied, non-values are typed. N is the ⊥
+of the fixed-point iteration (§9), the pending of any promise: it
+exists only inside the solver and never returns outward. The
+four-valued algebra {T,F,Z,N} with the lazy lift over ZTL is coherent
+and factorizes into our two registers ({T,F,Z} fragment = ZTL, {T,F,N}
+fragment = Kleene), but it packs two phases into one type — a monolith
+instead of modules; it is kept as a possible appendix, not as the core.
 
-Следствие для позиционирования: ZTL соседствует не с многозначными
-логиками, а с двузначными политиками утверждаемости супервалюационного
-семейства — отличаясь от них локальностью, табличностью и жадным
-коллапсом.
+Consequence for positioning: ZTL's neighbours are not the many-valued
+logics but the two-valued assertability policies of the supervaluation
+family — from which it differs by locality, tabularity, and greedy
+collapse.
 
-## 11. Экспедиции: Карри, чётность, Ябло (MEASURED expeditions.py)
+## 11. Expeditions: Curry, parity, Yablo, the crocodile (MEASURED)
 
-**Карри без отрицания.** c = (Tr(c) → ⊥) — парадокс, ломающий наивные
-параконсистентные теории (не использует ¬, глушение взрыва не помогает).
-Измерено: жадных неподвижных точек нет, итерация — период 2, ленивое
-заземление даёт Z. **Та же механика, что у лжеца**: карантину безразлично,
-каким оператором предложение развернуло само себя — важна лишь
-несуществуемость неподвижной точки. Наша конструкция глушит Карри
-бесплатно, там где LP вынуждена жертвовать contraction.
+**Curry without negation.** c = (Tr(c) → ⊥) is the paradox that breaks
+naive paraconsistent theories (it uses no ¬, so taming negation does
+not help). Measured: no greedy fixed points, iteration of period 2,
+lazy grounding gives Z. **The same mechanics as the liar**: quarantine
+does not care which operator a sentence used to invert itself — only
+the non-existence of a fixed point matters. Our construction silences
+Curry for free, where LP must sacrifice contraction.
 
-**Теорема чётности — тотально.** Все циклы длины 1–5, все узоры
-инверсий (62 системы): классические модели существуют ⟺ число инверсий
-по кольцу чётно (XOR-сумма рёбер = 0). Нечётные кольца — карусели
-(лжец n=1, Журден n=2), чётные — правдолюбы (недоопределённость).
-«XOR-бухгалтер» из мотивационных разговоров — теперь измеренная теорема.
+**The parity theorem — total.** All cycles of length 1–5, all inversion
+patterns (62 systems): classical models exist ⟺ the number of
+inversions around the ring is even (the XOR-sum of the edges is 0). Odd
+rings are carousels (liar n=1, Jourdain n=2), even rings are
+truth-tellers (underdetermination).
 
-**Ябло: третий источник незаземлённости.** sᵢ = «все sⱼ, j>i, ложны» —
-парадокс без единого цикла. Измерено: **каждая конечная обрезка
-полностью заземлена** (единственная модель F…FT, карантин пуст, жадная
-модель одна). Парадокс Ябло живёт только на актуальной бесконечности —
-конечный прибор его не видит в принципе. Итого источников незаземлённости
-три, и они различны: нечётный цикл (лжец), нечётная бесконечная
-прогрессия (Ябло), и недоопределённость чётных структур (правдолюб);
-первый ловится конечно, второй — только в пределе.
+**Yablo: a third source of ungroundedness.** sᵢ = "all sⱼ, j>i, are
+false" — a paradox without a single cycle. Measured: **every finite
+truncation is fully grounded** (the unique model F…FT, empty
+quarantine, exactly one greedy model). Yablo's paradox lives only at
+actual infinity — a finite instrument cannot see it in principle. So
+there are three distinct sources of ungroundedness: the odd cycle (the
+liar), the odd infinite progression (Yablo), and the underdetermination
+of even structures (the truth-teller); the first is caught finitely,
+the second only in the limit.
 
-**Крокодил (Э4, crocodile.py).** «Верну ребёнка ⟺ угадаешь, что сделаю»;
-мать: «не вернёшь». Формализация: R = Tr(M), M = ¬Tr(R) — карусель
-Журдена в шкурах (цикл 2, инверсий 1, нечёт). MEASURED: жадных моделей
-нет, итерация — период 4, ленивое заземление — обоюдный карантин, и
-главное — **жадный вердикт по самой сделке R↔M на заземлённой точке: F**.
-Zero-trust-прочтение древней дилеммы: условие сделки не заземляемо —
-договор ничтожен, обязательство не возникло; крокодил не «не может
-исполнить», а «не заключил». Контроль (мать-оптимистка, M = Tr(R),
-чётный цикл): классические модели есть — (T,T) и (F,F), слово сдержано
-в обеих — но наименьшая точка всё равно карантин и вердикт сделки F:
-исполнимый договор с самоссылкой не самоисполняется — какая модель
-реализуется, решает внешний выбор, не логика. Разница между парадоксом
-и недоопределённостью — это разница между «договор ничтожен» и «договор
-действителен, но требует воли сторон».
+**The crocodile.** "I shall return the child ⟺ you predict what I will
+do"; the mother: "you will not return it". Formalization: R = Tr(M),
+M = ¬Tr(R) — Jourdain's carousel in disguise (cycle 2, one inversion,
+odd). MEASURED: no greedy models, iteration of period 4, mutual
+quarantine under lazy grounding, and — the key measurement — **the
+greedy verdict on the deal itself, R↔M, at the grounded point: F**. The
+zero-trust reading of the ancient dilemma: the deal's condition cannot
+be grounded — the contract is void, no obligation ever arose; the
+crocodile is not "unable to comply" but "never contracted". The control
+case (an optimistic mother, M = Tr(R), an even cycle): classical models
+exist — (T,T) and (F,F), the word is kept in both — but the least fixed
+point is still quarantine and the deal's verdict is still F: an
+enforceable self-referential contract does not self-enforce — which
+model realizes is decided by an external choice, not by logic. The
+difference between paradox and underdetermination is the difference
+between "the contract is void" and "the contract is valid but requires
+the parties' will".
 
-## 12. Множества с непроверенными элементами (MEASURED zsets.py)
+## 12. Sets with unverified elements (MEASURED)
 
-Множества не постулируются — выводятся: равенство элементов — атом
-(T/F для проверенных; Z при любой метке, включая метку с самой собой),
-членство — ∃-свёртка, включение — ∀-свёртка, равенство множеств —
-взаимное включение; всё вычисляется таблицами ядра, ни одного
-специального правила. Представление: (ядро проверенных, карантинный
-мультисет меток).
+Sets are not postulated — they are derived: element equality is an atom
+(T/F for verified elements; Z whenever a mark is involved, including a
+mark with itself), membership is an ∃-fold, inclusion an ∀-fold, set
+equality mutual inclusion; everything computes through the core tables,
+with not a single special rule. Representation: (a core of verified
+elements, a quarantine multiset of marks).
 
-**Измерено:** {Z,Z} ≠ {Z} (склейка не заработана — два непроверенных
-свидетеля не один); **Z ∉ {Z}** даже для той же метки (SQL: NULL IN
-(NULL) — не true); на чистых множествах вся классическая теория
-множеств цела (C-расширяемость); метка валит ровно **законы тождества**
-— идемпотентность S∪S=S и S∩S=S, вычитание себя S∖S=∅, рефлексивность
-S=S и S⊆S — те же семьи, что пали в логике: множества унаследовали
-прейскурант от таблиц.
+**Measured:** {Z,Z} ≠ {Z} (merging is not earned — two unverified
+witnesses are not one); **Z ∉ {Z}** even for the same mark (SQL: NULL
+IN (NULL) is not true); on clean sets the whole classical set theory is
+intact (C-extension); a mark fells exactly the **identity laws** —
+idempotence S∪S=S and S∩S=S, self-subtraction S∖S=∅, reflexivity S=S
+and S⊆S — the same families that fell in the logic: sets inherited the
+price list from the tables.
 
-**Два уровня равенства** (незаказанная находка): коммутативность
-S∪T=T∪S на уровне представления жива (машина видит равенство), а
-вердикт-равенство всё равно F — отказ по тождеству сам default-deny.
-Инженерный уровень (для решателя) и вердиктный (для утверждений) —
-снова двухрегистровая архитектура, теперь в множествах.
+**Cardinality is an interval:** |{1,2,Z}| ∈ [2,3], the exact value is
+not earned (verdict F); but |{Z}| ∈ [1,1] — **cardinality is earned
+even where identity is not**: one mark is exactly one thing.
+Cardinality and identity have split into different currencies of trust.
 
-**Мощность — интервал:** |{1,2,Z}| ∈ [2,3], точное значение не
-заработано (вердикт F); но |{Z}| ∈ [1,1] — **мощность зарабатывается
-даже там, где тождество нет**: одна метка есть ровно одна вещь.
-Кардинальность и идентичность расщепились.
+**SQL's inconsistency is not inherited:** SQL holds NULL≠NULL in
+comparisons yet merges NULLs in DISTINCT/GROUP BY — swapping equality
+of values for equality of marks inside one syntax. Here the core
+deduplicates classically and the marks live with multiplicity — each
+operation honest about its own business.
 
-**SQL-непоследовательность не наследуется:** SQL держит NULL≠NULL в
-сравнениях, но склеивает NULL'ы в DISTINCT/GROUP BY — подмена равенства
-значений равенством меток в одном синтаксисе. У нас ядро дедуплицируется
-классикой, метки живут с кратностью — обе операции честны каждая о своём.
+## 13. The reals: two failures of enumeration (MEASURED)
 
-## 13. Вещественные: два провала пересчёта (MEASURED reals.py)
+A real-in-the-making is a stream of digits; at time t a prefix is
+verified. Stream equality is an atom with a pinned fate: prefixes
+diverged — **F earned** (apartness, a finite witness); they agree —
+**Z**; **T is never earned at any t** (the comparison is infinite).
+Finitely-presented objects (fractions p/q) are the contrast: equality
+decides finitely, the atoms are T/F.
 
-Вещественное-в-становлении — поток цифр; на времени t проверен префикс.
-Равенство потоков — атом с зажатой судьбой: префиксы разошлись — **F
-заработано** (апартность, конечный свидетель); совпадают — **Z**;
-**T не зарабатывается ни при каком t** (сверка бесконечна). Конечно-
-предъявленные объекты (дроби p/q) — контраст: равенство решается
-конечно, атомы T/F.
+**Measured — uncountability splits into two distinct impossibilities:**
 
-**Измерено — несчётность распадается на две разные невозможности:**
+1. **Non-registrability (zero-trust, about presentation).** Membership
+   of a stream in any registry — an ∃-fold of atoms from {F,Z} — is
+   eternally F: even streams literally standing in the list (including
+   a duplicate!) earn no membership. No enumeration of streams can
+   certify coverage of a single element — including its own rows.
+   Registries of fractions, by contrast, certify every element: the
+   countability of ℚ is the earnability of presentation identity.
+2. **Incompleteness (Cantorian, about cardinality).** The diagonal is
+   an apartness-earning machine: against the i-th entry a finite
+   witness is found by time i+1. The diagonal's non-membership is not
+   postulated — it is earned.
 
-1. **Нерегистрируемость (зеротрастовая, про презентацию).** Членство
-   потока в любом реестре — ∃-свёртка атомов из {F,Z} — вечное F: даже
-   потоки, буквально стоящие в списке (включая дубликат!), не
-   зарабатывают членства. Никакая нумерация потоков не может
-   сертифицировать покрытие ни одного элемента — включая собственные
-   строки. Реестры дробей, напротив, сертифицируют каждый свой элемент:
-   счётность ℚ — это заработимость тождества презентаций.
-2. **Неполнота (канторовская, про мощность).** Диагональ — машина
-   заработка апартности: против i-го пункта конечный свидетель находится
-   ко времени i+1. Невхождение диагонали не постулировано — заработано.
+Classical usage merges both impossibilities into the single word
+"uncountable". The Z-optics splits them: the first fits into Z entirely
+(it is a property of extensional presentation and strikes even
+countable stream families), the second remains a cardinality fact which
+the diagonal renders *earned*. Resonance: the split "how many / which
+exactly" of §12 (cardinality earned without identity) is the same split
+seen sideways.
 
-Классика сливает обе невозможности в одно слово «несчётно». Z-оптика
-расщепляет: первая уложилась в Z целиком (это свойство экстенсиональной
-презентации, и оно поражает даже счётные семейства потоков), вторая
-остаётся мощностным фактом, который диагональ делает *заработанным*.
-Ответ на исходную гипотезу: наполовину да — и эта половина оказалась
-самостоятельной теоремой о реестрах, невидимой в классике. Резонанс:
-расщепление «сколько/что именно» из §12 (мощность зарабатывается без
-тождества) — то же расщепление, вид сбоку.
+## 14. Functions: taint mode (MEASURED)
 
-## 14. Функции: таинт-режим (MEASURED zfuncs.py)
+A function is a computation, not a verdict ⇒ by the two-register
+theorem it behaves lazily: **the mark flows through the function** with
+a growing pedigree (f(m) is a new mark "f applied to m"). Measured:
 
-Функция — вычисление, не вердикт ⇒ по двухрегистровой теореме ведёт
-себя лениво: **метка течёт сквозь функцию** с растущей родословной
-(f(m) — новая метка «f применён к m»). Измерено:
-
-* **Образ:** проверенные коллизии *зарабатывают* склейку (f(1)=f(2) —
-  доказанный факт, ядро дедуплицируется), метки — с кратностью:
+* **Images:** verified collisions *earn* merging (f(1)=f(2) is a proven
+  fact, the core deduplicates), marks keep multiplicity:
   |f({1,2,3,Z})| ∈ [2,3].
-* **Композиция:** таинт транзитивен (родословная g(f(m))); образ
-  ассоциативен на уровне представления, вердикт-равенство — F
-  (закономерность Д1, §21).
-* **Прообраз раздвоился:** вердиктный (метки отброшены — default deny)
-  и решательный (метки — кандидаты) — закономерность Д2 (§21).
-* **Жемчужина: даже тождественная функция не сертифицируется
-  инъективной на меченом домене** — пары с меткой дают Z-атомы,
-  импликация Z→Z = F, ∀-свёртка рушится. Сертификат инъективности
-  требует полной проверенности домена; эхо павшего S ⊆ S.
-* **Отмывание запрещено:** функции не снимают метку; санитайзер —
-  только внешняя верификация значения. В терминах безопасности:
-  declassification только через доказательство.
+* **Composition:** taint is transitive (pedigree g(f(m))); the image is
+  associative at representation level while verdict-equality is F
+  (regularity R1, §21).
+* **The preimage splits** into a verdict version (marks dropped —
+  default deny) and a solver version (marks as candidates) —
+  regularity R2 (§21).
+* **The pearl: even the identity function is not certifiably injective
+  on a marked domain** — pairs with a mark give Z-atoms, the
+  implication Z→Z = F, the ∀-fold collapses. An injectivity certificate
+  requires a fully verified domain; the echo of fallen S ⊆ S.
+* **Laundering is forbidden:** functions do not remove marks; the only
+  sanitizer is external verification of the value. In security terms:
+  declassification only through proof.
 
-**Третий инженерный близнец.** После IEEE NaN и SQL NULL — **taint
-tracking / information flow control** (решётка Деннинг 1976, Perl taint
-mode, TaintDroid): Z-метка = таинт, ленивое протекание сквозь
-вычисления = taint propagation, жадные вердикты = санитайзеры-проверки,
-запрет отмывания = no-declassification. Три независимые инженерные
-традиции построили по фрагменту ZTL, не зная друг о друге.
+**The third engineering twin.** After IEEE NaN and SQL NULL — **taint
+tracking / information flow control** (Denning's lattice 1976, Perl
+taint mode, TaintDroid): the Z-mark is taint, lazy flow through
+computations is taint propagation, greedy verdicts are sanitizer
+checks, the laundering ban is no-declassification.
 
-## 15. Арифметика с метками (MEASURED zarith.py)
+## 15. Arithmetic with marks (MEASURED)
 
-Числа: проверенные и метки с интервалом частичного знания [lo,hi]
-(незнание = (−∞,∞)). Операции — вычисления ⇒ ленивые: интервалы текут
-(интервальная арифметика, декоррелированно). Атомы сравнения — по
-порождающему принципу, обобщённому на интервалы: **T, если вынуждено
-при всех прочтениях; F, если вынуждена ложь; иначе Z**. Измерено:
+Numbers: verified values and marks with an interval of partial
+knowledge [lo,hi] (ignorance = (−∞,∞)). Operations are computations ⇒
+lazy: intervals flow (interval arithmetic, decorrelated). Comparison
+atoms follow the generating principle extended to intervals: **T if
+forced under all readings; F if falsehood is forced; else Z**. Measured:
 
-* **Вынужденность зарабатывает и на метках:** 0·w = заработанный 0
-  даже для дикой метки (на ℤ вынуждено всеми прочтениями) — точка
-  осознанного расхождения с IEEE (у них 0·NaN = NaN: их домен содержит
-  inf/nan). m−m ∈ [−9,9] ≠ 0 — декорреляция (как NaN−NaN, как {Z,Z}).
-* **Три судьбы атома:** [3,5]<[10,12] — T заработано; [3,5]=[10,12] —
-  **апартность заработана интервалами** (эхо Э6: различие конечно
-  свидетельствуемо); перекрытие — Z; та же метка с собой — Z
-  (совпадение границ ≠ совпадение: тождество не зарабатывается ничем,
-  кроме полной верификации [x,x]).
-* **Верификация = сужение интервала:** атом «4 < m» проходит путь
-  Z → Z → T при [0,9]→[3,7]→[5,7]; заработанное не отменяется —
-  монотонность ленивого регистра в числах.
-* **Наследование прейскуранта:** коммутативность сложения жива на
-  уровне интервалов, вердикт-равенство — Z→F; нейтраль x+0=x пала
-  вердиктно при совпадающих интервалах (закономерность Д1, §21).
+* **Forcedness earns even on marks:** 0·w = an earned 0 even for a wild
+  mark (forced on ℤ by all readings) — a point of deliberate divergence
+  from IEEE (their 0·NaN = NaN: their domain contains inf/nan).
+  m−m ∈ [−9,9] ≠ 0 — decorrelation (like NaN−NaN, like {Z,Z}).
+* **Three fates of an atom:** [3,5]<[10,12] — T earned; [3,5]=[10,12] —
+  **apartness earned by intervals** (the echo of §13: difference is
+  finitely witnessable); overlap — Z; the same mark against itself — Z
+  (coincidence of bounds ≠ coincidence: identity is earned by nothing
+  short of full verification [x,x]).
+* **Verification = interval narrowing:** the atom "4 < m" travels
+  Z → Z → T along [0,9]→[3,7]→[5,7]; what is earned is never revoked —
+  the monotonicity of the lazy register, now in numbers.
+* **Price-list inheritance:** commutativity of addition survives at the
+  interval level, verdict-equality is Z→F; the unit x+0=x falls
+  verdict-wise with coinciding intervals (regularity R1, §21).
 
-**Близнец №4: абстрактная интерпретация** (Cousot & Cousot, 1977) —
-интервальный анализ значений (ленивое течение абстрактных значений
-через вычисления) + проверка ассертов (жадные вердикты). Четыре
-независимые инженерные традиции — NaN, NULL, taint tracking, abstract
-interpretation — оказались фрагментами одной логики.
+**The fourth twin: abstract interpretation** (Cousot & Cousot, 1977) —
+interval value analysis (lazy flow of abstract values through
+computations) + assertion checking (greedy verdicts). Four independent
+engineering traditions — NaN, NULL, taint tracking, abstract
+interpretation — turn out to be fragments of one logic.
 
-## 16. Вероятностный мост: Z ≠ p = 0.5 (MEASURED zprob.py)
+## 16. The probabilistic bridge: Z ≠ p = 0.5 (MEASURED)
 
-Три промера отвечают на вопрос, чем метка незнания отличается от
-равномерного приора.
+Three measurements answer how a mark of ignorance differs from a
+uniform prior.
 
-**Репараметризация (дискретный Бертран).** Дано лишь w ∈ [0,1]; вопрос
-«w ≤ 0.25?». Байесовец с uniform-приором на w отвечает 1/4; байесовец
-с uniform-приором на w² (то же незнание!) — 1/16. Одно незнание — два
-противоречащих числа: выбор параметризации — скрытая информация.
-ZTL-атом при w∈[0,1] — Z в обеих параметризациях: **незнание не
-конвертируется в число без внесения информации**, и это инвариантно.
+**Reparametrization (a discrete Bertrand).** Given only w ∈ [0,1]; the
+question "w ≤ 0.25?". A Bayesian with a uniform prior on w answers 1/4;
+a Bayesian with a uniform prior on w² (the same ignorance!) answers
+1/16. One ignorance — two contradicting numbers: the choice of
+parametrization is smuggled information. The ZTL atom at w∈[0,1] is Z
+in both parametrizations: **ignorance does not convert into a number
+without importing information**, and this is invariant.
 
-**Демпстер–Шейфер.** На массах m({a})=m({a,b,c})=1/2 измерено:
-ZTL-вердикт события = порог функций доверия: **T ⟺ Bel = 1** (вынуждено
-всеми прочтениями), **F ⟺ Pl = 0** (исключено всеми), иначе Z.
-Порождающий принцип ZTL — это {0,1}-порог теории Демпстера–Шейфера;
-интервальная мощность §12 — поэлементный [Bel-счёт, Pl-счёт].
+**Dempster–Shafer.** On masses m({a})=m({a,b,c})=1/2 it is measured
+that the ZTL verdict of an event is the threshold of belief functions:
+**T ⟺ Bel = 1** (forced by all readings of ignorance), **F ⟺ Pl = 0**
+(excluded by all), else Z. The generating principle of ZTL is the
+{0,1}-threshold of Dempster–Shafer theory; the interval cardinality of
+§12 is the elementwise [Bel-count, Pl-count].
 
-**Эллсберг.** Урна с проверенным 50/50 против урны неизвестного
-состава: EV(K)=[50,50] — заработанное число, EV(U)=[0,100] — интервал;
-атом «U не хуже K» не вынужден → default deny → выбор K. Знаменитая
-«иррациональность» испытуемых Эллсберга (1961) — это различение риска
-(проверенное p) и незнания (метка), недоступное точечному приору:
-zero-trust-рациональность.
+**Ellsberg.** An urn with a verified 50/50 versus an urn of unknown
+composition: EV(K)=[50,50] is an earned number, EV(U)=[0,100] an
+interval; the atom "U is no worse than K" is not forced → default deny
+→ choose K. The famous "irrationality" of Ellsberg's subjects (1961) is
+the distinction between risk (verified p) and ignorance (a mark),
+inaccessible to a point prior: zero-trust rationality.
 
-**Вторая «SQL-теорема» — про байесовцев.** Точечный prior из незнания —
-жадное отмывание Z в число, та же подмена, что склейка NULL в DISTINCT,
-и она наказуема (репараметризация). Честная архитектура двухрегистрова:
-незнание живёт интервалами масс (ленивый регистр — Демпстер–Шейфер и
-**близнец №5: imprecise probabilities Уолли, 1991**), решения — вердикты
-по вынужденности (жадный). Байес остаётся честным на проверенных
-вероятностях — его C-расширяемость; запрещена лишь чеканка чисел из
-пустоты.
+**The second "SQL theorem" — about Bayesians.** A point prior made from
+ignorance is a greedy laundering of Z into a number, the same
+substitution as merging NULLs in DISTINCT, and it is punishable
+(reparametrization). The honest architecture is two-registered:
+ignorance lives in mass intervals (the lazy register — Dempster–Shafer
+and **the fifth twin: Walley's imprecise probabilities, 1991**), while
+decisions are verdicts by forcedness (the greedy one). Bayes remains
+honest on verified probabilities — his C-extension; only minting
+numbers out of emptiness is forbidden.
 
-## 17. Модальный слой: локальный □ против глобального (MEASURED zmodal.py)
+## 17. The modal layer: local □ versus global (MEASURED)
 
-Миры — классические дочитки непроверенных атомов; □φ = во всех, ◇φ =
-хоть в одном. Измерено:
+Worlds are the classical completions of the unverified atoms; □φ = in
+all, ◇φ = in at least one. Measured:
 
-* **Вердикты атомов — модальные пороги** (тотально): T ⟺ □p, F ⟺ □¬p,
-  Z ⟺ контингентность; дуальность ◇ = ¬□¬ выполняется; вложенная
-  модальность схлопывается (□p классичен ⇒ □□=□) — рамка S5-подобна.
-  Это §16 этажом выше: □/◇ = Bel/Pl-пороги в вероятностной одежде.
-* **Знаки таблó — модальные заявки**: строгие T/F = □φ и □¬φ,
-  ослабленные P/N = ◇φ и ◇¬φ. Подпись исчисления читается модально:
-  доказательство требует необходимости, опровержение довольствуется
-  возможностью.
-* **Три логики на одной формуле** (классика | глобальный □ | ZTL):
-  p→p и LEM: T | T | F — супервалюация (один □ на всю формулу)
-  сохраняет все классические тавтологии, локальный по-операторный □
-  их валит. А ¬¬p: T | Z | T — **ZTL зарабатывает вердикт, которого
-  глобальная супервалюация дать не может** (лестница этажей): системы
-  несравнимы, а не упорядочены по строгости.
+* **Atom verdicts are modal thresholds** (totally): T ⟺ □p, F ⟺ □¬p,
+  Z ⟺ contingency; the duality ◇ = ¬□¬ holds; nested modality collapses
+  (□p is classical ⇒ □□=□) — the frame is S5-like. This is §16 one
+  floor up: □/◇ are the Bel/Pl thresholds in probabilistic dress.
+* **The tableau signs are modal claims**: strict T/F are □φ and □¬φ,
+  weak P/N are ◇φ and ◇¬φ. The calculus signature reads modally: proof
+  demands necessity, refutation settles for possibility.
+* **Three logics on one formula** (classical | global □ | ZTL): p→p and
+  LEM: T | T | F — supervaluation (one □ over the whole formula)
+  preserves all classical tautologies, the local per-operator □ fells
+  them. But ¬¬p: T | Z | T — **ZTL earns a verdict which global
+  supervaluation cannot give** (the ladder of floors): the systems are
+  incomparable, not ordered by strictness.
 
-Итог: **ZTL — локально-модальная логика над S5-рамкой миров-дочиток**,
-каждый оператор несёт собственный □-коллапс. Бочваровские трансляции
-(→ = ◇A⊃□B, ¬ = □¬) получили семантику миров; расщепление
-супервалюация/ZTL оказалось расщеплением глобальной/локальной
-модальности. Родич-теоретик — эпистемическая S5 Хинтикки (□ = «знаю»):
-ZTL утверждает только знаемое, но модальность по-операторная.
+Result: **ZTL is a locally-modal logic over the S5 frame of
+completions**; every operator carries its own □-collapse. Bochvar's
+translations (→ = ◇A⊃□B, ¬ = □¬) acquire world semantics; the
+supervaluation/ZTL split turns out to be the global/local modality
+split. The theoretical relative is Hintikka's epistemic S5 (□ =
+"known"): ZTL asserts only the known, but its modality is per-operator.
 
-## 18. Рассел: сдерживание вместо взрыва (MEASURED zrussell.py)
+## 18. Russell: containment instead of explosion (MEASURED)
 
-Рассел — лжец в одежде членства: R = {x : x∉x} ⇒ R∈R ⟺ ¬(R∈R).
-Вселенная-стенд: a = ∅, b = {b} (законный чудак), R; система из девяти
-фактов членства, определения Рассела ссылаются на факты x∈x. Измерено:
+Russell is the liar dressed in membership: R = {x : x∉x} ⇒ R∈R ⟺
+¬(R∈R). The test universe: a = ∅, b = {b} (a lawful eccentric), R; a
+system of nine membership facts, with Russell's definition referring to
+the facts x∈x. Measured:
 
-* **Жадный скачок**: моделей ноль, итерация — период 2, и осциллирует
-  ровно одна клетка R∈R — весь шторм локализован.
-* **Ленивое заземление**: 8 из 9 фактов заземлены; a∈R = T (не содержит
-  себя — принят), b∈R = F (содержит — отвергнут). **Рассел работает как
-  множество для всех, кроме самого себя**; карантин — одна клетка.
-* **Вердикты**: «R∈R?» — не заработано, отказ; «R∉R?» — жадная читка
-  ¬(R∈R) = F — тоже отказ. NaN-подпись на множествах: ни членство, ни
-  не-членство не зарабатываются.
-* **Двойник S = {x : x∈x}**: три жадных модели (T, F, Z), ленивое
-  заземление Z — правдолюб теории множеств, недоопределённость.
-  Чёт/нечет — теперь в множествах.
+* **The greedy jump**: zero models, iteration of period 2, and exactly
+  one cell oscillates — R∈R; the whole storm is localized.
+* **Lazy grounding**: 8 of 9 facts grounded; a∈R = T (does not contain
+  itself — admitted), b∈R = F (contains itself — rejected). **Russell's
+  set works as a set for everyone except itself**; quarantine is one
+  cell.
+* **Verdicts**: "R∈R?" — not earned, refusal; "R∉R?" — the greedy
+  reading of ¬(R∈R) is F — also refusal. The NaN signature reaches set
+  theory: neither membership nor non-membership is earned.
+* **The twin S = {x : x∈x}**: three greedy models (T, F, Z), lazy
+  grounding Z — the truth-teller of set theory, underdetermination.
+  Even and odd, now in sets.
 
-Контраст с классикой максимален: у Фреге одна клетка R∈R взорвала всю
-систему (из утверждённого противоречия выводимо всё). В ZTL та же
-клетка уходит в карантин, остальная вселенная заземлена: **взрыв требует
-утверждённого противоречия, а карантин не утверждает**. Примечательно
-сравнение с более ранней системой автора: в VR-Sets [Zenodo
-10.5281/zenodo.20592428] Рассел исключён
-грамматикой (запрет написания), в ZTL — принят и обезврежен точечно.
-Два честных решения одной беды: не впускать или впустить под конвоем.
+The contrast with the classical outcome is maximal: for Frege one cell
+R∈R blew up the whole system (from an asserted contradiction everything
+follows). In ZTL the same cell goes into quarantine and the rest of the
+universe stays grounded: **explosion requires an asserted
+contradiction, and quarantine asserts nothing**. A comparison with an
+earlier system of the author is instructive: in VR-Sets [Zenodo
+10.5281/zenodo.20592428] Russell is excluded by grammar (forbidden to
+write), in ZTL he is admitted and defused pointwise. Two honest answers
+to one calamity: keep it out, or let it in under guard.
 
-## 19. Операция верификации и стабильность вердиктов
-(MEASURED zverify.py)
+## 19. The verification operation and verdict stability (MEASURED)
 
-Акт верификации — снятие метки с вписыванием заработанного значения —
-вскрывает узкое место: **жадные вердикты немонотонны относительно
-верификации**. Переворачиваются не только отказы (p∨¬p: F → T при
-p:=T — ожидаемо: default deny до проверки), но и **T**: ¬¬p = T
-(лестничный рапорт) гибнет при p:=F. Вердикт без гарантии — клетка
-Фреге: неогороженное место, где потребитель, прочитавший T как
-«установлено навсегда», строит на песке.
+The act of verification — removing a mark and writing in the earned
+value — exposes a narrow place: **greedy verdicts are non-monotone
+under verification**. Not only refusals flip (p∨¬p: F → T upon p:=T —
+expected: default deny until checked) but **T flips too**: ¬¬p = T (a
+ladder report) dies at p:=F. A verdict without a warranty is a Frege
+cell: an unfenced spot where a consumer who read T as "settled forever"
+builds on sand.
 
-**Ограждение — бит стабильности**, и он оказался старым знакомым:
-вердикт стабилен ⟺ все дочитки дают один классический ответ — это
-глобальная супервалюация из §17. Измерено:
+**The fence is the stability bit**, and it turns out to be an old
+acquaintance: a verdict is stable ⟺ all completions give one classical
+answer — the global supervaluation of §17. Measured:
 
-* **Теорема эквивалентности** (тотально, 90 пар формула×разметка):
-  стабильность-по-супервалюации ⟺ инвариантность вердикта при любой
-  последовательности верификаций. Гарантия вычислима одним прогоном.
-* **Монотонность**: стабильный вердикт не отменяется и не теряет
-  стабильность ни при каком verify (0 нарушений, тотально).
-* **Классификация**: опасный класс «T-до-верификации» — в точности
-  лестничные вердикты (¬¬p); default deny — «F-до-верификации».
+* **The equivalence theorem** (totally, 90 formula×marking pairs):
+  stability-by-supervaluation ⟺ invariance of the verdict under every
+  sequence of verifications. The warranty is computable in one pass.
+* **Monotonicity**: a stable verdict is never revoked and never loses
+  stability under any verify (0 violations, totally).
+* **Classification**: the dangerous class "T-until-verification" is
+  exactly the ladder verdicts (¬¬p); default deny is
+  "F-until-verification".
 
-**Итог: вердикт = пара (значение, гарантия).** Значение — жадное
-(локальное, быстрое); гарантия — супервалюационная (глобальная).
-Соперничество локального и глобального режимов (§17) разрешается
-кооперацией: один даёт ответ, другой — срок его годности. Четыре
-класса вердиктов: T-стабильное (строй дом), T-до-верификации
-(лестничный рапорт, живёт до первой проверки), F-стабильное
-(заработанное опровержение), F-до-верификации (default deny).
+**Result: a verdict is a pair (value, warranty).** The value is greedy
+(local, fast); the warranty is supervaluational (global). The rivalry
+of the local and global modes (§17) resolves into cooperation: one
+gives the answer, the other its shelf life. Four verdict classes:
+stable T (build your house), T-until-verification (a ladder report,
+alive till the first check), stable F (an earned refutation),
+F-until-verification (default deny).
 
-## 20. Комбинирование свидетельств: конфликт не отмывается
-(MEASURED zcombine.py)
+## 20. Evidence combination: conflict is not laundered (MEASURED)
 
-Свидетельства об одном значении — ограничения; **комбинация =
-пересечение**. Измерено:
+Pieces of evidence about one value are constraints; **combination =
+intersection**. Measured:
 
-* **Теорема объединения**: verify из §19 — частный случай комбинации
-  (свидетель-синглтон [v,v]); операции верификации и слияния
-  свидетельств — одна операция. Побочный эффект честности: сам акт
-  проверки может заработать конфликт (verify 7 против m∈[0,5] —
-  проверяющий против прежних свидетельств).
-* **Пустое пересечение — заработанное противоречие источников**
-  (стабильное F вердикту «оба честны»), не шум для перенормировки.
-* **Парадокс Заде (1984), решённый в сторону Сметса.** Два врача почти
-  исключают опухоль (по 0.01); правило Демпстера перенормирует конфликт
-  0.9999 и выдаёт «опухоль = 1» — стабильную ложную уверенность.
-  Конъюнктивное правило Сметса (TBM) хранит конфликт в m(∅) — наш
-  подход: конфликт предъявлен, вердикт о диагнозе — отказ до
-  разбирательства. **Перенормировка конфликта — то же отмывание
-  незнания, что равномерный prior (§16), в главе о комбинировании:
-  один принцип, две болезни.**
-* **Близнец №6: полиномы провенанса (Green–Tannen, 2007).** Родословные
-  меток (§14) дорастают до полиномов источников: факт с выводами
-  A·B + C жив, пока жив хоть один моном; отзыв источника — обнуление
-  переменной. Алгебра доверия выводам, измерена на сценариях отзыва.
+* **The unification theorem**: verify of §19 is a special case of
+  combination (a singleton witness [v,v]); verification and evidence
+  fusion are one operation. An honest side effect: the act of checking
+  can itself earn a conflict (verify 7 against m∈[0,5] — the checker
+  against the prior evidence).
+* **An empty intersection is an earned contradiction of sources** (a
+  stable F for the verdict "both are honest"), not noise for
+  renormalization.
+* **Zadeh's paradox (1984), resolved in Smets' favor.** Two doctors
+  almost exclude a tumor (0.01 each); Dempster's rule renormalizes the
+  0.9999 conflict away and outputs "tumor = 1" — a stable false
+  certainty. Smets' conjunctive rule (TBM) keeps the conflict in m(∅) —
+  our approach: the conflict is exhibited, the diagnostic verdict is
+  refusal until the doctors are sorted out. **Renormalizing conflict is
+  the same laundering of ignorance as the uniform prior (§16), in the
+  chapter on combination: one principle, two diseases.**
+* **The sixth twin: provenance polynomials
+  (Green–Karvounarakis–Tannen, 2007).** The pedigrees of marks (§14)
+  grow into polynomials over sources: a fact with derivations A·B + C
+  stays alive while at least one monomial lives; retracting a source
+  zeroes a variable. An algebra of trust in derivations, measured on
+  retraction scenarios.
 
-Счёт близнецов: **шесть** — NaN, NULL, taint/IFC, абстрактная
-интерпретация, imprecise probabilities, semiring provenance.
+The twin count: **six** — NaN, NULL, taint/IFC, abstract
+interpretation, imprecise probabilities, semiring provenance.
 
-## 21. Сквозные закономерности
+## 21. Cross-cutting regularities
 
-Три факта повторялись в каждой прикладной главе; фиксируем их один раз.
+Three facts recurred in every applied chapter; we fix them once.
 
-**Д1. Два уровня равенства.** На каждом этаже (множества, функции,
-арифметика) операции совпадают на уровне представления (машина видит
-равенство), но вердикт-равенство отказывает: сам акт признания
-тождества — default deny. Инженерный уровень служит решателю,
-вердиктный — утверждениям.
+**R1. Two levels of equality.** On every floor (sets, functions,
+arithmetic) the operations coincide at the representation level (the
+machine sees equality), yet verdict-equality refuses: the very act of
+recognizing identity is default deny. The engineering level serves the
+solver, the verdict level serves assertions.
 
-**Д2. Двухрегистровость воспроизводится сама.** Вердиктный и
-решательный варианты каждой конструкции (прообразы, мощности,
-вероятности) возникают без специального проектирования — как следствия
-порождающего принципа и теоремы §9 о необходимости двух регистров.
+**R2. Two-registeredness reproduces itself.** The verdict and solver
+variants of each construction (preimages, cardinalities,
+probabilities) arise without special design — as consequences of the
+generating principle and the §9 theorem on the necessity of two
+registers.
 
-**Д3. Апартность зарабатывается, тождество — нет.** Различие двух
-непроверенных объектов зарабатывается конечным свидетелем (разошедшиеся
-интервалы, разошедшиеся префиксы); тождество не зарабатывается ничем,
-кроме полной верификации. Отсюда единым махом: {Z,Z} ≠ {Z}, m−m ≠ 0,
-нерегистрируемость потоков (§13) и NaN-подпись x ≠ x.
+**R3. Apartness is earned, identity is not.** The difference of two
+unverified objects is earned by a finite witness (diverged intervals,
+diverged prefixes); identity is earned by nothing short of full
+verification. Hence in one stroke: {Z,Z} ≠ {Z}, m−m ≠ 0, the
+non-registrability of streams (§13), and the NaN signature x ≠ x.
 
-## 22. Дорожка
+## 22. Roadmap
 
-Lean-порт таблó (индукция по строению формулы — первая не-decide задача;
-долг чести, не прочности) → возможное эссе «переизобретая Бочвара через
-NaN».
+A Lean port of the quantifier tableaux; a general Knaster–Tarski
+theorem for the lazy jump over finite systems; a sequent presentation
+and algebraic semantics; a mark "passport" distinguishing kinds of
+ungroundedness; a practical zero-trust validation library (verdicts
+with warranties + evidence combination + provenance) — and a possible
+essay, "Reinventing Bochvar through NaN".
 
----
+## References
 
-## Благодарности и раскрытие использования ИИ
-
-Работа выполнена при существенном участии ИИ-системы Claude (Anthropic)
-в режиме диалога: система генерировала текст, код стендов и
-Lean-доказательства. Все проектные решения, выбор развилок, постановка
-гипотез и итоговая ответственность за содержание — за автором-человеком.
-В соответствии с рекомендациями COPE/ICMJE ИИ-система не указывается в
-качестве автора. Достоверность не зависит от доверия к ИИ: все численные
-утверждения проверяемы кодом репозитория (`run_all.py` — полная
-регрессия), все Lean-утверждения — ядром Lean 4 (пустой список аксиом,
-`#print axioms`).
-
-## Литература
-
-1. Бочвар Д. А. Об одном трёхзначном исчислении и его применении к анализу
-   парадоксов классического расширенного функционального исчисления //
-   Математический сборник. 1938. Т. 4(46), № 2. С. 287–308.
-2. Kleene S. C. Introduction to Metamathematics. Amsterdam: North-Holland, 1952.
-3. Jaśkowski S. Rachunek zdań dla systemów dedukcyjnych sprzecznych //
-   Studia Societatis Scientiarum Torunensis. 1948. Sect. A, Vol. I, No. 5.
-4. van Fraassen B. C. Singular Terms, Truth-Value Gaps, and Free Logic //
-   Journal of Philosophy. 1966. Vol. 63, No. 17. P. 481–495.
-5. Kripke S. Outline of a Theory of Truth // Journal of Philosophy. 1975.
-   Vol. 72, No. 19. P. 690–716.
-6. Priest G. The Logic of Paradox // Journal of Philosophical Logic. 1979.
-   Vol. 8, No. 1. P. 219–241.
-7. Gupta A., Belnap N. The Revision Theory of Truth. Cambridge, MA: MIT
-   Press, 1993.
-8. Rosser J. B., Turquette A. R. Many-Valued Logics. Amsterdam:
-   North-Holland, 1952.
-9. Sette A. M. On the propositional calculus P1 // Mathematica Japonicae.
-   1973. Vol. 18. P. 173–180.
-10. Sette A. M., Carnielli W. A. Maximal weakly-intuitionistic logics //
-    Studia Logica. 1995. Vol. 55, No. 1. P. 181–203.
-11. Карпенко А. С., Томова Н. Е. Bochvar's three-valued logic and literal
-    paralogics: their lattice and functional equivalence // Logic and
-    Logical Philosophy. 2017. Vol. 26, No. 2. P. 207–235.
-12. Девяткин Л. Ю. Неклассические модификации многозначных матриц
-    классической логики. Часть I // Логические исследования. 2016. Т. 22,
-    № 2. С. 27–58.
-13. Libkin L. SQL's Three-Valued Logic and Certain Answers // ACM
-    Transactions on Database Systems. 2016. Vol. 41, No. 1. Article 1.
-14. Libkin L., Peterfreund L. SQL Nulls and Two-Valued Logic // Proc. PODS
-    2023. P. 11–20.
-15. Codd E. F. The Relational Model for Database Management: Version 2.
-    Reading, MA: Addison-Wesley, 1990.
-16. IEEE Standard for Floating-Point Arithmetic (IEEE 754-2019). IEEE, 2019.
-17. Denning D. E. A Lattice Model of Secure Information Flow //
-    Communications of the ACM. 1976. Vol. 19, No. 5. P. 236–243.
-18. Cousot P., Cousot R. Abstract Interpretation: A Unified Lattice Model
-    for Static Analysis of Programs // Proc. POPL 1977. P. 238–252.
-19. Dempster A. P. Upper and Lower Probabilities Induced by a Multivalued
-    Mapping // Annals of Mathematical Statistics. 1967. Vol. 38. P. 325–339.
-20. Shafer G. A Mathematical Theory of Evidence. Princeton: Princeton
+1. Bochvar, D. A. On a three-valued logical calculus and its
+   application to the analysis of the paradoxes of the classical
+   extended functional calculus. *Matematicheskii Sbornik* 4(46):2
+   (1938), 287–308. English translation: *History and Philosophy of
+   Logic* 2 (1981), 87–112.
+2. Kleene, S. C. *Introduction to Metamathematics*. North-Holland,
+   Amsterdam, 1952.
+3. Jaśkowski, S. Rachunek zdań dla systemów dedukcyjnych sprzecznych.
+   *Studia Societatis Scientiarum Torunensis*, Sect. A, I:5 (1948).
+4. van Fraassen, B. C. Singular terms, truth-value gaps, and free
+   logic. *Journal of Philosophy* 63:17 (1966), 481–495.
+5. Kripke, S. Outline of a theory of truth. *Journal of Philosophy*
+   72:19 (1975), 690–716.
+6. Priest, G. The logic of paradox. *Journal of Philosophical Logic*
+   8:1 (1979), 219–241.
+7. Gupta, A., Belnap, N. *The Revision Theory of Truth*. MIT Press,
+   Cambridge MA, 1993.
+8. Rosser, J. B., Turquette, A. R. *Many-Valued Logics*.
+   North-Holland, Amsterdam, 1952.
+9. Sette, A. M. On the propositional calculus P1. *Mathematica
+   Japonicae* 18 (1973), 173–180.
+10. Sette, A. M., Carnielli, W. A. Maximal weakly-intuitionistic
+    logics. *Studia Logica* 55:1 (1995), 181–203.
+11. Karpenko, A., Tomova, N. Bochvar's three-valued logic and literal
+    paralogics: their lattice and functional equivalence. *Logic and
+    Logical Philosophy* 26:2 (2017), 207–235.
+12. Devyatkin, L. Yu. Non-classical modifications of many-valued
+    matrices of classical logic. Part I. *Logical Investigations* 22:2
+    (2016), 27–58 (in Russian).
+13. Libkin, L. SQL's three-valued logic and certain answers. *ACM
+    Transactions on Database Systems* 41:1 (2016), Article 1.
+14. Libkin, L., Peterfreund, L. SQL nulls and two-valued logic. *Proc.
+    PODS 2023*, 11–20.
+15. Codd, E. F. *The Relational Model for Database Management: Version
+    2*. Addison-Wesley, Reading MA, 1990.
+16. IEEE Standard for Floating-Point Arithmetic (IEEE 754-2019). IEEE,
+    2019.
+17. Denning, D. E. A lattice model of secure information flow.
+    *Communications of the ACM* 19:5 (1976), 236–243.
+18. Cousot, P., Cousot, R. Abstract interpretation: a unified lattice
+    model for static analysis of programs. *Proc. POPL 1977*, 238–252.
+19. Dempster, A. P. Upper and lower probabilities induced by a
+    multivalued mapping. *Annals of Mathematical Statistics* 38
+    (1967), 325–339.
+20. Shafer, G. *A Mathematical Theory of Evidence*. Princeton
     University Press, 1976.
-21. Zadeh L. A. Review of Shafer's A Mathematical Theory of Evidence //
-    AI Magazine. 1984. Vol. 5, No. 3. P. 81–83.
-22. Smets P., Kennes R. The Transferable Belief Model // Artificial
-    Intelligence. 1994. Vol. 66. P. 191–234.
-23. Walley P. Statistical Reasoning with Imprecise Probabilities. London:
-    Chapman and Hall, 1991.
-24. Green T. J., Karvounarakis G., Tannen V. Provenance Semirings //
-    Proc. PODS 2007. P. 31–40.
-25. Hintikka J. Knowledge and Belief: An Introduction to the Logic of the
-    Two Notions. Ithaca: Cornell University Press, 1962.
-26. Ellsberg D. Risk, Ambiguity, and the Savage Axioms // Quarterly
-    Journal of Economics. 1961. Vol. 75, No. 4. P. 643–669.
-27. Hähnle R. Tableaux for Many-Valued Logics // Handbook of Tableau
-    Methods / Ed. M. D'Agostino et al. Dordrecht: Kluwer, 1999. P. 529–580.
-28. Yablo S. Paradox without Self-Reference // Analysis. 1993. Vol. 53,
-    No. 4. P. 251–252.
-29. Tarski A. The Concept of Truth in Formalized Languages (1933) //
-    Logic, Semantics, Metamathematics. Oxford: Clarendon Press, 1956.
-30. Varzi A. C. Supervaluationism and Its Logics // Mind. 2007. Vol. 116,
-    No. 463. P. 633–676.
+21. Zadeh, L. A. Review of Shafer's *A Mathematical Theory of
+    Evidence*. *AI Magazine* 5:3 (1984), 81–83.
+22. Smets, P., Kennes, R. The transferable belief model. *Artificial
+    Intelligence* 66 (1994), 191–234.
+23. Walley, P. *Statistical Reasoning with Imprecise Probabilities*.
+    Chapman and Hall, London, 1991.
+24. Green, T. J., Karvounarakis, G., Tannen, V. Provenance semirings.
+    *Proc. PODS 2007*, 31–40.
+25. Hintikka, J. *Knowledge and Belief: An Introduction to the Logic
+    of the Two Notions*. Cornell University Press, Ithaca, 1962.
+26. Ellsberg, D. Risk, ambiguity, and the Savage axioms. *Quarterly
+    Journal of Economics* 75:4 (1961), 643–669.
+27. Hähnle, R. Tableaux for many-valued logics. In: *Handbook of
+    Tableau Methods*, ed. M. D'Agostino et al. Kluwer, Dordrecht,
+    1999, 529–580.
+28. Yablo, S. Paradox without self-reference. *Analysis* 53:4 (1993),
+    251–252.
+29. Tarski, A. The concept of truth in formalized languages (1933).
+    In: *Logic, Semantics, Metamathematics*. Clarendon Press, Oxford,
+    1956.
+30. Varzi, A. C. Supervaluationism and its logics. *Mind* 116:463
+    (2007), 633–676.
+
+## Acknowledgements and AI disclosure
+
+This work was carried out with the substantial participation of the AI
+system Claude (Anthropic) in a dialogue setting: the system generated
+the text, the test-bench code, and the Lean proofs. All design
+decisions, fork choices, hypotheses, and the final responsibility for
+the content rest with the human author. In accordance with COPE/ICMJE
+recommendations, the AI system is not listed as an author. The
+reliability of the results does not depend on trusting the AI: every
+numerical claim is checkable by the repository code (`run_all.py` —
+full regression), and every Lean claim by the Lean 4 kernel (empty
+axiom list, `#print axioms`).

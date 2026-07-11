@@ -22,7 +22,8 @@ cd lean && lake build  # машинная проверка ядра: ноль а
 ```
 
 Спецификация и все проектные решения — в `SPEC.md`; рабочий черновик
-препринта — `paper/ZTL-draft.md`. Родословная честная: функционально
+препринта — `paper/ZTL-draft.md`. **Блюпринт формализации** (карта
+теорем с графом зависимостей): https://inventor1975.github.io/ZTL/ Родословная честная: функционально
 ZTL — фрагмент внешнего слоя логики Бочвара B3 (1938), ядро {¬,∧,∨} —
 в классе 8Kb*; своё — импликативный этаж (7 клеток дельты, вне условий
 стандартности Россера–Тюркетта), порождающий принцип и двухрегистровая
@@ -55,4 +56,6 @@ Curry, Yablo and Russell (containment instead of explosion); verdicts
 carry a stability warranty (local answer + supervaluational guarantee).
 
 Run `python3 run_all.py` for the full regression (19 stands + Lean build).
-License: MIT. Working draft of the preprint: `paper/ZTL-draft.md` (RU).
+Formalization blueprint (theorem map with dependency graph):
+https://inventor1975.github.io/ZTL/ — License: MIT. Working draft of
+the preprint: `paper/ZTL-draft.md` (RU).

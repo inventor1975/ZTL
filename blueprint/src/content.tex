@@ -141,3 +141,52 @@
   A marked set is not provably a subset of itself; reflexivity of set
   equality fails --- inherited from the tables, not postulated.
 \end{theorem}
+
+\chapter{The algebraic passport}
+
+\begin{definition}[J-operators]\label{def:jops}
+  \uses{def:ops}\lean{V.jT, V.jF}\leanok
+  $J_T(p) = p\wedge p$ (fallen idempotence is the truth detector),
+  $J_F(p) = \neg p\wedge\neg p$, $J_Z = \mathrm{isZ}$: three exact,
+  disjoint value indicators grown from ZTL's own connectives.
+\end{definition}
+
+\begin{theorem}[Expressive completeness, unary]\label{thm:unary}
+  \uses{def:jops}\lean{V.unary_complete}\leanok
+  Every unary external function $V\to\{T,F\}$ is a J-DNF: one theorem
+  over all eight target tables (binary case $512/512$ measured in
+  Python).
+\end{theorem}
+
+\begin{theorem}[Full deduction theorem for E]\label{thm:ddt}
+  \uses{def:jops, thm:greedy}\lean{V.eimp_spec, V.ddt_E}\leanok
+  The definable external implication
+  $E(p,q)=\neg(p\wedge p)\vee(q\wedge q)$ satisfies
+  $\Gamma,\varphi \vDash \psi \iff \Gamma \vDash E(\varphi,\psi)$ in
+  both directions, over the whole language; the primitive arrow stays
+  one-way.
+\end{theorem}
+
+\begin{theorem}[Blok--Pigozzi witnesses]\label{thm:bp}
+  \uses{def:jops}\lean{V.dEq_spec, V.bp_refl, V.bp_mp, V.bp_cong_xnor, V.truth_equation, V.bp_iv}\leanok
+  The same-value detector $\Delta$ and the truth equation
+  $p\wedge p \approx \neg(p\wedge\neg p)$ satisfy conditions
+  (i)--(iv) of the Blok--Pigozzi characterization on the matrix:
+  ZTL is algebraizable (kinship: Bochvar algebras, Bonzio--Pra Baldi
+  2024).
+\end{theorem}
+
+\begin{theorem}[Not self-extensional]\label{thm:selfext}
+  \uses{def:jops}\lean{V.idem_interderivable, V.not_selfextensional}\leanok
+  $p \dashv\vDash p\wedge p$, yet $\neg(p\wedge p) \nvDash \neg p$:
+  interderivability is not a congruence --- the same failure that
+  builds the detectors.
+\end{theorem}
+
+\begin{theorem}[Structurality]\label{thm:structural}
+  \uses{thm:greedy}\lean{V.evalF_subst, V.entails_structural}\leanok
+  The substitution lemma: $\Gamma\vDash\varphi$ implies
+  $\sigma\Gamma\vDash\sigma\varphi$; together with reflexivity,
+  monotonicity and cut, $\vDash$ is a structural Tarskian consequence
+  relation.
+\end{theorem}

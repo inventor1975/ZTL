@@ -177,8 +177,13 @@ contradiction.
   alive; EG, ¬∃⊭∀¬, ¬∀⊭∃¬, quantified LEM, the drinker — fallen) and
   dynamics (liar period 2, carousel period 4 with no fixed points,
   Curry homeless greedily / at home with Kleene, cycle parity, Yablo-3
-  grounded, the crocodile's deal void). THE WHOLE Lean corpus — 6
-  modules — on the empty axiom list.
+  grounded, the crocodile's deal void).
+  `ZAlgebra.lean` — the algebraic passport: J-indicators, unary
+  expressive completeness, the two-way deduction theorem for E over
+  the whole language (`ddt_E`), all Blok–Pigozzi witnesses, failure of
+  self-extensionality, the substitution lemma + structurality of ⊨
+  (`entails_structural`). THE WHOLE Lean corpus — 7 modules — on the
+  empty axiom list.
 
 * `fixedpoint.py` — quarantine as a fixed point: the greedy jump is
   non-monotone and has no fixed points on odd cycles (liar period 2,
@@ -245,6 +250,16 @@ contradiction.
   earned, not renormalized (Zadeh resolved in Smets' favor against
   Dempster); provenance polynomials with source retraction — twin #6
   (Green–Tannen). Preprint §20.
+* `zalgebra.py` — E14 the algebraic passport: J-indicators from fallen
+  idempotence (J_T = p∧p), expressive completeness of the external
+  layer (8/8 unary, 512/512 binary by J-DNF), the external implication
+  E(p,q) = ¬(p∧p)∨(q∧q) with a TWO-WAY deduction theorem (0/324
+  divergences; the primitive → stays one-way), the Blok–Pigozzi
+  conditions (Δ same-value detector, truth equation p∧p ≈ ¬(p∧¬p),
+  (i)–(iv) total) ⟹ ZTL is ALGEBRAIZABLE (kinship: Bochvar algebras,
+  Bonzio–Pra Baldi 2024); NOT self-extensional (p ⊣⊨ p∧p but
+  ¬(p∧p) ⊭ ¬p); structurality (substitution lemma). Lean twin:
+  `ZAlgebra.lean` (zero axioms). Preprint §3.6.
 
 ## The road ahead (not started)
 

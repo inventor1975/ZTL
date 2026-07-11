@@ -27,6 +27,8 @@ STANDS = [
     ("zrussell.py",    ["facts grounded: 8 of 9"]),
     ("zverify.py",     ["divergences: 0", "violations of stable-verdict monotonicity: 0"]),
     ("zcombine.py",    ["✓ on all cases"]),
+    ("zalgebra.py",    ["ZTL IS ALGEBRAIZABLE", "✓ DDT two-way, total",
+                        "512 of 512"]),
 ]
 
 

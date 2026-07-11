@@ -18,9 +18,15 @@
    truth-teller are both Z; revision theory distinguishes them by
    patterns. Enrich the mark with a "passport" without killing
    greediness?
-4. **Proof theory is thin** — no sequents/cut-elimination/
-   interpolation; no algebraic semantics; first order only on finite
-   domains. For v1 — an honest caveat; for completeness — a gap.
+4. PARTIALLY DONE (E14, zalgebra.py + ZAlgebra.lean, 2026-07-11):
+   ✅ algebraic semantics EXISTS — Blok–Pigozzi conditions verified on
+   the matrix (Δ, truth equation, (i)–(iv)) ⟹ ZTL algebraizable;
+   ✅ expressive completeness of the external layer (J-DNF);
+   ✅ full deduction theorem for the definable E (primitive → one-way);
+   ✅ structurality (substitution lemma); ✅ not self-extensional.
+   REMAINS: sequent calculus + cut elimination; interpolation;
+   description of the equivalent quasivariety; first order beyond
+   finite domains.
 
 ## Seams
 

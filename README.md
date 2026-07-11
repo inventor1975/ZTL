@@ -11,11 +11,15 @@ preprint, §10).
 Highlights: machine-checked core in Lean 4 with **zero axioms** (no
 propext, no Quot.sound, no choice), including a certified tableau engine
 (soundness + completeness) and a native-rules engine proven equivalent;
-measured bridges to six independent engineering traditions — IEEE NaN,
-SQL NULL, taint tracking/IFC, abstract interpretation, imprecise
-probabilities, provenance semirings; quarantine treatment of the liar,
-Curry, Yablo and Russell (containment instead of explosion); verdicts
-carry a stability warranty (local answer + supervaluational guarantee).
+an algebraic passport — expressive completeness of the external layer,
+a definable implication with a two-way deduction theorem, and the
+Blok–Pigozzi conditions verified on the matrix (**ZTL is
+algebraizable**, yet not self-extensional); measured bridges to six
+independent engineering traditions — IEEE NaN, SQL NULL, taint
+tracking/IFC, abstract interpretation, imprecise probabilities,
+provenance semirings; quarantine treatment of the liar, Curry, Yablo
+and Russell (containment instead of explosion); verdicts carry a
+stability warranty (local answer + supervaluational guarantee).
 
 Honest pedigree: functionally ZTL is a fragment of the external layer of
 Bochvar's B3 (1938); the {¬,∧,∨} core falls in the 8Kb* class. What is
@@ -34,10 +38,11 @@ python3 quantifiers.py # quantifiers: strict witnesses, UI/EG asymmetry
 python3 tableau_fo.py  # quantifier tableaux + check against enumeration (28 pairs)
 python3 paradoxes.py   # liar, carousel, avenger
 python3 fixedpoint.py  # quarantine as a fixed point, two registers
+python3 zalgebra.py    # algebraic passport: J-operators, DDT for E, Blok–Pigozzi
 cd lean && lake build  # machine check of the core: zero axioms
 ```
 
-Full regression: `python3 run_all.py` (19 stands + Lean build).
+Full regression: `python3 run_all.py` (20 stands + Lean build).
 
 The specification and all design decisions are in `SPEC.md`; the working
 preprint draft is `paper/ZTL-draft.md`. **Formalization blueprint**

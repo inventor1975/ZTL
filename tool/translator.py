@@ -16,6 +16,20 @@ import urllib.request
 
 API = "https://api.groq.com/openai/v1/chat/completions"
 MODEL = os.environ.get("ZTL_GROQ_MODEL", "llama-3.3-70b-versatile")
+KEY_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                        ".groq_key")
+
+
+def get_key():
+    """Env first; else the local untracked key file (the repo is public —
+    the key must never live in code)."""
+    key = os.environ.get("GROQ_API_KEY")
+    if key:
+        return key.strip()
+    if os.path.exists(KEY_FILE):
+        with open(KEY_FILE) as f:
+            return f.read().strip()
+    return None
 
 ZFL_SPEC = """ZFL — формальный язык для ядра ZTL. Строго JSON:
 {"genre": "statement"|"system",
@@ -70,11 +84,12 @@ class TranslatorError(Exception):
 
 
 def groq(messages, temperature=0.2):
-    key = os.environ.get("GROQ_API_KEY")
+    key = get_key()
     if not key:
         raise TranslatorError(
-            "GROQ_API_KEY не задан — работаю без ИИ (режим профи: "
-            "пишите ZFL руками в среднем окне).")
+            "Ключ Groq не найден: задайте GROQ_API_KEY или положите ключ "
+            "в файл tool/.groq_key (он в .gitignore) — пока работаю без "
+            "ИИ (режим профи: пишите ZFL руками в среднем окне).")
     body = json.dumps({"model": MODEL, "messages": messages,
                        "temperature": temperature}).encode()
     req = urllib.request.Request(API, data=body, headers={

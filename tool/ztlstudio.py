@@ -170,7 +170,8 @@ class Handler(BaseHTTPRequestHandler):
 
 if __name__ == "__main__":
     print(f"ZTLStudio: http://localhost:{PORT}")
-    if not os.environ.get("GROQ_API_KEY"):
-        print("GROQ_API_KEY не задан — режим профи (ZFL руками), ИИ выключен.")
+    if not translator.get_key():
+        print("Ключ Groq не найден (env GROQ_API_KEY или tool/.groq_key) — "
+              "режим профи (ZFL руками), ИИ выключен.")
     Timer(0.7, lambda: webbrowser.open(f"http://localhost:{PORT}")).start()
     HTTPServer(("127.0.0.1", PORT), Handler).serve_forever()

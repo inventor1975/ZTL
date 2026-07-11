@@ -4,3 +4,4 @@ lean/.lake/
 blueprint/web/
 OLD/
 lean/BridgeGen.lean
+tool/.groq_key

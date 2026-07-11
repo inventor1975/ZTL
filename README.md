@@ -12,9 +12,10 @@ Highlights: machine-checked core in Lean 4 with **zero axioms** (no
 propext, no Quot.sound, no choice), including a certified tableau engine
 (soundness + completeness) and a native-rules engine proven equivalent;
 an algebraic passport — expressive completeness of the external layer,
-a definable implication with a two-way deduction theorem, and the
-Blok–Pigozzi conditions verified on the matrix (**ZTL is
-algebraizable**, yet not self-extensional); measured bridges to six
+a definable implication with a two-way deduction theorem, Craig
+interpolation, machine-checked cut admissibility, and the Blok–Pigozzi
+conditions verified on the matrix (**ZTL is algebraizable**, yet not
+self-extensional); measured bridges to six
 independent engineering traditions — IEEE NaN, SQL NULL, taint
 tracking/IFC, abstract interpretation, imprecise probabilities,
 provenance semirings; quarantine treatment of the liar, Curry, Yablo
@@ -39,10 +40,12 @@ python3 tableau_fo.py  # quantifier tableaux + check against enumeration (28 pai
 python3 paradoxes.py   # liar, carousel, avenger
 python3 fixedpoint.py  # quarantine as a fixed point, two registers
 python3 zalgebra.py    # algebraic passport: J-operators, DDT for E, Blok–Pigozzi
+python3 zinterp.py     # Craig interpolation via expressive completeness
+python3 zsequent.py    # sequent reading: cut admissibility (semantic cut elimination)
 cd lean && lake build  # machine check of the core: zero axioms
 ```
 
-Full regression: `python3 run_all.py` (20 stands + Lean build).
+Full regression: `python3 run_all.py` (22 stands + Lean build).
 
 The specification and all design decisions are in `SPEC.md`; the working
 preprint draft is `paper/ZTL-draft.md`. **Formalization blueprint**

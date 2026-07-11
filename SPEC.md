@@ -182,8 +182,11 @@ contradiction.
   expressive completeness, the two-way deduction theorem for E over
   the whole language (`ddt_E`), all Blok–Pigozzi witnesses, failure of
   self-extensionality, the substitution lemma + structurality of ⊨
-  (`entails_structural`). THE WHOLE Lean corpus — 7 modules — on the
-  empty axiom list.
+  (`entails_structural`).
+  `ZSequent.lean` — the sequent reading: cut admissibility, admissible
+  weakening, derivable identity on top of closes_iff (semantic cut
+  elimination, kernel-checked). THE WHOLE Lean corpus — 8 modules —
+  on the empty axiom list.
 
 * `fixedpoint.py` — quarantine as a fixed point: the greedy jump is
   non-monotone and has no fixed points on odd cycles (liar period 2,
@@ -260,6 +263,18 @@ contradiction.
   Bonzio–Pra Baldi 2024); NOT self-extensional (p ⊣⊨ p∧p but
   ¬(p∧p) ⊭ ¬p); structurality (substitution lemma). Lean twin:
   `ZAlgebra.lean` (zero axioms). Preprint §3.6.
+* `zinterp.py` — E15 Craig interpolation: the interpolant = J-DNF of
+  A's projection onto the shared atoms (a corollary of expressive
+  completeness); verified totally (400/400 one shared atom, 32/32
+  cross-sample); empty-shared-set edge needs constants (honest
+  caveat). Preprint §3.6 item 7.
+* `zsequent.py` — E16 the sequent reading: tableaux bottom-up =
+  cut-free sequent calculus for refutability; identity 14/14,
+  weakening 696/696, cut admissible on both covering pairs (T/N and
+  F/P, 406 fired instances each, 0 violations) — semantic cut
+  elimination. Lean twin: `ZSequent.lean` (zero axioms:
+  cut_admissible, weakening_admissible, identity_refutable on top of
+  closes_iff). Preprint §5.
 
 ## The road ahead (not started)
 

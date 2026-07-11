@@ -24,7 +24,11 @@
    ✅ expressive completeness of the external layer (J-DNF);
    ✅ full deduction theorem for the definable E (primitive → one-way);
    ✅ structurality (substitution lemma); ✅ not self-extensional.
-   REMAINS: sequent calculus + cut elimination; interpolation;
+   ✅ Craig interpolation (E15, zinterp.py: J-DNF of the projection;
+   400/400 + 32/32); ✅ sequent presentation + cut ADMISSIBILITY
+   (E16, zsequent.py + ZSequent.lean: semantic cut elimination,
+   kernel-checked).
+   REMAINS: a syntactic cut-elimination procedure with bounds;
    description of the equivalent quasivariety; first order beyond
    finite domains.
 

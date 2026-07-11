@@ -29,6 +29,8 @@ STANDS = [
     ("zcombine.py",    ["✓ on all cases"]),
     ("zalgebra.py",    ["ZTL IS ALGEBRAIZABLE", "✓ DDT two-way, total",
                         "512 of 512"]),
+    ("zinterp.py",     ["✓ INTERPOLATION HOLDS, total on the pool"]),
+    ("zsequent.py",    ["✓ CUT IS ADMISSIBLE (semantic cut elimination), total"]),
 ]
 
 

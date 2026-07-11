@@ -26,12 +26,13 @@ account with a measured price list (12 surviving laws, including modus
 ponens, and 14 fallen ones — all the fallen laws are "truth from form");
 the discovered split between *rules* and *laws*, with a one-directional
 deduction theorem for the primitive arrow; a signed tableau calculus
-with machine-proven soundness and completeness; an algebraic passport
-(the fallen idempotence yields exact truth detectors, the external
-layer is expressively complete, a definable external implication
-restores the full deduction theorem, and the Blok–Pigozzi conditions
-are verified on the matrix — ZTL is algebraizable, yet not
-self-extensional); quantifiers; a modal identification (local
+with machine-proven soundness, completeness and cut admissibility; an
+algebraic passport (the fallen idempotence yields exact truth
+detectors, the external layer is expressively complete, a definable
+external implication restores the full deduction theorem, Craig
+interpolation holds, and the Blok–Pigozzi conditions are verified on
+the matrix — ZTL is algebraizable, yet not self-extensional);
+quantifiers; a modal identification (local
 modality over the S5 frame of completions — versus global
 supervaluation); a probabilistic identification (verdicts are the
 {0,1}-threshold of Dempster–Shafer belief functions); a theory of
@@ -226,6 +227,17 @@ axiom list):
    cut (immediate from the definition), ⊨ is a **structural Tarskian
    consequence relation** — finitary and decidable, since the matrix is
    finite.
+7. **Craig interpolation** holds, and its proof is one line on top of
+   item 2: if A ⊨ B, the projection of A onto the shared atoms ("some
+   completion of A's private atoms makes A true") is an external
+   function of the shared atoms, hence a formula — and its J-DNF
+   interpolates: A ⊨ I (A's own valuation is the witness), I ⊨ B (glue
+   the A-witness to the current valuation; B does not read A's private
+   atoms). MEASURED totally: 400 of 400 entailing pairs on the
+   one-shared-atom pool, 32 of 32 on a two-atom cross-sample. The
+   standard caveat: with an empty shared set the interpolant is a
+   constant, and in the constant-free language ⊤ = ¬(x∧¬x) spends a
+   spare variable — exactly as classically.
 
 ## 4. Place in the literature
 
@@ -331,6 +343,28 @@ tableaux with exact preimage coverage, soundness/completeness is the
 standard constructive result; the machine cross-check is an independent
 control of the implementation (and §8 upgrades it to a kernel-checked
 proof).
+
+**The sequent reading and semantic cut elimination.** Read bottom-up,
+the tableau engine is a cut-free sequent calculus for the refutability
+judgment ⊢ S ("the signed set S is jointly unsatisfiable"): axioms are
+the contradictory atom constraints, the rules are the twelve signed
+expansions with premises above the line, derivability is the engine's
+closure. The cut rule on a covering sign pair (every value lies in
+{T} ∪ {F,Z}):
+
+    ⊢ S, T:φ    ⊢ S, N:φ
+    ─────────────────────  (cut)
+           ⊢ S
+
+is sound, and the cut-free system is already complete — hence **cut is
+admissible**: the classic semantic cut elimination, here with a machine
+certificate. Kernel-checked with zero axioms (Lean: `cut_admissible`,
+`weakening_admissible`, `identity_refutable` on top of `closes_iff`);
+MEASURED directly as well (identity 14/14; weakening 696 checks, 0
+violations; cut 406 fired instances on each covering pair, 0
+violations). What remains proof-theoretic future work is a *syntactic*
+cut-elimination procedure with complexity bounds — the admissibility
+itself is settled.
 
 ## 6. Quantifiers over finite domains (MEASURED)
 
@@ -452,7 +486,10 @@ language with premise lists (`ddt_E`), all Blok–Pigozzi witnesses
 (Δ-spec, reflexivity, detachment, congruence for the six connectives,
 the truth equation, condition (iv)), the failure of
 self-extensionality, the substitution lemma and structurality of ⊨
-(`entails_structural`).
+(`entails_structural`). **The sequent reading (`ZSequent`, zero
+axioms):** cut admissibility on top of the engine certificate
+(`cut_admissible`), admissible weakening, derivable identity — the
+semantic cut elimination of §5, kernel-checked.
 
 ## 9. Quarantine as a fixed point: the two-register architecture
 (MEASURED)
@@ -884,10 +921,11 @@ non-registrability of streams (§13), and the NaN signature x ≠ x.
 ## 22. Roadmap
 
 A Lean port of the quantifier tableaux; a general Knaster–Tarski
-theorem for the lazy jump over finite systems; a sequent presentation
-with cut elimination and a description of the equivalent quasivariety
-(the algebraizability itself is settled — §3.6); first-order semantics
-over arbitrary domains; a mark "passport" distinguishing kinds of
+theorem for the lazy jump over finite systems; a syntactic
+cut-elimination procedure with complexity bounds (admissibility is
+settled — §5) and a description of the equivalent quasivariety
+(algebraizability is settled — §3.6); first-order semantics over
+arbitrary domains; a mark "passport" distinguishing kinds of
 ungroundedness; a practical zero-trust validation library (verdicts
 with warranties + evidence combination + provenance) — and a possible
 essay, "Reinventing Bochvar through NaN".

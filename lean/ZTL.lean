@@ -166,7 +166,13 @@ p⊨p is trivial). -/
 
 theorem no_gluts : ∀ p, ¬(p = T ∧ znot p = T) := by decide
 
-/-! ### The lazy register (strong Kleene) and the information order -/
+/-! ### The lazy register (strong Kleene) and the information order
+
+The symbol Z is reused positionally here: inside the lazy iteration it
+plays the solver's phase N ("not yet computed" — preprint §10), not
+the input mark. The role differs, not the alphabet; the greedy
+register is what forbids the status from becoming a value of
+assertions. -/
 
 def knot : V → V
   | T => F | F => T | Z => Z

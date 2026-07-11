@@ -8,9 +8,11 @@ this module proves it once and for all finite systems. A system is a
 list of defining formulas (sentence i defined by the i-th formula, over
 atoms Tr(0), Tr(1), …). The lazy (strong Kleene) evaluation is monotone
 in the information order over the WHOLE language; hence the lazy jump
-is monotone, the iteration from ⊥ (all-Z) ascends and stabilizes within
-n+1 steps at THE least fixed point; and the grounded part is identical
-in every fixed point — quarantine is well-defined. The greedy register's
+is monotone, the iteration from ⊥ (all-Z: here Z plays the solver's
+phase N of the §10 passport, reused positionally) ascends and
+stabilizes within n+1 steps at THE least fixed point; and the grounded
+part is identical in every fixed point — quarantine is well-defined:
+the phase that never resolves hardens into the quarantine mark. The greedy register's
 non-monotonicity (ZTL.lean, Part II) completes the necessity of two
 registers. No omega, no by_contra, no List membership — hand-rolled
 Nat arithmetic and boolean list predicates throughout.

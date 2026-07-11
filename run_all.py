@@ -34,6 +34,7 @@ STANDS = [
     ("zfo.py",         ["ALL verdicts cross-checked ✓", "guarded drinker"]),
     ("zpassport.py",   ["✓ STIPULATION THEOREM: total",
                         "parity cross-check: 62 of 62 ✓"]),
+    ("bridge.py",      ["ALL ANSWERS COINCIDE"]),
 ]
 
 

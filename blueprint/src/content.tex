@@ -243,3 +243,11 @@
   is identical in every fixed point --- quarantine is well-defined.
   Zero axioms (information-measure pigeonhole, no WF machinery).
 \end{theorem}
+
+\begin{theorem}[Expedition twins]\label{thm:exped}
+  \uses{thm:memz, def:jops}\lean{V.eqStream_never_T, V.eqStream_apart, V.diag_not_member, V.inj_cert_marked, V.mark_self_not_earned, V.atom_thresholds}\leanok
+  Streams never earn identity while apartness is earned by a finite
+  witness and persists; the diagonal earns strict non-membership; one
+  marked pair collapses the injectivity certificate; a nondegenerate
+  mark does not equal itself; atom verdicts are the modal thresholds.
+\end{theorem}

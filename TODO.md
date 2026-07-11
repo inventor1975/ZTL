@@ -44,12 +44,15 @@
 
 ## Seams
 
-5. PARTIALLY DONE: ✅ general lazy-grounding theorem — ZGround.lean
-   (Knaster–Tarski for the lazy jump, zero axioms, 2026-07-11).
-   REMAINS: E6–E11 expedition Lean twins; C-extension of sets is
-   examples only.
-6. Python and Lean are not stitched (no auto-check against the Lean
-   reference).
+5. MOSTLY DONE: ✅ general lazy-grounding theorem — ZGround.lean;
+   ✅ E6–E10 Lean twins — ZExped.lean (streams/taint/intervals/DS/
+   modal, zero axioms). REMAINS: E11 grounding half needs constants
+   ⊤/⊥ in Fm (engine surgery — v2); C-extension of sets is examples
+   only.
+6. ✅ DONE (bridge.py): the stitch — 136 kernel-computed answers
+   (tables of both registers, J-ops, E/Δ, certified tproves on a
+   shared battery, lfp of the zoo) auto-compared with the Python
+   stands on every regression run.
 7. ✅ DONE: run_all.py — 19 stands + Lean, markers, exit code.
 
 ## Cosmetics before the port (Zenodo)

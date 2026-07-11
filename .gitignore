@@ -3,3 +3,4 @@ __pycache__/
 lean/.lake/
 blueprint/web/
 OLD/
+lean/BridgeGen.lean

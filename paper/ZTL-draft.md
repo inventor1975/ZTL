@@ -532,13 +532,30 @@ membership form, and the battery of eight tableau verdicts as kernel
 evaluations of the certified engine (§6). **General Knaster–Tarski
 (`ZGround`, zero axioms):** the lazy register over the whole language,
 monotonicity, the least fixed point by bounded iteration, and the
-absoluteness of the grounded part (§9). Two further disinfection
+absoluteness of the grounded part (§9). **Expedition twins (`ZExped`,
+zero axioms):** streams — the equality atom never earns T, one finite
+witness earns apartness and it persists, Cantor's diagonal earns strict
+non-membership against every registry entry (§13); one marked pair
+collapses the injectivity certificate for every function including the
+identity (§14); interval decorrelation and unearned self-identity of a
+nondegenerate mark (§15); Dempster–Shafer thresholds (§16); atom
+verdicts as □/◇ thresholds with the ¬¬-cell separating the local
+ladder from global supervaluation (§17). The grounding half of Russell
+(§18) needs constants ⊤/⊥ in the certified language — an honest
+remainder. **The stitch (`bridge.py`):** one questionnaire, two
+engines — 136 kernel-computed answers (both registers cell by cell,
+the J-operators, E and Δ, certified-engine verdicts on a shared
+propositional and quantified battery, lazy lfp of the constant-free
+zoo) compared mechanically against the Python stands on every
+regression run: zero divergences. Two further disinfection
 pitfalls surfaced here: an overlapping wildcard row in a match taints
 the DEFINITION itself with propext through the compiled matcher
 (invisible to theorem-level axiom prints — `kand`/`kor` were rewritten
 with explicit cells, and the corpus now prints definition-level axiom
 checks too), and core's `List.length_map`/`length_replicate` are
-simp-proved and carry propext — replaced by hand-rolled inductions.
+simp-proved and carry propext — replaced by hand-rolled inductions
+(likewise the core Int order lemmas, omega-proved: general interval
+statements live over Nat, Int stays for computation).
 
 ## 9. Quarantine as a fixed point: the two-register architecture
 (MEASURED)

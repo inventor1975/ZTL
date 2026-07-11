@@ -1,5 +1,8 @@
 name = "ztl"
-defaultTargets = ["ZTL"]
+defaultTargets = ["ZTL", "TableauCert"]
 
 [[lean_lib]]
 name = "ZTL"
+
+[[lean_lib]]
+name = "TableauCert"

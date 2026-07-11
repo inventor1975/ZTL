@@ -33,3 +33,26 @@ ZTL — фрагмент внешнего слоя логики Бочвара B
 
 *AI-участие: проектировалось и написано в диалоге куратора (Виталий
 Резник) с Claude (Anthropic); решения по развилкам — куратора.*
+
+---
+
+## English summary
+
+**ZTL — Zero-Trust Logic.** A two-valued logic over marked (unverified)
+inputs with one generating principle: *truth is never granted on credit* —
+a connective returns T only if T is forced under every classical reading
+of the unverified. Verdicts are always classical (T/F); the third symbol
+Z is an input mark, not a truth value. Default deny, ported from security
+into truth tables.
+
+Highlights: machine-checked core in Lean 4 with **zero axioms** (no
+propext, no Quot.sound, no choice), including a certified tableau engine
+(soundness + completeness) and a native-rules engine proven equivalent;
+measured bridges to six independent engineering traditions — IEEE NaN,
+SQL NULL, taint tracking/IFC, abstract interpretation, imprecise
+probabilities, provenance semirings; quarantine treatment of the liar,
+Curry, Yablo and Russell (containment instead of explosion); verdicts
+carry a stability warranty (local answer + supervaluational guarantee).
+
+Run `python3 run_all.py` for the full regression (19 stands + Lean build).
+License: MIT. Working draft of the preprint: `paper/ZTL-draft.md` (RU).

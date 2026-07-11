@@ -1,0 +1,16 @@
+cff-version: 1.2.0
+message: "If you use this work, please cite it as below."
+title: "ZTL — Zero-Trust Logic"
+authors:
+  - family-names: "Reznik"
+    given-names: "Vitaly"
+type: software
+year: 2026
+repository-code: "https://github.com/inventor1975/ZTL"
+abstract: >
+  Zero-Trust Logic: a two-valued logic over marked (unverified) inputs with
+  a single generating principle — truth is never granted on credit. Verdicts
+  are classical; the third symbol Z is an input mark. Machine-checked core
+  (Lean 4, zero axioms) with a certified tableau engine; measured bridges to
+  IEEE NaN, SQL NULL, taint tracking, abstract interpretation, imprecise
+  probabilities and provenance semirings.

@@ -733,3 +733,67 @@ NaN» (решение куратора).
 *AI-участие: текст и код созданы в диалоге куратора с Claude (Anthropic);
 проектные решения — куратора; все численные утверждения проверены кодом
 репозитория.*
+
+## Литература
+
+1. Бочвар Д. А. Об одном трёхзначном исчислении и его применении к анализу
+   парадоксов классического расширенного функционального исчисления //
+   Математический сборник. 1938. Т. 4(46), № 2. С. 287–308.
+2. Kleene S. C. Introduction to Metamathematics. Amsterdam: North-Holland, 1952.
+3. Jaśkowski S. Rachunek zdań dla systemów dedukcyjnych sprzecznych //
+   Studia Societatis Scientiarum Torunensis. 1948. Sect. A, Vol. I, No. 5.
+4. van Fraassen B. C. Singular Terms, Truth-Value Gaps, and Free Logic //
+   Journal of Philosophy. 1966. Vol. 63, No. 17. P. 481–495.
+5. Kripke S. Outline of a Theory of Truth // Journal of Philosophy. 1975.
+   Vol. 72, No. 19. P. 690–716.
+6. Priest G. The Logic of Paradox // Journal of Philosophical Logic. 1979.
+   Vol. 8, No. 1. P. 219–241.
+7. Gupta A., Belnap N. The Revision Theory of Truth. Cambridge, MA: MIT
+   Press, 1993.
+8. Rosser J. B., Turquette A. R. Many-Valued Logics. Amsterdam:
+   North-Holland, 1952.
+9. Sette A. M. On the propositional calculus P1 // Mathematica Japonicae.
+   1973. Vol. 18. P. 173–180.
+10. Sette A. M., Carnielli W. A. Maximal weakly-intuitionistic logics //
+    Studia Logica. 1995. Vol. 55, No. 1. P. 181–203.
+11. Карпенко А. С., Томова Н. Е. Bochvar's three-valued logic and literal
+    paralogics: their lattice and functional equivalence // Logic and
+    Logical Philosophy. 2017. Vol. 26, No. 2. P. 207–235.
+12. Девяткин Л. Ю. Неклассические модификации многозначных матриц
+    классической логики. Часть I // Логические исследования. 2016. Т. 22,
+    № 2. С. 27–58.
+13. Libkin L. SQL's Three-Valued Logic and Certain Answers // ACM
+    Transactions on Database Systems. 2016. Vol. 41, No. 1. Article 1.
+14. Libkin L., Peterfreund L. SQL Nulls and Two-Valued Logic // Proc. PODS
+    2023. P. 11–20.
+15. Codd E. F. The Relational Model for Database Management: Version 2.
+    Reading, MA: Addison-Wesley, 1990.
+16. IEEE Standard for Floating-Point Arithmetic (IEEE 754-2019). IEEE, 2019.
+17. Denning D. E. A Lattice Model of Secure Information Flow //
+    Communications of the ACM. 1976. Vol. 19, No. 5. P. 236–243.
+18. Cousot P., Cousot R. Abstract Interpretation: A Unified Lattice Model
+    for Static Analysis of Programs // Proc. POPL 1977. P. 238–252.
+19. Dempster A. P. Upper and Lower Probabilities Induced by a Multivalued
+    Mapping // Annals of Mathematical Statistics. 1967. Vol. 38. P. 325–339.
+20. Shafer G. A Mathematical Theory of Evidence. Princeton: Princeton
+    University Press, 1976.
+21. Zadeh L. A. Review of Shafer's A Mathematical Theory of Evidence //
+    AI Magazine. 1984. Vol. 5, No. 3. P. 81–83.
+22. Smets P., Kennes R. The Transferable Belief Model // Artificial
+    Intelligence. 1994. Vol. 66. P. 191–234.
+23. Walley P. Statistical Reasoning with Imprecise Probabilities. London:
+    Chapman and Hall, 1991.
+24. Green T. J., Karvounarakis G., Tannen V. Provenance Semirings //
+    Proc. PODS 2007. P. 31–40.
+25. Hintikka J. Knowledge and Belief: An Introduction to the Logic of the
+    Two Notions. Ithaca: Cornell University Press, 1962.
+26. Ellsberg D. Risk, Ambiguity, and the Savage Axioms // Quarterly
+    Journal of Economics. 1961. Vol. 75, No. 4. P. 643–669.
+27. Hähnle R. Tableaux for Many-Valued Logics // Handbook of Tableau
+    Methods / Ed. M. D'Agostino et al. Dordrecht: Kluwer, 1999. P. 529–580.
+28. Yablo S. Paradox without Self-Reference // Analysis. 1993. Vol. 53,
+    No. 4. P. 251–252.
+29. Tarski A. The Concept of Truth in Formalized Languages (1933) //
+    Logic, Semantics, Metamathematics. Oxford: Clarendon Press, 1956.
+30. Varzi A. C. Supervaluationism and Its Logics // Mind. 2007. Vol. 116,
+    No. 463. P. 633–676.

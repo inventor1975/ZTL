@@ -44,6 +44,9 @@ STANDS = [
     ("zopsets.py",     ["IDENTITY IS TOTALLY EARNABLE", "dedup EARNED",
                         "SOUND about the facts: 0",
                         "hereditary-warranted 0", "ORTHOGONALITY"]),
+    ("zchoice.py",     ["mismatches 0", "violations 0 of",
+                        "stage verdicts revoked by one revealed bit: 0",
+                        "never T", "REDEEMED"]),
     ("tool/test_zfl.py", ["ZFL FOUNDATION GREEN"]),
 ]
 

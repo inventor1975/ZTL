@@ -659,7 +659,18 @@ again). The operational content is the **stipulation theorem**
 grounded part untouched): a component is UNDERDETERMINED iff
 stipulating any of its classical models grounds it cleanly, and PARADOX
 iff every decree contradicts the component's own definitions —
-liftable-by-choice versus permanent, mechanically separated. The parity
+liftable-by-choice versus permanent, mechanically separated. The
+passport is thereby a *biography* of the mark — there are exactly three
+ways to acquire it, and liftability follows genesis: **born** with the
+datum (INPUT — lifted by verification), **hardened** out of a solver
+phase that completed without resolving (UNDERDETERMINED — lifted by
+stipulation; PARADOX — lifted by nothing), or **inherited**
+(DOWNSTREAM — lifted with the culprits). "Completed" is a theorem, not
+a hope: the lazy iteration provably terminates within n+1 steps (§8,
+`ZGround`), so the phase N always dies — the liar is never "still
+computing"; the solver's verdict on it is final, and what is eternal
+is not the process but the refusal. (Contrast revision theory [7],
+where the process itself never settles.) The parity
 theorem of §11 re-derives through the passport (62 of 62 cycles), and
 Russell (§18) reads: R∈R — PARADOX, permanent; the twin S∈S —
 UNDERDETERMINED, awaiting an external decision; eight facts grounded.

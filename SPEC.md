@@ -347,7 +347,9 @@ contradiction.
   table identity (the anchor cell); but the GF(2) RING falls — unit,
   idempotence (the J_T detector) and ∧-over-⊕ distributivity all die
   on Z — so no multilinear canonical form: the normal-form role
-  belongs to the J-DNF (E14). Basis moves, ring stays.
+  belongs to the J-DNF (E14). Single-operator fates: {∧}+consts never
+  reaches ¬ (clone 7) yet births the J_T detector; SHEFFER'S STROKE
+  LOSES COMPLETENESS (18 of 514). Basis moves, ring stays.
 * `zopsets.py` — E21 operational sets (VR Part II, step (а)): finite
   SetsOp mirror (pointed reveal-graphs); identity totally earnable
   (T = checkable bisimulation witness, F = apartness at a finite

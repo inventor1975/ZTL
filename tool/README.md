@@ -30,9 +30,18 @@ python3 tool/ztlstudio.py        # → http://localhost:8190
 No dependencies (Python stdlib only; the core is imported from the
 repository root). The AI is optional: without a Groq key the studio
 runs in **pro mode** — write ZFL by hand in the middle panel. To
-enable the AI, set `GROQ_API_KEY` or put the key into `tool/.groq_key`
-(gitignored). Model override: `ZTL_GROQ_MODEL` (default
-`llama-3.3-70b-versatile`).
+enable the AI, open **⚙ Model** and choose a provider + model + key,
+or set an env var, or drop a key into `tool/.<provider>_key`
+(all gitignored). A stronger model formalizes cleaner — a weak model
+mis-encodes tricky cases (the crocodile came out as
+`imp(not(Tr(K)),Tr(C))` on llama instead of the clean
+`R:Tr(M), M:not(Tr(R))`).
+
+**Providers** (all keys stay on this machine): Groq, Anthropic
+(Claude), OpenAI, OpenRouter (any model it fronts), DeepSeek. Each has
+a default model you can override in Settings. Keys are read from, in
+order: the per-session Settings field, the env var
+(`GROQ_API_KEY`, `ANTHROPIC_API_KEY`, …), or `tool/.<provider>_key`.
 
 ## The three panels
 

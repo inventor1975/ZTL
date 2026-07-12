@@ -5,8 +5,12 @@ const chatBox = $("chat"), zflBox = $("zfl");
 let history = [];
 let lastRun = null;          // {zfl, back_reading, report}
 let explainHistory = [];
+let cfg = JSON.parse(localStorage.getItem("ztl_cfg") || "{}");  // {provider, model, key}
 
+const AI = new Set(["/api/chat", "/api/emit", "/api/repair",
+                    "/api/explain"]);
 async function api(path, payload) {
+  if (AI.has(path) && payload) payload = {...payload, cfg};
   try {
     const r = await fetch(path, payload === undefined ? {} : {
       method: "POST", headers: {"Content-Type": "application/json"},
@@ -201,3 +205,57 @@ function renderSystem(rep, out) {
     validate();
   };
 })();
+
+
+/* -------------------------------------------------------- settings */
+let providersList = [];
+async function loadProviders() {
+  const r = await api("/api/providers", {});
+  providersList = r.providers || [];
+  const sel = $("set-provider");
+  sel.innerHTML = "";
+  for (const p of providersList) {
+    const o = document.createElement("option");
+    o.value = p.provider;
+    o.textContent = p.label + (p.has_key ? " ✓" : " (no key)");
+    sel.appendChild(o);
+  }
+  if (cfg.provider) sel.value = cfg.provider;
+  syncSettings();
+}
+function currentProv() {
+  return providersList.find(p => p.provider === $("set-provider").value);
+}
+function syncSettings() {
+  const p = currentProv();
+  $("set-model").placeholder = p ? p.default_model : "default";
+  $("set-model").value = (cfg.provider === $("set-provider").value)
+    ? (cfg.model || "") : "";
+  $("set-status").textContent = p
+    ? (p.has_key ? "✓ a key is stored for this provider"
+                 : "no stored key — paste one or set the env var")
+    : "";
+  $("set-status").className = p && p.has_key ? "has-key" : "no-key";
+}
+$("btn-settings").onclick = () => { $("settings").classList.remove("hidden"); loadProviders(); };
+$("set-provider").onchange = syncSettings;
+$("set-close").onclick = () => {
+  cfg = {provider: $("set-provider").value,
+         model: $("set-model").value.trim(),
+         key: $("set-key").value.trim() || cfg.key || ""};
+  localStorage.setItem("ztl_cfg", JSON.stringify(cfg));
+  $("settings").classList.add("hidden");
+};
+$("set-save").onclick = async () => {
+  const key = $("set-key").value.trim();
+  if (!key) { $("set-status").textContent = "paste a key first"; return; }
+  const r = await api("/api/savekey",
+    {provider: $("set-provider").value, key});
+  $("set-status").textContent = r.ok ? "✓ saved to tool/." +
+    $("set-provider").value + "_key" : ("✗ " + r.error);
+  $("set-key").value = "";
+  cfg = {provider: $("set-provider").value,
+         model: $("set-model").value.trim(), key: ""};
+  localStorage.setItem("ztl_cfg", JSON.stringify(cfg));
+  loadProviders();
+};

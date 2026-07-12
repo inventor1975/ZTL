@@ -331,7 +331,10 @@ contradiction.
   re-derived; Russell/twin distinguished. Logic untouched:
   quarantine = (Z, passport). Preprint §9.
 
-* `tool/` — ZTLStudio: zfl.py (the Zero-trust Formal Language:
+* `tool/` — ZTLStudio: providers.py (multi-LLM layer: Groq / Anthropic
+  / OpenAI / OpenRouter / DeepSeek — OpenAI-compatible + Anthropic
+  families, keys from Settings/env/tool/.<provider>_key, 429 backoff);
+  zfl.py (the Zero-trust Formal Language:
   parser, validator with machine-readable errors for the AI repair
   loop, deterministic RU back-reading), engine.py (AI-free arbiter
   over ztl/zverify/zpassport), translator.py (Groq: understanding

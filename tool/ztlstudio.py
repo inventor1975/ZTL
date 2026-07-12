@@ -24,6 +24,7 @@ sys.path.insert(0, HERE)
 import zfl                    # noqa: E402
 import engine                 # noqa: E402
 import translator             # noqa: E402
+import providers              # noqa: E402
 
 PORT = 8190
 
@@ -94,7 +95,7 @@ def api_run(payload):
 def api_chat(payload):
     try:
         return {"ok": True, "reply": translator.understand(
-            payload.get("history", []))}
+            payload.get("history", []), payload.get("cfg"))}
     except translator.TranslatorError as e:
         return {"ok": False, "error": str(e)}
 
@@ -102,9 +103,29 @@ def api_chat(payload):
 def api_emit(payload):
     try:
         return {"ok": True, "zfl": translator.emit(
-            payload.get("understanding", ""))}
+            payload.get("understanding", ""), payload.get("cfg"))}
     except translator.TranslatorError as e:
         return {"ok": False, "error": str(e)}
+
+
+def api_providers(payload):
+    return {"ok": True, "providers": providers.available()}
+
+
+def api_savekey(payload):
+    """Persist a key into tool/.<provider>_key (gitignored). Optional
+    convenience — the UI can also pass keys per request without saving."""
+    prov = payload.get("provider", "")
+    key = (payload.get("key", "") or "").strip()
+    if prov not in providers.PROVIDERS:
+        return {"ok": False, "error": "unknown provider"}
+    if not key:
+        return {"ok": False, "error": "empty key"}
+    path = os.path.join(HERE, providers.PROVIDERS[prov][4])
+    with open(path, "w") as f:
+        f.write(key)
+    os.chmod(path, 0o600)
+    return {"ok": True, "saved": prov}
 
 
 def api_explain(payload):
@@ -112,7 +133,7 @@ def api_explain(payload):
         return {"ok": True, "reply": translator.explain(
             payload.get("zfl", ""), payload.get("back_reading", ""),
             payload.get("report", {}), payload.get("history", []),
-            payload.get("lang_hint", ""))}
+            payload.get("lang_hint", ""), payload.get("cfg"))}
     except translator.TranslatorError as e:
         return {"ok": False, "error": str(e)}
 
@@ -125,8 +146,9 @@ def api_repair(payload):
     if parsed is not None and not issues:
         return {"ok": True, "zfl": text, "note": "already valid"}
     try:
+        cfg = payload.get("cfg")
         for attempt in range(3):
-            text = translator.repair(text, issues)
+            text = translator.repair(text, issues, cfg)
             doc, parsed, issues = zfl.validate(text)
             if parsed is not None and not issues:
                 return {"ok": True, "zfl": text,
@@ -139,7 +161,8 @@ def api_repair(payload):
 
 ROUTES = {"/api/validate": api_validate, "/api/run": api_run,
           "/api/chat": api_chat, "/api/emit": api_emit,
-          "/api/repair": api_repair, "/api/explain": api_explain}
+          "/api/repair": api_repair, "/api/explain": api_explain,
+          "/api/providers": api_providers, "/api/savekey": api_savekey}
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -196,8 +219,9 @@ class Handler(BaseHTTPRequestHandler):
 
 if __name__ == "__main__":
     print(f"ZTLStudio: http://localhost:{PORT}")
-    if not translator.get_key():
-        print("No Groq key found (env GROQ_API_KEY or tool/.groq_key) — "
-              "pro mode (hand-written ZFL), the AI is off.")
+    if not translator.any_key():
+        print("No provider key found — pro mode (hand-written ZFL), the "
+              "AI is off. Add a key in Settings or drop it into "
+              "tool/.<provider>_key.")
     Timer(0.7, lambda: webbrowser.open(f"http://localhost:{PORT}")).start()
     HTTPServer(("127.0.0.1", PORT), Handler).serve_forever()

@@ -86,3 +86,20 @@ footer a { color: var(--dim); }
                 flex-direction: column; gap: .4rem; }
 .msg.exp { align-self: flex-start; background: #241f33;
            border-left: 3px solid var(--z); }
+
+#btn-settings { margin-left: .4rem; }
+#settings { position: fixed; inset: 0; background: rgba(0,0,0,.55);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 50; }
+#settings.hidden { display: none; }
+.settings-box { background: var(--panel); border: 1px solid var(--edge);
+                border-radius: 12px; padding: 1.2rem 1.4rem; width: 420px;
+                max-width: 92vw; display: flex; flex-direction: column;
+                gap: .6rem; }
+.settings-box h3 { margin: 0 0 .3rem; color: var(--accent); }
+.settings-box label { display: flex; flex-direction: column; gap: .2rem;
+                      font-size: .85rem; color: var(--dim); }
+.settings-box input, .settings-box select { font-size: .95rem; }
+.settings-box .dim { color: var(--dim); font-size: .8rem; margin: .1rem 0; }
+.settings-box code { color: var(--z); }
+.has-key { color: var(--ok); } .no-key { color: var(--warn); }

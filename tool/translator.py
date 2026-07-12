@@ -12,26 +12,8 @@ Cloudflare 1010; GROQ_API_KEY from the environment).
 
 import json
 import os
-import time
-import urllib.error
-import urllib.request
 
-API = "https://api.groq.com/openai/v1/chat/completions"
-MODEL = os.environ.get("ZTL_GROQ_MODEL", "llama-3.3-70b-versatile")
-KEY_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                        ".groq_key")
-
-
-def get_key():
-    """Env first; else the local untracked key file (the repo is public —
-    the key must never live in code)."""
-    key = os.environ.get("GROQ_API_KEY")
-    if key:
-        return key.strip()
-    if os.path.exists(KEY_FILE):
-        with open(KEY_FILE) as f:
-            return f.read().strip()
-    return None
+import providers
 
 ZFL_SPEC = """ZFL is the formal language of the ZTL core. Strict JSON:
 {"genre": "statement"|"system",
@@ -165,36 +147,27 @@ class TranslatorError(Exception):
     pass
 
 
-def groq(messages, temperature=0.2):
-    key = get_key()
-    if not key:
-        raise TranslatorError(
-            "No Groq key: set GROQ_API_KEY or put the key into "
-            "tool/.groq_key (gitignored). Running without AI for now "
-            "(pro mode: write ZFL by hand in the middle panel).")
-    body = json.dumps({"model": MODEL, "messages": messages,
-                       "temperature": temperature}).encode()
-    req = urllib.request.Request(API, data=body, headers={
-        "Authorization": f"Bearer {key}",
-        "Content-Type": "application/json",
-        "User-Agent": "ZTLStudio/1.0"})
-    for attempt in range(4):
-        try:
-            with urllib.request.urlopen(req, timeout=60) as r:
-                data = json.loads(r.read().decode())
-            return data["choices"][0]["message"]["content"].strip()
-        except urllib.error.HTTPError as e:
-            if e.code == 429 and attempt < 3:      # rate limit: breathe
-                time.sleep(15 * (attempt + 1))
-                continue
-            raise TranslatorError(f"Groq is unreachable: {e}")
-        except Exception as e:
-            raise TranslatorError(f"Groq is unreachable: {e}")
+def any_key():
+    """True if at least one provider has a usable key."""
+    return any(p["has_key"] for p in providers.available())
 
 
-def understand(history):
+def llm(messages, cfg, temperature=0.2):
+    """cfg: {provider, model, key} chosen in the UI (any field optional —
+    falls back to env / local key file / provider default)."""
+    cfg = cfg or {}
+    try:
+        return providers.chat(
+            messages, provider=cfg.get("provider", "groq"),
+            model=cfg.get("model", ""), key=cfg.get("key", ""),
+            temperature=temperature)
+    except providers.ProviderError as e:
+        raise TranslatorError(str(e))
+
+
+def understand(history, cfg=None):
     """history: [{'role': 'user'|'assistant', 'content': str}, ...]"""
-    return groq([{"role": "system", "content": UNDERSTAND_SYS}] + history)
+    return llm([{"role": "system", "content": UNDERSTAND_SYS}] + history, cfg)
 
 
 def strip_fences(s):
@@ -206,14 +179,14 @@ def strip_fences(s):
     return s.strip()
 
 
-def emit(understanding):
-    out = groq([{"role": "system", "content": EMIT_SYS},
+def emit(understanding, cfg=None):
+    out = llm([{"role": "system", "content": EMIT_SYS},
                 {"role": "user", "content":
                  f"The agreed understanding:\n{understanding}\n\n"
                  "Emit the ZFL. [Sentences are DEFINITIONS: a claim "
                  "'X holds iff PHI' becomes \"X\": \"PHI-formula\"; in "
                  "particular 'X iff not X' is {\"X\": \"not(Tr(X))\"}. "
-                 "Never emit xor(A,A) or xnor(A,A).]"}])
+                 "Never emit xor(A,A) or xnor(A,A).]"}], cfg)
     return strip_fences(out)
 
 
@@ -226,7 +199,7 @@ LANG_ANCHOR = ("\n\n[Reply strictly in the language of THIS message; "
                "the core answers, not you.]")
 
 
-def explain(zfl_text, back_reading, report, history, lang_hint=""):
+def explain(zfl_text, back_reading, report, history, lang_hint="", cfg=None):
     """history: follow-up chat about the result (may be empty);
     lang_hint: a sample of the user's own speech — the language anchor
     for the INITIAL explanation (the ZFL context is all-English and
@@ -246,14 +219,14 @@ def explain(zfl_text, back_reading, report, history, lang_hint=""):
         msgs.append(dict(m))
     if msgs[-1]["role"] == "user":
         msgs[-1]["content"] = msgs[-1]["content"] + LANG_ANCHOR
-    return groq(msgs, temperature=0.3)
+    return llm(msgs, cfg, temperature=0.3)
 
 
-def repair(zfl_text, issues):
+def repair(zfl_text, issues, cfg=None):
     errs = "\n".join(f"- [{i['level']}] {i['code']} @ {i['where']}: {i['hint']}"
                      for i in issues)
-    out = groq([{"role": "system", "content": REPAIR_SYS},
+    out = llm([{"role": "system", "content": REPAIR_SYS},
                 {"role": "user", "content":
                  f"ZFL:\n{zfl_text}\n\nValidator errors:\n{errs}\n\n"
-                 "Fix it and emit the ZFL."}])
+                 "Fix it and emit the ZFL."}], cfg)
     return strip_fences(out)

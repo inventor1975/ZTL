@@ -10,7 +10,28 @@
   <h1>ZTL<span>Studio</span></h1>
   <p class="motto">human → understanding → ZFL → the core · truth is never granted on credit</p>
   <select id="examples"><option value="">— examples —</option></select>
+  <button id="btn-settings" title="Model & key">⚙ Model</button>
 </header>
+
+<div id="settings" class="hidden">
+  <div class="settings-box">
+    <h3>Model &amp; key</h3>
+    <label>Provider
+      <select id="set-provider"></select></label>
+    <label>Model <small>(blank = provider default)</small>
+      <input id="set-model" type="text" placeholder="default" spellcheck="false"></label>
+    <label>API key <small>(kept locally; blank = use saved/env)</small>
+      <input id="set-key" type="password" placeholder="paste key…" spellcheck="false"></label>
+    <div class="row">
+      <button id="set-save">Save key locally</button>
+      <button id="set-close" class="accent">Use in session</button>
+    </div>
+    <p id="set-status" class="dim"></p>
+    <p class="dim">A stronger model formalizes cleaner. Keys never leave
+      this machine (env, <code>tool/.&lt;provider&gt;_key</code>, or this
+      session).</p>
+  </div>
+</div>
 
 <main>
   <!-- 1. Meta-chat -->

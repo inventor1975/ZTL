@@ -1,6 +1,8 @@
 # ZTL — Zero-Trust Logic
 
-**V. Reznik. Preprint, v1.1 — 2026-07-12. Concept DOI:
+**V. Reznik. Preprint, v1.1 — 2026-07-12.
+DOI: [10.5281/zenodo.21323552](https://doi.org/10.5281/zenodo.21323552);
+concept DOI:
 [10.5281/zenodo.21318981](https://doi.org/10.5281/zenodo.21318981)
 (v1.0: [10.5281/zenodo.21318982](https://doi.org/10.5281/zenodo.21318982)).
 v1.1 corrects §19: the verdict warranty is a two-grade ladder

@@ -20,5 +20,8 @@ identifiers:
     value: 10.5281/zenodo.21318981
     description: "Concept DOI (resolves to the latest preprint version)"
   - type: doi
+    value: 10.5281/zenodo.21323552
+    description: "Preprint v1.1 on Zenodo"
+  - type: doi
     value: 10.5281/zenodo.21318982
     description: "Preprint v1.0 on Zenodo"

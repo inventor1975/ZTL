@@ -1,13 +1,9 @@
 # Zenodo upload sheet — ZTL v1.1
 
-**v1.0 PUBLISHED 2026-07-12: DOI 10.5281/zenodo.21318982
-(concept DOI 10.5281/zenodo.21318981 — resolves to the latest
-version).**
-
-**v1.1 (this sheet): open the existing record → "New version" →
-upload the new PDF → update the fields marked below → Publish.
-After publication paste the new version DOI back here and into
-CITATION.cff / the preprint header (Claude will embed it).**
+**v1.1 PUBLISHED 2026-07-12: DOI 10.5281/zenodo.21323552
+(verified via the API: same concept 10.5281/zenodo.21318981, version
+index 1, is_last — the concept DOI now resolves to v1.1).
+v1.0: DOI 10.5281/zenodo.21318982.**
 
 Everything below is copy-paste material for the manual Zenodo upload
 (the curator publishes; this file only prepares).

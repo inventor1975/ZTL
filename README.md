@@ -51,10 +51,11 @@ python3 zquasi.py      # quasivariety recon: SI generator, clone theorem, Plonka
 python3 zipc.py        # the delta against intuitionism: G4ip vs the keel, incomparability
 python3 zopsets.py     # operational sets (VR Part II): witnessed identity as ZTL atoms
 python3 zchoice.py     # choice sequences (VR Part II): the stage court = lawless supervaluation
+python3 zzhegalkin.py  # Zhegalkin: the {∧,⊕} basis survives entirely, the GF(2) ring falls
 cd lean && lake build  # machine check of the core: zero axioms
 ```
 
-Full regression: `python3 run_all.py` (30 stands + Lean build).
+Full regression: `python3 run_all.py` (31 stands + Lean build).
 
 **ZTLStudio** (`tool/`): a local studio — a human states a paradox or
 a claim in natural language, the AI only *translates* (negotiated

@@ -47,6 +47,9 @@ STANDS = [
     ("zchoice.py",     ["mismatches 0", "violations 0 of",
                         "stage verdicts revoked by one revealed bit: 0",
                         "never T", "REDEEMED"]),
+    ("zzhegalkin.py",  ["SURVIVES ENTIRELY", "514 = 514",
+                        "x⊕x ≡ ⊥ on all three values ✓",
+                        "Zhegalkin-as-ring FALLS"]),
     ("tool/test_zfl.py", ["ZFL FOUNDATION GREEN"]),
 ]
 

@@ -341,6 +341,13 @@ contradiction.
   coincide 14/14 including both casualties; DP lost (measured witness
   + census); ¬¬ verdict-transparent (786-formula pool) vs Glivenko
   (27/27 proved). paper/delta-intuitionism.md.
+* `zzhegalkin.py` — E23 Zhegalkin under zero trust: the {∧,⊕}+consts
+  basis generates the FULL E19 clone (514 = 514; ¬ verbatim as x⊕⊤;
+  ∨/→/↔ reached through double-touch terms), and x⊕x ≡ ⊥ holds as a
+  table identity (the anchor cell); but the GF(2) RING falls — unit,
+  idempotence (the J_T detector) and ∧-over-⊕ distributivity all die
+  on Z — so no multilinear canonical form: the normal-form role
+  belongs to the J-DNF (E14). Basis moves, ring stays.
 * `zopsets.py` — E21 operational sets (VR Part II, step (а)): finite
   SetsOp mirror (pointed reveal-graphs); identity totally earnable
   (T = checkable bisimulation witness, F = apartness at a finite

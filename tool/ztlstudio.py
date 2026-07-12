@@ -111,7 +111,8 @@ def api_explain(payload):
     try:
         return {"ok": True, "reply": translator.explain(
             payload.get("zfl", ""), payload.get("back_reading", ""),
-            payload.get("report", {}), payload.get("history", []))}
+            payload.get("report", {}), payload.get("history", []),
+            payload.get("lang_hint", ""))}
     except translator.TranslatorError as e:
         return {"ok": False, "error": str(e)}
 

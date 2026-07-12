@@ -109,8 +109,9 @@ $("btn-run").onclick = async () => {
   const rep = r.report;
   if (rep.genre === "statement") renderStatement(rep, out);
   else renderSystem(rep, out);
+  const lastUser = [...history].reverse().find(m => m.role === "user");
   lastRun = {zfl: zflBox.value, back_reading: r.back_reading || "",
-             report: rep};
+             report: rep, lang_hint: lastUser ? lastUser.content : ""};
   explainHistory = [];
   $("explain-chat").innerHTML = "";
   $("explain-wrap").classList.remove("hidden");

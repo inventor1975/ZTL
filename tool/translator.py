@@ -191,13 +191,22 @@ LANG_ANCHOR = ("\n\n[Reply strictly in the language of THIS message; "
                "the core answers, not you.]")
 
 
-def explain(zfl_text, back_reading, report, history):
-    """history: follow-up chat about the result (may be empty)."""
+def explain(zfl_text, back_reading, report, history, lang_hint=""):
+    """history: follow-up chat about the result (may be empty);
+    lang_hint: a sample of the user's own speech — the language anchor
+    for the INITIAL explanation (the ZFL context is all-English and
+    would otherwise drag the reply into English)."""
     context = (f"ZFL:\n{zfl_text}\n\nBack-reading:\n{back_reading}\n\n"
                f"The core's report (JSON):\n{json.dumps(report, ensure_ascii=False)}")
+    if lang_hint:
+        first_anchor = (f"\n\n[The user speaks the language of this "
+                        f"phrase: \u201c{lang_hint[:200]}\u201d. Reply "
+                        f"STRICTLY in that language.]")
+    else:
+        first_anchor = LANG_ANCHOR
     msgs = [{"role": "system", "content": EXPLAIN_SYS},
             {"role": "user", "content": context +
-             "\n\nExplain the result in plain language." + LANG_ANCHOR}]
+             "\n\nExplain the result in plain language." + first_anchor}]
     for m in history:
         msgs.append(dict(m))
     if msgs[-1]["role"] == "user":

@@ -1,7 +1,12 @@
 # ZTL — Zero-Trust Logic
 
-**V. Reznik. Preprint, v1.0 — 2026-07-12.
-DOI: [10.5281/zenodo.21318982](https://doi.org/10.5281/zenodo.21318982).**
+**V. Reznik. Preprint, v1.1-draft (unpublished) — 2026-07-12; v1.0
+published as DOI:
+[10.5281/zenodo.21318982](https://doi.org/10.5281/zenodo.21318982).
+v1.1 corrects §19: the verdict warranty is a two-grade ladder
+(sound / hereditary); the v1.0 equivalence claim "stability ⟺
+invariance" was pool-relative — found and falsified by E21 (the
+identity atoms of VR Part II).**
 The tag MEASURED means "verified by machine enumeration" (code in this
 repository), as opposed to "argued"; references to Lean mean proofs
 checked by the Lean 4 kernel with an **empty axiom list**.
@@ -37,7 +42,9 @@ quantifiers; a modal identification (local
 modality over the S5 frame of completions — versus global
 supervaluation); a probabilistic identification (verdicts are the
 {0,1}-threshold of Dempster–Shafer belief functions); a theory of
-verification (a verdict is a pair "value + stability warranty") and of
+verification (a verdict is a pair "value + warranty", where the
+warranty is a two-grade ladder: sound — never lies; hereditary — never
+revoked) and of
 evidence combination (conflict is never renormalized — Zadeh's paradox
 is resolved in Smets' favor); and a quarantine passport that types
 every refusal by its genesis — paradox (permanent), intrinsic (the
@@ -1043,26 +1050,50 @@ ladder report) dies at p:=F. A verdict without a warranty is a Frege
 cell: an unfenced spot where a consumer who read T as "settled forever"
 builds on sand.
 
-**The fence is the stability bit**, and it turns out to be an old
-acquaintance: a verdict is stable ⟺ all completions give one classical
-answer — the global supervaluation of §17. Measured:
+**The fence is a warranty — and (corrected in v1.1) it is a ladder of
+two grades, not one bit.**
 
-* **The equivalence theorem** (totally, 90 formula×marking pairs):
-  stability-by-supervaluation ⟺ invariance of the verdict under every
-  sequence of verifications. The warranty is computable in one pass.
-* **Monotonicity**: a stable verdict is never revoked and never loses
-  stability under any verify (0 violations, totally).
-* **Classification**: the dangerous class "T-until-verification" is
-  exactly the ladder verdicts (¬¬p); default deny is
-  "F-until-verification".
+* **The SOUND grade** (the stability bit of v1.0): all completions
+  give one classical answer equal to the current greedy verdict — the
+  global supervaluation of §17. It buys *never lies*: a sound verdict
+  agrees with every possible resolution of the marks, so no truthful
+  verification can ever reveal it to have been false. Cheap: one pass
+  over the completions.
+* **The HEREDITARY grade**: the verdict is unchanged under *every
+  partial refinement* — any subset of the marks verified to any
+  classical values. It buys *never spoils*: no verification path can
+  revoke the verdict. Hereditary ⟹ sound (completions are among the
+  refinements); the converse is **false**.
 
-**Result: a verdict is a pair (value, warranty).** The value is greedy
-(local, fast); the warranty is supervaluational (global). The rivalry
-of the local and global modes (§17) resolves into cooperation: one
-gives the answer, the other its shelf life. Four verdict classes:
-stable T (build your house), T-until-verification (a ladder report,
-alive till the first check), stable F (an earned refutation),
-F-until-verification (default deny).
+**Correction of the v1.0 claim (MEASURED).** v1.0 asserted an
+equivalence — "stability-by-supervaluation ⟺ invariance under every
+sequence of verifications (totally, 90 formula×marking pairs)" — and
+a monotonicity corollary. Both were facts about that 10-formula pool,
+not laws. The separating shape, found by the identity atoms of the
+operational-sets expedition (E21) on a 3303-formula pool and
+cross-checked with this section's own instruments, is
+**or(ladder, gap)**:
+
+> ¬¬p ∨ (q ∨ ¬q) — greedy T via the ¬¬ ladder, insured by a gap that
+> is true in ALL completions yet greedy-F; verifying p:=F kicks the
+> ladder away before the gap closes. The verdict was sound — and died.
+> A simpler cell: (¬p) → (q→q), where the gap is the fallen law of
+> identity itself.
+
+Measured on the extended pool: hereditary-without-sound 0 (the ladder
+is real), sound-without-hereditary > 0 (the grades separate); the
+hereditary grade is monotone — never revoked, never degraded (0
+violations, totally) — while sound-only verdicts are revocable.
+
+**Result: a verdict is a pair (value, warranty grade).** The value is
+greedy (local, fast); the warranty grades are global. Six verdict
+classes now, and the honest advice differs by grade: **hereditary T —
+build your house** (no verification path can revoke it); **sound T —
+never a lie, but may stall to refusal before verification completes**;
+T-until-verification — a ladder report (¬¬p), alive till the first
+check; symmetrically for F, with F-until-verification as default deny.
+The Frege cell is fenced by the top grade only; the middle grade
+fences lying, not spoiling.
 
 ## 20. Evidence combination: conflict is not laundered (MEASURED)
 
@@ -1075,7 +1106,7 @@ intersection**. Measured:
   can itself earn a conflict (verify 7 against m∈[0,5] — the checker
   against the prior evidence).
 * **An empty intersection is an earned contradiction of sources** (a
-  stable F for the verdict "both are honest"), not noise for
+  sound F for the verdict "both are honest"), not noise for
   renormalization.
 * **Zadeh's paradox (1984), resolved in Smets' favor.** Two doctors
   almost exclude a tumor (0.01 each); Dempster's rule renormalizes the
@@ -1124,6 +1155,9 @@ syntactic cut-elimination procedure with complexity bounds
 (admissibility is settled — §5); the mining of the equivalent
 quasivariety scouted in §3.7 (axiomatization, subquasivariety lattice,
 a representation theorem replacing Plonka sums — a separate work);
+a cheap characterization of the hereditary warranty grade of §19
+(sound is one pass over completions; is hereditary computable without
+enumerating refinements? — open);
 a practical zero-trust validation library (verdicts with warranties +
 evidence combination + provenance). The interactive studio — natural
 language negotiated into ZFL and judged by the measured engines —

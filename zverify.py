@@ -1,20 +1,39 @@
 # -*- coding: utf-8 -*-
 """
-Expedition E12: the "verify" operation and verdict stability.
+Expedition E12: the "verify" operation and verdict warranties.
 
 THE NARROW PLACE: greedy verdicts are non-monotone under verification —
 both refusals flip (expected: default deny until checked) and T flips
 (dangerous: ¬¬p = T dies at p:=F). A verdict without a warranty is a
 Frege cell.
 
-THE CURE: the stability bit = global supervaluation (all completions
-give one classical answer coinciding with the verdict). Measurements:
-  1. A gallery of flips (including the death of T).
-  2. THE EQUIVALENCE THEOREM: stability-by-supervaluation ⟺ invariance
-     under ANY sequence of verifications (total).
-  3. Classification of the battery's verdicts: T/F × stable/until-verification.
-  4. Monotonicity: a stable verdict is never revoked by any verify.
-Conclusion for the tool: a verdict = a pair (value, warranty).
+THE CURE — REVISED 2026-07-12 (the E21 find, measured in zopsets.py and
+cross-checked here): the warranty is a LADDER OF TWO GRADES, not one bit.
+
+  * SOUND (the old stability bit; supervaluation): every completion
+    gives one classical answer equal to the current greedy verdict.
+    Buys: "never lies" — a sound verdict agrees with every possible
+    resolution of the marks. Cheap: one pass over the completions.
+  * HEREDITARY: the verdict is unchanged under EVERY partial refinement
+    (any subset of marks verified to any classical values). Buys:
+    "never spoils" — no verification path can revoke it. Costlier:
+    a pass over the refinements. Hereditary ⟹ sound (completions are
+    refinements); the converse is FALSE.
+
+The original E12 claim — "stability-by-supervaluation ⟺ invariance
+under any verifications" (90/90) — was POOL-RELATIVE: true on the
+original 10-formula pool, falsified by the or(ladder, gap) shape,
+e.g. ¬¬p ∨ (q∨¬q): greedy T via the ¬¬ ladder, insured by a gap that
+is true in ALL completions yet greedy-F; verifying p:=F kicks the
+ladder before the gap closes. This file now MEASURES the separation
+instead of the equivalence — the honest ledger:
+  1. A gallery of flips (including the death of T), with grades.
+  2. THE LADDER: hereditary ⟹ sound total; sound ⇏ hereditary —
+     witnesses exhibited (the old equivalence falsified).
+  3. Classification: T/F × hereditary / sound-only / until-verification.
+  4. Monotonicity: hereditary is never revoked and never loses its
+     grade (total); sound-only CAN be revoked — counted.
+Conclusion for the tool: a verdict = a pair (value, warranty GRADE).
 """
 
 from itertools import product
@@ -33,36 +52,47 @@ def verify(marking, atom, value):
 
 
 def stable_bit(phi, marking):
-    """Stability by supervaluation: all completions give one classical
-    answer equal to the current greedy verdict."""
+    """The SOUND grade (supervaluation): all completions give one
+    classical answer equal to the current greedy verdict. Guarantees
+    the verdict never lies about any resolution of the marks; does NOT
+    guarantee it survives intermediate verifications (see hereditary_bit)."""
     v = ztl_eval(phi, marking)
     return all(ev(phi, w) == v for w in worlds(marking))
 
 
-def invariant_under_all_verifications(phi, marking):
-    """True invariance: the verdict does not change under any sequence
-    of verifications (enumeration of all grounding paths)."""
-    v0 = ztl_eval(phi, marking)
+def refinements(marking):
+    """All partial refinements: any subset of the marks verified to any
+    classical values (the marking itself included). Subset-closed, so
+    order-free — this replaces the old fixed-order path recursion."""
     marks = [a for a, s in marking.items() if s == "M"]
+    for combo in product(("M", T, F), repeat=len(marks)):
+        m2 = dict(marking)
+        m2.update(zip(marks, combo))
+        yield m2
 
-    def rec(m, rest):
-        if ztl_eval(phi, m) != v0:
-            return False
-        if not rest:
-            return True
-        a = rest[0]
-        return all(rec(verify(m, a, val), rest[1:]) for val in (T, F))
 
-    # the order of verifications does not matter for enumerating the
-    # outcomes: all subsets are covered via recursion over a fixed list
-    # (each step takes both values; intermediate states checked at every step)
-    return rec(marking, marks)
+def hereditary_bit(phi, marking):
+    """The HEREDITARY grade: the verdict is unchanged under every
+    partial refinement. This is the true shelf-life warranty; it
+    implies the sound grade (completions are refinements)."""
+    v = ztl_eval(phi, marking)
+    return all(ztl_eval(phi, m2) == v for m2 in refinements(marking))
+
+
+def grade(phi, marking):
+    """The warranty grade of the current verdict."""
+    if hereditary_bit(phi, marking):
+        return "hereditary"
+    if stable_bit(phi, marking):
+        return "sound"
+    return "until-verification"
 
 
 if __name__ == "__main__":
     p, q = "p", "q"
     print("=" * 72)
-    print("E12. VERIFICATION AND STABILITY: fencing the Frege cell")
+    print("E12. VERIFICATION AND WARRANTIES: fencing the Frege cell")
+    print("     (revised: the warranty is a two-grade ladder — the E21 find)")
     print("=" * 72)
 
     print("\n### 1. A gallery of flips (p is a mark)")
@@ -77,66 +107,87 @@ if __name__ == "__main__":
     for nm, phi, val in gallery:
         v_before = ztl_eval(phi, m0)
         v_after = ztl_eval(phi, verify(m0, p, val))
-        st = stable_bit(phi, m0)
         flip = "FLIP" if v_before != v_after else "held"
         print(f"  {nm:10s} verdict {v_before} → verify(p:={val}) → {v_after}"
-              f"  [{flip}; stability bit: {'STABLE' if st else 'until-verification'}]")
+              f"  [{flip}; warranty: {grade(phi, m0)}]")
     print("  ¬¬p: the greedy T dies at p:=F — a T-verdict without a warranty is dangerous.")
-    print("  The stability bit predicted every flip and every hold.")
 
-    print("\n### 2. The equivalence theorem (total, 2 atoms)")
+    # the extended pool: the original ten + the or(ladder, gap) cells
     pool = [p, ("not", p), ("or", p, ("not", p)), ("not", ("not", p)),
             ("imp", p, q), ("and", p, ("not", q)), ("xnor", p, q),
             ("or", ("and", p, q), ("not", p)), ("xor", p, ("not", q)),
-            ("imp", ("not", ("not", p)), q)]
+            ("imp", ("not", ("not", p)), q),
+            ("or", ("not", ("not", p)), ("or", q, ("not", q))),   # the cell
+            ("imp", ("not", p), ("imp", q, q))]                   # the simpler cell
     markings = [dict(zip((p, q), c)) for c in product((T, F, "M"), repeat=2)]
-    total, mismatch = 0, 0
+
+    print("\n### 2. The ladder (total, extended pool incl. the E21 cells)")
+    total = her_not_sound = sound_not_her = 0
+    exhibits = []
     for phi in pool:
         for m in markings:
             total += 1
-            if stable_bit(phi, m) != invariant_under_all_verifications(phi, m):
-                mismatch += 1
-                print(f"  ✗ DIVERGENCE: {phi} at {m}")
-    print(f"  pairs checked (formula × marking): {total}; divergences: {mismatch}")
-    if mismatch == 0:
-        print("  ✓ STABILITY-BY-SUPERVALUATION ⟺ INVARIANCE UNDER ANY")
-        print("    VERIFICATIONS — the warranty is computable in one global pass.")
+            s, h = stable_bit(phi, m), hereditary_bit(phi, m)
+            her_not_sound += (h and not s)
+            if s and not h:
+                sound_not_her += 1
+                if len(exhibits) < 2 and ztl_eval(phi, m) == T \
+                        and all(v == "M" for v in m.values()):
+                    exhibits.append((phi, m))
+    print(f"  pairs checked (formula × marking): {total}")
+    print(f"  hereditary without sound: {her_not_sound} (must be 0 — "
+          f"hereditary ⟹ sound, completions are refinements)")
+    print(f"  sound without hereditary: {sound_not_her} (> 0 — THE GRADES "
+          f"SEPARATE;")
+    print("   the original E12 equivalence claim was pool-relative, falsified):")
+    for phi, m in exhibits:
+        m2 = verify(m, p, F)
+        print(f"    {phi}: verdict {ztl_eval(phi, m)} sound at all-marks, "
+              f"dies to {ztl_eval(phi, m2)} at p:=F")
+    assert her_not_sound == 0 and sound_not_her > 0
 
     print("\n### 3. Classification of the battery's verdicts (p, q are marks)")
     m2 = {p: "M", q: "M"}
     classes = {}
     for phi in pool:
-        v = ztl_eval(phi, m2)
-        st = stable_bit(phi, m2)
-        key = (v, st)
+        key = (ztl_eval(phi, m2), grade(phi, m2))
         classes.setdefault(key, []).append(phi)
-    for (v, st), fs in sorted(classes.items(), key=repr):
-        label = f"{v}-{'stable' if st else 'until-verification'}"
-        print(f"  {label:22s}: {len(fs)} formulas")
-    print("  The dangerous class — \"T-until-verification\" (ladder verdicts):")
-    for phi in classes.get((T, False), []):
-        print(f"    {phi}")
+    for (v, g), fs in sorted(classes.items(), key=repr):
+        print(f"  {v}-{g:18s}: {len(fs)} formulas")
+    print("  The dangerous classes: \"T-until-verification\" (ladder verdicts)")
+    print("  and now \"T-sound\" — true in every completion, yet the verdict")
+    print("  can still stall to refusal mid-verification:")
+    for phi in classes.get((T, "sound"), []):
+        print(f"    sound-only: {phi}")
 
-    print("\n### 4. Monotonicity of the stable (total)")
-    bad = 0
+    print("\n### 4. Monotonicity, per grade (total)")
+    her_bad = sound_revoked = 0
     for phi in pool:
         for m in markings:
-            if stable_bit(phi, m):
-                marks = [a for a, s in m.items() if s == "M"]
-                for a in marks:
-                    for val in (T, F):
-                        m2v = verify(m, a, val)
-                        if ztl_eval(phi, m2v) != ztl_eval(phi, m) or \
-                           not stable_bit(phi, m2v):
-                            bad += 1
-    print(f"  violations of stable-verdict monotonicity: {bad}")
-    print("  ✓ A stable verdict is never revoked and never loses stability.")
+            marks = [a for a, s in m.items() if s == "M"]
+            for a in marks:
+                for val in (T, F):
+                    m2v = verify(m, a, val)
+                    changed = ztl_eval(phi, m2v) != ztl_eval(phi, m)
+                    if hereditary_bit(phi, m) and \
+                            (changed or not hereditary_bit(phi, m2v)):
+                        her_bad += 1
+                    if stable_bit(phi, m) and not hereditary_bit(phi, m) \
+                            and changed:
+                        sound_revoked += 1
+    print(f"  hereditary: revocations or grade losses: {her_bad} (must be 0)")
+    print(f"  sound-only: revocations under a single verify: {sound_revoked} "
+          f"(> 0 — sound buys truth, not shelf life)")
+    assert her_bad == 0 and sound_revoked > 0
+    print("  ✓ A hereditary verdict is never revoked and never loses its grade.")
 
     print("\n### Conclusion for the tool")
-    print("  A verdict = a PAIR (value, warranty): the value is greedy (fast,")
-    print("  local), the warranty is supervaluational (one global pass over")
-    print("  the completions). \"Stable T\" — build your house; \"T until")
-    print("  verification\" — a ladder report, alive till the first check;")
-    print("  \"stable F\" — an earned refutation; \"F until verification\" —")
-    print("  default deny. The local and global modes (E10) are not rivals")
-    print("  but the answer and the warranty of one product. The Frege cell is fenced.")
+    print("  A verdict = a PAIR (value, warranty GRADE), and the grades are a")
+    print("  ladder: HEREDITARY T — build your house (no verification path")
+    print("  can revoke it); SOUND T — never a lie (every completion agrees)")
+    print("  but may stall to refusal before verification completes; T UNTIL")
+    print("  VERIFICATION — a ladder report, alive till the first check; the")
+    print("  same three grades for F (sound F — an earned-in-all-completions")
+    print("  refutation; F until verification — default deny). The Frege cell")
+    print("  is fenced by the TOP grade only; the middle grade fences lying,")
+    print("  not spoiling. Discovered by the identity atoms of VR Part II (E21).")

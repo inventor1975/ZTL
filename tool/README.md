@@ -112,7 +112,9 @@ list the AI repair loop consumes.
 ## What the core reports
 
 * **Statements:** the verdict (T/F — verdicts are always two-valued),
-  its **warranty** (stable / until-verification, §19 of the preprint),
+  its **warranty grade** (hereditary — no verification path can revoke
+  it / sound — never a lie, may still stall / until-verification;
+  §19 of the preprint),
   the passport of unverified inputs, and the completion table showing
   how the verdict behaves under every reading of the unverified atoms.
 * **Systems:** the grounded part (identical in every fixed point —

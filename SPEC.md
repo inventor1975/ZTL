@@ -280,11 +280,15 @@ contradiction.
   himself; both verdicts (∈ and ∉) are refusals; the twin S={x:x∈x}
   is the truth-teller. Containment instead of Frege's explosion.
   Preprint §18.
-* `zverify.py` — E12 verification: greedy verdicts are non-monotone
-  under further grounding (¬¬p: T dies!); the stability bit = global
-  supervaluation; THEOREM: stability ⟺ invariance under all
-  verifications (90/90); stable is monotone (0 violations); a verdict
-  = a pair (value, warranty) — the local and global modes cooperate.
+* `zverify.py` — E12 verification (REVISED 2026-07-12 by the E21 find):
+  greedy verdicts are non-monotone under further grounding (¬¬p: T
+  dies!); the warranty is a LADDER OF TWO GRADES: sound = global
+  supervaluation (buys "never lies"; cheap) ⊃ hereditary = invariance
+  under every partial refinement (buys "never spoils"; the only grade
+  that is monotone, 0 violations). The original claim "stability ⟺
+  invariance" (90/90) was pool-relative — falsified by the
+  or(ladder, gap) cells ¬¬p∨(q∨¬q) and (¬p)→(q→q); measured: the
+  grades separate. A verdict = a pair (value, warranty GRADE).
   Preprint §19. TODO.md — the saved list of remaining work.
 * `zcombine.py` — E13 combination: intersection of constraints; the
   unification theorem (verify = combine∘singleton); conflict is
@@ -330,6 +334,22 @@ contradiction.
   self-contradicts) measured totally on a mixed zoo; parity 62/62
   re-derived; Russell/twin distinguished. Logic untouched:
   quarantine = (Z, passport). Preprint §9.
+* `zipc.py` — E20 the delta against intuitionism: G4ip (Dyckhoff 1992,
+  calibrated on 27 canonical statuses) vs the keel; law-sets
+  INCOMPARABLE inside CPC (p→p and K fall here, weak LEM ¬p∨¬¬p —
+  Jankov's axiom — holds here); the 14 premised classical rules
+  coincide 14/14 including both casualties; DP lost (measured witness
+  + census); ¬¬ verdict-transparent (786-formula pool) vs Glivenko
+  (27/27 proved). paper/delta-intuitionism.md.
+* `zopsets.py` — E21 operational sets (VR Part II, step (а)): finite
+  SetsOp mirror (pointed reveal-graphs); identity totally earnable
+  (T = checkable bisimulation witness, F = apartness at a finite
+  separation stage); dedup earned ({∅,∅} ≈ {∅} — closing E5's
+  {Z,Z}≠{Z}); alive rules = witness constructors (refl/symm/trans/
+  congruence, 44 re-checked); cardinality intervals narrow
+  monotonically; lfp/gfp orthogonality (Ω ≈ Ω₂ earned while
+  IsGrounded(Ω) = False). Source of the E12 revision (the warranty
+  ladder).
 
 * `tool/` — ZTLStudio: providers.py (multi-LLM layer: Groq / Anthropic
   / OpenAI / OpenRouter / DeepSeek — OpenAI-compatible + Anthropic

@@ -38,8 +38,9 @@ MEASURED here:
      E12 pool lacks the or(ladder, gap) shape. What survives: the
      soundness half of the warranty. The true fence for shelf life is
      HEREDITARY invariance (verdict unchanged under every partial
-     refinement), measured here: 0 deaths, totally. Preprint §19
-     erratum is the curator's call.
+     refinement), measured here: 0 deaths, totally. Enacted 2026-07-12:
+     the two-grade warranty ladder is canon (zverify.py revised,
+     preprint §19 → v1.1, unpublished).
   5. Cardinality of a collection with unverified identity = an interval
      (E5/E8); truthful verification narrows it monotonically, and
      partition consistency (= witness composition) can earn the last
@@ -351,7 +352,9 @@ def run_verdicts():
           f"warranted T-verdicts are hereditary).")
     print("  → verdict = (value, warranty) stands, but the warranty splits:")
     print("    supervaluation buys soundness; only hereditary invariance buys")
-    print("    shelf life. Preprint §19 erratum — the curator's call.")
+    print("    shelf life. Curator's decision 2026-07-12: the warranty is a")
+    print("    two-grade ladder — canon in zverify.py; preprint §19 revised")
+    print("    for v1.1 (unpublished until the ship is checked further).")
 
 
 # ---------------------------------------------------------------------------
@@ -437,8 +440,9 @@ def main():
     print("narrows monotonically; set-cycles earn what sentence-cycles never")
     print("do. AND: the E12 warranty splits in two — supervaluation buys")
     print("soundness, only hereditary invariance buys shelf life (the")
-    print("equivalence theorem was pool-relative). Halt for the curator:")
-    print("warranty redefinition + preprint §19 erratum, then Lean SetsZTL.")
+    print("equivalence theorem was pool-relative). Enacted: the two-grade")
+    print("ladder is canon (zverify.py revised, preprint §19 → v1.1).")
+    print("Next: Lean SetsZTL in VRCycle.")
     print("=" * 72)
 
 

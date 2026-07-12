@@ -12,7 +12,7 @@ from itertools import product
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from ztl import T, F, Z, VALUES, ev                      # noqa: E402
-from zverify import stable_bit, ztl_eval                 # noqa: E402
+from zverify import grade, ztl_eval                      # noqa: E402
 from zpassport import passports, deps, component_models  # noqa: E402
 from zfl import to_statement, to_system                  # noqa: E402
 
@@ -31,17 +31,24 @@ def run_statement(doc, parsed):
     env, formula = to_statement(doc, parsed)
     value = ev(formula, env)
     marking = {a: (v if v in (T, F) else "M") for a, v in env.items()}
-    stable = stable_bit(formula, marking)
+    g = grade(formula, marking)
     z_atoms = sorted(a for a, v in env.items() if v == Z)
 
     if value == T:
-        cls = ("stable T — build on it" if stable
-               else "T until verification — a ladder report,"
-                    " alive till the first check")
+        cls = {"hereditary": "hereditary T — build on it: no verification"
+                             " path can revoke it",
+               "sound": "sound T — never a lie (every completion agrees),"
+                        " but the verdict may stall to refusal before"
+                        " verification completes",
+               "until-verification": "T until verification — a ladder report,"
+                                     " alive till the first check"}[g]
     else:
-        cls = ("stable F — an earned refutation" if stable
-               else "F until verification — default deny,"
-                    " refusal until the inputs are checked")
+        cls = {"hereditary": "hereditary F — no verification path can"
+                             " revoke the refusal",
+               "sound": "sound F — an earned-in-all-completions refutation,"
+                        " though the verdict may shift mid-verification",
+               "until-verification": "F until verification — default deny,"
+                                     " refusal until the inputs are checked"}[g]
 
     completions = []
     if 0 < len(z_atoms) <= 3:
@@ -55,7 +62,7 @@ def run_statement(doc, parsed):
     return {
         "genre": "statement",
         "verdict": value,
-        "warranty": "stable" if stable else "until-verification",
+        "warranty": g,
         "verdict_class": cls,
         "z_atoms": z_atoms,
         "passport": ("all atoms verified — the verdict is classical"

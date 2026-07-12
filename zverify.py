@@ -181,6 +181,29 @@ if __name__ == "__main__":
     assert her_bad == 0 and sound_revoked > 0
     print("  ✓ A hereditary verdict is never revoked and never loses its grade.")
 
+    print("\n### 5. The hereditary grade is NOT depth-1 testable")
+    # The overnight hunt of 2026-07-12 (151.8M formula-marking pairs,
+    # 4 atoms, depth 3) confirmed the ladder totally (hereditary⟹sound
+    # and hereditary monotonicity: 0 violations) and killed the cheap-
+    # characterization conjecture: one-step invariance does NOT imply
+    # heredity. The deterministic trophy cell, kept under regression:
+    phi4 = ("imp", ("xnor", "d", ("not", "c")),
+            ("imp", ("imp", "b", "a"), ("xnor", "b", "c")))
+    m4 = {"a": F, "b": "M", "c": "M", "d": "M"}
+    v4 = ztl_eval(phi4, m4)
+    marks4 = [a for a, s in m4.items() if s == "M"]
+    one_step = all(ztl_eval(phi4, {**m4, a: val}) == v4
+                   for a in marks4 for val in (T, F))
+    two_step = ztl_eval(phi4, {**m4, "b": F, "d": F})
+    print(f"  cell (d↔¬c)→((b→a)→(b↔c)) at a=F, b=c=d marked: verdict {v4}")
+    print(f"  invariant under EVERY single verification: {one_step}")
+    print(f"  killed by the pair b:=F, d:=F → {two_step}")
+    assert v4 == T and one_step and two_step != v4 \
+        and not hereditary_bit(phi4, m4)
+    print("  → no depth-1 fence exists for the hereditary grade: the")
+    print("    roadmap's open question (a cheap characterization) is")
+    print("    narrowed — any answer must look at least two moves deep.")
+
     print("\n### Conclusion for the tool")
     print("  A verdict = a PAIR (value, warranty GRADE), and the grades are a")
     print("  ladder: HEREDITARY T — build your house (no verification path")

@@ -23,12 +23,27 @@ async function api(path, payload) {
   }
 }
 
+function mdLite(text) {
+  let s = String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;");
+  s = s.replace(/\*\*([^*\n]+)\*\*/g, "<b>$1</b>");
+  s = s.split("\n").map(line => {
+    if (/^#{1,3}\s+/.test(line))
+      return "<b>" + line.replace(/^#{1,3}\s+/, "") + "</b>";
+    if (/^[-*]\s+/.test(line))
+      return "• " + line.replace(/^[-*]\s+/, "");
+    if (/^---+$/.test(line)) return "";
+    return line;
+  }).join("\n");
+  return s;
+}
+
 function addMsg(role, text) {
   const d = document.createElement("div");
   d.className = "msg " + role;
-  d.textContent = text;
+  d.innerHTML = mdLite(text);
   chatBox.appendChild(d);
   chatBox.scrollTop = chatBox.scrollHeight;
+  return d;
 }
 
 /* ---------------------------------------------------------- 1. chat */
@@ -125,7 +140,8 @@ $("btn-run").onclick = async () => {
 function addExp(role, text) {
   const d = document.createElement("div");
   d.className = "msg " + (role === "user" ? "user" : "exp");
-  d.textContent = text;
+  d.innerHTML = role === "user" ? mdLite(text).replace(/<b>|<\/b>/g, "")
+                                : mdLite(text);
   $("explain-chat").appendChild(d);
   $("explain-chat").scrollTop = $("explain-chat").scrollHeight;
   return d;

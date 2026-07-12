@@ -3,6 +3,8 @@
 const $ = id => document.getElementById(id);
 const chatBox = $("chat"), zflBox = $("zfl");
 let history = [];
+let lastRun = null;          // {zfl, back_reading, report}
+let explainHistory = [];
 
 async function api(path, payload) {
   try {
@@ -107,7 +109,43 @@ $("btn-run").onclick = async () => {
   const rep = r.report;
   if (rep.genre === "statement") renderStatement(rep, out);
   else renderSystem(rep, out);
+  lastRun = {zfl: zflBox.value, back_reading: r.back_reading || "",
+             report: rep};
+  explainHistory = [];
+  $("explain-chat").innerHTML = "";
+  $("explain-wrap").classList.remove("hidden");
+  await explainStep();       // the first, unprompted explanation
 };
+
+function addExp(role, text) {
+  const d = document.createElement("div");
+  d.className = "msg " + (role === "user" ? "user" : "exp");
+  d.textContent = text;
+  $("explain-chat").appendChild(d);
+  $("explain-chat").scrollTop = $("explain-chat").scrollHeight;
+  return d;
+}
+
+async function explainStep() {
+  const wait = addExp("exp", "…");
+  const r = await api("/api/explain", {...lastRun, history: explainHistory});
+  wait.remove();
+  if (!r.ok) { addExp("exp", r.error); return; }
+  addExp("exp", r.reply);
+  explainHistory.push({role: "assistant", content: r.reply});
+}
+
+$("btn-explain").onclick = async () => {
+  const q = $("explain-input").value.trim();
+  if (!q || !lastRun) return;
+  $("explain-input").value = "";
+  addExp("user", q);
+  explainHistory.push({role: "user", content: q});
+  await explainStep();
+};
+$("explain-input").addEventListener("keydown", e => {
+  if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); $("btn-explain").click(); }
+});
 
 function el(tag, html) { const d = document.createElement(tag); d.innerHTML = html; return d; }
 function esc(s) { return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;"); }

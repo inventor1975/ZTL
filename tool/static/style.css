@@ -76,3 +76,13 @@ th { color: var(--dim); font-weight: 400; }
 footer { text-align: center; color: var(--dim); font-size: .8rem;
          padding: .6rem 0 1rem; }
 footer a { color: var(--dim); }
+
+#explain-wrap { margin-top: .7rem; border-top: 1px dashed var(--edge);
+                padding-top: .5rem; }
+#explain-wrap.hidden { display: none; }
+#explain-wrap h3 { margin: 0 0 .4rem; font-size: .9rem; color: var(--z); }
+#explain-wrap h3 small { color: var(--dim); font-weight: 400; }
+#explain-chat { max-height: 300px; overflow-y: auto; display: flex;
+                flex-direction: column; gap: .4rem; }
+.msg.exp { align-self: flex-start; background: #241f33;
+           border-left: 3px solid var(--z); }

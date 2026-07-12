@@ -107,6 +107,15 @@ def api_emit(payload):
         return {"ok": False, "error": str(e)}
 
 
+def api_explain(payload):
+    try:
+        return {"ok": True, "reply": translator.explain(
+            payload.get("zfl", ""), payload.get("back_reading", ""),
+            payload.get("report", {}), payload.get("history", []))}
+    except translator.TranslatorError as e:
+        return {"ok": False, "error": str(e)}
+
+
 def api_repair(payload):
     doc, parsed, issues = zfl.validate(payload.get("zfl", ""))
     if parsed is not None:
@@ -121,7 +130,7 @@ def api_repair(payload):
 
 ROUTES = {"/api/validate": api_validate, "/api/run": api_run,
           "/api/chat": api_chat, "/api/emit": api_emit,
-          "/api/repair": api_repair}
+          "/api/repair": api_repair, "/api/explain": api_explain}
 
 
 class Handler(BaseHTTPRequestHandler):

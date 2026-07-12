@@ -49,7 +49,12 @@ enable the AI, set `GROQ_API_KEY` or put the key into `tool/.groq_key`
    AI; the **back-reading** (template-generated, no AI) verbalizes
    what is *actually* written, so the translation is audited by a
    component that cannot hallucinate.
-3. **Results** — validator issues and the core's report.
+3. **Results** — validator issues and the core's report, followed by
+   an **AI explanation chat**: the AI retells the formal verdict in
+   plain language and answers follow-up questions. The report is the
+   authority — the explainer is forbidden to re-judge, and its panel
+   is labeled *unverified by definition*: the pipeline applies its own
+   logic to itself.
 
 ## ZFL — the Zero-trust Formal Language
 

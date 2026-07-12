@@ -102,6 +102,38 @@ EMIT_SYS = ("You are the ZFL compiler. From the agreed understanding "
 REPAIR_SYS = ("You repair ZFL against validator errors. Emit ONLY the "
               "corrected ZFL JSON, no explanations.\n\n" + ZFL_SPEC)
 
+EXPLAIN_SYS = """You are the interpreter of the ZTL core's verdicts for
+a human. You receive the ZFL document, its deterministic back-reading
+and the core's formal report. THE REPORT IS THE AUTHORITY: never
+contradict it, never re-judge, never soften a PARADOX or promote a Z.
+Your job is to retell what the core established, in plain language.
+LANGUAGE RULE (strict): reply in the language of the MOST RECENT user
+message in the conversation; if there is none yet, use the language of
+the claim/notes inside the ZFL. Do not drift into the language of the
+technical context.
+
+Glossary you may rely on:
+- verdicts are always two-valued: T (truth was EARNED) / F (not earned);
+- warranty "stable" = no future verification can flip the verdict;
+  "until-verification" = it can flip when unverified inputs get checked;
+- passport kinds: PARADOX = no classical solutions, refusal permanent
+  (the oscillation period is diagnostics, not hope); UNDERDETERMINED =
+  several consistent solutions exist, an external choice (stipulation)
+  can ground it; INPUT = a plain unverified input, verification lifts
+  it; DOWNSTREAM = quarantine inherited from the listed culprits;
+- grounded sentences carry the same classical value in EVERY solution.
+
+If the user asks something the report does not answer, say honestly
+that the core was not asked that — and, when possible, show the EXACT
+ZFL change that would ask it. Any ZFL you show MUST be valid per the
+specification below: only the six connectives and Tr(name), nothing
+invented. NEVER predict what the core would say about a MODIFIED
+system — you are not the judge and you will guess wrong; show the
+edit and tell the user to run it: the core answers, not you.
+Be brief and concrete.
+
+""" + ZFL_SPEC
+
 
 class TranslatorError(Exception):
     pass
@@ -148,6 +180,29 @@ def emit(understanding):
                  f"The agreed understanding:\n{understanding}\n\n"
                  "Emit the ZFL."}])
     return strip_fences(out)
+
+
+LANG_ANCHOR = ("\n\n[Reply strictly in the language of THIS message; "
+               "for the initial explanation — in the language of the "
+               "claim/notes inside the ZFL. If this question asks what "
+               "would happen if the system or its inputs were CHANGED, "
+               "do NOT answer from your head — you would be guessing: "
+               "show the exact ZFL edit and say the core must be re-run; "
+               "the core answers, not you.]")
+
+
+def explain(zfl_text, back_reading, report, history):
+    """history: follow-up chat about the result (may be empty)."""
+    context = (f"ZFL:\n{zfl_text}\n\nBack-reading:\n{back_reading}\n\n"
+               f"The core's report (JSON):\n{json.dumps(report, ensure_ascii=False)}")
+    msgs = [{"role": "system", "content": EXPLAIN_SYS},
+            {"role": "user", "content": context +
+             "\n\nExplain the result in plain language." + LANG_ANCHOR}]
+    for m in history:
+        msgs.append(dict(m))
+    if msgs[-1]["role"] == "user":
+        msgs[-1]["content"] = msgs[-1]["content"] + LANG_ANCHOR
+    return groq(msgs, temperature=0.3)
 
 
 def repair(zfl_text, issues):

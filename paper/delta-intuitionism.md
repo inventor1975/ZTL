@@ -73,10 +73,11 @@ Three consequences worth stating plainly:
    Intermediate logics live between IPC and CPC; every one of them
    proves p→p. ZTL refuses p→p (an unverified input does not certify
    itself), so ZTL is not above IPC at all — it sits *beside* it,
-   inside CPC. The tabular kin of ZTL remain the Bochvar family
-   (preprint §4), not the Heyting family: the three-valued logics that
-   *are* intermediate (Gödel's G3, Dummett's LC₃) all validate
-   identity.
+   inside CPC. The tabular kin of ZTL remain the Bochvar family — a
+   post-hoc kinship, three tables of six, not a source (preprint §4,
+   the honest ledger) — and not the Heyting family: the three-valued
+   logics that *are* intermediate (Gödel's G3, Dummett's LC₃) all
+   validate identity.
 2. **Both directions of non-inclusion are witnessed**, so the
    incomparability is an existential fact, immune to battery choice.
 3. A nuance the preprint's price list makes easy to misread:

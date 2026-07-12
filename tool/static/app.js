@@ -260,6 +260,13 @@ function syncSettings() {
   $("set-status").className = p && p.has_key ? "has-key" : "no-key";
 }
 $("btn-settings").onclick = () => { $("settings").classList.remove("hidden"); loadProviders(); };
+$("set-x").onclick = () => $("settings").classList.add("hidden");
+$("settings").addEventListener("click", e => {
+  if (e.target === $("settings")) $("settings").classList.add("hidden");
+});
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape") $("settings").classList.add("hidden");
+});
 $("set-provider").onchange = syncSettings;
 $("set-close").onclick = () => {
   cfg = {provider: $("set-provider").value,

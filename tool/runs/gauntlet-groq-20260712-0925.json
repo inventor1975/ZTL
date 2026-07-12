@@ -1,0 +1,493 @@
+{
+ "provider": "groq",
+ "model": "(default)",
+ "when": "20260712-0925",
+ "total_ok": 13,
+ "total_bad": 4,
+ "cases": [
+  {
+   "name": "Лжец",
+   "intent": "Это предложение ложно.",
+   "expected": "PARADOX",
+   "understanding": "— СУЩНОСТИ/АТОМЫ: \"Это предложение ложно\" (один атом, не верифицированный);\n— АССЕРТИРОВАНО: предложение утверждает свою собственную ложность (самоотносится к истине);\n— ЖАНР: самоотносительная система;\n— ЗАПРОСИЛИ: является ли предложение истинным или ложным.\nЕсли понимание верно — нажмите кнопку «Agree → ZFL».",
+   "zfl_emitted": "{\"genre\": \"system\", \"sentences\": {\"X\": \"not(Tr(X))\"}, \"ask\": [\"passport\"]}",
+   "first_validation": [],
+   "report": {
+    "genre": "system",
+    "grounded": {},
+    "quarantined": [
+     "X"
+    ],
+    "passports": [
+     {
+      "component": [
+       "X"
+      ],
+      "kind": "PARADOX",
+      "kind_txt": "PARADOX — no classical solutions; refusal PERMANENT",
+      "detail": "no classical models; oscillation period 2; refusal PERMANENT"
+     }
+    ],
+    "stipulations": [],
+    "summary": "grounded 0 of 1; quarantined: X"
+   },
+   "got": "PARADOX",
+   "ok": true
+  },
+  {
+   "name": "Пиноккио",
+   "intent": "Пиноккио говорит: «Сейчас мой нос вырастет». Нос растёт тогда и только тогда, когда Пиноккио лжёт.",
+   "expected": "PARADOX",
+   "understanding": "— СУЩНОСТИ/АТОМЫ: \n  - \"Нос Пиноккио вырастет\" (UNVERIFIED);\n  - \"Пиноккио лжёт\" (UNVERIFIED).\n\n— УТВЕРЖДАЕТСЯ: \n  - Пиноккио утверждает, что его нос вырастет, что само по себе является утверждением о правде своего собственного высказывания (самореферентно).\n\n— ЖАНР: \n  - Самореферентная система, поскольку речь идёт о высказывании, говорящем о правде своего собственного высказывания.\n\n— СПРОШЕНО: \n  - Что происходит с носом Пиноккио, если его высказывание о том, что нос вырастет, является истинным или ложным.\n\nЕсли понимание верно — нажмите кнопку «Agree → ZFL».",
+   "zfl_emitted": "{\"genre\": \"system\", \"sentences\": {\"P\": \"Tr(P)\", \"N\": \"imp(Tr(P), Tr(N))\"}, \"ask\": [\"passport\", \"stipulations\"]}",
+   "first_validation": [],
+   "report": {
+    "genre": "system",
+    "grounded": {},
+    "quarantined": [
+     "N",
+     "P"
+    ],
+    "passports": [
+     {
+      "component": [
+       "P"
+      ],
+      "kind": "UNDERDETERMINED",
+      "kind_txt": "UNDERDETERMINED — refusal until an external choice",
+      "detail": "2 classical models; refusal until stipulation"
+     },
+     {
+      "component": [
+       "N"
+      ],
+      "kind": "DOWNSTREAM",
+      "kind_txt": "inherited from above (see the culprits)",
+      "detail": "culprits ['P'], refusal conditional"
+     }
+    ],
+    "stipulations": [
+     {
+      "component": [
+       "P"
+      ],
+      "models": [
+       "P=T",
+       "P=F"
+      ]
+     }
+    ],
+    "summary": "grounded 0 of 2; quarantined: N, P"
+   },
+   "got": "DOWNSTREAM, UNDERDETERMINED",
+   "ok": false
+  },
+  {
+   "name": "Правдолюб",
+   "intent": "Это предложение истинно.",
+   "expected": "UNDERDETERMINED",
+   "understanding": "— СУЩНОСТИ/АТОМЫ: \"Это предложение истинно\" (UNVERIFIED);\n— АССЕРТИРОВАНО: предложение утверждает свою собственную истинность (самореферентно к истине);\n— ЖАНР: самореферентная система;\n— ЗАПРОС: человек хочет знать, что такое это предложение.\nЕсли понимание верно — нажмите кнопку «Agree → ZFL».",
+   "zfl_emitted": "{\"genre\": \"system\", \"sentences\": {\"X\": \"Tr(X)\"}, \"ask\": [\"passport\"]}",
+   "first_validation": [],
+   "report": {
+    "genre": "system",
+    "grounded": {},
+    "quarantined": [
+     "X"
+    ],
+    "passports": [
+     {
+      "component": [
+       "X"
+      ],
+      "kind": "UNDERDETERMINED",
+      "kind_txt": "UNDERDETERMINED — refusal until an external choice",
+      "detail": "2 classical models; refusal until stipulation"
+     }
+    ],
+    "stipulations": [
+     {
+      "component": [
+       "X"
+      ],
+      "models": [
+       "X=T",
+       "X=F"
+      ]
+     }
+    ],
+    "summary": "grounded 0 of 1; quarantined: X"
+   },
+   "got": "UNDERDETERMINED",
+   "ok": true
+  },
+  {
+   "name": "Карусель Журдена",
+   "intent": "На одной стороне открытки написано: «Предложение на обороте истинно». На обороте: «Предложение на той стороне ложно».",
+   "expected": "PARADOX",
+   "understanding": "— СУЩНОСТИ/АТОМЫ: \n  - А: \"Предложение на обороте истинно\" (на одной стороне);\n  - Б: \"Предложение на той стороне ложно\" (на обороте).\n  Ни А, ни Б не верифицированы.\n\n— АССЕРТИВНЫЕ: \n  - Одна сторона утверждает, что предложение на обороте (Б) истинно;\n  - Оборот утверждает, что предложение на другой стороне (А) ложно.\n  Оба утверждения являются самореферентными по отношению к истине.\n\n— ЖАНР: Самореферентная система.\n\n— ЗАПРОС: Человек хочет знать, как оценить истинность этих предложений.\nЕсли понимание правильное — нажмите кнопку «Agree → ZFL».",
+   "zfl_emitted": "{\"genre\": \"system\", \"sentences\": {\"A\": \"Tr(B)\", \"B\": \"not(Tr(A))\"}, \"ask\": [\"passport\"]}",
+   "first_validation": [],
+   "report": {
+    "genre": "system",
+    "grounded": {},
+    "quarantined": [
+     "A",
+     "B"
+    ],
+    "passports": [
+     {
+      "component": [
+       "A",
+       "B"
+      ],
+      "kind": "PARADOX",
+      "kind_txt": "PARADOX — no classical solutions; refusal PERMANENT",
+      "detail": "no classical models; oscillation period 4; refusal PERMANENT"
+     }
+    ],
+    "stipulations": [],
+    "summary": "grounded 0 of 2; quarantined: A, B"
+   },
+   "got": "PARADOX",
+   "ok": true
+  },
+  {
+   "name": "Сократ и Платон",
+   "intent": "Платон говорит: «Сократ лжёт». Сократ говорит: «Платон говорит правду».",
+   "expected": "PARADOX",
+   "understanding": "— СУЩНОСТИ/АТОМЫ: \n  - Платон говорит, что Сократ лжёт (П)\n  - Сократ говорит, что Платон говорит правду (С)\n  - Оба утверждения не имеют явной верификации.\n\n— АССЕРТИВНЫЕ: \n  - Платон утверждает, что Сократ лжёт (самореферентно к истинности Сократа)\n  - Сократ утверждает, что Платон говорит правду (самореферентно к истинности Платона)\n\n— ЖАНР: \n  - Самореферентная система, поскольку оба утверждения говорят об истинности других утверждений.\n\n— ЗАПРОС: \n  - Человек хочет знать, как формализовать и понять эти взаимосвязанные утверждения в контексте ZTL.\n\nЕсли понимание верно — нажмите кнопку «Agree → ZFL».",
+   "zfl_emitted": "{\"genre\": \"system\", \"sentences\": {\"П\": \"not(Tr(С))\", \"С\": \"Tr(П)\"}, \"ask\": [\"passport\", \"stipulations\"]}",
+   "first_validation": [],
+   "report": {
+    "genre": "system",
+    "grounded": {},
+    "quarantined": [
+     "П",
+     "С"
+    ],
+    "passports": [
+     {
+      "component": [
+       "П",
+       "С"
+      ],
+      "kind": "PARADOX",
+      "kind_txt": "PARADOX — no classical solutions; refusal PERMANENT",
+      "detail": "no classical models; oscillation period 4; refusal PERMANENT"
+     }
+    ],
+    "stipulations": [],
+    "summary": "grounded 0 of 2; quarantined: П, С"
+   },
+   "got": "PARADOX",
+   "ok": true
+  },
+  {
+   "name": "Чётная пара",
+   "intent": "Два человека. Каждый говорит про другого: «он лжёт».",
+   "expected": "UNDERDETERMINED",
+   "understanding": "— СУЩНОСТИ/АТОМЫ: Человек А говорит, что человек Б лжёт; Человек Б говорит, что человек А лжёт. Ни одно из утверждений не является верифицированным.\n— УТВЕРЖДАЕТСЯ: Человек А утверждает, что человек Б лжёт (самореферентно к истинности утверждения человека Б); Человек Б утверждает, что человек А лжёт (самореферентно к истинности утверждения человека А).\n— ЖАНР: Самореферентная система.\n— СПРОСИТ: Какова истинность утверждений каждого человека?\nЕсли понимание верно — нажмите кнопку «Agree → ZFL».",
+   "zfl_emitted": "{\"genre\": \"system\", \n\"sentences\": {\"A\": \"not(Tr(B))\", \"B\": \"not(Tr(A))\"}, \n\"ask\": [\"passport\"]}",
+   "first_validation": [],
+   "report": {
+    "genre": "system",
+    "grounded": {},
+    "quarantined": [
+     "A",
+     "B"
+    ],
+    "passports": [
+     {
+      "component": [
+       "A",
+       "B"
+      ],
+      "kind": "UNDERDETERMINED",
+      "kind_txt": "UNDERDETERMINED — refusal until an external choice",
+      "detail": "2 classical models; refusal until stipulation"
+     }
+    ],
+    "stipulations": [
+     {
+      "component": [
+       "A",
+       "B"
+      ],
+      "models": [
+       "A=T, B=F",
+       "A=F, B=T"
+      ]
+     }
+    ],
+    "summary": "grounded 0 of 2; quarantined: A, B"
+   },
+   "got": "UNDERDETERMINED",
+   "ok": true
+  },
+  {
+   "name": "Пара правдолюбов",
+   "intent": "Два человека. Каждый говорит про другого: «он говорит правду».",
+   "expected": "UNDERDETERMINED",
+   "understanding": "— СУЩНОСТИ/АТОМЫ: \n  - А: Первый человек говорит правду.\n  - Б: Второй человек говорит правду.\n\n— УТВЕРЖДАЕТСЯ: \n  - Первый человек утверждает, что второй человек говорит правду (самоотносится к истине).\n  - Второй человек утверждает, что первый человек говорит правду (самоотносится к истине).\n\n— ЖАНР: Самоотносительная система.\n\n— СПРОСИТ: Что происходит, когда каждый человек говорит, что другой говорит правду?\n\nЕсли понимание верно — нажмите кнопку «Agree → ZFL».",
+   "zfl_emitted": "{\"genre\": \"system\", \"sentences\": {\"A\": \"Tr(B)\", \"B\": \"Tr(A)\"}, \"ask\": [\"passport\"]}",
+   "first_validation": [],
+   "report": {
+    "genre": "system",
+    "grounded": {},
+    "quarantined": [
+     "A",
+     "B"
+    ],
+    "passports": [
+     {
+      "component": [
+       "A",
+       "B"
+      ],
+      "kind": "UNDERDETERMINED",
+      "kind_txt": "UNDERDETERMINED — refusal until an external choice",
+      "detail": "2 classical models; refusal until stipulation"
+     }
+    ],
+    "stipulations": [
+     {
+      "component": [
+       "A",
+       "B"
+      ],
+      "models": [
+       "A=T, B=T",
+       "A=F, B=F"
+      ]
+     }
+    ],
+    "summary": "grounded 0 of 2; quarantined: A, B"
+   },
+   "got": "UNDERDETERMINED",
+   "ok": true
+  },
+  {
+   "name": "Карри",
+   "intent": "Предложение гласит: «Если это предложение истинно, то ложь». Никакого отрицания в нём нет, только импликация.",
+   "expected": "PARADOX",
+   "understanding": "— СУЩНОСТИ/АТОМЫ: предложение \"Если это предложение истинно, то ложь\" как целое; \n— УТВЕРЖДАЕТСЯ: предложение утверждает свою собственную ложность (самоотносится к истинности);\n— ЖАНР: самоотносительная система;\n— СПРОСИТо: является ли предложение истинным или ложным.\nЕсли понимание верно — нажмите кнопку «Agree → ZFL».",
+   "zfl_emitted": "{\"genre\":\"system\",\"sentences\":{\"X\":\"not(Tr(X))\"},\"ask\":[\"passport\"]}",
+   "first_validation": [],
+   "report": {
+    "genre": "system",
+    "grounded": {},
+    "quarantined": [
+     "X"
+    ],
+    "passports": [
+     {
+      "component": [
+       "X"
+      ],
+      "kind": "PARADOX",
+      "kind_txt": "PARADOX — no classical solutions; refusal PERMANENT",
+      "detail": "no classical models; oscillation period 2; refusal PERMANENT"
+     }
+    ],
+    "stipulations": [],
+    "summary": "grounded 0 of 1; quarantined: X"
+   },
+   "got": "PARADOX",
+   "ok": true
+  },
+  {
+   "name": "Крокодил (пессимистка)",
+   "intent": "Крокодил вернёт ребёнка тогда и только тогда, когда мать угадает, что он сделает. Мать: «ты не вернёшь».",
+   "expected": "PARADOX",
+   "understanding": "— СУЩНОСТИ/АТОМЫ: \n  - Крокодил вернёт ребёнка (UNVERIFIED)\n  - Мать угадает, что сделает крокодил (UNVERIFIED)\n— УТВЕРЖДАЕТСЯ: \n  - Мать утверждает, что крокодил не вернёт ребёнка (самореферентно к истине)\n— ЖАНР: \n  - Самореферентная система\n— СПРОСИТ: \n  - Будет ли крокодил возвращать ребёнка\nЕсли понимание правильное — нажмите кнопку «Agree → ZFL».",
+   "zfl_emitted": "{\"genre\": \"system\", \"sentences\": {\"C\": \"Tr(M)\", \"M\": \"not(Tr(C))\"}, \"ask\": [\"passport\", \"stipulations\"]}",
+   "first_validation": [],
+   "report": {
+    "genre": "system",
+    "grounded": {},
+    "quarantined": [
+     "C",
+     "M"
+    ],
+    "passports": [
+     {
+      "component": [
+       "C",
+       "M"
+      ],
+      "kind": "PARADOX",
+      "kind_txt": "PARADOX — no classical solutions; refusal PERMANENT",
+      "detail": "no classical models; oscillation period 4; refusal PERMANENT"
+     }
+    ],
+    "stipulations": [],
+    "summary": "grounded 0 of 2; quarantined: C, M"
+   },
+   "got": "PARADOX",
+   "ok": true
+  },
+  {
+   "name": "Крокодил (оптимистка)",
+   "intent": "Крокодил вернёт ребёнка тогда и только тогда, когда мать угадает, что он сделает. Мать: «ты вернёшь».",
+   "expected": "UNDERDETERMINED",
+   "understanding": "— СУЩНОСТИ/АТОМЫ: \n  - Крокодил вернёт ребёнка (UNVERIFIED).\n  - Мать угадала, что крокодил сделает (UNVERIFIED).\n— УТВЕРЖДАЕТСЯ: \n  - Мать утверждает, что крокодил вернёт ребёнка.\n— ЖАНР: \n  - Самореферентная система (крокодил вернёт ребёнка в зависимости от того, что мать угадает).\n— СПРОСИТ: \n  - Будет ли крокодил возвращать ребёнка?\n\nЕсли понимание верно — нажмите кнопку «Agree → ZFL».",
+   "zfl_emitted": "{\"genre\":\"system\",\"sentences\":{\"C\":\"Tr(M)\",\"M\":\"Tr(C)\"},\"ask\":[\"passport\",\"stipulations\"]}",
+   "first_validation": [],
+   "report": {
+    "genre": "system",
+    "grounded": {},
+    "quarantined": [
+     "C",
+     "M"
+    ],
+    "passports": [
+     {
+      "component": [
+       "C",
+       "M"
+      ],
+      "kind": "UNDERDETERMINED",
+      "kind_txt": "UNDERDETERMINED — refusal until an external choice",
+      "detail": "2 classical models; refusal until stipulation"
+     }
+    ],
+    "stipulations": [
+     {
+      "component": [
+       "C",
+       "M"
+      ],
+      "models": [
+       "C=T, M=T",
+       "C=F, M=F"
+      ]
+     }
+    ],
+    "summary": "grounded 0 of 2; quarantined: C, M"
+   },
+   "got": "UNDERDETERMINED",
+   "ok": true
+  },
+  {
+   "name": "Брадобрей",
+   "intent": "Брадобрей бреет всех, кто не бреет себя сам, и только их. Бреет ли он себя?",
+   "expected": "PARADOX",
+   "understanding": "— СУЩНОСТИ/АТОМЫ: брадобрей бреет себя, брадобрей бреет всех, кто не бреет себя сам;\n— УТВЕРЖДАЕТСЯ: брадобрей утверждает, что бреет всех, кто не бреет себя сам;\n— ЖАНР: самореферентная система;\n— СПРОСИТ: бреет ли брадобрей себя.\nЕсли понимание правильное — нажмите кнопку «Agree → ZFL».",
+   "zfl_emitted": "{\"genre\": \"system\", \"sentences\": {\"B\": \"not(Tr(B))\"}, \"ask\": [\"passport\"]}",
+   "first_validation": [],
+   "report": {
+    "genre": "system",
+    "grounded": {},
+    "quarantined": [
+     "B"
+    ],
+    "passports": [
+     {
+      "component": [
+       "B"
+      ],
+      "kind": "PARADOX",
+      "kind_txt": "PARADOX — no classical solutions; refusal PERMANENT",
+      "detail": "no classical models; oscillation period 2; refusal PERMANENT"
+     }
+    ],
+    "stipulations": [],
+    "summary": "grounded 0 of 1; quarantined: B"
+   },
+   "got": "PARADOX",
+   "ok": true
+  },
+  {
+   "name": "Рассел",
+   "intent": "Множество R всех множеств, не содержащих себя. Вселенная: a = пустое множество, b = {b}, и само R. Содержит ли R себя?",
+   "expected": "PARADOX",
+   "understanding": "— СУЩНОСТИ/АТОМЫ: a — пустое множество, b = {b}, R — множество всех множеств, не содержащих себя; \n— АССЕРТИВНЫЕ: утверждается, что R содержит все множества, не содержащие себя;\n— ЖАНР: самореферентная система;\n— ЗАПРОС: содержит ли R себя.\nЕсли понимание верно — нажмите кнопку «Agree → ZFL».",
+   "zfl_emitted": "{\"genre\": \"system\", \"sentences\": {\n\"a_in_a\": \"F\",\n\"a_in_b\": \"F\",\n\"a_in_R\": \"T\",\n\"b_in_a\": \"F\",\n\"b_in_b\": \"T\",\n\"b_in_R\": \"F\",\n\"R_in_a\": \"F\",\n\"R_in_b\": \"F\",\n\"R_in_R\": \"not(Tr(R_in_R))\"},\n\"ask\": [\"passport\"]}",
+   "first_validation": [],
+   "report": {
+    "genre": "system",
+    "grounded": {
+     "R_in_a": "F",
+     "R_in_b": "F",
+     "a_in_R": "T",
+     "a_in_a": "F",
+     "a_in_b": "F",
+     "b_in_R": "F",
+     "b_in_a": "F",
+     "b_in_b": "T"
+    },
+    "quarantined": [
+     "R_in_R"
+    ],
+    "passports": [
+     {
+      "component": [
+       "R_in_R"
+      ],
+      "kind": "PARADOX",
+      "kind_txt": "PARADOX — no classical solutions; refusal PERMANENT",
+      "detail": "no classical models; oscillation period 2; refusal PERMANENT"
+     }
+    ],
+    "stipulations": [],
+    "summary": "grounded 8 of 9; quarantined: R_in_R"
+   },
+   "got": "PARADOX",
+   "ok": true
+  },
+  {
+   "name": "Ябло-обрезка",
+   "intent": "Три предложения по порядку. Первое: «оба следующих ложны». Второе: «следующее ложно». Третье: «снег белый» (заведомо истинно).",
+   "expected": "grounded, no quarantine",
+   "understanding": "— СУЩНОСТИ/АТОМЫ: три предложения: \"оба следующих ложны\", \"следующее ложно\", \"снег белый\"; первое и второе предложения имеют неопределённый статус, третье предложение заведомо истинно.\n— УТВЕРЖДАЕТСЯ: первое предложение утверждает, что второе и третье предложения ложны; второе предложение утверждает, что третье предложение ложно; третье предложение является простым утверждением.\n— ЖАНР: самореферентная система, поскольку первые два предложения говорят о истинности/ложности последующих предложений.\n— СПРОСИТО: какова истинность каждого из трёх предложений.\nЕсли понимание верно — нажмите кнопку «Agree → ZFL».",
+   "zfl_emitted": "{\"genre\": \"system\", \n\"sentences\": {\n  \"A\": \"and(not(Tr(B)), not(Tr(C)))\", \n  \"B\": \"not(Tr(C))\", \n  \"C\": \"T\"\n}, \n\"ask\": [\"passport\"]}",
+   "first_validation": [],
+   "report": {
+    "genre": "system",
+    "grounded": {
+     "A": "F",
+     "B": "F",
+     "C": "T"
+    },
+    "quarantined": [],
+    "passports": [],
+    "stipulations": [],
+    "summary": "grounded 3 of 3; quarantined: none"
+   },
+   "got": "",
+   "ok": true
+  },
+  {
+   "name": "Эпименид",
+   "intent": "Критянин Эпименид говорит: «Всё, что говорят критяне, — ложь». Это его единственное высказывание.",
+   "expected": "informative (any hardened kind)",
+   "understanding": "— СУЩНОСТИ/АТОМЫ: высказывание Эпименида «Всё, что говорят критяне, — ложь» (UNVERIFIED);\n— ЗАЯВЛЕНО: Эпименид утверждает, что всё, что говорят критяне, — ложь (самоотносительное высказывание, относящееся к своей собственной истинности);\n— ЖАНР: самоотносительная система;\n— ЗАПРОШЕНО: определить истинность высказывания Эпименида.\nЕсли понимание правильное — нажмите кнопку «Agree → ZFL».",
+   "stage": "emit_fail",
+   "error": "HTTP 429: {\"error\":{\"message\":\"Rate limit reached for model `llama-3.3-70b-versatile` in organization `org_01kp3w55kmf5r9fbza66f8m0ch` service tier `on_demand` on tokens per day (TPD): Limit 100000, Used 99511,"
+  },
+  {
+   "name": "Датчик",
+   "intent": "Непроверенный датчик показывает перегрев. Если перегрев, то сработает защита. Сработает ли защита?",
+   "expected": "statement: F until-verification",
+   "stage": "chat_fail",
+   "error": "HTTP 429: {\"error\":{\"message\":\"Rate limit reached for model `llama-3.3-70b-versatile` in organization `org_01kp3w55kmf5r9fbza66f8m0ch` service tier `on_demand` on tokens per day (TPD): Limit 100000, Used 99399,"
+  },
+  {
+   "name": "Берри",
+   "intent": "Наименьшее натуральное число, которое нельзя описать менее чем тринадцатью словами. Я его только что описал двенадцатью.",
+   "expected": "REFUSED",
+   "understanding": "HTTP 429: {\"error\":{\"message\":\"Rate limit reached for model `llama-3.3-70b-versatile` in organization `org_01kp3w55kmf5r9fbza66f8m0ch` service tier `on_demand` on tokens per day (TPD): Limit 100000, Used 99287,",
+   "got": "accepted",
+   "ok": false
+  },
+  {
+   "name": "Сорит (куча)",
+   "intent": "Одно зерно — не куча. Если n зёрен не куча, то и n+1 не куча. Значит, миллион зёрен — не куча?",
+   "expected": "REFUSED",
+   "understanding": "Это не формализуется в пропозициональную ZTL без потери сути (здесь: количественная индукция над числом зёрен). Хотите ли вы остановиться или согласиться на упрощённую логическую тень (перечислив явно, что будет потеряно)?",
+   "got": "REFUSED",
+   "ok": true
+  }
+ ]
+}

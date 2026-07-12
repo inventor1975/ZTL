@@ -24,22 +24,26 @@ import urllib.request
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 
-# name -> (family, url, default model, env var, key-file basename, label)
+# name -> (family, url, default model, env var, key-file, label, key-console)
 PROVIDERS = {
     "groq": ("openai", "https://api.groq.com/openai/v1/chat/completions",
-             "llama-3.3-70b-versatile", "GROQ_API_KEY", ".groq_key", "Groq"),
+             "llama-3.3-70b-versatile", "GROQ_API_KEY", ".groq_key", "Groq",
+             "https://console.groq.com/keys"),
     "anthropic": ("anthropic", "https://api.anthropic.com/v1/messages",
                   "claude-haiku-4-5-20251001", "ANTHROPIC_API_KEY",
-                  ".anthropic_key", "Anthropic (Claude)"),
+                  ".anthropic_key", "Anthropic (Claude)",
+                  "https://console.anthropic.com/settings/keys"),
     "openai": ("openai", "https://api.openai.com/v1/chat/completions",
-               "gpt-4o", "OPENAI_API_KEY", ".openai_key", "OpenAI"),
+               "gpt-4o", "OPENAI_API_KEY", ".openai_key", "OpenAI",
+               "https://platform.openai.com/api-keys"),
     "openrouter": ("openai",
                    "https://openrouter.ai/api/v1/chat/completions",
                    "anthropic/claude-sonnet-4", "OPENROUTER_API_KEY",
-                   ".openrouter_key", "OpenRouter (any model)"),
+                   ".openrouter_key", "OpenRouter (any model)",
+                   "https://openrouter.ai/keys"),
     "deepseek": ("openai", "https://api.deepseek.com/v1/chat/completions",
                  "deepseek-chat", "DEEPSEEK_API_KEY", ".deepseek_key",
-                 "DeepSeek"),
+                 "DeepSeek", "https://platform.deepseek.com/api_keys"),
 }
 
 
@@ -51,7 +55,7 @@ def get_key(provider):
     """Env var first, then the local untracked key file."""
     if provider not in PROVIDERS:
         return None
-    _, _, _, env, keyfile, _ = PROVIDERS[provider]
+    env, keyfile = PROVIDERS[provider][3], PROVIDERS[provider][4]
     key = os.environ.get(env)
     if key:
         return key.strip()
@@ -65,9 +69,10 @@ def get_key(provider):
 def available():
     """[{provider, label, default_model, has_key}] for the settings UI."""
     out = []
-    for name, (_, _, model, _, _, label) in PROVIDERS.items():
-        out.append({"provider": name, "label": label,
-                    "default_model": model, "has_key": bool(get_key(name))})
+    for name, tup in PROVIDERS.items():
+        out.append({"provider": name, "label": tup[5],
+                    "default_model": tup[2], "has_key": bool(get_key(name)),
+                    "console": tup[6]})
     return out
 
 
@@ -96,7 +101,8 @@ def chat(messages, provider="groq", model="", key="", temperature=0.2):
     """messages: [{role: system|user|assistant, content}]. Returns text."""
     if provider not in PROVIDERS:
         raise ProviderError(f"unknown provider: {provider}")
-    family, url, default_model, _, _, label = PROVIDERS[provider]
+    family, url, default_model, label = (PROVIDERS[provider][0],
+        PROVIDERS[provider][1], PROVIDERS[provider][2], PROVIDERS[provider][5])
     model = (model or "").strip() or default_model
     key = (key or "").strip() or get_key(provider)
     if not key:

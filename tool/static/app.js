@@ -228,6 +228,12 @@ function currentProv() {
 }
 function syncSettings() {
   const p = currentProv();
+  const link = $("set-console");
+  if (p && p.console) {
+    link.href = p.console;
+    link.textContent = p.label.replace(/\s*\(.*\)/, "") + " console ↗";
+    link.style.display = "";
+  } else { link.style.display = "none"; }
   $("set-model").placeholder = p ? p.default_model : "default";
   $("set-model").value = (cfg.provider === $("set-provider").value)
     ? (cfg.model || "") : "";

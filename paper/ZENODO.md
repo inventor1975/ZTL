@@ -1,13 +1,18 @@
-# Zenodo upload sheet — ZTL v1.0
+# Zenodo upload sheet — ZTL v1.1
 
-**PUBLISHED 2026-07-12: DOI 10.5281/zenodo.21318982
+**v1.0 PUBLISHED 2026-07-12: DOI 10.5281/zenodo.21318982
 (concept DOI 10.5281/zenodo.21318981 — resolves to the latest
 version).**
+
+**v1.1 (this sheet): open the existing record → "New version" →
+upload the new PDF → update the fields marked below → Publish.
+After publication paste the new version DOI back here and into
+CITATION.cff / the preprint header (Claude will embed it).**
 
 Everything below is copy-paste material for the manual Zenodo upload
 (the curator publishes; this file only prepares).
 
-**File to upload:** `paper/ZTL-preprint-v1.0.pdf` (19 pages)
+**File to upload:** `paper/ZTL-preprint-v1.1.pdf` (18 pages)
 
 ---
 
@@ -17,7 +22,7 @@ Everything below is copy-paste material for the manual Zenodo upload
 
 **Authors:** Reznik, Vitaly
 
-**Version:** 1.0
+**Version:** 1.1
 
 **License:** Creative Commons Attribution 4.0 International (CC BY 4.0)
 
@@ -42,8 +47,9 @@ external layer, a definable implication with the full deduction
 theorem, Craig interpolation, and the Blok–Pigozzi conditions verified
 on the matrix (ZTL is algebraizable, yet not self-extensional);
 quantifiers over finite and arbitrary domains; modal and probabilistic
-identifications; a theory of verification (a verdict is a pair "value
-+ stability warranty") and of evidence combination (conflict is never
+identifications; a theory of verification (a verdict is a pair "value + warranty",
+where the warranty is a two-grade ladder: sound — never lies;
+hereditary — never revoked) and of evidence combination (conflict is never
 renormalized); and a quarantine passport typing every refusal by its
 genesis — paradox, intrinsic, underdetermined, unverified input,
 inherited — with a measured stipulation theorem. The classical
@@ -54,7 +60,7 @@ explosion.
 The entire development — ten Lean 4 modules — is machine-checked with
 an EMPTY axiom list (no classical choice, no quotients, not even
 propositional extensionality; definitions included). Every numerical
-claim is reproducible by the repository's regression (27 test stands);
+claim is reproducible by the repository's regression (30 test stands);
 an interactive studio (natural language → the ZFL formal language →
 the measured core) ships with the repository.
 
@@ -63,6 +69,19 @@ layer of Bochvar's logic (1938); the contribution is the generating
 principle, an implicational floor outside the Rosser–Turquette
 standardness conditions, the calculus, the machine verification, and
 the bridges to the engineering traditions.
+
+What is new in v1.1 (same-day self-correction): §19 is corrected —
+the verdict warranty is a two-grade ladder (sound / hereditary). The
+v1.0 claim "stability-by-supervaluation ⟺ invariance under
+verifications" (90/90) was a fact about that section's 10-formula
+pool, not a law: it is falsified by the or(ladder, gap) cells, e.g.
+¬¬p ∨ (q∨¬q), found by the identity atoms of the operational-sets
+expedition (E21) on a 3303-formula pool and cross-checked with the
+section's own instruments. The sound half of the warranty survives
+(a sound verdict never lies); only hereditary invariance buys shelf
+life. The correction was found the day of v1.0's publication and is
+released after three further expeditions leaned on the corrected
+machinery and it held.
 
 AI disclosure: this work was carried out with the substantial
 participation of the AI system Claude (Anthropic) in a dialogue
@@ -87,4 +106,4 @@ cut admissibility; Craig interpolation; Lean 4; machine-checked proofs
 The preprint text is CC BY 4.0; the accompanying repository code is
 MIT-licensed. The Lean corpus (10 modules) verifies with an empty
 axiom list; run `python3 run_all.py` for the full regression
-(27 stands + Lean build).
+(30 stands + Lean build).

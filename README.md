@@ -1,6 +1,6 @@
 # ZTL — Zero-Trust Logic
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21318982.svg)](https://doi.org/10.5281/zenodo.21318982)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21318981.svg)](https://doi.org/10.5281/zenodo.21318981)
 
 A logic built on one principle: **truth is never granted on credit**.
 Verdicts are always two-valued (T/F); the third symbol Z (zero-trust,
@@ -66,10 +66,12 @@ verdicts with warranties, quarantine passports, stipulation options.
 without GROQ_API_KEY it runs in pro mode — write ZFL by hand).
 
 The specification and all design decisions are in `SPEC.md`; the
-preprint is `paper/ZTL-draft.md` — **published on Zenodo: v1.0,
-DOI [10.5281/zenodo.21318982](https://doi.org/10.5281/zenodo.21318982)**
-(concept DOI 10.5281/zenodo.21318981 always resolves to the latest
-version; text CC BY 4.0, code MIT). **Formalization blueprint**
+preprint is `paper/ZTL-draft.md` — **published on Zenodo, latest v1.1
+(§19 corrected: the warranty is a two-grade ladder); concept DOI
+[10.5281/zenodo.21318981](https://doi.org/10.5281/zenodo.21318981)
+always resolves to the latest version** (v1.0:
+[10.5281/zenodo.21318982](https://doi.org/10.5281/zenodo.21318982);
+text CC BY 4.0, code MIT). **Formalization blueprint**
 (theorem map with dependency graph):
 https://inventor1975.github.io/ZTL/
 

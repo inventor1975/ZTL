@@ -6,6 +6,7 @@ authors:
     given-names: "Vitaly"
 type: software
 year: 2026
+version: "1.1"
 repository-code: "https://github.com/inventor1975/ZTL"
 abstract: >
   Zero-Trust Logic: a two-valued logic over marked (unverified) inputs with
@@ -15,6 +16,9 @@ abstract: >
   IEEE NaN, SQL NULL, taint tracking, abstract interpretation, imprecise
   probabilities and provenance semirings.
 identifiers:
+  - type: doi
+    value: 10.5281/zenodo.21318981
+    description: "Concept DOI (resolves to the latest preprint version)"
   - type: doi
     value: 10.5281/zenodo.21318982
     description: "Preprint v1.0 on Zenodo"

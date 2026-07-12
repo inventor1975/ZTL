@@ -1,12 +1,15 @@
 # ZTL — Zero-Trust Logic
 
-**V. Reznik. Preprint, v1.1-draft (unpublished) — 2026-07-12; v1.0
-published as DOI:
-[10.5281/zenodo.21318982](https://doi.org/10.5281/zenodo.21318982).
+**V. Reznik. Preprint, v1.1 — 2026-07-12. Concept DOI:
+[10.5281/zenodo.21318981](https://doi.org/10.5281/zenodo.21318981)
+(v1.0: [10.5281/zenodo.21318982](https://doi.org/10.5281/zenodo.21318982)).
 v1.1 corrects §19: the verdict warranty is a two-grade ladder
-(sound / hereditary); the v1.0 equivalence claim "stability ⟺
-invariance" was pool-relative — found and falsified by E21 (the
-identity atoms of VR Part II).**
+(sound — never lies / hereditary — never revoked); the v1.0 equivalence
+claim "stability ⟺ invariance" (90/90) was pool-relative — falsified by
+the or(ladder, gap) cells, found by E21 (the identity atoms of VR
+Part II) and cross-checked by the section's own instruments. Same-day
+self-correction, published as soon as three further expeditions
+(E21–E22) had leaned on the corrected machinery and it held.**
 The tag MEASURED means "verified by machine enumeration" (code in this
 repository), as opposed to "argued"; references to Lean mean proofs
 checked by the Lean 4 kernel with an **empty axiom list**.

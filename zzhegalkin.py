@@ -123,16 +123,23 @@ def main():
     print("\n-- 4. SINGLE-OPERATOR FATES --")
     and_clone = close([AND])
     NAND = lift2(lambda a, b: F if (a == T and b == T) else T)
+    NOR = lift2(lambda a, b: T if (a == F and b == F) else F)
     nand_clone = close([NAND])
+    nor_clone = close([NOR])
     not_tbl = tuple(NOT(x) for x, y in DOM)
     jt_tbl = tuple(AND(x, x) for x, y in DOM)
+    nor_diag = tuple(NOR(x, x) for x, y in DOM)
     print(f"  {{∧}}+consts  : clone {len(and_clone)} — ¬ reachable: "
           f"{not_tbl in and_clone}; J_T (p∧p) reachable: "
           f"{jt_tbl in and_clone}")
     print(f"  {{NAND}}+consts: clone {len(nand_clone)} of 514 — ¬ reachable: "
           f"{not_tbl in nand_clone}")
+    print(f"  {{NOR}}+consts : clone {len(nor_clone)} of 514 — ¬ reachable: "
+          f"{not_tbl in nor_clone}; NOR(p,p) = ¬p verbatim: "
+          f"{nor_diag == not_tbl}")
     assert not_tbl not in and_clone and jt_tbl in and_clone
     assert not_tbl in nand_clone and len(nand_clone) < 514
+    assert nor_diag == not_tbl and len(nor_clone) == len(nand_clone)
     print("  → ∧ alone cannot make ¬ (the monotonicity ban survives by")
     print("    classical restriction) yet births the J_T detector; and")
     print("    SHEFFER'S STROKE LOSES COMPLETENESS under zero trust —")
@@ -142,7 +149,9 @@ def main():
     print("\n" + "=" * 72)
     print("VERDICT: Zhegalkin-as-basis MOVES (clone equality 514 = 514);")
     print("Zhegalkin-as-ring FALLS (unit, idempotence, distributivity);")
-    print("Sheffer FALLS (18 of 514); lone ∧ births J_T but never ¬.")
+    print("BOTH classical solo champions fall to the same step — Sheffer's")
+    print("stroke and Peirce's arrow each stall at 18 of 514 (though")
+    print("NOR(p,p) = ¬p survives verbatim); lone ∧ births J_T but never ¬.")
     print("=" * 72)
 
 

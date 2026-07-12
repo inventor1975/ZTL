@@ -1,5 +1,9 @@
 # Zenodo upload sheet — ZTL v1.0
 
+**PUBLISHED 2026-07-12: DOI 10.5281/zenodo.21318982
+(concept DOI 10.5281/zenodo.21318981 — resolves to the latest
+version).**
+
 Everything below is copy-paste material for the manual Zenodo upload
 (the curator publishes; this file only prepares).
 

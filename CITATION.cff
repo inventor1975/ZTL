@@ -14,3 +14,7 @@ abstract: >
   (Lean 4, zero axioms) with a certified tableau engine; measured bridges to
   IEEE NaN, SQL NULL, taint tracking, abstract interpretation, imprecise
   probabilities and provenance semirings.
+identifiers:
+  - type: doi
+    value: 10.5281/zenodo.21318982
+    description: "Preprint v1.0 on Zenodo"

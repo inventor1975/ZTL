@@ -1,6 +1,7 @@
 # ZTL — Zero-Trust Logic
 
-**V. Reznik. Preprint, v1.0 — 2026-07-12.**
+**V. Reznik. Preprint, v1.0 — 2026-07-12.
+DOI: [10.5281/zenodo.21318982](https://doi.org/10.5281/zenodo.21318982).**
 The tag MEASURED means "verified by machine enumeration" (code in this
 repository), as opposed to "argued"; references to Lean mean proofs
 checked by the Lean 4 kernel with an **empty axiom list**.

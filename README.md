@@ -1,5 +1,7 @@
 # ZTL — Zero-Trust Logic
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21318982.svg)](https://doi.org/10.5281/zenodo.21318982)
+
 A logic built on one principle: **truth is never granted on credit**.
 Verdicts are always two-valued (T/F); the third symbol Z (zero-trust,
 "truth not earned") is a mark on an unverified input: it never produces
@@ -60,8 +62,11 @@ verdicts with warranties, quarantine passports, stipulation options.
 `python3 tool/ztlstudio.py` → http://localhost:8190 (no dependencies;
 without GROQ_API_KEY it runs in pro mode — write ZFL by hand).
 
-The specification and all design decisions are in `SPEC.md`; the working
-preprint draft is `paper/ZTL-draft.md`. **Formalization blueprint**
+The specification and all design decisions are in `SPEC.md`; the
+preprint is `paper/ZTL-draft.md` — **published on Zenodo: v1.0,
+DOI [10.5281/zenodo.21318982](https://doi.org/10.5281/zenodo.21318982)**
+(concept DOI 10.5281/zenodo.21318981 always resolves to the latest
+version; text CC BY 4.0, code MIT). **Formalization blueprint**
 (theorem map with dependency graph):
 https://inventor1975.github.io/ZTL/
 

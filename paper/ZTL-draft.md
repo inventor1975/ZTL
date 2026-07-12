@@ -1,10 +1,16 @@
 # ZTL — Zero-Trust Logic
 
-**V. Reznik. Preprint, v1.1 — 2026-07-12.
-DOI: [10.5281/zenodo.21323552](https://doi.org/10.5281/zenodo.21323552);
-concept DOI:
+**V. Reznik. Preprint, v1.2-draft (unpublished, accumulating). v1.1
+published 2026-07-12:
+DOI [10.5281/zenodo.21323552](https://doi.org/10.5281/zenodo.21323552);
+concept DOI
 [10.5281/zenodo.21318981](https://doi.org/10.5281/zenodo.21318981)
 (v1.0: [10.5281/zenodo.21318982](https://doi.org/10.5281/zenodo.21318982)).
+Accumulated for v1.2: the measured narrowing of the
+hereditary-characterization question (no depth-1 fence — §22 roadmap,
+zverify §5); E23 (Zhegalkin: the {∧,⊕} basis survives entirely, the
+GF(2) ring falls, Sheffer's stroke loses completeness) — section to be
+folded in at release.
 v1.1 corrects §19: the verdict warranty is a two-grade ladder
 (sound — never lies / hereditary — never revoked); the v1.0 equivalence
 claim "stability ⟺ invariance" (90/90) was pool-relative — falsified by
@@ -1089,6 +1095,10 @@ Measured on the extended pool: hereditary-without-sound 0 (the ladder
 is real), sound-without-hereditary > 0 (the grades separate); the
 hereditary grade is monotone — never revoked, never degraded (0
 violations, totally) — while sound-only verdicts are revocable.
+Subsequently stress-tested at scale (2026-07-12): a 151.8-million-pair
+hunt over four atoms at depth three, all six connectives, found 0
+violations of the ladder inclusion and of hereditary monotonicity;
+the grade separation is generic (1.2 million cells), not exotic.
 
 **Result: a verdict is a pair (value, warranty grade).** The value is
 greedy (local, fast); the warranty grades are global. Six verdict
@@ -1162,7 +1172,11 @@ quasivariety scouted in §3.7 (axiomatization, subquasivariety lattice,
 a representation theorem replacing Plonka sums — a separate work);
 a cheap characterization of the hereditary warranty grade of §19
 (sound is one pass over completions; is hereditary computable without
-enumerating refinements? — open);
+enumerating refinements? — open; MEASURED narrowing, 2026-07-12: no
+depth-1 fence exists — a 151.8-million-pair hunt at four atoms found
+verdicts invariant under every single verification yet killed by a
+pair (the counterexample cell is kept under regression, `zverify` §5),
+so any answer must look at least two moves deep);
 a practical zero-trust validation library (verdicts with warranties +
 evidence combination + provenance). The interactive studio — natural
 language negotiated into ZFL and judged by the measured engines —

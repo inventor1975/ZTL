@@ -40,6 +40,9 @@ STANDS = [
     ("zipc.py",        ["INCOMPARABLE sublogics of classical logic",
                         "Rule verdicts coincide: 14 of 14",
                         "match the canon ✓", "mismatches: 0"]),
+    ("zopsets.py",     ["IDENTITY IS TOTALLY EARNABLE", "dedup EARNED",
+                        "SOUND about the facts: 0",
+                        "hereditary-warranted 0", "ORTHOGONALITY"]),
     ("tool/test_zfl.py", ["ZFL FOUNDATION GREEN"]),
 ]
 

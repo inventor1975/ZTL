@@ -49,10 +49,11 @@ python3 zpassport.py   # quarantine passport: paradox / underdetermined / input
 python3 bridge.py      # the stitch: 141 answers, Python against the Lean kernel
 python3 zquasi.py      # quasivariety recon: SI generator, clone theorem, Plonka probe
 python3 zipc.py        # the delta against intuitionism: G4ip vs the keel, incomparability
+python3 zopsets.py     # operational sets (VR Part II): witnessed identity as ZTL atoms
 cd lean && lake build  # machine check of the core: zero axioms
 ```
 
-Full regression: `python3 run_all.py` (28 stands + Lean build).
+Full regression: `python3 run_all.py` (29 stands + Lean build).
 
 **ZTLStudio** (`tool/`): a local studio — a human states a paradox or
 a claim in natural language, the AI only *translates* (negotiated

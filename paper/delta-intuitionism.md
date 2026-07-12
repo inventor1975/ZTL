@@ -188,9 +188,16 @@ warranty)).
 The delta tells us exactly which planks may be carried from the
 Brouwerian shore onto the ZTL deck, and which must not:
 
-* **Witnessed identity → earned T.** VR-Sets' identity-by-witnessed-
-  bisimulation is verbatim "T is earned by a certificate" — it lands
-  on ZTL's R3 atoms without translation.
+* **Witnessed identity → earned T.** Precision matters here: the VR
+  set theory has three registers — VR-Sets (classical, ZFC-facing),
+  VR-Sets-ZFA, and **VR-SetsOp**, the native operational universe
+  (`SetsOp/`: identity is a witnessed bisimulation carried as a
+  relation with its witness — no quotient, no choice). The plank is
+  SetsOp's: its identity-by-witnessed-bisimulation is verbatim "T is
+  earned by a certificate" and lands on ZTL's atoms without
+  translation. The classical registers have propositional identity —
+  nothing there earns anything; they correspond to ZTL's
+  already-classical verdict algebra, not to its atoms.
 * **Apartness/equality asymmetry.** Constructive analysis: apartness
   is positive, equality is its negation. ZTL, measured (E6): apartness
   of streams is *earnable* at a finite stage and persists; stream

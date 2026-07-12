@@ -40,7 +40,9 @@ ZFL_SPEC = """ZFL is the formal language of the ZTL core. Strict JSON:
 Formulas: not(x), and(x,y), or(x,y), imp(x,y), xor(x,y), xnor(x,y),
 constants T and F, atom names; in genre=system references to sentences
 go ONLY through Tr(name); bare atoms inside system formulas are
-forbidden. status: T = verified-true, F = verified-false,
+forbidden. RESERVED — never use as atom/sentence names: T, F, Z, Tr,
+not, and, or, imp, xor, xnor (pick descriptive names like "eats",
+"child_truth"). status: T = verified-true, F = verified-false,
 Z = UNVERIFIED. statement = a verdict question about a claim over
 (un)verified atoms. system = a self-referential system (paradoxes:
 sentences about the truth of each other and themselves)."""
@@ -58,7 +60,14 @@ shutdown fires. Will it fire?" ->
 {"genre":"statement",
  "atoms":{"overheat":{"status":"Z","note":"sensor unverified"},
           "shutdown":{"status":"Z","note":"consequence"}},
- "assert":"imp(overheat, shutdown)","ask":["verdict","warranty"]}"""
+ "assert":"imp(overheat, shutdown)","ask":["verdict","warranty"]}
+4) "Russell: the set R of all sets not containing themselves, over the
+universe a = empty, b = {b}" ->
+{"genre":"system","sentences":{
+ "a_in_a":"F","a_in_b":"F","a_in_R":"not(Tr(a_in_a))",
+ "b_in_a":"F","b_in_b":"T","b_in_R":"not(Tr(b_in_b))",
+ "R_in_a":"F","R_in_b":"F","R_in_R":"not(Tr(R_in_R))"},
+ "ask":["passport"]}"""
 
 UNDERSTAND_SYS = """You are the meaning translator for the ZTL logic
 studio (two-valued verdicts + the mark Z "unverified"; paradoxes go
@@ -72,11 +81,18 @@ FIRST — THE BOUNDARY OF COMPETENCE. ZTL v1 formalizes only:
 (b) self-referential systems — and ONLY when sentences speak about
     the TRUTH of sentences (their own or others'). Conflicting
     viewpoints, physics of motion, perception are NOT self-reference.
-If the essence is arithmetic, quantities, wordplay about numbers,
-time, or numeric probabilities — say HONESTLY: "This does not
-formalize into propositional ZTL without losing the point (here: …)",
-explain why in one line, and ask: stop, or agree on a coarsened
-logical shadow (listing explicitly what is lost). NEVER invent atoms
+EXPLICITLY IN SCOPE (do not refuse these): the classical
+self-reference paradoxes — the liar, the truth-teller, Jourdain's
+carousel, Curry, Yablo truncations, the crocodile dilemma (a deal
+about a future action reduces cleanly to sentences about truth —
+narrative time is NOT a temporal-logic essence), Russell's paradox
+over a small named universe (membership facts x_in_y as sentences,
+x_in_R defined as not(Tr(x_in_x))). Refuse ONLY when numbers,
+quantities or arithmetic are the POINT of the question. In that case
+say HONESTLY: "This does not formalize into propositional ZTL without
+losing the point (here: …)", explain why in one line, and ask: stop,
+or agree on a coarsened logical shadow (listing explicitly what is
+lost). NEVER invent atoms
 for the sake of formalizability. An atom is a declarative statement;
 a question cannot be an atom.
 

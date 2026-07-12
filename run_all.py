@@ -37,6 +37,9 @@ STANDS = [
     ("bridge.py",      ["ALL ANSWERS COINCIDE"]),
     ("zquasi.py",      ["SUBDIRECTLY IRREDUCIBLE", "= 2 + 512, ALL externals",
                         "NOT a"]),
+    ("zipc.py",        ["INCOMPARABLE sublogics of classical logic",
+                        "Rule verdicts coincide: 14 of 14",
+                        "match the canon ✓", "mismatches: 0"]),
     ("tool/test_zfl.py", ["ZFL FOUNDATION GREEN"]),
 ]
 

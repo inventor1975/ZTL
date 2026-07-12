@@ -27,13 +27,22 @@ MEASURED here:
      normal-form role in ZTL is played by the J-DNF of the external
      layer (E14), not by GF(2) polynomials.
 
+  4. SINGLE-OPERATOR FATES: {∧}+consts cannot make ¬ (the classical
+     monotonicity ban survives by restriction) — its clone is 7
+     operations — but it BIRTHS the J_T detector (p∧p), a profession
+     ∧ does not have classically. And SHEFFER'S STROKE LOSES
+     COMPLETENESS: {NAND}+consts stalls at 18 of 514 (¬ reachable,
+     the clone not) — the classical champion of one-operator
+     completeness does not survive zero trust, while Zhegalkin's
+     PAIR does. Completeness, too, is not granted on credit.
+
 Slogan: Zhegalkin-as-basis moves onto ZTL; Zhegalkin-as-ring stays on
 the classical shore.
 """
 
 from itertools import product
 
-from ztl import T, F, Z, VALUES, NOT, AND, OR, IMP, XOR, XNOR
+from ztl import T, F, Z, VALUES, NOT, AND, OR, IMP, XOR, XNOR, lift2
 
 DOM = list(product(VALUES, repeat=2))            # the 9 input pairs
 
@@ -111,9 +120,29 @@ def main():
     print("    the classical shore; the normal-form job in ZTL belongs to")
     print("    the J-DNF of the external layer (E14).")
 
+    print("\n-- 4. SINGLE-OPERATOR FATES --")
+    and_clone = close([AND])
+    NAND = lift2(lambda a, b: F if (a == T and b == T) else T)
+    nand_clone = close([NAND])
+    not_tbl = tuple(NOT(x) for x, y in DOM)
+    jt_tbl = tuple(AND(x, x) for x, y in DOM)
+    print(f"  {{∧}}+consts  : clone {len(and_clone)} — ¬ reachable: "
+          f"{not_tbl in and_clone}; J_T (p∧p) reachable: "
+          f"{jt_tbl in and_clone}")
+    print(f"  {{NAND}}+consts: clone {len(nand_clone)} of 514 — ¬ reachable: "
+          f"{not_tbl in nand_clone}")
+    assert not_tbl not in and_clone and jt_tbl in and_clone
+    assert not_tbl in nand_clone and len(nand_clone) < 514
+    print("  → ∧ alone cannot make ¬ (the monotonicity ban survives by")
+    print("    classical restriction) yet births the J_T detector; and")
+    print("    SHEFFER'S STROKE LOSES COMPLETENESS under zero trust —")
+    print("    the one-operator champion stalls while Zhegalkin's pair")
+    print("    generates everything. Completeness is not granted on credit.")
+
     print("\n" + "=" * 72)
     print("VERDICT: Zhegalkin-as-basis MOVES (clone equality 514 = 514);")
-    print("Zhegalkin-as-ring FALLS (unit, idempotence, distributivity).")
+    print("Zhegalkin-as-ring FALLS (unit, idempotence, distributivity);")
+    print("Sheffer FALLS (18 of 514); lone ∧ births J_T but never ¬.")
     print("=" * 72)
 
 

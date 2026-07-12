@@ -1,6 +1,6 @@
 # ZTL — Zero-Trust Logic
 
-**V. Reznik. Working preprint draft, v0.4 — 2026-07-11.**
+**V. Reznik. Preprint, v1.0 — 2026-07-12.**
 The tag MEASURED means "verified by machine enumeration" (code in this
 repository), as opposed to "argued"; references to Lean mean proofs
 checked by the Lean 4 kernel with an **empty axiom list**.
@@ -38,7 +38,11 @@ supervaluation); a probabilistic identification (verdicts are the
 {0,1}-threshold of Dempster–Shafer belief functions); a theory of
 verification (a verdict is a pair "value + stability warranty") and of
 evidence combination (conflict is never renormalized — Zadeh's paradox
-is resolved in Smets' favor). The entire development — the core,
+is resolved in Smets' favor); and a quarantine passport that types
+every refusal by its genesis — paradox (permanent), intrinsic (the
+stipulation is forced), underdetermined (until a choice), unverified
+input (until verification), inherited — with a measured stipulation
+theorem separating the liftable from the permanent. The entire development — the core,
 both engine certificates with cut admissibility, the algebraic
 witnesses, the general fixed-point theorem and the expedition twins,
 ten modules in all — is formalized in Lean 4 **with an empty axiom
@@ -52,7 +56,11 @@ core is a fragment of the external layer of Bochvar's logic (1938); the
 contribution of this work is the generating principle, an implicational
 floor lying outside the Rosser–Turquette standardness conditions, the
 calculus, the machine verification, and the bridges to the engineering
-traditions.
+traditions. An interactive studio ships with the repository: natural
+language is negotiated into ZFL, a small formal language whose
+validity guarantees loadability, and judged by the measured core — the
+pipeline itself obeys the logic it serves (the LLM's output is an
+unverified input; the deterministic core is the customs).
 
 ## 1. Motivation: one problem, six independent solutions
 
@@ -404,7 +412,7 @@ violations). What remains proof-theoretic future work is a *syntactic*
 cut-elimination procedure with complexity bounds — the admissibility
 itself is settled.
 
-## 6. Quantifiers over finite domains (MEASURED)
+## 6. Quantifiers: finite domains and beyond (MEASURED)
 
 By the generating principle: **∀xφ = T if every instance is strictly T,
 else F** (one Z-witness poisons the universal); **∃xφ = T if some
@@ -659,10 +667,11 @@ refusal stands *until verification* (§19); **DOWNSTREAM** — inherited
 quarantine with the culprits listed (the provenance of refusal, §14
 again). The operational content is the **stipulation theorem**
 (MEASURED totally on a mixed zoo carrying every kind at once, with the
-grounded part untouched): a component is UNDERDETERMINED iff
-stipulating any of its classical models grounds it cleanly, and PARADOX
-iff every decree contradicts the component's own definitions —
-liftable-by-choice versus permanent, mechanically separated. The
+grounded part untouched): a component carries classical models
+(INTRINSIC or UNDERDETERMINED) iff stipulating any of them grounds it
+cleanly — the forced choice and the free one obey the same mechanics —
+and it is PARADOX iff every decree contradicts the component's own
+definitions: the liftable and the permanent, mechanically separated. The
 passport is thereby a *biography* of the mark — there are exactly three
 ways to acquire it, and liftability follows genesis: **born** with the
 datum (INPUT — lifted by verification), **hardened** out of a solver
@@ -707,7 +716,8 @@ The final and most precise formulation of what has been built:
 Truth values:      T, F                    (verdicts are always two-valued)
 Input mark:        Z "unverified"           (a property of data, not truth)
 Solver state:      N "not yet computed"     (a computation phase, present
-                                             only under self-reference,
+                                             only under self-reference;
+                                             provably finite — §9 — and
                                              never escapes outward)
 Reading policy:    local, default deny      (the three-symbol tables are
                                              the policy's calculator)
@@ -1109,13 +1119,15 @@ non-registrability of streams (§13), and the NaN signature x ≠ x.
 ## 22. Roadmap
 
 A Lean port of the parameter (arbitrary-domain) tableaux of §6; a
-syntactic
-cut-elimination procedure with complexity bounds (admissibility is
-settled — §5) and a description of the equivalent quasivariety
-(algebraizability is settled — §3.6); first-order semantics over
-arbitrary domains; a practical zero-trust validation library (verdicts
-with warranties + evidence combination + provenance) — and a possible
-essay, "Reinventing Bochvar through NaN".
+syntactic cut-elimination procedure with complexity bounds
+(admissibility is settled — §5); the mining of the equivalent
+quasivariety scouted in §3.7 (axiomatization, subquasivariety lattice,
+a representation theorem replacing Plonka sums — a separate work);
+a practical zero-trust validation library (verdicts with warranties +
+evidence combination + provenance). The interactive studio — natural
+language negotiated into ZFL and judged by the measured engines —
+already ships in the repository (`tool/`); a possible essay,
+"Reinventing Bochvar through NaN", remains on the horizon.
 
 ## References
 

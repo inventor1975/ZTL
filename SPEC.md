@@ -337,9 +337,15 @@ contradiction.
   over ztl/zverify/zpassport), translator.py (Groq: understanding
   negotiation → ZFL emission → error-driven repair), ztlstudio.py +
   static/ (three stacked panels: meta-chat / ZFL editor / results),
-  test_zfl.py (foundation stand, 21 checks). The pipeline embodies
-  the logic: the LLM's output is an unverified input; the core is
-  the customs.
+  test_zfl.py (foundation stand, 25 checks; in the regression) and
+  gauntlet.py (the paradox gauntlet: 15 canon cases + 2 boundary
+  refusals through the WHOLE pipeline with the AI in the loop —
+  liar/Pinocchio/truth-teller/Jourdain/Socrates-Plato/even pairs/
+  Curry/both crocodiles/barber/Russell/Yablo/Epimenides/sensor, and
+  Berry+sorites honestly refused; run by hand — AI-nondeterministic,
+  not in the regression; measured 2026-07-12: 17/17). The pipeline
+  embodies the logic: the LLM's output is an unverified input; the
+  core is the customs.
 
 ## The road ahead (not started)
 

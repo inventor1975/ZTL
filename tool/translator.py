@@ -12,6 +12,8 @@ Cloudflare 1010; GROQ_API_KEY from the environment).
 
 import json
 import os
+import time
+import urllib.error
 import urllib.request
 
 API = "https://api.groq.com/openai/v1/chat/completions"
@@ -93,7 +95,10 @@ about a future action reduces cleanly to sentences about truth —
 narrative time is NOT a temporal-logic essence), Russell's paradox
 over a small named universe (membership facts x_in_y as sentences,
 x_in_R defined as not(Tr(x_in_x))). Refuse ONLY when numbers,
-quantities or arithmetic are the POINT of the question. In that case
+quantities or arithmetic are the POINT of the question — e.g. the
+SORITES/heap (induction over n grains IS arithmetic: refuse first and
+offer the coarsened shadow, do NOT silently formalize a few grain
+counts as atoms), Berry, Richard. In that case
 say HONESTLY: "This does not formalize into propositional ZTL without
 losing the point (here: …)", explain why in one line, and ask: stop,
 or agree on a coarsened logical shadow (listing explicitly what is
@@ -173,12 +178,18 @@ def groq(messages, temperature=0.2):
         "Authorization": f"Bearer {key}",
         "Content-Type": "application/json",
         "User-Agent": "ZTLStudio/1.0"})
-    try:
-        with urllib.request.urlopen(req, timeout=60) as r:
-            data = json.loads(r.read().decode())
-    except Exception as e:
-        raise TranslatorError(f"Groq is unreachable: {e}")
-    return data["choices"][0]["message"]["content"].strip()
+    for attempt in range(4):
+        try:
+            with urllib.request.urlopen(req, timeout=60) as r:
+                data = json.loads(r.read().decode())
+            return data["choices"][0]["message"]["content"].strip()
+        except urllib.error.HTTPError as e:
+            if e.code == 429 and attempt < 3:      # rate limit: breathe
+                time.sleep(15 * (attempt + 1))
+                continue
+            raise TranslatorError(f"Groq is unreachable: {e}")
+        except Exception as e:
+            raise TranslatorError(f"Groq is unreachable: {e}")
 
 
 def understand(history):

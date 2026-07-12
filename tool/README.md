@@ -123,7 +123,8 @@ list the AI repair loop consumes.
 | `translator.py` | the only AI component: understanding ↔ emission ↔ repair (Groq) |
 | `ztlstudio.py` | local server (stdlib), three-panel UI, examples |
 | `static/` | the UI (HTML/CSS/JS) |
-| `test_zfl.py` | the foundation stand (24 checks), wired into `run_all.py` |
+| `test_zfl.py` | the foundation stand (25 checks), wired into `run_all.py` |
+| `gauntlet.py` | the paradox gauntlet: the whole canon through the WHOLE pipeline (AI in the loop) — run by hand, not in the regression |
 
 *AI participation: designed and written in a dialogue between the
 curator (Vitaly Reznik) and Claude (Anthropic); all fork decisions are

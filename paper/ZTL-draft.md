@@ -1043,7 +1043,7 @@ earlier system of the author is instructive: in VR-Sets [Zenodo
 write), in ZTL he is admitted and defused pointwise. Two honest answers
 to one calamity: keep it out, or let it in under guard.
 
-## 19. The verification operation and verdict stability (MEASURED)
+## 19. The verification operation and verdict warranties (MEASURED)
 
 The act of verification — removing a mark and writing in the earned
 value — exposes a narrow place: **greedy verdicts are non-monotone
@@ -1113,7 +1113,7 @@ intersection**. Measured:
   renormalization.
 * **Zadeh's paradox (1984), resolved in Smets' favor.** Two doctors
   almost exclude a tumor (0.01 each); Dempster's rule renormalizes the
-  0.9999 conflict away and outputs "tumor = 1" — a stable false
+  0.9999 conflict away and outputs "tumor = 1" — an unshakable false
   certainty. Smets' conjunctive rule (TBM) keeps the conflict in m(∅) —
   our approach: the conflict is exhibited, the diagnostic verdict is
   refusal until the doctors are sorted out. **Renormalizing conflict is

@@ -18,6 +18,8 @@ from zfl import to_statement, to_system                  # noqa: E402
 
 KIND_TXT = {
     "PARADOX": "PARADOX — no classical solutions; refusal PERMANENT",
+    "INTRINSIC": "INTRINSIC — ungrounded, yet uniquely consistent:"
+                 " the stipulation is forced",
     "UNDERDETERMINED": "UNDERDETERMINED — refusal until an external choice",
     "INPUT": "unverified input — refusal until verification",
     "DOWNSTREAM": "inherited from above (see the culprits)",
@@ -77,7 +79,7 @@ def run_system(doc, parsed):
         passport_rows.append({
             "component": comp, "kind": kind,
             "kind_txt": KIND_TXT.get(kind, kind), "detail": detail})
-        if kind == "UNDERDETERMINED":
+        if kind in ("UNDERDETERMINED", "INTRINSIC"):
             names = set(comp)
             env_names = set()
             for s in comp:

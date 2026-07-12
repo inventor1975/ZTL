@@ -118,13 +118,21 @@ def api_explain(payload):
 
 
 def api_repair(payload):
-    doc, parsed, issues = zfl.validate(payload.get("zfl", ""))
-    if parsed is not None:
-        return {"ok": True, "zfl": payload.get("zfl", ""),
-                "note": "already valid"}
+    """Bounded repair loop: up to 3 passes, each fed by the fresh
+    validator output (errors AND warnings)."""
+    text = payload.get("zfl", "")
+    doc, parsed, issues = zfl.validate(text)
+    if parsed is not None and not issues:
+        return {"ok": True, "zfl": text, "note": "already valid"}
     try:
-        return {"ok": True, "zfl": translator.repair(
-            payload.get("zfl", ""), issues)}
+        for attempt in range(3):
+            text = translator.repair(text, issues)
+            doc, parsed, issues = zfl.validate(text)
+            if parsed is not None and not issues:
+                return {"ok": True, "zfl": text,
+                        "note": f"repaired in {attempt + 1} pass(es)"}
+        return {"ok": True, "zfl": text,
+                "note": "3 passes spent; issues may remain"}
     except translator.TranslatorError as e:
         return {"ok": False, "error": str(e)}
 

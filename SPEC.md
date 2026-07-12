@@ -322,6 +322,8 @@ contradiction.
   undecidable via the J-guard embedding of classical FO. Preprint §6.
 * `zpassport.py` — E18 the quarantine passport: per-SCC diagnosis of
   ungroundedness (PARADOX with oscillation period — permanent /
+  INTRINSIC — unique classical model, the stipulation is forced
+  (Kripke's intrinsic value; found by field use of the studio) /
   UNDERDETERMINED — until stipulation / INPUT — until verification /
   DOWNSTREAM — inherited, culprits listed); the stipulation theorem
   (underdetermined ⟺ liftable by choice, paradox ⟺ every decree

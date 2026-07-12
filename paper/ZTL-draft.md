@@ -649,9 +649,12 @@ greediness are intact; it is solver-side metadata computed per strongly
 connected component of the dependency graph. Kinds: **PARADOX** — the
 component has no classical model consistent with its grounded
 environment (odd cycles; the greedy oscillation period is recorded:
-liar 2, carousel 4) — the refusal is *permanent*; **UNDERDETERMINED** —
-classical models exist (even cycles, the truth-teller) — the refusal
-stands *until stipulation*; **INPUT** — a plain unverified datum — the
+liar 2, carousel 4) — the refusal is *permanent*; **INTRINSIC** — exactly one
+classical model exists (Kripke's intrinsic value): ungrounded, yet
+uniquely consistent — the stipulation is forced, not chosen;
+**UNDERDETERMINED** —
+classical models exist (≥ 2: even cycles, the truth-teller) — the
+refusal stands *until stipulation*; **INPUT** — a plain unverified datum — the
 refusal stands *until verification* (§19); **DOWNSTREAM** — inherited
 quarantine with the culprits listed (the provenance of refusal, §14
 again). The operational content is the **stipulation theorem**
@@ -663,8 +666,9 @@ liftable-by-choice versus permanent, mechanically separated. The
 passport is thereby a *biography* of the mark — there are exactly three
 ways to acquire it, and liftability follows genesis: **born** with the
 datum (INPUT — lifted by verification), **hardened** out of a solver
-phase that completed without resolving (UNDERDETERMINED — lifted by
-stipulation; PARADOX — lifted by nothing), or **inherited**
+phase that completed without resolving (INTRINSIC — lifted by the
+forced stipulation; UNDERDETERMINED — lifted by a chosen one;
+PARADOX — lifted by nothing), or **inherited**
 (DOWNSTREAM — lifted with the culprits). "Completed" is a theorem, not
 a hope: the lazy iteration provably terminates within n+1 steps (§8,
 `ZGround`), so the phase N always dies — the liar is never "still

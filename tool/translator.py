@@ -61,7 +61,12 @@ shutdown fires. Will it fire?" ->
  "atoms":{"overheat":{"status":"Z","note":"sensor unverified"},
           "shutdown":{"status":"Z","note":"consequence"}},
  "assert":"imp(overheat, shutdown)","ask":["verdict","warranty"]}
-4) "Russell: the set R of all sets not containing themselves, over the
+4) "X is true if and only if X is false" (compressed Russell / the
+liar: encode the biconditional as the DEFINITION) ->
+{"genre":"system","sentences":{"X":"not(Tr(X))"},"ask":["passport"]}
+Never emit degenerate formulas like xor(A,A) or xnor(A,A) — if you are
+tempted, you have mis-encoded a biconditional definition.
+5) "Russell: the set R of all sets not containing themselves, over the
 universe a = empty, b = {b}" ->
 {"genre":"system","sentences":{
  "a_in_a":"F","a_in_b":"F","a_in_R":"not(Tr(a_in_a))",
@@ -194,7 +199,10 @@ def emit(understanding):
     out = groq([{"role": "system", "content": EMIT_SYS},
                 {"role": "user", "content":
                  f"The agreed understanding:\n{understanding}\n\n"
-                 "Emit the ZFL."}])
+                 "Emit the ZFL. [Sentences are DEFINITIONS: a claim "
+                 "'X holds iff PHI' becomes \"X\": \"PHI-formula\"; in "
+                 "particular 'X iff not X' is {\"X\": \"not(Tr(X))\"}. "
+                 "Never emit xor(A,A) or xnor(A,A).]"}])
     return strip_fences(out)
 
 
@@ -231,8 +239,8 @@ def explain(zfl_text, back_reading, report, history, lang_hint=""):
 
 
 def repair(zfl_text, issues):
-    errs = "\n".join(f"- {i['code']} @ {i['where']}: {i['hint']}"
-                     for i in issues if i["level"] == "error")
+    errs = "\n".join(f"- [{i['level']}] {i['code']} @ {i['where']}: {i['hint']}"
+                     for i in issues)
     out = groq([{"role": "system", "content": REPAIR_SYS},
                 {"role": "user", "content":
                  f"ZFL:\n{zfl_text}\n\nValidator errors:\n{errs}\n\n"

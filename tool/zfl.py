@@ -122,6 +122,16 @@ def parse_formula(s):
     return tree
 
 
+def degenerates(tree):
+    """xor/xnor with syntactically identical arguments — almost always
+    a mis-encoded biconditional definition."""
+    if tree[0] in ("xor", "xnor") and tree[1] == tree[2]:
+        yield tree[0]
+    if tree[0] in CONNECTIVES:
+        for arg in tree[1:]:
+            yield from degenerates(arg)
+
+
 def walk(tree, kind):
     """All names of the given node kind ('atom' or 'tr')."""
     if tree[0] == kind:
@@ -179,6 +189,11 @@ def validate(text):
             try:
                 tree = parse_formula(doc["assert"])
                 parsed["assert"] = tree
+                for opd in degenerates(tree):
+                    issues.append(warn("W_DEGENERATE", f"assert: {opd}(A,A)",
+                                       "constant-like; a biconditional "
+                                       "definition 'X iff Φ' is written as "
+                                       "X := Φ, e.g. not(Tr(X))"))
                 for name in walk(tree, "tr"):
                     issues.append(err("E_TR_IN_STATEMENT", f"Tr({name})",
                                       "Tr() lives only in the system genre"))
@@ -214,6 +229,10 @@ def validate(text):
             try:
                 tree = parse_formula(f)
                 parsed["sentences"][n] = tree
+                for opd in degenerates(tree):
+                    issues.append(warn("W_DEGENERATE", f"{n}: {opd}(A,A)",
+                                       "constant-like; 'X iff not X' is "
+                                       "the definition X := not(Tr(X))"))
                 for m in walk(tree, "tr"):
                     if m not in names:
                         issues.append(err("E_UNDEF_SENTENCE", f"Tr({m})",

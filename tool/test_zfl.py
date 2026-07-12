@@ -86,6 +86,12 @@ if __name__ == "__main__":
         check(f"{name} → {'/'.join(sorted(want))}",
               p is None and want <= codes(iss), str(codes(iss)))
 
+    dg = json.dumps({"genre": "system",
+                     "sentences": {"R": "xnor(Tr(R),Tr(R))"}})
+    _, pdg, idg = zfl.validate(dg)
+    check("degenerate xnor(A,A) → warning, still valid",
+          pdg is not None and "W_DEGENERATE" in codes(idg), str(codes(idg)))
+
     print("\n### Back-reading: the non-hallucinating auditor")
     br = zfl.back_reading(doc, parsed)
     check("liar reads back", "not (\u201cL\u201d is true)" in br, br)

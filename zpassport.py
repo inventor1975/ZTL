@@ -13,6 +13,9 @@ per strongly connected component of the dependency graph:
                    its grounded environment (odd cycles): the refusal is
                    PERMANENT — no act can ever lift it; the greedy
                    oscillation period is recorded (liar 2, carousel 4).
+  INTRINSIC        exactly ONE classical model exists (Kripke's intrinsic
+                   value): ungrounded, yet uniquely consistent — the
+                   stipulation is FORCED, not chosen.
   UNDERDETERMINED  classical models exist (≥ 2): the refusal stands
                    UNTIL STIPULATION — an external choice grounds it.
   INPUT            a plain unverified input imported into the system:
@@ -153,7 +156,15 @@ def passports(system):
                                 "unverified input; refusal until verification"))
             else:
                 models = component_models(comp, system, env)
-                if models:
+                if len(models) == 1:
+                    kind = ("INTRINSIC", 1)
+                    forced = ", ".join(f"{k}={v}" for k, v
+                                       in sorted(models[0].items()))
+                    reports.append((comp, "INTRINSIC",
+                                    f"exactly one classical model "
+                                    f"({forced}); the stipulation is "
+                                    f"FORCED, not chosen"))
+                elif models:
                     kind = ("UNDERDETERMINED", len(models))
                     reports.append((comp, "UNDERDETERMINED",
                                     f"{len(models)} classical models; "
@@ -189,7 +200,7 @@ def stipulation_theorem(system):
         for s in comp:
             env_names |= deps(system[s]) - names
         env = {n: lfp[n] for n in env_names}
-        if kind == "UNDERDETERMINED":
+        if kind in ("UNDERDETERMINED", "INTRINSIC"):
             for m in component_models(comp, system, env):
                 checked_under += 1
                 lfp2 = least_fp_lazy(stipulate(system, m))
@@ -213,6 +224,7 @@ MIXED = {
     "τ":  "τ",                                # truth-teller — 2 models
     "A":  "B", "B": ("not", "A"),             # carousel — paradox, period 4
     "E1": ("not", "E2"), "E2": ("not", "E1"),  # even cycle — 2 models
+    "I":  ("xnor", "I", "I"),                 # intrinsic: unique model T
     "m":  "Z",                                # unverified input
     "g0": "T",                                # grounded
     "g1": ("not", "λ"),                       # downstream of the liar

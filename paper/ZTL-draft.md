@@ -139,8 +139,12 @@ its lift:
 Every occurrence of Z is substituted independently; the result is
 always classical. This one construction is the generating principle of
 the whole system: every connective of ZTL is a lifted classical one,
-and every result in this preprint is a property of the lift. Throughout
-the text and the companion repositories it is called simply *the lift*.
+and every result in this preprint is a property of the lift. It is NOT
+the strict (Kleene-style) lift of domain theory, which propagates the
+extra element (f(…,⊥,…) = ⊥): the strict lift passes the mark on, the
+zero-trust lift interrogates it — every classical reading is taken and
+truth must be unanimous. Throughout the text and the companion
+repositories it is called simply *the lift*.
 
 **Corollary (greediness theorem, MEASURED):** no compound formula ever
 takes the value Z; Z lives only on atoms.

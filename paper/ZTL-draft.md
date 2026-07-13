@@ -144,7 +144,11 @@ the strict (Kleene-style) lift of domain theory, which propagates the
 extra element (f(…,⊥,…) = ⊥): the strict lift passes the mark on, the
 zero-trust lift interrogates it — every classical reading is taken and
 truth must be unanimous. Throughout the text and the companion
-repositories it is called simply *the lift*.
+repositories it is called simply *the lift*; its emblem is **↕** — the
+lift raises the operation into the marked world, the greedy collapse
+returns the verdict to the classical floor: the mark never lives above
+the ground level. (In formulas the lift stays f*; ↕ is heraldry, not
+notation.)
 
 **Corollary (greediness theorem, MEASURED):** no compound formula ever
 takes the value Z; Z lives only on atoms.

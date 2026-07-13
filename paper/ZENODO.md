@@ -1,14 +1,18 @@
-# Zenodo upload sheet — ZTL v1.1
+# Zenodo upload sheet — ZTL v1.2 (READY; release when the Zulip thread answers, per the curator)
 
-**v1.1 PUBLISHED 2026-07-12: DOI 10.5281/zenodo.21323552
-(verified via the API: same concept 10.5281/zenodo.21318981, version
-index 1, is_last — the concept DOI now resolves to v1.1).
-v1.0: DOI 10.5281/zenodo.21318982.**
+**v1.1 PUBLISHED 2026-07-12: DOI 10.5281/zenodo.21323552; v1.0:
+10.5281/zenodo.21318982; concept DOI 10.5281/zenodo.21318981 resolves
+to the latest version.**
+
+**v1.2 flow: open the existing record → "New version" → upload
+`paper/ZTL-preprint-v1.2.pdf` (20 pages) → set Version: 1.2 → replace
+the description with the block below → Publish. Then paste the new
+version DOI back for embedding.**
 
 Everything below is copy-paste material for the manual Zenodo upload
 (the curator publishes; this file only prepares).
 
-**File to upload:** `paper/ZTL-preprint-v1.1.pdf` (18 pages)
+**File to upload:** `paper/ZTL-preprint-v1.2.pdf` (20 pages)
 
 ---
 
@@ -18,7 +22,7 @@ Everything below is copy-paste material for the manual Zenodo upload
 
 **Authors:** Reznik, Vitaly
 
-**Version:** 1.1
+**Version:** 1.2
 
 **License:** Creative Commons Attribution 4.0 International (CC BY 4.0)
 
@@ -56,7 +60,7 @@ explosion.
 The entire development — ten Lean 4 modules — is machine-checked with
 an EMPTY axiom list (no classical choice, no quotients, not even
 propositional extensionality; definitions included). Every numerical
-claim is reproducible by the repository's regression (30 test stands);
+claim is reproducible by the repository's regression (31 test stands);
 an interactive studio (natural language → the ZFL formal language →
 the measured core) ships with the repository.
 
@@ -66,7 +70,22 @@ principle, an implicational floor outside the Rosser–Turquette
 standardness conditions, the calculus, the machine verification, and
 the bridges to the engineering traditions.
 
-What is new in v1.1 (same-day self-correction): §19 is corrected —
+What is new in v1.2: the central construction is named — the
+zero-trust lift (§2), with its disambiguation from the strict (Kleene)
+lift; §3.8, the census of sixteen: a lifted binary connective is
+complete alone iff its kernel is essentially binary and
+non-commutative — Sheffer's stroke and Peirce's arrow lose their
+crowns (both stall in one shared 18-table cage), both implications and
+both abjunctions keep theirs, with kernel clone equalities
+machine-checked on the empty axiom list (lean/ZClone.lean); the
+fence-depth theorem (§19): the hereditary warranty is checkable at
+depth exactly m−1 and no constant-depth fence exists (the guard
+family over the fallen law of identity); the warranty ladder
+stress-tested at scale (151.8M pairs, 0 violations); and the honest
+Bochvar ledger (§4): the {¬,∧,∨} coincidence found post hoc, not a
+source.
+
+What was new in v1.1 (same-day self-correction): §19 is corrected —
 the verdict warranty is a two-grade ladder (sound / hereditary). The
 v1.0 claim "stability-by-supervaluation ⟺ invariance under
 verifications" (90/90) was a fact about that section's 10-formula
@@ -102,4 +121,4 @@ cut admissibility; Craig interpolation; Lean 4; machine-checked proofs
 The preprint text is CC BY 4.0; the accompanying repository code is
 MIT-licensed. The Lean corpus (10 modules) verifies with an empty
 axiom list; run `python3 run_all.py` for the full regression
-(30 stands + Lean build).
+(31 stands + Lean build).

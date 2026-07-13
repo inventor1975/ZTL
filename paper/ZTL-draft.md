@@ -1,30 +1,17 @@
 # ZTL — Zero-Trust Logic
 
-**V. Reznik. Preprint, v1.2-draft (unpublished, accumulating). v1.1
-published 2026-07-12:
-DOI [10.5281/zenodo.21323552](https://doi.org/10.5281/zenodo.21323552);
-concept DOI
+**V. Reznik. Preprint, v1.2 — 2026-07-13. Concept DOI:
 [10.5281/zenodo.21318981](https://doi.org/10.5281/zenodo.21318981)
-(v1.0: [10.5281/zenodo.21318982](https://doi.org/10.5281/zenodo.21318982)).
-Accumulated for v1.2: the measured narrowing of the
-hereditary-characterization question (no depth-1 fence — §22 roadmap,
-zverify §5); E23 (Zhegalkin: the {∧,⊕} basis survives entirely, the
-GF(2) ring falls; THE CENSUS LAW over all sixteen kernels: a lifted
-connective is complete alone ⟺ its kernel is essentially binary and
-non-commutative — survivors are the four directional connectives
-(both implications, both abjunctions, incl. the credit detector ¬p∧q),
-every commutative kernel falls, incl. Sheffer's stroke and Peirce's
-arrow; kernel clone equalities in lean/ZClone.lean) — section to be
-folded in at release;
-the central construction now carries its canonical name, **the
-zero-trust lift** (§2).
-v1.1 corrects §19: the verdict warranty is a two-grade ladder
-(sound — never lies / hereditary — never revoked); the v1.0 equivalence
-claim "stability ⟺ invariance" (90/90) was pool-relative — falsified by
-the or(ladder, gap) cells, found by E21 (the identity atoms of VR
-Part II) and cross-checked by the section's own instruments. Same-day
-self-correction, published as soon as three further expeditions
-(E21–E22) had leaned on the corrected machinery and it held.**
+(v1.1: [10.5281/zenodo.21323552](https://doi.org/10.5281/zenodo.21323552);
+v1.0: [10.5281/zenodo.21318982](https://doi.org/10.5281/zenodo.21318982)).
+v1.2 adds: the central construction named — the zero-trust lift (§2);
+§3.8, the census of sixteen — a lifted binary connective is complete
+alone iff its kernel is essentially binary and non-commutative
+(Sheffer's stroke and Peirce's arrow fall, both implications and both
+abjunctions survive), with kernel clone equalities in Lean; the
+fence-depth theorem in §19 (exactly m−1; no constant-depth fence);
+the at-scale stress-test of the warranty ladder; and the recalculated
+Bochvar ledger (§4).**
 The tag MEASURED means "verified by machine enumeration" (code in this
 repository), as opposed to "argued"; references to Lean mean proofs
 checked by the Lean 4 kernel with an **empty axiom list**.
@@ -71,7 +58,7 @@ input (until verification), inherited — with a measured stipulation
 theorem separating the liftable from the permanent. The entire development — the core,
 both engine certificates with cut admissibility, the algebraic
 witnesses, the general fixed-point theorem and the expedition twins,
-eleven modules in all (twelve with the E23 clone certificates accumulating for v1.2) — is formalized in Lean 4 **with an empty axiom
+twelve modules in all — is formalized in Lean 4 **with an empty axiom
 list, definitions included**. As a
 test bench the logic is run over the classical paradoxes — the liar,
 Jourdain's carousel, Curry, Yablo, the crocodile, Russell — and in every
@@ -323,6 +310,62 @@ What a dedicated paper would need: a quasi-equational axiomatization
 of Q(A), its subquasivariety lattice, and a representation theorem
 replacing Plonka sums. The reconnaissance says the ore is there; the
 mining is left as a separate work.
+
+### 3.8 Single-operator completeness: the census of sixteen (MEASURED + Lean)
+
+Zhegalkin's classical theorem splits in two under the lift, and the
+halves part ways. The *basis* survives entirely: the clone generated
+by {∧, ⊕} + constants equals the clone of the canonical basis
+{¬, ∧, ∨} + constants — a kernel clone equality, with negation
+verbatim as x⊕⊤ and the disjunction witness J_T(x) ⊕ y ⊕ (x∧y), where
+the truth detector J_T(x) = x∧x (the fallen idempotence law, §3.6)
+repairs the classical polynomial. The *ring* falls: the unit law
+x∧⊤ = x, idempotence and the distributivity of ∧ over ⊕ all die on Z
+(only the characteristic-2 law x⊕x = ⊥ survives — it is an anchor
+cell), so no multilinear canonical form exists; the normal-form role
+belongs to the J-DNF of the external layer (§3.6).
+
+The census. Lifting each of the sixteen binary Boolean kernels and
+closing over projections and constants gives, totally:
+
+| fate | kernels | clone size |
+|---|---|---|
+| complete alone | →, ←, ↛, ↚ | 514 |
+| fallen | NAND, NOR | 18 (one shared cage) |
+| fallen | ∧, ∨ | 7 |
+| fallen | ⊕, ↔ | 258 |
+| degenerate | p, q, ¬p, ¬q, ⊤, ⊥ | 4–8 |
+
+**The census law: a lifted binary connective is complete alone (with
+constants) iff its kernel is essentially binary and non-commutative.**
+The four directional connectives survive — both implications (the
+classical arrow-and-falsum basis of Hilbert systems crosses the lift
+intact) and both abjunctions (nonimplication p∧¬q and its converse
+¬p∧q, the *credit detector*: its single truth cell is "the consequent
+stands, the ground does not" — the very situation the logic is built
+to forbid). Every commutative kernel falls, including both classical
+one-operator champions: Sheffer's stroke and Peirce's arrow stall in
+the *same* eighteen-table cage, each still defining negation on its
+diagonal (x↑x = ¬x = x↓x) yet unable to rebuild its own De Morgan
+partner. Directionality, not any "mark-killing", is the mechanism:
+the lifted implication mints forced truth over marked cells (Z→T = T)
+and is complete regardless. Classical completeness theory is untouched
+— these are statements about the lifted operations relative to the
+lifted clone (for the classical landscape see Post; Martin [33];
+Rosenberg [34]); whether completeness relative to the external-Bochvar
+clone has prior art is an open literature question.
+
+Machine verification (`lean/ZClone.lean`, the twelfth module, empty
+axiom list throughout): the negative half by the certificate method —
+the explicit 18-table cage, its closure under both champions a single
+`decide`, with Boolean membership by own recursion (the core
+decidability of list membership is propext-tainted); the positive half
+by witness terms spliced through table extensionality as data (nine
+cell equalities instead of `funext`), giving the kernel clone
+equalities clone(↛) = clone({¬,∧,∨}) = clone({∧,⊕}), plus the
+seven-table cage banning lone ∧ from negation. The only measured (not
+kernel) remainder is the cardinality of the common clone: 514 = 2
+projections + all 512 external binary tables, by exhaustive closure.
 
 ## 4. Place in the literature
 
@@ -1134,6 +1177,25 @@ hunt over four atoms at depth three, all six connectives, found 0
 violations of the ladder inclusion and of hereditary monotonicity;
 the grade separation is generic (1.2 million cells), not exotic.
 
+**The fence depth is exactly m−1 (MEASURED).** How deep must a
+verification-invariance check look before the hereditary grade is
+certain? For a *sound* verdict all full completions agree with it by
+definition, so heredity violations can live only at partial
+refinements of size at most m−1 (m the number of marks): depth m−1
+always suffices. It is also necessary: the guard family
+
+    (b₁ ∧ … ∧ b_{m−1}) → (a → a)
+
+— a conjunction guard of m−1 marks standing over the fallen law of
+identity — is sound, invariant under every verification of fewer than
+m−1 atoms, and dies the moment all guards are verified true, when the
+door opens onto the greedy-F gap a→a (checked deterministically for
+m = 3, 4, 5; the m = 2 witness is the cell (¬p)→(q→q) above). Hence
+**no constant-depth characterization of the hereditary grade exists**;
+the cost of the full warranty grows with the number of unverified
+inputs, and what remains open is a structural, non-enumerative
+criterion.
+
 **Result: a verdict is a pair (value, warranty grade).** The value is
 greedy (local, fast); the warranty grades are global. Six verdict
 classes now, and the honest advice differs by grade: **hereditary T —
@@ -1293,6 +1355,11 @@ already ships in the repository (`tool/`); a possible essay,
     American Mathematical Society 77:396. AMS, Providence, 1989.
 32. Bonzio, S., Pra Baldi, M. On the structure of Bochvar algebras.
     *The Review of Symbolic Logic* (2024), doi:10.1017/S175502032400008X.
+33. Martin, N. M. The Sheffer functions of 3-valued logic. *The
+    Journal of Symbolic Logic* 19:1 (1954), 45–51.
+34. Rosenberg, I. G. Über die funktionale Vollständigkeit in den
+    mehrwertigen Logiken. *Rozpravy Československé Akad. Věd* 80
+    (1970), 3–93 (the classification of maximal clones).
 
 ## Acknowledgements and AI disclosure
 

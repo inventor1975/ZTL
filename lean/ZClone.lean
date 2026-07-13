@@ -227,6 +227,202 @@ theorem nimp_reaches_or : Reach znimp (ofOp zor) := by
         (map2 znimp projY cnstF)) = ofOp zor
     by decide) ▸ h
 
+-- ============================================================
+-- §3.  The splice: clone equalities, entirely in the kernel
+-- ============================================================
+
+/-- Pointwise unary application. -/
+def map1 (u : V → V) (a : Tbl) : Tbl :=
+  ⟨u a.c1, u a.c2, u a.c3, u a.c4, u a.c5, u a.c6, u a.c7, u a.c8, u a.c9⟩
+
+/-- Table extensionality, cell by cell — data, no `funext`. -/
+theorem tbl_eq_of_cells {s t : Tbl}
+    (h1 : s.c1 = t.c1) (h2 : s.c2 = t.c2) (h3 : s.c3 = t.c3)
+    (h4 : s.c4 = t.c4) (h5 : s.c5 = t.c5) (h6 : s.c6 = t.c6)
+    (h7 : s.c7 = t.c7) (h8 : s.c8 = t.c8) (h9 : s.c9 = t.c9) : s = t := by
+  cases s; cases t
+  cases h1; cases h2; cases h3; cases h4; cases h5
+  cases h6; cases h7; cases h8; cases h9
+  rfl
+
+/-- The clone of the canonical basis {¬, ∧, ∨} (+ constants). -/
+inductive ReachC : Tbl → Prop
+  | fst : ReachC projX
+  | snd : ReachC projY
+  | top : ReachC cnstT
+  | bot : ReachC cnstF
+  | nots {a : Tbl} : ReachC a → ReachC (map1 znot a)
+  | ands {a b : Tbl} : ReachC a → ReachC b → ReachC (map2 zand a b)
+  | ors  {a b : Tbl} : ReachC a → ReachC b → ReachC (map2 zor a b)
+
+/-- The clone of the Zhegalkin pair {∧, ⊕} (+ constants). -/
+inductive ReachZh : Tbl → Prop
+  | fst : ReachZh projX
+  | snd : ReachZh projY
+  | top : ReachZh cnstT
+  | bot : ReachZh cnstF
+  | ands {a b : Tbl} : ReachZh a → ReachZh b → ReachZh (map2 zand a b)
+  | xors {a b : Tbl} : ReachZh a → ReachZh b → ReachZh (map2 zxor a b)
+
+/-! Cell identities — each kernel-checked over all 3 or 9 value pairs. -/
+
+theorem cell_not_nimp : ∀ v, znimp V.T v = znot v := by decide
+theorem cell_and_nimp :
+    ∀ x y, znimp x (znimp x (znimp y V.F)) = zand x y := by decide
+theorem cell_or_nimp :
+    ∀ x y, znimp V.T (znimp (znimp V.T (znimp x V.F)) (znimp y V.F))
+      = zor x y := by decide
+theorem cell_nimp_canon : ∀ x y, zand x (znot y) = znimp x y := by decide
+theorem cell_not_zh : ∀ v, zxor v V.T = znot v := by decide
+theorem cell_or_zh :
+    ∀ x y, zxor (zand x x) (zxor y (zand x y)) = zor x y := by decide
+theorem cell_xor_canon :
+    ∀ x y, zor (zand x (znot y)) (zand (znot x) y) = zxor x y := by decide
+
+/-- **Nonimplication subsumes the canonical basis**: everything {¬,∧,∨}
+reach, ↛ reaches alone. -/
+theorem nimp_subsumes_canon {t : Tbl} (h : ReachC t) : Reach znimp t := by
+  induction h with
+  | fst => exact .fst
+  | snd => exact .snd
+  | top => exact .top
+  | bot => exact .bot
+  | nots _ ih =>
+      rename_i a _
+      have key : map2 znimp cnstT a = map1 znot a :=
+        tbl_eq_of_cells (cell_not_nimp _) (cell_not_nimp _) (cell_not_nimp _)
+          (cell_not_nimp _) (cell_not_nimp _) (cell_not_nimp _)
+          (cell_not_nimp _) (cell_not_nimp _) (cell_not_nimp _)
+      exact key ▸ Reach.app Reach.top ih
+  | ands _ _ iha ihb =>
+      rename_i a b _ _
+      have key : map2 znimp a (map2 znimp a (map2 znimp b cnstF))
+          = map2 zand a b :=
+        tbl_eq_of_cells (cell_and_nimp _ _) (cell_and_nimp _ _)
+          (cell_and_nimp _ _) (cell_and_nimp _ _) (cell_and_nimp _ _)
+          (cell_and_nimp _ _) (cell_and_nimp _ _) (cell_and_nimp _ _)
+          (cell_and_nimp _ _)
+      exact key ▸ Reach.app iha (Reach.app iha (Reach.app ihb Reach.bot))
+  | ors _ _ iha ihb =>
+      rename_i a b _ _
+      have key : map2 znimp cnstT
+          (map2 znimp (map2 znimp cnstT (map2 znimp a cnstF))
+            (map2 znimp b cnstF)) = map2 zor a b :=
+        tbl_eq_of_cells (cell_or_nimp _ _) (cell_or_nimp _ _)
+          (cell_or_nimp _ _) (cell_or_nimp _ _) (cell_or_nimp _ _)
+          (cell_or_nimp _ _) (cell_or_nimp _ _) (cell_or_nimp _ _)
+          (cell_or_nimp _ _)
+      exact key ▸ Reach.app Reach.top
+        (Reach.app
+          (Reach.app Reach.top (Reach.app iha Reach.bot))
+          (Reach.app ihb Reach.bot))
+
+/-- ...and conversely (↛ = p ∧ ¬q is canonical), so the clones are EQUAL. -/
+theorem canon_subsumes_nimp {t : Tbl} (h : Reach znimp t) : ReachC t := by
+  induction h with
+  | fst => exact .fst
+  | snd => exact .snd
+  | top => exact .top
+  | bot => exact .bot
+  | app _ _ iha ihb =>
+      rename_i a b _ _
+      have key : map2 zand a (map1 znot b) = map2 znimp a b :=
+        tbl_eq_of_cells (cell_nimp_canon _ _) (cell_nimp_canon _ _)
+          (cell_nimp_canon _ _) (cell_nimp_canon _ _) (cell_nimp_canon _ _)
+          (cell_nimp_canon _ _) (cell_nimp_canon _ _) (cell_nimp_canon _ _)
+          (cell_nimp_canon _ _)
+      exact key ▸ ReachC.ands iha (ReachC.nots ihb)
+
+/-- **Kernel clone equality**: nonimplication alone generates exactly the
+canonical clone — its completeness, with no measured step left. -/
+theorem nimp_clone_eq : ∀ t, Reach znimp t ↔ ReachC t :=
+  fun _ => ⟨canon_subsumes_nimp, nimp_subsumes_canon⟩
+
+/-- **The Zhegalkin pair subsumes the canonical basis** (¬x = x⊕⊤;
+x∨y = J_T(x) ⊕ y ⊕ (x∧y) — the detector repairs the classical
+polynomial). -/
+theorem zh_subsumes_canon {t : Tbl} (h : ReachC t) : ReachZh t := by
+  induction h with
+  | fst => exact .fst
+  | snd => exact .snd
+  | top => exact .top
+  | bot => exact .bot
+  | nots _ ih =>
+      rename_i a _
+      have key : map2 zxor a cnstT = map1 znot a :=
+        tbl_eq_of_cells (cell_not_zh _) (cell_not_zh _) (cell_not_zh _)
+          (cell_not_zh _) (cell_not_zh _) (cell_not_zh _)
+          (cell_not_zh _) (cell_not_zh _) (cell_not_zh _)
+      exact key ▸ ReachZh.xors ih ReachZh.top
+  | ands _ _ iha ihb => exact ReachZh.ands iha ihb
+  | ors _ _ iha ihb =>
+      rename_i a b _ _
+      have key : map2 zxor (map2 zand a a) (map2 zxor b (map2 zand a b))
+          = map2 zor a b :=
+        tbl_eq_of_cells (cell_or_zh _ _) (cell_or_zh _ _) (cell_or_zh _ _)
+          (cell_or_zh _ _) (cell_or_zh _ _) (cell_or_zh _ _)
+          (cell_or_zh _ _) (cell_or_zh _ _) (cell_or_zh _ _)
+      exact key ▸ ReachZh.xors (ReachZh.ands iha iha)
+        (ReachZh.xors ihb (ReachZh.ands iha ihb))
+
+/-- ...and conversely (⊕ by its surviving canonical definition). -/
+theorem canon_subsumes_zh {t : Tbl} (h : ReachZh t) : ReachC t := by
+  induction h with
+  | fst => exact .fst
+  | snd => exact .snd
+  | top => exact .top
+  | bot => exact .bot
+  | ands _ _ iha ihb => exact ReachC.ands iha ihb
+  | xors _ _ iha ihb =>
+      rename_i a b _ _
+      have key : map2 zor (map2 zand a (map1 znot b))
+          (map2 zand (map1 znot a) b) = map2 zxor a b :=
+        tbl_eq_of_cells (cell_xor_canon _ _) (cell_xor_canon _ _)
+          (cell_xor_canon _ _) (cell_xor_canon _ _) (cell_xor_canon _ _)
+          (cell_xor_canon _ _) (cell_xor_canon _ _) (cell_xor_canon _ _)
+          (cell_xor_canon _ _)
+      exact key ▸ ReachC.ors (ReachC.ands iha (ReachC.nots ihb))
+        (ReachC.ands (ReachC.nots iha) ihb)
+
+/-- **Kernel clone equality** for the Zhegalkin pair. -/
+theorem zhegalkin_clone_eq : ∀ t, ReachZh t ↔ ReachC t :=
+  fun _ => ⟨canon_subsumes_zh, zh_subsumes_canon⟩
+
+/-- The trio closed: ↛ alone, the pair {∧,⊕}, and the canonical basis
+{¬,∧,∨} generate one and the same clone. -/
+theorem nimp_eq_zhegalkin : ∀ t, Reach znimp t ↔ ReachZh t :=
+  fun t => (nimp_clone_eq t).trans (zhegalkin_clone_eq t).symm
+
+-- ============================================================
+-- §4.  Lone conjunction: never negation (the 7-table cage)
+-- ============================================================
+
+def andCage : List Tbl := [
+  ⟨F, F, F, F, F, F, F, F, F⟩,
+  ⟨T, F, F, F, F, F, F, F, F⟩,
+  ⟨T, F, F, T, F, F, T, F, F⟩,
+  ⟨T, F, Z, T, F, Z, T, F, Z⟩,
+  ⟨T, T, T, F, F, F, F, F, F⟩,
+  ⟨T, T, T, F, F, F, Z, Z, Z⟩,
+  ⟨T, T, T, T, T, T, T, T, T⟩
+]
+
+theorem andCage_closed : closedUnder zand andCage = true := by decide
+
+theorem reach_and_in_cage {t : Tbl} (h : Reach zand t) :
+    memb t andCage = true := by
+  induction h with
+  | fst => decide
+  | snd => decide
+  | top => decide
+  | bot => decide
+  | app _ _ iha ihb => exact closed_at andCage_closed _ iha _ ihb
+
+/-- Lone ∧ can never make negation (the monotonicity ban, kernel form). -/
+theorem and_cannot_not : ¬ Reach zand notTbl := by
+  intro h
+  exact absurd (reach_and_in_cage h) (by decide)
+
 -- CHECKS: no sorry, no admit.
 
 -- Axiom audit — MEASURED (VR discipline): the empty list, module-wide.
@@ -241,3 +437,7 @@ theorem nimp_reaches_or : Reach znimp (ofOp zor) := by
 #print axioms nimp_reaches_not
 #print axioms nimp_reaches_and
 #print axioms nimp_reaches_or
+#print axioms nimp_clone_eq
+#print axioms zhegalkin_clone_eq
+#print axioms nimp_eq_zhegalkin
+#print axioms and_cannot_not

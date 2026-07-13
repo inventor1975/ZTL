@@ -215,9 +215,13 @@ contradiction.
   twin): single-operator completeness by the CERTIFICATE method —
   the 18-table cage (Boolean membership by own recursion, pitfall #5;
   closure = one decide) proves NAND and NOR cannot rebuild ∧ or ∨,
-  while explicit witness terms crown nonimplication (¬x = ⊤↛x,
-  x∧y = x↛(x↛(y↛⊥)), x∨y = ⊤↛((⊤↛(x↛⊥))↛(y↛⊥))); both champions
-  still negate (x↑x = ¬x). Eleven theorems, empty axiom list.
+  and the 7-table cage bans lone ∧ from ¬; the positive side is now
+  KERNEL CLONE EQUALITIES via the splice (tbl_eq_of_cells + cell
+  identities, no funext): clone(↛) = clone(¬,∧,∨) = clone(∧,⊕) —
+  nimp_clone_eq / zhegalkin_clone_eq / nimp_eq_zhegalkin (the ∨-term
+  over the pair: J_T(x) ⊕ y ⊕ (x∧y) — the detector repairs the
+  classical polynomial). Fifteen theorems, empty axiom list; only
+  the CARDINALITY of the common clone (514) stays Python-measured.
 * `zquasi.py` — E19 quasivariety reconnaissance: subalgebras (exactly
   the Boolean core + A), congruences (A subdirectly irreducible, the
   monolith = the greediness kernel {T,F}|{Z}; quotient: the mark

@@ -9,8 +9,12 @@ concept DOI
 Accumulated for v1.2: the measured narrowing of the
 hereditary-characterization question (no depth-1 fence — §22 roadmap,
 zverify §5); E23 (Zhegalkin: the {∧,⊕} basis survives entirely, the
-GF(2) ring falls, Sheffer's stroke loses completeness) — section to be
-folded in at release.
+GF(2) ring falls, Sheffer's stroke and Peirce's arrow lose
+completeness, nonimplication/abjunction — the credit detector ¬p∧q up
+to argument order — is the sole surviving solo basis; kernel clone
+equalities in lean/ZClone.lean) — section to be folded in at release;
+the central construction now carries its canonical name, **the
+zero-trust lift** (§2).
 v1.1 corrects §19: the verdict warranty is a two-grade ladder
 (sound — never lies / hereditary — never revoked); the v1.0 equivalence
 claim "stability ⟺ invariance" (90/90) was pool-relative — falsified by
@@ -125,14 +129,18 @@ Z (zero-trust, "not earned") — a property of an atomic datum, not a
 truth value; it participates in the calculating tables as a third
 symbol.
 
-**Generating principle.** For any classical connective f, its ZTL lift:
+**Definition (the zero-trust lift).** For any classical connective f,
+its lift:
 
     f*(x₁,…,xₙ) = ⋀ { f(v₁,…,vₙ) : vᵢ ∈ subs(xᵢ) },
     where subs(Z) = {T,F}, subs(v) = {v} otherwise;
     ⋀ is classical conjunction over all combinations.
 
-Every occurrence of Z is substituted independently; the result is always
-classical.
+Every occurrence of Z is substituted independently; the result is
+always classical. This one construction is the generating principle of
+the whole system: every connective of ZTL is a lifted classical one,
+and every result in this preprint is a property of the lift. Throughout
+the text and the companion repositories it is called simply *the lift*.
 
 **Corollary (greediness theorem, MEASURED):** no compound formula ever
 takes the value Z; Z lives only on atoms.

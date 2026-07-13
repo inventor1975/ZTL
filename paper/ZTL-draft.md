@@ -1206,11 +1206,13 @@ quasivariety scouted in §3.7 (axiomatization, subquasivariety lattice,
 a representation theorem replacing Plonka sums — a separate work);
 a cheap characterization of the hereditary warranty grade of §19
 (sound is one pass over completions; is hereditary computable without
-enumerating refinements? — open; MEASURED narrowing, 2026-07-12: no
-depth-1 fence exists — a 151.8-million-pair hunt at four atoms found
-verdicts invariant under every single verification yet killed by a
-pair (the counterexample cell is kept under regression, `zverify` §5),
-so any answer must look at least two moves deep);
+enumerating refinements? — MEASURED narrowing, 2026-07-12/13: the
+fence depth is exactly m−1 in the number of marks — sufficient for
+every sound verdict (violations cannot hide in full completions) and
+necessary by the guard family (b₁∧…∧b_{m−1}) → (a→a), checked at
+m = 2,3,4,5 (`zverify` §§5–6); hence NO constant-depth
+characterization exists and what remains open is a structural,
+non-enumerative criterion);
 a practical zero-trust validation library (verdicts with warranties +
 evidence combination + provenance). The interactive studio — natural
 language negotiated into ZFL and judged by the measured engines —

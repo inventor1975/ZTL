@@ -299,7 +299,11 @@ contradiction.
   invariance" (90/90) was pool-relative — falsified by the
   or(ladder, gap) cells ¬¬p∨(q∨¬q) and (¬p)→(q→q); measured: the
   grades separate. A verdict = a pair (value, warranty GRADE).
-  Preprint §19. TODO.md — the saved list of remaining work.
+  THE FENCE DEPTH IS EXACTLY m−1 (no constant-depth fence): sufficient
+  for sound verdicts, necessary by the guard family
+  (b₁∧…∧b_{m−1})→(a→a) — deterministic at m=3,4,5 (§6); open remains
+  a structural criterion. Preprint §19. TODO.md — the saved list of
+  remaining work.
 * `zcombine.py` — E13 combination: intersection of constraints; the
   unification theorem (verify = combine∘singleton); conflict is
   earned, not renormalized (Zadeh resolved in Smets' favor against

@@ -200,9 +200,43 @@ if __name__ == "__main__":
     print(f"  killed by the pair b:=F, d:=F → {two_step}")
     assert v4 == T and one_step and two_step != v4 \
         and not hereditary_bit(phi4, m4)
-    print("  → no depth-1 fence exists for the hereditary grade: the")
-    print("    roadmap's open question (a cheap characterization) is")
-    print("    narrowed — any answer must look at least two moves deep.")
+    print("  → no depth-1 fence exists for the hereditary grade.")
+
+    print("\n### 6. The fence depth is exactly m−1 (no constant-depth fence)")
+    # For SOUND verdicts all full completions agree, so heredity
+    # violations can live only at partial refinements of size ≤ m−1:
+    # depth m−1 always SUFFICES. It is also NECESSARY: the guard
+    # family  (b₁∧…∧b_{m−1}) → (a→a)  — a conjunction guard of m−1
+    # marks over the fallen law of identity — is sound, invariant
+    # under every verification of fewer than m−1 atoms, and dies when
+    # all guards are verified true (the door opens onto the greedy-F
+    # gap a→a). Checked deterministically here for m = 3, 4, 5; the
+    # m = 2 witness is the (¬p)→(q→q) cell of §5.
+    from itertools import combinations
+    for m in (3, 4, 5):
+        guards = [f"b{i}" for i in range(1, m)]
+        atoms = guards + ["a"]
+        conj = guards[0]
+        for g in guards[1:]:
+            conj = ("and", conj, g)
+        phi = ("imp", conj, ("imp", "a", "a"))
+        mk = {x: "M" for x in atoms}
+        v = ztl_eval(phi, mk)
+        snd = all(ev(phi, dict(zip(atoms, c))) == v
+                  for c in product((T, F), repeat=m))
+        inv = all(ztl_eval(phi, {**mk, **dict(zip(ns, vs))}) == v
+                  for sz in range(1, m - 1)
+                  for ns in combinations(atoms, sz)
+                  for vs in product((T, F), repeat=sz))
+        dies = ztl_eval(phi, {**mk, **{g: T for g in guards}}) != v
+        assert v == T and snd and inv and dies
+        print(f"  m={m}: (∧ of {m-1} guards)→(a→a) — sound T, invariant "
+              f"below m−1, dies at m−1 ✓")
+    print("  → THE FENCE DEPTH IS EXACTLY m−1: sufficient for every sound")
+    print("    verdict (violations cannot hide in full completions), and")
+    print("    necessary by the guard family. NO constant-depth")
+    print("    characterization of the hereditary grade exists; what")
+    print("    remains open is a STRUCTURAL (non-enumerative) criterion.")
 
     print("\n### Conclusion for the tool")
     print("  A verdict = a PAIR (value, warranty GRADE), and the grades are a")

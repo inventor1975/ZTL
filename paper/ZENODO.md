@@ -83,9 +83,12 @@ machine-checked on the empty axiom list (lean/ZClone.lean); the
 fence-depth theorem (§19): the hereditary warranty is checkable at
 depth exactly m−1 and no constant-depth fence exists (the guard
 family over the fallen law of identity); the warranty ladder
-stress-tested at scale (151.8M pairs, 0 violations); and the honest
+stress-tested at scale (151.8M pairs, 0 violations); the honest
 Bochvar ledger (§4): the {¬,∧,∨} coincidence found post hoc, not a
-source.
+source; and the passport's phase letter glossed (§10): read N as
+Not-yet — Kleene's undefined by intent housed as a phase — with errors
+typed as interface events (the premature read of a phase; signaling
+NaN is the cousin), not as a logical letter.
 
 What was new in v1.1 (same-day self-correction): §19 is corrected —
 the verdict warranty is a two-grade ladder (sound / hereditary). The

@@ -840,7 +840,9 @@ the NaN signature "not equal to itself". The anchors choose locality.
 (precedent: Codd's two NULLs for RM/V2, rejected by industry) is
 declined: values are not multiplied, non-values are typed. N is the ⊥
 of the fixed-point iteration (§9), the pending of any promise: it
-exists only inside the solver and never returns outward. The
+exists only inside the solver and never returns outward. Read N as
+**Not-yet** — Kleene's undefined *by intent*, at last housed as a
+phase rather than a value. The
 four-valued algebra {T,F,Z,N} with the lazy lift over ZTL is coherent
 and factorizes into our two registers ({T,F,Z} fragment = ZTL, {T,F,N}
 fragment = Kleene), but it packs two phases into one type — a monolith
@@ -863,6 +865,15 @@ not the shared symbol (our own solver reuses Z positionally during
 iteration) but the promotion of a status to a truth value: ZTL splits
 the *role*, not the alphabet, and revokes the status's right to be
 what a statement evaluates to.
+
+A closing note on errors: the system has no error letter, and none is
+missing. An *error* is an interface event — the premature read of a
+phase: any value returned for a still-pending N is wrong whatever it
+is, because nothing has been computed yet. The engineering cousin pair
+makes the split visible: IEEE's quiet NaN behaves like the mark Z
+(carried, tested, lifted by verification), while the signaling NaN is
+the alarm on touching the phase. The alphabet stays four letters;
+E is hardware, not logic.
 
 Consequence for positioning: ZTL's neighbours are not the many-valued
 logics but the two-valued assertability policies of the supervaluation

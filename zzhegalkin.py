@@ -36,6 +36,10 @@ MEASURED here:
      completeness does not survive zero trust, while Zhegalkin's
      PAIR does. Completeness, too, is not granted on credit.
 
+Lean twin: lean/ZClone.lean — the negative half by the certificate
+method (the 18-table cage, closure as one decide), the positive half
+by explicit witness terms; eleven theorems, empty axiom list.
+
 Slogan: Zhegalkin-as-basis moves onto ZTL; Zhegalkin-as-ring stays on
 the classical shore.
 """

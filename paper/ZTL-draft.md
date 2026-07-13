@@ -64,7 +64,7 @@ input (until verification), inherited — with a measured stipulation
 theorem separating the liftable from the permanent. The entire development — the core,
 both engine certificates with cut admissibility, the algebraic
 witnesses, the general fixed-point theorem and the expedition twins,
-ten modules in all — is formalized in Lean 4 **with an empty axiom
+eleven modules in all (twelve with the E23 clone certificates accumulating for v1.2) — is formalized in Lean 4 **with an empty axiom
 list, definitions included**. As a
 test bench the logic is run over the classical paradoxes — the liar,
 Jourdain's carousel, Curry, Yablo, the crocodile, Russell — and in every

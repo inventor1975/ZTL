@@ -211,7 +211,13 @@ contradiction.
   kernel-computed (lfp of the nine-fact system: 8 grounded, R∈R = Z).
   Fm now carries the constants ⊤/⊥ (engines + both certificates
   extended). THE WHOLE Lean corpus — 11 modules — on the empty
-  axiom list, definitions included.
+  axiom list, definitions included. `ZClone.lean` (12th module, E23
+  twin): single-operator completeness by the CERTIFICATE method —
+  the 18-table cage (Boolean membership by own recursion, pitfall #5;
+  closure = one decide) proves NAND and NOR cannot rebuild ∧ or ∨,
+  while explicit witness terms crown nonimplication (¬x = ⊤↛x,
+  x∧y = x↛(x↛(y↛⊥)), x∨y = ⊤↛((⊤↛(x↛⊥))↛(y↛⊥))); both champions
+  still negate (x↑x = ¬x). Eleven theorems, empty axiom list.
 * `zquasi.py` — E19 quasivariety reconnaissance: subalgebras (exactly
   the Boolean core + A), congruences (A subdirectly irreducible, the
   monolith = the greediness kernel {T,F}|{Z}; quotient: the mark

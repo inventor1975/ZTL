@@ -143,17 +143,49 @@ def main():
           f"{nor_diag == not_tbl}")
     NIMPL = lift2(lambda a, b: T if (a == T and b == F) else F)
     nimpl_clone = close([NIMPL])
-    print(f"  {{↛}}+consts  : clone {len(nimpl_clone)} of 514 — THE SOLE "
-          f"SURVIVING SOLO BASIS")
+    print(f"  {{↛}}+consts  : clone {len(nimpl_clone)} of 514 — complete alone")
     assert not_tbl not in and_clone and jt_tbl in and_clone
     assert not_tbl in nand_clone and len(nand_clone) < 514
     assert nor_diag == not_tbl and len(nor_clone) == len(nand_clone)
     assert len(nimpl_clone) == 514
-    print("  → the mechanism: a solo operator must both negate and KILL the")
-    print("    mark. NAND/NOR negate but mint T over Z-cells (zNAND(Z,F)=T —")
-    print("    a rigid decoration that locks their clone at 18); ↛ = p∧¬q")
-    print("    kills every Z-cell AND yields ¬q = ⊤↛q verbatim — the refusal")
-    print("    connective is the one complete loner under zero trust.")
+
+    print("\n-- 5. THE CENSUS OF SIXTEEN (corrects §4's former 'sole') --")
+    # All 16 binary Boolean kernels, lifted; bits over (TT, TF, FT, FF).
+    kernels = {(0,0,0,0): "⊥", (1,1,1,1): "⊤", (1,1,0,0): "p",
+               (0,0,1,1): "¬p", (1,0,1,0): "q", (0,1,0,1): "¬q",
+               (1,0,0,0): "∧", (1,1,1,0): "∨", (0,1,1,0): "⊕",
+               (1,0,0,1): "↔", (0,1,1,1): "NAND", (0,0,0,1): "NOR",
+               (0,1,0,0): "↛", (0,0,1,0): "↚",
+               (1,1,0,1): "impl-shaped", (1,0,1,1): "impl-shaped'"}
+    complete, fallen = [], []
+    for bits, name in kernels.items():
+        cells = {(T,T): bits[0], (T,F): bits[1], (F,T): bits[2],
+                 (F,F): bits[3]}
+        op = lift2(lambda a, b, c=cells: T if c[(a, b)] else F)
+        n = len(close([op]))
+        noncomm = bits[1] != bits[2]
+        dep_q = bits[0] != bits[1] or bits[2] != bits[3]
+        dep_p = bits[0] != bits[2] or bits[1] != bits[3]
+        essential = dep_p and dep_q
+        (complete if n == 514 else fallen).append((name, n, noncomm))
+        # THE LAW: solo-complete ⟺ essentially binary AND non-commutative
+        assert (n == 514) == (essential and noncomm), (name, n)
+    print(f"  complete alone ({len(complete)}): "
+          + ", ".join(f"{nm}" for nm, _, _ in complete))
+    print(f"  fallen ({len(fallen)}): "
+          + ", ".join(f"{nm}({n})" for nm, n, _ in fallen))
+    print("  → THE CENSUS LAW, total over all sixteen kernels:")
+    print("    a lifted binary connective is COMPLETE ALONE (with consts)")
+    print("    ⟺ its kernel is ESSENTIALLY BINARY and NON-COMMUTATIVE. The four")
+    print("    directional connectives (both implications, both")
+    print("    abjunctions) survive; every commutative kernel falls —")
+    print("    including both classical solo champions. Directionality,")
+    print("    not mark-killing, is the true mechanism; the earlier")
+    print("    'sole surviving solo basis' wording was an overclaim")
+    print("    beyond the four measured candidates — corrected here.")
+    print("  → (the once-conjectured mechanism 'must negate and kill the")
+    print("    mark' is CORRECTED by §5: lifted implication mints T over")
+    print("    Z-cells yet is complete — directionality is the law.)")
     print("  → ∧ alone cannot make ¬ (the monotonicity ban survives by")
     print("    classical restriction) yet births the J_T detector; and")
     print("    SHEFFER'S STROKE LOSES COMPLETENESS under zero trust —")
@@ -163,10 +195,11 @@ def main():
     print("\n" + "=" * 72)
     print("VERDICT: Zhegalkin-as-basis MOVES (clone equality 514 = 514);")
     print("Zhegalkin-as-ring FALLS (unit, idempotence, distributivity);")
-    print("both classical solo champions fall to the same step (Sheffer and")
-    print("Peirce: 18 of 514, though NOR(p,p) = ¬p survives verbatim); the")
-    print("SOLE surviving solo basis is nonimplication ↛ — the refusal")
-    print("connective (514 of 514); lone ∧ births J_T but never ¬.")
+    print("the CENSUS LAW: a lifted connective is complete alone iff its")
+    print("kernel is essentially binary and non-commutative — the four")
+    print("directional connectives survive (both implications, both")
+    print("abjunctions), every commutative kernel falls, including both")
+    print("classical solo champions (18 of 514); lone ∧ births J_T.")
     print("=" * 72)
 
 

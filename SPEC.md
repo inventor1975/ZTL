@@ -357,11 +357,17 @@ contradiction.
   table identity (the anchor cell); but the GF(2) RING falls — unit,
   idempotence (the J_T detector) and ∧-over-⊕ distributivity all die
   on Z — so no multilinear canonical form: the normal-form role
-  belongs to the J-DNF (E14). Single-operator fates: {∧}+consts never
-  reaches ¬ (clone 7) yet births the J_T detector; Sheffer's stroke
-  AND Peirce's arrow both lose completeness (18 of 514 each — they
-  mint T over Z-cells and lock); the SOLE surviving solo basis is
-  nonimplication ↛ = p∧¬q, the refusal connective (514 of 514).
+  belongs to the J-DNF (E14). Single-operator fates — THE
+  CENSUS LAW (all 16 kernels, total): a lifted binary connective is
+  complete alone (with consts) ⟺ its kernel is essentially binary
+  and NON-COMMUTATIVE. Survivors: the four directional connectives
+  (both implications, both abjunctions ↛/↚ — the credit detector up
+  to argument order); fallen: every commutative kernel, incl. both
+  classical solo champions NAND/NOR (18 of 514, same cage), ∧/∨ (7),
+  ⊕/↔ (258); {∧}+consts births J_T but never ¬. (The earlier 'sole
+  surviving solo basis' and the 'must kill the mark' mechanism were
+  overclaims beyond the four measured candidates — corrected by the
+  census; lifted → mints T over Z-cells yet is complete.)
   Basis moves, ring stays.
 * `zopsets.py` — E21 operational sets (VR Part II, step (а)): finite
   SetsOp mirror (pointed reveal-graphs); identity totally earnable

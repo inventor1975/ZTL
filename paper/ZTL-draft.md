@@ -9,10 +9,13 @@ concept DOI
 Accumulated for v1.2: the measured narrowing of the
 hereditary-characterization question (no depth-1 fence — §22 roadmap,
 zverify §5); E23 (Zhegalkin: the {∧,⊕} basis survives entirely, the
-GF(2) ring falls, Sheffer's stroke and Peirce's arrow lose
-completeness, nonimplication/abjunction — the credit detector ¬p∧q up
-to argument order — is the sole surviving solo basis; kernel clone
-equalities in lean/ZClone.lean) — section to be folded in at release;
+GF(2) ring falls; THE CENSUS LAW over all sixteen kernels: a lifted
+connective is complete alone ⟺ its kernel is essentially binary and
+non-commutative — survivors are the four directional connectives
+(both implications, both abjunctions, incl. the credit detector ¬p∧q),
+every commutative kernel falls, incl. Sheffer's stroke and Peirce's
+arrow; kernel clone equalities in lean/ZClone.lean) — section to be
+folded in at release;
 the central construction now carries its canonical name, **the
 zero-trust lift** (§2).
 v1.1 corrects §19: the verdict warranty is a two-grade ladder

@@ -14,23 +14,25 @@ it**.
 
 ## Buckets
 
-**SAVED** — the catch, written with WHY (`kill` = the refinement that flips it,
-`depth` = how many marks must be verified first). Only `depth ≥ --save-min-depth`
-is written to disk (the treacherous that survive real checks); shallower breaks
-are counted, not stored.
+**SAVED** — one file only, written with WHY (`kill` = the refinement that flips
+it, `depth` = how many marks must be verified first):
 
 | file | grade | meaning | curator's words |
 |---|---|---|---|
-| `results/suspect.jsonl` | **sound, not hereditary** | honest in every completion, yet a hidden break (the fallen-lemma class) | «как с той лемкой, вот почему» |
-| `results/dangerous.jsonl` | **until-verification, value T** | a T you cannot trust — asserts now, verification REVOKES it (the Frege cell) | «утверждение, что рухнет» |
+| `results/suspect.jsonl` | **sound, not hereditary** | a genuine classical law (a tautology when the value is T) that breaks ONLY under ZTL uncertainty — the fallen-lemma class | «как с той лемкой, вот почему» |
 
-**COUNTED** — the boring mass, statistics only (never written; too big):
+**COUNTED** — everything else, statistics only (bucket totals + depth histograms
+in `summary.json`, never dumped):
 
-| bucket | grade | meaning |
+| bucket | grade | why not saved |
 |---|---|---|
+| **dangerous** | until-verification, value T | NOT sound ⇒ it has a classical countermodel ⇒ **classical logic already refutes it**. Not unique to ZTL, so counted only. |
 | clean | hereditary | never revoked. «всё ровно» |
 | deny | until-verification, value F | a refusal now that verification would GRANT. Safe pessimism. |
 | atom_z | value Z | a bare marked atom: the unverified datum itself. «Или Z» |
+
+The point: **only `suspect` is broken *only* in ZTL.** Everything else is either
+fine (clean), a safe refusal (deny), or already broken classically (dangerous).
 
 `summary.json` keeps full bucket totals + depth histograms for every grade, so
 the counted mass is never lost — only its line-by-line dump is.

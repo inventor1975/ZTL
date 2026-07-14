@@ -211,7 +211,7 @@ def run(atom_names, max_nodes, cores, chunk, save_min_depth):
                  f"  | dangerous {total['dangerous']:,} clean {total['clean']:,}"
                  f" deny {total['deny']:,}  ({pairs / el if el else 0:,.0f}/s)")
 
-    note("merging catch shards …")
+    note("merging catch shards into one file and cleaning up …")
     for b in SAVED:
         with open(os.path.join(RESULTS, f"{b}.jsonl"), "w") as out:
             for i in range(done):
@@ -219,6 +219,11 @@ def run(atom_names, max_nodes, cores, chunk, save_min_depth):
                 if os.path.exists(p):
                     with open(p) as f:
                         out.writelines(f)
+                    os.remove(p)                  # tidy each shard once merged
+    try:
+        os.rmdir(SHARDS)                          # drop the now-empty shards dir
+    except OSError:
+        pass
     summary = {"atoms": atom_names, "max_nodes": max_nodes, "pairs": pairs,
                "save_min_depth": save_min_depth,
                "bucket_totals": total,

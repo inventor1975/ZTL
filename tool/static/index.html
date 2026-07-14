@@ -55,9 +55,15 @@
 
   <!-- 2. ZFL -->
   <section id="panel-zfl">
-    <h2>2 · ZFL <small>the formal language; hand-editable — <span class="warn-note">the AI may misformalize here; check the back-reading &amp; edit</span></small></h2>
+    <h2>2 · ZFL <small>the formal language; hand-editable — write a plain line
+      (<code>a=F assert (d iff !c) impl (b impl a)</code>) or JSON —
+      <span class="warn-note">the AI may misformalize here; check the back-reading &amp; edit</span></small></h2>
     <textarea id="zfl" rows="10" spellcheck="false"
-      placeholder='{"genre": "system", "sentences": {"L": "not(Tr(L))"}}'></textarea>
+      placeholder='a=F assert (d iff !c) impl ((b impl a) impl (b iff c))
+
+status only for verified atoms; anything unnamed is Z (unverified).
+operators: ! not · and · or · impl · xor · iff/nxor · assert
+(or paste JSON for the system genre: {"genre":"system","sentences":{"L":"not(Tr(L))"}})'></textarea>
     <div class="row">
       <button id="btn-validate">Validate</button>
       <button id="btn-repair">AI repair from errors</button>

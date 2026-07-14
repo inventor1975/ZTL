@@ -22,6 +22,23 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 
 import zfl                    # noqa: E402
+import humanzfl               # noqa: E402
+
+
+def _coerce(payload):
+    """Accept EITHER a JSON ZFL document OR a human line
+    (`a=F assert (d iff !c) impl …`). Returns (zfl_json_string, issues|None).
+    A leading '{' means JSON (unchanged); anything else is the human surface
+    syntax, parsed to the same document."""
+    text = payload.get("zfl", "")
+    t = (text or "").strip()
+    if not t or t.startswith("{"):
+        return text, None
+    try:
+        return json.dumps(humanzfl.human_to_doc(t), ensure_ascii=False), None
+    except Exception as e:
+        return None, [{"level": "error", "code": "E_HUMAN", "where": "input",
+                       "hint": f"человеческий ZFL: {e}"}]
 import engine                 # noqa: E402
 import translator             # noqa: E402
 import providers              # noqa: E402
@@ -76,14 +93,20 @@ EXAMPLES = [
 
 
 def api_validate(payload):
-    doc, parsed, issues = zfl.validate(payload.get("zfl", ""))
+    text, herr = _coerce(payload)
+    if herr:
+        return {"ok": False, "issues": herr, "back_reading": None}
+    doc, parsed, issues = zfl.validate(text)
     ok = parsed is not None
     br = zfl.back_reading(doc, parsed) if ok else None
     return {"ok": ok, "issues": issues, "back_reading": br}
 
 
 def api_run(payload):
-    doc, parsed, issues = zfl.validate(payload.get("zfl", ""))
+    text, herr = _coerce(payload)
+    if herr:
+        return {"ok": False, "issues": herr}
+    doc, parsed, issues = zfl.validate(text)
     if parsed is None:
         return {"ok": False, "issues": issues}
     report = engine.run(doc, parsed)
@@ -143,7 +166,9 @@ def api_explain(payload):
 def api_repair(payload):
     """Bounded repair loop: up to 3 passes, each fed by the fresh
     validator output (errors AND warnings)."""
-    text = payload.get("zfl", "")
+    text, herr = _coerce(payload)
+    if herr:
+        return {"ok": False, "error": herr[0]["hint"]}
     doc, parsed, issues = zfl.validate(text)
     if parsed is not None and not issues:
         return {"ok": True, "zfl": text, "note": "already valid"}
@@ -165,7 +190,9 @@ def api_refute(payload):
     """Hypotheses mode: exhaustively check a claimed law (ZFL statement)
     over {T,F,Z}. Same shape as api_run so the front reuses the flow."""
     import refuter
-    text = payload.get("zfl", "")
+    text, herr = _coerce(payload)
+    if herr:
+        return {"ok": False, "issues": herr}
     r = refuter.refute_zfl(text)
     if not r.get("ok"):
         return {"ok": False, "issues": r.get("issues", [])}

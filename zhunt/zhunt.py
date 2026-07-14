@@ -141,7 +141,9 @@ def _process(args):
     """One chunk → shard files for the SAVED buckets only; full counts and
     depth histograms returned for statistics."""
     cid, formulas = args
-    handles = {b: open(os.path.join(SHARDS, f"{b}.{cid}.jsonl"), "w")
+    # one shard file per WORKER (append), not per chunk — so the run leaves
+    # ~#cores temp files, not one per chunk (which would be tens of thousands).
+    handles = {b: open(os.path.join(SHARDS, f"{b}.{os.getpid()}.jsonl"), "a")
                for b in SAVED}
     counts = {b: 0 for b in ALL_BUCKETS}
     written = {b: 0 for b in SAVED}
@@ -214,9 +216,9 @@ def run(atom_names, max_nodes, cores, chunk, save_min_depth):
     note("merging catch shards into one file and cleaning up …")
     for b in SAVED:
         with open(os.path.join(RESULTS, f"{b}.jsonl"), "w") as out:
-            for i in range(done):
-                p = os.path.join(SHARDS, f"{b}.{i}.jsonl")
-                if os.path.exists(p):
+            for name in sorted(os.listdir(SHARDS)):
+                if name.startswith(f"{b}.") and name.endswith(".jsonl"):
+                    p = os.path.join(SHARDS, name)
                     with open(p) as f:
                         out.writelines(f)
                     os.remove(p)                  # tidy each shard once merged

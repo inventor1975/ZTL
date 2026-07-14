@@ -93,14 +93,7 @@ EXAMPLES = [
     {"name": "Sensor",
      "intent": "An unverified sensor reports overheating; if overheating, "
                "the shutdown fires. Will it fire?",
-     "zfl": json.dumps({"genre": "statement",
-                        "atoms": {"overheat": {"status": "Z",
-                                               "note": "sensor unverified"},
-                                  "shutdown": {"status": "Z",
-                                               "note": "not observed"}},
-                        "assert": "imp(overheat, shutdown)",
-                        "ask": ["verdict", "warranty"]},
-                       ensure_ascii=False, indent=1)},
+     "zfl": "assert overheat impl shutdown"},
     {"name": "Russell",
      "intent": "The set of all sets not containing themselves: does it "
                "contain itself? Universe: a = empty, b = {b}, R.",

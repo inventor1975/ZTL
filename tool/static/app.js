@@ -210,21 +210,21 @@ function renderSystem(rep, out) {
 let PARADOX_EX = [];
 const HYP_EX = [
   {name: "p → p  (reflexivity of the arrow)", intent: "Does p imply p — is the arrow reflexive?",
-   zfl: '{"genre":"statement","atoms":{"p":{"status":"Z"}},"assert":"imp(p,p)"}'},
+   zfl: 'assert p impl p'},
   {name: "¬p → ¬p", intent: "Does not-p imply not-p?",
-   zfl: '{"genre":"statement","atoms":{"p":{"status":"Z"}},"assert":"imp(not(p),not(p))"}'},
+   zfl: 'assert !p impl !p'},
   {name: "excluded middle:  p ∨ ¬p", intent: "Is 'p or not p' always true?",
-   zfl: '{"genre":"statement","atoms":{"p":{"status":"Z"}},"assert":"or(p,not(p))"}'},
+   zfl: 'assert p or !p'},
   {name: "¬¬p ∨ ¬p  (LEM is not all bad)", intent: "Is '¬¬p or ¬p' always true?",
-   zfl: '{"genre":"statement","atoms":{"p":{"status":"Z"}},"assert":"or(not(not(p)),not(p))"}'},
+   zfl: 'assert !!p or !p'},
   {name: "¬¬¬p ↔ ¬p  (triple = single ¬)", intent: "Does ¬¬¬p equal ¬p?",
-   zfl: '{"genre":"statement","atoms":{"p":{"status":"Z"}},"assert":"xnor(not(not(not(p))),not(p))"}'},
+   zfl: 'assert !!!p iff !p'},
   {name: "¬¬p  (double negation alone)", intent: "Is ¬¬p always true?",
-   zfl: '{"genre":"statement","atoms":{"p":{"status":"Z"}},"assert":"not(not(p))"}'},
+   zfl: 'assert !!p'},
   {name: "∧-elimination:  (a∧b) → a", intent: "Does 'a and b' imply a?",
-   zfl: '{"genre":"statement","atoms":{"a":{"status":"Z"},"b":{"status":"Z"}},"assert":"imp(and(a,b),a)"}'},
+   zfl: 'assert (a and b) impl a'},
   {name: "∨-introduction:  a → (a∨b)", intent: "Does a imply 'a or b'?",
-   zfl: '{"genre":"statement","atoms":{"a":{"status":"Z"},"b":{"status":"Z"}},"assert":"imp(a,or(a,b))"}'},
+   zfl: 'assert a impl (a or b)'},
 ];
 
 function fillExamples(list) {
@@ -238,7 +238,10 @@ function fillExamples(list) {
     const e = list[+sel.value];
     if (!e) return;
     if (e.intent) addMsg("user", e.intent);
-    if (e.zfl) { zflBox.value = pretty(e.zfl); validate(); }
+    if (e.zfl) {                          // human line as-is; JSON pretty-printed
+      zflBox.value = e.zfl.trim().startsWith("{") ? pretty(e.zfl) : e.zfl;
+      validate();
+    }
   };
 }
 

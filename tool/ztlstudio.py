@@ -45,6 +45,31 @@ import providers              # noqa: E402
 
 PORT = int(os.environ.get("PORT", "8190"))   # copy: 8191 (live studio uses 8190); preview harness sets PORT
 
+# --- public-instance hardening (server sets ZTLSTUDIO_PUBLIC=1) --------------
+import time                                                     # noqa: E402
+from collections import defaultdict, deque                      # noqa: E402
+PUBLIC = os.environ.get("ZTLSTUDIO_PUBLIC") == "1"
+_LLM_ROUTES = {"/api/chat", "/api/emit", "/api/explain", "/api/repair"}
+_RL = defaultdict(deque)          # ip -> timestamps of free-AI calls
+_RL_MAX, _RL_WINDOW = 20, 600     # ≤20 free-AI calls / 10 min / IP
+
+
+def _client_ip(handler):
+    """Real client IP behind the Apache reverse proxy (X-Forwarded-For)."""
+    xff = handler.headers.get("X-Forwarded-For", "")
+    return xff.split(",")[0].strip() if xff else handler.client_address[0]
+
+
+def _rate_ok(ip):
+    now = time.time()
+    q = _RL[ip]
+    while q and q[0] < now - _RL_WINDOW:
+        q.popleft()
+    if len(q) >= _RL_MAX:
+        return False
+    q.append(now)
+    return True
+
 EXAMPLES = [
     {"name": "Liar",
      "intent": "This sentence is false.",
@@ -134,12 +159,15 @@ def api_emit(payload):
 
 
 def api_providers(payload):
-    return {"ok": True, "providers": providers.available()}
+    return {"ok": True, "providers": providers.available(), "public": PUBLIC}
 
 
 def api_savekey(payload):
     """Persist a key into tool/.<provider>_key (gitignored). Optional
     convenience — the UI can also pass keys per request without saving."""
+    if PUBLIC:
+        return {"ok": False, "error": "saving is off on the public instance — "
+                "a key you enter is used for this session only, never stored"}
     prov = payload.get("provider", "")
     key = (payload.get("key", "") or "").strip()
     if prov not in providers.PROVIDERS:
@@ -246,6 +274,13 @@ class Handler(BaseHTTPRequestHandler):
         if not fn:
             self._send(404, {"error": "not found"})
             return
+        if PUBLIC and self.path in _LLM_ROUTES and \
+                not _rate_ok(_client_ip(self)):
+            self._send(200, {"ok": False, "error":
+                "free-AI limit reached (20 / 10 min per visitor). Enter your "
+                "own key in ⚙ Model for unlimited use — it stays this session "
+                "only. The core verdict never needs the AI."})
+            return
         n = int(self.headers.get("Content-Length", 0))
         try:
             payload = json.loads(self.rfile.read(n).decode() or "{}")
@@ -267,5 +302,6 @@ if __name__ == "__main__":
         print("No provider key found — pro mode (hand-written ZFL), the "
               "AI is off. Add a key in Settings or drop it into "
               "tool/.<provider>_key.")
-    Timer(0.7, lambda: webbrowser.open(f"http://localhost:{PORT}")).start()
+    if not PUBLIC:
+        Timer(0.7, lambda: webbrowser.open(f"http://localhost:{PORT}")).start()
     HTTPServer(("127.0.0.1", PORT), Handler).serve_forever()

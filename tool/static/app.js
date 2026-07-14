@@ -250,6 +250,10 @@ let providersList = [];
 async function loadProviders() {
   const r = await api("/api/providers", {});
   providersList = r.providers || [];
+  if (r.public) {                       // public instance: keys are session-only
+    const sv = $("set-save");
+    if (sv) sv.style.display = "none";
+  }
   const sel = $("set-provider");
   sel.innerHTML = "";
   for (const p of providersList) {

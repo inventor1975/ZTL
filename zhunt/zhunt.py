@@ -48,10 +48,15 @@ from zverify import stable_bit, hereditary_bit, refinements  # noqa: E402
 BINOPS = list(OPS2.keys())          # and, or, imp, xor, xnor
 RESULTS = os.path.join(HERE, "results")
 SHARDS = os.path.join(RESULTS, "shards")
-SAVED = ("suspect", "dangerous")
+# Only `suspect` is written to disk — SOUND but not hereditary = a genuine
+# CLASSICAL law (tautology when T) that breaks only under ZTL uncertainty; this
+# is the unique-to-ZTL catch. `dangerous` (T-until-verification) is NOT sound,
+# so it has a classical countermodel — classical logic already refutes it — so
+# it is only COUNTED, never dumped. depth histograms are kept for both.
+SAVED = ("suspect",)                       # written to disk (the whole bucket)
+TRACKED = ("suspect", "dangerous")         # depth histograms, for statistics
 ALL_BUCKETS = ("clean", "suspect", "dangerous", "deny", "atom_z")
-SAVE_MIN_DEPTH = 2      # only the treacherous (survive ≥1 check) go to disk;
-#                         shallower breaks are counted, not written. Set in run().
+SAVE_MIN_DEPTH = 1      # suspect is small and precious — save all of it. Set in run().
 
 
 # ----------------------------------------------------------------- the HUNTER
@@ -140,7 +145,7 @@ def _process(args):
                for b in SAVED}
     counts = {b: 0 for b in ALL_BUCKETS}
     written = {b: 0 for b in SAVED}
-    depth_hist = {b: {} for b in SAVED}      # full distribution, for statistics
+    depth_hist = {b: {} for b in TRACKED}    # full distribution, for statistics
     pairs = 0
     for phi in formulas:
         names = sorted(f_atoms(phi))
@@ -152,16 +157,16 @@ def _process(args):
             v, grade, kill, depth = judge(phi, marking)
             b = bucket_of(v, grade)
             counts[b] += 1
-            if b in SAVED:
+            if b in TRACKED:
                 dh = depth_hist[b]
                 dh[depth] = dh.get(depth, 0) + 1
-                if depth is not None and depth >= SAVE_MIN_DEPTH:   # the catch
-                    if s is None:
-                        s = show(phi)
-                    rec = {"f": s, "m": {a: marking[a] for a in names},
-                           "v": v, "g": grade, "kill": kill, "depth": depth}
-                    handles[b].write(json.dumps(rec, ensure_ascii=False) + "\n")
-                    written[b] += 1
+            if b in SAVED and depth is not None and depth >= SAVE_MIN_DEPTH:
+                if s is None:
+                    s = show(phi)
+                rec = {"f": s, "m": {a: marking[a] for a in names},
+                       "v": v, "g": grade, "kill": kill, "depth": depth}
+                handles[b].write(json.dumps(rec, ensure_ascii=False) + "\n")
+                written[b] += 1
     for h in handles.values():
         h.close()
     return cid, counts, written, depth_hist, pairs
@@ -186,7 +191,7 @@ def run(atom_names, max_nodes, cores, chunk, save_min_depth):
 
     total = {b: 0 for b in ALL_BUCKETS}
     wtotal = {b: 0 for b in SAVED}
-    hist = {b: {} for b in SAVED}
+    hist = {b: {} for b in TRACKED}
     pairs = done = 0
     with Pool(cores) as pool:
         for cid, counts, written, dh, p in pool.imap_unordered(
@@ -195,16 +200,16 @@ def run(atom_names, max_nodes, cores, chunk, save_min_depth):
                 total[b] += counts[b]
             for b in SAVED:
                 wtotal[b] += written[b]
+            for b in TRACKED:
                 for d, n in dh[b].items():
                     hist[b][d] = hist[b].get(d, 0) + n
             pairs += p
             done += 1
             el = time.time() - t0
             note(f"chunk {done}  pairs {pairs:,}  "
-                 f"SUSPECT {total['suspect']:,} (saved {wtotal['suspect']:,})  "
-                 f"DANGEROUS {total['dangerous']:,} (saved {wtotal['dangerous']:,})"
-                 f"  | clean {total['clean']:,} deny {total['deny']:,}"
-                 f"  ({pairs / el if el else 0:,.0f}/s)")
+                 f"SUSPECT {total['suspect']:,} (SAVED {wtotal['suspect']:,})"
+                 f"  | dangerous {total['dangerous']:,} clean {total['clean']:,}"
+                 f" deny {total['deny']:,}  ({pairs / el if el else 0:,.0f}/s)")
 
     note("merging catch shards …")
     for b in SAVED:
@@ -220,7 +225,7 @@ def run(atom_names, max_nodes, cores, chunk, save_min_depth):
                "saved_to_disk": wtotal,
                "depth_hist": {b: {str(k): v for k, v in sorted(
                    hist[b].items(), key=lambda x: (x[0] is None, x[0]))}
-                   for b in SAVED},
+                   for b in TRACKED},
                "seconds": round(time.time() - t0, 1)}
     with open(os.path.join(RESULTS, "summary.json"), "w") as f:
         json.dump(summary, f, ensure_ascii=False, indent=2)
@@ -257,7 +262,7 @@ if __name__ == "__main__":
     ap.add_argument("--max-nodes", type=int, default=9)
     ap.add_argument("--cores", type=int, default=max(1, os.cpu_count() - 2))
     ap.add_argument("--chunk", type=int, default=2000)
-    ap.add_argument("--save-min-depth", type=int, default=2)
+    ap.add_argument("--save-min-depth", type=int, default=1)
     ap.add_argument("--regression", action="store_true")
     a = ap.parse_args()
     if a.regression:

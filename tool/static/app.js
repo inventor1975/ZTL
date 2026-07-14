@@ -308,6 +308,7 @@ $("set-close").onclick = () => {
          key: $("set-key").value.trim() || cfg.key || ""};
   localStorage.setItem("ztl_cfg", JSON.stringify(cfg));
   $("settings").classList.add("hidden");
+  updateAiWarn();                        // reflect the newly chosen provider
 };
 $("set-save").onclick = async () => {
   const key = $("set-key").value.trim();
@@ -380,11 +381,29 @@ document.querySelectorAll(".tab").forEach(t => t.onclick = () => {
   document.querySelectorAll(".tab").forEach(x => x.classList.remove("active"));
   t.classList.add("active");
   mode = newMode;
+  setTabTint(mode);
   restore(tabState[mode]);               // load the entering tab (null = fresh)
   applyMode();
 });
 
+// background tint per tab, on body (whole page) and main (content area) so
+// the switch is unmistakable
+function setTabTint(m) {
+  document.body.classList.toggle("tab-par", m === "par");
+  document.body.classList.toggle("tab-hyp", m === "hyp");
+}
+
+// the free-model warning: show when the active provider is Groq
+function updateAiWarn() {
+  const prov = (cfg && cfg.provider) ||
+               (providersList[0] && providersList[0].provider) || "groq";
+  const w = $("ai-warn");
+  if (w) w.classList.toggle("hidden", prov !== "groq");
+}
+
+setTabTint("hyp");   // default tab background
 applyMode();   // render the default (Hypotheses) view immediately
+loadProviders().then(updateAiWarn);       // populate providers, hide save, set warning
 
 /* the refuter verdict (Hypotheses mode) rendered into #report */
 function renderRefute(res, out) {

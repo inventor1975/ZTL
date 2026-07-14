@@ -114,7 +114,16 @@ footer a { color: var(--dim); }
 .hidden { display: none; }
 
 /* tabs (Парадоксы / Гипотезы) */
-.tabbar { display: flex; gap: .4rem; padding: .4rem 1rem 0; }
+.tabbar { display: flex; gap: .4rem; max-width: 1080px; margin: 0 auto;
+          padding: .4rem 1.2rem 0; }
+#ai-warn { max-width: 1080px; margin: .35rem auto 0; padding: .35rem 1.2rem;
+           color: var(--warn); font-size: .82rem; }
+body { transition: background .25s ease; }
+section { transition: background .2s ease, border-color .2s ease; }
+.tab-par { background: #1d1638; }             /* Paradoxes — page tint (Z purple) */
+.tab-hyp { background: #12151c; }              /* Hypotheses — default dark */
+/* the visible cue: the panels themselves tint per tab (they fill the view) */
+body.tab-par section { background: #201a33; border-color: #372b57; }
 .tabbar .tab { background: none; border: none; cursor: pointer;
   color: var(--dim); padding: .45rem .9rem; font-size: 1rem;
   border-bottom: 2px solid transparent; }

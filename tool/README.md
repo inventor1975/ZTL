@@ -68,7 +68,21 @@ order: the per-session Settings field, the env var
 ## ZFL — the Zero-trust Formal Language
 
 Design goal: **everything valid in ZFL loads into the ZTL core with no
-further questions.** A ZFL document is strict JSON:
+further questions.** ZFL has two surfaces that compile to the same
+document — a leading `{` means JSON, anything else is the plain line.
+
+**A plain line** (keyboard-friendly; for the `statement` genre) —
+`assert <formula>`, with `name=T` / `name=F` up front *only* for verified
+atoms; everything unnamed is `Z` (unverified — the ZTL default). Operators:
+`! not · and · or · impl · xor · iff`/`nxor`. The first JSON document below
+is exactly:
+
+```
+assert overheat impl shutdown
+```
+
+**Strict JSON** (the canonical document; required for the `system` genre,
+whose self-reference uses `Tr()` and has no plain-line form):
 
 ```json
 {

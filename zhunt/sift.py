@@ -28,6 +28,31 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.dirname(HERE))
 from ztl import T, F, ev, VALUES                       # noqa: E402
 from zmodal import ztl_eval                            # noqa: E402
+import zipc                                            # noqa: E402
+
+
+def _expand(phi):
+    """Rewrite ⊕/↔ into ∧/∨/→/¬ so the IPC translator can read them:
+    a↔b = (a→b)∧(b→a),  a⊕b = ¬(a↔b)."""
+    if isinstance(phi, str):
+        return phi
+    op = phi[0]
+    if op == "xnor":
+        a, b = _expand(phi[1]), _expand(phi[2])
+        return ("and", ("imp", a, b), ("imp", b, a))
+    if op == "xor":
+        a, b = _expand(phi[1]), _expand(phi[2])
+        return ("not", ("and", ("imp", a, b), ("imp", b, a)))
+    if op == "not":
+        return ("not", _expand(phi[1]))
+    return (op, _expand(phi[1]), _expand(phi[2]))
+
+
+def ipc_valid(phi):
+    """Does intuitionistic logic also KEEP this law? If yes, ZTL breaks a law
+    both classical AND intuitionistic logic accept — a break beyond
+    constructivism, unique to ZTL's zero-trust discipline."""
+    return zipc.ipc_valid(_expand(phi))
 
 SIGN = {"∧": "and", "∨": "or", "→": "imp", "⊕": "xor", "↔": "xnor"}
 ASCII = {"and": "∧", "or": "∨", "imp": "→", "xor": "⊕", "xnor": "↔"}
@@ -167,7 +192,7 @@ def sift(path, min_depth=2, top=40):
     for key, d in laws.items():
         rows.append((key, d, guard_gap(d["rep"])))
     rows.sort(key=lambda x: (-x[1]["dmax"], x[1]["nodes"], -x[1]["count"]))
-    return kept, len(laws), rows[:top]
+    return kept, len(laws), rows          # all rows; caller truncates for display
 
 
 if __name__ == "__main__":
@@ -177,12 +202,32 @@ if __name__ == "__main__":
                     default=os.path.join(HERE, "results", "suspect.jsonl"))
     ap.add_argument("--min-depth", type=int, default=2)
     ap.add_argument("--top", type=int, default=40)
+    ap.add_argument("--ipc", action="store_true",
+                    help="screen each law through IPC: which break beyond "
+                         "constructivism (ZTL-unique)")
     a = ap.parse_args()
+    ap_ipc = a.ipc
     kept, distinct, rows = sift(a.path, a.min_depth, a.top)
     print(f"kept {kept:,} records (v=T, depth≥{a.min_depth}) → "
           f"{distinct:,} DISTINCT laws (up to renaming)\n")
-    print(f"{'#':>3}  {'dmax':>4} {'n':>3} {'count':>8}  gap  law")
-    for i, (key, d, gg) in enumerate(rows, 1):
+    if ap_ipc:
+        vc = ic = 0
+        vd, idd = {}, {}
+        for key, d, gg in rows:
+            v = ipc_valid(d["rep"])
+            dm = d["dmax"]
+            if v:
+                vc += 1; vd[dm] = vd.get(dm, 0) + 1
+            else:
+                ic += 1; idd[dm] = idd.get(dm, 0) + 1
+        print(f"IPC screen (of all {len(rows):,} distinct):")
+        print(f"  IPC-VALID  → broken ONLY by ZTL (beyond constructivism): "
+              f"{vc:,}  by depth {dict(sorted(vd.items()))}")
+        print(f"  IPC-invalid→ the constructivist overlap (LEM etc.)      : "
+              f"{ic:,}  by depth {dict(sorted(idd.items()))}\n")
+    print(f"{'#':>3}  {'dmax':>4} {'n':>3} {'count':>8}  gap ipc  law")
+    for i, (key, d, gg) in enumerate(rows[:a.top], 1):
         tag = "GAP" if gg else "   "
-        print(f"{i:>3}  {d['dmax']:>4} {d['nodes']:>3} {d['count']:>8}  {tag}  "
+        it = "ZTL!" if (ap_ipc and ipc_valid(d["rep"])) else "    "
+        print(f"{i:>3}  {d['dmax']:>4} {d['nodes']:>3} {d['count']:>8}  {tag} {it} "
               f"{key}   [kill {d['kill']}]")

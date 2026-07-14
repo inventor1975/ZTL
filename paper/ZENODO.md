@@ -74,12 +74,14 @@ the bridges to the engineering traditions.
 
 What is new in v1.2: the central construction is named — the
 zero-trust lift (§2), with its disambiguation from the strict (Kleene)
-lift; §3.8, the census of sixteen: a lifted binary connective is
-complete alone iff its kernel is essentially binary and
-non-commutative — Sheffer's stroke and Peirce's arrow lose their
-crowns (both stall in one shared 18-table cage), both implications and
-both abjunctions keep theirs, with kernel clone equalities
-machine-checked on the empty axiom list (lean/ZClone.lean); the
+lift; §3.8, an explicit Lean-verified census of the sixteen lifted binary
+connectives that re-derives Finn's completeness landscape for the
+external-Bochvar class (Studia Logica 1974): solo-completeness tracks
+non-commutative directionality — Sheffer's stroke and Peirce's arrow
+fall (both stall in one shared 18-table cage), both implications and
+both abjunctions survive — with the kernel clone equalities
+machine-checked on the empty axiom list (lean/ZClone.lean), the
+surviving basis read as the credit detector; the
 fence-depth theorem (§19): the hereditary warranty is checkable at
 depth exactly m−1 and no constant-depth fence exists (the guard
 family over the fallen law of identity); the warranty ladder

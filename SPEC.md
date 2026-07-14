@@ -364,7 +364,10 @@ contradiction.
   belongs to the J-DNF (E14). Single-operator fates — THE
   CENSUS LAW (all 16 kernels, total): a lifted binary connective is
   complete alone (with consts) ⟺ its kernel is essentially binary
-  and NON-COMMUTATIVE. Survivors: the four directional connectives
+  and NON-COMMUTATIVE. (This completeness landscape is Finn's — the
+  external-Bochvar class B³ex, Studia Logica 33:2, 1974, Remark 1; the
+  census re-derives and machine-checks it, and adds the directionality
+  reading.) Survivors: the four directional connectives
   (both implications, both abjunctions ↛/↚ — the credit detector up
   to argument order); fallen: every commutative kernel, incl. both
   classical solo champions NAND/NOR (18 of 514, same cage), ∧/∨ (7),

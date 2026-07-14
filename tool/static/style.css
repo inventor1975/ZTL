@@ -109,3 +109,18 @@ footer a { color: var(--dim); }
          background: none; color: var(--dim); font-size: 1.1rem;
          padding: .1rem .3rem; }
 #set-x:hover { color: var(--bad); }
+
+/* general hidden (studio only had per-element .hidden rules) */
+.hidden { display: none; }
+
+/* tabs (Парадоксы / Гипотезы) */
+.tabbar { display: flex; gap: .4rem; padding: .4rem 1rem 0; }
+.tabbar .tab { background: none; border: none; cursor: pointer;
+  color: var(--dim); padding: .45rem .9rem; font-size: 1rem;
+  border-bottom: 2px solid transparent; }
+.tabbar .tab.active { color: var(--fg); font-weight: 600;
+  border-bottom-color: var(--z); }
+.warn-note { color: var(--bad); }   /* "the AI may err here" note on the ZFL heading */
+.refute-result::before { content: none; }   /* reuses .card box, drops "back-reading" label */
+.refute-result h3 { margin: 0 0 .3rem; }
+.refute-result code { color: var(--z); }

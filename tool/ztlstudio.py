@@ -26,7 +26,7 @@ import engine                 # noqa: E402
 import translator             # noqa: E402
 import providers              # noqa: E402
 
-PORT = 8190
+PORT = int(os.environ.get("PORT", "8190"))   # copy: 8191 (live studio uses 8190); preview harness sets PORT
 
 EXAMPLES = [
     {"name": "Liar",
@@ -95,7 +95,8 @@ def api_run(payload):
 def api_chat(payload):
     try:
         return {"ok": True, "reply": translator.understand(
-            payload.get("history", []), payload.get("cfg"))}
+            payload.get("history", []), payload.get("cfg"),
+            payload.get("mode", "par"))}
     except translator.TranslatorError as e:
         return {"ok": False, "error": str(e)}
 
@@ -103,7 +104,8 @@ def api_chat(payload):
 def api_emit(payload):
     try:
         return {"ok": True, "zfl": translator.emit(
-            payload.get("understanding", ""), payload.get("cfg"))}
+            payload.get("understanding", ""), payload.get("cfg"),
+            payload.get("mode", "par"))}
     except translator.TranslatorError as e:
         return {"ok": False, "error": str(e)}
 
@@ -159,10 +161,25 @@ def api_repair(payload):
         return {"ok": False, "error": str(e)}
 
 
+def api_refute(payload):
+    """Hypotheses mode: exhaustively check a claimed law (ZFL statement)
+    over {T,F,Z}. Same shape as api_run so the front reuses the flow."""
+    import refuter
+    text = payload.get("zfl", "")
+    r = refuter.refute_zfl(text)
+    if not r.get("ok"):
+        return {"ok": False, "issues": r.get("issues", [])}
+    doc, parsed, _ = zfl.validate(text)
+    return {"ok": True, "issues": [],
+            "back_reading": zfl.back_reading(doc, parsed),
+            "result": r}
+
+
 ROUTES = {"/api/validate": api_validate, "/api/run": api_run,
           "/api/chat": api_chat, "/api/emit": api_emit,
           "/api/repair": api_repair, "/api/explain": api_explain,
-          "/api/providers": api_providers, "/api/savekey": api_savekey}
+          "/api/providers": api_providers, "/api/savekey": api_savekey,
+          "/api/refute": api_refute}
 
 
 class Handler(BaseHTTPRequestHandler):

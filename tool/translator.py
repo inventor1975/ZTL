@@ -167,9 +167,78 @@ def llm(messages, cfg, temperature=0.2):
         raise TranslatorError(str(e))
 
 
-def understand(history, cfg=None):
+UNDERSTAND_SYS_HYP = """You are the meaning translator for the ZTL studio,
+HYPOTHESES mode. The user states a claimed LAW, RULE or INFERENCE and wants
+the core to check it. Your job is ONLY to understand and restate it, never
+to judge — the core judges. ALWAYS reply in the language the user writes in.
+
+WHAT THIS MODE CHECKS. A hypothesis is any claim built from logical
+connectives (not, and, or, if-then, xor, iff) over declarative atoms — e.g.
+modus ponens, De Morgan, excluded middle, distributivity, contraposition,
+an access or business rule. It is NOT a self-referential paradox: do NOT ask
+about self-reference, and NEVER say a claimed logical law or rule is
+"outside ZTL". Each atom is a declarative statement, treated as UNVERIFIED
+unless the user pins it true/false. The core checks the claim EXHAUSTIVELY
+over every combination of {verified-true, verified-false, UNVERIFIED}, so the
+real question it answers is: does the rule still hold when some inputs are
+UNVERIFIED?
+
+Refuse ONLY if the claim is not propositional at all — numbers, quantities
+or arithmetic are the point, or a vague predicate like "heap". Then say
+honestly in one line that it does not formalize into propositional ZTL
+without losing the point, and offer a coarsened shadow. Never invent atoms;
+a question is not an atom.
+
+Reply with a short structured summary:
+— ATOMS: the elementary declarative statements (all UNVERIFIED unless the
+  user fixed one);
+— CLAIM: the WHOLE rule as ONE implication — the premises together imply the
+  conclusion; the conclusion is PART of the claim, not the question. An
+  inference "from P1 and P2 conclude C" is (P1 and P2) → C; a premise
+  "X is true" is just the atom X;
+— ASKED: does this rule hold, and does it survive unverified inputs.
+Ask a clarifying question ONLY if formalization is impossible without it. Do
+NOT predict the verdict. If the understanding is complete, end with exactly
+this sentence (translated into the user's language, quoting the button name):
+"If the understanding is correct — press the «Agree → ZFL» button." Be brief."""
+
+HYP_FEWSHOT = (
+    "Examples (emit exactly this shape). KEY RULE: every premise stated as "
+    "TRUE becomes a CONJUNCT in the antecedent — never drop it.\n"
+    '"if A→B and A is true, then B is true" (modus ponens) ->\n'
+    '{"genre":"statement","atoms":{"A":{"status":"Z"},"B":{"status":"Z"}},'
+    '"assert":"imp(and(imp(A,B),A),B)"}\n'
+    '"if A and B are true, and (A and B) implies C, then C is true" ->\n'
+    '{"genre":"statement","atoms":{"A":{"status":"Z"},"B":{"status":"Z"},'
+    '"C":{"status":"Z"}},'
+    '"assert":"imp(and(and(A,B),imp(and(A,B),C)),C)"}\n'
+    '   (WRONG here would be imp(imp(and(A,B),C),C) — it drops the premise '
+    '"A and B are true".)\n'
+    '"p or not p is always true" (excluded middle) ->\n'
+    '{"genre":"statement","atoms":{"p":{"status":"Z"}},'
+    '"assert":"or(p,not(p))"}')
+
+EMIT_SYS_HYP = (
+    "You are the ZFL compiler, HYPOTHESES mode. From the agreed "
+    "understanding emit ONLY valid ZFL JSON, no explanations, no markdown. "
+    "ALWAYS use genre \"statement\". The \"assert\" is the WHOLE claimed "
+    "rule as ONE formula, INCLUDING its conclusion: an inference 'from "
+    "premises P1,P2,... conclude C' is imp(and(P1,P2,...),C); a premise 'X "
+    "is true' is just the atom X. Never drop a premise or the conclusion, "
+    "and never encode a premise as an atom status — put it in the formula. "
+    "Declare EVERY atom with status \"Z\". Never emit a self-referential "
+    "\"system\". Atoms are declarative; never an atom for a question. "
+    "CRITICAL: the atom names inside \"assert\" MUST be EXACTLY the keys of "
+    "\"atoms\" — same letters and SAME SCRIPT. If the user wrote Cyrillic "
+    "А, Б, use А, Б in the formula too (never silently switch to Latin "
+    "A, B). Pick ASCII-safe names only if the user did.\n\n"
+    + ZFL_SPEC + "\n\n" + HYP_FEWSHOT)
+
+
+def understand(history, cfg=None, mode="par"):
     """history: [{'role': 'user'|'assistant', 'content': str}, ...]"""
-    return llm([{"role": "system", "content": UNDERSTAND_SYS}] + history, cfg)
+    sys = UNDERSTAND_SYS_HYP if mode == "hyp" else UNDERSTAND_SYS
+    return llm([{"role": "system", "content": sys}] + history, cfg)
 
 
 def strip_fences(s):
@@ -181,14 +250,22 @@ def strip_fences(s):
     return s.strip()
 
 
-def emit(understanding, cfg=None):
-    out = llm([{"role": "system", "content": EMIT_SYS},
-                {"role": "user", "content":
-                 f"The agreed understanding:\n{understanding}\n\n"
-                 "Emit the ZFL. [Sentences are DEFINITIONS: a claim "
-                 "'X holds iff PHI' becomes \"X\": \"PHI-formula\"; in "
-                 "particular 'X iff not X' is {\"X\": \"not(Tr(X))\"}. "
-                 "Never emit xor(A,A) or xnor(A,A).]"}], cfg)
+def emit(understanding, cfg=None, mode="par"):
+    if mode == "hyp":
+        sys = EMIT_SYS_HYP
+        user = (f"The agreed understanding:\n{understanding}\n\n"
+                "Emit the ZFL statement for the claimed rule: the WHOLE rule "
+                "as one \"assert\" (premises AND conclusion), every atom "
+                "status \"Z\".")
+    else:
+        sys = EMIT_SYS
+        user = (f"The agreed understanding:\n{understanding}\n\n"
+                "Emit the ZFL. [Sentences are DEFINITIONS: a claim "
+                "'X holds iff PHI' becomes \"X\": \"PHI-formula\"; in "
+                "particular 'X iff not X' is {\"X\": \"not(Tr(X))\"}. "
+                "Never emit xor(A,A) or xnor(A,A).]")
+    out = llm([{"role": "system", "content": sys},
+               {"role": "user", "content": user}], cfg)
     return strip_fences(out)
 
 

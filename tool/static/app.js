@@ -54,7 +54,7 @@ $("btn-send").onclick = async () => {
   addMsg("user", text);
   history.push({role: "user", content: text});
   addMsg("ai", "…");
-  const r = await api("/api/chat", {history});
+  const r = await api("/api/chat", {history, mode});
   chatBox.lastChild.remove();
   if (!r.ok) { addMsg("err", r.error); return; }
   addMsg("ai", r.reply);
@@ -68,7 +68,7 @@ $("btn-agree").onclick = async () => {
   const last = [...history].reverse().find(m => m.role === "assistant");
   if (!last) { addMsg("err", "get an understanding from the AI first"); return; }
   addMsg("ai", "compiling to ZFL…");
-  const r = await api("/api/emit", {understanding: last.content});
+  const r = await api("/api/emit", {understanding: last.content, mode});
   chatBox.lastChild.remove();
   if (!r.ok) { addMsg("err", r.error); return; }
   zflBox.value = pretty(r.zfl);
@@ -119,15 +119,16 @@ $("btn-repair").onclick = async () => {
 
 /* ------------------------------------------------------- 3. results */
 $("btn-run").onclick = async () => {
-  const r = await api("/api/run", {zfl: zflBox.value});
+  const path = mode === "hyp" ? "/api/refute" : "/api/run";
+  const r = await api(path, {zfl: zflBox.value});
   showIssues(r.issues);
   const out = $("report");
   out.innerHTML = "";
   if (!r.ok) { $("vstatus").textContent = "✗ fix the errors first"; $("vstatus").style.color = "var(--bad)"; return; }
   if (r.back_reading) { $("backread").textContent = r.back_reading; $("backread").classList.remove("hidden"); }
-  const rep = r.report;
-  if (rep.genre === "statement") renderStatement(rep, out);
-  else renderSystem(rep, out);
+  let rep;
+  if (mode === "hyp") { rep = r.result; renderRefute(rep, out); }
+  else { rep = r.report; if (rep.genre === "statement") renderStatement(rep, out); else renderSystem(rep, out); }
   const lastUser = [...history].reverse().find(m => m.role === "user");
   lastRun = {zfl: zflBox.value, back_reading: r.back_reading || "",
              report: rep, lang_hint: lastUser ? lastUser.content : ""};
@@ -205,22 +206,43 @@ function renderSystem(rep, out) {
   }
 }
 
-/* -------------------------------------------------------- examples */
-(async () => {
-  const ex = await api("/api/examples");
-  for (const e of ex) {
+/* -------------------------------------------- examples (mode-aware) */
+let PARADOX_EX = [];
+const HYP_EX = [
+  {name: "p → p  (reflexivity of the arrow)", intent: "Does p imply p — is the arrow reflexive?",
+   zfl: '{"genre":"statement","atoms":{"p":{"status":"Z"}},"assert":"imp(p,p)"}'},
+  {name: "¬p → ¬p", intent: "Does not-p imply not-p?",
+   zfl: '{"genre":"statement","atoms":{"p":{"status":"Z"}},"assert":"imp(not(p),not(p))"}'},
+  {name: "excluded middle:  p ∨ ¬p", intent: "Is 'p or not p' always true?",
+   zfl: '{"genre":"statement","atoms":{"p":{"status":"Z"}},"assert":"or(p,not(p))"}'},
+  {name: "¬¬p ∨ ¬p  (LEM is not all bad)", intent: "Is '¬¬p or ¬p' always true?",
+   zfl: '{"genre":"statement","atoms":{"p":{"status":"Z"}},"assert":"or(not(not(p)),not(p))"}'},
+  {name: "¬¬¬p ↔ ¬p  (triple = single ¬)", intent: "Does ¬¬¬p equal ¬p?",
+   zfl: '{"genre":"statement","atoms":{"p":{"status":"Z"}},"assert":"xnor(not(not(not(p))),not(p))"}'},
+  {name: "¬¬p  (double negation alone)", intent: "Is ¬¬p always true?",
+   zfl: '{"genre":"statement","atoms":{"p":{"status":"Z"}},"assert":"not(not(p))"}'},
+  {name: "∧-elimination:  (a∧b) → a", intent: "Does 'a and b' imply a?",
+   zfl: '{"genre":"statement","atoms":{"a":{"status":"Z"},"b":{"status":"Z"}},"assert":"imp(and(a,b),a)"}'},
+  {name: "∨-introduction:  a → (a∨b)", intent: "Does a imply 'a or b'?",
+   zfl: '{"genre":"statement","atoms":{"a":{"status":"Z"},"b":{"status":"Z"}},"assert":"imp(a,or(a,b))"}'},
+];
+
+function fillExamples(list) {
+  const sel = $("examples");
+  sel.innerHTML = '<option value="">— examples —</option>';
+  list.forEach((e, i) => {
     const o = document.createElement("option");
-    o.value = e.name; o.textContent = e.name;
-    $("examples").appendChild(o);
-  }
-  $("examples").onchange = () => {
-    const e = ex.find(x => x.name === $("examples").value);
+    o.value = String(i); o.textContent = e.name; sel.appendChild(o);
+  });
+  sel.onchange = () => {
+    const e = list[+sel.value];
     if (!e) return;
-    addMsg("user", e.intent);
-    zflBox.value = e.zfl;
-    validate();
+    if (e.intent) addMsg("user", e.intent);
+    if (e.zfl) { zflBox.value = pretty(e.zfl); validate(); }
   };
-})();
+}
+
+(async () => { PARADOX_EX = await api("/api/examples"); applyMode(); })();
 
 
 /* -------------------------------------------------------- settings */
@@ -250,9 +272,17 @@ function syncSettings() {
     link.textContent = p.label.replace(/\s*\(.*\)/, "") + " console ↗";
     link.style.display = "";
   } else { link.style.display = "none"; }
-  $("set-model").placeholder = p ? p.default_model : "default";
-  $("set-model").value = (cfg.provider === $("set-provider").value)
-    ? (cfg.model || "") : "";
+  const msel = $("set-model");
+  msel.innerHTML = "";
+  const models = (p && p.models && p.models.length) ? p.models
+                 : (p ? [p.default_model] : []);
+  for (const m of models) {
+    const o = document.createElement("option");
+    o.value = m; o.textContent = m; msel.appendChild(o);
+  }
+  const want = (cfg.provider === $("set-provider").value && cfg.model)
+               ? cfg.model : (p ? p.default_model : "");
+  if (want && models.includes(want)) msel.value = want;
   $("set-status").textContent = p
     ? (p.has_key ? "✓ a key is stored for this provider"
                  : "no stored key — paste one or set the env var")
@@ -288,3 +318,91 @@ $("set-save").onclick = async () => {
   localStorage.setItem("ztl_cfg", JSON.stringify(cfg));
   loadProviders();
 };
+
+/* --------------------------------------- mode: Hypotheses / Paradoxes */
+let mode = "hyp";                       // Hypotheses is the first/default tab
+const tabState = {par: null, hyp: null};   // independent per-tab state
+
+function applyMode() {
+  const hyp = mode === "hyp";
+  $("p1-title").innerHTML = hyp
+    ? '1 · Hypothesis <small>a claimed law / rule — describe it, the AI formalizes, the core checks it</small>'
+    : '1 · Meta-chat <small>negotiating the meaning; the AI only translates, never judges</small>';
+  $("chat-input").placeholder = hyp
+    ? "Describe a law or rule to check — any language (e.g. “does p imply p?”)…"
+    : "Describe a claim, a paradox, a situation — any language…";
+  $("btn-run").textContent = hyp ? "Check hypothesis on the core" : "Run on the core";
+  fillExamples(hyp ? HYP_EX : PARADOX_EX);
+}
+
+/* each tab keeps its OWN chat, ZFL and output — snapshot on leave, restore on enter */
+function snapshot() {
+  return {
+    chat: chatBox.innerHTML, history: history.slice(),
+    zfl: zflBox.value,
+    issues: $("issues").innerHTML, report: $("report").innerHTML,
+    backread: $("backread").innerHTML,
+    backreadHidden: $("backread").classList.contains("hidden"),
+    explain: $("explain-chat").innerHTML,
+    explainWrapHidden: $("explain-wrap").classList.contains("hidden"),
+    vstatus: $("vstatus").textContent, vstatusColor: $("vstatus").style.color,
+    lastRun, explainHistory: explainHistory.slice(),
+  };
+}
+function restore(s) {
+  if (!s) {                              // fresh tab — clear everything
+    chatBox.innerHTML = ""; history = []; zflBox.value = "";
+    $("issues").innerHTML = ""; $("report").innerHTML = "";
+    $("backread").innerHTML = ""; $("backread").classList.add("hidden");
+    $("explain-chat").innerHTML = ""; $("explain-wrap").classList.add("hidden");
+    $("vstatus").textContent = ""; lastRun = null; explainHistory = [];
+    return;
+  }
+  chatBox.innerHTML = s.chat; history = s.history;
+  zflBox.value = s.zfl;
+  $("issues").innerHTML = s.issues; $("report").innerHTML = s.report;
+  $("backread").innerHTML = s.backread;
+  $("backread").classList.toggle("hidden", s.backreadHidden);
+  $("explain-chat").innerHTML = s.explain;
+  $("explain-wrap").classList.toggle("hidden", s.explainWrapHidden);
+  $("vstatus").textContent = s.vstatus; $("vstatus").style.color = s.vstatusColor;
+  lastRun = s.lastRun; explainHistory = s.explainHistory;
+}
+
+document.querySelectorAll(".tab").forEach(t => t.onclick = () => {
+  const newMode = t.dataset.tab;
+  if (newMode === mode) return;
+  tabState[mode] = snapshot();           // save the leaving tab
+  document.querySelectorAll(".tab").forEach(x => x.classList.remove("active"));
+  t.classList.add("active");
+  mode = newMode;
+  restore(tabState[mode]);               // load the entering tab (null = fresh)
+  applyMode();
+});
+
+applyMode();   // render the default (Hypotheses) view immediately
+
+/* the refuter verdict (Hypotheses mode) rendered into #report */
+function renderRefute(res, out) {
+  const cefmt = ce => Object.entries(ce).map(([a, v]) => `${a}=${v}`).join(", ");
+  let head, body;
+  if (res.outcome === "CONFIRMED") {
+    head = "✅ CONFIRMED";
+    body = "Holds under every assignment — including any unverified (Z) inputs.";
+  } else if (res.outcome === "REFUTED_CLASSICAL") {
+    head = "❌ REFUTED (classically)";
+    body = "Fails already on verified inputs — a plain logic error.<br>" +
+           "counterexample: <code>" + cefmt(res.counterexample) + "</code>";
+  } else {
+    head = "⚠️ REFUTED (under uncertainty)";
+    const zs = Object.entries(res.counterexample).filter(([, v]) => v === "Z")
+      .map(([a]) => a).join(", ");
+    body = "Holds when every input is verified, but BREAKS when an input is " +
+           "unverified — silent trust laundering.<br>killing marking: <code>" +
+           cefmt(res.counterexample) + "</code>  (unverified: " + zs + ")";
+  }
+  const atoms = (res.atoms || []).join(", ") || "(none)";
+  out.appendChild(el("div",
+    `<div class="card refute-result"><h3>${head}</h3>` +
+    `<p class="dim">atoms: ${atoms}</p><p>${body}</p></div>`));
+}

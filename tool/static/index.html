@@ -19,8 +19,8 @@
     <h3>Model &amp; key</h3>
     <label>Provider
       <select id="set-provider"></select></label>
-    <label>Model <small>(blank = provider default)</small>
-      <input id="set-model" type="text" placeholder="default" spellcheck="false"></label>
+    <label>Model <small>(Sonnet-level &amp; up)</small>
+      <select id="set-model"></select></label>
     <label>API key <small>(kept locally; blank = use saved/env)</small>
       <input id="set-key" type="password" placeholder="paste key…" spellcheck="false"></label>
     <p class="dim">Get a key: <a id="set-console" href="#" target="_blank" rel="noopener">provider console ↗</a></p>
@@ -35,10 +35,15 @@
   </div>
 </div>
 
-<main>
+<nav class="tabbar">
+  <button class="tab active" data-tab="hyp">Hypotheses</button>
+  <button class="tab" data-tab="par">Paradoxes</button>
+</nav>
+
+<main id="tab-par">
   <!-- 1. Meta-chat -->
   <section id="panel-chat">
-    <h2>1 · Meta-chat <small>negotiating the meaning; the AI only translates, never judges</small></h2>
+    <h2 id="p1-title">1 · Meta-chat <small>negotiating the meaning; the AI only translates, never judges</small></h2>
     <div id="chat"></div>
     <div class="row">
       <textarea id="chat-input" rows="2"
@@ -50,7 +55,7 @@
 
   <!-- 2. ZFL -->
   <section id="panel-zfl">
-    <h2>2 · ZFL <small>the formal language; hand-editable</small></h2>
+    <h2>2 · ZFL <small>the formal language; hand-editable — <span class="warn-note">the AI may misformalize here; check the back-reading &amp; edit</span></small></h2>
     <textarea id="zfl" rows="10" spellcheck="false"
       placeholder='{"genre": "system", "sentences": {"L": "not(Tr(L))"}}'></textarea>
     <div class="row">

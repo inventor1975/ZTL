@@ -27,14 +27,15 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 # name -> (family, url, default model, env var, key-file, label, key-console)
 PROVIDERS = {
     "groq": ("openai", "https://api.groq.com/openai/v1/chat/completions",
-             "llama-3.3-70b-versatile", "GROQ_API_KEY", ".groq_key", "Groq",
+             "llama-3.3-70b-versatile", "GROQ_API_KEY", ".groq_key",
+             "Groq (free · weaker, may misformalize)",
              "https://console.groq.com/keys"),
     "anthropic": ("anthropic", "https://api.anthropic.com/v1/messages",
-                  "claude-haiku-4-5-20251001", "ANTHROPIC_API_KEY",
+                  "claude-sonnet-5", "ANTHROPIC_API_KEY",
                   ".anthropic_key", "Anthropic (Claude)",
                   "https://console.anthropic.com/settings/keys"),
     "openai": ("openai", "https://api.openai.com/v1/chat/completions",
-               "gpt-4o", "OPENAI_API_KEY", ".openai_key", "OpenAI",
+               "gpt-5", "OPENAI_API_KEY", ".openai_key", "OpenAI",
                "https://platform.openai.com/api-keys"),
     "openrouter": ("openai",
                    "https://openrouter.ai/api/v1/chat/completions",
@@ -42,8 +43,31 @@ PROVIDERS = {
                    ".openrouter_key", "OpenRouter (any model)",
                    "https://openrouter.ai/keys"),
     "deepseek": ("openai", "https://api.deepseek.com/v1/chat/completions",
-                 "deepseek-chat", "DEEPSEEK_API_KEY", ".deepseek_key",
+                 "deepseek-reasoner", "DEEPSEEK_API_KEY", ".deepseek_key",
                  "DeepSeek", "https://platform.deepseek.com/api_keys"),
+    "gemini": ("openai",
+               "https://generativelanguage.googleapis.com/v1beta/openai/"
+               "chat/completions",
+               "gemini-2.5-pro", "GEMINI_API_KEY", ".gemini_key",
+               "Google Gemini", "https://aistudio.google.com/apikey"),
+    "xai": ("openai", "https://api.x.ai/v1/chat/completions",
+            "grok-4", "XAI_API_KEY", ".xai_key", "xAI (Grok)",
+            "https://console.x.ai"),
+}
+
+# FLAGSHIP models only (Sonnet-level or above) — weaker models mis-formalize.
+# First = default. VERIFY IDS: only the Anthropic ids are known-current here;
+# the others (gpt-5, o3, gemini-2.5-pro, grok-4, deepseek-reasoner) are best
+# guesses at each provider's frontier — adjust if a call 404s.
+MODELS = {
+    "anthropic":  ["claude-sonnet-5", "claude-opus-4-8"],
+    "openai":     ["gpt-5", "o3"],
+    "gemini":     ["gemini-2.5-pro"],
+    "xai":        ["grok-4"],
+    "openrouter": ["anthropic/claude-sonnet-5", "anthropic/claude-opus-4-8",
+                   "openai/gpt-5", "google/gemini-2.5-pro"],
+    "deepseek":   ["deepseek-reasoner"],
+    "groq":       ["llama-3.3-70b-versatile"],   # free, but weak — mis-formalizes
 }
 
 
@@ -72,7 +96,8 @@ def available():
     for name, tup in PROVIDERS.items():
         out.append({"provider": name, "label": tup[5],
                     "default_model": tup[2], "has_key": bool(get_key(name)),
-                    "console": tup[6]})
+                    "console": tup[6],
+                    "models": MODELS.get(name, [tup[2]])})
     return out
 
 
@@ -92,6 +117,10 @@ def _post(url, body, headers):
                 detail = e.read().decode()[:200]
             except Exception:
                 pass
+            if (e.code == 400 and "temperature" in detail.lower()
+                    and "temperature" in body):
+                body.pop("temperature", None)   # newer models deprecate it
+                continue
             raise ProviderError(f"HTTP {e.code}: {detail or e.reason}")
         except Exception as e:
             raise ProviderError(str(e))

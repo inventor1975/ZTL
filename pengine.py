@@ -24,7 +24,14 @@ What the engine MEASURED while cranking (two corrections to the naive story):
 So the operational reading: a paradox is a self-referential net whose
 fixed-point equations have NO unique classical solution — 0 (over-constrained,
 contradictory) or ≥2 (under-constrained, undetermined) — and ZTL then withholds
-(grounds to Z) rather than picking. Names provisional.
+(grounds to Z) rather than picking.
+
+SCOPE / boundary: this reads FINITE reference nets. Yablo's paradox is
+infinitary — any finite truncation is consistent (see boundary()), so the engine
+does not reach it; that is exactly where ZTL and classical logic agree. The
+genuine step away from classics is on the 0-solution nets: classical logic
+EXPLODES (ex falso), ZTL WITHHOLDS (Z, no explosion — the paradox is contained).
+Names provisional.
 """
 
 from itertools import product
@@ -75,6 +82,22 @@ def neg_cycle(k):
     return {ns[i]: ("not", ns[(i + 1) % k]) for i in range(k)}
 
 
+def yablo(n):
+    """Truncated Yablo: Y_i = ∧_{j>i} ¬Y_j, and Y_n = ⊤ (empty conjunction).
+    THE BOUNDARY of the engine — see boundary()."""
+    net = {}
+    for i in range(1, n + 1):
+        later = [("not", f"Y{j}") for j in range(i + 1, n + 1)]
+        if not later:
+            net[f"Y{i}"] = "T"                       # no successors ⇒ vacuously ⊤
+        else:
+            e = later[0]
+            for term in later[1:]:
+                e = ("and", e, term)
+            net[f"Y{i}"] = e
+    return net
+
+
 # specimens, each a reference net -------------------------------------------
 ZOO = {
     "Liar          S=¬S":        {HOLE: ("not", HOLE)},
@@ -111,7 +134,27 @@ def parity_law():
           "\n  grounding says Z for all — the STRUCTURE is in the solutions.")
 
 
+def boundary():
+    """The engine's honest LIMIT: Yablo's paradox is infinitary. Any finite
+    truncation is CONSISTENT — its last sentence has no successors, so it is
+    vacuously ⊤, an anchor that grounds the whole chain. So truncation ≠
+    paradox, and the engine (finite reference nets) does not reach Yablo. This
+    is exactly where ZTL and classical logic COINCIDE (both: consistent)."""
+    print("BOUNDARY — truncated Yablo is CONSISTENT (the engine can't reach the "
+          "real, infinitary Yablo)\n")
+    print(f"  {'N':>2} {'#sol':>5}   unique solution")
+    for n in range(3, 7):
+        d = diagnose(yablo(n))
+        sol = d["solutions"][0] if d["n"] == 1 else "(not unique!)"
+        print(f"  {n:>2} {d['n']:>5}   {sol}")
+    print("\n  1 solution (not 0) — the vacuous ⊤ bottom anchors it. The Yablo "
+          "paradox\n  needs NO bottom (infinite forward chain); finite "
+          "truncation trivialises it.")
+
+
 if __name__ == "__main__":
     report_zoo()
     print("=" * 64 + "\n")
     parity_law()
+    print("\n" + "=" * 64 + "\n")
+    boundary()

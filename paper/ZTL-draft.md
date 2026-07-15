@@ -13,7 +13,9 @@ survive), and the surviving basis ↛ reads as the credit detector; the
 fence-depth theorem in §19 (exactly m−1; no constant-depth fence);
 the at-scale stress-test of the warranty ladder; the recalculated
 Bochvar ledger (§4); and the three-laws-of-thought reading — a denial is
-free, an affirmation is on credit (§3.1).**
+free, an affirmation is on credit (§3.1); and the paradox engine (§11) — the
+expeditions unified as one construction paradox(f)=ground(S=f(S)) with three
+measured layers.**
 The tag MEASURED means "verified by machine enumeration" (code in this
 repository), as opposed to "argued"; references to Lean mean proofs
 checked by the Lean 4 kernel with an **empty axiom list**.
@@ -922,6 +924,31 @@ family — from which it differs by locality, tabularity, and greedy
 collapse.
 
 ## 11. Expeditions: Curry, parity, Yablo, the crocodile (MEASURED)
+
+**Paradox as an operator — the expeditions are one construction (MEASURED,
+`pengine.py`).** A self-referential net is a system Sᵢ = fᵢ(S₁…Sₙ); to read it
+is to ground it (§9). So a paradox is *paradox(f) = ground(S = f(S))* — feed an
+operator, form its self-reference, ground it — and the specimens below are that
+one construction on chosen operators: the liar is paradox(¬S), the truth-teller
+paradox(S), Curry paradox(S→⊥), Russell's propositional shadow again
+paradox(¬S). Three measured layers read a net, coarse to fine:
+
+1. *Grounding* — the zero-trust verdict (§9): every pure self-reference lands in
+   Z. Coarsest; it does not separate paradoxes.
+2. *Solutions* — the classical models of the net: 0 = contradictory, ≥2 =
+   underdetermined, 1 = determined. This is the content of the parity theorem
+   below — an odd ring has no model ⟺ its reference graph is not 2-colourable.
+3. *Dynamics* — the period spectrum of the greedy jump: finest. The period-1
+   points are exactly the solutions, so dynamics refines (2); the higher periods
+   separate what the model count merges — the liar and Curry are the *same*
+   2-cycle, the k-ring carries 2k, the crocodile a 4-cycle.
+
+Grounding is strictly the most conservative of the three: measured over all
+9015 one-sentence nets up to six symbols, it reaches a classical value only when
+the net has a *unique* model that is also reachable from ignorance; 1068 of them
+have a unique classical model yet ground to Z (e.g. S = S∨¬S — classically ⊤,
+here Z: zero-trust will not grant a truth it cannot ground). The ZTL-settled
+nets are thus a strict subset of the classically-categorical ones.
 
 **Curry without negation.** c = (Tr(c) → ⊥) is the paradox that breaks
 naive paraconsistent theories (it uses no ¬, so taming negation does

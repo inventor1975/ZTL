@@ -60,6 +60,28 @@ def ground(net):
     return least_fp_lazy(net)
 
 
+def periods(net):
+    """Period spectrum of the greedy jump on {T,F}^n — the DYNAMICAL signature,
+    finer than the solution count. Period-1 points ARE the classical solutions;
+    the higher periods are the oscillations that separate paradoxes the count
+    lumps together (Liar & Curry share [2]; the k-cycle carries 2k)."""
+    names = sorted(net)
+
+    def jump(v):
+        d = dict(zip(names, v))
+        return tuple(ev(net[n], d) for n in names)
+
+    lengths = set()
+    for combo in product((T, F), repeat=len(names)):
+        v, seen, step = combo, {}, 0
+        while v not in seen:
+            seen[v] = step
+            v = jump(v)
+            step += 1
+        lengths.add(step - seen[v])
+    return sorted(lengths)
+
+
 def diagnose(net):
     """The operational diagnosis of a reference net — two layers: the classical
     SOLUTIONS (= kernels of the reference graph) and, stricter, the ZTL
@@ -78,7 +100,8 @@ def diagnose(net):
         kind = ("cautious Z      (1 solution exists, but not Kripke-grounded "
                 "— ZTL won't grant it)")
     return {"solutions": sols, "ground": g, "n": n,
-            "grounds_to_value": grounds_to_value, "kind": kind}
+            "grounds_to_value": grounds_to_value, "kind": kind,
+            "periods": periods(net)}
 
 
 def selfref(f):
@@ -128,7 +151,7 @@ def report_zoo():
             else ", ".join(f"{k}={v}" for k, v in d["ground"].items())
         print(f"  {name}")
         print(f"      solutions: {d['n']}  →  {d['kind']}")
-        print(f"      grounding: {gz}\n")
+        print(f"      grounding: {gz}   | dynamics (periods): {d['periods']}\n")
 
 
 def parity_law():

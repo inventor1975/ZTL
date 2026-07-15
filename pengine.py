@@ -61,14 +61,24 @@ def ground(net):
 
 
 def diagnose(net):
-    """The operational diagnosis of a reference net."""
+    """The operational diagnosis of a reference net — two layers: the classical
+    SOLUTIONS (= kernels of the reference graph) and, stricter, the ZTL
+    GROUNDING (which also withholds a unique-but-ungrounded answer)."""
     sols = solutions(net)
     g = ground(net)
     n = len(sols)
-    kind = ("contradictory  (0 solutions, Liar-type)" if n == 0 else
-            "determined     (1 solution)" if n == 1 else
-            f"underdetermined ({n} solutions, truth-teller-type)")
-    return {"solutions": sols, "ground": g, "n": n, "kind": kind}
+    grounds_to_value = not any(v == Z for v in g.values())
+    if n == 0:
+        kind = "contradictory   (0 solutions / no kernel → Z)"
+    elif n >= 2:
+        kind = f"underdetermined ({n} solutions / many kernels → Z)"
+    elif grounds_to_value:
+        kind = "determined      (1 solution, grounded → its value)"
+    else:
+        kind = ("cautious Z      (1 solution exists, but not Kripke-grounded "
+                "— ZTL won't grant it)")
+    return {"solutions": sols, "ground": g, "n": n,
+            "grounds_to_value": grounds_to_value, "kind": kind}
 
 
 def selfref(f):

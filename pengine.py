@@ -37,7 +37,7 @@ Names provisional.
 from itertools import product
 
 from ztl import T, F, Z, ev
-from fixedpoint import least_fp_lazy
+from fixedpoint import least_fp_lazy, LAZY, ev_reg
 
 HOLE = "S"                                   # the self-reference placeholder
 
@@ -58,6 +58,21 @@ def ground(net):
     """The zero-trust verdict: the lazy least fixed point (cautious — pure
     self-reference lands in Z)."""
     return least_fp_lazy(net)
+
+
+def lazy_step(net):
+    """One lazy (Kleene) jump from all-Z — the first step of grounding.
+
+    THEOREM (measured, 0 violations over all 9015 one-sentence nets ≤6 symbols):
+    for a one-sentence net S = f(S), grounding reaches a classical value ⟺ this
+    single step already escapes Z, i.e. f evaluated lazily at S=Z is not Z. Proof
+    sketch: if the lazy jump sends Z to a classical c, monotonicity gives
+    c = jump(Z) ⊑ jump(c), and a classical value is maximal in the information
+    order, so jump(c)=c — c is already a fixed point. Grounding is one step.
+    The 'cautious Z' nets (unique classical model, yet Z) are exactly those with
+    f(Z)=Z: the operator will not propagate a value from ignorance."""
+    z = {n: Z for n in net}
+    return {n: ev_reg(net[n], z, LAZY) for n in net}
 
 
 def periods(net):

@@ -23,6 +23,7 @@ each on a run; the closing statement; the aphorism if one was earned).
 | dilemma | where | state |
 |---|---|---|
 | divine foreknowledge vs free will (Maimonides, Hilchot Teshuva 5:5) | `solved/foreknowledge/` | resolved 2026-07-16 |
+| the sufferer's guilt / victim-blaming (the Book of Job) | `job.py` | open |
 
 *AI participation: designed and written in a dialogue between the curator
 (Vitaly Reznik) and Claude (Anthropic); all fork decisions are the curator's.*

@@ -3,7 +3,9 @@
 *The dilemma: God foresees everything; the person chooses freely. Tradition
 settles it by postulate ("His knowledge is not like our knowledge" —
 Maimonides' explicit refusal to explain). Every claim below stands on a run:
-the stand is `rambam.py` in this folder, plus the core stands it imports.*
+the stand is `rambam.py` in this folder, plus the core stands it imports.
+The native Russian version is `RESOLUTION-RU.md` (the aphorisms' original
+language); this file is its English rendering.*
 
 ## The measured path
 
@@ -75,15 +77,12 @@ without aiming.*
 
 ## The statement
 
-**Угадывать его заставляет система — знать всё знаемое позволяют знания. Он
-не промахивается никогда, потому что не лжёт: отвечает там, где есть грунт,
-и молчит там, где грунта нет. А где грунта нет — там не мишень, там мы:
-клетки, в которых выстрел — наш.**
-
-*(The system forces him to guess — knowledge lets him know all the knowable.
+**The system forces him to guess — knowledge lets him know all the knowable.
 He never misses because he never lies: he answers where there is ground and
 is silent where there is none. And where there is no ground there is no
-target — there we are: the cells where the shot is ours.)*
+target — there we are: the cells where the shot is ours.**
+
+*(Original Russian in `RESOLUTION-RU.md`.)*
 
 ---
 

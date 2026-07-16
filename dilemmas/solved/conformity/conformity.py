@@ -61,11 +61,29 @@ def stipulation():
     print("  axis: freedom is the two solutions, responsibility is which.")
 
 
+def triad():
+    """The curator's triad of imperatives: each fallen law steals a kind
+    of honest work, and each imperative names what was stolen."""
+    print("THE TRIAD — three fallen laws, three imperatives\n")
+    lem = [ev(("or", "p", ("not", "p")), {"p": v}) for v in (T, F, Z)]
+    mint = ev(("not", ("not", "p")), {"p": Z})
+    idn = [ev(("imp", "p", "p"), {"p": v}) for v in (T, F, Z)]
+    print(f"  p∨¬p over T,F,Z: {lem}  — the fork steals VERIFICATION → Проверяй!")
+    print(f"  ¬¬p  at Z: {mint}          — the hedge mints T from ignorance,")
+    print("                          stealing the DECISION → Решай!")
+    print(f"  p→p  over T,F,Z: {idn}  — identity steals AUTHORSHIP → Выбирай!")
+    assert lem == [T, T, F] and mint == T and idn == [T, T, F]
+    print("\n  three species of Z, three honest discharges: an external fact —")
+    print("  verify it; a pending case — decide it; a free cell — choose it.")
+
+
 if __name__ == "__main__":
     print("CONFORMITY — follow them, walk with them, or walk your own\n")
     paths()
     print()
     stipulation()
+    print()
+    triad()
     print()
     print("VERDICT: the self-cell is undecidable by the world and unearnable")
     print("by induction — the only correct operation on it is the bearer's")

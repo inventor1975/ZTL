@@ -46,6 +46,22 @@ the wheel: it licenses *both* values equally (both stipulations hold).
 answered by conscience, whose axis is off the core's reach. Freedom is
 the two solutions; responsibility is which.
 
+## The triad of imperatives (the curator's)
+
+Generalized to all three fallen laws: each steals its own kind of honest
+work, and each gets its imperative:
+
+```
+p∨¬p  falls at Z  → the fork steals VERIFICATION → Проверяй! (Verify!)
+¬¬p   mints at Z  → the hedge steals the DECISION → Решай!   (Decide!)
+p→p   falls at Z  → identity steals AUTHORSHIP   → Выбирай!  (Choose!)
+```
+
+Three species of Z — three honest discharges: an external fact — verify
+it; a pending case — decide it; a free cell — choose it. LEM is honest
+only over a grounded atom; "it cannot be that not" must carry the case
+to a direct verdict; who you are is laid down by the bearer.
+
 ## The capstone — the curator's aphorism
 
 > **«Или ты идёшь за ними, или ты идёшь с ними, или ты наконец-то идёшь

@@ -76,41 +76,76 @@ def sign_layer():
 
 
 def the_stones():
-    """The curator's construction, stone by stone: how it CAN be done.
-    The honest sign carries the level (∧, not ↔); money is a receipt for
-    a deed (M=D — as much money as truth); the single root leak is
-    issuance without a deed (money built on money); default is the
-    grounding day of an unrooted pyramid."""
-    print("THE STONES — the curator's construction\n")
-    blind_tt = ev(("xnor", "a", "b"), {"a": T, "b": T})
-    blind_ff = ev(("xnor", "a", "b"), {"a": F, "b": F})
-    hon_tt = ev(("and", "a", "b"), {"a": T, "b": T})
-    hon_ff = ev(("and", "a", "b"), {"a": F, "b": F})
-    print(f"  1. the blind sign ↔ : T=T→{blind_tt}, F=F→{blind_ff} — level lost")
-    print(f"     the honest sign ∧ : T∧T→{hon_tt}, F∧F→{hon_ff} — level carried")
-    assert (blind_tt, blind_ff, hon_tt, hon_ff) == (T, T, T, F)
+    """The curator's construction, revised stone by stone. Money is a
+    receipt for an EARNED BIT — and an earned NO has the same nominal as
+    an earned YES (the information equivalent); the unverified mints
+    nothing. The sign must carry the level (∧, not the blind ↔). The
+    single root leak is issuance without a bit (money built on money);
+    default is the grounding day of an unrooted pyramid."""
+    print("THE STONES — the curator's construction (revised)\n")
+    yes = judge("p", {"p": "T"})
+    no = judge("p", {"p": "F"})
+    z = judge("p", {"p": "M"})
+    print(f"  1. NOMINAL: earned YES → {yes[0]}, {yes[1]}; earned NO → "
+          f"{no[0]}, {no[1]}")
+    print(f"     — one grade, one bit, ONE NOMINAL (polarity does not price);")
+    print(f"     unverified → {z[0]}, {z[1]} — the note is not issued")
+    assert yes[:2] == ("T", "hereditary") and no[:2] == ("F", "hereditary")
+    assert z[1] == "until-verification"
 
-    receipt = {v: ev("D", {"D": v}) for v in (T, F, Z)}
-    print(f"  2. money as a receipt for a deed, M=D: deed done → {receipt[T]},"
-          f" no deed → {receipt[F]},")
-    print(f"     deed unverified → {receipt[Z]} — as much money as truth,"
-          " by construction")
-    assert receipt == {T: T, F: F, Z: Z}
+    blind_ff = ev(("xnor", "a", "b"), {"a": F, "b": F})
+    hon_ff = ev(("and", "a", "b"), {"a": F, "b": F})
+    print(f"  2. the blind sign ↔ mints T on F=F ({blind_ff}) — level lost;")
+    print(f"     the honest sign ∧ carries it (F∧F→{hon_ff}): a receipt must")
+    print("     say WHAT bit it certifies, not merely 'equal'")
+    assert blind_ff == T and hon_ff == F
 
     pyr = diagnose({"M3": "M2", "M2": "M1", "M1": "M1"})
     unrooted = list(pyr["ground"].values())
-    rooted_T = [ev("D", {"D": T})] * 3
+    rooted = [ev("D", {"D": T})] * 3
     default = [ev("D", {"D": F})] * 3
-    print(f"  3. the pyramid M3=M2=M1, no deed below: {unrooted}")
-    print(f"     same chain rooted in a deed T:      {rooted_T} — every "
-          "floor earned")
-    print(f"     DEFAULT — the deed below was F:     {default} — every "
-          "floor dies at once")
-    assert unrooted == [Z, Z, Z] and rooted_T == [T, T, T] and default == [F, F, F]
-    print("\n  the single root leak is issuance without a deed (the blind ↔")
-    print("  mints on F=F too); credit rooted in a deed is honest investment;")
-    print("  default does not break the pyramid — it reads it to the end.")
-    print("  Money making money — harm; deeds making money — good.")
+    print(f"  3. the pyramid M3=M2=M1, no bit below: {unrooted}")
+    print(f"     rooted in an earned bit:            {rooted} — every floor "
+          "earned")
+    print(f"     DEFAULT — the root read out as F:   {default} — every floor "
+          "dies at once")
+    assert unrooted == [Z, Z, Z] and rooted == [T, T, T] and default == [F, F, F]
+    print("\n  as much money as EARNED BITS; credit rooted in a bit is honest")
+    print("  investment; default does not break the pyramid — it reads it to")
+    print("  the end. Money making money — harm; deeds making money — good.")
+
+
+def ruling():
+    """Who may rule: the receipts or the stipulator. Money REGISTERS the
+    earned; power STIPULATES the free cells and HOLDS THE LAWS — and the
+    laws, measured, are the cash-out infrastructure of refutations."""
+    print("THE RULING — receipts do not rule\n")
+    from zchoice import stage, EXACTLY_ONE, LAWLESS
+    with_law = stage("a2", (0, 0), EXACTLY_ONE)
+    lawless = stage("a2", (0, 0), LAWLESS)
+    print(f"  cash-out of an F-bundle: two earned NOs under the law "
+          f"'exactly one 1' force → {with_law}")
+    print(f"  the same two NOs with no law               → {lawless}")
+    assert with_law == T and lawless == Z
+    free_denial = ev(("not", "g"), {"g": Z})
+    print(f"  power's native coin: the free denial ¬Z = {free_denial} — "
+          "ruling by prohibition is cheap;")
+    print("  real power begins where a T must be grounded")
+    assert free_denial == F
+    print("""
+  the honest split:
+    MONEY  registers earned bits (equal nominal for YES and NO) — it
+           records, it does not decide;
+    POWER  stipulates the common free cells (the king the book of
+           Judges lacked) and holds the laws — the infrastructure that
+           cashes F-bundles into forced Ts.
+  the two leaks, one in each direction:
+    the receipt in the judge's seat — money buying stipulations;
+    the printing press — power minting receipts without bits, or
+    rewriting an earned bit by decree (no decree makes a grounded F
+    into T: the stones above do not move).
+  'money rules the world' is a category error: a receipt has taken
+  the stipulator's chair — and a receipt that rules mints itself.""")
 
 
 if __name__ == "__main__":
@@ -124,6 +159,8 @@ if __name__ == "__main__":
     sign_layer()
     print()
     the_stones()
+    print()
+    ruling()
     print()
     print("DIAGNOSIS: money rules honestly as the common stipulated ground")
     print("of strangers — and dishonestly as a judge, wherever the priced")

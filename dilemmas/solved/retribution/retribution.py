@@ -81,7 +81,7 @@ def law_dne():
 def steer():
     """The curator's corrected aphorism — how the doctrine must be said
     so it rides no fallen law: «Всем воздастся по заслугам — и только
-    хорошее, но только то, что дадут другие.»"""
+    хорошее, но только то, что им дадут другие.»"""
     print("THE STEER — the corrected doctrine, cell by cell\n")
     pun = judge("d", {"d": "M"})              # punitive: verdict on hidden desert
     gift = judge("give", {"give": "T"})       # the gift: giver's own grounded act

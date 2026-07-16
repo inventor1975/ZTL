@@ -56,9 +56,9 @@ one of its cells is earned.**
 ## The steer-out — the curator's corrected aphorism
 
 > **«Всем воздастся по заслугам — и только хорошее, но только то, что
-> дадут другие.»**
+> им дадут другие.»**
 > *(Everyone will be repaid by their deserts — and only good — but only
-> what other people give.)*
+> what other people give them.)*
 
 Measured (`steer()` in the stand) — the correction rides no fallen law:
 

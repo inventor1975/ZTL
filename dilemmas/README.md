@@ -16,9 +16,13 @@ first (the honest step — a bad skeleton refutes only a straw man), then the
 cells are measured. The essay or aphorism, if one comes, is delivery; the
 run underneath is the proof.
 
-| file | dilemma |
-|---|---|
-| `rambam.py` | divine foreknowledge vs free will (Maimonides, Hilchot Teshuva 5:5) |
+A dilemma that reaches a resolution moves to `solved/<name>/` — the stand
+plus `RESOLUTION.md`, the record of what was actually settled (findings,
+each on a run; the closing statement; the aphorism if one was earned).
+
+| dilemma | where | state |
+|---|---|---|
+| divine foreknowledge vs free will (Maimonides, Hilchot Teshuva 5:5) | `solved/foreknowledge/` | resolved 2026-07-16 |
 
 *AI participation: designed and written in a dialogue between the curator
 (Vitaly Reznik) and Claude (Anthropic); all fork decisions are the curator's.*

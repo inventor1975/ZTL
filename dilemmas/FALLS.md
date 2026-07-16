@@ -53,6 +53,21 @@ CLASSICAL LOGIC           p↔p — assumed to work for every p
 > the guess, worn as a verdict. The same forced mode as the top
 > system's — only God does not pretend otherwise.
 
+The mechanism unpacked (the curator's step, measured): guess «truth» —
+rejected; guess «falsehood» — rejected; then guess IN ORDER — and the
+orbit is T,F,T,F,… (period 2), which is literally xor dynamics: the
+liar S=¬S iterates x ↦ x⊕⊤. **An answer does arrive — but in a
+different currency: not a value, a difference.** The orbit has no
+level, yet the xor of consecutive guesses is a CONSTANT ⊤ ("not what I
+was yesterday" — always). Classics asked "what?" and the liar answered
+"how often": a question about value, an answer about parity. Guessing
+classics is an oscilloscope — blind to the level, perfect on the
+frequency. This is the measured parity theorem in person (62/62:
+paradoxical ⟺ odd xor-sum of the ring), the liar's period [2], and ⊕
+surviving as a basis (E23): on self-reference classics always receives
+its answer in the xor currency — and refuses to admit the answer has a
+different type.
+
 One law, three dresses: identity-over-time fells God (induction),
 identity-of-value assumed universal fells classics (p↔p → the liar's
 cell), and identity falls for us openly at Z — we are merely the ones

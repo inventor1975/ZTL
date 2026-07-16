@@ -86,6 +86,25 @@ of thinking: the world will not decide who you are — you lay that
 ground. (Earlier wordings — p∨¬p → "Verify!" and the first member
 "Choose!" — were replaced by the curator.)
 
+**The engine of the laws — the tamed liar (the curator's observation).**
+"I reject with the liar's paradox, and decide with the strong liar":
+
+```
+the whole liar  p = ¬p  →  0 solutions, quarantine, period [2]   the monster
+the half        p → ¬p  →  the liar's signature in a hypothesis   the detector
+strong half's discharge: reductio (p→¬p)→¬p → hereditary          you DECIDE with it
+weak half's discharge:   cogito  (¬p→p)→p   → until-verif         behind the barrier
+```
+
+Rejection is presenting the hypothesis with half a liar (p implies ¬p —
+a loop inside the assumption); deciding is the strong liar, reductio:
+the one free discharge, converting the exposed loop into an earned NO.
+The project's ring closes: ZTL was born from the liar's paradox — and
+the liar turned out to be not the enemy it defeated but the engine it
+harnessed. Whole — quarantine; split — an instrument. Classics flees
+him up an infinite hierarchy — we broke him into halves and yoked him
+to the pipeline.
+
 ## The capstone — the curator's aphorism
 
 > **«Или ты идёшь за ними, или ты идёшь с ними, или ты наконец-то идёшь

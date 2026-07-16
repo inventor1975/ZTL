@@ -63,40 +63,38 @@ def stipulation():
 
 
 def triad():
-    """The curator's triad of imperatives (final wording, 2026-07-16):
-    three credit shapes, three kinds of honest work returned to their
-    owner. Verification is not a member — it is the general regime of
-    the whole logic (until-verification); the triad names the BEARER's
-    three works."""
-    print("THE TRIAD — three cells, three imperatives\n")
-    idn = [ev(("imp", "p", "p"), {"p": v}) for v in (T, F, Z)]
+    """The curator's LAWS OF THINKING (final wording, 2026-07-16):
+    Отвергни! Подумай! Реши! — the pipeline starts by taking F for
+    free, so the first law is a rejection, not a choice. Verification
+    is not a member — it is the general regime of the whole logic
+    (until-verification). The imperative Выбирай! stays where it
+    belongs: on the free self-cell p→p — the capstone of this dilemma,
+    the law of the self rather than a law of thinking."""
+    print("THE LAWS OF THINKING — Отвергни! Подумай! Реши!\n")
+    free_no = ev(("not", "g"), {"g": Z})
     hyp = judge(("imp", ("not", "p"), "q"), {"p": "M", "q": "M"})
     mint = ev(("not", ("not", "p")), {"p": Z})
-    print(f"  p→p  over T,F,Z: {idn}   the world will not decide your cell")
-    print("                             → Выбирай!  (choose)")
+    print(f"  ¬Z = {free_no}                the denial is free — take it first")
+    print("                             → Отвергни!  (reject)")
     print(f"  ¬p→q on the unverified → {hyp[0]}, {hyp[1]}, counter p:="
           f"{hyp[2]['p']}")
     print("        a hypothesis held on credit — run its consequences")
-    print("        before asserting     → Думай!    (think)")
+    print("        before asserting     → Подумай!   (think it through)")
     print(f"  ¬¬p  at Z → {mint}          the hedge mints T from ignorance —")
-    print("        carry the case to a direct verdict → Решай!  (decide)")
-    assert idn == [T, T, F]
+    print("        carry the case to a direct verdict → Реши!  (decide)")
+    assert free_no == F
     assert hyp[:2] == ("T", "until-verification") and hyp[2] == {"p": "F"}
     assert mint == T
-    print("\n  a free cell — choose it; an assumption — think it through; a")
-    print("  pending case — decide it. Выбирай! Думай! Решай!")
 
-    # THE PIPELINE — the triad is also ONE algorithm, in this order:
-    # the coin algorithm (the curator's, with the barrier measured).
     red = judge(("imp", ("imp", "p", ("not", "p")), ("not", "p")), {"p": "M"})
     cog = judge(("imp", ("imp", ("not", "p"), "p"), "p"), {"p": "M"})
     dne = judge(("imp", ("not", ("not", "p")), "p"), {"p": "M"})
-    print("\nTHE PIPELINE — the same triad run as the coin algorithm\n")
-    print("  1. Выбирай!  take the F-coin: assume ¬p — denial is free (¬Z=F);")
+    print("\nTHE PIPELINE — the three laws run as the coin algorithm\n")
+    print("  1. Отвергни!  take the F-coin: assume ¬p — denial is free (¬Z=F);")
     print("     the only coin whose failure stalls instead of lying")
-    print("  2. Думай!    run the consequences of the assumption — the")
+    print("  2. Подумай!   run the consequences of the assumption — the")
     print("     hypothesis is credit until thought through")
-    print("  3. Решай!    carry to a direct verdict, and mind the barrier:")
+    print("  3. Реши!      carry to a direct verdict, and mind the barrier:")
     print(f"       reductio (p→¬p)→¬p → {red[0]}, {red[1]}   a NO from collapse — free")
     print(f"       cogito (¬p→p)→p    → {cog[0]}, {cog[1]}   a YES from collapse — credit")
     print(f"       DNE ¬¬p→p          → {dne[0]}, {dne[1]}   no way back through double NO")
@@ -105,6 +103,8 @@ def triad():
     print("\n  the coin earns denials wholesale; every YES is a separate")
     print("  direct purchase — grounding, witness, verification. The coin")
     print("  buys refutations; affirmations are sold only by the world.")
+    print("  And the self-cell keeps its own imperative apart from the")
+    print("  laws of thinking: p→p — the world will not decide you — Выбирай!")
 
 
 if __name__ == "__main__":

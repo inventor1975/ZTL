@@ -13,9 +13,11 @@ GOD (the top system)      (p∧p∧…∧p) → p          T, until-verification
 
 WE (ZTL)                  p→p · p∨¬p · ¬¬p→p     all fall at Z
   the price is COMPLETENESS; in exchange, the three imperatives name the
-  returned work: p→p → Выбирай! (choose) · ¬p→q → Думай! (think) ·
-  ¬¬p → Решай! (decide); verification is the general regime that pays
-  for all three, not a member.
+  returned work — the laws of thinking: ¬Z=F → Отвергни! (reject: take
+  the free denial first) · ¬p→q → Подумай! (think the hypothesis
+  through) · ¬¬p → Реши! (decide to a direct verdict); verification is
+  the general regime that pays for all three, not a member; and the
+  self-cell p→p keeps its own imperative apart — Выбирай! (choose).
 
 CLASSICAL LOGIC           p↔p — assumed to work for every p
   its real axiom: every sentence HAS a value equal to itself. Measured:

@@ -46,40 +46,45 @@ the wheel: it licenses *both* values equally (both stipulations hold).
 answered by conscience, whose axis is off the core's reach. Freedom is
 the two solutions; responsibility is which.
 
-## The triad of imperatives (the curator's; final wording 2026-07-16)
+## The laws of thinking (the curator's; final wording 2026-07-16)
+
+> **Отвергни! Подумай! Реши!** *(Reject! Think it through! Decide!)*
+
+The pipeline starts by taking F for free — so the first law is a
+rejection, not a choice:
 
 ```
-p→p   identity: the world will not decide your cell   → Выбирай! (Choose!)
-¬p→q  hypothesis: a consequence from an assumption,
-      held on credit (T, until-verif; counter p:=F)    → Думай!   (Think!)
-¬¬p   the hedge: T minted from ignorance               → Решай!   (Decide!)
+¬Z = F   the denial is free — take it first                    → Отвергни!
+¬p→q     hypothesis: a consequence from an assumption, held
+         on credit (T, until-verif; counter p:=F)              → Подумай!
+¬¬p      the hedge: T minted from ignorance — carry to verdict → Реши!
 ```
 
-Three shapes of credit — three works of the bearer: a free cell —
-choose it; an assumption — think its consequences through before
-asserting; a pending case — decide it to a direct verdict. Verification
-is not a member of the triad — it is not one work among works but the
-general regime of the whole logic (until-verification): each of the
-three roads is paid for by it. (The earlier middle member — p∨¬p →
-"Verify!" — was replaced by the curator.)
-
-**The triad as a pipeline — the coin algorithm (in exactly this
-order):**
+As a pipeline — the coin algorithm, in exactly this order:
 
 ```
-1. Выбирай!  take the F-coin: assume ¬p — denial is free (¬Z=F);
-             the only coin whose failure stalls instead of lying
-2. Думай!    run the consequences of the assumption — a hypothesis is
-             credit until thought through
-3. Решай!    carry to a direct verdict — and mind the barrier:
-             reductio (p→¬p)→¬p  → T, hereditary      a NO from collapse — free
-             cogito  (¬p→p)→p    → F, until-verif     a YES from collapse — credit
-             DNE     ¬¬p→p       → F, until-verif     no way back through double NO
+1. Отвергни!  take the F-coin: assume ¬p — denial is free (¬Z=F);
+              the only coin whose failure stalls instead of lying
+2. Подумай!   run the consequences of the assumption — a hypothesis
+              is credit until thought through
+3. Реши!      carry to a direct verdict — and mind the barrier:
+              reductio (p→¬p)→¬p  → T, hereditary      a NO from collapse — free
+              cogito  (¬p→p)→p    → F, until-verif     a YES from collapse — credit
+              DNE     ¬¬p→p       → F, until-verif     no way back through double NO
 ```
 
 The coin earns denials wholesale; every YES is a separate direct
 purchase — grounding, witness, verification. The coin buys refutations;
 affirmations are sold only by the world.
+
+Verification is not a member of the laws — it is not one work among
+works but the general regime of the whole logic (until-verification):
+each of the three roads is paid for by it. And the imperative
+**Выбирай!** *(Choose!)* stays where it belongs: on the free self-cell
+p→p — this dilemma's capstone, the law of the *self* rather than a law
+of thinking: the world will not decide who you are — you lay that
+ground. (Earlier wordings — p∨¬p → "Verify!" and the first member
+"Choose!" — were replaced by the curator.)
 
 ## The capstone — the curator's aphorism
 

@@ -75,6 +75,44 @@ def sign_layer():
     print("  here legally: paper (F) = promise (F) → a working T. Sign-dust.")
 
 
+def the_stones():
+    """The curator's construction, stone by stone: how it CAN be done.
+    The honest sign carries the level (∧, not ↔); money is a receipt for
+    a deed (M=D — as much money as truth); the single root leak is
+    issuance without a deed (money built on money); default is the
+    grounding day of an unrooted pyramid."""
+    print("THE STONES — the curator's construction\n")
+    blind_tt = ev(("xnor", "a", "b"), {"a": T, "b": T})
+    blind_ff = ev(("xnor", "a", "b"), {"a": F, "b": F})
+    hon_tt = ev(("and", "a", "b"), {"a": T, "b": T})
+    hon_ff = ev(("and", "a", "b"), {"a": F, "b": F})
+    print(f"  1. the blind sign ↔ : T=T→{blind_tt}, F=F→{blind_ff} — level lost")
+    print(f"     the honest sign ∧ : T∧T→{hon_tt}, F∧F→{hon_ff} — level carried")
+    assert (blind_tt, blind_ff, hon_tt, hon_ff) == (T, T, T, F)
+
+    receipt = {v: ev("D", {"D": v}) for v in (T, F, Z)}
+    print(f"  2. money as a receipt for a deed, M=D: deed done → {receipt[T]},"
+          f" no deed → {receipt[F]},")
+    print(f"     deed unverified → {receipt[Z]} — as much money as truth,"
+          " by construction")
+    assert receipt == {T: T, F: F, Z: Z}
+
+    pyr = diagnose({"M3": "M2", "M2": "M1", "M1": "M1"})
+    unrooted = list(pyr["ground"].values())
+    rooted_T = [ev("D", {"D": T})] * 3
+    default = [ev("D", {"D": F})] * 3
+    print(f"  3. the pyramid M3=M2=M1, no deed below: {unrooted}")
+    print(f"     same chain rooted in a deed T:      {rooted_T} — every "
+          "floor earned")
+    print(f"     DEFAULT — the deed below was F:     {default} — every "
+          "floor dies at once")
+    assert unrooted == [Z, Z, Z] and rooted_T == [T, T, T] and default == [F, F, F]
+    print("\n  the single root leak is issuance without a deed (the blind ↔")
+    print("  mints on F=F too); credit rooted in a deed is honest investment;")
+    print("  default does not break the pyramid — it reads it to the end.")
+    print("  Money making money — harm; deeds making money — good.")
+
+
 if __name__ == "__main__":
     print("MONEY RULES THE WORLD — through the core\n")
     truth_teller()
@@ -84,6 +122,8 @@ if __name__ == "__main__":
     leak()
     print()
     sign_layer()
+    print()
+    the_stones()
     print()
     print("DIAGNOSIS: money rules honestly as the common stipulated ground")
     print("of strangers — and dishonestly as a judge, wherever the priced")

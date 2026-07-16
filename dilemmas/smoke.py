@@ -35,7 +35,7 @@ def run():
     print("  the fallen direction of contraposition. The law's counter-cell")
     print("  is f:=F — smoke without fire exists, the smoke MACHINE makes it")
     print("  (slander manufactures smoke cheaply; fire it cannot make).")
-    print("  Smoke is a MARK — an order to verify (Проверяй!) — and the")
+    print("  Smoke is a MARK — an order to verify — and the")
     print("  proverb sells the mark as a verdict.")
 
 

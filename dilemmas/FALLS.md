@@ -13,7 +13,9 @@ GOD (the top system)      (p∧p∧…∧p) → p          T, until-verification
 
 WE (ZTL)                  p→p · p∨¬p · ¬¬p→p     all fall at Z
   the price is COMPLETENESS; in exchange, the three imperatives name the
-  stolen work: Проверяй! (verify) · Решай! (decide) · Выбирай! (choose).
+  returned work: p→p → Выбирай! (choose) · ¬p→q → Думай! (think) ·
+  ¬¬p → Решай! (decide); verification is the general regime that pays
+  for all three, not a member.
 
 CLASSICAL LOGIC           p↔p — assumed to work for every p
   its real axiom: every sentence HAS a value equal to itself. Measured:

@@ -20,6 +20,7 @@ sys.path.insert(0, os.path.join(_ROOT, "zhunt"))
 
 from ztl import T, F, Z, ev
 from pengine import diagnose
+from zhunt import judge
 
 
 def paths():
@@ -62,19 +63,28 @@ def stipulation():
 
 
 def triad():
-    """The curator's triad of imperatives: each fallen law steals a kind
-    of honest work, and each imperative names what was stolen."""
-    print("THE TRIAD — three fallen laws, three imperatives\n")
-    lem = [ev(("or", "p", ("not", "p")), {"p": v}) for v in (T, F, Z)]
-    mint = ev(("not", ("not", "p")), {"p": Z})
+    """The curator's triad of imperatives (final wording, 2026-07-16):
+    three credit shapes, three kinds of honest work returned to their
+    owner. Verification is not a member — it is the general regime of
+    the whole logic (until-verification); the triad names the BEARER's
+    three works."""
+    print("THE TRIAD — three cells, three imperatives\n")
     idn = [ev(("imp", "p", "p"), {"p": v}) for v in (T, F, Z)]
-    print(f"  p∨¬p over T,F,Z: {lem}  — the fork steals VERIFICATION → Проверяй!")
-    print(f"  ¬¬p  at Z: {mint}          — the hedge mints T from ignorance,")
-    print("                          stealing the DECISION → Решай!")
-    print(f"  p→p  over T,F,Z: {idn}  — identity steals AUTHORSHIP → Выбирай!")
-    assert lem == [T, T, F] and mint == T and idn == [T, T, F]
-    print("\n  three species of Z, three honest discharges: an external fact —")
-    print("  verify it; a pending case — decide it; a free cell — choose it.")
+    hyp = judge(("imp", ("not", "p"), "q"), {"p": "M", "q": "M"})
+    mint = ev(("not", ("not", "p")), {"p": Z})
+    print(f"  p→p  over T,F,Z: {idn}   the world will not decide your cell")
+    print("                             → Выбирай!  (choose)")
+    print(f"  ¬p→q on the unverified → {hyp[0]}, {hyp[1]}, counter p:="
+          f"{hyp[2]['p']}")
+    print("        a hypothesis held on credit — run its consequences")
+    print("        before asserting     → Думай!    (think)")
+    print(f"  ¬¬p  at Z → {mint}          the hedge mints T from ignorance —")
+    print("        carry the case to a direct verdict → Решай!  (decide)")
+    assert idn == [T, T, F]
+    assert hyp[:2] == ("T", "until-verification") and hyp[2] == {"p": "F"}
+    assert mint == T
+    print("\n  a free cell — choose it; an assumption — think it through; a")
+    print("  pending case — decide it. Выбирай! Думай! Решай!")
 
 
 if __name__ == "__main__":

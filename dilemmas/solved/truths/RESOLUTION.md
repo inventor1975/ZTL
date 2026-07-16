@@ -39,7 +39,7 @@ was no king" = there was no common decision: each stipulated alone.
 
 ```
 START    p = Z          p→p = F    any number of 'truths', zero identity
-STEP     by the cell's species (the triad): an external fact — VERIFY
+STEP     by the cell's species: an external fact — VERIFY
          (the world collapses the dispute by force); a pending case —
          DECIDE; a free cell — CHOOSE TOGETHER (joint stipulation)
 FINISH   p ∈ {T,F}      p→p = T    one truth, a common decision

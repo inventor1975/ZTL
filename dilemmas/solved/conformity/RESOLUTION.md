@@ -46,21 +46,22 @@ the wheel: it licenses *both* values equally (both stipulations hold).
 answered by conscience, whose axis is off the core's reach. Freedom is
 the two solutions; responsibility is which.
 
-## The triad of imperatives (the curator's)
-
-Generalized to all three fallen laws: each steals its own kind of honest
-work, and each gets its imperative:
+## The triad of imperatives (the curator's; final wording 2026-07-16)
 
 ```
-p∨¬p  falls at Z  → the fork steals VERIFICATION → Проверяй! (Verify!)
-¬¬p   mints at Z  → the hedge steals the DECISION → Решай!   (Decide!)
-p→p   falls at Z  → identity steals AUTHORSHIP   → Выбирай!  (Choose!)
+p→p   identity: the world will not decide your cell   → Выбирай! (Choose!)
+¬p→q  hypothesis: a consequence from an assumption,
+      held on credit (T, until-verif; counter p:=F)    → Думай!   (Think!)
+¬¬p   the hedge: T minted from ignorance               → Решай!   (Decide!)
 ```
 
-Three species of Z — three honest discharges: an external fact — verify
-it; a pending case — decide it; a free cell — choose it. LEM is honest
-only over a grounded atom; "it cannot be that not" must carry the case
-to a direct verdict; who you are is laid down by the bearer.
+Three shapes of credit — three works of the bearer: a free cell —
+choose it; an assumption — think its consequences through before
+asserting; a pending case — decide it to a direct verdict. Verification
+is not a member of the triad — it is not one work among works but the
+general regime of the whole logic (until-verification): each of the
+three roads is paid for by it. (The earlier middle member — p∨¬p →
+"Verify!" — was replaced by the curator.)
 
 ## The capstone — the curator's aphorism
 

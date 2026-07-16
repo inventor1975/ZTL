@@ -78,6 +78,31 @@ def slide():
     print("  bloodline, the verdict does not (E7: taint ≠ certificate).")
 
 
+def construction():
+    """The correct logical construction, found by running candidates:
+    a group has no atom of its own — verdicts go per person, marks may
+    flow to the block. And the block verdict is ASYMMETRIC by measure:
+    no pile of grounded criminals earns it; one grounded righteous
+    refutes it forever. Abraham bargained with exact logic: he was not
+    justifying Sodom — he was refuting the ∀."""
+    blk = ("and", "g1", ("and", "g2", "g3"))
+    v_pile = judge(blk, {"g1": "T", "g2": "T", "g3": "M"})
+    v_one = judge(blk, {"g1": "M", "g2": "F", "g3": "M"})
+    v_all = judge(blk, {"g1": "T", "g2": "T", "g3": "T"})
+    print("THE CONSTRUCTION — the honest block verdict is asymmetric\n")
+    print(f"  2 of 3 criminals grounded, 1 hidden → {v_pile[0]}, {v_pile[1]}")
+    print(f"  1 righteous grounded, rest hidden   → {v_one[0]}, {v_one[1]}")
+    print(f"  every atom walked (Abraham's limit) → {v_all[0]}, {v_all[1]}")
+    assert v_pile[:2] == ("F", "until-verification")
+    assert v_one[:2] == ("F", "hereditary")
+    assert v_all[:2] == ("T", "hereditary")
+    print("\n  no number of real criminals earns the block verdict while one")
+    print("  atom stays hidden; ONE grounded righteous refutes it forever —")
+    print("  and the fully-walked block is no block at all, but n personal")
+    print("  verdicts. Verdicts per person; marks (suspicion, the task to")
+    print("  verify) may flow to the group — the verdict may not (E7).")
+
+
 if __name__ == "__main__":
     print("COLLECTIVE GUILT — 'they are all like that' through the core\n")
     wrapper()
@@ -87,6 +112,8 @@ if __name__ == "__main__":
     merge()
     print()
     slide()
+    print()
+    construction()
     print()
     print("Four cells, one machine: merge the atoms without a witness, run")
     print("the unfailable wrapper on the merged block, slide the earned ∃")

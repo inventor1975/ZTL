@@ -26,6 +26,7 @@ each on a run; the closing statement; the aphorism if one was earned).
 | the sufferer's guilt / victim-blaming (the Book of Job) | `solved/job/` | resolved 2026-07-16 |
 | "everyone will be repaid by their deserts" (karma / retribution) | `solved/retribution/` | resolved 2026-07-16 |
 | collective guilt — "they are all like that" (Abraham at Sodom) | `solved/collective/` | resolved 2026-07-16 |
+| conformity — follow them / walk with them / walk your own | `solved/conformity/` | resolved 2026-07-16 |
 
 *AI participation: designed and written in a dialogue between the curator
 (Vitaly Reznik) and Claude (Anthropic); all fork decisions are the curator's.*

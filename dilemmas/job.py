@@ -68,6 +68,34 @@ def registers():
     print("  either way — any bivalent answer about an unverified g is credit.")
 
 
+def resolution():
+    """The curator's reduction: the whole book is ONE formula — g→g, the
+    fallen law of identity, on the guilt atom. Identity earns exactly at
+    the owner's grounding, and g is grounded only in its bearer: only the
+    person can rightly assess his own guilt (the F→F version — the
+    innocent knowing his innocence — IS Job)."""
+    pp = ("imp", "g", "g")
+    cells = [
+        ("g→g outside (g unverified)", pp, {"g": "M"},
+         ("F", "until-verification")),
+        ("g→g self, guilty   (T→T)  ", pp, {"g": "T"}, ("T", "hereditary")),
+        ("g→g self, innocent (F→F)  ", pp, {"g": "F"}, ("T", "hereditary")),
+        ("¬g  Job's word, own ground", ("not", "g"), {"g": "F"},
+         ("T", "hereditary")),
+        ("¬g  the same word, outside", ("not", "g"), {"g": "M"},
+         ("F", "until-verification")),
+    ]
+    print("RESOLUTION — the five cells collapse into one: g→g\n")
+    for name, phi, marks, want in cells:
+        v, grade, _, _ = judge(phi, marks)
+        print(f"  {name} → {v}, {grade}")
+        assert (v, grade) == want
+    print("\n  identity — the fallen law — earns exactly at the owner's")
+    print("  grounding, and the guilt atom is grounded only in its bearer:")
+    print("  only the person can rightly assess his own guilt. The friends")
+    print("  ran g→g on someone else's atom — their whole sin in one line.")
+
+
 if __name__ == "__main__":
     print("JOB — the sufferer's guilt through the core\n")
     skeleton()
@@ -75,6 +103,8 @@ if __name__ == "__main__":
     stamp()
     print()
     registers()
+    print()
+    resolution()
     print()
     print("THE BOOK'S OWN GRADE (quoted, not measured — Job 42:7): the holder")
     print("of Z is vindicated, the stampers of T are condemned — the text")

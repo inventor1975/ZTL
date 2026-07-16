@@ -70,10 +70,10 @@ truths" confirming each other do not make one.
 
 ## The capstone — the curator's aphorism
 
-> **«У каждого своя правда и только ложь общая. Истину через тождество
-> имеет право говорить только логика!»**
-> *(Everyone has his own truth — and only the lie is common. Truth
-> through identity may be spoken by logic alone!)*
+> **«У каждого своя правда и только ложь общая. Истину или добро через
+> тождество имеет право говорить только логика!»**
+> *(Everyone has his own truth — and only the lie is common. Truth or
+> goodness through identity may be spoken by logic alone!)*
 
 The second half is a monopoly, and it is honest by measure: logic's
 identity-truths (the hereditary constants — non-contradiction, reductio)
@@ -81,8 +81,17 @@ are frames that read no atom, empty by construction, and logic alone
 owns that emptiness without selling it as content. Every machine of this
 day was a human speaking truth through identity about content: "not
 guilty — not hurting" (the tautologized test), "that's just how they
-are" ((p→p)→(p→p)), "my truth is mine". What remains to the human is
-truth through grounding: verify, decide, choose.
+are" ((p→p)→(p→p)), "my truth is mine".
+
+And "goodness" in the monopoly is a mute lock: logic has no axis of good
+at all (value is beyond its reach — every moral cut of this arc was the
+human's), so the sole rightholder of the identity channel is SILENT on
+goodness — and goodness-through-identity is spoken by no one. "We are
+good because we are ours" is the simple man's counterfeit, as "my truth
+is mine" is the strong man's. The program for both: **goodness is not
+declared — it is done (a grounded act: "only what others give them");
+truth is not owned — it is earned: verify, decide, choose.** Through
+identity — nothing, for no one.
 
 Truths are many precisely because none is a truth; the one thing the
 disputants share before the grounding is the counterfeit method itself:

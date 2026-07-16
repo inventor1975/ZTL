@@ -51,6 +51,16 @@ STANDS = [
     ("zzhegalkin.py",  ["SURVIVES ENTIRELY", "514 = 514",
                         "x⊕x ≡ ⊥ on all three values ✓",
                         "Zhegalkin-as-ring FALLS"]),
+    ("finn_reconcile.py", ["znor  == ¬x∩̇¬x  (Finn B3ex,¬ gen) : True",
+                        "[znand] == [znor]   : True",
+                        "|[znand]|           = 18",
+                        "[x̄variant] == [znand]: False"]),
+    ("pengine.py",     ["all 9015 one-sentence nets",
+                        "0 violations",
+                        "grounded without a unique model: 0",
+                        "cautious Z (1 model, still Z): 1068",
+                        "odd k → 0 solutions (Liar-type)",
+                        "truncated Yablo is CONSISTENT"]),
     ("tool/test_zfl.py", ["ZFL FOUNDATION GREEN"]),
 ]
 

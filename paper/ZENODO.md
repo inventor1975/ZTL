@@ -60,7 +60,7 @@ explosion.
 The entire development — twelve Lean 4 modules — is machine-checked with
 an EMPTY axiom list (no classical choice, no quotients, not even
 propositional extensionality; definitions included). Every numerical
-claim is reproducible by the repository's regression (31 test stands);
+claim is reproducible by the repository's regression (33 test stands);
 an interactive studio (natural language → the ZFL formal language →
 the measured core) ships with the repository.
 
@@ -138,4 +138,4 @@ cut admissibility; Craig interpolation; functional completeness; Sheffer stroke;
 The preprint text is CC BY 4.0; the accompanying repository code is
 MIT-licensed. The Lean corpus (12 modules) verifies with an empty
 axiom list; run `python3 run_all.py` for the full regression
-(31 stands + Lean build).
+(33 stands + Lean build).

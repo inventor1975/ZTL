@@ -55,7 +55,7 @@ python3 zzhegalkin.py  # Zhegalkin: the {∧,⊕} basis survives entirely, the G
 cd lean && lake build  # machine check of the core: zero axioms
 ```
 
-Full regression: `python3 run_all.py` (31 stands + Lean build).
+Full regression: `python3 run_all.py` (33 stands + Lean build).
 
 **ZTLStudio** (`tool/`): a local studio — a human states a paradox or
 a claim in natural language, the AI only *translates* (negotiated

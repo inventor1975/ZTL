@@ -124,6 +124,70 @@ def selfref(f):
     return diagnose({HOLE: f})
 
 
+def all_formulas(max_size):
+    """Every formula tree over {S, ⊤, ⊥} with 2..max_size symbols (a symbol =
+    one node: a leaf or an operator; compounds only — a bare leaf is not a
+    net worth reading). Ops: ¬ and the five binary connectives of the core."""
+    by_size = {1: [HOLE, "T", "F"]}
+    for n in range(2, max_size + 1):
+        acc = [("not", f) for f in by_size[n - 1]]
+        for a_sz in range(1, n - 1):
+            for a in by_size[a_sz]:
+                for b in by_size[n - 1 - a_sz]:
+                    acc += [(op, a, b)
+                            for op in ("and", "or", "imp", "xor", "xnor")]
+        by_size[n] = acc
+    return [f for n in range(2, max_size + 1) for f in by_size[n]]
+
+
+def containment(max_size=6, verbose=True):
+    """THE SWEEP behind §11 of the preprint — the numbers cited there are
+    recomputed here, not quoted. Over every one-sentence net S = f(S) up to
+    `max_size` symbols, two measured claims:
+
+    1. One-step criterion (the theorem at lazy_step): grounding reaches a
+       classical value ⟺ one lazy jump from Z escapes Z. Checked per net.
+    2. Containment: grounding reaches a classical value only when the net has
+       a UNIQUE classical model that is also reachable from ignorance — the
+       cautious-Z nets (unique model, yet Z, e.g. S = S∨¬S) witness that
+       ZTL-settled nets are a STRICT subset of the classically categorical."""
+    pool = all_formulas(max_size)
+    agree = boom = cautious = multi = 0
+    violations, leaks = [], []
+    for f in pool:
+        net = {HOLE: f}
+        n_sols = len(solutions(net))
+        g = ground(net)[HOLE]
+        if (g != Z) != (lazy_step(net)[HOLE] != Z):
+            violations.append(f)
+        if g != Z and n_sols != 1:
+            leaks.append(f)              # a ground that is not THE model
+        if n_sols == 0:
+            boom += 1                    # classical explodes, ZTL contains
+        elif n_sols >= 2:
+            multi += 1                   # underdetermined for both
+        elif g == Z:
+            cautious += 1                # unique model, yet ungrounded
+        else:
+            agree += 1                   # determined: both settle it
+    if verbose:
+        print(f"CONTAINMENT SWEEP — all {len(pool)} one-sentence nets "
+              f"≤{max_size} symbols\n")
+        print(f"  one-step grounding criterion:  {len(violations)} violations")
+        print(f"  grounded without a unique model: {len(leaks)}")
+        print(f"  determined (both settle):      {agree}")
+        print(f"  contradictory (0 models → Z):  {boom}")
+        print(f"  cautious Z (1 model, still Z): {cautious}   ← the witnesses")
+        print(f"  underdetermined (≥2 → Z):      {multi}")
+        print("\n  every grounded net has a unique model — ZTL-settled nets "
+              "are a strict\n  subset of the classically categorical ones; "
+              "the cautious-Z nets (e.g.\n  S=S∨¬S: classically ⊤, here Z) "
+              "are the strictness witnesses.")
+    return {"n": len(pool), "agree": agree, "boom": boom,
+            "cautious": cautious, "multi": multi,
+            "violations": violations, "leaks": leaks}
+
+
 def neg_cycle(k):
     """The k-sentence negation cycle A1=¬A2, …, Ak=¬A1."""
     ns = [f"A{i}" for i in range(1, k + 1)]
@@ -203,6 +267,8 @@ def boundary():
 if __name__ == "__main__":
     report_zoo()
     print("=" * 64 + "\n")
+    containment()
+    print("\n" + "=" * 64 + "\n")
     parity_law()
     print("\n" + "=" * 64 + "\n")
     boundary()

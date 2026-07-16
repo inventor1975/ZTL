@@ -100,12 +100,12 @@ Underwriting the loan is literally the stage court: judging which
 future deeds will read out. **Honest power = a good stage judge of the
 economy.**
 
-## The capstone — the curator's aphorism (counted on the core)
+## The capstone — the curator's aphorism (final, counted on the core)
 
-> **«Деньги делают деньги — инфляция. Дела делают деньги — процветание!
-> Деньги и дела делают деньги — власть.»**
-> *(Money makes money — inflation. Deeds make money — prosperity! Money
-> and deeds make money — power.)*
+> **«Деньги делают деньги — инфляция. Дела делают деньги —
+> стабильность. Деньги и дела делают деньги — процветание!»**
+> *(Money makes money — inflation. Deeds make money — stability. Money
+> and deeds make money — prosperity!)*
 
 ```
 money makes money    M→M             →  F, until-verification   CREDIT
@@ -113,12 +113,18 @@ deeds make money     receipt-per-bit →  T, hereditary           EARNED
 money∧deeds → money  (M∧D)→M         →  T, hereditary           A LAW
 ```
 
-"Money makes money" is literally p→p — the day's fallen identity in a
-wallet; "deeds make money" is the one earned line; and "money∧deeds →
-money" is a hereditary constant (projection): **the seat is paid in
-tautology, no ground required.** Inflation — credit; prosperity —
-earnings; power — tautology. Three kinds of income, three grades of
-warranty.
+The triple is the three bars in aphorism form: inflation = the credit
+bar torn from its roots (and literally p→p — the fallen identity in a
+wallet); stability = the confidence bar (parity, the one earned line,
+zero possible deaths); prosperity = the credit bar done honestly —
+parity plus the loan grown into deeds, and when both money AND deeds
+are present the inflow is guaranteed by logic itself (a hereditary
+law). The exit formula with an exclamation mark. Inflation — credit;
+stability — earnings; prosperity — law.
+
+A minting step kept as a finding: the same projection read at the SEAT
+is the dark twin ("money and deeds make money — power"): the chair is
+paid in tautology, no ground required; see The Ruling.
 
 ## The statement
 
@@ -129,8 +135,8 @@ Rule it cannot — a receipt registers, and a ruling receipt mints
 itself. The system stands on parity, holds on a loan rooted in deeds
 that will verify, and starves without signs. The press to a rule,
 issuance per bit, the loan to a stage court in real time. Money makes
-money — inflation. Deeds make money — prosperity! Money and deeds make
-money — power.**
+money — inflation. Deeds make money — stability. Money and deeds make
+money — prosperity!**
 
 *(Original Russian in `RESOLUTION-RU.md`.)*
 

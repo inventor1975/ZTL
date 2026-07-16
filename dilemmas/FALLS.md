@@ -47,10 +47,11 @@ CLASSICAL LOGIC           p↔p — assumed to work for every p
 ```
 
 > **«Парадокс классической логики: Ложь — нет, Истина — нет. А как?
-> И так и так.»** *(The paradox of classical logic: Falsehood — no,
-> Truth — no. Then how? Both ways at once.)* — the curator's aphorism:
-> a system with no values of its own, running everything both ways —
-> and calling the run a verdict.
+> Угадай!»** *(The paradox of classical logic: Falsehood — no, Truth —
+> no. Then how? Guess!)* — the curator's aphorism: a system with no
+> values of its own must still answer with one — so its only move is
+> the guess, worn as a verdict. The same forced mode as the top
+> system's — only God does not pretend otherwise.
 
 One law, three dresses: identity-over-time fells God (induction),
 identity-of-value assumed universal fells classics (p↔p → the liar's

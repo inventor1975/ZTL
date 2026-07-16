@@ -17,11 +17,14 @@ FORMALIZATION (agreed in words before the run):
   ORACLE         asserts a future ak when it is NOT forced; the unerring
                  oracle is right on the actual continuation every time.
 
-Two instruments, one target:
+Three instruments, one target:
   * the skeleton cells (zhunt.judge) — where the classical DILEMMA
     "either He knows or He is not omniscient" keeps its credit;
   * the stage court of E22 (zchoice.stage) — what knowledge-with-ground
-    does to an open future.
+    does to an open future;
+  * the bullet and the marksman — the top system's own liar tried at
+    every door (unclosable → guessing is the forced mode), and the sound
+    policy (answer on ground, withhold on the free) verified to never lie.
 
 MEASURED verdict, in one line: the dilemma's inference frame is free
 (hereditary), but its fuel K∨¬K over an unverified K is credit — the very
@@ -40,9 +43,10 @@ sys.path.insert(0, os.path.join(_ROOT, "zhunt"))
 
 from itertools import product
 
-from ztl import T, F, Z
+from ztl import T, F, Z, ev
 from zchoice import H, ATOMS, completions, stage, LAWLESS, EXACTLY_ONE
 from zhunt import judge
+from pengine import diagnose
 
 WORLDS = list(product((0, 1), repeat=H))
 
@@ -152,11 +156,71 @@ def court():
     print("      foreknowledge lives exactly where the law closed the future")
 
 
+# --- layer 3: the bullet and the marksman ----------------------------------
+
+def bullet():
+    """The top system's own liar, tried at every door. A system that
+    contains its own truth cannot close this cell — and the topmost system
+    has no metalanguage above to hand it to (no notary). Hence guessing is
+    its forced MODE over whatever it cannot ground."""
+    print("THE BULLET — the system's own liar, every door tried\n")
+    nets = [("liar     S=¬S", {"S": ("not", "S")}),
+            ("avenger  M=¬M∨¬(M↔M)",
+             {"M": ("or", ("not", "M"), ("not", ("xnor", "M", "M")))})]
+    for name, net in nets:
+        d = diagnose(net)
+        n0 = next(iter(net))
+        stip = {v: ev(net[n0], {n0: v}) == v for v in (T, F)}
+        print(f"  {name}: solutions {d['n']}, ground "
+              f"{list(d['ground'].values())[0]}, stipulate T/F fixed? "
+              f"{stip[T]}/{stip[F]}, inputs to verify: none")
+        assert d["n"] == 0 and list(d["ground"].values())[0] == Z
+        assert not stip[T] and not stip[F]
+    tt = diagnose({"S": "S"})
+    assert tt["n"] == 2 and ev("S", {"S": T}) == T
+    print("  truth-teller S=S (contrast): 2 solutions — STIPULABLE; "
+          "the liar is not.")
+    print("\n  unclosable by decision, stipulation, or verification — "
+          "the refusal is permanent.")
+
+
+def marksman():
+    """The sound policy — answer where the stage forces, withhold (Z)
+    where it does not: verified to never lie, and its silences sit exactly
+    on the freedom cells. 'Never misses' is bought by the discipline of
+    the shot, not by a warranty on tomorrow."""
+    lies = answers = stalls = 0
+    for law in all_laws():
+        for p in reachable_prefixes(law):
+            for k in range(len(p), H):
+                v = stage(ATOMS[k], p, law)
+                if v == Z:
+                    stalls += 1
+                    lies += (not free(p, k, law))     # silence off a free cell?
+                else:
+                    answers += 1
+                    want = 1 if v == T else 0
+                    lies += any(w[k] != want
+                                for w in completions(p, law))
+    print("THE MARKSMAN — the sound policy over all 255 laws\n")
+    print(f"  answers {answers} (each right in EVERY admitted world), "
+          f"withholds {stalls},")
+    print(f"  lies or misplaced silences: {lies}")
+    assert lies == 0 and answers == 986 and stalls == 1507
+    print("\n  he never misses because he never lies: ground → answer, "
+          "no ground → Z —\n  and the Z-cells are exactly the freedom cells: "
+          "not missed targets, OUR cells.")
+
+
 if __name__ == "__main__":
     print("FOREKNOWLEDGE vs FREE WILL — the Rambam dilemma through the core\n")
     skeleton()
     print()
     court()
+    print()
+    bullet()
+    print()
+    marksman()
     print("\nVERDICT: no paradox — an identity read from two sides. To know in")
     print("advance with a warranty is to have taken the choice away; whoever")
     print("leaves the choice open does not know — he aims, unerringly. The")

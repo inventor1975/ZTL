@@ -56,15 +56,29 @@ as my servant Job has." The holder of Z is vindicated, the stampers of T
 are condemned — the text itself grades affirmation-on-credit as the sin.
 We break the friends' theodicy — and rescue the book.
 
-## The capstone — the curator's aphorism
+## The capstone — the curator's aphorism (completed 2026-07-16)
 
-> **«Правильно свою вину может оценить только сам человек.»**
-> *(Only the person himself can rightly assess his own guilt.)*
+> **«Правильно свою вину может оценить только сам человек — и только
+> общепринятыми нормами.»**
+> *(Only the person himself can rightly assess his own guilt — and only
+> by the commonly accepted norms.)*
 
-The honest boundary: the core guards "only the self *can* earn it" — from
-outside, a verdict on another's guilt is earned by nothing. Whether the
-self assesses honestly is guarded by conscience, not logic: that axis is
-off the core's reach.
+Two clauses = two guards against two counterfeits, both measured:
+
+- **"only the self"** guards the ATOM: from outside, a verdict on
+  another's guilt is credit (g→g on someone else's atom, §5);
+- **"only by the shared norms"** guards the YARDSTICK: a norm chosen
+  after the deeds reads the judge's wish, not the deeds — on EVERY
+  possible record 8/16 norms acquit and 8/16 convict. A private norm
+  acquits any self and convicts any other — a test that cannot fail is
+  again not a test (the same cell as ¬p→¬p).
+
+The earned verdict lives only in the intersection: one's own atoms under
+the shared yardstick (measured: own grounded deeds under a fixed norm —
+hereditary; another's deeds under the same norm — until-verification: the
+norm does not rescue the friends). What conscience still guards: whether
+the person grounds his own deeds honestly — that axis is off the core's
+reach.
 
 ## The statement
 

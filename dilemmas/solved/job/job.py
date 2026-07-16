@@ -133,6 +133,33 @@ def resolution():
     print("  ran g→g on someone else's atom — their whole sin in one line.")
 
 
+def norms():
+    """The curator's completion: «...и только общепринятыми нормами».
+    A verdict is norm(deeds). Two guards against two counterfeits: the
+    ATOM must be your own (outside it is credit — resolution()), and the
+    YARDSTICK must be shared — a norm chosen after the deeds reads the
+    judge's wish, not the deeds."""
+    from itertools import product
+    print("NORMS — the second guard: whose yardstick?\n")
+    kernels = [tuple(bits) for bits in product((True, False), repeat=4)]
+    k_at = lambda k, a, b: k[(0 if a else 2) + (0 if b else 1)]
+    for deeds in product((True, False), repeat=2):
+        acq = sum(1 for k in kernels if not k_at(k, *deeds))
+        assert acq == 8 and 16 - acq == 8
+    print("  private norm: for EVERY deed record 8/16 norms acquit, 8/16")
+    print("  convict — a yardstick chosen after the deeds reads the judge's")
+    print("  wish, not the deeds: it acquits any self and convicts any other.")
+    own = judge(("and", "d1", "d2"), {"d1": "T", "d2": "F"})
+    other = judge(("and", "d1", "d2"), {"d1": "M", "d2": "M"})
+    print(f"\n  shared norm, own grounded deeds  → {own[0]}, {own[1]}")
+    print(f"  shared norm, another's deeds (M) → {other[0]}, {other[1]}")
+    assert own[:2] == ("F", "hereditary")
+    assert other[:2] == ("F", "until-verification")
+    print("\n  the earned verdict lives only in the intersection: your own")
+    print("  atoms under the SHARED yardstick. Drop either clause and you")
+    print("  get a counterfeit — credit outside, an unfailable test inside.")
+
+
 if __name__ == "__main__":
     print("JOB — the sufferer's guilt through the core\n")
     skeleton()
@@ -144,6 +171,8 @@ if __name__ == "__main__":
     the_flip()
     print()
     resolution()
+    print()
+    norms()
     print()
     print("THE BOOK'S OWN GRADE (quoted, not measured — Job 42:7): the holder")
     print("of Z is vindicated, the stampers of T are condemned — the text")

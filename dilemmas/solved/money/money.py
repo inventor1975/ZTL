@@ -9,7 +9,8 @@ exactly HALF the world — one bit is lost, and it is the LEVEL bit.
 import os
 import sys
 
-_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(
+    os.path.dirname(os.path.abspath(__file__)))))
 sys.path.insert(0, _ROOT)
 sys.path.insert(0, os.path.join(_ROOT, "zhunt"))
 
@@ -148,6 +149,52 @@ def ruling():
   the stipulator's chair — and a receipt that rules mints itself.""")
 
 
+def equilibrium():
+    """The three bars — where the system stands, holds, or starves.
+    S = signs (money), B = earned bits (deeds)."""
+    print("EQUILIBRIUM — the three bars\n")
+    with_sign = judge("R", {"R": "T"})
+    without = judge("D", {"D": "M"})
+    print(f"  a receipt in any hands        → {with_sign[0]}, {with_sign[1]}"
+          "   money = PORTABLE warranty")
+    print(f"  another's bit, no receipt     → {without[0]}, {without[1]}"
+          "   every trade re-pays verification")
+    assert with_sign[:2] == ("T", "hereditary")
+    assert without[:2] == ("Z", "until-verification")
+    roots = {v: [ev("D", {"D": v})] * 3 for v in (Z, T, F)}
+    print(f"  credit chain, root unread     → {roots[Z]}   deferred, not dead")
+    print(f"  credit chain, root read T     → {roots[T]}   converts to earned")
+    print(f"  credit chain, root read F     → {roots[F]}   cascade default")
+    assert roots[Z] == [Z] * 3 and roots[T] == [T] * 3 and roots[F] == [F] * 3
+    print("""
+  S = B   the CONFIDENCE bar: every sign hereditary, zero possible deaths
+  S > B   the CREDIT bar: the overhang lives on Z — still holds, its fate
+          is the reading of the roots; fragility = the share of Z-roots
+  S < B   the HUNGER bar: earned bits are non-portable — commerce
+          throttles, the common ground shrinks back to mutual checks""")
+
+
+def realtime():
+    """The loan is a stage quantity: re-judged at every revealed bit.
+    An annual emission plan is a greedy verdict 12 months forward — the
+    measured over-assertion of the future (the ¬¬a0 cell, E22)."""
+    print("REAL TIME — the loan is judged by revelation, not by calendar\n")
+    from zchoice import stage, EXACTLY_ONE
+    verdicts = [stage("a2", p, EXACTLY_ONE) for p in ((), (0,), (0, 0))]
+    print(f"  revealed () → {verdicts[0]}, (0) → {verdicts[1]}, "
+          f"(0,0) → {verdicts[2]}")
+    assert verdicts == [Z, Z, T]
+    print("""
+  the verdict arrives exactly when the bits do; heredity is native to
+  the stage court (forces_mono, machine-checked) — what the stage grants
+  is never revoked, the loan's corridor narrows monotonically. The
+  calendar guesses and breaks; the stage court reads and never backs up.
+  THE EXIT, complete:
+    the press   — to a rule (not to the chair)
+    issuance    — per earned bit (a receipt, either polarity)
+    the loan    — a stage court in real time, fragility on the dashboard""")
+
+
 if __name__ == "__main__":
     print("MONEY RULES THE WORLD — through the core\n")
     truth_teller()
@@ -161,6 +208,10 @@ if __name__ == "__main__":
     the_stones()
     print()
     ruling()
+    print()
+    equilibrium()
+    print()
+    realtime()
     print()
     print("DIAGNOSIS: money rules honestly as the common stipulated ground")
     print("of strangers — and dishonestly as a judge, wherever the priced")

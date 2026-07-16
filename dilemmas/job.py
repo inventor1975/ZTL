@@ -68,6 +68,42 @@ def registers():
     print("  either way — any bivalent answer about an unverified g is credit.")
 
 
+def the_flip():
+    """The curator's further step: the friends argue from the negative —
+    «не виноват — не болит» (¬g→¬s) — i.e. they check identity through
+    its contrapositive. In ZTL that is not a style choice but an ERROR,
+    and the run shows why it is the sharpest one in the book."""
+    print("THE FLIP — checking p→p through ¬p→¬p is forbidden, measured\n")
+    from ztl import VALUES
+    pp = ("imp", "p", "p")
+    npnp = ("imp", ("not", "p"), ("not", "p"))
+    row_pp = {v: ev(pp, {"p": v}) for v in VALUES}
+    row_np = {v: ev(npnp, {"p": v}) for v in VALUES}
+    print(f"  p→p   over T,F,Z : {row_pp[T]}, {row_pp[F]}, {row_pp[Z]}"
+          "   — fails honestly on the unverified")
+    print(f"  ¬p→¬p over T,F,Z : {row_np[T]}, {row_np[F]}, {row_np[Z]}"
+          "   — CANNOT fail: ¬ burns the mark (¬Z=F),")
+    print("                     the test is unfalsifiable — a frame, not a fact")
+    assert row_pp[Z] == F and row_np[Z] == T
+    assert all(row_np[v] == T for v in VALUES)    # constant = frame
+
+    b_need = ("imp", ("imp", ("not", "g"), ("not", "s")), ("imp", "s", "g"))
+    b_back = ("imp", ("imp", "s", "g"), ("imp", ("not", "g"), ("not", "s")))
+    v1 = judge(b_need, {"g": "M", "s": "M"})
+    v2 = judge(b_back, {"g": "M", "s": "M"})
+    slogan = judge(("imp", ("not", "g"), ("not", "s")), {"g": "M", "s": "T"})
+    print(f"\n  (¬g→¬s)→(s→g) → {v1[0]}, {v1[1]}   — the direction the friends"
+          " NEED is the fallen one")
+    print(f"  (s→g)→(¬g→¬s) → {v2[0]}, {v2[1]}   — the honest direction points"
+          " the other way")
+    print(f"  slogan ¬g→¬s at the bedside (s=T) → {slogan[0]}, {slogan[1]},")
+    print(f"  killed by the grounding g:={slogan[2]['g']} — Job's innocence is"
+          " its counter-cell")
+    assert v1[:2] == ("F", "until-verification")
+    assert v2[:2] == ("T", "hereditary")
+    assert slogan[:2] == ("T", "until-verification") and slogan[2] == {"g": "F"}
+
+
 def resolution():
     """The curator's reduction: the whole book is ONE formula — g→g, the
     fallen law of identity, on the guilt atom. Identity earns exactly at
@@ -103,6 +139,8 @@ if __name__ == "__main__":
     stamp()
     print()
     registers()
+    print()
+    the_flip()
     print()
     resolution()
     print()

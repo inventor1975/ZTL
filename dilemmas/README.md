@@ -29,6 +29,7 @@ each on a run; the closing statement; the aphorism if one was earned).
 | conformity — follow them / walk with them / walk your own | `solved/conformity/` | resolved 2026-07-16 |
 | "no smoke without fire" — the rumour as verdict | `smoke.py` | open |
 | "everyone has his own truth" (Judges 21:25) | `solved/truths/` | resolved 2026-07-16 |
+| "money rules the world" — the sign layer | `money.py` | open |
 
 *AI participation: designed and written in a dialogue between the curator
 (Vitaly Reznik) and Claude (Anthropic); all fork decisions are the curator's.*

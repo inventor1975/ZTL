@@ -33,6 +33,27 @@ in Finn attribution. The old PDF is stale. Page count will rise (was 20).
    boundary, Curry) were already there — this opener only unifies them; it does
    not duplicate. The changelog line in the header was updated to list it.
 
+4. **§4 prior-art corrected — Łukasiewicz added (new ref [36]).** The pedigree
+   in §4 "Place in the literature" was missing the earliest and closest-in-*meaning*
+   ancestor. Added a passage (right before "Kindred in spirit:") separating two axes
+   cleanly: the *tables* are Bochvar's external B3 (as before), but the *meaning* of
+   the mark Z ("unverified until verification") descends from **Łukasiewicz's Ł₃
+   (1920)** middle value "possible / not yet determined". So Z ← Łukasiewicz and
+   N ← Kleene now give the passport's two non-classical letters two distinct pedigrees.
+   New reference **[36] Łukasiewicz 1920** appended after [35] (no renumbering). This
+   is a 2026-07-15 Opus session fix; fold it into the acknowledgement's model split too.
+
+5. **Genetic order corrected: N, Z, F, T (was N, F, T, Z), in §4.** The old
+   order put Z *last* — that is the solver's lifecycle (N = ⊥ hardens into the
+   quarantine mark Z when a computation never resolves). But the *pre-computer /
+   epistemic* genesis puts Z **second**: nothing (N) → doubt (Z, a question with
+   no answer) → free denial (F, default-deny) → earned affirmation (T, truth on a
+   ground). Z has two faces — born second as raw doubt, returns last as the hardened
+   liar — and the genetic (birth) order is N, Z, F, T. This also reads as the
+   paper's own thesis laid in a row: "denial free, affirmation on credit." Only the
+   one explicit ordered-list mention (§4) was changed; lines saying just "four
+   letters" were left. Curator's call, 2026-07-15.
+
 ## Commits (all on master, pushed)
 - `d32e023` — v1.2 draft unified + capstone
 - `6d5c566` — §11 paradox engine

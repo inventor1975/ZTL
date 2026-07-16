@@ -430,12 +430,30 @@ The internal dynamics are opposite — his meaninglessness is infectious
 so is the ontology: his third symbol is a *value* sentences take; our
 verdicts are two-valued, and the non-classical letters are *marks*
 (Z on a datum, N in the solver, §10) — the alphabet is four letters,
-N, F, T, Z, in the genetic order. ZTL's implication is his
+N, Z, F, T, in the genetic order — nothing (pending), the
+unsettled (a question with no answer yet), the free denial
+(default-deny), the earned affirmation (truth on a ground):
+nothing → doubt → default-no → grounded-yes. Z is born second, as
+raw doubt, and returns last, as the hardened liar (§10) — the
+pre-computer genesis, not the solver's lifecycle. ZTL's
+implication is his
 ◇A⊃□B taken as a primitive; a polarity-adaptive translation (□ in
 positive positions, ◇ in negative ones) instead of a uniform one. ZTL
 falls outside Tomova's classification of "natural implications" (it
 fails p→p) and coincides with none of the literal paralogics of the
-Karpenko–Tomova lattice (2017). Kindred in spirit: supervaluationism
+Karpenko–Tomova lattice (2017). The *meaning* of the mark, as
+against its tables, has a separate and earlier ancestor:
+Łukasiewicz's Ł₃ [36] (1920), the first three-valued logic, whose
+middle value read *possible / not yet determined* — the nearest
+kin to Z's *unverified until verification.* His motive was future
+contingents, not the paradoxes, and his implication keeps p→p, so
+the kinship is of intent, not of tables. The two axes separate
+cleanly: the tables are Bochvar's external B3, the mark's meaning
+is Łukasiewicz's, and no prior system occupied their conjunction.
+The passport's two non-classical letters carry two distinct
+pedigrees accordingly — Z from Łukasiewicz's indeterminate (a
+truth not yet settled), N from Kleene's undefined (a computation
+not yet run, §10). Kindred in spirit: supervaluationism
 (rigid, non-tabular), subvaluationism/Jaśkowski (its dual), SQL NULL
 (lazy), IEEE NaN (comparisons), exceptions with try/catch at every node
 (greediness). The motivation "greedy local supervaluation / default
@@ -1443,12 +1461,26 @@ already ships in the repository (`tool/`); a possible essay,
     *Studia Logica* 33:2 (1974), 121–125 (abstract: *Bulletin of the
     Section of Logic* 2:1 (1973), 3–6). Remark 1 gives the seven
     pre-complete classes of the external class B³ₑₓ.
+36. Łukasiewicz, J. *O logice trójwartościowej* (On three-valued
+    logic). *Ruch Filozoficzny* 5 (1920), 170–171. English in: *Jan
+    Łukasiewicz: Selected Works* (ed. L. Borkowski), North-Holland,
+    1970. The first three-valued logic; its middle value "possible /
+    not yet determined" is the meaning-ancestor of the mark Z, as
+    Bochvar's external tables are of the {¬,∧,∨} fragment.
 
 ## Acknowledgements and AI disclosure
 
 This work was carried out with the substantial participation of the AI
 system Claude (Anthropic) in a dialogue setting: the system generated
-the text, the test-bench code, and the Lean proofs. All design
+the text, the test-bench code, and the Lean proofs. Across versions the
+dialogue ran on two Claude models, and the attribution is kept honest:
+Claude Opus 4.8 — the original corpus (v1.0) and the 2026-07-14/15
+additions (the three-laws capstone §3.1, the Finn attribution and
+reconciliation in §3.8, the paradox-engine synthesis opening §11, the
+Łukasiewicz pedigree and the genetic order in §4); Claude Fable 5 —
+the v1.1 same-day correction and the v1.2 assembly (the census of
+sixteen and its Lean clone equalities, the fence-depth theorem, the
+warranty ladder at scale, the naming of the lift, and this PDF build). All design
 decisions, fork choices, hypotheses, and the final responsibility for
 the content rest with the human author. In accordance with COPE/ICMJE
 recommendations, the AI system is not listed as an author. The

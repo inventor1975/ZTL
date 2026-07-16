@@ -5,14 +5,14 @@
 to the latest version.**
 
 **v1.2 flow: open the existing record → "New version" → upload
-`paper/ZTL-preprint-v1.2.pdf` (20 pages) → set Version: 1.2 → replace
+`paper/ZTL-preprint-v1.2.pdf` (21 pages) → set Version: 1.2 → replace
 the description with the block below → Publish. Then paste the new
 version DOI back for embedding.**
 
 Everything below is copy-paste material for the manual Zenodo upload
 (the curator publishes; this file only prepares).
 
-**File to upload:** `paper/ZTL-preprint-v1.2.pdf` (20 pages)
+**File to upload:** `paper/ZTL-preprint-v1.2.pdf` (21 pages)
 
 ---
 
@@ -85,9 +85,19 @@ surviving basis read as the credit detector; the
 fence-depth theorem (§19): the hereditary warranty is checkable at
 depth exactly m−1 and no constant-depth fence exists (the guard
 family over the fallen law of identity); the warranty ladder
-stress-tested at scale (151.8M pairs, 0 violations); the honest
+stress-tested at scale (151.8M pairs, 0 violations); the three-laws
+capstone (§3.1): of the classical triad only non-contradiction
+survives the lift — a denial is free, an affirmation is on credit;
+§11 opened by the paradox engine: paradox(f) = ground(S = f(S)), the
+expeditions as the range of one construction, with the verified
+containment (ZTL-settled nets are a strict subset of the classically
+categorical ones; stand pengine.py); the honest
 Bochvar ledger (§4): the {¬,∧,∨} coincidence found post hoc, not a
-source; and the passport's phase letter glossed (§10): read N as
+source, now joined by the Łukasiewicz pedigree — the tables are
+Bochvar's, the MEANING of the mark Z descends from Ł₃'s "possible /
+not yet determined" (ref [36]), and the genetic order of the alphabet
+reads N, Z, F, T: nothing → doubt → free denial → earned affirmation;
+and the passport's phase letter glossed (§10): read N as
 Not-yet — Kleene's undefined by intent housed as a phase — with errors
 typed as interface events (the premature read of a phase; signaling
 NaN is the cousin), not as a logical letter.

@@ -70,8 +70,19 @@ truths" confirming each other do not make one.
 
 ## The capstone — the curator's aphorism
 
-> **«У каждого своя правда и только ложь общая.»**
-> *(Everyone has his own truth — and only the lie is common.)*
+> **«У каждого своя правда и только ложь общая. Истину через тождество
+> имеет право говорить только логика!»**
+> *(Everyone has his own truth — and only the lie is common. Truth
+> through identity may be spoken by logic alone!)*
+
+The second half is a monopoly, and it is honest by measure: logic's
+identity-truths (the hereditary constants — non-contradiction, reductio)
+are frames that read no atom, empty by construction, and logic alone
+owns that emptiness without selling it as content. Every machine of this
+day was a human speaking truth through identity about content: "not
+guilty — not hurting" (the tautologized test), "that's just how they
+are" ((p→p)→(p→p)), "my truth is mine". What remains to the human is
+truth through grounding: verify, decide, choose.
 
 Truths are many precisely because none is a truth; the one thing the
 disputants share before the grounding is the counterfeit method itself:

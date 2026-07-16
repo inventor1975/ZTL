@@ -68,30 +68,37 @@ not expunge the record. Beside it: agreement of two ungrounded parties
 is also credit (folie à deux, the crowd-certainty atom): two "own
 truths" confirming each other do not make one.
 
-## The capstone — the curator's aphorism
+## The capstone — the curator's aphorism (final)
 
-> **«У каждого своя правда и только ложь общая. Истину или добро через
-> тождество имеет право говорить только логика!»**
-> *(Everyone has his own truth — and only the lie is common. Truth or
-> goodness through identity may be spoken by logic alone!)*
+> **«У каждого своя правда — ложь общая. А истина создаётся только через
+> знак тождества!»**
+> *(Everyone has his own truth — the lie is common. And truth is created
+> only through the sign of identity!)*
 
-The second half is a monopoly, and it is honest by measure: logic's
-identity-truths (the hereditary constants — non-contradiction, reductio)
-are frames that read no atom, empty by construction, and logic alone
-owns that emptiness without selling it as content. Every machine of this
-day was a human speaking truth through identity about content: "not
-guilty — not hurting" (the tautologized test), "that's just how they
-are" ((p→p)→(p→p)), "my truth is mine".
+The day's villain returned as the instrument: all day identity was the
+thief (free of charge — "that's just how they are", "my truth is mine");
+the final gives the same sign back **paid for**. The core's whole
+mechanics says so: the lift grants T ⟺ all readings are identical (the
+very issuing of truth is a check of coincidence); the witness (E21) is
+an "=" with a receipt (identity is totally earnable); grounding forces
+all agents' verdicts to coincide (K3). And all three imperatives end in
+one act — placing the identity sign on the grounded: verified → p=v,
+decided → p=v, chosen → S:=v (a stipulation literally writes "S = v",
+and it holds as a fixed point). Three roads, one arrival station: the
+earned "=".
 
-And "goodness" in the monopoly is a mute lock: logic has no axis of good
-at all (value is beyond its reach — every moral cut of this arc was the
-human's), so the sole rightholder of the identity channel is SILENT on
-goodness — and goodness-through-identity is spoken by no one. "We are
-good because we are ours" is the simple man's counterfeit, as "my truth
-is mine" is the strong man's. The program for both: **goodness is not
-declared — it is done (a grounded act: "only what others give them");
-truth is not owned — it is earned: verify, decide, choose.** Through
-identity — nothing, for no one.
+The lie is the same sign without the collation: the tautology (p=p
+without reading p), the witnessless merge (Z↔Z=F), the credit (equality
+of the unverified). **The difference between truth and lie is whether
+the identity sign has been paid for.**
+
+A minting step kept as a finding: the monopoly — "truth or goodness
+through identity may be spoken by logic alone": its identity-truths are
+honest because empty (constants read no atoms), and on goodness the sole
+rightholder is silent (logic has no value axis) — goodness-through-
+identity is spoken by no one: **goodness is done, not declared; truth is
+earned, not owned.** In the final this is implicit: for a human, only
+the paid sign is honest.
 
 Truths are many precisely because none is a truth; the one thing the
 disputants share before the grounding is the counterfeit method itself:

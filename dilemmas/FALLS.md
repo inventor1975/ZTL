@@ -15,21 +15,24 @@ WE (ZTL)                  p→p · p∨¬p · ¬¬p→p     all fall at Z
   the price is COMPLETENESS; in exchange, the three imperatives name the
   stolen work: Проверяй! (verify) · Решай! (decide) · Выбирай! (choose).
 
-CLASSICAL LOGIC           p∨¬p — as an AXIOM for every p
-  bivalence = truth handed to every cell on credit, the unverified and
-  the self-referential included. The paradoxes are not its failure —
-  they are the BILLS arriving on that credit. The shortest bill is the
-  cell p = ¬p: 0 solutions (measured; 1484 such nets of 9015 — classics
-  explodes, ZTL contains in Z). Classics escapes by the Tarski
-  HIERARCHY: truth of each floor lives one floor up — it does not solve
-  the liar, it moves house forever.
+CLASSICAL LOGIC           p↔p — assumed to work for every p
+  its real axiom: every sentence HAS a value equal to itself. Measured:
+  p↔p holds only where a value exists (T,T over T,F — and F at Z); the
+  liar is the cell where no self-identical value exists at all — 0
+  solutions, period 2: p today ≠ p tomorrow, liar↔liar = F on the
+  grounding. The paradoxes are the cells where p↔p has nothing to hold;
+  classics explodes there (1484 nets of 9015), and escapes only by the
+  Tarski HIERARCHY — it does not solve the liar, it moves house forever.
+  THE TWIST: their abyss is our instrument — isZ(x) = ¬(x↔x), ZTL's
+  quarantine detector (the very reason Z↔Z=F was chosen), is precisely
+  the gauge of failed self-identity.
 ```
 
-One law, three dresses: identity-over-time fells God (induction), the
-excluded middle handed out as an axiom fells classics (bivalence → the
-liar's bill), and all three fall for us on Z — we are merely the ones
-who put the price on the tag. The lie begins only where a system
-pretends it does not pay.
+One law, three dresses: identity-over-time fells God (induction),
+identity-of-value assumed universal fells classics (p↔p → the liar's
+cell), and identity falls for us openly at Z — we are merely the ones
+who put the price on the tag and turned the abyss into a gauge. The lie
+begins only where a system pretends it does not pay.
 
 *AI participation: measured and written in a dialogue between the
 curator (Vitaly Reznik) and Claude (Anthropic; Claude Fable 5); the map

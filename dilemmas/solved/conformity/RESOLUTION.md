@@ -63,6 +63,24 @@ general regime of the whole logic (until-verification): each of the
 three roads is paid for by it. (The earlier middle member — p∨¬p →
 "Verify!" — was replaced by the curator.)
 
+**The triad as a pipeline — the coin algorithm (in exactly this
+order):**
+
+```
+1. Выбирай!  take the F-coin: assume ¬p — denial is free (¬Z=F);
+             the only coin whose failure stalls instead of lying
+2. Думай!    run the consequences of the assumption — a hypothesis is
+             credit until thought through
+3. Решай!    carry to a direct verdict — and mind the barrier:
+             reductio (p→¬p)→¬p  → T, hereditary      a NO from collapse — free
+             cogito  (¬p→p)→p    → F, until-verif     a YES from collapse — credit
+             DNE     ¬¬p→p       → F, until-verif     no way back through double NO
+```
+
+The coin earns denials wholesale; every YES is a separate direct
+purchase — grounding, witness, verification. The coin buys refutations;
+affirmations are sold only by the world.
+
 ## The capstone — the curator's aphorism
 
 > **«Или ты идёшь за ними, или ты идёшь с ними, или ты наконец-то идёшь

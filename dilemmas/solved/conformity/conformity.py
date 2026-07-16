@@ -86,6 +86,26 @@ def triad():
     print("\n  a free cell — choose it; an assumption — think it through; a")
     print("  pending case — decide it. Выбирай! Думай! Решай!")
 
+    # THE PIPELINE — the triad is also ONE algorithm, in this order:
+    # the coin algorithm (the curator's, with the barrier measured).
+    red = judge(("imp", ("imp", "p", ("not", "p")), ("not", "p")), {"p": "M"})
+    cog = judge(("imp", ("imp", ("not", "p"), "p"), "p"), {"p": "M"})
+    dne = judge(("imp", ("not", ("not", "p")), "p"), {"p": "M"})
+    print("\nTHE PIPELINE — the same triad run as the coin algorithm\n")
+    print("  1. Выбирай!  take the F-coin: assume ¬p — denial is free (¬Z=F);")
+    print("     the only coin whose failure stalls instead of lying")
+    print("  2. Думай!    run the consequences of the assumption — the")
+    print("     hypothesis is credit until thought through")
+    print("  3. Решай!    carry to a direct verdict, and mind the barrier:")
+    print(f"       reductio (p→¬p)→¬p → {red[0]}, {red[1]}   a NO from collapse — free")
+    print(f"       cogito (¬p→p)→p    → {cog[0]}, {cog[1]}   a YES from collapse — credit")
+    print(f"       DNE ¬¬p→p          → {dne[0]}, {dne[1]}   no way back through double NO")
+    assert red[:2] == ("T", "hereditary")
+    assert cog[:2] == dne[:2] == ("F", "until-verification")
+    print("\n  the coin earns denials wholesale; every YES is a separate")
+    print("  direct purchase — grounding, witness, verification. The coin")
+    print("  buys refutations; affirmations are sold only by the world.")
+
 
 if __name__ == "__main__":
     print("CONFORMITY — follow them, walk with them, or walk your own\n")

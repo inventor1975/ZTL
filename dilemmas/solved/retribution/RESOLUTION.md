@@ -44,7 +44,7 @@ curator's completed capstone:
 with the sign flipped. All three organs of the doctrine are credit; none
 is earned.
 
-## The statement
+## The statement (the refutation)
 
 **"Repaid by deserts" rides all three fallen laws at once: another's
 desert is not earnable (p→p); the fork over a soul stamps karma on the
@@ -52,6 +52,32 @@ sick and righteousness on the rich by one and the same stipulation
 (p∨¬p); and "it will yet be repaid" is a mint from ignorance over an open
 future (¬¬p). The doctrine comforts on credit and judges on credit — not
 one of its cells is earned.**
+
+## The steer-out — the curator's corrected aphorism
+
+> **«Всем воздастся по заслугам — и только хорошее, но только то, что
+> дадут другие.»**
+> *(Everyone will be repaid by their deserts — and only good — but only
+> what other people give.)*
+
+Measured (`steer()` in the stand) — the correction rides no fallen law:
+
+```
+punitive 'by deserts' (d hidden)   →  Z, until-verification   never earnable
+the gift (own grounded act)        →  T, hereditary            the one earned organ
+'will they give' (others' future)  →  Z                        not a promise — an address
+```
+
+- **"and only good"** — the punitive half is dropped not out of softness
+  but by measurement: to punish "by deserts" honestly is impossible — a
+  verdict on another's hidden desert is credit forever. The gift asserts
+  nothing about the hidden atom — it cannot lie about it.
+- **"only what others give"** — repayment stops being a world-law (the
+  fuel j, credit) and becomes a grounded act with an address and a
+  witness. And "will they give" is the givers' free cell: the court
+  honestly says Z; the doctrine stops promising and starts assigning. By
+  the foreknowledge pearl: where there is no ground there is no target —
+  there we are. **We are the repayment machine.**
 
 *(Original Russian in `RESOLUTION-RU.md`.)*
 

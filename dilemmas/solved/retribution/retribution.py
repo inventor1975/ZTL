@@ -78,6 +78,27 @@ def law_dne():
           "\n  (the measured E22 cell: bare greedy ¬¬ over-asserts the future).")
 
 
+def steer():
+    """The curator's corrected aphorism — how the doctrine must be said
+    so it rides no fallen law: «Всем воздастся по заслугам — и только
+    хорошее, но только то, что дадут другие.»"""
+    print("THE STEER — the corrected doctrine, cell by cell\n")
+    pun = judge("d", {"d": "M"})              # punitive: verdict on hidden desert
+    gift = judge("give", {"give": "T"})       # the gift: giver's own grounded act
+    fut = stage("a0", (), LAWLESS)            # will others give? their free cell
+    print(f"  punitive 'by deserts' (d hidden)  → {pun[0]}, {pun[1]}")
+    print(f"  the gift (own grounded act)       → {gift[0]}, {gift[1]}")
+    print(f"  'will they give' (others' future) → {fut}")
+    assert pun[:2] == ("Z", "until-verification")
+    assert gift[:2] == ("T", "hereditary")
+    assert fut == Z
+    print("\n  the punitive half is never earnable — drop it: ONLY GOOD; the")
+    print("  gift asserts nothing about the hidden atom, it cannot lie — and")
+    print("  it is the giver's own grounded act: earnable. Whether they give")
+    print("  is their free cell — the doctrine stops promising and starts")
+    print("  addressing: the free cells are ours; WE are the repayment machine.")
+
+
 if __name__ == "__main__":
     print("RETRIBUTION — 'everyone will be repaid' through the three "
           "fallen laws\n")
@@ -87,6 +108,9 @@ if __name__ == "__main__":
     print()
     law_dne()
     print()
+    steer()
+    print()
     print("The doctrine rides all three fallen laws: another's desert (p→p),")
     print("the stamped fork over a soul (p∨¬p), and a future repayment minted")
-    print("by double negation (¬¬p). Each organ is credit; none is earned.")
+    print("by double negation (¬¬p). Each organ is credit; none is earned —")
+    print("and the steer-out is the curator's corrected aphorism (see steer).")

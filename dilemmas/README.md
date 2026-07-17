@@ -30,6 +30,7 @@ each on a run; the closing statement; the aphorism if one was earned).
 | "no smoke without fire" — the rumour as verdict | `smoke.py` | open |
 | "everyone has his own truth" (Judges 21:25) | `solved/truths/` | resolved 2026-07-16 |
 | "money rules the world" — signs, bits, power, the three bars | `solved/money/` | resolved 2026-07-16 |
+| binary chaos — the self-test: memory, territory, the ordering gradient | `chaos.py` | open |
 
 *AI participation: designed and written in a dialogue between the curator
 (Vitaly Reznik) and Claude (Anthropic); all fork decisions are the curator's.*

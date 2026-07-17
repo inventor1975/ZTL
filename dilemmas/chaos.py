@@ -190,6 +190,83 @@ def atoms_of_gen(phi, base, acc=None):
     return acc
 
 
+
+
+def drifting_world():
+    """EXP 3 — the destruction effect (the curator's dropout): the world
+    DRIFTS — bits silently flip. Stale knowledge does not just age, it
+    changes grade in the dark: it looks hereditary and has become
+    credit. The archivist (eternal memory) against forgetters (memory
+    with a TTL — dropout as hygiene)."""
+    rnd = random.Random(7)
+    atoms = [f"c{i}" for i in range(30)]
+    base = {a: rnd.choice([T, F]) for a in atoms}
+
+    def rf():
+        a, b, c = rnd.sample(atoms, 3)
+        f = (rnd.choice(OPS), a, b)
+        return (rnd.choice(OPS), f, c) if rnd.random() < .5 else f
+
+    queries = [rf() for _ in range(3000)]
+    flips = [[a for a in atoms if rnd.random() < 0.0015]
+             for _ in range(3000)]
+
+    def forced_d(q, known):
+        unk = sorted(a for a in atoms_of_gen(q, base) if a not in known)
+        vals = set()
+        for combo in product((T, F), repeat=len(unk)):
+            env = {a: known[a] for a in atoms_of_gen(q, base) if a in known}
+            env.update(zip(unk, combo))
+            vals.add(ev(q, env))
+            if len(vals) > 1:
+                return None
+        return vals.pop()
+
+    def run3(ttl):
+        w = dict(base)
+        mem = {}
+        errs, ver = [], 0
+        for i, q in enumerate(queries):
+            for a in flips[i]:
+                w[a] = T if w[a] == F else F
+            known = {a: v for a, (v, t) in mem.items() if i - t < ttl}
+            v = forced_d(q, known)
+            budget = 1
+            while v is None and budget > 0:
+                cand = [a for a in atoms_of_gen(q, base) if a not in known]
+                if not cand:
+                    break
+                a = cand[0]
+                mem[a] = (w[a], i)
+                known[a] = w[a]
+                ver += 1
+                budget -= 1
+                v = forced_d(q, known)
+            if v is None:
+                v = F
+            errs.append(v != ev(q, w))
+        return sum(errs[:500]) / 5, sum(errs[-500:]) / 5, sum(errs), ver
+
+    rows = {}
+    for name, ttl in (("archivist (eternal memory)", 10**9),
+                      ("forgetter  (TTL 250)      ", 250),
+                      ("forgetter  (TTL 40)       ", 40)):
+        e0, e9, tot, ver = run3(ttl)
+        rows[ttl] = (e0, e9, tot, ver)
+        print(f"  {name}: err {e0:.1f}% -> {e9:.1f}%, total {tot}, "
+              f"verifs {ver}")
+    assert rows[10**9][1] > 30            # eternal memory rots blind
+    assert rows[250][2] < rows[10**9][2]  # forgetting is hygiene
+    assert rows[40][2] < rows[250][2] and rows[40][3] > 3 * rows[250][3]
+    print("""
+  in a drifting world eternal memory KILLS (the archivist climbs to 40%
+  — only the believer is worse): stale knowledge wears the wrong grade.
+  Forgetting is hygiene — dropout re-grades the stale back to honest Z;
+  and the TTL is a price dial: faster forgetting buys accuracy at a
+  verification cost. The ritual closes its own loop here: even the
+  verified must be re-verified — the ritual is eternal because the
+  world drifts.""")
+
 if __name__ == "__main__":
     print("BINARY CHAOS — the self-test of the architecture\n")
     print("EXP 1 — uniform chaos: is survival possible?\n")
@@ -210,6 +287,8 @@ if __name__ == "__main__":
     print("  chaos there is nothing to order.\n")
     print("EXP 2 — skewed chaos, scarce budget: does ordering pay?\n")
     skewed_world()
+    print("\nEXP 3 — the drifting world: destruction of the built\n")
+    drifting_world()
     print("""
   VERDICT: survival is bought by MEMORY, not by wit (the pipeline without
   memory scores like a guesser). What will it do? Grow territory: the

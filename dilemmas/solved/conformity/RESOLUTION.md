@@ -86,6 +86,31 @@ of thinking: the world will not decide who you are — you lay that
 ground. (Earlier wordings — p∨¬p → "Verify!" and the first member
 "Choose!" — were replaced by the curator.)
 
+**The floors of thinking — the pipeline in stages (the curator's):**
+
+```
+stage  floor                law        formula       what happens
+  1    LOWER (ground)       Отвергни!  ¬Z = F        the start: take the F-coin —
+                                                     the free NO, assume ¬p
+  2    UPPER (hypothesis)   Подумай!   ¬p→q          reflection: run consequences —
+                                                     all on credit, no verdicts here
+  3    LOWER again          Реши!      barrier ¬¬p   descend with a verdict: ground it;
+                                                     reductio gives the NO for free,
+                                                     a YES — direct payment only
+  4    THE SELF (receiver)  Выбирай!   p→p           the decision SETTLES: the laid
+                                                     ground becomes you
+mode   all floors           RITUAL     until-verif   verification, unconditional
+                                                     by construction
+```
+
+Only the lower floor issues verdicts: the upper — the floor of
+reflection — lays no ground, everything there is credit. Thinking starts
+on the ground (the free NO), rises into hypothesis, and must come back
+down to decide — whoever stays upstairs lives on credit. And the self is
+not a floor of the cycle but its receiver: p→p is earned not by
+declaration but by sediment — every laid ground lays a brick into who
+you are.
+
 **The engine of the laws — the tamed liar (the curator's observation).**
 "I reject with the liar's paradox, and decide with the strong liar":
 

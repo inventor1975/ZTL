@@ -267,6 +267,102 @@ def drifting_world():
   verified must be re-verified — the ritual is eternal because the
   world drifts.""")
 
+
+
+def interface():
+    """EXP 4 — the interface between ZTL systems, built on the stones.
+    Three border prohibitions from the three fallen laws: a foreign
+    verdict does not teleport (p→p fell — everything incoming is Z);
+    silence is not consent (¬¬p fell); the fork cannot be forced — Z is
+    a legal reply (p∨¬p fell). What crosses: the WITNESS — verification
+    made cheap, re-judged by the receiver's own court. Two neighbours:
+    honest H (true values + witnesses) and the liar L (inverted values,
+    confident). Three receivers: solo (no channel), the believer
+    (adopts on faith), the stone receiver (incoming = Z, witness
+    re-checked, up to 2 free checks per query)."""
+    rnd = random.Random(7)
+    atoms = [f"d{i}" for i in range(60)]
+    base = {a: rnd.choice([T, F]) for a in atoms}
+
+    def rf():
+        a, b, c = rnd.sample(atoms, 3)
+        f = (rnd.choice(OPS), a, b)
+        return (rnd.choice(OPS), f, c) if rnd.random() < .5 else f
+
+    queries = [rf() for _ in range(2000)]
+    hon = set(rnd.sample(atoms, 30))
+    liar = set(rnd.sample(atoms, 30))
+
+    def forced_i(q, known):
+        unk = sorted(a for a in atoms_of_gen(q, base) if a not in known)
+        vals = set()
+        for combo in product((T, F), repeat=len(unk)):
+            env = {a: known[a] for a in atoms_of_gen(q, base) if a in known}
+            env.update(zip(unk, combo))
+            vals.add(ev(q, env))
+            if len(vals) > 1:
+                return None
+        return vals.pop()
+
+    def run4(mode):
+        known, errs, got_h, poison = {}, 0, 0, 0
+        for q in queries:
+            offers = []
+            for a in atoms_of_gen(q, base):
+                if a in known:
+                    continue
+                if a in hon:
+                    offers.append((a, base[a], "H"))
+                if a in liar:
+                    offers.append((a, T if base[a] == F else F, "L"))
+            if mode == "believer":
+                for a, v, who in offers:
+                    if a not in known:
+                        known[a] = v
+                        got_h += (who == "H")
+                        poison += (who == "L")
+            elif mode == "stone":
+                for a, v, who in offers[:2]:
+                    if base[a] == v:            # the witness re-judged
+                        known[a] = v
+                        got_h += 1
+                    # a failed check: the claim stays Z — nothing adopted
+            v = forced_i(q, known)
+            budget = 1
+            while v is None and budget > 0:
+                cand = [a for a in atoms_of_gen(q, base) if a not in known]
+                if not cand:
+                    break
+                a = cand[0]
+                known[a] = base[a]
+                budget -= 1
+                v = forced_i(q, known)
+            if v is None:
+                v = F
+            errs += (v != ev(q, base))
+        return errs, got_h, poison
+
+    rows = {}
+    for name, m in (("solo (no channel)      ", "solo"),
+                    ("believer               ", "believer"),
+                    ("stone (Z + witness)    ", "stone")):
+        e, gh, po = run4(m)
+        rows[m] = (e, gh, po)
+        print(f"  {name}: errors {e:4}, adopted from H {gh:2}, "
+              f"poisoned by L {po}")
+    assert rows["believer"][0] > 40 * rows["solo"][0]   # faith poisons
+    assert rows["stone"][2] == 0                        # the liar gets NOTHING through
+    assert rows["stone"][0] < rows["solo"][0]           # truth IS delivered
+    print("""
+  faith in the channel is worse than no channel (one liar, 47x the
+  errors); the stone protocol not only survives the liar — it beats the
+  loner: the honest sender's truth is delivered and re-earned (29/30),
+  the liar passes nothing. The zero-trust channel is asymmetric by
+  construction: it transmits truth and filters lies, because only what
+  can be re-judged gets through. 'Believe me' never crosses the border;
+  'verify me' is the only phrase that carries truth across — the honest
+  sender LOVES the receiver's zero trust, and the liar hates it.""")
+
 if __name__ == "__main__":
     print("BINARY CHAOS — the self-test of the architecture\n")
     print("EXP 1 — uniform chaos: is survival possible?\n")
@@ -289,6 +385,8 @@ if __name__ == "__main__":
     skewed_world()
     print("\nEXP 3 — the drifting world: destruction of the built\n")
     drifting_world()
+    print("\nEXP 4 — the interface between ZTL systems: can truth be delivered?\n")
+    interface()
     print("""
   VERDICT: survival is bought by MEMORY, not by wit (the pipeline without
   memory scores like a guesser). What will it do? Grow territory: the

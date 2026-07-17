@@ -237,7 +237,7 @@ function fillExamples(list) {
   sel.onchange = () => {
     const e = list[+sel.value];
     if (!e) return;
-    if (e.intent) addMsg("user", e.intent);
+    if (e.intent) $("chat-input").value = e.intent;   // ready for “Understand”
     if (e.zfl) {                          // human line as-is; JSON pretty-printed
       zflBox.value = e.zfl.trim().startsWith("{") ? pretty(e.zfl) : e.zfl;
       validate();

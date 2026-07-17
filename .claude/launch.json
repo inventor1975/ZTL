@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "ztlstudio",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["tool/ztlstudio.py"],
+      "port": 8190,
+      "autoPort": true
+    }
+  ]
+}

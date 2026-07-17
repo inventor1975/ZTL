@@ -293,6 +293,27 @@ theorem cover_xnor_F : ∀ a b : V,
     zxnor a b = F ↔ (((a = T ∨ a = Z) ∧ (b = F ∨ b = Z)) ∨
                      ((a = F ∨ a = Z) ∧ (b = T ∨ b = Z))) := by decide
 
+/-! ## The extensionality divorce (anti-propext, at the object level)
+
+`propext` is the licence "equivalent, hence identical — replace anywhere".
+This system refuses the object-level analogue, and the refusal is a theorem:
+`p` and `p ∧ p` have the same truth profile (by-consequence equivalent), yet
+their tables differ at the mark, and a CONTEXT — the quarantine detector —
+separates them.  Equivalence does not buy identity; transport goes by
+direction (`Iff.mp`/`Iff.mpr`), never by rewriting.  Hence every `[propext]`
+in a meta-proof's tail is the mark of a replacement licence that the object
+logic itself does not grant. -/
+
+/-- **Interderivable, yet not the same function.**  Same T-profile; different
+tables at `Z`; separated by the `isZ` context.  The object-level refutation
+of the replacement-of-equivalents licence — on the empty axiom list. -/
+theorem equiv_not_identical :
+    (∀ x : V, (zand x x = T) ↔ (x = T)) ∧
+    zand Z Z ≠ Z ∧
+    isZ (zand Z Z) ≠ isZ Z := by
+  refine ⟨?_, by decide, by decide⟩
+  decide
+
 #print axioms kand
 #print axioms kor
 #print axioms modus_ponens
@@ -305,5 +326,6 @@ theorem cover_xnor_F : ∀ a b : V,
 #print axioms revenge_bullet
 #print axioms evalF_classical
 #print axioms cover_imp_F
+#print axioms equiv_not_identical
 
 end V

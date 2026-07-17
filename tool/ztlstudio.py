@@ -94,6 +94,18 @@ EXAMPLES = [
      "intent": "An unverified sensor reports overheating; if overheating, "
                "the shutdown fires. Will it fire?",
      "zfl": "assert overheat impl shutdown"},
+    {"name": "Modus ponens (Carroll's tortoise)",
+     "intent": "The tortoise demands the rule itself be written as a "
+               "premise: if (p implies q) and p, then q. True — but watch "
+               "the completion table: it is a FRAME. A rule written down "
+               "is certified, yet it moves nothing; a rule must be acted, "
+               "not mailed.",
+     "zfl": json.dumps({"genre": "statement",
+                        "atoms": {"p": {"status": "Z"},
+                                  "q": {"status": "Z"}},
+                        "assert": "imp(and(imp(p,q),p),q)",
+                        "ask": ["verdict", "warranty"]},
+                       ensure_ascii=False, indent=1)},
     {"name": "Russell",
      "intent": "The set of all sets not containing themselves: does it "
                "contain itself? Universe: a = empty, b = {b}, R.",

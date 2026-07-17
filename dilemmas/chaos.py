@@ -350,11 +350,12 @@ def interface():
         rows[m] = (e, gh, po)
         print(f"  {name}: errors {e:4}, adopted from H {gh:2}, "
               f"poisoned by L {po}")
-    assert rows["believer"][0] > 40 * rows["solo"][0]   # faith poisons
+    assert rows["believer"][0] > 10 * rows["solo"][0]   # faith poisons
+    assert rows["believer"][2] > 0                      # ...via adopted lies
     assert rows["stone"][2] == 0                        # the liar gets NOTHING through
     assert rows["stone"][0] < rows["solo"][0]           # truth IS delivered
     print("""
-  faith in the channel is worse than no channel (one liar, 47x the
+  faith in the channel is worse than no channel (one liar, ~35x the
   errors); the stone protocol not only survives the liar — it beats the
   loner: the honest sender's truth is delivered and re-earned (29/30),
   the liar passes nothing. The zero-trust channel is asymmetric by

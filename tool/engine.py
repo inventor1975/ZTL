@@ -59,7 +59,7 @@ def run_statement(doc, parsed):
                 "case": ", ".join(f"{a}={v}" for a, v in zip(z_atoms, combo)),
                 "value": ev(formula, env2)})
 
-    return {
+    report = {
         "genre": "statement",
         "verdict": value,
         "warranty": g,
@@ -71,6 +71,15 @@ def run_statement(doc, parsed):
                      " — the refusals are liftable by verification"),
         "completions": completions,
     }
+    # A constant completion table means the verdict reads none of the
+    # unverified atoms: the assertion is a FRAME, not a fact — a test
+    # that cannot fail is not a test (the Girard cell).
+    if len(completions) > 1 and len({c["value"] for c in completions}) == 1:
+        report["frame"] = ("constant over all completions — a frame, not a"
+                           " fact: the assertion reads none of its"
+                           " unverified atoms; a test that cannot fail is"
+                           " not a test")
+    return report
 
 
 def run_system(doc, parsed):

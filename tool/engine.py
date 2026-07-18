@@ -135,7 +135,7 @@ def _split_and(f):
 
 
 def logic_map(doc, parsed):
-    """The Утверждение tab: the assertion's LOGIC MAP on top of the
+    """The Assertion tab: the assertion's LOGIC MAP on top of the
     statement report — (a) its currency (free ZTL truth / classically
     valid but ON CREDIT / contingent), (b) the decisive verifications,
     (c) for an implication-shaped assertion, the E26 derivation audit:

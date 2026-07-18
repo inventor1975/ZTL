@@ -125,7 +125,7 @@ if __name__ == "__main__":
         _, _, iss_b = zfl.validate(t)
         check(f"timeline rejects {name}", code in codes(iss_b), str(iss_b))
 
-    print("\n### Утверждение (E26): the logic map")
+    print("\n### Assertion (E26): the logic map")
     lm_syll = json.dumps({"genre": "statement",
                           "atoms": {x: {"status": "Z"} for x in "pqr"},
                           "assert": "imp(and(imp(p,q), and(imp(q,r), p)), r)"})

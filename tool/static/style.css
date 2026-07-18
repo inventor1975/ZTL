@@ -122,8 +122,10 @@ body { transition: background .25s ease; }
 section { transition: background .2s ease, border-color .2s ease; }
 .tab-par { background: #1d1638; }             /* Paradoxes — page tint (Z purple) */
 .tab-hyp { background: #12151c; }              /* Hypotheses — default dark */
+.tab-ast { background: #12201a; }              /* Утверждение — ledger green */
 /* the visible cue: the panels themselves tint per tab (they fill the view) */
 body.tab-par section { background: #201a33; border-color: #372b57; }
+body.tab-ast section { background: #16261f; border-color: #2b5741; }
 .tabbar .tab { background: none; border: none; cursor: pointer;
   color: var(--dim); padding: .45rem .9rem; font-size: 1rem;
   border-bottom: 2px solid transparent; }

@@ -61,13 +61,15 @@ ATOMS = [P, Q, R]
 
 
 # ------------------------------------------------------------ the pool
-def build_pool():
-    d1 = [("not", a) for a in ATOMS] + \
-         [(op, a, b) for op in OPS2 for a in ATOMS for b in ATOMS]
-    extra = [(op, a, ("not", b)) for op in OPS2 for a in ATOMS for b in ATOMS]
-    contra = [("imp", ("not", a), ("not", b)) for a in ATOMS for b in ATOMS]
+def build_pool(atom_names=None):
+    """The bounded formula pool over the given atoms (default p,q,r)."""
+    names = list(atom_names) if atom_names else ATOMS
+    d1 = [("not", a) for a in names] + \
+         [(op, a, b) for op in OPS2 for a in names for b in names]
+    extra = [(op, a, ("not", b)) for op in OPS2 for a in names for b in names]
+    contra = [("imp", ("not", a), ("not", b)) for a in names for b in names]
     pool = []
-    for f in ATOMS + d1 + [("not", x) for x in d1] + extra + contra:
+    for f in names + d1 + [("not", x) for x in d1] + extra + contra:
         if f not in pool:
             pool.append(f)
     return pool
@@ -78,14 +80,17 @@ PS = set(POOL)
 
 
 # ------------------------------------------------ forward chaining
-def close(premises, loans=frozenset()):
+def close(premises, loans=frozenset(), pool=None):
     """Fixpoint closure under the 12 alive rules (+ optional loans),
-    bounded to the pool. Returns {formula: (rule, parents)} provenance;
-    premises carry ("premise", ())."""
-    D = {f: ("premise", ()) for f in premises if f in PS}
+    bounded to the pool (default: the p,q,r pool). Returns
+    {formula: (rule, parents)} provenance; premises carry ("premise", ())."""
+    the_pool = POOL if pool is None else pool
+    ps = PS if pool is None else set(the_pool)
+    atom_names = [f for f in the_pool if isinstance(f, str)]
+    D = {f: ("premise", ()) for f in premises if f in ps}
 
     def add(f, rule, parents):
-        if f in PS and f not in D:
+        if f in ps and f not in D:
             D[f] = (rule, parents)
             return True
         return False
@@ -103,7 +108,7 @@ def close(premises, loans=frozenset()):
             changed |= add(("not", ("not", f)), "¬¬-intro", (f,))
             for g in items:
                 changed |= add(("and", f, g), "∧-intro", (f, g))
-            for g in POOL:
+            for g in the_pool:
                 changed |= add(("or", f, g), "∨-intro", (f,))
                 changed |= add(("imp", g, f), "K", (f,))
             if isinstance(f, tuple) and f[0] == "and":
@@ -130,7 +135,7 @@ def close(premises, loans=frozenset()):
         # explosion: a contradiction grounds everything in the pool
         for f in items:
             if ("not", f) in D:
-                for g in POOL:
+                for g in the_pool:
                     changed |= add(g, "explosion", (f, ("not", f)))
                 break
         # ---- the loan library (fallen rules) ----
@@ -142,7 +147,7 @@ def close(premises, loans=frozenset()):
         if "TAUT" in loans:
             if items:
                 first = items[0]
-                for a in ATOMS:
+                for a in atom_names:
                     changed |= add(("or", a, ("not", a)),
                                    "LOAN taut-concl", (first,))
     return D

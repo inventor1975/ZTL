@@ -125,6 +125,33 @@ if __name__ == "__main__":
         _, _, iss_b = zfl.validate(t)
         check(f"timeline rejects {name}", code in codes(iss_b), str(iss_b))
 
+    print("\n### Утверждение (E26): the logic map")
+    lm_syll = json.dumps({"genre": "statement",
+                          "atoms": {x: {"status": "Z"} for x in "pqr"},
+                          "assert": "imp(and(imp(p,q), and(imp(q,r), p)), r)"})
+    d_s, p_s, _ = zfl.validate(lm_syll)
+    map_s = engine.logic_map(d_s, p_s)["logic_map"]
+    check("syllogism audit: earned", map_s["audit"]["status"] == "earned",
+          str(map_s["audit"]))
+    lm_dne = json.dumps({"genre": "statement",
+                         "atoms": {"p": {"status": "Z"}},
+                         "assert": "imp(not(not(p)), p)"})
+    d_d, p_d, _ = zfl.validate(lm_dne)
+    map_d = engine.logic_map(d_d, p_d)["logic_map"]
+    check("DNE: on-credit currency + DNE loan",
+          map_d["currency"]["kind"] == "on-credit"
+          and map_d["audit"]["status"] == "on-credit"
+          and map_d["audit"]["loans"] == ["DNE"], str(map_d))
+    lm_g = json.dumps({"genre": "statement",
+                       "atoms": {"a": {"status": "Z"}, "b": {"status": "Z"}},
+                       "assert": "imp(not(a), b)"})
+    d_g, p_g, _ = zfl.validate(lm_g)
+    map_g = engine.logic_map(d_g, p_g)["logic_map"]
+    check("contingent assertion: does-not-follow with counterexample",
+          map_g["currency"]["kind"] == "contingent"
+          and map_g["audit"]["status"] == "does-not-follow"
+          and map_g["audit"]["counterexample"], str(map_g))
+
     print("\n### Engine: the zoo through ZFL end to end")
     rep = engine.run(doc, parsed)
     kinds = {p["kind"] for p in rep["passports"]}

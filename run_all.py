@@ -70,6 +70,9 @@ STANDS = [
     ("usage/car.py",   ["settled at tick 1; checks saved: 3",
                         "settled at tick 2; checks saved: 2",
                         "Once HEREDITARY, every remaining check buys nothing"]),
+    ("zexpire.py",     ["contentful formulas surviving unrestricted expiry: 0",
+                        "the settled deal UNSETTLES",
+                        "the verdict SURVIVES the expiry"]),
 ]
 
 

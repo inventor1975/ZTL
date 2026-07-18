@@ -160,4 +160,4 @@ public review register.
 > (in particular §11's interpretation) are not claimed as experimental
 > results.
 >
-> — Vitaly Reznik, [date]
+> — Vitaly Reznik, 2026-07-18

@@ -207,7 +207,46 @@ def validate(text):
             except FormulaError as e:
                 issues.append(err("E_FORMULA", f"assert, position {e.pos}",
                                   e.msg))
+        # --- the temporal extension (E24): an optional verification
+        # timeline — logical time, one tick = one verified atom ---
+        tl = doc.get("timeline")
+        if tl is not None:
+            if not isinstance(tl, list):
+                issues.append(err("E_TL_TYPE", "timeline",
+                                  'a list of {"atom": name, "value": "T"|"F"}'))
+            else:
+                seen_ticks = set()
+                for i, ev_ in enumerate(tl):
+                    where = f"timeline[{i}]"
+                    if not isinstance(ev_, dict) or \
+                            set(ev_) != {"atom", "value"}:
+                        issues.append(err("E_TL_TYPE", where,
+                                          'each tick is {"atom": ..., '
+                                          '"value": "T"|"F"}'))
+                        continue
+                    a, v = ev_["atom"], ev_["value"]
+                    if a not in atoms:
+                        issues.append(err("E_TL_ATOM", where,
+                                          f"unknown atom '{a}' — declare it"))
+                        continue
+                    if v not in ("T", "F"):
+                        issues.append(err("E_TL_VALUE", where,
+                                          "a verification earns T or F"))
+                    spec = atoms[a]
+                    st = spec.get("status") if isinstance(spec, dict) else None
+                    if st in ("T", "F"):
+                        issues.append(err("E_TL_GROUND", where,
+                                          f"'{a}' is already ground —"
+                                          " only a mark (Z) can be verified"))
+                    if a in seen_ticks:
+                        issues.append(err("E_TL_REPEAT", where,
+                                          f"'{a}' is verified twice —"
+                                          " a mark resolves once"))
+                    seen_ticks.add(a)
     else:  # system
+        if doc.get("timeline") is not None:
+            issues.append(err("E_TL_GENRE", "timeline",
+                              "the timeline lives in the statement genre"))
         sentences = doc.get("sentences", {})
         if not isinstance(sentences, dict) or not sentences:
             issues.append(err("E_EMPTY", "sentences",

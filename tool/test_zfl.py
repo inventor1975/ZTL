@@ -100,6 +100,31 @@ if __name__ == "__main__":
           "if \u201ca\u201d then \u201cb\u201d" in br2
           and "UNVERIFIED" in br2, br2)
 
+    print("\n### Timeline (E24): the temporal field of the statement genre")
+    tl_good = json.dumps({"genre": "statement",
+                          "atoms": {"a": {"status": "Z"},
+                                    "b": {"status": "Z"}},
+                          "assert": "and(a, b)",
+                          "timeline": [{"atom": "a", "value": "F"}]})
+    doc_t, parsed_t, iss_t = zfl.validate(tl_good)
+    check("timeline validates", parsed_t is not None and not
+          [i for i in iss_t if i["level"] == "error"], str(iss_t))
+    rep_t = engine.run(doc_t, parsed_t)
+    check("chronicle plays: F/hereditary at tick 1, settled early",
+          rep_t["settled_at"] == 1 and rep_t["checks_saved"] == 1
+          and rep_t["chronicle"][1]["warranty"] == "hereditary",
+          str(rep_t.get("chronicle")))
+    for name, bad, code in [
+            ("unknown atom", [{"atom": "ghost", "value": "T"}], "E_TL_ATOM"),
+            ("repeat tick",
+             [{"atom": "a", "value": "T"}, {"atom": "a", "value": "F"}],
+             "E_TL_REPEAT")]:
+        t = json.dumps({"genre": "statement",
+                        "atoms": {"a": {"status": "Z"}}, "assert": "not(a)",
+                        "timeline": bad})
+        _, _, iss_b = zfl.validate(t)
+        check(f"timeline rejects {name}", code in codes(iss_b), str(iss_b))
+
     print("\n### Engine: the zoo through ZFL end to end")
     rep = engine.run(doc, parsed)
     kinds = {p["kind"] for p in rep["passports"]}

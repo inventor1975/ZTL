@@ -73,6 +73,10 @@ STANDS = [
     ("zexpire.py",     ["contentful formulas surviving unrestricted expiry: 0",
                         "the settled deal UNSETTLES",
                         "the verdict SURVIVES the expiry"]),
+    ("zderive.py",     ["closure(∅, alive + both loans) = 0 formulas",
+                        "yet ZTL-TAUTOLOGIES exist on this pool: 6",
+                        "soundness cross-check on the core: 0 violations",
+                        "the first measured"]),
 ]
 
 

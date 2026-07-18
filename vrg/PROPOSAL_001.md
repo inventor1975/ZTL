@@ -39,9 +39,11 @@ ladder tested here. Not to be conflated.)
 
 ```
 git clone https://github.com/inventor1975/ZTL && cd ZTL \
-  && git checkout bfd9037 \
+  && git checkout vrg-proposal-001-v1 \
   && python3 vrg/judgment_kernel_test.py
 ```
+(the immutable tag `vrg-proposal-001-v1` carries this memo *and* the
+artifact; the artifact core is unchanged from SHA `bfd9037`.)
 No third-party dependencies (Python 3 standard library only). The run
 ends in `assert`s over the code-confirmed facts of §8; a non-zero exit
 falsifies the submission.

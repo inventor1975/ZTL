@@ -12,7 +12,7 @@ from itertools import product
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from ztl import T, F, Z, VALUES, ev                      # noqa: E402
-from zverify import grade, ztl_eval                      # noqa: E402
+from zverify import grade, ztl_eval, verify              # noqa: E402
 from zpassport import passports, deps, component_models  # noqa: E402
 from zfl import to_statement, to_system                  # noqa: E402
 
@@ -79,6 +79,49 @@ def run_statement(doc, parsed):
                            " fact: the assertion reads none of its"
                            " unverified atoms; a test that cannot fail is"
                            " not a test")
+
+    # --- the temporal extension (E24): play the verification timeline.
+    # Logical time: one tick = one act verify(mark -> earned value); the
+    # verdict is a pair (value, warranty grade) and the chronicle shows
+    # how the grade travels the ladder: until-verification = true NOW,
+    # sound = true at every ending, hereditary = true always (on the
+    # shelf). Once hereditary, the remaining checks buy nothing.
+    tl = doc.get("timeline")
+    if tl:
+        m = dict(marking)
+        prev_g, settled_at = g, None
+        chronicle = [{"tick": 0, "event": "start", "verdict": value,
+                      "warranty": g,
+                      "marks_left": sum(1 for s in m.values() if s == "M")}]
+        for i, ev_ in enumerate(tl, start=1):
+            a, val = ev_["atom"], ev_["value"]
+            prev_v = ztl_eval(formula, m)
+            m = verify(m, a, val)
+            v2, g2 = ztl_eval(formula, m), grade(formula, m)
+            left = sum(1 for s in m.values() if s == "M")
+            step = {"tick": i, "event": f"{a} := {val}", "verdict": v2,
+                    "warranty": g2, "marks_left": left}
+            notes = []
+            if v2 != prev_v:
+                notes.append("the verdict FLIPS")
+            if prev_g == "until-verification" and g2 == "hereditary":
+                notes.append("U->H: the ground arrived all at once")
+            if prev_g == "sound" and g2 == "until-verification":
+                notes.append("S->U: the credit worsened before settling")
+            if g2 == "hereditary" and settled_at is None:
+                settled_at = i
+                saved_at_settle = left
+                if left > 0:
+                    notes.append(f"SETTLED EARLY — {left} check(s) still"
+                                 " unverified buy NOTHING now")
+            if notes:
+                step["note"] = "; ".join(notes)
+            chronicle.append(step)
+            prev_g = g2
+        report["chronicle"] = chronicle
+        report["settled_at"] = settled_at
+        report["checks_saved"] = (saved_at_settle
+                                  if settled_at is not None else 0)
     return report
 
 

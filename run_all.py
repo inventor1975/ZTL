@@ -67,6 +67,9 @@ STANDS = [
                         "GENUINE entries into sound-only (predecessor not S): 0",
                         "FULL STRICT LADDER U → S → H: realized, rung by rung."]),
     ("tool/test_zfl.py", ["ZFL FOUNDATION GREEN"]),
+    ("usage/car.py",   ["settled at tick 1; checks saved: 3",
+                        "settled at tick 2; checks saved: 2",
+                        "Once HEREDITARY, every remaining check buys nothing"]),
 ]
 
 

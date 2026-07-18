@@ -61,6 +61,10 @@ STANDS = [
                         "cautious Z (1 model, still Z): 1068",
                         "odd k → 0 solutions (Liar-type)",
                         "truncated Yablo is CONSISTENT"]),
+    ("ztime.py",       ["ticks leaving an H-state: 0",
+                        "caught waiting (value Z): 0",
+                        "ending hereditary: 130",
+                        "GENUINE entries into sound-only (predecessor not S): 0"]),
     ("tool/test_zfl.py", ["ZFL FOUNDATION GREEN"]),
 ]
 

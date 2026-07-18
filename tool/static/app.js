@@ -233,20 +233,20 @@ const HYP_EX = [
    zfl: 'assert a impl (a or b)'},
 ];
 const AST_EX = [
-  {name: "силлогизм: из p→q, q→r и p следует r",
-   intent: "Если из p следует q, из q следует r, и p верно — то верно r.",
+  {name: "syllogism: from p→q, q→r and p, r follows",
+   intent: "If p implies q, q implies r, and p holds — then r holds.",
    zfl: 'assert ((p impl q) and ((q impl r) and p)) impl r'},
-  {name: "¬¬p → p  (снятие двойного отрицания)",
-   intent: "Если неверно, что p неверно — то p верно.",
+  {name: "¬¬p → p  (double negation elimination)",
+   intent: "If it is false that p is false, then p is true.",
    zfl: 'assert !!p impl p'},
-  {name: "тождество отрицаний: ¬p → ¬p",
-   intent: "Отрицание следует из самого себя.",
+  {name: "identity of denials: ¬p → ¬p",
+   intent: "A denial follows from itself.",
    zfl: 'assert !p impl !p'},
-  {name: "«не опроверг — значит виновен»",
-   intent: "Если обвинение не опровергнуто, человек виновен.",
+  {name: "“not disproved — hence guilty”",
+   intent: "If the accusation is not disproved, the person is guilty.",
    zfl: 'assert !refuted impl guilty'},
-  {name: "p → p  (тождество)",
-   intent: "Всякое утверждение следует из самого себя.",
+  {name: "p → p  (identity)",
+   intent: "Every assertion follows from itself.",
    zfl: 'assert p impl p'},
 ];
 
@@ -357,16 +357,16 @@ const tabState = {par: null, hyp: null, ast: null};   // independent per-tab sta
 function applyMode() {
   const hyp = mode === "hyp", ast = mode === "ast";
   $("p1-title").innerHTML = ast
-    ? '1 · Утверждение <small>state an assertion — the AI formalizes, the core maps its logic</small>'
+    ? '1 · Assertion <small>state an assertion — the AI formalizes, the core maps its logic</small>'
     : hyp
     ? '1 · Hypothesis <small>a claimed law / rule — describe it, the AI formalizes, the core checks it</small>'
     : '1 · Meta-chat <small>negotiating the meaning; the AI only translates, never judges</small>';
   $("chat-input").placeholder = ast
-    ? "Выскажи утверждение — любой язык (e.g. “если не опроверг — значит виновен”)…"
+    ? "State an assertion — any language (e.g. “not disproved, hence guilty”)…"
     : hyp
     ? "Describe a law or rule to check — any language (e.g. “does p imply p?”)…"
     : "Describe a claim, a paradox, a situation — any language…";
-  $("btn-run").textContent = ast ? "Карта логики"
+  $("btn-run").textContent = ast ? "Map the logic"
     : hyp ? "Check hypothesis on the core" : "Run on the core";
   fillExamples(ast ? AST_EX : hyp ? HYP_EX : PARADOX_EX);
 }
@@ -462,35 +462,35 @@ function renderRefute(res, out) {
     `<p class="dim">atoms: ${atoms}</p><p>${body}</p></div>`));
 }
 
-/* ---------------------------------------- Утверждение: the logic map */
+/* ---------------------------------------- Assertion: the logic map */
 function renderLogicMap(map, out) {
   if (!map) return;
   const esc2 = s => String(s).replace(/</g, "&lt;");
   const wfmt = w => Object.entries(w || {}).map(([a, v]) => `${a}=${v}`).join(", ");
   let cur = map.currency, head, cls;
-  if (cur.kind === "free-truth") { head = "🟢 СВОБОДНАЯ ИСТИНА — guarded ZTL tautology"; cls = "ok"; }
-  else if (cur.kind === "on-credit") { head = "🟡 НА КРЕДИТЕ — classically valid, breaks on unverified input"; cls = "warn"; }
-  else { head = "⚪ КОНТИНГЕНТНО — depends on the facts"; cls = "dim"; }
-  let html = `<div class="card"><h3>Карта логики · logic map</h3>`
+  if (cur.kind === "free-truth") { head = "🟢 FREE TRUTH — a guarded ZTL tautology"; cls = "ok"; }
+  else if (cur.kind === "on-credit") { head = "🟡 ON CREDIT — classically valid, breaks on unverified input"; cls = "warn"; }
+  else { head = "⚪ CONTINGENT — depends on the facts"; cls = "dim"; }
+  let html = `<div class="card"><h3>Logic map</h3>`
     + `<p><code>${esc2(map.formula)}</code></p>`
     + `<p><b>${head}</b><br><span class="dim">${esc2(cur.note)}</span>`
     + (cur.witness && Object.keys(cur.witness).length
        ? `<br>witness: <code>${esc2(wfmt(cur.witness))}</code>` : "")
     + `</p>`;
   if (map.decisive && map.decisive.length) {
-    html += `<p><b>Решающие проверки · decisive checks</b><br>` +
+    html += `<p><b>Decisive checks</b><br>` +
       map.decisive.map(d =>
         `<code>${esc2(d.atom)}</code>: verify T → ${d.T}, verify F → ${d.F}`)
       .join("<br>") + `</p>`;
   }
   const a = map.audit;
   if (a) {
-    const label = {earned: "✅ ЗАРАБОТАНО — alive rules only",
-                   "on-credit": "🟡 В КРЕДИТ — a fallen rule is borrowed",
-                   "rules-gap": "🕳 ГЭП ПРАВИЛ — forced semantically, unreachable by the battery",
-                   "does-not-follow": "❌ НЕ СЛЕДУЕТ",
-                   skipped: "— аудит пропущен"}[a.status] || a.status;
-    html += `<p><b>Аудит вывода · derivation audit: ${label}</b>`
+    const label = {earned: "✅ EARNED — alive rules only",
+                   "on-credit": "🟡 ON CREDIT — a fallen rule is borrowed",
+                   "rules-gap": "🕳 RULES GAP — forced semantically, unreachable by the battery",
+                   "does-not-follow": "❌ DOES NOT FOLLOW",
+                   skipped: "— audit skipped"}[a.status] || a.status;
+    html += `<p><b>Derivation audit: ${label}</b>`
       + (a.loans ? `<br>loan: <code>${a.loans.join(", ")}</code>` : "")
       + (a.counterexample
          ? `<br>counterexample: <code>${esc2(wfmt(a.counterexample))}</code>` : "")

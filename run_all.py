@@ -64,7 +64,8 @@ STANDS = [
     ("ztime.py",       ["ticks leaving an H-state: 0",
                         "caught waiting (value Z): 0",
                         "ending hereditary: 130",
-                        "GENUINE entries into sound-only (predecessor not S): 0"]),
+                        "GENUINE entries into sound-only (predecessor not S): 0",
+                        "FULL STRICT LADDER U → S → H: realized, rung by rung."]),
     ("tool/test_zfl.py", ["ZFL FOUNDATION GREEN"]),
 ]
 

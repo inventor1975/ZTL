@@ -55,14 +55,22 @@ MEASURED (this file, deterministic, re-run to reproduce):
   on the road: 4; verdict flips mid-trace: 58; early settlement: 68 of
   130 traces; settling 0/1 exists (¬(p∧¬p) is born hereditary),
   xor/xnor need every mark (2/2).
-  THE E24 DISCOVERY (§5, the corrected hunt — the first sweep counted
-  irrelevant-tick S→S as entries; fixed): on the 3-atom exhaustive
-  depth-≤2 pool, 13,059 formulas × 78,354 ticks from the all-marked
-  start, GENUINE entries into sound-only (predecessor not S): 0.
-  CONJECTURE (open, no proof, falsifiable by wider hunts): sound-only
-  is a BIRTH grade — verification can spend it (promote to H, demote
-  to U, flip the verdict) but never mint it. The middle rung of the
-  ladder is initial capital, not earnable by ticks.
+  THE E24 STORY — a conjecture born and killed the same day, in the
+  open (§5–§6). The corrected hunt (§5; the naive sweep counted
+  irrelevant-tick S→S as entries — fixed) found 0 genuine entries into
+  sound-only on 13,059 formulas × 78,354 ticks, and for half an hour
+  the conjecture stood: "sound is a BIRTH grade, never earned by a
+  tick". The PROOF ATTEMPT then broke at a specific spot, and the spot
+  folded into a COUNTEREXAMPLE (§6): the hunts were SHALLOW (depth ≤2),
+  while the insured E21 shape lives at depth 3. The selector
+      φ = (a ∧ X) ∨ (¬a ∧ p),   X = ¬¬p ∨ (q ∨ ¬q)
+  at all-marked start walks  F/U → (a:=T) → T/S → (p:=T) → T/H:
+  a GENUINE entry into sound-only AND the full strict ladder U→S→H,
+  both realized. Verifying the SELECTOR atom routes the formula onto
+  the insured branch, and soundness is EARNED. So: sound can be earned
+  by the tick that verifies WHICH WORLD YOU ARE IN; the §5 zeros were
+  a pool artifact, kept as the honest record of how the conjecture
+  died.
 
 HONEST BOUNDARY. This is not LTL3 re-derived: LTL3 grades one "?"
 about trace membership on a finite prefix; here the evolving object is
@@ -265,10 +273,9 @@ if __name__ == "__main__":
         print(f"    e.g. {phi}: " +
               " → ".join(show_state(s) for s in tr))
     else:
-        print("    NONE on this pool — sound-only observed only as a BIRTH")
-        print("    grade (with one mark left, sound ⟺ hereditary by arithmetic;")
-        print("    the 3-mark trophy gives S room to be entered — it wasn't;")
-        print("    the exhaustive hunt is §5).")
+        print("    none on THIS pool (with one mark left, sound ⟺ hereditary")
+        print("    by arithmetic; the 3-mark trophy did not enter S either) —")
+        print("    but see §6: the entry EXISTS at depth 4.")
     print(f"  S→U demotions on the road: {st['demote']}")
     if st['demote_ex']:
         phi, tr = st['demote_ex']
@@ -316,9 +323,32 @@ if __name__ == "__main__":
     print(f"  formulas: {len(pool3)}; ticks: {hunt_ticks}")
     print(f"  GENUINE entries into sound-only (predecessor not S): {genuine}")
     assert genuine == 0
-    print("  → CONJECTURE (open, falsifiable): sound-only is a BIRTH grade —")
-    print("    verification spends it (H or U or a flip) but never mints it.")
+    print("  → on THIS pool: none. For half an hour this stood as the")
+    print("    conjecture 'sound is a birth grade'. It is FALSE — the pool")
+    print("    was shallow (depth ≤2); the refutation is §6.")
+
+    # ---- 6. the refutation: sound IS earned, by the selector ------------
+    print(f"\n### 6. The refutation — the selector witness (depth 4)")
+    print("  φ = (a ∧ X) ∨ (¬a ∧ p),  X = ¬¬p ∨ (q ∨ ¬q)  (the E21 insured cell)")
+    Xf = ("or", ("not", ("not", "p")), ("or", "q", ("not", "q")))
+    phi_w = ("or", ("and", "a", Xf), ("and", ("not", "a"), "p"))
+    w0 = {"a": "M", "p": "M", "q": "M"}
+    w1 = verify(w0, "a", T)
+    w2 = verify(w1, "p", T)
+    path = [("all marked", w0), ("a:=T", w1), ("p:=T", w2)]
+    gs = []
+    for label, m in path:
+        v, g = gstate(phi_w, m)
+        gs.append(g)
+        print(f"    {label:12s} verdict {v}  grade {g}")
+    assert gs == ["U", "S", "H"]
+    print("  GENUINE entry U→S: yes — verifying the SELECTOR atom routes the")
+    print("  formula onto the insured branch; soundness is EARNED by the tick")
+    print("  that verifies which world you are in.")
+    print("  FULL STRICT LADDER U → S → H: realized, rung by rung.")
 
     print("\n  ✓ E24: the ladder is a temporal logic; hereditary is absorbing;")
     print("    every completed verification path lands on the shelf;")
-    print("    sound-only is never earned by a tick — only born.")
+    print("    and the ladder CAN be climbed rung by rung — sound is earned")
+    print("    by verifying which world you are in (the birth-grade")
+    print("    conjecture died in §6, same day, in the open).")

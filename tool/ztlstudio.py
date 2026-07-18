@@ -235,11 +235,32 @@ def api_refute(payload):
             "result": r}
 
 
+def api_assert(payload):
+    """Утверждение mode: the assertion's LOGIC MAP — statement report +
+    currency (free / on-credit / contingent) + decisive checks + the
+    E26 derivation audit. Same shape as api_run so the front reuses
+    the flow."""
+    text, herr = _coerce(payload)
+    if herr:
+        return {"ok": False, "issues": herr}
+    doc, parsed, issues = zfl.validate(text)
+    if parsed is None:
+        return {"ok": False, "issues": issues}
+    if doc.get("genre") != "statement":
+        return {"ok": False, "issues": [
+            {"level": "error", "code": "E_GENRE", "where": "genre",
+             "hint": "the Утверждение tab maps statement-genre documents"}]}
+    report = engine.logic_map(doc, parsed)
+    return {"ok": True, "issues": issues,
+            "back_reading": zfl.back_reading(doc, parsed),
+            "report": report}
+
+
 ROUTES = {"/api/validate": api_validate, "/api/run": api_run,
           "/api/chat": api_chat, "/api/emit": api_emit,
           "/api/repair": api_repair, "/api/explain": api_explain,
           "/api/providers": api_providers, "/api/savekey": api_savekey,
-          "/api/refute": api_refute}
+          "/api/refute": api_refute, "/api/assert": api_assert}
 
 
 class Handler(BaseHTTPRequestHandler):

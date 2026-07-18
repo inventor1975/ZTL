@@ -237,7 +237,7 @@ EMIT_SYS_HYP = (
 
 def understand(history, cfg=None, mode="par"):
     """history: [{'role': 'user'|'assistant', 'content': str}, ...]"""
-    sys = UNDERSTAND_SYS_HYP if mode == "hyp" else UNDERSTAND_SYS
+    sys = UNDERSTAND_SYS_HYP if mode in ("hyp", "ast") else UNDERSTAND_SYS
     return llm([{"role": "system", "content": sys}] + history, cfg)
 
 
@@ -251,7 +251,7 @@ def strip_fences(s):
 
 
 def emit(understanding, cfg=None, mode="par"):
-    if mode == "hyp":
+    if mode in ("hyp", "ast"):
         sys = EMIT_SYS_HYP
         user = (f"The agreed understanding:\n{understanding}\n\n"
                 "Emit the ZFL statement for the claimed rule: the WHOLE rule "

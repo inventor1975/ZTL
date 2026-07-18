@@ -11,10 +11,12 @@ from itertools import product
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from ztl import T, F, Z, VALUES, ev                      # noqa: E402
+from ztl import T, F, Z, VALUES, ev, atoms, show         # noqa: E402
 from zverify import grade, ztl_eval, verify              # noqa: E402
 from zpassport import passports, deps, component_models  # noqa: E402
 from zfl import to_statement, to_system                  # noqa: E402
+import zderive                                           # noqa: E402
+from entailment import entails                           # noqa: E402
 
 KIND_TXT = {
     "PARADOX": "PARADOX — no classical solutions; refusal PERMANENT",
@@ -122,6 +124,131 @@ def run_statement(doc, parsed):
         report["settled_at"] = settled_at
         report["checks_saved"] = (saved_at_settle
                                   if settled_at is not None else 0)
+    return report
+
+
+def _split_and(f):
+    """Flatten a top-level conjunction into a premise list."""
+    if isinstance(f, tuple) and f[0] == "and":
+        return _split_and(f[1]) + _split_and(f[2])
+    return [f]
+
+
+def logic_map(doc, parsed):
+    """The Утверждение tab: the assertion's LOGIC MAP on top of the
+    statement report — (a) its currency (free ZTL truth / classically
+    valid but ON CREDIT / contingent), (b) the decisive verifications,
+    (c) for an implication-shaped assertion, the E26 derivation audit:
+    earned / on credit (which loan) / rules-gap / does not follow."""
+    report = run_statement(doc, parsed)
+    env, formula = to_statement(doc, parsed)
+    names = sorted(atoms(formula))
+    marking = {a: (v if v in (T, F) else "M") for a, v in env.items()}
+
+    # ---- (a) currency: what the assertion's truth is made of ----------
+    from itertools import product as _prod
+    classical_valid = all(
+        ev(formula, dict(zip(names, c))) == T
+        for c in _prod((T, F), repeat=len(names))) if names else \
+        ev(formula, {}) == T
+    ztl_tautology = all(
+        ev(formula, dict(zip(names, c))) == T
+        for c in _prod(VALUES, repeat=len(names))) if names else \
+        ev(formula, {}) == T
+    if ztl_tautology:
+        currency = {"kind": "free-truth",
+                    "note": "a guarded ZTL tautology — true under every "
+                            "assignment INCLUDING unverified inputs; "
+                            "this truth costs nothing"}
+    elif classical_valid:
+        witness = next(
+            dict(zip(names, c)) for c in _prod(VALUES, repeat=len(names))
+            if ev(formula, dict(zip(names, c))) != T)
+        currency = {"kind": "on-credit",
+                    "witness": {a: v for a, v in witness.items()},
+                    "note": "classically valid — yet it BREAKS when an "
+                            "input is unverified: truth minted from form, "
+                            "not from ground; the killing marking is the "
+                            "witness"}
+    else:
+        cm = next((dict(zip(names, c))
+                   for c in _prod((T, F), repeat=len(names))
+                   if ev(formula, dict(zip(names, c))) != T), None)
+        currency = {"kind": "contingent",
+                    "witness": cm or {},
+                    "note": "not a law — its truth depends on the facts; "
+                            "the witness is a classical countermodel"}
+
+    # ---- (b) decisive verifications (which single checks flip it) -----
+    decisive = []
+    cur = ztl_eval(formula, marking)
+    for a in names:
+        if marking.get(a) != "M":
+            continue
+        flips = {v: ztl_eval(formula, verify(marking, a, v))
+                 for v in (T, F)}
+        if any(v != cur for v in flips.values()):
+            decisive.append({"atom": a, "T": flips[T], "F": flips[F]})
+
+    # ---- (c) the derivation audit (E26) for implication shapes --------
+    audit = None
+    if isinstance(formula, tuple) and formula[0] == "imp":
+        premises = _split_and(formula[1])
+        target = formula[2]
+        if len(names) > 3:
+            audit = {"status": "skipped",
+                     "note": "audit pool is bounded to 3 atoms"}
+        else:
+            pool = zderive.build_pool(names)
+            ps = set(pool)
+            if any(p not in ps for p in premises) or target not in ps:
+                audit = {"status": "skipped",
+                         "note": "a premise or the conclusion is deeper "
+                                 "than the bounded audit pool"}
+            else:
+                D = zderive.close(premises, pool=pool)
+                if target in D:
+                    audit = {"status": "earned",
+                             "chain": zderive.chain(D, target),
+                             "note": "reachable by the 12 alive rules "
+                                     "alone — every step transports "
+                                     "earned truth, no borrowing"}
+                else:
+                    unlocked = None
+                    for loans in ({"DNE"}, {"TAUT"}, {"DNE", "TAUT"}):
+                        D2 = zderive.close(premises, loans=loans, pool=pool)
+                        if target in D2:
+                            unlocked = (loans, D2)
+                            break
+                    if unlocked:
+                        loans, D2 = unlocked
+                        audit = {"status": "on-credit",
+                                 "loans": sorted(loans),
+                                 "chain": zderive.chain(D2, target),
+                                 "note": "every chain to the conclusion "
+                                         "must borrow a FALLEN rule — the "
+                                         "inference stands only on credit"}
+                    elif entails(premises, target) is None:
+                        audit = {"status": "rules-gap",
+                                 "note": "semantically forced (every "
+                                         "assignment making the premises "
+                                         "T makes the conclusion T), yet "
+                                         "no chain in the measured rule "
+                                         "battery reaches it on this pool"}
+                    else:
+                        ce = entails(premises, target)
+                        audit = {"status": "does-not-follow",
+                                 "counterexample": ce,
+                                 "note": "the conclusion is not entailed "
+                                         "by the premises — the "
+                                         "counterexample assignment makes "
+                                         "the premises T and the "
+                                         "conclusion non-T"}
+
+    report["logic_map"] = {"formula": show(formula),
+                           "currency": currency,
+                           "decisive": decisive,
+                           "audit": audit}
     return report
 
 

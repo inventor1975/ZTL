@@ -119,7 +119,8 @@ $("btn-repair").onclick = async () => {
 
 /* ------------------------------------------------------- 3. results */
 $("btn-run").onclick = async () => {
-  const path = mode === "hyp" ? "/api/refute" : "/api/run";
+  const path = mode === "hyp" ? "/api/refute"
+             : mode === "ast" ? "/api/assert" : "/api/run";
   const r = await api(path, {zfl: zflBox.value});
   showIssues(r.issues);
   const out = $("report");
@@ -128,6 +129,11 @@ $("btn-run").onclick = async () => {
   if (r.back_reading) { $("backread").textContent = r.back_reading; $("backread").classList.remove("hidden"); }
   let rep;
   if (mode === "hyp") { rep = r.result; renderRefute(rep, out); }
+  else if (mode === "ast") {
+    rep = r.report;
+    renderLogicMap(rep.logic_map, out);
+    renderStatement(rep, out);
+  }
   else { rep = r.report; if (rep.genre === "statement") renderStatement(rep, out); else renderSystem(rep, out); }
   const lastUser = [...history].reverse().find(m => m.role === "user");
   lastRun = {zfl: zflBox.value, back_reading: r.back_reading || "",
@@ -225,6 +231,23 @@ const HYP_EX = [
    zfl: 'assert (a and b) impl a'},
   {name: "∨-introduction:  a → (a∨b)", intent: "Does a imply 'a or b'?",
    zfl: 'assert a impl (a or b)'},
+];
+const AST_EX = [
+  {name: "силлогизм: из p→q, q→r и p следует r",
+   intent: "Если из p следует q, из q следует r, и p верно — то верно r.",
+   zfl: 'assert ((p impl q) and ((q impl r) and p)) impl r'},
+  {name: "¬¬p → p  (снятие двойного отрицания)",
+   intent: "Если неверно, что p неверно — то p верно.",
+   zfl: 'assert !!p impl p'},
+  {name: "тождество отрицаний: ¬p → ¬p",
+   intent: "Отрицание следует из самого себя.",
+   zfl: 'assert !p impl !p'},
+  {name: "«не опроверг — значит виновен»",
+   intent: "Если обвинение не опровергнуто, человек виновен.",
+   zfl: 'assert !refuted impl guilty'},
+  {name: "p → p  (тождество)",
+   intent: "Всякое утверждение следует из самого себя.",
+   zfl: 'assert p impl p'},
 ];
 
 function fillExamples(list) {
@@ -329,18 +352,23 @@ $("set-save").onclick = async () => {
 
 /* --------------------------------------- mode: Hypotheses / Paradoxes */
 let mode = "hyp";                       // Hypotheses is the first/default tab
-const tabState = {par: null, hyp: null};   // independent per-tab state
+const tabState = {par: null, hyp: null, ast: null};   // independent per-tab state
 
 function applyMode() {
-  const hyp = mode === "hyp";
-  $("p1-title").innerHTML = hyp
+  const hyp = mode === "hyp", ast = mode === "ast";
+  $("p1-title").innerHTML = ast
+    ? '1 · Утверждение <small>state an assertion — the AI formalizes, the core maps its logic</small>'
+    : hyp
     ? '1 · Hypothesis <small>a claimed law / rule — describe it, the AI formalizes, the core checks it</small>'
     : '1 · Meta-chat <small>negotiating the meaning; the AI only translates, never judges</small>';
-  $("chat-input").placeholder = hyp
+  $("chat-input").placeholder = ast
+    ? "Выскажи утверждение — любой язык (e.g. “если не опроверг — значит виновен”)…"
+    : hyp
     ? "Describe a law or rule to check — any language (e.g. “does p imply p?”)…"
     : "Describe a claim, a paradox, a situation — any language…";
-  $("btn-run").textContent = hyp ? "Check hypothesis on the core" : "Run on the core";
-  fillExamples(hyp ? HYP_EX : PARADOX_EX);
+  $("btn-run").textContent = ast ? "Карта логики"
+    : hyp ? "Check hypothesis on the core" : "Run on the core";
+  fillExamples(ast ? AST_EX : hyp ? HYP_EX : PARADOX_EX);
 }
 
 /* each tab keeps its OWN chat, ZFL and output — snapshot on leave, restore on enter */
@@ -394,6 +422,7 @@ document.querySelectorAll(".tab").forEach(t => t.onclick = () => {
 function setTabTint(m) {
   document.body.classList.toggle("tab-par", m === "par");
   document.body.classList.toggle("tab-hyp", m === "hyp");
+  document.body.classList.toggle("tab-ast", m === "ast");
 }
 
 // the free-model warning: show when the active provider is Groq
@@ -431,4 +460,46 @@ function renderRefute(res, out) {
   out.appendChild(el("div",
     `<div class="card refute-result"><h3>${head}</h3>` +
     `<p class="dim">atoms: ${atoms}</p><p>${body}</p></div>`));
+}
+
+/* ---------------------------------------- Утверждение: the logic map */
+function renderLogicMap(map, out) {
+  if (!map) return;
+  const esc2 = s => String(s).replace(/</g, "&lt;");
+  const wfmt = w => Object.entries(w || {}).map(([a, v]) => `${a}=${v}`).join(", ");
+  let cur = map.currency, head, cls;
+  if (cur.kind === "free-truth") { head = "🟢 СВОБОДНАЯ ИСТИНА — guarded ZTL tautology"; cls = "ok"; }
+  else if (cur.kind === "on-credit") { head = "🟡 НА КРЕДИТЕ — classically valid, breaks on unverified input"; cls = "warn"; }
+  else { head = "⚪ КОНТИНГЕНТНО — depends on the facts"; cls = "dim"; }
+  let html = `<div class="card"><h3>Карта логики · logic map</h3>`
+    + `<p><code>${esc2(map.formula)}</code></p>`
+    + `<p><b>${head}</b><br><span class="dim">${esc2(cur.note)}</span>`
+    + (cur.witness && Object.keys(cur.witness).length
+       ? `<br>witness: <code>${esc2(wfmt(cur.witness))}</code>` : "")
+    + `</p>`;
+  if (map.decisive && map.decisive.length) {
+    html += `<p><b>Решающие проверки · decisive checks</b><br>` +
+      map.decisive.map(d =>
+        `<code>${esc2(d.atom)}</code>: verify T → ${d.T}, verify F → ${d.F}`)
+      .join("<br>") + `</p>`;
+  }
+  const a = map.audit;
+  if (a) {
+    const label = {earned: "✅ ЗАРАБОТАНО — alive rules only",
+                   "on-credit": "🟡 В КРЕДИТ — a fallen rule is borrowed",
+                   "rules-gap": "🕳 ГЭП ПРАВИЛ — forced semantically, unreachable by the battery",
+                   "does-not-follow": "❌ НЕ СЛЕДУЕТ",
+                   skipped: "— аудит пропущен"}[a.status] || a.status;
+    html += `<p><b>Аудит вывода · derivation audit: ${label}</b>`
+      + (a.loans ? `<br>loan: <code>${a.loans.join(", ")}</code>` : "")
+      + (a.counterexample
+         ? `<br>counterexample: <code>${esc2(wfmt(a.counterexample))}</code>` : "")
+      + `<br><span class="dim">${esc2(a.note)}</span></p>`;
+    if (a.chain) {
+      html += `<pre class="dim" style="white-space:pre-wrap">`
+        + a.chain.map(esc2).join("\n") + `</pre>`;
+    }
+  }
+  html += `</div>`;
+  out.appendChild(el("div", html));
 }

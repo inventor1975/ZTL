@@ -19,10 +19,14 @@ EVERY formula, every marking, every tick, not a finite enumeration:
   3. `hereditary_sound`     — the ladder inclusion: hereditary ⟹ sound
      (completions are refinements).
 
-NOT formalized, by honesty: the E24 conjecture "sound-only is a birth
-grade — never entered by a tick" is OPEN (measured 0 entries on the
-exhaustive pools; no proof; falsifiable by wider hunts). It is not
-stated here as a theorem because it is not one yet.
+Also here: the REFUTATION of the E24 conjecture "sound-only is a birth
+grade, never entered by a tick" — born of shallow (depth ≤ 2) hunts and
+killed the same day by a constructed witness. The selector
+`φ = (a ∧ X) ∨ (¬a ∧ p)` with `X = ¬¬p ∨ (q ∨ ¬q)` (the E21 insured
+cell) walks U → S → H from the all-marked start: soundness is EARNED by
+the tick that verifies which world you are in, and the full strict
+ladder is realized rung by rung (`strict_ladder`, kernel-checked over
+the formula's atom triple).
 
 VR discipline: self-contained (no imports, no mathlib), `#print axioms`
 at the end — the whole file must stand on the EMPTY axiom list.
@@ -192,6 +196,58 @@ theorem hereditary_sound {φ : Fm} {m : Marking}
     (hH : Hereditary φ m) : Sound φ m :=
   fun c hc => hH c hc.1
 
+/-! ## The witness: sound IS earned (the refutation, kernel-checked)
+
+The conjecture "sound-only is a birth grade" is FALSE. Refinements and
+completions are bounded here to the formula's three atoms — faithful,
+since evaluation is pointwise and marks outside the formula never touch
+it; the unbounded cross-check is the stand (`ztime.py` §6). -/
+
+namespace Witness
+
+-- Non-overlapping matches: an overlapping wildcard row pulls propext in
+-- through the compiled matcher (measured; the kand/kor pitfall of ZTL.lean).
+
+/-- One-coordinate refinements: ground stays; a mark may stay or resolve. -/
+def ref1 : V → List V
+  | V.T => [V.T]
+  | V.F => [V.F]
+  | V.Z => [V.Z, V.T, V.F]
+
+/-- One-coordinate completions: a mark must resolve. -/
+def comp1 : V → List V
+  | V.T => [V.T]
+  | V.F => [V.F]
+  | V.Z => [V.T, V.F]
+
+/-- The selector over the E21 insured cell:
+`φ = (a ∧ (¬¬p ∨ (q ∨ ¬q))) ∨ (¬a ∧ p)`, evaluated directly. -/
+def eval3 (a p q : V) : V :=
+  zor (zand a (zor (znot (znot p)) (zor q (znot q))))
+      (zand (znot a) p)
+
+/-- Hereditary, bounded to the atom triple (Bool level — the
+ZClone pattern: no tactic-built instances, no propext). -/
+def hered3 (a p q : V) : Bool :=
+  (ref1 a).all fun a' => (ref1 p).all fun p' => (ref1 q).all fun q' =>
+    eval3 a' p' q' == eval3 a p q
+
+/-- Sound, bounded to the atom triple. -/
+def sound3 (a p q : V) : Bool :=
+  (comp1 a).all fun a' => (comp1 p).all fun p' => (comp1 q).all fun q' =>
+    eval3 a' p' q' == eval3 a p q
+
+/-- **The strict ladder, rung by rung — and the entry into sound.**
+All marked: neither sound nor hereditary (U). Tick `a:=T`: sound but
+not hereditary — sound-only is ENTERED, the birth-grade conjecture
+falls. Tick `p:=T`: hereditary (H). -/
+theorem strict_ladder :
+    (sound3 V.Z V.Z V.Z = false ∧ hered3 V.Z V.Z V.Z = false)
+  ∧ (sound3 V.T V.Z V.Z = true  ∧ hered3 V.T V.Z V.Z = false)
+  ∧ hered3 V.T V.T V.Z = true := by decide
+
+end Witness
+
 /-! ## Axiom audit — every line must print "does not depend on any axioms" -/
 
 #print axioms refines_trans
@@ -200,5 +256,6 @@ theorem hereditary_sound {φ : Fm} {m : Marking}
 #print axioms evalF_congr
 #print axioms grounded_hereditary
 #print axioms hereditary_sound
+#print axioms Witness.strict_ladder
 
 end ZTime

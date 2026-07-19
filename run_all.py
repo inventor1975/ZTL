@@ -82,6 +82,11 @@ STANDS = [
                         "SINGLET REACHED (round 3)",
                         "the singlet line",
                         "violations 0"]),
+    ("dilemmas/quantum_ladder.py",
+                       ["0 of 512",
+                        "0 of 64",
+                        "Sasaki MP a∧(a→s b) ≤ b: True (216/216 triples)",
+                        "iron at every rung"]),
 ]
 
 

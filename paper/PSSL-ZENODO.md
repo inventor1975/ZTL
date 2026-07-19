@@ -1,16 +1,17 @@
-# Zenodo upload sheet — PSSL v1.1.0 (PREPARED, DRYING; the curator publishes)
+# Zenodo upload sheet — PSSL v1.0.0 (PREPARED, DRYING; the curator publishes)
 
 **This file only prepares the manual upload. Claude never publishes.**
-Source: `paper/PSSL_EN_v1_1_0.tex` → **`paper/PSSL_EN_v1_1_0.pdf` (7 pages, BUILT
-2026-07-19, pdflatex)** = the file to upload. (v1.0.0 kept in-repo, never published.) RU reading copy: `paper/PSSL-RU.md`.
+Source: `paper/PSSL_EN_v1_0_0.tex` → **`paper/PSSL_EN_v1_0_0.pdf` (7 pages, BUILT
+2026-07-19, pdflatex)** = the file to upload. (PSSL was never published — the
+first public version is 1.0.0; internal iterations consume no number.) RU reading copy: `paper/PSSL-RU.md`.
 Verifiable anchor: `lean/ZTL.lean` + `lean/QuantumWitness.lean` +
 `lean/Contextuality.lean` + `lean/JunctionWitness.lean` (all empty axiom list,
 measured 2026-07-18/19).
 
-**Upload flow:** new Zenodo record → upload `paper/PSSL_EN_v1_1_0.pdf` → paste the
+**Upload flow:** new Zenodo record → upload `paper/PSSL_EN_v1_0_0.pdf` → paste the
 block below → Publish → paste the version DOI back here.
 
-**File to upload:** `paper/PSSL_EN_v1_1_0.pdf` (7 pages)
+**File to upload:** `paper/PSSL_EN_v1_0_0.pdf` (7 pages)
 
 ---
 
@@ -23,7 +24,7 @@ universal diagonal — a synthesis with four machine-checked components.
 
 **Authors:** Reznik, Vitaly
 
-**Version:** 1.1.0
+**Version:** 1.0.0
 
 **License:** Creative Commons Attribution 4.0 International (CC BY 4.0)
 
@@ -47,7 +48,7 @@ every law at the price of the raw liar) rather than fusing.
 
 The formal components are machine-checked on the EMPTY axiom list,
 verifiable from zero with a bare Lean 4 (no mathlib, no imports): the
-mirror between ZTL and quantum logic, and (new in 1.1) the combinatorial
+mirror between ZTL and quantum logic, the combinatorial
 core of quantum contextuality — the Mermin-Peres magic square admits no
 bivalent valuation (0 of 512) and GHZ none (0 of 64), by kernel
 enumeration. On two quanta the mirror sharpens: at the singlet, pair

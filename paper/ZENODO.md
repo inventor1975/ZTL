@@ -1,14 +1,14 @@
-# Zenodo upload sheet — ZTL v1.2 (READY; the curator releases at his moment)
+# Zenodo upload sheet — ZTL v1.2 (PUBLISHED 2026-07-19)
 
-**v1.1 PUBLISHED 2026-07-12: DOI 10.5281/zenodo.21323552; v1.0:
+**v1.2 PUBLISHED 2026-07-19: version DOI 10.5281/zenodo.21440066.**
+Prior: v1.1 10.5281/zenodo.21323552 (2026-07-12); v1.0
 10.5281/zenodo.21318982; concept DOI 10.5281/zenodo.21318981 resolves
-to the latest version.**
+to the latest version (now v1.2).
 
-**v1.2 flow: open the existing record → "New version" → upload
-`paper/ZTL-preprint-v1.2.pdf` (24 pages) → set Version: 1.2 → replace
-the description with the block below → Publish. Then paste the new
-version DOI back for embedding. (The public sequence is 1.0 → 1.1 → 1.2:
-an unreleased internal assembly consumes no number.)**
+**DONE — v1.2 is live at https://zenodo.org/records/21440066 (version
+DOI 10.5281/zenodo.21440066), the temporal-layer preprint. The block
+below is retained as the record of what was uploaded. The public
+sequence stayed clean: 1.0 → 1.1 → 1.2.**
 
 Everything below is copy-paste material for the manual Zenodo upload
 (the curator publishes; this file only prepares).

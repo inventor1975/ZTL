@@ -667,7 +667,7 @@ returns "does not depend on any axioms": no Classical.choice, no
 Quot.sound, not even propext; pure computation. This is the strictest
 possible tier — rare for a substantial logical system.
 
-**The temporal modules** (v1.3): `ZTime.lean` — the verification tree,
+**The temporal modules** (v1.2): `ZTime.lean` — the verification tree,
 with absorption, arrow and ladder-inclusion proven structurally for
 every formula and marking; `EpochBoundary.lean` — the epoch boundary
 theorem and the separation witness (§§21–22). Both self-contained,
@@ -1638,11 +1638,11 @@ Claude Opus 4.8 — the original corpus (v1.0) and the 2026-07-14/15
 additions (the three-laws capstone §3.1, the Finn attribution and
 reconciliation in §3.8, the paradox-engine synthesis opening §11, the
 Łukasiewicz pedigree and the genetic order in §4); Claude Fable 5 —
-the v1.1 same-day correction, the v1.2 assembly (the census of
+the v1.1 same-day correction and the v1.2 assembly (the census of
 sixteen and its Lean clone equalities, the fence-depth theorem, the
-warranty ladder at scale, the naming of the lift), and the v1.3
-temporal layer (§§21–23 with `ZTime.lean` and `EpochBoundary.lean`,
-the expiry and derivation stands, and this PDF build). All design
+warranty ladder at scale, the naming of the lift, the temporal layer
+§§21–23 with `ZTime.lean` and `EpochBoundary.lean`, the expiry and
+derivation stands, and this PDF build). All design
 decisions, fork choices, hypotheses, and the final responsibility for
 the content rest with the human author. In accordance with COPE/ICMJE
 recommendations, the AI system is not listed as an author. The

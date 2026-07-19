@@ -1,19 +1,19 @@
-# Zenodo upload sheet — ZTL v1.3 (READY; the curator releases at his moment)
+# Zenodo upload sheet — ZTL v1.2 (READY; the curator releases at his moment)
 
 **v1.1 PUBLISHED 2026-07-12: DOI 10.5281/zenodo.21323552; v1.0:
 10.5281/zenodo.21318982; concept DOI 10.5281/zenodo.21318981 resolves
 to the latest version.**
 
-**v1.3 flow: open the existing record → "New version" → upload
-`paper/ZTL-preprint-v1.3.pdf` (24 pages) → set Version: 1.3 → replace
+**v1.2 flow: open the existing record → "New version" → upload
+`paper/ZTL-preprint-v1.2.pdf` (24 pages) → set Version: 1.2 → replace
 the description with the block below → Publish. Then paste the new
-version DOI back for embedding. (v1.2 was assembled 2026-07-16 but never
-released — v1.3 supersedes it; no version proliferation.)**
+version DOI back for embedding. (The public sequence is 1.0 → 1.1 → 1.2:
+an unreleased internal assembly consumes no number.)**
 
 Everything below is copy-paste material for the manual Zenodo upload
 (the curator publishes; this file only prepares).
 
-**File to upload:** `paper/ZTL-preprint-v1.3.pdf` (24 pages)
+**File to upload:** `paper/ZTL-preprint-v1.2.pdf` (24 pages)
 
 ---
 
@@ -23,7 +23,7 @@ Everything below is copy-paste material for the manual Zenodo upload
 
 **Authors:** Reznik, Vitaly
 
-**Version:** 1.3
+**Version:** 1.2
 
 **License:** Creative Commons Attribution 4.0 International (CC BY 4.0)
 
@@ -73,7 +73,7 @@ principle, an implicational floor outside the Rosser–Turquette
 standardness conditions, the calculus, the machine verification, and
 the bridges to the engineering traditions.
 
-What is new in v1.3: the TEMPORAL LAYER. ZTL's only clock is the
+What is new in v1.2 — first, the TEMPORAL LAYER. ZTL's only clock is the
 arrival of ground: one tick = one verification. The warranty ladder is
 read as a system of temporal quantifiers — until-verification = true
 now, sound = true at every ending, hereditary = true always along every
@@ -102,7 +102,7 @@ priced borrowing with a named creditor. New sections 21-23; the
 ZFL language gains a verification timeline played into chronicles;
 regression now 40 stands + Lean.
 
-What was new in v1.2 (folded into this release): the central construction is named — the
+Also new in v1.2: the central construction is named — the
 zero-trust lift (§2), with its disambiguation from the strict (Kleene)
 lift; §3.8, an explicit Lean-verified census of the sixteen lifted binary
 connectives that re-derives Finn's completeness landscape for the

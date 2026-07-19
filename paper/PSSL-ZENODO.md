@@ -66,7 +66,12 @@ excluded middle, double negation, and identity p→p (they fall at the mark);
 quantum logic (witnessed on MO2, the smallest non-distributive ortholattice)
 keeps excluded middle and double negation and loses distributivity; both keep
 non-contradiction. ZTL breaks where a thing equals itself; quantum breaks where
-things combine.
+things combine. The mirror is shown to be an analogy, not a lattice duality:
+the obstruction is the involution asymmetry (ZTL's negation is not involutive,
+double negation being one of the laws it drops), which is also what locates
+ZTL as the paracomplete relative that breaks the involution its Lukasiewicz
+ancestor and its quantum cousin both keep (the known bridge from orthomodular
+to many-valued logic runs through Lukasiewicz, Pykacz 2010).
 
 Honest scope. This is a synthesis and a reading, not a theorem, a merger, a new
 foundation, or a new field. Its components are established (Lawvere 1969;

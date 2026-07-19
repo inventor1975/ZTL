@@ -73,5 +73,22 @@
     }
    ]
   }
+ ],
+ "rejected_events": [
+  {
+   "epoch_id": 1,
+   "event_type": "verify",
+   "atom": "fresh := T",
+   "source_reference": null,
+   "decision": "REJECT_EVENT",
+   "reason_code": "E_UNGROUNDED_VERIFICATION",
+   "reason": "a verification tick without a source_reference; the closed-world assumption (no proof of revocation, hence not revoked) is not admissible as ground",
+   "state_unchanged": true,
+   "state_after": {
+    "epistemic_status": "Z",
+    "decision": "DENY_EXECUTION",
+    "warrant": "until-verification"
+   }
+  }
  ]
 }

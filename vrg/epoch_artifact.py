@@ -22,8 +22,18 @@ Agreed with A. (Veraxis) 2026-07-18/19; implements the reviewed spec verbatim:
   * every event carries source_reference; an event WITHOUT a source is an
     UNGROUNDED VERIFICATION EVENT and is REJECTED — the closed-world loan
     ("no proof of revocation, hence not revoked") cannot enter as a tick;
-    the core itself refuses the argument from absence (¬R at R=Z gives
-    F/until-verification, never T).
+    the core itself refuses the argument from absence. The check is stated
+    on the atom it is ABOUT: with R = `revoked` unverified (R = Z), the
+    proposition ¬R ("not revoked") evaluates F/until-verification — never
+    T. (`fresh` is NOT that atom: it already MEANS "not revoked", the
+    opposite polarity; the earlier draft computed ¬fresh under the ¬revoked
+    label — corrected on review, A., 2026-07-19.)
+  * rejected events are part of the FROZEN RECORD, not merely printed:
+    the JSON carries `rejected_events` with source_reference: null,
+    decision: "REJECT_EVENT", a stable `reason_code`
+    (E_UNGROUNDED_VERIFICATION), `state_unchanged: true` and the untouched
+    three-coordinate cell nested under `state_after` (so the event's own
+    disposition is never shadowed by the state's decision).
 
 Scenario = the two reviewed formulations:
   F1  admission = power ∧ confirmed ∧ jurisdiction ∧ fresh (iff; power alone
@@ -72,6 +82,7 @@ class Ledger:
         self.epoch = 0
         self.marking = {a: "M" for a in ATOMS}
         self.rows = []
+        self.rejected = []          # ungrounded events, kept in the ledger
 
     def _row(self, event_type, atom, source, composed=None):
         r = {"epoch_id": self.epoch, "event_type": event_type, "atom": atom,
@@ -83,6 +94,22 @@ class Ledger:
 
     def verify(self, atom, value, source):
         if not source:
+            # An ungrounded verification event: recorded, never applied.
+            # The state is left untouched; the ledger keeps the attempt so
+            # that the refusal is auditable, not merely printed.
+            self.rejected.append(
+                {"epoch_id": self.epoch, "event_type": "verify",
+                 "atom": f"{atom} := {value}", "source_reference": None,
+                 "decision": "REJECT_EVENT",
+                 "reason_code": "E_UNGROUNDED_VERIFICATION",
+                 "reason": "a verification tick without a source_reference; "
+                           "the closed-world assumption (no proof of "
+                           "revocation, hence not revoked) is not admissible "
+                           "as ground",
+                 "state_unchanged": True,
+                 # the state cell is nested, so the event's own disposition
+                 # (REJECT_EVENT) is never shadowed by the state's decision
+                 "state_after": cell(self.marking)})
             raise UngroundedVerificationEvent(
                 f"verify({atom}:={value}) carries no source_reference — "
                 "the closed-world loan is not admissible as a tick")
@@ -170,9 +197,14 @@ if __name__ == "__main__":
         raise AssertionError("an ungrounded tick was accepted")
     except UngroundedVerificationEvent as e:
         print(f"    REJECTED: {e}")
-    nr = ztl_eval(("not", "fresh"), {"fresh": "M"})
-    print(f"    and inside the core: 'not revoked' at R=Z evaluates "
-          f"{nr}/{grade(('not', 'fresh'), {'fresh': 'M'})} — the argument")
+    # The CWA loan is about the atom `revoked` itself (R), NOT about
+    # `fresh` (which already MEANS "not revoked" — the opposite polarity).
+    # With R unverified, the core is asked whether "not revoked" holds.
+    R_UNKNOWN = {"revoked": "M"}
+    NOT_R = ("not", "revoked")
+    nr, nrg = ztl_eval(NOT_R, R_UNKNOWN), grade(NOT_R, R_UNKNOWN)
+    print(f"    and inside the core: '\u00acrevoked' at revoked=Z evaluates "
+          f"{nr}/{nrg} — the argument")
     print("    from absence never yields T; absence of proof of revocation")
     print("    is not proof of absence.")
 
@@ -205,7 +237,8 @@ if __name__ == "__main__":
                          "revoke open a new one",
            "t0_epoch0": L.rows,
            "t1_branch_A_evidence_expire": A.rows,
-           "t1_branch_B_revoke": B.rows}
+           "t1_branch_B_revoke": B.rows,
+           "rejected_events": L.rejected + A.rejected + B.rejected}
     path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                         "epoch_artifact.json")
     with open(path, "w") as f:

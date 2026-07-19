@@ -24,8 +24,8 @@ with two machine-checked poles}
 \author{Vitaly Reznik}
 \date{2026 --- Version 1.1.0\\[2pt]
 \small Lean 4 witnesses: \texttt{github.com/inventor1975/ZTL}
-(\texttt{lean/ZTL.lean}, \texttt{lean/QuantumWitness.lean}, \texttt{lean/Contextuality.lean})\\
-\small Verify from zero: \S\ref{sec:mirror} --- three files, three commands, no dependencies}
+(\texttt{lean/ZTL.lean}, \texttt{lean/QuantumWitness.lean}, \texttt{lean/Contextuality.lean}, \texttt{lean/JunctionWitness.lean})\\
+\small Verify from zero: \S\ref{sec:mirror} --- four files, four commands, no dependencies}
 
 \begin{document}
 \maketitle
@@ -42,8 +42,8 @@ with its associated reductio (a retained \emph{principle}), and the diagonal
 itself (a retained \emph{obstruction}). We isolate the parts of this
 picture that are formal rather than expository --- the complementary sacrifice
 made by ZTL and by orthomodular quantum logic, and the combinatorial core of
-quantum contextuality (Mermin--Peres, GHZ) --- and record them as three
-machine-checked components in Lean~4 on the \emph{empty axiom list} (no
+quantum contextuality (Mermin--Peres, GHZ) and the junction theorem of
+composition --- and record them as four machine-checked components in Lean~4 on the \emph{empty axiom list} (no
 classical choice, no quotient, no propositional extensionality). A closing
 section, explicitly marked as a reading, draws the consequence of the
 contextuality witness: the quantum ``corner'' pays its laws only in the
@@ -265,7 +265,14 @@ $a$ true or $b$ true --- a law the ZTL matrix keeps as a theorem
 (\texttt{cover\_or\_T}). Lattice expressibility, by contrast, does NOT
 fall: the singlet line is reachable from local propositions by meet and join
 (measured in the repository stand \texttt{dilemmas/quantum\_pair.py}); what
-is not compositional is the truth VALUE, not the lattice. The falls saturate
+is not compositional is the truth VALUE, not the lattice. The seam itself is
+kernel-checked (\texttt{lean/JunctionWitness.lean}, empty axiom list, exact
+integer arithmetic): the \emph{junction theorem} --- the singlet lies in the
+join of the two product atoms yet in neither atom and in no local plane of
+either factor. Plugging two quantum logics together makes the COVER face of
+the disjunction (one face of the trio ZTL surrenders) fall for quantum at the
+seam of composition, in correlation form --- entanglement as a lattice fact;
+the LEM identity $x \vee x^{\perp} = 1$ itself stays intact at every size. The falls saturate
 along the ladder (repository stand \texttt{dilemmas/quantum\_ladder.py}):
 one quantum costs distributivity (and modus ponens for the material arrow;
 the Sasaki arrow keeps both identity and modus ponens), two quanta cost the
@@ -297,6 +304,7 @@ between superposition and ZTL's mark.
 $ lean lean/ZTL.lean             # 13 objects, no axioms,  ~1.1 s
 $ lean lean/QuantumWitness.lean  #  5 objects, no axioms,  ~0.5 s
 $ lean lean/Contextuality.lean   #  3 objects, no axioms,  ~0.4 s
+$ lean lean/JunctionWitness.lean #  8 objects, no axioms,  ~0.2 s
 \end{verbatim}
 
 Every \texttt{\#print axioms} line reports \emph{``does not depend on any
@@ -357,7 +365,7 @@ The universe is not a fifth corner. It is what the corners are about.
  & \textbf{Content} & \textbf{Status} \\
 \hline
 Established & Lawvere's fixed-point theorem and the diagonal unification (Lawvere~\cite{lawvere}; Yanofsky~\cite{yanofsky}); quantum logic and non-distributivity (Birkhoff--von Neumann~\cite{bvn}); contextuality (Kochen--Specker~\cite{ks}; Mermin~\cite{mermin}; Peres~\cite{peres}); intuitionism, the universe hierarchy, Girard's paradox (Martin-L\"of~\cite{ml}; Coquand~\cite{coquand}; Hurkens~\cite{hurkens}); universal logic as a field (B\'eziau~\cite{beziau}) & literature \\
-Author's & ZTL, the zero-trust paracomplete logic~\cite{ztl}; the arrangement of the four as resolutions of one diagonal; the three Lean witnesses on the empty axiom list (the two poles + the contextuality core); the measured ladder of falls and its saturation & synthesis + machine-checked \\
+Author's & ZTL, the zero-trust paracomplete logic~\cite{ztl}; the arrangement of the four as resolutions of one diagonal; the four Lean witnesses on the empty axiom list (the two poles, the contextuality core, the junction theorem); the measured ladder of falls and its saturation & synthesis + machine-checked \\
 Analogy (no proof) & the ``cycle / orbit / centre''; ``the floor guards the ceiling''; ``each logic pays one principle so none pays the whole diagonal''; \S\ref{sec:world} entire --- ``the world is not a corner; the paradox is a disease of descriptions'' & structural metaphor, marked \\
 \hline
 \end{tabular}

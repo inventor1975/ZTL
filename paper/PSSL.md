@@ -4,6 +4,8 @@
 
 **Vitaly Reznik**
 
+> *Paradox and Truth — the progenitors of Logic!*
+
 *(v1.1 note: the publication text is `PSSL_EN_v1_1_0.tex` — it adds
 Proposition C (the contextuality core, `lean/Contextuality.lean`: Mermin–Peres
 0/512, GHZ 0/64, empty axiom list), the pair extension of the mirror

@@ -4,6 +4,12 @@
 
 **Vitaly Reznik**
 
+*(v1.1 note: the publication text is `PSSL_EN_v1_1_0.tex` — it adds
+Proposition C (the contextuality core, `lean/Contextuality.lean`: Mermin–Peres
+0/512, GHZ 0/64, empty axiom list), the pair extension of the mirror
+(the covering law falls in correlation form; the ladder of falls saturates),
+and §7 "The world is not a corner (a reading)". This markdown mirrors v1.0.)*
+
 ---
 
 **Abstract.** We propose a reading of four non-classical logics — classical, intuitionistic / type-theoretic, quantum (orthomodular), and Zero-Trust Logic (ZTL) — as four disciplined responses to a single self-referential construction: the universal diagonal underlying the liar, Russell, Cantor, Gödel and Tarski (Lawvere 1969; Yanofsky 2003). Each retains all classical structural principles *save one*, and each thereby houses the diagonal differently. Two features are invariant across all four: non-contradiction with its associated reductio (a retained *principle*), and the diagonal itself (a retained *obstruction*). We isolate the one part of this picture that is formal rather than expository — the complementary sacrifice made by ZTL and by orthomodular quantum logic — and record it as two propositions machine-checked in Lean 4 on the *empty axiom list* (no classical choice, no quotient, no propositional extensionality). We are explicit throughout about what is established (all four logics; the Lawvere–Yanofsky unification), what is the author's (ZTL; the arrangement; the two witnesses), and what is analogy carrying no proof (the "cycle" itself). This is a synthesis and a reading, not a theorem, a merger, a new foundation, or a new field.

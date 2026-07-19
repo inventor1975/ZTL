@@ -1,0 +1,77 @@
+{
+ "artifact": "IC worked example on the ZTL core",
+ "admission_formula": "and(power, and(confirmed, and(jurisdiction, fresh)))",
+ "epoch_rule": "verify keeps the epoch; evidence_expire and revoke open a new one",
+ "t0_epoch0": [
+  {
+   "epoch_id": 0,
+   "event_type": "verify",
+   "atom": "power := T",
+   "source_reference": "mandate-registry:2026-07-19:rec-4411",
+   "epistemic_status": "Z",
+   "decision": "DENY_EXECUTION",
+   "warrant": "until-verification"
+  },
+  {
+   "epoch_id": 0,
+   "event_type": "verify",
+   "atom": "confirmed := T",
+   "source_reference": "source-attestation:notary:file-88K",
+   "epistemic_status": "Z",
+   "decision": "DENY_EXECUTION",
+   "warrant": "until-verification"
+  },
+  {
+   "epoch_id": 0,
+   "event_type": "verify",
+   "atom": "jurisdiction := T",
+   "source_reference": "legal-desk:jurisdiction-memo-17",
+   "epistemic_status": "Z",
+   "decision": "DENY_EXECUTION",
+   "warrant": "until-verification"
+  },
+  {
+   "epoch_id": 0,
+   "event_type": "verify",
+   "atom": "fresh := T",
+   "source_reference": "revocation-registry:negative-clearance-901",
+   "epistemic_status": "T",
+   "decision": "ALLOW_EXECUTION",
+   "warrant": "hereditary"
+  }
+ ],
+ "t1_branch_A_evidence_expire": [
+  {
+   "epoch_id": 1,
+   "event_type": "evidence_expire",
+   "atom": "fresh -> Z",
+   "source_reference": "clearance-901:validity-window-elapsed",
+   "epistemic_status": "Z",
+   "decision": "DENY_EXECUTION",
+   "warrant": "until-verification"
+  }
+ ],
+ "t1_branch_B_revoke": [
+  {
+   "epoch_id": 1,
+   "event_type": "revoke",
+   "atom": "fresh := F",
+   "source_reference": null,
+   "epistemic_status": "F",
+   "decision": "DENY_EXECUTION",
+   "warrant": "hereditary",
+   "composed_of": [
+    {
+     "component": "evidence_expire",
+     "atom": "fresh -> Z",
+     "source_reference": "revocation-notice:authority:2026-1907"
+    },
+    {
+     "component": "verify",
+     "atom": "fresh := F",
+     "source_reference": "revocation-notice:authority:2026-1907"
+    }
+   ]
+  }
+ ]
+}

@@ -58,10 +58,10 @@ paradoxes (the liar, Jourdain's carousel, Curry, Yablo, the crocodile,
 Russell) receive a uniform diagnosis: pointwise quarantine instead of
 explosion.
 
-The entire development — twelve Lean 4 modules — is machine-checked with
+The entire development — fourteen Lean 4 modules — is machine-checked with
 an EMPTY axiom list (no classical choice, no quotients, not even
 propositional extensionality; definitions included). Every numerical
-claim is reproducible by the repository's regression (33 test stands);
+claim is reproducible by the repository's regression (40 test stands);
 an interactive studio (natural language → the ZFL formal language →
 the measured core) ships with the repository.
 
@@ -158,7 +158,7 @@ unverified data; SQL NULL; IEEE NaN; taint tracking; abstract
 interpretation; imprecise probabilities; provenance semirings;
 supervaluation; Kripke fixed points; theory of truth; paradoxes;
 Russell's paradox; algebraizable logics; Blok–Pigozzi; signed tableaux;
-cut admissibility; Craig interpolation; functional completeness; Sheffer stroke; clones; Lean 4; machine-checked proofs
+cut admissibility; Craig interpolation; functional completeness; Sheffer stroke; clones; temporal logic; runtime verification; warranty; epoch boundary; institutional computation; Lean 4; machine-checked proofs
 
 **Related/alternate identifiers:**
 - https://github.com/inventor1975/ZTL — isSupplementedBy (the code,
@@ -166,6 +166,6 @@ cut admissibility; Craig interpolation; functional completeness; Sheffer stroke;
 
 **Additional notes (paste into "Additional notes"):**
 The preprint text is CC BY 4.0; the accompanying repository code is
-MIT-licensed. The Lean corpus (12 modules) verifies with an empty
-axiom list; run `python3 run_all.py` for the full regression
-(33 stands + Lean build).
+MIT-licensed. The ZTL Lean corpus (fourteen modules) verifies with an
+empty axiom list; run `python3 run_all.py` for the full repository
+regression (40 stands + Lean build).

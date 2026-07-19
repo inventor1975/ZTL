@@ -1,18 +1,19 @@
-# Zenodo upload sheet — ZTL v1.2 (READY; release when the Zulip thread answers, per the curator)
+# Zenodo upload sheet — ZTL v1.3 (READY; the curator releases at his moment)
 
 **v1.1 PUBLISHED 2026-07-12: DOI 10.5281/zenodo.21323552; v1.0:
 10.5281/zenodo.21318982; concept DOI 10.5281/zenodo.21318981 resolves
 to the latest version.**
 
-**v1.2 flow: open the existing record → "New version" → upload
-`paper/ZTL-preprint-v1.2.pdf` (21 pages) → set Version: 1.2 → replace
+**v1.3 flow: open the existing record → "New version" → upload
+`paper/ZTL-preprint-v1.3.pdf` (24 pages) → set Version: 1.3 → replace
 the description with the block below → Publish. Then paste the new
-version DOI back for embedding.**
+version DOI back for embedding. (v1.2 was assembled 2026-07-16 but never
+released — v1.3 supersedes it; no version proliferation.)**
 
 Everything below is copy-paste material for the manual Zenodo upload
 (the curator publishes; this file only prepares).
 
-**File to upload:** `paper/ZTL-preprint-v1.2.pdf` (21 pages)
+**File to upload:** `paper/ZTL-preprint-v1.3.pdf` (24 pages)
 
 ---
 
@@ -22,7 +23,7 @@ Everything below is copy-paste material for the manual Zenodo upload
 
 **Authors:** Reznik, Vitaly
 
-**Version:** 1.2
+**Version:** 1.3
 
 **License:** Creative Commons Attribution 4.0 International (CC BY 4.0)
 
@@ -72,7 +73,36 @@ principle, an implicational floor outside the Rosser–Turquette
 standardness conditions, the calculus, the machine verification, and
 the bridges to the engineering traditions.
 
-What is new in v1.2: the central construction is named — the
+What is new in v1.3: the TEMPORAL LAYER. ZTL's only clock is the
+arrival of ground: one tick = one verification. The warranty ladder is
+read as a system of temporal quantifiers — until-verification = true
+now, sound = true at every ending, hereditary = true always along every
+path — with the absorption and arrow theorems machine-checked
+structurally (ZTime.lean, empty axiom list; every completed
+verification path ends hereditary). An expiry event returns earned
+ground to the mark and splits time into epochs — the knowledge
+chronology (learning about the same world) versus the validity
+chronology (the world changing) — and the EPOCH BOUNDARY THEOREM
+(EpochBoundary.lean, empty axiom list, structural for every formula of
+the language) states: a verdict invariant across unrestricted epoch
+crossing is constant — it reads none of its grounds; non-trivial
+guarantees require the boundary, which is thereby a logical necessity,
+not an administrative convenience. The layer is priced for use: early
+settlement (once hereditary, remaining checks buy nothing),
+expiry-insurance (a shortcut's savings are a loan against its
+expirable ground), the ungrounded verification event (the closed-world
+loan "no proof of revocation, hence not revoked" cannot enter the
+logic — an argument from absence never yields T — and is exposed in
+the event ledger). And a price list of DERIVATIONS: forward chaining
+over the 12 alive rules shows they are transport, not creation — from
+the empty premise set nothing is derivable even with the fallen rules
+as loans, ZTL's own guarded tautologies included; the classical
+step invisible from inside (double-negation elimination) becomes a
+priced borrowing with a named creditor. New sections 21-23; the
+ZFL language gains a verification timeline played into chronicles;
+regression now 40 stands + Lean.
+
+What was new in v1.2 (folded into this release): the central construction is named — the
 zero-trust lift (§2), with its disambiguation from the strict (Kleene)
 lift; §3.8, an explicit Lean-verified census of the sixteen lifted binary
 connectives that re-derives Finn's completeness landscape for the

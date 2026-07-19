@@ -4,7 +4,8 @@
 Source: `paper/PSSL_EN_v1_1_0.tex` → **`paper/PSSL_EN_v1_1_0.pdf` (7 pages, BUILT
 2026-07-19, pdflatex)** = the file to upload. (v1.0.0 kept in-repo, never published.) RU reading copy: `paper/PSSL-RU.md`.
 Verifiable anchor: `lean/ZTL.lean` + `lean/QuantumWitness.lean` +
-`lean/Contextuality.lean` (all empty axiom list, measured 2026-07-18/19).
+`lean/Contextuality.lean` + `lean/JunctionWitness.lean` (all empty axiom list,
+measured 2026-07-18/19).
 
 **Upload flow:** new Zenodo record → upload `paper/PSSL_EN_v1_1_0.pdf` → paste the
 block below → Publish → paste the version DOI back here.
@@ -18,7 +19,7 @@ block below → Publish → paste the version DOI back here.
 **Title:** A Paradoxical, Self-Referential System of Logics (PSSL)
 
 **Subtitle / in-text:** Four non-classical logics as resolutions of one
-universal diagonal — a synthesis with three machine-checked components.
+universal diagonal — a synthesis with four machine-checked components.
 
 **Authors:** Reznik, Vitaly
 
@@ -51,7 +52,10 @@ core of quantum contextuality — the Mermin-Peres magic square admits no
 bivalent valuation (0 of 512) and GHZ none (0 of 64), by kernel
 enumeration. On two quanta the mirror sharpens: at the singlet, pair
 propositions are true while every local proposition is unverified — the
-covering law falls in correlation form; the falls saturate along the
+covering law falls in correlation form — and the seam itself is
+kernel-checked (the junction theorem: the singlet lies in the join of two
+product atoms yet in neither atom and in no local plane of either factor,
+exact integer arithmetic, empty axiom list); the falls saturate along the
 ladder. A closing section, explicitly marked as a reading, draws the
 consequence: the corners are descriptions and it is descriptions that pay
 the laws; at the level of states the diagonal's premise itself fails (the
@@ -67,11 +71,11 @@ Honest scope. This is a synthesis and a reading, not a theorem, a merger, a new
 foundation, or a new field. Its components are established (Lawvere 1969;
 Birkhoff–von Neumann 1936; intuitionism; universal logic). What is the author's:
 ZTL itself (its own preprint), the curation of the four as resolutions of one
-diagonal, and the three Lean witnesses. The formal components are machine-checked;
+diagonal, and the four Lean witnesses. The formal components are machine-checked;
 the cycle between them, and the metatheoretic corners (intuitionistic
 underivability of LEM, "classical as center"), are prose, marked as such. The
 reliability of the machine-checked components does not depend on trusting the
-author or the AI: all three Lean files verify against the Lean 4 kernel on the
+author or the AI: all four Lean files verify against the Lean 4 kernel on the
 empty axiom list.
 
 AI disclosure: written in dialogue with the AI system Claude (Anthropic); all
@@ -94,4 +98,5 @@ The essay text is CC BY 4.0; the accompanying Lean files are MIT-licensed.
 Reproduce the machine-checked components from zero, no mathlib:
 `lean lean/ZTL.lean` (13 objects, "does not depend on any axioms", ~1.1 s),
 `lean lean/QuantumWitness.lean` (5 objects, ~0.5 s) and
-`lean lean/Contextuality.lean` (3 objects, ~0.4 s), Lean 4.29.1.
+`lean lean/Contextuality.lean` (3 objects, ~0.4 s) and
+`lean lean/JunctionWitness.lean` (8 objects, ~0.2 s), Lean 4.29.1.

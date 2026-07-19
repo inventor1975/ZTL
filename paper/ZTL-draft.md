@@ -667,6 +667,13 @@ returns "does not depend on any axioms": no Classical.choice, no
 Quot.sound, not even propext; pure computation. This is the strictest
 possible tier — rare for a substantial logical system.
 
+**The temporal modules** (v1.3): `ZTime.lean` — the verification tree,
+with absorption, arrow and ladder-inclusion proven structurally for
+every formula and marking; `EpochBoundary.lean` — the epoch boundary
+theorem and the separation witness (§§21–22). Both self-contained,
+both on the empty axiom list, both verifiable from zero by a bare
+`lean` call.
+
 **Part II** (same file): the entailment rule battery (11 alive + 2
 fallen, including the split contraposition-rule vs contraposition-law),
 no-gluts, the lazy Kleene register with proven monotonicity of all
@@ -1080,10 +1087,10 @@ a growing pedigree (f(m) is a new mark "f applied to m"). Measured:
   |f({1,2,3,Z})| ∈ [2,3].
 * **Composition:** taint is transitive (pedigree g(f(m))); the image is
   associative at representation level while verdict-equality is F
-  (regularity R1, §21).
+  (regularity R1, §24).
 * **The preimage splits** into a verdict version (marks dropped —
   default deny) and a solver version (marks as candidates) —
-  regularity R2 (§21).
+  regularity R2 (§24).
 * **The pearl: even the identity function is not certifiably injective
   on a marked domain** — pairs with a mark give Z-atoms, the
   implication Z→Z = F, the ∀-fold collapses. An injectivity certificate
@@ -1120,7 +1127,7 @@ forced under all readings; F if falsehood is forced; else Z**. Measured:
   the monotonicity of the lazy register, now in numbers.
 * **Price-list inheritance:** commutativity of addition survives at the
   interval level, verdict-equality is Z→F; the unit x+0=x falls
-  verdict-wise with coinciding intervals (regularity R1, §21).
+  verdict-wise with coinciding intervals (regularity R1, §24).
 
 **The fourth twin: abstract interpretation** (Cousot & Cousot, 1977) —
 interval value analysis (lazy flow of abstract values through
@@ -1334,7 +1341,158 @@ intersection**. Measured:
 The twin count: **six** — NaN, NULL, taint/IFC, abstract
 interpretation, imprecise probabilities, semiring provenance.
 
-## 21. Cross-cutting regularities
+## 21. Logical time: verification is the only clock (MEASURED + Lean)
+
+ZTL owns no physical clock, and §7 keeps it honest: duration, tense and
+"how long" are outside the system's axis. Yet one clock was inside the
+calculus all along, unnamed. The verification operation of §19 is a
+tick: one act `verify` resolves one mark into an earned classical
+value. A moment is a marking; the past is the verified prefix; the
+future is a tree — every remaining mark can resolve either way, so
+time branches, and "everyone's time differs" is just the choice of a
+path through one tree.
+
+**The ladder is a temporal logic.** The central identification costs
+nothing and buys the whole layer: the warranty ladder of §19, read on
+the verification tree, is a system of temporal quantifiers —
+
+* *until-verification* — true **now** (the present tense of a verdict;
+  credit);
+* *sound* — true **at every ending** (all completed traces agree; the
+  road may wobble);
+* *hereditary* — true **always along every path** (the invariant of
+  the tree; never revoked).
+
+The modal layer of §17 is the statics of this structure (worlds =
+completions); the temporal layer is its dynamics — the paths through
+the partial refinements between here and the endings.
+
+**Measured** (`ztime.py`; the grade automaton over the exhaustive
+depth-≤2 pool, 2,906 formulas, 29,812 ticks): the hereditary states
+absorb — not one tick leaves them (0 violations); no compound formula
+is ever caught waiting (greediness in temporal costume); ground can
+arrive all at once (14,818 direct U→H jumps) and credit can worsen
+before it settles (108 S→U demotions); every completed trace ends
+hereditary — the arrow of logical time points at the shelf (130 of
+130); and settlement can come early — 68 of 130 traces reach a
+hereditary verdict with marks still unresolved (after `p:=T` the
+verdict of p∨q no longer cares about q). Settling times run from 0
+(¬(p∧¬p) is born on the shelf) to every-mark (⊕ needs them all).
+
+**Lean** (`lean/ZTime.lean`, empty axiom list, structural — for every
+formula, marking and tick, not an enumeration): absorption (a
+hereditary verdict survives any tick with its grade), the arrow (a
+fully verified marking is hereditary), and the ladder inclusion
+(hereditary ⟹ sound; an ending is a refinement). The proofs are
+pointwise throughout — no function extensionality enters.
+
+**A conjecture that lived one hour** — kept, as the method demands.
+The first sweeps found no tick that ever *enters* the sound-only
+grade, and for an hour the conjecture stood: *sound is a birth grade —
+verification spends it but cannot mint it*. The proof attempt broke at
+a specific spot, and the spot folded into a counterexample: the pools
+had been shallow. The selector φ = (a ∧ X) ∨ (¬a ∧ p) with
+X = ¬¬p ∨ (q ∨ ¬q) walks F/U → (a:=T) → T/S → (p:=T) → T/H from the
+all-marked start: soundness is *earned* — by the tick that verifies
+which world you are in — and the full strict ladder U→S→H is realized
+rung by rung (`ztime.py` §§5–6, the record of the death included).
+
+**The tool.** The ZFL statement genre carries an optional `timeline`
+field (a list of verification ticks, validated with its own error
+codes); the engine plays it into a chronicle — verdict and warranty
+per tick, with settlement marked. The consumer sentence of the layer:
+once a verdict is hereditary, every remaining check buys nothing —
+stop paying (`usage/car.py`, the used-car stand: an affirmation is
+earned at the last tick; a refusal is grounded at the first failure,
+three checks saved; verifying the selector first saves two).
+
+## 22. Epochs: expiry and the boundary theorem (MEASURED + Lean)
+
+The time of §21 is monotone: ground only arrives. Institutions live in
+non-monotone time — confirmations lapse, registries are re-pledged,
+facts are authoritatively changed. The anti-tick `expire` returns an
+earned value to the mark, and with it the layer splits into two
+chronologies that must never be conflated: the *knowledge* chronology
+(verify — learning more about the same world) and the *validity*
+chronology (expire — the world becoming different). A maximal
+verify-only stretch is an **epoch**; an expiry opens a new one. A
+composite event — authoritative revocation — is deliberately a
+composition, expire + verify of the new value, so that one event
+cannot hide two institutionally different facts.
+
+**Measured** (`zexpire.py`): hereditary is a warranty against future
+*verification*, not against the *loss of ground* — a fully verified
+conjunction (T/hereditary) falls to F/until-verification on a single
+expiry; and the "checks saved" of §21's early settlement are revealed
+as a loan against the expirable ground: the settled verdict survives
+the death of its shortcut iff the saved checks were verified before
+the clock ran out — expiry-insurance, priced by the core.
+
+**The Epoch Boundary Theorem** (`lean/EpochBoundary.lean`, empty axiom
+list, structural). Call a verdict *epoch-blind* at a marking if it is
+invariant along every finite chain of verify and expire events — i.e.
+if the protocol refuses to distinguish epistemic refinement from
+validity change. Then, within this model (markings over {T, F, Z}, the
+greedy evaluation, the two event kinds):
+
+> a verdict is epoch-blind **iff** it is constant over all markings
+> whatsoever — iff the assertion reads none of its grounds.
+
+Contentful conclusions cannot survive unrestricted epoch crossing; the
+empirical census (2,906 formulas, 0 contentful survivors) is thereby
+upgraded from evidence to a theorem for every formula of the language.
+A separation witness (`epochs_matter`) completes the picture: a
+hereditary verdict destroyed by one expiry — so intra-epoch warranty
+and cross-epoch persistence are provably different notions, and the
+epoch boundary is a logical necessity, not an administrative
+convenience.
+
+**The institutional reading.** For an admission formula over grounding
+atoms the layer yields a three-coordinate cell — epistemic status
+(the global supervaluation of §17: Z is *not established* and is never
+conflated with falsity), operational decision (the greedy verdict:
+default deny), and warranty grade — and an event ledger in which every
+verification tick carries its source. The closed-world loan — "no
+proof of revocation, hence not revoked" — cannot be taken inside the
+logic at all: ¬R at R = Z evaluates F/until-verification, an argument
+from absence never yields T. It can enter only as a tick without a
+source, which the ledger exposes as an *ungrounded verification
+event*. A worked, frozen artifact (admission condition; expiry branch;
+revocation branch; the rejected ungrounded tick) ships in the
+repository (`vrg/epoch_artifact.py`, deterministic JSON ledger).
+
+## 23. The price of derivations: transport, not creation (MEASURED)
+
+The price list of §3.1 concerns laws; it extends to *paths*. Take the
+12 alive entailment rules of §3.2 as the only links, the 2 fallen ones
+(¬¬-elimination and tautology-in-conclusion) as a loan library, and
+close premise sets under chains, bounded to a 153-formula pool over
+three atoms; every closure is cross-checked against the semantic
+entailment of §3.2 (0 violations — the chains never lie;
+`zderive.py`). Three facts emerge.
+
+**From nothing, nothing — even on credit.** The closure of the empty
+premise set is empty, with and without the loans: the battery has no
+axiom rule. And yet ZTL-tautologies *exist* — the guarded forms
+¬q → ¬q and ¬(p ⊕ p) are true under every assignment, because denial
+is classical (¬Z = F; §3.1's "a denial is free") — and the battery
+cannot mint even those. The alive rules are *transport, not creation*:
+classical logic mints truth from form; ZTL's free truths must *enter*,
+as verified premises.
+
+**The one-way street, priced.** From {p} the ladder ¬¬p is earned
+(¬¬-introduction is alive); from {¬¬p} the alive closure is {¬¬p}
+itself, and the ¬¬-elimination loan unlocks fourteen formulas — the
+first measured *on-credit derivations*, p among them. What
+classical logic cannot even see (the step is invisible inside it) is
+here a priced borrowing with a named creditor.
+
+**The gap, honestly.** The rules are incomplete for the semantic
+entailment even on the small pool ({p}: 24 entailed, 15 derivable) —
+part pool-boundedness, part missing law-rewrite links, part genuine;
+the split needs a bigger pool, not a claim.
+
+## 24. Cross-cutting regularities
 
 Three facts recurred in every applied chapter; we fix them once.
 
@@ -1356,7 +1514,7 @@ diverged prefixes); identity is earned by nothing short of full
 verification. Hence in one stroke: {Z,Z} ≠ {Z}, m−m ≠ 0, the
 non-registrability of streams (§13), and the NaN signature x ≠ x.
 
-## 22. Roadmap
+## 25. Roadmap
 
 A Lean port of the parameter (arbitrary-domain) tableaux of §6; a
 syntactic cut-elimination procedure with complexity bounds
@@ -1373,7 +1531,9 @@ m = 2,3,4,5 (`zverify` §§5–6); hence NO constant-depth
 characterization exists and what remains open is a structural,
 non-enumerative criterion);
 a practical zero-trust validation library (verdicts with warranties +
-evidence combination + provenance). The interactive studio — natural
+evidence combination + provenance); temporal operators over the
+verification tree (□/◇/until against the grade semantics of §21) once
+a concrete user forces them, and the grade automaton at scale; The interactive studio — natural
 language negotiated into ZFL and judged by the measured engines —
 already ships in the repository (`tool/`); a possible essay,
 "Reinventing Bochvar through NaN", remains on the horizon.
@@ -1478,9 +1638,11 @@ Claude Opus 4.8 — the original corpus (v1.0) and the 2026-07-14/15
 additions (the three-laws capstone §3.1, the Finn attribution and
 reconciliation in §3.8, the paradox-engine synthesis opening §11, the
 Łukasiewicz pedigree and the genetic order in §4); Claude Fable 5 —
-the v1.1 same-day correction and the v1.2 assembly (the census of
+the v1.1 same-day correction, the v1.2 assembly (the census of
 sixteen and its Lean clone equalities, the fence-depth theorem, the
-warranty ladder at scale, the naming of the lift, and this PDF build). All design
+warranty ladder at scale, the naming of the lift), and the v1.3
+temporal layer (§§21–23 with `ZTime.lean` and `EpochBoundary.lean`,
+the expiry and derivation stands, and this PDF build). All design
 decisions, fork choices, hypotheses, and the final responsibility for
 the content rest with the human author. In accordance with COPE/ICMJE
 recommendations, the AI system is not listed as an author. The

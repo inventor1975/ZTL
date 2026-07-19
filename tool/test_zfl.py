@@ -152,6 +152,32 @@ if __name__ == "__main__":
           and map_g["audit"]["status"] == "does-not-follow"
           and map_g["audit"]["counterexample"], str(map_g))
 
+    print("\n### Polarity audit (the 2026-07-19 lesson): glosses catch it")
+    pol_bad = json.dumps({"genre": "statement",
+                          "atoms": {"fresh": {"status": "Z",
+                                              "means": "no revocation has occurred"}},
+                          "assert": "not(fresh)"})
+    _, p_pb, iss_pb = zfl.validate(pol_bad)
+    check("negated atom with a negative gloss is flagged",
+          p_pb is not None and "W_DOUBLE_NEGATION_MEANING" in codes(iss_pb),
+          str(codes(iss_pb)))
+    pol_ok = json.dumps({"genre": "statement",
+                         "atoms": {"revoked": {"status": "Z",
+                                               "means": "the ground was revoked"}},
+                         "assert": "not(revoked)"})
+    d_po, p_po, iss_po = zfl.validate(pol_ok)
+    check("correct polarity passes clean",
+          "W_DOUBLE_NEGATION_MEANING" not in codes(iss_po)
+          and "W_NO_GLOSS" not in codes(iss_po), str(codes(iss_po)))
+    check("back-reading speaks the gloss",
+          "the ground was revoked" in zfl.back_reading(d_po, p_po),
+          zfl.back_reading(d_po, p_po))
+    no_gloss = json.dumps({"genre": "statement",
+                           "atoms": {"x": {"status": "Z"}}, "assert": "not(x)"})
+    _, _, iss_ng = zfl.validate(no_gloss)
+    check("missing gloss is warned (polarity unauditable)",
+          "W_NO_GLOSS" in codes(iss_ng), str(codes(iss_ng)))
+
     print("\n### Engine: the zoo through ZFL end to end")
     rep = engine.run(doc, parsed)
     kinds = {p["kind"] for p in rep["passports"]}

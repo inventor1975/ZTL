@@ -7,7 +7,8 @@ with no further questions. A ZFL document is JSON:
 
 {
   "genre": "statement" | "system",
-  "atoms":     { "rain": {"status": "Z", "note": "forecast unverified"} },
+  "atoms":     { "rain": {"status": "Z", "means": "it is raining",
+                          "note": "forecast unverified"} },
   "assert":    "imp(rain, umbrella)",          # statement genre
   "sentences": { "L": "not(Tr(L))" },          # system genre
   "ask": ["verdict", "warranty", "passport", "stipulations"]   # optional
@@ -17,6 +18,14 @@ Formulas: not(x), and(x,y), or(x,y), imp(x,y), xor(x,y), xnor(x,y),
 constants T | F, atom names, and Tr(name) (system genre only).
 In the system genre declared atoms become INPUT sentences (defined by
 their own status constant) — unverified inputs imported into the system.
+
+The optional "means" gloss states what T of the atom MEANS. It is the
+polarity auditor: names lie (`fresh` already means "not revoked", so
+"not fresh" asserts a positive fact), glosses do not. The validator
+warns on a negated atom whose gloss is itself negative
+(W_DOUBLE_NEGATION_MEANING) and on a missing gloss (W_NO_GLOSS), and
+the back-reading verbalizes the formula by MEANING as well as by name —
+so a name/meaning mismatch is visible before the run, not in review.
 
 This module is deliberately AI-free: parser, validator with
 machine-readable errors (the repair loop feeds on them), a
@@ -141,6 +150,35 @@ def walk(tree, kind):
             yield from walk(arg, kind)
 
 
+# --- the polarity auditor (the 2026-07-19 lesson) -------------------------
+# An atom is a bare string to the core; nothing stops a formula from saying
+# "not fresh" while the prose says "not revoked" — opposite polarities,
+# since `fresh` ALREADY MEANS "not revoked". The cure is a gloss: what does
+# T of this atom MEAN. Then two things become mechanical: the back-reading
+# speaks meanings instead of names, and an atom whose meaning is already
+# negative gets flagged when it appears under a negation.
+_NEG_MARKERS = ("no ", "not ", "never", "none", "without", "absen", "lack",
+                "free of", "нет", "не ", "без", "отсут", "отриц")
+
+
+def negative_gloss(text):
+    """Heuristic: does this gloss state a NEGATIVE fact? (auditor aid only)"""
+    t = " " + (text or "").strip().lower()
+    return any(m in t for m in _NEG_MARKERS)
+
+
+def negated_atoms(tree):
+    """Atom names appearing directly under a negation."""
+    if tree[0] == "not":
+        sub = tree[1]
+        if sub[0] == "atom":
+            yield sub[1]
+        yield from negated_atoms(sub)
+    elif tree[0] in CONNECTIVES:
+        for arg in tree[1:]:
+            yield from negated_atoms(arg)
+
+
 # ---------------------------------------------------------- validation
 def validate(text):
     """→ (doc|None, parsed|None, [errors and warnings])."""
@@ -204,6 +242,29 @@ def validate(text):
                 for name in set(atoms) - used:
                     issues.append(warn("W_UNUSED_ATOM", name,
                                        "the atom is declared but unused"))
+                # --- the polarity audit: names lie, glosses do not ---
+                for name in used:
+                    spec = atoms.get(name)
+                    gloss = (spec.get("means") if isinstance(spec, dict)
+                             else None)
+                    if not gloss:
+                        issues.append(warn(
+                            "W_NO_GLOSS", name,
+                            'no "means" gloss — state what T of this atom '
+                            'MEANS, so the polarity can be audited '
+                            '(e.g. "means": "the ground was revoked")'))
+                for name in set(negated_atoms(tree)):
+                    spec = atoms.get(name)
+                    gloss = (spec.get("means") if isinstance(spec, dict)
+                             else None)
+                    if gloss and negative_gloss(gloss):
+                        issues.append(warn(
+                            "W_DOUBLE_NEGATION_MEANING", name,
+                            f'the atom is negated in the formula, but its '
+                            f'gloss is already negative ("{gloss}") — '
+                            f'"not {name}" therefore asserts a POSITIVE '
+                            f'fact; check that this is the polarity you '
+                            f'mean'))
             except FormulaError as e:
                 issues.append(err("E_FORMULA", f"assert, position {e.pos}",
                                   e.msg))
@@ -293,15 +354,17 @@ STATUS_TXT = {"T": "verified: true", "F": "verified: false",
               "Z": "UNVERIFIED (mark Z)"}
 
 
-def say(tree, system=False):
+def say(tree, system=False, glosses=None):
     op = tree[0]
     if op == "const":
         return "truth" if tree[1] == "T" else "falsehood"
     if op == "atom":
+        if glosses and tree[1] in glosses:
+            return f"[{glosses[tree[1]]}]"
         return f"\u201c{tree[1]}\u201d"
     if op == "tr":
         return f"\u201c{tree[1]}\u201d is true"
-    a = [say(x, system) for x in tree[1:]]
+    a = [say(x, system, glosses) for x in tree[1:]]
     if op == "not":
         return f"not ({a[0]})"
     if op == "and":
@@ -321,11 +384,18 @@ def back_reading(doc, parsed):
     atoms = doc.get("atoms", {})
     for a, spec in atoms.items():
         note = spec.get("note", "")
+        gloss = spec.get("means", "")
         lines.append(f"Atom \u201c{a}\u201d \u2014 "
                      f"{STATUS_TXT.get(spec.get('status'), '?')}"
+                     + (f"; T means: {gloss}" if gloss else "")
                      + (f" ({note})" if note else "") + ".")
     if doc["genre"] == "statement":
         lines.append(f"Asserted: {say(parsed['assert'])}.")
+        gl = {a: spec.get("means") for a, spec in atoms.items()
+              if isinstance(spec, dict) and spec.get("means")}
+        if gl:
+            lines.append("Read by meaning: "
+                         + say(parsed["assert"], glosses=gl) + ".")
     else:
         for n, tree in parsed["sentences"].items():
             lines.append(f"Sentence \u201c{n}\u201d asserts: "

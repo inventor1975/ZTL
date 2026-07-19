@@ -1,6 +1,6 @@
 # ZTL — Zero-Trust Logic
 
-**V. Reznik. Preprint, v1.2 — 2026-07-13. Concept DOI:
+**V. Reznik. Preprint, v1.2 — 2026-07-19. Concept DOI:
 [10.5281/zenodo.21318981](https://doi.org/10.5281/zenodo.21318981)
 (v1.1: [10.5281/zenodo.21323552](https://doi.org/10.5281/zenodo.21323552);
 v1.0: [10.5281/zenodo.21318982](https://doi.org/10.5281/zenodo.21318982)).
@@ -15,7 +15,15 @@ the at-scale stress-test of the warranty ladder; the recalculated
 Bochvar ledger (§4); and the three-laws-of-thought reading — a denial is
 free, an affirmation is on credit (§3.1); and the paradox engine (§11) — the
 expeditions unified as one construction paradox(f)=ground(S=f(S)) with three
-measured layers.**
+measured layers; and — the headline of this version — a TEMPORAL LAYER
+(§§21–23) in which the only clock is the arrival of ground: the warranty
+ladder read as temporal quantifiers (now / at every ending / always on
+every path), the absorption and arrow theorems machine-checked
+(`ZTime.lean`), an expiry event that opens epochs, and the EPOCH BOUNDARY
+THEOREM (`EpochBoundary.lean`) — a verdict invariant across unrestricted
+epoch crossing reads none of its grounds, so non-trivial guarantees
+require the boundary between learning and world change; plus a price list
+of derivations (§23) — the alive rules transport truth but cannot mint it.**
 The tag MEASURED means "verified by machine enumeration" (code in this
 repository), as opposed to "argued"; references to Lean mean proofs
 checked by the Lean 4 kernel with an **empty axiom list**.
@@ -59,10 +67,19 @@ is resolved in Smets' favor); and a quarantine passport that types
 every refusal by its genesis — paradox (permanent), intrinsic (the
 stipulation is forced), underdetermined (until a choice), unverified
 input (until verification), inherited — with a measured stipulation
-theorem separating the liftable from the permanent. The entire development — the core,
-both engine certificates with cut admissibility, the algebraic
-witnesses, the general fixed-point theorem and the expedition twins,
-twelve modules in all — is formalized in Lean 4 **with an empty axiom
+theorem separating the liftable from the permanent; a temporal layer in
+which the only clock is the arrival of ground — the warranty ladder read
+as temporal quantifiers (now / at every ending / always on every path),
+with the absorption and arrow theorems machine-checked, an expiry event
+that opens epochs, and the Epoch Boundary Theorem (a verdict invariant
+across unrestricted epoch crossing is constant, so non-trivial
+guarantees require the boundary between learning and world change); and
+a price list of derivations (the twelve alive rules transport truth but
+cannot mint it — from no premises nothing is derivable, even the guarded
+tautologies, even on credit). The entire development — the core, both
+engine certificates with cut admissibility, the algebraic witnesses, the
+general fixed-point theorem, the expedition twins, and the temporal
+modules, fourteen in all — is formalized in Lean 4 **with an empty axiom
 list, definitions included**. As a
 test bench the logic is run over the classical paradoxes — the liar,
 Jourdain's carousel, Curry, Yablo, the crocodile, Russell — and in every

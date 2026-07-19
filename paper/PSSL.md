@@ -6,11 +6,11 @@
 
 > *Paradox and Truth — the progenitors of Logic!*
 
-*(v1.1 note: the publication text is `PSSL_EN_v1_1_0.tex` — it adds
-Proposition C (the contextuality core, `lean/Contextuality.lean`: Mermin–Peres
-0/512, GHZ 0/64, empty axiom list), the pair extension of the mirror
-(the covering law falls in correlation form; the ladder of falls saturates),
-and §7 "The world is not a corner (a reading)". This markdown mirrors v1.0.)*
+*(Note: the authoritative v1.0 text is `PSSL_EN_v1_0_0.tex` / `.pdf` and the
+Russian reading copy `PSSL-RU.md`; both carry Proposition C (the contextuality
+core, `lean/Contextuality.lean`: Mermin–Peres 0/512, GHZ 0/64), the junction
+theorem (`lean/JunctionWitness.lean`), and §7 "The world is not a corner (a
+reading)". This markdown is an earlier, abbreviated mirror.)*
 
 ---
 

@@ -20,15 +20,20 @@
 
 \title{\textbf{A Paradoxical, Self-Referential System of Logics}\\[4pt]
 \large Four non-classical logics as resolutions of one universal diagonal,\\
-with two machine-checked poles}
+with four machine-checked components}
 \author{Vitaly Reznik}
 \date{2026 --- Version 1.0.0\\[2pt]
 \small Lean 4 witnesses: \texttt{github.com/inventor1975/ZTL}
-(\texttt{lean/ZTL.lean}, \texttt{lean/QuantumWitness.lean})\\
-\small Verify from zero: \S\ref{sec:mirror} --- two files, two commands, no dependencies}
+(\texttt{lean/ZTL.lean}, \texttt{lean/QuantumWitness.lean}, \texttt{lean/Contextuality.lean}, \texttt{lean/JunctionWitness.lean})\\
+\small Verify from zero: \S\ref{sec:mirror} --- four files, four commands, no dependencies}
 
 \begin{document}
 \maketitle
+
+\begin{center}
+\emph{Paradox and Truth --- the progenitors of Logic!}
+\end{center}
+\vspace{4pt}
 
 \begin{abstract}
 We propose a reading of four non-classical logics --- classical,
@@ -39,14 +44,20 @@ G\"odel and Tarski (Lawvere 1969; Yanofsky 2003). Each retains all classical
 structural principles \emph{save one}, and each thereby houses the diagonal
 differently. Two features are invariant across all four: non-contradiction
 with its associated reductio (a retained \emph{principle}), and the diagonal
-itself (a retained \emph{obstruction}). We isolate the one part of this
-picture that is formal rather than expository --- the complementary sacrifice
-made by ZTL and by orthomodular quantum logic --- and record it as two
-propositions machine-checked in Lean~4 on the \emph{empty axiom list} (no
-classical choice, no quotient, no propositional extensionality). We are
+itself (a retained \emph{obstruction}). We isolate the parts of this
+picture that are formal rather than expository --- the complementary sacrifice
+made by ZTL and by orthomodular quantum logic, and the combinatorial core of
+quantum contextuality (Mermin--Peres, GHZ) and the junction theorem of
+composition --- and record them as four machine-checked components in Lean~4 on the \emph{empty axiom list} (no
+classical choice, no quotient, no propositional extensionality). A closing
+section, explicitly marked as a reading, draws the consequence of the
+contextuality witness: the quantum ``corner'' pays its laws only in the
+DESCRIPTIONS; at the level of states the diagonal's premise itself fails ---
+the self-negating fixed point exists physically --- so the paradox, for the
+world, dissolves rather than being tamed. We are
 explicit throughout about what is established (all four logics; the
 Lawvere--Yanofsky unification), what is the author's (ZTL; the arrangement;
-the two witnesses), and what is analogy carrying no proof (the ``cycle''
+the four witnesses), and what is analogy carrying no proof (the ``cycle''
 itself). This is a synthesis and a reading, not a theorem, a merger, a new
 foundation, or a new field.
 
@@ -74,8 +85,10 @@ theory of logical systems'' already exists as a field (universal logic,
 abstract model theory~\cite{beziau}). The single component original to the
 author is \textbf{ZTL}~\cite{ztl}, which appears here only as one corner.
 What this note adds is (i) the \emph{arrangement} of the four as four
-resolutions of one diagonal, and (ii) two machine-checked propositions
-(\S\ref{sec:mirror}) exhibiting the sharpest pair of them as complementary.
+resolutions of one diagonal, (ii) four machine-checked components
+(\S\ref{sec:mirror}) --- the two complementary poles, the combinatorial
+core of contextuality, and the junction theorem of composition --- and
+(iii) a closing reading (\S\ref{sec:world}), marked as such.
 Everything expository is marked as such; everything proved is in
 \S\ref{sec:mirror} and reproducible from zero.
 
@@ -248,11 +261,55 @@ not a single cross-formalism theorem. This is the boundary between what is
 proved (each proposition) and what is read (their pairing).
 \end{rem}
 
-\paragraph{Reproduction} (Lean 4.29.1, measured 2026-07-18):
+\paragraph{The pair extension.} On TWO quanta the mirror sharpens. At the
+singlet state, pair propositions are true (``spins are opposite'', ``total
+spin $=0$'') while \emph{every} local proposition --- either particle, any
+axis --- has probability $\tfrac12$: a true join whose joinees are all
+unverified. The law that falls is the covering law $a\vee b$ true $\iff$
+$a$ true or $b$ true --- a law the ZTL matrix keeps as a theorem
+(\texttt{cover\_or\_T}). Lattice expressibility, by contrast, does NOT
+fall: the singlet line is reachable from local propositions by meet and join
+(measured in the repository stand \texttt{dilemmas/quantum\_pair.py}); what
+is not compositional is the truth VALUE, not the lattice. The seam itself is
+kernel-checked (\texttt{lean/JunctionWitness.lean}, empty axiom list, exact
+integer arithmetic): the \emph{junction theorem} --- the singlet lies in the
+join of the two product atoms yet in neither atom and in no local plane of
+either factor. Plugging two quantum logics together makes the COVER face of
+the disjunction (one face of the trio ZTL surrenders) fall for quantum at the
+seam of composition, in correlation form --- entanglement as a lattice fact;
+the LEM identity $x \vee x^{\perp} = 1$ itself stays intact at every size. The falls saturate
+along the ladder (repository stand \texttt{dilemmas/quantum\_ladder.py}):
+one quantum costs distributivity (and modus ponens for the material arrow;
+the Sasaki arrow keeps both identity and modus ponens), two quanta cost the
+valuation itself, and beyond two nothing new falls, while
+$\neg\neg$, non-contradiction and the LEM-identity hold at every size.
+
+\begin{prop}[\texttt{lean/Contextuality.lean}, empty axiom list]\label{propC}
+\leavevmode
+\begin{enumerate}
+\item[(i)] \emph{Mermin--Peres}: no assignment of $\pm1$ to the nine cells
+of the magic square satisfies the six sign constraints (rows $+1$; columns
+$+1$, $+1$, $-1$) --- $0$ of $512$, by kernel enumeration;
+\item[(ii)] \emph{GHZ}: no assignment of $\pm1$ to the six single-particle
+values satisfies $XXX=+1$, $XYY=YXY=YYX=-1$ --- $0$ of $64$.
+\end{enumerate}
+\end{prop}
+
+\noindent The honest split: Lean proves the COMBINATORIAL impossibility for
+these sign patterns; that the patterns are quantum's is direct operator
+arithmetic, verified in the repository stand. Together with the pair
+measurement: the local truth-value addresses are not merely empty --- no
+bivalent valuation exists to fill them. The quantum ``$Z$'' is an ontic
+vacancy, not an epistemic flag; this is the precise boundary of the kinship
+between superposition and ZTL's mark.
+
+\paragraph{Reproduction} (Lean 4.29.1, measured 2026-07-18/19):
 
 \begin{verbatim}
 $ lean lean/ZTL.lean             # 13 objects, no axioms,  ~1.1 s
 $ lean lean/QuantumWitness.lean  #  5 objects, no axioms,  ~0.5 s
+$ lean lean/Contextuality.lean   #  3 objects, no axioms,  ~0.4 s
+$ lean lean/JunctionWitness.lean #  8 objects, no axioms,  ~0.2 s
 \end{verbatim}
 
 Every \texttt{\#print axioms} line reports \emph{``does not depend on any
@@ -264,6 +321,46 @@ middle; failure of strong normalization for $\mathrm{Type}:\mathrm{Type}$;
 itself, ranging over four logics that are not objects of one theory, is
 likewise not a single formal object.
 
+\section{The world is not a corner (a reading)}\label{sec:world}
+
+Everything in this section is interpretation, anchored on the measured cells
+of \S\ref{sec:mirror}; no formal claim is made beyond
+Propositions~A--C.
+
+The four corners of \S\ref{sec:four} are DESCRIPTIONS, and it is the
+descriptions that pay the laws: distributivity, the covering law, the
+valuation. What Proposition~\ref{propC} exhibits is not a broken inference
+inside any lattice --- the lattice is consistent --- but the absence of a
+semantic map: the world declines to be a classical model. The discrepancy is
+located at the INTERFACE between a logic and its world, and it is closed to
+every repair: no further verification, no better translation, no finer
+instrument removes it, because there is no valuation to recover ($0$ of
+$512$). Where a discrepancy between derivation and measurement is normally
+an incident to be triaged, here it is a theorem.
+
+The same relocation dissolves the diagonal. Lawvere's construction needs a
+fixed-point-free map; for every description's negation this premise holds
+--- the ZTL tables prove $\neg v \neq v$ for all $v$, and a subspace never
+equals its orthocomplement, since no nonzero vector is orthogonal to itself
+--- and so every description must TAME the resulting monster, each paying
+its price: the classical hierarchy of metalanguages, the type-theoretic
+tower of universes, ZTL's completeness tax for the quarantine. But at the
+level of STATES the premise fails: the flip has a fixed point, and it is
+physical --- $X\lvert{+}\rangle = \lvert{+}\rangle$, a state prepared and
+measured on hardware (repository record, IBM Heron, 2026-07-17). The two
+negations must not be conflated --- the lattice orthocomplement remains
+fixed-point-free while the state-level flip is not --- and precisely this
+non-conflation is the point: the self-negating fixed point, a paradox in
+every description, EXISTS in the world as a citizen, and its existence costs
+the world nothing --- no hierarchy, no tower, no tax. The paradox is a
+disease of descriptions, not of the world.
+
+Read this way, the cycle closes cleanly: the world supplies the obstruction
+(the interface discrepancy, permanent by Proposition~\ref{propC}) and
+natively houses the fixed point; the four logics are four ways of living
+with that supply, each paying exactly one law for its manner of description.
+The universe is not a fifth corner. It is what the corners are about.
+
 \section{Provenance}\label{sec:prov}
 
 \begin{center}
@@ -272,9 +369,9 @@ likewise not a single formal object.
 \hline
  & \textbf{Content} & \textbf{Status} \\
 \hline
-Established & Lawvere's fixed-point theorem and the diagonal unification (Lawvere~\cite{lawvere}; Yanofsky~\cite{yanofsky}); quantum logic and non-distributivity (Birkhoff--von Neumann~\cite{bvn}); intuitionism, the universe hierarchy, Girard's paradox (Martin-L\"of~\cite{ml}; Coquand~\cite{coquand}; Hurkens~\cite{hurkens}); universal logic as a field (B\'eziau~\cite{beziau}) & literature \\
-Author's & ZTL, the zero-trust paracomplete logic~\cite{ztl}; the arrangement of the four as resolutions of one diagonal; the two Lean witnesses on the empty axiom list & synthesis + machine-checked \\
-Analogy (no proof) & the ``cycle / orbit / centre''; ``the floor guards the ceiling''; ``each logic pays one principle so none pays the whole diagonal'' & structural metaphor, marked \\
+Established & Lawvere's fixed-point theorem and the diagonal unification (Lawvere~\cite{lawvere}; Yanofsky~\cite{yanofsky}); quantum logic and non-distributivity (Birkhoff--von Neumann~\cite{bvn}); contextuality (Kochen--Specker~\cite{ks}; Mermin~\cite{mermin}; Peres~\cite{peres}); intuitionism, the universe hierarchy, Girard's paradox (Martin-L\"of~\cite{ml}; Coquand~\cite{coquand}; Hurkens~\cite{hurkens}); universal logic as a field (B\'eziau~\cite{beziau}) & literature \\
+Author's & ZTL, the zero-trust paracomplete logic~\cite{ztl}; the arrangement of the four as resolutions of one diagonal; the four Lean witnesses on the empty axiom list (the two poles, the contextuality core, the junction theorem); the measured ladder of falls and its saturation & synthesis + machine-checked \\
+Analogy (no proof) & the ``cycle / orbit / centre''; ``the floor guards the ceiling''; ``each logic pays one principle so none pays the whole diagonal''; \S\ref{sec:world} entire --- ``the world is not a corner; the paradox is a disease of descriptions'' & structural metaphor, marked \\
 \hline
 \end{tabular}
 \end{center}
@@ -300,14 +397,21 @@ TLCA 1995, LNCS 902, 266--278.
 North-Holland, 1952.
 \bibitem{kripke} S. Kripke. \emph{Outline of a theory of truth.} J. Philos.
 \textbf{72} (1975), 690--716.
+\bibitem{ks} S. Kochen, E. P. Specker. \emph{The problem of hidden
+variables in quantum mechanics.} J. Math. Mech. \textbf{17} (1967), 59--87.
 \bibitem{lawvere} F. W. Lawvere. \emph{Diagonal arguments and cartesian closed
 categories.} LNM 92, Springer, 1969, 134--145.
 \bibitem{lukasiewicz} J. \L ukasiewicz. \emph{On three-valued logic} (1920).
 In: Selected Works, North-Holland, 1970.
+\bibitem{mermin} N. D. Mermin. \emph{Simple unified form for the major
+no-hidden-variables theorems.} Phys. Rev. Lett. \textbf{65} (1990),
+3373--3376.
 \bibitem{ml} P. Martin-L\"of. \emph{Intuitionistic Type Theory.} Bibliopolis,
 1984.
 \bibitem{lean4} L. de Moura, S. Ullrich. \emph{The Lean 4 theorem prover and
 programming language.} CADE 2021, LNCS 12699, 625--635.
+\bibitem{peres} A. Peres. \emph{Incompatible results of quantum
+measurements.} Phys. Lett. A \textbf{151} (1990), 107--108.
 \bibitem{yanofsky} N. S. Yanofsky. \emph{A universal approach to
 self-referential paradoxes, incompleteness and fixed points.} Bull. Symbolic
 Logic \textbf{9} (2003), 362--386.

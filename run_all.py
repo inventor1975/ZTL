@@ -77,6 +77,11 @@ STANDS = [
                         "yet ZTL-TAUTOLOGIES exist on this pool: 6",
                         "soundness cross-check on the core: 0 violations",
                         "the first measured"]),
+    ("dilemmas/quantum_pair.py",
+                       ["EVERY local address is empty",
+                        "SINGLET REACHED (round 3)",
+                        "the singlet line",
+                        "violations 0"]),
 ]
 
 

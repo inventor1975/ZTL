@@ -172,6 +172,19 @@ if __name__ == "__main__":
     if poles_only:
         failures.append("PSSL closing offers 'two poles' as the proof")
 
+    # --- 3b. the reproduction instructions ------------------------------
+    # A stranger follows these. A wrong number here does not look like our
+    # error to them — it looks like a FAILED REPRODUCTION, and they would
+    # be right to report it. The first draft of REPRODUCE.md carried counts
+    # grepped from the sources, which include `#print axioms` mentioned in
+    # prose comments; Lean prints fewer.
+    print("\n### Reproduction instructions (REPRODUCE.md) — a stranger")
+    print("    follows these; a wrong number reads as a failed reproduction")
+    rep = text("REPRODUCE.md")
+    for mod, claimed in re.findall(r"\| (\w+)\.lean \| (\d+) \|", rep):
+        check(f"REPRODUCE says {mod}.lean prints", claimed,
+              str(lean_objects(mod)), "REPRODUCE.md")
+
     # --- 4. the Zenodo sheet vs the actual artefact ----------------------
     print("\n### Frozen records — deliberately NOT checked")
     for rel, why in FROZEN.items():

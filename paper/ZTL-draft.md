@@ -1009,6 +1009,19 @@ makes the split visible: IEEE's quiet NaN behaves like the mark Z
 the alarm on touching the phase. The alphabet stays four letters;
 E is hardware, not logic.
 
+That last sentence is about the alphabet of the LOGIC, and it does not
+change. What it leaves open is whether the seam itself has letters, and
+a candidate register is recorded outside this system rather than inside
+it (repository `IDEAS.md` 12.6, staked and deliberately unimplemented):
+two marks — `M`, no ground was ever offered, and `O`, a check dispatched
+and not returned — beside two states, `E` for the world's silence and
+`σ` for the world answering against. It mirrors the internal ladder by
+information rather than by polarity, and it keeps the internal typing:
+a boundary mark would live on an atom and never become a boundary event,
+as `Z` never becomes a verdict. None of it is built, and it is mentioned
+here only so that a reader meeting `E` does not take it for a fifth
+truth value.
+
 Consequence for positioning: ZTL's neighbours are not the many-valued
 logics but the two-valued assertability policies of the supervaluation
 family — from which it differs by locality, tabularity, and greedy

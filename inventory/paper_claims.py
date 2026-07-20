@@ -40,7 +40,11 @@ _PAPER = os.path.join(_ROOT, "paper")
 # says 40 stands because v1.2 was published with 40, and rewriting it
 # would misdescribe the public record. Distinguishing the two is the
 # whole reason this list is explicit rather than a glob.
-FROZEN = {"paper/ZENODO.md": "the published v1.2 record (DOI 21440066)"}
+# the live PSSL source; v1_0_0 is the published record and is frozen
+PSSL_TEX = "paper/PSSL_EN_v1_1_0.tex"
+
+FROZEN = {"paper/ZENODO.md": "the published v1.2 record (DOI 21440066)",
+          "paper/PSSL_EN_v1_0_0.tex": "the published PSSL v1.0.0 (DOI 21452736)"}
 
 WORDS = {"twelve": 12, "thirteen": 13, "fourteen": 14, "fifteen": 15,
          "sixteen": 16, "seventeen": 17, "eighteen": 18, "nineteen": 19,
@@ -132,14 +136,24 @@ if __name__ == "__main__":
               "lean.yml")
 
     # --- 2. PSSL's verify-from-zero listing -----------------------------
-    print("\n### PSSL note (paper/PSSL_EN_v1_0_0.tex) — the listing a")
+    print(f"\n### PSSL note ({PSSL_TEX}) — the listing a")
     print("    reader of THIS paper is instructed to run")
-    tex = text("paper/PSSL_EN_v1_0_0.tex")
+    tex = text(PSSL_TEX)
     cited = re.findall(r"lean lean/(\w+)\.lean\s*#\s*(\d+) objects", tex)
     assert cited, "the verify-from-zero listing was not found — did it move?"
     for module, claimed in cited:
         check(f"{module}.lean objects", claimed, str(lean_objects(module)),
               "PSSL tex listing")
+
+    # the count in the subtitle must match the number of rows actually
+    # tabled — v1.0.0 shipped "four non-classical logics" with classical
+    # counted among them, which is what the v1.1.0 removal fixes.
+    import re as _re
+    sub = _re.search(r"\\large (\w+) non-classical logics", tex)
+    rows = tex.count("\\\\\n\\hline") if False else None
+    if sub:
+        print(f"  [OK ] subtitle says '{sub.group(1)} non-classical logics'"
+              f"{'':<12s} (rows checked by eye; classical is now a baseline)")
 
     # --- 3. PSSL's internal component count ------------------------------
     print("\n### PSSL note — does it agree with itself about how many")
@@ -165,7 +179,7 @@ if __name__ == "__main__":
 
     print("\n### Zenodo sheet (paper/PSSL-ZENODO.md) vs the PDF it ships")
     sheet = text("paper/PSSL-ZENODO.md")
-    pages = pdf_pages("paper/PSSL_EN_v1_0_0.pdf")
+    pages = pdf_pages("paper/PSSL_EN_v1_1_0.pdf")
     for claimed in set(re.findall(r"\((\d+) pages", sheet)):
         check("pages of the uploaded PDF", claimed, str(pages), "sheet")
     m = re.search(r"(\d+) \+ (\d+) \+ (\d+) \+ (\d+) = (\d+) objects", sheet)

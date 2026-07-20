@@ -1018,19 +1018,20 @@ indeterminacy — beside two states, `E` for the world's silence and `σ`
 for the world's answer. The register reads ONE WAY, from the physical
 into the operational: a boundary letter arrives and becomes an internal
 one, so the four letters above are what the seam delivered rather than a
-second alphabet competing with them.
+second alphabet competing with them, and each is paired by what it is
+ABOUT — `E` with the phase `N` it reads too early, `M` with `F`, `σ`
+with `T`, `O` with `Z`.
 
 Read that way, this section's own claim is explained rather than
-weakened. `E` points into `F` and carries no logical content of its own
-— the world's silence *is* unearnedness, and `¬Z = F` is literally
-"asked, nothing came back, therefore not earned". That is why the system
-needs no error letter: `F` already carries what `E` would have said. The
-other three arrows do carry content of their own, `O` most sharply,
-since ontic vacancy (a value that does not exist) is not the epistemic
-mark `Z` (a value we have not looked at) — a distinction this
-repository measured on hardware before it had a name for it. None of the
-register is built, and it is mentioned here only so that a reader
-meeting `E` does not take it for a fifth truth value.
+weakened. `E` carries no logical content of its own precisely because it
+is an interface accident concerning a phase that has no value yet — not
+a value of any kind, and so not a letter the system is missing. The
+other three arrows do carry content, `O` most sharply, since ontic
+vacancy (a value that does not exist) is not the epistemic mark `Z` (a
+value we have not looked at) — a distinction this repository measured on
+hardware before it had a name for it. None of the register is built, and
+it is mentioned here only so that a reader meeting `E` does not take it
+for a fifth truth value.
 
 Consequence for positioning: ZTL's neighbours are not the many-valued
 logics but the two-valued assertability policies of the supervaluation

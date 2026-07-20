@@ -12,8 +12,8 @@ Reproduced on a clean build the same day.
 Reproduce the two mechanical tiers:
 
 ```
-cd lean && lake build          # 31 jobs, green
-python3 inventory/axiom_audit.py   # 321 theorems, empty axiom list
+cd lean && lake build              # 35 jobs, green
+python3 inventory/axiom_audit.py   # 338 theorems, empty axiom list
 python3 run_all.py                 # 40 stands + Lean, ALL GREEN
 ```
 
@@ -38,11 +38,11 @@ tier: exhaustive *over what* is the whole question.
 
 ---
 
-## Tier A — machine-proved (321 theorems, empty axiom list)
+## Tier A — machine-proved (338 theorems, empty axiom list)
 
 Lean 4.29.1, no mathlib, no imports outside the corpus. Measured
-2026-07-20 by `inventory/axiom_audit.py`: **321 of 321 theorems return
-"does not depend on any axioms"** — not the 103 hand-placed prints, but
+2026-07-20 by `inventory/axiom_audit.py`: **338 of 338 theorems return
+"does not depend on any axioms"** — not the 125 hand-placed prints, but
 every theorem in every module, generated and checked.
 
 | module | thms | what it establishes |
@@ -61,6 +61,7 @@ every theorem in every module, generated and checked.
 | `JunctionWitness.lean` | 9 | the junction: a true pair whose every local disjunct fails |
 | `ZTime.lean` | 8 | logical time: `hereditary_absorbing`, `grounded_hereditary`, `hereditary_sound`, `strict_ladder` |
 | `ZSequent.lean` | 7 | `cut_admissible`, admissible weakening, derivable identity |
+| `Frame.lean` | 17 | the §3.5 mini-theorems: contraposition dies at two named cells, the quarantine flag is outside the value layer, and the atom-collapse is classical term by term (Bochvar's B3□ fork) |
 | `QuantumWitness.lean` | 5 | MO2: distributivity fails while LEM, DNE and non-contradiction hold — the quantum pole |
 | `Contextuality.lean` | 3 | Mermin square and GHZ admit no valuation; the parity core |
 
@@ -130,9 +131,7 @@ as verified.
 | the six engineering traditions (NaN, SQL NULL, taint, abstract interpretation, imprecise probability, provenance semirings) **implement fragments of one logic** | §1, Abstract | each of the six is exhibited on a worked case with a stand — NaN and intervals `zarith.py`, NULL `zsets.py`/`zfuncs.py`, taint `zfuncs.py`/`zprob.py`, Dempster–Shafer `zprob.py`, provenance semirings `zcombine.py`. So the correspondences are demonstrated, not asserted. But **a worked instance is not an embedding**: no stand formalises a tradition's own semantics and proves a fragment map into ZTL. The evidence is "here is that tradition's central move, reproduced by our core", which is tier C by construction. **Upgrade path:** pick one — provenance semirings is the most tractable — define its semantics and prove the embedding. One such theorem would carry the whole §1 claim. |
 | ZTL sits outside the Rosser–Turquette standardness conditions | §4 | argued against the definitions, not machine-checked |
 | relative consistency / the position among three-valued logics | §4 | metatheory, cited to the literature |
-| §3.5 mini-theorem 1: {¬Z=F, T→Z=F} ⟹ contraposition-as-identity impossible | §3.5 | "verified by substitution" — a two-line argument, not in Lean. **Cheap to upgrade**; it should be. |
-| §3.5 mini-theorem 2: a value housing the liar must be a ¬-fixed-point, so the quarantine flag is irremovable | §3.5 | argued; the ¬-fixed-point half is in Lean (`liar_homeless`), the *irremovability* conclusion is not |
-| §3.5 mini-theorem 3: collapsing Z→F at the atom turns ZTL verbatim into B3□ | §3.5 | argued; **measurable** by construction and comparison of tables |
+| ~~the three §3.5 mini-theorems~~ | §3.5 | **PROMOTED to tier A on 2026-07-20** — `lean/Frame.lean`, 17 theorems, empty axiom list. Left in this table as a record of what tier D looked like before it was cleared. |
 | R1–R3, the cross-cutting regularities | §24 | generalisations over the applied chapters; each instance is measured, the *pattern* is prose |
 | the two-register architecture is **necessary** | §9, §24 | every *component* is tier A — lazy monotonicity (`evalK_mono`, `jumpL_mono`), the least fixed point (`kt_fixed`, `kt_least`), well-definedness of quarantine (`grounded_absolute`), greedy non-monotonicity (`eager_and_not_monotone`) — but **no Lean object states the necessity itself**. The conclusion is a composition of theorems by argument. §9's "the necessity of two registers is now a theorem end to end" therefore over-reads its own parts. Honest form: *each half of the necessity argument is machine-checked; the argument joining them is prose.* |
 | ¬¬Z = T is a design consequence, not a defect | §3, and the reply to VRG | the *value* is machine-checked (`ax_notnot_Z`); that it follows from the generating principle rather than being patched in is an argument about design intent. It is a good argument and it should be written out, not asserted. |
@@ -225,11 +224,24 @@ parts are the most thoroughly checked material in the corpus. The defect
 is narrower and more interesting than "no evidence": it is a true
 composition described with a stronger word than composition earns.)
 
-**F5 — three §3.5 mini-theorems are cheap to promote.** All three are
-finite arguments about a finite matrix. Two are one Lean lemma each; the
-third (B3□ collapse) is a table construction and comparison, i.e. tier B.
-Promoting them removes the only place in the paper where the word
-"theorem" sits on unformalised reasoning about the core itself.
+**F5 — the three §3.5 mini-theorems were prose. FIXED 2026-07-20.**
+They were the only place in the paper where the word "theorem" sat on
+unformalised reasoning about the core itself. Now `lean/Frame.lean`, 17
+theorems, empty axiom list:
+
+* MT1 `mt1_contraposition_impossible`, plus `mt1_from_the_cells` stating
+  the failure as an implication from the two named cells — so the cost
+  of a rescue is explicit;
+* MT2 `mt2_quarantine_irremovable` — no ¬-fixed point exists, and at Z
+  it is pessimism that excludes it;
+* MT3 turned out to be the real work. "Restores all classical laws"
+  deserved the strong reading, so what is proved is agreement with
+  Boolean evaluation term by term (`mt3_collapse_is_classical`), with
+  "every classical tautology returns" as a corollary
+  (`mt3_every_tautology_returns`). `mt3_the_fork` exhibits the same
+  `p→p` at F in ZTL proper — the fork is one step wide.
+
+Corpus now 338 theorems in 17 modules, all clean.
 
 ---
 

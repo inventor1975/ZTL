@@ -248,3 +248,54 @@ deduction theorem is a cited theorem. **LP's "has DT" is measured, not
 proved** — no counterexample was found in the pools swept, which is not
 the same statement. The two zero-gap entries that are safe are safe by
 citation, not by our sweep.
+
+---
+
+# Results — tack 2c, appended 2026-07-20
+
+## Every pair carries a receipt
+
+Eight grounds, 28 pairs, the minimal separating formula by size.
+
+* **26 pairs are separated by a LAW** — one formula valid in one ground
+  and not the other.
+* **2 pairs are separated only by a RULE** — they agree on every law we
+  can write and still transport differently.
+
+The cheapest apartness in the family is `classical | ZTL` at size 3:
+`⊨ p→p`. The dearest is `classical | quantum MO2` at size 5:
+`⊨ p→(q→p)`.
+
+## Apartness has an arity too, and an assertion caught it
+
+`classical | LP` reported **no separator**. That is not a gap in the
+sweep: LP's valid formulas are exactly the classical ones — it is
+paraconsistent in its *consequence relation*, not in its theorems. No law
+can ever separate them, and no one-premise rule does either.
+
+They are apart at **two premises**, where explosion separates them:
+
+    p, ¬p ⊨ q
+
+So apartness carries an arity exactly as the deduction theorem did in
+tack 2b, and the sweep learned it the same way — by an `assert` failing
+rather than by a printed "no difference". A one-premise search would have
+reported nothing and been read as sameness.
+
+`K3 | weak Kleene` is the other rule-only pair, at arity 1: `p ⊨ p∨q`.
+Strong Kleene transports it; the infectious register does not.
+
+## Why the rule-only pairs are the interesting ones
+
+Laws are what a ground **says**; rules are what it **does**. Two grounds
+can say identical things and do different ones — classical and LP write
+the same theorems and disagree about what follows from a contradiction.
+Which of the two issues the receipt is itself information about the pair,
+and it is invisible to any comparison that looks only at theorems.
+
+## Claim ceiling
+
+Every "no separator found" means exactly that. Sameness of grounds is not
+witnessable — that is the content of the tack, not a limitation of the
+sweep. The whole point of R3 is that identity is the thing you never get
+to earn.

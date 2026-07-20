@@ -7,3 +7,8 @@ lean/BridgeGen.lean
 tool/.groq_key
 tool/.*_key
 zrefuter_runs/
+
+# LaTeX build artefacts
+paper/*.log
+paper/*.out
+paper/*.aux

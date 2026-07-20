@@ -58,6 +58,21 @@ MEASURED (simulator, 4096 shots, 2026-07-20):
                    device error. Noise moves the controls' inputs and
                    still cannot move a hereditary verdict.
 
+MEASURED ON REAL HARDWARE (IBM ibm_fez, 156-qubit Heron, 2026-07-20,
+4096 shots, job d9evhhcinv1c73aqo240):
+  device bias      p→1 in 0.5242, q→1 in 0.4910 — visibly worse than the
+                   simulator, which is what makes the run worth doing
+  PROBE            0 moves, 0 grade losses out of 4096
+                   → BOUNDARY NOISE FLOOR = 0.000000
+  controls         0.2480 / 0.4758 / 0.7671 against 0.25 / 0.50 / 0.75 —
+                   the device's own bias shows up here, in the readings
+                   that are ALLOWED to move
+  → The seam is clean at this resolution. Silicon drifted (readout bias
+    ~2.4% off centre) and the hereditary verdict did not, because a
+    theorem forbade it and the pipeline obeyed the theorem. σ has no
+    floor to hide in at 1 part in 4096; an objection above that would be
+    the world speaking, not our noise.
+
 Run:
   python3 dilemmas/tautology_boundary.py --sim         # ideal simulator
   python3 dilemmas/tautology_boundary.py --sim --noisy # with a noise model

@@ -1,3 +1,8 @@
+> **SUPERSEDED DRAFT (kept for history).** The canonical text is
+> `PSSL_EN_v1_0_0.tex` / `PSSL_EN_v1_0_0.pdf` (five machine-checked
+> components; this draft predates three of them, including the
+> impossibility of a deduction theorem in MO2). Do not cite from here.
+
 # A Paradoxical, Self-Referential System of Logics
 
 ### Four non-classical logics as resolutions of one universal diagonal, with two machine-checked poles

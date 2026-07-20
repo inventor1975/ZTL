@@ -80,9 +80,11 @@ a price list of derivations (the twelve alive rules transport truth but
 cannot mint it — from no premises nothing is derivable, even the guarded
 tautologies, even on credit). The entire development — the core, both
 engine certificates with cut admissibility, the algebraic witnesses, the
-general fixed-point theorem, the expedition twins, and the temporal
-modules, fourteen in all — is formalized in Lean 4 **with an empty axiom
-list, definitions included**. As a
+general fixed-point theorem, the expedition twins, the temporal modules
+and the frame's own mini-theorems, seventeen modules in all — is
+formalized in Lean 4 **with an empty axiom list, definitions
+included**: 338 theorems, each one audited individually rather than by
+sample (`inventory/axiom_audit.py`, re-run on every push). As a
 test bench the logic is run over the classical paradoxes — the liar,
 Jourdain's carousel, Curry, Yablo, the crocodile, Russell — and in every
 case explosion is replaced by pointwise quarantine (for Russell, 8 of 9
@@ -249,15 +251,37 @@ expresses the revenge liar; its content evaluates to T while the
 sentence is denied truth — a price paid deliberately (it is the standard
 price of all quarantine theories; here it is written out explicitly).
 
-### 3.5 Incompatibilities (mini-theorems)
+### 3.5 Incompatibilities (mini-theorems — Lean, `Frame.lean`)
 
-1. {¬Z=F, T→Z=F} ⟹ contraposition-as-identity is impossible
-   (verified by substitution).
-2. A value housing the liar must be a fixed point of ¬; pessimism
-   (¬Z=F) excludes this ⟹ the quarantine flag is irremovable.
-3. Collapsing Z→F at the atom (instead of at the operator) restores all
-   classical laws and turns the system verbatim into Bochvar's isomorph
-   B3□ — the novelty and the rules/laws split vanish.
+Three statements about the frame itself. Until v1.2 they were argued in
+a parenthesis ("verified by substitution"); they are now kernel-checked
+on the empty axiom list, since a paper about the difference between
+earned and borrowed truth should not carry the word *theorem* on
+unformalised reasoning about its own core.
+
+1. **{¬Z=F, T→Z=F} ⟹ contraposition-as-identity is impossible.** At
+   p = T, q = Z the left side is T→Z = F while the right side is
+   ¬Z→¬T = F→F = T (`mt1_contraposition_impossible`). The dependence is
+   stated separately as an implication from the two named cells
+   (`mt1_from_the_cells`): the failure is a consequence of those
+   entries, so a rescue costs exactly the flip of one of them.
+2. **The quarantine flag is irremovable.** Housing the liar means being
+   a fixed point of ¬; the frame has none (`mt2_housing_means_fixed_point`),
+   and at Z it is pessimism, ¬Z = F ≠ Z, that does the excluding
+   (`mt2_pessimism_excludes_Z`). Quarantine is therefore not a fourth
+   value one could reach by editing a cell — it is a property of the
+   input mark, not a verdict the tables could return
+   (`mt2_quarantine_irremovable`).
+3. **Collapsing Z→F at the atom is the classical fork.** The claim
+   proved is the strong one, not "some laws come back": under the
+   atom-collapse the ZTL evaluation of *every* formula equals the
+   embedded Boolean evaluation, term by term
+   (`mt3_collapse_is_classical`), whence every classical tautology
+   returns (`mt3_every_tautology_returns`) — p→p and excluded middle
+   among them. With the price list empty the rules/laws split has
+   nothing left to split, and the system is Bochvar's isomorph B3□.
+   The fork is one step wide: the same p→p is F in ZTL proper, where
+   the mark reaches the operator and is read there (`mt3_the_fork`).
 
 ### 3.6 The algebraic passport: completeness as a logic (MEASURED + Lean)
 
@@ -687,10 +711,22 @@ fallen laws, semantic MP, the greediness theorem, the homelessness of
 the liar (∀v, ¬v ≠ v), the isZ detector and the quantifier UI/EG
 asymmetry — all proven.
 
-**Axiom status: the empty list.** `#print axioms` over the whole corpus
-returns "does not depend on any axioms": no Classical.choice, no
-Quot.sound, not even propext; pure computation. This is the strictest
-possible tier — rare for a substantial logical system.
+**Axiom status: the empty list, audited exhaustively.** `#print axioms`
+over the whole corpus returns "does not depend on any axioms": no
+Classical.choice, no Quot.sound, not even propext; pure computation.
+This is the strictest possible tier — rare for a substantial logical
+system.
+
+The claim used to rest on 125 hand-placed prints against 338 theorems,
+with the rest covered transitively — a sound argument (a lemma carrying
+an axiom infects every theorem that uses it), but an argument, and one
+that an unused orphan theorem would escape. It is now a measurement:
+`inventory/axiom_audit.py` extracts every theorem name from every
+module, generates one `#print axioms` per name, and fails if a single
+line reads otherwise. **338 of 338 clean**, re-run by CI on every push.
+The same stand refuses a module that carries theorems and is built by no
+target — the failure mode that let one module (`QuantumWitness.lean`) go
+unchecked by any automation until 2026-07-20.
 
 **The temporal modules** (v1.2): `ZTime.lean` — the verification tree,
 with absorption, arrow and ladder-inclusion proven structurally for

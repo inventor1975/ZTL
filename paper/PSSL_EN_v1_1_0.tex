@@ -189,23 +189,38 @@ the obstruction persists, the floor stands; that is why both are invariant.
 
 Why an irreducible plurality rather than a hierarchy or a common refinement?
 
-Because the retained principles are \emph{pairwise incompatible}. Quantum
-logic retains $x \vee x^{\perp} = 1$; ZTL withholds $p \vee \neg p$ at the
-mark --- no single valuation structure validates both a total complementation
-law and its pointwise failure. Type theory demands strong normalization
-(every term terminates); the ZTL solver houses non-termination as the
-transient phase $\Nph$ (\S\ref{sec:mirror}). Pairwise incompatibility is
-already enough: three systems no two of which admit a common valuation
-structure have no common refinement, and the three are genuinely
-incomparable.
+The three pairs fail to merge, but not all in the same way, and the
+difference is worth stating exactly.
 
-Version 1.0.0 argued this through the baseline instead --- ``any system
-retaining all four families would validate distributivity and its negation,
-hence be trivial; that system is classical logic'' --- which was muddled,
-since classical logic is not trivial, and unnecessary, since the pairwise
-argument above carries the section on its own. The informal picture of an
-\emph{orbit} around an unreachable centre goes with it; it was marked as
-metaphor and did no work.
+Two pairs clash at the level of what is validated. Quantum logic retains
+$x \vee x^{\perp} = 1$; ZTL withholds $p \vee \neg p$ at the mark --- no
+single valuation structure validates both a total complementation law and
+its pointwise failure. Type theory demands strong normalization (every term
+terminates); the ZTL solver houses non-termination as the transient phase
+$\Nph$ (\S\ref{sec:mirror}).
+
+The third pair --- quantum and intuitionistic --- is \emph{not} incompatible
+in that sense, and it would be an overclaim to say so: intuitionistic logic
+does not negate excluded middle, it merely lacks it, and a common refinement
+of the two sets of retentions exists. But look at what it is. Distributivity
+(Heyting algebras are distributive) plus excluded middle, double negation
+and total complementation is a Boolean algebra: the join of the quantum and
+intuitionistic retentions is \emph{classical logic itself}. The pair can
+merge --- and merging expels them from the family, because the merge is
+exactly the baseline of \S\ref{sec:four}, which resolves nothing from
+within: it explodes on the raw liar and is repaired from the metalanguage.
+So the three are incomparable \emph{as resolutions}: two pairs cannot share
+a valuation structure, and the third pair can share one only by ceasing to
+resolve.
+
+Version 1.0.0 ran this argument through the baseline in a muddled form ---
+``any system retaining all four families would validate distributivity and
+its negation, hence be trivial; that system is classical logic'' --- muddled
+because classical logic is not trivial. But the old argument was gesturing at
+something true, and the repair is to state it, not to delete it: the baseline
+is where the mergeable pair lands. The informal picture of an \emph{orbit}
+around an unreachable centre is gone; it was marked as metaphor and did no
+work.
 
 What remains is the content: the pairwise incompatibility above and the
 concrete complementarity of \S\ref{sec:mirror}. No claim of a formal cyclic

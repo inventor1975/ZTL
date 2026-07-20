@@ -11,7 +11,7 @@
 **This file prepares a NEW VERSION of an existing record. Claude never
 publishes.**
 
-Source: `paper/PSSL_EN_v1_1_0.tex` → **`paper/PSSL_EN_v1_1_0.pdf` (8 pages,
+Source: `paper/PSSL_EN_v1_1_0.tex` → **`paper/PSSL_EN_v1_1_0.pdf` (9 pages,
 lualatex, 2026-07-20)** = the file to upload. English only: the Russian
 reading copy was removed in v1.1.0 (see the foot of this sheet).
 Verifiable anchor: `lean/ZTL.lean` + `lean/QuantumWitness.lean` +
@@ -25,7 +25,7 @@ over the old description → Publish → paste the new version DOI back here.
 Going through "New version" keeps the concept DOI 21452735 and the lineage;
 a fresh record would orphan v1.1.0 from v1.0.0.
 
-**File to upload:** `paper/PSSL_EN_v1_1_0.pdf` (8 pages)
+**File to upload:** `paper/PSSL_EN_v1_1_0.pdf` (9 pages)
 
 ---
 
@@ -62,9 +62,15 @@ nothing about the classical corner is proved here.
 Two invariants do not move: non-contradiction with its reductio
 (the shared floor, a law kept by all) and the self-referential paradox itself
 (the shared ceiling, a monster tamed by all); the floor is the guard posted
-against the monster. The three do not merge, and the reason is pairwise
-incompatibility alone: no two of them admit a common valuation structure, so
-there is no common refinement.
+against the monster. The three do not merge, and the paper states exactly how the three pairs
+fail to: two pairs clash at the level of what is validated (total excluded
+middle against its pointwise failure; strong normalization against housed
+non-termination), while the third — quantum and intuitionistic — CAN merge,
+and the merge is exactly classical logic (distributivity plus excluded middle,
+double negation and total complementation is a Boolean algebra). Merging
+expels the pair from the family: the result resolves nothing from within. So
+the three are incomparable AS RESOLUTIONS — two pairs cannot share a valuation
+structure, and the third can share one only by ceasing to resolve.
 
 The formal components are machine-checked on the EMPTY axiom list,
 verifiable from zero with a bare Lean 4 (no mathlib, no imports): the
@@ -109,13 +115,14 @@ and suggested a symmetry that does not hold: none of the five machine-checked
 components concerns the classical corner — every witness is about ZTL, MO2, or
 their pair. Classical logic is now stated once as the baseline and set aside,
 with the difference in kind made explicit (its repair is metalinguistic, the
-other three resolve the diagonal from within). Section 4 gains from the
-removal rather than losing: its work was always done by pairwise
-incompatibility, while the old argument through the baseline — "any system
-retaining all four families would be trivial; that system is classical logic"
-— was muddled, since classical logic is not trivial, and unnecessary. The
-metaphor of an orbit around an unreachable centre goes with it; it was marked
-as metaphor and did no work. No formal content is added or removed: the five
+other three resolve the diagonal from within). Section 4 is restated exactly: two pairs are valuation-incompatible, and the
+third pair (quantum–intuitionistic) can merge — into classical logic itself,
+which is precisely the baseline and resolves nothing from within. The old
+argument through the baseline was muddled in form (classical logic is not
+trivial) but was gesturing at this true fact, and the repair states it rather
+than deleting it: the baseline is where the mergeable pair lands. The metaphor
+of an orbit around an unreachable centre is gone; it was marked as metaphor
+and did no work. No formal content is added or removed: the five
 machine-checked components, their axiom profiles and their statements are
 unchanged from 1.0.0.
 

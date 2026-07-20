@@ -67,6 +67,13 @@ which law survives the pair and which falls — and the honest note that
 the quantum Z here is ONTIC vacancy (by Bell, local values cannot even
 be consistently assigned), not ZTL's epistemic flag: the Z↔superposition
 kinship stays a rhyme, and the pair shows exactly where the rhyme ends.
+
+NAMED 2026-07-20 (IDEAS 12.6, on the curator's word): that ontic vacancy
+is the boundary mark `O`. `Z` and `O` are the same rung of the ladder in
+two registers — "present, no value" — differing in WHY: `Z` is epistemic
+(a value exists, we have not looked), `O` is ontic (there is no value to
+look at). With the letter the rhyme does not end, it RESOLVES. This
+stand is where `O` was measured a day before it had a name.
 """
 import math
 

@@ -34,3 +34,9 @@ jobs:
       # zero-axiom line, so the Lean corpus is exercised here too.
       - name: all stands + Lean
         run: python3 run_all.py
+      # The papers are claims too. Until 2026-07-20 nothing checked that
+      # their numbers matched the corpus, and two of them did not.
+      - name: paper claims
+        run: |
+          sudo apt-get install -y poppler-utils >/dev/null 2>&1 || true
+          python3 inventory/paper_claims.py

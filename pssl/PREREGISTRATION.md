@@ -78,3 +78,81 @@ a populated field, named here once as a handle.
 What is ours is the **operational reading**: a ground is not a position
 but an **act**, and the act has a receipt. The price list is the witness
 of laying a ground.
+
+---
+
+# Results — appended 2026-07-20, after the run
+
+Pre-registration without a result record is half the discipline. This
+section is appended, never edited above the line.
+
+## Measurement
+
+Pool of 16 formulas over p, q; contexts of size 0 and 1; the deduction
+theorem in its real form, `Γ, γ ⊨ φ ⟹ Γ ⊨ γ → φ`.
+
+| ground | laws | rules | DT gap | first witness |
+|---|---:|---:|---:|---|
+| classical | 27 | 14 | 0 | — |
+| intuitionistic | 20 | 12 | 0 | — |
+| quantum MO2 | 22 | 9 | 194 | `p, q ⊨ p` but `p ⊭ q→p` |
+| ZTL | 15 | 12 | 128 | `p ⊨ p` but `⊭ p→p` |
+
+**P1 HOLDS.** **P2 HOLDS** — non-contradiction survives in all four; the
+PSSL floor is no longer four curated points but a measured invariant.
+
+Both are now `assert`ed in the stand, not printed, and the stand runs in
+`run_all.py` on every push.
+
+## The claim ceiling, and why it is not the pool size
+
+The counts 194 and 128 are tier C: they are artefacts of a 16-formula
+pool and mean nothing in absolute terms. The **qualitative** split does
+not depend on them, and was deliberately lifted out of tier C rather
+than defended by a bigger sweep:
+
+* classical — the deduction theorem is a classical theorem (cited);
+* intuitionistic — standard (cited; the prover agrees on the battery);
+* ZTL — `lean/ZTL.lean`, `dt_one_way`: `p ⊨ p` while `p→p = F`;
+* quantum — `lean/QuantumWitness.lean`, `deduction_theorem_fails` and
+  `deduction_witness`, added for this leg. Empty axiom list.
+
+So the 2/2 split rests on two citations and two machine-checked
+witnesses. Enlarging the pool would have produced bigger tier-C numbers
+and no more certainty. The Python MO2 is cross-checked against the Lean
+MO2 in the stand (`calibrate_against_lean`), which aborts leg 1 if they
+diverge — the `bridge.py` discipline applied to new work on the day it
+was written.
+
+## Three instrument failures, recorded because they are the substance
+
+Each pass tested a *convenient* form and read the answer as if it were
+the real statement — the exact move ZTL exists to catch, performed three
+times by ZTL's own authors.
+
+1. **The curated 14-rule battery reported gap 0 for MO2.** False: the
+   deduction theorem fails there on 32 of 216 triples. The classical
+   canon contains no non-commuting instance. *You cannot price a ground
+   with another ground's battery.* (This is the same principle the VRG
+   programme states for benchmarks — do not force a system into another's
+   vocabulary — arrived at here from the opposite direction.)
+2. **A one-premise generated sweep is blind too.** In any ortholattice
+   `a ≤ b` already gives `a →s b = ⊤`, so a single premise always
+   discharges; the failure needs three independent elements.
+3. **Folding the premises into one conjoined antecedent is blind to
+   both.** In MO2 for the same reason; in ZTL because `∧` collapses the
+   mark (`Z∧Z = F`) before `→` ever sees it.
+
+The moral is not "we were careless". It is that **a ground's failure mode
+is invisible to instruments built from another ground's habits**, and
+that this is precisely why the price list has to be generated rather than
+inherited. Leg 1's method had to learn its own lesson before it could
+report it.
+
+## What leg 1 did not settle
+
+Whether the 2/2 split is one axis or a coincidence of two. Classical and
+intuitionistic share the deduction theorem; quantum and ZTL lack it — but
+for visibly different reasons (non-commutation vs the mark). Whether
+those are one phenomenon is leg 2's question, and the identity criterion
+for grounds is the tool for asking it.

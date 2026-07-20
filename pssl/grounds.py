@@ -243,6 +243,20 @@ def show(title, rows):
     return tally
 
 
+def calibrate_against_lean():
+    """The Python MO2 must agree with the Lean MO2, or leg 1 stands on
+    sand. Same discipline as `bridge.py`: two engines, one questionnaire.
+    Mirrors the four theorems of `lean/QuantumWitness.lean`."""
+    E = QL.ELS
+    mp = all(QL.leq(QL.meet(x, QL.sasaki(x, y)), y)
+             for x, y in itertools.product(E, repeat=2))
+    dt = not all((QL.leq(x, QL.sasaki(y, z)) if QL.leq(QL.meet(x, y), z)
+                  else True)
+                 for x, y, z in itertools.product(E, repeat=3))
+    wit = (QL.leq(QL.meet("a", "b"), "a"), QL.leq("a", QL.sasaki("b", "a")))
+    return mp and dt and wit == (True, False)
+
+
 if __name__ == "__main__":
     print("=" * 78)
     print("PSSL LEG 1 — four grounds, one generator")
@@ -252,10 +266,17 @@ if __name__ == "__main__":
     for nm, refuses, _, _ in GROUNDS:
         print(f"  {nm:16s} {refuses}")
 
+    cal = calibrate_against_lean()
+    print(f"\n  calibration vs lean/QuantumWitness.lean: "
+          f"{'AGREE' if cal else 'DIVERGED'}"
+          "  (sasaki_mp, deduction_theorem_fails, deduction_witness)")
+    assert cal, "Python MO2 diverged from the Lean MO2 — leg 1 is void"
+
     laws = show("PRICE LIST — LAWS (⊨ φ)", price_list_laws())
     rules = show("PRICE LIST — RULES (Γ ⊨ φ)", price_list_rules())
 
-    print(f"\n{'=' * 78}\nTHE GAP — rules that hold, whose law falls\n{'=' * 78}")
+    print(f"\n{'=' * 78}\nTHE GAP — curated battery. A BLIND INSTRUMENT; kept as"
+          f"\nthe record of a wrong reading, do NOT quote these numbers.\n{'=' * 78}")
     print("  Zero iff the ground exports every rule into its object")
     print("  language, i.e. iff it has the deduction theorem.\n")
     gaps = deduction_gap()
@@ -298,6 +319,10 @@ if __name__ == "__main__":
         print("  the ground can export a rule into its own object language —")
         print("  and the two cuts do not coincide.")
 
+    assert p1, "P1 flipped — the 2/2 split no longer holds"
+    assert ggaps[0] == 0 and ggaps[1] == 0, "a ground with DT grew a gap"
+    assert ggaps[2] > 0 and ggaps[3] > 0, "a ground without DT lost its gap"
+
     nc = [name for name, _, _ in zipc.LAWS if "non-contradiction" in name]
     print(f"\nPREDICTION P2 — non-contradiction (the PSSL floor) in all four:")
     for nm, cols in price_list_laws():
@@ -306,3 +331,5 @@ if __name__ == "__main__":
                   + ", ".join(f"{g[0]}={'✓' if c else '✗'}"
                               for g, c in zip(GROUNDS, cols)))
             print(f"  P2 {'HOLDS' if all(cols) else 'FAILS'}")
+            assert all(cols), "P2 fell: the PSSL floor is not invariant"
+    print("\n  LEG 1 GREEN — P1 and P2 both asserted, not merely printed.")

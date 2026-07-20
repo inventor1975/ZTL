@@ -99,6 +99,7 @@ STANDS = [
     ("pssl/kripke.py", ["KRIPKE CROSS-CHECK GREEN",
                         "definitive bugs (prover says ⊢, model refutes) : 0",
                         "14-rule battery : agree 14 / 14"]),
+    ("inventory/paper_claims.py", ["PAPER CLAIMS GREEN"]),
     ("pssl/E27_instrument.py", ["E27 GREEN", "7 blindnesses reproduced",
                                 "blindnesses that silently changed the answer: 7 of 7"]),
     ("dilemmas/quantum_ladder.py",

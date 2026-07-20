@@ -161,3 +161,90 @@ Q2 (Łukasiewicz Ł3 has the deduction theorem) and Q3 (weak Kleene — the
 cycle's own lazy register — lacks it, for the mark's reason rather than
 the lattice's) are untouched. They are tack 2b, and they are what decides
 whether the 2/2 split is one axis or two.
+
+---
+
+# Results — tack 2b, appended 2026-07-20
+
+## Q2 is RETRACTED. Q3 holds.
+
+**Q2 predicted that Łukasiewicz Ł3 has the deduction theorem. It does
+not.** On a depth-1 pool Ł3 reads gap 0, and that reading was printed
+before it was checked. The counterexample
+
+    p ⊨ ¬(p→¬p)      but      ⊭ p→¬(p→¬p)      (at p = u the arrow gives u)
+
+has depth 3; the shallow pool cannot contain it. On a depth-2 pool the
+gap is 6404. **A pool is not a proof, and a zero on a pool is only the
+absence of a counterexample we could reach.** This is the fourth
+instrument blindness of this work and the same shape as the other three.
+
+Q3 holds: weak Kleene — the cycle's own lazy register — lacks discharge,
+gap 245130 at depth 2, first witness `p ⊨ p`.
+
+## What the family showed, which neither prediction anticipated
+
+| ground | ¬¬x=x | MP | DT |
+|---|---|---|---|
+| classical | — | yes | **yes** |
+| intuitionistic | — | yes | **yes** |
+| quantum MO2 | — | yes | no |
+| ZTL | — | yes | no |
+| K3 | yes | yes | no |
+| **LP** | yes | **NO** | yes |
+| weak Kleene | yes | yes | no |
+| Ł3 | yes | yes | no |
+
+**The arrow has two halves, and outside the classical/intuitionistic pair
+every ground pays with one of them.**
+
+* *transport* — modus ponens: the arrow carries earned truth;
+* *discharge* — the deduction theorem: a rule can be exported into the
+  object language as an arrow.
+
+Only classical and intuitionistic logic keep both. Five grounds keep
+transport and lose discharge; LP keeps discharge and loses transport
+(modus ponens is not valid in LP). **No ground in the family pays with
+neither.**
+
+**ZTL and LP are the two poles of one trade.** ZTL keeps transport and
+loses discharge — `p ⊨ p` while `p→p` falls. LP keeps discharge and loses
+transport. The cycle's own rules-versus-laws split reappears here as a
+property of a *family* rather than of one logic, which is what leg 2 was
+for.
+
+Involution is **not** the discriminator: all four matrix grounds satisfy
+¬¬x = x and they split on both halves. The framing that made Ł3 "the
+decisive contrast because it keeps the involution ZTL breaks" was true
+and irrelevant.
+
+## The answer to leg 1's question: two shapes, not one axis
+
+| ground | arity 0 | arity 1 | first fails at |
+|---|---:|---:|---:|
+| quantum MO2 | 0 | 194 | **1** |
+| ZTL | 14 | 114 | **0** |
+| K3 | 84 | 724 | **0** |
+| weak Kleene | 72 | 1220 | **0** |
+
+The three-valued grounds lose the arrow's *identity* itself. The
+ortholattice keeps identity (`x →s x = ⊤`) and loses only discharge under
+a standing context. Leg 1's 2/2 split lumped two structurally different
+failures together; the arity of first failure is what tells them apart.
+
+## A category error caught by our own assertion
+
+The first draft of this table filled the "DT" column with the *arity-0*
+gap, which put MO2 in the "has DT" column — contradicting the
+impossibility theorem proved in tack 2a two hours earlier. The `assert`
+placed on the both-halves club is what caught it. A convenient proxy read
+as the real property: the same move, for the fifth time in this work, and
+the reason every conclusion here is asserted rather than printed.
+
+## Claim ceiling
+
+Gap 0 is tier C everywhere except classical and intuitionistic, where the
+deduction theorem is a cited theorem. **LP's "has DT" is measured, not
+proved** — no counterexample was found in the pools swept, which is not
+the same statement. The two zero-gap entries that are safe are safe by
+citation, not by our sweep.

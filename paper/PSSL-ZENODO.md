@@ -1,24 +1,32 @@
-# Zenodo sheet — PSSL v1.0.0 **PUBLISHED 2026-07-20**
+# Zenodo sheet — PSSL **v1.1.0, PREPARED** (the curator publishes)
 
-**Version DOI:** [10.5281/zenodo.21452736](https://doi.org/10.5281/zenodo.21452736)
-**Concept DOI (always latest):** [10.5281/zenodo.21452735](https://doi.org/10.5281/zenodo.21452735)
-Record: https://zenodo.org/records/21452736 — 8 pages, CC BY 4.0, creator
-carries ORCID 0009-0002-4103-6387, three related identifiers registered as
-entered (two preprint references, the repository as isSupplementedBy).
-Verified against the Zenodo API after publication, not assumed.
+**Published history**
+- **v1.0.0** — 2026-07-20, version DOI
+  [10.5281/zenodo.21452736](https://doi.org/10.5281/zenodo.21452736).
+  Verified against the API after publication: 8 pages, CC BY 4.0, ORCID in
+  the creator, three related identifiers as entered.
+- **Concept DOI (always latest):**
+  [10.5281/zenodo.21452735](https://doi.org/10.5281/zenodo.21452735)
 
-**This file prepared the manual upload. Claude never publishes; the curator did.**
-Source: `paper/PSSL_EN_v1_0_0.tex` → **`paper/PSSL_EN_v1_0_0.pdf` (8 pages, REBUILT
-2026-07-20, lualatex)** = the file to upload. (PSSL was never published — the
-first public version is 1.0.0; internal iterations consume no number.) RU reading copy: `paper/PSSL-RU.md`.
+**This file prepares a NEW VERSION of an existing record. Claude never
+publishes.**
+
+Source: `paper/PSSL_EN_v1_1_0.tex` → **`paper/PSSL_EN_v1_1_0.pdf` (8 pages,
+lualatex, 2026-07-20)** = the file to upload. RU reading copy:
+`paper/PSSL-RU.md` (still describes four corners — update or omit; see the
+note at the foot of this sheet).
 Verifiable anchor: `lean/ZTL.lean` + `lean/QuantumWitness.lean` +
 `lean/Contextuality.lean` + `lean/JunctionWitness.lean` (all empty axiom list,
 re-measured 2026-07-20: 13 + 11 + 3 + 8 = 35 objects).
 
-**Upload flow:** new Zenodo record → upload `paper/PSSL_EN_v1_0_0.pdf` → paste the
-block below → Publish → paste the version DOI back here.
+**Upload flow — NOT a new record.** Open the existing record
+https://zenodo.org/records/21452736 → **New version** → replace the file with
+`paper/PSSL_EN_v1_1_0.pdf` → set Version to **1.1.0** → paste the block below
+over the old description → Publish → paste the new version DOI back here.
+Going through "New version" keeps the concept DOI 21452735 and the lineage;
+a fresh record would orphan v1.1.0 from v1.0.0.
 
-**File to upload:** `paper/PSSL_EN_v1_0_0.pdf` (8 pages)
+**File to upload:** `paper/PSSL_EN_v1_1_0.pdf` (8 pages)
 
 ---
 
@@ -26,32 +34,38 @@ block below → Publish → paste the version DOI back here.
 
 **Title:** A Paradoxical, Self-Referential System of Logics (PSSL)
 
-**Subtitle / in-text:** Four non-classical logics as resolutions of one
+**Subtitle / in-text:** Three non-classical logics as resolutions of one
 universal diagonal — a synthesis with five machine-checked components.
 
 **Authors:** Reznik, Vitaly
 
-**Version:** 1.0.0
+**Version:** 1.1.0
 
 **License:** Creative Commons Attribution 4.0 International (CC BY 4.0)
 
 **Description (paste as-is):**
 
-This essay offers a way to see four non-classical logics — classical, type
-theory / intuitionism, quantum logic, and Zero-Trust Logic (ZTL) — as four
+This essay offers a way to see three non-classical logics — type theory /
+intuitionism, quantum logic, and Zero-Trust Logic (ZTL) — as three
 disciplined answers to a single self-referential paradox. The paradox is the
 one construction behind the liar, Russell's set, Cantor's diagonal, and
 Gödel's undecidable sentence, made exact by Lawvere's fixed-point theorem
-(1969): self-application with no fixed point. Each logic keeps all of classical
-logic except one law and thereby houses the paradox differently — classical by
-explosion plus the Tarski hierarchy, type theory by the universe hierarchy
-(Girard's paradox), quantum by superposition, ZTL by pointwise quarantine to
-the mark Z. Two invariants do not move: non-contradiction with its reductio
+(1969): self-application with no fixed point. Each keeps all of classical logic
+except one law and thereby houses the paradox differently FROM WITHIN — type
+theory by the universe hierarchy (Girard's paradox), quantum by
+superposition, ZTL by pointwise quarantine to the mark Z. Classical logic
+itself is stated once as the BASELINE and set aside: it keeps every
+structural principle and therefore has nothing to house the paradox with, so
+it explodes and is repaired from the METALANGUAGE — Tarski's hierarchy sits
+above the logic, not inside it. Its "resolution" is of a different kind, and
+nothing about the classical corner is proved here.
+
+Two invariants do not move: non-contradiction with its reductio
 (the shared floor, a law kept by all) and the self-referential paradox itself
 (the shared ceiling, a monster tamed by all); the floor is the guard posted
-against the monster. The four do not merge — their kept laws conflict at the
-seams — so they orbit classical logic (the unreachable center that would keep
-every law at the price of the raw liar) rather than fusing.
+against the monster. The three do not merge, and the reason is pairwise
+incompatibility alone: no two of them admit a common valuation structure, so
+there is no common refinement.
 
 The formal components are machine-checked on the EMPTY axiom list,
 verifiable from zero with a bare Lean 4 (no mathlib, no imports): the
@@ -59,8 +73,9 @@ mirror between ZTL and quantum logic, the combinatorial
 core of quantum contextuality — the Mermin-Peres magic square admits no
 bivalent valuation (0 of 512) and GHZ none (0 of 64), by kernel
 enumeration. On two quanta the mirror sharpens: at the singlet, pair
-propositions are true while every local proposition is unverified — the
-covering law falls in correlation form — and the seam itself is
+propositions are true while every local proposition is empty — ontic
+vacancy, not our ignorance: by Bell no consistent local values exist to be
+looked at — the covering law falls in correlation form — and the seam itself is
 kernel-checked (the junction theorem: the singlet lies in the join of two
 product atoms yet in neither atom and in no local plane of either factor,
 exact integer arithmetic, empty axiom list); the falls saturate along the
@@ -76,8 +91,8 @@ non-contradiction. ZTL breaks where a thing equals itself; quantum breaks where
 things combine. That second clause is sharpened into a necessity and
 machine-checked: MO2 keeps modus ponens under the Sasaki hook but admits NO
 implication at all — no binary operation on the lattice — satisfying the
-deduction theorem — such an arrow would have
-to be a relative pseudocomplement, which would make the lattice Heyting and
+deduction theorem: such an arrow would have to be a relative
+pseudocomplement, which would make the lattice Heyting and
 therefore distributive. So what the quantum corner cannot do is discharge a
 premise while a context still stands, and no choice of connective repairs it;
 the claim is not "MO2 under the Sasaki hook lacks the deduction theorem" but
@@ -88,13 +103,30 @@ ZTL as the paracomplete relative that breaks the involution its Lukasiewicz
 ancestor and its quantum cousin both keep (the known bridge from orthomodular
 to many-valued logic runs through Lukasiewicz, Pykacz 2010).
 
+What changed in version 1.1.0. Classical logic is no longer listed as a
+fourth resolution. Version 1.0.0 tabled it beside the other three, which
+counted classical logic among the "non-classical logics" of its own subtitle,
+and suggested a symmetry that does not hold: none of the five machine-checked
+components concerns the classical corner — every witness is about ZTL, MO2, or
+their pair. Classical logic is now stated once as the baseline and set aside,
+with the difference in kind made explicit (its repair is metalinguistic, the
+other three resolve the diagonal from within). Section 4 gains from the
+removal rather than losing: its work was always done by pairwise
+incompatibility, while the old argument through the baseline — "any system
+retaining all four families would be trivial; that system is classical logic"
+— was muddled, since classical logic is not trivial, and unnecessary. The
+metaphor of an orbit around an unreachable centre goes with it; it was marked
+as metaphor and did no work. No formal content is added or removed: the five
+machine-checked components, their axiom profiles and their statements are
+unchanged from 1.0.0.
+
 Honest scope. This is a synthesis and a reading, not a theorem, a merger, a new
 foundation, or a new field. Its components are established (Lawvere 1969;
 Birkhoff–von Neumann 1936; intuitionism; universal logic). What is the author's:
-ZTL itself (its own preprint), the curation of the four as resolutions of one
+ZTL itself (its own preprint), the curation of the three as resolutions of one
 diagonal, and the five Lean witnesses (the impossibility result among them). The formal components are machine-checked;
 the cycle between them, and the metatheoretic corners (intuitionistic
-underivability of LEM, "classical as center"), are prose, marked as such. The
+underivability of LEM), are prose, marked as such. The
 reliability of the machine-checked components does not depend on trusting the
 author or the AI: all four Lean files verify against the Lean 4 kernel on the
 empty axiom list, 35 objects in about a second in total.
@@ -123,3 +155,13 @@ Reproduce the machine-checked components from zero, no mathlib:
 `lean lean/Contextuality.lean` (3 objects, ~0.3 s) and
 `lean lean/JunctionWitness.lean` (8 objects, ~0.2 s), Lean 4.29.1.
 Timings re-measured 2026-07-20 on the curator's machine.
+
+---
+
+**Note for the curator before upload.** `paper/PSSL-RU.md` is the Russian
+reading copy named above and still describes FOUR corners with classical among
+them. It is not uploaded to Zenodo and nothing points a reader at it from the
+record, so it does not block publication — but it is now one version behind the
+English, exactly as it was before the 12.6 pass. Either bring it to three
+corners or drop the mention of it from this sheet; leaving it as-is is the one
+inconsistency remaining in the package.

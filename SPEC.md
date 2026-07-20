@@ -37,7 +37,7 @@ by how much an event carries.
 **Two orderings, and the axis must be named.** The rungs below are
 ordered by how much an event CARRIES. That is not the only order: the
 GENETIC one — what was recognised first — runs `N → F → T → Z` inside
-and `M → E → σ → O` at the seam. Falsity precedes truth (denial is
+and `E → M → σ → O` at the seam. Falsity precedes truth (denial is
 cheap, assertion is earned), and the mark comes LAST, because "an input
 may be unverified, and that is not a third truth value" is a modern
 recognition: IEEE NaN 1985, SQL NULL 1986. The pairing is unaffected —
@@ -48,22 +48,25 @@ not a mirror of two alphabets but a map of ARRIVAL: a boundary letter
 arrives and becomes an internal one. The logic's alphabet is what the
 seam delivered.
 
-| carries | at the seam (source) | → | inside (arrival) |
+| at the seam (source) | → | inside (arrival) | why the pair |
 |---|---|---|---|
-| nothing, before any process | `M` (matter) — no ground was ever offered | → | `N` phase |
-| under way, no value | `O` — the world's INDETERMINACY (ontic: there is no value) | → | `Z` mark (epistemic: a value exists, we have not looked) |
-| cheap negative | `E` — the world stayed silent | → | `F` — not earned |
-| expensive, informative | `σ` — the world ANSWERED | → | `T` — earned |
+| `E` — the world stayed silent | → | `N` phase | `E` **is** the premature read of phase `N` (§10) — same subject |
+| `M` (matter) — no ground was ever offered | → | `F` — not earned | empty to empty: nothing offered, therefore nothing earned |
+| `σ` — the world ANSWERED | → | `T` — earned | the world's answer is what an earned value is paid in |
+| `O` — the world's INDETERMINACY (ontic: there is no value) | → | `Z` mark (epistemic: a value exists, we have not looked) | one rung, differing in WHY the value is absent |
 
-`E` points into `F` and carries no logical content of its own: the
-world's silence IS unearnedness, and `¬Z = F` is literally "asked,
-nothing came back, therefore not earned". This explains rather than
+A pair goes by what a letter is ABOUT, not by what it causes. The
+world's silence does produce `F` — `¬Z = F` is literally "asked,
+nothing came back, therefore not earned" — but that is a consequence,
+while `E`'s subject is the phase it read too early.
+
+So `E` carries no logical content of its own, which explains rather than
 overturns the preprint's §10 line — *"the system has no error letter,
-and none is missing… E is hardware, not logic"* — `E` has no letter
-inside because `F` already carries it. The other three arrows do carry
-content: `M` is an input that never came, `O` is ontic vacancy as
-opposed to epistemic `Z`, and `σ` is an answer that can disagree with
-what was derived.
+and none is missing… E is hardware, not logic"*. It has no letter inside
+because it is an interface accident about a phase that has no value yet,
+not a value of any kind. The other three do carry content: `M` is an
+input that never came, `O` is ontic vacancy as opposed to epistemic `Z`,
+and `σ` is an answer that can disagree with what was derived.
 
 `M` and `O` are MARKS, `E` and `σ` are STATES: a boundary mark lives on
 an atom and never becomes a boundary event, exactly as `Z` never becomes

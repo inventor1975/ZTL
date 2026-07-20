@@ -34,12 +34,27 @@ at the seam with the world, a second register is staked and deliberately
 not implemented: two marks and two states, mirroring the internal ladder
 by how much an event carries.
 
-| carries | inside the solver | at the seam |
-|---|---|---|
-| nothing yet | `N` phase | `M` (matter) — no ground was ever offered |
-| under way, no value | `Z` mark | `O` — a check is dispatched, not returned |
-| cheap negative | `F` | `E` — the world stayed silent |
-| expensive, informative | `T` | `σ` — the world answered AGAINST |
+The table reads ONE WAY — from the physical INTO the operational. It is
+not a mirror of two alphabets but a map of ARRIVAL: a boundary letter
+arrives and becomes an internal one. The logic's alphabet is what the
+seam delivered.
+
+| carries | at the seam (source) | → | inside (arrival) |
+|---|---|---|---|
+| nothing, before any process | `M` (matter) — no ground was ever offered | → | `N` phase |
+| under way, no value | `O` — the world's INDETERMINACY (ontic: there is no value) | → | `Z` mark (epistemic: a value exists, we have not looked) |
+| cheap negative | `E` — the world stayed silent | → | `F` — not earned |
+| expensive, informative | `σ` — the world ANSWERED | → | `T` — earned |
+
+`E` points into `F` and carries no logical content of its own: the
+world's silence IS unearnedness, and `¬Z = F` is literally "asked,
+nothing came back, therefore not earned". This explains rather than
+overturns the preprint's §10 line — *"the system has no error letter,
+and none is missing… E is hardware, not logic"* — `E` has no letter
+inside because `F` already carries it. The other three arrows do carry
+content: `M` is an input that never came, `O` is ontic vacancy as
+opposed to epistemic `Z`, and `σ` is an answer that can disagree with
+what was derived.
 
 `M` and `O` are MARKS, `E` and `σ` are STATES: a boundary mark lives on
 an atom and never becomes a boundary event, exactly as `Z` never becomes

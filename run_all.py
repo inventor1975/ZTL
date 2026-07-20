@@ -36,6 +36,8 @@ STANDS = [
     ("zfo.py",         ["ALL verdicts cross-checked ✓", "guarded drinker"]),
     ("zpassport.py",   ["✓ STIPULATION THEOREM: total",
                         "parity cross-check: 62 of 62 ✓"]),
+    ("zsew.py", ["E29 GREEN", "hereditary ⊗ hereditary stays hereditary: 324 of 324",
+                 "UNPICKED", "CANNOT"]),
     ("zparadox.py", ["E28 GREEN", "PARADOX (0 tables)",
                      "strong liar", "INTRINSIC"]),
     ("bridge.py",      ["ALL ANSWERS COINCIDE"]),

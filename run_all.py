@@ -94,6 +94,7 @@ STANDS = [
     ("pssl/family.py", ["THREE ZEROS THAT ARE NOT TIER C", "TACK 2b GREEN", "Q2 — Ł3 HAS the deduction theorem : FAILS",
                         "BOTH halves        : classical, intuitionistic",
                         "keeps DT, no MP    : LP"]),
+    ("pssl/census.py", ["CENSUS GREEN", "Our eight are RARE in their own space"]),
     ("pssl/distance.py", ["LEG 3 GREEN", "R1 (kind predicts proximity) : FAILS",
                           "{CPC, IPC, LP, Ł3}", "{ZTL, K3}"]),
     ("pssl/apartness.py", ["TACK 2c GREEN", "every pair carries a receipt",

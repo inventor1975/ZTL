@@ -299,3 +299,59 @@ Every "no separator found" means exactly that. Sameness of grounds is not
 witnessable — that is the content of the tack, not a limitation of the
 sweep. The whole point of R3 is that identity is the thing you never get
 to earn.
+
+---
+
+# Instrument audit — the IPC oracle, appended 2026-07-20
+
+Not a tack; a hole in the instrument, found in review and closed the same
+day.
+
+## The hole
+
+Every PSSL leg used `zipc.prove` (Dyckhoff G4ip) as the intuitionistic
+oracle. It is calibrated against 27 textbook laws — **and every one of
+those has an empty premise set**, while the sweeps ask `ipc_derives`
+with premises standing. The premise-handling half of the prover was
+checked by nothing at all. An error there would have sat exactly in the
+uncalibrated part and shown up as a plausible number.
+
+## The fix, and why it is not a rewrite
+
+Rewriting G4ip a second time reproduces the same misunderstanding twice.
+`pssl/kripke.py` is the other **method**: Kripke semantics with finite
+countermodel search over every partial order on ≤ 4 worlds with every
+monotone labelling. It shares no code and no idea with the prover.
+
+It carries an asymmetry that is reported and never blurred:
+
+* a countermodel **found** is a witness — it settles ⊬ outright and can
+  be printed and checked by hand;
+* **no** countermodel up to N worlds is not a proof of ⊢.
+
+So "prover says ⊢, semantics exhibits a countermodel" is a definitive bug
+report; the converse is a request for a larger N. The two are counted
+separately.
+
+## Result
+
+| check | cases | agree | definitive bugs | unreached |
+|---|---:|---:|---:|---:|
+| semantics self-calibration | 8 known facts | 8 | — | — |
+| the 27-law battery (Γ = ∅) | 27 | 27 | 0 | 0 |
+| **the 14-rule battery (Γ ≠ ∅)** | 14 | 14 | **0** | 0 |
+| generated single-premise pairs | 256 | 256 | 0 | 0 |
+| **two-premise triples** | 512 | 512 | **0** | 0 |
+
+The semantics first calibrates itself: LEM, DNE and Peirce are refuted by
+the two-world model `0:{} ≤ 1:{p}`; weak LEM and Dummett need three
+worlds; `p→p`, `p→¬¬p` and `¬(p∧¬p)` have no countermodel. Then the two
+methods agree on every question the legs ever asked the prover —
+including the premise-handling half that nothing had checked before.
+
+## Ceiling
+
+"No countermodel at 4 worlds" is not a proof of derivability. This file
+settles **underivability with witnesses** and **corroborates**
+derivability. It does not prove it, and the run says so in its own
+output.

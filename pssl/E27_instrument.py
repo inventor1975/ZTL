@@ -15,21 +15,21 @@ side by side on the same objects, and the gap between their answers is
 printed. Where the two disagree, the convenient form returned a number
 that a competent reader would have believed.
 
-All six were committed to the repository as results before being
-recognised as errors. The seventh is the one that makes the other six
-data rather than anecdote: a fresh reviewer (Claude Fable 5, 2026-07-20),
+Six were committed to the repository as results before being recognised
+as errors; B8 is the same shape in shell tooling with no logic anywhere
+near it. B7 is the one that makes the rest data rather than anecdote: a fresh reviewer (Claude Fable 5, 2026-07-20),
 having just read the warning about shallow pools, reproduced B4 in the
 first run of its own verification script. The failure is not carelessness.
 It is structural, and it is why a price list must be GENERATED and never
 INHERITED.
 
-THE SHAPE, identical in all seven:
+THE SHAPE, identical in all eight:
 
     test a convenient form of the question,
     read the answer as if it were the real statement.
 
 Which is precisely the move ZTL exists to catch — truth accepted on
-credit — performed seven times in one day by the people building the
+credit — performed eight times in one day by the people building the
 instrument that measures it.
 
 Run:  python3 pssl/E27_instrument.py
@@ -43,6 +43,10 @@ _ROOT = os.path.dirname(_HERE)
 sys.path.insert(0, _ROOT)
 sys.path.insert(0, _HERE)
 sys.path.insert(0, os.path.join(_ROOT, "dilemmas"))
+
+import fnmatch                                                # noqa: E402
+import re                                                     # noqa: E402
+import subprocess                                             # noqa: E402
 
 import zipc                                                   # noqa: E402
 import grounds as G                                           # noqa: E402
@@ -193,6 +197,53 @@ def b6():
 
 
 # ---------------------------------------------------------------------------
+@blindness(
+    "B8", "the same shape outside logic entirely — in the tooling",
+    "last time this commit produced 3 CI runs, so wait for 3",
+    "ask which workflows the CHANGED FILES actually trigger")
+def b8():
+    """Not a measurement about logics. After pushing E27 the session sat
+    in a wait-loop for three completed CI runs because the previous push
+    had produced three — and hung, because this commit touches only
+    `pssl/` and `run_all.py`, while `lean.yml` filters on `lean/**` and
+    `inventory/**`. Two runs, correctly.
+
+    The convenient form was a remembered NUMBER; the real form is the
+    path filters read against the changed files. That the identical shape
+    appears in shell tooling, with no logic anywhere near it, is the
+    strongest evidence in this expedition that the failure is structural
+    rather than a property of three-valued matrices."""
+    root = _ROOT
+    try:
+        changed = subprocess.run(
+            ["git", "show", "--name-only", "--format=", "9760b0f"],
+            cwd=root, capture_output=True, text=True, timeout=30).stdout.split()
+    except Exception:
+        return 3, 2, "CI", "git unavailable — recorded value 3 vs 2"
+    if not changed:
+        return 3, 2, "CI", "commit unreachable — recorded value 3 vs 2"
+
+    wf = os.path.join(root, ".github", "workflows")
+    triggered = 0
+    for name in sorted(os.listdir(wf)):
+        if not name.endswith((".yml", ".yaml")):
+            continue
+        text = open(os.path.join(wf, name), encoding="utf-8").read()
+        m = re.search(r"^on:.*?(?=^\w)", text, re.S | re.M)
+        head = m.group(0) if m else text
+        if "paths:" not in head:
+            triggered += 1                      # unfiltered: always runs
+            continue
+        pats = re.findall(r'^\s*-\s*"([^"]+)"', head, re.M)
+        if any(fnmatch.fnmatch(f, pat) or
+               fnmatch.fnmatch(f, pat.replace("/**", "/*"))
+               for f in changed for pat in pats):
+            triggered += 1
+    return 3, triggered, "CI on 9760b0f", \
+        f"assumed 3 runs, actual {triggered} ({len(changed)} files changed)"
+
+
+# ---------------------------------------------------------------------------
 if __name__ == "__main__":
     print("=" * 78)
     print("EXPEDITION E27 — THE INSTRUMENT INHERITS ITS GROUND")
@@ -221,7 +272,7 @@ if __name__ == "__main__":
           f"{len(BLINDNESSES)}")
     print("=" * 78)
 
-    print("\n  B7 — the one that makes the other six data.")
+    print("\n  B7 — the one that makes the rest data, not anecdote.")
     print("  A fresh reviewer (Claude Fable 5, 2026-07-20), auditing this")
     print("  work and having just read the warning about shallow pools,")
     print("  reproduced B4 in the first run of its own verification script:")
@@ -229,12 +280,16 @@ if __name__ == "__main__":
     print("  depth-1 pool. Caught by an adjacent line of the same script")
     print("  that checked the witness directly.")
     print()
-    print("  Seven repetitions, one shape:")
+    print("  Eight repetitions, one shape:")
     print("      test a convenient form of the question,")
     print("      read the answer as if it were the real statement.")
     print()
-    print("  A warned reviewer reproducing it is what rules out")
-    print("  carelessness. The failure is structural: an instrument")
+    print("  And B8 says the same thing from the other side: the shape")
+    print("  appears in shell tooling, waiting for a CI run that the path")
+    print("  filters were never going to produce, with no logic anywhere")
+    print("  near it. A warned reviewer reproducing it, and the shape")
+    print("  recurring outside logic, together rule out carelessness.")
+    print("  The failure is structural: an instrument")
     print("  assembled from one ground's habits transports that ground's")
     print("  blindness, exactly as E26's rules transport truth without")
     print("  minting it. That is why a price list must be GENERATED and")

@@ -189,6 +189,38 @@ def discharge_gap(valid, derives, pool):
     return gap, first
 
 
+# ---------------------------------------------------------------------------
+# Why three of the zeros in the table are NOT tier C
+#
+# Found in review by Claude Fable 5 (2026-07-20) and banked here rather
+# than left in a scratchpad. A zero from a sweep is the absence of a
+# counterexample we could reach; these three are arguments instead, and
+# they hold at every arity and every depth.
+# ---------------------------------------------------------------------------
+def lp_export_is_a_theorem():
+    """LP's export-DT, pointwise, at EVERY arity — not a swept zero.
+
+    In LP the arrow is material and the designated set is {1, u}. A
+    discharged form γ→φ is UNdesignated only at value 0, and
+    max(1-γ, φ) = 0 forces γ = 1 and φ = 0. But then γ is designated and
+    φ is not, so the same valuation already refutes the RULE. Hence no
+    countermodel to the discharge can fail to be a countermodel to the
+    premise — export holds, and no sweep is needed to see it."""
+    o = {FF: 0.0, UU: 0.5, TT: 1.0}
+    return all(max(1.0 - o[g], o[f]) != 0.0 or (g == TT and f == FF)
+               for g in VALS for f in VALS)
+
+
+def no_tautologies(m):
+    """K3 and weak Kleene have NO valid formulas at all — not 'none found
+    up to size 5'. Send every atom to u: in K3 every connective returns u
+    on all-u inputs, and in weak Kleene u is infectious. u is not
+    designated in either, so nothing is valid, and no law can ever
+    separate them from each other."""
+    return all(m.ev(f, {a: UU for a in ("p", "q")}) not in m.D
+               for f in zipc.build_pool(("p", "q"), depth=2))
+
+
 if __name__ == "__main__":
     print("=" * 78)
     print("LEG 2, TACK 2b — WALKING THE PARAMETER")
@@ -211,6 +243,12 @@ if __name__ == "__main__":
     print("  transport (modus ponens)  — the arrow carries earned truth")
     print("  discharge (deduction thm) — a rule can be exported into the")
     print("                              object language as an arrow\n")
+    print("  NOTE ON DIRECTION. 'DT' here is the EXPORT direction,")
+    print("  Γ,γ ⊨ φ ⟹ Γ ⊨ γ→φ. Export alone is cheap — a constant-⊤")
+    print("  arrow has it and no modus ponens — which is exactly why the")
+    print("  two columns are reported as a pair and neither alone means")
+    print("  anything. (The Lean impossibility for MO2 is stronger still:")
+    print("  it kills the BICONDITIONAL for every possible arrow.)\n")
     print("  A ground HAS the deduction theorem only if discharge holds at")
     print("  EVERY arity. Reporting arity-0 alone would put MO2 in the wrong")
     print("  column — it discharges at arity 0 and fails at arity 1, and no")
@@ -259,6 +297,22 @@ if __name__ == "__main__":
     print("  discharge and loses transport (modus ponens is not valid).")
     print("  That is the cycle's own rules-versus-laws split, appearing")
     print("  again as a property of a FAMILY rather than of one logic.")
+
+    # ---------------------------------------------------------------
+    print(f"\n{'=' * 78}\nTHREE ZEROS THAT ARE NOT TIER C\n{'=' * 78}")
+    print("  A zero from a sweep is the absence of a counterexample we")
+    print("  could reach. These three are arguments, at every arity and")
+    print("  every depth (found in review, 2026-07-20):\n")
+    lp_ok = lp_export_is_a_theorem()
+    K3 = [m for m in FAMILY if m.name == "K3"][0]
+    WK = [m for m in FAMILY if m.name == "weak Kleene"][0]
+    k3_ok, wk_ok = no_tautologies(K3), no_tautologies(WK)
+    print(f"  LP export-DT is pointwise (γ→φ = 0 iff γ=1, φ=0) : {lp_ok}")
+    print(f"  K3 has NO valid formulas at all (all-u)          : {k3_ok}")
+    print(f"  weak Kleene likewise (u is infectious)           : {wk_ok}")
+    print("  => K3 and weak Kleene cannot be separated by any LAW, ever;")
+    print("     only a rule can tell them apart (and one does: p ⊨ p∨q).")
+    assert lp_ok and k3_ok and wk_ok, "a banked argument stopped holding"
 
     # ---------------------------------------------------------------
     print(f"\n{'=' * 78}\nAT WHICH ARITY DOES DISCHARGE FIRST FAIL?\n{'=' * 78}")

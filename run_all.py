@@ -94,6 +94,8 @@ STANDS = [
     ("pssl/family.py", ["TACK 2b GREEN", "Q2 — Ł3 HAS the deduction theorem : FAILS",
                         "BOTH halves        : classical, intuitionistic",
                         "keeps DT, no MP    : LP"]),
+    ("pssl/apartness.py", ["TACK 2c GREEN", "every pair carries a receipt",
+                           "classical | LP  —  p, ¬p ⊨ q  (rule/arity 2)"]),
     ("dilemmas/quantum_ladder.py",
                        ["0 of 512",
                         "0 of 64",

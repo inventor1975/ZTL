@@ -34,6 +34,15 @@ at the seam with the world, a second register is staked and deliberately
 not implemented: two marks and two states, mirroring the internal ladder
 by how much an event carries.
 
+**Two orderings, and the axis must be named.** The rungs below are
+ordered by how much an event CARRIES. That is not the only order: the
+GENETIC one — what was recognised first — runs `N → F → T → Z` inside
+and `M → E → σ → O` at the seam. Falsity precedes truth (denial is
+cheap, assertion is earned), and the mark comes LAST, because "an input
+may be unverified, and that is not a third truth value" is a modern
+recognition: IEEE NaN 1985, SQL NULL 1986. The pairing is unaffected —
+a pairing is not an ordering. (IDEAS 12.7.)
+
 The table reads ONE WAY — from the physical INTO the operational. It is
 not a mirror of two alphabets but a map of ARRIVAL: a boundary letter
 arrives and becomes an internal one. The logic's alphabet is what the

@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - "lean/**"
+      - "inventory/**"
       - ".github/workflows/lean.yml"
   workflow_dispatch:
 
@@ -15,6 +16,9 @@ jobs:
       - uses: leanprover/lean-action@v1
         with:
           lake-package-directory: lean
+      # The hand-placed `#print axioms` lines. The floor tracks the corpus
+      # exactly (108 on 2026-07-20): a threshold set well below the real
+      # count would stay green while dozens of prints were deleted.
       - name: zero-axiom ledger
         working-directory: lean
         run: |
@@ -22,4 +26,11 @@ jobs:
           clean=$(grep -c "does not depend on any axioms" build.log || true)
           dirty=$(grep -c "depends on axioms" build.log || true)
           echo "zero-axiom checks: $clean; dirty: $dirty"
-          test "$dirty" -eq 0 && test "$clean" -ge 60
+          test "$dirty" -eq 0
+          test "$clean" -ge 108
+      # The hand-placed prints cover 108 of 321 theorems; the rest are
+      # covered transitively, which is an ARGUMENT. This audits every
+      # theorem individually, and fails on an orphan module that no
+      # target builds.
+      - name: per-theorem axiom audit
+        run: python3 inventory/axiom_audit.py

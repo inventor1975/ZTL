@@ -1,0 +1,36 @@
+name: regression
+
+# Every MEASURED claim of the preprint — the 12/14 price list, the
+# algebraic passport, interpolation, cut admissibility, the temporal
+# layer, the quantum stands — rests on these stands. Until 2026-07-20
+# no workflow ran them: they were green on the author's machine only,
+# which is precisely the kind of assurance this project refuses to
+# grant itself.
+#
+# No `paths:` filter, deliberately. The Python core and the Lean corpus
+# mirror each other, and `bridge.py` is what proves they still agree
+# (141 kernel-computed answers, cell by cell). A filter on lean/** would
+# let a change to ztl.py drift away from ZTL.lean unnoticed — the one
+# divergence that would invalidate the machine-verification claim.
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  stands:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: leanprover/lean-action@v1
+        with:
+          lake-package-directory: lean
+          build: false
+      # run_all.py ends with `lake build` itself and asserts the
+      # zero-axiom line, so the Lean corpus is exercised here too.
+      - name: all stands + Lean
+        run: python3 run_all.py

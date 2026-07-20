@@ -1,6 +1,11 @@
-# Zenodo sheet — PSSL **v1.1.0, PREPARED** (the curator publishes)
+# Zenodo sheet — PSSL **v1.1.0 PUBLISHED 2026-07-20**
 
 **Published history**
+- **v1.1.0** — 2026-07-20, version DOI
+  [10.5281/zenodo.21455696](https://doi.org/10.5281/zenodo.21455696).
+  Verified against the API: 9 pages, CC BY 4.0, ORCID in the creator, the
+  three related identifiers as entered — and the **concept DOI unchanged**
+  at 21452735, so the New-version flow held and the lineage is intact.
 - **v1.0.0** — 2026-07-20, version DOI
   [10.5281/zenodo.21452736](https://doi.org/10.5281/zenodo.21452736).
   Verified against the API after publication: 8 pages, CC BY 4.0, ORCID in
@@ -8,8 +13,8 @@
 - **Concept DOI (always latest):**
   [10.5281/zenodo.21452735](https://doi.org/10.5281/zenodo.21452735)
 
-**This file prepares a NEW VERSION of an existing record. Claude never
-publishes.**
+**This file prepared the v1.1.0 upload. Claude never publishes; the curator
+did. Kept as the record of what was entered.**
 
 Source: `paper/PSSL_EN_v1_1_0.tex` → **`paper/PSSL_EN_v1_1_0.pdf` (9 pages,
 lualatex, 2026-07-20)** = the file to upload. English only: the Russian

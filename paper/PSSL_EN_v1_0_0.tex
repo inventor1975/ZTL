@@ -359,9 +359,9 @@ between superposition and ZTL's mark.
 \paragraph{Reproduction} (Lean 4.29.1, measured 2026-07-18/19):
 
 \begin{verbatim}
-$ lean lean/ZTL.lean             # 13 objects, no axioms,  ~1.1 s
-$ lean lean/QuantumWitness.lean  #  5 objects, no axioms,  ~0.5 s
-$ lean lean/Contextuality.lean   #  3 objects, no axioms,  ~0.4 s
+$ lean lean/ZTL.lean             # 13 objects, no axioms,  ~0.3 s
+$ lean lean/QuantumWitness.lean  # 11 objects, no axioms,  ~0.2 s
+$ lean lean/Contextuality.lean   #  3 objects, no axioms,  ~0.3 s
 $ lean lean/JunctionWitness.lean #  8 objects, no axioms,  ~0.2 s
 \end{verbatim}
 
@@ -433,7 +433,9 @@ The defensible claim is narrow: four established non-classical logics align as
 four disciplined resolutions of one pre-classical diagonal, and the sharpest
 pair among them --- ZTL and orthomodular logic --- make complementary,
 machine-checkable sacrifices. The organizing picture is offered as a reading;
-its two poles are offered as proof.
+its five machine-checked components --- the two poles, the impossibility of
+a deduction theorem in $\mathrm{MO}_2$, the contextuality core, and the
+junction theorem --- are offered as proof.
 
 \begin{thebibliography}{99}
 \bibitem{bvn} G. Birkhoff, J. von Neumann. \emph{The logic of quantum

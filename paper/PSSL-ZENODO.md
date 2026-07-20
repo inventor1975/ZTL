@@ -68,7 +68,8 @@ keeps excluded middle and double negation and loses distributivity; both keep
 non-contradiction. ZTL breaks where a thing equals itself; quantum breaks where
 things combine. That second clause is sharpened into a necessity and
 machine-checked: MO2 keeps modus ponens under the Sasaki hook but admits NO
-implication at all satisfying the deduction theorem — such an arrow would have
+implication at all — no binary operation on the lattice — satisfying the
+deduction theorem — such an arrow would have
 to be a relative pseudocomplement, which would make the lattice Heyting and
 therefore distributive. So what the quantum corner cannot do is discharge a
 premise while a context still stands, and no choice of connective repairs it;

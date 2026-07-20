@@ -35,6 +35,11 @@ Agreed with A. (Veraxis) 2026-07-18/19; implements the reviewed spec verbatim:
     three-coordinate cell nested under `state_after` (so the event's own
     disposition is never shadowed by the state's decision).
 
+The mark `M` (IDEAS 12.6, staked): the rejection above IS `M` in the
+wild — "no ground was ever offered", as distinct from `Z` = "offered,
+not verified". Named in the comments only; the JSON is byte-frozen
+against an external SHA-256 pin and is not touched to carry a name.
+
 Scenario = the two reviewed formulations:
   F1  admission = power ∧ confirmed ∧ jurisdiction ∧ fresh (iff; power alone
       insufficient), all atoms starting Z;
@@ -110,6 +115,17 @@ class Ledger:
                  # the state cell is nested, so the event's own disposition
                  # (REJECT_EVENT) is never shadowed by the state's decision
                  "state_after": cell(self.marking)})
+            # THIS IS THE MARK `M` (IDEAS 12.6), working here unnamed since
+            # 2026-07-19. `Z` says a ground was offered and not verified;
+            # this rejection says a ground was NEVER OFFERED — a different
+            # state of the atom, and the boundary's counterpart to the
+            # solver's phase `N`. The name is left out of the JSON on
+            # purpose: the artifact is pinned by SHA-256
+            # b68fd32d684de95518ef45c6d5e378940401fb656ba84ae92736498ecd8d8358
+            # in an external review, and renaming a field to decorate it
+            # with a staked letter would break someone else's verification
+            # for nothing. The letter is recorded where it costs no one:
+            # here, and in SPEC.md.
             raise UngroundedVerificationEvent(
                 f"verify({atom}:={value}) carries no source_reference — "
                 "the closed-world loan is not admissible as a tick")

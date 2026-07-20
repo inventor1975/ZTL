@@ -1,6 +1,13 @@
-# Zenodo upload sheet — PSSL v1.0.0 (PREPARED, DRYING; the curator publishes)
+# Zenodo sheet — PSSL v1.0.0 **PUBLISHED 2026-07-20**
 
-**This file only prepares the manual upload. Claude never publishes.**
+**Version DOI:** [10.5281/zenodo.21452736](https://doi.org/10.5281/zenodo.21452736)
+**Concept DOI (always latest):** [10.5281/zenodo.21452735](https://doi.org/10.5281/zenodo.21452735)
+Record: https://zenodo.org/records/21452736 — 8 pages, CC BY 4.0, creator
+carries ORCID 0009-0002-4103-6387, three related identifiers registered as
+entered (two preprint references, the repository as isSupplementedBy).
+Verified against the Zenodo API after publication, not assumed.
+
+**This file prepared the manual upload. Claude never publishes; the curator did.**
 Source: `paper/PSSL_EN_v1_0_0.tex` → **`paper/PSSL_EN_v1_0_0.pdf` (8 pages, REBUILT
 2026-07-20, lualatex)** = the file to upload. (PSSL was never published — the
 first public version is 1.0.0; internal iterations consume no number.) RU reading copy: `paper/PSSL-RU.md`.

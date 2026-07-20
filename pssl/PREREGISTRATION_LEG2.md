@@ -92,3 +92,72 @@ grounds; PSSL claims "at least four" and we claim no more. The map
 abstract algebraic logic and the lattice of subclassical consequence
 relations — named once as a handle. What is ours is the operational
 reading: a ground is an **act**, and the act has a receipt.
+
+---
+
+# Results — tack 2a, appended 2026-07-20
+
+Appended below the line; nothing above it edited.
+
+## Q1 HOLDS — and then stopped being a survey
+
+Six implications proposed for orthomodular lattices (Kalmbach's five plus
+the material one) were run against MO2. Four are usable — classical on
+the Boolean sublattice and keeping modus ponens: Sasaki, Dishkant,
+non-tollens, relevance. **None restores the deduction theorem.**
+
+| arrow | classical | MP | DT | failures /216 |
+|---|---|---|---|---:|
+| material | yes | no | no | 32 |
+| Sasaki (leg 1's declaration) | yes | yes | no | 32 |
+| Dishkant | yes | yes | no | 32 |
+| Kalmbach | yes | no | no | 48 |
+| non-tollens | yes | yes | no | 32 |
+| relevance | yes | yes | no | 40 |
+
+So the quantum half of leg 1's 2/2 split is **not** an artefact of
+decision D2. It survives its own control.
+
+## The survey was unnecessary — the result is an impossibility
+
+Six arrows failing is evidence. It is not the statement. The deduction
+theorem
+
+    a ≤ (b → c)  ⟺  a ∧ b ≤ c
+
+says `b → c` must **be** the greatest element whose meet with `b` lies
+below `c` — a relative pseudocomplement. A lattice possessing one for
+every pair is a Heyting algebra, hence distributive. MO2 is not
+(`distributivity_fails`).
+
+**Therefore no binary operation whatever on MO2 satisfies the deduction
+theorem.** Measured: 16 of 36 pairs (b,c) have a set {x : x∧b ≤ c} with
+no maximum — at b = a, c = ⊥ the set is {⊥, a′, b, b′} with three
+incomparable maximal elements. Machine-checked as
+`no_arrow_has_deduction_theorem` in `lean/QuantumWitness.lean`, empty
+axiom list, with `above_two_atoms` as the supporting fact.
+
+This is the upgrade that matters for the claim ceiling. Leg 1 could say
+"MO2 with the Sasaki hook lacks the deduction theorem". It can now say
+**"MO2 cannot have one"** — and the difference is exactly the difference
+between a measurement of our choices and a fact about the object.
+
+## Corpus effect
+
+`lean/QuantumWitness.lean` grew from 5 theorems to 11; the corpus is 344
+theorems in 17 modules, all on the empty axiom list. `pssl/arrow_control.py`
+asserts Q1 and the impossibility, and runs in `run_all.py` (42 stands).
+
+## A Lean pitfall, refined
+
+Applying an `Iff` as a function (`.1` / `.2`) is clean. Only `rw` with an
+`Iff` drags `propext`. The impossibility proof uses both `.1` and `.2`
+plus a `rw` by an `Eq`, and prints the empty list — which sharpens the
+rule recorded earlier for the corpus.
+
+## Still open, unchanged
+
+Q2 (Łukasiewicz Ł3 has the deduction theorem) and Q3 (weak Kleene — the
+cycle's own lazy register — lacks it, for the mark's reason rather than
+the lattice's) are untouched. They are tack 2b, and they are what decides
+whether the 2/2 split is one axis or two.

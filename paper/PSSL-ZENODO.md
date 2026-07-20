@@ -12,9 +12,8 @@
 publishes.**
 
 Source: `paper/PSSL_EN_v1_1_0.tex` → **`paper/PSSL_EN_v1_1_0.pdf` (8 pages,
-lualatex, 2026-07-20)** = the file to upload. RU reading copy:
-`paper/PSSL-RU.md` (still describes four corners — update or omit; see the
-note at the foot of this sheet).
+lualatex, 2026-07-20)** = the file to upload. English only: the Russian
+reading copy was removed in v1.1.0 (see the foot of this sheet).
 Verifiable anchor: `lean/ZTL.lean` + `lean/QuantumWitness.lean` +
 `lean/Contextuality.lean` + `lean/JunctionWitness.lean` (all empty axiom list,
 re-measured 2026-07-20: 13 + 11 + 3 + 8 = 35 objects).
@@ -158,10 +157,10 @@ Timings re-measured 2026-07-20 on the curator's machine.
 
 ---
 
-**Note for the curator before upload.** `paper/PSSL-RU.md` is the Russian
-reading copy named above and still describes FOUR corners with classical among
-them. It is not uploaded to Zenodo and nothing points a reader at it from the
-record, so it does not block publication — but it is now one version behind the
-English, exactly as it was before the 12.6 pass. Either bring it to three
-corners or drop the mention of it from this sheet; leaving it as-is is the one
-inconsistency remaining in the package.
+**On the Russian reading copy.** `paper/PSSL-RU.md` was removed with v1.1.0
+rather than carried forward. It had fallen a generation behind twice in two
+days — four corners after the English went to three, and no Proposition B′
+after the impossibility landed — and a second-language copy that misdescribes
+the work is worse than none, since nothing in the record marks it as stale to
+a reader who finds it. The English `.tex` is the single source. It remains in
+git history (last at `0729be8`) if it is ever wanted back.

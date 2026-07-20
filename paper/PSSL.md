@@ -12,7 +12,7 @@
 > *Paradox and Truth — the progenitors of Logic!*
 
 *(Note: the authoritative v1.0 text is `PSSL_EN_v1_0_0.tex` / `.pdf` and the
-Russian reading copy `PSSL-RU.md`; both carry Proposition C (the contextuality
+Russian reading copy (removed in v1.1.0); both carried Proposition C (the contextuality
 core, `lean/Contextuality.lean`: Mermin–Peres 0/512, GHZ 0/64), the junction
 theorem (`lean/JunctionWitness.lean`), and §7 "The world is not a corner (a
 reading)". This markdown is an earlier, abbreviated mirror.)*

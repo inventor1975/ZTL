@@ -87,6 +87,8 @@ STANDS = [
                         "evidence_expire => (Z, DENY, until-",
                         "revoke => fresh=F => (F, DENY, hereditary)",
                         "REJECTED: verify(fresh:=T) carries no source_reference"]),
+    ("pssl/grounds.py", ["LEG 1 GREEN", "P1 HOLDS", "P2 HOLDS",
+                         "calibration vs lean/QuantumWitness.lean: AGREE"]),
     ("dilemmas/quantum_ladder.py",
                        ["0 of 512",
                         "0 of 64",

@@ -84,8 +84,56 @@ theorem quantum_pole :
   ⟨distributivity_fails, lem_holds, dne_holds, no_contradiction_holds⟩
 
 -- ============================================================
+-- The deduction theorem fails here (PSSL leg 1, `pssl/grounds.py`)
+-- ============================================================
+
+/-- Lattice order, and the Sasaki hook — MO2's implication by declaration
+(there is no canonical → in an ortholattice; this is the standard choice
+and it is part of the ground, not neutral plumbing). -/
+def leq (x y : Q) : Bool := meet x y == x
+
+def sasaki (x y : Q) : Q := join (neg x) (meet x y)
+
+/-- **Modus ponens survives** the Sasaki hook: x ∧ (x →s y) ≤ y. This is
+why the hook is the right choice of arrow — it keeps the rule. -/
+theorem sasaki_mp : ∀ x y : Q, leq (meet x (sasaki x y)) y = true := by decide
+
+/-- **The deduction theorem FAILS in MO2.** Not "some laws differ": the
+ground cannot export a rule into its own object language. Witness — the
+generated sweep of `pssl/grounds.py` found it first at weakening:
+
+    a ∧ b ≤ a   for every a, b   (the rule holds)
+    a ≰ (b →s a)                 (its discharged form does not)
+
+Concretely a, b are two non-commuting middle atoms. This is the half of
+the PSSL leg-1 split that had no machine witness; ZTL's half already did
+(`ZTL.lean`, `dt_one_way`: p ⊨ p while p→p = F). -/
+theorem deduction_theorem_fails :
+    ¬ ∀ x y z : Q, leq (meet x y) z = true → leq x (sasaki y z) = true := by
+  decide
+
+/-- The concrete witness named, so the failure is readable without a
+search: with x = a, y = b, z = a — weakening holds as a rule and does not
+discharge. -/
+theorem deduction_witness :
+    leq (meet a b) a = true ∧ leq a (sasaki b a) = false := by decide
+
+/-- Leg 1 in one statement: MO2 keeps modus ponens and loses the
+deduction theorem. The arrow transports, but it cannot be earned by
+discharge — which is precisely the shape ZTL exhibits at the mark, in a
+lattice that shares none of ZTL's other refusals. -/
+theorem quantum_has_no_deduction_theorem :
+    (∀ x y : Q, leq (meet x (sasaki x y)) y = true)
+    ∧ (¬ ∀ x y z : Q, leq (meet x y) z = true → leq x (sasaki y z) = true) :=
+  ⟨sasaki_mp, deduction_theorem_fails⟩
+
+-- ============================================================
 -- Axiom audit — every line prints "does not depend on any axioms"
 -- ============================================================
+#print axioms sasaki_mp
+#print axioms deduction_theorem_fails
+#print axioms deduction_witness
+#print axioms quantum_has_no_deduction_theorem
 #print axioms distributivity_fails
 #print axioms lem_holds
 #print axioms dne_holds

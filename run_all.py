@@ -89,6 +89,8 @@ STANDS = [
                         "REJECTED: verify(fresh:=T) carries no source_reference"]),
     ("pssl/grounds.py", ["LEG 1 GREEN", "P1 HOLDS", "P2 HOLDS",
                          "calibration vs lean/QuantumWitness.lean: AGREE"]),
+    ("pssl/arrow_control.py", ["Q1 HOLDS", "TACK 2a GREEN",
+                               "none can succeed"]),
     ("dilemmas/quantum_ladder.py",
                        ["0 of 512",
                         "0 of 64",

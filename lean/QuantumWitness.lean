@@ -127,9 +127,45 @@ theorem quantum_has_no_deduction_theorem :
     ∧ (¬ ∀ x y z : Q, leq (meet x y) z = true → leq x (sasaki y z) = true) :=
   ⟨sasaki_mp, deduction_theorem_fails⟩
 
+/-- Two distinct middle atoms have nothing above them but ⊤ — the fact
+that makes the impossibility below work. -/
+theorem above_two_atoms : ∀ t : Q, leq a' t = true → leq b t = true → t = top := by
+  decide
+
+/-- **NO implication whatever gives MO2 the deduction theorem.**
+
+Leg 2's tack 2a began as a survey — six implications proposed for
+orthomodular lattices in the literature, all of them failing. The survey
+was unnecessary. The deduction theorem
+
+    a ≤ (b → c)  ↔  a ∧ b ≤ c
+
+says that `b → c` must BE the greatest element whose meet with `b` lies
+below `c`; that is a relative pseudocomplement, and a lattice having one
+for every pair is a Heyting algebra, hence distributive. MO2 is not
+(`distributivity_fails`). So the failure is not a defect of the Sasaki
+hook we declared in leg 1 — it belongs to the lattice, and no choice of
+arrow could have hidden it.
+
+The proof needs no search: at b = a, c = ⊥ the set {x : x ∧ a ≤ ⊥}
+contains the two incomparable atoms a' and b, so any arrow would have to
+put `a → ⊥` above their join, which is ⊤ — and ⊤ ∧ a = a ≰ ⊥. -/
+theorem no_arrow_has_deduction_theorem :
+    ¬ ∃ imp : Q → Q → Q,
+        ∀ x y z : Q, (leq (meet x y) z = true ↔ leq x (imp y z) = true) := by
+  rintro ⟨imp, h⟩
+  have h1 : leq a' (imp a bot) = true := (h a' a bot).1 (by decide)
+  have h2 : leq b (imp a bot) = true := (h b a bot).1 (by decide)
+  have htop : imp a bot = top := above_two_atoms _ h1 h2
+  have hfin : leq (meet top a) bot = true := (h top a bot).2 (by
+    rw [htop]; decide)
+  exact absurd hfin (by decide)
+
 -- ============================================================
 -- Axiom audit — every line prints "does not depend on any axioms"
 -- ============================================================
+#print axioms above_two_atoms
+#print axioms no_arrow_has_deduction_theorem
 #print axioms sasaki_mp
 #print axioms deduction_theorem_fails
 #print axioms deduction_witness

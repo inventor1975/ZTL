@@ -64,12 +64,12 @@ toolchain instead, use Path B, where `elan` installs `v4.29.1` for you.
 
 | file | lines expected | any line NOT saying "does not depend on any axioms"? | any red error? |
 |---|---:|---|---|
-| ZTL.lean | 14 | | |
+| ZTL.lean | 13 | | |
 | QuantumWitness.lean | 11 | | |
 | Contextuality.lean | 3 | | |
 | JunctionWitness.lean | 8 | | |
-| ZTime.lean | 8 | | |
-| EpochBoundary.lean | 6 | | |
+| ZTime.lean | 7 | | |
+| EpochBoundary.lean | 5 | | |
 
 The counts matter less than the two questions after them. **A single
 line that says anything other than "does not depend on any axioms", or

@@ -4,8 +4,8 @@ axiom_audit — the per-THEOREM axiom ledger of the Lean corpus.
 
 Why this exists. The preprint (§8) claims that `#print axioms` over the
 WHOLE corpus returns "does not depend on any axioms". Until now that was
-backed by 103 hand-placed `#print axioms` lines against 321 theorems in
-the sources. The defence is sound in principle — a dirty lemma infects
+backed by hand-placed `#print axioms` lines against the theorems in the
+sources. The defence is sound in principle — a dirty lemma infects
 every theorem that uses it, so a clean print at the top transitively
 covers its dependencies — but it is an ARGUMENT, and an unused orphan
 theorem would escape it entirely. The claim ceiling of an argument is
@@ -22,8 +22,12 @@ it. That is not hypothetical — `QuantumWitness.lean` (the MO2 quantum
 pole, load-bearing for PSSL) sat outside `defaultTargets` from its
 writing until 2026-07-20 and was checked by nobody.
 
-MEASURED (2026-07-20, Lean 4.29.1, clean build, 16 modules):
-  theorems audited ............................... 321   all empty-list
+The corpus total is NOT hard-coded here — it is whatever the run reports
+(the last line, "ALL CLEAN: N theorems across M modules"), so this file
+never carries a second, drifting copy of the number. For the record, on
+2026-07-21 (Lean 4.29.1, clean build) that was 371 theorems across 21
+modules, every one on the empty axiom list; `inventory/list_theorems.py`
+dumps the full names, and CI re-checks on every push.
 
 Run:  python3 inventory/axiom_audit.py
 Exit 0 = every theorem in the corpus is on the empty axiom list.

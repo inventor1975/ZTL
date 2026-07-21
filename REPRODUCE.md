@@ -29,14 +29,19 @@ The Lean files below have **no imports and no library dependencies**.
 They can be pasted into Lean's official web editor and will compile
 there.
 
+The links are pinned to commit `82a0f6a` so the counts in the table
+below match exactly. A newer state of the repository will show larger
+counts — that is the corpus growing, not a failure; reproduce this
+commit to match this document.
+
 1. Open **https://live.lean-lang.org**
 2. Open one of these files on GitHub, click the "copy raw file" button:
-   - https://github.com/inventor1975/ZTL/blob/master/lean/ZTL.lean
-   - https://github.com/inventor1975/ZTL/blob/master/lean/QuantumWitness.lean
-   - https://github.com/inventor1975/ZTL/blob/master/lean/Contextuality.lean
-   - https://github.com/inventor1975/ZTL/blob/master/lean/JunctionWitness.lean
-   - https://github.com/inventor1975/ZTL/blob/master/lean/ZTime.lean
-   - https://github.com/inventor1975/ZTL/blob/master/lean/EpochBoundary.lean
+   - https://github.com/inventor1975/ZTL/blob/82a0f6ac61e0ddf9a927a70e04a0018989ef316d/lean/ZTL.lean
+   - https://github.com/inventor1975/ZTL/blob/82a0f6ac61e0ddf9a927a70e04a0018989ef316d/lean/QuantumWitness.lean
+   - https://github.com/inventor1975/ZTL/blob/82a0f6ac61e0ddf9a927a70e04a0018989ef316d/lean/Contextuality.lean
+   - https://github.com/inventor1975/ZTL/blob/82a0f6ac61e0ddf9a927a70e04a0018989ef316d/lean/JunctionWitness.lean
+   - https://github.com/inventor1975/ZTL/blob/82a0f6ac61e0ddf9a927a70e04a0018989ef316d/lean/ZTime.lean
+   - https://github.com/inventor1975/ZTL/blob/82a0f6ac61e0ddf9a927a70e04a0018989ef316d/lean/EpochBoundary.lean
 3. Paste it into the editor, replacing whatever is there. Wait for the
    right-hand panel to finish (a few seconds; a spinner or "Processing"
    may show first).
@@ -52,12 +57,12 @@ there.
 
 | file | lines expected | any line NOT saying "does not depend on any axioms"? | any red error? |
 |---|---:|---|---|
-| ZTL.lean | 13 | | |
+| ZTL.lean | 14 | | |
 | QuantumWitness.lean | 11 | | |
 | Contextuality.lean | 3 | | |
 | JunctionWitness.lean | 8 | | |
-| ZTime.lean | 7 | | |
-| EpochBoundary.lean | 5 | | |
+| ZTime.lean | 8 | | |
+| EpochBoundary.lean | 6 | | |
 
 The counts matter less than the two questions after them. **A single
 line that says anything other than "does not depend on any axioms", or
@@ -77,6 +82,7 @@ and Lean (via `elan`).
 ```bash
 git clone https://github.com/inventor1975/ZTL
 cd ZTL
+git checkout 82a0f6ac61e0ddf9a927a70e04a0018989ef316d   # the documented state
 curl https://elan.lean-lang.org/elan-init.sh -sSf | sh   # installs Lean
 cd lean && lake build && cd ..
 python3 run_all.py
@@ -87,14 +93,15 @@ python3 inventory/paper_claims.py
 **Expected final lines:**
 
 ```
-ALL GREEN: 50 stands + Lean.
-ALL CLEAN: 344 theorems across 17 modules, every one on the empty axiom list.
+ALL GREEN: 59 stands + Lean.
+ALL CLEAN: 371 theorems across 21 modules, every one on the empty axiom list.
 PAPER CLAIMS GREEN — every numeric claim checked matches a measurement taken now.
 ```
 
-Note the counts (50, 344, 17) as you see them — if they differ from the
-above, the repository has moved on since these instructions were written,
-which is itself worth recording rather than a failure.
+Note the counts (59, 371, 21) as you see them. The `git checkout` above
+pins the repository to the state these numbers were taken from; if you skip
+it and run the moving tip instead, larger counts are expected and are worth
+recording rather than a failure.
 
 `run_all.py` takes a few minutes. If a stand fails it prints `FAIL` with
 the name; that line is the finding.

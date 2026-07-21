@@ -560,7 +560,7 @@ consequence relation, and the witness on the "the neighbour derives it,
 ZTL does not" side is the *same* for all four: **¬¬p ⊨ p**, double-
 negation elimination as a rule (MEASURED, depth-2 pool; the witness is
 of size 3 and exhibited, so underivability is settled, not merely
-unfound). Every neighbour keeps it; ZTL alone breaks it, and the reason
+unfound). Every neighbour keeps it; ZTL breaks it, and the reason
 is proved rather than tabulated: an involutive negation *forces* the
 rule (`involution_gives_dne`, for an arbitrary negation and designated
 set), and ZTL's greedy negation is not involutive — ¬¬Z = T ≠ Z, one

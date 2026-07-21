@@ -38,6 +38,8 @@ STANDS = [
                         "parity cross-check: 62 of 62 ✓"]),
     ("zsew.py", ["E29 GREEN", "hereditary ⊗ hereditary stays hereditary: 324 of 324",
                  "UNPICKED", "CANNOT"]),
+    ("zsew_attack.py", ["ATTACK GREEN", "BUG (unsound join)      : 1",
+                        "convenient proxy for agreement"]),
     ("zparadox.py", ["E28 GREEN", "PARADOX (0 tables)",
                      "strong liar", "INTRINSIC"]),
     ("bridge.py",      ["ALL ANSWERS COINCIDE"]),

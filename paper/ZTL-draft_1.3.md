@@ -8,14 +8,17 @@ v1.0: [10.5281/zenodo.21318982](https://doi.org/10.5281/zenodo.21318982)).
 v1.3 adds: the Suszko positioning (§4) — Z as a mark rather than a third
 truth value is Suszko's Thesis taken as architecture rather than
 recovered by reduction, with the discriminator measured; the signature
-result (§4) — the single rule ¬¬p ⊨ p separates ZTL from every
-three-valued matrix neighbour, its cause proved in `lean/Signature.lean`
-on the empty axiom list; **first-order identity** (§24, `ZEq.lean`) — a
-`=` predicate whose reflexivity and Leibniz's law are earned verdicts,
-falling on unverified references; and **free logic with definite
-descriptions** (§25, `ZDesc.lean`) — a non-denoting term takes the mark
-(existence = earned self-identity), diverging from every prior free logic
-(excluded middle is F, not super-true). v1.2 added: the central construction named — the zero-trust lift (§2);
+result (§4) — the single rule ¬¬p ⊨ p separates ZTL from each of its four
+involutive-negation neighbours (K3, LP, weak Kleene, Ł₃) and, by one
+lemma, from any three-valued matrix with involutive negation, its cause
+proved in `lean/Signature.lean` on the empty axiom list; **first-order
+identity** (§24, `ZEq.lean`) — a `=` predicate whose reflexivity is an
+earned verdict, falling to Z on an unverified reference, while Leibniz's
+law licenses substitution only through an earned equality; and **free
+logic with definite descriptions** (§25, `ZDesc.lean`) — a non-denoting
+term takes the mark (existence = earned self-identity), and the greedy
+collapse (excluded middle on it is F, not a gap and not super-true)
+sets ZTL apart from the neutral free-logic school. v1.2 added: the central construction named — the zero-trust lift (§2);
 §3.8, an explicit Lean-verified census of the sixteen lifted binary
 connectives — re-deriving Finn's external-Bochvar completeness landscape
 (Finn 1974): solo-completeness tracks non-commutative directionality (Sheffer's
@@ -48,19 +51,21 @@ generated in its entirety by a single principle: **truth is never
 granted on credit** — a connective returns T only if T is forced under
 every classical reading of the unverified. There are exactly two truth
 values (verdicts are always classical); the third symbol Z is a **mark**
-on an unverified input, not a truth value. It is bivalent by
-construction, not merely bivalent after the fact: Suszko's thesis
-returns every structural logic to two logical values, and where a
-genuinely three-valued matrix regains bivalence only under that
-reduction, ZTL never lets the mark reach the value of a compound at all
-(the greediness theorem, 0 of 784 depth-2 compounds — MEASURED). Its
-identity among the three-valued matrices is precise and proven: a single
-rule, **¬¬p ⊨ p**, separates its consequence relation from every
-neighbour (K3, LP, weak Kleene, Łukasiewicz Ł₃), and the cause — a
-broken involution, ¬¬Z = T — is machine-checked on the empty axiom list.
+on an unverified input, not a truth value. The mark is barred from the
+value of any compound — the greediness theorem (`evalF_classical`, empty
+axiom list): every compound assertion is already T or F, the middle never
+appears above the atoms. This is more than Suszko's logical
+two-valuedness, which every structural logic has for free; it is the
+stronger, truth-functional fact that above the atoms the algebraic value
+already *is* the logical value, so the reduction has nothing left to do
+on compounds. Its identity among the three-valued matrices is precise and
+machine-checked at its cause: a single rule, **¬¬p ⊨ p**, separates its
+consequence relation from each of its four involutive-negation neighbours
+(K3, LP, weak Kleene, Łukasiewicz Ł₃), and by one lemma from any matrix
+with involutive negation — the cause a broken involution, ¬¬Z = T.
 
-That the logic is not arbitrary is shown rather than asserted. Six
-independent engineering traditions — IEEE 754 arithmetic (NaN), SQL's
+That the logic is not arbitrary is evidenced, case by case, rather than
+asserted. Six independent engineering traditions — IEEE 754 arithmetic (NaN), SQL's
 three-valued logic (NULL), taint tracking in security, abstract
 interpretation in static analysis, imprecise probabilities in decision
 theory, and provenance semirings in database theory — have each, over
@@ -82,12 +87,13 @@ detectors, the external layer is expressively complete, a definable
 external implication restores the full deduction theorem, Craig
 interpolation holds, and the Blok–Pigozzi conditions are verified on
 the matrix — ZTL is algebraizable, yet not self-extensional);
-quantifiers, first-order identity (a `=` predicate whose reflexivity and
-Leibniz's law are earned verdicts — self-identity falls to Z on an
-unverified reference) and free logic with definite descriptions (a
-non-denoting term takes the mark, not F and not a gap; existence is
-earned self-identity, and excluded middle on it is F rather than the
-supervaluational super-true); a modal identification (local
+quantifiers, first-order identity (a `=` predicate whose reflexivity is
+an earned verdict — self-identity falls to Z on an unverified reference —
+while Leibniz's law licenses substitution only through an earned
+equality) and free logic with definite descriptions (a non-denoting term
+takes the mark, not F and not a gap; existence is earned self-identity,
+and the greedy collapse makes excluded middle on it F, apart from the
+neutral free-logic school); a modal identification (local
 modality over the S5 frame of completions — versus global
 supervaluation); a probabilistic identification (verdicts are the
 {0,1}-threshold of Dempster–Shafer belief functions); a theory of
@@ -136,10 +142,10 @@ unverified input; the deterministic core is the customs).
 
 This paper presents a logic and argues that it was already in use. The
 logic is generated by one principle — truth is never granted on credit
-(§2) — and has a precise identity among the finite-valued systems: a
-single rule, ¬¬p ⊨ p, separates its consequence relation from every
-three-valued matrix neighbour, its cause proved on the empty axiom list
-(§4). What keeps it from being one more many-valued table is where it
+(§2) — and has a precise identity among the three-valued matrices: a
+single rule, ¬¬p ⊨ p, separates its consequence relation from each of its
+involutive-negation neighbours — and, by one lemma, from any matrix with
+involutive negation — its cause proved on the empty axiom list (§4). What keeps it from being one more many-valued table is where it
 was found. Most of the data over which modern software computes is
 unverified — sensor readings, user input, third-party databases, answers
 of network services — and engineering, facing this, answered not with a
@@ -526,19 +532,12 @@ the third symbol ever appear as the value of a *compound* assertion? In
 the neighbours it does — 602 to 784 of the 784 depth-2 compounds over
 two atoms take the middle value (MEASURED). In ZTL it never does — **0
 of 784**, the greediness theorem (`evalF_classical`, empty axiom list):
-the mark evaporates at the first operator, so no assertion built by the
-logic is ever anything but T or F. Where a genuinely three-valued logic
-is shown bivalent by Suszko's reduction, ZTL is bivalent before any
-reduction, because the mark is barred from the value of assertions from
-the start. That is the precise sense in which ZTL is a two-valued logic
-with a mark, not a three-valued logic — the alphabet is four letters,
-N, Z, F, T, in the genetic order — nothing (pending), the
-unsettled (a question with no answer yet), the free denial
-(default-deny), the earned affirmation (truth on a ground):
-nothing → doubt → default-no → grounded-yes. Z is born second, as
-raw doubt, and returns last, as the hardened liar (§10) — the
-pre-computer genesis, not the solver's lifecycle. ZTL's
-implication is his
+the mark evaporates at the first operator, so no *compound* assertion is
+ever anything but T or F. Where a genuinely three-valued logic is shown
+bivalent by Suszko's reduction, ZTL is bivalent before any reduction,
+because the mark is barred from the value of compounds from the start.
+That is the precise sense in which ZTL is a two-valued logic with a mark,
+not a three-valued logic. ZTL's implication is Bochvar's
 ◇A⊃□B taken as a primitive; a polarity-adaptive translation (□ in
 positive positions, ◇ in negative ones) instead of a uniform one. ZTL
 falls outside Tomova's classification of "natural implications" (it
@@ -551,9 +550,11 @@ kin to Z's *unverified until verification.* His motive was future
 contingents, not the paradoxes, and his implication keeps p→p, so
 the kinship is of intent, not of tables. The two axes separate
 cleanly: the tables are Bochvar's external B3, the mark's meaning
-is Łukasiewicz's, and no prior system occupied their conjunction. And
-the *consequence* relation is separated from the whole three-valued
-matrix family by a single rule. Against each of its matrix neighbours
+is Łukasiewicz's, and no system in the surveyed literature occupied their
+conjunction.
+
+The *consequence* relation is separated from each of its four
+involutive-negation neighbours by a single rule. Against each of them
 (K3, LP, weak Kleene, Łukasiewicz Ł₃) ZTL is incomparable as a
 consequence relation, and the witness on the "the neighbour derives it,
 ZTL does not" side is the *same* for all four: **¬¬p ⊨ p**, double-
@@ -564,15 +565,20 @@ is proved rather than tabulated: an involutive negation *forces* the
 rule (`involution_gives_dne`, for an arbitrary negation and designated
 set), and ZTL's greedy negation is not involutive — ¬¬Z = T ≠ Z, one
 cell — so it breaks the rule with the involution
-(`lean/Signature.lean`, empty axiom list). The broken involution is
-thus the single consequence-level feature separating ZTL from the entire
-family, and it is the same greedy ¬¬Z = T that (i) makes the logic
-bivalent by construction above, (ii) bars ZTL from *expressing* any
-mark-carrying neighbour — greediness lets no compound output the mark,
-while every neighbour's connectives do (MEASURED) — and (iii) witnesses
-the separation here. One feature, three faces; the novelty is that
-feature and the principle that generates it, not the shared external
-tables.
+(`lean/Signature.lean`, empty axiom list). The broken involution is thus
+the feature separating ZTL from each of these involutive-negation
+neighbours — and, by `involution_gives_dne`, from *any* three-valued
+matrix whose negation is involutive, an infinite class of which the four
+are instances. Its non-involutive kin is the exception that keeps the
+claim honest: external Bochvar shares the {¬,∧,∨} tables, hence the
+broken involution itself, so ¬¬p ⊨ p does *not* separate the two — there
+they part in the implication fragment (the seven cells above), not on
+this rule. The same greedy ¬¬Z = T (i) makes the compounds classical
+above, (ii) bars ZTL from *expressing* any mark-carrying neighbour —
+greediness lets no compound output the mark, while every neighbour's
+connectives do (MEASURED) — and (iii) witnesses the separation here. One
+feature, three faces; the novelty is that feature and the principle that
+generates it, not the shared external tables.
 The passport's two non-classical letters carry two distinct
 pedigrees accordingly — Z from Łukasiewicz's indeterminate (a
 truth not yet settled), N from Kleene's undefined (a computation
@@ -580,7 +586,12 @@ not yet run, §10). Kindred in spirit: supervaluationism
 (rigid, non-tabular), subvaluationism/Jaśkowski (its dual), SQL NULL
 (lazy), IEEE NaN (comparisons), exceptions with try/catch at every node
 (greediness). The motivation "greedy local supervaluation / default
-deny" was not found in the surveyed literature.
+deny" was not found in the surveyed literature. The passport spells four
+letters, N, Z, F, T, in the genetic order — nothing (pending), the
+unsettled (a question with no answer yet), the free denial (default-deny),
+the earned affirmation (truth on a ground): nothing → doubt → default-no →
+grounded-yes. Z is born second, as raw doubt, and returns last, as the
+hardened liar (§10) — the pre-computer genesis, not the solver's lifecycle.
 
 **Devyatkin (2016, "Non-classical modifications of many-valued
 matrices", read in full).** The {¬,∧,∨} core of ZTL fits the templates
@@ -788,8 +799,7 @@ asymmetry — all proven.
 **Axiom status: the empty list, audited exhaustively.** `#print axioms`
 over the whole corpus returns "does not depend on any axioms": no
 Classical.choice, no Quot.sound, not even propext; pure computation.
-This is the strictest possible tier — rare for a substantial logical
-system.
+This is the strictest possible tier.
 
 The claim used to rest on 158 hand-placed prints against 371 theorems,
 with the rest covered transitively — a sound argument (a lemma carrying
@@ -1297,7 +1307,8 @@ forced under all readings; F if falsehood is forced; else Z**. Measured:
 interval value analysis (lazy flow of abstract values through
 computations) + assertion checking (greedy verdicts). Four independent
 engineering traditions — NaN, NULL, taint tracking, abstract
-interpretation — turn out to be fragments of one logic.
+interpretation — whose central moves the core reproduces on worked
+cases (in the sense of §1, not as a proved embedding).
 
 ## 16. The probabilistic bridge: Z ≠ p = 0.5 (MEASURED)
 
@@ -1671,8 +1682,13 @@ unresolved description, `1/0`. Equality inherits the mark:
              = Z   if a or b is a marked (unverified) reference.
 
 Four facts, all measured total in `zeq.py` over a domain of grounded and
-marked individuals, and all promoted to Lean (`ZEq.lean`, nine theorems,
-**empty axiom list**).
+marked individuals, and all kernel-checked in Lean (`ZEq.lean`, nine
+theorems, **empty axiom list**) — on a fixed five-individual model (three
+grounded, two marked), as instance certificates rather than structural
+theorems over a class of models; the exhaustive statement is the
+measurement. (Leibniz here is a one-line `congrArg`: once an equality is
+earned, `=` is genuine identity, so substitution is congruence — the
+content is in *when* it is earned, not in the substitution.)
 
 - **Reflexivity is earned.** `Eq(a,a)` is T for a grounded reference but
   **Z** for a marked one — self-identity is not free; an unverified
@@ -1715,11 +1731,14 @@ Classical logic assumes every singular term denotes; *free logic* drops
 that assumption. Its schools disagree on what an atomic statement about a
 non-denoting term is worth — negative free logic says **false**, positive
 says some are **true**, supervaluational leaves a **gap** (but keeps
-excluded middle super-true). ZTL gives a fourth answer that no prior
-school gives, and it is the answer the whole system was built to give: the
-**mark**. A non-denoting term makes the atom **Z**, and the greedy lift
-propagates it. Z was always the value of "unverified until verification"; a
-description not shown to denote is precisely that.
+excluded middle super-true), and the neutral school (Lehmann; weak-Kleene
+on non-denoting atoms) gives it a **third value**. ZTL's answer is the
+neutral one made operational — the atom takes the **mark** Z — with one
+decisive difference: the mark is **greedy**. It does not propagate as a
+gap and does not complete to a super-true middle; it evaporates at the
+first operator, so excluded middle on a non-denoting atom is **F**, not a
+gap and not super-true. Z was always the value of "unverified until
+verification"; a description not shown to denote is precisely that.
 
 The spine is a bridge back to §24, and it is Quine's *"no entity without
 identity"* made literal:
@@ -1727,8 +1746,12 @@ identity"* made literal:
         E!(t)  :=  Eq(t, t)          — existence *is* earned self-identity.
 
 A grounded reference is equal to itself, so it exists (E! = T); an
-unresolved reference is not, so E! = Z. ZTL therefore never *asserts*
-non-existence (a free F); it **marks** it. A definite description
+unresolved reference is not, so E! = Z. Non-existence is therefore not
+asserted through E! — `¬E!(τ) = ¬Z = F`, always — but it is still sayable:
+a domain verified to be empty of φ earns `¬∃x.φ = T`, so "the F does not
+exist" is asserted Russell's way, as a denied existential. E! and ∃ part
+company on the negative side, and Russell's paraphrase is the honest way to
+deny. A definite description
 `ιx.φ(x)` — "the x such that φ" — denotes the unique grounded satisfier of
 φ, uniqueness decided by the `=` of §24; with zero or several satisfiers
 it is a marked reference. This is Russell's uniqueness, but failure lands
@@ -1746,9 +1769,9 @@ eight theorems, **empty axiom list**):
   sentence, Russell asserts falsity, ZTL refuses the assertion and marks
   it. (Compare §18, where Russell's *paradox* is contained rather than
   exploded — the same refusal to assert on unearned ground.)
-- **Greedy propagation.** `P(τ)` alone is Z, but `P(τ) ∨ (guarded
-  tautology)` is T (`mark_evaporates_in_compound`): a non-denoting term
-  poisons only the atom, never a compound.
+- **Greedy propagation.** `P(τ)` alone is Z, but `P(τ) ∨ ⊤` is T
+  (`mark_evaporates_in_compound`): a non-denoting term poisons only the
+  atom, never a compound.
 - **An internal witness.** `1/0 = ιx.(0·x = 1)` has no grounded x, so it is
   a marked reference and `1/0 = 1/0` is Z — dead-on with the arithmetic of
   §15. The construction reaches the same verdict the number line did.

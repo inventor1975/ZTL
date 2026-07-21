@@ -53,6 +53,16 @@ THE KERNEL'S CONTRACT — three answers and no more (curator):
     CONTRADICTION   it is not, and here is WHERE
     (checking an existing seam is the engine that already exists)
 
+KNOWN UNSOUNDNESS (A. Miteiko review, 2026-07-21). This sketch joins over
+VERDICT EQUALITY (xnor = T), and verdict equality is NOT agreement: two
+unrelated formulas can share a verdict without asserting anything in
+common (zsew_attack.py #1). A correct seam must join TYPED CLAIM
+CERTIFICATES — normalized formula, formula hash, atom/claim namespace,
+schema version, marking + timestamp, derivation object, warrant grade,
+dependencies, validity interval, ZTL version, grounding references — so
+that "the same claim" and "the same symbol" cannot be confused. Until
+that object is defined, SEWN below is a demonstration, not a service.
+
 Run:  python3 zsew.py
 """
 from zmodal import ztl_eval
@@ -236,10 +246,13 @@ if __name__ == "__main__":
     print(f"\n    A = {_show(a.formula)}   B = {_show(b.formula)}  → {st3}")
     if st3 == "SEWN":
         print(f"      {s3}   final: {s3.final}")
-        print("      Both sides read F right now — ¬Z = F on each — so they")
-        print("      AGREE, and the seam is legitimately made. But it agrees")
-        print("      for the wrong reason: neither side has a ground, and")
-        print("      both are F by default deny rather than by fact.")
+        print("      Both sides read F right now — ¬Z = F on each — so the")
+        print("      seam returns SEWN on VERDICT EQUALITY. Arkady (2026-07-21)")
+        print("      showed this is NOT agreement: the two claims are not")
+        print("      equivalent, and equal output symbols are not consensus.")
+        print("      See zsew_attack.py #1 — this SEWN is UNSOUND and stands")
+        print("      as a known bug until the seam joins typed certificates")
+        print("      over a shared namespace rather than bare verdicts.")
         v0 = s3.verdict
         for m in refinements(s3.marking):
             if ztl_eval(s3.formula, m) != v0:

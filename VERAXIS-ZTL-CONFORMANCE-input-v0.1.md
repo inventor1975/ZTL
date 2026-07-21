@@ -1,9 +1,11 @@
 # VERAXIS–ZTL semantic-review package — candidate subset v0.1
 
-## Snapshot (self-contained pin coordinates)
+## Snapshot
 
-- **repository commit (verified corpus state)**: `52b1447d093436a031fb5081e0962ce6da665762`  — the finalized artifact is contained in the committing revision; pin THAT commit.
-- **release tag**: none at this commit; published version is v1.3 (Zenodo).
+This package pins the CORPUS it reviews, not itself. A tracked file cannot stably carry the SHA of the commit it lives in (writing that SHA changes the commit SHA). So:
+
+- **corpus_source_commit** (the reviewed Lean corpus): `905c7fd37851704519c3dd172c02650f0b2e5612`  — the last commit that changed `lean/`; the declarations and their per-module `sha256` (below) are taken from this state.
+- **package_commit** and the immutable **tag** (`veraxis-ztl-input-v0.1`) are recorded EXTERNALLY — by the git tag and by the downstream Veraxis manifest — never inside this file.
 - **DOI (v1.3 baseline)**: `10.5281/zenodo.21472971`  · concept `10.5281/zenodo.21318981`
 - **Lean toolchain**: `leanprover/lean4:v4.29.1`
 - **theorem / module count**: 371 theorems across 21 modules
@@ -11,6 +13,7 @@
 - **inventory hash** (`ZTL-theorems.txt`): `sha256:fa0b34378a967c409f3c2afb2414c8b5a4b087200f923521dc035933ae1e303a`
 - **semantic-review status**: all 28 declarations authored
 - **dependency-closure status**: DEFERRED (native Lean dependency extraction not yet run)
+- **machine-readable fixtures**: `VERAXIS-ZTL-fixtures-v0.1.json` (typed by `subject_kind`; no generic defaults)
 
 Upstream input for `VERAXIS-ZTL-CONFORMANCE-v0.1`. Every declaration below is `evidence_status: PROVED` on the empty axiom list at the pinned snapshot. Mechanical fields are extracted; the semantic fields are authored (ZTL-author semantic review). No semantic transition is hidden inside a convenient phrasing.
 
@@ -29,9 +32,8 @@ Upstream input for `VERAXIS-ZTL-CONFORMANCE-v0.1`. Every declaration below is `e
 - **positive test vector** (human): atom Z → ¬(atom) = F (formula verdict).
 - **adversarial test vector** (human): consumer reports ¬(atom)=F as a grounded false fact about the atom → FAILS.
 - **expected Veraxis conformance**: Veraxis exposes ¬(atom)=F as a formula verdict; any 'default-deny' reading is an explicit downstream mapping, never a grounded negative world-fact.
-- **machine-readable fixtures**:
-  - `{ id: "FX-ax_not_Z-pos", formula_ast: "(¬ a)", marking: "a=Z", expected_formula_verdict: "F", retained_atom_state: "marks in the marking stay Z", epistemic_status: "formula-level; atoms unpromoted", prohibited_conversion: "none", expected_veraxis: "accept; reason=OK" }`
-  - `{ id: "FX-ax_not_Z-adv", formula_ast: "(¬ a)", marking: "a=Z", expected_formula_verdict: "F", retained_atom_state: "marks stay Z", epistemic_status: "unchanged by the misuse", prohibited_conversion: "F_READ_AS_GROUNDED_NEGATIVE", expected_veraxis: "reject; reason=F_READ_AS_GROUNDED_NEGATIVE" }`
+- **subject_kind**: `formula_evaluation`
+- **machine-readable fixtures**: `VERAXIS-ZTL-fixtures-v0.1.json` → `"V.ax_not_Z"` (`positive` / `adversarial`, typed by `subject_kind`; only the fields applicable to that kind are present)
 
 ### `V.ax_notnot_Z`
 - **canonical name**: `V.ax_notnot_Z`
@@ -46,9 +48,8 @@ Upstream input for `VERAXIS-ZTL-CONFORMANCE-v0.1`. Every declaration below is `e
 - **positive test vector** (human): atom marked Z; compute ¬¬(atom) → expect T (formula verdict).
 - **adversarial test vector** (human): atom marked Z; a consumer reads ¬¬(atom)=T and reports the atom's ground-state as T → CONFORMANCE FAILS (prohibited promotion).
 - **expected Veraxis conformance**: Veraxis exposes the compound verdict T but keeps the atom's grounding at Z; it never serialises the atom as grounded-true.
-- **machine-readable fixtures**:
-  - `{ id: "FX-ax_notnot_Z-pos", formula_ast: "(¬ (¬ a))", marking: "a=Z", expected_formula_verdict: "T", retained_atom_state: "marks in the marking stay Z", epistemic_status: "formula-level; atoms unpromoted", prohibited_conversion: "none", expected_veraxis: "accept; reason=OK" }`
-  - `{ id: "FX-ax_notnot_Z-adv", formula_ast: "(¬ (¬ a))", marking: "a=Z", expected_formula_verdict: "T", retained_atom_state: "marks stay Z", epistemic_status: "unchanged by the misuse", prohibited_conversion: "Z_PROMOTED_TO_GROUNDED_T", expected_veraxis: "reject; reason=Z_PROMOTED_TO_GROUNDED_T" }`
+- **subject_kind**: `formula_evaluation`
+- **machine-readable fixtures**: `VERAXIS-ZTL-fixtures-v0.1.json` → `"V.ax_notnot_Z"` (`positive` / `adversarial`, typed by `subject_kind`; only the fields applicable to that kind are present)
 
 ### `V.lift1_classical`
 - **canonical name**: `V.lift1_classical`
@@ -63,9 +64,8 @@ Upstream input for `VERAXIS-ZTL-CONFORMANCE-v0.1`. Every declaration below is `e
 - **positive test vector** (human): any f, x=Z → lift1 f Z ∈ {T,F}.
 - **adversarial test vector** (human): consumer expects a compound to carry Z downstream → it is always T/F.
 - **expected Veraxis conformance**: Veraxis may rely on every unary compound being two-valued; only atoms carry Z.
-- **machine-readable fixtures**:
-  - `{ id: "FX-lift1_classical-pos", formula_ast: "(f a)  [any unary f]", marking: "a=Z", expected_formula_verdict: "T|F (never Z)", retained_atom_state: "marks in the marking stay Z", epistemic_status: "formula-level; atoms unpromoted", prohibited_conversion: "none", expected_veraxis: "accept; reason=OK" }`
-  - `{ id: "FX-lift1_classical-adv", formula_ast: "(f a)  [any unary f]", marking: "a=Z", expected_formula_verdict: "T|F (never Z)", retained_atom_state: "marks stay Z", epistemic_status: "unchanged by the misuse", prohibited_conversion: "COMPOUND_EXPECTED_TO_CARRY_Z", expected_veraxis: "reject; reason=COMPOUND_EXPECTED_TO_CARRY_Z" }`
+- **subject_kind**: `formula_evaluation`
+- **machine-readable fixtures**: `VERAXIS-ZTL-fixtures-v0.1.json` → `"V.lift1_classical"` (`positive` / `adversarial`, typed by `subject_kind`; only the fields applicable to that kind are present)
 
 ### `V.lift2_classical`
 - **canonical name**: `V.lift2_classical`
@@ -80,9 +80,8 @@ Upstream input for `VERAXIS-ZTL-CONFORMANCE-v0.1`. Every declaration below is `e
 - **positive test vector** (human): any f, x=Z, y=T → lift2 f Z T ∈ {T,F}.
 - **adversarial test vector** (human): consumer expects a Z operand to propagate as Z through a connective → it collapses to T/F.
 - **expected Veraxis conformance**: Veraxis may rely on every binary compound being two-valued.
-- **machine-readable fixtures**:
-  - `{ id: "FX-lift2_classical-pos", formula_ast: "(f a b)  [any binary f]", marking: "a=Z, b=T", expected_formula_verdict: "T|F (never Z)", retained_atom_state: "marks in the marking stay Z", epistemic_status: "formula-level; atoms unpromoted", prohibited_conversion: "none", expected_veraxis: "accept; reason=OK" }`
-  - `{ id: "FX-lift2_classical-adv", formula_ast: "(f a b)  [any binary f]", marking: "a=Z, b=T", expected_formula_verdict: "T|F (never Z)", retained_atom_state: "marks stay Z", epistemic_status: "unchanged by the misuse", prohibited_conversion: "COMPOUND_EXPECTED_TO_CARRY_Z", expected_veraxis: "reject; reason=COMPOUND_EXPECTED_TO_CARRY_Z" }`
+- **subject_kind**: `formula_evaluation`
+- **machine-readable fixtures**: `VERAXIS-ZTL-fixtures-v0.1.json` → `"V.lift2_classical"` (`positive` / `adversarial`, typed by `subject_kind`; only the fields applicable to that kind are present)
 
 ### `V.evalF_classical`
 - **canonical name**: `V.evalF_classical`
@@ -97,9 +96,8 @@ Upstream input for `VERAXIS-ZTL-CONFORMANCE-v0.1`. Every declaration below is `e
 - **positive test vector** (human): any non-atomic φ, any marked valuation → evalF ∈ {T,F}.
 - **adversarial test vector** (human): consumer reserves a Z code point for a compound's value → compounds are strictly {T,F}.
 - **expected Veraxis conformance**: Veraxis serializes compound verdicts as {T,F}; only atom slots may hold Z.
-- **machine-readable fixtures**:
-  - `{ id: "FX-evalF_classical-pos", formula_ast: "any non-atomic φ", marking: "any marking with marks", expected_formula_verdict: "T|F", retained_atom_state: "marks in the marking stay Z", epistemic_status: "formula-level; atoms unpromoted", prohibited_conversion: "none", expected_veraxis: "accept; reason=OK" }`
-  - `{ id: "FX-evalF_classical-adv", formula_ast: "any non-atomic φ", marking: "any marking with marks", expected_formula_verdict: "T|F", retained_atom_state: "marks stay Z", epistemic_status: "unchanged by the misuse", prohibited_conversion: "COMPOUND_SERIALIZED_AS_Z", expected_veraxis: "reject; reason=COMPOUND_SERIALIZED_AS_Z" }`
+- **subject_kind**: `formula_evaluation`
+- **machine-readable fixtures**: `VERAXIS-ZTL-fixtures-v0.1.json` → `"V.evalF_classical"` (`positive` / `adversarial`, typed by `subject_kind`; only the fields applicable to that kind are present)
 
 ### `V.isZ_detects`
 - **canonical name**: `V.isZ_detects`
@@ -114,9 +112,8 @@ Upstream input for `VERAXIS-ZTL-CONFORMANCE-v0.1`. Every declaration below is `e
 - **positive test vector** (human): slot Z → isZ = T; slot T/F → isZ = F.
 - **adversarial test vector** (human): consumer reads isZ=T as the atom being true → FAILS (detector, not assertion).
 - **expected Veraxis conformance**: Veraxis may use isZ to route/quarantine unverified slots; never as grounded truth.
-- **machine-readable fixtures**:
-  - `{ id: "FX-isZ_detects-pos", formula_ast: "(isZ a)", marking: "a=Z", expected_formula_verdict: "T", retained_atom_state: "marks in the marking stay Z", epistemic_status: "formula-level; atoms unpromoted", prohibited_conversion: "none", expected_veraxis: "accept; reason=OK" }`
-  - `{ id: "FX-isZ_detects-adv", formula_ast: "(isZ a)", marking: "a=Z", expected_formula_verdict: "T", retained_atom_state: "marks stay Z", epistemic_status: "unchanged by the misuse", prohibited_conversion: "DETECTOR_READ_AS_ASSERTION", expected_veraxis: "reject; reason=DETECTOR_READ_AS_ASSERTION" }`
+- **subject_kind**: `formula_evaluation`
+- **machine-readable fixtures**: `VERAXIS-ZTL-fixtures-v0.1.json` → `"V.isZ_detects"` (`positive` / `adversarial`, typed by `subject_kind`; only the fields applicable to that kind are present)
 
 ### `V.no_gluts`
 - **canonical name**: `V.no_gluts`
@@ -131,9 +128,8 @@ Upstream input for `VERAXIS-ZTL-CONFORMANCE-v0.1`. Every declaration below is `e
 - **positive test vector** (human): any single value v → not (v=T and ¬v=T).
 - **adversarial test vector** (human): consumer reads no_gluts as 'the system reconciles conflicting external sources' → it says nothing about source conflict.
 - **expected Veraxis conformance**: Veraxis may rely on no single value being both T and not-T; cross-source conflict is handled by the institutional layer, not by this theorem.
-- **machine-readable fixtures**:
-  - `{ id: "FX-no_gluts-pos", formula_ast: "(a ∧ (¬ a))", marking: "a ∈ {T,F,Z}", expected_formula_verdict: "never T", retained_atom_state: "marks in the marking stay Z", epistemic_status: "formula-level; atoms unpromoted", prohibited_conversion: "none", expected_veraxis: "accept; reason=OK" }`
-  - `{ id: "FX-no_gluts-adv", formula_ast: "(a ∧ (¬ a))", marking: "a ∈ {T,F,Z}", expected_formula_verdict: "never T", retained_atom_state: "marks stay Z", epistemic_status: "unchanged by the misuse", prohibited_conversion: "NO_GLUT_READ_AS_SOURCE_RECONCILIATION", expected_veraxis: "reject; reason=NO_GLUT_READ_AS_SOURCE_RECONCILIATION" }`
+- **subject_kind**: `formula_evaluation`
+- **machine-readable fixtures**: `VERAXIS-ZTL-fixtures-v0.1.json` → `"V.no_gluts"` (`positive` / `adversarial`, typed by `subject_kind`; only the fields applicable to that kind are present)
 
 ## Warrant-preserving and credit-rejecting inference
 
@@ -150,9 +146,8 @@ Upstream input for `VERAXIS-ZTL-CONFORMANCE-v0.1`. Every declaration below is `e
 - **positive test vector** (human): p=T, p→q=T → q=T.
 - **adversarial test vector** (human): consumer applies MP with p unverified (Z) → premise not T, the rule does not fire; no false promotion.
 - **expected Veraxis conformance**: Veraxis may use MP soundly; the earned q stays a formula verdict.
-- **machine-readable fixtures**:
-  - `{ id: "FX-modus_ponens-pos", formula_ast: "premises [a, (a→b)] ⊢ b", marking: "a=T, b=T", expected_formula_verdict: "b=T", retained_atom_state: "marks in the marking stay Z", epistemic_status: "formula-level; atoms unpromoted", prohibited_conversion: "none", expected_veraxis: "accept; reason=OK" }`
-  - `{ id: "FX-modus_ponens-adv", formula_ast: "premises [a, (a→b)] ⊢ b", marking: "a=T, b=T", expected_formula_verdict: "b=T", retained_atom_state: "marks stay Z", epistemic_status: "unchanged by the misuse", prohibited_conversion: "VERDICT_READ_AS_WORLD_FACT", expected_veraxis: "reject; reason=VERDICT_READ_AS_WORLD_FACT" }`
+- **subject_kind**: `inference_rule`
+- **machine-readable fixtures**: `VERAXIS-ZTL-fixtures-v0.1.json` → `"V.modus_ponens"` (`positive` / `adversarial`, typed by `subject_kind`; only the fields applicable to that kind are present)
 
 ### `V.rule_and_intro`
 - **canonical name**: `V.rule_and_intro`
@@ -167,9 +162,8 @@ Upstream input for `VERAXIS-ZTL-CONFORMANCE-v0.1`. Every declaration below is `e
 - **positive test vector** (human): p=T, q=T → p∧q=T.
 - **adversarial test vector** (human): consumer treats p∧q=T as a legally sewn institutional claim → it is only logical joint warrant; seam-legality needs the interface layer.
 - **expected Veraxis conformance**: Veraxis's logical join-by-∧ requires BOTH earned; institutional seam-legality adds admissibility/provenance on top, out of scope here.
-- **machine-readable fixtures**:
-  - `{ id: "FX-rule_and_intro-pos", formula_ast: "(a ∧ b)", marking: "a=T, b=T", expected_formula_verdict: "T", retained_atom_state: "marks in the marking stay Z", epistemic_status: "formula-level; atoms unpromoted", prohibited_conversion: "none", expected_veraxis: "accept; reason=OK" }`
-  - `{ id: "FX-rule_and_intro-adv", formula_ast: "(a ∧ b)", marking: "a=T, b=T", expected_formula_verdict: "T", retained_atom_state: "marks stay Z", epistemic_status: "unchanged by the misuse", prohibited_conversion: "LOGICAL_WARRANT_READ_AS_SEAM_LEGALITY", expected_veraxis: "reject; reason=LOGICAL_WARRANT_READ_AS_SEAM_LEGALITY" }`
+- **subject_kind**: `inference_rule`
+- **machine-readable fixtures**: `VERAXIS-ZTL-fixtures-v0.1.json` → `"V.rule_and_intro"` (`positive` / `adversarial`, typed by `subject_kind`; only the fields applicable to that kind are present)
 
 ### `V.rule_and_elim`
 - **canonical name**: `V.rule_and_elim`
@@ -184,9 +178,8 @@ Upstream input for `VERAXIS-ZTL-CONFORMANCE-v0.1`. Every declaration below is `e
 - **positive test vector** (human): p∧q=T → p=T.
 - **adversarial test vector** (human): consumer extracts p from a conjunction that is not actually T → premise false, no extraction.
 - **expected Veraxis conformance**: Veraxis extracts conjuncts only from an earned conjunction.
-- **machine-readable fixtures**:
-  - `{ id: "FX-rule_and_elim-pos", formula_ast: "(a ∧ b) ⊢ a", marking: "a∧b = T", expected_formula_verdict: "a=T", retained_atom_state: "marks in the marking stay Z", epistemic_status: "formula-level; atoms unpromoted", prohibited_conversion: "none", expected_veraxis: "accept; reason=OK" }`
-  - `{ id: "FX-rule_and_elim-adv", formula_ast: "(a ∧ b) ⊢ a", marking: "a∧b = T", expected_formula_verdict: "a=T", retained_atom_state: "marks stay Z", epistemic_status: "unchanged by the misuse", prohibited_conversion: "VERDICT_READ_AS_WORLD_FACT", expected_veraxis: "reject; reason=VERDICT_READ_AS_WORLD_FACT" }`
+- **subject_kind**: `inference_rule`
+- **machine-readable fixtures**: `VERAXIS-ZTL-fixtures-v0.1.json` → `"V.rule_and_elim"` (`positive` / `adversarial`, typed by `subject_kind`; only the fields applicable to that kind are present)
 
 ### `V.rule_transitivity`
 - **canonical name**: `V.rule_transitivity`
@@ -201,9 +194,8 @@ Upstream input for `VERAXIS-ZTL-CONFORMANCE-v0.1`. Every declaration below is `e
 - **positive test vector** (human): p→q=T, q→r=T → p→r=T.
 - **adversarial test vector** (human): consumer reads the chain as causation → it is entailment structure only.
 - **expected Veraxis conformance**: Veraxis may chain earned implications; the chain is logical, not causal.
-- **machine-readable fixtures**:
-  - `{ id: "FX-rule_transitivity-pos", formula_ast: "[(a→b),(b→c)] ⊢ (a→c)", marking: "both = T", expected_formula_verdict: "(a→c)=T", retained_atom_state: "marks in the marking stay Z", epistemic_status: "formula-level; atoms unpromoted", prohibited_conversion: "none", expected_veraxis: "accept; reason=OK" }`
-  - `{ id: "FX-rule_transitivity-adv", formula_ast: "[(a→b),(b→c)] ⊢ (a→c)", marking: "both = T", expected_formula_verdict: "(a→c)=T", retained_atom_state: "marks stay Z", epistemic_status: "unchanged by the misuse", prohibited_conversion: "ENTAILMENT_READ_AS_CAUSATION", expected_veraxis: "reject; reason=ENTAILMENT_READ_AS_CAUSATION" }`
+- **subject_kind**: `inference_rule`
+- **machine-readable fixtures**: `VERAXIS-ZTL-fixtures-v0.1.json` → `"V.rule_transitivity"` (`positive` / `adversarial`, typed by `subject_kind`; only the fields applicable to that kind are present)
 
 ### `V.dt_one_way`
 - **canonical name**: `V.dt_one_way`
@@ -218,9 +210,8 @@ Upstream input for `VERAXIS-ZTL-CONFORMANCE-v0.1`. Every declaration below is `e
 - **positive test vector** (human): p=Z → p→p = F (the arrow does not hold at the mark).
 - **adversarial test vector** (human): consumer treats p→p as a universal tautology (always T) → FAILS at Z.
 - **expected Veraxis conformance**: Veraxis must not treat p→p as universally T, nor internalize entailment into the arrow.
-- **machine-readable fixtures**:
-  - `{ id: "FX-dt_one_way-pos", formula_ast: "(a → a)", marking: "a=Z", expected_formula_verdict: "F", retained_atom_state: "marks in the marking stay Z", epistemic_status: "formula-level; atoms unpromoted", prohibited_conversion: "none", expected_veraxis: "accept; reason=OK" }`
-  - `{ id: "FX-dt_one_way-adv", formula_ast: "(a → a)", marking: "a=Z", expected_formula_verdict: "F", retained_atom_state: "marks stay Z", epistemic_status: "unchanged by the misuse", prohibited_conversion: "ARROW_ASSUMED_TAUTOLOGY", expected_veraxis: "reject; reason=ARROW_ASSUMED_TAUTOLOGY" }`
+- **subject_kind**: `formula_evaluation`
+- **machine-readable fixtures**: `VERAXIS-ZTL-fixtures-v0.1.json` → `"V.dt_one_way"` (`positive` / `adversarial`, typed by `subject_kind`; only the fields applicable to that kind are present)
 
 ### `V.rule_dn_elim_fails`
 - **canonical name**: `V.rule_dn_elim_fails`
@@ -235,9 +226,8 @@ Upstream input for `VERAXIS-ZTL-CONFORMANCE-v0.1`. Every declaration below is `e
 - **positive test vector** (human): apply DNE-elim with p = Z: premise ¬¬Z = T holds, conclusion Z = T is false → the rule is correctly seen to fail.
 - **adversarial test vector** (human): a consumer uses DNE-elim as a sound inference to promote an unverified atom to T because its double negation computed T → CONFORMANCE FAILS.
 - **expected Veraxis conformance**: Veraxis must not carry ¬¬p ⊨ p as an admissible inference over unverified atoms; grounded atoms are unaffected.
-- **machine-readable fixtures**:
-  - `{ id: "FX-rule_dn_elim_fails-pos", formula_ast: "apply ¬¬p ⊨ p at p=Z", marking: "p=Z", expected_formula_verdict: "rule FAILS (¬¬Z=T, Z≠T)", retained_atom_state: "marks in the marking stay Z", epistemic_status: "formula-level; atoms unpromoted", prohibited_conversion: "none", expected_veraxis: "accept; reason=OK" }`
-  - `{ id: "FX-rule_dn_elim_fails-adv", formula_ast: "apply ¬¬p ⊨ p at p=Z", marking: "p=Z", expected_formula_verdict: "rule FAILS (¬¬Z=T, Z≠T)", retained_atom_state: "marks stay Z", epistemic_status: "unchanged by the misuse", prohibited_conversion: "INFERENCE_NOT_WARRANT_PRESERVING", expected_veraxis: "reject; reason=INFERENCE_NOT_WARRANT_PRESERVING" }`
+- **subject_kind**: `inference_rule`
+- **machine-readable fixtures**: `VERAXIS-ZTL-fixtures-v0.1.json` → `"V.rule_dn_elim_fails"` (`positive` / `adversarial`, typed by `subject_kind`; only the fields applicable to that kind are present)
 
 ### `V.rule_taut_concl_fails`
 - **canonical name**: `V.rule_taut_concl_fails`
@@ -252,9 +242,8 @@ Upstream input for `VERAXIS-ZTL-CONFORMANCE-v0.1`. Every declaration below is `e
 - **positive test vector** (human): p=T, q=Z → q∨¬q = F → the rule correctly fails.
 - **adversarial test vector** (human): consumer injects q∨¬q as an always-available tautology → FAILS at unverified q.
 - **expected Veraxis conformance**: Veraxis must not treat excluded middle as a free tautology over unverified atoms.
-- **machine-readable fixtures**:
-  - `{ id: "FX-rule_taut_concl_fails-pos", formula_ast: "(b ∨ (¬ b))", marking: "b=Z", expected_formula_verdict: "F", retained_atom_state: "marks in the marking stay Z", epistemic_status: "formula-level; atoms unpromoted", prohibited_conversion: "none", expected_veraxis: "accept; reason=OK" }`
-  - `{ id: "FX-rule_taut_concl_fails-adv", formula_ast: "(b ∨ (¬ b))", marking: "b=Z", expected_formula_verdict: "F", retained_atom_state: "marks stay Z", epistemic_status: "unchanged by the misuse", prohibited_conversion: "EXCLUDED_MIDDLE_ASSUMED", expected_veraxis: "reject; reason=EXCLUDED_MIDDLE_ASSUMED" }`
+- **subject_kind**: `inference_rule`
+- **machine-readable fixtures**: `VERAXIS-ZTL-fixtures-v0.1.json` → `"V.rule_taut_concl_fails"` (`positive` / `adversarial`, typed by `subject_kind`; only the fields applicable to that kind are present)
 
 ## Proof-engine correspondence
 
@@ -271,9 +260,8 @@ Upstream input for `VERAXIS-ZTL-CONFORMANCE-v0.1`. Every declaration below is `e
 - **positive test vector** (human): an unsatisfiable node set → closes = true.
 - **adversarial test vector** (human): consumer reads a closure as proving a world-fact false → it proves formula-unsatisfiability only.
 - **expected Veraxis conformance**: Veraxis maps closure to formula-unsat, not world-falsity.
-- **machine-readable fixtures**:
-  - `{ id: "FX-closes_iff-pos", formula_ast: "an unsatisfiable node set", marking: "—", expected_formula_verdict: "closes = true", retained_atom_state: "marks in the marking stay Z", epistemic_status: "formula-level; atoms unpromoted", prohibited_conversion: "none", expected_veraxis: "accept; reason=OK" }`
-  - `{ id: "FX-closes_iff-adv", formula_ast: "an unsatisfiable node set", marking: "—", expected_formula_verdict: "closes = true", retained_atom_state: "marks stay Z", epistemic_status: "unchanged by the misuse", prohibited_conversion: "CLOSURE_READ_AS_WORLD_FALSITY", expected_veraxis: "reject; reason=CLOSURE_READ_AS_WORLD_FALSITY" }`
+- **subject_kind**: `tableau_closure`
+- **machine-readable fixtures**: `VERAXIS-ZTL-fixtures-v0.1.json` → `"V.closes_iff"` (`positive` / `adversarial`, typed by `subject_kind`; only the fields applicable to that kind are present)
 
 ### `V.tproves_iff`
 - **canonical name**: `V.tproves_iff`
@@ -288,9 +276,8 @@ Upstream input for `VERAXIS-ZTL-CONFORMANCE-v0.1`. Every declaration below is `e
 - **positive test vector** (human): ps = [p, p→q], c = q (modus ponens) → tproves true, and q follows.
 - **adversarial test vector** (human): ps = [], c = ¬q→¬q (a guarded tautology): tproves true, but a consumer must not read the derived c as a grounded world-fact — formula-level consequence only.
 - **expected Veraxis conformance**: Veraxis may use `tproves` as the authoritative entailment oracle for the covered fragment, but maps its YES to 'formula-level consequence', never to grounded truth.
-- **machine-readable fixtures**:
-  - `{ id: "FX-tproves_iff-pos", formula_ast: "ps=[a,(a→b)], c=b", marking: "—", expected_formula_verdict: "tproves = true", retained_atom_state: "marks in the marking stay Z", epistemic_status: "formula-level; atoms unpromoted", prohibited_conversion: "none", expected_veraxis: "accept; reason=OK" }`
-  - `{ id: "FX-tproves_iff-adv", formula_ast: "ps=[a,(a→b)], c=b", marking: "—", expected_formula_verdict: "tproves = true", retained_atom_state: "marks stay Z", epistemic_status: "unchanged by the misuse", prohibited_conversion: "PROOF_READ_AS_WORLD_FACT", expected_veraxis: "reject; reason=PROOF_READ_AS_WORLD_FACT" }`
+- **subject_kind**: `entailment`
+- **machine-readable fixtures**: `VERAXIS-ZTL-fixtures-v0.1.json` → `"V.tproves_iff"` (`positive` / `adversarial`, typed by `subject_kind`; only the fields applicable to that kind are present)
 
 ### `V.closesN_iff`
 - **canonical name**: `V.closesN_iff`
@@ -305,9 +292,8 @@ Upstream input for `VERAXIS-ZTL-CONFORMANCE-v0.1`. Every declaration below is `e
 - **positive test vector** (human): an unsatisfiable node set → closesN = true.
 - **adversarial test vector** (human): as closes_iff: closure ≠ world-falsity.
 - **expected Veraxis conformance**: Veraxis maps native closure to formula-unsat only.
-- **machine-readable fixtures**:
-  - `{ id: "FX-closesN_iff-pos", formula_ast: "an unsatisfiable node set (native)", marking: "—", expected_formula_verdict: "closesN = true", retained_atom_state: "marks in the marking stay Z", epistemic_status: "formula-level; atoms unpromoted", prohibited_conversion: "none", expected_veraxis: "accept; reason=OK" }`
-  - `{ id: "FX-closesN_iff-adv", formula_ast: "an unsatisfiable node set (native)", marking: "—", expected_formula_verdict: "closesN = true", retained_atom_state: "marks stay Z", epistemic_status: "unchanged by the misuse", prohibited_conversion: "CLOSURE_READ_AS_WORLD_FALSITY", expected_veraxis: "reject; reason=CLOSURE_READ_AS_WORLD_FALSITY" }`
+- **subject_kind**: `tableau_closure`
+- **machine-readable fixtures**: `VERAXIS-ZTL-fixtures-v0.1.json` → `"V.closesN_iff"` (`positive` / `adversarial`, typed by `subject_kind`; only the fields applicable to that kind are present)
 
 ### `V.tprovesN_iff`
 - **canonical name**: `V.tprovesN_iff`
@@ -322,9 +308,8 @@ Upstream input for `VERAXIS-ZTL-CONFORMANCE-v0.1`. Every declaration below is `e
 - **positive test vector** (human): ps=[p, p→q], c=q → tprovesN true.
 - **adversarial test vector** (human): consumer reads a derived c as a grounded fact → consequence only.
 - **expected Veraxis conformance**: Veraxis may use tprovesN as the entailment oracle; YES ↦ consequence, not truth.
-- **machine-readable fixtures**:
-  - `{ id: "FX-tprovesN_iff-pos", formula_ast: "ps=[a,(a→b)], c=b (native)", marking: "—", expected_formula_verdict: "tprovesN = true", retained_atom_state: "marks in the marking stay Z", epistemic_status: "formula-level; atoms unpromoted", prohibited_conversion: "none", expected_veraxis: "accept; reason=OK" }`
-  - `{ id: "FX-tprovesN_iff-adv", formula_ast: "ps=[a,(a→b)], c=b (native)", marking: "—", expected_formula_verdict: "tprovesN = true", retained_atom_state: "marks stay Z", epistemic_status: "unchanged by the misuse", prohibited_conversion: "PROOF_READ_AS_WORLD_FACT", expected_veraxis: "reject; reason=PROOF_READ_AS_WORLD_FACT" }`
+- **subject_kind**: `entailment`
+- **machine-readable fixtures**: `VERAXIS-ZTL-fixtures-v0.1.json` → `"V.tprovesN_iff"` (`positive` / `adversarial`, typed by `subject_kind`; only the fields applicable to that kind are present)
 
 ### `V.engines_agree`
 - **canonical name**: `V.engines_agree`
@@ -339,9 +324,8 @@ Upstream input for `VERAXIS-ZTL-CONFORMANCE-v0.1`. Every declaration below is `e
 - **positive test vector** (human): any ps, c → tprovesN ps c = tproves ps c.
 - **adversarial test vector** (human): consumer expects the engines to differ on some input → they never do.
 - **expected Veraxis conformance**: Veraxis may use either engine interchangeably as the oracle.
-- **machine-readable fixtures**:
-  - `{ id: "FX-engines_agree-pos", formula_ast: "any (ps, c)", marking: "—", expected_formula_verdict: "tprovesN = tproves", retained_atom_state: "marks in the marking stay Z", epistemic_status: "formula-level; atoms unpromoted", prohibited_conversion: "none", expected_veraxis: "accept; reason=OK" }`
-  - `{ id: "FX-engines_agree-adv", formula_ast: "any (ps, c)", marking: "—", expected_formula_verdict: "tprovesN = tproves", retained_atom_state: "marks stay Z", epistemic_status: "unchanged by the misuse", prohibited_conversion: "ENGINES_EXPECTED_TO_DIFFER", expected_veraxis: "reject; reason=ENGINES_EXPECTED_TO_DIFFER" }`
+- **subject_kind**: `engine_equivalence`
+- **machine-readable fixtures**: `VERAXIS-ZTL-fixtures-v0.1.json` → `"V.engines_agree"` (`positive` / `adversarial`, typed by `subject_kind`; only the fields applicable to that kind are present)
 
 ### `V.entails_structural`
 - **canonical name**: `V.entails_structural`
@@ -356,9 +340,8 @@ Upstream input for `VERAXIS-ZTL-CONFORMANCE-v0.1`. Every declaration below is `e
 - **positive test vector** (human): Γ ⊨ φ, substitution σ → σΓ ⊨ σφ.
 - **adversarial test vector** (human): consumer substitutes an object for a variable expecting object-identity to carry → only formula structure carries.
 - **expected Veraxis conformance**: Veraxis may rely on uniform substitution preserving entailment over formula variables.
-- **machine-readable fixtures**:
-  - `{ id: "FX-entails_structural-pos", formula_ast: "Γ ⊨ φ, substitution σ", marking: "—", expected_formula_verdict: "σΓ ⊨ σφ", retained_atom_state: "marks in the marking stay Z", epistemic_status: "formula-level; atoms unpromoted", prohibited_conversion: "none", expected_veraxis: "accept; reason=OK" }`
-  - `{ id: "FX-entails_structural-adv", formula_ast: "Γ ⊨ φ, substitution σ", marking: "—", expected_formula_verdict: "σΓ ⊨ σφ", retained_atom_state: "marks stay Z", epistemic_status: "unchanged by the misuse", prohibited_conversion: "SUBSTITUTION_CARRIES_OBJECT_IDENTITY", expected_veraxis: "reject; reason=SUBSTITUTION_CARRIES_OBJECT_IDENTITY" }`
+- **subject_kind**: `entailment`
+- **machine-readable fixtures**: `VERAXIS-ZTL-fixtures-v0.1.json` → `"V.entails_structural"` (`positive` / `adversarial`, typed by `subject_kind`; only the fields applicable to that kind are present)
 
 ## Refinement and warranty structure
 
@@ -375,9 +358,8 @@ Upstream input for `VERAXIS-ZTL-CONFORMANCE-v0.1`. Every declaration below is `e
 - **positive test vector** (human): any m → Refines m m.
 - **adversarial test vector** (human): consumer assumes refinement is strict/irreflexive → it is a preorder.
 - **expected Veraxis conformance**: Veraxis's refinement is a preorder; equal states refine each other.
-- **machine-readable fixtures**:
-  - `{ id: "FX-refines_refl-pos", formula_ast: "Refines m m", marking: "any m", expected_formula_verdict: "holds", retained_atom_state: "marks in the marking stay Z", epistemic_status: "formula-level; atoms unpromoted", prohibited_conversion: "none", expected_veraxis: "accept; reason=OK" }`
-  - `{ id: "FX-refines_refl-adv", formula_ast: "Refines m m", marking: "any m", expected_formula_verdict: "holds", retained_atom_state: "marks stay Z", epistemic_status: "unchanged by the misuse", prohibited_conversion: "REFINEMENT_ASSUMED_IRREFLEXIVE", expected_veraxis: "reject; reason=REFINEMENT_ASSUMED_IRREFLEXIVE" }`
+- **subject_kind**: `refinement_relation`
+- **machine-readable fixtures**: `VERAXIS-ZTL-fixtures-v0.1.json` → `"ZTime.refines_refl"` (`positive` / `adversarial`, typed by `subject_kind`; only the fields applicable to that kind are present)
 
 ### `ZTime.refines_trans`
 - **canonical name**: `ZTime.refines_trans`
@@ -392,9 +374,8 @@ Upstream input for `VERAXIS-ZTL-CONFORMANCE-v0.1`. Every declaration below is `e
 - **positive test vector** (human): Refines m₂ m₁, Refines m₁ m → Refines m₂ m.
 - **adversarial test vector** (human): consumer assumes refinement is not transitive → it is.
 - **expected Veraxis conformance**: Veraxis may chain refinement steps.
-- **machine-readable fixtures**:
-  - `{ id: "FX-refines_trans-pos", formula_ast: "Refines m₂ m₁, Refines m₁ m", marking: "—", expected_formula_verdict: "Refines m₂ m", retained_atom_state: "marks in the marking stay Z", epistemic_status: "formula-level; atoms unpromoted", prohibited_conversion: "none", expected_veraxis: "accept; reason=OK" }`
-  - `{ id: "FX-refines_trans-adv", formula_ast: "Refines m₂ m₁, Refines m₁ m", marking: "—", expected_formula_verdict: "Refines m₂ m", retained_atom_state: "marks stay Z", epistemic_status: "unchanged by the misuse", prohibited_conversion: "REFINEMENT_ASSUMED_NONTRANSITIVE", expected_veraxis: "reject; reason=REFINEMENT_ASSUMED_NONTRANSITIVE" }`
+- **subject_kind**: `refinement_relation`
+- **machine-readable fixtures**: `VERAXIS-ZTL-fixtures-v0.1.json` → `"ZTime.refines_trans"` (`positive` / `adversarial`, typed by `subject_kind`; only the fields applicable to that kind are present)
 
 ### `ZTime.verify_refines`
 - **canonical name**: `ZTime.verify_refines`
@@ -409,9 +390,8 @@ Upstream input for `VERAXIS-ZTL-CONFORMANCE-v0.1`. Every declaration below is `e
 - **positive test vector** (human): m a = Z, v = T → verify m a v refines m, and every earlier non-Z assignment is preserved.
 - **adversarial test vector** (human): consumer treats any `verify` call as a grounding event (even with v = Z) → FAILS; grounding needs v ≠ Z plus an external event, not just this refinement.
 - **expected Veraxis conformance**: Veraxis models the write as monotone refinement; it counts a slot as GROUNDED only on v ≠ Z together with an external grounded event, never from the refinement relation alone.
-- **machine-readable fixtures**:
-  - `{ id: "FX-verify_refines-pos", formula_ast: "verify m a v", marking: "m a=Z, v=T", expected_formula_verdict: "Refines (verify m a v) m", retained_atom_state: "marks in the marking stay Z", epistemic_status: "formula-level; atoms unpromoted", prohibited_conversion: "none", expected_veraxis: "accept; reason=OK" }`
-  - `{ id: "FX-verify_refines-adv", formula_ast: "verify m a v", marking: "m a=Z, v=T", expected_formula_verdict: "Refines (verify m a v) m", retained_atom_state: "marks stay Z", epistemic_status: "unchanged by the misuse", prohibited_conversion: "REFINEMENT_READ_AS_GROUNDING", expected_veraxis: "reject; reason=REFINEMENT_READ_AS_GROUNDING" }`
+- **subject_kind**: `refinement_relation`
+- **machine-readable fixtures**: `VERAXIS-ZTL-fixtures-v0.1.json` → `"ZTime.verify_refines"` (`positive` / `adversarial`, typed by `subject_kind`; only the fields applicable to that kind are present)
 
 ### `ZTime.evalF_congr`
 - **canonical name**: `ZTime.evalF_congr`
@@ -426,9 +406,8 @@ Upstream input for `VERAXIS-ZTL-CONFORMANCE-v0.1`. Every declaration below is `e
 - **positive test vector** (human): m' = m pointwise → evalF m' φ = evalF m φ for all φ.
 - **adversarial test vector** (human): consumer expects hidden state to move the verdict → evaluation is a pure function of the marking.
 - **expected Veraxis conformance**: Veraxis's evaluation is deterministic in the marking; no hidden inputs.
-- **machine-readable fixtures**:
-  - `{ id: "FX-evalF_congr-pos", formula_ast: "m' = m pointwise", marking: "—", expected_formula_verdict: "evalF m' φ = evalF m φ", retained_atom_state: "marks in the marking stay Z", epistemic_status: "formula-level; atoms unpromoted", prohibited_conversion: "none", expected_veraxis: "accept; reason=OK" }`
-  - `{ id: "FX-evalF_congr-adv", formula_ast: "m' = m pointwise", marking: "—", expected_formula_verdict: "evalF m' φ = evalF m φ", retained_atom_state: "marks stay Z", epistemic_status: "unchanged by the misuse", prohibited_conversion: "HIDDEN_STATE_ASSUMED", expected_veraxis: "reject; reason=HIDDEN_STATE_ASSUMED" }`
+- **subject_kind**: `formula_evaluation`
+- **machine-readable fixtures**: `VERAXIS-ZTL-fixtures-v0.1.json` → `"ZTime.evalF_congr"` (`positive` / `adversarial`, typed by `subject_kind`; only the fields applicable to that kind are present)
 
 ### `ZTime.hereditary_absorbing`
 - **canonical name**: `ZTime.hereditary_absorbing`
@@ -437,15 +416,14 @@ Upstream input for `VERAXIS-ZTL-CONFORMANCE-v0.1`. Every declaration below is `e
 - **surface definitions referenced in statement**: Fm, Hereditary, Marking, V, evalF, verify  _(substring scan, not a dependency graph)_
 - **transitive theorem/definition closure**: DEFERRED (native Lean dependency extraction; supplied on request)
 - **evidence_status**: PROVED  ·  **proof_scope**: GENERAL
-- **operational interpretation**: Hereditary is absorbing under verification: if φ is hereditary at m, verifying any unverified atom leaves φ's verdict UNCHANGED and still hereditary — once settled, further verification buys nothing.
-- **prohibited interpretation**: About a HEREDITARY verdict; a sound/until verdict CAN change under verification. Absorption is the mark of the permanent grade only.
-- **claim ceiling**: General over φ/m/a/v, given Hereditary φ m and the slot was Z. Does not say which φ are hereditary.
-- **positive test vector** (human): φ hereditary at m, verify a Z-atom → same verdict, still hereditary.
-- **adversarial test vector** (human): consumer re-checks a hereditary verdict after each verification expecting change (wasted), or treats an until-verdict as hereditary → FAILS.
-- **expected Veraxis conformance**: Veraxis may treat a hereditary verdict as settled, immune to further verification; only non-hereditary verdicts need re-checking.
-- **machine-readable fixtures**:
-  - `{ id: "FX-hereditary_absorbing-pos", formula_ast: "verify m a v on hereditary φ", marking: "Hereditary φ m, m a=Z", expected_formula_verdict: "verdict unchanged ∧ still Hereditary", retained_atom_state: "marks in the marking stay Z", epistemic_status: "formula-level; atoms unpromoted", prohibited_conversion: "none", expected_veraxis: "accept; reason=OK" }`
-  - `{ id: "FX-hereditary_absorbing-adv", formula_ast: "verify m a v on hereditary φ", marking: "Hereditary φ m, m a=Z", expected_formula_verdict: "verdict unchanged ∧ still Hereditary", retained_atom_state: "marks stay Z", epistemic_status: "unchanged by the misuse", prohibited_conversion: "HEREDITARY_READ_AS_EXPIRY_PROOF", expected_veraxis: "reject; reason=HEREDITARY_READ_AS_EXPIRY_PROOF" }`
+- **operational interpretation**: For a HEREDITARY φ at m, monotonically resolving ANOTHER unverified atom (Z→T/F) within the SAME fixed formula, marking model and semantics leaves φ's verdict invariant and still hereditary. It is closure of a hereditary verdict under the allowed monotone resolution of a mark — nothing wider.
+- **prohibited interpretation**: This is NARROW. It does NOT say a hereditary verdict is 'permanent', 'settled', or 'immune to further verification' in general. It does NOT remove the obligation to re-evaluate under expiry, revocation, correction, source invalidation, schema change, formula change, semantic-version change, or institutional admissibility — none of those is a monotone Z→T/F step in the same fixed model.
+- **claim ceiling**: General over φ/m/a/v, given Hereditary φ m and the slot was Z. Invariance under one allowed monotone mark-resolution ONLY; not over any external event.
+- **positive test vector** (human): φ hereditary at m; resolve some OTHER Z atom to T/F in the same marking → φ's verdict is unchanged and still hereditary.
+- **adversarial test vector** (human): consumer treats a hereditary verdict as needing no re-check after an expiry / revocation / schema or semantic-version change → FAILS; those are outside this theorem's monotone-resolution scope.
+- **expected Veraxis conformance**: A hereditary verdict does not require logical recomputation solely because another Z in the same fixed marking is monotonically resolved. It does NOT remove the obligation to re-evaluate external grounds, validity, admissibility, schema, or semantic version.
+- **subject_kind**: `warranty_relation`
+- **machine-readable fixtures**: `VERAXIS-ZTL-fixtures-v0.1.json` → `"ZTime.hereditary_absorbing"` (`positive` / `adversarial`, typed by `subject_kind`; only the fields applicable to that kind are present)
 
 ### `ZTime.grounded_hereditary`
 - **canonical name**: `ZTime.grounded_hereditary`
@@ -460,9 +438,8 @@ Upstream input for `VERAXIS-ZTL-CONFORMANCE-v0.1`. Every declaration below is `e
 - **positive test vector** (human): a globally Z-free marking → every φ hereditary.
 - **adversarial test vector** (human): consumer applies this formula-locally ('φ's atoms are grounded, so φ is hereditary') under a marking with other Z atoms → FAILS; the premise is global.
 - **expected Veraxis conformance**: Veraxis may treat verdicts hereditary only under a globally Z-free marking; partial grounding does not license it, even for formulas whose own atoms are set.
-- **machine-readable fixtures**:
-  - `{ id: "FX-grounded_hereditary-pos", formula_ast: "Hereditary φ m", marking: "∀ n, m n ≠ Z", expected_formula_verdict: "holds", retained_atom_state: "marks in the marking stay Z", epistemic_status: "formula-level; atoms unpromoted", prohibited_conversion: "none", expected_veraxis: "accept; reason=OK" }`
-  - `{ id: "FX-grounded_hereditary-adv", formula_ast: "Hereditary φ m", marking: "∀ n, m n ≠ Z", expected_formula_verdict: "holds", retained_atom_state: "marks stay Z", epistemic_status: "unchanged by the misuse", prohibited_conversion: "GROUNDED_APPLIED_FORMULA_LOCALLY", expected_veraxis: "reject; reason=GROUNDED_APPLIED_FORMULA_LOCALLY" }`
+- **subject_kind**: `warranty_relation`
+- **machine-readable fixtures**: `VERAXIS-ZTL-fixtures-v0.1.json` → `"ZTime.grounded_hereditary"` (`positive` / `adversarial`, typed by `subject_kind`; only the fields applicable to that kind are present)
 
 ### `ZTime.hereditary_sound`
 - **canonical name**: `ZTime.hereditary_sound`
@@ -477,9 +454,8 @@ Upstream input for `VERAXIS-ZTL-CONFORMANCE-v0.1`. Every declaration below is `e
 - **positive test vector** (human): a formula/marking hereditary (its T invariant under every Z→T/F refinement) → it agrees with the verdict on all completions (sound).
 - **adversarial test vector** (human): a consumer treats a sound (or even hereditary) verdict as proof against expiry/revocation/correction → FAILS; those are outside the refinement lattice this theorem ranges over.
 - **expected Veraxis conformance**: Veraxis's grade ladder respects hereditary ⇒ sound and does not collapse them; neither grade is read as world-truth or as expiry/revocation-proof.
-- **machine-readable fixtures**:
-  - `{ id: "FX-hereditary_sound-pos", formula_ast: "", marking: "", expected_formula_verdict: "", retained_atom_state: "marks in the marking stay Z", epistemic_status: "formula-level; atoms unpromoted", prohibited_conversion: "none", expected_veraxis: "accept; reason=OK" }`
-  - `{ id: "FX-hereditary_sound-adv", formula_ast: "", marking: "", expected_formula_verdict: "", retained_atom_state: "marks stay Z", epistemic_status: "unchanged by the misuse", prohibited_conversion: "REVIEW", expected_veraxis: "reject; reason=REVIEW" }`
+- **subject_kind**: `warranty_relation`
+- **machine-readable fixtures**: `VERAXIS-ZTL-fixtures-v0.1.json` → `"ZTime.hereditary_sound"` (`positive` / `adversarial`, typed by `subject_kind`; only the fields applicable to that kind are present)
 
 ### `ZTime.Witness.strict_ladder`
 - **canonical name**: `ZTime.Witness.strict_ladder`
@@ -494,7 +470,6 @@ Upstream input for `VERAXIS-ZTL-CONFORMANCE-v0.1`. Every declaration below is `e
 - **positive test vector** (human): the exhibited triples realize U, S, H respectively.
 - **adversarial test vector** (human): consumer collapses sound and hereditary into one 'verified' grade → the sound-not-hereditary case would be wrongly settled.
 - **expected Veraxis conformance**: Veraxis must carry all three grades distinctly; the sound-not-hereditary rung is real and revocable.
-- **machine-readable fixtures**:
-  - `{ id: "FX-strict_ladder-pos", formula_ast: "(sound3,hered3) at (Z,Z,Z)/(T,Z,Z)/(T,T,Z)", marking: "the three triples", expected_formula_verdict: "U / S / H realized", retained_atom_state: "marks in the marking stay Z", epistemic_status: "formula-level; atoms unpromoted", prohibited_conversion: "none", expected_veraxis: "accept; reason=OK" }`
-  - `{ id: "FX-strict_ladder-adv", formula_ast: "(sound3,hered3) at (Z,Z,Z)/(T,Z,Z)/(T,T,Z)", marking: "the three triples", expected_formula_verdict: "U / S / H realized", retained_atom_state: "marks stay Z", epistemic_status: "unchanged by the misuse", prohibited_conversion: "LADDER_GRADES_COLLAPSED", expected_veraxis: "reject; reason=LADDER_GRADES_COLLAPSED" }`
+- **subject_kind**: `bounded_witness`
+- **machine-readable fixtures**: `VERAXIS-ZTL-fixtures-v0.1.json` → `"ZTime.Witness.strict_ladder"` (`positive` / `adversarial`, typed by `subject_kind`; only the fields applicable to that kind are present)
 

@@ -8,14 +8,23 @@ fields (name, normalized statement, module + full sha256, surface
 definitions, evidence_status, proof_scope) are extracted; the SEMANTIC
 fields (operational + prohibited interpretation, claim ceiling, positive +
 adversarial test vectors, expected conformance) are authored — the ZTL
-author's semantic-review role. All 28 declarations are authored; each also
-carries machine-readable positive/adversarial fixtures. The file opens with
-a self-contained snapshot header (commit, toolchain, DOI, counts, audit,
-inventory hash) so it pins its own provenance. The transitive dependency
-closure is DEFERRED (native Lean extraction), not guessed.
+author's semantic-review role. All 28 declarations are authored.
+
+Machine-readable fixtures live in a SEPARATE artifact
+(VERAXIS-ZTL-fixtures-v0.1.json), typed by subject_kind: the fields
+retained_atom_state / expected_formula_verdict / epistemic_status appear only
+where semantically applicable (formula_evaluation), never as generic defaults.
+
+The header pins the CORPUS it reviews (corpus_source_commit + per-module
+sha256), not itself: a tracked file cannot stably carry its own commit SHA, so
+package_commit and the immutable tag (veraxis-ztl-input-v0.1) are recorded
+externally — by the git tag and the downstream Veraxis manifest. The
+transitive dependency closure is DEFERRED (native Lean extraction), not
+guessed.
 
 Run:  python3 inventory/conformance_package.py
       → writes VERAXIS-ZTL-CONFORMANCE-input-v0.1.md
+      → writes VERAXIS-ZTL-fixtures-v0.1.json
 """
 import hashlib
 import os
@@ -444,20 +453,29 @@ AUTHORED = {
            "inputs.",
  },
  "ZTime.hereditary_absorbing": {
-   "op": "Hereditary is absorbing under verification: if φ is hereditary at m, "
-         "verifying any unverified atom leaves φ's verdict UNCHANGED and still "
-         "hereditary — once settled, further verification buys nothing.",
-   "no": "About a HEREDITARY verdict; a sound/until verdict CAN change under "
-         "verification. Absorption is the mark of the permanent grade only.",
-   "ceil": "General over φ/m/a/v, given Hereditary φ m and the slot was Z. Does "
-           "not say which φ are hereditary.",
-   "pos": "φ hereditary at m, verify a Z-atom → same verdict, still hereditary.",
-   "adv": "consumer re-checks a hereditary verdict after each verification "
-          "expecting change (wasted), or treats an until-verdict as hereditary "
-          "→ FAILS.",
-   "conf": "Veraxis may treat a hereditary verdict as settled, immune to "
-           "further verification; only non-hereditary verdicts need "
-           "re-checking.",
+   "op": "For a HEREDITARY φ at m, monotonically resolving ANOTHER unverified "
+         "atom (Z→T/F) within the SAME fixed formula, marking model and "
+         "semantics leaves φ's verdict invariant and still hereditary. It is "
+         "closure of a hereditary verdict under the allowed monotone "
+         "resolution of a mark — nothing wider.",
+   "no": "This is NARROW. It does NOT say a hereditary verdict is 'permanent', "
+         "'settled', or 'immune to further verification' in general. It does "
+         "NOT remove the obligation to re-evaluate under expiry, revocation, "
+         "correction, source invalidation, schema change, formula change, "
+         "semantic-version change, or institutional admissibility — none of "
+         "those is a monotone Z→T/F step in the same fixed model.",
+   "ceil": "General over φ/m/a/v, given Hereditary φ m and the slot was Z. "
+           "Invariance under one allowed monotone mark-resolution ONLY; not "
+           "over any external event.",
+   "pos": "φ hereditary at m; resolve some OTHER Z atom to T/F in the same "
+          "marking → φ's verdict is unchanged and still hereditary.",
+   "adv": "consumer treats a hereditary verdict as needing no re-check after an "
+          "expiry / revocation / schema or semantic-version change → FAILS; "
+          "those are outside this theorem's monotone-resolution scope.",
+   "conf": "A hereditary verdict does not require logical recomputation solely "
+           "because another Z in the same fixed marking is monotonically "
+           "resolved. It does NOT remove the obligation to re-evaluate external "
+           "grounds, validity, admissibility, schema, or semantic version.",
  },
  "ZTime.grounded_hereditary": {
    "op": "Under the GLOBAL premise that no atom is unverified (∀ n, m n ≠ Z), "
@@ -499,86 +517,224 @@ AUTHORED = {
 }
 
 
-# ---- machine-readable fixture bits (ast · marking · expected · reason) -----
-# one canonical instance per declaration; the emitter derives the structured
-# positive/adversarial fixtures from these plus the authored prohibition.
-MB = {
- "V.ax_not_Z":            ("(¬ a)", "a=Z", "F", "F_READ_AS_GROUNDED_NEGATIVE"),
- "V.ax_notnot_Z":         ("(¬ (¬ a))", "a=Z", "T", "Z_PROMOTED_TO_GROUNDED_T"),
- "V.lift1_classical":     ("(f a)  [any unary f]", "a=Z", "T|F (never Z)",
-                           "COMPOUND_EXPECTED_TO_CARRY_Z"),
- "V.lift2_classical":     ("(f a b)  [any binary f]", "a=Z, b=T", "T|F (never Z)",
-                           "COMPOUND_EXPECTED_TO_CARRY_Z"),
- "V.evalF_classical":     ("any non-atomic φ", "any marking with marks", "T|F",
-                           "COMPOUND_SERIALIZED_AS_Z"),
- "V.isZ_detects":         ("(isZ a)", "a=Z", "T", "DETECTOR_READ_AS_ASSERTION"),
- "V.no_gluts":            ("(a ∧ (¬ a))", "a ∈ {T,F,Z}", "never T",
-                           "NO_GLUT_READ_AS_SOURCE_RECONCILIATION"),
- "V.modus_ponens":        ("premises [a, (a→b)] ⊢ b", "a=T, b=T", "b=T",
-                           "VERDICT_READ_AS_WORLD_FACT"),
- "V.rule_and_intro":      ("(a ∧ b)", "a=T, b=T", "T",
-                           "LOGICAL_WARRANT_READ_AS_SEAM_LEGALITY"),
- "V.rule_and_elim":       ("(a ∧ b) ⊢ a", "a∧b = T", "a=T",
-                           "VERDICT_READ_AS_WORLD_FACT"),
- "V.rule_transitivity":   ("[(a→b),(b→c)] ⊢ (a→c)", "both = T", "(a→c)=T",
-                           "ENTAILMENT_READ_AS_CAUSATION"),
- "V.dt_one_way":          ("(a → a)", "a=Z", "F", "ARROW_ASSUMED_TAUTOLOGY"),
- "V.rule_taut_concl_fails": ("(b ∨ (¬ b))", "b=Z", "F", "EXCLUDED_MIDDLE_ASSUMED"),
- "V.closes_iff":          ("an unsatisfiable node set", "—", "closes = true",
-                           "CLOSURE_READ_AS_WORLD_FALSITY"),
- "V.closesN_iff":         ("an unsatisfiable node set (native)", "—",
-                           "closesN = true", "CLOSURE_READ_AS_WORLD_FALSITY"),
- "V.tprovesN_iff":        ("ps=[a,(a→b)], c=b (native)", "—", "tprovesN = true",
-                           "PROOF_READ_AS_WORLD_FACT"),
- "V.engines_agree":       ("any (ps, c)", "—", "tprovesN = tproves",
-                           "ENGINES_EXPECTED_TO_DIFFER"),
- "V.entails_structural":  ("Γ ⊨ φ, substitution σ", "—", "σΓ ⊨ σφ",
-                           "SUBSTITUTION_CARRIES_OBJECT_IDENTITY"),
- "V.tproves_iff":         ("ps=[a,(a→b)], c=b", "—", "tproves = true",
-                           "PROOF_READ_AS_WORLD_FACT"),
- "V.rule_dn_elim_fails":  ("apply ¬¬p ⊨ p at p=Z", "p=Z",
-                           "rule FAILS (¬¬Z=T, Z≠T)",
-                           "INFERENCE_NOT_WARRANT_PRESERVING"),
- "ZTime.refines_refl":    ("Refines m m", "any m", "holds",
+# ---- typed machine-readable fixtures (emitted to a separate JSON artifact) --
+# Each declaration is typed by subject_kind; only the fields applicable to
+# that kind appear (no generic defaults). Each carries one positive and one
+# adversarial fixture; the adversarial names the prohibited conversion and the
+# reason code Veraxis must return.
+def _fe(ast, mk, ver, atoms, epi, pro, rc):          # formula_evaluation
+    return {"subject_kind": "formula_evaluation",
+            "positive": {"formula_ast": ast, "marking": mk,
+                         "expected_formula_verdict": ver,
+                         "retained_atom_state": atoms,
+                         "epistemic_status": epi,
+                         "expected_veraxis": "accept; reason=OK"},
+            "adversarial": {"formula_ast": ast, "marking": mk,
+                            "prohibited_conversion": pro,
+                            "expected_veraxis": f"reject; reason={rc}"}}
+
+
+def _ir(prem, concl, mk, res, pro, rc):              # inference_rule
+    return {"subject_kind": "inference_rule",
+            "positive": {"premises": prem, "conclusion": concl, "marking": mk,
+                         "rule_result": res, "expected_veraxis": "accept; reason=OK"},
+            "adversarial": {"premises": prem, "conclusion": concl, "marking": mk,
+                            "prohibited_conversion": pro,
+                            "expected_veraxis": f"reject; reason={rc}"}}
+
+
+def _en(prem, concl, res, pro, rc):                  # entailment
+    return {"subject_kind": "entailment",
+            "positive": {"premises": prem, "conclusion": concl,
+                         "entailment_result": res, "expected_veraxis": "accept; reason=OK"},
+            "adversarial": {"premises": prem, "conclusion": concl,
+                            "prohibited_conversion": pro,
+                            "expected_veraxis": f"reject; reason={rc}"}}
+
+
+def _tc(nodes, sat, res, pro, rc):                   # tableau_closure
+    return {"subject_kind": "tableau_closure",
+            "positive": {"node_set": nodes, "satisfiable": sat,
+                         "closes_expected": res, "expected_veraxis": "accept; reason=OK"},
+            "adversarial": {"node_set": nodes, "prohibited_conversion": pro,
+                            "expected_veraxis": f"reject; reason={rc}"}}
+
+
+def _eq(inp, res, pro, rc):                          # engine_equivalence
+    return {"subject_kind": "engine_equivalence",
+            "positive": {"input": inp, "expected_equality": res,
+                         "expected_veraxis": "accept; reason=OK"},
+            "adversarial": {"input": inp, "prohibited_conversion": pro,
+                            "expected_veraxis": f"reject; reason={rc}"}}
+
+
+def _rr(frm, to, res, pro, rc):                      # refinement_relation
+    return {"subject_kind": "refinement_relation",
+            "positive": {"from_marking": frm, "to_marking": to,
+                         "refines_expected": res, "expected_veraxis": "accept; reason=OK"},
+            "adversarial": {"from_marking": frm, "to_marking": to,
+                            "prohibited_conversion": pro,
+                            "expected_veraxis": f"reject; reason={rc}"}}
+
+
+def _wr(formula, mk, hyp, res, pro, rc):             # warranty_relation
+    return {"subject_kind": "warranty_relation",
+            "positive": {"formula": formula, "marking": mk, "hypothesis": hyp,
+                         "relation_result": res, "expected_veraxis": "accept; reason=OK"},
+            "adversarial": {"formula": formula, "marking": mk,
+                            "prohibited_conversion": pro,
+                            "expected_veraxis": f"reject; reason={rc}"}}
+
+
+def _bw(constr, cases, pro, rc):                     # bounded_witness
+    return {"subject_kind": "bounded_witness",
+            "positive": {"construction": constr, "exhibited_cases": cases,
+                         "expected_veraxis": "accept; reason=OK"},
+            "adversarial": {"construction": constr, "prohibited_conversion": pro,
+                            "expected_veraxis": f"reject; reason={rc}"}}
+
+
+FX = {
+ "V.ax_not_Z": _fe("(¬ a)", {"a": "Z"}, "F", {"a": "Z"}, "unverified_atom",
+                   "read F as a grounded-negative fact about a",
+                   "F_READ_AS_GROUNDED_NEGATIVE"),
+ "V.ax_notnot_Z": _fe("(¬ (¬ a))", {"a": "Z"}, "T", {"a": "Z"},
+                      "compound verdict over an unverified atom",
+                      "promote a to grounded-true because ¬¬a = T",
+                      "Z_PROMOTED_TO_GROUNDED_T"),
+ "V.lift1_classical": _fe("(f a)  [any unary f]", {"a": "Z"}, "T|F (never Z)",
+                          {"a": "Z"}, "compound is two-valued",
+                          "expect the compound to carry Z downstream",
+                          "COMPOUND_EXPECTED_TO_CARRY_Z"),
+ "V.lift2_classical": _fe("(f a b)  [any binary f]", {"a": "Z", "b": "T"},
+                          "T|F (never Z)", {"a": "Z"}, "compound is two-valued",
+                          "expect a Z operand to propagate as Z",
+                          "COMPOUND_EXPECTED_TO_CARRY_Z"),
+ "V.evalF_classical": _fe("any non-atomic φ", {"...": "any marks"}, "T|F",
+                          {"atoms": "unchanged"}, "compound is two-valued",
+                          "reserve a Z code point for a compound's value",
+                          "COMPOUND_SERIALIZED_AS_Z"),
+ "V.isZ_detects": _fe("(isZ a)", {"a": "Z"}, "T", {"a": "Z"},
+                      "detector output about the register",
+                      "read isZ=T as the atom being true",
+                      "DETECTOR_READ_AS_ASSERTION"),
+ "V.no_gluts": _fe("(a ∧ (¬ a))", {"a": "T|F|Z"}, "never T", {"a": "unchanged"},
+                   "value-level non-contradiction",
+                   "read as reconciliation of conflicting external sources",
+                   "NO_GLUT_READ_AS_SOURCE_RECONCILIATION"),
+ "V.dt_one_way": _fe("(a → a)", {"a": "Z"}, "F", {"a": "Z"},
+                     "arrow value at the mark",
+                     "treat p→p as a universal tautology (always T)",
+                     "ARROW_ASSUMED_TAUTOLOGY"),
+ "ZTime.evalF_congr": _fe("φ under m' vs m", {"m'": "= m pointwise"},
+                          "evalF m' φ = evalF m φ", {"atoms": "unchanged"},
+                          "evaluation is a pure function of the marking",
+                          "assume hidden state can move the verdict",
+                          "HIDDEN_STATE_ASSUMED"),
+ "V.modus_ponens": _ir(["a", "(a → b)"], "b", {"a": "T", "b": "T"}, "b = T",
+                       "read the earned b as a grounded world-fact",
+                       "VERDICT_READ_AS_WORLD_FACT"),
+ "V.rule_and_intro": _ir(["a", "b"], "(a ∧ b)", {"a": "T", "b": "T"}, "(a∧b) = T",
+                         "read joint logical warrant as institutional "
+                         "seam-legality", "LOGICAL_WARRANT_READ_AS_SEAM_LEGALITY"),
+ "V.rule_and_elim": _ir(["(a ∧ b)"], "a", {"(a∧b)": "T"}, "a = T",
+                        "read the extracted a as a grounded world-fact",
+                        "VERDICT_READ_AS_WORLD_FACT"),
+ "V.rule_transitivity": _ir(["(a → b)", "(b → c)"], "(a → c)",
+                            {"(a→b)": "T", "(b→c)": "T"}, "(a→c) = T",
+                            "read the chain as causal/temporal",
+                            "ENTAILMENT_READ_AS_CAUSATION"),
+ "V.rule_dn_elim_fails": _ir(["(¬ (¬ p))"], "p", {"p": "Z"},
+                            "rule FAILS (¬¬Z = T, Z ≠ T)",
+                            "apply ¬¬p ⊨ p to promote an unverified atom",
+                            "INFERENCE_NOT_WARRANT_PRESERVING"),
+ "V.rule_taut_concl_fails": _ir(["a"], "(b ∨ (¬ b))", {"a": "T", "b": "Z"},
+                               "rule FAILS (b∨¬b = F at b=Z)",
+                               "inject b∨¬b as an always-available tautology",
+                               "EXCLUDED_MIDDLE_ASSUMED"),
+ "V.closes_iff": _tc("an unsatisfiable node set", False, "closes = true",
+                     "read closure as proving a world-fact false",
+                     "CLOSURE_READ_AS_WORLD_FALSITY"),
+ "V.closesN_iff": _tc("an unsatisfiable node set (native engine)", False,
+                      "closesN = true",
+                      "read closure as proving a world-fact false",
+                      "CLOSURE_READ_AS_WORLD_FALSITY"),
+ "V.tproves_iff": _en(["a", "(a → b)"], "b", "tproves = true (b is a consequence)",
+                      "read a derived consequence as a grounded world-fact",
+                      "PROOF_READ_AS_WORLD_FACT"),
+ "V.tprovesN_iff": _en(["a", "(a → b)"], "b",
+                       "tprovesN = true (b is a consequence)",
+                       "read a derived consequence as a grounded world-fact",
+                       "PROOF_READ_AS_WORLD_FACT"),
+ "V.entails_structural": _en(["Γ", "substitution σ"], "σΓ ⊨ σφ (given Γ ⊨ φ)",
+                             "structurality holds",
+                             "substitute an object for a variable expecting "
+                             "object-identity to carry",
+                             "SUBSTITUTION_CARRIES_OBJECT_IDENTITY"),
+ "V.engines_agree": _eq("any (premise list, conclusion)",
+                        "tprovesN = tproves",
+                        "expect the two engines to differ on some input",
+                        "ENGINES_EXPECTED_TO_DIFFER"),
+ "ZTime.refines_refl": _rr("m", "m", "Refines m m holds",
+                           "assume refinement is strict/irreflexive",
                            "REFINEMENT_ASSUMED_IRREFLEXIVE"),
- "ZTime.refines_trans":   ("Refines m₂ m₁, Refines m₁ m", "—", "Refines m₂ m",
-                           "REFINEMENT_ASSUMED_NONTRANSITIVE"),
- "ZTime.verify_refines":  ("verify m a v", "m a=Z, v=T",
-                           "Refines (verify m a v) m", "REFINEMENT_READ_AS_GROUNDING"),
- "ZTime.evalF_congr":     ("m' = m pointwise", "—", "evalF m' φ = evalF m φ",
-                           "HIDDEN_STATE_ASSUMED"),
- "ZTime.hereditary_absorbing": ("verify m a v on hereditary φ",
-                           "Hereditary φ m, m a=Z",
-                           "verdict unchanged ∧ still Hereditary",
-                           "HEREDITARY_READ_AS_EXPIRY_PROOF"),
- "ZTime.grounded_hereditary": ("Hereditary φ m", "∀ n, m n ≠ Z",
-                           "holds", "GROUNDED_APPLIED_FORMULA_LOCALLY"),
- "ZTime.Witness.strict_ladder": ("(sound3,hered3) at (Z,Z,Z)/(T,Z,Z)/(T,T,Z)",
-                           "the three triples", "U / S / H realized",
-                           "LADDER_GRADES_COLLAPSED"),
+ "ZTime.refines_trans": _rr("m₂ (with Refines m₂ m₁, Refines m₁ m)", "m",
+                            "Refines m₂ m holds",
+                            "assume refinement is not transitive",
+                            "REFINEMENT_ASSUMED_NONTRANSITIVE"),
+ "ZTime.verify_refines": _rr("m (with m a = Z)", "verify m a v (v = T)",
+                             "refines; earlier non-Z assignments preserved",
+                             "treat any verify call (even v = Z) as a grounding "
+                             "event", "REFINEMENT_READ_AS_GROUNDING"),
+ "ZTime.hereditary_absorbing": _wr("φ", {"a": "Z", "other": "Z"},
+                                   "Hereditary φ m; resolve another Z→T/F",
+                                   "verdict invariant, still Hereditary",
+                                   "treat hereditary as needing no re-check after "
+                                   "expiry/revocation/schema/semantic-version "
+                                   "change", "HEREDITARY_SCOPE_OVEREXTENDED"),
+ "ZTime.grounded_hereditary": _wr("any φ", {"∀n": "m n ≠ Z"},
+                                  "whole marking Z-free (global)",
+                                  "Hereditary φ m",
+                                  "apply formula-locally under a marking with "
+                                  "other Z atoms", "GROUNDED_APPLIED_FORMULA_LOCALLY"),
+ "ZTime.hereditary_sound": _wr("φ", {"m": "any"}, "Hereditary φ m", "Sound φ m",
+                               "read sound as world-truth, or sound as "
+                               "hereditary", "GRADE_OR_TRUTH_CONFLATED"),
+ "ZTime.Witness.strict_ladder": _bw(
+     "sound3/hered3 evaluated at three markings",
+     ["(Z,Z,Z): U (neither sound nor hereditary)",
+      "(T,Z,Z): S (sound, not hereditary)", "(T,T,Z): H (hereditary)"],
+     "collapse sound and hereditary into one 'verified' grade",
+     "LADDER_GRADES_COLLAPSED"),
 }
 
 
 def snapshot_header():
     import subprocess
     try:
-        sha = subprocess.run(["git", "-C", _ROOT, "rev-parse", "HEAD"],
-                             capture_output=True, text=True).stdout.strip()
+        corpus = subprocess.run(
+            ["git", "-C", _ROOT, "log", "-1", "--format=%H", "--", "lean"],
+            capture_output=True, text=True).stdout.strip()
     except Exception:
-        sha = "(run git rev-parse HEAD)"
+        corpus = "(git log -1 --format=%H -- lean)"
     tc = open(os.path.join(_LEAN, "lean-toolchain")).read().strip()
     inv = hashlib.sha256(
         open(os.path.join(_ROOT, "ZTL-theorems.txt"), "rb").read()).hexdigest()
     targets = aa.build_targets()
     thms = sum(len(es.statements(m)) for m in targets)
     return [
-        "## Snapshot (self-contained pin coordinates)",
+        "## Snapshot",
         "",
-        f"- **repository commit (verified corpus state)**: `{sha}`  "
-        "— the finalized artifact is contained in the committing revision; "
-        "pin THAT commit.",
-        "- **release tag**: none at this commit; published version is v1.3 "
-        "(Zenodo).",
+        "This package pins the CORPUS it reviews, not itself. A tracked file "
+        "cannot stably carry the SHA of the commit it lives in (writing that "
+        "SHA changes the commit SHA). So:",
+        "",
+        f"- **corpus_source_commit** (the reviewed Lean corpus): `{corpus}`  "
+        "— the last commit that changed `lean/`; the declarations and their "
+        "per-module `sha256` (below) are taken from this state.",
+        "- **package_commit** and the immutable **tag** "
+        "(`veraxis-ztl-input-v0.1`) are recorded EXTERNALLY — by the git tag "
+        "and by the downstream Veraxis manifest — never inside this file.",
         "- **DOI (v1.3 baseline)**: `10.5281/zenodo.21472971`  · concept "
         "`10.5281/zenodo.21318981`",
         f"- **Lean toolchain**: `{tc}`",
@@ -590,6 +746,8 @@ def snapshot_header():
         "- **semantic-review status**: all 28 declarations authored",
         "- **dependency-closure status**: DEFERRED (native Lean dependency "
         "extraction not yet run)",
+        "- **machine-readable fixtures**: `VERAXIS-ZTL-fixtures-v0.1.json` "
+        "(typed by `subject_kind`; no generic defaults)",
         "",
     ]
 
@@ -630,29 +788,51 @@ def main():
             L.append(f"- **positive test vector** (human): {a['pos']}")
             L.append(f"- **adversarial test vector** (human): {a['adv']}")
             L.append(f"- **expected Veraxis conformance**: {a['conf']}")
-            ast, mk, ver, rc = MB.get(qn, ("", "", "", "REVIEW"))
-            key = qn.split(".")[-1]
-            L.append("- **machine-readable fixtures**:")
-            L.append(f"  - `{{ id: \"FX-{key}-pos\", formula_ast: \"{ast}\", "
-                     f"marking: \"{mk}\", expected_formula_verdict: \"{ver}\", "
-                     f"retained_atom_state: \"marks in the marking stay Z\", "
-                     f"epistemic_status: \"formula-level; atoms unpromoted\", "
-                     f"prohibited_conversion: \"none\", "
-                     f"expected_veraxis: \"accept; reason=OK\" }}`")
-            L.append(f"  - `{{ id: \"FX-{key}-adv\", formula_ast: \"{ast}\", "
-                     f"marking: \"{mk}\", expected_formula_verdict: \"{ver}\", "
-                     f"retained_atom_state: \"marks stay Z\", "
-                     f"epistemic_status: \"unchanged by the misuse\", "
-                     f"prohibited_conversion: \"{rc}\", "
-                     f"expected_veraxis: \"reject; reason={rc}\" }}`")
+            fx = FX.get(qn)
+            kind = fx["subject_kind"] if fx else "REVIEW"
+            L.append(f"- **subject_kind**: `{kind}`")
+            L.append("- **machine-readable fixtures**: "
+                     f"`VERAXIS-ZTL-fixtures-v0.1.json` → `\"{qn}\"` "
+                     "(`positive` / `adversarial`, typed by `subject_kind`; "
+                     "only the fields applicable to that kind are present)")
             L.append("")
     if missing:
         L.append(f"> MISSING from the corpus: {missing}")
     path = os.path.join(_ROOT, "VERAXIS-ZTL-CONFORMANCE-input-v0.1.md")
     open(path, "w", encoding="utf-8").write("\n".join(L) + "\n")
+    write_fixtures_json()
     n = sum(len(v) for _, v in SUBSET)
     print(f"wrote {path}: {n} declarations, {len(AUTHORED)} authored, "
           f"{len(missing)} missing")
+
+
+def write_fixtures_json():
+    """Emit the typed machine-readable fixtures as a separate JSON artifact.
+    Each declaration is keyed by its canonical name and carries subject_kind
+    plus a positive and adversarial fixture; only the fields applicable to the
+    subject_kind are present (no generic defaults)."""
+    import json
+    kinds = {}
+    for v in FX.values():
+        kinds[v["subject_kind"]] = kinds.get(v["subject_kind"], 0) + 1
+    doc = {
+        "artifact": "VERAXIS-ZTL-fixtures-v0.1",
+        "note": ("Typed conformance fixtures for the v0.1 declaration subset. "
+                 "Each entry is typed by subject_kind; retained_atom_state, "
+                 "expected_formula_verdict and epistemic_status appear ONLY in "
+                 "formula_evaluation, where they are semantically applicable. "
+                 "Every adversarial fixture names the prohibited_conversion and "
+                 "the reason code Veraxis must return on rejection."),
+        "subject_kinds": sorted(kinds),
+        "counts_by_kind": kinds,
+        "fixtures": FX,
+    }
+    path = os.path.join(_ROOT, "VERAXIS-ZTL-fixtures-v0.1.json")
+    with open(path, "w", encoding="utf-8") as fh:
+        json.dump(doc, fh, ensure_ascii=False, indent=2)
+        fh.write("\n")
+    print(f"wrote {path}: {len(FX)} typed fixtures across {len(kinds)} "
+          f"subject_kinds {kinds}")
 
 
 if __name__ == "__main__":

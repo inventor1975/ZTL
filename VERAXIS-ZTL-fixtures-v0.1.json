@@ -1,0 +1,627 @@
+{
+  "artifact": "VERAXIS-ZTL-fixtures-v0.1",
+  "note": "Typed conformance fixtures for the v0.1 declaration subset. Each entry is typed by subject_kind; retained_atom_state, expected_formula_verdict and epistemic_status appear ONLY in formula_evaluation, where they are semantically applicable. Every adversarial fixture names the prohibited_conversion and the reason code Veraxis must return on rejection.",
+  "subject_kinds": [
+    "bounded_witness",
+    "engine_equivalence",
+    "entailment",
+    "formula_evaluation",
+    "inference_rule",
+    "refinement_relation",
+    "tableau_closure",
+    "warranty_relation"
+  ],
+  "counts_by_kind": {
+    "formula_evaluation": 9,
+    "inference_rule": 6,
+    "tableau_closure": 2,
+    "entailment": 3,
+    "engine_equivalence": 1,
+    "refinement_relation": 3,
+    "warranty_relation": 3,
+    "bounded_witness": 1
+  },
+  "fixtures": {
+    "V.ax_not_Z": {
+      "subject_kind": "formula_evaluation",
+      "positive": {
+        "formula_ast": "(¬ a)",
+        "marking": {
+          "a": "Z"
+        },
+        "expected_formula_verdict": "F",
+        "retained_atom_state": {
+          "a": "Z"
+        },
+        "epistemic_status": "unverified_atom",
+        "expected_veraxis": "accept; reason=OK"
+      },
+      "adversarial": {
+        "formula_ast": "(¬ a)",
+        "marking": {
+          "a": "Z"
+        },
+        "prohibited_conversion": "read F as a grounded-negative fact about a",
+        "expected_veraxis": "reject; reason=F_READ_AS_GROUNDED_NEGATIVE"
+      }
+    },
+    "V.ax_notnot_Z": {
+      "subject_kind": "formula_evaluation",
+      "positive": {
+        "formula_ast": "(¬ (¬ a))",
+        "marking": {
+          "a": "Z"
+        },
+        "expected_formula_verdict": "T",
+        "retained_atom_state": {
+          "a": "Z"
+        },
+        "epistemic_status": "compound verdict over an unverified atom",
+        "expected_veraxis": "accept; reason=OK"
+      },
+      "adversarial": {
+        "formula_ast": "(¬ (¬ a))",
+        "marking": {
+          "a": "Z"
+        },
+        "prohibited_conversion": "promote a to grounded-true because ¬¬a = T",
+        "expected_veraxis": "reject; reason=Z_PROMOTED_TO_GROUNDED_T"
+      }
+    },
+    "V.lift1_classical": {
+      "subject_kind": "formula_evaluation",
+      "positive": {
+        "formula_ast": "(f a)  [any unary f]",
+        "marking": {
+          "a": "Z"
+        },
+        "expected_formula_verdict": "T|F (never Z)",
+        "retained_atom_state": {
+          "a": "Z"
+        },
+        "epistemic_status": "compound is two-valued",
+        "expected_veraxis": "accept; reason=OK"
+      },
+      "adversarial": {
+        "formula_ast": "(f a)  [any unary f]",
+        "marking": {
+          "a": "Z"
+        },
+        "prohibited_conversion": "expect the compound to carry Z downstream",
+        "expected_veraxis": "reject; reason=COMPOUND_EXPECTED_TO_CARRY_Z"
+      }
+    },
+    "V.lift2_classical": {
+      "subject_kind": "formula_evaluation",
+      "positive": {
+        "formula_ast": "(f a b)  [any binary f]",
+        "marking": {
+          "a": "Z",
+          "b": "T"
+        },
+        "expected_formula_verdict": "T|F (never Z)",
+        "retained_atom_state": {
+          "a": "Z"
+        },
+        "epistemic_status": "compound is two-valued",
+        "expected_veraxis": "accept; reason=OK"
+      },
+      "adversarial": {
+        "formula_ast": "(f a b)  [any binary f]",
+        "marking": {
+          "a": "Z",
+          "b": "T"
+        },
+        "prohibited_conversion": "expect a Z operand to propagate as Z",
+        "expected_veraxis": "reject; reason=COMPOUND_EXPECTED_TO_CARRY_Z"
+      }
+    },
+    "V.evalF_classical": {
+      "subject_kind": "formula_evaluation",
+      "positive": {
+        "formula_ast": "any non-atomic φ",
+        "marking": {
+          "...": "any marks"
+        },
+        "expected_formula_verdict": "T|F",
+        "retained_atom_state": {
+          "atoms": "unchanged"
+        },
+        "epistemic_status": "compound is two-valued",
+        "expected_veraxis": "accept; reason=OK"
+      },
+      "adversarial": {
+        "formula_ast": "any non-atomic φ",
+        "marking": {
+          "...": "any marks"
+        },
+        "prohibited_conversion": "reserve a Z code point for a compound's value",
+        "expected_veraxis": "reject; reason=COMPOUND_SERIALIZED_AS_Z"
+      }
+    },
+    "V.isZ_detects": {
+      "subject_kind": "formula_evaluation",
+      "positive": {
+        "formula_ast": "(isZ a)",
+        "marking": {
+          "a": "Z"
+        },
+        "expected_formula_verdict": "T",
+        "retained_atom_state": {
+          "a": "Z"
+        },
+        "epistemic_status": "detector output about the register",
+        "expected_veraxis": "accept; reason=OK"
+      },
+      "adversarial": {
+        "formula_ast": "(isZ a)",
+        "marking": {
+          "a": "Z"
+        },
+        "prohibited_conversion": "read isZ=T as the atom being true",
+        "expected_veraxis": "reject; reason=DETECTOR_READ_AS_ASSERTION"
+      }
+    },
+    "V.no_gluts": {
+      "subject_kind": "formula_evaluation",
+      "positive": {
+        "formula_ast": "(a ∧ (¬ a))",
+        "marking": {
+          "a": "T|F|Z"
+        },
+        "expected_formula_verdict": "never T",
+        "retained_atom_state": {
+          "a": "unchanged"
+        },
+        "epistemic_status": "value-level non-contradiction",
+        "expected_veraxis": "accept; reason=OK"
+      },
+      "adversarial": {
+        "formula_ast": "(a ∧ (¬ a))",
+        "marking": {
+          "a": "T|F|Z"
+        },
+        "prohibited_conversion": "read as reconciliation of conflicting external sources",
+        "expected_veraxis": "reject; reason=NO_GLUT_READ_AS_SOURCE_RECONCILIATION"
+      }
+    },
+    "V.dt_one_way": {
+      "subject_kind": "formula_evaluation",
+      "positive": {
+        "formula_ast": "(a → a)",
+        "marking": {
+          "a": "Z"
+        },
+        "expected_formula_verdict": "F",
+        "retained_atom_state": {
+          "a": "Z"
+        },
+        "epistemic_status": "arrow value at the mark",
+        "expected_veraxis": "accept; reason=OK"
+      },
+      "adversarial": {
+        "formula_ast": "(a → a)",
+        "marking": {
+          "a": "Z"
+        },
+        "prohibited_conversion": "treat p→p as a universal tautology (always T)",
+        "expected_veraxis": "reject; reason=ARROW_ASSUMED_TAUTOLOGY"
+      }
+    },
+    "ZTime.evalF_congr": {
+      "subject_kind": "formula_evaluation",
+      "positive": {
+        "formula_ast": "φ under m' vs m",
+        "marking": {
+          "m'": "= m pointwise"
+        },
+        "expected_formula_verdict": "evalF m' φ = evalF m φ",
+        "retained_atom_state": {
+          "atoms": "unchanged"
+        },
+        "epistemic_status": "evaluation is a pure function of the marking",
+        "expected_veraxis": "accept; reason=OK"
+      },
+      "adversarial": {
+        "formula_ast": "φ under m' vs m",
+        "marking": {
+          "m'": "= m pointwise"
+        },
+        "prohibited_conversion": "assume hidden state can move the verdict",
+        "expected_veraxis": "reject; reason=HIDDEN_STATE_ASSUMED"
+      }
+    },
+    "V.modus_ponens": {
+      "subject_kind": "inference_rule",
+      "positive": {
+        "premises": [
+          "a",
+          "(a → b)"
+        ],
+        "conclusion": "b",
+        "marking": {
+          "a": "T",
+          "b": "T"
+        },
+        "rule_result": "b = T",
+        "expected_veraxis": "accept; reason=OK"
+      },
+      "adversarial": {
+        "premises": [
+          "a",
+          "(a → b)"
+        ],
+        "conclusion": "b",
+        "marking": {
+          "a": "T",
+          "b": "T"
+        },
+        "prohibited_conversion": "read the earned b as a grounded world-fact",
+        "expected_veraxis": "reject; reason=VERDICT_READ_AS_WORLD_FACT"
+      }
+    },
+    "V.rule_and_intro": {
+      "subject_kind": "inference_rule",
+      "positive": {
+        "premises": [
+          "a",
+          "b"
+        ],
+        "conclusion": "(a ∧ b)",
+        "marking": {
+          "a": "T",
+          "b": "T"
+        },
+        "rule_result": "(a∧b) = T",
+        "expected_veraxis": "accept; reason=OK"
+      },
+      "adversarial": {
+        "premises": [
+          "a",
+          "b"
+        ],
+        "conclusion": "(a ∧ b)",
+        "marking": {
+          "a": "T",
+          "b": "T"
+        },
+        "prohibited_conversion": "read joint logical warrant as institutional seam-legality",
+        "expected_veraxis": "reject; reason=LOGICAL_WARRANT_READ_AS_SEAM_LEGALITY"
+      }
+    },
+    "V.rule_and_elim": {
+      "subject_kind": "inference_rule",
+      "positive": {
+        "premises": [
+          "(a ∧ b)"
+        ],
+        "conclusion": "a",
+        "marking": {
+          "(a∧b)": "T"
+        },
+        "rule_result": "a = T",
+        "expected_veraxis": "accept; reason=OK"
+      },
+      "adversarial": {
+        "premises": [
+          "(a ∧ b)"
+        ],
+        "conclusion": "a",
+        "marking": {
+          "(a∧b)": "T"
+        },
+        "prohibited_conversion": "read the extracted a as a grounded world-fact",
+        "expected_veraxis": "reject; reason=VERDICT_READ_AS_WORLD_FACT"
+      }
+    },
+    "V.rule_transitivity": {
+      "subject_kind": "inference_rule",
+      "positive": {
+        "premises": [
+          "(a → b)",
+          "(b → c)"
+        ],
+        "conclusion": "(a → c)",
+        "marking": {
+          "(a→b)": "T",
+          "(b→c)": "T"
+        },
+        "rule_result": "(a→c) = T",
+        "expected_veraxis": "accept; reason=OK"
+      },
+      "adversarial": {
+        "premises": [
+          "(a → b)",
+          "(b → c)"
+        ],
+        "conclusion": "(a → c)",
+        "marking": {
+          "(a→b)": "T",
+          "(b→c)": "T"
+        },
+        "prohibited_conversion": "read the chain as causal/temporal",
+        "expected_veraxis": "reject; reason=ENTAILMENT_READ_AS_CAUSATION"
+      }
+    },
+    "V.rule_dn_elim_fails": {
+      "subject_kind": "inference_rule",
+      "positive": {
+        "premises": [
+          "(¬ (¬ p))"
+        ],
+        "conclusion": "p",
+        "marking": {
+          "p": "Z"
+        },
+        "rule_result": "rule FAILS (¬¬Z = T, Z ≠ T)",
+        "expected_veraxis": "accept; reason=OK"
+      },
+      "adversarial": {
+        "premises": [
+          "(¬ (¬ p))"
+        ],
+        "conclusion": "p",
+        "marking": {
+          "p": "Z"
+        },
+        "prohibited_conversion": "apply ¬¬p ⊨ p to promote an unverified atom",
+        "expected_veraxis": "reject; reason=INFERENCE_NOT_WARRANT_PRESERVING"
+      }
+    },
+    "V.rule_taut_concl_fails": {
+      "subject_kind": "inference_rule",
+      "positive": {
+        "premises": [
+          "a"
+        ],
+        "conclusion": "(b ∨ (¬ b))",
+        "marking": {
+          "a": "T",
+          "b": "Z"
+        },
+        "rule_result": "rule FAILS (b∨¬b = F at b=Z)",
+        "expected_veraxis": "accept; reason=OK"
+      },
+      "adversarial": {
+        "premises": [
+          "a"
+        ],
+        "conclusion": "(b ∨ (¬ b))",
+        "marking": {
+          "a": "T",
+          "b": "Z"
+        },
+        "prohibited_conversion": "inject b∨¬b as an always-available tautology",
+        "expected_veraxis": "reject; reason=EXCLUDED_MIDDLE_ASSUMED"
+      }
+    },
+    "V.closes_iff": {
+      "subject_kind": "tableau_closure",
+      "positive": {
+        "node_set": "an unsatisfiable node set",
+        "satisfiable": false,
+        "closes_expected": "closes = true",
+        "expected_veraxis": "accept; reason=OK"
+      },
+      "adversarial": {
+        "node_set": "an unsatisfiable node set",
+        "prohibited_conversion": "read closure as proving a world-fact false",
+        "expected_veraxis": "reject; reason=CLOSURE_READ_AS_WORLD_FALSITY"
+      }
+    },
+    "V.closesN_iff": {
+      "subject_kind": "tableau_closure",
+      "positive": {
+        "node_set": "an unsatisfiable node set (native engine)",
+        "satisfiable": false,
+        "closes_expected": "closesN = true",
+        "expected_veraxis": "accept; reason=OK"
+      },
+      "adversarial": {
+        "node_set": "an unsatisfiable node set (native engine)",
+        "prohibited_conversion": "read closure as proving a world-fact false",
+        "expected_veraxis": "reject; reason=CLOSURE_READ_AS_WORLD_FALSITY"
+      }
+    },
+    "V.tproves_iff": {
+      "subject_kind": "entailment",
+      "positive": {
+        "premises": [
+          "a",
+          "(a → b)"
+        ],
+        "conclusion": "b",
+        "entailment_result": "tproves = true (b is a consequence)",
+        "expected_veraxis": "accept; reason=OK"
+      },
+      "adversarial": {
+        "premises": [
+          "a",
+          "(a → b)"
+        ],
+        "conclusion": "b",
+        "prohibited_conversion": "read a derived consequence as a grounded world-fact",
+        "expected_veraxis": "reject; reason=PROOF_READ_AS_WORLD_FACT"
+      }
+    },
+    "V.tprovesN_iff": {
+      "subject_kind": "entailment",
+      "positive": {
+        "premises": [
+          "a",
+          "(a → b)"
+        ],
+        "conclusion": "b",
+        "entailment_result": "tprovesN = true (b is a consequence)",
+        "expected_veraxis": "accept; reason=OK"
+      },
+      "adversarial": {
+        "premises": [
+          "a",
+          "(a → b)"
+        ],
+        "conclusion": "b",
+        "prohibited_conversion": "read a derived consequence as a grounded world-fact",
+        "expected_veraxis": "reject; reason=PROOF_READ_AS_WORLD_FACT"
+      }
+    },
+    "V.entails_structural": {
+      "subject_kind": "entailment",
+      "positive": {
+        "premises": [
+          "Γ",
+          "substitution σ"
+        ],
+        "conclusion": "σΓ ⊨ σφ (given Γ ⊨ φ)",
+        "entailment_result": "structurality holds",
+        "expected_veraxis": "accept; reason=OK"
+      },
+      "adversarial": {
+        "premises": [
+          "Γ",
+          "substitution σ"
+        ],
+        "conclusion": "σΓ ⊨ σφ (given Γ ⊨ φ)",
+        "prohibited_conversion": "substitute an object for a variable expecting object-identity to carry",
+        "expected_veraxis": "reject; reason=SUBSTITUTION_CARRIES_OBJECT_IDENTITY"
+      }
+    },
+    "V.engines_agree": {
+      "subject_kind": "engine_equivalence",
+      "positive": {
+        "input": "any (premise list, conclusion)",
+        "expected_equality": "tprovesN = tproves",
+        "expected_veraxis": "accept; reason=OK"
+      },
+      "adversarial": {
+        "input": "any (premise list, conclusion)",
+        "prohibited_conversion": "expect the two engines to differ on some input",
+        "expected_veraxis": "reject; reason=ENGINES_EXPECTED_TO_DIFFER"
+      }
+    },
+    "ZTime.refines_refl": {
+      "subject_kind": "refinement_relation",
+      "positive": {
+        "from_marking": "m",
+        "to_marking": "m",
+        "refines_expected": "Refines m m holds",
+        "expected_veraxis": "accept; reason=OK"
+      },
+      "adversarial": {
+        "from_marking": "m",
+        "to_marking": "m",
+        "prohibited_conversion": "assume refinement is strict/irreflexive",
+        "expected_veraxis": "reject; reason=REFINEMENT_ASSUMED_IRREFLEXIVE"
+      }
+    },
+    "ZTime.refines_trans": {
+      "subject_kind": "refinement_relation",
+      "positive": {
+        "from_marking": "m₂ (with Refines m₂ m₁, Refines m₁ m)",
+        "to_marking": "m",
+        "refines_expected": "Refines m₂ m holds",
+        "expected_veraxis": "accept; reason=OK"
+      },
+      "adversarial": {
+        "from_marking": "m₂ (with Refines m₂ m₁, Refines m₁ m)",
+        "to_marking": "m",
+        "prohibited_conversion": "assume refinement is not transitive",
+        "expected_veraxis": "reject; reason=REFINEMENT_ASSUMED_NONTRANSITIVE"
+      }
+    },
+    "ZTime.verify_refines": {
+      "subject_kind": "refinement_relation",
+      "positive": {
+        "from_marking": "m (with m a = Z)",
+        "to_marking": "verify m a v (v = T)",
+        "refines_expected": "refines; earlier non-Z assignments preserved",
+        "expected_veraxis": "accept; reason=OK"
+      },
+      "adversarial": {
+        "from_marking": "m (with m a = Z)",
+        "to_marking": "verify m a v (v = T)",
+        "prohibited_conversion": "treat any verify call (even v = Z) as a grounding event",
+        "expected_veraxis": "reject; reason=REFINEMENT_READ_AS_GROUNDING"
+      }
+    },
+    "ZTime.hereditary_absorbing": {
+      "subject_kind": "warranty_relation",
+      "positive": {
+        "formula": "φ",
+        "marking": {
+          "a": "Z",
+          "other": "Z"
+        },
+        "hypothesis": "Hereditary φ m; resolve another Z→T/F",
+        "relation_result": "verdict invariant, still Hereditary",
+        "expected_veraxis": "accept; reason=OK"
+      },
+      "adversarial": {
+        "formula": "φ",
+        "marking": {
+          "a": "Z",
+          "other": "Z"
+        },
+        "prohibited_conversion": "treat hereditary as needing no re-check after expiry/revocation/schema/semantic-version change",
+        "expected_veraxis": "reject; reason=HEREDITARY_SCOPE_OVEREXTENDED"
+      }
+    },
+    "ZTime.grounded_hereditary": {
+      "subject_kind": "warranty_relation",
+      "positive": {
+        "formula": "any φ",
+        "marking": {
+          "∀n": "m n ≠ Z"
+        },
+        "hypothesis": "whole marking Z-free (global)",
+        "relation_result": "Hereditary φ m",
+        "expected_veraxis": "accept; reason=OK"
+      },
+      "adversarial": {
+        "formula": "any φ",
+        "marking": {
+          "∀n": "m n ≠ Z"
+        },
+        "prohibited_conversion": "apply formula-locally under a marking with other Z atoms",
+        "expected_veraxis": "reject; reason=GROUNDED_APPLIED_FORMULA_LOCALLY"
+      }
+    },
+    "ZTime.hereditary_sound": {
+      "subject_kind": "warranty_relation",
+      "positive": {
+        "formula": "φ",
+        "marking": {
+          "m": "any"
+        },
+        "hypothesis": "Hereditary φ m",
+        "relation_result": "Sound φ m",
+        "expected_veraxis": "accept; reason=OK"
+      },
+      "adversarial": {
+        "formula": "φ",
+        "marking": {
+          "m": "any"
+        },
+        "prohibited_conversion": "read sound as world-truth, or sound as hereditary",
+        "expected_veraxis": "reject; reason=GRADE_OR_TRUTH_CONFLATED"
+      }
+    },
+    "ZTime.Witness.strict_ladder": {
+      "subject_kind": "bounded_witness",
+      "positive": {
+        "construction": "sound3/hered3 evaluated at three markings",
+        "exhibited_cases": [
+          "(Z,Z,Z): U (neither sound nor hereditary)",
+          "(T,Z,Z): S (sound, not hereditary)",
+          "(T,T,Z): H (hereditary)"
+        ],
+        "expected_veraxis": "accept; reason=OK"
+      },
+      "adversarial": {
+        "construction": "sound3/hered3 evaluated at three markings",
+        "prohibited_conversion": "collapse sound and hereditary into one 'verified' grade",
+        "expected_veraxis": "reject; reason=LADDER_GRADES_COLLAPSED"
+      }
+    }
+  }
+}

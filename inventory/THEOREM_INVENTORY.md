@@ -142,10 +142,12 @@ as verified.
 
 **F1 — the corpus claim is true, and now measured rather than argued.**
 The preprint says `#print axioms` over "the whole corpus" is empty. That
-rested on 103 hand-placed prints against 321 theorems; the defence (a
-dirty lemma infects its consumers) is sound but is an argument, and an
-orphan theorem would escape it. Measured exhaustively: **321 of 321
-clean.** The claim survived contact with its own audit. This is a
+rested on hand-placed prints; the defence (a dirty lemma infects its
+consumers) is sound but is an argument, and an orphan theorem would escape
+it. Measured exhaustively by `axiom_audit.py`, which re-counts on every
+run rather than hard-coding a total: **every theorem clean** (as of
+2026-07-21, 371 of 371 across 21 modules). The claim survived contact with
+its own audit. This is a
 strengthening and should be stated in Deliverable One with the method,
 not just the result.
 

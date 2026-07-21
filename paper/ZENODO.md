@@ -1,14 +1,14 @@
-# Zenodo upload sheet — ZTL v1.3 (READY TO UPLOAD)
+# Zenodo upload sheet — ZTL v1.3 (PUBLISHED 2026-07-21)
 
-**v1.3 is prepared, NOT yet uploaded — the curator publishes; this file
-only prepares.** Upload as a NEW VERSION of the existing record (concept
-DOI 10.5281/zenodo.21318981, which resolves to the latest version).
-Prior published: v1.2 10.5281/zenodo.21440066 (2026-07-19); v1.1
-10.5281/zenodo.21323552; v1.0 10.5281/zenodo.21318982. The public
-sequence stays clean: 1.0 → 1.1 → 1.2 → 1.3. After upload, embed the new
-version DOI into the draft header, CITATION.cff, and README.
+**v1.3 PUBLISHED 2026-07-21: version DOI 10.5281/zenodo.21472971**
+(https://zenodo.org/records/21472971). Prior: v1.2 10.5281/zenodo.21440066
+(2026-07-19); v1.1 10.5281/zenodo.21323552; v1.0 10.5281/zenodo.21318982;
+concept DOI 10.5281/zenodo.21318981 resolves to the latest version (now
+v1.3). The public sequence stayed clean: 1.0 → 1.1 → 1.2 → 1.3. DOI
+embedded into the draft header, CITATION.cff, and README.
 
-Everything below is copy-paste material for the manual Zenodo upload.
+The block below is retained as the record of what was uploaded (copy-paste
+material for the manual Zenodo upload; the curator publishes).
 
 **File to upload:** `paper/ZTL-preprint-v1.3.pdf` (24 pages)
 

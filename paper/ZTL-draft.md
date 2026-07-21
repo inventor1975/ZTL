@@ -1,10 +1,16 @@
 # ZTL — Zero-Trust Logic
 
-**V. Reznik. Preprint, v1.2 — 2026-07-19. Concept DOI:
+**V. Reznik. Preprint, v1.3 (draft) — 2026-07-21. Concept DOI:
 [10.5281/zenodo.21318981](https://doi.org/10.5281/zenodo.21318981)
-(v1.1: [10.5281/zenodo.21323552](https://doi.org/10.5281/zenodo.21323552);
+(v1.2: [10.5281/zenodo.21440066](https://doi.org/10.5281/zenodo.21440066);
+v1.1: [10.5281/zenodo.21323552](https://doi.org/10.5281/zenodo.21323552);
 v1.0: [10.5281/zenodo.21318982](https://doi.org/10.5281/zenodo.21318982)).
-v1.2 adds: the central construction named — the zero-trust lift (§2);
+v1.3 adds: the Suszko positioning (§4) — Z as a mark rather than a third
+truth value is Suszko's Thesis taken as architecture rather than
+recovered by reduction, with the discriminator measured; the signature
+result (§4) — the single rule ¬¬p ⊨ p separates ZTL from every
+three-valued matrix neighbour, its cause proved in `lean/Signature.lean`
+on the empty axiom list. v1.2 added: the central construction named — the zero-trust lift (§2);
 §3.8, an explicit Lean-verified census of the sixteen lifted binary
 connectives — re-deriving Finn's external-Bochvar completeness landscape
 (Finn 1974): solo-completeness tracks non-commutative directionality (Sheffer's
@@ -478,7 +484,26 @@ The internal dynamics are opposite — his meaninglessness is infectious
 (the internal layer), our mark evaporates at the first operator — and
 so is the ontology: his third symbol is a *value* sentences take; our
 verdicts are two-valued, and the non-classical letters are *marks*
-(Z on a datum, N in the solver, §10) — the alphabet is four letters,
+(Z on a datum, N in the solver, §10) — and this is not a soft
+claim but a named one. **Suszko's Thesis** (Suszko 1977 [37]) holds that
+every structural logic is *logically* two-valued: the many values of a
+matrix are *algebraic*, administrative, while the *logical* values are
+only two, designated and undesignated. On that thesis Łukasiewicz, K3
+and Bochvar are already two-valued as logics, their third value an
+algebraic bookkeeping symbol recovered as bivalent by the Suszko
+reduction *after the fact*. ZTL's difference is not that it escapes the
+reduction — nothing does — but that it needs none: it is bivalent **by
+construction**. The discriminator is exact and machine-measurable: does
+the third symbol ever appear as the value of a *compound* assertion? In
+the neighbours it does — 602 to 784 of the 784 depth-2 compounds over
+two atoms take the middle value (MEASURED). In ZTL it never does — **0
+of 784**, the greediness theorem (`evalF_classical`, empty axiom list):
+the mark evaporates at the first operator, so no assertion built by the
+logic is ever anything but T or F. Where a genuinely three-valued logic
+is shown bivalent by Suszko's reduction, ZTL is bivalent before any
+reduction, because the mark is barred from the value of assertions from
+the start. That is the precise sense in which ZTL is a two-valued logic
+with a mark, not a three-valued logic — the alphabet is four letters,
 N, Z, F, T, in the genetic order — nothing (pending), the
 unsettled (a question with no answer yet), the free denial
 (default-deny), the earned affirmation (truth on a ground):
@@ -498,7 +523,28 @@ kin to Z's *unverified until verification.* His motive was future
 contingents, not the paradoxes, and his implication keeps p→p, so
 the kinship is of intent, not of tables. The two axes separate
 cleanly: the tables are Bochvar's external B3, the mark's meaning
-is Łukasiewicz's, and no prior system occupied their conjunction.
+is Łukasiewicz's, and no prior system occupied their conjunction. And
+the *consequence* relation is separated from the whole three-valued
+matrix family by a single rule. Against each of its matrix neighbours
+(K3, LP, weak Kleene, Łukasiewicz Ł₃) ZTL is incomparable as a
+consequence relation, and the witness on the "the neighbour derives it,
+ZTL does not" side is the *same* for all four: **¬¬p ⊨ p**, double-
+negation elimination as a rule (MEASURED, depth-2 pool; the witness is
+of size 3 and exhibited, so underivability is settled, not merely
+unfound). Every neighbour keeps it; ZTL alone breaks it, and the reason
+is proved rather than tabulated: an involutive negation *forces* the
+rule (`involution_gives_dne`, for an arbitrary negation and designated
+set), and ZTL's greedy negation is not involutive — ¬¬Z = T ≠ Z, one
+cell — so it breaks the rule with the involution
+(`lean/Signature.lean`, empty axiom list). The broken involution is
+thus the single consequence-level feature separating ZTL from the entire
+family, and it is the same greedy ¬¬Z = T that (i) makes the logic
+bivalent by construction above, (ii) bars ZTL from *expressing* any
+mark-carrying neighbour — greediness lets no compound output the mark,
+while every neighbour's connectives do (MEASURED) — and (iii) witnesses
+the separation here. One feature, three faces; the novelty is that
+feature and the principle that generates it, not the shared external
+tables.
 The passport's two non-classical letters carry two distinct
 pedigrees accordingly — Z from Łukasiewicz's indeterminate (a
 truth not yet settled), N from Kleene's undefined (a computation
@@ -1724,6 +1770,13 @@ already ships in the repository (`tool/`); a possible essay,
     1970. The first three-valued logic; its middle value "possible /
     not yet determined" is the meaning-ancestor of the mark Z, as
     Bochvar's external tables are of the {¬,∧,∨} fragment.
+37. Suszko, R. The Fregean axiom and Polish mathematical logic in the
+    1920s. *Studia Logica* 36 (1977), 377–380. Suszko's Thesis: every
+    structural (Tarskian) logic is logically two-valued; the many values
+    of a matrix are algebraic, the logical values only two (designated /
+    undesignated). ZTL takes this as architecture — the mark is barred
+    from the value of assertions by construction (greediness) — rather
+    than recovering bivalence by the Suszko reduction after the fact.
 
 ## Acknowledgements and AI disclosure
 

@@ -40,6 +40,8 @@ STANDS = [
                         "ZTL is NOT supervaluational"]),
     ("zmodid.py",      ["ZMODID GREEN", "Kripke recovered",
                         "a name is rigid ⟺ it denotes"]),
+    ("zeps.py",        ["ZEPS GREEN", "the choice term denotes exactly",
+                        "the empty choice is the mark"]),
     ("zpassport.py",   ["✓ STIPULATION THEOREM: total",
                         "parity cross-check: 62 of 62 ✓"]),
     ("zsew.py", ["E29 GREEN", "hereditary ⊗ hereditary stays hereditary: 324 of 324",

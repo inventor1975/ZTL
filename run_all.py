@@ -36,6 +36,8 @@ STANDS = [
     ("zfo.py",         ["ALL verdicts cross-checked ✓", "guarded drinker"]),
     ("zeq.py",         ["ZEQ GREEN", "grounded: T total; marked: Z total",
                         "0 violations of 24 licensed substitutions"]),
+    ("zdesc.py",       ["ZDESC GREEN", "a thing exists iff it is self-identical",
+                        "ZTL is NOT supervaluational"]),
     ("zpassport.py",   ["✓ STIPULATION THEOREM: total",
                         "parity cross-check: 62 of 62 ✓"]),
     ("zsew.py", ["E29 GREEN", "hereditary ⊗ hereditary stays hereditary: 324 of 324",

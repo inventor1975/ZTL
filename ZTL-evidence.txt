@@ -1,448 +1,457 @@
-ZTL — evidence-status map (first cut, Miteiko's four-level taxonomy)
+ZTL — evidence-status × proof-scope map (first cut)
 ==================================================================
 
-  PROVED                  a general Lean theorem on the empty axiom list —
-                          universal over the semantic domain (all of V, all
-                          formulas Fm, an arbitrary type).
-  PROVED-BOUNDED-WITNESS  a machine-proved SPECIFIC witness or finite
-                          construction (an ∃-claim, or a claim over a fixed
-                          chosen finite MODEL) — the instance is proved, not
-                          a universal classification.
-  MEASURED-WITH-CEILING   a Python-stand pool enumeration — not a Lean
-                          theorem; true within a bounded test space.
-  INTERPRETIVE-INVARIANT  an interface reading rule (§10) — normatively
-                          required, NOT a Lean theorem unless the mapping is
-                          formalized in Lean.
+Every Lean declaration in this corpus IS proved on the empty axiom list, so
+"proved-vs-witness" is not a status difference — it is a difference of
+SCOPE. Two orthogonal coordinates keep that honest:
+
+  evidence_status:
+    PROVED                  a Lean theorem, kernel-checked, empty axiom list
+    MEASURED_WITH_CEILING   a Python-stand pool enumeration (not a theorem)
+    INTERPRETIVE_INVARIANT  a §10 interface reading rule (not a theorem)
+
+  proof_scope (for PROVED):
+    GENERAL           universal over the semantic domain (all of V, all
+                      formulas Fm, an arbitrary type) — a binder or ∀ or a
+                      hypothesis arrow. An ∃ INSIDE the conclusion does not
+                      demote it (e.g. V.evalF_classical is GENERAL).
+    BOUNDED_MODEL     proved over a fixed chosen finite model (the five-
+                      individual identity model, MO2, the GHZ/Mermin frame).
+    EXISTENCE_WITNESS a top-level ∃ — the instance is exhibited.
+    CONCRETE_CELL     a specific proved equation or finite construction (an
+                      anchor cell znot Z = F; the realized ladder).
+  proof_scope (for the others): POOL_BOUNDED / INTERFACE_NORMATIVE.
+
+A bounded scope is not "less proved"; its claim scope is simply narrower.
 
 ==================================================================
-1. LEAN THEOREMS — PROVED and PROVED-BOUNDED-WITNESS
+1. LEAN DECLARATIONS — evidence_status = PROVED (empty axiom list); proof_scope varies
 ==================================================================
 
 ## ZTL.lean
-    [WITNESS   ] ZTL.ax_not_Z
-    [WITNESS   ] ZTL.ax_notnot_Z
-    [WITNESS   ] ZTL.ax_xnor_ZZ
-    [WITNESS   ] ZTL.ax_xnor_ZT
-    [WITNESS   ] ZTL.ax_xor_ZZ
-    [WITNESS   ] ZTL.ax_xor_ZF
-    [WITNESS   ] ZTL.ax_xor_ZT
-    [PROVED    ] ZTL.lift1_classical
-    [PROVED    ] ZTL.lift2_classical
-    [PROVED    ] ZTL.imp_def
-    [PROVED    ] ZTL.xor_def
-    [PROVED    ] ZTL.xnor_def
-    [PROVED    ] ZTL.xnor_imps
-    [PROVED    ] ZTL.and_comm'
-    [PROVED    ] ZTL.or_comm'
-    [PROVED    ] ZTL.and_assoc'
-    [PROVED    ] ZTL.or_assoc'
-    [PROVED    ] ZTL.and_distrib
-    [PROVED    ] ZTL.or_distrib
-    [PROVED    ] ZTL.no_contradiction
-    [PROVED    ] ZTL.imp_trans_law
-    [PROVED    ] ZTL.modus_ponens
-    [PROVED    ] ZTL.double_neg_fails
-    [PROVED    ] ZTL.deMorgan1_fails
-    [PROVED    ] ZTL.deMorgan2_fails
-    [PROVED    ] ZTL.contraposition_fails
-    [PROVED    ] ZTL.xor_as_not_xnor_fails
-    [PROVED    ] ZTL.and_idem_fails
-    [PROVED    ] ZTL.or_idem_fails
-    [PROVED    ] ZTL.absorption_fails
-    [PROVED    ] ZTL.and_true_fails
-    [PROVED    ] ZTL.or_false_fails
-    [PROVED    ] ZTL.lem_fails
-    [PROVED    ] ZTL.imp_refl_fails
-    [PROVED    ] ZTL.peirce_fails
-    [PROVED    ] ZTL.k_axiom_fails
-    [PROVED    ] ZTL.liar_homeless
-    [WITNESS   ] ZTL.isZ_detects
-    [WITNESS   ] ZTL.dt_one_way
-    [PROVED    ] ZTL.ui_law
-    [PROVED    ] ZTL.eg_law_fails
-    [PROVED    ] ZTL.rule_modus_tollens
-    [PROVED    ] ZTL.rule_contraposition
-    [PROVED    ] ZTL.rule_disj_syllogism
-    [PROVED    ] ZTL.rule_and_intro
-    [PROVED    ] ZTL.rule_and_elim
-    [PROVED    ] ZTL.rule_or_intro
-    [PROVED    ] ZTL.rule_dn_intro
-    [PROVED    ] ZTL.rule_transitivity
-    [PROVED    ] ZTL.rule_K
-    [PROVED    ] ZTL.rule_explosion
-    [PROVED    ] ZTL.rule_resolution
-    [PROVED    ] ZTL.rule_dn_elim_fails
-    [PROVED    ] ZTL.rule_taut_concl_fails
-    [PROVED    ] ZTL.no_gluts
-    [PROVED    ] ZTL.kleene_not_monotone
-    [PROVED    ] ZTL.kleene_and_monotone
-    [PROVED    ] ZTL.kleene_or_monotone
-    [PROVED    ] ZTL.eager_and_not_monotone
-    [PROVED    ] ZTL.eager_not_not_monotone
-    [WITNESS   ] ZTL.liar_kleene_home
-    [PROVED    ] ZTL.carousel_no_model
-    [PROVED    ] ZTL.carousel_kleene_fp
-    [WITNESS   ] ZTL.revenge_bullet
-    [WITNESS   ] ZTL.evalF_classical
-    [PROVED    ] ZTL.cover_not_T
-    [PROVED    ] ZTL.cover_not_F
-    [PROVED    ] ZTL.cover_and_T
-    [PROVED    ] ZTL.cover_and_F
-    [PROVED    ] ZTL.cover_or_T
-    [PROVED    ] ZTL.cover_or_F
-    [PROVED    ] ZTL.cover_imp_T
-    [PROVED    ] ZTL.cover_imp_F
-    [PROVED    ] ZTL.cover_xor_T
-    [PROVED    ] ZTL.cover_xor_F
-    [PROVED    ] ZTL.cover_xnor_T
-    [PROVED    ] ZTL.cover_xnor_F
-    [PROVED    ] ZTL.equiv_not_identical
+    [PROVED · CONCRETE_CELL    ] V.ax_not_Z
+    [PROVED · CONCRETE_CELL    ] V.ax_notnot_Z
+    [PROVED · CONCRETE_CELL    ] V.ax_xnor_ZZ
+    [PROVED · CONCRETE_CELL    ] V.ax_xnor_ZT
+    [PROVED · CONCRETE_CELL    ] V.ax_xor_ZZ
+    [PROVED · CONCRETE_CELL    ] V.ax_xor_ZF
+    [PROVED · CONCRETE_CELL    ] V.ax_xor_ZT
+    [PROVED · GENERAL          ] V.lift1_classical
+    [PROVED · GENERAL          ] V.lift2_classical
+    [PROVED · GENERAL          ] V.imp_def
+    [PROVED · GENERAL          ] V.xor_def
+    [PROVED · GENERAL          ] V.xnor_def
+    [PROVED · GENERAL          ] V.xnor_imps
+    [PROVED · GENERAL          ] V.and_comm'
+    [PROVED · GENERAL          ] V.or_comm'
+    [PROVED · GENERAL          ] V.and_assoc'
+    [PROVED · GENERAL          ] V.or_assoc'
+    [PROVED · GENERAL          ] V.and_distrib
+    [PROVED · GENERAL          ] V.or_distrib
+    [PROVED · GENERAL          ] V.no_contradiction
+    [PROVED · GENERAL          ] V.imp_trans_law
+    [PROVED · GENERAL          ] V.modus_ponens
+    [PROVED · GENERAL          ] V.double_neg_fails
+    [PROVED · GENERAL          ] V.deMorgan1_fails
+    [PROVED · GENERAL          ] V.deMorgan2_fails
+    [PROVED · GENERAL          ] V.contraposition_fails
+    [PROVED · GENERAL          ] V.xor_as_not_xnor_fails
+    [PROVED · GENERAL          ] V.and_idem_fails
+    [PROVED · GENERAL          ] V.or_idem_fails
+    [PROVED · GENERAL          ] V.absorption_fails
+    [PROVED · GENERAL          ] V.and_true_fails
+    [PROVED · GENERAL          ] V.or_false_fails
+    [PROVED · GENERAL          ] V.lem_fails
+    [PROVED · GENERAL          ] V.imp_refl_fails
+    [PROVED · GENERAL          ] V.peirce_fails
+    [PROVED · GENERAL          ] V.k_axiom_fails
+    [PROVED · GENERAL          ] V.liar_homeless
+    [PROVED · CONCRETE_CELL    ] V.isZ_detects
+    [PROVED · CONCRETE_CELL    ] V.dt_one_way
+    [PROVED · GENERAL          ] V.ui_law
+    [PROVED · GENERAL          ] V.eg_law_fails
+    [PROVED · GENERAL          ] V.rule_modus_tollens
+    [PROVED · GENERAL          ] V.rule_contraposition
+    [PROVED · GENERAL          ] V.rule_disj_syllogism
+    [PROVED · GENERAL          ] V.rule_and_intro
+    [PROVED · GENERAL          ] V.rule_and_elim
+    [PROVED · GENERAL          ] V.rule_or_intro
+    [PROVED · GENERAL          ] V.rule_dn_intro
+    [PROVED · GENERAL          ] V.rule_transitivity
+    [PROVED · GENERAL          ] V.rule_K
+    [PROVED · GENERAL          ] V.rule_explosion
+    [PROVED · GENERAL          ] V.rule_resolution
+    [PROVED · GENERAL          ] V.rule_dn_elim_fails
+    [PROVED · GENERAL          ] V.rule_taut_concl_fails
+    [PROVED · GENERAL          ] V.no_gluts
+    [PROVED · GENERAL          ] V.kleene_not_monotone
+    [PROVED · GENERAL          ] V.kleene_and_monotone
+    [PROVED · GENERAL          ] V.kleene_or_monotone
+    [PROVED · GENERAL          ] V.eager_and_not_monotone
+    [PROVED · GENERAL          ] V.eager_not_not_monotone
+    [PROVED · CONCRETE_CELL    ] V.liar_kleene_home
+    [PROVED · GENERAL          ] V.carousel_no_model
+    [PROVED · GENERAL          ] V.carousel_kleene_fp
+    [PROVED · CONCRETE_CELL    ] V.revenge_bullet
+    [PROVED · GENERAL          ] V.evalF_classical
+    [PROVED · GENERAL          ] V.cover_not_T
+    [PROVED · GENERAL          ] V.cover_not_F
+    [PROVED · GENERAL          ] V.cover_and_T
+    [PROVED · GENERAL          ] V.cover_and_F
+    [PROVED · GENERAL          ] V.cover_or_T
+    [PROVED · GENERAL          ] V.cover_or_F
+    [PROVED · GENERAL          ] V.cover_imp_T
+    [PROVED · GENERAL          ] V.cover_imp_F
+    [PROVED · GENERAL          ] V.cover_xor_T
+    [PROVED · GENERAL          ] V.cover_xor_F
+    [PROVED · GENERAL          ] V.cover_xnor_T
+    [PROVED · GENERAL          ] V.cover_xnor_F
+    [PROVED · GENERAL          ] V.equiv_not_identical
 
 ## TableauCert.lean
-    [PROVED    ] TableauCert.iffOfEq
-    [PROVED    ] TableauCert.notCongr
-    [PROVED    ] TableauCert.andCongr
-    [PROVED    ] TableauCert.orCongr
-    [PROVED    ] TableauCert.notOr
-    [PROVED    ] TableauCert.andEqTrue
-    [PROVED    ] TableauCert.boundStep
-    [PROVED    ] TableauCert.bNotTrue
-    [PROVED    ] TableauCert.vT
-    [PROVED    ] TableauCert.vF
-    [PROVED    ] TableauCert.vP
-    [PROVED    ] TableauCert.vN
-    [PROVED    ] TableauCert.vN_neq
-    [PROVED    ] TableauCert.bNotOr1
-    [PROVED    ] TableauCert.bNotOr2
-    [PROVED    ] TableauCert.bNotOr3
-    [PROVED    ] TableauCert.bAllFalse
-    [PROVED    ] TableauCert.sNonempty_of_mem
-    [PROVED    ] TableauCert.sPick_mem
-    [PROVED    ] TableauCert.Fm.size_pos
-    [PROVED    ] TableauCert.mem_cls_T
-    [PROVED    ] TableauCert.mem_cls_F
-    [PROVED    ] TableauCert.mem_cls_both
-    [PROVED    ] TableauCert.not_mem_cls
-    [PROVED    ] TableauCert.satL_nil
-    [PROVED    ] TableauCert.satL_cons
-    [PROVED    ] TableauCert.SAT_head_congr
-    [PROVED    ] TableauCert.SAT_head_split2
-    [PROVED    ] TableauCert.SAT_head_or
-    [PROVED    ] TableauCert.SAT_head_true
-    [PROVED    ] TableauCert.SAT_head_false
-    [PROVED    ] TableauCert.SAT_atom
-    [PROVED    ] TableauCert.closes_iff
-    [PROVED    ] TableauCert.satL_bridge
-    [PROVED    ] TableauCert.tproves_iff
+    [PROVED · GENERAL          ] V.iffOfEq
+    [PROVED · GENERAL          ] V.notCongr
+    [PROVED · GENERAL          ] V.andCongr
+    [PROVED · GENERAL          ] V.orCongr
+    [PROVED · GENERAL          ] V.notOr
+    [PROVED · GENERAL          ] V.andEqTrue
+    [PROVED · GENERAL          ] V.boundStep
+    [PROVED · GENERAL          ] V.bNotTrue
+    [PROVED · GENERAL          ] V.vT
+    [PROVED · GENERAL          ] V.vF
+    [PROVED · GENERAL          ] V.vP
+    [PROVED · GENERAL          ] V.vN
+    [PROVED · GENERAL          ] V.vN_neq
+    [PROVED · GENERAL          ] V.bNotOr1
+    [PROVED · GENERAL          ] V.bNotOr2
+    [PROVED · GENERAL          ] V.bNotOr3
+    [PROVED · GENERAL          ] V.bAllFalse
+    [PROVED · GENERAL          ] V.sNonempty_of_mem
+    [PROVED · GENERAL          ] V.sPick_mem
+    [PROVED · GENERAL          ] V.Fm.size_pos
+    [PROVED · GENERAL          ] V.mem_cls_T
+    [PROVED · GENERAL          ] V.mem_cls_F
+    [PROVED · GENERAL          ] V.mem_cls_both
+    [PROVED · GENERAL          ] V.not_mem_cls
+    [PROVED · GENERAL          ] V.satL_nil
+    [PROVED · GENERAL          ] V.satL_cons
+    [PROVED · GENERAL          ] V.SAT_head_congr
+    [PROVED · GENERAL          ] V.SAT_head_split2
+    [PROVED · GENERAL          ] V.SAT_head_or
+    [PROVED · GENERAL          ] V.SAT_head_true
+    [PROVED · GENERAL          ] V.SAT_head_false
+    [PROVED · GENERAL          ] V.SAT_atom
+    [PROVED · GENERAL          ] V.closes_iff
+    [PROVED · GENERAL          ] V.satL_bridge
+    [PROVED · GENERAL          ] V.tproves_iff
 
 ## TableauCertN.lean
-    [PROVED    ] TableauCertN.addShuffle
-    [PROVED    ] TableauCertN.boolEqOfIff
-    [PROVED    ] TableauCertN.SAT_head_or2
-    [WITNESS   ] TableauCertN.impB1
-    [WITNESS   ] TableauCertN.impB2
-    [WITNESS   ] TableauCertN.impB3
-    [WITNESS   ] TableauCertN.xorB
-    [WITNESS   ] TableauCertN.xnorB
-    [PROVED    ] TableauCertN.dropBound
-    [PROVED    ] TableauCertN.closesN_iff
-    [PROVED    ] TableauCertN.tprovesN_iff
-    [PROVED    ] TableauCertN.engines_agree
+    [PROVED · GENERAL          ] V.addShuffle
+    [PROVED · GENERAL          ] V.boolEqOfIff
+    [PROVED · GENERAL          ] V.SAT_head_or2
+    [PROVED · CONCRETE_CELL    ] V.impB1
+    [PROVED · CONCRETE_CELL    ] V.impB2
+    [PROVED · CONCRETE_CELL    ] V.impB3
+    [PROVED · CONCRETE_CELL    ] V.xorB
+    [PROVED · CONCRETE_CELL    ] V.xnorB
+    [PROVED · GENERAL          ] V.dropBound
+    [PROVED · GENERAL          ] V.closesN_iff
+    [PROVED · GENERAL          ] V.tprovesN_iff
+    [PROVED · GENERAL          ] V.engines_agree
 
 ## ZSets.lean
-    [PROVED    ] ZSets.zorZ
-    [PROVED    ] ZSets.zorF
-    [PROVED    ] ZSets.zandXF
-    [PROVED    ] ZSets.zandFX
-    [PROVED    ] ZSets.memL_classical
-    [PROVED    ] ZSets.memZ
-    [PROVED    ] ZSets.sub_marked_false
-    [PROVED    ] ZSets.seteq_self_marked
-    [PROVED    ] ZSets.zorTX
-    [PROVED    ] ZSets.zorXT
-    [PROVED    ] ZSets.beqRefl
-    [PROVED    ] ZSets.eqAtom_refl_v
-    [PROVED    ] ZSets.memL_self
-    [PROVED    ] ZSets.append_cons_el
-    [PROVED    ] ZSets.subL_refl_aux
-    [PROVED    ] ZSets.subL_refl_clean
-    [PROVED    ] ZSets.seteq_refl_clean
+    [PROVED · GENERAL          ] V.zorZ
+    [PROVED · GENERAL          ] V.zorF
+    [PROVED · GENERAL          ] V.zandXF
+    [PROVED · GENERAL          ] V.zandFX
+    [PROVED · GENERAL          ] V.memL_classical
+    [PROVED · GENERAL          ] V.memZ
+    [PROVED · GENERAL          ] V.sub_marked_false
+    [PROVED · GENERAL          ] V.seteq_self_marked
+    [PROVED · GENERAL          ] V.zorTX
+    [PROVED · GENERAL          ] V.zorXT
+    [PROVED · GENERAL          ] V.beqRefl
+    [PROVED · GENERAL          ] V.eqAtom_refl_v
+    [PROVED · GENERAL          ] V.memL_self
+    [PROVED · GENERAL          ] V.append_cons_el
+    [PROVED · GENERAL          ] V.subL_refl_aux
+    [PROVED · GENERAL          ] V.subL_refl_clean
+    [PROVED · GENERAL          ] V.seteq_refl_clean
 
 ## Facts.lean
-    [PROVED    ] Facts.ui_law_dom2
-    [PROVED    ] Facts.eg_law_dom2_fails
-    [PROVED    ] Facts.allnot_notex_dom2
-    [PROVED    ] Facts.notex_allnot_dom2_fails
-    [PROVED    ] Facts.notall_exnot_dom2_fails
-    [PROVED    ] Facts.qlem_dom2_fails
-    [PROVED    ] Facts.drinker_dom2_fails
-    [PROVED    ] Facts.liar_period2
-    [PROVED    ] Facts.carousel_no_fp
-    [PROVED    ] Facts.carousel_period4
-    [PROVED    ] Facts.curry_homeless
-    [WITNESS   ] Facts.curry_kleene_home
-    [PROVED    ] Facts.odd3_no_model
-    [WITNESS   ] Facts.even2_has_model
-    [PROVED    ] Facts.yablo3_unique
-    [WITNESS   ] Facts.crocodile_deal_void
-    [PROVED    ] Facts.passport_even2
+    [PROVED · GENERAL          ] V.ui_law_dom2
+    [PROVED · GENERAL          ] V.eg_law_dom2_fails
+    [PROVED · GENERAL          ] V.allnot_notex_dom2
+    [PROVED · GENERAL          ] V.notex_allnot_dom2_fails
+    [PROVED · GENERAL          ] V.notall_exnot_dom2_fails
+    [PROVED · GENERAL          ] V.qlem_dom2_fails
+    [PROVED · GENERAL          ] V.drinker_dom2_fails
+    [PROVED · GENERAL          ] V.liar_period2
+    [PROVED · GENERAL          ] V.carousel_no_fp
+    [PROVED · GENERAL          ] V.carousel_period4
+    [PROVED · GENERAL          ] V.curry_homeless
+    [PROVED · CONCRETE_CELL    ] V.curry_kleene_home
+    [PROVED · GENERAL          ] V.odd3_no_model
+    [PROVED · EXISTENCE_WITNESS] V.even2_has_model
+    [PROVED · GENERAL          ] V.yablo3_unique
+    [PROVED · CONCRETE_CELL    ] V.crocodile_deal_void
+    [PROVED · GENERAL          ] V.passport_even2
 
 ## ZAlgebra.lean
-    [PROVED    ] ZAlgebra.jT_spec
-    [PROVED    ] ZAlgebra.jF_spec
-    [PROVED    ] ZAlgebra.jZ_spec
-    [PROVED    ] ZAlgebra.indicators_partition
-    [PROVED    ] ZAlgebra.unary_complete
-    [PROVED    ] ZAlgebra.eimp_spec
-    [WITNESS   ] ZAlgebra.eimp_vs_zimp
-    [PROVED    ] ZAlgebra.ddt_E
-    [PROVED    ] ZAlgebra.dEq_spec
-    [PROVED    ] ZAlgebra.bp_refl
-    [PROVED    ] ZAlgebra.bp_mp
-    [PROVED    ] ZAlgebra.bp_cong_not
-    [PROVED    ] ZAlgebra.bp_cong_and
-    [PROVED    ] ZAlgebra.bp_cong_or
-    [PROVED    ] ZAlgebra.bp_cong_imp
-    [PROVED    ] ZAlgebra.bp_cong_xor
-    [PROVED    ] ZAlgebra.bp_cong_xnor
-    [PROVED    ] ZAlgebra.truth_equation
-    [PROVED    ] ZAlgebra.bp_iv
-    [PROVED    ] ZAlgebra.idem_interderivable
-    [PROVED    ] ZAlgebra.not_selfextensional
-    [PROVED    ] ZAlgebra.congr2
-    [PROVED    ] ZAlgebra.evalF_subst
-    [PROVED    ] ZAlgebra.allT_subst
-    [PROVED    ] ZAlgebra.entails_structural
+    [PROVED · GENERAL          ] V.jT_spec
+    [PROVED · GENERAL          ] V.jF_spec
+    [PROVED · GENERAL          ] V.jZ_spec
+    [PROVED · GENERAL          ] V.indicators_partition
+    [PROVED · GENERAL          ] V.unary_complete
+    [PROVED · GENERAL          ] V.eimp_spec
+    [PROVED · CONCRETE_CELL    ] V.eimp_vs_zimp
+    [PROVED · GENERAL          ] V.ddt_E
+    [PROVED · GENERAL          ] V.dEq_spec
+    [PROVED · GENERAL          ] V.bp_refl
+    [PROVED · GENERAL          ] V.bp_mp
+    [PROVED · GENERAL          ] V.bp_cong_not
+    [PROVED · GENERAL          ] V.bp_cong_and
+    [PROVED · GENERAL          ] V.bp_cong_or
+    [PROVED · GENERAL          ] V.bp_cong_imp
+    [PROVED · GENERAL          ] V.bp_cong_xor
+    [PROVED · GENERAL          ] V.bp_cong_xnor
+    [PROVED · GENERAL          ] V.truth_equation
+    [PROVED · GENERAL          ] V.bp_iv
+    [PROVED · GENERAL          ] V.idem_interderivable
+    [PROVED · GENERAL          ] V.not_selfextensional
+    [PROVED · GENERAL          ] V.congr2
+    [PROVED · GENERAL          ] V.evalF_subst
+    [PROVED · GENERAL          ] V.allT_subst
+    [PROVED · GENERAL          ] V.entails_structural
 
 ## ZSequent.lean
-    [PROVED    ] ZSequent.signTN_total
-    [PROVED    ] ZSequent.signTN_disjoint
-    [PROVED    ] ZSequent.signFP_total
-    [PROVED    ] ZSequent.SAT_cut_split
-    [PROVED    ] ZSequent.cut_admissible
-    [PROVED    ] ZSequent.weakening_admissible
-    [PROVED    ] ZSequent.identity_refutable
+    [PROVED · GENERAL          ] V.signTN_total
+    [PROVED · GENERAL          ] V.signTN_disjoint
+    [PROVED · GENERAL          ] V.signFP_total
+    [PROVED · GENERAL          ] V.SAT_cut_split
+    [PROVED · GENERAL          ] V.cut_admissible
+    [PROVED · GENERAL          ] V.weakening_admissible
+    [PROVED · GENERAL          ] V.identity_refutable
 
 ## ZQuant.lean
-    [PROVED    ] ZQuant.jTT
-    [PROVED    ] ZQuant.jTF
-    [PROVED    ] ZQuant.cover_allF_T
-    [PROVED    ] ZQuant.allF_classical
-    [PROVED    ] ZQuant.exF_classical
-    [PROVED    ] ZQuant.nz_of_classical
-    [PROVED    ] ZQuant.cover_allF_F
-    [PROVED    ] ZQuant.cover_exF_T
-    [PROVED    ] ZQuant.cover_exF_F
-    [PROVED    ] ZQuant.ui_mem
-    [PROVED    ] ZQuant.eg_mem
-    [PROVED    ] ZQuant.tab_ui
-    [PROVED    ] ZQuant.tab_eg
-    [WITNESS   ] ZQuant.tab_eg_law_fails
-    [PROVED    ] ZQuant.tab_allnot_notex
-    [PROVED    ] ZQuant.tab_notex_allnot_fails
-    [PROVED    ] ZQuant.tab_qlem_fails
-    [PROVED    ] ZQuant.tab_drinker_fails
-    [PROVED    ] ZQuant.tab_distrib
+    [PROVED · GENERAL          ] V.jTT
+    [PROVED · GENERAL          ] V.jTF
+    [PROVED · GENERAL          ] V.cover_allF_T
+    [PROVED · GENERAL          ] V.allF_classical
+    [PROVED · GENERAL          ] V.exF_classical
+    [PROVED · GENERAL          ] V.nz_of_classical
+    [PROVED · GENERAL          ] V.cover_allF_F
+    [PROVED · GENERAL          ] V.cover_exF_T
+    [PROVED · GENERAL          ] V.cover_exF_F
+    [PROVED · GENERAL          ] V.ui_mem
+    [PROVED · GENERAL          ] V.eg_mem
+    [PROVED · GENERAL          ] V.tab_ui
+    [PROVED · GENERAL          ] V.tab_eg
+    [PROVED · CONCRETE_CELL    ] V.tab_eg_law_fails
+    [PROVED · GENERAL          ] V.tab_allnot_notex
+    [PROVED · GENERAL          ] V.tab_notex_allnot_fails
+    [PROVED · GENERAL          ] V.tab_qlem_fails
+    [PROVED · GENERAL          ] V.tab_drinker_fails
+    [PROVED · GENERAL          ] V.tab_distrib
 
 ## ZGround.lean
-    [PROVED    ] ZGround.kimp_monotone
-    [PROVED    ] ZGround.kxor_monotone
-    [PROVED    ] ZGround.kxnor_monotone
-    [PROVED    ] ZGround.leqb_refl
-    [PROVED    ] ZGround.evalK_mono
-    [PROVED    ] ZGround.vbeq
-    [PROVED    ] ZGround.leqZ
-    [PROVED    ] ZGround.leq_ne_z
-    [PROVED    ] ZGround.leq_nz
-    [PROVED    ] ZGround.valEq_iff
-    [PROVED    ] ZGround.getZ_mono
-    [PROVED    ] ZGround.jumpL_mono
-    [PROVED    ] ZGround.replicate_leq
-    [PROVED    ] ZGround.jumpL_length
-    [PROVED    ] ZGround.bot_leq
-    [PROVED    ] ZGround.iter_length
-    [PROVED    ] ZGround.chain
-    [PROVED    ] ZGround.info_le_length
-    [PROVED    ] ZGround.info_mono
-    [PROVED    ] ZGround.info_strict
-    [PROVED    ] ZGround.persist
-    [PROVED    ] ZGround.fix_or_grow
-    [PROVED    ] ZGround.kt_fixed
-    [PROVED    ] ZGround.kt_least
-    [PROVED    ] ZGround.grounded_absolute
+    [PROVED · GENERAL          ] V.kimp_monotone
+    [PROVED · GENERAL          ] V.kxor_monotone
+    [PROVED · GENERAL          ] V.kxnor_monotone
+    [PROVED · GENERAL          ] V.leqb_refl
+    [PROVED · GENERAL          ] V.evalK_mono
+    [PROVED · GENERAL          ] V.vbeq
+    [PROVED · GENERAL          ] V.leqZ
+    [PROVED · GENERAL          ] V.leq_ne_z
+    [PROVED · GENERAL          ] V.leq_nz
+    [PROVED · GENERAL          ] V.valEq_iff
+    [PROVED · GENERAL          ] V.getZ_mono
+    [PROVED · GENERAL          ] V.jumpL_mono
+    [PROVED · GENERAL          ] V.replicate_leq
+    [PROVED · GENERAL          ] V.jumpL_length
+    [PROVED · GENERAL          ] V.bot_leq
+    [PROVED · GENERAL          ] V.iter_length
+    [PROVED · GENERAL          ] V.chain
+    [PROVED · GENERAL          ] V.info_le_length
+    [PROVED · GENERAL          ] V.info_mono
+    [PROVED · GENERAL          ] V.info_strict
+    [PROVED · GENERAL          ] V.persist
+    [PROVED · GENERAL          ] V.fix_or_grow
+    [PROVED · GENERAL          ] V.kt_fixed
+    [PROVED · GENERAL          ] V.kt_least
+    [PROVED · GENERAL          ] V.grounded_absolute
 
 ## ZExped.lean
-    [PROVED    ] ZExped.eqStream_never_T
-    [PROVED    ] ZExped.eqStream_self
-    [PROVED    ] ZExped.eqStream_F_mono
-    [PROVED    ] ZExped.eqStream_F_persist
-    [PROVED    ] ZExped.eqStream_apart
-    [PROVED    ] ZExped.zor_no_T
-    [PROVED    ] ZExped.mem_never_T
-    [PROVED    ] ZExped.diag_not_member
-    [PROVED    ] ZExped.eqAtom_z_right
-    [PROVED    ] ZExped.inj_cert_marked
-    [PROVED    ] ZExped.mark_self_not_earned
-    [PROVED    ] ZExped.atom_thresholds
-    [PROVED    ] ZExped.box_dia_duality
-    [WITNESS   ] ZExped.ladder_vs_global
-    [PROVED    ] ZExped.russell_grounded
-    [WITNESS   ] ZExped.russell_verdicts
+    [PROVED · GENERAL          ] V.eqStream_never_T
+    [PROVED · GENERAL          ] V.eqStream_self
+    [PROVED · GENERAL          ] V.eqStream_F_mono
+    [PROVED · GENERAL          ] V.eqStream_F_persist
+    [PROVED · GENERAL          ] V.eqStream_apart
+    [PROVED · GENERAL          ] V.zor_no_T
+    [PROVED · GENERAL          ] V.mem_never_T
+    [PROVED · GENERAL          ] V.diag_not_member
+    [PROVED · GENERAL          ] V.eqAtom_z_right
+    [PROVED · GENERAL          ] V.inj_cert_marked
+    [PROVED · GENERAL          ] V.mark_self_not_earned
+    [PROVED · GENERAL          ] V.atom_thresholds
+    [PROVED · GENERAL          ] V.box_dia_duality
+    [PROVED · CONCRETE_CELL    ] V.ladder_vs_global
+    [PROVED · GENERAL          ] V.russell_grounded
+    [PROVED · CONCRETE_CELL    ] V.russell_verdicts
 
 ## ZClone.lean
-    [PROVED    ] ZClone.andEqTrueC
-    [WITNESS   ] ZClone.cage_closed_nand
-    [WITNESS   ] ZClone.cage_closed_nor
-    [PROVED    ] ZClone.all_at_memb
-    [PROVED    ] ZClone.closed_at
-    [PROVED    ] ZClone.reach_nand_in_cage
-    [PROVED    ] ZClone.reach_nor_in_cage
-    [WITNESS   ] ZClone.nand_cannot_and
-    [WITNESS   ] ZClone.nand_cannot_or
-    [WITNESS   ] ZClone.nor_cannot_and
-    [WITNESS   ] ZClone.nor_cannot_or
-    [WITNESS   ] ZClone.nand_reaches_not
-    [WITNESS   ] ZClone.nor_reaches_not
-    [WITNESS   ] ZClone.nimp_reaches_not
-    [WITNESS   ] ZClone.nimp_reaches_and
-    [WITNESS   ] ZClone.nimp_reaches_or
-    [PROVED    ] ZClone.tbl_eq_of_cells
-    [PROVED    ] ZClone.cell_not_nimp
-    [PROVED    ] ZClone.cell_and_nimp
-    [PROVED    ] ZClone.cell_or_nimp
-    [PROVED    ] ZClone.cell_nimp_canon
-    [PROVED    ] ZClone.cell_not_zh
-    [PROVED    ] ZClone.cell_or_zh
-    [PROVED    ] ZClone.cell_xor_canon
-    [PROVED    ] ZClone.nimp_subsumes_canon
-    [PROVED    ] ZClone.canon_subsumes_nimp
-    [PROVED    ] ZClone.nimp_clone_eq
-    [PROVED    ] ZClone.zh_subsumes_canon
-    [PROVED    ] ZClone.canon_subsumes_zh
-    [PROVED    ] ZClone.zhegalkin_clone_eq
-    [PROVED    ] ZClone.nimp_eq_zhegalkin
-    [WITNESS   ] ZClone.andCage_closed
-    [PROVED    ] ZClone.reach_and_in_cage
-    [WITNESS   ] ZClone.and_cannot_not
+    [PROVED · GENERAL          ] andEqTrueC
+    [PROVED · CONCRETE_CELL    ] cage_closed_nand
+    [PROVED · CONCRETE_CELL    ] cage_closed_nor
+    [PROVED · GENERAL          ] all_at_memb
+    [PROVED · GENERAL          ] closed_at
+    [PROVED · GENERAL          ] reach_nand_in_cage
+    [PROVED · GENERAL          ] reach_nor_in_cage
+    [PROVED · CONCRETE_CELL    ] nand_cannot_and
+    [PROVED · CONCRETE_CELL    ] nand_cannot_or
+    [PROVED · CONCRETE_CELL    ] nor_cannot_and
+    [PROVED · CONCRETE_CELL    ] nor_cannot_or
+    [PROVED · CONCRETE_CELL    ] nand_reaches_not
+    [PROVED · CONCRETE_CELL    ] nor_reaches_not
+    [PROVED · CONCRETE_CELL    ] nimp_reaches_not
+    [PROVED · CONCRETE_CELL    ] nimp_reaches_and
+    [PROVED · CONCRETE_CELL    ] nimp_reaches_or
+    [PROVED · GENERAL          ] tbl_eq_of_cells
+    [PROVED · GENERAL          ] cell_not_nimp
+    [PROVED · GENERAL          ] cell_and_nimp
+    [PROVED · GENERAL          ] cell_or_nimp
+    [PROVED · GENERAL          ] cell_nimp_canon
+    [PROVED · GENERAL          ] cell_not_zh
+    [PROVED · GENERAL          ] cell_or_zh
+    [PROVED · GENERAL          ] cell_xor_canon
+    [PROVED · GENERAL          ] nimp_subsumes_canon
+    [PROVED · GENERAL          ] canon_subsumes_nimp
+    [PROVED · GENERAL          ] nimp_clone_eq
+    [PROVED · GENERAL          ] zh_subsumes_canon
+    [PROVED · GENERAL          ] canon_subsumes_zh
+    [PROVED · GENERAL          ] zhegalkin_clone_eq
+    [PROVED · GENERAL          ] nimp_eq_zhegalkin
+    [PROVED · CONCRETE_CELL    ] andCage_closed
+    [PROVED · GENERAL          ] reach_and_in_cage
+    [PROVED · CONCRETE_CELL    ] and_cannot_not
 
 ## ZTime.lean
-    [PROVED    ] ZTime.refines_refl
-    [PROVED    ] ZTime.refines_trans
-    [PROVED    ] ZTime.verify_refines
-    [PROVED    ] ZTime.hereditary_absorbing
-    [PROVED    ] ZTime.evalF_congr
-    [PROVED    ] ZTime.grounded_hereditary
-    [PROVED    ] ZTime.hereditary_sound
-    [WITNESS   ] ZTime.strict_ladder
+    [PROVED · GENERAL          ] ZTime.refines_refl
+    [PROVED · GENERAL          ] ZTime.refines_trans
+    [PROVED · GENERAL          ] ZTime.verify_refines
+    [PROVED · GENERAL          ] ZTime.hereditary_absorbing
+    [PROVED · GENERAL          ] ZTime.evalF_congr
+    [PROVED · GENERAL          ] ZTime.grounded_hereditary
+    [PROVED · GENERAL          ] ZTime.hereditary_sound
+    [PROVED · CONCRETE_CELL    ] ZTime.Witness.strict_ladder
 
 ## Contextuality.lean
-    [WITNESS   ] Contextuality.mermin_square_no_valuation
-    [WITNESS   ] Contextuality.ghz_no_valuation
-    [WITNESS   ] Contextuality.mermin_parity_core
+    [PROVED · BOUNDED_MODEL    ] Contextuality.mermin_square_no_valuation
+    [PROVED · BOUNDED_MODEL    ] Contextuality.ghz_no_valuation
+    [PROVED · BOUNDED_MODEL    ] Contextuality.mermin_parity_core
 
 ## EpochBoundary.lean
-    [PROVED    ] EpochBoundary.or_true_elim
-    [PROVED    ] EpochBoundary.or_intro_left
-    [PROVED    ] EpochBoundary.or_intro_right
-    [PROVED    ] EpochBoundary.evalF_congr_on
-    [PROVED    ] EpochBoundary.occurs_le_bound
-    [PROVED    ] EpochBoundary.update_at
-    [PROVED    ] EpochBoundary.update_ne
-    [WITNESS   ] EpochBoundary.walk_one
-    [WITNESS   ] EpochBoundary.walk_below
-    [PROVED    ] EpochBoundary.epoch_boundary_iff
-    [WITNESS   ] EpochBoundary.epochs_matter
+    [PROVED · GENERAL          ] EpochBoundary.or_true_elim
+    [PROVED · GENERAL          ] EpochBoundary.or_intro_left
+    [PROVED · GENERAL          ] EpochBoundary.or_intro_right
+    [PROVED · GENERAL          ] EpochBoundary.evalF_congr_on
+    [PROVED · GENERAL          ] EpochBoundary.occurs_le_bound
+    [PROVED · GENERAL          ] EpochBoundary.update_at
+    [PROVED · GENERAL          ] EpochBoundary.update_ne
+    [PROVED · GENERAL          ] EpochBoundary.walk_one
+    [PROVED · GENERAL          ] EpochBoundary.walk_below
+    [PROVED · GENERAL          ] EpochBoundary.epoch_boundary_iff
+    [PROVED · GENERAL          ] EpochBoundary.epochs_matter
 
 ## JunctionWitness.lean
-    [WITNESS   ] JunctionWitness.pair_true
-    [WITNESS   ] JunctionWitness.add_mz
-    [WITNESS   ] JunctionWitness.disjunct_ud_fails
-    [WITNESS   ] JunctionWitness.disjunct_du_fails
-    [WITNESS   ] JunctionWitness.spin1_up_fails
-    [WITNESS   ] JunctionWitness.spin1_down_fails
-    [WITNESS   ] JunctionWitness.spin2_up_fails
-    [WITNESS   ] JunctionWitness.spin2_down_fails
-    [WITNESS   ] JunctionWitness.junction
+    [PROVED · BOUNDED_MODEL    ] JunctionWitness.pair_true
+    [PROVED · BOUNDED_MODEL    ] JunctionWitness.add_mz
+    [PROVED · BOUNDED_MODEL    ] JunctionWitness.disjunct_ud_fails
+    [PROVED · BOUNDED_MODEL    ] JunctionWitness.disjunct_du_fails
+    [PROVED · BOUNDED_MODEL    ] JunctionWitness.spin1_up_fails
+    [PROVED · BOUNDED_MODEL    ] JunctionWitness.spin1_down_fails
+    [PROVED · BOUNDED_MODEL    ] JunctionWitness.spin2_up_fails
+    [PROVED · BOUNDED_MODEL    ] JunctionWitness.spin2_down_fails
+    [PROVED · BOUNDED_MODEL    ] JunctionWitness.junction
 
 ## QuantumWitness.lean
-    [WITNESS   ] QuantumWitness.distributivity_fails
-    [WITNESS   ] QuantumWitness.lem_holds
-    [WITNESS   ] QuantumWitness.dne_holds
-    [WITNESS   ] QuantumWitness.no_contradiction_holds
-    [WITNESS   ] QuantumWitness.quantum_pole
-    [WITNESS   ] QuantumWitness.sasaki_mp
-    [WITNESS   ] QuantumWitness.deduction_theorem_fails
-    [WITNESS   ] QuantumWitness.deduction_witness
-    [WITNESS   ] QuantumWitness.quantum_has_no_deduction_theorem
-    [WITNESS   ] QuantumWitness.above_two_atoms
-    [WITNESS   ] QuantumWitness.no_arrow_has_deduction_theorem
+    [PROVED · BOUNDED_MODEL    ] QuantumWitness.distributivity_fails
+    [PROVED · BOUNDED_MODEL    ] QuantumWitness.lem_holds
+    [PROVED · BOUNDED_MODEL    ] QuantumWitness.dne_holds
+    [PROVED · BOUNDED_MODEL    ] QuantumWitness.no_contradiction_holds
+    [PROVED · BOUNDED_MODEL    ] QuantumWitness.quantum_pole
+    [PROVED · BOUNDED_MODEL    ] QuantumWitness.sasaki_mp
+    [PROVED · BOUNDED_MODEL    ] QuantumWitness.deduction_theorem_fails
+    [PROVED · BOUNDED_MODEL    ] QuantumWitness.deduction_witness
+    [PROVED · BOUNDED_MODEL    ] QuantumWitness.quantum_has_no_deduction_theorem
+    [PROVED · BOUNDED_MODEL    ] QuantumWitness.above_two_atoms
+    [PROVED · BOUNDED_MODEL    ] QuantumWitness.no_arrow_has_deduction_theorem
 
 ## Frame.lean
-    [WITNESS   ] Frame.cells
-    [WITNESS   ] Frame.mt1_contraposition_impossible
-    [PROVED    ] Frame.mt1_from_the_cells
-    [PROVED    ] Frame.mt2_housing_means_fixed_point
-    [PROVED    ] Frame.mt2_pessimism_excludes_Z
-    [PROVED    ] Frame.mt2_quarantine_irremovable
-    [PROVED    ] Frame.embed_not
-    [PROVED    ] Frame.embed_and
-    [PROVED    ] Frame.embed_or
-    [PROVED    ] Frame.embed_imp
-    [PROVED    ] Frame.embed_xor
-    [PROVED    ] Frame.embed_xnor
-    [PROVED    ] Frame.mt3_collapse_is_classical
-    [PROVED    ] Frame.mt3_every_tautology_returns
-    [PROVED    ] Frame.mt3_imp_refl_returns
-    [PROVED    ] Frame.mt3_lem_returns
-    [PROVED    ] Frame.mt3_the_fork
+    [PROVED · CONCRETE_CELL    ] Frame.cells
+    [PROVED · CONCRETE_CELL    ] Frame.mt1_contraposition_impossible
+    [PROVED · GENERAL          ] Frame.mt1_from_the_cells
+    [PROVED · GENERAL          ] Frame.mt2_housing_means_fixed_point
+    [PROVED · GENERAL          ] Frame.mt2_pessimism_excludes_Z
+    [PROVED · GENERAL          ] Frame.mt2_quarantine_irremovable
+    [PROVED · GENERAL          ] Frame.embed_not
+    [PROVED · GENERAL          ] Frame.embed_and
+    [PROVED · GENERAL          ] Frame.embed_or
+    [PROVED · GENERAL          ] Frame.embed_imp
+    [PROVED · GENERAL          ] Frame.embed_xor
+    [PROVED · GENERAL          ] Frame.embed_xnor
+    [PROVED · GENERAL          ] Frame.mt3_collapse_is_classical
+    [PROVED · GENERAL          ] Frame.mt3_every_tautology_returns
+    [PROVED · GENERAL          ] Frame.mt3_imp_refl_returns
+    [PROVED · GENERAL          ] Frame.mt3_lem_returns
+    [PROVED · GENERAL          ] Frame.mt3_the_fork
 
 ## Signature.lean
-    [PROVED    ] Signature.involution_gives_dne
-    [PROVED    ] Signature.ztl_not_involutive
-    [WITNESS   ] Signature.ztl_dne_witness
-    [WITNESS   ] Signature.ztl_breaks_dne
-    [WITNESS   ] Signature.signature
+    [PROVED · GENERAL          ] Signature.involution_gives_dne
+    [PROVED · GENERAL          ] Signature.ztl_not_involutive
+    [PROVED · CONCRETE_CELL    ] Signature.ztl_dne_witness
+    [PROVED · EXISTENCE_WITNESS] Signature.ztl_breaks_dne
+    [PROVED · GENERAL          ] Signature.signature
 
 ## ZEq.lean
-    [WITNESS   ] ZEq.refl_ground
-    [WITNESS   ] ZEq.refl_marked
-    [WITNESS   ] ZEq.refl_not_free
-    [WITNESS   ] ZEq.eq_forces_same
-    [WITNESS   ] ZEq.leibniz_congr
-    [WITNESS   ] ZEq.no_laundering
-    [WITNESS   ] ZEq.symm_rule
-    [WITNESS   ] ZEq.trans_rule
-    [WITNESS   ] ZEq.symm_law_falls
+    [PROVED · BOUNDED_MODEL    ] ZEq.refl_ground
+    [PROVED · BOUNDED_MODEL    ] ZEq.refl_marked
+    [PROVED · BOUNDED_MODEL    ] ZEq.refl_not_free
+    [PROVED · BOUNDED_MODEL    ] ZEq.eq_forces_same
+    [PROVED · BOUNDED_MODEL    ] ZEq.leibniz_congr
+    [PROVED · BOUNDED_MODEL    ] ZEq.no_laundering
+    [PROVED · BOUNDED_MODEL    ] ZEq.symm_rule
+    [PROVED · BOUNDED_MODEL    ] ZEq.trans_rule
+    [PROVED · BOUNDED_MODEL    ] ZEq.symm_law_falls
 
 ## ZDesc.lean
-    [WITNESS   ] ZDesc.exists_is_self_identity
-    [WITNESS   ] ZDesc.grounded_exists
-    [WITNESS   ] ZDesc.nonexist_marked
-    [WITNESS   ] ZDesc.iota_unique_denotes
-    [WITNESS   ] ZDesc.iota_empty_marked
-    [WITNESS   ] ZDesc.iota_multiple_marked
-    [WITNESS   ] ZDesc.lem_fails_nondenoting
-    [WITNESS   ] ZDesc.mark_evaporates_in_compound
+    [PROVED · BOUNDED_MODEL    ] ZDesc.exists_is_self_identity
+    [PROVED · BOUNDED_MODEL    ] ZDesc.grounded_exists
+    [PROVED · BOUNDED_MODEL    ] ZDesc.nonexist_marked
+    [PROVED · BOUNDED_MODEL    ] ZDesc.iota_unique_denotes
+    [PROVED · BOUNDED_MODEL    ] ZDesc.iota_empty_marked
+    [PROVED · BOUNDED_MODEL    ] ZDesc.iota_multiple_marked
+    [PROVED · BOUNDED_MODEL    ] ZDesc.lem_fails_nondenoting
+    [PROVED · BOUNDED_MODEL    ] ZDesc.mark_evaporates_in_compound
 
 ## ZEps.lean
-    [WITNESS   ] ZEps.eps_denotes_iff_exists
-    [WITNESS   ] ZEps.eps_empty_marked
-    [WITNESS   ] ZEps.eps_witness_denotes
-    [WITNESS   ] ZEps.iota_eps_split
-    [WITNESS   ] ZEps.eps_axiom_instance
+    [PROVED · BOUNDED_MODEL    ] ZEps.eps_denotes_iff_exists
+    [PROVED · BOUNDED_MODEL    ] ZEps.eps_empty_marked
+    [PROVED · BOUNDED_MODEL    ] ZEps.eps_witness_denotes
+    [PROVED · BOUNDED_MODEL    ] ZEps.iota_eps_split
+    [PROVED · BOUNDED_MODEL    ] ZEps.eps_axiom_instance
 
 ==================================================================
-2. MEASURED-WITH-CEILING — the Python stands (NOT Lean theorems)
+2. evidence_status = MEASURED_WITH_CEILING · proof_scope = POOL_BOUNDED  (Python stands, not Lean theorems)
 ==================================================================
-    [entailment.py / audit.py]  the 12 alive / 14 fallen laws and rules — measured on the connective tables and the entailment pool
-    [zverify.py]  the runtime grade classifier (until / sound / hereditary) and its separation — pool-level; the hereditary-checkable-at-depth-1 hypothesis FELL (2-move counterexample)
+    [entailment.py / audit.py]  the 12 alive / 14 fallen laws and rules, measured on the connective tables and the entailment pool
+    [zverify.py]  the runtime grade classifier (until / sound / hereditary) and its separation; the depth-1-checkability hypothesis FELL (2-move counterexample)
     [zipc.py / pssl/*]  ZTL vs IPC and the matrix neighbours — incomparable, witnesses exhibited; depth-2 pool
-    [zsequent.py / zalgebra.py]  cut admissibility and interpolation as run over pools (the Lean-proved cores are separate, PROVED)
-    [pengine.py]  the paradox containment sweep — 9015 nets, grounded ⊊ categorical, 1068 cautious-Z witnesses
-    [ztime.py (runtime)]  observed U/S/H transitions and pool coverage — the STRUCTURE is PROVED in ZTime.lean; only the classifier behaviour and coverage are measured
+    [pengine.py]  the paradox containment sweep — 9015 nets, grounded ⊊ categorical, 1068 cautious-Z
+    [ztime.py (runtime)]  observed U/S/H transitions and pool coverage — the STRUCTURE is PROVED/GENERAL in ZTime.lean; only the classifier behaviour and coverage are measured
 
 ==================================================================
-3. INTERPRETIVE-INVARIANT — §10 interface reading rules (NOT Lean theorems)
+3. evidence_status = INTERPRETIVE_INVARIANT · proof_scope = INTERFACE_NORMATIVE  (§10, not Lean theorems)
 ==================================================================
     - a formula verdict is NOT the state of an external object
     - a formula F is NOT a grounded negative fact about the world
@@ -451,5 +460,5 @@ ZTL — evidence-status map (first cut, Miteiko's four-level taxonomy)
     - the passport register reads ONE WAY, physical → operational (§10)
 
 ==================================================================
-first-cut tally of Lean theorems: 280 PROVED (universal over the semantics), 91 PROVED-BOUNDED-WITNESS (∃-witness / fixed model / concrete cell or construction).
-All are on the empty axiom list. The PROVED / BOUNDED split is by UNIVERSALITY, not importance: an anchor cell (¬Z=F) is foundational yet bounded. Heuristic first cut — the status of each SELECTED element is confirmed in the semantic-review package.
+proof_scope tally over 371 PROVED Lean declarations: 285 GENERAL, 45 BOUNDED_MODEL, 2 EXISTENCE_WITNESS, 39 CONCRETE_CELL.
+Heuristic first cut (syntactic scan); the scope of each SELECTED element is confirmed by semantic review.

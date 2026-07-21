@@ -44,6 +44,8 @@ STANDS = [
                         "the empty choice is the mark"]),
     ("zpassport.py",   ["✓ STIPULATION THEOREM: total",
                         "parity cross-check: 62 of 62 ✓"]),
+    ("ztltool.py",     ["ZTLTOOL GREEN", "over an unchanged core",
+                        "a mark reached the join"]),
     ("zparadox.py", ["E28 GREEN", "PARADOX (0 tables)",
                      "strong liar", "INTRINSIC"]),
     ("bridge.py",      ["ALL ANSWERS COINCIDE"]),

@@ -1,0 +1,269 @@
+# -*- coding: utf-8 -*-
+"""
+ztltool — a closed, abstract tool over the unchanged ZTL core.
+
+Not the studio (no web, no NL, no service): a self-contained instrument
+that lives in the repository, that a fork downloads and runs for itself.
+It does not touch the core — it only reads a formula, formalizes it, passes
+it through the kernel (`ztl.ev`, `zverify.grade`), and reports what
+happened. Deliberately abstract: no Veraxis, no certificates, no
+institutional apparatus — those are specialised elsewhere, on top of this.
+
+Three operations, and they are STEPWISE, not a batch pipeline. You hand it
+one formula and it is checked; you hand it a second and it is checked; you
+hand it both and an operator, and they are glued:
+
+    check(text, marking)                 → what happened to this claim
+    check(other, marking)                → what happened to that one
+    join(text, other, operator, marking) → glue the two by the operator
+
+"Formalize" here means parse a formula written in plain symbols
+(~ ∧→&, | ∨, -> →, ^ ⊕, = ↔, parentheses) into the kernel's own form; the
+kernel is unchanged and does the judging. A marking says which atoms are
+verified (T/F) and which are not (Z, the default) — truth is never granted
+on credit, so an unverified atom stays a mark.
+
+Run:  python3 ztltool.py                 (a worked stepwise session)
+      python3 ztltool.py -i              (interactive: check / join / mark)
+"""
+import os
+import sys
+
+_HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, _HERE)
+
+from ztl import T, F, Z, VALUES, NOT, AND, OR, IMP, XOR, XNOR, ev  # noqa: E402
+from zverify import grade                                          # noqa: E402
+
+# ---- the operators a join may glue by (the kernel's own connectives) -------
+BINOPS = {"∧": AND, "&": AND, "∨": OR, "|": OR, "→": IMP, "->": IMP,
+          "⊕": XOR, "^": XOR, "↔": XNOR, "=": XNOR}
+_OP_NAME = {"∧": "∧", "&": "∧", "∨": "∨", "|": "∨", "→": "→", "->": "→",
+            "⊕": "⊕", "^": "⊕", "↔": "↔", "=": "↔"}
+
+
+# --------------------------------------------------------------- formalize
+def _tokens(s):
+    out, i = [], 0
+    two = {"->"}
+    while i < len(s):
+        c = s[i]
+        if c.isspace():
+            i += 1
+        elif s[i:i + 2] in two:
+            out.append(s[i:i + 2]); i += 2
+        elif c in "()~&|^=∧∨¬→⊕↔":
+            out.append("¬" if c == "~" else c); i += 1
+        elif c.isalnum() or c == "_":
+            j = i
+            while j < len(s) and (s[j].isalnum() or s[j] == "_"):
+                j += 1
+            out.append(s[i:j]); i = j
+        else:
+            raise ValueError(f"stray character {c!r}")
+    return out
+
+
+_BIN = {"&": "and", "∧": "and", "|": "or", "∨": "or", "->": "imp",
+        "→": "imp", "^": "xor", "⊕": "xor", "=": "xnor", "↔": "xnor"}
+_PREC = {"xnor": 1, "imp": 2, "xor": 3, "or": 4, "and": 5}
+
+
+def formalize(text):
+    """Parse a plainly-written formula into the kernel's AST. This is the
+    'formalize' step; the kernel does the rest, unchanged."""
+    toks = _tokens(text)
+    pos = [0]
+
+    def peek():
+        return toks[pos[0]] if pos[0] < len(toks) else None
+
+    def eat():
+        t = toks[pos[0]]; pos[0] += 1; return t
+
+    def atom():
+        t = peek()
+        if t == "(":
+            eat(); e = expr(0)
+            if peek() != ")":
+                raise ValueError("missing )")
+            eat(); return e
+        if t in ("¬", "~"):
+            eat(); return ("not", atom())
+        if t is None or t in _BIN or t == ")":
+            raise ValueError("expected a formula")
+        return eat()
+
+    def expr(minp):
+        left = atom()
+        while True:
+            t = peek()
+            if t in _BIN and _PREC[_BIN[t]] >= minp:
+                op = _BIN[eat()]
+                right = expr(_PREC[op] + 1)
+                left = (op, left, right)
+            else:
+                return left
+
+    e = expr(0)
+    if pos[0] != len(toks):
+        raise ValueError("trailing input")
+    return e
+
+
+def _atoms(phi, acc=None):
+    acc = set() if acc is None else acc
+    if isinstance(phi, str):
+        if phi not in VALUES:
+            acc.add(phi)
+    else:
+        for s in phi[1:]:
+            _atoms(s, acc)
+    return acc
+
+
+def _show(phi):
+    if isinstance(phi, str):
+        return phi
+    if phi[0] == "not":
+        return "¬" + _show(phi[1])
+    sign = {"and": "∧", "or": "∨", "imp": "→", "xor": "⊕", "xnor": "↔"}[phi[0]]
+    return f"({_show(phi[1])} {sign} {_show(phi[2])})"
+
+
+def _full(phi, marking):
+    """Every atom gets a value; anything unspecified is Z (default deny of
+    trust — never on credit)."""
+    m = {a: Z for a in _atoms(phi)}
+    m.update({k: v for k, v in (marking or {}).items()})
+    return m
+
+
+# ------------------------------------------------------------------- report
+def _happened(phi, m):
+    """What the kernel did with one claim, as a dict."""
+    v = ev(phi, m)
+    g = grade(phi, m)
+    unver = sorted(a for a in _atoms(phi) if m.get(a, Z) == Z)
+    return {"formula": _show(phi), "verdict": v, "grade": g,
+            "marking": {a: m[a] for a in sorted(_atoms(phi))},
+            "unverified": unver}
+
+
+def check(text, marking=None):
+    """Formalize one formula, pass it through the kernel, report what
+    happened."""
+    phi = formalize(text)
+    return _happened(phi, _full(phi, marking))
+
+
+def join(text_a, text_b, operator, marking=None):
+    """Check both, then glue them by `operator` and report the join."""
+    a, b = formalize(text_a), formalize(text_b)
+    if operator not in BINOPS:
+        return {"status": "REFUSED",
+                "reason": f"{operator!r} is not a connective "
+                          f"({'/'.join(sorted(set(_OP_NAME.values())))})"}
+    m = _full(("and", a, b), marking)          # one shared marking for both
+    ra, rb = _happened(a, m), _happened(b, m)
+    vj = BINOPS[operator](ra["verdict"], rb["verdict"])
+    gj = grade((_BIN[operator], a, b), m)
+    return {"left": ra, "right": rb, "operator": _OP_NAME[operator],
+            "joined_formula": _show((_BIN[operator], a, b)),
+            "verdict": vj, "grade": gj,
+            "glued": vj == T,
+            "reading": _read(_OP_NAME[operator], ra["verdict"],
+                             rb["verdict"], vj)}
+
+
+def _read(op, va, vb, vj):
+    if vj == T:
+        return f"glued: the {op}-claim is earned ({va} {op} {vb} = T)"
+    if Z in (va, vb):
+        return (f"not glued: a mark reached the join ({va} {op} {vb} = {vj}); "
+                f"nothing spoke against, something is unverified")
+    return f"not glued: {va} {op} {vb} = {vj} — the {op}-claim is not met"
+
+
+# ------------------------------------------------------------------- display
+def _print_check(r):
+    print(f"    {r['formula']}   →   {r['verdict']}   ({r['grade']})")
+    print(f"      marking: {r['marking']}"
+          + (f"   unverified: {r['unverified']}" if r['unverified'] else ""))
+
+
+def _print_join(r):
+    if r.get("status") == "REFUSED":
+        print(f"    REFUSED — {r['reason']}"); return
+    print(f"    left  {r['left']['formula']} → {r['left']['verdict']}")
+    print(f"    right {r['right']['formula']} → {r['right']['verdict']}")
+    print(f"    glue by {r['operator']}:  {r['joined_formula']} → "
+          f"{r['verdict']}  ({r['grade']})")
+    print(f"      {r['reading']}")
+
+
+def _repl():
+    print("ztltool — check <formula> [| p=T q=F] · join <A> ~ <B> ~ <op> "
+          "[| marks] · quit")
+    while True:
+        try:
+            line = input("ztl> ").strip()
+        except (EOFError, KeyboardInterrupt):
+            print(); break
+        if not line or line in ("quit", "exit"):
+            break
+        body, _, mtext = line.partition("|")
+        marking = {}
+        for tok in mtext.split():
+            if "=" in tok:
+                k, v = tok.split("=", 1)
+                if v.upper() in VALUES:
+                    marking[k] = v.upper()
+        try:
+            if body.startswith("check "):
+                _print_check(check(body[6:].strip(), marking))
+            elif body.startswith("join "):
+                parts = [p.strip() for p in body[5:].split("~")]
+                if len(parts) != 3:
+                    print("    usage: join <A> ~ <B> ~ <op>")
+                else:
+                    _print_join(join(parts[0], parts[1], parts[2], marking))
+            else:
+                print("    say 'check ...' or 'join A ~ B ~ op'")
+        except ValueError as e:
+            print(f"    formalize error: {e}")
+
+
+# ---------------------------------------------------------------------------
+if __name__ == "__main__":
+    if "-i" in sys.argv:
+        _repl(); sys.exit()
+
+    print("=" * 76)
+    print("ztltool — a closed tool over the ZTL core: check, check, join")
+    print("=" * 76)
+
+    print("\n1. hand it one formula — it is formalized and checked:")
+    _print_check(check("p -> q", {"p": T, "q": T}))
+
+    print("\n2. hand it a second — checked on its own:")
+    _print_check(check("~r", {"r": F}))
+
+    print("\n3. hand it both and an operator — glued, with a report:")
+    _print_join(join("p -> q", "~r", "∧", {"p": T, "q": T, "r": F}))
+
+    print("\n4. one ground left unverified — the mark reaches the join:")
+    _print_join(join("p", "q", "∧", {"p": T}))                 # q left Z
+
+    print("\n5. the same two, a different operator — glued this time:")
+    _print_join(join("p", "q", "∨", {"p": T}))                 # q left Z
+
+    # honest self-check on the worked cases
+    assert check("p -> q", {"p": T, "q": T})["verdict"] == T
+    assert check("~r", {"r": F})["verdict"] == T
+    assert join("p -> q", "~r", "∧", {"p": T, "q": T, "r": F})["glued"]
+    _mark = join("p", "q", "∧", {"p": T})                       # q = Z
+    assert _mark["right"]["verdict"] == Z and not _mark["glued"]
+    assert join("p", "q", "∨", {"p": T})["verdict"] == T        # ∨ needs one
+    print("\n  ZTLTOOL GREEN — formalize · check · check · join, over an "
+          "unchanged core.")

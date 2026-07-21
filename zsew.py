@@ -67,6 +67,7 @@ Run:  python3 zsew.py
 """
 from zmodal import ztl_eval
 from zverify import grade, refinements
+from entailment import entails
 
 T, F, MARK = "T", "F", "M"
 
@@ -76,10 +77,16 @@ class Seam:
     and the leaves it was made from — because a seam that cannot say
     what it rests on cannot be told where it came apart."""
 
-    def __init__(self, formula, marking, parts=()):
+    def __init__(self, formula, marking, parts=(), direction=None):
         self.formula = formula
         self.marking = dict(marking)
         self.parts = tuple(parts)
+        # A⊢B / B⊢A / A≡B — WHICH side carries which, set at the join.
+        # Checks (↔, ∧) decide whether to sew; the implication decides the
+        # STRUCTURE of the sewn thing, and that structure is transitive
+        # across further seams (measured: 0 violations), which is the
+        # whole point of recording it — the next seam inherits it.
+        self.direction = direction
 
     @property
     def verdict(self):
@@ -100,7 +107,8 @@ class Seam:
         return self.grade == "hereditary"
 
     def __repr__(self):
-        return f"Seam({_show(self.formula)} = {self.verdict}/{self.grade})"
+        d = f", {self.direction}" if self.direction else ""
+        return f"Seam({_show(self.formula)} = {self.verdict}/{self.grade}{d})"
 
 
 def _atoms(phi, acc=None):
@@ -150,22 +158,42 @@ def sew(a, b):
     for k in a.marking.keys() & b.marking.keys():
         merged[k] = (a.marking[k] if a.marking[k] != MARK else b.marking[k])
 
-    # 2. TWO GATES, not one — the curator's fix for the review bug, 2026-07-21.
-    #    ↔ asks CONCORDANCE: do the verdicts fail to conflict? (correctness)
-    #    ∧ asks CONSISTENCY: is the joint claim actually EARNED by both?
-    #    A seam is legal iff it passes BOTH. The old single ↔ gate sewed
-    #    ¬p to ¬q — both F by default deny — because verdict equality is
-    #    not agreement (zsew_attack.py #1). The ∧ gate refuses it: Z∧Z = F,
-    #    so a join with no ground under it cannot survive conjunction. ↔
-    #    catches disagreement; ∧ catches emptiness. Neither alone is enough.
+    # 2. TWO CHECKS decide WHETHER to sew; the IMPLICATION records WHAT
+    #    was sewn — cause and effect (curator, 2026-07-21).
+    #
+    #    ↔ (xnor)  CONCORDANCE  — do the verdicts fail to conflict?
+    #    ∧ (and)   CONSISTENCY  — is the joint claim EARNED by both?
+    #    A seam is legal iff it passes BOTH. ↔ catches disagreement; ∧
+    #    catches emptiness (¬p ∧ ¬q = F: two claims F by default deny have
+    #    no ground to stand a conjunction on — zsew_attack.py #1). Neither
+    #    alone is enough, and implication is not a legality gate: F→F = T,
+    #    so an implication gate would revive the very bug ∧ closes.
+    #
+    #    ⊨ (entails) DIRECTION — on a LEGAL seam, which side ENTAILS which.
+    #    A⊢B means B follows from A under every marking (not just this one:
+    #    verdict-level imp degenerates to A≡B on legal seams, since both are
+    #    T). Recorded, not gated, and transitive across seams (0 of 340),
+    #    so a chain of causal seams keeps its direction without re-deriving.
     agree = ("xnor", a.formula, b.formula)
     differ = ("xor", a.formula, b.formula)
     joint = ("and", a.formula, b.formula)
     ch = (ztl_eval(agree, merged), ztl_eval(differ, merged))
     survives_and = ztl_eval(joint, merged) == T
 
+    # DIRECTION by ENTAILMENT, not by imp-under-this-marking. On a legal
+    # seam both sides are T (the ∧ gate), so verdict-level imp is always
+    # T→T and degenerates to A≡B — it would record nothing. Entailment
+    # A ⊨ B (B follows from A under EVERY marking) is marking-independent,
+    # so it is real causal structure: p ⊢ p∨q, p∧q ⊢ p. And it is
+    # transitive across seams (measured, 0 of 340), which is why the
+    # structure survives further sewing.
+    ab = entails([a.formula], b.formula) is None
+    ba = entails([b.formula], a.formula) is None
+    direction = ("A≡B" if ab and ba else "A⊢B" if ab
+                 else "B⊢A" if ba else "—")
+
     if ch == (T, F) and survives_and:
-        return "SEWN", Seam(joint, merged, parts=(a, b))
+        return "SEWN", Seam(joint, merged, parts=(a, b), direction=direction)
     if ch == (T, F) and not survives_and:
         return "CANNOT", {
             "where": "no ground under the agreement",

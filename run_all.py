@@ -38,6 +38,8 @@ STANDS = [
                         "parity cross-check: 62 of 62 ✓"]),
     ("zsew.py", ["E29 GREEN", "hereditary ⊗ hereditary stays hereditary: 324 of 324",
                  "UNPICKED", "CANNOT"]),
+    ("zsew_direction.py", ["DIRECTION GREEN",
+                           "A⊨B and B⊨C ⟹ A⊨C : checked 340, violations 0"]),
     ("zsew_attack.py", ["ATTACK GREEN", "LEGAL SEWING MUST SURVIVE ∧",
                         "healed by the ∧ gate (its ONLY effect): 1"]),
     ("zparadox.py", ["E28 GREEN", "PARADOX (0 tables)",
@@ -124,20 +126,35 @@ STANDS = [
 ]
 
 
+def _run_one(item):
+    script, markers = item
+    r = subprocess.run([sys.executable, script],
+                       capture_output=True, text=True, timeout=300)
+    missing = [m for m in markers if m not in r.stdout]
+    ok = r.returncode == 0 and not missing
+    return script, ok, missing, r.returncode
+
+
 def main():
     failures = []
-    for script, markers in STANDS:
-        r = subprocess.run([sys.executable, script],
-                           capture_output=True, text=True, timeout=300)
-        missing = [m for m in markers if m not in r.stdout]
-        status = "OK " if r.returncode == 0 and not missing else "FAIL"
+    # Stands are independent processes; run them on a pool. Kept
+    # deterministic in REPORTING order (STANDS order), not completion
+    # order, so the output reads the same as the sequential runner.
+    from concurrent.futures import ThreadPoolExecutor
+    workers = min(30, len(STANDS))
+    with ThreadPoolExecutor(max_workers=workers) as pool:
+        results = {script: (ok, missing, rc)
+                   for script, ok, missing, rc in pool.map(_run_one, STANDS)}
+    for script, _markers in STANDS:
+        ok, missing, rc = results[script]
+        status = "OK " if ok else "FAIL"
         print(f"  [{status}] {script}"
               + (f"  — missing markers: {missing}" if missing else "")
-              + (f"  — exit code {r.returncode}" if r.returncode else ""))
-        if status == "FAIL":
+              + (f"  — exit code {rc}" if rc else ""))
+        if not ok:
             failures.append(script)
 
-    print("  [....] lean: lake build ...")
+    print(f"  [....] lean: lake build ...  ({workers} stands ran in parallel)")
     r = subprocess.run(["lake", "build"], cwd="lean",
                        capture_output=True, text=True, timeout=900)
     lean_ok = r.returncode == 0 and \

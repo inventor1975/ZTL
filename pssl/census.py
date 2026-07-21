@@ -133,6 +133,17 @@ def keeps_mp(tbl, D):
                and ev(("imp", "p", "q"), a, tbl) in D)
 
 
+def _fingerprint_chunk(chunk):
+    """Worker: fingerprint + MP for a chunk of matrices. Returns
+    (list of (fingerprint, keeps_mp)). Pure function of its input, so the
+    numbers are identical to the sequential loop — only the compute is
+    spread over cores. The matrices are drawn sequentially in the parent
+    (preserving the RNG stream), so parallelising here changes nothing
+    measurable, only the wall clock."""
+    return [(fingerprint_matrix(tbl, D), keeps_mp(tbl, D))
+            for tbl, D in chunk]
+
+
 if __name__ == "__main__":
     N = int(sys.argv[1]) if len(sys.argv) > 1 else 200000
     print("=" * 74)
@@ -165,13 +176,28 @@ if __name__ == "__main__":
     print("     and the blocks are exactly leg 3's, so hits are reported")
     print("     per BLOCK, which is all this fingerprint can resolve)")
 
+    # Draw all matrices sequentially — this keeps the RNG stream exactly
+    # as the old loop, so every number below is byte-identical; only the
+    # expensive fingerprinting is spread over cores.
     rnd = random.Random(SEED)
+    mats = [random_matrix(rnd) for _ in range(N)]
+
+    from concurrent.futures import ProcessPoolExecutor
+    workers = min(os.cpu_count() or 1, 32)
+    chunk = max(1, (N + workers - 1) // workers)
+    chunks = [mats[i:i + chunk] for i in range(0, N, chunk)]
+    computed = []
+    try:
+        with ProcessPoolExecutor(max_workers=workers) as pool:
+            for part in pool.map(_fingerprint_chunk, chunks):
+                computed.extend(part)
+    except Exception:                       # any pool failure → sequential
+        computed = [(fingerprint_matrix(t, D), keeps_mp(t, D))
+                    for t, D in mats]
+
     hits, seen_new, mp_hits, mp_new = {}, {}, {}, {}
     mp_total = 0
-    for _ in range(N):
-        tbl, D = random_matrix(rnd)
-        fp = fingerprint_matrix(tbl, D)
-        mp = keeps_mp(tbl, D)
+    for fp, mp in computed:
         mp_total += mp
         if fp in ours:
             hits[label[fp]] = hits.get(label[fp], 0) + 1

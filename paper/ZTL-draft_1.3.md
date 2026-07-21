@@ -10,7 +10,12 @@ truth value is Suszko's Thesis taken as architecture rather than
 recovered by reduction, with the discriminator measured; the signature
 result (§4) — the single rule ¬¬p ⊨ p separates ZTL from every
 three-valued matrix neighbour, its cause proved in `lean/Signature.lean`
-on the empty axiom list. v1.2 added: the central construction named — the zero-trust lift (§2);
+on the empty axiom list; **first-order identity** (§24, `ZEq.lean`) — a
+`=` predicate whose reflexivity and Leibniz's law are earned verdicts,
+falling on unverified references; and **free logic with definite
+descriptions** (§25, `ZDesc.lean`) — a non-denoting term takes the mark
+(existence = earned self-identity), diverging from every prior free logic
+(excluded middle is F, not super-true). v1.2 added: the central construction named — the zero-trust lift (§2);
 §3.8, an explicit Lean-verified census of the sixteen lifted binary
 connectives — re-deriving Finn's external-Bochvar completeness landscape
 (Finn 1974): solo-completeness tracks non-commutative directionality (Sheffer's
@@ -63,7 +68,12 @@ detectors, the external layer is expressively complete, a definable
 external implication restores the full deduction theorem, Craig
 interpolation holds, and the Blok–Pigozzi conditions are verified on
 the matrix — ZTL is algebraizable, yet not self-extensional);
-quantifiers; a modal identification (local
+quantifiers, first-order identity (a `=` predicate whose reflexivity and
+Leibniz's law are earned verdicts — self-identity falls to Z on an
+unverified reference) and free logic with definite descriptions (a
+non-denoting term takes the mark, not F and not a gap; existence is
+earned self-identity, and excluded middle on it is F rather than the
+supervaluational super-true); a modal identification (local
 modality over the S5 frame of completions — versus global
 supervaluation); a probabilistic identification (verdicts are the
 {0,1}-threshold of Dempster–Shafer belief functions); a theory of
@@ -136,7 +146,7 @@ those six correspondences to a common denominator — a two-valued logic
 over marked inputs with a single generating principle. The claim
 ceiling, stated here rather than left to the reader: a reproduced case
 is not an embedding. We do not formalise any tradition's own semantics
-and prove a fragment map into ZTL; that remains open (§25), and one such
+and prove a fragment map into ZTL; that remains open (§27), and one such
 theorem would carry this section far better than six demonstrations do.
 What is shown without qualification is that the denominator survives a
 full logical development: a calculus, quantifiers, modal and
@@ -1223,10 +1233,10 @@ a growing pedigree (f(m) is a new mark "f applied to m"). Measured:
   |f({1,2,3,Z})| ∈ [2,3].
 * **Composition:** taint is transitive (pedigree g(f(m))); the image is
   associative at representation level while verdict-equality is F
-  (regularity R1, §24).
+  (regularity R1, §26).
 * **The preimage splits** into a verdict version (marks dropped —
   default deny) and a solver version (marks as candidates) —
-  regularity R2 (§24).
+  regularity R2 (§26).
 * **The pearl: even the identity function is not certifiably injective
   on a marked domain** — pairs with a mark give Z-atoms, the
   implication Z→Z = F, the ∀-fold collapses. An injectivity certificate
@@ -1263,7 +1273,7 @@ forced under all readings; F if falsehood is forced; else Z**. Measured:
   the monotonicity of the lazy register, now in numbers.
 * **Price-list inheritance:** commutativity of addition survives at the
   interval level, verdict-equality is Z→F; the unit x+0=x falls
-  verdict-wise with coinciding intervals (regularity R1, §24).
+  verdict-wise with coinciding intervals (regularity R1, §26).
 
 **The fourth twin: abstract interpretation** (Cousot & Cousot, 1977) —
 interval value analysis (lazy flow of abstract values through
@@ -1628,7 +1638,118 @@ entailment even on the small pool ({p}: 24 entailed, 15 derivable) —
 part pool-boundedness, part missing law-rewrite links, part genuine;
 the split needs a bigger pool, not a claim.
 
-## 24. Cross-cutting regularities
+## 24. Identity: a `=` predicate on credit (MEASURED + Lean)
+
+The first-order layer of §6 had quantifiers but no identity. We add it,
+and the zero-trust principle turns the classical axioms of identity —
+reflexivity and Leibniz's substitutivity — from free laws into *earned
+verdicts*. The reading is the native one: a domain individual is a
+*reference*, and a **marked** individual is one whose reference is not yet
+verified — the individual-level face of Z (§10), a null pointer, an
+unresolved description, `1/0`. Equality inherits the mark:
+
+    Eq(a, b) = T   if a, b are grounded and denote the same object,
+             = F   if a, b are grounded and denote different objects,
+             = Z   if a or b is a marked (unverified) reference.
+
+Four facts, all measured total in `zeq.py` over a domain of grounded and
+marked individuals, and all promoted to Lean (`ZEq.lean`, nine theorems,
+**empty axiom list**).
+
+- **Reflexivity is earned.** `Eq(a,a)` is T for a grounded reference but
+  **Z** for a marked one — self-identity is not free; an unverified
+  reference is not even certified equal to itself. This is the applied
+  regularity R3 (§26), *identity is not earned*, now made a predicate: it
+  is the same phenomenon as the uncertified `id` on a marked argument
+  (§14), the non-registrable stream `x ≠ x` (§13), and `1/0 = 1/0 → Z`
+  (§15). Reflexivity is therefore *not a law* (`refl_not_free`), the exact
+  identity analogue of the fallen `¬¬p = p`.
+
+- **The rule/law split (§3.2), on identity.** Symmetry holds as a rule
+  (`Eq(a,b) ⊨ Eq(b,a)`, no violations) but the biconditional *law*
+  `Eq(a,b) ↔ Eq(b,a)` fails wherever the equality is Z — because `↔` over
+  Z is F (quarantine is detectable, `↔(Z,Z)=F`). Transitivity holds as a
+  rule.
+
+- **Leibniz substitutivity survives as a rule — salva veritate, not salva
+  Z.** `Eq(a,b) ⊨ P(a) ↔ P(b)` for every generic predicate P (zero
+  violations of the licensed substitutions): an earned equality means the
+  two references are literally the same object (`eq_forces_same`), so
+  substitution is congruence (`leibniz_congr` is a one-line `congrArg`).
+  Where a reference is unverified the equality is never T, so the
+  substitution is simply never licensed — you cannot launder a mark
+  through identity (`no_laundering`).
+
+- **Identity of indiscernibles fails on the mark.** Two distinct marked
+  references are indiscernible — Z under every generic predicate — yet
+  `Eq(m₁,m₂) = Z`, not T. Unverified references are not made equal by the
+  mere absence of a distinguishing predicate.
+
+So ZTL keeps the *consequence relation* of classical identity (Leibniz,
+symmetry, transitivity as rules) and loses exactly the free half —
+reflexivity-on-credit and indiscernibility-on-credit — by the same coin as
+everywhere else. And the marked individual is the seed of the next
+section: a non-denoting term is an unverified reference.
+
+## 25. Free logic and definite descriptions: the mark as non-denotation (MEASURED + Lean)
+
+Classical logic assumes every singular term denotes; *free logic* drops
+that assumption. Its schools disagree on what an atomic statement about a
+non-denoting term is worth — negative free logic says **false**, positive
+says some are **true**, supervaluational leaves a **gap** (but keeps
+excluded middle super-true). ZTL gives a fourth answer that no prior
+school gives, and it is the answer the whole system was built to give: the
+**mark**. A non-denoting term makes the atom **Z**, and the greedy lift
+propagates it. Z was always the value of "unverified until verification"; a
+description not shown to denote is precisely that.
+
+The spine is a bridge back to §24, and it is Quine's *"no entity without
+identity"* made literal:
+
+        E!(t)  :=  Eq(t, t)          — existence *is* earned self-identity.
+
+A grounded reference is equal to itself, so it exists (E! = T); an
+unresolved reference is not, so E! = Z. ZTL therefore never *asserts*
+non-existence (a free F); it **marks** it. A definite description
+`ιx.φ(x)` — "the x such that φ" — denotes the unique grounded satisfier of
+φ, uniqueness decided by the `=` of §24; with zero or several satisfiers
+it is a marked reference. This is Russell's uniqueness, but failure lands
+on the mark, not on falsity.
+
+Measured in `zdesc.py`, with the first-order core in Lean (`ZDesc.lean`,
+eight theorems, **empty axiom list**):
+
+- **The sharp divergence: excluded middle.** For a non-denoting atom,
+  `P(τ) ∨ ¬P(τ) = F` in ZTL, whereas supervaluational free logic makes it
+  *super-true*. ZTL marks the gap rather than completing it; the mark is
+  not a value, so the middle is not excluded (`lem_fails_nondenoting`).
+- **Divergence from Russell.** "The present king of France is bald" is
+  **F** on Russell's `∃x(Kx ∧ unique ∧ Bx)` and **Z** in ZTL: same
+  sentence, Russell asserts falsity, ZTL refuses the assertion and marks
+  it. (Compare §18, where Russell's *paradox* is contained rather than
+  exploded — the same refusal to assert on unearned ground.)
+- **Greedy propagation.** `P(τ)` alone is Z, but `P(τ) ∨ (guarded
+  tautology)` is T (`mark_evaporates_in_compound`): a non-denoting term
+  poisons only the atom, never a compound.
+- **An internal witness.** `1/0 = ιx.(0·x = 1)` has no grounded x, so it is
+  a marked reference and `1/0 = 1/0` is Z — dead-on with the arithmetic of
+  §15. The construction reaches the same verdict the number line did.
+- **Free universal instantiation.** The classical law `∀xφ ⊨ φ(t)` FAILS
+  for a non-denoting t (`∀xφ` is T over what exists, `φ(τ)` is Z, and
+  `T → Z = F`); the repaired free-logic law `∀xφ, E!t ⊨ φ(t)` holds, with
+  existence the earned self-identity of the spine. Quantifiers range over
+  what exists.
+
+The nearest ancestor is Kleene's partial logic (an undefined term takes
+the third value, motivated by partial recursive functions); ZTL's delta is
+that the mark is **greedy**, so a non-denoting term inside a
+tautology-shaped compound still collapses to a verdict rather than staying
+undefined. *Honest caveat:* the identity-of-indiscernibles failure and the
+free instantiation law are measured on finite domains; the `ι` operator,
+the existence bridge, and the excluded-middle divergence are in Lean on
+the empty axiom list.
+
+## 26. Cross-cutting regularities
 
 Three facts recurred in every applied chapter; we fix them once.
 
@@ -1650,7 +1771,7 @@ diverged prefixes); identity is earned by nothing short of full
 verification. Hence in one stroke: {Z,Z} ≠ {Z}, m−m ≠ 0, the
 non-registrability of streams (§13), and the NaN signature x ≠ x.
 
-## 25. Roadmap
+## 27. Roadmap
 
 A Lean port of the parameter (arbitrary-domain) tableaux of §6; a
 syntactic cut-elimination procedure with complexity bounds

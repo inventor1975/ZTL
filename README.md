@@ -67,8 +67,10 @@ verdicts with warranties, quarantine passports, stipulation options.
 without GROQ_API_KEY it runs in pro mode — write ZFL by hand).
 
 The specification and all design decisions are in `SPEC.md`; the
-preprint is `paper/ZTL-draft.md` — **published on Zenodo, latest v1.1
-(§19 corrected: the warranty is a two-grade ladder); concept DOI
+preprint is `paper/ZTL-draft_1.3.md` (v1.3 is a working draft) —
+**published on Zenodo, latest v1.2
+([10.5281/zenodo.21440066](https://doi.org/10.5281/zenodo.21440066));
+concept DOI
 [10.5281/zenodo.21318981](https://doi.org/10.5281/zenodo.21318981)
 always resolves to the latest version** (v1.0:
 [10.5281/zenodo.21318982](https://doi.org/10.5281/zenodo.21318982);

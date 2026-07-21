@@ -4,7 +4,7 @@ ZTL — Zero-Trust Logic.
 
 Truth values: T (truth), F (falsehood) — verdicts are always two-valued.
 Input mark: Z (zero-trust: "truth not earned") — the third symbol of the
-calculating tables, not a value (passport: paper/ZTL-draft.md §10).
+calculating tables, not a value (passport: paper/ZTL-draft_1.3.md §10).
 
 Generating principle (one for all connectives):
     op(...Z...) = AND over all classical substitutions {T,F} for Z,

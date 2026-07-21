@@ -111,24 +111,24 @@ if __name__ == "__main__":
     print("=" * 78)
 
     # --- 1. the ZTL preprint's corpus figures ---------------------------
-    print("\n### ZTL preprint (paper/ZTL-draft.md)")
+    print("\n### ZTL preprint (paper/ZTL-draft_1.3.md)")
     thms, mods = corpus_totals()
-    d = text("paper/ZTL-draft.md")
+    d = text("paper/ZTL-draft_1.3.md")
     for claimed in set(re.findall(r"(\d+) theorems", d)):
-        check("theorems in the corpus", claimed, str(thms), "ZTL-draft.md")
+        check("theorems in the corpus", claimed, str(thms), "ZTL-draft_1.3.md")
     words = set(re.findall(r"(\w+) modules in all|(\w+) modules", d))
     for w in {a or b for a, b in words}:
         if w.lower() in WORDS:
             check(f"modules ('{w}')", str(WORDS[w.lower()]), str(mods),
-                  "ZTL-draft.md")
+                  "ZTL-draft_1.3.md")
     for claimed in set(re.findall(r"(\d+) (?:test )?stands", d)):
-        check("test stands", claimed, str(stand_count()), "ZTL-draft.md")
+        check("test stands", claimed, str(stand_count()), "ZTL-draft_1.3.md")
     lake = subprocess.run(["lake", "build"], cwd=_LEAN, capture_output=True,
                           text=True, timeout=1800)
     prints = (lake.stdout + lake.stderr).count("does not depend on any axioms")
     for claimed in set(re.findall(r"(\d+) hand-placed prints", d)):
         check("hand-placed #print axioms", claimed, str(prints),
-              "ZTL-draft.md")
+              "ZTL-draft_1.3.md")
     ci = text(".github/workflows/lean.yml")
     m = re.search(r'test "\$clean" -ge (\d+)', ci)
     if m:

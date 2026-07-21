@@ -192,7 +192,7 @@ contradiction.
 * `tableau.py` — the calculus: signed tableaux (signs T, F, P={T,Z},
   N={F,Z}); preimage coverage and a check against ⊨ on 2462
   entailments — MEASURED, all coincided. The rules are written out in
-  paper/ZTL-draft.md §5.
+  paper/ZTL-draft_1.3.md §5.
 * `quantifiers.py` — quantifiers on finite domains: ∀/∃ with strict
   witnesses; UI alive as a law, EG only as a rule, ¬∃⊨∀¬ fell (the
   quantifier twin of ¬¬-elimination), the drinker fell. Preprint §6.

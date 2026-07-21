@@ -59,6 +59,28 @@ def _atoms(phi, acc=None):
     return acc
 
 
+def single_gate(A, B):
+    """The OLD join: same ground-clash check as sew(), but ↔ ONLY at the
+    formula level — no ∧ gate. Isolating the ∧ gate means keeping every
+    other check identical, so any difference from sew() is the ∧ gate and
+    nothing else."""
+    clash = {k for k in A.marking.keys() & B.marking.keys()
+             if A.marking[k] != B.marking[k]
+             and M not in (A.marking[k], B.marking[k])}
+    if clash:
+        return "CONTRADICTION"
+    m = {**A.marking, **B.marking}
+    for k in A.marking.keys() & B.marking.keys():
+        m[k] = A.marking[k] if A.marking[k] != M else B.marking[k]
+    x = ztl_eval(("xnor", A.formula, B.formula), m)
+    d = ztl_eval(("xor", A.formula, B.formula), m)
+    if x == T and d == F:
+        return "SEWN"
+    if x == F and d == T:
+        return "CONTRADICTION"
+    return "CANNOT"
+
+
 def jointly_assertable(A, B):
     """Is there a full completion under which BOTH formulas are T? The
     honest notion of 'can coexist', as opposed to 'have equal verdict'."""
@@ -102,33 +124,37 @@ def run():
     print("=" * 78)
     print("  The seam joins over VERDICT EQUALITY. Where that is not the")
     print("  same as agreement, it is caught here.\n")
-    print(f"  {'case':46s}{'seam':15s}{'class':10s}")
-    bugs, missing = [], []
+    print(f"  {'case':46s}{'↔ only (old)':>14s}{'↔ AND ∧ (now)':>16s}   class")
+    bugs, missing, healed = [], [], []
     for label, A, B, klass in CASES:
-        st, _ = sew(A, B)
-        print(f"  {label:46s}{st:15s}{klass}")
+        old = single_gate(A, B)
+        new, _ = sew(A, B)
+        flag = "  ← healed" if old != new else ""
+        print(f"  {label:46s}{old:>14s}{new:>16s}   {klass}{flag}")
         if klass == "BUG":
             bugs.append(label)
         if klass == "MISSING":
             missing.append(label)
+        if old != new:
+            healed.append(label)
 
-    print("\n  The decisive #1, in Arkady's own five distinctions:")
+    print("\n  The decisive #1 — the bug and its cure in one line:")
     A, B = Seam(("not", "p"), {"p": M}), Seam(("not", "q"), {"q": M})
-    st, _ = sew(A, B)
     m = {**A.marking, **B.marking}
-    sv = ztl_eval(A.formula, m) == ztl_eval(B.formula, m)
-    print(f"    ¬p vs ¬q     seam: {st}")
-    print(f"      same verdict (what the seam used) : {sv}")
-    print(f"      equivalent claims                 : {A.formula == B.formula}")
-    print(f"      jointly assertable                : {jointly_assertable(A, B)}")
-    print("      → SEWN on 'same verdict' alone; the claims are not")
-    print("        equivalent and agreement was never shown. This is the")
-    print("        bug, and it is the day's shape once more: verdict")
-    print("        equality is a convenient proxy for agreement, and it lies.")
+    print(f"    ¬p vs ¬q :  ↔ = {ztl_eval(('xnor',A.formula,B.formula),m)} "
+          f"(don't conflict)   ∧ = {ztl_eval(('and',A.formula,B.formula),m)} "
+          "(not jointly earned)")
+    print("      ↔ alone sews them — verdict equality read as agreement, the")
+    print("      day's shape once more, and it lies. ∧ refuses them: two")
+    print("      claims F by default deny have no ground to stand a")
+    print("      conjunction on. LEGAL SEWING MUST SURVIVE ∧ (curator).")
 
     print(f"\n{'=' * 78}\nTHE LEDGER\n{'=' * 78}")
-    print(f"  BUG (unsound join)      : {len(bugs)}  — {'; '.join(bugs)}")
-    print(f"  MISSING (needs schema)  : {len(missing)}")
+    print(f"  BUG (unsound join, now healed by ∧) : {len(bugs)}  — "
+          f"{'; '.join(bugs)}")
+    print(f"  healed by the ∧ gate (its ONLY effect): {len(healed)}  — "
+          f"{'; '.join(healed)}")
+    print(f"  MISSING (needs the typed certificate): {len(missing)}")
     print("  These are DIFFERENT: a bug is the join manufacturing a wrong")
     print("  answer; missing capacity is the join lacking the certificate")
     print("  fields (namespace, schema version, derivation) to answer at")
@@ -145,8 +171,15 @@ def run():
     print("  correct join. It cannot catch misaligned atoms, differing")
     print("  schemas, or a contradiction that lives in reality unrepresented.")
 
-    assert bugs, "the seam stopped manufacturing agreement — re-read #1"
-    print("\n  ATTACK GREEN — the failure surface is measured and named.")
+    # the ∧-gate fix (curator, 2026-07-21): #1 must now be refused
+    A1, B1 = Seam(("not", "p"), {"p": M}), Seam(("not", "q"), {"q": M})
+    st1, _ = sew(A1, B1)
+    print(f"\n  AFTER THE ∧-GATE FIX: case #1 (¬p, ¬q) now → {st1}")
+    print("    the two-gate seam (↔ AND ∧) refuses to sew two ungrounded")
+    print("    claims that merely share a verdict. ↔ passes, ∧ = F, so the")
+    print("    seam returns CANNOT — no ground under the agreement.")
+    assert st1 == "CANNOT", f"the ∧ gate did not catch #1: got {st1}"
+    print("\n  ATTACK GREEN — bug measured, then closed by the ∧ gate.")
 
 
 if __name__ == "__main__":

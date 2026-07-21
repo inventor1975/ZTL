@@ -150,13 +150,30 @@ def sew(a, b):
     for k in a.marking.keys() & b.marking.keys():
         merged[k] = (a.marking[k] if a.marking[k] != MARK else b.marking[k])
 
-    # 2. the two channels
+    # 2. TWO GATES, not one — the curator's fix for the review bug, 2026-07-21.
+    #    ↔ asks CONCORDANCE: do the verdicts fail to conflict? (correctness)
+    #    ∧ asks CONSISTENCY: is the joint claim actually EARNED by both?
+    #    A seam is legal iff it passes BOTH. The old single ↔ gate sewed
+    #    ¬p to ¬q — both F by default deny — because verdict equality is
+    #    not agreement (zsew_attack.py #1). The ∧ gate refuses it: Z∧Z = F,
+    #    so a join with no ground under it cannot survive conjunction. ↔
+    #    catches disagreement; ∧ catches emptiness. Neither alone is enough.
     agree = ("xnor", a.formula, b.formula)
     differ = ("xor", a.formula, b.formula)
+    joint = ("and", a.formula, b.formula)
     ch = (ztl_eval(agree, merged), ztl_eval(differ, merged))
+    survives_and = ztl_eval(joint, merged) == T
 
-    if ch == (T, F):
-        return "SEWN", Seam(agree, merged, parts=(a, b))
+    if ch == (T, F) and survives_and:
+        return "SEWN", Seam(joint, merged, parts=(a, b))
+    if ch == (T, F) and not survives_and:
+        return "CANNOT", {
+            "where": "no ground under the agreement",
+            "unverified": sorted(k for k, v in merged.items() if v == MARK),
+            "reading": "the verdicts do not conflict (↔ = T) but the joint "
+                       "claim is not earned by both (∧ ≠ T): agreement by "
+                       "default deny, not by fact. Legal sewing must survive "
+                       "conjunction, and this does not"}
     if ch == (F, T):
         return "CONTRADICTION", {
             "where": "derivation",
@@ -237,33 +254,30 @@ if __name__ == "__main__":
     print(f"\n  after seam 2 verifies p := T, re-sew 1.1 ⊗ 1.2 → {st2}")
     print(f"      {s1v}   final: {s1v.final}")
 
-    print("\n  And the other direction — a seam that HOLDS now and is")
-    print("  unpicked by what arrives later. The shortest such pair in the")
-    print("  depth-2 pool, found by search rather than chosen:")
-    a = Seam(("not", "p"), {"p": MARK, "q": MARK})
-    b = Seam(("not", "q"), {"p": MARK, "q": MARK})
+    print("\n  And the other direction — a seam that passes BOTH gates now")
+    print("  and is unpicked by what arrives later. Found by search, not")
+    print("  chosen: ¬¬p sewn to ¬¬p.")
+    a = Seam(("not", ("not", "p")), {"p": MARK})
+    b = Seam(("not", ("not", "p")), {"p": MARK})
     st3, s3 = sew(a, b)
     print(f"\n    A = {_show(a.formula)}   B = {_show(b.formula)}  → {st3}")
     if st3 == "SEWN":
         print(f"      {s3}   final: {s3.final}")
-        print("      Both sides read F right now — ¬Z = F on each — so the")
-        print("      seam returns SEWN on VERDICT EQUALITY. Arkady (2026-07-21)")
-        print("      showed this is NOT agreement: the two claims are not")
-        print("      equivalent, and equal output symbols are not consensus.")
-        print("      See zsew_attack.py #1 — this SEWN is UNSOUND and stands")
-        print("      as a known bug until the seam joins typed certificates")
-        print("      over a shared namespace rather than bare verdicts.")
+        print("      Both read T right now (¬¬Z = T, the very cell PSSL")
+        print("      discusses), so ↔ = T AND ∧ = T — a legally sewn seam,")
+        print("      not the #1 bug. But it is on credit: grade")
+        print("      until-verification, never final.")
         v0 = s3.verdict
         for m in refinements(s3.marking):
             if ztl_eval(s3.formula, m) != v0:
                 shown = {k: v for k, v in m.items() if v != MARK}
                 print(f"\n      seam 2 arrives and verifies {shown}:")
-                print(f"        A stays {ztl_eval(a.formula, m)}, "
-                      f"B becomes {ztl_eval(b.formula, m)}")
-                print(f"        seam → {ztl_eval(s3.formula, m)}  "
-                      "← UNPICKED, exactly the curator's 1.1-from-1.2")
-                print("        and the warranty said so in advance: the seam")
-                print("        was until-verification, never final.")
+                print(f"        the seam → {ztl_eval(s3.formula, m)}  "
+                      "← UNPICKED, exactly the curator's 1.1-from-1.2.")
+                print("        The warranty said so in advance: a legal seam")
+                print("        that is not hereditary is legitimate AND")
+                print("        revocable, and the unpicking is scheduled, not")
+                print("        an accident.")
                 break
 
     print("\n" + "=" * 76)

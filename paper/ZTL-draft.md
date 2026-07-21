@@ -1,4 +1,4 @@
-# ZTL — Zero-Trust Logic
+# ZTL — Zero-Trust Logic — v1.3 (draft)
 
 **V. Reznik. Preprint, v1.3 (draft) — 2026-07-21. Concept DOI:
 [10.5281/zenodo.21318981](https://doi.org/10.5281/zenodo.21318981)

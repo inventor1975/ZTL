@@ -38,6 +38,8 @@ STANDS = [
                         "parity cross-check: 62 of 62 ✓"]),
     ("zsew.py", ["E29 GREEN", "hereditary ⊗ hereditary stays hereditary: 324 of 324",
                  "UNPICKED", "CANNOT"]),
+    ("zsew_compose.py", ["COMPOSE GREEN", "associativity : holds",
+                         "all-pairs-SEWN yet jointly ≠ T, in the pool : none found"]),
     ("zsew_direction.py", ["DIRECTION GREEN",
                            "A⊨B and B⊨C ⟹ A⊨C : checked 340, violations 0"]),
     ("zsew_attack.py", ["ATTACK GREEN", "LEGAL SEWING MUST SURVIVE ∧",

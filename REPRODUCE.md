@@ -34,6 +34,13 @@ below match exactly. A newer state of the repository will show larger
 counts — that is the corpus growing, not a failure; reproduce this
 commit to match this document.
 
+The web editor may offer a newer Lean than the `v4.29.1` this repository
+pins (pick any version in its dropdown — these files have no imports, so
+they compile against Lean core alone). If it compiles without a red error,
+the `does not depend on any axioms` lines are what matter; that result does
+not hinge on the exact version. To reproduce against the paper's exact
+toolchain instead, use Path B, where `elan` installs `v4.29.1` for you.
+
 1. Open **https://live.lean-lang.org**
 2. Open one of these files on GitHub, click the "copy raw file" button:
    - https://github.com/inventor1975/ZTL/blob/82a0f6ac61e0ddf9a927a70e04a0018989ef316d/lean/ZTL.lean

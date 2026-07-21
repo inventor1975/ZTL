@@ -52,6 +52,8 @@ STANDS = [
                            "A⊨B and B⊨C ⟹ A⊨C : checked 340, violations 0"]),
     ("zsew_attack.py", ["ATTACK GREEN", "LEGAL SEWING MUST SURVIVE ∧",
                         "healed by the ∧ gate (its ONLY effect): 1"]),
+    ("zrubber.py", ["ZRUBBER GREEN", "one engine, sixteen seams",
+                    "∧ is the one zero-trust joiner"]),
     ("zparadox.py", ["E28 GREEN", "PARADOX (0 tables)",
                      "strong liar", "INTRINSIC"]),
     ("bridge.py",      ["ALL ANSWERS COINCIDE"]),

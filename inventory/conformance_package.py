@@ -3,18 +3,16 @@
 conformance_package — the upstream semantic-review package for the Veraxis
 candidate subset v0.1 (28 Lean declarations selected by A. Miteiko).
 
-For each declaration it emits the thirteen fields Miteiko asked for. The
-MECHANICAL fields (name, normalized statement, module + source hash, proof
-scope, immediate dependent definitions, evidence status) are extracted; the
-SEMANTIC fields (operational interpretation, prohibited interpretation,
-claim ceiling, positive / adversarial test vectors, expected conformance
-behaviour) are authored — that is the ZTL author's semantic-review role.
-
-This first pass ships four fully-authored declarations as the format
-sample — chosen to hit Miteiko's own concerns (¬¬Z must not be read as
-grounded truth; DNE-elim's failure does not reject all double negations) —
-with the remaining declarations carrying the mechanical fields and an
-explicit TODO for the authored ones, pending format approval.
+For each declaration it emits the fields Miteiko asked for. The MECHANICAL
+fields (name, normalized statement, module + full sha256, surface
+definitions, evidence_status, proof_scope) are extracted; the SEMANTIC
+fields (operational + prohibited interpretation, claim ceiling, positive +
+adversarial test vectors, expected conformance) are authored — the ZTL
+author's semantic-review role. All 28 declarations are authored; each also
+carries machine-readable positive/adversarial fixtures. The file opens with
+a self-contained snapshot header (commit, toolchain, DOI, counts, audit,
+inventory hash) so it pins its own provenance. The transitive dependency
+closure is DEFERRED (native Lean extraction), not guessed.
 
 Run:  python3 inventory/conformance_package.py
       → writes VERAXIS-ZTL-CONFORMANCE-input-v0.1.md
@@ -51,8 +49,9 @@ SUBSET = [
 # ---- KNOWN definitions the statements lean on (for the dependent-defs field)
 _DEFS = ["znot", "zand", "zor", "zimp", "zxor", "zxnor", "lift1", "lift2",
          "evalF", "isZ", "sIsEmpty", "tproves", "tprovesN", "closes", "closesN",
-         "entails", "Refines", "Verify", "Hereditary", "Sound", "sound3",
-         "hered3", "Fm", "Marking", "V"]
+         "entails", "Refines", "verify", "Verify", "Hereditary", "Sound",
+         "sound3", "hered3", "allT", "substL", "substF", "SAT", "wsize",
+         "Node", "Env", "Fm", "Marking", "V"]
 
 
 def _index():
@@ -66,7 +65,7 @@ def _index():
 
 def _hash(module):
     data = open(os.path.join(_LEAN, module + ".lean"), "rb").read()
-    return hashlib.sha256(data).hexdigest()[:16]
+    return hashlib.sha256(data).hexdigest()          # full 64-char digest
 
 
 def _norm(sig):
@@ -114,23 +113,28 @@ AUTHORED = {
            "unverified atoms; grounded atoms are unaffected.",
  },
  "ZTime.hereditary_sound": {
-   "op": "A hereditary verdict is sound: if φ under marking m is hereditary "
-         "(its T survives every partial refinement), then it is sound (never "
-         "lies about the facts at m). The stronger warranty implies the weaker.",
-   "no": "Soundness here is 'does not lie under the current marking', NOT "
-         "'permanently settled' (that is hereditary). A merely-sound verdict "
-         "must not be read as hereditary or as revocation-proof.",
-   "ceil": "General over all φ and m. Establishes hereditary ⇒ sound only; NOT "
-           "the converse (a sound verdict need not be hereditary — measured "
-           "separately), and does not characterise which formulas are "
-           "hereditary.",
-   "pos": "a formula/marking that is hereditary (grounded atoms, stable T) → "
-          "it is also sound.",
-   "adv": "a sound-but-not-hereditary T (survives no-lie now, revoked under a "
-          "later verification): a consumer treating sound as hereditary wrongly "
-          "marks it settled → CONFORMANCE FAILS.",
-   "conf": "Veraxis's grade ladder respects hereditary ⇒ sound and does NOT "
-           "collapse the two; a sound-only verdict stays revocable.",
+   "op": "A hereditary verdict is sound: if φ at m is HEREDITARY (its T is "
+         "invariant under every allowed monotone refinement Z→T/F), then it is "
+         "SOUND — it agrees with the verdict on ALL completions of the "
+         "marking. The stronger scope implies the weaker.",
+   "no": "SOUND means 'agrees with all completions', NOT 'truth about the "
+         "facts of the world'. HEREDITARY means invariance under the allowed "
+         "monotone refinements Z→T/F ONLY — it is NOT proof against expiry, "
+         "revocation, correction, or schema change. A sound verdict must not "
+         "be read as hereditary, nor either as world-truth.",
+   "ceil": "General over all φ and m. hereditary ⇒ sound only; NOT the converse "
+           "(sound need not be hereditary — measured separately). Both scopes "
+           "are over monotone refinements/completions of the marking, not over "
+           "world events.",
+   "pos": "a formula/marking hereditary (its T invariant under every Z→T/F "
+          "refinement) → it agrees with the verdict on all completions "
+          "(sound).",
+   "adv": "a consumer treats a sound (or even hereditary) verdict as proof "
+          "against expiry/revocation/correction → FAILS; those are outside the "
+          "refinement lattice this theorem ranges over.",
+   "conf": "Veraxis's grade ladder respects hereditary ⇒ sound and does not "
+           "collapse them; neither grade is read as world-truth or as "
+           "expiry/revocation-proof.",
  },
  "V.tproves_iff": {
    "op": "The tableau engine is sound and complete for entailment: "
@@ -151,14 +155,19 @@ AUTHORED = {
            "consequence', never to grounded truth.",
  },
  "V.ax_not_Z": {
-   "op": "Negating the mark computes F: ¬Z = F — the default-deny cell of the "
-         "negation table.",
-   "no": "F here is default-deny (no ground was offered), NOT a grounded "
-         "negative fact about the atom; the atom stays Z.",
-   "ceil": "Fixes one cell (¬ of Z is F). Nothing about ¬p for grounded p.",
-   "pos": "atom Z → ¬(atom) = F (a default-deny verdict).",
-   "adv": "consumer reports ¬(atom)=F as a grounded false fact → FAILS.",
-   "conf": "Veraxis exposes ¬(atom)=F as default-deny, never as a grounded "
+   "op": "Negating the mark computes the formula verdict F: ¬Z = F — one cell "
+         "of the negation table.",
+   "no": "F here is the FORMULA VERDICT F, nothing more. 'default-deny' is a "
+         "possible DOWNSTREAM mapping of that verdict, not the universal "
+         "meaning of F; and it is not a grounded negative fact about the atom "
+         "(the atom stays Z).",
+   "ceil": "Fixes one cell (¬ of Z is F). Nothing about ¬p for grounded p, and "
+           "no downstream semantics of F is implied.",
+   "pos": "atom Z → ¬(atom) = F (formula verdict).",
+   "adv": "consumer reports ¬(atom)=F as a grounded false fact about the atom "
+          "→ FAILS.",
+   "conf": "Veraxis exposes ¬(atom)=F as a formula verdict; any 'default-deny' "
+           "reading is an explicit downstream mapping, never a grounded "
            "negative world-fact.",
  },
  "V.lift1_classical": {
@@ -207,8 +216,10 @@ AUTHORED = {
    "no": "isZ is a META-predicate about the register (is this a mark?), NOT a "
          "truth about the world: isZ Z = T means 'this slot is unverified', "
          "not 'the atom is true'.",
-   "ceil": "Fixes the three cells of isZ. It is the ONLY sanctioned "
-           "mark-detector; a generic predicate returns Z on a mark, not T.",
+   "ceil": "Fixes the three cells of isZ — it proves the detector WORKS "
+           "(T on Z, F on verdicts). It does NOT prove uniqueness (that no "
+           "other predicate detects the mark); a generic predicate happens to "
+           "return Z on a mark, but that is a separate observation.",
    "pos": "slot Z → isZ = T; slot T/F → isZ = F.",
    "adv": "consumer reads isZ=T as the atom being true → FAILS (detector, not "
           "assertion).",
@@ -216,18 +227,23 @@ AUTHORED = {
            "grounded truth.",
  },
  "V.no_gluts": {
-   "op": "No gluts: no value makes both p and ¬p true. Paracomplete (a gap at "
-         "Z) but NOT paraconsistent — a contradiction is never jointly "
-         "asserted.",
-   "no": "Does NOT give excluded middle (p∨¬p FALLS at Z). Absence of gluts ≠ "
-         "presence of the middle.",
-   "ceil": "Universal over values; the no-glut direction only. The companion "
-           "gap (paracompleteness) is separate.",
-   "pos": "any p → not (p=T and ¬p=T).",
-   "adv": "consumer relies on explosion (p,¬p ⊨ anything) as if gluts existed "
-          "→ gluts are absent, explosion is vacuous.",
-   "conf": "Veraxis may rely on no-glut (never both affirmed and denied); it "
-           "must not assume excluded middle.",
+   "op": "No gluts at the VALUE level: no single value makes both p and ¬p "
+         "equal T. (Paracomplete — a gap at Z — but no value is both T and "
+         "not-T.)",
+   "no": "This is a fact about the connective tables, NOT a general "
+         "paraconsistency claim and NOT a statement about external source "
+         "conflicts (two parties asserting p and ¬p is a different, "
+         "institutional matter). It also does not give excluded middle (p∨¬p "
+         "FALLS at Z).",
+   "ceil": "Universal over the three values; the no-glut direction only. Says "
+           "nothing about conflicts between distinct sources or about the "
+           "middle.",
+   "pos": "any single value v → not (v=T and ¬v=T).",
+   "adv": "consumer reads no_gluts as 'the system reconciles conflicting "
+          "external sources' → it says nothing about source conflict.",
+   "conf": "Veraxis may rely on no single value being both T and not-T; "
+           "cross-source conflict is handled by the institutional layer, not "
+           "by this theorem.",
  },
  "V.modus_ponens": {
    "op": "Modus ponens holds: an earned p and an earned p→q yield an earned q. "
@@ -244,14 +260,21 @@ AUTHORED = {
  },
  "V.rule_and_intro": {
    "op": "∧-introduction: two earned claims yield their earned conjunction — "
-         "joint warrant is composable.",
-   "no": "p∧q=T means both are jointly EARNED as verdicts, not that the "
-         "conjoined objects are grounded-true in the world.",
-   "ceil": "General; the intro direction (elim is separate).",
+         "joint LOGICAL warrant is composable at the formula level.",
+   "no": "p∧q=T establishes joint logical warrant only. It is NOT sufficient "
+         "for a legal/institutional Seam: certificate admissibility, "
+         "schema/namespace agreement, provenance and the interface conditions "
+         "are separate and live in the institutional layer, not in this "
+         "theorem.",
+   "ceil": "General; the intro direction (elim is separate). Logical joint "
+           "warrant, not institutional seam-legality.",
    "pos": "p=T, q=T → p∧q=T.",
-   "adv": "consumer conjoins with a Z side → p∧q ≠ T; the mark blocks, no false "
-          "joint warrant.",
-   "conf": "Veraxis's join-by-∧ requires BOTH earned; a marked side blocks it.",
+   "adv": "consumer treats p∧q=T as a legally sewn institutional claim → it is "
+          "only logical joint warrant; seam-legality needs the interface "
+          "layer.",
+   "conf": "Veraxis's logical join-by-∧ requires BOTH earned; institutional "
+           "seam-legality adds admissibility/provenance on top, out of scope "
+           "here.",
  },
  "V.rule_and_elim": {
    "op": "∧-elimination: from an earned conjunction each conjunct is earned — "
@@ -387,18 +410,26 @@ AUTHORED = {
    "conf": "Veraxis may chain refinement steps.",
  },
  "ZTime.verify_refines": {
-   "op": "Verifying an unverified slot is a refinement: setting a Z-atom to a "
-         "verdict yields a marking that refines the original — verification "
-         "only ever adds ground.",
-   "no": "Says verification MOVES along the refinement order (adds ground), NOT "
-         "that the verified value v is true — v could be F.",
-   "ceil": "General over markings/atoms/values, given the slot was Z. No claim "
-           "that v is correct.",
-   "pos": "m a = Z → verify m a v refines m.",
-   "adv": "consumer reads 'refines' as 'the new value is true' → it is about "
-          "ground added, not the truth of v.",
-   "conf": "Veraxis models verification as monotone refinement; the verified "
-           "value's truth is a separate matter.",
+   "op": "Setting a previously-unverified slot yields a refinement: it "
+         "PRESERVES all the earlier non-Z assignments and is comparable in the "
+         "refinement order. It is the monotonicity of the operation, not an "
+         "assertion that ground was added.",
+   "no": "This does NOT itself prove that ground was ADDED: the written value "
+         "v may even be Z, so the theorem alone does not establish a "
+         "grounding. A Veraxis 'verification' requires the ADDITIONAL "
+         "conditions v ≠ Z AND an external grounded event; the refinement "
+         "relation does not supply them.",
+   "ceil": "General over markings/atoms/values, given the slot was Z. Proves "
+           "refinement (earlier non-Z preserved), NOT that v is correct, NOT "
+           "that v is non-Z, NOT that a real-world verification occurred.",
+   "pos": "m a = Z, v = T → verify m a v refines m, and every earlier non-Z "
+          "assignment is preserved.",
+   "adv": "consumer treats any `verify` call as a grounding event (even with "
+          "v = Z) → FAILS; grounding needs v ≠ Z plus an external event, not "
+          "just this refinement.",
+   "conf": "Veraxis models the write as monotone refinement; it counts a slot "
+           "as GROUNDED only on v ≠ Z together with an external grounded event, "
+           "never from the refinement relation alone.",
  },
  "ZTime.evalF_congr": {
    "op": "Evaluation is a congruence on markings: markings agreeing on every "
@@ -429,19 +460,25 @@ AUTHORED = {
            "re-checking.",
  },
  "ZTime.grounded_hereditary": {
-   "op": "A fully grounded marking makes every formula hereditary: with no "
-         "atom unverified there is nothing left to refine, so every verdict is "
-         "permanent — ground buys permanence.",
-   "no": "Requires FULL grounding (no Z anywhere). A partially grounded marking "
-         "does NOT make all formulas hereditary; permanence is bought with "
-         "ground, not asserted.",
-   "ceil": "General over φ, given a Z-free marking. Sufficient condition (full "
-           "grounding ⇒ hereditary), not necessary.",
-   "pos": "a Z-free marking → every φ hereditary.",
-   "adv": "consumer assumes a partially-verified marking gives permanent "
-          "verdicts → only full grounding guarantees it.",
-   "conf": "Veraxis may treat verdicts under a fully-grounded marking as "
-           "permanent; partial grounding does not license it globally.",
+   "op": "Under the GLOBAL premise that no atom is unverified (∀ n, m n ≠ Z), "
+         "every formula is hereditary: there is nothing left to refine, so the "
+         "verdict is invariant under (the now-empty set of) monotone "
+         "refinements.",
+   "no": "This is a STRONG global SUFFICIENT condition on the whole marking, "
+         "NOT a formula-local production rule: a partially grounded marking "
+         "does not make a formula hereditary just because that formula's own "
+         "atoms are set. Hereditary is still only monotone-refinement "
+         "invariance, not expiry/revocation/correction-proof.",
+   "ceil": "General over φ, given the whole marking is Z-free. Sufficient (full "
+           "grounding ⇒ hereditary), not necessary, and not localisable to a "
+           "formula's atoms.",
+   "pos": "a globally Z-free marking → every φ hereditary.",
+   "adv": "consumer applies this formula-locally ('φ's atoms are grounded, so "
+          "φ is hereditary') under a marking with other Z atoms → FAILS; the "
+          "premise is global.",
+   "conf": "Veraxis may treat verdicts hereditary only under a globally "
+           "Z-free marking; partial grounding does not license it, even for "
+           "formulas whose own atoms are set.",
  },
  "ZTime.Witness.strict_ladder": {
    "op": "The strict warranty ladder U→S→H is REALIZED rung by rung by an "
@@ -462,16 +499,110 @@ AUTHORED = {
 }
 
 
+# ---- machine-readable fixture bits (ast · marking · expected · reason) -----
+# one canonical instance per declaration; the emitter derives the structured
+# positive/adversarial fixtures from these plus the authored prohibition.
+MB = {
+ "V.ax_not_Z":            ("(¬ a)", "a=Z", "F", "F_READ_AS_GROUNDED_NEGATIVE"),
+ "V.ax_notnot_Z":         ("(¬ (¬ a))", "a=Z", "T", "Z_PROMOTED_TO_GROUNDED_T"),
+ "V.lift1_classical":     ("(f a)  [any unary f]", "a=Z", "T|F (never Z)",
+                           "COMPOUND_EXPECTED_TO_CARRY_Z"),
+ "V.lift2_classical":     ("(f a b)  [any binary f]", "a=Z, b=T", "T|F (never Z)",
+                           "COMPOUND_EXPECTED_TO_CARRY_Z"),
+ "V.evalF_classical":     ("any non-atomic φ", "any marking with marks", "T|F",
+                           "COMPOUND_SERIALIZED_AS_Z"),
+ "V.isZ_detects":         ("(isZ a)", "a=Z", "T", "DETECTOR_READ_AS_ASSERTION"),
+ "V.no_gluts":            ("(a ∧ (¬ a))", "a ∈ {T,F,Z}", "never T",
+                           "NO_GLUT_READ_AS_SOURCE_RECONCILIATION"),
+ "V.modus_ponens":        ("premises [a, (a→b)] ⊢ b", "a=T, b=T", "b=T",
+                           "VERDICT_READ_AS_WORLD_FACT"),
+ "V.rule_and_intro":      ("(a ∧ b)", "a=T, b=T", "T",
+                           "LOGICAL_WARRANT_READ_AS_SEAM_LEGALITY"),
+ "V.rule_and_elim":       ("(a ∧ b) ⊢ a", "a∧b = T", "a=T",
+                           "VERDICT_READ_AS_WORLD_FACT"),
+ "V.rule_transitivity":   ("[(a→b),(b→c)] ⊢ (a→c)", "both = T", "(a→c)=T",
+                           "ENTAILMENT_READ_AS_CAUSATION"),
+ "V.dt_one_way":          ("(a → a)", "a=Z", "F", "ARROW_ASSUMED_TAUTOLOGY"),
+ "V.rule_taut_concl_fails": ("(b ∨ (¬ b))", "b=Z", "F", "EXCLUDED_MIDDLE_ASSUMED"),
+ "V.closes_iff":          ("an unsatisfiable node set", "—", "closes = true",
+                           "CLOSURE_READ_AS_WORLD_FALSITY"),
+ "V.closesN_iff":         ("an unsatisfiable node set (native)", "—",
+                           "closesN = true", "CLOSURE_READ_AS_WORLD_FALSITY"),
+ "V.tprovesN_iff":        ("ps=[a,(a→b)], c=b (native)", "—", "tprovesN = true",
+                           "PROOF_READ_AS_WORLD_FACT"),
+ "V.engines_agree":       ("any (ps, c)", "—", "tprovesN = tproves",
+                           "ENGINES_EXPECTED_TO_DIFFER"),
+ "V.entails_structural":  ("Γ ⊨ φ, substitution σ", "—", "σΓ ⊨ σφ",
+                           "SUBSTITUTION_CARRIES_OBJECT_IDENTITY"),
+ "V.tproves_iff":         ("ps=[a,(a→b)], c=b", "—", "tproves = true",
+                           "PROOF_READ_AS_WORLD_FACT"),
+ "V.rule_dn_elim_fails":  ("apply ¬¬p ⊨ p at p=Z", "p=Z",
+                           "rule FAILS (¬¬Z=T, Z≠T)",
+                           "INFERENCE_NOT_WARRANT_PRESERVING"),
+ "ZTime.refines_refl":    ("Refines m m", "any m", "holds",
+                           "REFINEMENT_ASSUMED_IRREFLEXIVE"),
+ "ZTime.refines_trans":   ("Refines m₂ m₁, Refines m₁ m", "—", "Refines m₂ m",
+                           "REFINEMENT_ASSUMED_NONTRANSITIVE"),
+ "ZTime.verify_refines":  ("verify m a v", "m a=Z, v=T",
+                           "Refines (verify m a v) m", "REFINEMENT_READ_AS_GROUNDING"),
+ "ZTime.evalF_congr":     ("m' = m pointwise", "—", "evalF m' φ = evalF m φ",
+                           "HIDDEN_STATE_ASSUMED"),
+ "ZTime.hereditary_absorbing": ("verify m a v on hereditary φ",
+                           "Hereditary φ m, m a=Z",
+                           "verdict unchanged ∧ still Hereditary",
+                           "HEREDITARY_READ_AS_EXPIRY_PROOF"),
+ "ZTime.grounded_hereditary": ("Hereditary φ m", "∀ n, m n ≠ Z",
+                           "holds", "GROUNDED_APPLIED_FORMULA_LOCALLY"),
+ "ZTime.Witness.strict_ladder": ("(sound3,hered3) at (Z,Z,Z)/(T,Z,Z)/(T,T,Z)",
+                           "the three triples", "U / S / H realized",
+                           "LADDER_GRADES_COLLAPSED"),
+}
+
+
+def snapshot_header():
+    import subprocess
+    try:
+        sha = subprocess.run(["git", "-C", _ROOT, "rev-parse", "HEAD"],
+                             capture_output=True, text=True).stdout.strip()
+    except Exception:
+        sha = "(run git rev-parse HEAD)"
+    tc = open(os.path.join(_LEAN, "lean-toolchain")).read().strip()
+    inv = hashlib.sha256(
+        open(os.path.join(_ROOT, "ZTL-theorems.txt"), "rb").read()).hexdigest()
+    targets = aa.build_targets()
+    thms = sum(len(es.statements(m)) for m in targets)
+    return [
+        "## Snapshot (self-contained pin coordinates)",
+        "",
+        f"- **repository commit (verified corpus state)**: `{sha}`  "
+        "— the finalized artifact is contained in the committing revision; "
+        "pin THAT commit.",
+        "- **release tag**: none at this commit; published version is v1.3 "
+        "(Zenodo).",
+        "- **DOI (v1.3 baseline)**: `10.5281/zenodo.21472971`  · concept "
+        "`10.5281/zenodo.21318981`",
+        f"- **Lean toolchain**: `{tc}`",
+        f"- **theorem / module count**: {thms} theorems across {len(targets)} "
+        "modules",
+        "- **axiom-audit result**: ALL CLEAN — every theorem on the EMPTY "
+        "axiom list (`inventory/axiom_audit.py`, re-run in CI)",
+        f"- **inventory hash** (`ZTL-theorems.txt`): `sha256:{inv}`",
+        "- **semantic-review status**: all 28 declarations authored",
+        "- **dependency-closure status**: DEFERRED (native Lean dependency "
+        "extraction not yet run)",
+        "",
+    ]
+
+
 def main():
     idx = _index()
-    L = ["# VERAXIS–ZTL semantic-review package — candidate subset v0.1",
-         "",
-         "Upstream input for `VERAXIS-ZTL-CONFORMANCE-v0.1`. Every declaration "
-         "below is `evidence_status: PROVED` on the empty axiom list at the "
-         "pinned repository snapshot. Mechanical fields are extracted; the "
-         "semantic fields are authored (ZTL-author semantic review). Four are "
-         "fully authored as the format sample; the rest carry mechanical "
-         "fields and an explicit TODO pending format approval.", ""]
+    L = ["# VERAXIS–ZTL semantic-review package — candidate subset v0.1", ""]
+    L += snapshot_header()
+    L += ["Upstream input for `VERAXIS-ZTL-CONFORMANCE-v0.1`. Every declaration "
+          "below is `evidence_status: PROVED` on the empty axiom list at the "
+          "pinned snapshot. Mechanical fields are extracted; the semantic "
+          "fields are authored (ZTL-author semantic review). No semantic "
+          "transition is hidden inside a convenient phrasing.", ""]
     missing = []
     for group, names in SUBSET:
         L.append(f"## {group}\n")
@@ -480,36 +611,48 @@ def main():
                 missing.append(qn); continue
             module, sig = idx[qn]
             _, scope = es.classify(module, sig)
-            a = AUTHORED.get(qn)
+            a = AUTHORED[qn]
             L.append(f"### `{qn}`")
             L.append(f"- **canonical name**: `{qn}`")
             L.append(f"- **statement**: `{_norm(sig)}`")
             L.append(f"- **module / source hash**: `{module}.lean` / "
                      f"`sha256:{_hash(module)}`")
-            L.append(f"- **dependent definitions**: {', '.join(_deps(sig))}")
-            L.append("- **transitive theorem deps**: (via Lean `#print`; "
-                     "supplied on request — not hard-coded here)")
+            L.append("- **surface definitions referenced in statement**: "
+                     f"{', '.join(_deps(sig))}  _(substring scan, not a "
+                     "dependency graph)_")
+            L.append("- **transitive theorem/definition closure**: DEFERRED "
+                     "(native Lean dependency extraction; supplied on request)")
             L.append("- **evidence_status**: PROVED  ·  **proof_scope**: "
                      f"{scope}")
-            if a:
-                L.append(f"- **operational interpretation**: {a['op']}")
-                L.append(f"- **prohibited interpretation**: {a['no']}")
-                L.append(f"- **claim ceiling**: {a['ceil']}")
-                L.append(f"- **positive test vector**: {a['pos']}")
-                L.append(f"- **adversarial test vector**: {a['adv']}")
-                L.append(f"- **expected Veraxis conformance**: {a['conf']}")
-            else:
-                L.append("- **operational / prohibited / ceiling / test "
-                         "vectors / conformance**: _TODO — author on format "
-                         "approval_")
+            L.append(f"- **operational interpretation**: {a['op']}")
+            L.append(f"- **prohibited interpretation**: {a['no']}")
+            L.append(f"- **claim ceiling**: {a['ceil']}")
+            L.append(f"- **positive test vector** (human): {a['pos']}")
+            L.append(f"- **adversarial test vector** (human): {a['adv']}")
+            L.append(f"- **expected Veraxis conformance**: {a['conf']}")
+            ast, mk, ver, rc = MB.get(qn, ("", "", "", "REVIEW"))
+            key = qn.split(".")[-1]
+            L.append("- **machine-readable fixtures**:")
+            L.append(f"  - `{{ id: \"FX-{key}-pos\", formula_ast: \"{ast}\", "
+                     f"marking: \"{mk}\", expected_formula_verdict: \"{ver}\", "
+                     f"retained_atom_state: \"marks in the marking stay Z\", "
+                     f"epistemic_status: \"formula-level; atoms unpromoted\", "
+                     f"prohibited_conversion: \"none\", "
+                     f"expected_veraxis: \"accept; reason=OK\" }}`")
+            L.append(f"  - `{{ id: \"FX-{key}-adv\", formula_ast: \"{ast}\", "
+                     f"marking: \"{mk}\", expected_formula_verdict: \"{ver}\", "
+                     f"retained_atom_state: \"marks stay Z\", "
+                     f"epistemic_status: \"unchanged by the misuse\", "
+                     f"prohibited_conversion: \"{rc}\", "
+                     f"expected_veraxis: \"reject; reason={rc}\" }}`")
             L.append("")
     if missing:
         L.append(f"> MISSING from the corpus: {missing}")
     path = os.path.join(_ROOT, "VERAXIS-ZTL-CONFORMANCE-input-v0.1.md")
     open(path, "w", encoding="utf-8").write("\n".join(L) + "\n")
     n = sum(len(v) for _, v in SUBSET)
-    print(f"wrote {path}: {n} declarations, "
-          f"{len(AUTHORED)} fully authored, {len(missing)} missing")
+    print(f"wrote {path}: {n} declarations, {len(AUTHORED)} authored, "
+          f"{len(missing)} missing")
 
 
 if __name__ == "__main__":

@@ -107,6 +107,8 @@ STANDS = [
     ("pssl/invariants.py", ["LEG 5 GREEN", "The trade is NOT a law of the space",
                             "across the extended eight : FAILS"]),
     ("pssl/census.py", ["CENSUS GREEN", "Our eight are RARE in their own space"]),
+    ("pssl/ztl_signature.py", ["SIGNATURE GREEN", "uniform: True",
+                               "NEVER appears"]),
     ("pssl/ztl_vs_k3.py", ["ZTL vs K3 GREEN", "They are INCOMPARABLE",
                            "hypothesis refuted, leg-3 artifact corrected"]),
     ("pssl/distance.py", ["LEG 3 GREEN", "R1 (kind predicts proximity) : FAILS",

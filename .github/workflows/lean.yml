@@ -17,7 +17,7 @@ jobs:
         with:
           lake-package-directory: lean
       # The hand-placed `#print axioms` lines. The floor tracks the corpus
-      # exactly (131 on 2026-07-20): a threshold set well below the real
+      # exactly (136 on 2026-07-21): a threshold set well below the real
       # count would stay green while dozens of prints were deleted.
       - name: zero-axiom ledger
         working-directory: lean
@@ -27,8 +27,8 @@ jobs:
           dirty=$(grep -c "depends on axioms" build.log || true)
           echo "zero-axiom checks: $clean; dirty: $dirty"
           test "$dirty" -eq 0
-          test "$clean" -ge 131
-      # The hand-placed prints cover 131 of 344 theorems; the rest are
+          test "$clean" -ge 136
+      # The hand-placed prints cover 136 of 349 theorems; the rest are
       # covered transitively, which is an ARGUMENT. This audits every
       # theorem individually, and fails on an orphan module that no
       # target builds.

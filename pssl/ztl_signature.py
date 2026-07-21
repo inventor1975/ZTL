@@ -147,6 +147,12 @@ if __name__ == "__main__":
     assert all_incomp, "ZTL is not incomparable with some neighbour"
     assert not z_dne, "ZTL started proving ¬¬p ⊨ p — the involution returned"
     assert uniform, "the uniform ¬¬p⊨p witness broke for some neighbour"
+    # the general lemma covers a neighbour iff its ¬ is involutive — check
+    inv_all = all(all(m.neg(m.neg(x)) == x for x in ("1", "u", "0"))
+                  for m in Fm.FAMILY)
+    print(f"\n    every neighbour's ¬ is involutive: {inv_all}"
+          "  → involution_gives_dne (Lean) covers all four")
+    assert inv_all, "a neighbour has non-involutive ¬ — the lemma misses it"
 
     print("\n" + "=" * 76)
     print("THE SIGNATURE, IN ONE LINE")
@@ -159,7 +165,14 @@ if __name__ == "__main__":
     print("  Both facts are the same feature seen twice: ZTL speaks only in")
     print("  verdicts, so it neither keeps the involution nor utters a logic")
     print("  that does.")
+    print("\n  NOW PROVED IN LEAN (lean/Signature.lean, empty axiom list):")
+    print("  the WHY is a theorem, not a measurement. involution_gives_dne —")
+    print("  any involutive negation forces ¬¬p ⊨ p, so every neighbour")
+    print("  keeps it by ONE general lemma; ztl_not_involutive + ztl_breaks_dne")
+    print("  — ZTL's ¬¬Z = T breaks the involution and the rule with it.")
+    print("  The four neighbours' involutivity is confirmed here in Python;")
+    print("  the structural reason is the Lean theorem.")
     print("\n  CEILING: consequence measured on the depth-2 pool (witnesses")
-    print("  exhibited, so underivability is settled); expressibility is a")
-    print("  theorem (greediness), exact and not pool-bounded.")
+    print("  exhibited, so underivability is settled); the CAUSE (involution")
+    print("  ⟹ DNE, and ZTL breaking it) is now Lean, exact and not pool-bounded.")
     print("\n  SIGNATURE GREEN")

@@ -1,5 +1,5 @@
 name = "ztl"
-defaultTargets = ["ZTL", "TableauCert", "TableauCertN", "ZSets", "Facts", "ZAlgebra", "ZSequent", "ZQuant", "ZGround", "ZExped", "ZClone", "ZTime", "Contextuality", "EpochBoundary", "JunctionWitness", "QuantumWitness", "Frame"]
+defaultTargets = ["ZTL", "TableauCert", "TableauCertN", "ZSets", "Facts", "ZAlgebra", "ZSequent", "ZQuant", "ZGround", "ZExped", "ZClone", "ZTime", "Contextuality", "EpochBoundary", "JunctionWitness", "QuantumWitness", "Frame", "Signature"]
 
 [[lean_lib]]
 name = "ZTL"
@@ -51,3 +51,6 @@ name = "QuantumWitness"
 
 [[lean_lib]]
 name = "Frame"
+
+[[lean_lib]]
+name = "Signature"

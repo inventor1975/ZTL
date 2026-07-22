@@ -1,4 +1,4 @@
-# claims.txt — a stream of dirty claims for the ztltool judge.
+# claims.txt — a stream of dirty claims for the ztljudge judge.
 #   run:  python3 claim_ledger.py claims.txt
 # format:  label :: formula :: marks      (unlisted atoms are Z = unchecked)
 # the field separator is '::' so the OR operator '|' is free inside a formula.

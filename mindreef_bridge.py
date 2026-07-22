@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-mindreef_bridge — run the ztltool warrant judge over a live MindReef topic set.
+mindreef_bridge — run the ztljudge warrant judge over a live MindReef topic set.
 
 MindReef (a discussion platform) marks each topic with a flat
 `resolution_status` (open / discussing / resolved). Each topic collects IDEAS,
@@ -27,7 +27,7 @@ import os
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from ztltool import judge, next_check                             # noqa: E402
+from ztljudge import judge, next_check                             # noqa: E402
 from ztl import T, F                                              # noqa: E402
 
 

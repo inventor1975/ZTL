@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-ztltool — a closed, abstract tool over the unchanged ZTL core.
+ztljudge — a closed, abstract tool over the unchanged ZTL core.
 
 Not the studio (no web, no NL, no service): a self-contained instrument
 that lives in the repository, that a fork downloads and runs for itself.
@@ -23,8 +23,8 @@ kernel is unchanged and does the judging. A marking says which atoms are
 verified (T/F) and which are not (Z, the default) — truth is never granted
 on credit, so an unverified atom stays a mark.
 
-Run:  python3 ztltool.py                 (a worked stepwise session)
-      python3 ztltool.py -i              (interactive: check / join / mark)
+Run:  python3 ztljudge.py                 (a worked stepwise session)
+      python3 ztljudge.py -i              (interactive: check / join / mark)
 """
 import os
 import sys
@@ -142,7 +142,7 @@ def _full(phi, marking):
 # ------------------------------------------------------------------- report
 def _grade_marking(m):
     """zverify speaks the E12 mark dialect, where the mark symbol is 'M';
-    ztltool marks the unverified atom with the value Z. Translate Z→'M' so
+    ztljudge marks the unverified atom with the value Z. Translate Z→'M' so
     the warranty grade actually SEES the marks — otherwise it finds none, the
     refinement set is a singleton, and every verdict reads 'hereditary'."""
     return {a: ("M" if v == Z else v) for a, v in m.items()}
@@ -342,7 +342,7 @@ def _print_join(r):
 
 
 def _repl():
-    print("ztltool — check <formula> [| p=T q=F] · judge <formula> [| marks] "
+    print("ztljudge — check <formula> [| p=T q=F] · judge <formula> [| marks] "
           "· whatif <formula> [| marks] · join <A> ~ <B> ~ <op> [| marks] "
           "· quit")
     while True:
@@ -384,7 +384,7 @@ if __name__ == "__main__":
         _repl(); sys.exit()
 
     print("=" * 76)
-    print("ztltool — a closed tool over the ZTL core: check, check, join")
+    print("ztljudge — a closed tool over the ZTL core: check, check, join")
     print("=" * 76)
 
     print("\n1. hand it one formula — it is formalized and checked:")
@@ -422,5 +422,5 @@ if __name__ == "__main__":
     _nc = next_check("p & q", {"p": T})                         # q still Z
     assert _nc["atom"] == "q" and _nc["settles"]                # checking q ends it
     assert not next_check("a & b", {})["settles"]               # one of two: narrows
-    print("\n  ZTLTOOL GREEN — formalize · check · check · join · judge · "
+    print("\n  ZTLJUDGE GREEN — formalize · check · check · join · judge · "
           "whatif, over an unchanged core.")

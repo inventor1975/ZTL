@@ -263,6 +263,38 @@ def ledger(claims):
     return {"rows": rows, "buckets": buckets}
 
 
+def what_if(text, marking=None):
+    """The actionable half of the judge: for each still-unverified link, what
+    verifying it would do to the claim. Returns [{atom, if_T, if_F, settles}],
+    where `settles` means BOTH outcomes are terminal (EARNED/REFUTED) — i.e.
+    checking that link resolves the claim whichever way it turns."""
+    base = check(text, marking)
+    known = {k: v for k, v in _full(formalize(text), marking).items() if v != Z}
+    terminal = {"EARNED", "REFUTED"}
+    out = []
+    for a in base["unverified"]:
+        d_t = judge(text, {**known, a: T})["disposition"]
+        d_f = judge(text, {**known, a: F})["disposition"]
+        out.append({"atom": a, "if_T": d_t, "if_F": d_f,
+                    "settles": d_t in terminal and d_f in terminal})
+    return out
+
+
+def next_check(text, marking=None):
+    """Recommend which unverified link to check next: one that settles the
+    claim either way if possible, otherwise one that can settle it in at least
+    one direction, otherwise the first open link. Returns the what_if entry, or
+    None if there is nothing left to verify."""
+    opts = what_if(text, marking)
+    if not opts:
+        return None
+    terminal = {"EARNED", "REFUTED"}
+    settling = [o for o in opts if o["settles"]]
+    partial = [o for o in opts if not o["settles"]
+               and (o["if_T"] in terminal or o["if_F"] in terminal)]
+    return (settling or partial or opts)[0]
+
+
 def _read(op, va, vb, vj):
     if vj == T:
         return f"glued: the {op}-claim is earned ({va} {op} {vb} = T)"
@@ -285,6 +317,20 @@ def _print_judge(r):
     print(f"      {r['why']}")
 
 
+def _print_whatif(text, marking):
+    r = judge(text, marking)
+    _print_judge(r)
+    nc = next_check(text, marking)
+    if nc is None:
+        print("      settled — nothing left to verify")
+        return
+    for o in what_if(text, marking):
+        star = " ⇐ check this next" if o["atom"] == nc["atom"] else ""
+        tag = "settles" if o["settles"] else "narrows"
+        print(f"      verify {o['atom']:12s} →  T: {o['if_T']:9s} "
+              f"F: {o['if_F']:9s} ({tag}){star}")
+
+
 def _print_join(r):
     if r.get("status") == "REFUSED":
         print(f"    REFUSED — {r['reason']}"); return
@@ -297,7 +343,8 @@ def _print_join(r):
 
 def _repl():
     print("ztltool — check <formula> [| p=T q=F] · judge <formula> [| marks] "
-          "· join <A> ~ <B> ~ <op> [| marks] · quit")
+          "· whatif <formula> [| marks] · join <A> ~ <B> ~ <op> [| marks] "
+          "· quit")
     while True:
         try:
             line = input("ztl> ").strip()
@@ -317,6 +364,8 @@ def _repl():
                 _print_check(check(body[6:].strip(), marking))
             elif body.startswith("judge "):
                 _print_judge(judge(body[6:].strip(), marking))
+            elif body.startswith("whatif "):
+                _print_whatif(body[7:].strip(), marking)
             elif body.startswith("join "):
                 parts = [p.strip() for p in body[5:].split("~")]
                 if len(parts) != 3:
@@ -367,5 +416,11 @@ if __name__ == "__main__":
     assert check("~~p", {})["grade"] == "until-verification"    # the dangerous T
     assert check("b", {})["grade"] == "until-verification"      # a bare mark
     assert check("p & q", {"p": T, "q": T})["grade"] == "hereditary"  # grounded
-    print("\n  ZTLTOOL GREEN — formalize · check · check · join, over an "
-          "unchanged core.")
+    # the warrant judge and its actionable half
+    assert judge("p & q", {"p": T, "q": T})["disposition"] == "EARNED"
+    assert judge("~~p", {})["disposition"] == "ON CREDIT"       # T on credit
+    _nc = next_check("p & q", {"p": T})                         # q still Z
+    assert _nc["atom"] == "q" and _nc["settles"]                # checking q ends it
+    assert not next_check("a & b", {})["settles"]               # one of two: narrows
+    print("\n  ZTLTOOL GREEN — formalize · check · check · join · judge · "
+          "whatif, over an unchanged core.")

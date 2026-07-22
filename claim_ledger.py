@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-claim_ledger — ztltool as a WARRANT JUDGE over a stream of dirty claims.
+claim_ledger — ztljudge as a WARRANT JUDGE over a stream of dirty claims.
 
 Not mathematics: everyday claims whose supporting facts are PARTLY checked.
 Each claim is a small argument; the marking says which supporting facts are
@@ -20,7 +20,7 @@ import sys
 import os
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from ztltool import (judge, ledger, load_claims, next_check,       # noqa: E402
+from ztljudge import (judge, ledger, load_claims, next_check,       # noqa: E402
                      DISPOSITIONS)
 from ztl import T                                                  # noqa: E402
 
@@ -40,7 +40,7 @@ def main():
     src = path if path else "built-in stream"
 
     print("=" * 82)
-    print(f"claim_ledger — ztltool judges dirty claims by WARRANT, not truth  "
+    print(f"claim_ledger — ztljudge judges dirty claims by WARRANT, not truth  "
           f"[{src}]")
     print("=" * 82)
     result = ledger(claims)

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-proof_ring — ZTL as a proof-checking ring, over an UNCHANGED core, via ztltool.
+proof_ring — ZTL as a proof-checking ring, over an UNCHANGED core, via ztljudge.
 
 Here ZTL judges a piece of META-logic, not itself: an external arithmetic
 proof, 2 + 3 = 5, done the way a child does it — by tally.
@@ -30,7 +30,7 @@ import sys
 import os
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from ztltool import check, join                                    # noqa: E402
+from ztljudge import check, join                                    # noqa: E402
 from ztl import T, F, Z                                            # noqa: E402
 
 # The five arithmetic facts of the proof, as opaque propositional atoms.
@@ -43,7 +43,7 @@ FACTS = {
     "five_is_11111":  "5 = 11111",
 }
 
-# The two arms of the ring, written for ztltool's formalizer.
+# The two arms of the ring, written for ztljudge's formalizer.
 LEFT = "two_is_11 & three_is_111 & sum_subst & flatten"   # 2+3 ⇝ 11111
 RIGHT = "five_is_11111"                                    # 5   ⇝ 11111
 

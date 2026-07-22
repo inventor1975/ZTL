@@ -38,9 +38,22 @@ recorded here as an independent reproduction.)
 
 Reproducibility matures with independent, diverse confirmations:
 
-1. **#001** — an unconnected engineer.
+1. **#001** — an unconnected engineer. Requirements: no prior connection to
+   ZTL, Veraxis, or the authors; given only the public `REPRODUCE.md`; runs
+   the **full terminal Path B** on a clean machine or VM (Path B is what
+   exercises the whole stand suite, the full axiom audit, and the paper-claims
+   measurement — Path A may be done additionally, but the first weighty report
+   must include Path B); returns the **raw output regardless of result**; if
+   paid, paid **for time, not for a green result**. Records `target_commit`
+   and `recipe_blob` (see the template) plus OS, Lean version, exact commands,
+   and any deviation.
 2. **#002** — a different engineer, on a different OS.
 3. **#003** — a Lean / formal-methods specialist.
+
+A failed or partially-successful reproduction is as useful as a clean one — the
+report certifies execution reproducibility only, never mathematical
+correctness, significance, or correspondence between the formal statements and
+the prose.
 
 ## The claim ladder
 

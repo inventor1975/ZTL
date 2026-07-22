@@ -41,7 +41,8 @@ the `does not depend on any axioms` lines are what matter; that result does
 not hinge on the exact version. To reproduce against the paper's exact
 toolchain instead, use Path B, where `elan` installs `v4.29.1` for you.
 
-1. Open **https://live.lean-lang.org**
+1. Open **https://live.lean-lang.org** (if it shows a version chooser first,
+   pick any entry — the default is fine — to reach the editor).
 2. Open one of these files on GitHub, click the "copy raw file" button:
    - https://github.com/inventor1975/ZTL/blob/82a0f6ac61e0ddf9a927a70e04a0018989ef316d/lean/ZTL.lean
    - https://github.com/inventor1975/ZTL/blob/82a0f6ac61e0ddf9a927a70e04a0018989ef316d/lean/QuantumWitness.lean
@@ -90,12 +91,17 @@ and Lean (via `elan`).
 git clone https://github.com/inventor1975/ZTL
 cd ZTL
 git checkout 82a0f6ac61e0ddf9a927a70e04a0018989ef316d   # the documented state
-curl https://elan.lean-lang.org/elan-init.sh -sSf | sh   # installs Lean
-cd lean && lake build && cd ..
+curl https://elan.lean-lang.org/elan-init.sh -sSf | sh -s -- -y   # installs Lean (no prompt)
+source "$HOME/.elan/env"                                 # put lean/lake on PATH in THIS shell
+cd lean && lake build && cd ..                           # first build fetches the pinned toolchain; can take a while
 python3 run_all.py
 python3 inventory/axiom_audit.py
 python3 inventory/paper_claims.py
 ```
+
+If a later command reports `lake: command not found`, the elan `PATH` did not
+reach this shell — run `source "$HOME/.elan/env"` (or open a new terminal) and
+retry from `cd lean`.
 
 **Expected final lines:**
 

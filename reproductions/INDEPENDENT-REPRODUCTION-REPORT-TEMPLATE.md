@@ -29,7 +29,7 @@ tiers) and why the first independent report should be Tier 1.
   FOLLOWED — recorded separately from the corpus so a later edit to the
   instructions cannot change this report's provenance. Take it from the cloned
   tip, before any checkout: `git rev-parse HEAD:REPRODUCE.md`. At the time of
-  writing that is `0bfe7bef4d99c5ca54d83cb6ce947920e34575f0`):
+  writing that is `af617da547b6d713afbdfbf3b8764b3eb74be2e7`):
 - **date / time** (with timezone):
 - **path taken**: Path A (browser only) / Path B (full terminal run) / both
 

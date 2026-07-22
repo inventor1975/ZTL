@@ -1,6 +1,7 @@
 {
   "rule_id": "MR-WARRANT-RESOLUTION-001",
   "version": "1.0.0",
+  "rule_hash": "27d1d4d9795da569186b3d6dc098982a684d2305a6017699af44f98e91af34a8",
   "title": "MindReef Resolution Warrant Gate",
   "normative_statement": "A topic's resolution_status may become 'resolved' only if every idea in the presented topic state has a KNOWN, DECIDED status (approved or rejected). Any idea whose status is pending, or unknown / missing / null / malformed, blocks the transition, which is downgraded to 'discussing'. Fail closed: an unrecognised status is treated as unresolved ground, never waved through. A non-'resolved' proposed status passes through unchanged.",
   "decided_statuses": ["approved", "rejected"],

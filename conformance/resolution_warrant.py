@@ -57,6 +57,8 @@ def main():
     spec = json.load(open(_SPEC, encoding="utf-8"))
     assert spec["rule_id"] == RULE_ID and spec["version"] == VERSION, \
         "spec/reference rule id or version mismatch"
+    assert spec["rule_hash"] == rule_hash(), \
+        "spec/reference semantic hash mismatch"
     print(f"{RULE_ID} v{VERSION}  rule_hash={rule_hash()[:16]}…")
     print(f"checking {len(spec['fixtures'])} shared fixtures "
           "(the same set the PHP consumer must pass)\n")

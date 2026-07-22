@@ -123,12 +123,30 @@ was unclear, a step that took much longer than stated, a message you
 could not interpret — than when it is a clean "worked fine". The
 instructions are as much on trial as the code.
 
-A template, to be edited freely:
+Please file your report as a copy of
+[`reproductions/INDEPENDENT-REPRODUCTION-REPORT-TEMPLATE.md`](reproductions/INDEPENDENT-REPRODUCTION-REPORT-TEMPLATE.md)
+— a fixed structure (identity, relationship, OS, versions, commit, raw
+output, verdict) so reproductions accumulate as a versioned record rather
+than scattered emails. A quick free-form note is also fine if that is all
+you have time for:
 
 > On [date] I followed [Path A / Path B] on [OS, browser or terminal].
 > I ran [what], and saw [what]. Deviations from the stated expectations:
 > [list, or "none"]. Difficulties: [list, or "none"].
 > — [name]
+
+---
+
+## How much your reproduction counts (independence tiers)
+
+Disclosing a relationship makes a report honest; it does not make it carry
+more weight. Weight comes from **arm's length**. Reports are graded:
+**Tier 1** — a reproducer with no prior connection to ZTL or Veraxis (maximal
+weight); **Tier 2** — a disclosed acquaintance who did not take part in
+development; **Tier 3** — the author's self-check, or checks by family or
+co-authors. All are useful, but only Tier 1 strengthens external conviction,
+and **the first independent report should be Tier 1**. The full policy and
+the target set are in [`reproductions/README.md`](reproductions/README.md).
 
 ---
 

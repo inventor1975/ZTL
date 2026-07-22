@@ -1,0 +1,25 @@
+{
+  "rule_id": "MR-WARRANT-RESOLUTION-001",
+  "version": "1.0.0",
+  "title": "MindReef Resolution Warrant Gate",
+  "normative_statement": "A topic's resolution_status may become 'resolved' only if every idea in the presented topic state has a KNOWN, DECIDED status (approved or rejected). Any idea whose status is pending, or unknown / missing / null / malformed, blocks the transition, which is downgraded to 'discussing'. Fail closed: an unrecognised status is treated as unresolved ground, never waved through. A non-'resolved' proposed status passes through unchanged.",
+  "decided_statuses": ["approved", "rejected"],
+  "blocking_when_resolved": "any idea status not in decided_statuses (pending, or unknown/missing/null/malformed)",
+  "output": "the admissible resolution_status",
+  "claim_ceiling": "The rule proves only the absence of a presented pending (or unrecognised) idea status. It does NOT prove synthesis quality, absence of unrecorded dissent, correctness of the idea statuses themselves, authority of any actor to close the topic, or sufficiency of the resolution for external reliance.",
+  "fixtures": [
+    {"id": "RES-000-all-approved", "kind": "positive", "proposed": "resolved", "idea_statuses": ["approved", "approved"], "expected": "resolved", "note": "0 pending, all decided -> may proceed"},
+    {"id": "RES-000-no-ideas", "kind": "positive", "proposed": "resolved", "idea_statuses": [], "expected": "resolved", "note": "no presented ground -> nothing blocks"},
+    {"id": "RES-000-all-rejected", "kind": "positive", "proposed": "resolved", "idea_statuses": ["rejected", "rejected"], "expected": "resolved", "note": "all decided (rejected is decided) -> may proceed"},
+    {"id": "RES-000-mixed-decided", "kind": "positive", "proposed": "resolved", "idea_statuses": ["approved", "rejected", "approved"], "expected": "resolved", "note": "all decided -> may proceed"},
+    {"id": "RES-001-one-pending", "kind": "adversarial", "proposed": "resolved", "idea_statuses": ["approved", "pending"], "expected": "discussing", "note": "1 pending -> blocked"},
+    {"id": "RES-00N-many-pending", "kind": "adversarial", "proposed": "resolved", "idea_statuses": ["pending", "pending", "pending"], "expected": "discussing", "note": "N pending -> blocked"},
+    {"id": "RES-recompute-addressed", "kind": "positive", "proposed": "resolved", "idea_statuses": ["approved", "approved"], "expected": "resolved", "note": "pending changed to addressed -> recompute proceeds (re-evaluated on idea change)"},
+    {"id": "RES-new-pending-after-proposal", "kind": "adversarial", "proposed": "resolved", "idea_statuses": ["approved", "pending"], "expected": "discussing", "note": "a new pending idea after the proposal -> invalidates (re-evaluation blocks)"},
+    {"id": "RES-unknown-status", "kind": "adversarial", "proposed": "resolved", "idea_statuses": ["approved", "escalated"], "expected": "discussing", "note": "FAIL CLOSED: an unrecognised status must not bypass the gate"},
+    {"id": "RES-null-status", "kind": "adversarial", "proposed": "resolved", "idea_statuses": ["approved", null], "expected": "discussing", "note": "FAIL CLOSED: null status blocks"},
+    {"id": "RES-empty-status", "kind": "adversarial", "proposed": "resolved", "idea_statuses": ["approved", ""], "expected": "discussing", "note": "FAIL CLOSED: empty/malformed status blocks"},
+    {"id": "RES-passthrough-discussing", "kind": "positive", "proposed": "discussing", "idea_statuses": ["pending"], "expected": "discussing", "note": "non-resolved proposal passes through unchanged"},
+    {"id": "RES-passthrough-open", "kind": "positive", "proposed": "open", "idea_statuses": ["pending", "approved"], "expected": "open", "note": "non-resolved proposal passes through unchanged"}
+  ]
+}

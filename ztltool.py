@@ -220,6 +220,49 @@ def judge(text, marking=None):
     return {**r, "disposition": disp, "why": why}
 
 
+def load_claims(path):
+    """Read a stream of claims from a file. One per line:
+
+        label :: formula :: marks        (marks optional; unlisted atoms = Z)
+
+    The field separator is '::', NOT '|' — '|' is the OR operator and must be
+    free to appear inside a formula. '#' starts a comment; blank lines are
+    skipped. Marks are `atom=T` / `atom=F` tokens, space-separated. Returns
+    [(label, text, marking), ...]."""
+    claims = []
+    for raw in open(path, encoding="utf-8"):
+        line = raw.split("#", 1)[0].strip()
+        if not line:
+            continue
+        parts = [p.strip() for p in line.split("::")]
+        if len(parts) < 2 or not parts[1]:
+            raise ValueError(f"claim needs 'label :: formula [:: marks]': {raw!r}")
+        marking = {}
+        for tok in (parts[2].split() if len(parts) >= 3 else []):
+            if "=" in tok:
+                k, v = tok.split("=", 1)
+                if v.upper() in VALUES:
+                    marking[k] = v.upper()
+        claims.append((parts[0], parts[1], marking))
+    return claims
+
+
+DISPOSITIONS = ("EARNED", "ON CREDIT", "OPEN", "REFUTED")
+
+
+def ledger(claims):
+    """Judge a whole stream and bucket it by disposition. `claims` is an
+    iterable of (label, text, marking). Returns {'rows': [...], 'buckets':
+    {disposition: [label, ...]}}."""
+    rows, buckets = [], {d: [] for d in DISPOSITIONS}
+    for label, text, mk in claims:
+        r = judge(text, mk)
+        r["label"] = label
+        rows.append(r)
+        buckets[r["disposition"]].append(label)
+    return {"rows": rows, "buckets": buckets}
+
+
 def _read(op, va, vb, vj):
     if vj == T:
         return f"glued: the {op}-claim is earned ({va} {op} {vb} = T)"
@@ -236,6 +279,12 @@ def _print_check(r):
           + (f"   unverified: {r['unverified']}" if r['unverified'] else ""))
 
 
+def _print_judge(r):
+    print(f"    {r['formula']}   →   {r['verdict']}  ({r['grade']})   "
+          f"[{r['disposition']}]")
+    print(f"      {r['why']}")
+
+
 def _print_join(r):
     if r.get("status") == "REFUSED":
         print(f"    REFUSED — {r['reason']}"); return
@@ -247,8 +296,8 @@ def _print_join(r):
 
 
 def _repl():
-    print("ztltool — check <formula> [| p=T q=F] · join <A> ~ <B> ~ <op> "
-          "[| marks] · quit")
+    print("ztltool — check <formula> [| p=T q=F] · judge <formula> [| marks] "
+          "· join <A> ~ <B> ~ <op> [| marks] · quit")
     while True:
         try:
             line = input("ztl> ").strip()
@@ -266,6 +315,8 @@ def _repl():
         try:
             if body.startswith("check "):
                 _print_check(check(body[6:].strip(), marking))
+            elif body.startswith("judge "):
+                _print_judge(judge(body[6:].strip(), marking))
             elif body.startswith("join "):
                 parts = [p.strip() for p in body[5:].split("~")]
                 if len(parts) != 3:

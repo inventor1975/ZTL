@@ -1,0 +1,14 @@
+# claims.txt — a stream of dirty claims for the ztltool judge.
+#   run:  python3 claim_ledger.py claims.txt
+# format:  label :: formula :: marks      (unlisted atoms are Z = unchecked)
+# the field separator is '::' so the OR operator '|' is free inside a formula.
+# operators: ~ not · & and · | or · -> implies · ^ xor · = iff
+
+both checks pass         :: identity & funds     :: identity=T funds=T
+redundant unknown        :: approved | scratch    :: approved=T
+looks fine (double neg)  :: ~~cleared             ::
+one check still pending  :: identity & funds      :: identity=T
+revoked                  :: granted & ~revoked    :: granted=T revoked=T
+delivery unconfirmed     :: signed -> delivered   :: signed=T
+either path suffices     :: reviewed | ~flagged   :: reviewed=T
+contradiction slipped in :: ok & ~ok              :: ok=T

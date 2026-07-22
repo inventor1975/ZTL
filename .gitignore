@@ -13,3 +13,4 @@ paper/*.log
 paper/*.out
 paper/*.aux
 mindreef_topics.json
+ztlnode.db

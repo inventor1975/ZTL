@@ -20,7 +20,8 @@ import sys
 import os
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from ztltool import judge, ledger, load_claims, DISPOSITIONS       # noqa: E402
+from ztltool import (judge, ledger, load_claims, next_check,       # noqa: E402
+                     DISPOSITIONS)
 from ztl import T                                                  # noqa: E402
 
 # the built-in stream (used when no file is given)
@@ -46,10 +47,16 @@ def main():
 
     print(f"\n{'claim':26s} {'verdict':7s} {'grade':18s} disposition")
     print("-" * 82)
-    for r in result["rows"]:
+    for (_, text, mk), r in zip(claims, result["rows"]):
         print(f"{r['label']:26s} {r['verdict']:7s} {r['grade']:18s} "
               f"{r['disposition']}")
         print(f"    {r['formula']}   —   {r['why']}")
+        if r["disposition"] in ("ON CREDIT", "OPEN"):
+            nc = next_check(text, mk)
+            if nc:
+                tag = "settles either way" if nc["settles"] else "narrows it"
+                print(f"      → check '{nc['atom']}' next:  T ⇒ {nc['if_T']}"
+                      f",  F ⇒ {nc['if_F']}  ({tag})")
 
     print("\n" + "-" * 82)
     print("sorted by warranty:")

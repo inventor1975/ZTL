@@ -75,7 +75,8 @@ that most needed guarding — `unknown / null / empty status → fail closed`.
 
 - Reference (Python): `conformance/resolution_warrant.py` — 13/13 pass.
 - Consumer (PHP): `tests/Feature/ResolutionWarrantConformanceTest` — 13/13 pass
-  against the byte-identical fixtures (22 assertions incl. rule id/version).
+  against the byte-identical fixtures (17 assertions incl. rule id, version,
+  and hash).
 
 Both implementations produce the fixtures' expected outputs on identical inputs;
 they therefore agree.
@@ -123,8 +124,10 @@ Not: *MindReef guarantees a resolved topic is actually fully resolved.*
 
 MindReef is not git-tracked and its source is private, so the immutable
 consumer pin is a content hash of the rule-bearing file, not a commit SHA. The
-private PHP source is not published; the pins below make the conformance claim
-independently checkable against the public reference without it.
+private PHP source is not published; the pins make the private consumer evidence
+immutable and independently auditable by a party granted access to the pinned
+private source and raw test output; the public record independently exposes the
+reference semantics, fixtures, hashes, and claim boundary.
 
 ```yaml
 consumer:
@@ -147,9 +150,10 @@ consumer:
 ```
 
 The `fixture_blob_sha256` above equals the sha256 of the public reference
-fixtures (`conformance/MR-WARRANT-RESOLUTION-001.json`): the consumer is proven,
-byte-for-byte, against the same fixtures anyone can inspect. What remains
-private is only the PHP source and the raw run, pinned by the hashes above.
+fixtures (`conformance/MR-WARRANT-RESOLUTION-001.json`): the consumer is
+author-attested and hash-pinned as having been tested against a byte-identical
+copy of the publicly inspectable fixtures. What remains private is only the PHP
+source and the raw run, pinned by the hashes above.
 
 ## Non-normative note
 

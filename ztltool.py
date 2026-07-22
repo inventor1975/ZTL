@@ -184,6 +184,42 @@ def join(text_a, text_b, operator, marking=None):
                              rb["verdict"], vj)}
 
 
+def judge(text, marking=None):
+    """Triage a claim by its WARRANT, not merely its truth. The verdict alone
+    cannot tell 'earned' from 'true-on-credit', nor 'refuted' from 'not yet
+    established' — the warranty GRADE does, and it names the weak link.
+
+      EARNED    verdict T, hereditary — grounded; any marks are irrelevant.
+      REFUTED   verdict F, hereditary — false regardless of the marks.
+      ON CREDIT verdict T, but not hereditary — true only while an unverified
+                link holds; if it flips, the claim can die.
+      OPEN      not established — a mark actually matters; verify it.
+
+    This is the sort a plain truth-check and a proof kernel do NOT give: which
+    conclusions ride on something unchecked, and exactly which link that is."""
+    r = check(text, marking)
+    v, g, unv = r["verdict"], r["grade"], r["unverified"]
+    if g == "hereditary":
+        if v == T:
+            disp = "EARNED"
+            why = ("grounded outright" if not unv
+                   else f"grounded; the unverified {unv} do not matter")
+        elif v == F:
+            disp = "REFUTED"
+            why = ("grounded false" if not unv
+                   else f"false regardless of the unverified {unv}")
+        else:
+            disp, why = "OPEN", "not established"
+    elif v == T:
+        disp = "ON CREDIT"
+        why = (f"true only on credit — rides the unverified {unv}; "
+               "if one flips, the claim can die")
+    else:
+        disp = "OPEN"
+        why = f"not established — verify {unv} (it could still turn either way)"
+    return {**r, "disposition": disp, "why": why}
+
+
 def _read(op, va, vb, vj):
     if vj == T:
         return f"glued: the {op}-claim is earned ({va} {op} {vb} = T)"

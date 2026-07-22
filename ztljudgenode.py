@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-ztlnode — a ZTL judge with MEMORY: one node of the (future) federated verdict
+ztljudgenode — a ZTL judge with MEMORY: one node of the (future) federated verdict
 network, useful already on its own.
 
 It gives the stateless judge (ztljudge) a persistent, auditable memory and a
@@ -25,7 +25,7 @@ nodes and agrees on the ORDER of transitions. The node stands and is testable
 alone. SQLite now (local, single-writer); migrates to a shared server DB when
 it becomes a service.
 
-Run:  python3 ztlnode.py
+Run:  python3 ztljudgenode.py
 """
 import hashlib
 import json
@@ -37,6 +37,11 @@ from datetime import datetime, timezone
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from ztljudge import judge, formalize, _show, _atoms                # noqa: E402
 from ztl import T, F, Z, VALUES                                     # noqa: E402
+from cryptography.hazmat.primitives.asymmetric.ed25519 import (     # noqa: E402
+    Ed25519PrivateKey, Ed25519PublicKey)
+from cryptography.hazmat.primitives.serialization import (          # noqa: E402
+    Encoding, PublicFormat)
+from cryptography.exceptions import InvalidSignature               # noqa: E402
 
 GENESIS = "0" * 64
 
@@ -59,7 +64,12 @@ def _now() -> str:
 class Node:
     """One judge node with a persistent, hash-chained memory."""
 
-    def __init__(self, db_path: str = "ztlnode.db"):
+    def __init__(self, db_path: str = "ztljudgenode.db", seed: bytes = None):
+        # the node's signing identity (a seed gives a stable id for demos)
+        self._sk = (Ed25519PrivateKey.from_private_bytes(seed) if seed
+                    else Ed25519PrivateKey.generate())
+        self.node_id = self._sk.public_key().public_bytes(
+            Encoding.Raw, PublicFormat.Raw).hex()
         self.db = sqlite3.connect(db_path)
         self.db.execute(
             "CREATE TABLE IF NOT EXISTS atoms (name TEXT PRIMARY KEY, "
@@ -133,6 +143,31 @@ class Node:
              "disposition": record["disposition"]}))
         return record
 
+    # ---- attestation: a SIGNED verdict a peer can audit without trust -----
+    def _sign(self, msg: str) -> str:
+        return self._sk.sign(msg.encode()).hex()
+
+    def attest(self, claim: str) -> dict:
+        """The node's SIGNED claim about a verdict. It carries the atom
+        snapshot it judged, so any auditor can re-compute and check — no trust,
+        no vote. The signature makes it non-repudiable."""
+        r = self.judge_claim(claim)
+        body = {"node_id": self.node_id, "formula": r["formula"],
+                "atoms": r["atoms"], "verdict": r["verdict"],
+                "grade": r["grade"], "disposition": r["disposition"]}
+        return {**body, "verdict_hash": r["verdict_hash"],
+                "sig": self._sign(_canon(body))}
+
+    def forge(self, claim: str, verdict: str, disposition: str) -> dict:
+        """DEMO ONLY: a Byzantine node signs a verdict that does NOT follow
+        from its own snapshot — to show audit() catches it with proof."""
+        r = self.judge_claim(claim)
+        body = {"node_id": self.node_id, "formula": r["formula"],
+                "atoms": r["atoms"], "verdict": verdict,
+                "grade": r["grade"], "disposition": disposition}
+        return {**body, "verdict_hash": "(forged)",
+                "sig": self._sign(_canon(body))}
+
     # ---- audit: the append-only history and the chain integrity ----------
     def history(self, atom: str):
         return self.db.execute(
@@ -161,6 +196,31 @@ class Node:
 
 
 # ---------------------------------------------------------------------------
+def audit(att: dict) -> dict:
+    """Verify a peer's signed attestation with NO trust and NO vote: check the
+    signature is really the node's, then RE-COMPUTE the verdict from the atom
+    snapshot the attestation carries. A mismatch is a self-contained,
+    non-repudiable PROOF-OF-FAULT — the node signed a verdict that does not
+    follow from its own stated atoms; anyone can re-run and see it.
+
+    Scope: this catches a wrong VERDICT on a given snapshot (the deterministic
+    layer). Agreement on the snapshot itself — which inputs are admitted — is
+    the consensus layer's job, not this."""
+    body = {k: att[k] for k in ("node_id", "formula", "atoms", "verdict",
+                                "grade", "disposition")}
+    try:
+        pub = Ed25519PublicKey.from_public_bytes(bytes.fromhex(att["node_id"]))
+        pub.verify(bytes.fromhex(att["sig"]), _canon(body).encode())
+    except (InvalidSignature, ValueError):
+        return {"result": "BAD_SIG", "node": att["node_id"][:12]}
+    r = judge(att["formula"], att["atoms"])
+    if att["verdict"] == r["verdict"] and att["disposition"] == r["disposition"]:
+        return {"result": "CONFIRMED", "verdict": r["verdict"]}
+    return {"result": "FAULT", "node": att["node_id"][:12],
+            "attested": att["verdict"], "true": r["verdict"],
+            "true_disposition": r["disposition"]}
+
+
 def _disp(node, claim):
     r = node.judge_claim(claim)
     print(f"    {claim!r}  →  {r['disposition']:9s}  "
@@ -170,7 +230,7 @@ def _disp(node, claim):
 
 def main():
     print("=" * 78)
-    print("ztlnode — a ZTL judge with memory: atoms · hash-chained "
+    print("ztljudgenode — a ZTL judge with memory: atoms · hash-chained "
           "transitions · reproducible verdicts")
     print("=" * 78)
     node = Node(":memory:")
@@ -204,14 +264,41 @@ def main():
     ok2, detail2 = node.verify_chain()
     print(f"    verify_chain after edit: {ok2} — {detail2}")
 
+    print("\n7. proof-of-fault — agree by re-computation, not by vote:")
+    A = Node(":memory:", seed=b"A" * 32)
+    B = Node(":memory:", seed=b"B" * 32)
+    for nd in (A, B):
+        nd.assert_atom("identity_check", T, "verified", "gov")
+        nd.assert_atom("funds_check", T, "cleared", "bank")
+    attA, attB = A.attest(claim), B.attest(claim)
+    print(f"    A,B agree WITHOUT voting: same verdict_hash="
+          f"{attA['verdict_hash'] == attB['verdict_hash']}  "
+          f"(audit → {audit(attA)['result']}/{audit(attB)['result']})")
+    liar = Node(":memory:", seed=b"F" * 32)
+    liar.assert_atom("identity_check", T, "verified", "gov")
+    liar.assert_atom("funds_check", T, "cleared", "bank")
+    lie = liar.forge(claim, F, "REFUTED")            # true is T/EARNED
+    resF = audit(lie)
+    print(f"    Byzantine node signs REFUTED → audit: {resF['result']} "
+          f"(attested {resF['attested']}, TRUE {resF['true']}) — signed, so "
+          "non-repudiable")
+    tampered = dict(attA, verdict=F)                 # edit verdict, don't re-sign
+    print(f"    edit an attestation without re-signing → audit: "
+          f"{audit(tampered)['result']}")
+
     # honest self-check
     assert r1["disposition"] == "OPEN"       # funds unverified
     assert r2["disposition"] == "EARNED"     # funds grounded
     assert r3["disposition"] == "REFUTED"    # funds refuted
     assert again == r3["verdict_hash"]       # deterministic / reproducible
     assert ok and not ok2                     # chain verifies, tamper caught
-    print("\nZTLNODE GREEN — memory + hash-chained transitions + reproducible, "
-          "hashable verdicts, over the ztljudge core.")
+    assert attA["verdict_hash"] == attB["verdict_hash"]   # agree without voting
+    assert audit(attA)["result"] == "CONFIRMED"
+    assert audit(lie)["result"] == "FAULT"               # liar caught by re-run
+    assert audit(tampered)["result"] == "BAD_SIG"        # unsigned edit caught
+    print("\nZTLJUDGENODE GREEN — memory + hash-chained transitions + "
+          "reproducible verdicts + signed attestations with proof-of-fault, "
+          "over the ztljudge core.")
 
 
 if __name__ == "__main__":

@@ -22,8 +22,14 @@ tiers) and why the first independent report should be Tier 1.
 - **exact OS** (name and version):
 - **browser** (name + version) **and/or terminal / shell**:
 - **Lean version** (as reported by the tool you used):
-- **commit reproduced** (the SHA you actually checked out or whose blob
-  links you opened; the document pins `82a0f6a`):
+- **target_commit** (the CORPUS commit you reproduced — the one the recipe
+  pins and Path B has you `git checkout`):
+  `82a0f6ac61e0ddf9a927a70e04a0018989ef316d`
+- **recipe_blob** (the git blob hash of the `REPRODUCE.md` you actually
+  FOLLOWED — recorded separately from the corpus so a later edit to the
+  instructions cannot change this report's provenance. Take it from the cloned
+  tip, before any checkout: `git rev-parse HEAD:REPRODUCE.md`. At the time of
+  writing that is `0bfe7bef4d99c5ca54d83cb6ce947920e34575f0`):
 - **date / time** (with timezone):
 - **path taken**: Path A (browser only) / Path B (full terminal run) / both
 

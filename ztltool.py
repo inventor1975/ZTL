@@ -140,10 +140,18 @@ def _full(phi, marking):
 
 
 # ------------------------------------------------------------------- report
+def _grade_marking(m):
+    """zverify speaks the E12 mark dialect, where the mark symbol is 'M';
+    ztltool marks the unverified atom with the value Z. Translate Z→'M' so
+    the warranty grade actually SEES the marks — otherwise it finds none, the
+    refinement set is a singleton, and every verdict reads 'hereditary'."""
+    return {a: ("M" if v == Z else v) for a, v in m.items()}
+
+
 def _happened(phi, m):
     """What the kernel did with one claim, as a dict."""
     v = ev(phi, m)
-    g = grade(phi, m)
+    g = grade(phi, _grade_marking(m))
     unver = sorted(a for a in _atoms(phi) if m.get(a, Z) == Z)
     return {"formula": _show(phi), "verdict": v, "grade": g,
             "marking": {a: m[a] for a in sorted(_atoms(phi))},
@@ -167,7 +175,7 @@ def join(text_a, text_b, operator, marking=None):
     m = _full(("and", a, b), marking)          # one shared marking for both
     ra, rb = _happened(a, m), _happened(b, m)
     vj = BINOPS[operator](ra["verdict"], rb["verdict"])
-    gj = grade((_BIN[operator], a, b), m)
+    gj = grade((_BIN[operator], a, b), _grade_marking(m))
     return {"left": ra, "right": rb, "operator": _OP_NAME[operator],
             "joined_formula": _show((_BIN[operator], a, b)),
             "verdict": vj, "grade": gj,
@@ -265,5 +273,12 @@ if __name__ == "__main__":
     _mark = join("p", "q", "∧", {"p": T})                       # q = Z
     assert _mark["right"]["verdict"] == Z and not _mark["glued"]
     assert join("p", "q", "∨", {"p": T})["verdict"] == T        # ∨ needs one
+    # grade must be MEANINGFUL — regression guard for the Z→'M' translation
+    # zverify's mark dialect needs. Without it every grade reads 'hereditary';
+    # in particular the dangerous greedy T of ¬¬p (dies at p:=F) would be
+    # mislabelled the safest grade instead of until-verification.
+    assert check("~~p", {})["grade"] == "until-verification"    # the dangerous T
+    assert check("b", {})["grade"] == "until-verification"      # a bare mark
+    assert check("p & q", {"p": T, "q": T})["grade"] == "hereditary"  # grounded
     print("\n  ZTLTOOL GREEN — formalize · check · check · join, over an "
           "unchanged core.")

@@ -74,7 +74,7 @@ class Node:
         self.db.execute(
             "CREATE TABLE IF NOT EXISTS atoms (name TEXT PRIMARY KEY, "
             "verdict TEXT NOT NULL, provenance TEXT, updated_at TEXT, "
-            "updated_by TEXT)")
+            "updated_by TEXT, expires_at TEXT)")
         self.db.execute(
             "CREATE TABLE IF NOT EXISTS transitions (seq INTEGER PRIMARY KEY, "
             "ts TEXT, atom TEXT, from_v TEXT, to_v TEXT, reason TEXT, "
@@ -94,9 +94,12 @@ class Node:
 
     # ---- the act: change an atom's status, append to the chain -----------
     def assert_atom(self, name: str, verdict: str, reason: str = "",
-                    source: str = ""):
+                    source: str = "", ttl: float = None):
         """Record a verdict on an atom (grounding it T/F, or marking it Z).
-        A change appends one hash-chained transition; a no-op is ignored."""
+        A change appends one hash-chained transition; a no-op is ignored.
+        `ttl` (seconds) gives a grounding a shelf-life: after it lapses,
+        expire_due() reverts the atom to Z — a shelf does not insure against
+        the loss of its ground (ZTime, E25)."""
         if verdict not in VALUES:
             raise ValueError(f"verdict must be one of {sorted(VALUES)}")
         cur = self.verdict_of(name)
@@ -106,6 +109,11 @@ class Node:
         seq = (last[0] + 1) if last else 1
         prev = last[1] if last else GENESIS
         ts = _now()
+        expires = (None if (ttl is None or verdict == Z)
+                   else datetime.fromisoformat(ts).timestamp() + ttl)
+        expires_iso = (None if expires is None
+                       else datetime.fromtimestamp(expires, timezone.utc)
+                       .isoformat())
         payload = _canon({"seq": seq, "ts": ts, "atom": name, "from": cur,
                           "to": verdict, "reason": reason, "source": source,
                           "prev": prev})
@@ -116,13 +124,27 @@ class Node:
             (seq, ts, name, cur, verdict, reason, source, prev, row_hash))
         self.db.execute(
             "INSERT INTO atoms (name, verdict, provenance, updated_at, "
-            "updated_by) VALUES (?,?,?,?,?) ON CONFLICT(name) DO UPDATE SET "
-            "verdict=excluded.verdict, provenance=excluded.provenance, "
-            "updated_at=excluded.updated_at, updated_by=excluded.updated_by",
-            (name, verdict, reason, ts, source))
+            "updated_by, expires_at) VALUES (?,?,?,?,?,?) ON CONFLICT(name) "
+            "DO UPDATE SET verdict=excluded.verdict, "
+            "provenance=excluded.provenance, updated_at=excluded.updated_at, "
+            "updated_by=excluded.updated_by, expires_at=excluded.expires_at",
+            (name, verdict, reason, ts, source, expires_iso))
         self.db.commit()
         return {"seq": seq, "atom": name, "from": cur, "to": verdict,
                 "row_hash": row_hash}
+
+    def expire_due(self, now: str = None):
+        """Revert to Z every grounded atom whose shelf-life has lapsed by
+        `now` (default: real now). Each reversion is a logged transition —
+        the ground can be lost, and the ledger shows when. Returns the names
+        expired."""
+        now = now or _now()
+        due = [r[0] for r in self.db.execute(
+            "SELECT name FROM atoms WHERE expires_at IS NOT NULL AND "
+            "expires_at <= ? AND verdict != ?", (now, Z)).fetchall()]
+        for name in due:
+            self.assert_atom(name, Z, "grounding expired", "clock")
+        return due
 
     # ---- the verdict: reproducible, hashable, NOT stored -----------------
     def judge_claim(self, formula: str) -> dict:
@@ -286,7 +308,17 @@ def main():
     print(f"    edit an attestation without re-signing → audit: "
           f"{audit(tampered)['result']}")
 
+    print("\n8. expiry — a grounding has a shelf-life (ZTime live):")
+    E = Node(":memory:")
+    E.assert_atom("badge", T, "scanned", "reader", ttl=3600)   # 1-hour ground
+    b1 = E.judge_claim("badge")["disposition"]
+    expired = E.expire_due("2999-01-01T00:00:00+00:00")        # jump past shelf
+    b2 = E.judge_claim("badge")["disposition"]
+    print(f"    badge grounded → {b1};  shelf-life lapses → expire {expired} "
+          f"→ {b2}  (the ground was lost, and the ledger shows when)")
+
     # honest self-check
+    assert b1 == "EARNED" and expired == ["badge"] and b2 == "OPEN"
     assert r1["disposition"] == "OPEN"       # funds unverified
     assert r2["disposition"] == "EARNED"     # funds grounded
     assert r3["disposition"] == "REFUTED"    # funds refuted
@@ -297,8 +329,8 @@ def main():
     assert audit(lie)["result"] == "FAULT"               # liar caught by re-run
     assert audit(tampered)["result"] == "BAD_SIG"        # unsigned edit caught
     print("\nZTLJUDGENODE GREEN — memory + hash-chained transitions + "
-          "reproducible verdicts + signed attestations with proof-of-fault, "
-          "over the ztljudge core.")
+          "reproducible verdicts + signed attestations with proof-of-fault + "
+          "expiry, over the ztljudge core.")
 
 
 if __name__ == "__main__":

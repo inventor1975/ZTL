@@ -12,3 +12,4 @@ zrefuter_runs/
 paper/*.log
 paper/*.out
 paper/*.aux
+mindreef_topics.json

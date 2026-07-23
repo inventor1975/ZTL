@@ -1,0 +1,69 @@
+{
+  "_doc": "Shared conformance fixtures for the ZTL Connector core judge (SPEC v0.1 §4). A consumer's native re-implementation must produce the same expected verdict record on each warrant. Expected outputs were derived from ZTL semantics and confirmed against the Python reference. Covers grounded T/F, contradiction, on-credit, fail-closed (unknown value / inadmissible), default-deny (missing atom), and disjunction.",
+  "rule": {"id": "ZTL-CORE-JUDGE", "version": "0.1.0", "hash": "3b5b42a87252c8c6a3e1881eeab27467c405c53dce05af38a216085d825be762"},
+  "rule_hash": "3b5b42a87252c8c6a3e1881eeab27467c405c53dce05af38a216085d825be762",
+  "fixtures": [
+    {
+      "name": "grounded-true",
+      "description": "Both atoms decided; conjunction true; hereditary -> EARNED.",
+      "warrant": {"claim": "cleared & ~flagged",
+        "atoms": [
+          {"name": "cleared", "value": "T", "provenance": "audit-A", "admissible": "yes"},
+          {"name": "flagged", "value": "F", "provenance": "audit-A", "admissible": "yes"}]},
+      "expected": {"verdict": "T", "grade": "hereditary", "disposition": "EARNED", "unverified": []}
+    },
+    {
+      "name": "grounded-false",
+      "description": "Both atoms decided; conjunction false; hereditary -> REFUTED.",
+      "warrant": {"claim": "cleared & flagged",
+        "atoms": [
+          {"name": "cleared", "value": "T", "provenance": "audit-A", "admissible": "yes"},
+          {"name": "flagged", "value": "F", "provenance": "audit-A", "admissible": "yes"}]},
+      "expected": {"verdict": "F", "grade": "hereditary", "disposition": "REFUTED", "unverified": []}
+    },
+    {
+      "name": "contradiction",
+      "description": "p & ~p is false under every reading; hereditary -> REFUTED.",
+      "warrant": {"claim": "p & ~p",
+        "atoms": [{"name": "p", "value": "T", "provenance": "src", "admissible": "yes"}]},
+      "expected": {"verdict": "F", "grade": "hereditary", "disposition": "REFUTED", "unverified": []}
+    },
+    {
+      "name": "on-credit",
+      "description": "Double negation over an unverified atom is true only on credit; the mark rides -> ON CREDIT.",
+      "warrant": {"claim": "~~cleared",
+        "atoms": [{"name": "cleared", "value": "Z", "provenance": "src", "admissible": "yes"}]},
+      "expected": {"verdict": "T", "grade": "until-verification", "disposition": "ON CREDIT", "unverified": ["cleared"]}
+    },
+    {
+      "name": "fail-closed-unknown-value",
+      "description": "A value outside {T,F} ('approved') is coerced to Z; the claim is not established -> OPEN.",
+      "warrant": {"claim": "cleared",
+        "atoms": [{"name": "cleared", "value": "approved", "provenance": "raw-import", "admissible": "yes"}]},
+      "expected": {"verdict": "Z", "grade": "until-verification", "disposition": "OPEN", "unverified": ["cleared"]}
+    },
+    {
+      "name": "fail-closed-inadmissible",
+      "description": "A decided value with admissible='no' is coerced to Z -> OPEN. The admissibility gate.",
+      "warrant": {"claim": "cleared",
+        "atoms": [{"name": "cleared", "value": "T", "provenance": "unverified-source", "admissible": "no"}]},
+      "expected": {"verdict": "Z", "grade": "until-verification", "disposition": "OPEN", "unverified": ["cleared"]}
+    },
+    {
+      "name": "default-deny-missing-atom",
+      "description": "An atom named in the claim but absent from the list defaults to Z (default-deny) -> OPEN, naming the weak link.",
+      "warrant": {"claim": "cleared & extra",
+        "atoms": [{"name": "cleared", "value": "T", "provenance": "src", "admissible": "yes"}]},
+      "expected": {"verdict": "F", "grade": "until-verification", "disposition": "OPEN", "unverified": ["extra"]}
+    },
+    {
+      "name": "disjunction-earned",
+      "description": "Both atoms decided; disjunction true; hereditary -> EARNED.",
+      "warrant": {"claim": "cleared | flagged",
+        "atoms": [
+          {"name": "cleared", "value": "F", "provenance": "src", "admissible": "yes"},
+          {"name": "flagged", "value": "T", "provenance": "src", "admissible": "yes"}]},
+      "expected": {"verdict": "T", "grade": "hereditary", "disposition": "EARNED", "unverified": []}
+    }
+  ]
+}

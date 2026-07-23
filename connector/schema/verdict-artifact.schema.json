@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ztl/connector/verdict-artifact.schema.json",
+  "title": "ZTL Connector — verdict artifact (SPEC v0.1 §3)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["input_digest", "rule", "kernel_version",
+               "verdict", "grade", "disposition", "why", "unverified"],
+  "properties": {
+    "input_digest": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{96}$",
+      "description": "SHA-384 of the RFC-8785-canonicalized {claim, rule, atoms}."
+    },
+    "rule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "version", "hash"],
+      "properties": {
+        "id": {"type": "string"},
+        "version": {"type": "string"},
+        "hash": {"type": "string"}
+      }
+    },
+    "kernel_version": {"type": "string"},
+    "verdict": {"type": "string", "enum": ["T", "F", "Z"],
+                "description": "T/F are decided; Z is returned when an unresolved mark survives to the top (an OPEN claim over a bare Z atom)."},
+    "grade": {"type": "string",
+              "enum": ["hereditary", "sound", "until-verification"]},
+    "disposition": {"type": "string",
+                    "enum": ["EARNED", "REFUTED", "ON CREDIT", "OPEN"]},
+    "why": {"type": "string"},
+    "unverified": {"type": "array", "items": {"type": "string"}},
+    "signature": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["scheme", "signer", "value"],
+      "description": "Voucher for the signer, NOT the source of truth (SPEC §3).",
+      "properties": {
+        "scheme": {"type": "string"},
+        "signer": {"type": "string"},
+        "value": {"type": "string"}
+      }
+    }
+  }
+}

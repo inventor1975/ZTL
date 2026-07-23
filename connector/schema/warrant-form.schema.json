@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ztl/connector/warrant-form.schema.json",
+  "title": "ZTL Connector — warrant-form (SPEC v0.1 §1)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["claim", "rule", "atoms"],
+  "properties": {
+    "claim": {
+      "type": "string",
+      "minLength": 1,
+      "description": "A ZTL formula over named atoms, e.g. 'cleared & ~flagged'."
+    },
+    "rule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "version", "hash"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "version": {"type": "string",
+                    "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"},
+        "hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+      }
+    },
+    "atoms": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name"],
+        "properties": {
+          "name": {"type": "string", "minLength": 1},
+          "value": {
+            "description": "Kernel marking. T/F are decided verdicts; Z is the mark (unverified/unknown, default-deny). Fail-closed is FIRST-CLASS (SPEC §1): only 'T' or 'F' with admissible 'yes' pass as decided; any other string, null, or an absent value is coerced to Z. Dirty domain values are permitted here precisely so the connector can fail them closed rather than reject them.",
+            "type": ["string", "null"]
+          },
+          "provenance": {
+            "type": "string",
+            "description": "Audit-only; the judge never reads it (SPEC §7)."
+          },
+          "admissible": {
+            "description": "'no', or an absent/other value, is fail-closed to Z (SPEC §1). Only the exact string 'yes' admits a decided value.",
+            "type": ["string", "null"],
+            "enum": ["yes", "no", null]
+          }
+        }
+      }
+    }
+  }
+}

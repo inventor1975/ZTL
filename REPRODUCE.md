@@ -23,71 +23,7 @@ good. Those need a logician and are somebody else's task.
 
 ---
 
-**Start with Path A — it needs nothing installed and IS the real check. Path B
-is a heavier optional cross-check, only for people who want the full terminal
-build. (A skilled admin who jumps straight to a terminal can trip on Path B's
-toolchain install and miss that Path A was the easy, sufficient route.)**
-
-## Path A — browser only, about 10 minutes, nothing installed
-
-The Lean files below have **no imports and no library dependencies**.
-They can be pasted into Lean's official web editor and will compile
-there.
-
-The links are pinned to commit `82a0f6a` so the counts in the table
-below match exactly. A newer state of the repository will show larger
-counts — that is the corpus growing, not a failure; reproduce this
-commit to match this document.
-
-The web editor may offer a newer Lean than the `v4.29.1` this repository
-pins (pick any version in its dropdown — these files have no imports, so
-they compile against Lean core alone). If it compiles without a red error,
-the `does not depend on any axioms` lines are what matter; that result does
-not hinge on the exact version. To reproduce against the paper's exact
-toolchain instead, use Path B, where `elan` installs `v4.29.1` for you.
-
-1. Open **https://live.lean-lang.org** (if it shows a version chooser first,
-   pick any entry — the default is fine — to reach the editor).
-2. Open one of these files on GitHub, click the "copy raw file" button:
-   - https://github.com/inventor1975/ZTL/blob/82a0f6ac61e0ddf9a927a70e04a0018989ef316d/lean/ZTL.lean
-   - https://github.com/inventor1975/ZTL/blob/82a0f6ac61e0ddf9a927a70e04a0018989ef316d/lean/QuantumWitness.lean
-   - https://github.com/inventor1975/ZTL/blob/82a0f6ac61e0ddf9a927a70e04a0018989ef316d/lean/Contextuality.lean
-   - https://github.com/inventor1975/ZTL/blob/82a0f6ac61e0ddf9a927a70e04a0018989ef316d/lean/JunctionWitness.lean
-   - https://github.com/inventor1975/ZTL/blob/82a0f6ac61e0ddf9a927a70e04a0018989ef316d/lean/ZTime.lean
-   - https://github.com/inventor1975/ZTL/blob/82a0f6ac61e0ddf9a927a70e04a0018989ef316d/lean/EpochBoundary.lean
-3. Paste it into the editor, replacing whatever is there. Wait for the
-   right-hand panel to finish (a few seconds; a spinner or "Processing"
-   may show first).
-4. Scroll the right-hand panel to the bottom.
-
-**What you should see.** A block of lines, each of the form
-
-```
-'SomeName' does not depend on any axioms
-```
-
-**What to record for each file:**
-
-| file | lines expected | any line NOT saying "does not depend on any axioms"? | any red error? |
-|---|---:|---|---|
-| ZTL.lean | 13 | | |
-| QuantumWitness.lean | 11 | | |
-| Contextuality.lean | 3 | | |
-| JunctionWitness.lean | 8 | | |
-| ZTime.lean | 7 | | |
-| EpochBoundary.lean | 5 | | |
-
-The counts matter less than the two questions after them. **A single
-line that says anything other than "does not depend on any axioms", or
-any red error marker, is a finding — please report it exactly as shown.**
-
-That is the whole of Path A. Nothing is installed, nothing is trusted:
-the checking is done by Lean's own kernel, running in your browser, on a
-server that has nothing to do with this project.
-
----
-
-## Path B — full run, needs a terminal (optional)
+## How to reproduce — one terminal command
 
 Only if you are comfortable at a command line (Mac/Linux; on Windows use WSL).
 
@@ -144,7 +80,6 @@ than scattered emails. A quick note is also fine if that is all you have time fo
 My connection to the ZTL / Veraxis project:  none  (or: acquaintance / relative / colleague)
 Date:
 OS:                                (e.g. Ubuntu 24.04 / Windows 11 + WSL / macOS)
-Path:  A (browser)  or  B (terminal)
 Saw the "✅ REPRODUCED" line and the numbers 59 / 371 / 21?   yes  /  no (then: what you saw)
 Anything different from what the instructions promised?       no  /  describe
 Where was it hard or confusing?                               no  /  describe

@@ -198,6 +198,15 @@ def validate(text):
     atoms = doc.get("atoms", {})
     if not isinstance(atoms, dict):
         return doc, None, [err("E_SCHEMA", "atoms", "an object is required")]
+    # DoS guard: core routes check a claim over {T,F,Z}**names, so cost is
+    # 3**names. Measured: 10 names ~0.9s, 12 hangs. Cap the public surface here
+    # (every core route reaches validate). 10 admits every shipped example
+    # (Russell = 9).
+    _nn = len(atoms) + (len(doc["sentences"]) if isinstance(doc.get("sentences"), dict) else 0)
+    if _nn > 10:
+        return doc, None, [err("E_TOOBIG", "atoms/sentences",
+                               f"too many names ({_nn}); the studio caps exhaustive "
+                               f"checks at 10 (cost is 3**names)")]
     for a, spec in atoms.items():
         if a in RESERVED or not NAME_RE.fullmatch(a):
             issues.append(err("E_RESERVED", a,

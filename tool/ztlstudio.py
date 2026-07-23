@@ -308,6 +308,15 @@ class Handler(BaseHTTPRequestHandler):
                 "only. The core verdict never needs the AI."})
             return
         n = int(self.headers.get("Content-Length", 0))
+        if n > 262144:                      # 256 KB body cap (DoS guard)
+            remaining = n                   # drain the proxied body first,
+            while remaining > 0:            # else Apache sees a desync -> 502
+                chunk = self.rfile.read(min(remaining, 65536))
+                if not chunk:
+                    break
+                remaining -= len(chunk)
+            self._send(413, {"ok": False, "error": "request too large"})
+            return
         try:
             payload = json.loads(self.rfile.read(n).decode() or "{}")
         except json.JSONDecodeError:

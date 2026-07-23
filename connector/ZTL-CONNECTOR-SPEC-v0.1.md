@@ -158,6 +158,25 @@ inputs; it does not prove the inputs are true, complete, or authoritative. This
 ceiling is stated in the artifact's meaning and must not be overstated in any
 consumer's claims.
 
+## 7a. Input bounds (DoS guard)
+
+The connector takes untrusted warrant-forms, so the wire is bounded (this is
+separate from §7, which is about the *world*). Two costs make bounds mandatory,
+both measured: the warranty grade is **O(3^(distinct atoms))** (it scans every
+completion of the Z-marked atoms — 14 atoms hung for >8s), and the claim parser
+is recursive (~1000-deep nesting raised `RecursionError`). `warrant.validate`
+therefore enforces, and rejects with a clean `WarrantError` (never hang/crash):
+
+- `MAX_CLAIM_LEN` 1024 chars, `MAX_ATOMS` 64, `MAX_NAME_LEN` 128,
+  `MAX_PROVENANCE_LEN` 4096;
+- `MAX_DISTINCT_ATOMS` 12 in the claim (3^12 ≈ 5.3e5, sub-second) — the real cap;
+- deep nesting is caught (`RecursionError → WarrantError`).
+
+No code/SQL/shell injection surface exists: the parser is hand-written recursive
+descent (no `eval`/`exec`), and there is no query or shell layer. Bad atom
+*values* are fail-closed to Z (§1), not errors. The harness exercises all three
+abuse classes as regression guards.
+
 ## 8. Locked decisions (the four forks, curator-accepted 2026-07-23)
 
 1. **Mark dialect:** public warrant-form uses `value: "T"|"F"|"Z"` (Z = the

@@ -148,11 +148,22 @@ def main():
     # Stands are independent processes; run them on a pool. Kept
     # deterministic in REPORTING order (STANDS order), not completion
     # order, so the output reads the same as the sequential runner.
-    from concurrent.futures import ThreadPoolExecutor
+    from concurrent.futures import ThreadPoolExecutor, as_completed
     workers = min(30, len(STANDS))
+    total = len(STANDS)
+    results = {}
+    # Live progress: the stands run in parallel and would otherwise print
+    # nothing until all finish — which reads as "hung". Show a counter that
+    # advances as each completes (reporting below stays in STANDS order).
+    print(f"  running {total} stands in parallel — the slow part; progress below:",
+          flush=True)
     with ThreadPoolExecutor(max_workers=workers) as pool:
-        results = {script: (ok, missing, rc)
-                   for script, ok, missing, rc in pool.map(_run_one, STANDS)}
+        futures = [pool.submit(_run_one, item) for item in STANDS]
+        for done, fut in enumerate(as_completed(futures), 1):
+            script, ok, missing, rc = fut.result()
+            results[script] = (ok, missing, rc)
+            print(f"\r    {done}/{total} stands finished…", end="", flush=True)
+    print()
     for script, _markers in STANDS:
         ok, missing, rc = results[script]
         status = "OK " if ok else "FAIL"

@@ -26,6 +26,7 @@ sys.path.insert(0, os.path.dirname(HERE))
 
 from connector.signer import Signer, available_schemes  # noqa: E402
 from connector.verdict import judge_warrant, verify_artifact  # noqa: E402
+from connector.warrant import WarrantError  # noqa: E402
 
 FIXTURES = os.path.join(HERE, "fixtures", "ZTL-CORE-JUDGE-fixtures-v0.1.json")
 WF_SCHEMA = os.path.join(HERE, "schema", "warrant-form.schema.json")
@@ -100,6 +101,26 @@ def run() -> int:
 
     # ---- 5. formal schema validation ----------------------------------------
     print(f"  [OK ] {_validate_schemas(data, fixtures)}")
+
+    # ---- 6. DoS input-bound guards (must reject, not hang/crash) -------------
+    def _r(claim, atoms):
+        return {"claim": claim, "rule": data["rule"], "atoms": atoms}
+    abuses = {
+        "many-distinct-atoms": _r(" & ".join(f"a{i}" for i in range(20)),
+                                  [{"name": f"a{i}", "value": "Z",
+                                    "admissible": "yes"} for i in range(20)]),
+        "deep-nesting": _r("~" * 2000 + "p",
+                           [{"name": "p", "value": "T", "admissible": "yes"}]),
+        "huge-provenance": _r("p", [{"name": "p", "value": "T",
+                              "provenance": "x" * 99999, "admissible": "yes"}]),
+    }
+    for name, w in abuses.items():
+        try:
+            judge_warrant(w)
+            fails.append((f"guard:{name}", "WarrantError", "NOT blocked"))
+            print(f"  [XX ] guard {name:<22} NOT blocked")
+        except WarrantError:
+            print(f"  [OK ] guard {name:<22} rejected")
 
     # ---- report -------------------------------------------------------------
     print()

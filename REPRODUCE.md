@@ -23,6 +23,11 @@ good. Those need a logician and are somebody else's task.
 
 ---
 
+**Start with Path A — it needs nothing installed and IS the real check. Path B
+is a heavier optional cross-check, only for people who want the full terminal
+build. (A skilled admin who jumps straight to a terminal can trip on Path B's
+toolchain install and miss that Path A was the easy, sufficient route.)**
+
 ## Path A — browser only, about 10 minutes, nothing installed
 
 The Lean files below have **no imports and no library dependencies**.
@@ -84,40 +89,40 @@ server that has nothing to do with this project.
 
 ## Path B — full run, needs a terminal (optional)
 
-Only if you are comfortable at a command line. Needs `git`, `python3`,
-and Lean (via `elan`).
+Only if you are comfortable at a command line (Mac/Linux; on Windows use WSL).
+
+**Copy and paste the whole block at once** — it does everything itself:
 
 ```bash
-git clone https://github.com/inventor1975/ZTL
-cd ZTL
-git checkout 82a0f6ac61e0ddf9a927a70e04a0018989ef316d   # the documented state
-curl https://elan.lean-lang.org/elan-init.sh -sSf | sh -s -- -y   # installs Lean (no prompt)
-source "$HOME/.elan/env"                                 # put lean/lake on PATH in THIS shell
-cd lean && lake build && cd ..                           # first build fetches the pinned toolchain; can take a while
-python3 run_all.py
-python3 inventory/axiom_audit.py
-python3 inventory/paper_claims.py
+git clone https://github.com/inventor1975/ZTL &&
+cd ZTL &&
+git checkout 82a0f6ac61e0ddf9a927a70e04a0018989ef316d &&
+curl https://elan.lean-lang.org/elan-init.sh -sSf | sh -s -- -y &&
+source "$HOME/.elan/env" &&
+(cd lean && lake build) &&
+python3 run_all.py &&
+python3 inventory/axiom_audit.py &&
+python3 inventory/paper_claims.py &&
+echo "
+============================================================
+  ✅ REPRODUCED — everything matched.  59 stands / 371 theorems / 21 modules.
+  Copy THIS line into your report — you are done.
+============================================================"
 ```
 
-If a later command reports `lake: command not found`, the elan `PATH` did not
-reach this shell — run `source "$HOME/.elan/env"` (or open a new terminal) and
-retry from `cd lean`.
+Installing Lean can take a few minutes — that is normal, and `run_all.py` prints
+a `N/59 stands finished…` counter so you can see it is working, not stuck.
 
-**Expected final lines:**
+**You will see a lot of technical output — that is the evidence; you do not need
+to read it.** You only need the **very last line**:
 
-```
-ALL GREEN: 59 stands + Lean.
-ALL CLEAN: 371 theorems across 21 modules, every one on the empty axiom list.
-PAPER CLAIMS GREEN — every numeric claim checked matches a measurement taken now.
-```
+- if it says **✅ REPRODUCED** with the numbers **59 / 371 / 21** — it matched;
+  copy that line into your report and you are done;
+- if that line **does not appear** (or you see `FAIL` or red anywhere) — that is
+  the finding: copy the last lines of the terminal into your report.
 
-Note the counts (59, 371, 21) as you see them. The `git checkout` above
-pins the repository to the state these numbers were taken from; if you skip
-it and run the moving tip instead, larger counts are expected and are worth
-recording rather than a failure.
-
-`run_all.py` takes a few minutes. If a stand fails it prints `FAIL` with
-the name; that line is the finding.
+(The `git checkout` pins the exact documented state; if you skip it and run the
+moving tip, larger counts are expected and worth recording, not a failure.)
 
 ---
 
@@ -133,13 +138,18 @@ Please file your report as a copy of
 [`reproductions/INDEPENDENT-REPRODUCTION-REPORT-TEMPLATE.md`](reproductions/INDEPENDENT-REPRODUCTION-REPORT-TEMPLATE.md)
 — a fixed structure (identity, relationship, OS, versions, commit, raw
 output, verdict) so reproductions accumulate as a versioned record rather
-than scattered emails. A quick free-form note is also fine if that is all
-you have time for:
+than scattered emails. A quick note is also fine if that is all you have time for — just fill these in:
 
-> On [date] I followed [Path A / Path B] on [OS, browser or terminal].
-> I ran [what], and saw [what]. Deviations from the stated expectations:
-> [list, or "none"]. Difficulties: [list, or "none"].
-> — [name]
+```
+My connection to the ZTL / Veraxis project:  none  (or: acquaintance / relative / colleague)
+Date:
+OS:                                (e.g. Ubuntu 24.04 / Windows 11 + WSL / macOS)
+Path:  A (browser)  or  B (terminal)
+Saw the "✅ REPRODUCED" line and the numbers 59 / 371 / 21?   yes  /  no (then: what you saw)
+Anything different from what the instructions promised?       no  /  describe
+Where was it hard or confusing?                               no  /  describe
+Name or handle (a real name gives the report more weight):
+```
 
 ---
 

@@ -27,12 +27,12 @@ You only need the **last line**:
 
 ## Fill in and send back
 
-```
-My connection to the ZTL / Veraxis project:  none  (or: acquaintance / relative / colleague)
-Date:
-OS:                                (e.g. Ubuntu 24.04 / Windows 11 + WSL / macOS)
-Saw the "✅ REPRODUCED" line and the numbers 59 / 371 / 21?   yes  /  no (then: what you saw)
-Anything different from what the instructions promised?       no  /  describe
-Where was it hard or confusing?                               no  /  describe
-Name or handle (a real name gives the report more weight):
-```
+| Question | Your answer |
+|---|---|
+| My connection to ZTL / Veraxis | none / acquaintance / relative / colleague |
+| Date | |
+| OS | e.g. Ubuntu 24.04 / Windows 11 + WSL / macOS |
+| Saw the "✅ REPRODUCED" line + numbers 59 / 371 / 21? | yes / no (then: what you saw) |
+| Anything different from the instructions? | no / describe |
+| Where was it hard or confusing? | no / describe |
+| Name or handle (a real name gives more weight) | |

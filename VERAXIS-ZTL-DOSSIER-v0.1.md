@@ -32,11 +32,23 @@ Preprint text: separate, cite by DOI.
 | Pin | Value |
 |---|---|
 | Annotated tag | `veraxis-ztl-input-v0.1` |
+| **Signed tag (same commit)** | **`veraxis-ztl-input-v0.1.1-signed`** |
 | Tag target commit | `e819dec7e89d2dc67d6371e1eedb8e7aae854602` (2026-07-21) |
 | Lean toolchain | `leanprover/lean4:v4.29.1` |
 | Standalone dependency-closure commit | `82a0f6ac61e0ddf9a927a70e04a0018989ef316d` |
+| Signing key (Ed25519) | `F170414DDBB78F231929121175B13F5AEC28313A` — public key in `ZTL-signing-key.pub.asc` |
 
-The tag is **annotated, not GPG-signed** (the maintainer has no GPG key configured). Signature is an open hardening item, not a claim.
+**Signed provenance (2026-07-29).** The original tag `veraxis-ztl-input-v0.1` is annotated, not signed, and is **deliberately left untouched**: it is already pinned downstream, and re-signing would change the tag object and break that pin. A second tag, `veraxis-ztl-input-v0.1.1-signed`, points at the **same commit** with the **same artifacts** and carries a GPG signature. It adds provenance only; it asserts nothing new about the corpus.
+
+Verify with:
+
+```
+git tag -v veraxis-ztl-input-v0.1.1-signed
+# gpg: Good signature from "Vitaly Reznik <vitalyreznik@gmail.com>"
+# object e819dec7e89d2dc67d6371e1eedb8e7aae854602
+```
+
+Honest note on the key: it is a fresh Ed25519 key created for release signing on the maintainer's workstation and **held without a passphrase**, so that signing is not interactive. It establishes continuity of releases from this machine; it is not a hardware-backed identity and should not be read as one.
 
 ## 5. Interface schema (the pinned boundary)
 
@@ -201,7 +213,7 @@ If ZTL is unavailable, unacceptable, or replaced:
 | Item | State |
 |---|---|
 | Independent Tier-1 reproduction | OPEN — sought by Arkadiy Miteiko; cannot be closed by us |
-| GPG signature on the release tag | OPEN — no key configured |
+| GPG signature on the release tag | **CLOSED 2026-07-29** — signed tag `veraxis-ztl-input-v0.1.1-signed`, key `F170414D…EC28313A` |
 | Joint ZTL↔Envelope mapping conformance test (§6.3) | PROPOSED — requires OIC side to define expected Envelope behavior |
 | ZTL↔OIC time-model alignment (§6.4) | PROPOSED |
 | `MissingGround` granularity vs OIC review docket | QUESTION — ours is a list of unverified atoms; OIC to confirm this matches what a reviewer needs |

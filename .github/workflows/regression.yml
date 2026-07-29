@@ -15,6 +15,13 @@ name: regression
 
 on:
   push:
+    # Branches only. A tag push re-runs the workflow against the commit the tag
+    # points at — and release tags point at FROZEN history (downstream-ztl-input-v0.1
+    # -> e819dec, pinned downstream). Old commits predate current fixes and fail
+    # honestly; that is not a regression, it is archaeology, and it cannot be
+    # repaired without breaking the pin. Test the branch, not the museum.
+    branches:
+      - '**'
   pull_request:
   workflow_dispatch:
 

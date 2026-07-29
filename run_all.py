@@ -4,6 +4,7 @@ Unified ZTL regression runner: all stands + Lean.
 Exit 0 = all green. Key markers are checked against the output.
 """
 
+import os
 import subprocess
 import sys
 
@@ -137,7 +138,7 @@ STANDS = [
 def _run_one(item):
     script, markers = item
     r = subprocess.run([sys.executable, script],
-                       capture_output=True, text=True, timeout=300)
+                       capture_output=True, text=True, timeout=900)
     # A stand may SKIP when an optional third-party backend is absent (the
     # quantum probes need qiskit-aer). A skip is NOT a pass: it is reported
     # separately, its markers are not claimed, and the summary says how many
@@ -156,13 +157,19 @@ def main():
     # deterministic in REPORTING order (STANDS order), not completion
     # order, so the output reads the same as the sequential runner.
     from concurrent.futures import ThreadPoolExecutor, as_completed
-    workers = min(30, len(STANDS))
+    # Parallelism is bounded by the MACHINE, not by a constant. A fixed 30
+    # is fine on a 32-core workstation and starves a 2-4 core CI runner: the
+    # heaviest stand (pssl/ztl_signature.py, ~52 s alone) then exceeded the
+    # old 300 s limit and the workflow died on a timeout, not on a result.
+    # Green on the author's machine is exactly the assurance this project
+    # refuses to grant itself, so the runner sets the width.
+    workers = max(2, min(30, os.cpu_count() or 4, len(STANDS)))
     total = len(STANDS)
     results = {}
     # Live progress: the stands run in parallel and would otherwise print
     # nothing until all finish — which reads as "hung". Show a counter that
     # advances as each completes (reporting below stays in STANDS order).
-    print(f"  running {total} stands in parallel — the slow part; progress below:",
+    print(f"  running {total} stands, {workers} at a time — the slow part; progress below:",
           flush=True)
     with ThreadPoolExecutor(max_workers=workers) as pool:
         futures = [pool.submit(_run_one, item) for item in STANDS]

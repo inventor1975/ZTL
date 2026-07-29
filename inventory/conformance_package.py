@@ -23,8 +23,8 @@ transitive dependency closure is DEFERRED (native Lean extraction), not
 guessed.
 
 Run:  python3 inventory/conformance_package.py
-      → writes VERAXIS-ZTL-CONFORMANCE-input-v0.1.md
-      → writes VERAXIS-ZTL-fixtures-v0.1.json
+      → writes veraxis/VERAXIS-ZTL-CONFORMANCE-input-v0.1.md
+      → writes veraxis/VERAXIS-ZTL-fixtures-v0.1.json
 """
 import hashlib
 import os
@@ -798,7 +798,7 @@ def main():
             L.append("")
     if missing:
         L.append(f"> MISSING from the corpus: {missing}")
-    path = os.path.join(_ROOT, "VERAXIS-ZTL-CONFORMANCE-input-v0.1.md")
+    path = os.path.join(_ROOT, "veraxis", "VERAXIS-ZTL-CONFORMANCE-input-v0.1.md")
     open(path, "w", encoding="utf-8").write("\n".join(L) + "\n")
     write_fixtures_json()
     n = sum(len(v) for _, v in SUBSET)
@@ -827,7 +827,7 @@ def write_fixtures_json():
         "counts_by_kind": kinds,
         "fixtures": FX,
     }
-    path = os.path.join(_ROOT, "VERAXIS-ZTL-fixtures-v0.1.json")
+    path = os.path.join(_ROOT, "veraxis", "VERAXIS-ZTL-fixtures-v0.1.json")
     with open(path, "w", encoding="utf-8") as fh:
         json.dump(doc, fh, ensure_ascii=False, indent=2)
         fh.write("\n")

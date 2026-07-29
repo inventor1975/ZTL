@@ -18,7 +18,7 @@ KEPT — they are meaningful named objects. This choice is stated in the
 artifact header so nothing is hidden.
 
 Run:  python3 inventory/dep_closure.py
-      → writes VERAXIS-ZTL-deps-v0.1.json
+      → writes veraxis/VERAXIS-ZTL-deps-v0.1.json
 Requires a built corpus (lean/.lake/build) — same precondition as axiom_audit.
 """
 import json
@@ -148,7 +148,7 @@ def main():
         "corpus_modules": modules,
         "closures": closures,
     }
-    path = os.path.join(_ROOT, "VERAXIS-ZTL-deps-v0.1.json")
+    path = os.path.join(_ROOT, "veraxis", "VERAXIS-ZTL-deps-v0.1.json")
     with open(path, "w", encoding="utf-8") as fh:
         json.dump(doc, fh, ensure_ascii=False, indent=2)
         fh.write("\n")

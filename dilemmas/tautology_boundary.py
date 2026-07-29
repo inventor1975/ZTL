@@ -231,6 +231,20 @@ if __name__ == "__main__":
         tok = sys.argv[i + 1] if len(sys.argv) > i + 1 else None
         moved, lost, live = run_ibm(tok)
     else:
+        # The simulator is a third-party package (qiskit-aer). Where it is
+        # absent — a bare CI runner, a fresh clone — this stand SKIPS and says
+        # so. It does not print its green markers: an unrun probe must never
+        # look like a passed one. The regression treats a skip as "not run",
+        # not as evidence; run it locally with qiskit-aer to exercise it.
+        try:
+            import qiskit_aer  # noqa: F401
+        except ImportError:
+            print()
+            print("  SKIPPED — qiskit-aer is not installed in this environment.")
+            print("  The probe needs a quantum backend (simulator by default,")
+            print("  real hardware only with --ibm). Nothing is claimed here:")
+            print("  install qiskit-aer and re-run to measure the boundary.")
+            sys.exit(0)
         moved, lost, live = run_sim("--noisy" in sys.argv)
 
     print()

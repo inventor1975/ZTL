@@ -138,6 +138,13 @@ def _run_one(item):
     script, markers = item
     r = subprocess.run([sys.executable, script],
                        capture_output=True, text=True, timeout=300)
+    # A stand may SKIP when an optional third-party backend is absent (the
+    # quantum probes need qiskit-aer). A skip is NOT a pass: it is reported
+    # separately, its markers are not claimed, and the summary says how many
+    # stands actually ran. It is also not a failure — an unavailable device
+    # is not a refuted theorem.
+    if r.returncode == 0 and "SKIPPED" in r.stdout:
+        return script, "skip", [], 0
     missing = [m for m in markers if m not in r.stdout]
     ok = r.returncode == 0 and not missing
     return script, ok, missing, r.returncode
@@ -164,13 +171,18 @@ def main():
             results[script] = (ok, missing, rc)
             print(f"\r    {done}/{total} stands finished…", end="", flush=True)
     print()
+    skipped = []
     for script, _markers in STANDS:
         ok, missing, rc = results[script]
-        status = "OK " if ok else "FAIL"
+        status = "SKIP" if ok == "skip" else ("OK " if ok else "FAIL")
         print(f"  [{status}] {script}"
+              + ("  — optional backend absent; nothing claimed"
+                 if ok == "skip" else "")
               + (f"  — missing markers: {missing}" if missing else "")
               + (f"  — exit code {rc}" if rc else ""))
-        if not ok:
+        if ok == "skip":
+            skipped.append(script)
+        elif not ok:
             failures.append(script)
 
     print(f"  [....] lean: lake build ...  ({workers} stands ran in parallel)")
@@ -187,7 +199,15 @@ def main():
     if failures:
         print(f"RED: {failures}")
         return 1
-    print(f"ALL GREEN: {len(STANDS)} stands + Lean.")
+    # Say what was actually exercised. "ALL GREEN: 59" while two stands never
+    # ran would be exactly the kind of assurance this project refuses itself.
+    ran = len(STANDS) - len(skipped)
+    if skipped:
+        print(f"ALL GREEN: {ran} of {len(STANDS)} stands + Lean "
+              f"({len(skipped)} SKIPPED, backend absent: "
+              f"{', '.join(skipped)} — nothing claimed for them).")
+    else:
+        print(f"ALL GREEN: {len(STANDS)} stands + Lean.")
     return 0
 
 

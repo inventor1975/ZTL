@@ -32,6 +32,14 @@ jobs:
           build: false
       # run_all.py ends with `lake build` itself and asserts the
       # zero-axiom line, so the Lean corpus is exercised here too.
+      # poppler-utils must be present BEFORE run_all.py, not after it:
+      # inventory/paper_claims.py is itself one of the stands, and it counts
+      # PDF pages with `pdfinfo`. Installing poppler only for the later step
+      # left the in-regression run without it, so the stand reported
+      # "sheet: says 9, measured None" and the workflow was RED on every push
+      # from 2026-07-22 onward. The corpus was never at fault.
+      - name: page-count tool for the paper claims
+        run: sudo apt-get install -y poppler-utils >/dev/null 2>&1 || true
       - name: all stands + Lean
         run: python3 run_all.py
       # The papers are claims too. Until 2026-07-20 nothing checked that

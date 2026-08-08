@@ -1,11 +1,11 @@
 # OIC–ZTL–OAM Protocol v0.1
 
 **Document ID:** `OIC-ZTL-OAM-PROTOCOL-v0.1`
-**Status:** REVISED CANDIDATE (revision 2) — returned for owner/adjudicator review after `REVISION_REQUIRED_BEFORE_FREEZE`; not frozen; not executable authority.
+**Status:** REVISION 3 — FINAL FREEZE CANDIDATE, returned after `ACCEPTED_IN_SUBSTANCE / FREEZE = PENDING_SURGICAL_ERRATA`; not frozen; not executable authority.
 **Steering:** Vitaliy Reznik (post-M1 protocol phase, per owner authorization of 2026-08-09).
 **Drafted:** 2026-08-09, by Claude (Fable 5) under the steering role's direction (Variant A: the human owns decisions and answers for the result).
 **Governing predecessor state:** Review Ledger `main` = `060efa2cc295e0d7d9960f725aece264fc471935` (M1 `CLOSED_BY_ACCEPTED_FALSIFICATION`; falsification basis F1+F3+F6+F7; F4 not sustained as labeled; no replacement causal hypothesis).
-**Prior candidate:** commit `3c6a8cf`, SHA-256 `e207a243…`; the semantic core of that candidate was ACCEPTED and is preserved here; the changes of this revision are accounted in Appendix D.
+**Prior candidates:** revision 1 commit `3c6a8cf` (SHA-256 `e207a243…`, semantic core ACCEPTED); revision 2 commit `fd7c55ef…` (SHA-256 `c4478420…`, ACCEPTED IN SUBSTANCE). Revision-2 changes are accounted in Appendix D; this revision's freeze errata in Appendix E.
 
 ---
 
@@ -96,9 +96,15 @@ institutional-actor or admission roles for the same evaluation.
   `ON CREDIT` names a **disposition**, never an atom status. Note: `EARNED` does
   **not** require every atom in the marking to carry `T`; irrelevant `Z` atoms may
   exist under a hereditary result (the grade quantifies over their completions).
+- **CompletionSpace(JudgeContext)** — the **counterfactual** set of admissible
+  completions of the `Z`-valued atoms of the JudgeContext's fixed base marking,
+  evaluated under the same formula and judge semantics. Members of the
+  CompletionSpace are hypothetical valuations used by grade computation; they are
+  **not** persisted marking versions and do not mutate the JudgeContext (an *actual*
+  status change is succession per R-25 and yields a new JudgeContext).
 - **Grade** — the judge's stability qualifier over the verdict; `hereditary` means the
-  verdict survives every completion/refinement of the current marking **within the
-  same JudgeContext**.
+  verdict is **invariant across every member of the CompletionSpace generated from
+  the JudgeContext's fixed base marking**.
 - **Weak links** — the named atoms whose status blocks or conditions the disposition.
 - **CLWR** — contemporaneous logical-warrant record (§6).
 - **Issuance** — the explicit act of an institutional authority that converts an
@@ -271,8 +277,8 @@ Given a JudgeContext, the judge returns exactly one disposition:
 
 | Disposition | Kernel definition | Meaning |
 |---|---|---|
-| `EARNED` | verdict `T` + grade `hereditary` | the claim holds and no completion of the current marking can revoke it within this JudgeContext |
-| `REFUTED` | verdict `F` + grade `hereditary` | the claim fails and no completion of the current marking can rescue it within this JudgeContext |
+| `EARNED` | verdict `T` + grade `hereditary` | the claim holds in every member of the JudgeContext's CompletionSpace: no counterfactual completion of the base marking revokes it |
+| `REFUTED` | verdict `F` + grade `hereditary` | the claim fails in every member of the JudgeContext's CompletionSpace: no counterfactual completion of the base marking rescues it |
 | `ON CREDIT` | verdict `T` + non-`hereditary` grade | the claim currently computes true, but unverified ground is load-bearing: truth is being asked for on credit |
 | `OPEN` | otherwise non-established | the current marking does not establish the claim; the weak links name what verification would have to settle |
 
@@ -310,15 +316,20 @@ under governing authority, recorded as such.
 
 **R-12 — Grade semantics are JudgeContext-bounded.**
 *Input state:* a CLWR with grade `hereditary`.
-*Condition:* refinements/completions of the **current marking** (verification of
-currently-`Z` atoms) within the **same** JudgeContext.
-*Permitted transition:* the disposition may be relied upon as logically stable under
-exactly those refinements — nothing more.
-*Observable evidence:* the CLWR's JudgeContext triple.
+*Condition:* invariance of the verdict across the **CompletionSpace** of the CLWR's
+JudgeContext — the counterfactual completions of the fixed base marking's `Z` atoms
+under the same formula and judge semantics (§2).
+*Permitted transition:* the disposition may be relied upon as logically stable across
+exactly that counterfactual space — nothing more. An **actual** later admission or
+status change is succession (R-25): it produces a successor marking, hence a new
+JudgeContext and, when evaluated, a new CLWR; it neither confirms nor impeaches the
+prior CLWR, whose grade was never a claim about actual future markings.
+*Observable evidence:* the CLWR's JudgeContext triple and the §2 CompletionSpace
+definition.
 *Falsifying counterexample:* any artifact citing a `hereditary` grade as grounds that
-an authorization cannot expire, be revoked, or be superseded. Those are lifecycle
-events of the institutional envelope (§11); they change current reliance state and
-leave the logical record untouched.
+an authorization cannot expire, be revoked, or be superseded; or as a claim about
+actual successor markings. Lifecycle events of the institutional envelope (§11)
+change current reliance state and leave the logical record untouched.
 
 **R-13 — Weak-link disclosure.**
 *Input state:* any non-`EARNED` disposition.
@@ -370,18 +381,28 @@ and while the issuance is active** (R-26); relying parties may then act on it.
 *Falsifying counterexample:* reliance recorded against a claim with no issuance
 record, or issuance missing any of the seven minimum elements.
 
-**R-26 — Issuance lifecycle and current status.**
-*Input state:* an existing issuance record.
-*Condition:* lifecycle events — activation, expiry, revocation, supersession — are
-themselves explicit, hash-bound institutional records citing the issuance identity;
-the **current status** of an issuance at any reliance event is determined from the
-issuance record plus its recorded lifecycle events under the governing rules.
-*Permitted transition:* status transitions occur only through such recorded events;
-supersession records identify the superseding issuance.
-*Observable evidence:* the lifecycle chain resolvable from the issuance identity.
-*Falsifying counterexample:* an issuance treated as revoked/expired/superseded (or as
-still active) with no corresponding lifecycle record; or lifecycle state asserted from
-anything other than the recorded chain.
+**R-26 — Issuance lifecycle and fail-closed current status.**
+*Input state:* an existing issuance record and a reliance event at time *t*.
+*Condition:* the **current status** at *t* is computed deterministically and
+fail-closed from **both** sources together: (A) the issuance record's own
+effective/expiry terms, and (B) all recorded lifecycle events — revocation,
+supersession, and any term modifications the governing rules allow — effective at or
+before *t*. **The issuance itself establishes initial activation at its stated
+effective time; no separate activation record is required.** `ACTIVE` at *t* holds
+**iff** all of: the issuance is effective at *t*; its stated expiry/end condition has
+not occurred by *t*; no effective revocation exists at *t*; no effective supersession
+exists at *t*; and every other governing activation condition stated in the issuance
+is satisfied at *t*. **The absence of a separately written expiry event never keeps
+an issuance active beyond an expiry already encoded in its own terms.**
+*Permitted transition:* status changes arise only from the issuance terms taking
+effect (including self-expiry) or from recorded lifecycle events; supersession
+records identify the superseding issuance.
+*Observable evidence:* the issuance record plus the lifecycle chain resolvable from
+its identity — jointly sufficient to recompute the status at any *t*.
+*Falsifying counterexample:* an issuance treated as ACTIVE past its own encoded
+expiry because no expiry event was written; a status asserted from anything other
+than the recorded terms-plus-events computation; or a revocation/supersession honored
+with no corresponding record.
 
 **R-17 — Reliance requires an ACTIVE issuance at the reliance event.**
 *Input state:* a relying party contemplating action on a claim.
@@ -550,9 +571,13 @@ Preregistered, each falsifiable by the criteria of §24:
 - **EH-3 (Blinded detection).** Under the blinded-mutation methodology of §23, the
   judge pipeline detects planted defects at or above the thresholds of §24.2, with
   zero false `EARNED` (§24.3).
-- **EH-4 (No false convictions).** On unmutated accepted transactions, gates that the
-  governing record accepted evaluate `EARNED` — no false `REFUTED` against the
-  independently established reference markings (§21).
+- **EH-4 (Accepted-state reproduction).** The EH-4 population is exactly the
+  unmutated gates whose independently established ground truth is qualifying/PASS
+  (§21). For every such gate, under the frozen reference marking, the expected judge
+  disposition is `EARNED`. **Any** other disposition on that population — `REFUTED`,
+  `OPEN`, or `ON CREDIT` — falsifies EH-4 (a `REFUTED` is additionally labeled a
+  *false conviction*). Gates whose ground truth is adverse or non-qualifying are not
+  in this population and are scored against their own ground-truth class.
 
 ## 18. Corpus
 
@@ -568,7 +593,8 @@ corpus index.
 
 **Corpus index.** A hash-bound `corpus-index` artifact enumerates every included
 transaction: identity (head/tree or package hashes), its governing text(s), its
-evidence tree, and its accepted disposition. The index is frozen with this protocol.
+evidence tree, and its accepted disposition. The exact index is bound and frozen in
+the **Experiment Freeze Package** (§28), not in this protocol.
 
 ## 19. Atom harvesting and admission methodology
 
@@ -590,10 +616,11 @@ evidence tree, and its accepted disposition. The index is frozen with this proto
    activation predicate list, packaging accounting requirements, confinement
    counters), one formula per gate, composed of the atoms of §19.
 2. Every formula records its source anchor: document identity + the quoted clause.
-3. The complete formula set is frozen (hash + date) together with the harvesting
-   rules **before** any evaluation or mutation run; after freeze, formula changes are
-   prohibited for the duration of the experiment (a defective formula found later is
-   an experiment *result* under §24.6, not a repair ticket).
+3. The complete formula set and the harvesting rules are bound and frozen in the
+   **Experiment Freeze Package** (§28) **before** any evaluation or mutation run;
+   after that freeze, formula changes are prohibited for the duration of the
+   experiment (a defective formula found later is an experiment *result* under
+   §24.6, not a repair ticket).
 4. The judge implementation is pinned by version/commit hash for the entire
    experiment; the pinned identity appears in every CLWR.
 
@@ -626,18 +653,32 @@ harvested; each surfaces as `REFUTED`, `OPEN` (weak link naming the seam), or a
 provenance/consistency failure. Detection of S-1…S-5 is scored as **known-seam
 recall** and reported separately from blinded results (§23).
 
+**Binding requirement.** Before the Experiment Freeze Package (§28) is accepted,
+every scored seam must resolve to an exact persisted, hash-bound artifact inside the
+frozen corpus. A seam that exists only as conversational or transport history (a
+candidate concern for S-2 and S-3, whose corrupted orders traveled the relay channel)
+may **not** remain in the scored set by description alone: either the exact persisted
+artifact is bound, or the seam is replaced/removed in the Freeze Package with the
+substitution recorded. The scored denominator of §24.1 is whatever the Freeze Package
+binds.
+
 ## 23. Blinded-mutation methodology
 
-1. After the freeze of §20, a mutation controller **outside the implementation path**
-   (owner side, or a sealed script accepted by the owner) produces N mutated copies
-   of corpus transactions. The implementer does not know which transactions or
-   classes were mutated.
+1. After the Experiment Freeze Package (§28) is accepted, a mutation controller
+   **outside the implementation path** (owner side, or a sealed script accepted by
+   the owner) produces the mutated corpus copies. The implementer does not know which
+   transactions or classes were mutated.
 2. Mutation classes (at minimum, per the accepted charter): missing witness/evidence;
    corrupted hashes; schema drift; counter inconsistency; contradictory gate facts;
    missing atoms; false-positive adapter markings; altered identity/environment
    evidence.
-3. The mutation manifest (what was planted, where) is hash-committed **before** runs
-   and disclosed only after the implementer's results are frozen.
+3. The exact planted denominator **per class** is fixed in the Experiment Freeze
+   Package before any run: at least **N ≥ 10 planted mutations per class**, unless
+   the frozen corpus contains fewer than ten structurally valid opportunities for a
+   class — in which case every valid opportunity is enumerated, all are used, and the
+   structural ceiling is recorded before execution. The mutation manifest (what was
+   planted, where) is hash-committed **before** runs and disclosed only after the
+   implementer's results are frozen.
 4. Runs over mutated corpora use the same frozen harvester, formulas and judge as the
    unmutated runs.
 5. Scoring after disclosure: per-class detection = flagged/planted; misses and false
@@ -647,16 +688,20 @@ recall** and reported separately from blinded results (§23).
 
 The experiment **fails** (per hypothesis) if any of the following holds:
 
-1. **Denominators.** All rates below use preregistered denominators: gates evaluated,
-   atoms harvested, seams known (5), mutations planted per class (from the sealed
-   manifest), qualifying evaluations. Excluded gates are reported in a separate
-   line — never silently dropped from denominators.
+1. **Denominators.** All rates below use denominators frozen in the Experiment
+   Freeze Package (§28): gates evaluated, atoms harvested, seams bound, mutations
+   planted per class (per the §23 rule and the sealed manifest), qualifying
+   evaluations. A percentage threshold with an unfrozen denominator is not
+   preregistration. Excluded gates are reported in a separate line — never silently
+   dropped from denominators.
 2. **EH-3 thresholds.** Detection below **100%** for hash/identity/witness mutation
    classes, or below **90%** for any other class.
 3. **False `EARNED`.** Any planted defect whose gate still evaluates clean `EARNED`:
    tolerance **zero**.
-4. **False `REFUTED`.** Any unmutated accepted gate evaluating `REFUTED` against the
-   reference markings (EH-4): tolerance **zero** after ground-truth adjudication.
+4. **EH-4 failure.** Any gate of the EH-4 population (ground truth
+   qualifying/PASS) evaluating anything other than `EARNED` under the frozen
+   reference marking — `REFUTED` (a *false conviction*), `OPEN`, or `ON CREDIT` —
+   tolerance **zero** after ground-truth adjudication.
 5. **Provenance failure.** Any provenance-less `T`/`F` surviving admission into an
    evaluated marking (scored against the harvesting layer; EH-2/EH-3 results over
    such markings are void for the affected gates).
@@ -713,6 +758,7 @@ not re-create them.
 ## 27. Phase boundaries
 
 **Phase A — retrospective.**
+*Entry condition:* `EXPERIMENT_FREEZE_PACKAGE_ACCEPTED = true` (§28).
 *Authority:* **read-only; zero institutional authority.** No Phase A output changes
 any disposition, ledger state, or governed artifact. Phase A comprises §§18–26 over
 the unmutated corpus (known-seam recall, EH-1/EH-2/EH-4) and the blinded-mutation
@@ -729,7 +775,35 @@ governing process; for every applicable gate the record is
 retained and adjudicated. No consequence of any kind may depend on the judge's output
 during Phase B.
 *Exit:* a discrepancy ledger and adjudication submitted for review; any subsequent
-role for the judge requires separate issuance per §15.1.
+role for the judge requires a separate issuance under R-14/R-16/R-17 (and remains
+excluded by §15 item 1 until so issued).
+
+## 28. The Experiment Freeze Package (mandatory pre-execution artifact)
+
+Between the freeze of this protocol and any Phase A evaluation there is exactly one
+gate: the **Experiment Freeze Package v0.1** — a single owner-frozen, hash-bound
+artifact set produced under this protocol. It binds, at minimum:
+
+1. the exact corpus index;
+2. every included head/tree/package identity;
+3. the complete inclusion/exclusion list with reasons;
+4. the harvesting rules;
+5. the harvester implementation identity;
+6. the complete formula set;
+7. the source anchor for every formula;
+8. the pinned ZTL/judge implementation identity;
+9. the exact S-1…S-5 artifact identities (or recorded substitutions per §22);
+10. the reproduction commands/procedure;
+11. the mutation classes;
+12. the exact mutation denominator per class (per §23);
+13. the sealed-manifest commitment procedure;
+14. every other preregistered constant required to score §24.
+
+**Gate:** Phase A authority does not exist until
+`EXPERIMENT_FREEZE_PACKAGE_ACCEPTED = true` is recorded by the owner. No evaluation,
+mutation run, or result-bearing execution of any kind may precede that acceptance.
+The protocol freezes semantics and method; the Freeze Package freezes the exact
+experimental matter. Their hashes are bound in that order.
 
 ---
 
@@ -777,12 +851,12 @@ No generalization beyond these four is made or licensed by this document.
 | R-09 | §6 | the judge is deterministic over a fixed JudgeContext |
 | R-10 | §7 | a CLWR alone effects no reliance-bearing transition |
 | R-11 | §8 | only `EARNED` qualifies as PASS |
-| R-12 | §8 | `hereditary` is JudgeContext-bounded stability, not persistence |
+| R-12 | §8 | `hereditary` = invariance over the CompletionSpace of the fixed base marking |
 | R-13 | §8 | non-`EARNED` dispositions name their weak links |
 | R-14 | §9 | issuance requires both the `EARNED` CLWR and the institutional legs |
 | R-15 | §10 | every load-bearing reference resolves to a content hash |
 | R-16 | §11 | issuance is an explicit, scoped act with lifecycle elements |
-| R-26 | §11 | issuance status is determined from recorded lifecycle events |
+| R-26 | §11 | current status computed fail-closed from issuance terms AND lifecycle events |
 | R-17 | §11 | reliance requires an ACTIVE issuance at the reliance event |
 | R-18 | §12 | `CANNOT` never decays into `PASS` |
 | R-19 | §12 | adverse results are preserved; successor work is newly authorized |
@@ -792,7 +866,7 @@ No generalization beyond these four is made or licensed by this document.
 | R-23 | §14 | replay audits the contemporaneous record; it never creates warrant |
 | R-24 | §14 | reconstruction succeeds from records — including institutional legs — without replay |
 
-## Appendix D. Change account for this revision (keyed to the seven review items)
+## Appendix D. Change account — revision 2 (keyed to the seven review items)
 
 1. **Experiment protocol completed** — Part II added (§§17–27): hypotheses EH-1…EH-4;
    corpus with inclusion/exclusion and frozen index; harvesting/admission methodology
@@ -835,7 +909,45 @@ No generalization beyond these four is made or licensed by this document.
    falsification is operationalized (a D1/D2 breach on a transaction violating no
    R-rule).
 
+## Appendix E. Change account — revision 3 (freeze errata only)
+
+1. **Hereditary/JudgeContext contradiction corrected** — §2: new
+   `CompletionSpace(JudgeContext)` definition (counterfactual completions of the
+   fixed base marking's `Z` atoms; not persisted markings; no JudgeContext
+   mutation); Grade redefined as invariance across that space; §8.1 EARNED/REFUTED
+   wording restated over the CompletionSpace; R-12 rewritten accordingly, with the
+   operational succession rule (actual change → R-25 → new JudgeContext → new CLWR)
+   preserved separately. Kernel disposition mapping unchanged.
+2. **Issuance current status made fail-closed** — R-26 rewritten: status at *t*
+   computed deterministically from the issuance's own effective/expiry terms AND
+   recorded lifecycle events; the chosen model is stated exactly (issuance
+   establishes initial activation at its effective time; no separate activation
+   record); ACTIVE-at-*t* conditions enumerated; absence of an expiry event never
+   extends an issuance past its own encoded expiry. R-16/R-17 already consistent
+   with this model and unchanged.
+3. **Experiment Freeze Package added** — new §28: mandatory owner-frozen artifact
+   between protocol freeze and Phase A, binding the fourteen enumerated items
+   (corpus index, identities, inclusion/exclusion, harvesting rules, harvester and
+   judge identities, formula set with anchors, exact seam identities, reproduction,
+   mutation classes and per-class denominators, sealed-manifest procedure, scoring
+   constants); Phase A entry condition `EXPERIMENT_FREEZE_PACKAGE_ACCEPTED = true`;
+   §18/§20/§23/§24.1 re-pointed at the Freeze Package; §22 binding requirement
+   added — every scored seam must resolve to a persisted hash-bound artifact, with
+   S-2/S-3 explicitly flagged for binding-or-substitution before acceptance.
+4. **EH-4 and denominators closed** — EH-4 population defined exactly (ground truth
+   qualifying/PASS); any non-`EARNED` disposition on that population falsifies EH-4
+   (`REFUTED` additionally labeled false conviction); §24.4 restated identically;
+   adverse/non-qualifying gates excluded from that population. Blinded-mutation
+   denominators: ≥10 planted per class or the enumerated structural ceiling,
+   recorded before execution; frozen in the Freeze Package (§23, §24.1).
+5. **Editorial cross-reference** — §27 Phase B exit now cites R-14/R-16/R-17 (and
+   §15 item 1) instead of the ambiguous §15.1.
+
+Explicitly: `architecture_changed = false`; `accepted_semantic_core_changed = false`;
+`code_implemented = false`; `Phase_A_started = false`. No cleanup, rewriting or
+expansion was performed beyond these errata.
+
 ---
 
-*End of Protocol v0.1 (revised candidate). Submitted for owner/adjudicator review. No
-implementation work precedes that review.*
+*End of Protocol v0.1, revision 3 — FINAL FREEZE CANDIDATE. Submitted for the freeze
+decision. No implementation work precedes it.*

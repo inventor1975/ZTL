@@ -132,6 +132,10 @@ STANDS = [
                         "0 of 64",
                         "Sasaki MP a∧(a→s b) ≤ b: True (216/216 triples)",
                         "iron at every rung"]),
+    ("zclassify.py",   ["docket complete — every row pinned",
+                        "Kripke transported, total",
+                        "barber = Grelling = R∈R = liar",
+                        "suspended ⊥ ⇒ DOWNSTREAM"]),
 ]
 
 

@@ -155,5 +155,6 @@
    "what": "relay-channel review-order texts (including the corrupted copies underlying candidate seams S-2/S-3)",
    "reason": "not persisted hash-bound corpus artifacts; not bindable under §22/§28"
   }
- ]
+ ],
+ "note": "Revision 3: formula source anchors point only to persisted governing artifacts (owner-decision blobs, the verbatim order inside the legacy zip, persisted authorization-reference records) or, for identity values established by accepted decisions, to the accepted-decision registry entries here. Result-derived expectations were removed; the observed counts live in ground-truth.json, not in the gate conditions."
 }

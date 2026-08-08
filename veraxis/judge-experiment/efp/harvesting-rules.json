@@ -21,6 +21,16 @@
   "zip_member_identity": "as member_identity, over the legacy zip's members; witness = zip sha256 + member name.",
   "zip_manifest_accounting": "as manifest_accounting over the legacy zip; witness = zip sha256.",
   "ast_confinement": "atom is T iff AST module-unit diff of the two persisted sources changes exactly the listed units and no others, with the named unit byte-identical; witness = both source blobs.",
-  "doc_cites": "atom is T iff the persisted return/record document contains the exact cited line (e.g., a CI run id with SUCCESS); witness = blob. NOTE: this binds the persisted CITATION; the external CI service itself is not a corpus artifact."
+  "doc_cites": "atom is T iff the persisted return/record document contains the exact cited line (e.g., a CI run id with SUCCESS); witness = blob. NOTE: this binds the persisted CITATION; the external CI service itself is not a corpus artifact.",
+  "commit_exists": "T iff <head> resolves to a commit object in the corpus ledger (recited head, tree not separately stipulated); unresolvable -> Z.",
+  "file_present": "T iff <path> is present in the item tree (existence only).",
+  "argv_has_substr": "T iff some element of the JSON argv at <path> contains the substring <substr>.",
+  "json_field_in": "T iff JSON <path>.<field> is one of <allowed>.",
+  "junit_population": "T iff the set of test IDs in the JUnit at <path> equals exactly <expected> (population).",
+  "junit_collected": "T iff the JUnit at <path> collects exactly <collected> cases (total).",
+  "zip_member_present": "T iff <member> exists in the legacy zip.",
+  "seam_contradiction": "T iff a governing clause value and the measured evidence value disagree (seam exposed).",
+  "seam_f4_support": "T iff no previously-S1-resolved test regressed in R1 (the F4 mislabel is unsupported).",
+  "seam_schema_drift": "T iff two corpus manifests bind members under different field names (byte_length vs bytes)."
  }
 }

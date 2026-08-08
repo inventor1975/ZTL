@@ -1,0 +1,44 @@
+{
+ "mapping_id": "M1-EXPERIMENT-SEAM-DETECTION-v0.1",
+ "seams": [
+  {
+   "seam_id": "S-1",
+   "gate": "SEAM-S1-METRIC-CONTRADICTION",
+   "source_artifacts": [
+    "legacy-zip:01-OWNER-ACCEPTANCE-...-ORDER-001.md (governing '7')",
+    "legacy-zip:03-M1-S1-CHANGE-CONFINEMENT-REPORT.json (measured 5)"
+   ],
+   "detection_check": "atom s1_seam (rule seam_contradiction): T iff governing 7 != measured 5",
+   "permissible_detection": "T (contradiction exposed)",
+   "missed": "F (values agreed) or clean EARNED of the gate",
+   "scoring_field": "gate disposition + s1_seam witness {governing_value, measured_value, exposed}",
+   "note": "The historical defective '7' is PRESERVED as the tested condition; the machinery must expose, not normalize."
+  },
+  {
+   "seam_id": "S-4",
+   "gate": "SEAM-S4-F4-MISLABEL",
+   "source_artifacts": [
+    "ledger@060efa2c:stage-m1-closure/12-M1-CLOSURE-R1-ADJUDICATION.json (F4 listed)",
+    "ledger@060efa2c:stage-m1-closure/evidence/r1/suite.junit.xml (R1 states of the seven)"
+   ],
+   "detection_check": "atom s4_seam (rule seam_f4_support): T iff none of the seven S1-resolved tests regressed in R1 (so F4 per B8-4 is unsupported)",
+   "permissible_detection": "T (F4 label unsupported by evidence)",
+   "missed": "F (a regression found, endorsing F4)",
+   "scoring_field": "s4_seam witness {regressed: []}",
+   "note": "Actually exercises the F4-support condition, not merely H1/reruns/BLOCKED."
+  },
+  {
+   "seam_id": "S-5",
+   "gate": "SEAM-S5-SCHEMA-DRIFT",
+   "source_artifacts": [
+    "legacy-zip:11-M1-S1-PACKAGE-MANIFEST.json ('byte_length')",
+    "ledger@f44d1cc3:stage-m1-s2/12-M1-S2-EVIDENCE-MANIFEST.json ('bytes')"
+   ],
+   "detection_check": "atom s5_seam (rule seam_schema_drift): T iff the two manifests bind members under different field names",
+   "permissible_detection": "T (drift exposed)",
+   "missed": "F (fields identical) or drift silently absorbed",
+   "scoring_field": "s5_seam witness {zip_field, ledger_field, drift}",
+   "note": "Directly compares the two schemas; the harvester's dual-field tolerance elsewhere does not score this gate."
+  }
+ ]
+}

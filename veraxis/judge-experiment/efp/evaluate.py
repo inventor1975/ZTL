@@ -29,10 +29,14 @@ R07_FIELDS = ["formula", "formula_sha256", "marking", "marking_sha256",
               "judge_context_id", "claim_context_id"]
 
 def build_clwr(gate, mdoc, mpath, pin, templates):
+    # Full Marking (Protocol §2): atom -> status AND witness references for every non-Z.
+    full_marking = {a: {"status": rec["status"], "witness": rec.get("witness")}
+                    for a, rec in mdoc["marking"].items()}
     marking_status = {a: rec["status"] for a, rec in mdoc["marking"].items()}
     formula = gate["formula"]
     formula_sha = sha(formula.encode())
-    marking_sha = sha(canon(marking_status))
+    marking_sha = sha(canon(full_marking))          # Marking identity binds witnesses
+    status_map_sha = sha(canon(marking_status))     # diagnostic only
     pin_sha = sha(canon(pin))
     judge_ctx = sha(canon({"formula_sha256": formula_sha,
                            "marking_sha256": marking_sha,
@@ -46,9 +50,10 @@ def build_clwr(gate, mdoc, mpath, pin, templates):
         # R-07 field 1: formula and its individual identity
         "formula": formula,
         "formula_sha256": formula_sha,
-        # R-07 field 2: the marking itself and its hash
-        "marking": marking_status,
+        # R-07 field 2: the marking itself (with witnesses) and its identity hash
+        "marking": full_marking,
         "marking_sha256": marking_sha,
+        "status_map_sha256": status_map_sha,
         # field 3: judge identity
         "judge_identity": {**pin, "judge_pin_sha256": pin_sha},
         # field 4-5: verdict/disposition, grade

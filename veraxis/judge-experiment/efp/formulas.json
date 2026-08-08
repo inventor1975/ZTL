@@ -21,104 +21,114 @@
   "zip_member_identity": "as member_identity, over the legacy zip's members; witness = zip sha256 + member name.",
   "zip_manifest_accounting": "as manifest_accounting over the legacy zip; witness = zip sha256.",
   "ast_confinement": "atom is T iff AST module-unit diff of the two persisted sources changes exactly the listed units and no others, with the named unit byte-identical; witness = both source blobs.",
-  "doc_cites": "atom is T iff the persisted return/record document contains the exact cited line (e.g., a CI run id with SUCCESS); witness = blob. NOTE: this binds the persisted CITATION; the external CI service itself is not a corpus artifact."
+  "doc_cites": "atom is T iff the persisted return/record document contains the exact cited line (e.g., a CI run id with SUCCESS); witness = blob. NOTE: this binds the persisted CITATION; the external CI service itself is not a corpus artifact.",
+  "commit_exists": "T iff <head> resolves to a commit object in the corpus ledger (recited head, tree not separately stipulated); unresolvable -> Z.",
+  "file_present": "T iff <path> is present in the item tree (existence only).",
+  "argv_has_substr": "T iff some element of the JSON argv at <path> contains the substring <substr>.",
+  "json_field_in": "T iff JSON <path>.<field> is one of <allowed>.",
+  "junit_population": "T iff the set of test IDs in the JUnit at <path> equals exactly <expected> (population).",
+  "junit_collected": "T iff the JUnit at <path> collects exactly <collected> cases (total).",
+  "zip_member_present": "T iff <member> exists in the legacy zip.",
+  "seam_contradiction": "T iff a governing clause value and the measured evidence value disagree (seam exposed).",
+  "seam_f4_support": "T iff no previously-S1-resolved test regressed in R1 (the F4 mislabel is unsupported).",
+  "seam_schema_drift": "T iff two corpus manifests bind members under different field names (byte_length vs bytes)."
  },
  "gates": [
   {
-   "gate_id": "G-01-TREE",
+   "gate_id": "G-01-HEAD",
    "item_id": "LEDGER-PR-01",
    "source_anchors": [
     {
-     "kind": "accepted-decision-registry",
-     "item_id": "LEDGER-PR-01",
-     "review_id": 4884911346,
-     "accepted_review_token": "ACCEPT (bootstrap review)",
-     "note": "accepted head/tree coordinate of the reviewed transaction"
+     "kind": "persisted-artifact",
+     "head": "060efa2cc295e0d7d9960f725aece264fc471935",
+     "path": "owner-decisions/REVIEW-LEDGER-BOOTSTRAP-OWNER-ACCEPTANCE-001.md",
+     "sha256": "8588676fe507832ec499eb7cedc4949106044533d44caefc91fb367fcc6ccc35",
+     "bytes": 10461,
+     "clause": "bootstrap review-chain binding: 'Reviewed head ' + head recited; trees not recited, so the gate tests recitation resolvability, not tree equality"
     }
    ],
-   "formula": "t_tree",
+   "formula": "t_head",
    "atoms": [
     {
-     "atom": "t_tree",
-     "rule": "tree_identity",
+     "atom": "t_head",
+     "rule": "commit_exists",
      "args": {
-      "head": "00074eeb98517fd4cd4e76ca31758dfdda15fc93",
-      "expected_tree": "db3be329820f7e137b968e907775ebd5891554c3"
+      "head": "00074eeb98517fd4cd4e76ca31758dfdda15fc93"
      }
     }
    ],
    "note": "Early infrastructure PRs carry thin mechanical gate content; their substance is institutional prose (expected discrepancy class: institutional)."
   },
   {
-   "gate_id": "G-02-TREE",
+   "gate_id": "G-02-HEAD",
    "item_id": "LEDGER-PR-02",
    "source_anchors": [
     {
-     "kind": "accepted-decision-registry",
-     "item_id": "LEDGER-PR-02",
-     "review_id": 4885485435,
-     "accepted_review_token": "ACCEPT (identity binding review)",
-     "note": "accepted head/tree coordinate of the reviewed transaction"
+     "kind": "persisted-artifact",
+     "head": "060efa2cc295e0d7d9960f725aece264fc471935",
+     "path": "owner-decisions/REVIEW-LEDGER-BOOTSTRAP-OWNER-ACCEPTANCE-001.md",
+     "sha256": "8588676fe507832ec499eb7cedc4949106044533d44caefc91fb367fcc6ccc35",
+     "bytes": 10461,
+     "clause": "bootstrap review-chain binding: 'Reviewed head ' + head recited; trees not recited, so the gate tests recitation resolvability, not tree equality"
     }
    ],
-   "formula": "t_tree",
+   "formula": "t_head",
    "atoms": [
     {
-     "atom": "t_tree",
-     "rule": "tree_identity",
+     "atom": "t_head",
+     "rule": "commit_exists",
      "args": {
-      "head": "59e4cd5c6101766a825b9cf93df7202ef1a6e254",
-      "expected_tree": "8376e2ee05ffe890cdc44c83fc0208c97934e833"
+      "head": "59e4cd5c6101766a825b9cf93df7202ef1a6e254"
      }
     }
    ],
    "note": "Early infrastructure PRs carry thin mechanical gate content; their substance is institutional prose (expected discrepancy class: institutional)."
   },
   {
-   "gate_id": "G-03-TREE",
+   "gate_id": "G-03-HEAD",
    "item_id": "LEDGER-PR-03",
    "source_anchors": [
     {
-     "kind": "accepted-decision-registry",
-     "item_id": "LEDGER-PR-03",
-     "review_id": 4885872274,
-     "accepted_review_token": "ACCEPT (decommission review)",
-     "note": "accepted head/tree coordinate of the reviewed transaction"
+     "kind": "persisted-artifact",
+     "head": "060efa2cc295e0d7d9960f725aece264fc471935",
+     "path": "owner-decisions/REVIEW-LEDGER-BOOTSTRAP-OWNER-ACCEPTANCE-001.md",
+     "sha256": "8588676fe507832ec499eb7cedc4949106044533d44caefc91fb367fcc6ccc35",
+     "bytes": 10461,
+     "clause": "bootstrap review-chain binding: 'Reviewed head ' + head recited; trees not recited, so the gate tests recitation resolvability, not tree equality"
     }
    ],
-   "formula": "t_tree",
+   "formula": "t_head",
    "atoms": [
     {
-     "atom": "t_tree",
-     "rule": "tree_identity",
+     "atom": "t_head",
+     "rule": "commit_exists",
      "args": {
-      "head": "cb38c13bad436d860b34dd75269d4fbdd648e931",
-      "expected_tree": "602f5227ea02b258d7d249554be964af18abf951"
+      "head": "cb38c13bad436d860b34dd75269d4fbdd648e931"
      }
     }
    ],
    "note": "Early infrastructure PRs carry thin mechanical gate content; their substance is institutional prose (expected discrepancy class: institutional)."
   },
   {
-   "gate_id": "G-04-TREE",
+   "gate_id": "G-04-HEAD",
    "item_id": "LEDGER-PR-04",
    "source_anchors": [
     {
-     "kind": "accepted-decision-registry",
-     "item_id": "LEDGER-PR-04",
-     "review_id": 4888423824,
-     "accepted_review_token": "ACCEPT (acceptance-record review)",
-     "note": "accepted head/tree coordinate of the reviewed transaction"
+     "kind": "persisted-artifact",
+     "head": "ecdabc7ba4ca026391f0b64b6d793df67abecc29",
+     "path": "LEDGER-INVARIANTS.md",
+     "sha256": "40f97003724df8cddf45559c11274a39334fef486cef4a44a859f81f67b19e95",
+     "bytes": 4154,
+     "clause": "'Bootstrap acceptance is persisted at ec66062ed9a63fae77eeb840b766b84162059c69' (head recited; tree not recited)"
     }
    ],
-   "formula": "t_tree",
+   "formula": "t_head",
    "atoms": [
     {
-     "atom": "t_tree",
-     "rule": "tree_identity",
+     "atom": "t_head",
+     "rule": "commit_exists",
      "args": {
-      "head": "ec66062ed9a63fae77eeb840b766b84162059c69",
-      "expected_tree": "af5ce11bd0618fd10d3678dea705b88b81f666a7"
+      "head": "ec66062ed9a63fae77eeb840b766b84162059c69"
      }
     }
    ],
@@ -129,11 +139,12 @@
    "item_id": "LEDGER-PR-05",
    "source_anchors": [
     {
-     "kind": "accepted-decision-registry",
-     "item_id": "LEDGER-PR-05",
-     "review_id": 4889015262,
-     "accepted_review_token": "ACCEPT_REVIEW_LEDGER_OPERATIONAL_ACTIVATION_001",
-     "note": "accepted head/tree coordinate of the reviewed activation transaction"
+     "kind": "persisted-artifact",
+     "head": "86adb7d84d4a6bb469705afc04397a8260553f23",
+     "path": "owner-decisions/AUTHORIZE-M1-S2-LEDGER-NATIVE-EXECUTION-001.md",
+     "sha256": "971ce005d0771dadf7ad7e6827c8b9f19ce63d22f408a462cad53bc014cdd020",
+     "bytes": 10506,
+     "clause": "§1: 'Required activation coordinate: ledger main: ecdabc7ba4...; tree: 25f1cdab32...'"
     }
    ],
    "formula": "s_tree",
@@ -147,7 +158,7 @@
      }
     }
    ],
-   "note": "The three-file-scope requirement existed only in the relay-channel order; not bindable per corpus exclusions, so the scope atom is removed and the transaction is anchored by its accepted coordinate."
+   "note": "Head AND tree recited in the persisted PR-06 artifact §1; the relay-only three-file-scope atom remains removed."
   },
   {
    "gate_id": "G-06-SCOPE-AND-ID",
@@ -203,10 +214,9 @@
     },
     {
      "atom": "o_tree",
-     "rule": "tree_identity",
+     "rule": "commit_exists",
      "args": {
-      "head": "86adb7d84d4a6bb469705afc04397a8260553f23",
-      "expected_tree": "fd7dfac761460a523060566fabe04731ff41f435"
+      "head": "86adb7d84d4a6bb469705afc04397a8260553f23"
      }
     }
    ]
@@ -222,6 +232,14 @@
      "sha256": "971ce005d0771dadf7ad7e6827c8b9f19ce63d22f408a462cad53bc014cdd020",
      "bytes": 10506,
      "clause": "§8: 'Authorized evidence branch: evidence/m1-s2-001 ... Authorized path class: stage-m1-s2/**'"
+    },
+    {
+     "kind": "persisted-artifact",
+     "head": "88a81aba060806157c6d3b63f36c0dcd1a99827a",
+     "path": "owner-decisions/AUTHORIZE-M1-S2-DIAGNOSTIC-001.md",
+     "sha256": "3fae0fe4bdf8c60761ff9d6c25e5122280b9553f906fbf8f7952130b61d3a321",
+     "bytes": 7570,
+     "clause": "§1: 'ledger commit: f44d1cc3...' + 'tree: 8c48fe4b...' — persisted recitation of this transaction's coordinate"
     }
    ],
    "formula": "c_paths & c_tree",
@@ -360,84 +378,66 @@
    ]
   },
   {
-   "gate_id": "G-07-BLOCKED-SHAPE",
+   "gate_id": "G-07-EVIDENCE-COMPLETENESS",
    "item_id": "LEDGER-PR-07",
    "source_anchors": [
     {
      "kind": "persisted-artifact",
-     "head": "88a81aba060806157c6d3b63f36c0dcd1a99827a",
-     "path": "owner-decisions/AUTHORIZE-M1-S2-DIAGNOSTIC-001.md",
-     "sha256": "3fae0fe4bdf8c60761ff9d6c25e5122280b9553f906fbf8f7952130b61d3a321",
-     "bytes": 7570,
-     "clause": "§2 Frozen crash facts: began 2026-08-08T16:39:19Z; terminated SIGSEGV; exit code 139; JUnit not created; reruns 0"
+     "head": "f44d1cc337d20cb8b01f85d232795b7bff93954a",
+     "path": "owner-decisions/AUTHORIZE-M1-S2-LEDGER-NATIVE-EXECUTION-001.md",
+     "sha256": "971ce005d0771dadf7ad7e6827c8b9f19ce63d22f408a462cad53bc014cdd020",
+     "bytes": 10506,
+     "clause": "§8: 'The M1-S2 evidence record must include at minimum: 01-... 11-M1-S2-RETURN-FINAL.md ... all raw JUnit/stdout/stderr execution evidence; self-excluded manifest' — pre-result stipulation; the observed crash-shape values (SIGSEGV/139/absent JUnit) are ground truth, not gate conditions"
     }
    ],
-   "formula": "b_exit & b_term & b_nojunit & b_out0 & b_err0 & b_reruns & b_started",
+   "formula": "ev01 & ev05 & ev10 & ev_exec & ev_out & ev_err",
    "atoms": [
     {
-     "atom": "b_exit",
-     "rule": "json_field",
+     "atom": "ev01",
+     "rule": "file_present",
      "args": {
       "head": "f44d1cc337d20cb8b01f85d232795b7bff93954a",
-      "path": "stage-m1-s2/05-M1-S2-AUTHORIZED-NINE-EVIDENCE.json",
-      "field": "exit_code",
-      "expected": 139
+      "path": "stage-m1-s2/01-M1-S2-OWNER-AUTHORIZATION-REFERENCE.json"
      }
     },
     {
-     "atom": "b_term",
-     "rule": "json_field",
+     "atom": "ev05",
+     "rule": "file_present",
      "args": {
       "head": "f44d1cc337d20cb8b01f85d232795b7bff93954a",
-      "path": "stage-m1-s2/05-M1-S2-AUTHORIZED-NINE-EVIDENCE.json",
-      "field": "termination",
-      "expected": "SIGSEGV"
+      "path": "stage-m1-s2/05-M1-S2-AUTHORIZED-NINE-EVIDENCE.json"
      }
     },
     {
-     "atom": "b_nojunit",
-     "rule": "file_absent",
+     "atom": "ev10",
+     "rule": "file_present",
      "args": {
       "head": "f44d1cc337d20cb8b01f85d232795b7bff93954a",
-      "path": "stage-m1-s2/evidence/authorized-nine.junit.xml"
+      "path": "stage-m1-s2/11-M1-S2-RETURN-FINAL.md"
      }
     },
     {
-     "atom": "b_out0",
-     "rule": "file_bytes",
+     "atom": "ev_exec",
+     "rule": "file_present",
      "args": {
       "head": "f44d1cc337d20cb8b01f85d232795b7bff93954a",
-      "path": "stage-m1-s2/evidence/authorized-nine.stdout.txt",
-      "n": 0
+      "path": "stage-m1-s2/evidence/authorized-nine.execution.json"
      }
     },
     {
-     "atom": "b_err0",
-     "rule": "file_bytes",
+     "atom": "ev_out",
+     "rule": "file_present",
      "args": {
       "head": "f44d1cc337d20cb8b01f85d232795b7bff93954a",
-      "path": "stage-m1-s2/evidence/authorized-nine.stderr.txt",
-      "n": 0
+      "path": "stage-m1-s2/evidence/authorized-nine.stdout.txt"
      }
     },
     {
-     "atom": "b_reruns",
-     "rule": "json_field",
+     "atom": "ev_err",
+     "rule": "file_present",
      "args": {
       "head": "f44d1cc337d20cb8b01f85d232795b7bff93954a",
-      "path": "stage-m1-s2/05-M1-S2-AUTHORIZED-NINE-EVIDENCE.json",
-      "field": "reruns",
-      "expected": 0
-     }
-    },
-    {
-     "atom": "b_started",
-     "rule": "file_equals",
-     "args": {
-      "head": "f44d1cc337d20cb8b01f85d232795b7bff93954a",
-      "path": "stage-m1-s2/evidence/authorized-nine.started-at.txt",
-      "literal": "2026-08-08T16:39:19Z\n",
-      "alt_literal": "2026-08-08T16:39:19Z"
+      "path": "stage-m1-s2/evidence/authorized-nine.stderr.txt"
      }
     }
    ]
@@ -604,59 +604,58 @@
      "path": "owner-decisions/AUTHORIZE-M1-S2-DIAGNOSTIC-001.md",
      "sha256": "3fae0fe4bdf8c60761ff9d6c25e5122280b9553f906fbf8f7952130b61d3a321",
      "bytes": 7570,
-     "clause": "§4.6: 'execute at most one normal import readline probe'; §2: SIGSEGV / exit 139 crash facts"
+     "clause": "§4.6: 'execute at most one normal import readline probe'; §4.7: 'preserve stdout, stderr, exit status, exact argv/environment delta' — the probe's observed outcome values are ground truth, not stipulated expectations"
     }
    ],
-   "formula": "p1_argv & p1_delta & p1_exit & p1_out & p1_err",
+   "formula": "p1_code & p1_argv & p1_delta & p1_exit & p1_out & p1_err",
    "atoms": [
     {
-     "atom": "p1_argv",
-     "rule": "argv_equals",
+     "atom": "p1_code",
+     "rule": "argv_has_substr",
      "args": {
       "head": "6bbdaf60dea4ddeeeb820a515fa717083211c2fc",
       "path": "stage-m1-s2-diag/evidence/probes/probe-01.argv.json",
-      "argv": [
-       "/Users/arkadiymiteiko/oam-cdc-reference-publication-candidate/.venv/bin/python",
-       "-c",
-       "import readline; print('READLINE_IMPORT_OK')"
-      ]
+      "substr": "import readline"
+     }
+    },
+    {
+     "atom": "p1_argv",
+     "rule": "file_present",
+     "args": {
+      "head": "6bbdaf60dea4ddeeeb820a515fa717083211c2fc",
+      "path": "stage-m1-s2-diag/evidence/probes/probe-01.argv.json"
      }
     },
     {
      "atom": "p1_delta",
-     "rule": "file_equals",
+     "rule": "file_present",
      "args": {
       "head": "6bbdaf60dea4ddeeeb820a515fa717083211c2fc",
-      "path": "stage-m1-s2-diag/evidence/probes/probe-01.environment-delta.json",
-      "json_equals": {}
+      "path": "stage-m1-s2-diag/evidence/probes/probe-01.environment-delta.json"
      }
     },
     {
      "atom": "p1_exit",
-     "rule": "file_equals",
+     "rule": "file_present",
      "args": {
       "head": "6bbdaf60dea4ddeeeb820a515fa717083211c2fc",
-      "path": "stage-m1-s2-diag/evidence/probes/probe-01.exit-code.txt",
-      "literal": "139\n",
-      "alt_literal": "139"
+      "path": "stage-m1-s2-diag/evidence/probes/probe-01.exit-code.txt"
      }
     },
     {
      "atom": "p1_out",
-     "rule": "file_bytes",
+     "rule": "file_present",
      "args": {
       "head": "6bbdaf60dea4ddeeeb820a515fa717083211c2fc",
-      "path": "stage-m1-s2-diag/evidence/probes/probe-01.stdout.txt",
-      "n": 0
+      "path": "stage-m1-s2-diag/evidence/probes/probe-01.stdout.txt"
      }
     },
     {
      "atom": "p1_err",
-     "rule": "file_bytes",
+     "rule": "file_present",
      "args": {
       "head": "6bbdaf60dea4ddeeeb820a515fa717083211c2fc",
-      "path": "stage-m1-s2-diag/evidence/probes/probe-01.stderr.txt",
-      "n": 0
+      "path": "stage-m1-s2-diag/evidence/probes/probe-01.stderr.txt"
      }
     }
    ]
@@ -667,75 +666,62 @@
    "source_anchors": [
     {
      "kind": "persisted-artifact",
-     "head": "3308a02ca288c2b95cbf1d56cc53c59a0140390f",
-     "path": "owner-decisions/AUTHORIZE-M1-CLOSURE-ENV-001-CONDITIONAL-R1-001.md",
-     "sha256": "e485d95eaa0416f8ac3c1a7666b3357a21f64d454c8b188f70da5169bc083ad7",
-     "bytes": 20814,
-     "clause": "§1 accepted diagnostic finding: 'changing only LANG, LC_ALL, and LC_CTYPE jointly from C.UTF-8 to C produced READLINE_IMPORT_OK'"
-    },
-    {
-     "kind": "persisted-artifact",
      "head": "6bbdaf60dea4ddeeeb820a515fa717083211c2fc",
      "path": "owner-decisions/AUTHORIZE-M1-S2-DIAGNOSTIC-001.md",
      "sha256": "3fae0fe4bdf8c60761ff9d6c25e5122280b9553f906fbf8f7952130b61d3a321",
      "bytes": 7570,
-     "clause": "§4.6: 'at most two environment-isolation variants of that same standalone probe'"
+     "clause": "§4.6: 'at most two environment-isolation variants of that same standalone probe' — same python code required; probe count bounded at three; observed outcome values are ground truth"
     }
    ],
-   "formula": "p2_delta & p2_exit & p2_out & p2_err & p2_nocrash",
+   "formula": "p2_code & p2_delta & p2_exit & p2_out & p2_err & p_no4",
    "atoms": [
     {
-     "atom": "p2_delta",
-     "rule": "file_equals",
+     "atom": "p2_code",
+     "rule": "argv_has_substr",
      "args": {
       "head": "6bbdaf60dea4ddeeeb820a515fa717083211c2fc",
-      "path": "stage-m1-s2-diag/evidence/probes/probe-02.environment-delta.json",
-      "json_equals": {
-       "set": {
-        "LANG": "C",
-        "LC_ALL": "C",
-        "LC_CTYPE": "C"
-       },
-       "unset": [],
-       "other_inherited_variables": "UNCHANGED"
-      }
+      "path": "stage-m1-s2-diag/evidence/probes/probe-02.argv.json",
+      "substr": "import readline"
+     }
+    },
+    {
+     "atom": "p2_delta",
+     "rule": "file_present",
+     "args": {
+      "head": "6bbdaf60dea4ddeeeb820a515fa717083211c2fc",
+      "path": "stage-m1-s2-diag/evidence/probes/probe-02.environment-delta.json"
      }
     },
     {
      "atom": "p2_exit",
-     "rule": "file_equals",
+     "rule": "file_present",
      "args": {
       "head": "6bbdaf60dea4ddeeeb820a515fa717083211c2fc",
-      "path": "stage-m1-s2-diag/evidence/probes/probe-02.exit-code.txt",
-      "literal": "0\n",
-      "alt_literal": "0"
+      "path": "stage-m1-s2-diag/evidence/probes/probe-02.exit-code.txt"
      }
     },
     {
      "atom": "p2_out",
-     "rule": "file_equals",
+     "rule": "file_present",
      "args": {
       "head": "6bbdaf60dea4ddeeeb820a515fa717083211c2fc",
-      "path": "stage-m1-s2-diag/evidence/probes/probe-02.stdout.txt",
-      "literal": "READLINE_IMPORT_OK\n"
+      "path": "stage-m1-s2-diag/evidence/probes/probe-02.stdout.txt"
      }
     },
     {
      "atom": "p2_err",
-     "rule": "file_bytes",
+     "rule": "file_present",
      "args": {
       "head": "6bbdaf60dea4ddeeeb820a515fa717083211c2fc",
-      "path": "stage-m1-s2-diag/evidence/probes/probe-02.stderr.txt",
-      "n": 0
+      "path": "stage-m1-s2-diag/evidence/probes/probe-02.stderr.txt"
      }
     },
     {
-     "atom": "p2_nocrash",
-     "rule": "file_bytes",
+     "atom": "p_no4",
+     "rule": "file_absent",
      "args": {
       "head": "6bbdaf60dea4ddeeeb820a515fa717083211c2fc",
-      "path": "stage-m1-s2-diag/evidence/crash-diagnostics/probe-02-new-crash-reports.txt",
-      "n_max": 1
+      "path": "stage-m1-s2-diag/evidence/probes/probe-04.argv.json"
      }
     }
    ]
@@ -746,31 +732,28 @@
    "source_anchors": [
     {
      "kind": "persisted-artifact",
-     "head": "3308a02ca288c2b95cbf1d56cc53c59a0140390f",
-     "path": "owner-decisions/AUTHORIZE-M1-CLOSURE-ENV-001-CONDITIONAL-R1-001.md",
-     "sha256": "e485d95eaa0416f8ac3c1a7666b3357a21f64d454c8b188f70da5169bc083ad7",
-     "bytes": 20814,
-     "clause": "§1: 'diagnostic disposition: ROOT_CAUSE_NARROWED; ROOT_CAUSE_IDENTIFIED = false; Probe 3 was not run'"
-    },
-    {
-     "kind": "persisted-artifact",
      "head": "6bbdaf60dea4ddeeeb820a515fa717083211c2fc",
      "path": "owner-decisions/AUTHORIZE-M1-S2-DIAGNOSTIC-001.md",
      "sha256": "3fae0fe4bdf8c60761ff9d6c25e5122280b9553f906fbf8f7952130b61d3a321",
      "bytes": 7570,
-     "clause": "§5/§7: no pytest; return dispositions; no rerun"
+     "clause": "§7: 'Return exactly one: ROOT_CAUSE_IDENTIFIED / ROOT_CAUSE_NARROWED / ROOT_CAUSE_UNRESOLVED / DIAGNOSTIC_BLOCKED'; §5: no pytest, no rerunning authorized-nine — the specific NARROWED value is ground truth"
     }
    ],
-   "formula": "l_disp & l_pytest & l_reruns & l_rc",
+   "formula": "l_disp_vocab & l_pytest & l_reruns",
    "atoms": [
     {
-     "atom": "l_disp",
-     "rule": "json_field",
+     "atom": "l_disp_vocab",
+     "rule": "json_field_in",
      "args": {
       "head": "6bbdaf60dea4ddeeeb820a515fa717083211c2fc",
       "path": "stage-m1-s2-diag/09-M1-S2-DIAG-ADJUDICATION.json",
       "field": "diagnostic_disposition",
-      "expected": "ROOT_CAUSE_NARROWED"
+      "allowed": [
+       "ROOT_CAUSE_IDENTIFIED",
+       "ROOT_CAUSE_NARROWED",
+       "ROOT_CAUSE_UNRESOLVED",
+       "DIAGNOSTIC_BLOCKED"
+      ]
      }
     },
     {
@@ -792,41 +775,38 @@
       "field": "m1_s2_measurement_reruns",
       "expected": 0
      }
-    },
-    {
-     "atom": "l_rc",
-     "rule": "json_field",
-     "args": {
-      "head": "6bbdaf60dea4ddeeeb820a515fa717083211c2fc",
-      "path": "stage-m1-s2-diag/09-M1-S2-DIAG-ADJUDICATION.json",
-      "field": "root_cause_claimed",
-      "expected": false
-     }
     }
    ]
   },
   {
-   "gate_id": "G-09-BOUNDARY",
+   "gate_id": "G-09-BOUNDARY-EVIDENCE",
    "item_id": "LEDGER-PR-09",
    "source_anchors": [
     {
      "kind": "persisted-artifact",
-     "head": "3308a02ca288c2b95cbf1d56cc53c59a0140390f",
-     "path": "owner-decisions/AUTHORIZE-M1-CLOSURE-ENV-001-CONDITIONAL-R1-001.md",
-     "sha256": "e485d95eaa0416f8ac3c1a7666b3357a21f64d454c8b188f70da5169bc083ad7",
-     "bytes": 20814,
-     "clause": "§1: 'normal standalone import readline reproduced the frozen M1-S2 SIGSEGV'"
+     "head": "6bbdaf60dea4ddeeeb820a515fa717083211c2fc",
+     "path": "owner-decisions/AUTHORIZE-M1-S2-DIAGNOSTIC-001.md",
+     "sha256": "3fae0fe4bdf8c60761ff9d6c25e5122280b9553f906fbf8f7952130b61d3a321",
+     "bytes": 7570,
+     "clause": "§6.F: 'Compare those observations to the frozen crash report' — requires both comparanda preserved; the equality outcome is ground truth"
     }
    ],
-   "formula": "y_same",
+   "formula": "y_frozen & y_probe",
    "atoms": [
     {
-     "atom": "y_same",
-     "rule": "file_equals",
+     "atom": "y_frozen",
+     "rule": "file_present",
      "args": {
       "head": "6bbdaf60dea4ddeeeb820a515fa717083211c2fc",
-      "path": "stage-m1-s2-diag/evidence/crash-diagnostics/probe-01-stack-boundary.txt",
-      "equals_path": "stage-m1-s2-diag/evidence/crash-diagnostics/frozen-m1-s2-stack-boundary.txt"
+      "path": "stage-m1-s2-diag/evidence/crash-diagnostics/frozen-m1-s2-stack-boundary.txt"
+     }
+    },
+    {
+     "atom": "y_probe",
+     "rule": "file_present",
+     "args": {
+      "head": "6bbdaf60dea4ddeeeb820a515fa717083211c2fc",
+      "path": "stage-m1-s2-diag/evidence/crash-diagnostics/probe-01-stack-boundary.txt"
      }
     }
    ]
@@ -887,7 +867,7 @@
      "clause": "§8: 'Branch: evidence/m1-closure-001 ... Paths: stage-m1-closure/**'"
     }
    ],
-   "formula": "z_paths & z_tree",
+   "formula": "z_paths",
    "atoms": [
     {
      "atom": "z_paths",
@@ -899,16 +879,9 @@
        "stage-m1-closure/"
       ]
      }
-    },
-    {
-     "atom": "z_tree",
-     "rule": "tree_identity",
-     "args": {
-      "head": "060efa2cc295e0d7d9960f725aece264fc471935",
-      "expected_tree": "451c4173718752dc3ced893c00a6bd4eb505bc4f"
-     }
     }
-   ]
+   ],
+   "note": "PR-11 is the terminal transaction; its coordinate has no downstream persisted recitation, so the tree atom is removed — the coordinate lives in ground truth (accepted decision registry)."
   },
   {
    "gate_id": "G-11-MANIFEST",
@@ -1178,49 +1151,30 @@
     {
      "kind": "persisted-artifact",
      "head": "060efa2cc295e0d7d9960f725aece264fc471935",
-     "path": "stage-m1-closure/14-M1-CLOSURE-RETURN-FINAL.md",
-     "sha256": "40af1f57ffc59622a7989e993b61a125623771099bd02cec1f8b880913b4d2e1",
-     "bytes": 693,
-     "clause": "recorded result: 'authorized-nine 8P/1F'"
-    },
-    {
-     "kind": "persisted-artifact",
-     "head": "060efa2cc295e0d7d9960f725aece264fc471935",
      "path": "owner-decisions/AUTHORIZE-M1-CLOSURE-ENV-001-CONDITIONAL-R1-001.md",
      "sha256": "e485d95eaa0416f8ac3c1a7666b3357a21f64d454c8b188f70da5169bc083ad7",
      "bytes": 20814,
-     "clause": "§B6 frozen nine-ID population; §B7 measurement sequence"
-    },
-    {
-     "kind": "accepted-decision-registry",
-     "item_id": "LEDGER-PR-11",
-     "review_id": 4889786951,
-     "accepted_review_token": "ACCEPT_M1_CLOSURE_EVIDENCE_H1_FALSIFIED_001",
-     "note": "counts verified by accepted review 4889786951"
+     "clause": "§B6: 'The first scientific command must target exactly these nine IDs and no others' (population stipulated pre-result); §B7: result-bearing = parseable JUnit for the intended population — the observed 8P/1F is ground truth, not a stipulated expectation"
     }
    ],
-   "formula": "n9_counts & n9_fail",
+   "formula": "n9_pop",
    "atoms": [
     {
-     "atom": "n9_counts",
-     "rule": "junit_counts",
-     "args": {
-      "head": "060efa2cc295e0d7d9960f725aece264fc471935",
-      "path": "stage-m1-closure/evidence/r1/authorized-nine.junit.xml",
-      "collected": 9,
-      "passed": 8,
-      "failed": 1,
-      "skipped": 0
-     }
-    },
-    {
-     "atom": "n9_fail",
-     "rule": "junit_failing_set",
+     "atom": "n9_pop",
+     "rule": "junit_population",
      "args": {
       "head": "060efa2cc295e0d7d9960f725aece264fc471935",
       "path": "stage-m1-closure/evidence/r1/authorized-nine.junit.xml",
       "expected": [
-       "tests.test_audit_lineage::test_governed_success_tokens_are_distinct"
+       "tests.test_audit_lineage::test_operational_index_validates_and_verifies",
+       "tests.test_audit_lineage::test_supersession_lineage_is_a_single_normalized_graph",
+       "tests.test_audit_lineage::test_currentness_is_unaffected_by_filesystem_tricks[higher numbered unindexed report]",
+       "tests.test_audit_lineage::test_currentness_is_unaffected_by_filesystem_tricks[newer modification time]",
+       "tests.test_audit_lineage::test_currentness_is_unaffected_by_filesystem_tricks[lexically later name]",
+       "tests.test_audit_lineage::test_governed_success_tokens_are_distinct",
+       "tests.test_audit_lineage::test_focused_audit_tests_do_not_mutate_the_reviewed_repository",
+       "tests.test_audit_lineage::test_valid_confined_alternate_index_is_accepted",
+       "tests.test_audit_lineage::test_lineage_is_a_single_root_injective_linear_chain"
       ]
      }
     }
@@ -1233,44 +1187,21 @@
     {
      "kind": "persisted-artifact",
      "head": "060efa2cc295e0d7d9960f725aece264fc471935",
-     "path": "stage-m1-closure/14-M1-CLOSURE-RETURN-FINAL.md",
-     "sha256": "40af1f57ffc59622a7989e993b61a125623771099bd02cec1f8b880913b4d2e1",
-     "bytes": 693,
-     "clause": "recorded result: 'module 84P/3F'"
-    },
-    {
-     "kind": "accepted-decision-registry",
-     "item_id": "LEDGER-PR-11",
-     "review_id": 4889786951,
-     "accepted_review_token": "ACCEPT_M1_CLOSURE_EVIDENCE_H1_FALSIFIED_001",
-     "note": "counts and failing set verified by accepted review 4889786951"
+     "path": "owner-decisions/AUTHORIZE-M1-CLOSURE-ENV-001-CONDITIONAL-R1-001.md",
+     "sha256": "e485d95eaa0416f8ac3c1a7666b3357a21f64d454c8b188f70da5169bc083ad7",
+     "bytes": 20814,
+     "clause": "§B7: 'tests/test_audit_lineage.py module' executed once, result-bearing; §B2: 'S1 module predecessor: 85P / 2F' stipulates the 87-ID module population pre-result — the observed 84P/3F is ground truth"
     }
    ],
-   "formula": "md_counts & md_fail",
+   "formula": "md_coll",
    "atoms": [
     {
-     "atom": "md_counts",
-     "rule": "junit_counts",
+     "atom": "md_coll",
+     "rule": "junit_collected",
      "args": {
       "head": "060efa2cc295e0d7d9960f725aece264fc471935",
       "path": "stage-m1-closure/evidence/r1/module.junit.xml",
-      "collected": 87,
-      "passed": 84,
-      "failed": 3,
-      "skipped": 0
-     }
-    },
-    {
-     "atom": "md_fail",
-     "rule": "junit_failing_set",
-     "args": {
-      "head": "060efa2cc295e0d7d9960f725aece264fc471935",
-      "path": "stage-m1-closure/evidence/r1/module.junit.xml",
-      "expected": [
-       "tests.test_audit_lineage::test_audit_003_removed_while_current_fails",
-       "tests.test_audit_lineage::test_governed_success_tokens_are_distinct",
-       "tests.test_audit_lineage::test_report_generation_requires_an_explicit_report_id"
-      ]
+      "collected": 87
      }
     }
    ]
@@ -1282,31 +1213,21 @@
     {
      "kind": "persisted-artifact",
      "head": "060efa2cc295e0d7d9960f725aece264fc471935",
-     "path": "stage-m1-closure/14-M1-CLOSURE-RETURN-FINAL.md",
-     "sha256": "40af1f57ffc59622a7989e993b61a125623771099bd02cec1f8b880913b4d2e1",
-     "bytes": 693,
-     "clause": "recorded result: 'suite 1008P/26F/7S'"
-    },
-    {
-     "kind": "accepted-decision-registry",
-     "item_id": "LEDGER-PR-11",
-     "review_id": 4889786951,
-     "accepted_review_token": "ACCEPT_M1_CLOSURE_EVIDENCE_H1_FALSIFIED_001",
-     "note": "counts verified by accepted review 4889786951"
+     "path": "owner-decisions/AUTHORIZE-M1-CLOSURE-ENV-001-CONDITIONAL-R1-001.md",
+     "sha256": "e485d95eaa0416f8ac3c1a7666b3357a21f64d454c8b188f70da5169bc083ad7",
+     "bytes": 20814,
+     "clause": "§B5: 'total suite collected: 1041' (stipulated pre-result); §B7: full suite once, result-bearing — the observed 1008P/26F/7S is ground truth"
     }
    ],
-   "formula": "st_counts",
+   "formula": "st_coll",
    "atoms": [
     {
-     "atom": "st_counts",
-     "rule": "junit_counts",
+     "atom": "st_coll",
+     "rule": "junit_collected",
      "args": {
       "head": "060efa2cc295e0d7d9960f725aece264fc471935",
       "path": "stage-m1-closure/evidence/r1/suite.junit.xml",
-      "collected": 1041,
-      "passed": 1008,
-      "failed": 26,
-      "skipped": 7
+      "collected": 1041
      }
     }
    ]
@@ -1388,19 +1309,24 @@
      "path": "owner-decisions/AUTHORIZE-M1-CLOSURE-ENV-001-CONDITIONAL-R1-001.md",
      "sha256": "e485d95eaa0416f8ac3c1a7666b3357a21f64d454c8b188f70da5169bc083ad7",
      "bytes": 20814,
-     "clause": "§B7-B8: R1 dispositions incl. H1_FALSIFIED_BY_PREREGISTERED_R1; 'a falsified result is evidence'; §B1: original M1-S2 remains permanently BLOCKED"
+     "clause": "§B7-B8: disposition vocabulary {H1_SUPPORTED_BY_PREREGISTERED_R1, H1_FALSIFIED_BY_PREREGISTERED_R1, BLOCKED_INFRASTRUCTURE}; §9: no R1 rerun, no retry-until-green; §B1: 'The original M1-S2 remains permanently BLOCKED' — all pre-result; the specific FALSIFIED value is ground truth"
     }
    ],
-   "formula": "j_disp & j_rr & j_ce & j_blocked",
+   "formula": "j_vocab & j_rr & j_ce & j_blocked",
    "atoms": [
     {
-     "atom": "j_disp",
-     "rule": "json_field",
+     "atom": "j_vocab",
+     "rule": "json_field_in",
      "args": {
       "head": "060efa2cc295e0d7d9960f725aece264fc471935",
       "path": "stage-m1-closure/12-M1-CLOSURE-R1-ADJUDICATION.json",
       "field": "m1_s2_r1_disposition",
-      "expected": "H1_FALSIFIED_BY_PREREGISTERED_R1"
+      "allowed": [
+       "H1_SUPPORTED_BY_PREREGISTERED_R1",
+       "H1_FALSIFIED_BY_PREREGISTERED_R1",
+       "BLOCKED_INFRASTRUCTURE",
+       "NOT_EXECUTED_PHASE_B_INACTIVE"
+      ]
      }
     },
     {
@@ -1489,15 +1415,14 @@
     },
     {
      "atom": "zs1",
-     "rule": "zip_member_identity",
+     "rule": "zip_member_present",
      "args": {
       "zip_sha256": "e9250d1938bbbd5f607add695ce2273c52d00428da26481834b2dd020348d30a",
-      "member": "evidence/S1-test_audit_lineage.py",
-      "bytes": 40975,
-      "sha256": "8e6f51a1613456f4a52ce37f1da8f999694fb3195da10c7dc78697b1f9c57410"
+      "member": "evidence/S1-test_audit_lineage.py"
      }
     }
-   ]
+   ],
+   "note": "§6 stipulates that S1 identities be computed and recorded; the specific S1 values are results — ground truth, not gate conditions. The gate requires presence of both sources; S0's identity IS pre-stipulated (§3) and stays exact."
   },
   {
    "gate_id": "G-M1S1-CONFINEMENT",
@@ -1530,12 +1455,12 @@
        "test_valid_confined_alternate_index_is_accepted",
        "test_lineage_is_a_single_root_injective_linear_chain"
       ],
-      "expected_changed": 5,
       "expected_hunks": 7,
       "byte_identical_unit": "_isolated"
      }
     }
-   ]
+   ],
+   "note": "§5 pre-stipulates seven sites and §4 the frozen fixture; the measured five-function count is a result (and the substance of seam S-1) — ground truth, not a gate condition."
   },
   {
    "gate_id": "G-M1S1-NINE",
@@ -1550,33 +1475,19 @@
      "clause": "§8: execute the accepted nine-ID set; measure collected/passed/failed/skipped and exact failing IDs"
     }
    ],
-   "formula": "z9_counts & z9_fail",
+   "formula": "z9_coll",
    "atoms": [
     {
-     "atom": "z9_counts",
-     "rule": "junit_counts",
+     "atom": "z9_coll",
+     "rule": "junit_collected",
      "args": {
       "zip_sha256": "e9250d1938bbbd5f607add695ce2273c52d00428da26481834b2dd020348d30a",
       "member": "evidence/authorized-nine.junit.xml",
-      "collected": 9,
-      "passed": 7,
-      "failed": 2,
-      "skipped": 0
-     }
-    },
-    {
-     "atom": "z9_fail",
-     "rule": "junit_failing_set",
-     "args": {
-      "zip_sha256": "e9250d1938bbbd5f607add695ce2273c52d00428da26481834b2dd020348d30a",
-      "member": "evidence/authorized-nine.junit.xml",
-      "expected": [
-       "tests.test_audit_lineage::test_governed_success_tokens_are_distinct",
-       "tests.test_audit_lineage::test_valid_confined_alternate_index_is_accepted"
-      ]
+      "collected": 9
      }
     }
-   ]
+   ],
+   "note": "§8: 'Do not assume the expected result. Measure.' — the 7P/2F outcome is ground truth; the stipulated content is the nine-ID execution with a parseable result."
   },
   {
    "gate_id": "G-M1S1-MODULE",
@@ -1591,21 +1502,19 @@
      "clause": "§9: execute complete module; S0 module failures = 9 IDs; compare S1 directly to S0"
     }
    ],
-   "formula": "zm_counts",
+   "formula": "zm_coll",
    "atoms": [
     {
-     "atom": "zm_counts",
-     "rule": "junit_counts",
+     "atom": "zm_coll",
+     "rule": "junit_collected",
      "args": {
       "zip_sha256": "e9250d1938bbbd5f607add695ce2273c52d00428da26481834b2dd020348d30a",
       "member": "evidence/module.junit.xml",
-      "collected": 87,
-      "passed": 85,
-      "failed": 2,
-      "skipped": 0
+      "collected": 87
      }
     }
-   ]
+   ],
+   "note": "87 collected is stipulated by the accepted S0 state recited in §1 ('module = 87 collected'); 85P/2F is ground truth."
   },
   {
    "gate_id": "G-M1S1-SUITE",
@@ -1620,21 +1529,134 @@
      "clause": "§10: execute complete suite; S0 = 32 failing IDs / 30 functions / 9 modules; produce all six directed differences"
     }
    ],
-   "formula": "zt_counts",
+   "formula": "zt_coll",
    "atoms": [
     {
-     "atom": "zt_counts",
-     "rule": "junit_counts",
+     "atom": "zt_coll",
+     "rule": "junit_collected",
      "args": {
       "zip_sha256": "e9250d1938bbbd5f607add695ce2273c52d00428da26481834b2dd020348d30a",
       "member": "evidence/suite.junit.xml",
-      "collected": 1041,
-      "passed": 1009,
-      "failed": 25,
-      "skipped": 7
+      "collected": 1041
      }
     }
-   ]
+   ],
+   "note": "1041 total is stipulated by the accepted S0 state recited in §1 ('suite = 1041 total'); 1009P/25F/7S is ground truth."
+  },
+  {
+   "gate_id": "SEAM-S1-METRIC-CONTRADICTION",
+   "item_id": "LEGACY-M1-S1-PACKAGE",
+   "source_anchors": [
+    {
+     "kind": "legacy-zip-member",
+     "zip_sha256": "e9250d1938bbbd5f607add695ce2273c52d00428da26481834b2dd020348d30a",
+     "member": "01-OWNER-ACCEPTANCE-CHECKPOINT-B-AND-M1-S1-EXECUTION-ORDER-001.md",
+     "sha256": "a05729a43e88e37dcdc47fb6a38960a3cd9780b493a4eabc3fa8f2c5b96041b0",
+     "bytes": 11627,
+     "clause": "govering: 'authorized functions changed = 7'"
+    },
+    {
+     "kind": "legacy-zip-member",
+     "zip_sha256": "e9250d1938bbbd5f607add695ce2273c52d00428da26481834b2dd020348d30a",
+     "member": "03-M1-S1-CHANGE-CONFINEMENT-REPORT.json",
+     "sha256": "330ab36436e5b4ffb4117af80739c16bade097e39bc2439eaa1e8a04572e8f0b",
+     "bytes": 7743,
+     "clause": "measured: authorized_functions_changed = 5"
+    }
+   ],
+   "formula": "s1_seam",
+   "atoms": [
+    {
+     "atom": "s1_seam",
+     "rule": "seam_contradiction",
+     "args": {
+      "zip_sha256": "e9250d1938bbbd5f607add695ce2273c52d00428da26481834b2dd020348d30a",
+      "governing_member": "01-OWNER-ACCEPTANCE-CHECKPOINT-B-AND-M1-S1-EXECUTION-ORDER-001.md",
+      "governing_regex": "authorized functions changed\\s*=\\s*(\\d+)",
+      "measured_member": "03-M1-S1-CHANGE-CONFINEMENT-REPORT.json",
+      "measured_field": "authorized_functions_changed"
+     }
+    }
+   ],
+   "note": "S-1 detection: T iff governing 7 and measured 5 disagree. The historical defect is preserved as the condition tested; MISSED = values agreed / normalized away."
+  },
+  {
+   "gate_id": "SEAM-S4-F4-MISLABEL",
+   "item_id": "LEDGER-PR-11",
+   "source_anchors": [
+    {
+     "kind": "persisted-artifact",
+     "head": "060efa2cc295e0d7d9960f725aece264fc471935",
+     "path": "stage-m1-closure/12-M1-CLOSURE-R1-ADJUDICATION.json",
+     "sha256": "eac1179f7e80dbc4b7764456c7353d3d88740a0c917d2263bfd0cd13aad77401",
+     "bytes": 256,
+     "clause": "triggered_conditions include F4"
+    },
+    {
+     "kind": "accepted-decision-registry",
+     "item_id": "LEDGER-PR-11",
+     "review_id": 4889786951,
+     "accepted_review_token": "ACCEPT_M1_CLOSURE_EVIDENCE_H1_FALSIFIED_001",
+     "note": "owner ruled F4 NOT_SUSTAINED_AS_LABELED"
+    }
+   ],
+   "formula": "s4_seam",
+   "atoms": [
+    {
+     "atom": "s4_seam",
+     "rule": "seam_f4_support",
+     "args": {
+      "head": "060efa2cc295e0d7d9960f725aece264fc471935",
+      "suite": "stage-m1-closure/evidence/r1/suite.junit.xml",
+      "seven_resolved": [
+       "tests.test_audit_lineage::test_operational_index_validates_and_verifies",
+       "tests.test_audit_lineage::test_supersession_lineage_is_a_single_normalized_graph",
+       "tests.test_audit_lineage::test_currentness_is_unaffected_by_filesystem_tricks[higher numbered unindexed report]",
+       "tests.test_audit_lineage::test_currentness_is_unaffected_by_filesystem_tricks[newer modification time]",
+       "tests.test_audit_lineage::test_currentness_is_unaffected_by_filesystem_tricks[lexically later name]",
+       "tests.test_audit_lineage::test_focused_audit_tests_do_not_mutate_the_reviewed_repository",
+       "tests.test_audit_lineage::test_lineage_is_a_single_root_injective_linear_chain"
+      ]
+     }
+    }
+   ],
+   "note": "S-4 detection: T iff none of the seven S1-resolved tests regressed in R1 (F4 per B8-4 unsupported). MISSED = a regression found, endorsing F4."
+  },
+  {
+   "gate_id": "SEAM-S5-SCHEMA-DRIFT",
+   "item_id": "LEGACY-M1-S1-PACKAGE",
+   "source_anchors": [
+    {
+     "kind": "legacy-zip-member",
+     "zip_sha256": "e9250d1938bbbd5f607add695ce2273c52d00428da26481834b2dd020348d30a",
+     "member": "11-M1-S1-PACKAGE-MANIFEST.json",
+     "sha256": "ca52af098af34c5ce363b96bfaf96ef6fb02cd536faed79e74cb2f85ce002ad5",
+     "bytes": 11874,
+     "clause": "binds members by 'byte_length'"
+    },
+    {
+     "kind": "persisted-artifact",
+     "head": "f44d1cc337d20cb8b01f85d232795b7bff93954a",
+     "path": "stage-m1-s2/12-M1-S2-EVIDENCE-MANIFEST.json",
+     "sha256": "1626f2b608fda34f56e4a8ddb3c39e229f510028322d923a061e4606e216cdf8",
+     "bytes": 5888,
+     "clause": "binds members by 'bytes'"
+    }
+   ],
+   "formula": "s5_seam",
+   "atoms": [
+    {
+     "atom": "s5_seam",
+     "rule": "seam_schema_drift",
+     "args": {
+      "zip_sha256": "e9250d1938bbbd5f607add695ce2273c52d00428da26481834b2dd020348d30a",
+      "zip_manifest": "11-M1-S1-PACKAGE-MANIFEST.json",
+      "ledger_head": "f44d1cc337d20cb8b01f85d232795b7bff93954a",
+      "ledger_manifest": "stage-m1-s2/12-M1-S2-EVIDENCE-MANIFEST.json"
+     }
+    }
+   ],
+   "note": "S-5 detection: T iff the two manifests bind members under different field names. MISSED = drift silently absorbed."
   }
  ]
 }

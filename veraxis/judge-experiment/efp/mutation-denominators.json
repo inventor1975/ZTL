@@ -3,38 +3,40 @@
  "rule": "N >= 10 planted per class, or the enumerated structural ceiling (all used, ceiling recorded before execution)",
  "classes": {
   "missing_witness_or_evidence": {
-   "structural_ceiling": 35,
+   "structural_ceiling": 21,
    "frozen_N": 10
   },
   "corrupted_hashes": {
-   "structural_ceiling": 35,
+   "structural_ceiling": 28,
    "frozen_N": 10
   },
   "schema_drift": {
-   "structural_ceiling": 27,
+   "structural_ceiling": 21,
    "frozen_N": 10
   },
   "counter_inconsistency": {
-   "structural_ceiling": 10,
-   "frozen_N": 10
+   "structural_ceiling": 7,
+   "frozen_N": 7,
+   "note": "fewer than ten structurally valid opportunities; all enumerated opportunities to be used (Protocol §23)"
   },
   "contradictory_gate_facts": {
-   "structural_ceiling": 13,
-   "frozen_N": 10
+   "structural_ceiling": 3,
+   "frozen_N": 3,
+   "note": "fewer than ten structurally valid opportunities; all enumerated opportunities to be used (Protocol §23)"
   },
   "missing_atoms": {
-   "structural_ceiling": 94,
+   "structural_ceiling": 91,
    "frozen_N": 10
   },
   "false_positive_adapter_markings": {
-   "structural_ceiling": 94,
+   "structural_ceiling": 91,
    "frozen_N": 10
   },
   "altered_identity_environment": {
-   "structural_ceiling": 23,
+   "structural_ceiling": 13,
    "frozen_N": 10
   }
  },
- "atoms_total": 94,
- "gates_total": 34
+ "atoms_total": 91,
+ "gates_total": 37
 }

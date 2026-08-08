@@ -1,0 +1,347 @@
+{
+ "ground_truth_id": "M1-EXPERIMENT-GROUND-TRUTH-v0.1",
+ "source_principle": "Ground truth is the independently accepted institutional record (owner dispositions + accepted independent-review verdicts), never the judge's expected output.",
+ "gates": {
+  "G-01-HEAD": {
+   "corpus_item": "LEDGER-PR-01",
+   "ground_truth_source": "accepted disposition of LEDGER-PR-01 per corpus-index (independent-review ACCEPT + owner acceptance)",
+   "classification": "accepted_qualifying",
+   "qualifying_PASS": true,
+   "eh4_population": true,
+   "exclusion": null
+  },
+  "G-02-HEAD": {
+   "corpus_item": "LEDGER-PR-02",
+   "ground_truth_source": "accepted disposition of LEDGER-PR-02 per corpus-index (independent-review ACCEPT + owner acceptance)",
+   "classification": "accepted_qualifying",
+   "qualifying_PASS": true,
+   "eh4_population": true,
+   "exclusion": null
+  },
+  "G-03-HEAD": {
+   "corpus_item": "LEDGER-PR-03",
+   "ground_truth_source": "accepted disposition of LEDGER-PR-03 per corpus-index (independent-review ACCEPT + owner acceptance)",
+   "classification": "accepted_qualifying",
+   "qualifying_PASS": true,
+   "eh4_population": true,
+   "exclusion": null
+  },
+  "G-04-HEAD": {
+   "corpus_item": "LEDGER-PR-04",
+   "ground_truth_source": "accepted disposition of LEDGER-PR-04 per corpus-index (independent-review ACCEPT + owner acceptance)",
+   "classification": "accepted_qualifying",
+   "qualifying_PASS": true,
+   "eh4_population": true,
+   "exclusion": null
+  },
+  "G-05-TREE": {
+   "corpus_item": "LEDGER-PR-05",
+   "ground_truth_source": "accepted disposition of LEDGER-PR-05 per corpus-index (independent-review ACCEPT + owner acceptance)",
+   "classification": "accepted_qualifying",
+   "qualifying_PASS": true,
+   "eh4_population": true,
+   "exclusion": null
+  },
+  "G-06-SCOPE-AND-ID": {
+   "corpus_item": "LEDGER-PR-06",
+   "ground_truth_source": "accepted disposition of LEDGER-PR-06 per corpus-index (independent-review ACCEPT + owner acceptance)",
+   "classification": "accepted_qualifying",
+   "qualifying_PASS": true,
+   "eh4_population": true,
+   "exclusion": null
+  },
+  "G-07-SCOPE": {
+   "corpus_item": "LEDGER-PR-07",
+   "ground_truth_source": "accepted disposition of LEDGER-PR-07 per corpus-index (independent-review ACCEPT + owner acceptance)",
+   "classification": "accepted_qualifying",
+   "qualifying_PASS": true,
+   "eh4_population": true,
+   "exclusion": null
+  },
+  "G-07-MANIFEST": {
+   "corpus_item": "LEDGER-PR-07",
+   "ground_truth_source": "accepted disposition of LEDGER-PR-07 per corpus-index (independent-review ACCEPT + owner acceptance)",
+   "classification": "accepted_qualifying",
+   "qualifying_PASS": true,
+   "eh4_population": true,
+   "exclusion": null
+  },
+  "G-07-AUTHREF": {
+   "corpus_item": "LEDGER-PR-07",
+   "ground_truth_source": "accepted disposition of LEDGER-PR-07 per corpus-index (independent-review ACCEPT + owner acceptance)",
+   "classification": "accepted_qualifying",
+   "qualifying_PASS": true,
+   "eh4_population": true,
+   "exclusion": null
+  },
+  "G-07-EVIDENCE-COMPLETENESS": {
+   "corpus_item": "LEDGER-PR-07",
+   "ground_truth_source": "accepted disposition of LEDGER-PR-07 per corpus-index (independent-review ACCEPT + owner acceptance)",
+   "classification": "accepted_qualifying",
+   "qualifying_PASS": true,
+   "eh4_population": true,
+   "exclusion": null
+  },
+  "G-07-CRASH-ID": {
+   "corpus_item": "LEDGER-PR-07",
+   "ground_truth_source": "accepted disposition of LEDGER-PR-07 per corpus-index (independent-review ACCEPT + owner acceptance)",
+   "classification": "accepted_qualifying",
+   "qualifying_PASS": true,
+   "eh4_population": true,
+   "exclusion": null
+  },
+  "G-08-ID": {
+   "corpus_item": "LEDGER-PR-08",
+   "ground_truth_source": "accepted disposition of LEDGER-PR-08 per corpus-index (independent-review ACCEPT + owner acceptance)",
+   "classification": "accepted_qualifying",
+   "qualifying_PASS": true,
+   "eh4_population": true,
+   "exclusion": null
+  },
+  "G-09-SCOPE": {
+   "corpus_item": "LEDGER-PR-09",
+   "ground_truth_source": "accepted disposition of LEDGER-PR-09 per corpus-index (independent-review ACCEPT + owner acceptance)",
+   "classification": "accepted_qualifying",
+   "qualifying_PASS": true,
+   "eh4_population": true,
+   "exclusion": null
+  },
+  "G-09-MANIFEST": {
+   "corpus_item": "LEDGER-PR-09",
+   "ground_truth_source": "accepted disposition of LEDGER-PR-09 per corpus-index (independent-review ACCEPT + owner acceptance)",
+   "classification": "accepted_qualifying",
+   "qualifying_PASS": true,
+   "eh4_population": true,
+   "exclusion": null
+  },
+  "G-09-PROBE1": {
+   "corpus_item": "LEDGER-PR-09",
+   "ground_truth_source": "accepted disposition of LEDGER-PR-09 per corpus-index (independent-review ACCEPT + owner acceptance)",
+   "classification": "accepted_qualifying",
+   "qualifying_PASS": true,
+   "eh4_population": true,
+   "exclusion": null
+  },
+  "G-09-PROBE2": {
+   "corpus_item": "LEDGER-PR-09",
+   "ground_truth_source": "accepted disposition of LEDGER-PR-09 per corpus-index (independent-review ACCEPT + owner acceptance)",
+   "classification": "accepted_qualifying",
+   "qualifying_PASS": true,
+   "eh4_population": true,
+   "exclusion": null
+  },
+  "G-09-LADDER-AND-COUNTERS": {
+   "corpus_item": "LEDGER-PR-09",
+   "ground_truth_source": "accepted disposition of LEDGER-PR-09 per corpus-index (independent-review ACCEPT + owner acceptance)",
+   "classification": "accepted_qualifying",
+   "qualifying_PASS": true,
+   "eh4_population": true,
+   "exclusion": null
+  },
+  "G-09-BOUNDARY-EVIDENCE": {
+   "corpus_item": "LEDGER-PR-09",
+   "ground_truth_source": "accepted disposition of LEDGER-PR-09 per corpus-index (independent-review ACCEPT + owner acceptance)",
+   "classification": "accepted_qualifying",
+   "qualifying_PASS": true,
+   "eh4_population": true,
+   "exclusion": null
+  },
+  "G-10-ID": {
+   "corpus_item": "LEDGER-PR-10",
+   "ground_truth_source": "accepted disposition of LEDGER-PR-10 per corpus-index (independent-review ACCEPT + owner acceptance)",
+   "classification": "accepted_qualifying",
+   "qualifying_PASS": true,
+   "eh4_population": true,
+   "exclusion": null
+  },
+  "G-11-SCOPE": {
+   "corpus_item": "LEDGER-PR-11",
+   "ground_truth_source": "accepted disposition of LEDGER-PR-11 per corpus-index (independent-review ACCEPT + owner acceptance)",
+   "classification": "accepted_qualifying",
+   "qualifying_PASS": true,
+   "eh4_population": true,
+   "exclusion": null
+  },
+  "G-11-MANIFEST": {
+   "corpus_item": "LEDGER-PR-11",
+   "ground_truth_source": "accepted disposition of LEDGER-PR-11 per corpus-index (independent-review ACCEPT + owner acceptance)",
+   "classification": "accepted_qualifying",
+   "qualifying_PASS": true,
+   "eh4_population": true,
+   "exclusion": null
+  },
+  "G-11-TRIALS": {
+   "corpus_item": "LEDGER-PR-11",
+   "ground_truth_source": "accepted disposition of LEDGER-PR-11 per corpus-index (independent-review ACCEPT + owner acceptance)",
+   "classification": "accepted_qualifying",
+   "qualifying_PASS": true,
+   "eh4_population": true,
+   "exclusion": null
+  },
+  "G-11-ACTIVATION": {
+   "corpus_item": "LEDGER-PR-11",
+   "ground_truth_source": "accepted disposition of LEDGER-PR-11 per corpus-index (independent-review ACCEPT + owner acceptance)",
+   "classification": "accepted_qualifying",
+   "qualifying_PASS": true,
+   "eh4_population": true,
+   "exclusion": null
+  },
+  "G-11-R1-NINE": {
+   "corpus_item": "LEDGER-PR-11",
+   "ground_truth_source": "accepted disposition of LEDGER-PR-11 per corpus-index (independent-review ACCEPT + owner acceptance)",
+   "classification": "accepted_qualifying",
+   "qualifying_PASS": true,
+   "eh4_population": true,
+   "exclusion": null
+  },
+  "G-11-R1-MODULE": {
+   "corpus_item": "LEDGER-PR-11",
+   "ground_truth_source": "accepted disposition of LEDGER-PR-11 per corpus-index (independent-review ACCEPT + owner acceptance)",
+   "classification": "accepted_qualifying",
+   "qualifying_PASS": true,
+   "eh4_population": true,
+   "exclusion": null
+  },
+  "G-11-R1-SUITE": {
+   "corpus_item": "LEDGER-PR-11",
+   "ground_truth_source": "accepted disposition of LEDGER-PR-11 per corpus-index (independent-review ACCEPT + owner acceptance)",
+   "classification": "accepted_qualifying",
+   "qualifying_PASS": true,
+   "eh4_population": true,
+   "exclusion": null
+  },
+  "G-11-EDIT-IDS": {
+   "corpus_item": "LEDGER-PR-11",
+   "ground_truth_source": "accepted disposition of LEDGER-PR-11 per corpus-index (independent-review ACCEPT + owner acceptance)",
+   "classification": "accepted_qualifying",
+   "qualifying_PASS": true,
+   "eh4_population": true,
+   "exclusion": null
+  },
+  "G-11-ADJUDICATION": {
+   "corpus_item": "LEDGER-PR-11",
+   "ground_truth_source": "accepted disposition of LEDGER-PR-11 per corpus-index (independent-review ACCEPT + owner acceptance)",
+   "classification": "accepted_qualifying",
+   "qualifying_PASS": true,
+   "eh4_population": true,
+   "exclusion": null
+  },
+  "G-M1S1-ACCOUNTING": {
+   "corpus_item": "LEGACY-M1-S1-PACKAGE",
+   "ground_truth_source": "accepted disposition of LEGACY-M1-S1-PACKAGE per corpus-index (independent-review ACCEPT + owner acceptance)",
+   "classification": "accepted_qualifying",
+   "qualifying_PASS": true,
+   "eh4_population": true,
+   "exclusion": null
+  },
+  "G-M1S1-FILE-IDS": {
+   "corpus_item": "LEGACY-M1-S1-PACKAGE",
+   "ground_truth_source": "accepted disposition of LEGACY-M1-S1-PACKAGE per corpus-index (independent-review ACCEPT + owner acceptance)",
+   "classification": "accepted_qualifying",
+   "qualifying_PASS": true,
+   "eh4_population": true,
+   "exclusion": null
+  },
+  "G-M1S1-CONFINEMENT": {
+   "corpus_item": "LEGACY-M1-S1-PACKAGE",
+   "ground_truth_source": "accepted disposition of LEGACY-M1-S1-PACKAGE per corpus-index (independent-review ACCEPT + owner acceptance)",
+   "classification": "accepted_qualifying",
+   "qualifying_PASS": true,
+   "eh4_population": true,
+   "exclusion": null
+  },
+  "G-M1S1-NINE": {
+   "corpus_item": "LEGACY-M1-S1-PACKAGE",
+   "ground_truth_source": "accepted disposition of LEGACY-M1-S1-PACKAGE per corpus-index (independent-review ACCEPT + owner acceptance)",
+   "classification": "accepted_qualifying",
+   "qualifying_PASS": true,
+   "eh4_population": true,
+   "exclusion": null
+  },
+  "G-M1S1-MODULE": {
+   "corpus_item": "LEGACY-M1-S1-PACKAGE",
+   "ground_truth_source": "accepted disposition of LEGACY-M1-S1-PACKAGE per corpus-index (independent-review ACCEPT + owner acceptance)",
+   "classification": "accepted_qualifying",
+   "qualifying_PASS": true,
+   "eh4_population": true,
+   "exclusion": null
+  },
+  "G-M1S1-SUITE": {
+   "corpus_item": "LEGACY-M1-S1-PACKAGE",
+   "ground_truth_source": "accepted disposition of LEGACY-M1-S1-PACKAGE per corpus-index (independent-review ACCEPT + owner acceptance)",
+   "classification": "accepted_qualifying",
+   "qualifying_PASS": true,
+   "eh4_population": true,
+   "exclusion": null
+  },
+  "SEAM-S1-METRIC-CONTRADICTION": {
+   "corpus_item": "LEGACY-M1-S1-PACKAGE",
+   "ground_truth_source": "accepted adjudication of the named seam (S-1 order-B / S-4 owner NOT_SUSTAINED / S-5 observed drift)",
+   "classification": "known_seam",
+   "qualifying_PASS": false,
+   "eh4_population": false,
+   "exclusion": "not a qualifying gate; scored under EH-2 known-seam recall, not EH-4"
+  },
+  "SEAM-S4-F4-MISLABEL": {
+   "corpus_item": "LEDGER-PR-11",
+   "ground_truth_source": "accepted adjudication of the named seam (S-1 order-B / S-4 owner NOT_SUSTAINED / S-5 observed drift)",
+   "classification": "known_seam",
+   "qualifying_PASS": false,
+   "eh4_population": false,
+   "exclusion": "not a qualifying gate; scored under EH-2 known-seam recall, not EH-4"
+  },
+  "SEAM-S5-SCHEMA-DRIFT": {
+   "corpus_item": "LEGACY-M1-S1-PACKAGE",
+   "ground_truth_source": "accepted adjudication of the named seam (S-1 order-B / S-4 owner NOT_SUSTAINED / S-5 observed drift)",
+   "classification": "known_seam",
+   "qualifying_PASS": false,
+   "eh4_population": false,
+   "exclusion": "not a qualifying gate; scored under EH-2 known-seam recall, not EH-4"
+  }
+ },
+ "gates_total": 37,
+ "EH4_population_gate_ids": [
+  "G-01-HEAD",
+  "G-02-HEAD",
+  "G-03-HEAD",
+  "G-04-HEAD",
+  "G-05-TREE",
+  "G-06-SCOPE-AND-ID",
+  "G-07-SCOPE",
+  "G-07-MANIFEST",
+  "G-07-AUTHREF",
+  "G-07-EVIDENCE-COMPLETENESS",
+  "G-07-CRASH-ID",
+  "G-08-ID",
+  "G-09-SCOPE",
+  "G-09-MANIFEST",
+  "G-09-PROBE1",
+  "G-09-PROBE2",
+  "G-09-LADDER-AND-COUNTERS",
+  "G-09-BOUNDARY-EVIDENCE",
+  "G-10-ID",
+  "G-11-SCOPE",
+  "G-11-MANIFEST",
+  "G-11-TRIALS",
+  "G-11-ACTIVATION",
+  "G-11-R1-NINE",
+  "G-11-R1-MODULE",
+  "G-11-R1-SUITE",
+  "G-11-EDIT-IDS",
+  "G-11-ADJUDICATION",
+  "G-M1S1-ACCOUNTING",
+  "G-M1S1-FILE-IDS",
+  "G-M1S1-CONFINEMENT",
+  "G-M1S1-NINE",
+  "G-M1S1-MODULE",
+  "G-M1S1-SUITE"
+ ],
+ "EH4_population_count": 34,
+ "excluded_gate_ids": [
+  "SEAM-S1-METRIC-CONTRADICTION",
+  "SEAM-S4-F4-MISLABEL",
+  "SEAM-S5-SCHEMA-DRIFT"
+ ],
+ "excluded_gate_count": 3,
+ "known_seam_denominator": 3
+}

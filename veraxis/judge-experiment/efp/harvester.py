@@ -223,10 +223,97 @@ def r_ast_confinement(a):
         d = list(difflib.unified_diff(u0[k].splitlines(), u1[k].splitlines(), lineterm="", n=0))
         hunks += sum(1 for ln in d if ln.startswith("@@"))
     iso_same = u0[g["byte_identical_unit"]] == u1[g["byte_identical_unit"]]
-    ok = (same_keys and within and len(changed) == g["expected_changed"]
-          and hunks == g["expected_hunks"] and iso_same)
+    ok = (same_keys and within and hunks == g["expected_hunks"] and iso_same)
     return ("T" if ok else "F", wit("zip-ast-diff", zip_sha256=g["zip_sha256"],
                                     changed=changed, hunks=hunks, iso_identical=iso_same))
+
+def r_commit_exists(a):
+    head = a["args"]["head"]
+    try:
+        tree = git("rev-parse", f"{head}^{{tree}}").strip()
+    except RuntimeError as e:
+        return ("Z", wit("git-unresolvable", head=head, error=str(e)[:120]))
+    return ("T", wit("git-commit", head=head, tree=tree))
+
+def r_file_present(a):
+    g = a["args"]
+    present = g["path"] in tree_paths(g["head"], os.path.dirname(g["path"]) + "/")
+    return ("T" if present else "F", wit("git-tree", head=g["head"], path=g["path"], present=present))
+
+def r_argv_has_substr(a):
+    g = a["args"]
+    d = json.loads(blob(g["head"], g["path"]))
+    ok = any(isinstance(x, str) and g["substr"] in x for x in d)
+    return ("T" if ok else "F", wit("git-json", head=g["head"], path=g["path"], sha256=sha(blob(g["head"], g["path"]))))
+
+def r_json_field_in(a):
+    g = a["args"]
+    d = json.loads(blob(g["head"], g["path"]))
+    val = d.get(g["field"], "<ABSENT>")
+    ok = val in g["allowed"]
+    return ("T" if ok else "F", wit("git-json", head=g["head"], path=g["path"],
+                                    sha256=sha(blob(g["head"], g["path"])), value=val))
+
+def r_junit_population(a):
+    g = a["args"]
+    data, w = _junit_src(a)
+    ids = sorted(_junit(data).keys())
+    ok = ids == sorted(g["expected"])
+    w["population_size"] = len(ids)
+    return ("T" if ok else "F", w)
+
+def r_junit_collected(a):
+    g = a["args"]
+    data, w = _junit_src(a)
+    c = _junit(data)
+    ok = len(c) == g["collected"]
+    w["collected"] = len(c)
+    return ("T" if ok else "F", w)
+
+def r_zip_member_present(a):
+    g = a["args"]
+    try:
+        _zip.getinfo(g["member"]); ok = True
+    except KeyError:
+        ok = False
+    return ("T" if ok else "F", wit("zip-member", zip_sha256=g["zip_sha256"], member=g["member"], present=ok))
+
+def r_seam_contradiction(a):
+    g = a["args"]
+    import re as _re
+    gov = zmember(g["governing_member"]).decode("utf-8", "replace")
+    m = _re.search(g["governing_regex"], gov)
+    gov_val = int(m.group(1)) if m else None
+    meas = json.loads(zmember(g["measured_member"]))
+    meas_val = meas.get(g["measured_field"])
+    exposed = gov_val is not None and meas_val is not None and gov_val != meas_val
+    return ("T" if exposed else "F", wit("zip-seam", zip_sha256=g["zip_sha256"],
+                                         governing_member_sha256=sha(zmember(g["governing_member"])),
+                                         measured_member_sha256=sha(zmember(g["measured_member"])),
+                                         governing_value=gov_val, measured_value=meas_val, exposed=exposed))
+
+def r_seam_f4_support(a):
+    g = a["args"]
+    r1 = _junit(blob(g["head"], g["suite"]))
+    regressed = [t for t in g["seven_resolved"] if r1.get(t) == "F"]
+    # T = F4 unsupported = none of the seven regressed
+    ok = len(regressed) == 0
+    return ("T" if ok else "F", wit("git-blob", head=g["head"], path=g["suite"], regressed=regressed))
+
+def r_seam_schema_drift(a):
+    g = a["args"]
+    zman = json.loads(zmember(g["zip_manifest"]))
+    lman = json.loads(blob(g["ledger_head"], g["ledger_manifest"]))
+    def field_of(m):
+        e = m["members"][0]
+        return "byte_length" if "byte_length" in e else ("bytes" if "bytes" in e else "?")
+    zf, lf = field_of(zman), field_of(lman)
+    drift = zf != lf
+    return ("T" if drift else "F", wit("cross-manifest",
+            zip_sha256=g["zip_sha256"], head=g["ledger_head"],
+            zip_manifest_sha256=sha(zmember(g["zip_manifest"])),
+            ledger_manifest_sha256=sha(blob(g["ledger_head"], g["ledger_manifest"])),
+            zip_field=zf, ledger_field=lf, drift=drift))
 
 HANDLERS = {
  "tree_identity": r_tree_identity, "path_confinement": r_path_confinement,
@@ -237,7 +324,12 @@ HANDLERS = {
  "argv_equals": r_argv_equals, "junit_counts": r_junit_counts,
  "junit_failing_set": r_junit_failing_set, "zip_member_identity": r_zip_member_identity,
  "zip_manifest_accounting": r_zip_manifest_accounting, "ast_confinement": r_ast_confinement,
- "doc_cites": None,  # reserved; unimplemented rules yield Z
+ "commit_exists": r_commit_exists, "file_present": r_file_present,
+ "argv_has_substr": r_argv_has_substr, "json_field_in": r_json_field_in,
+ "junit_population": r_junit_population, "junit_collected": r_junit_collected,
+ "zip_member_present": r_zip_member_present, "seam_contradiction": r_seam_contradiction,
+ "seam_f4_support": r_seam_f4_support, "seam_schema_drift": r_seam_schema_drift,
+ "doc_cites": None, "file_empty_or_absent": None,  # unimplemented rules yield Z
 }
 
 def main():

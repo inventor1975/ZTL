@@ -1,0 +1,13 @@
+{
+ "scoring_constants_id": "M1-EXPERIMENT-SCORING-CONSTANTS-v0.1",
+ "known_seam_denominator": 3,
+ "blinded_detection_thresholds": {"hash_identity_witness_classes": 1.00, "other_classes": 0.90},
+ "false_EARNED_tolerance": 0,
+ "eh4_population": "gates whose accepted ground truth per corpus-index is qualifying/PASS; expected disposition EARNED; any REFUTED/OPEN/ON CREDIT falsifies EH-4 (REFUTED additionally labeled false conviction)",
+ "eh4_failure_tolerance": 0,
+ "mechanical_residue_tolerance": 0.10,
+ "residue_denominator": "gates_total = 34",
+ "atoms_total": 94,
+ "discrepancy_classes": ["mechanical", "institutional", "explanatory"],
+ "non_qualification_rule": "no ON CREDIT or OPEN output may be consumed as qualifying anywhere in the pipeline (Protocol R-11/R-18)"
+}

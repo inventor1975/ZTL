@@ -1,0 +1,96 @@
+{
+ "manifest_id": "EXPERIMENT-FREEZE-PACKAGE-v0.1-MANIFEST",
+ "manifest_self_inclusion": false,
+ "members": [
+  {
+   "path": "EXPERIMENT-FREEZE-PACKAGE-v0.1.md",
+   "bytes": 3579,
+   "sha256": "5ff0850b1af7309ad3f32fffc399f890cbe5e14e31f8e5073f845cfb3b8b54ab",
+   "sha512": "e89d1a1aaaf6093ca8e171604914aeedcc19c188aeb9e8d850d45ae8cc1afc6d6380872bd05c6f6c428e6064a58d4b7bfe18a80f1a33d39de23907ff78499f30"
+  },
+  {
+   "path": "REPRODUCTION.md",
+   "bytes": 1226,
+   "sha256": "a3e18bed8eca81bdffad3da30c5a1b8333ad09524ca527090417af2170d074d6",
+   "sha512": "286ac809588218f09fda2f1a3a9139d169de7cc8905a8ad74b108ef0acadb6fd9385fa93a51bfa103eaf8a314cce0ea515886ed0588ca5a860ac9a47de4d399d"
+  },
+  {
+   "path": "build_formulas.py",
+   "bytes": 25126,
+   "sha256": "ccd5518623d747b9ea839a4afc1636c7046bc2696a017f648525204ba1f805bc",
+   "sha512": "39742cf0323ae2bce66e9b387cb7539b6c68346e1bce758737a5528f6c2da117cbb478791ad4fc7275f53afd0c04a79d957fe07bee018c06ce460a8391acd565"
+  },
+  {
+   "path": "corpus-index.json",
+   "bytes": 8325,
+   "sha256": "63d8c32c70ce78f77df2d765d68167c5672f950d1b70f43238c500c27e05cc78",
+   "sha512": "6c9d3efa4447f77c7fe12a4e11d2b52f6e794925cdfb5e97e4f70c079416bf72d33b7c276d9fc72bac6aa2d8d1673bc70c032cdc68b54b10d85ca7c5fcde1348"
+  },
+  {
+   "path": "enumerate_mutations.py",
+   "bytes": 2780,
+   "sha256": "99894763a51df07e4834333d9fd777f71373a21a1d280b958354bf91f88862d5",
+   "sha512": "4996f31ee0f7c77a0993f99364b4bc50f7b749dba72115d55d83adf38a23eae4e8dd53bfda21dffec00ddc314418a434d744c3588f2e3797136a10c8bf7fe6d0"
+  },
+  {
+   "path": "evaluate.py",
+   "bytes": 2069,
+   "sha256": "35c94f0d60e1db598591c475d37769bdc3bdc3dada2fd2ebaef9c190b3dba7a0",
+   "sha512": "28d9b19b0c533dc03f665527d035e0f70881e6bdc9c1648b20a5eeb230f5ff1a1b9662ace68476fd5af894615f61d2979d975755ef252a70b9aff68385d21a5e"
+  },
+  {
+   "path": "formulas.json",
+   "bytes": 39123,
+   "sha256": "01f9c439fd8f92fa9b4d9453f0fec5d4a77ae25dc8bc08dd44a79b9a32c56049",
+   "sha512": "593c93c5df1dd9f78099b64c267136d691e7bef11a01ddef82ca4198c6d638c7d4a4dc902dae0d5e79c34bce5dde0aa042b8986f78c86c2e87853321709a17db"
+  },
+  {
+   "path": "harvester.py",
+   "bytes": 11739,
+   "sha256": "c1f7b6718371d98cd570012b9032e3b36c142ceb9f9cc4b43c6ac5d0de6c2279",
+   "sha512": "d76b13c3a26e7e2eaf2f2b51dccf1773a437f5910f1d38ce5783e709bba0961100b1875cc34e489d1a29b308cfb6d6ea99e8907eb40c3766b767e5a34675d03b"
+  },
+  {
+   "path": "harvesting-rules.json",
+   "bytes": 2978,
+   "sha256": "e4ca4bb3dbbc5f8f7ac4f503a680d283824a8c2df4ff898d3f1026eafee894e2",
+   "sha512": "42fddb7157e5d85edc4c7d367d30b5a8cdfb015f5179b68139b3cdd9cb1e62e195486db2b81e13a5315fb2bd66775109cd88e3bc6f37dd475cb8b153b2f6404a"
+  },
+  {
+   "path": "judge-pin.json",
+   "bytes": 832,
+   "sha256": "53c1de28609eb8e48c5fdbb59723e9f2f8589e7b907da9718530302ac9f0e0f8",
+   "sha512": "f28f6e82f3aec41829e47213f19230bc64536214fca1571192122e4e2ebbdc1048b0ef54db136e00c9cecf8ffeb8d5480028016b2c5d695ddd655f67e4929811"
+  },
+  {
+   "path": "mutation-denominators.json",
+   "bytes": 897,
+   "sha256": "2885d79cd02d96f1dbcf9d93dd07228242106c98619e02e8641b1d2ec2b77f5c",
+   "sha512": "30e180228fdb084750e7ad3828eddb989b13d2f4e4cfe5b4ce95de6d87178f64674c8d9477243fd64141e8bb5fcba7496ee5906f43e1cb42365df9ace13c9c54"
+  },
+  {
+   "path": "provenance_audit.py",
+   "bytes": 1124,
+   "sha256": "c61506c0b9722d66f03739e40b8697a1b3ea721f1c5a07764068fc6c0b6b1ac3",
+   "sha512": "abfc9fbbc51c1a2e10d8028f367d6523cbb89ad99eb2cc239a7f8d32f3bd04ab25634c0d553fef989cf5be097cf3b3f2ba813c9be65bd55f28162525cb46c442"
+  },
+  {
+   "path": "scoring-constants.json",
+   "bytes": 775,
+   "sha256": "4076d59baa1d16f346ecc4e28e52ba962518c91602e7a5c1a29b01d8d475fede",
+   "sha512": "9d675a6bdb4e84978510fdc4cab750df8192d260150583dafe56db229b6bf2ac668a496fff8ccc217f1c1b3a1f5de31e73327bd562fd6968f15bad10e4d4544c"
+  },
+  {
+   "path": "sealed-manifest-procedure.md",
+   "bytes": 1062,
+   "sha256": "dad933b333f05355467152b45669fe0e1a61ca5dbf53a9946bbb64e441e2d50d",
+   "sha512": "e912331b9dfd856ce726f8ec8df8fcd8d817dd8eeca57c6d208f222511c821051c106e259031cce042d3c41c93118198a48d2ce6ae15f66a7a246ef693d9344b"
+  },
+  {
+   "path": "seam-dispositions.json",
+   "bytes": 2588,
+   "sha256": "72c04243bad1874173eb4f310f9d7f10877264b300269fd2bd8de2da4408f0b6",
+   "sha512": "429ec9a282ec6e2d6c6eb7b1e2eeafcd351a882b8b267c3f964c7d2b0e7fa78b98af8b329894b8bc6a30d69f37f6862b7b616eda6e9cd8e5d54a15940cb8d6d8"
+  }
+ ]
+}

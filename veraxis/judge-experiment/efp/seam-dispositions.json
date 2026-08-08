@@ -1,0 +1,34 @@
+{
+ "seam_set_id": "M1-EXPERIMENT-SEAMS-v0.1",
+ "protocol_clause": "Frozen Protocol §22: every scored seam must resolve to an exact persisted, hash-bound artifact inside the frozen corpus; description-only seams may not remain scored.",
+ "scored": [
+  {"seam": "S-1", "description": "Expected-metric contradiction: order requires 'authorized functions changed = 7' while its §5 delta resolves to seven sites in five functions",
+   "binding": {"kind": "zip-member", "zip_sha256": "e9250d1938bbbd5f607add695ce2273c52d00428da26481834b2dd020348d30a",
+               "member": "01-OWNER-ACCEPTANCE-CHECKPOINT-B-AND-M1-S1-EXECUTION-ORDER-001.md"},
+   "adjudicated": "B (defective expected metric), owner-adopted in PR-06 artifact §2",
+   "status": "BOUND"},
+  {"seam": "S-4", "description": "Falsification-trigger mislabel: F4 recorded, owner-ruled NOT_SUSTAINED_AS_LABELED",
+   "binding": {"kind": "git-blob", "head": "060efa2cc295e0d7d9960f725aece264fc471935",
+               "path": "stage-m1-closure/12-M1-CLOSURE-R1-ADJUDICATION.json"},
+   "adjudicated": "independent review flag sustained by owner in M1 closure disposition",
+   "status": "BOUND"},
+  {"seam": "S-5", "description": "Schema drift across packages: legacy manifest binds members by 'byte_length' where ledger manifests use 'bytes'",
+   "binding": {"kind": "zip-member vs git-blob pair",
+               "zip_member": "11-M1-S1-PACKAGE-MANIFEST.json",
+               "zip_sha256": "e9250d1938bbbd5f607add695ce2273c52d00428da26481834b2dd020348d30a",
+               "ledger_example": {"head": "f44d1cc337d20cb8b01f85d232795b7bff93954a",
+                                  "path": "stage-m1-s2/12-M1-S2-EVIDENCE-MANIFEST.json"}},
+   "adjudicated": "observed and worked around during independent reviews",
+   "status": "BOUND"}
+ ],
+ "removed": [
+  {"seam": "S-2", "description": "Transport-corrupted SHA-256 in a relayed review order (PR#9 order header)",
+   "reason": "the corrupted order text exists only in the relay channel; no persisted hash-bound corpus artifact carries it; Protocol §22 prohibits description-only scoring",
+   "status": "REMOVED_NOT_BINDABLE"},
+  {"seam": "S-3", "description": "Transport-corrupted text blocks in a relayed order (PR#10 order)",
+   "reason": "same as S-2",
+   "status": "REMOVED_NOT_BINDABLE"}
+ ],
+ "scored_denominator": 3,
+ "note": "Removal shrinks known-seam recall's denominator to 3; the blinded-mutation classes 'corrupted_hashes' and 'schema_drift' cover the S-2/S-3 defect shapes with frozen N=10 each, so the defect classes remain tested — under seal instead of by history."
+}

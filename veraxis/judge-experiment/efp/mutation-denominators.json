@@ -1,0 +1,40 @@
+{
+ "denominators_id": "M1-EXPERIMENT-MUTATION-DENOMINATORS-v0.1",
+ "rule": "N >= 10 planted per class, or the enumerated structural ceiling (all used, ceiling recorded before execution)",
+ "classes": {
+  "missing_witness_or_evidence": {
+   "structural_ceiling": 35,
+   "frozen_N": 10
+  },
+  "corrupted_hashes": {
+   "structural_ceiling": 35,
+   "frozen_N": 10
+  },
+  "schema_drift": {
+   "structural_ceiling": 27,
+   "frozen_N": 10
+  },
+  "counter_inconsistency": {
+   "structural_ceiling": 10,
+   "frozen_N": 10
+  },
+  "contradictory_gate_facts": {
+   "structural_ceiling": 13,
+   "frozen_N": 10
+  },
+  "missing_atoms": {
+   "structural_ceiling": 94,
+   "frozen_N": 10
+  },
+  "false_positive_adapter_markings": {
+   "structural_ceiling": 94,
+   "frozen_N": 10
+  },
+  "altered_identity_environment": {
+   "structural_ceiling": 23,
+   "frozen_N": 10
+  }
+ },
+ "atoms_total": 94,
+ "gates_total": 34
+}

@@ -1,0 +1,159 @@
+{
+ "index_id": "M1-EXPERIMENT-CORPUS-INDEX-v0.1",
+ "protocol_commit": "61a470b41eccf8e57633d0abee7bbc795329a411",
+ "included": [
+  {
+   "item_id": "LEDGER-PR-01",
+   "kind": "ledger_transaction",
+   "title": "Bootstrap Institutional Compiler Review Ledger",
+   "head": "00074eeb98517fd4cd4e76ca31758dfdda15fc93",
+   "tree": "db3be329820f7e137b968e907775ebd5891554c3",
+   "review_id": 4884911346,
+   "accepted_review_token": "ACCEPT (bootstrap review)",
+   "governing_texts": "owner-decisions/**, bootstrap/**, policy/** at head; the relayed review order where applicable (not persisted; see exclusions)",
+   "evidence_root": "(repository tree)",
+   "accepted_disposition": "ACCEPT (independent review) + owner acceptance per ledger record"
+  },
+  {
+   "item_id": "LEDGER-PR-02",
+   "kind": "ledger_transaction",
+   "title": "Bind independent reviewer identity and review routing",
+   "head": "59e4cd5c6101766a825b9cf93df7202ef1a6e254",
+   "tree": "8376e2ee05ffe890cdc44c83fc0208c97934e833",
+   "review_id": 4885485435,
+   "accepted_review_token": "ACCEPT (identity binding review)",
+   "governing_texts": "owner-decisions/**, bootstrap/**, policy/** at head; the relayed review order where applicable (not persisted; see exclusions)",
+   "evidence_root": "(repository tree)",
+   "accepted_disposition": "ACCEPT (independent review) + owner acceptance per ledger record"
+  },
+  {
+   "item_id": "LEDGER-PR-03",
+   "kind": "ledger_transaction",
+   "title": "Decommission temporary bootstrap authority",
+   "head": "cb38c13bad436d860b34dd75269d4fbdd648e931",
+   "tree": "602f5227ea02b258d7d249554be964af18abf951",
+   "review_id": 4885872274,
+   "accepted_review_token": "ACCEPT (decommission review)",
+   "governing_texts": "owner-decisions/**, bootstrap/**, policy/** at head; the relayed review order where applicable (not persisted; see exclusions)",
+   "evidence_root": "(repository tree)",
+   "accepted_disposition": "ACCEPT (independent review) + owner acceptance per ledger record"
+  },
+  {
+   "item_id": "LEDGER-PR-04",
+   "kind": "ledger_transaction",
+   "title": "Record owner bootstrap acceptance candidate and RL-13 accepted-state reference",
+   "head": "ec66062ed9a63fae77eeb840b766b84162059c69",
+   "tree": "af5ce11bd0618fd10d3678dea705b88b81f666a7",
+   "review_id": 4888423824,
+   "accepted_review_token": "ACCEPT (acceptance-record review)",
+   "governing_texts": "owner-decisions/**, bootstrap/**, policy/** at head; the relayed review order where applicable (not persisted; see exclusions)",
+   "evidence_root": "(repository tree)",
+   "accepted_disposition": "ACCEPT (independent review) + owner acceptance per ledger record"
+  },
+  {
+   "item_id": "LEDGER-PR-05",
+   "kind": "ledger_transaction",
+   "title": "Activate Institutional Compiler Review Ledger",
+   "head": "ecdabc7ba4ca026391f0b64b6d793df67abecc29",
+   "tree": "25f1cdab32b5e21de0e2d73b69a4a3ea10997042",
+   "review_id": 4889015262,
+   "accepted_review_token": "ACCEPT_REVIEW_LEDGER_OPERATIONAL_ACTIVATION_001",
+   "governing_texts": "owner-decisions/**, bootstrap/**, policy/** at head; the relayed review order where applicable (not persisted; see exclusions)",
+   "evidence_root": "(repository tree)",
+   "accepted_disposition": "ACCEPT (independent review) + owner acceptance per ledger record"
+  },
+  {
+   "item_id": "LEDGER-PR-06",
+   "kind": "ledger_transaction",
+   "title": "Authorize M1-S2 ledger-native execution",
+   "head": "86adb7d84d4a6bb469705afc04397a8260553f23",
+   "tree": "fd7dfac761460a523060566fabe04731ff41f435",
+   "review_id": 4889162186,
+   "accepted_review_token": "ACCEPT_M1_S2_LEDGER_NATIVE_OWNER_AUTHORIZATION_001",
+   "governing_texts": "owner-decisions/**, bootstrap/**, policy/** at head; the relayed review order where applicable (not persisted; see exclusions)",
+   "evidence_root": "(repository tree)",
+   "accepted_disposition": "ACCEPT (independent review) + owner acceptance per ledger record"
+  },
+  {
+   "item_id": "LEDGER-PR-07",
+   "kind": "ledger_transaction",
+   "title": "evidence: record blocked M1-S2 ledger-native measurement",
+   "head": "f44d1cc337d20cb8b01f85d232795b7bff93954a",
+   "tree": "8c48fe4bd01eca42abde77b55618023a4260c618",
+   "review_id": 4889282030,
+   "accepted_review_token": "ACCEPT_M1_S2_LEDGER_NATIVE_BLOCKED_MEASUREMENT_001",
+   "governing_texts": "owner-decisions/**, bootstrap/**, policy/** at head; the relayed review order where applicable (not persisted; see exclusions)",
+   "evidence_root": "stage-m1-s2/",
+   "accepted_disposition": "ACCEPT (independent review) + owner acceptance per ledger record"
+  },
+  {
+   "item_id": "LEDGER-PR-08",
+   "kind": "ledger_transaction",
+   "title": "Authorize M1-S2 infrastructure diagnostic",
+   "head": "88a81aba060806157c6d3b63f36c0dcd1a99827a",
+   "tree": "1b0fb440970718bc7ce03195f4ec03d381c5b870",
+   "review_id": 4889485795,
+   "accepted_review_token": "ACCEPT_M1_S2_INFRASTRUCTURE_DIAGNOSTIC_AUTHORIZATION_001",
+   "governing_texts": "owner-decisions/**, bootstrap/**, policy/** at head; the relayed review order where applicable (not persisted; see exclusions)",
+   "evidence_root": "(repository tree)",
+   "accepted_disposition": "ACCEPT (independent review) + owner acceptance per ledger record"
+  },
+  {
+   "item_id": "LEDGER-PR-09",
+   "kind": "ledger_transaction",
+   "title": "evidence: record M1 infrastructure diagnostic",
+   "head": "6bbdaf60dea4ddeeeb820a515fa717083211c2fc",
+   "tree": "2fdd8bcdbe9b856fe5c3fadf78f5c27532ff8e27",
+   "review_id": 4889536531,
+   "accepted_review_token": "ACCEPT_M1_S2_INFRASTRUCTURE_DIAGNOSTIC_EVIDENCE_001",
+   "governing_texts": "owner-decisions/**, bootstrap/**, policy/** at head; the relayed review order where applicable (not persisted; see exclusions)",
+   "evidence_root": "stage-m1-s2-diag/",
+   "accepted_disposition": "ACCEPT (independent review) + owner acceptance per ledger record"
+  },
+  {
+   "item_id": "LEDGER-PR-10",
+   "kind": "ledger_transaction",
+   "title": "Authorize conditional M1 closure: ENV-001 -> M1-S2-R1",
+   "head": "3308a02ca288c2b95cbf1d56cc53c59a0140390f",
+   "tree": "3c7737c7be67a332413e0cf30c41a9f012d397d0",
+   "review_id": 4889632543,
+   "accepted_review_token": "ACCEPT_M1_CLOSURE_ENV_001_CONDITIONAL_M1_S2_R1_AUTHORIZATION_001",
+   "governing_texts": "owner-decisions/**, bootstrap/**, policy/** at head; the relayed review order where applicable (not persisted; see exclusions)",
+   "evidence_root": "(repository tree)",
+   "accepted_disposition": "ACCEPT (independent review) + owner acceptance per ledger record"
+  },
+  {
+   "item_id": "LEDGER-PR-11",
+   "kind": "ledger_transaction",
+   "title": "evidence: record M1 closure transaction",
+   "head": "060efa2cc295e0d7d9960f725aece264fc471935",
+   "tree": "451c4173718752dc3ced893c00a6bd4eb505bc4f",
+   "review_id": 4889786951,
+   "accepted_review_token": "ACCEPT_M1_CLOSURE_EVIDENCE_H1_FALSIFIED_001",
+   "governing_texts": "owner-decisions/**, bootstrap/**, policy/** at head; the relayed review order where applicable (not persisted; see exclusions)",
+   "evidence_root": "stage-m1-closure/",
+   "accepted_disposition": "ACCEPT (independent review) + owner acceptance per ledger record"
+  },
+  {
+   "item_id": "LEGACY-M1-S1-PACKAGE",
+   "kind": "legacy_zip_package",
+   "title": "m1-s1-measurement-001.zip (final legacy-transport exception)",
+   "bytes": 103189,
+   "sha256": "e9250d1938bbbd5f607add695ce2273c52d00428da26481834b2dd020348d30a",
+   "sha512": "958cf6449f9d7a838bac755e029421ced5de15a5a6bed18f9ce65ed15fafd9b9f77709fbd4e541bedd94fa44055e28dae557a1ce1122ea4331f922320abed5f5",
+   "review_return": "OAM-CDC-PROFILE-CORRECTION-M1-S1-SEVEN-FUNCTION-LOCAL-EDITS-MEASUREMENT-INDEPENDENT-REVIEW-RETURN-001.md (10032/70de1db9...)",
+   "accepted_review_token": "ACCEPT_N2A_1_M1_S1_SEVEN_FUNCTION_LOCAL_EDITS_MEASUREMENT_001",
+   "accepted_disposition": "owner predecessor decision ACCEPT_N2A_1_M1_S1_SEVEN_FUNCTION_LOCAL_EDITS_MEASUREMENT_OWNER_001 (recited in PR-06 artifact)"
+  }
+ ],
+ "excluded": [
+  {
+   "what": "pre-ledger Stage-B0 packages other than the M1-S1 package",
+   "reason": "gate texts predate the frozen role/transport model (protocol §18)"
+  },
+  {
+   "what": "relay-channel review-order texts (including the corrupted copies underlying candidate seams S-2/S-3)",
+   "reason": "not persisted hash-bound corpus artifacts; not bindable under §22/§28"
+  }
+ ]
+}

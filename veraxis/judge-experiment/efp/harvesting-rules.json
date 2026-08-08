@@ -1,0 +1,26 @@
+{
+ "harvesting_rules_id": "M1-EXPERIMENT-HARVESTING-RULES-v0.1",
+ "provenance": "Every T/F atom carries witness = (corpus item identity, artifact path, blob/zip hash, rule id). Whatever a rule cannot support enters as Z. No manual patching. Witness must support the SPECIFIC atom at the SPECIFIC status (Protocol R-02/R-03).",
+ "default": "Z (default-deny)",
+ "rules": {
+  "tree_identity": "atom is T iff `git rev-parse <head>^{tree}` equals the recorded tree; witness = the commit object itself (head sha).",
+  "path_confinement": "atom is T iff every path in `git diff --name-only <base> <head>` matches the prefix set; witness = (base, head) tree pair.",
+  "changed_file_set": "atom is T iff the changed-path set vs base equals exactly the listed set; witness = (base, head).",
+  "member_identity": "atom is T iff the artifact at <path> in the item tree has the declared bytes/sha256/sha512; witness = the blob hash.",
+  "manifest_accounting": "atom is T iff declared members + the self-excluded manifest == physical files, with 0 missing / 0 undeclared / 0 duplicates and every member's bytes+sha256+sha512 reproducing; witness = manifest blob + member blobs.",
+  "json_field": "atom is T iff JSON artifact <path> has <field> == <expected>; witness = artifact blob.",
+  "json_all_true": "atom is T iff every element of <array> in <path> has <field> == true; witness = artifact blob.",
+  "file_bytes": "atom is T iff artifact <path> has exactly <n> bytes; witness = blob.",
+  "file_equals": "atom is T iff artifact <path> content equals <literal> exactly; witness = blob.",
+  "file_empty_or_absent": "atom is T iff artifact <path> is absent from the tree, or present with 0 bytes where the gate expects emptiness; witness = tree listing / blob.",
+  "file_absent": "atom is T iff <path> is absent from the item tree; witness = tree object.",
+  "argv_equals": "atom is T iff JSON artifact <path> equals the exact argv list; witness = blob.",
+  "junit_counts": "atom is T iff the JUnit at <path> parses with exactly (collected,P,F,S); witness = blob.",
+  "junit_failing_set": "atom is T iff the failing-ID set of the JUnit at <path> equals exactly <set>; witness = blob.",
+  "junit_set_diff": "atom is T iff failing(<A>) - failing(<B>) == <left> and failing(<B>) - failing(<A>) == <right>; witness = both blobs.",
+  "zip_member_identity": "as member_identity, over the legacy zip's members; witness = zip sha256 + member name.",
+  "zip_manifest_accounting": "as manifest_accounting over the legacy zip; witness = zip sha256.",
+  "ast_confinement": "atom is T iff AST module-unit diff of the two persisted sources changes exactly the listed units and no others, with the named unit byte-identical; witness = both source blobs.",
+  "doc_cites": "atom is T iff the persisted return/record document contains the exact cited line (e.g., a CI run id with SUCCESS); witness = blob. NOTE: this binds the persisted CITATION; the external CI service itself is not a corpus artifact."
+ }
+}

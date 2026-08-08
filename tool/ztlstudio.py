@@ -71,25 +71,223 @@ def _rate_ok(ip):
     return True
 
 EXAMPLES = [
+    # ------------------------------------------------ the docket: convicted
     {"name": "Liar",
      "intent": "This sentence is false.",
      "zfl": json.dumps({"genre": "system",
                         "sentences": {"L": "not(Tr(L))"},
                         "ask": ["passport"]},
                        ensure_ascii=False, indent=1)},
+    {"name": "Barber (the liar in a barber's apron)",
+     "intent": "The barber shaves exactly those who do not shave "
+               "themselves. Does he shave himself?",
+     "zfl": json.dumps({"genre": "system",
+                        "sentences": {"shaves": "not(Tr(shaves))"},
+                        "ask": ["passport"]},
+                       ensure_ascii=False, indent=1)},
+    {"name": "Grelling's 'heterological'",
+     "intent": "'Heterological' means 'not applying to itself'. Is "
+               "'heterological' heterological?",
+     "zfl": json.dumps({"genre": "system",
+                        "sentences": {"het": "not(Tr(het))"},
+                        "ask": ["passport"]},
+                       ensure_ascii=False, indent=1)},
+    {"name": "Russell",
+     "intent": "The set of all sets not containing themselves: does it "
+               "contain itself? Universe: a = empty, b = {b}, R.",
+     "zfl": json.dumps({"genre": "system",
+                        "sentences": {
+                            "a_in_a": "F", "a_in_b": "F",
+                            "a_in_R": "not(Tr(a_in_a))",
+                            "b_in_a": "F", "b_in_b": "T",
+                            "b_in_R": "not(Tr(b_in_b))",
+                            "R_in_a": "F", "R_in_b": "F",
+                            "R_in_R": "not(Tr(R_in_R))"},
+                        "ask": ["passport"]},
+                       ensure_ascii=False, indent=1)},
+    {"name": "Jourdain's postcard",
+     "intent": "Front of the card: 'the sentence on the back is true'. "
+               "Back: 'the sentence on the front is false'. Note the "
+               "oscillation period: 4, not the liar's 2.",
+     "zfl": json.dumps({"genre": "system",
+                        "sentences": {"front": "Tr(back)",
+                                      "back": "not(Tr(front))"},
+                        "ask": ["passport"]},
+                       ensure_ascii=False, indent=1)},
     {"name": "Crocodile",
      "intent": "The crocodile returns the child if and only if the mother "
-               "guesses what he will do. The mother: 'you will not return it'.",
+               "guesses what he will do. The mother: 'you will not return "
+               "it'. Same shape as Jourdain's postcard — and the deal "
+               "itself never earns truth: the contract is void.",
      "zfl": json.dumps({"genre": "system",
                         "sentences": {"R": "Tr(M)", "M": "not(Tr(R))"},
                         "ask": ["passport", "stipulations"]},
                        ensure_ascii=False, indent=1)},
+    {"name": "Odd 3-cycle",
+     "intent": "Three sentences in a ring, each denying the next: odd "
+               "parity, no consistent solution. Vicious is the parity, "
+               "not the circle.",
+     "zfl": json.dumps({"genre": "system",
+                        "sentences": {"a": "not(Tr(b))",
+                                      "b": "not(Tr(c))",
+                                      "c": "not(Tr(a))"},
+                        "ask": ["passport"]},
+                       ensure_ascii=False, indent=1)},
+    {"name": "Curry (grounded falsum)",
+     "intent": "'If this sentence is true, then falsehood.' With a real, "
+               "grounded falsum Curry IS the liar in an arrow costume.",
+     "zfl": json.dumps({"genre": "system",
+                        "sentences": {"g": "imp(Tr(g), F)"},
+                        "ask": ["passport"]},
+                       ensure_ascii=False, indent=1)},
+    # --------------------------------------------- the docket: conditional
+    {"name": "Curry (suspended falsum)",
+     "intent": "The same Curry, but its 'falsum' is defined over an "
+               "unsettled base: the refusal is INHERITED, and the culprit "
+               "is named. Curry's passport depends on what feeds the arrow.",
+     "zfl": json.dumps({"genre": "system",
+                        "sentences": {"gamma": "imp(Tr(gamma), Tr(bot))",
+                                      "bot": "and(Tr(s), not(Tr(s)))",
+                                      "s": "Tr(s)"},
+                        "ask": ["passport"]},
+                       ensure_ascii=False, indent=1)},
+    # ------------------------------------------- the docket: forced verdict
+    {"name": "Strong liar (forced FALSE)",
+     "intent": "'This sentence is false AND this sentence is true.' "
+               "Intuition says: worse than the liar. Measurement says: "
+               "tamer — exactly one consistent solution, forced false.",
+     "zfl": json.dumps({"genre": "system",
+                        "sentences": {"sigma":
+                                      "and(not(Tr(sigma)), Tr(sigma))"},
+                        "ask": ["passport"]},
+                       ensure_ascii=False, indent=1)},
+    {"name": "Revenge / avenger (forced FALSE)",
+     "intent": "'This sentence is not equivalent to itself.' One "
+               "consistent solution: forced false.",
+     "zfl": json.dumps({"genre": "system",
+                        "sentences": {"mu": "not(xnor(Tr(mu), Tr(mu)))"},
+                        "ask": ["passport"]},
+                       ensure_ascii=False, indent=1)},
+    {"name": "Henkin-style sentence (forced TRUE)",
+     "intent": "'If this sentence is true, then this sentence is true.' "
+               "The strong liar's mirror: one solution, forced TRUE.",
+     "zfl": json.dumps({"genre": "system",
+                        "sentences": {"h": "imp(Tr(h), Tr(h))"},
+                        "ask": ["passport"]},
+                       ensure_ascii=False, indent=1)},
+    # ----------------------------------------------- the docket: acquitted
     {"name": "Truth-teller",
      "intent": "This sentence is true.",
      "zfl": json.dumps({"genre": "system",
                         "sentences": {"tau": "Tr(tau)"},
                         "ask": ["passport", "stipulations"]},
                        ensure_ascii=False, indent=1)},
+    {"name": "Russell's twin S∈S",
+     "intent": "The set of all sets that DO contain themselves: does it "
+               "contain itself? The truth-teller of set theory — two "
+               "honest answers, choose by decree. Type theory bans this "
+               "curable twin together with the incurable R.",
+     "zfl": json.dumps({"genre": "system",
+                        "sentences": {"S_in_S": "Tr(S_in_S)"},
+                        "ask": ["passport", "stipulations"]},
+                       ensure_ascii=False, indent=1)},
+    {"name": "Crocodile control (optimistic mother)",
+     "intent": "Flip the mother's prediction to 'you WILL return it': one "
+               "negation vanishes, parity flips, the sentence becomes a "
+               "blank. Note WHO fills it: the deal binds nobody — the "
+               "crocodile does as he pleases in both solutions.",
+     "zfl": json.dumps({"genre": "system",
+                        "sentences": {"R": "Tr(M)", "M": "Tr(R)"},
+                        "ask": ["passport", "stipulations"]},
+                       ensure_ascii=False, indent=1)},
+    {"name": "Even 2-cycle",
+     "intent": "Two sentences denying each other: even parity, two lawful "
+               "solutions, stipulate either.",
+     "zfl": json.dumps({"genre": "system",
+                        "sentences": {"A": "not(Tr(B))", "B": "not(Tr(A))"},
+                        "ask": ["passport", "stipulations"]},
+                       ensure_ascii=False, indent=1)},
+    {"name": "Even 4-cycle",
+     "intent": "Four negations around the ring: still even, still a blank.",
+     "zfl": json.dumps({"genre": "system",
+                        "sentences": {"a": "not(Tr(b))", "b": "not(Tr(c))",
+                                      "c": "not(Tr(d))", "d": "not(Tr(a))"},
+                        "ask": ["passport", "stipulations"]},
+                       ensure_ascii=False, indent=1)},
+    {"name": "Yablo (truncated at 3)",
+     "intent": "An infinite queue, each sentence saying 'everyone after "
+               "me lies'. EVERY finite truncation is grounded — no "
+               "quarantine at all: the paradoxicality lives only in the "
+               "actual infinity. Extend the queue and see for yourself.",
+     "zfl": json.dumps({"genre": "system",
+                        "sentences": {"s0": "and(not(Tr(s1)), not(Tr(s2)))",
+                                      "s1": "not(Tr(s2))",
+                                      "s2": "T"},
+                        "ask": ["passport"]},
+                       ensure_ascii=False, indent=1)},
+    # ------------------------------------- the contingent liar: three worlds
+    {"name": "Contingent liar — world A (harmless)",
+     "intent": "Smith: 'what Jones said is false.' Jones happened to say "
+               "a truth about grass. Smith's sentence is plain false — "
+               "everything grounded, case closed.",
+     "zfl": json.dumps({"genre": "system",
+                        "sentences": {"S": "not(Tr(J))",
+                                      "J": "Tr(g)", "g": "T"},
+                        "ask": ["passport"]},
+                       ensure_ascii=False, indent=1)},
+    {"name": "Contingent liar — world B (unlucky)",
+     "intent": "Same Smith sentence — but Jones happened to say 'Smith "
+               "speaks truly'. Two honest people close Jourdain's "
+               "carousel without knowing it. A paradox is an event, not "
+               "a text (Kripke).",
+     "zfl": json.dumps({"genre": "system",
+                        "sentences": {"S": "not(Tr(J))", "J": "Tr(S)"},
+                        "ask": ["passport"]},
+                       ensure_ascii=False, indent=1)},
+    {"name": "Contingent liar — world C (unverified)",
+     "intent": "Same Smith sentence; what Jones said is not yet verified. "
+               "The refusal is CONDITIONAL, and the culprit is named: "
+               "verify Jones and the case resolves either way.",
+     "zfl": json.dumps({"genre": "system",
+                        "atoms": {"J": {"status": "Z",
+                                        "means": "what Jones said is true"}},
+                        "sentences": {"S": "not(Tr(J))"},
+                        "ask": ["passport"]},
+                       ensure_ascii=False, indent=1)},
+    # ------------------------------------------------- dilemmas in the dock
+    {"name": "Ship of Theseus: the title contest",
+     "intent": "Repaired ship A and reassembled ship B each claim: 'the "
+               "real one is me, because it is not him'. An even cycle — "
+               "two lawful decrees, no paradox anywhere. (The criterion-"
+               "free 'same, in itself' is the truth-teller: try same := "
+               "Tr(same).)",
+     "zfl": json.dumps({"genre": "system",
+                        "sentences": {"theA": "not(Tr(theB))",
+                                      "theB": "not(Tr(theA))"},
+                        "ask": ["passport", "stipulations"]},
+                       ensure_ascii=False, indent=1)},
+    {"name": "Agrippa's dogma (foundation with a passport)",
+     "intent": "A self-supporting foundation f := f with a dependent "
+               "claim on top: the foundation is stipulable, and the "
+               "dependent's refusal names its culprit.",
+     "zfl": json.dumps({"genre": "system",
+                        "sentences": {"p": "Tr(f)", "f": "Tr(f)"},
+                        "ask": ["passport", "stipulations"]},
+                       ensure_ascii=False, indent=1)},
+    {"name": "Same person? (corecursion, all observations match)",
+     "intent": "'The same person' = matches now AND the same henceforth: "
+               "S := obs AND S. With every observation matching, the core "
+               "never says 'yes' — only 'decide'. Flip obs to F and watch "
+               "identity ground to false instantly: refutable by fact, "
+               "confirmable only by decree.",
+     "zfl": json.dumps({"genre": "system",
+                        "atoms": {"obs": {"status": "T",
+                                          "means": "every observation so "
+                                                   "far matches"}},
+                        "sentences": {"S": "and(Tr(obs), Tr(S))"},
+                        "ask": ["passport", "stipulations"]},
+                       ensure_ascii=False, indent=1)},
+    # ------------------------------------------------ other genres, intact
     {"name": "Sensor",
      "intent": "An unverified sensor reports overheating; if overheating, "
                "the shutdown fires. Will it fire?",
@@ -105,19 +303,6 @@ EXAMPLES = [
                                   "q": {"status": "Z"}},
                         "assert": "imp(and(imp(p,q),p),q)",
                         "ask": ["verdict", "warranty"]},
-                       ensure_ascii=False, indent=1)},
-    {"name": "Russell",
-     "intent": "The set of all sets not containing themselves: does it "
-               "contain itself? Universe: a = empty, b = {b}, R.",
-     "zfl": json.dumps({"genre": "system",
-                        "sentences": {
-                            "a_in_a": "F", "a_in_b": "F",
-                            "a_in_R": "not(Tr(a_in_a))",
-                            "b_in_a": "F", "b_in_b": "T",
-                            "b_in_R": "not(Tr(b_in_b))",
-                            "R_in_a": "F", "R_in_b": "F",
-                            "R_in_R": "not(Tr(R_in_R))"},
-                        "ask": ["passport"]},
                        ensure_ascii=False, indent=1)},
 ]
 

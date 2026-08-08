@@ -4,9 +4,9 @@
  "members": [
   {
    "path": "EXPERIMENT-FREEZE-PACKAGE-v0.1.md",
-   "bytes": 10529,
-   "sha256": "36ccc808b79474efac0f1df88f956c52c36c7b7199d3d8d57b71f1675bd6aecc",
-   "sha512": "6f8baf026030d2a1d5e6319428e31549ab72b50752f4f13b22604a93deecd93041aba30cf40559314cdc881cebf689e7d69e41142d44f2f7ed014afffb091d0a"
+   "bytes": 11357,
+   "sha256": "5d8da06fb7cbb3bb433a67a30e89ac177988c66a432f381aa1343a014a5a98b1",
+   "sha512": "aae593a4044de76f7235b523fca7d20b8ddf38892fc7864d66d99d06e04e44307e03f1b257dbcbc5d80a66dd0a6b34df76833b1cdf522ef30cf4ba87f378b3b1"
   },
   {
    "path": "REPRODUCTION.md",
@@ -88,9 +88,9 @@
   },
   {
    "path": "package_integrity.py",
-   "bytes": 1083,
-   "sha256": "67fe81343db23009f199ee46507cdadb2cece2cf54e26a827efeb858d99a3890",
-   "sha512": "3ccf82111992efe7545da385c8984e216be82fdde204bf3fd4e8fc82de2e7fd140c340ad38ea4b0f154a2d7f8fce470f46e39f8e2c91b1872bc6eca271225449"
+   "bytes": 1932,
+   "sha256": "bfa9b7a5ac7f343fa2b3b366935cee8bb690c1de1cdb20a2112959a83bcaf63b",
+   "sha512": "d17a617fcf7941be728d7af38dec30afe93ba2ffd89197d82f4a715fd5c9bf713e1faec4682fbb0032a6a9af46df6fe1f0def0e6bc30c8804aa994337aa8c9c9"
   },
   {
    "path": "provenance_audit.py",
@@ -106,9 +106,9 @@
   },
   {
    "path": "sealed-manifest-procedure.md",
-   "bytes": 1062,
-   "sha256": "dad933b333f05355467152b45669fe0e1a61ca5dbf53a9946bbb64e441e2d50d",
-   "sha512": "e912331b9dfd856ce726f8ec8df8fcd8d817dd8eeca57c6d208f222511c821051c106e259031cce042d3c41c93118198a48d2ce6ae15f66a7a246ef693d9344b"
+   "bytes": 1348,
+   "sha256": "eb645bc7a8c03bd4ffbd47f920aa15eedd6b9081a81d884796b1107cb292a79b",
+   "sha512": "4295dbfdf499294f0156b903ec05c9f5dd4e60df9a1fd432e30b002b999a091e18be940c27d0062744d07877772b41e42e396fddad448221e085ec8ee72a817b"
   },
   {
    "path": "seam-detection-mapping.json",

@@ -1,7 +1,7 @@
 # Experiment Freeze Package v0.1
 
 **Package ID:** `EXPERIMENT-FREEZE-PACKAGE-v0.1`
-**Status:** REVISION 4 — FINAL OWNER ACCEPTANCE CANDIDATE, returned after `REVISION_3 = REJECTED_FOR_FREEZE` (two mechanical integration blockers). Phase A authority does not exist until acceptance (frozen Protocol §28).
+**Status:** REVISION 5 — FINAL OWNER ACCEPTANCE CANDIDATE, returned after `REVISION_4 = REJECTED_FOR_FREEZE` (one denominator-text consistency blocker). Phase A authority does not exist until acceptance (frozen Protocol §28).
 **Frozen protocol:** `OIC-ZTL-OAM-PROTOCOL-v0.1`, commit `61a470b41eccf8e57633d0abee7bbc795329a411`, SHA-256 `98bbb05ba82d61638b063da9898827492b679dbcbba33784231482f092c14273`.
 **Built:** 2026-08-09, by Claude (Fable 5) under the steering role (V. Reznik), per the productive-implementation authority of the freeze decision.
 
@@ -20,9 +20,22 @@
 | 9 | Exact scored seam identities + detection rules | `seam-dispositions.json` (S-1/S-4/S-5 BOUND; S-2/S-3 REMOVED) + `seam-detection-mapping.json` (executable detection rule per seam) + the three SEAM-* gates; scored denominator = 3 |
 | 10 | Reproduction commands/procedure | `REPRODUCTION.md` v0.2 (exact statically-verified invocations) + `evaluate.py` (R-06/R-07/R-15-conformant CLWR emitter) + `claim-context-templates.json` (frozen institutional envelope per gate) |
 | 11 | Mutation classes | `mutation-denominators.json` (8 classes per the accepted charter) |
-| 12 | Exact mutation denominator per class | `mutation-denominators.json` — structural ceilings enumerated from the bound atom sites; frozen N = 10 for every class (all ceilings ≥ 10) |
+| 12 | Exact mutation denominator per class | `mutation-denominators.json` is normative: N=10 for six classes; counter_inconsistency N=7 at structural ceiling 7; contradictory_gate_facts N=3 at structural ceiling 3 |
 | 13 | Sealed-manifest commitment procedure | `sealed-manifest-procedure.md` |
 | 14 | Remaining §24 scoring constants | `scoring-constants.json` + `ground-truth.json` (thresholds 100%/90%, zero tolerances, frozen EH-4 population of 34, residue ≤ 10%, all denominators) |
+
+## Revision-5 change account (one text-consistency blocker, nothing else)
+
+Two stale sentences that authorized a different blinded experiment than the
+canonical `mutation-denominators.json` were corrected — the denominator JSON
+itself is unchanged. (a) Master binding #12 now states the canonical vector
+(N=10 for six classes; counter_inconsistency N=7 at ceiling 7;
+contradictory_gate_facts N=3 at ceiling 3). (b) `sealed-manifest-procedure.md`
+step 2 no longer duplicates "all classes N=10"; it derives each class's planted
+count from the canonical artifact, yielding 10,10,10,7,3,10,10,10 and never
+exceeding a structural ceiling. `package_integrity.py` now also asserts the
+eight-class set, `frozen_N ≤ structural_ceiling`, the exact frozen_N vector, and
+gates/atoms totals — all PASS.
 
 ## Revision-4 change account (the two mechanical blockers, nothing else)
 

@@ -119,9 +119,9 @@ cannot mint it — from no premises nothing is derivable, even the guarded
 tautologies, even on credit). The entire development — the core, both
 engine certificates with cut admissibility, the algebraic witnesses, the
 general fixed-point theorem, the expedition twins, the temporal modules
-and the frame's own mini-theorems, twenty-one modules in all — is
+and the frame's own mini-theorems, twenty-four modules in all — is
 formalized in Lean 4 **with an empty axiom list, definitions
-included**: 371 theorems, each one audited individually rather than by
+included**: 389 theorems, each one audited individually rather than by
 sample (`inventory/axiom_audit.py`, re-run on every push). As a
 test bench the logic is run over the classical paradoxes — the liar,
 Jourdain's carousel, Curry, Yablo, the crocodile, Russell — and in every
@@ -803,13 +803,13 @@ over the whole corpus returns "does not depend on any axioms": no
 Classical.choice, no Quot.sound, not even propext; pure computation.
 This is the strictest possible tier.
 
-The claim used to rest on 158 hand-placed prints against 371 theorems,
+The claim used to rest on hand-placed prints — 158 of them at the time, against the then-current corpus of 371 —
 with the rest covered transitively — a sound argument (a lemma carrying
 an axiom infects every theorem that uses it), but an argument, and one
 that an unused orphan theorem would escape. It is now a measurement:
 `inventory/axiom_audit.py` extracts every theorem name from every
 module, generates one `#print axioms` per name, and fails if a single
-line reads otherwise. **371 of 371 clean**, re-run by CI on every push.
+line reads otherwise. **389 of 389 clean**, re-run by CI on every push.
 The same stand refuses a module that carries theorems and is built by no
 target — the failure mode that let one module (`QuantumWitness.lean`) go
 unchecked by any automation until 2026-07-20.

@@ -76,6 +76,24 @@ least three, each with its own witness discipline:
       keeps a permanently credit-shaped half. The hard version of the
       puzzle was never about planks.
 
+  F7  THE PASSPORT OFFICE REFUSES THE WORD "PARADOX". Written as a
+      definitional system and run through E18 (the same core as
+      ZTLStudio; cross-checked on ztl.vitalyreznik.com, 2026-08-08),
+      Theseus contains NOT ONE PARADOX component. The named-criteria
+      layer is GROUNDED outright (6 sentences, no quarantine). The
+      Hobbes title contest theA := ¬theB, theB := ¬theA is an even
+      cycle — UNDERDETERMINED, two classical models (theA=T,theB=F or
+      the reverse), and stipulation grounds it cleanly both ways:
+      "which is THE ship" is a blank to be filled by decree, not a
+      contradiction. The metaphysician's criterion-free atom
+      same := Tr(same) is the bare truth-teller — UNDERDETERMINED too:
+      stipulable either way (and, per F4's E27 stamps, never earnable —
+      a dogma with a passport, like Agrippa's foundation). Control: the
+      liar on the same core is PARADOX, oscillation period 2, refusal
+      PERMANENT. The instrument whose trade is recognizing paradoxes
+      finds none in Theseus: the liar and Russell earn the word; this
+      one wore it 2400 years without papers.
+
   VERDICT. The instrument does not answer "is it the same ship?" — it
   refuses the question until the relation is named, then answers it
   instantly, with a witness, under every naming. The 2000-year paradox
@@ -107,6 +125,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."
 from ztl import T, F                    # noqa: E402
 from ztljudge import judge              # noqa: E402
 from zopsets import sup, vn, eq_earn, check_witness  # noqa: E402
+from zpassport import passports, stipulation_theorem  # noqa: E402
 from zredeem import stamp, ceiling      # noqa: E402
 
 N = 4                                    # planks; small so every stage is visible
@@ -250,12 +269,45 @@ def run():
     print("ok  difference earns at a finite stage; identity never settles —")
     print("    E6's asymmetry: the hard Theseus is about persons, not planks")
 
+    print("\n### F7. The passport office refuses the word 'paradox'")
+    # ZTLStudio dialect of the same system (cross-checked on the site,
+    # 2026-08-08): {"genre":"system","sentences":{...},"ask":["passport"]}
+    CRITERIA = {"matA": "F", "matB": "T", "contA": "T", "contB": "F",
+                "structA": "T", "structB": "T"}
+    CONTEST = {"theA": ("not", "theB"), "theB": ("not", "theA")}
+    META = {"same": "same"}
+    lfp, reports, kinds = passports(CRITERIA)
+    print(f"ok  named criteria: {len(CRITERIA)} sentences, "
+          f"quarantined components: {len(reports)} (all GROUNDED)")
+    assert reports == [] and all(k[0] == "GROUNDED" for k in kinds.values())
+    _, reports, kinds = passports(CONTEST)
+    print(f"ok  title contest theA:=~theB, theB:=~theA: {reports[0][1]} "
+          f"({reports[0][2]})")
+    assert kinds["theA"] == ("UNDERDETERMINED", 2)
+    ou, cu, op_, cp = stipulation_theorem(CONTEST)
+    print(f"ok  stipulations ground cleanly: {ou}/{cu} (decree, either way)")
+    assert (ou, cu, op_, cp) == (2, 2, 0, 0)
+    _, reports, kinds = passports(META)
+    print(f"ok  metaphysician same:=Tr(same): {reports[0][1]} — truth-teller,")
+    print("    stipulable either way; per F4, never earnable: dogma w/ papers")
+    assert kinds["same"] == ("UNDERDETERMINED", 2)
+    _, reports, kinds = passports({"liar": ("not", "liar")})
+    print(f"ok  control, the liar: {reports[0][1]} ({reports[0][2]})")
+    assert kinds["liar"][0] == "PARADOX" and kinds["liar"][1] == 2
+    FULL = {**CRITERIA, **CONTEST, **META}
+    _, reports, _ = passports(FULL)
+    assert all(kind != "PARADOX" for _, kind, _ in reports)
+    print(f"ok  FULL system ({len(FULL)} sentences): zero PARADOX passports —")
+    print("    the instrument that recognizes paradoxes finds none here")
+
     print("\nTHESEUS: all measurements hold.")
     print("No gradualness — one relation dies at plank 1, one never dies;")
-    print("Hobbes splits relations, not ships; the paradox is an unbound")
-    print("word (INPUT, not PARADOX); the ceiling is alive — the first case")
-    print("on the earnable side of the witnessability line; counting is an")
-    print("interval; and the residue that stays hard is the person.")
+    print("Hobbes splits relations, not ships; the paradox package dies")
+    print("under every binding of 'same'; the ceiling is alive — the first")
+    print("case on the earnable side of the witnessability line; counting")
+    print("is an interval; the residue that stays hard is the person; and")
+    print("the passport office finds ZERO paradox components — the liar")
+    print("earns the word, Theseus wore it 2400 years without papers.")
     return 0
 
 

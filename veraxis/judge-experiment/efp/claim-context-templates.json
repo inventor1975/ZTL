@@ -1,52 +1,57 @@
 {
  "templates_id": "M1-EXPERIMENT-CLAIM-CONTEXT-TEMPLATES-v0.1",
- "model": "ClaimContext = stipulation identity + authority identity + institutional reading/scope + JudgeContext identity (frozen Protocol §2). The institutional portion below is frozen per gate; the JudgeContext identity is computed at evaluation time; the ClaimContext identity is the SHA-256 of the canonical JSON of the combined tuple.",
+ "model": "ClaimContext = stipulation identity + authority identity + institutional reading/scope + JudgeContext identity (frozen Protocol §2). The institutional portion below is frozen per gate; JudgeContext identity is computed at evaluation time; ClaimContext identity is the SHA-256 of the canonical JSON of the combined tuple.",
  "canonicalization": "json.dumps(obj, sort_keys=True, separators=(',',':')), UTF-8",
  "gates": {
-  "G-01-TREE": {
+  "G-01-HEAD": {
    "stipulation_identity": {
-    "kind": "accepted-decision-registry",
-    "item_id": "LEDGER-PR-01",
-    "review_id": 4884911346
+    "kind": "persisted-artifact",
+    "head": "060efa2cc295e0d7d9960f725aece264fc471935",
+    "path": "owner-decisions/REVIEW-LEDGER-BOOTSTRAP-OWNER-ACCEPTANCE-001.md",
+    "sha256": "8588676fe507832ec499eb7cedc4949106044533d44caefc91fb367fcc6ccc35"
    },
-   "authority_identity": "Accepted independent-review decision (inventor1975) + owner acceptance of record",
-   "institutional_reading_scope": "LEDGER-PR-01: accepted head/tree coordinate of the reviewed transaction"
+   "authority_identity": "Arkadiy Miteiko, Owner / Design Authority (persisted owner-decision artifact)",
+   "institutional_reading_scope": "LEDGER-PR-01: bootstrap review-chain binding: 'Reviewed head ' + head recited; trees not recited, so the gate tests recitation resolvability, not tree equality"
   },
-  "G-02-TREE": {
+  "G-02-HEAD": {
    "stipulation_identity": {
-    "kind": "accepted-decision-registry",
-    "item_id": "LEDGER-PR-02",
-    "review_id": 4885485435
+    "kind": "persisted-artifact",
+    "head": "060efa2cc295e0d7d9960f725aece264fc471935",
+    "path": "owner-decisions/REVIEW-LEDGER-BOOTSTRAP-OWNER-ACCEPTANCE-001.md",
+    "sha256": "8588676fe507832ec499eb7cedc4949106044533d44caefc91fb367fcc6ccc35"
    },
-   "authority_identity": "Accepted independent-review decision (inventor1975) + owner acceptance of record",
-   "institutional_reading_scope": "LEDGER-PR-02: accepted head/tree coordinate of the reviewed transaction"
+   "authority_identity": "Arkadiy Miteiko, Owner / Design Authority (persisted owner-decision artifact)",
+   "institutional_reading_scope": "LEDGER-PR-02: bootstrap review-chain binding: 'Reviewed head ' + head recited; trees not recited, so the gate tests recitation resolvability, not tree equality"
   },
-  "G-03-TREE": {
+  "G-03-HEAD": {
    "stipulation_identity": {
-    "kind": "accepted-decision-registry",
-    "item_id": "LEDGER-PR-03",
-    "review_id": 4885872274
+    "kind": "persisted-artifact",
+    "head": "060efa2cc295e0d7d9960f725aece264fc471935",
+    "path": "owner-decisions/REVIEW-LEDGER-BOOTSTRAP-OWNER-ACCEPTANCE-001.md",
+    "sha256": "8588676fe507832ec499eb7cedc4949106044533d44caefc91fb367fcc6ccc35"
    },
-   "authority_identity": "Accepted independent-review decision (inventor1975) + owner acceptance of record",
-   "institutional_reading_scope": "LEDGER-PR-03: accepted head/tree coordinate of the reviewed transaction"
+   "authority_identity": "Arkadiy Miteiko, Owner / Design Authority (persisted owner-decision artifact)",
+   "institutional_reading_scope": "LEDGER-PR-03: bootstrap review-chain binding: 'Reviewed head ' + head recited; trees not recited, so the gate tests recitation resolvability, not tree equality"
   },
-  "G-04-TREE": {
+  "G-04-HEAD": {
    "stipulation_identity": {
-    "kind": "accepted-decision-registry",
-    "item_id": "LEDGER-PR-04",
-    "review_id": 4888423824
+    "kind": "persisted-artifact",
+    "head": "ecdabc7ba4ca026391f0b64b6d793df67abecc29",
+    "path": "LEDGER-INVARIANTS.md",
+    "sha256": "40f97003724df8cddf45559c11274a39334fef486cef4a44a859f81f67b19e95"
    },
-   "authority_identity": "Accepted independent-review decision (inventor1975) + owner acceptance of record",
-   "institutional_reading_scope": "LEDGER-PR-04: accepted head/tree coordinate of the reviewed transaction"
+   "authority_identity": "Implementer evidence record under owner authorization; accepted by independent review",
+   "institutional_reading_scope": "LEDGER-PR-04: 'Bootstrap acceptance is persisted at ec66062ed9a63fae77eeb840b766b84162059c69' (head recited; tree not recited)"
   },
   "G-05-TREE": {
    "stipulation_identity": {
-    "kind": "accepted-decision-registry",
-    "item_id": "LEDGER-PR-05",
-    "review_id": 4889015262
+    "kind": "persisted-artifact",
+    "head": "86adb7d84d4a6bb469705afc04397a8260553f23",
+    "path": "owner-decisions/AUTHORIZE-M1-S2-LEDGER-NATIVE-EXECUTION-001.md",
+    "sha256": "971ce005d0771dadf7ad7e6827c8b9f19ce63d22f408a462cad53bc014cdd020"
    },
-   "authority_identity": "Accepted independent-review decision (inventor1975) + owner acceptance of record",
-   "institutional_reading_scope": "LEDGER-PR-05: accepted head/tree coordinate of the reviewed activation transaction"
+   "authority_identity": "Arkadiy Miteiko, Owner / Design Authority (persisted owner-decision artifact)",
+   "institutional_reading_scope": "LEDGER-PR-05: §1: 'Required activation coordinate: ledger main: ecdabc7ba4...; tree: 25f1cdab32...'"
   },
   "G-06-SCOPE-AND-ID": {
    "stipulation_identity": {
@@ -88,15 +93,15 @@
    "authority_identity": "Arkadiy Miteiko, Owner / Design Authority (persisted owner-decision artifact)",
    "institutional_reading_scope": "LEDGER-PR-07: §8: '01-M1-S2-OWNER-AUTHORIZATION-REFERENCE.json must resolve this persisted owner-decision artifact by exact ledger commit, ledger path, bytes, SHA-256, SHA-512, and owner decision identifier.'"
   },
-  "G-07-BLOCKED-SHAPE": {
+  "G-07-EVIDENCE-COMPLETENESS": {
    "stipulation_identity": {
     "kind": "persisted-artifact",
-    "head": "88a81aba060806157c6d3b63f36c0dcd1a99827a",
-    "path": "owner-decisions/AUTHORIZE-M1-S2-DIAGNOSTIC-001.md",
-    "sha256": "3fae0fe4bdf8c60761ff9d6c25e5122280b9553f906fbf8f7952130b61d3a321"
+    "head": "f44d1cc337d20cb8b01f85d232795b7bff93954a",
+    "path": "owner-decisions/AUTHORIZE-M1-S2-LEDGER-NATIVE-EXECUTION-001.md",
+    "sha256": "971ce005d0771dadf7ad7e6827c8b9f19ce63d22f408a462cad53bc014cdd020"
    },
    "authority_identity": "Arkadiy Miteiko, Owner / Design Authority (persisted owner-decision artifact)",
-   "institutional_reading_scope": "LEDGER-PR-07: §2 Frozen crash facts: began 2026-08-08T16:39:19Z; terminated SIGSEGV; exit code 139; JUnit not created; reruns 0"
+   "institutional_reading_scope": "LEDGER-PR-07: §8: 'The M1-S2 evidence record must include at minimum: 01-... 11-M1-S2-RETURN-FINAL.md ... all raw JUnit/stdout/stderr execution evidence; self-excluded manifest' — pre-result stipulation; the observed crash-shape values (SIGSEGV/139/absent JUnit) are ground truth, not gate conditions"
   },
   "G-07-CRASH-ID": {
    "stipulation_identity": {
@@ -146,37 +151,37 @@
     "sha256": "3fae0fe4bdf8c60761ff9d6c25e5122280b9553f906fbf8f7952130b61d3a321"
    },
    "authority_identity": "Arkadiy Miteiko, Owner / Design Authority (persisted owner-decision artifact)",
-   "institutional_reading_scope": "LEDGER-PR-09: §4.6: 'execute at most one normal import readline probe'; §2: SIGSEGV / exit 139 crash facts"
+   "institutional_reading_scope": "LEDGER-PR-09: §4.6: 'execute at most one normal import readline probe'; §4.7: 'preserve stdout, stderr, exit status, exact argv/environment delta' — the probe's observed outcome values are ground truth, not stipulated expectations"
   },
   "G-09-PROBE2": {
    "stipulation_identity": {
     "kind": "persisted-artifact",
-    "head": "3308a02ca288c2b95cbf1d56cc53c59a0140390f",
-    "path": "owner-decisions/AUTHORIZE-M1-CLOSURE-ENV-001-CONDITIONAL-R1-001.md",
-    "sha256": "e485d95eaa0416f8ac3c1a7666b3357a21f64d454c8b188f70da5169bc083ad7"
+    "head": "6bbdaf60dea4ddeeeb820a515fa717083211c2fc",
+    "path": "owner-decisions/AUTHORIZE-M1-S2-DIAGNOSTIC-001.md",
+    "sha256": "3fae0fe4bdf8c60761ff9d6c25e5122280b9553f906fbf8f7952130b61d3a321"
    },
    "authority_identity": "Arkadiy Miteiko, Owner / Design Authority (persisted owner-decision artifact)",
-   "institutional_reading_scope": "LEDGER-PR-09: §1 accepted diagnostic finding: 'changing only LANG, LC_ALL, and LC_CTYPE jointly from C.UTF-8 to C produced READLINE_IMPORT_OK'"
+   "institutional_reading_scope": "LEDGER-PR-09: §4.6: 'at most two environment-isolation variants of that same standalone probe' — same python code required; probe count bounded at three; observed outcome values are ground truth"
   },
   "G-09-LADDER-AND-COUNTERS": {
    "stipulation_identity": {
     "kind": "persisted-artifact",
-    "head": "3308a02ca288c2b95cbf1d56cc53c59a0140390f",
-    "path": "owner-decisions/AUTHORIZE-M1-CLOSURE-ENV-001-CONDITIONAL-R1-001.md",
-    "sha256": "e485d95eaa0416f8ac3c1a7666b3357a21f64d454c8b188f70da5169bc083ad7"
+    "head": "6bbdaf60dea4ddeeeb820a515fa717083211c2fc",
+    "path": "owner-decisions/AUTHORIZE-M1-S2-DIAGNOSTIC-001.md",
+    "sha256": "3fae0fe4bdf8c60761ff9d6c25e5122280b9553f906fbf8f7952130b61d3a321"
    },
    "authority_identity": "Arkadiy Miteiko, Owner / Design Authority (persisted owner-decision artifact)",
-   "institutional_reading_scope": "LEDGER-PR-09: §1: 'diagnostic disposition: ROOT_CAUSE_NARROWED; ROOT_CAUSE_IDENTIFIED = false; Probe 3 was not run'"
+   "institutional_reading_scope": "LEDGER-PR-09: §7: 'Return exactly one: ROOT_CAUSE_IDENTIFIED / ROOT_CAUSE_NARROWED / ROOT_CAUSE_UNRESOLVED / DIAGNOSTIC_BLOCKED'; §5: no pytest, no rerunning authorized-nine — the specific NARROWED value is ground truth"
   },
-  "G-09-BOUNDARY": {
+  "G-09-BOUNDARY-EVIDENCE": {
    "stipulation_identity": {
     "kind": "persisted-artifact",
-    "head": "3308a02ca288c2b95cbf1d56cc53c59a0140390f",
-    "path": "owner-decisions/AUTHORIZE-M1-CLOSURE-ENV-001-CONDITIONAL-R1-001.md",
-    "sha256": "e485d95eaa0416f8ac3c1a7666b3357a21f64d454c8b188f70da5169bc083ad7"
+    "head": "6bbdaf60dea4ddeeeb820a515fa717083211c2fc",
+    "path": "owner-decisions/AUTHORIZE-M1-S2-DIAGNOSTIC-001.md",
+    "sha256": "3fae0fe4bdf8c60761ff9d6c25e5122280b9553f906fbf8f7952130b61d3a321"
    },
    "authority_identity": "Arkadiy Miteiko, Owner / Design Authority (persisted owner-decision artifact)",
-   "institutional_reading_scope": "LEDGER-PR-09: §1: 'normal standalone import readline reproduced the frozen M1-S2 SIGSEGV'"
+   "institutional_reading_scope": "LEDGER-PR-09: §6.F: 'Compare those observations to the frozen crash report' — requires both comparanda preserved; the equality outcome is ground truth"
   },
   "G-10-ID": {
    "stipulation_identity": {
@@ -232,31 +237,31 @@
    "stipulation_identity": {
     "kind": "persisted-artifact",
     "head": "060efa2cc295e0d7d9960f725aece264fc471935",
-    "path": "stage-m1-closure/14-M1-CLOSURE-RETURN-FINAL.md",
-    "sha256": "40af1f57ffc59622a7989e993b61a125623771099bd02cec1f8b880913b4d2e1"
+    "path": "owner-decisions/AUTHORIZE-M1-CLOSURE-ENV-001-CONDITIONAL-R1-001.md",
+    "sha256": "e485d95eaa0416f8ac3c1a7666b3357a21f64d454c8b188f70da5169bc083ad7"
    },
-   "authority_identity": "Implementer evidence record under owner authorization; accepted by independent review",
-   "institutional_reading_scope": "LEDGER-PR-11: recorded result: 'authorized-nine 8P/1F'"
+   "authority_identity": "Arkadiy Miteiko, Owner / Design Authority (persisted owner-decision artifact)",
+   "institutional_reading_scope": "LEDGER-PR-11: §B6: 'The first scientific command must target exactly these nine IDs and no others' (population stipulated pre-result); §B7: result-bearing = parseable JUnit for the intended population — the observed 8P/1F is ground truth, not a stipulated expectation"
   },
   "G-11-R1-MODULE": {
    "stipulation_identity": {
     "kind": "persisted-artifact",
     "head": "060efa2cc295e0d7d9960f725aece264fc471935",
-    "path": "stage-m1-closure/14-M1-CLOSURE-RETURN-FINAL.md",
-    "sha256": "40af1f57ffc59622a7989e993b61a125623771099bd02cec1f8b880913b4d2e1"
+    "path": "owner-decisions/AUTHORIZE-M1-CLOSURE-ENV-001-CONDITIONAL-R1-001.md",
+    "sha256": "e485d95eaa0416f8ac3c1a7666b3357a21f64d454c8b188f70da5169bc083ad7"
    },
-   "authority_identity": "Implementer evidence record under owner authorization; accepted by independent review",
-   "institutional_reading_scope": "LEDGER-PR-11: recorded result: 'module 84P/3F'"
+   "authority_identity": "Arkadiy Miteiko, Owner / Design Authority (persisted owner-decision artifact)",
+   "institutional_reading_scope": "LEDGER-PR-11: §B7: 'tests/test_audit_lineage.py module' executed once, result-bearing; §B2: 'S1 module predecessor: 85P / 2F' stipulates the 87-ID module population pre-result — the observed 84P/3F is ground truth"
   },
   "G-11-R1-SUITE": {
    "stipulation_identity": {
     "kind": "persisted-artifact",
     "head": "060efa2cc295e0d7d9960f725aece264fc471935",
-    "path": "stage-m1-closure/14-M1-CLOSURE-RETURN-FINAL.md",
-    "sha256": "40af1f57ffc59622a7989e993b61a125623771099bd02cec1f8b880913b4d2e1"
+    "path": "owner-decisions/AUTHORIZE-M1-CLOSURE-ENV-001-CONDITIONAL-R1-001.md",
+    "sha256": "e485d95eaa0416f8ac3c1a7666b3357a21f64d454c8b188f70da5169bc083ad7"
    },
-   "authority_identity": "Implementer evidence record under owner authorization; accepted by independent review",
-   "institutional_reading_scope": "LEDGER-PR-11: recorded result: 'suite 1008P/26F/7S'"
+   "authority_identity": "Arkadiy Miteiko, Owner / Design Authority (persisted owner-decision artifact)",
+   "institutional_reading_scope": "LEDGER-PR-11: §B5: 'total suite collected: 1041' (stipulated pre-result); §B7: full suite once, result-bearing — the observed 1008P/26F/7S is ground truth"
   },
   "G-11-EDIT-IDS": {
    "stipulation_identity": {
@@ -276,7 +281,7 @@
     "sha256": "e485d95eaa0416f8ac3c1a7666b3357a21f64d454c8b188f70da5169bc083ad7"
    },
    "authority_identity": "Arkadiy Miteiko, Owner / Design Authority (persisted owner-decision artifact)",
-   "institutional_reading_scope": "LEDGER-PR-11: §B7-B8: R1 dispositions incl. H1_FALSIFIED_BY_PREREGISTERED_R1; 'a falsified result is evidence'; §B1: original M1-S2 remains permanently BLOCKED"
+   "institutional_reading_scope": "LEDGER-PR-11: §B7-B8: disposition vocabulary {H1_SUPPORTED_BY_PREREGISTERED_R1, H1_FALSIFIED_BY_PREREGISTERED_R1, BLOCKED_INFRASTRUCTURE}; §9: no R1 rerun, no retry-until-green; §B1: 'The original M1-S2 remains permanently BLOCKED' — all pre-result; the specific FALSIFIED value is ground truth"
   },
   "G-M1S1-ACCOUNTING": {
    "stipulation_identity": {
@@ -337,6 +342,33 @@
    },
    "authority_identity": "Arkadiy Miteiko, Owner / Design Authority (verbatim owner order persisted in the accepted package)",
    "institutional_reading_scope": "LEGACY-M1-S1-PACKAGE: §10: execute complete suite; S0 = 32 failing IDs / 30 functions / 9 modules; produce all six directed differences"
+  },
+  "SEAM-S1-METRIC-CONTRADICTION": {
+   "stipulation_identity": {
+    "kind": "experiment-freeze-package",
+    "protocol_commit": "61a470b41eccf8e57633d0abee7bbc795329a411",
+    "seam_gate": "SEAM-S1-METRIC-CONTRADICTION"
+   },
+   "authority_identity": "Experiment authority under frozen Protocol v0.1 §22/§28 and the Experiment Freeze Package (steering: V. Reznik). NOT stipulated by the historical institution.",
+   "institutional_reading_scope": "Known-seam evaluation claim: EH-2 detection of the seam bound in seam-detection-mapping.json for SEAM-S1-METRIC-CONTRADICTION."
+  },
+  "SEAM-S4-F4-MISLABEL": {
+   "stipulation_identity": {
+    "kind": "experiment-freeze-package",
+    "protocol_commit": "61a470b41eccf8e57633d0abee7bbc795329a411",
+    "seam_gate": "SEAM-S4-F4-MISLABEL"
+   },
+   "authority_identity": "Experiment authority under frozen Protocol v0.1 §22/§28 and the Experiment Freeze Package (steering: V. Reznik). NOT stipulated by the historical institution.",
+   "institutional_reading_scope": "Known-seam evaluation claim: EH-2 detection of the seam bound in seam-detection-mapping.json for SEAM-S4-F4-MISLABEL."
+  },
+  "SEAM-S5-SCHEMA-DRIFT": {
+   "stipulation_identity": {
+    "kind": "experiment-freeze-package",
+    "protocol_commit": "61a470b41eccf8e57633d0abee7bbc795329a411",
+    "seam_gate": "SEAM-S5-SCHEMA-DRIFT"
+   },
+   "authority_identity": "Experiment authority under frozen Protocol v0.1 §22/§28 and the Experiment Freeze Package (steering: V. Reznik). NOT stipulated by the historical institution.",
+   "institutional_reading_scope": "Known-seam evaluation claim: EH-2 detection of the seam bound in seam-detection-mapping.json for SEAM-S5-SCHEMA-DRIFT."
   }
  }
 }

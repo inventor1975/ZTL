@@ -423,7 +423,7 @@ ORDERM = "01-OWNER-ACCEPTANCE-CHECKPOINT-B-AND-M1-S1-EXECUTION-ORDER-001.md"
 gate("SEAM-S1-METRIC-CONTRADICTION", "LEGACY-M1-S1-PACKAGE",
      [ZA(ORDERM, "govering: 'authorized functions changed = 7'"),
       ZA("03-M1-S1-CHANGE-CONFINEMENT-REPORT.json", "measured: authorized_functions_changed = 5")],
-     "s1_seam",
+     "~s1_seam",
      [A("s1_seam", "seam_contradiction", zip_sha256=ZID,
         governing_member=ORDERM, governing_regex=r"authorized functions changed\s*=\s*(\d+)",
         measured_member="03-M1-S1-CHANGE-CONFINEMENT-REPORT.json",
@@ -433,7 +433,7 @@ gate("SEAM-S4-F4-MISLABEL", "LEDGER-PR-11",
      [PA("060efa2cc295e0d7d9960f725aece264fc471935", C+"12-M1-CLOSURE-R1-ADJUDICATION.json",
          "triggered_conditions include F4"),
       REG("LEDGER-PR-11", "owner ruled F4 NOT_SUSTAINED_AS_LABELED")],
-     "s4_seam",
+     "~s4_seam",
      [A("s4_seam", "seam_f4_support", head="060efa2cc295e0d7d9960f725aece264fc471935",
         suite=C+"evidence/r1/suite.junit.xml",
         seven_resolved=["tests.test_audit_lineage::test_operational_index_validates_and_verifies",
@@ -448,7 +448,7 @@ gate("SEAM-S5-SCHEMA-DRIFT", "LEGACY-M1-S1-PACKAGE",
      [ZA("11-M1-S1-PACKAGE-MANIFEST.json", "binds members by 'byte_length'"),
       PA("f44d1cc337d20cb8b01f85d232795b7bff93954a", "stage-m1-s2/12-M1-S2-EVIDENCE-MANIFEST.json",
          "binds members by 'bytes'")],
-     "s5_seam",
+     "~s5_seam",
      [A("s5_seam", "seam_schema_drift", zip_sha256=ZID,
         zip_manifest="11-M1-S1-PACKAGE-MANIFEST.json",
         ledger_head="f44d1cc337d20cb8b01f85d232795b7bff93954a",
@@ -465,6 +465,36 @@ json.dump({"harvesting_rules_id": "M1-EXPERIMENT-HARVESTING-RULES-v0.1",
            "default": "Z (default-deny)",
            "rules": RULES},
           open("harvesting-rules.json", "w"), indent=1, ensure_ascii=False)
+# ---- regenerate ClaimContext templates from the FINAL gate set (revision 4)
+_tpl = {"templates_id": "M1-EXPERIMENT-CLAIM-CONTEXT-TEMPLATES-v0.1",
+        "model": "ClaimContext = stipulation identity + authority identity + institutional reading/scope + JudgeContext identity (frozen Protocol §2). The institutional portion below is frozen per gate; JudgeContext identity is computed at evaluation time; ClaimContext identity is the SHA-256 of the canonical JSON of the combined tuple.",
+        "canonicalization": "json.dumps(obj, sort_keys=True, separators=(',',':')), UTF-8",
+        "gates": {}}
+for g in F:
+    a0 = g["source_anchors"][0]
+    gid = g["gate_id"]
+    if gid.startswith("SEAM-"):
+        stip = {"kind": "experiment-freeze-package", "protocol_commit": "61a470b41eccf8e57633d0abee7bbc795329a411",
+                "seam_gate": gid}
+        auth = "Experiment authority under frozen Protocol v0.1 §22/§28 and the Experiment Freeze Package (steering: V. Reznik). NOT stipulated by the historical institution."
+        scope = f"Known-seam evaluation claim: EH-2 detection of the seam bound in seam-detection-mapping.json for {gid}."
+    else:
+        if a0["kind"] == "persisted-artifact":
+            stip = {"kind": a0["kind"], "head": a0["head"], "path": a0["path"], "sha256": a0["sha256"]}
+            auth = ("Arkadiy Miteiko, Owner / Design Authority (persisted owner-decision artifact)"
+                    if a0["path"].startswith("owner-decisions/")
+                    else "Implementer evidence record under owner authorization; accepted by independent review")
+        elif a0["kind"] == "legacy-zip-member":
+            stip = {"kind": a0["kind"], "zip_sha256": a0["zip_sha256"], "member": a0["member"], "sha256": a0["sha256"]}
+            auth = "Arkadiy Miteiko, Owner / Design Authority (verbatim owner order persisted in the accepted package)"
+        else:
+            stip = {"kind": a0["kind"], "item_id": a0["item_id"], "review_id": a0.get("review_id")}
+            auth = "Accepted independent-review decision (inventor1975) + owner acceptance of record"
+        scope = f"{g['item_id']}: {a0.get('clause', a0.get('note',''))}"
+    _tpl["gates"][gid] = {"stipulation_identity": stip, "authority_identity": auth,
+                          "institutional_reading_scope": scope}
+json.dump(_tpl, open("claim-context-templates.json", "w"), indent=1, ensure_ascii=False)
+
 n_atoms = sum(len(g["atoms"]) for g in F)
 print(f"formulas.json: {len(F)} gates, {n_atoms} atoms")
 for g in F: print(" ", g["gate_id"])

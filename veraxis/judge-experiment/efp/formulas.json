@@ -1564,7 +1564,7 @@
      "clause": "measured: authorized_functions_changed = 5"
     }
    ],
-   "formula": "s1_seam",
+   "formula": "~s1_seam",
    "atoms": [
     {
      "atom": "s1_seam",
@@ -1600,7 +1600,7 @@
      "note": "owner ruled F4 NOT_SUSTAINED_AS_LABELED"
     }
    ],
-   "formula": "s4_seam",
+   "formula": "~s4_seam",
    "atoms": [
     {
      "atom": "s4_seam",
@@ -1643,7 +1643,7 @@
      "clause": "binds members by 'bytes'"
     }
    ],
-   "formula": "s5_seam",
+   "formula": "~s5_seam",
    "atoms": [
     {
      "atom": "s5_seam",

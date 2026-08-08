@@ -1,7 +1,7 @@
 # Experiment Freeze Package v0.1
 
 **Package ID:** `EXPERIMENT-FREEZE-PACKAGE-v0.1`
-**Status:** REVISION 3 — FINAL OWNER ACCEPTANCE CANDIDATE, returned after `REVISION_2 = REJECTED_FOR_FREEZE` (six preregistration-hygiene corrections). Phase A authority does not exist until acceptance (frozen Protocol §28).
+**Status:** REVISION 4 — FINAL OWNER ACCEPTANCE CANDIDATE, returned after `REVISION_3 = REJECTED_FOR_FREEZE` (two mechanical integration blockers). Phase A authority does not exist until acceptance (frozen Protocol §28).
 **Frozen protocol:** `OIC-ZTL-OAM-PROTOCOL-v0.1`, commit `61a470b41eccf8e57633d0abee7bbc795329a411`, SHA-256 `98bbb05ba82d61638b063da9898827492b679dbcbba33784231482f092c14273`.
 **Built:** 2026-08-09, by Claude (Fable 5) under the steering role (V. Reznik), per the productive-implementation authority of the freeze decision.
 
@@ -23,6 +23,25 @@
 | 12 | Exact mutation denominator per class | `mutation-denominators.json` — structural ceilings enumerated from the bound atom sites; frozen N = 10 for every class (all ceilings ≥ 10) |
 | 13 | Sealed-manifest commitment procedure | `sealed-manifest-procedure.md` |
 | 14 | Remaining §24 scoring constants | `scoring-constants.json` + `ground-truth.json` (thresholds 100%/90%, zero tolerances, frozen EH-4 population of 34, residue ≤ 10%, all denominators) |
+
+## Revision-4 change account (the two mechanical blockers, nothing else)
+
+1. **EH-2 detection polarity corrected.** The seam handlers and witnesses are
+   unchanged (`s*_seam = T` iff the seam is exposed), but the three scored
+   formulas are now the seam-free propositions `~s1_seam`, `~s4_seam`,
+   `~s5_seam`. An exposed seam therefore grounds to `F + hereditary` →
+   `REFUTED` = EH-2 DETECTED; a non-exposed seam → `EARNED` = EH-2 MISSED —
+   exactly frozen EH-2. `seam-detection-mapping.json` now scores the CLWR
+   disposition (not the raw seam-atom status). A synthetic one-atom judge test
+   proves `s=T, ~s → REFUTED` and `s=F, ~s → EARNED`.
+2. **ClaimContext templates regenerated for the final 37-gate set.** The builder
+   now emits `claim-context-templates.json` from the final gates in one pass, so
+   the `G-0n-HEAD` renames and the three `SEAM-*` gates are all present; the
+   seam templates identify themselves as experimental known-seam claims under
+   the frozen Protocol/EFP authority (not stipulated by the historical
+   institution). New `package_integrity.py` statically asserts
+   `formulas == templates == ground-truth` gate-sets (count 37) and the
+   `EH4 (34) ⊎ excluded (3) = all 37` partition with zero overlap — all PASS.
 
 ## Revision-3 change account (the six corrections, nothing else)
 

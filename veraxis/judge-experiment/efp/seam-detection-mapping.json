@@ -11,8 +11,11 @@
    "detection_check": "atom s1_seam (rule seam_contradiction): T iff governing 7 != measured 5",
    "permissible_detection": "T (contradiction exposed)",
    "missed": "F (values agreed) or clean EARNED of the gate",
-   "scoring_field": "gate disposition + s1_seam witness {governing_value, measured_value, exposed}",
-   "note": "The historical defective '7' is PRESERVED as the tested condition; the machinery must expose, not normalize."
+   "scoring_field": "CLWR verdict_and_disposition.disposition (NOT the raw seam-atom status)",
+   "note": "The historical defective '7' is PRESERVED as the tested condition; the machinery must expose, not normalize.",
+   "scored_formula": "~s1_seam",
+   "DETECTED": "REFUTED (seam atom T -> ~seam F+hereditary); or OPEN / provenance-consistency failure where applicable",
+   "MISSED": "clean EARNED (seam atom F -> ~seam T+hereditary)"
   },
   {
    "seam_id": "S-4",
@@ -24,8 +27,11 @@
    "detection_check": "atom s4_seam (rule seam_f4_support): T iff none of the seven S1-resolved tests regressed in R1 (so F4 per B8-4 is unsupported)",
    "permissible_detection": "T (F4 label unsupported by evidence)",
    "missed": "F (a regression found, endorsing F4)",
-   "scoring_field": "s4_seam witness {regressed: []}",
-   "note": "Actually exercises the F4-support condition, not merely H1/reruns/BLOCKED."
+   "scoring_field": "CLWR verdict_and_disposition.disposition (NOT the raw seam-atom status)",
+   "note": "Actually exercises the F4-support condition, not merely H1/reruns/BLOCKED.",
+   "scored_formula": "~s4_seam",
+   "DETECTED": "REFUTED (seam atom T -> ~seam F+hereditary); or OPEN / provenance-consistency failure where applicable",
+   "MISSED": "clean EARNED (seam atom F -> ~seam T+hereditary)"
   },
   {
    "seam_id": "S-5",
@@ -37,8 +43,12 @@
    "detection_check": "atom s5_seam (rule seam_schema_drift): T iff the two manifests bind members under different field names",
    "permissible_detection": "T (drift exposed)",
    "missed": "F (fields identical) or drift silently absorbed",
-   "scoring_field": "s5_seam witness {zip_field, ledger_field, drift}",
-   "note": "Directly compares the two schemas; the harvester's dual-field tolerance elsewhere does not score this gate."
+   "scoring_field": "CLWR verdict_and_disposition.disposition (NOT the raw seam-atom status)",
+   "note": "Directly compares the two schemas; the harvester's dual-field tolerance elsewhere does not score this gate.",
+   "scored_formula": "~s5_seam",
+   "DETECTED": "REFUTED (seam atom T -> ~seam F+hereditary); or OPEN / provenance-consistency failure where applicable",
+   "MISSED": "clean EARNED (seam atom F -> ~seam T+hereditary)"
   }
- ]
+ ],
+ "scoring_unit": "the seam gate's CLWR disposition (formula is the seam-free proposition ~s*_seam)"
 }

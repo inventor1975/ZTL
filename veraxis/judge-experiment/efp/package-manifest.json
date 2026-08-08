@@ -4,9 +4,9 @@
  "members": [
   {
    "path": "EXPERIMENT-FREEZE-PACKAGE-v0.1.md",
-   "bytes": 9265,
-   "sha256": "96747ec916969634bbb9d070d764209041b7692e991bc86af58656a3386c8fdc",
-   "sha512": "5f1a2fedd5559dca650514d7242f6442ca94040c420094475f4ce71e5eb7bb51888aad29f3f984b998426c77d4ed4bb0b92c98aa3469538168ca4b4d3746d355"
+   "bytes": 10529,
+   "sha256": "36ccc808b79474efac0f1df88f956c52c36c7b7199d3d8d57b71f1675bd6aecc",
+   "sha512": "6f8baf026030d2a1d5e6319428e31549ab72b50752f4f13b22604a93deecd93041aba30cf40559314cdc881cebf689e7d69e41142d44f2f7ed014afffb091d0a"
   },
   {
    "path": "REPRODUCTION.md",
@@ -16,15 +16,15 @@
   },
   {
    "path": "build_formulas.py",
-   "bytes": 38045,
-   "sha256": "8052e3181e7ff2b0bf2a059550e99ffeba723eaff97d71c6f6ce0dbc3676b739",
-   "sha512": "51156d43c0aa6df355d479921f192398621ff5b8e8ab230742735691f1c3cafa72ee41c93a6efe9dac170b1f3771f1c8caded2f5f0aa2b2522554910099d37c5"
+   "bytes": 40456,
+   "sha256": "524da4c2b57552e44822268eb8cfa34f2fd3ee5b3bf5ab4ecb8219afdc1e6f20",
+   "sha512": "059b94e5b226f7b64ab08cfc6ed30811a1f28b8df4a96e1c7ad16693dc77f50fa700425538a3ed541d32b7af5b6c00f0bd5e99703c7ce17e0b8e23afbe1a370b"
   },
   {
    "path": "claim-context-templates.json",
-   "bytes": 19378,
-   "sha256": "b3a2f5d58d9fe3252c2356fdf0096ca335fe7737f282ea6a44220ec1d8cbccdc",
-   "sha512": "62fae3a2c418621c8b781f10d01d81110d423b40a90cf123a2606aa5cdabb781f38c04caddf82d91c2e96eeaa78073d843ba784c6aec83235a4acc37760f2d73"
+   "bytes": 23275,
+   "sha256": "da18b9c3ffa067af7a5edc11d9eb9fd6a7bc0e48c9decf964d791fd13b387898",
+   "sha512": "8a4bbcfeecfe7992bfb2d21bf1667fa7df9a2d273e19558da550eb1b170cc67befcfdbf8691de61432ba50fc68a7232711f37b91fd952a37bd8bc58c04a6eb3f"
   },
   {
    "path": "corpus-index.json",
@@ -46,9 +46,9 @@
   },
   {
    "path": "formulas.json",
-   "bytes": 59629,
-   "sha256": "22382e5ae0548d38fcc440fc1c15f9d5c444c8b8330aae34b4fca4b4b27f6cd6",
-   "sha512": "a635cbbf7d9936dbbf38443b2b102bf4d8da9e96d5ad0a023d93e1d8cb22d51896c667fd76d046ae78640751aa53bca840268de958b81659c75be7d66b377b63"
+   "bytes": 59632,
+   "sha256": "36e8bbdadcf8f24fcca6045916a55abc151583924ef8db5f6f665d4f29ba3dde",
+   "sha512": "755a39539226757e3182a0e44ac3cb67173e59c494bcb68afc4e044a064de8b1fe6064740e1e516de1de4e11779aa9adbd3c81103f0c6bc81424384a12311e6f"
   },
   {
    "path": "ground-truth.json",
@@ -87,6 +87,12 @@
    "sha512": "79e6b1d51686653040a1532aad5fe7a6ed73a4f1bb877e60b1ff57c1e446802f5bc72ca26f7d289e289cec9ae9de81ec47509906be6248d35e810fb035973aca"
   },
   {
+   "path": "package_integrity.py",
+   "bytes": 1083,
+   "sha256": "67fe81343db23009f199ee46507cdadb2cece2cf54e26a827efeb858d99a3890",
+   "sha512": "3ccf82111992efe7545da385c8984e216be82fdde204bf3fd4e8fc82de2e7fd140c340ad38ea4b0f154a2d7f8fce470f46e39f8e2c91b1872bc6eca271225449"
+  },
+  {
    "path": "provenance_audit.py",
    "bytes": 1124,
    "sha256": "c61506c0b9722d66f03739e40b8697a1b3ea721f1c5a07764068fc6c0b6b1ac3",
@@ -106,9 +112,9 @@
   },
   {
    "path": "seam-detection-mapping.json",
-   "bytes": 2115,
-   "sha256": "811438ecd5ec7a6247fb004ef1bc506cc25ce37de91835973716605b124f5953",
-   "sha512": "5fa6333e712e338d322fa03cd1da28aa05a5bd140135d68df4c0b7ce23cc78f6b85d3e6c95f4286ee9604909b9d28ef23718f0bd4700957c0101fcc08d66de3b"
+   "bytes": 2930,
+   "sha256": "0fac95328782c49a72e81c837c33a60d5e6610a1bd2db6bb052e40d244fb4076",
+   "sha512": "64629a9e0a82787fa0889f25fd74c82d456efc34e25fb4d03b6d8661271ea4f2771ff032d037dbe2266f20e47258de265d6719693b38ee63eef5981027744806"
   },
   {
    "path": "seam-dispositions.json",

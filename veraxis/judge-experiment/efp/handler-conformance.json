@@ -1,0 +1,24 @@
+{
+ "matrix_id": "M1-EXPERIMENT-HANDLER-CONFORMANCE-v0.1",
+ "discipline": "every implemented handler tests the condition stated in harvesting-rules.json; unimplemented rules fail closed to Z and can never return T",
+ "handlers": [
+  {"rule": "tree_identity", "tests": "observed tree (git rev-parse <head>^{tree}) == expected_tree bound from the frozen corpus index; unresolvable head -> Z", "witness": "head + expected_tree + observed_tree"},
+  {"rule": "path_confinement", "tests": "every changed path vs base startswith an authorized prefix AND the diff is non-empty", "witness": "base+head+paths_sha256+count"},
+  {"rule": "changed_file_set", "tests": "sorted changed-path set == sorted expected set", "witness": "base+head+paths"},
+  {"rule": "member_identity", "tests": "blob length == bytes AND sha256 == expected AND (sha512 == expected when bound); missing blob -> F", "witness": "head+path+bytes+sha256"},
+  {"rule": "manifest_accounting", "tests": "no duplicate declarations; every declared member resolves and reproduces bytes+sha256(+sha512); no unmanifested files beyond the self-excluded manifest", "witness": "manifest blob + detail"},
+  {"rule": "json_field", "tests": "parsed field value == expected (absent field compares as sentinel and fails); missing artifact -> Z", "witness": "blob sha256 + field + observed value"},
+  {"rule": "json_all_true", "tests": "array non-empty AND every element's field is literally true", "witness": "blob sha256 + element count"},
+  {"rule": "file_bytes", "tests": "blob length == n (or <= n_max when bound so); missing -> F", "witness": "head+path+bytes"},
+  {"rule": "file_equals", "tests": "content equals the bound literal / alt literal / other blob / parsed-JSON value; missing -> F", "witness": "blob sha256"},
+  {"rule": "file_absent", "tests": "path not present in the item tree", "witness": "tree + presence flag"},
+  {"rule": "argv_equals", "tests": "parsed JSON list == exact bound argv list", "witness": "blob sha256"},
+  {"rule": "junit_counts", "tests": "parsed (collected,P,F,S) == bound tuple", "witness": "blob + observed counts"},
+  {"rule": "junit_failing_set", "tests": "sorted failing-ID set == sorted expected set", "witness": "blob + observed failing set"},
+  {"rule": "junit_set_diff", "tests": "declared but not bound by any current gate; handler not present -> would fail closed to Z", "witness": "-"},
+  {"rule": "zip_member_identity", "tests": "zip member length == bytes AND sha256 == expected; missing member -> F", "witness": "zip_sha256+member+bytes+sha256"},
+  {"rule": "zip_manifest_accounting", "tests": "same checks as manifest_accounting over zip members", "witness": "zip_sha256 + detail"},
+  {"rule": "ast_confinement", "tests": "unit sets equal; changed units within allowed set; changed count == expected; hunk count == expected; named unit byte-identical", "witness": "zip_sha256 + changed + hunks + iso flag"},
+  {"rule": "doc_cites", "tests": "UNIMPLEMENTED - always fails closed to Z with reason recorded; never returns T", "witness": "-"}
+ ]
+}

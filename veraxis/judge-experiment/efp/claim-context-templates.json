@@ -1,0 +1,342 @@
+{
+ "templates_id": "M1-EXPERIMENT-CLAIM-CONTEXT-TEMPLATES-v0.1",
+ "model": "ClaimContext = stipulation identity + authority identity + institutional reading/scope + JudgeContext identity (frozen Protocol §2). The institutional portion below is frozen per gate; the JudgeContext identity is computed at evaluation time; the ClaimContext identity is the SHA-256 of the canonical JSON of the combined tuple.",
+ "canonicalization": "json.dumps(obj, sort_keys=True, separators=(',',':')), UTF-8",
+ "gates": {
+  "G-01-TREE": {
+   "stipulation_identity": {
+    "kind": "accepted-decision-registry",
+    "item_id": "LEDGER-PR-01",
+    "review_id": 4884911346
+   },
+   "authority_identity": "Accepted independent-review decision (inventor1975) + owner acceptance of record",
+   "institutional_reading_scope": "LEDGER-PR-01: accepted head/tree coordinate of the reviewed transaction"
+  },
+  "G-02-TREE": {
+   "stipulation_identity": {
+    "kind": "accepted-decision-registry",
+    "item_id": "LEDGER-PR-02",
+    "review_id": 4885485435
+   },
+   "authority_identity": "Accepted independent-review decision (inventor1975) + owner acceptance of record",
+   "institutional_reading_scope": "LEDGER-PR-02: accepted head/tree coordinate of the reviewed transaction"
+  },
+  "G-03-TREE": {
+   "stipulation_identity": {
+    "kind": "accepted-decision-registry",
+    "item_id": "LEDGER-PR-03",
+    "review_id": 4885872274
+   },
+   "authority_identity": "Accepted independent-review decision (inventor1975) + owner acceptance of record",
+   "institutional_reading_scope": "LEDGER-PR-03: accepted head/tree coordinate of the reviewed transaction"
+  },
+  "G-04-TREE": {
+   "stipulation_identity": {
+    "kind": "accepted-decision-registry",
+    "item_id": "LEDGER-PR-04",
+    "review_id": 4888423824
+   },
+   "authority_identity": "Accepted independent-review decision (inventor1975) + owner acceptance of record",
+   "institutional_reading_scope": "LEDGER-PR-04: accepted head/tree coordinate of the reviewed transaction"
+  },
+  "G-05-TREE": {
+   "stipulation_identity": {
+    "kind": "accepted-decision-registry",
+    "item_id": "LEDGER-PR-05",
+    "review_id": 4889015262
+   },
+   "authority_identity": "Accepted independent-review decision (inventor1975) + owner acceptance of record",
+   "institutional_reading_scope": "LEDGER-PR-05: accepted head/tree coordinate of the reviewed activation transaction"
+  },
+  "G-06-SCOPE-AND-ID": {
+   "stipulation_identity": {
+    "kind": "persisted-artifact",
+    "head": "86adb7d84d4a6bb469705afc04397a8260553f23",
+    "path": "owner-decisions/AUTHORIZE-M1-S2-LEDGER-NATIVE-EXECUTION-001.md",
+    "sha256": "971ce005d0771dadf7ad7e6827c8b9f19ce63d22f408a462cad53bc014cdd020"
+   },
+   "authority_identity": "Arkadiy Miteiko, Owner / Design Authority (persisted owner-decision artifact)",
+   "institutional_reading_scope": "LEDGER-PR-06: §9.1: 'be committed alone under owner-decisions/** on an owner/ branch'"
+  },
+  "G-07-SCOPE": {
+   "stipulation_identity": {
+    "kind": "persisted-artifact",
+    "head": "f44d1cc337d20cb8b01f85d232795b7bff93954a",
+    "path": "owner-decisions/AUTHORIZE-M1-S2-LEDGER-NATIVE-EXECUTION-001.md",
+    "sha256": "971ce005d0771dadf7ad7e6827c8b9f19ce63d22f408a462cad53bc014cdd020"
+   },
+   "authority_identity": "Arkadiy Miteiko, Owner / Design Authority (persisted owner-decision artifact)",
+   "institutional_reading_scope": "LEDGER-PR-07: §8: 'Authorized evidence branch: evidence/m1-s2-001 ... Authorized path class: stage-m1-s2/**'"
+  },
+  "G-07-MANIFEST": {
+   "stipulation_identity": {
+    "kind": "persisted-artifact",
+    "head": "f44d1cc337d20cb8b01f85d232795b7bff93954a",
+    "path": "owner-decisions/AUTHORIZE-M1-S2-LEDGER-NATIVE-EXECUTION-001.md",
+    "sha256": "971ce005d0771dadf7ad7e6827c8b9f19ce63d22f408a462cad53bc014cdd020"
+   },
+   "authority_identity": "Arkadiy Miteiko, Owner / Design Authority (persisted owner-decision artifact)",
+   "institutional_reading_scope": "LEDGER-PR-07: §8: '12-M1-S2-EVIDENCE-MANIFEST.json is self-excluded and every member row must bind path, bytes, sha256, and sha512.'"
+  },
+  "G-07-AUTHREF": {
+   "stipulation_identity": {
+    "kind": "persisted-artifact",
+    "head": "f44d1cc337d20cb8b01f85d232795b7bff93954a",
+    "path": "owner-decisions/AUTHORIZE-M1-S2-LEDGER-NATIVE-EXECUTION-001.md",
+    "sha256": "971ce005d0771dadf7ad7e6827c8b9f19ce63d22f408a462cad53bc014cdd020"
+   },
+   "authority_identity": "Arkadiy Miteiko, Owner / Design Authority (persisted owner-decision artifact)",
+   "institutional_reading_scope": "LEDGER-PR-07: §8: '01-M1-S2-OWNER-AUTHORIZATION-REFERENCE.json must resolve this persisted owner-decision artifact by exact ledger commit, ledger path, bytes, SHA-256, SHA-512, and owner decision identifier.'"
+  },
+  "G-07-BLOCKED-SHAPE": {
+   "stipulation_identity": {
+    "kind": "persisted-artifact",
+    "head": "88a81aba060806157c6d3b63f36c0dcd1a99827a",
+    "path": "owner-decisions/AUTHORIZE-M1-S2-DIAGNOSTIC-001.md",
+    "sha256": "3fae0fe4bdf8c60761ff9d6c25e5122280b9553f906fbf8f7952130b61d3a321"
+   },
+   "authority_identity": "Arkadiy Miteiko, Owner / Design Authority (persisted owner-decision artifact)",
+   "institutional_reading_scope": "LEDGER-PR-07: §2 Frozen crash facts: began 2026-08-08T16:39:19Z; terminated SIGSEGV; exit code 139; JUnit not created; reruns 0"
+  },
+  "G-07-CRASH-ID": {
+   "stipulation_identity": {
+    "kind": "persisted-artifact",
+    "head": "88a81aba060806157c6d3b63f36c0dcd1a99827a",
+    "path": "owner-decisions/AUTHORIZE-M1-S2-DIAGNOSTIC-001.md",
+    "sha256": "3fae0fe4bdf8c60761ff9d6c25e5122280b9553f906fbf8f7952130b61d3a321"
+   },
+   "authority_identity": "Arkadiy Miteiko, Owner / Design Authority (persisted owner-decision artifact)",
+   "institutional_reading_scope": "LEDGER-PR-07: §2: crash report path/bytes/SHA-256/SHA-512 = python3.12-...ips / 16911 / 4a343442... / b51d6598..."
+  },
+  "G-08-ID": {
+   "stipulation_identity": {
+    "kind": "persisted-artifact",
+    "head": "6bbdaf60dea4ddeeeb820a515fa717083211c2fc",
+    "path": "stage-m1-s2-diag/01-M1-S2-DIAG-OWNER-AUTHORIZATION-REFERENCE.json",
+    "sha256": "a452e8e945376e83993fd9c394866efd3716eacc97f4228578d40896448f7e97"
+   },
+   "authority_identity": "Implementer evidence record under owner authorization; accepted by independent review",
+   "institutional_reading_scope": "LEDGER-PR-08: persisted resolution of this artifact's bytes/SHA-256/SHA-512 and decision token"
+  },
+  "G-09-SCOPE": {
+   "stipulation_identity": {
+    "kind": "persisted-artifact",
+    "head": "6bbdaf60dea4ddeeeb820a515fa717083211c2fc",
+    "path": "owner-decisions/AUTHORIZE-M1-S2-DIAGNOSTIC-001.md",
+    "sha256": "3fae0fe4bdf8c60761ff9d6c25e5122280b9553f906fbf8f7952130b61d3a321"
+   },
+   "authority_identity": "Arkadiy Miteiko, Owner / Design Authority (persisted owner-decision artifact)",
+   "institutional_reading_scope": "LEDGER-PR-09: §4: 'Authorized evidence branch: evidence/m1-s2-diag-001 ... Authorized ledger path: stage-m1-s2-diag/**'"
+  },
+  "G-09-MANIFEST": {
+   "stipulation_identity": {
+    "kind": "persisted-artifact",
+    "head": "6bbdaf60dea4ddeeeb820a515fa717083211c2fc",
+    "path": "owner-decisions/AUTHORIZE-M1-S2-DIAGNOSTIC-001.md",
+    "sha256": "3fae0fe4bdf8c60761ff9d6c25e5122280b9553f906fbf8f7952130b61d3a321"
+   },
+   "authority_identity": "Arkadiy Miteiko, Owner / Design Authority (persisted owner-decision artifact)",
+   "institutional_reading_scope": "LEDGER-PR-09: §8: 'self-excluded evidence manifest binding each member by path, bytes, sha256, sha512'"
+  },
+  "G-09-PROBE1": {
+   "stipulation_identity": {
+    "kind": "persisted-artifact",
+    "head": "6bbdaf60dea4ddeeeb820a515fa717083211c2fc",
+    "path": "owner-decisions/AUTHORIZE-M1-S2-DIAGNOSTIC-001.md",
+    "sha256": "3fae0fe4bdf8c60761ff9d6c25e5122280b9553f906fbf8f7952130b61d3a321"
+   },
+   "authority_identity": "Arkadiy Miteiko, Owner / Design Authority (persisted owner-decision artifact)",
+   "institutional_reading_scope": "LEDGER-PR-09: §4.6: 'execute at most one normal import readline probe'; §2: SIGSEGV / exit 139 crash facts"
+  },
+  "G-09-PROBE2": {
+   "stipulation_identity": {
+    "kind": "persisted-artifact",
+    "head": "3308a02ca288c2b95cbf1d56cc53c59a0140390f",
+    "path": "owner-decisions/AUTHORIZE-M1-CLOSURE-ENV-001-CONDITIONAL-R1-001.md",
+    "sha256": "e485d95eaa0416f8ac3c1a7666b3357a21f64d454c8b188f70da5169bc083ad7"
+   },
+   "authority_identity": "Arkadiy Miteiko, Owner / Design Authority (persisted owner-decision artifact)",
+   "institutional_reading_scope": "LEDGER-PR-09: §1 accepted diagnostic finding: 'changing only LANG, LC_ALL, and LC_CTYPE jointly from C.UTF-8 to C produced READLINE_IMPORT_OK'"
+  },
+  "G-09-LADDER-AND-COUNTERS": {
+   "stipulation_identity": {
+    "kind": "persisted-artifact",
+    "head": "3308a02ca288c2b95cbf1d56cc53c59a0140390f",
+    "path": "owner-decisions/AUTHORIZE-M1-CLOSURE-ENV-001-CONDITIONAL-R1-001.md",
+    "sha256": "e485d95eaa0416f8ac3c1a7666b3357a21f64d454c8b188f70da5169bc083ad7"
+   },
+   "authority_identity": "Arkadiy Miteiko, Owner / Design Authority (persisted owner-decision artifact)",
+   "institutional_reading_scope": "LEDGER-PR-09: §1: 'diagnostic disposition: ROOT_CAUSE_NARROWED; ROOT_CAUSE_IDENTIFIED = false; Probe 3 was not run'"
+  },
+  "G-09-BOUNDARY": {
+   "stipulation_identity": {
+    "kind": "persisted-artifact",
+    "head": "3308a02ca288c2b95cbf1d56cc53c59a0140390f",
+    "path": "owner-decisions/AUTHORIZE-M1-CLOSURE-ENV-001-CONDITIONAL-R1-001.md",
+    "sha256": "e485d95eaa0416f8ac3c1a7666b3357a21f64d454c8b188f70da5169bc083ad7"
+   },
+   "authority_identity": "Arkadiy Miteiko, Owner / Design Authority (persisted owner-decision artifact)",
+   "institutional_reading_scope": "LEDGER-PR-09: §1: 'normal standalone import readline reproduced the frozen M1-S2 SIGSEGV'"
+  },
+  "G-10-ID": {
+   "stipulation_identity": {
+    "kind": "persisted-artifact",
+    "head": "060efa2cc295e0d7d9960f725aece264fc471935",
+    "path": "stage-m1-closure/01-M1-CLOSURE-OWNER-AUTHORIZATION-REFERENCE.json",
+    "sha256": "f8eb1c8f940470790d4051c70cb19bc3106a3080bd7327133013133bfdeac520"
+   },
+   "authority_identity": "Implementer evidence record under owner authorization; accepted by independent review",
+   "institutional_reading_scope": "LEDGER-PR-10: persisted resolution of this artifact's identity, ratification and persistence events"
+  },
+  "G-11-SCOPE": {
+   "stipulation_identity": {
+    "kind": "persisted-artifact",
+    "head": "060efa2cc295e0d7d9960f725aece264fc471935",
+    "path": "owner-decisions/AUTHORIZE-M1-CLOSURE-ENV-001-CONDITIONAL-R1-001.md",
+    "sha256": "e485d95eaa0416f8ac3c1a7666b3357a21f64d454c8b188f70da5169bc083ad7"
+   },
+   "authority_identity": "Arkadiy Miteiko, Owner / Design Authority (persisted owner-decision artifact)",
+   "institutional_reading_scope": "LEDGER-PR-11: §8: 'Branch: evidence/m1-closure-001 ... Paths: stage-m1-closure/**'"
+  },
+  "G-11-MANIFEST": {
+   "stipulation_identity": {
+    "kind": "persisted-artifact",
+    "head": "060efa2cc295e0d7d9960f725aece264fc471935",
+    "path": "owner-decisions/AUTHORIZE-M1-CLOSURE-ENV-001-CONDITIONAL-R1-001.md",
+    "sha256": "e485d95eaa0416f8ac3c1a7666b3357a21f64d454c8b188f70da5169bc083ad7"
+   },
+   "authority_identity": "Arkadiy Miteiko, Owner / Design Authority (persisted owner-decision artifact)",
+   "institutional_reading_scope": "LEDGER-PR-11: §8: 'The manifest is self-excluded and must bind every other persisted member by path, bytes, SHA-256, and SHA-512.'"
+  },
+  "G-11-TRIALS": {
+   "stipulation_identity": {
+    "kind": "persisted-artifact",
+    "head": "060efa2cc295e0d7d9960f725aece264fc471935",
+    "path": "owner-decisions/AUTHORIZE-M1-CLOSURE-ENV-001-CONDITIONAL-R1-001.md",
+    "sha256": "e485d95eaa0416f8ac3c1a7666b3357a21f64d454c8b188f70da5169bc083ad7"
+   },
+   "authority_identity": "Arkadiy Miteiko, Owner / Design Authority (persisted owner-decision artifact)",
+   "institutional_reading_scope": "LEDGER-PR-11: §5.A5 exact trial argv semantics; §6.6-10: three trials attempted once, exit 0, stdout exactly READLINE_IMPORT_OK + terminating newline, stderr zero bytes, no crash report"
+  },
+  "G-11-ACTIVATION": {
+   "stipulation_identity": {
+    "kind": "persisted-artifact",
+    "head": "060efa2cc295e0d7d9960f725aece264fc471935",
+    "path": "owner-decisions/AUTHORIZE-M1-CLOSURE-ENV-001-CONDITIONAL-R1-001.md",
+    "sha256": "e485d95eaa0416f8ac3c1a7666b3357a21f64d454c8b188f70da5169bc083ad7"
+   },
+   "authority_identity": "Arkadiy Miteiko, Owner / Design Authority (persisted owner-decision artifact)",
+   "institutional_reading_scope": "LEDGER-PR-11: §6: 'Phase B authority becomes ACTIVE_BY_PREAUTHORIZED_CONDITION if and only if all of the following are true and recorded' (P01-P18)"
+  },
+  "G-11-R1-NINE": {
+   "stipulation_identity": {
+    "kind": "persisted-artifact",
+    "head": "060efa2cc295e0d7d9960f725aece264fc471935",
+    "path": "stage-m1-closure/14-M1-CLOSURE-RETURN-FINAL.md",
+    "sha256": "40af1f57ffc59622a7989e993b61a125623771099bd02cec1f8b880913b4d2e1"
+   },
+   "authority_identity": "Implementer evidence record under owner authorization; accepted by independent review",
+   "institutional_reading_scope": "LEDGER-PR-11: recorded result: 'authorized-nine 8P/1F'"
+  },
+  "G-11-R1-MODULE": {
+   "stipulation_identity": {
+    "kind": "persisted-artifact",
+    "head": "060efa2cc295e0d7d9960f725aece264fc471935",
+    "path": "stage-m1-closure/14-M1-CLOSURE-RETURN-FINAL.md",
+    "sha256": "40af1f57ffc59622a7989e993b61a125623771099bd02cec1f8b880913b4d2e1"
+   },
+   "authority_identity": "Implementer evidence record under owner authorization; accepted by independent review",
+   "institutional_reading_scope": "LEDGER-PR-11: recorded result: 'module 84P/3F'"
+  },
+  "G-11-R1-SUITE": {
+   "stipulation_identity": {
+    "kind": "persisted-artifact",
+    "head": "060efa2cc295e0d7d9960f725aece264fc471935",
+    "path": "stage-m1-closure/14-M1-CLOSURE-RETURN-FINAL.md",
+    "sha256": "40af1f57ffc59622a7989e993b61a125623771099bd02cec1f8b880913b4d2e1"
+   },
+   "authority_identity": "Implementer evidence record under owner authorization; accepted by independent review",
+   "institutional_reading_scope": "LEDGER-PR-11: recorded result: 'suite 1008P/26F/7S'"
+  },
+  "G-11-EDIT-IDS": {
+   "stipulation_identity": {
+    "kind": "persisted-artifact",
+    "head": "060efa2cc295e0d7d9960f725aece264fc471935",
+    "path": "owner-decisions/AUTHORIZE-M1-CLOSURE-ENV-001-CONDITIONAL-R1-001.md",
+    "sha256": "e485d95eaa0416f8ac3c1a7666b3357a21f64d454c8b188f70da5169bc083ad7"
+   },
+   "authority_identity": "Arkadiy Miteiko, Owner / Design Authority (persisted owner-decision artifact)",
+   "institutional_reading_scope": "LEDGER-PR-11: §B3: exact post-edit identities (_isolated 9a11894f...; file 40975 / 04bd2679... / 5c56b9a1...); 'no second scientific edit is authorized'"
+  },
+  "G-11-ADJUDICATION": {
+   "stipulation_identity": {
+    "kind": "persisted-artifact",
+    "head": "060efa2cc295e0d7d9960f725aece264fc471935",
+    "path": "owner-decisions/AUTHORIZE-M1-CLOSURE-ENV-001-CONDITIONAL-R1-001.md",
+    "sha256": "e485d95eaa0416f8ac3c1a7666b3357a21f64d454c8b188f70da5169bc083ad7"
+   },
+   "authority_identity": "Arkadiy Miteiko, Owner / Design Authority (persisted owner-decision artifact)",
+   "institutional_reading_scope": "LEDGER-PR-11: §B7-B8: R1 dispositions incl. H1_FALSIFIED_BY_PREREGISTERED_R1; 'a falsified result is evidence'; §B1: original M1-S2 remains permanently BLOCKED"
+  },
+  "G-M1S1-ACCOUNTING": {
+   "stipulation_identity": {
+    "kind": "legacy-zip-member",
+    "zip_sha256": "e9250d1938bbbd5f607add695ce2273c52d00428da26481834b2dd020348d30a",
+    "member": "01-OWNER-ACCEPTANCE-CHECKPOINT-B-AND-M1-S1-EXECUTION-ORDER-001.md",
+    "sha256": "a05729a43e88e37dcdc47fb6a38960a3cd9780b493a4eabc3fa8f2c5b96041b0"
+   },
+   "authority_identity": "Arkadiy Miteiko, Owner / Design Authority (verbatim owner order persisted in the accepted package)",
+   "institutional_reading_scope": "LEGACY-M1-S1-PACKAGE: §13: package accounting — manifest derived from actual members; missing 0 / undeclared 0 / duplicates 0 / identity mismatches 0; self-excluded manifest"
+  },
+  "G-M1S1-FILE-IDS": {
+   "stipulation_identity": {
+    "kind": "legacy-zip-member",
+    "zip_sha256": "e9250d1938bbbd5f607add695ce2273c52d00428da26481834b2dd020348d30a",
+    "member": "01-OWNER-ACCEPTANCE-CHECKPOINT-B-AND-M1-S1-EXECUTION-ORDER-001.md",
+    "sha256": "a05729a43e88e37dcdc47fb6a38960a3cd9780b493a4eabc3fa8f2c5b96041b0"
+   },
+   "authority_identity": "Arkadiy Miteiko, Owner / Design Authority (verbatim owner order persisted in the accepted package)",
+   "institutional_reading_scope": "LEGACY-M1-S1-PACKAGE: §3: S0 test-file bytes 40741, SHA-256 582906...; §6: S1 test-file bytes/SHA-256/SHA-512 required"
+  },
+  "G-M1S1-CONFINEMENT": {
+   "stipulation_identity": {
+    "kind": "legacy-zip-member",
+    "zip_sha256": "e9250d1938bbbd5f607add695ce2273c52d00428da26481834b2dd020348d30a",
+    "member": "01-OWNER-ACCEPTANCE-CHECKPOINT-B-AND-M1-S1-EXECUTION-ORDER-001.md",
+    "sha256": "a05729a43e88e37dcdc47fb6a38960a3cd9780b493a4eabc3fa8f2c5b96041b0"
+   },
+   "authority_identity": "Arkadiy Miteiko, Owner / Design Authority (verbatim owner order persisted in the accepted package)",
+   "institutional_reading_scope": "LEGACY-M1-S1-PACKAGE: §4: only the seven enumerated functions may receive semantic edits; _isolated must remain byte-for-byte at S0; §5: seven enumerated sites; EXECUTION NOTE: seven sites fall inside five functions"
+  },
+  "G-M1S1-NINE": {
+   "stipulation_identity": {
+    "kind": "legacy-zip-member",
+    "zip_sha256": "e9250d1938bbbd5f607add695ce2273c52d00428da26481834b2dd020348d30a",
+    "member": "01-OWNER-ACCEPTANCE-CHECKPOINT-B-AND-M1-S1-EXECUTION-ORDER-001.md",
+    "sha256": "a05729a43e88e37dcdc47fb6a38960a3cd9780b493a4eabc3fa8f2c5b96041b0"
+   },
+   "authority_identity": "Arkadiy Miteiko, Owner / Design Authority (verbatim owner order persisted in the accepted package)",
+   "institutional_reading_scope": "LEGACY-M1-S1-PACKAGE: §8: execute the accepted nine-ID set; measure collected/passed/failed/skipped and exact failing IDs"
+  },
+  "G-M1S1-MODULE": {
+   "stipulation_identity": {
+    "kind": "legacy-zip-member",
+    "zip_sha256": "e9250d1938bbbd5f607add695ce2273c52d00428da26481834b2dd020348d30a",
+    "member": "01-OWNER-ACCEPTANCE-CHECKPOINT-B-AND-M1-S1-EXECUTION-ORDER-001.md",
+    "sha256": "a05729a43e88e37dcdc47fb6a38960a3cd9780b493a4eabc3fa8f2c5b96041b0"
+   },
+   "authority_identity": "Arkadiy Miteiko, Owner / Design Authority (verbatim owner order persisted in the accepted package)",
+   "institutional_reading_scope": "LEGACY-M1-S1-PACKAGE: §9: execute complete module; S0 module failures = 9 IDs; compare S1 directly to S0"
+  },
+  "G-M1S1-SUITE": {
+   "stipulation_identity": {
+    "kind": "legacy-zip-member",
+    "zip_sha256": "e9250d1938bbbd5f607add695ce2273c52d00428da26481834b2dd020348d30a",
+    "member": "01-OWNER-ACCEPTANCE-CHECKPOINT-B-AND-M1-S1-EXECUTION-ORDER-001.md",
+    "sha256": "a05729a43e88e37dcdc47fb6a38960a3cd9780b493a4eabc3fa8f2c5b96041b0"
+   },
+   "authority_identity": "Arkadiy Miteiko, Owner / Design Authority (verbatim owner order persisted in the accepted package)",
+   "institutional_reading_scope": "LEGACY-M1-S1-PACKAGE: §10: execute complete suite; S0 = 32 failing IDs / 30 functions / 9 modules; produce all six directed differences"
+  }
+ }
+}

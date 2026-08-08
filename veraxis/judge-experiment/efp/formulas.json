@@ -27,14 +27,23 @@
   {
    "gate_id": "G-01-TREE",
    "item_id": "LEDGER-PR-01",
-   "source_anchor": "PR #1 reviewed head (review record)",
+   "source_anchors": [
+    {
+     "kind": "accepted-decision-registry",
+     "item_id": "LEDGER-PR-01",
+     "review_id": 4884911346,
+     "accepted_review_token": "ACCEPT (bootstrap review)",
+     "note": "accepted head/tree coordinate of the reviewed transaction"
+    }
+   ],
    "formula": "t_tree",
    "atoms": [
     {
      "atom": "t_tree",
      "rule": "tree_identity",
      "args": {
-      "head": "00074eeb98517fd4cd4e76ca31758dfdda15fc93"
+      "head": "00074eeb98517fd4cd4e76ca31758dfdda15fc93",
+      "expected_tree": "db3be329820f7e137b968e907775ebd5891554c3"
      }
     }
    ],
@@ -43,14 +52,23 @@
   {
    "gate_id": "G-02-TREE",
    "item_id": "LEDGER-PR-02",
-   "source_anchor": "PR #2 reviewed head (review record)",
+   "source_anchors": [
+    {
+     "kind": "accepted-decision-registry",
+     "item_id": "LEDGER-PR-02",
+     "review_id": 4885485435,
+     "accepted_review_token": "ACCEPT (identity binding review)",
+     "note": "accepted head/tree coordinate of the reviewed transaction"
+    }
+   ],
    "formula": "t_tree",
    "atoms": [
     {
      "atom": "t_tree",
      "rule": "tree_identity",
      "args": {
-      "head": "59e4cd5c6101766a825b9cf93df7202ef1a6e254"
+      "head": "59e4cd5c6101766a825b9cf93df7202ef1a6e254",
+      "expected_tree": "8376e2ee05ffe890cdc44c83fc0208c97934e833"
      }
     }
    ],
@@ -59,14 +77,23 @@
   {
    "gate_id": "G-03-TREE",
    "item_id": "LEDGER-PR-03",
-   "source_anchor": "PR #3 reviewed head (review record)",
+   "source_anchors": [
+    {
+     "kind": "accepted-decision-registry",
+     "item_id": "LEDGER-PR-03",
+     "review_id": 4885872274,
+     "accepted_review_token": "ACCEPT (decommission review)",
+     "note": "accepted head/tree coordinate of the reviewed transaction"
+    }
+   ],
    "formula": "t_tree",
    "atoms": [
     {
      "atom": "t_tree",
      "rule": "tree_identity",
      "args": {
-      "head": "cb38c13bad436d860b34dd75269d4fbdd648e931"
+      "head": "cb38c13bad436d860b34dd75269d4fbdd648e931",
+      "expected_tree": "602f5227ea02b258d7d249554be964af18abf951"
      }
     }
    ],
@@ -75,51 +102,81 @@
   {
    "gate_id": "G-04-TREE",
    "item_id": "LEDGER-PR-04",
-   "source_anchor": "PR #4 reviewed head (review record)",
+   "source_anchors": [
+    {
+     "kind": "accepted-decision-registry",
+     "item_id": "LEDGER-PR-04",
+     "review_id": 4888423824,
+     "accepted_review_token": "ACCEPT (acceptance-record review)",
+     "note": "accepted head/tree coordinate of the reviewed transaction"
+    }
+   ],
    "formula": "t_tree",
    "atoms": [
     {
      "atom": "t_tree",
      "rule": "tree_identity",
      "args": {
-      "head": "ec66062ed9a63fae77eeb840b766b84162059c69"
+      "head": "ec66062ed9a63fae77eeb840b766b84162059c69",
+      "expected_tree": "af5ce11bd0618fd10d3678dea705b88b81f666a7"
      }
     }
    ],
    "note": "Early infrastructure PRs carry thin mechanical gate content; their substance is institutional prose (expected discrepancy class: institutional)."
   },
   {
-   "gate_id": "G-05-SCOPE",
+   "gate_id": "G-05-TREE",
    "item_id": "LEDGER-PR-05",
-   "source_anchor": "PR#5 review order: 'three-file activation scope'",
-   "formula": "s_files & s_tree",
-   "atoms": [
+   "source_anchors": [
     {
-     "atom": "s_files",
-     "rule": "changed_file_set",
-     "args": {
-      "base": "ec66062ed9a63fae77eeb840b766b84162059c69",
-      "head": "ecdabc7ba4ca026391f0b64b6d793df67abecc29",
-      "expected": [
-       "LEDGER-INVARIANTS.md",
-       "README.md",
-       "ROLE-IDENTITY-MAP.json"
-      ]
-     }
-    },
+     "kind": "accepted-decision-registry",
+     "item_id": "LEDGER-PR-05",
+     "review_id": 4889015262,
+     "accepted_review_token": "ACCEPT_REVIEW_LEDGER_OPERATIONAL_ACTIVATION_001",
+     "note": "accepted head/tree coordinate of the reviewed activation transaction"
+    }
+   ],
+   "formula": "s_tree",
+   "atoms": [
     {
      "atom": "s_tree",
      "rule": "tree_identity",
      "args": {
-      "head": "ecdabc7ba4ca026391f0b64b6d793df67abecc29"
+      "head": "ecdabc7ba4ca026391f0b64b6d793df67abecc29",
+      "expected_tree": "25f1cdab32b5e21de0e2d73b69a4a3ea10997042"
      }
     }
-   ]
+   ],
+   "note": "The three-file-scope requirement existed only in the relay-channel order; not bindable per corpus exclusions, so the scope atom is removed and the transaction is anchored by its accepted coordinate."
   },
   {
    "gate_id": "G-06-SCOPE-AND-ID",
    "item_id": "LEDGER-PR-06",
-   "source_anchor": "PR#6 review order: one-file owner scope; artifact identity 10506/971ce005/b2a35c65",
+   "source_anchors": [
+    {
+     "kind": "persisted-artifact",
+     "head": "86adb7d84d4a6bb469705afc04397a8260553f23",
+     "path": "owner-decisions/AUTHORIZE-M1-S2-LEDGER-NATIVE-EXECUTION-001.md",
+     "sha256": "971ce005d0771dadf7ad7e6827c8b9f19ce63d22f408a462cad53bc014cdd020",
+     "bytes": 10506,
+     "clause": "§9.1: 'be committed alone under owner-decisions/** on an owner/ branch'"
+    },
+    {
+     "kind": "persisted-artifact",
+     "head": "f44d1cc337d20cb8b01f85d232795b7bff93954a",
+     "path": "stage-m1-s2/01-M1-S2-OWNER-AUTHORIZATION-REFERENCE.json",
+     "sha256": "7ee3b6b1bc480e8a647d93cdec1c764287898b85eaf56a1ef087970a4873265a",
+     "bytes": 598,
+     "clause": "persisted resolution of this artifact's bytes/SHA-256/SHA-512 and decision token"
+    },
+    {
+     "kind": "accepted-decision-registry",
+     "item_id": "LEDGER-PR-06",
+     "review_id": 4889162186,
+     "accepted_review_token": "ACCEPT_M1_S2_LEDGER_NATIVE_OWNER_AUTHORIZATION_001",
+     "note": "accepted coordinate"
+    }
+   ],
    "formula": "o_file & o_id & o_tree",
    "atoms": [
     {
@@ -148,7 +205,8 @@
      "atom": "o_tree",
      "rule": "tree_identity",
      "args": {
-      "head": "86adb7d84d4a6bb469705afc04397a8260553f23"
+      "head": "86adb7d84d4a6bb469705afc04397a8260553f23",
+      "expected_tree": "fd7dfac761460a523060566fabe04731ff41f435"
      }
     }
    ]
@@ -156,7 +214,16 @@
   {
    "gate_id": "G-07-SCOPE",
    "item_id": "LEDGER-PR-07",
-   "source_anchor": "PR#7 order §1: all changed paths confined to stage-m1-s2/**",
+   "source_anchors": [
+    {
+     "kind": "persisted-artifact",
+     "head": "f44d1cc337d20cb8b01f85d232795b7bff93954a",
+     "path": "owner-decisions/AUTHORIZE-M1-S2-LEDGER-NATIVE-EXECUTION-001.md",
+     "sha256": "971ce005d0771dadf7ad7e6827c8b9f19ce63d22f408a462cad53bc014cdd020",
+     "bytes": 10506,
+     "clause": "§8: 'Authorized evidence branch: evidence/m1-s2-001 ... Authorized path class: stage-m1-s2/**'"
+    }
+   ],
    "formula": "c_paths & c_tree",
    "atoms": [
     {
@@ -174,7 +241,8 @@
      "atom": "c_tree",
      "rule": "tree_identity",
      "args": {
-      "head": "f44d1cc337d20cb8b01f85d232795b7bff93954a"
+      "head": "f44d1cc337d20cb8b01f85d232795b7bff93954a",
+      "expected_tree": "8c48fe4bd01eca42abde77b55618023a4260c618"
      }
     }
    ]
@@ -182,7 +250,23 @@
   {
    "gate_id": "G-07-MANIFEST",
    "item_id": "LEDGER-PR-07",
-   "source_anchor": "PR#7 order §15/§11: manifest 5888/1626f2b6/732d272b, self-excluded, all members reproduce",
+   "source_anchors": [
+    {
+     "kind": "persisted-artifact",
+     "head": "f44d1cc337d20cb8b01f85d232795b7bff93954a",
+     "path": "owner-decisions/AUTHORIZE-M1-S2-LEDGER-NATIVE-EXECUTION-001.md",
+     "sha256": "971ce005d0771dadf7ad7e6827c8b9f19ce63d22f408a462cad53bc014cdd020",
+     "bytes": 10506,
+     "clause": "§8: '12-M1-S2-EVIDENCE-MANIFEST.json is self-excluded and every member row must bind path, bytes, sha256, and sha512.'"
+    },
+    {
+     "kind": "accepted-decision-registry",
+     "item_id": "LEDGER-PR-07",
+     "review_id": 4889282030,
+     "accepted_review_token": "ACCEPT_M1_S2_LEDGER_NATIVE_BLOCKED_MEASUREMENT_001",
+     "note": "accepted manifest identity 5888/1626f2b6/732d272b per review 4889282030"
+    }
+   ],
    "formula": "m_id & m_acct",
    "atoms": [
     {
@@ -211,7 +295,16 @@
   {
    "gate_id": "G-07-AUTHREF",
    "item_id": "LEDGER-PR-07",
-   "source_anchor": "PR#7 order §2: authorization reference resolves persisted commit, artifact identity, token",
+   "source_anchors": [
+    {
+     "kind": "persisted-artifact",
+     "head": "f44d1cc337d20cb8b01f85d232795b7bff93954a",
+     "path": "owner-decisions/AUTHORIZE-M1-S2-LEDGER-NATIVE-EXECUTION-001.md",
+     "sha256": "971ce005d0771dadf7ad7e6827c8b9f19ce63d22f408a462cad53bc014cdd020",
+     "bytes": 10506,
+     "clause": "§8: '01-M1-S2-OWNER-AUTHORIZATION-REFERENCE.json must resolve this persisted owner-decision artifact by exact ledger commit, ledger path, bytes, SHA-256, SHA-512, and owner decision identifier.'"
+    }
+   ],
    "formula": "a_commit & a_bytes & a_sha & a_token & a_state",
    "atoms": [
     {
@@ -269,7 +362,16 @@
   {
    "gate_id": "G-07-BLOCKED-SHAPE",
    "item_id": "LEDGER-PR-07",
-   "source_anchor": "PR#7 order §§6-9: SIGSEGV/139 before result; no JUnit; zero-byte streams; counters",
+   "source_anchors": [
+    {
+     "kind": "persisted-artifact",
+     "head": "88a81aba060806157c6d3b63f36c0dcd1a99827a",
+     "path": "owner-decisions/AUTHORIZE-M1-S2-DIAGNOSTIC-001.md",
+     "sha256": "3fae0fe4bdf8c60761ff9d6c25e5122280b9553f906fbf8f7952130b61d3a321",
+     "bytes": 7570,
+     "clause": "§2 Frozen crash facts: began 2026-08-08T16:39:19Z; terminated SIGSEGV; exit code 139; JUnit not created; reruns 0"
+    }
+   ],
    "formula": "b_exit & b_term & b_nojunit & b_out0 & b_err0 & b_reruns & b_started",
    "atoms": [
     {
@@ -343,7 +445,16 @@
   {
    "gate_id": "G-07-CRASH-ID",
    "item_id": "LEDGER-PR-07",
-   "source_anchor": "PR#7 order §12: crash report preserved exactly 16911/4a343442/b51d6598",
+   "source_anchors": [
+    {
+     "kind": "persisted-artifact",
+     "head": "88a81aba060806157c6d3b63f36c0dcd1a99827a",
+     "path": "owner-decisions/AUTHORIZE-M1-S2-DIAGNOSTIC-001.md",
+     "sha256": "3fae0fe4bdf8c60761ff9d6c25e5122280b9553f906fbf8f7952130b61d3a321",
+     "bytes": 7570,
+     "clause": "§2: crash report path/bytes/SHA-256/SHA-512 = python3.12-...ips / 16911 / 4a343442... / b51d6598..."
+    }
+   ],
    "formula": "cr_id",
    "atoms": [
     {
@@ -360,22 +471,27 @@
    ]
   },
   {
-   "gate_id": "G-08-SCOPE-AND-ID",
+   "gate_id": "G-08-ID",
    "item_id": "LEDGER-PR-08",
-   "source_anchor": "PR#8 review order: one-file owner scope; artifact 7570/3fae0fe4/beb373b6",
-   "formula": "d_file & d_id & d_tree",
-   "atoms": [
+   "source_anchors": [
     {
-     "atom": "d_file",
-     "rule": "changed_file_set",
-     "args": {
-      "base": "f44d1cc337d20cb8b01f85d232795b7bff93954a",
-      "head": "88a81aba060806157c6d3b63f36c0dcd1a99827a",
-      "expected": [
-       "owner-decisions/AUTHORIZE-M1-S2-DIAGNOSTIC-001.md"
-      ]
-     }
+     "kind": "persisted-artifact",
+     "head": "6bbdaf60dea4ddeeeb820a515fa717083211c2fc",
+     "path": "stage-m1-s2-diag/01-M1-S2-DIAG-OWNER-AUTHORIZATION-REFERENCE.json",
+     "sha256": "a452e8e945376e83993fd9c394866efd3716eacc97f4228578d40896448f7e97",
+     "bytes": 797,
+     "clause": "persisted resolution of this artifact's bytes/SHA-256/SHA-512 and decision token"
     },
+    {
+     "kind": "accepted-decision-registry",
+     "item_id": "LEDGER-PR-08",
+     "review_id": 4889485795,
+     "accepted_review_token": "ACCEPT_M1_S2_INFRASTRUCTURE_DIAGNOSTIC_AUTHORIZATION_001",
+     "note": "accepted coordinate; one-file-scope requirement existed only in the relay order — scope atom removed"
+    }
+   ],
+   "formula": "d_id & d_tree",
+   "atoms": [
     {
      "atom": "d_id",
      "rule": "member_identity",
@@ -391,7 +507,8 @@
      "atom": "d_tree",
      "rule": "tree_identity",
      "args": {
-      "head": "88a81aba060806157c6d3b63f36c0dcd1a99827a"
+      "head": "88a81aba060806157c6d3b63f36c0dcd1a99827a",
+      "expected_tree": "1b0fb440970718bc7ce03195f4ec03d381c5b870"
      }
     }
    ]
@@ -399,7 +516,16 @@
   {
    "gate_id": "G-09-SCOPE",
    "item_id": "LEDGER-PR-09",
-   "source_anchor": "PR#9 order §1: confined to stage-m1-s2-diag/**",
+   "source_anchors": [
+    {
+     "kind": "persisted-artifact",
+     "head": "6bbdaf60dea4ddeeeb820a515fa717083211c2fc",
+     "path": "owner-decisions/AUTHORIZE-M1-S2-DIAGNOSTIC-001.md",
+     "sha256": "3fae0fe4bdf8c60761ff9d6c25e5122280b9553f906fbf8f7952130b61d3a321",
+     "bytes": 7570,
+     "clause": "§4: 'Authorized evidence branch: evidence/m1-s2-diag-001 ... Authorized ledger path: stage-m1-s2-diag/**'"
+    }
+   ],
    "formula": "g_paths & g_tree",
    "atoms": [
     {
@@ -417,7 +543,8 @@
      "atom": "g_tree",
      "rule": "tree_identity",
      "args": {
-      "head": "6bbdaf60dea4ddeeeb820a515fa717083211c2fc"
+      "head": "6bbdaf60dea4ddeeeb820a515fa717083211c2fc",
+      "expected_tree": "2fdd8bcdbe9b856fe5c3fadf78f5c27532ff8e27"
      }
     }
    ]
@@ -425,7 +552,23 @@
   {
    "gate_id": "G-09-MANIFEST",
    "item_id": "LEDGER-PR-09",
-   "source_anchor": "PR#9 order §11: manifest 69457/b210ee6c/15f659d3, self-excluded, members reproduce",
+   "source_anchors": [
+    {
+     "kind": "persisted-artifact",
+     "head": "6bbdaf60dea4ddeeeb820a515fa717083211c2fc",
+     "path": "owner-decisions/AUTHORIZE-M1-S2-DIAGNOSTIC-001.md",
+     "sha256": "3fae0fe4bdf8c60761ff9d6c25e5122280b9553f906fbf8f7952130b61d3a321",
+     "bytes": 7570,
+     "clause": "§8: 'self-excluded evidence manifest binding each member by path, bytes, sha256, sha512'"
+    },
+    {
+     "kind": "accepted-decision-registry",
+     "item_id": "LEDGER-PR-09",
+     "review_id": 4889536531,
+     "accepted_review_token": "ACCEPT_M1_S2_INFRASTRUCTURE_DIAGNOSTIC_EVIDENCE_001",
+     "note": "accepted manifest identity 69457/b210ee6c/15f659d3 per review 4889536531"
+    }
+   ],
    "formula": "n_id & n_acct",
    "atoms": [
     {
@@ -454,7 +597,16 @@
   {
    "gate_id": "G-09-PROBE1",
    "item_id": "LEDGER-PR-09",
-   "source_anchor": "PR#9 order §6: probe 1 exact argv, delta NONE, exit 139, empty streams",
+   "source_anchors": [
+    {
+     "kind": "persisted-artifact",
+     "head": "6bbdaf60dea4ddeeeb820a515fa717083211c2fc",
+     "path": "owner-decisions/AUTHORIZE-M1-S2-DIAGNOSTIC-001.md",
+     "sha256": "3fae0fe4bdf8c60761ff9d6c25e5122280b9553f906fbf8f7952130b61d3a321",
+     "bytes": 7570,
+     "clause": "§4.6: 'execute at most one normal import readline probe'; §2: SIGSEGV / exit 139 crash facts"
+    }
+   ],
    "formula": "p1_argv & p1_delta & p1_exit & p1_out & p1_err",
    "atoms": [
     {
@@ -512,7 +664,24 @@
   {
    "gate_id": "G-09-PROBE2",
    "item_id": "LEDGER-PR-09",
-   "source_anchor": "PR#9 order §7: probe 2 delta exactly the locale triple; exit 0; stdout READLINE_IMPORT_OK; no new crash",
+   "source_anchors": [
+    {
+     "kind": "persisted-artifact",
+     "head": "3308a02ca288c2b95cbf1d56cc53c59a0140390f",
+     "path": "owner-decisions/AUTHORIZE-M1-CLOSURE-ENV-001-CONDITIONAL-R1-001.md",
+     "sha256": "e485d95eaa0416f8ac3c1a7666b3357a21f64d454c8b188f70da5169bc083ad7",
+     "bytes": 20814,
+     "clause": "§1 accepted diagnostic finding: 'changing only LANG, LC_ALL, and LC_CTYPE jointly from C.UTF-8 to C produced READLINE_IMPORT_OK'"
+    },
+    {
+     "kind": "persisted-artifact",
+     "head": "6bbdaf60dea4ddeeeb820a515fa717083211c2fc",
+     "path": "owner-decisions/AUTHORIZE-M1-S2-DIAGNOSTIC-001.md",
+     "sha256": "3fae0fe4bdf8c60761ff9d6c25e5122280b9553f906fbf8f7952130b61d3a321",
+     "bytes": 7570,
+     "clause": "§4.6: 'at most two environment-isolation variants of that same standalone probe'"
+    }
+   ],
    "formula": "p2_delta & p2_exit & p2_out & p2_err & p2_nocrash",
    "atoms": [
     {
@@ -574,7 +743,24 @@
   {
    "gate_id": "G-09-LADDER-AND-COUNTERS",
    "item_id": "LEDGER-PR-09",
-   "source_anchor": "PR#9 order §§4,8: probes executed 2, reruns 0, corrective 0, disposition NARROWED",
+   "source_anchors": [
+    {
+     "kind": "persisted-artifact",
+     "head": "3308a02ca288c2b95cbf1d56cc53c59a0140390f",
+     "path": "owner-decisions/AUTHORIZE-M1-CLOSURE-ENV-001-CONDITIONAL-R1-001.md",
+     "sha256": "e485d95eaa0416f8ac3c1a7666b3357a21f64d454c8b188f70da5169bc083ad7",
+     "bytes": 20814,
+     "clause": "§1: 'diagnostic disposition: ROOT_CAUSE_NARROWED; ROOT_CAUSE_IDENTIFIED = false; Probe 3 was not run'"
+    },
+    {
+     "kind": "persisted-artifact",
+     "head": "6bbdaf60dea4ddeeeb820a515fa717083211c2fc",
+     "path": "owner-decisions/AUTHORIZE-M1-S2-DIAGNOSTIC-001.md",
+     "sha256": "3fae0fe4bdf8c60761ff9d6c25e5122280b9553f906fbf8f7952130b61d3a321",
+     "bytes": 7570,
+     "clause": "§5/§7: no pytest; return dispositions; no rerun"
+    }
+   ],
    "formula": "l_disp & l_pytest & l_reruns & l_rc",
    "atoms": [
     {
@@ -622,7 +808,16 @@
   {
    "gate_id": "G-09-BOUNDARY",
    "item_id": "LEDGER-PR-09",
-   "source_anchor": "PR#9 order §6: probe-01 boundary reproduces the frozen M1-S2 boundary",
+   "source_anchors": [
+    {
+     "kind": "persisted-artifact",
+     "head": "3308a02ca288c2b95cbf1d56cc53c59a0140390f",
+     "path": "owner-decisions/AUTHORIZE-M1-CLOSURE-ENV-001-CONDITIONAL-R1-001.md",
+     "sha256": "e485d95eaa0416f8ac3c1a7666b3357a21f64d454c8b188f70da5169bc083ad7",
+     "bytes": 20814,
+     "clause": "§1: 'normal standalone import readline reproduced the frozen M1-S2 SIGSEGV'"
+    }
+   ],
    "formula": "y_same",
    "atoms": [
     {
@@ -637,22 +832,27 @@
    ]
   },
   {
-   "gate_id": "G-10-SCOPE-AND-ID",
+   "gate_id": "G-10-ID",
    "item_id": "LEDGER-PR-10",
-   "source_anchor": "Revised PR#10 order: one-file net scope vs base; artifact 20814/e485d95e/c4a58c6e",
-   "formula": "r_file & r_id & r_tree",
-   "atoms": [
+   "source_anchors": [
     {
-     "atom": "r_file",
-     "rule": "changed_file_set",
-     "args": {
-      "base": "6bbdaf60dea4ddeeeb820a515fa717083211c2fc",
-      "head": "3308a02ca288c2b95cbf1d56cc53c59a0140390f",
-      "expected": [
-       "owner-decisions/AUTHORIZE-M1-CLOSURE-ENV-001-CONDITIONAL-R1-001.md"
-      ]
-     }
+     "kind": "persisted-artifact",
+     "head": "060efa2cc295e0d7d9960f725aece264fc471935",
+     "path": "stage-m1-closure/01-M1-CLOSURE-OWNER-AUTHORIZATION-REFERENCE.json",
+     "sha256": "f8eb1c8f940470790d4051c70cb19bc3106a3080bd7327133013133bfdeac520",
+     "bytes": 672,
+     "clause": "persisted resolution of this artifact's identity, ratification and persistence events"
     },
+    {
+     "kind": "accepted-decision-registry",
+     "item_id": "LEDGER-PR-10",
+     "review_id": 4889632543,
+     "accepted_review_token": "ACCEPT_M1_CLOSURE_ENV_001_CONDITIONAL_M1_S2_R1_AUTHORIZATION_001",
+     "note": "accepted coordinate; net-one-file requirement existed only in the relay order — scope atom removed"
+    }
+   ],
+   "formula": "r_id & r_tree",
+   "atoms": [
     {
      "atom": "r_id",
      "rule": "member_identity",
@@ -668,7 +868,8 @@
      "atom": "r_tree",
      "rule": "tree_identity",
      "args": {
-      "head": "3308a02ca288c2b95cbf1d56cc53c59a0140390f"
+      "head": "3308a02ca288c2b95cbf1d56cc53c59a0140390f",
+      "expected_tree": "3c7737c7be67a332413e0cf30c41a9f012d397d0"
      }
     }
    ]
@@ -676,7 +877,16 @@
   {
    "gate_id": "G-11-SCOPE",
    "item_id": "LEDGER-PR-11",
-   "source_anchor": "PR#11 order §16: confined to stage-m1-closure/**",
+   "source_anchors": [
+    {
+     "kind": "persisted-artifact",
+     "head": "060efa2cc295e0d7d9960f725aece264fc471935",
+     "path": "owner-decisions/AUTHORIZE-M1-CLOSURE-ENV-001-CONDITIONAL-R1-001.md",
+     "sha256": "e485d95eaa0416f8ac3c1a7666b3357a21f64d454c8b188f70da5169bc083ad7",
+     "bytes": 20814,
+     "clause": "§8: 'Branch: evidence/m1-closure-001 ... Paths: stage-m1-closure/**'"
+    }
+   ],
    "formula": "z_paths & z_tree",
    "atoms": [
     {
@@ -694,7 +904,8 @@
      "atom": "z_tree",
      "rule": "tree_identity",
      "args": {
-      "head": "060efa2cc295e0d7d9960f725aece264fc471935"
+      "head": "060efa2cc295e0d7d9960f725aece264fc471935",
+      "expected_tree": "451c4173718752dc3ced893c00a6bd4eb505bc4f"
      }
     }
    ]
@@ -702,7 +913,23 @@
   {
    "gate_id": "G-11-MANIFEST",
    "item_id": "LEDGER-PR-11",
-   "source_anchor": "PR#11 order §15: manifest 36845/8aca2ce0/d24422f0, self-excluded, members reproduce",
+   "source_anchors": [
+    {
+     "kind": "persisted-artifact",
+     "head": "060efa2cc295e0d7d9960f725aece264fc471935",
+     "path": "owner-decisions/AUTHORIZE-M1-CLOSURE-ENV-001-CONDITIONAL-R1-001.md",
+     "sha256": "e485d95eaa0416f8ac3c1a7666b3357a21f64d454c8b188f70da5169bc083ad7",
+     "bytes": 20814,
+     "clause": "§8: 'The manifest is self-excluded and must bind every other persisted member by path, bytes, SHA-256, and SHA-512.'"
+    },
+    {
+     "kind": "accepted-decision-registry",
+     "item_id": "LEDGER-PR-11",
+     "review_id": 4889786951,
+     "accepted_review_token": "ACCEPT_M1_CLOSURE_EVIDENCE_H1_FALSIFIED_001",
+     "note": "accepted manifest identity 36845/8aca2ce0/d24422f0 per review 4889786951"
+    }
+   ],
    "formula": "w_id & w_acct",
    "atoms": [
     {
@@ -731,7 +958,16 @@
   {
    "gate_id": "G-11-TRIALS",
    "item_id": "LEDGER-PR-11",
-   "source_anchor": "Frozen authorization §5.A5/§6.6-10: three exact trials, exit 0, exact stdout, empty stderr, no crash",
+   "source_anchors": [
+    {
+     "kind": "persisted-artifact",
+     "head": "060efa2cc295e0d7d9960f725aece264fc471935",
+     "path": "owner-decisions/AUTHORIZE-M1-CLOSURE-ENV-001-CONDITIONAL-R1-001.md",
+     "sha256": "e485d95eaa0416f8ac3c1a7666b3357a21f64d454c8b188f70da5169bc083ad7",
+     "bytes": 20814,
+     "clause": "§5.A5 exact trial argv semantics; §6.6-10: three trials attempted once, exit 0, stdout exactly READLINE_IMPORT_OK + terminating newline, stderr zero bytes, no crash report"
+    }
+   ],
    "formula": "q01_argv & q01_exit & q01_out & q01_err & q01_nc & q02_argv & q02_exit & q02_out & q02_err & q02_nc & q03_argv & q03_exit & q03_out & q03_err & q03_nc",
    "atoms": [
     {
@@ -901,7 +1137,16 @@
   {
    "gate_id": "G-11-ACTIVATION",
    "item_id": "LEDGER-PR-11",
-   "source_anchor": "Frozen authorization §6: all 18 predicates proven; authority ACTIVE_BY_PREAUTHORIZED_CONDITION",
+   "source_anchors": [
+    {
+     "kind": "persisted-artifact",
+     "head": "060efa2cc295e0d7d9960f725aece264fc471935",
+     "path": "owner-decisions/AUTHORIZE-M1-CLOSURE-ENV-001-CONDITIONAL-R1-001.md",
+     "sha256": "e485d95eaa0416f8ac3c1a7666b3357a21f64d454c8b188f70da5169bc083ad7",
+     "bytes": 20814,
+     "clause": "§6: 'Phase B authority becomes ACTIVE_BY_PREAUTHORIZED_CONDITION if and only if all of the following are true and recorded' (P01-P18)"
+    }
+   ],
    "formula": "act_all & act_auth",
    "atoms": [
     {
@@ -929,7 +1174,31 @@
   {
    "gate_id": "G-11-R1-NINE",
    "item_id": "LEDGER-PR-11",
-   "source_anchor": "PR#11 order §7: authorized-nine 9/8/1/0; sole failure governed_success_tokens",
+   "source_anchors": [
+    {
+     "kind": "persisted-artifact",
+     "head": "060efa2cc295e0d7d9960f725aece264fc471935",
+     "path": "stage-m1-closure/14-M1-CLOSURE-RETURN-FINAL.md",
+     "sha256": "40af1f57ffc59622a7989e993b61a125623771099bd02cec1f8b880913b4d2e1",
+     "bytes": 693,
+     "clause": "recorded result: 'authorized-nine 8P/1F'"
+    },
+    {
+     "kind": "persisted-artifact",
+     "head": "060efa2cc295e0d7d9960f725aece264fc471935",
+     "path": "owner-decisions/AUTHORIZE-M1-CLOSURE-ENV-001-CONDITIONAL-R1-001.md",
+     "sha256": "e485d95eaa0416f8ac3c1a7666b3357a21f64d454c8b188f70da5169bc083ad7",
+     "bytes": 20814,
+     "clause": "§B6 frozen nine-ID population; §B7 measurement sequence"
+    },
+    {
+     "kind": "accepted-decision-registry",
+     "item_id": "LEDGER-PR-11",
+     "review_id": 4889786951,
+     "accepted_review_token": "ACCEPT_M1_CLOSURE_EVIDENCE_H1_FALSIFIED_001",
+     "note": "counts verified by accepted review 4889786951"
+    }
+   ],
    "formula": "n9_counts & n9_fail",
    "atoms": [
     {
@@ -960,7 +1229,23 @@
   {
    "gate_id": "G-11-R1-MODULE",
    "item_id": "LEDGER-PR-11",
-   "source_anchor": "PR#11 order §8: module 87/84/3/0 with the exact three failing IDs",
+   "source_anchors": [
+    {
+     "kind": "persisted-artifact",
+     "head": "060efa2cc295e0d7d9960f725aece264fc471935",
+     "path": "stage-m1-closure/14-M1-CLOSURE-RETURN-FINAL.md",
+     "sha256": "40af1f57ffc59622a7989e993b61a125623771099bd02cec1f8b880913b4d2e1",
+     "bytes": 693,
+     "clause": "recorded result: 'module 84P/3F'"
+    },
+    {
+     "kind": "accepted-decision-registry",
+     "item_id": "LEDGER-PR-11",
+     "review_id": 4889786951,
+     "accepted_review_token": "ACCEPT_M1_CLOSURE_EVIDENCE_H1_FALSIFIED_001",
+     "note": "counts and failing set verified by accepted review 4889786951"
+    }
+   ],
    "formula": "md_counts & md_fail",
    "atoms": [
     {
@@ -993,7 +1278,23 @@
   {
    "gate_id": "G-11-R1-SUITE",
    "item_id": "LEDGER-PR-11",
-   "source_anchor": "PR#11 order §9: suite 1041/1008/26/7",
+   "source_anchors": [
+    {
+     "kind": "persisted-artifact",
+     "head": "060efa2cc295e0d7d9960f725aece264fc471935",
+     "path": "stage-m1-closure/14-M1-CLOSURE-RETURN-FINAL.md",
+     "sha256": "40af1f57ffc59622a7989e993b61a125623771099bd02cec1f8b880913b4d2e1",
+     "bytes": 693,
+     "clause": "recorded result: 'suite 1008P/26F/7S'"
+    },
+    {
+     "kind": "accepted-decision-registry",
+     "item_id": "LEDGER-PR-11",
+     "review_id": 4889786951,
+     "accepted_review_token": "ACCEPT_M1_CLOSURE_EVIDENCE_H1_FALSIFIED_001",
+     "note": "counts verified by accepted review 4889786951"
+    }
+   ],
    "formula": "st_counts",
    "atoms": [
     {
@@ -1013,7 +1314,16 @@
   {
    "gate_id": "G-11-EDIT-IDS",
    "item_id": "LEDGER-PR-11",
-   "source_anchor": "PR#11 order §5: one scientific edit; post identities 9a11894f / 40975 / 04bd2679 / 5c56b9a1",
+   "source_anchors": [
+    {
+     "kind": "persisted-artifact",
+     "head": "060efa2cc295e0d7d9960f725aece264fc471935",
+     "path": "owner-decisions/AUTHORIZE-M1-CLOSURE-ENV-001-CONDITIONAL-R1-001.md",
+     "sha256": "e485d95eaa0416f8ac3c1a7666b3357a21f64d454c8b188f70da5169bc083ad7",
+     "bytes": 20814,
+     "clause": "§B3: exact post-edit identities (_isolated 9a11894f...; file 40975 / 04bd2679... / 5c56b9a1...); 'no second scientific edit is authorized'"
+    }
+   ],
    "formula": "e_cnt & e_iso & e_bytes & e_sha & e_sha512",
    "atoms": [
     {
@@ -1071,7 +1381,16 @@
   {
    "gate_id": "G-11-ADJUDICATION",
    "item_id": "LEDGER-PR-11",
-   "source_anchor": "PR#11 order §§12,16: disposition H1_FALSIFIED_BY_PREREGISTERED_R1; no reruns/corrections; BLOCKED preserved",
+   "source_anchors": [
+    {
+     "kind": "persisted-artifact",
+     "head": "060efa2cc295e0d7d9960f725aece264fc471935",
+     "path": "owner-decisions/AUTHORIZE-M1-CLOSURE-ENV-001-CONDITIONAL-R1-001.md",
+     "sha256": "e485d95eaa0416f8ac3c1a7666b3357a21f64d454c8b188f70da5169bc083ad7",
+     "bytes": 20814,
+     "clause": "§B7-B8: R1 dispositions incl. H1_FALSIFIED_BY_PREREGISTERED_R1; 'a falsified result is evidence'; §B1: original M1-S2 remains permanently BLOCKED"
+    }
+   ],
    "formula": "j_disp & j_rr & j_ce & j_blocked",
    "atoms": [
     {
@@ -1119,7 +1438,16 @@
   {
    "gate_id": "G-M1S1-ACCOUNTING",
    "item_id": "LEGACY-M1-S1-PACKAGE",
-   "source_anchor": "M1-S1 order §13: 24 declared / 25 physical / 0 defects, round-trip",
+   "source_anchors": [
+    {
+     "kind": "legacy-zip-member",
+     "zip_sha256": "e9250d1938bbbd5f607add695ce2273c52d00428da26481834b2dd020348d30a",
+     "member": "01-OWNER-ACCEPTANCE-CHECKPOINT-B-AND-M1-S1-EXECUTION-ORDER-001.md",
+     "sha256": "a05729a43e88e37dcdc47fb6a38960a3cd9780b493a4eabc3fa8f2c5b96041b0",
+     "bytes": 11627,
+     "clause": "§13: package accounting — manifest derived from actual members; missing 0 / undeclared 0 / duplicates 0 / identity mismatches 0; self-excluded manifest"
+    }
+   ],
    "formula": "za_acct",
    "atoms": [
     {
@@ -1137,7 +1465,16 @@
   {
    "gate_id": "G-M1S1-FILE-IDS",
    "item_id": "LEGACY-M1-S1-PACKAGE",
-   "source_anchor": "M1-S1 order §§3,6: S0 40741/582906 and S1 40975/8e6f51a1 file identities",
+   "source_anchors": [
+    {
+     "kind": "legacy-zip-member",
+     "zip_sha256": "e9250d1938bbbd5f607add695ce2273c52d00428da26481834b2dd020348d30a",
+     "member": "01-OWNER-ACCEPTANCE-CHECKPOINT-B-AND-M1-S1-EXECUTION-ORDER-001.md",
+     "sha256": "a05729a43e88e37dcdc47fb6a38960a3cd9780b493a4eabc3fa8f2c5b96041b0",
+     "bytes": 11627,
+     "clause": "§3: S0 test-file bytes 40741, SHA-256 582906...; §6: S1 test-file bytes/SHA-256/SHA-512 required"
+    }
+   ],
    "formula": "zs0 & zs1",
    "atoms": [
     {
@@ -1165,7 +1502,16 @@
   {
    "gate_id": "G-M1S1-CONFINEMENT",
    "item_id": "LEGACY-M1-S1-PACKAGE",
-   "source_anchor": "M1-S1 order §§4-6: changed units = 5 of the authorized 7; 7 hunks; _isolated byte-identical",
+   "source_anchors": [
+    {
+     "kind": "legacy-zip-member",
+     "zip_sha256": "e9250d1938bbbd5f607add695ce2273c52d00428da26481834b2dd020348d30a",
+     "member": "01-OWNER-ACCEPTANCE-CHECKPOINT-B-AND-M1-S1-EXECUTION-ORDER-001.md",
+     "sha256": "a05729a43e88e37dcdc47fb6a38960a3cd9780b493a4eabc3fa8f2c5b96041b0",
+     "bytes": 11627,
+     "clause": "§4: only the seven enumerated functions may receive semantic edits; _isolated must remain byte-for-byte at S0; §5: seven enumerated sites; EXECUTION NOTE: seven sites fall inside five functions"
+    }
+   ],
    "formula": "zc_ast",
    "atoms": [
     {
@@ -1194,7 +1540,16 @@
   {
    "gate_id": "G-M1S1-NINE",
    "item_id": "LEGACY-M1-S1-PACKAGE",
-   "source_anchor": "M1-S1 order §8: nine 9/7/2/0",
+   "source_anchors": [
+    {
+     "kind": "legacy-zip-member",
+     "zip_sha256": "e9250d1938bbbd5f607add695ce2273c52d00428da26481834b2dd020348d30a",
+     "member": "01-OWNER-ACCEPTANCE-CHECKPOINT-B-AND-M1-S1-EXECUTION-ORDER-001.md",
+     "sha256": "a05729a43e88e37dcdc47fb6a38960a3cd9780b493a4eabc3fa8f2c5b96041b0",
+     "bytes": 11627,
+     "clause": "§8: execute the accepted nine-ID set; measure collected/passed/failed/skipped and exact failing IDs"
+    }
+   ],
    "formula": "z9_counts & z9_fail",
    "atoms": [
     {
@@ -1226,7 +1581,16 @@
   {
    "gate_id": "G-M1S1-MODULE",
    "item_id": "LEGACY-M1-S1-PACKAGE",
-   "source_anchor": "M1-S1 order §9: module 87/85/2/0",
+   "source_anchors": [
+    {
+     "kind": "legacy-zip-member",
+     "zip_sha256": "e9250d1938bbbd5f607add695ce2273c52d00428da26481834b2dd020348d30a",
+     "member": "01-OWNER-ACCEPTANCE-CHECKPOINT-B-AND-M1-S1-EXECUTION-ORDER-001.md",
+     "sha256": "a05729a43e88e37dcdc47fb6a38960a3cd9780b493a4eabc3fa8f2c5b96041b0",
+     "bytes": 11627,
+     "clause": "§9: execute complete module; S0 module failures = 9 IDs; compare S1 directly to S0"
+    }
+   ],
    "formula": "zm_counts",
    "atoms": [
     {
@@ -1246,7 +1610,16 @@
   {
    "gate_id": "G-M1S1-SUITE",
    "item_id": "LEGACY-M1-S1-PACKAGE",
-   "source_anchor": "M1-S1 order §10: suite 1041/1009/25/7",
+   "source_anchors": [
+    {
+     "kind": "legacy-zip-member",
+     "zip_sha256": "e9250d1938bbbd5f607add695ce2273c52d00428da26481834b2dd020348d30a",
+     "member": "01-OWNER-ACCEPTANCE-CHECKPOINT-B-AND-M1-S1-EXECUTION-ORDER-001.md",
+     "sha256": "a05729a43e88e37dcdc47fb6a38960a3cd9780b493a4eabc3fa8f2c5b96041b0",
+     "bytes": 11627,
+     "clause": "§10: execute complete suite; S0 = 32 failing IDs / 30 functions / 9 modules; produce all six directed differences"
+    }
+   ],
    "formula": "zt_counts",
    "atoms": [
     {

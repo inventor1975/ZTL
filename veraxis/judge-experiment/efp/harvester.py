@@ -43,9 +43,14 @@ def wit(kind, **kw):
 
 # ------------------------------------------------------------- rule handlers
 def r_tree_identity(a):
-    head = a["args"]["head"]
-    tree = git("rev-parse", f"{head}^{{tree}}").strip()
-    return ("T", wit("git-commit", head=head, tree=tree))
+    g = a["args"]
+    head, expected = g["head"], g["expected_tree"]
+    try:
+        observed = git("rev-parse", f"{head}^{{tree}}").strip()
+    except RuntimeError as e:
+        return ("Z", wit("git-unresolvable", head=head, error=str(e)[:120]))
+    w = wit("git-commit", head=head, expected_tree=expected, observed_tree=observed)
+    return ("T" if observed == expected else "F", w)
 
 def _diff(base, head):
     return [l for l in git("diff", "--name-only", base, head).splitlines() if l]

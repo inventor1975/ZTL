@@ -94,6 +94,38 @@ least three, each with its own witness discipline:
       finds none in Theseus: the liar and Russell earn the word; this
       one wore it 2400 years without papers.
 
+  F8  THE PERSON, WRITTEN HONESTLY, IS A CORECURSION. A ship's identity
+      is a FINITE conjunction of witnesses — it grounds to T by itself
+      (measured). "Same person" admits no finite list: the honest
+      formula is S := obs & Tr(S) — matches now AND same henceforth,
+      a definition biting its own tail. Passports (cross-checked on
+      ZTLStudio, both runs, 2026-08-08): with every observation
+      matching (obs=T), S stays quarantined — UNDERDETERMINED, two
+      models, "refusal until an external choice": no amount of
+      agreement ever EARNS "the same person"; recognizing someone is a
+      standing decree, renewed daily. With one mismatch (obs=F), S
+      grounds to F instantly, no stipulation asked. Same passport kind
+      as the metaphysician's same := Tr(same) — but with a hook into
+      the world: the person's loop hangs on obs, so the identity is
+      REFUTABLE BY FACT though confirmable only by decree. Personal
+      identity prices out as extended credit: prolonged by choice,
+      closable forever by a single piece of evidence.
+
+  F9  FISSION: "WHICH IS REAL?" SMUGGLES AN AXIOM. Two doubles, each
+      perfectly continuous with the original. Write each title on its
+      own evidence — theA := obsA, theB := obsB — and the core grounds
+      BOTH to T: the real ones are two, earned, no quarantine. The
+      "choose which one" verdict of F7's contest appears ONLY when the
+      exclusivity clause is written into the definitions (theA :=
+      obsA & ~theB, …) — and then the same facts land in quarantine,
+      UNDERDETERMINED, decree required. So the agonizing question
+      "which of the two is REALLY him?" is not forced by the facts:
+      it is manufactured by an unearned uniqueness norm added to them.
+      Drop the norm and the puzzle does not resolve — it disappears.
+      (Parfit's fission verdict — survival matters, identity's
+      one-to-one bookkeeping does not — measured: the "paradox" sits
+      in the bookkeeping axiom, not in the world.)
+
   VERDICT. The instrument does not answer "is it the same ship?" — it
   refuses the question until the relation is named, then answers it
   instantly, with a witness, under every naming. The 2000-year paradox
@@ -299,6 +331,41 @@ def run():
     assert all(kind != "PARADOX" for _, kind, _ in reports)
     print(f"ok  FULL system ({len(FULL)} sentences): zero PARADOX passports —")
     print("    the instrument that recognizes paradoxes finds none here")
+
+    print("\n### F8. The person is a corecursion: credit with a hook")
+    # ZTLStudio dialect: {"S": "and(Tr(obs), Tr(S))", "obs": "T"/"F"}
+    # (both runs cross-checked on the site, 2026-08-08)
+    lfp, reports, kinds = passports({"S": ("and", "obs", "S"), "obs": "T"})
+    print(f"ok  all observations match: S = {lfp['S']}, {reports[0][1]} "
+          f"({reports[0][2]})")
+    assert kinds["S"] == ("UNDERDETERMINED", 2)
+    ou, cu, op_, cp = stipulation_theorem({"S": ("and", "obs", "S"), "obs": "T"})
+    assert (ou, cu, op_, cp) == (2, 2, 0, 0)
+    print("ok  'the same person' is never EARNED — only decreed (2/2 clean)")
+    lfp, reports, _ = passports({"S": ("and", "obs", "S"), "obs": "F"})
+    print(f"ok  one mismatch: S = {lfp['S']}, quarantined: {len(reports)} — "
+          f"refuted by fact, no decree asked")
+    assert str(lfp["S"]) == "F" and reports == []
+    lfp, reports, _ = passports({"Sship": ("and", "w1", ("and", "w2", "w3")),
+                                 "w1": "T", "w2": "T", "w3": "T"})
+    print(f"ok  ship control (finite conjunction): Sship = {lfp['Sship']}, "
+          f"grounds to T by itself — the line, in passport terms")
+    assert str(lfp["Sship"]) == "T" and reports == []
+
+    print("\n### F9. Fission: 'which is real?' smuggles an axiom")
+    lfp, reports, _ = passports({"theA": "obsA", "theB": "obsB",
+                                 "obsA": "T", "obsB": "T"})
+    print(f"ok  titles on own evidence: theA = {lfp['theA']}, "
+          f"theB = {lfp['theB']}, quarantined: {len(reports)} — "
+          f"the real ones are TWO, earned")
+    assert str(lfp["theA"]) == "T" and str(lfp["theB"]) == "T" and not reports
+    _, reports, kinds = passports({"theA": ("and", "obsA", ("not", "theB")),
+                                   "theB": ("and", "obsB", ("not", "theA")),
+                                   "obsA": "T", "obsB": "T"})
+    print(f"ok  exclusivity written in: {reports[0][1]} ({reports[0][2]}) — "
+          f"same facts, manufactured dilemma")
+    assert kinds["theA"] == ("UNDERDETERMINED", 2)
+    print("ok  the puzzle sits in the uniqueness axiom, not in the world")
 
     print("\nTHESEUS: all measurements hold.")
     print("No gradualness — one relation dies at plank 1, one never dies;")

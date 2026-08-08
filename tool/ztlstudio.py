@@ -163,7 +163,9 @@ EXAMPLES = [
                        ensure_ascii=False, indent=1)},
     {"name": "Revenge / avenger (forced FALSE)",
      "intent": "'This sentence is not equivalent to itself.' One "
-               "consistent solution: forced false.",
+               "consistent solution: forced false. (The validator will "
+               "flag the degenerate xnor(mu,mu) — that degeneracy IS the "
+               "sentence.)",
      "zfl": json.dumps({"genre": "system",
                         "sentences": {"mu": "not(xnor(Tr(mu), Tr(mu)))"},
                         "ask": ["passport"]},
@@ -290,8 +292,18 @@ EXAMPLES = [
     # ------------------------------------------------ other genres, intact
     {"name": "Sensor",
      "intent": "An unverified sensor reports overheating; if overheating, "
-               "the shutdown fires. Will it fire?",
-     "zfl": "assert overheat impl shutdown"},
+               "the shutdown fires. Will it fire? (Also try the one-line "
+               "human syntax: assert overheat impl shutdown)",
+     "zfl": json.dumps({"genre": "statement",
+                        "atoms": {"overheat": {"status": "Z",
+                                               "means": "the sensor reads "
+                                                        "overheating"},
+                                  "shutdown": {"status": "Z",
+                                               "means": "the shutdown "
+                                                        "fires"}},
+                        "assert": "imp(overheat, shutdown)",
+                        "ask": ["verdict", "warranty"]},
+                       ensure_ascii=False, indent=1)},
     {"name": "Modus ponens (Carroll's tortoise)",
      "intent": "The tortoise demands the rule itself be written as a "
                "premise: if (p implies q) and p, then q. True — but watch "
@@ -299,8 +311,10 @@ EXAMPLES = [
                "is certified, yet it moves nothing; a rule must be acted, "
                "not mailed.",
      "zfl": json.dumps({"genre": "statement",
-                        "atoms": {"p": {"status": "Z"},
-                                  "q": {"status": "Z"}},
+                        "atoms": {"p": {"status": "Z",
+                                        "means": "the premise p holds"},
+                                  "q": {"status": "Z",
+                                        "means": "the conclusion q holds"}},
                         "assert": "imp(and(imp(p,q),p),q)",
                         "ask": ["verdict", "warranty"]},
                        ensure_ascii=False, indent=1)},

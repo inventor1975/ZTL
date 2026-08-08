@@ -77,6 +77,21 @@ THE CERTIFIED VERDICTS (each pinned as an assert below):
       these as decree-resolvable non-paradoxes (dilemmas/*.py hold the
       full cases).
 
+  V8  THE CONTINGENT LIAR — PARADOXICALITY IS EMPIRICAL (Kripke's
+      Jones/Nixon point, machine-certified). Smith's sentence is the
+      SAME in all three worlds: S ≡ "what Jones says is false". Only
+      the empirical fact of what Jones actually said differs. World A
+      (Jones said a truth): everything GROUNDED, S is an ordinary
+      falsehood. World B (Jones happened to say "Smith speaks truly"):
+      S and J form the Jourdain carousel — PARADOX, period 4, refusal
+      permanent. World C (Jones's words not yet verified): J is INPUT
+      and S is DOWNSTREAM — a CONDITIONAL refusal with the culprit
+      named, lifted or hardened by verification. One sentence, three
+      passports: no syntactic sieve can quarantine "the paradoxical
+      sentences" in advance, because paradoxicality is a property of
+      the world's reference configuration, not of the sentence — a
+      paradox is an EVENT, not a text.
+
 GENRE BOUNDARIES (documented, deliberately unmeasured here): the passport
 axis governs finite definitional systems — self-reference paradoxes. It
 does not adjudicate: Carroll's tortoise and the Sensor (warranty/frame
@@ -245,6 +260,23 @@ def run():
     assert rows["person corecursion, obs=F"][0] == "GROUNDED"
     print("ok  Theseus contest / criterion-free same / person / Agrippa's dogma:")
     print("    decree-resolvable non-paradoxes, same instrument, same table")
+
+    print("\n### V8. The contingent liar: paradoxicality is empirical")
+    S_DEF = ("not", "J")            # Smith's sentence, identical in all worlds
+    lfp, reports, _ = passports({"S": S_DEF, "J": "g", "g": "T"})
+    assert reports == [] and str(lfp["S"]) == "F"
+    print("ok  world A (Jones told a truth): GROUNDED — S is ordinary falsehood")
+    _, reports, kinds = passports({"S": S_DEF, "J": "S"})
+    assert kinds["S"][0] == "PARADOX" and kinds["S"][1] == 4
+    print("ok  world B (Jones said 'Smith speaks truly'): PARADOX, period 4 —")
+    print("    the unlucky configuration IS the Jourdain carousel")
+    _, reports, kinds = passports({"S": S_DEF, "J": "Z"})
+    assert kinds["J"][0] == "INPUT" and kinds["S"][0] == "DOWNSTREAM"
+    culprit = [d for c, k, d in reports if "S" in c][0]
+    assert "'J'" in culprit and "conditional" in culprit
+    print(f"ok  world C (Jones unverified): INPUT + DOWNSTREAM ({culprit[:45]})")
+    print("ok  one sentence, three passports — a paradox is an EVENT, not a")
+    print("    text; no syntactic sieve can quarantine paradoxes in advance")
 
     print("\nE35: docket complete — every row pinned, every verdict certified.")
     print("Genre borders stand outside the axis by design: tortoise & sensor →")

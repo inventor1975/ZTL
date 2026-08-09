@@ -1,0 +1,24 @@
+{
+ "manifest_id": "ADAPTER-REPLICATION-CLOSURE-BUNDLE-MANIFEST-v0.1",
+ "manifest_self_inclusion": false,
+ "members": [
+  {
+   "path": "00-ADAPTER-REPLICATION-CLOSURE-RECORD.json",
+   "bytes": 26675,
+   "sha256": "5561d5d410a55480f4282846eaf36c1f4e70636695e2d46289210fa0f8298c1c",
+   "sha512": "81237e06e0660bf6852a723cff4ff1a5ec380901629afb930739ea89edbe5409ac8087fd1571a40fe61c65c0626d3ab92f0d76fbe451e2001da3d953b46259f2"
+  },
+  {
+   "path": "OWNER-SEALED-ADAPTER-REPLICATION-MANIFEST-v0.1.json",
+   "bytes": 17282,
+   "sha256": "0430e5d8e42435a32c7675a585a7bbaac342b5e414590de7103f4f5fcdbff118",
+   "sha512": "70ab5ae487ed6b51b4615011c5a81771c14f5c04998903a9e42382157f5927ce5a75e57527c4b37cc7de56112b7fb1955db5ddc4255f379de94d794cd1ef18fa"
+  },
+  {
+   "path": "RETURN.md",
+   "bytes": 1304,
+   "sha256": "dc08904239d78e3ac49df7c94c6a79c1db75c4d5c6b2583ebf7752daadc520e2",
+   "sha512": "c7f8d297963cda02014ae03208c5dcb90f1f16b01fd1d3cba75715d7dcfa254ffcb78e13dcca5b7fa0390790cacdfcbad5bc43fd8561dad8a76cd4ffde3a278f"
+  }
+ ]
+}

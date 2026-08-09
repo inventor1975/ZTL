@@ -1,0 +1,30 @@
+{
+ "manifest_id": "M1-EXPERIMENT-PHASE-A-EH3-BUNDLE-MANIFEST-v0.1",
+ "manifest_self_inclusion": false,
+ "members": [
+  {
+   "path": "00-EH3-BLINDED-RAW-RESULT.json",
+   "bytes": 2064,
+   "sha256": "f0306f79fb25d9e0f2f2d93a3df4e857454a9d5ce9206006c87dc0e9f5d6f733",
+   "sha512": "92c0dd2492c8f013b37602ace18478ca40e625a5dd6ce456b977bbc100575e61ec40854c8263502154aabaaeae83db46c8a3d978b3a72b28ab8cc04f25dd8b2e"
+  },
+  {
+   "path": "eh3-raw-bundle.tar.gz",
+   "bytes": 1623352,
+   "sha256": "185e2dcf24f13b94671cb1c7516e12ec585c88fae3942ae378de231ecae815f5",
+   "sha512": "5a8be82090ca8b8223e47faa8156a600b2eb0ce98127e67b17d0e81266a248f8500442694a2c6f4bc502d4d4986b6fd4fb7c96dff1d15829e7eda39f8788126c"
+  },
+  {
+   "path": "per-case-raw.json",
+   "bytes": 12947,
+   "sha256": "ed1dfb55434dd2e240cd47df58d61829852862a696571b85dc5d358839e34578",
+   "sha512": "f424572037f553e6b174d74de6fc0210b4f3d7eb6c016ccf7e30667150ef0adc6b6c0eb1d383eb3eecae6be04a4d64f2b6fffdbbdb0cad5789fd30629faf76ca"
+  },
+  {
+   "path": "run-summary.json",
+   "bytes": 10272,
+   "sha256": "ea1bcfd3c2d05ba61da035562578d77a43f2e5972312d90684274ded48cd0659",
+   "sha512": "af92b894717303cae01958b42e553176fabfffca395fa39c72551b7748ab6697550371d0238346661b49df79b4d77c6cd6a918b89e5810d5e40a43710c235f0a"
+  }
+ ]
+}

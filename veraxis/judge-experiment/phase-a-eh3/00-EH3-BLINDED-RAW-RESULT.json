@@ -1,0 +1,43 @@
+{
+ "result_bundle_id": "M1-EXPERIMENT-PHASE-A-EH3-BLINDED-RAW-v0.1",
+ "protocol_commit": "61a470b41eccf8e57633d0abee7bbc795329a411",
+ "efp_commit": "673a8854e68d03f0cc30655b168343cf47887e0f",
+ "efp_tree": "c02c5b1e1078aef385908c1ab64cad077bbe9b12",
+ "unmutated_bundle_commit": "d5bd9e172d9dac0eae893c13a4f9ebfbc545f33f",
+ "owner_sealed_mutation_commitment": {
+  "manifest_id": "OWNER-SEALED-MUTATION-MANIFEST-v0.1",
+  "sha256": "32b85214381091aa0d82c3f6a9cf482b408bee5706e10cf3f11bcc102dff48e7",
+  "sha512": "cdd36b2e2e644dacc3e61c0e63a278752752d47aef23ded075ac69679636641cb7bc23abef3abdb1090e15e6b3c27b6d48a2ff6eab096f74088b9e727620765e"
+ },
+ "opaque_input_archive": {
+  "file": "PHASE-A-OPAQUE-CASES-v0.1.tar.gz",
+  "bytes": 27936402,
+  "sha256": "01fe32b0ecfb2a4793ea661de1ad56111167ba7da24ab266bf2f6500e42a0ac1",
+  "sha512": "d7b8a5bf7fa58cf0cdcd267a05695f5358cc563dfd4d18a4ecdf9ee7336d51e0914ce08d5a7afede8a0159cb1ef1542d5d104ff2bc333bcc4e0a71a568bd99e1",
+  "inventory_sha256": "d9bf39f1bc7c2f170304d3ec3857d02a9953fd5cc1622826aa257b08dd9023c7",
+  "verified": true
+ },
+ "arm": "BLINDED EH-3 (mutated corpus copies; sealed mapping NOT inspected)",
+ "raw_bundle": {
+  "file": "eh3-raw-bundle.tar.gz",
+  "bytes": 1623352,
+  "sha256": "185e2dcf24f13b94671cb1c7516e12ec585c88fae3942ae378de231ecae815f5",
+  "contents": "per-case markings/, clwr/, stdout/stderr/exit, provenance-audit output+exit"
+ },
+ "accounting": {
+  "cases_attempted": 70,
+  "cases_completed": 50,
+  "cases_with_nonzero_exit": 20,
+  "markings_count": 2590,
+  "clwr_count": 1850,
+  "provenance_violation_count": 1
+ },
+ "blindness": {
+  "sealed_manifest_inspected": false,
+  "mutation_mapping_inferred": false,
+  "class_scoring_performed": false,
+  "baseline_diff_performed": false
+ },
+ "note": "Raw blinded evidence only. Nonzero exits and disposition changes are frozen exactly as observed; no repair, no case exclusion. EH-3 class scoring and planted-defect attribution occur only after owner discloses the sealed manifest (whose pre-run hashes must reproduce).",
+ "phase_b_authority": "NONE"
+}

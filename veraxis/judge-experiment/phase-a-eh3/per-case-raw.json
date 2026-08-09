@@ -1,0 +1,720 @@
+{
+ "raw_per_case_id": "M1-EXPERIMENT-EH3-RAW-PER-CASE-v0.1",
+ "note": "Neutral raw outputs only. No mutation-class scoring, no baseline diff, no planted-defect attribution \u2014 those occur only after sealed-manifest disclosure.",
+ "cases": [
+  {
+   "case_id": "0142fc6d38a3f34fad24",
+   "exit": 0,
+   "markings": 37,
+   "clwr": 37,
+   "provenance_exit": "0",
+   "disposition_histogram": {
+    "EARNED": 32,
+    "REFUTED": 5
+   }
+  },
+  {
+   "case_id": "0749c2a77d47d65de61a",
+   "exit": 0,
+   "markings": 37,
+   "clwr": 37,
+   "provenance_exit": "0",
+   "disposition_histogram": {
+    "EARNED": 32,
+    "REFUTED": 5
+   }
+  },
+  {
+   "case_id": "092fdaeaaa14c53224fe",
+   "exit": 0,
+   "markings": 37,
+   "clwr": 37,
+   "provenance_exit": "0",
+   "disposition_histogram": {
+    "EARNED": 32,
+    "REFUTED": 5
+   }
+  },
+  {
+   "case_id": "0971739f43bb64f97760",
+   "exit": 0,
+   "markings": 37,
+   "clwr": 37,
+   "provenance_exit": "0",
+   "disposition_histogram": {
+    "EARNED": 33,
+    "REFUTED": 4
+   }
+  },
+  {
+   "case_id": "0a6e4404372924b4c117",
+   "exit": 1,
+   "markings": 37,
+   "clwr": 0,
+   "provenance_exit": "?",
+   "disposition_histogram": {}
+  },
+  {
+   "case_id": "0e568b098774a60cf090",
+   "exit": 1,
+   "markings": 37,
+   "clwr": 0,
+   "provenance_exit": "?",
+   "disposition_histogram": {}
+  },
+  {
+   "case_id": "0e6b2825b5e931fadafc",
+   "exit": 1,
+   "markings": 37,
+   "clwr": 0,
+   "provenance_exit": "?",
+   "disposition_histogram": {}
+  },
+  {
+   "case_id": "13c6d6f8f12d95ac8209",
+   "exit": 0,
+   "markings": 37,
+   "clwr": 37,
+   "provenance_exit": "0",
+   "disposition_histogram": {
+    "EARNED": 32,
+    "REFUTED": 5
+   }
+  },
+  {
+   "case_id": "141e989e1fe3cd39c139",
+   "exit": 1,
+   "markings": 37,
+   "clwr": 0,
+   "provenance_exit": "?",
+   "disposition_histogram": {}
+  },
+  {
+   "case_id": "169849a176baffab3519",
+   "exit": 0,
+   "markings": 37,
+   "clwr": 37,
+   "provenance_exit": "0",
+   "disposition_histogram": {
+    "EARNED": 32,
+    "REFUTED": 5
+   }
+  },
+  {
+   "case_id": "17247636cdb0853b6c8b",
+   "exit": 0,
+   "markings": 37,
+   "clwr": 37,
+   "provenance_exit": "0",
+   "disposition_histogram": {
+    "REFUTED": 6,
+    "EARNED": 31
+   }
+  },
+  {
+   "case_id": "1bf5ec89f8a5cb38a210",
+   "exit": 0,
+   "markings": 37,
+   "clwr": 37,
+   "provenance_exit": "0",
+   "disposition_histogram": {
+    "EARNED": 33,
+    "REFUTED": 4
+   }
+  },
+  {
+   "case_id": "248f76ce0ca67b3cf26b",
+   "exit": 0,
+   "markings": 37,
+   "clwr": 37,
+   "provenance_exit": "0",
+   "disposition_histogram": {
+    "EARNED": 32,
+    "REFUTED": 5
+   }
+  },
+  {
+   "case_id": "2660ddc9a3f9430ff347",
+   "exit": 1,
+   "markings": 37,
+   "clwr": 0,
+   "provenance_exit": "?",
+   "disposition_histogram": {}
+  },
+  {
+   "case_id": "2de60aa51b52231fa7b9",
+   "exit": 0,
+   "markings": 37,
+   "clwr": 37,
+   "provenance_exit": "0",
+   "disposition_histogram": {
+    "EARNED": 33,
+    "REFUTED": 4
+   }
+  },
+  {
+   "case_id": "2ebea84578b594272d32",
+   "exit": 0,
+   "markings": 37,
+   "clwr": 37,
+   "provenance_exit": "0",
+   "disposition_histogram": {
+    "EARNED": 33,
+    "REFUTED": 4
+   }
+  },
+  {
+   "case_id": "2f856b508b6fd23bf596",
+   "exit": 1,
+   "markings": 37,
+   "clwr": 0,
+   "provenance_exit": "?",
+   "disposition_histogram": {}
+  },
+  {
+   "case_id": "355d95735843d7c8d58f",
+   "exit": 0,
+   "markings": 37,
+   "clwr": 37,
+   "provenance_exit": "0",
+   "disposition_histogram": {
+    "EARNED": 31,
+    "REFUTED": 6
+   }
+  },
+  {
+   "case_id": "3a3e8739e134487c5c91",
+   "exit": 1,
+   "markings": 37,
+   "clwr": 0,
+   "provenance_exit": "?",
+   "disposition_histogram": {}
+  },
+  {
+   "case_id": "3fb3c0473c0c17a0e7e1",
+   "exit": 1,
+   "markings": 37,
+   "clwr": 0,
+   "provenance_exit": "?",
+   "disposition_histogram": {}
+  },
+  {
+   "case_id": "425882a5f91b7d709591",
+   "exit": 0,
+   "markings": 37,
+   "clwr": 37,
+   "provenance_exit": "0",
+   "disposition_histogram": {
+    "EARNED": 32,
+    "REFUTED": 5
+   }
+  },
+  {
+   "case_id": "454e0266e1299a849301",
+   "exit": 1,
+   "markings": 37,
+   "clwr": 0,
+   "provenance_exit": "?",
+   "disposition_histogram": {}
+  },
+  {
+   "case_id": "460defe8982b68e0e90f",
+   "exit": 1,
+   "markings": 37,
+   "clwr": 0,
+   "provenance_exit": "?",
+   "disposition_histogram": {}
+  },
+  {
+   "case_id": "4729988f7f5cd39a55b4",
+   "exit": 0,
+   "markings": 37,
+   "clwr": 37,
+   "provenance_exit": "0",
+   "disposition_histogram": {
+    "EARNED": 32,
+    "REFUTED": 5
+   }
+  },
+  {
+   "case_id": "4b9d356cdfc297e44730",
+   "exit": 0,
+   "markings": 37,
+   "clwr": 37,
+   "provenance_exit": "0",
+   "disposition_histogram": {
+    "EARNED": 32,
+    "REFUTED": 5
+   }
+  },
+  {
+   "case_id": "521f815b1ee1632bb547",
+   "exit": 0,
+   "markings": 37,
+   "clwr": 37,
+   "provenance_exit": "0",
+   "disposition_histogram": {
+    "EARNED": 32,
+    "REFUTED": 5
+   }
+  },
+  {
+   "case_id": "6033969d979739a8ebc6",
+   "exit": 0,
+   "markings": 37,
+   "clwr": 37,
+   "provenance_exit": "0",
+   "disposition_histogram": {
+    "EARNED": 32,
+    "REFUTED": 5
+   }
+  },
+  {
+   "case_id": "60b9e2c8d603bdfe1a80",
+   "exit": 0,
+   "markings": 37,
+   "clwr": 37,
+   "provenance_exit": "0",
+   "disposition_histogram": {
+    "EARNED": 32,
+    "REFUTED": 5
+   }
+  },
+  {
+   "case_id": "67607f3f023f9ebd7561",
+   "exit": 0,
+   "markings": 37,
+   "clwr": 37,
+   "provenance_exit": "0",
+   "disposition_histogram": {
+    "EARNED": 32,
+    "REFUTED": 5
+   }
+  },
+  {
+   "case_id": "6b931c1b12bdcdf7c21d",
+   "exit": 0,
+   "markings": 37,
+   "clwr": 37,
+   "provenance_exit": "0",
+   "disposition_histogram": {
+    "REFUTED": 6,
+    "EARNED": 31
+   }
+  },
+  {
+   "case_id": "6de7d7407d00fdf12dcf",
+   "exit": 0,
+   "markings": 37,
+   "clwr": 37,
+   "provenance_exit": "0",
+   "disposition_histogram": {
+    "EARNED": 32,
+    "REFUTED": 5
+   }
+  },
+  {
+   "case_id": "6ff421bbcdb32be10e47",
+   "exit": 0,
+   "markings": 37,
+   "clwr": 37,
+   "provenance_exit": "0",
+   "disposition_histogram": {
+    "EARNED": 31,
+    "REFUTED": 6
+   }
+  },
+  {
+   "case_id": "70fd59844a69c6bf3e57",
+   "exit": 0,
+   "markings": 37,
+   "clwr": 37,
+   "provenance_exit": "0",
+   "disposition_histogram": {
+    "EARNED": 32,
+    "REFUTED": 5
+   }
+  },
+  {
+   "case_id": "7a0e01dbe7fbee6beb35",
+   "exit": 0,
+   "markings": 37,
+   "clwr": 37,
+   "provenance_exit": "0",
+   "disposition_histogram": {
+    "EARNED": 32,
+    "REFUTED": 5
+   }
+  },
+  {
+   "case_id": "7b79cd6981e3e0842e3e",
+   "exit": 0,
+   "markings": 37,
+   "clwr": 37,
+   "provenance_exit": "0",
+   "disposition_histogram": {
+    "EARNED": 33,
+    "REFUTED": 4
+   }
+  },
+  {
+   "case_id": "7bae7db05b178c4ad624",
+   "exit": 0,
+   "markings": 37,
+   "clwr": 37,
+   "provenance_exit": "0",
+   "disposition_histogram": {
+    "REFUTED": 6,
+    "EARNED": 31
+   }
+  },
+  {
+   "case_id": "82b8cddd6b213d991671",
+   "exit": 0,
+   "markings": 37,
+   "clwr": 37,
+   "provenance_exit": "0",
+   "disposition_histogram": {
+    "EARNED": 28,
+    "OPEN": 1,
+    "REFUTED": 8
+   }
+  },
+  {
+   "case_id": "84ab124bbe5fe4d3ebff",
+   "exit": 1,
+   "markings": 37,
+   "clwr": 0,
+   "provenance_exit": "?",
+   "disposition_histogram": {}
+  },
+  {
+   "case_id": "87d1644b504b1944351c",
+   "exit": 1,
+   "markings": 37,
+   "clwr": 0,
+   "provenance_exit": "?",
+   "disposition_histogram": {}
+  },
+  {
+   "case_id": "87e5967bbd320e015df0",
+   "exit": 0,
+   "markings": 37,
+   "clwr": 37,
+   "provenance_exit": "0",
+   "disposition_histogram": {
+    "EARNED": 32,
+    "REFUTED": 5
+   }
+  },
+  {
+   "case_id": "8c99aab65893db1d0591",
+   "exit": 0,
+   "markings": 37,
+   "clwr": 37,
+   "provenance_exit": "0",
+   "disposition_histogram": {
+    "EARNED": 32,
+    "REFUTED": 5
+   }
+  },
+  {
+   "case_id": "9304d6a755d8ebdd306b",
+   "exit": 0,
+   "markings": 37,
+   "clwr": 37,
+   "provenance_exit": "0",
+   "disposition_histogram": {
+    "EARNED": 34,
+    "REFUTED": 3
+   }
+  },
+  {
+   "case_id": "95937be403f1073d7dc4",
+   "exit": 0,
+   "markings": 37,
+   "clwr": 37,
+   "provenance_exit": "0",
+   "disposition_histogram": {
+    "EARNED": 32,
+    "REFUTED": 5
+   }
+  },
+  {
+   "case_id": "97d6f85324af44bba498",
+   "exit": 0,
+   "markings": 37,
+   "clwr": 37,
+   "provenance_exit": "0",
+   "disposition_histogram": {
+    "REFUTED": 6,
+    "EARNED": 31
+   }
+  },
+  {
+   "case_id": "99510174063422411ed6",
+   "exit": 1,
+   "markings": 37,
+   "clwr": 0,
+   "provenance_exit": "?",
+   "disposition_histogram": {}
+  },
+  {
+   "case_id": "998730b6384968e1b1cb",
+   "exit": 0,
+   "markings": 37,
+   "clwr": 37,
+   "provenance_exit": "0",
+   "disposition_histogram": {
+    "EARNED": 33,
+    "REFUTED": 4
+   }
+  },
+  {
+   "case_id": "9ec4705f15b99597a559",
+   "exit": 0,
+   "markings": 37,
+   "clwr": 37,
+   "provenance_exit": "0",
+   "disposition_histogram": {
+    "EARNED": 32,
+    "REFUTED": 5
+   }
+  },
+  {
+   "case_id": "a1ca0085d588b3874e3b",
+   "exit": 0,
+   "markings": 37,
+   "clwr": 37,
+   "provenance_exit": "0",
+   "disposition_histogram": {
+    "EARNED": 32,
+    "REFUTED": 5
+   }
+  },
+  {
+   "case_id": "a3b7296bd5e5bb579a66",
+   "exit": 0,
+   "markings": 37,
+   "clwr": 37,
+   "provenance_exit": "0",
+   "disposition_histogram": {
+    "EARNED": 33,
+    "REFUTED": 4
+   }
+  },
+  {
+   "case_id": "a65f0393a9d5365a6624",
+   "exit": 0,
+   "markings": 37,
+   "clwr": 37,
+   "provenance_exit": "0",
+   "disposition_histogram": {
+    "EARNED": 32,
+    "REFUTED": 5
+   }
+  },
+  {
+   "case_id": "acbcb5a6f43f614bd942",
+   "exit": 0,
+   "markings": 37,
+   "clwr": 37,
+   "provenance_exit": "0",
+   "disposition_histogram": {
+    "EARNED": 32,
+    "REFUTED": 5
+   }
+  },
+  {
+   "case_id": "acc74edc73dff847f6a9",
+   "exit": 1,
+   "markings": 37,
+   "clwr": 0,
+   "provenance_exit": "?",
+   "disposition_histogram": {}
+  },
+  {
+   "case_id": "acf2f7ba1b5d65c1e5e3",
+   "exit": 0,
+   "markings": 37,
+   "clwr": 37,
+   "provenance_exit": "0",
+   "disposition_histogram": {
+    "EARNED": 32,
+    "REFUTED": 5
+   }
+  },
+  {
+   "case_id": "ad21ef86d2fb42990565",
+   "exit": 0,
+   "markings": 37,
+   "clwr": 37,
+   "provenance_exit": "0",
+   "disposition_histogram": {
+    "EARNED": 32,
+    "REFUTED": 5
+   }
+  },
+  {
+   "case_id": "bb6a0177e76294a94823",
+   "exit": 0,
+   "markings": 37,
+   "clwr": 37,
+   "provenance_exit": "0",
+   "disposition_histogram": {
+    "OPEN": 2,
+    "EARNED": 29,
+    "REFUTED": 6
+   }
+  },
+  {
+   "case_id": "c5dc7355027f01afd4b7",
+   "exit": 0,
+   "markings": 37,
+   "clwr": 37,
+   "provenance_exit": "0",
+   "disposition_histogram": {
+    "EARNED": 32,
+    "REFUTED": 5
+   }
+  },
+  {
+   "case_id": "d2382b7ee223a534e5cf",
+   "exit": 0,
+   "markings": 37,
+   "clwr": 37,
+   "provenance_exit": "0",
+   "disposition_histogram": {
+    "EARNED": 33,
+    "REFUTED": 4
+   }
+  },
+  {
+   "case_id": "d48aea39a00dd3eb9fbb",
+   "exit": 0,
+   "markings": 37,
+   "clwr": 37,
+   "provenance_exit": "0",
+   "disposition_histogram": {
+    "EARNED": 32,
+    "REFUTED": 4,
+    "OPEN": 1
+   }
+  },
+  {
+   "case_id": "e20cf86d48c9ac3673dd",
+   "exit": 0,
+   "markings": 37,
+   "clwr": 37,
+   "provenance_exit": "1",
+   "disposition_histogram": {
+    "EARNED": 31,
+    "REFUTED": 5,
+    "OPEN": 1
+   }
+  },
+  {
+   "case_id": "e4e2e43024b236e8ff90",
+   "exit": 1,
+   "markings": 37,
+   "clwr": 0,
+   "provenance_exit": "?",
+   "disposition_histogram": {}
+  },
+  {
+   "case_id": "e73dd56606749d7b25f8",
+   "exit": 1,
+   "markings": 37,
+   "clwr": 0,
+   "provenance_exit": "?",
+   "disposition_histogram": {}
+  },
+  {
+   "case_id": "e83127881cd147f8d2e6",
+   "exit": 0,
+   "markings": 37,
+   "clwr": 37,
+   "provenance_exit": "0",
+   "disposition_histogram": {
+    "EARNED": 31,
+    "REFUTED": 6
+   }
+  },
+  {
+   "case_id": "e98a3df8f20b40167ed4",
+   "exit": 0,
+   "markings": 37,
+   "clwr": 37,
+   "provenance_exit": "0",
+   "disposition_histogram": {
+    "EARNED": 32,
+    "REFUTED": 5
+   }
+  },
+  {
+   "case_id": "ede5364e4398702f63d6",
+   "exit": 1,
+   "markings": 37,
+   "clwr": 0,
+   "provenance_exit": "?",
+   "disposition_histogram": {}
+  },
+  {
+   "case_id": "efb4843fe40f498dccbd",
+   "exit": 1,
+   "markings": 37,
+   "clwr": 0,
+   "provenance_exit": "?",
+   "disposition_histogram": {}
+  },
+  {
+   "case_id": "f620ef51dfa4745dd00f",
+   "exit": 1,
+   "markings": 37,
+   "clwr": 0,
+   "provenance_exit": "?",
+   "disposition_histogram": {}
+  },
+  {
+   "case_id": "fb1b7257441caf2de550",
+   "exit": 0,
+   "markings": 37,
+   "clwr": 37,
+   "provenance_exit": "0",
+   "disposition_histogram": {
+    "EARNED": 32,
+    "REFUTED": 5
+   }
+  },
+  {
+   "case_id": "fdb2094a165526acb744",
+   "exit": 0,
+   "markings": 37,
+   "clwr": 37,
+   "provenance_exit": "0",
+   "disposition_histogram": {
+    "EARNED": 32,
+    "REFUTED": 5
+   }
+  },
+  {
+   "case_id": "fe03a54c8ffe537128dc",
+   "exit": 0,
+   "markings": 37,
+   "clwr": 37,
+   "provenance_exit": "0",
+   "disposition_histogram": {
+    "EARNED": 32,
+    "REFUTED": 5
+   }
+  },
+  {
+   "case_id": "fe81c9eb18579c64ae98",
+   "exit": 1,
+   "markings": 37,
+   "clwr": 0,
+   "provenance_exit": "?",
+   "disposition_histogram": {}
+  }
+ ]
+}

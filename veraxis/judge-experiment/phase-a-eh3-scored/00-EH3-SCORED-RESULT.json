@@ -1,0 +1,132 @@
+{
+ "result_bundle_id": "M1-EXPERIMENT-PHASE-A-EH3-SCORED-v0.1",
+ "protocol_commit": "61a470b41eccf8e57633d0abee7bbc795329a411",
+ "efp_commit": "673a8854e68d03f0cc30655b168343cf47887e0f",
+ "raw_bundle_commit": "4d8f87bd365039024745c005461192489344cb25",
+ "SEALED_MANIFEST_COMMITMENT_REPRODUCTION": "PASS",
+ "sealed_manifest": {
+  "bytes": 51630,
+  "sha256": "32b85214381091aa0d82c3f6a9cf482b408bee5706e10cf3f11bcc102dff48e7",
+  "sha512": "cdd36b2e2e644dacc3e61c0e63a278752752d47aef23ded075ac69679636641cb7bc23abef3abdb1090e15e6b3c27b6d48a2ff6eab096f74088b9e727620765e"
+ },
+ "class_scores": [
+  {
+   "class": "missing_witness_or_evidence",
+   "planted": 10,
+   "detected": 10,
+   "missed": 0,
+   "detection_rate": 1.0,
+   "threshold": 1.0,
+   "PASS_FAIL": "PASS"
+  },
+  {
+   "class": "corrupted_hashes",
+   "planted": 10,
+   "detected": 10,
+   "missed": 0,
+   "detection_rate": 1.0,
+   "threshold": 1.0,
+   "PASS_FAIL": "PASS"
+  },
+  {
+   "class": "schema_drift",
+   "planted": 10,
+   "detected": 10,
+   "missed": 0,
+   "detection_rate": 1.0,
+   "threshold": 0.9,
+   "PASS_FAIL": "PASS"
+  },
+  {
+   "class": "counter_inconsistency",
+   "planted": 7,
+   "detected": 7,
+   "missed": 0,
+   "detection_rate": 1.0,
+   "threshold": 0.9,
+   "PASS_FAIL": "PASS"
+  },
+  {
+   "class": "contradictory_gate_facts",
+   "planted": 3,
+   "detected": 3,
+   "missed": 0,
+   "detection_rate": 1.0,
+   "threshold": 0.9,
+   "PASS_FAIL": "PASS"
+  },
+  {
+   "class": "missing_atoms",
+   "planted": 10,
+   "detected": 0,
+   "missed": 0,
+   "status": "BLOCKED_CASE_CONSTRUCTION",
+   "threshold": 0.9,
+   "reason": "adapter_patch.pyc failed with 'Bad magic number in .pyc file' (version-locked bytecode not loadable in the execution environment); ZTL never saw these mutations — not detection, not miss",
+   "PASS_FAIL": "NOT_SCORED"
+  },
+  {
+   "class": "false_positive_adapter_markings",
+   "planted": 10,
+   "detected": 0,
+   "missed": 0,
+   "status": "BLOCKED_CASE_CONSTRUCTION",
+   "threshold": 0.9,
+   "reason": "adapter_patch.pyc failed with 'Bad magic number in .pyc file' (version-locked bytecode not loadable in the execution environment); ZTL never saw these mutations — not detection, not miss",
+   "PASS_FAIL": "NOT_SCORED"
+  },
+  {
+   "class": "altered_identity_environment",
+   "planted": 10,
+   "detected": 10,
+   "missed": 0,
+   "detection_rate": 1.0,
+   "threshold": 1.0,
+   "PASS_FAIL": "PASS"
+  }
+ ],
+ "aggregate": {
+  "planted_total": 70,
+  "scored_planted": 50,
+  "scored_detected": 50,
+  "scored_missed": 0,
+  "false_clean_EARNED_count": 0,
+  "provenance_rule_flag_count": 1,
+  "nonzero_exit_count": 20,
+  "blocked_case_construction_count": 20,
+  "ambiguous_attribution_count": 0
+ },
+ "causal_attribution": {
+  "category_1_experimental_contract_case_construction": {
+   "count": 20,
+   "cases": "the 20 adapter_output cases",
+   "detail": "adapter_patch.pyc 'Bad magic number' — compiled bytecode shipped instead of source; not loadable in the execution environment; blocks the false_positive_adapter_markings and missing_atoms classes entirely"
+  },
+  "provenance_nuance": {
+   "case": "case-e20cf86d48c9ac3673dd (MISSING_WITNESS_OR_EVIDENCE-10, gate G-M1S1-FILE-IDS, atom zs0)",
+   "observation": "the frozen provenance auditor flagged 1 provenance-less F (exit 1); detection succeeded (target gate flipped AND auditor flagged); recorded for owner adjudication of whether an F emitted with an unsupporting witness that the separate auditor then caught counts as clean detection or a harvester-layer nuance"
+  }
+ },
+ "EH1": "PASS (unmutated arm: 0/37 mechanical residue)",
+ "EH2": "PASS (unmutated arm: 3/3 known seams detected)",
+ "EH4": "PASS (unmutated arm: 34/34 accepted qualifying gates EARNED; 0 false conviction)",
+ "EH3": "PARTIAL: 6/8 mutation classes at 100% detection (50/50 executable defects caught, 0 false clean EARNED); 2/8 classes (adapter_output, 20 mutations) BLOCKED_CASE_CONSTRUCTION — unmeasured",
+ "PHASE_A_OVERALL": "INCOMPLETE / BLOCKED_ON_EH3_ADAPTER_ARM — all measured arms PASS; the two adapter-layer classes could not be measured because their injection harness (compiled .pyc) failed to execute. This is a preserved experimental finding (owner-side case-construction), not a ZTL detection failure and not repaired.",
+ "no_repair": true,
+ "no_threshold_adjustment": true,
+ "no_case_excluded_from_denominator": true,
+ "PHASE_B_AUTHORITY": "NONE",
+ "all_misses": [],
+ "all_false_clean_EARNED": [],
+ "all_provenance_flags": [
+  "case-e20cf86d48c9ac3673dd / G-M1S1-FILE-IDS / zs0"
+ ],
+ "all_execution_failures": [
+  {
+   "cases": 20,
+   "cause": "adapter_patch.pyc bad-magic-number",
+   "class": "adapter_output (false_positive_adapter_markings + missing_atoms)"
+  }
+ ],
+ "all_ambiguous_attributions": []
+}

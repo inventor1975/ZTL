@@ -1,0 +1,18 @@
+{
+ "manifest_id": "M1-EXPERIMENT-PHASE-A-EH3-SCORED-BUNDLE-MANIFEST-v0.1",
+ "manifest_self_inclusion": false,
+ "members": [
+  {
+   "path": "00-EH3-SCORED-RESULT.json",
+   "bytes": 4739,
+   "sha256": "bda0ecb0a122e1ca96679f57f8df0c73de26bd9824a1874f8ac91919efdee164",
+   "sha512": "16b24587ca9e86b9fe308fc151a258f523653fd7ccf1ca72643c7668ca82c4d1ff2b6a2891e735b1bb30e556e0c5135ae31574e925e364b4b047f4db78322d4c"
+  },
+  {
+   "path": "case-class-binding.json",
+   "bytes": 2234,
+   "sha256": "af77add42a0c848b1e09cda8dfdfae06df42f0247c5d929ef7481383c2b58c12",
+   "sha512": "3c8e9496ec0719abb3f1ae9b72feed632350d7cf62e3cbd9cec3d675135d956379d7f221372411a9bc03d8fb5b07a926d4fef0735dcdd4408f81130d41612e9c"
+  }
+ ]
+}

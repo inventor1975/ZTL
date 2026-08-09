@@ -1,0 +1,66 @@
+{
+ "result_bundle_id": "OIC-ZTL-OAM-PHASE-A-EH3-ADAPTER-REPLICATION-RAW-v0.1",
+ "experiment_id": "OIC-ZTL-OAM-PHASE-A-EH3-ADAPTER-REPLICATION-v0.1",
+ "protocol_commit": "61a470b41eccf8e57633d0abee7bbc795329a411",
+ "efp_commit": "673a8854e68d03f0cc30655b168343cf47887e0f",
+ "phase_a_v0.1_adjudication": "9f5a9adf2bc2ca65af6a55a2e1773c828e51f3a3",
+ "delivery_zip": {
+  "file": "OWNER-DELIVERY-BLINDED-ADAPTER-REPLICATION-v0.1.zip",
+  "bytes": 7957822,
+  "sha256": "424fd90181e93579ac837d5eec072db8952a8565d856095472f079efbf325e04",
+  "verified": true
+ },
+ "four_members_verified": true,
+ "adapter_harness": {
+  "form": "python_source",
+  "sha256": "01b07d286f0f678f1984e2f40c25d80f9b74b513dbe3f6be17e2df7fb1dec381",
+  "selftest": "ADAPTER_HARNESS_SELFTEST=PASS"
+ },
+ "owner_sealed_commitment": {
+  "manifest_id": "OWNER-SEALED-ADAPTER-REPLICATION-MANIFEST-v0.1",
+  "bytes": 17282,
+  "sha256": "0430e5d8e42435a32c7675a585a7bbaac342b5e414590de7103f4f5fcdbff118",
+  "sha512": "70ab5ae487ed6b51b4615011c5a81771c14f5c04998903a9e42382157f5927ce5a75e57527c4b37cc7de56112b7fb1955db5ddc4255f379de94d794cd1ef18fa",
+  "note": "NOT inspected; blindness preserved"
+ },
+ "runtime_identity": {
+  "python_version": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+  "python_implementation": "CPython",
+  "python_executable": "/home/vitaly/venvs/torch/bin/python3",
+  "platform": "Linux-7.0.0-28-generic-x86_64-with-glibc2.39",
+  "adapter_harness_sha256": "01b07d286f0f678f1984e2f40c25d80f9b74b513dbe3f6be17e2df7fb1dec381"
+ },
+ "raw_bundle": {
+  "file": "adrep-raw-bundle.tar.gz",
+  "bytes": 139496,
+  "sha256": "c68baf6fe51efdc5ca5eb3ac02889857b9708119f79280bd1dcc3b7140e118fc"
+ },
+ "accounting": {
+  "cases_attempted": 20,
+  "cases_completed": 0,
+  "cases_with_nonzero_exit": 20,
+  "markings_count": 740,
+  "clwr_count": 0,
+  "provenance_violation_count": 0
+ },
+ "outcome": "ALL 20 CASES BLOCKED_CASE_CONSTRUCTION (identical cause)",
+ "cause": {
+  "stage": "harness decode_payload, BEFORE provenance/judge",
+  "error": "binascii.Error: Excess data after padding",
+  "mechanism": "each patch.payload ends with base64 padding '==' followed by a trailing newline (0x0a); the source harness decodes with base64.b64decode(validate=True), which rejects the trailing whitespace",
+  "diagnostic": "strip() of the trailing whitespace yields valid strict base64 for the inspected payload envelope; NOT applied (repair/adaptation forbidden)",
+  "no_corruption_on_reviewer_side": "the extracted payload SHA-256 equals the in-archive payload SHA-256 (240cedf5...); the reviewer did not alter any byte",
+  "harness_selftest_passed_because": "the selftest decodes in-memory data with no trailing newline; the shipped payload FILES carry a trailing newline the strict decoder rejects",
+  "category": "experimental-contract / case-construction limitation (owner-side); NOT a ZTL detection miss, NOT a measured PASS"
+ },
+ "blindness": {
+  "sealed_manifest_inspected": false,
+  "mutation_mapping_inferred": false,
+  "note": "the failure is pre-payload-decode, before any mutation is applied; no mapping information could leak"
+ },
+ "no_repair": true,
+ "no_rerun": true,
+ "no_case_specific_adaptation": true,
+ "PHASE_A_v0.1_EFFECT": "NONE",
+ "PHASE_B_AUTHORITY": "NONE"
+}

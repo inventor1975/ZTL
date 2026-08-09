@@ -1,0 +1,36 @@
+{
+ "manifest_id": "ADAPTER-REPLICATION-RAW-BUNDLE-MANIFEST-v0.1",
+ "manifest_self_inclusion": false,
+ "members": [
+  {
+   "path": "00-ADAPTER-REPLICATION-RAW-RESULT.json",
+   "bytes": 3238,
+   "sha256": "e788917ada688ada2ad25b081debe7643587d5a05c9935c9f62654ec51670ee4",
+   "sha512": "416230d4b31691c29591351629afac35b62df9f86b2b4e49ae62b0050defa518005092a45852f0912791ce3ebe35d0a0a41e15c3bc21b226e83697cc711e6a2d"
+  },
+  {
+   "path": "adrep-raw-bundle.tar.gz",
+   "bytes": 139496,
+   "sha256": "c68baf6fe51efdc5ca5eb3ac02889857b9708119f79280bd1dcc3b7140e118fc",
+   "sha512": "57ee61d70822fc5ff32418b7e8ccee2137493b3247a9615f2eb273b012b078138f119b398fece972095634108f699d3999f4e6aba9f721df34d2d6aacb3ef99f"
+  },
+  {
+   "path": "per-case-raw.json",
+   "bytes": 6318,
+   "sha256": "3193ccac942333959d6def01af2989732d1f539e90ee5a1634c063b420e44693",
+   "sha512": "08476777071098c7625eba8c920a21cf60b497f428e46c989ed50a1a9cfd4245dbf0a1658984d5ad142e3adfa519058e8565e80f92694aac7e3c9fe55a62cbf8"
+  },
+  {
+   "path": "run-summary.json",
+   "bytes": 3162,
+   "sha256": "bb1b46d6512ca99026acf3511c93404b64ea7fc5b0ef746d6b72386cdbd29fcb",
+   "sha512": "44f8d6d14006b2f8c4dcf7760bd27fdba6018489d9b3e8f3ef42ac4cccab66ebf9ad5f9f5416b122a957cbabe5a01ad4fdfccf31e9ae8605290486aef50c8a92"
+  },
+  {
+   "path": "runtime-identity.json",
+   "bytes": 329,
+   "sha256": "42643d70ec423ac5eac5224e7a0638b2d6d65d8604b5284408de6c38871f9b51",
+   "sha512": "c3ccf55f400a1d212f86633c0f6b99a74a2041492382074d85c50051b9a7bf64cb90ea09f0d157c3f7da1391753c7436aac6ea7bd7d77720a95acfe44e303bd7"
+  }
+ ]
+}

@@ -1,0 +1,16 @@
+{
+ "gate_id": "G-03-HEAD",
+ "item_id": "LEDGER-PR-03",
+ "formula": "t_head",
+ "marking": {
+  "t_head": {
+   "status": "T",
+   "witness": {
+    "kind": "git-commit",
+    "head": "cb38c13bad436d860b34dd75269d4fbdd648e931",
+    "tree": "602f5227ea02b258d7d249554be964af18abf951"
+   }
+  }
+ },
+ "harvester_sha256": "0f2d486f438682164ab8962863de2f5f1ccca7f7d2736b5de9453ebeea6cb147"
+}

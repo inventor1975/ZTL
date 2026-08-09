@@ -1,0 +1,102 @@
+{
+ "clwr_of": "SEAM-S5-SCHEMA-DRIFT",
+ "formula": "~s5_seam",
+ "formula_sha256": "2e9daa47b55b7c22212585edaa7a3bdca94ddd9b0d8087570420e6232641880e",
+ "marking": {
+  "s5_seam": {
+   "status": "T",
+   "witness": {
+    "kind": "cross-manifest",
+    "zip_sha256": "e9250d1938bbbd5f607add695ce2273c52d00428da26481834b2dd020348d30a",
+    "head": "f44d1cc337d20cb8b01f85d232795b7bff93954a",
+    "zip_manifest_sha256": "ca52af098af34c5ce363b96bfaf96ef6fb02cd536faed79e74cb2f85ce002ad5",
+    "ledger_manifest_sha256": "1626f2b608fda34f56e4a8ddb3c39e229f510028322d923a061e4606e216cdf8",
+    "zip_field": "byte_length",
+    "ledger_field": "bytes",
+    "drift": true
+   }
+  }
+ },
+ "marking_sha256": "79efa5ff072f2a3aaaef61b21a2ba44a5a849f4ed6c369001cf88455b2fa9f26",
+ "status_map_sha256": "d9aa1168f3d1308eb7a3bab817d295559f18b20885cb34136a2bb45b40cedda8",
+ "judge_identity": {
+  "judge_pin_id": "M1-EXPERIMENT-JUDGE-PIN-v0.1",
+  "note": "The pinned judge identity is the ZTL repository commit recorded at package freeze plus the kernel module hashes below. Every experimental CLWR must carry this identity (Protocol R-06/R-07). The commit recorded here is the parent of the EFP commit; the EFP commit hash itself is recorded in the package return.",
+  "ztl_repo_commit_at_build": "61a470b41eccf8e57633d0abee7bbc795329a411",
+  "kernel_modules": {
+   "ztl.py": {
+    "bytes": 5335,
+    "sha256": "c15006a5dcd9f06ac6325ab1e8e935556c8c52310883453fd7bf57248c33679e"
+   },
+   "ztljudge.py": {
+    "bytes": 17122,
+    "sha256": "c13cdbf12a344533b58996e39e1f5932df18716af6407f86874b04247273a885"
+   },
+   "zverify.py": {
+    "bytes": 12216,
+    "sha256": "0567b7be5b40c174c42de1a30253a1cc84e73e710913fb2e84a8075b5b4ed1ea"
+   }
+  },
+  "judge_pin_sha256": "cd79148bb9be8d54740c43bdc0e322780b7f884e03b9323d3ac8c0350743e06c"
+ },
+ "verdict_and_disposition": {
+  "verdict": "F",
+  "disposition": "REFUTED"
+ },
+ "grade": "hereditary",
+ "weak_links": [],
+ "atom_provenance": {
+  "s5_seam": {
+   "kind": "cross-manifest",
+   "zip_sha256": "e9250d1938bbbd5f607add695ce2273c52d00428da26481834b2dd020348d30a",
+   "head": "f44d1cc337d20cb8b01f85d232795b7bff93954a",
+   "zip_manifest_sha256": "ca52af098af34c5ce363b96bfaf96ef6fb02cd536faed79e74cb2f85ce002ad5",
+   "ledger_manifest_sha256": "1626f2b608fda34f56e4a8ddb3c39e229f510028322d923a061e4606e216cdf8",
+   "zip_field": "byte_length",
+   "ledger_field": "bytes",
+   "drift": true
+  }
+ },
+ "input_artifacts": {
+  "marking_document": {
+   "path": "SEAM-S5-SCHEMA-DRIFT.marking.json",
+   "bytes": 707,
+   "sha256": "08acbb0507e9c40c0efb54bbfa82428900ba76f5927c4b7d82a87127aab7dcbf"
+  },
+  "formula_set": {
+   "path": "formulas.json",
+   "sha256": "36e8bbdadcf8f24fcca6045916a55abc151583924ef8db5f6f665d4f29ba3dde",
+   "bytes": 59632
+  },
+  "source_anchors": [
+   {
+    "kind": "legacy-zip-member",
+    "zip_sha256": "e9250d1938bbbd5f607add695ce2273c52d00428da26481834b2dd020348d30a",
+    "member": "11-M1-S1-PACKAGE-MANIFEST.json",
+    "sha256": "ca52af098af34c5ce363b96bfaf96ef6fb02cd536faed79e74cb2f85ce002ad5",
+    "bytes": 11874,
+    "clause": "binds members by 'byte_length'"
+   },
+   {
+    "kind": "persisted-artifact",
+    "head": "f44d1cc337d20cb8b01f85d232795b7bff93954a",
+    "path": "stage-m1-s2/12-M1-S2-EVIDENCE-MANIFEST.json",
+    "sha256": "1626f2b608fda34f56e4a8ddb3c39e229f510028322d923a061e4606e216cdf8",
+    "bytes": 5888,
+    "clause": "binds members by 'bytes'"
+   }
+  ]
+ },
+ "invocation_time": "2026-08-09T06:46:59Z",
+ "judge_context_id": "e75cd21c66c13d04c85e4acaac7ddd87360e40705c12f0a70d6ffcfa45180686",
+ "claim_context_id": "cf459a5f71bdf6bce8cb8ec2294b4a2e1031145eda55904346f271ff9d841cdb",
+ "claim_context_template": {
+  "stipulation_identity": {
+   "kind": "experiment-freeze-package",
+   "protocol_commit": "61a470b41eccf8e57633d0abee7bbc795329a411",
+   "seam_gate": "SEAM-S5-SCHEMA-DRIFT"
+  },
+  "authority_identity": "Experiment authority under frozen Protocol v0.1 §22/§28 and the Experiment Freeze Package (steering: V. Reznik). NOT stipulated by the historical institution.",
+  "institutional_reading_scope": "Known-seam evaluation claim: EH-2 detection of the seam bound in seam-detection-mapping.json for SEAM-S5-SCHEMA-DRIFT."
+ }
+}

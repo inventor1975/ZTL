@@ -1,0 +1,17 @@
+{
+ "gate_id": "G-11-R1-SUITE",
+ "item_id": "LEDGER-PR-11",
+ "formula": "st_coll",
+ "marking": {
+  "st_coll": {
+   "status": "T",
+   "witness": {
+    "kind": "git-blob",
+    "head": "060efa2cc295e0d7d9960f725aece264fc471935",
+    "path": "stage-m1-closure/evidence/r1/suite.junit.xml",
+    "collected": 1041
+   }
+  }
+ },
+ "harvester_sha256": "0f2d486f438682164ab8962863de2f5f1ccca7f7d2736b5de9453ebeea6cb147"
+}

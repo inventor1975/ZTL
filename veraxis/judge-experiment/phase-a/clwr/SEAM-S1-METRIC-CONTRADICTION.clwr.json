@@ -1,0 +1,100 @@
+{
+ "clwr_of": "SEAM-S1-METRIC-CONTRADICTION",
+ "formula": "~s1_seam",
+ "formula_sha256": "22b3a3716ef3b129b747c5f823a0839ea8bbb08fc10a9c05a1352b19531cf178",
+ "marking": {
+  "s1_seam": {
+   "status": "T",
+   "witness": {
+    "kind": "zip-seam",
+    "zip_sha256": "e9250d1938bbbd5f607add695ce2273c52d00428da26481834b2dd020348d30a",
+    "governing_member_sha256": "a05729a43e88e37dcdc47fb6a38960a3cd9780b493a4eabc3fa8f2c5b96041b0",
+    "measured_member_sha256": "330ab36436e5b4ffb4117af80739c16bade097e39bc2439eaa1e8a04572e8f0b",
+    "governing_value": 7,
+    "measured_value": 5,
+    "exposed": true
+   }
+  }
+ },
+ "marking_sha256": "bb7ecc52e78ce853b8988d9d6ff5e4825d8fb38af430a0007a2f14f5529f69e9",
+ "status_map_sha256": "c3c8f71006d59e7672d7e200f4998114adcf89b24a514173a66588bb1fcaf859",
+ "judge_identity": {
+  "judge_pin_id": "M1-EXPERIMENT-JUDGE-PIN-v0.1",
+  "note": "The pinned judge identity is the ZTL repository commit recorded at package freeze plus the kernel module hashes below. Every experimental CLWR must carry this identity (Protocol R-06/R-07). The commit recorded here is the parent of the EFP commit; the EFP commit hash itself is recorded in the package return.",
+  "ztl_repo_commit_at_build": "61a470b41eccf8e57633d0abee7bbc795329a411",
+  "kernel_modules": {
+   "ztl.py": {
+    "bytes": 5335,
+    "sha256": "c15006a5dcd9f06ac6325ab1e8e935556c8c52310883453fd7bf57248c33679e"
+   },
+   "ztljudge.py": {
+    "bytes": 17122,
+    "sha256": "c13cdbf12a344533b58996e39e1f5932df18716af6407f86874b04247273a885"
+   },
+   "zverify.py": {
+    "bytes": 12216,
+    "sha256": "0567b7be5b40c174c42de1a30253a1cc84e73e710913fb2e84a8075b5b4ed1ea"
+   }
+  },
+  "judge_pin_sha256": "cd79148bb9be8d54740c43bdc0e322780b7f884e03b9323d3ac8c0350743e06c"
+ },
+ "verdict_and_disposition": {
+  "verdict": "F",
+  "disposition": "REFUTED"
+ },
+ "grade": "hereditary",
+ "weak_links": [],
+ "atom_provenance": {
+  "s1_seam": {
+   "kind": "zip-seam",
+   "zip_sha256": "e9250d1938bbbd5f607add695ce2273c52d00428da26481834b2dd020348d30a",
+   "governing_member_sha256": "a05729a43e88e37dcdc47fb6a38960a3cd9780b493a4eabc3fa8f2c5b96041b0",
+   "measured_member_sha256": "330ab36436e5b4ffb4117af80739c16bade097e39bc2439eaa1e8a04572e8f0b",
+   "governing_value": 7,
+   "measured_value": 5,
+   "exposed": true
+  }
+ },
+ "input_artifacts": {
+  "marking_document": {
+   "path": "SEAM-S1-METRIC-CONTRADICTION.marking.json",
+   "bytes": 649,
+   "sha256": "29443dab6d7eca69423b35b645af8d6537c428d0df35c63be85d2544187fd900"
+  },
+  "formula_set": {
+   "path": "formulas.json",
+   "sha256": "36e8bbdadcf8f24fcca6045916a55abc151583924ef8db5f6f665d4f29ba3dde",
+   "bytes": 59632
+  },
+  "source_anchors": [
+   {
+    "kind": "legacy-zip-member",
+    "zip_sha256": "e9250d1938bbbd5f607add695ce2273c52d00428da26481834b2dd020348d30a",
+    "member": "01-OWNER-ACCEPTANCE-CHECKPOINT-B-AND-M1-S1-EXECUTION-ORDER-001.md",
+    "sha256": "a05729a43e88e37dcdc47fb6a38960a3cd9780b493a4eabc3fa8f2c5b96041b0",
+    "bytes": 11627,
+    "clause": "govering: 'authorized functions changed = 7'"
+   },
+   {
+    "kind": "legacy-zip-member",
+    "zip_sha256": "e9250d1938bbbd5f607add695ce2273c52d00428da26481834b2dd020348d30a",
+    "member": "03-M1-S1-CHANGE-CONFINEMENT-REPORT.json",
+    "sha256": "330ab36436e5b4ffb4117af80739c16bade097e39bc2439eaa1e8a04572e8f0b",
+    "bytes": 7743,
+    "clause": "measured: authorized_functions_changed = 5"
+   }
+  ]
+ },
+ "invocation_time": "2026-08-09T06:46:59Z",
+ "judge_context_id": "8c8fd651aba42370f16c0c4cec5ce236fd042c60d68fe67a8cfcead235c3f97f",
+ "claim_context_id": "dca5608d5cebfe19970a158881fa52248ef513550c39cb26521695ea56e38e0f",
+ "claim_context_template": {
+  "stipulation_identity": {
+   "kind": "experiment-freeze-package",
+   "protocol_commit": "61a470b41eccf8e57633d0abee7bbc795329a411",
+   "seam_gate": "SEAM-S1-METRIC-CONTRADICTION"
+  },
+  "authority_identity": "Experiment authority under frozen Protocol v0.1 §22/§28 and the Experiment Freeze Package (steering: V. Reznik). NOT stipulated by the historical institution.",
+  "institutional_reading_scope": "Known-seam evaluation claim: EH-2 detection of the seam bound in seam-detection-mapping.json for SEAM-S1-METRIC-CONTRADICTION."
+ }
+}

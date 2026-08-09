@@ -1,0 +1,26 @@
+{
+ "gate_id": "G-09-BOUNDARY-EVIDENCE",
+ "item_id": "LEDGER-PR-09",
+ "formula": "y_frozen & y_probe",
+ "marking": {
+  "y_frozen": {
+   "status": "T",
+   "witness": {
+    "kind": "git-tree",
+    "head": "6bbdaf60dea4ddeeeb820a515fa717083211c2fc",
+    "path": "stage-m1-s2-diag/evidence/crash-diagnostics/frozen-m1-s2-stack-boundary.txt",
+    "present": true
+   }
+  },
+  "y_probe": {
+   "status": "T",
+   "witness": {
+    "kind": "git-tree",
+    "head": "6bbdaf60dea4ddeeeb820a515fa717083211c2fc",
+    "path": "stage-m1-s2-diag/evidence/crash-diagnostics/probe-01-stack-boundary.txt",
+    "present": true
+   }
+  }
+ },
+ "harvester_sha256": "0f2d486f438682164ab8962863de2f5f1ccca7f7d2736b5de9453ebeea6cb147"
+}

@@ -1,0 +1,63 @@
+{
+ "result_bundle_id": "M1-EXPERIMENT-PHASE-A-UNMUTATED-RESULT-v0.1",
+ "protocol_commit": "61a470b41eccf8e57633d0abee7bbc795329a411",
+ "efp_commit": "673a8854e68d03f0cc30655b168343cf47887e0f",
+ "efp_tree": "c02c5b1e1078aef385908c1ab64cad077bbe9b12",
+ "owner_sealed_mutation_commitment": {
+  "manifest_id": "OWNER-SEALED-MUTATION-MANIFEST-v0.1",
+  "sha256": "32b85214381091aa0d82c3f6a9cf482b408bee5706e10cf3f11bcc102dff48e7",
+  "sha512": "cdd36b2e2e644dacc3e61c0e63a278752752d47aef23ded075ac69679636641cb7bc23abef3abdb1090e15e6b3c27b6d48a2ff6eab096f74088b9e727620765e",
+  "note": "recorded pre-run; blinded arm (EH-3) NOT executed here — awaiting owner-supplied opaque mutated inputs"
+ },
+ "arm": "UNMUTATED_RETROSPECTIVE (EH-1, EH-2, EH-4)",
+ "accounting": {
+  "gates_total": 37,
+  "atoms_total": 91,
+  "provenance_violations": 0,
+  "clwr_count": 37,
+  "EH4_population_count": 34,
+  "seam_gate_count": 3
+ },
+ "EH1_representability": {
+  "gates_evaluated": 37,
+  "gates_unresolved": 0,
+  "mechanical_residue_gates": [],
+  "mechanical_residue_count": 0,
+  "residue_fraction": 0.0,
+  "tolerance": 0.1,
+  "raw_result": "no mechanical gate unrepresentable; residue 0% <= 10% tolerance"
+ },
+ "EH2_known_seam_recall": {
+  "denominator": 3,
+  "detected": [
+   "SEAM-S1-METRIC-CONTRADICTION",
+   "SEAM-S4-F4-MISLABEL",
+   "SEAM-S5-SCHEMA-DRIFT"
+  ],
+  "detected_count": 3,
+  "missed": {},
+  "per_seam": {
+   "SEAM-S1-METRIC-CONTRADICTION": "REFUTED",
+   "SEAM-S4-F4-MISLABEL": "REFUTED",
+   "SEAM-S5-SCHEMA-DRIFT": "REFUTED"
+  },
+  "raw_result": "3/3 seams detected (all REFUTED); 0 clean-EARNED misses"
+ },
+ "EH4_no_false_conviction": {
+  "population_count": 34,
+  "expected_disposition": "EARNED",
+  "failures": {},
+  "failure_count": 0,
+  "tolerance": 0,
+  "raw_result": "34/34 EARNED; 0 non-EARNED (tolerance 0)"
+ },
+ "EH3_blinded": "NOT_EXECUTED — awaiting owner-supplied opaque mutated inputs derived from the committed sealed manifest",
+ "non_earned_dispositions": {
+  "SEAM-S1-METRIC-CONTRADICTION": "REFUTED",
+  "SEAM-S4-F4-MISLABEL": "REFUTED",
+  "SEAM-S5-SCHEMA-DRIFT": "REFUTED"
+ },
+ "blocked_or_nondecision_states": [],
+ "phase_b_authority": "NONE",
+ "reproduction": "REPRODUCTION.md v0.2 at efp commit 673a8854; harvester+evaluate over the frozen corpus reproduce every CLWR disposition byte-equal (invocation_time excluded per R-23)"
+}

@@ -1,0 +1,108 @@
+{
+ "clwr_of": "G-11-ACTIVATION",
+ "formula": "act_all & act_auth",
+ "formula_sha256": "61da3bf97500337560685f9c6f5bcc4f270936603428c3d58ee15e55cb815447",
+ "marking": {
+  "act_all": {
+   "status": "T",
+   "witness": {
+    "kind": "git-json",
+    "head": "060efa2cc295e0d7d9960f725aece264fc471935",
+    "path": "stage-m1-closure/05-M1-CLOSURE-PHASE-A-ACTIVATION.json",
+    "sha256": "61bab391e6a4b5204172fdbcac1d823e7ea63d77bb9641cdc95553d4df7a812f",
+    "n": 18
+   }
+  },
+  "act_auth": {
+   "status": "T",
+   "witness": {
+    "kind": "git-json",
+    "head": "060efa2cc295e0d7d9960f725aece264fc471935",
+    "path": "stage-m1-closure/05-M1-CLOSURE-PHASE-A-ACTIVATION.json",
+    "sha256": "61bab391e6a4b5204172fdbcac1d823e7ea63d77bb9641cdc95553d4df7a812f",
+    "field": "phase_b_authority",
+    "value": "ACTIVE_BY_PREAUTHORIZED_CONDITION"
+   }
+  }
+ },
+ "marking_sha256": "308d654cc4924b54249962b6417d613b2a72ac8fd11d410c94f35ad3616b33a1",
+ "status_map_sha256": "5afebae1edb165f1d3e3a1c4e1b3488d1a4886587a4a74f42dc76a4981c1cb59",
+ "judge_identity": {
+  "judge_pin_id": "M1-EXPERIMENT-JUDGE-PIN-v0.1",
+  "note": "The pinned judge identity is the ZTL repository commit recorded at package freeze plus the kernel module hashes below. Every experimental CLWR must carry this identity (Protocol R-06/R-07). The commit recorded here is the parent of the EFP commit; the EFP commit hash itself is recorded in the package return.",
+  "ztl_repo_commit_at_build": "61a470b41eccf8e57633d0abee7bbc795329a411",
+  "kernel_modules": {
+   "ztl.py": {
+    "bytes": 5335,
+    "sha256": "c15006a5dcd9f06ac6325ab1e8e935556c8c52310883453fd7bf57248c33679e"
+   },
+   "ztljudge.py": {
+    "bytes": 17122,
+    "sha256": "c13cdbf12a344533b58996e39e1f5932df18716af6407f86874b04247273a885"
+   },
+   "zverify.py": {
+    "bytes": 12216,
+    "sha256": "0567b7be5b40c174c42de1a30253a1cc84e73e710913fb2e84a8075b5b4ed1ea"
+   }
+  },
+  "judge_pin_sha256": "cd79148bb9be8d54740c43bdc0e322780b7f884e03b9323d3ac8c0350743e06c"
+ },
+ "verdict_and_disposition": {
+  "verdict": "T",
+  "disposition": "EARNED"
+ },
+ "grade": "hereditary",
+ "weak_links": [],
+ "atom_provenance": {
+  "act_all": {
+   "kind": "git-json",
+   "head": "060efa2cc295e0d7d9960f725aece264fc471935",
+   "path": "stage-m1-closure/05-M1-CLOSURE-PHASE-A-ACTIVATION.json",
+   "sha256": "61bab391e6a4b5204172fdbcac1d823e7ea63d77bb9641cdc95553d4df7a812f",
+   "n": 18
+  },
+  "act_auth": {
+   "kind": "git-json",
+   "head": "060efa2cc295e0d7d9960f725aece264fc471935",
+   "path": "stage-m1-closure/05-M1-CLOSURE-PHASE-A-ACTIVATION.json",
+   "sha256": "61bab391e6a4b5204172fdbcac1d823e7ea63d77bb9641cdc95553d4df7a812f",
+   "field": "phase_b_authority",
+   "value": "ACTIVE_BY_PREAUTHORIZED_CONDITION"
+  }
+ },
+ "input_artifacts": {
+  "marking_document": {
+   "path": "G-11-ACTIVATION.marking.json",
+   "bytes": 879,
+   "sha256": "75723f163337731ca3a87772aff98f5b10656714992f732706b8793bc7cc72c7"
+  },
+  "formula_set": {
+   "path": "formulas.json",
+   "sha256": "36e8bbdadcf8f24fcca6045916a55abc151583924ef8db5f6f665d4f29ba3dde",
+   "bytes": 59632
+  },
+  "source_anchors": [
+   {
+    "kind": "persisted-artifact",
+    "head": "060efa2cc295e0d7d9960f725aece264fc471935",
+    "path": "owner-decisions/AUTHORIZE-M1-CLOSURE-ENV-001-CONDITIONAL-R1-001.md",
+    "sha256": "e485d95eaa0416f8ac3c1a7666b3357a21f64d454c8b188f70da5169bc083ad7",
+    "bytes": 20814,
+    "clause": "§6: 'Phase B authority becomes ACTIVE_BY_PREAUTHORIZED_CONDITION if and only if all of the following are true and recorded' (P01-P18)"
+   }
+  ]
+ },
+ "invocation_time": "2026-08-09T06:46:59Z",
+ "judge_context_id": "1849129ed503d1d37baea901cc8729f255fd856897ead6d3cf35c35a1a5813e9",
+ "claim_context_id": "3985b72fad77fb58d68031fa753eb466d819baea500c35ca0f3b3855364ee2aa",
+ "claim_context_template": {
+  "stipulation_identity": {
+   "kind": "persisted-artifact",
+   "head": "060efa2cc295e0d7d9960f725aece264fc471935",
+   "path": "owner-decisions/AUTHORIZE-M1-CLOSURE-ENV-001-CONDITIONAL-R1-001.md",
+   "sha256": "e485d95eaa0416f8ac3c1a7666b3357a21f64d454c8b188f70da5169bc083ad7"
+  },
+  "authority_identity": "Arkadiy Miteiko, Owner / Design Authority (persisted owner-decision artifact)",
+  "institutional_reading_scope": "LEDGER-PR-11: §6: 'Phase B authority becomes ACTIVE_BY_PREAUTHORIZED_CONDITION if and only if all of the following are true and recorded' (P01-P18)"
+ }
+}

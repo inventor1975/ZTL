@@ -1,0 +1,111 @@
+{
+ "clwr_of": "G-09-MANIFEST",
+ "formula": "n_id & n_acct",
+ "formula_sha256": "90f4c47d26100788809c90aa923df578bcab471ff995d0665349a51f4f1e8949",
+ "marking": {
+  "n_id": {
+   "status": "T",
+   "witness": {
+    "kind": "git-blob",
+    "head": "6bbdaf60dea4ddeeeb820a515fa717083211c2fc",
+    "path": "stage-m1-s2-diag/12-M1-S2-DIAG-EVIDENCE-MANIFEST.json",
+    "bytes": 69457,
+    "sha256": "b210ee6cccb622d43d47c62c841aad7ab683b40a4ea9c8a3d10c55f55f8651d4"
+   }
+  },
+  "n_acct": {
+   "status": "T",
+   "witness": {
+    "kind": "git-manifest",
+    "head": "6bbdaf60dea4ddeeeb820a515fa717083211c2fc",
+    "manifest": "stage-m1-s2-diag/12-M1-S2-DIAG-EVIDENCE-MANIFEST.json",
+    "detail": "ok"
+   }
+  }
+ },
+ "marking_sha256": "ac4fbd1b6d3860481c436b00b518f8b9c09e85cbc6550b09a06a39d97fb1c86a",
+ "status_map_sha256": "3366ce9b2f1ac7c44f53256575cf045aa93ac7e7b7da389f36da4c6281c3551d",
+ "judge_identity": {
+  "judge_pin_id": "M1-EXPERIMENT-JUDGE-PIN-v0.1",
+  "note": "The pinned judge identity is the ZTL repository commit recorded at package freeze plus the kernel module hashes below. Every experimental CLWR must carry this identity (Protocol R-06/R-07). The commit recorded here is the parent of the EFP commit; the EFP commit hash itself is recorded in the package return.",
+  "ztl_repo_commit_at_build": "61a470b41eccf8e57633d0abee7bbc795329a411",
+  "kernel_modules": {
+   "ztl.py": {
+    "bytes": 5335,
+    "sha256": "c15006a5dcd9f06ac6325ab1e8e935556c8c52310883453fd7bf57248c33679e"
+   },
+   "ztljudge.py": {
+    "bytes": 17122,
+    "sha256": "c13cdbf12a344533b58996e39e1f5932df18716af6407f86874b04247273a885"
+   },
+   "zverify.py": {
+    "bytes": 12216,
+    "sha256": "0567b7be5b40c174c42de1a30253a1cc84e73e710913fb2e84a8075b5b4ed1ea"
+   }
+  },
+  "judge_pin_sha256": "cd79148bb9be8d54740c43bdc0e322780b7f884e03b9323d3ac8c0350743e06c"
+ },
+ "verdict_and_disposition": {
+  "verdict": "T",
+  "disposition": "EARNED"
+ },
+ "grade": "hereditary",
+ "weak_links": [],
+ "atom_provenance": {
+  "n_id": {
+   "kind": "git-blob",
+   "head": "6bbdaf60dea4ddeeeb820a515fa717083211c2fc",
+   "path": "stage-m1-s2-diag/12-M1-S2-DIAG-EVIDENCE-MANIFEST.json",
+   "bytes": 69457,
+   "sha256": "b210ee6cccb622d43d47c62c841aad7ab683b40a4ea9c8a3d10c55f55f8651d4"
+  },
+  "n_acct": {
+   "kind": "git-manifest",
+   "head": "6bbdaf60dea4ddeeeb820a515fa717083211c2fc",
+   "manifest": "stage-m1-s2-diag/12-M1-S2-DIAG-EVIDENCE-MANIFEST.json",
+   "detail": "ok"
+  }
+ },
+ "input_artifacts": {
+  "marking_document": {
+   "path": "G-09-MANIFEST.marking.json",
+   "bytes": 734,
+   "sha256": "046674c0ccaa68f4055fa3f8203e657ac6d72238de29781d08aa286292e79724"
+  },
+  "formula_set": {
+   "path": "formulas.json",
+   "sha256": "36e8bbdadcf8f24fcca6045916a55abc151583924ef8db5f6f665d4f29ba3dde",
+   "bytes": 59632
+  },
+  "source_anchors": [
+   {
+    "kind": "persisted-artifact",
+    "head": "6bbdaf60dea4ddeeeb820a515fa717083211c2fc",
+    "path": "owner-decisions/AUTHORIZE-M1-S2-DIAGNOSTIC-001.md",
+    "sha256": "3fae0fe4bdf8c60761ff9d6c25e5122280b9553f906fbf8f7952130b61d3a321",
+    "bytes": 7570,
+    "clause": "§8: 'self-excluded evidence manifest binding each member by path, bytes, sha256, sha512'"
+   },
+   {
+    "kind": "accepted-decision-registry",
+    "item_id": "LEDGER-PR-09",
+    "review_id": 4889536531,
+    "accepted_review_token": "ACCEPT_M1_S2_INFRASTRUCTURE_DIAGNOSTIC_EVIDENCE_001",
+    "note": "accepted manifest identity 69457/b210ee6c/15f659d3 per review 4889536531"
+   }
+  ]
+ },
+ "invocation_time": "2026-08-09T06:46:59Z",
+ "judge_context_id": "bc4bfc373cf5555a36480918be4be3757c53abeaec071cb3decada8412a453ea",
+ "claim_context_id": "9f80b840ce2b431e269e120f1d64dbc7853ef19c59291f6d4fd8cbad157f88d3",
+ "claim_context_template": {
+  "stipulation_identity": {
+   "kind": "persisted-artifact",
+   "head": "6bbdaf60dea4ddeeeb820a515fa717083211c2fc",
+   "path": "owner-decisions/AUTHORIZE-M1-S2-DIAGNOSTIC-001.md",
+   "sha256": "3fae0fe4bdf8c60761ff9d6c25e5122280b9553f906fbf8f7952130b61d3a321"
+  },
+  "authority_identity": "Arkadiy Miteiko, Owner / Design Authority (persisted owner-decision artifact)",
+  "institutional_reading_scope": "LEDGER-PR-09: §8: 'self-excluded evidence manifest binding each member by path, bytes, sha256, sha512'"
+ }
+}

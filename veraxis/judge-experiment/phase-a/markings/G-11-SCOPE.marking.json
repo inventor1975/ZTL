@@ -1,0 +1,18 @@
+{
+ "gate_id": "G-11-SCOPE",
+ "item_id": "LEDGER-PR-11",
+ "formula": "z_paths",
+ "marking": {
+  "z_paths": {
+   "status": "T",
+   "witness": {
+    "kind": "git-tree-diff",
+    "base": "3308a02ca288c2b95cbf1d56cc53c59a0140390f",
+    "head": "060efa2cc295e0d7d9960f725aece264fc471935",
+    "paths_sha256": "b40f8d676404700e725a1e4e37ce99c4957539a58b02895a0bd4a5c40cef3ea8",
+    "n": 115
+   }
+  }
+ },
+ "harvester_sha256": "0f2d486f438682164ab8962863de2f5f1ccca7f7d2736b5de9453ebeea6cb147"
+}

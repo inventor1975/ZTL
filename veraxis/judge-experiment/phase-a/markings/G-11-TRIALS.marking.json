@@ -1,0 +1,143 @@
+{
+ "gate_id": "G-11-TRIALS",
+ "item_id": "LEDGER-PR-11",
+ "formula": "q01_argv & q01_exit & q01_out & q01_err & q01_nc & q02_argv & q02_exit & q02_out & q02_err & q02_nc & q03_argv & q03_exit & q03_out & q03_err & q03_nc",
+ "marking": {
+  "q01_argv": {
+   "status": "T",
+   "witness": {
+    "kind": "git-json",
+    "head": "060efa2cc295e0d7d9960f725aece264fc471935",
+    "path": "stage-m1-closure/evidence/phase-a/QUAL_TRIAL_01.argv.json",
+    "sha256": "156a107015ec0984f8a2fc88aaa033c10880173ce52e1a8225a6651a487e6dd9"
+   }
+  },
+  "q01_exit": {
+   "status": "T",
+   "witness": {
+    "kind": "git-blob",
+    "head": "060efa2cc295e0d7d9960f725aece264fc471935",
+    "path": "stage-m1-closure/evidence/phase-a/QUAL_TRIAL_01.exit-code.txt",
+    "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+   }
+  },
+  "q01_out": {
+   "status": "T",
+   "witness": {
+    "kind": "git-blob",
+    "head": "060efa2cc295e0d7d9960f725aece264fc471935",
+    "path": "stage-m1-closure/evidence/phase-a/QUAL_TRIAL_01.stdout.txt",
+    "sha256": "3f7809ff68e38b738f45789e7552964c47648c24243897c21345ba1abaca196d"
+   }
+  },
+  "q01_err": {
+   "status": "T",
+   "witness": {
+    "kind": "git-blob",
+    "head": "060efa2cc295e0d7d9960f725aece264fc471935",
+    "path": "stage-m1-closure/evidence/phase-a/QUAL_TRIAL_01.stderr.txt",
+    "bytes": 0
+   }
+  },
+  "q01_nc": {
+   "status": "T",
+   "witness": {
+    "kind": "git-blob",
+    "head": "060efa2cc295e0d7d9960f725aece264fc471935",
+    "path": "stage-m1-closure/evidence/phase-a/QUAL_TRIAL_01.new-crash-reports.txt",
+    "bytes": 0
+   }
+  },
+  "q02_argv": {
+   "status": "T",
+   "witness": {
+    "kind": "git-json",
+    "head": "060efa2cc295e0d7d9960f725aece264fc471935",
+    "path": "stage-m1-closure/evidence/phase-a/QUAL_TRIAL_02.argv.json",
+    "sha256": "156a107015ec0984f8a2fc88aaa033c10880173ce52e1a8225a6651a487e6dd9"
+   }
+  },
+  "q02_exit": {
+   "status": "T",
+   "witness": {
+    "kind": "git-blob",
+    "head": "060efa2cc295e0d7d9960f725aece264fc471935",
+    "path": "stage-m1-closure/evidence/phase-a/QUAL_TRIAL_02.exit-code.txt",
+    "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+   }
+  },
+  "q02_out": {
+   "status": "T",
+   "witness": {
+    "kind": "git-blob",
+    "head": "060efa2cc295e0d7d9960f725aece264fc471935",
+    "path": "stage-m1-closure/evidence/phase-a/QUAL_TRIAL_02.stdout.txt",
+    "sha256": "3f7809ff68e38b738f45789e7552964c47648c24243897c21345ba1abaca196d"
+   }
+  },
+  "q02_err": {
+   "status": "T",
+   "witness": {
+    "kind": "git-blob",
+    "head": "060efa2cc295e0d7d9960f725aece264fc471935",
+    "path": "stage-m1-closure/evidence/phase-a/QUAL_TRIAL_02.stderr.txt",
+    "bytes": 0
+   }
+  },
+  "q02_nc": {
+   "status": "T",
+   "witness": {
+    "kind": "git-blob",
+    "head": "060efa2cc295e0d7d9960f725aece264fc471935",
+    "path": "stage-m1-closure/evidence/phase-a/QUAL_TRIAL_02.new-crash-reports.txt",
+    "bytes": 0
+   }
+  },
+  "q03_argv": {
+   "status": "T",
+   "witness": {
+    "kind": "git-json",
+    "head": "060efa2cc295e0d7d9960f725aece264fc471935",
+    "path": "stage-m1-closure/evidence/phase-a/QUAL_TRIAL_03.argv.json",
+    "sha256": "156a107015ec0984f8a2fc88aaa033c10880173ce52e1a8225a6651a487e6dd9"
+   }
+  },
+  "q03_exit": {
+   "status": "T",
+   "witness": {
+    "kind": "git-blob",
+    "head": "060efa2cc295e0d7d9960f725aece264fc471935",
+    "path": "stage-m1-closure/evidence/phase-a/QUAL_TRIAL_03.exit-code.txt",
+    "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+   }
+  },
+  "q03_out": {
+   "status": "T",
+   "witness": {
+    "kind": "git-blob",
+    "head": "060efa2cc295e0d7d9960f725aece264fc471935",
+    "path": "stage-m1-closure/evidence/phase-a/QUAL_TRIAL_03.stdout.txt",
+    "sha256": "3f7809ff68e38b738f45789e7552964c47648c24243897c21345ba1abaca196d"
+   }
+  },
+  "q03_err": {
+   "status": "T",
+   "witness": {
+    "kind": "git-blob",
+    "head": "060efa2cc295e0d7d9960f725aece264fc471935",
+    "path": "stage-m1-closure/evidence/phase-a/QUAL_TRIAL_03.stderr.txt",
+    "bytes": 0
+   }
+  },
+  "q03_nc": {
+   "status": "T",
+   "witness": {
+    "kind": "git-blob",
+    "head": "060efa2cc295e0d7d9960f725aece264fc471935",
+    "path": "stage-m1-closure/evidence/phase-a/QUAL_TRIAL_03.new-crash-reports.txt",
+    "bytes": 0
+   }
+  }
+ },
+ "harvester_sha256": "0f2d486f438682164ab8962863de2f5f1ccca7f7d2736b5de9453ebeea6cb147"
+}

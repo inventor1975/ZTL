@@ -1,0 +1,16 @@
+{
+ "gate_id": "G-M1S1-ACCOUNTING",
+ "item_id": "LEGACY-M1-S1-PACKAGE",
+ "formula": "za_acct",
+ "marking": {
+  "za_acct": {
+   "status": "T",
+   "witness": {
+    "kind": "zip-manifest",
+    "zip_sha256": "e9250d1938bbbd5f607add695ce2273c52d00428da26481834b2dd020348d30a",
+    "detail": "ok"
+   }
+  }
+ },
+ "harvester_sha256": "0f2d486f438682164ab8962863de2f5f1ccca7f7d2736b5de9453ebeea6cb147"
+}

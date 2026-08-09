@@ -1,0 +1,111 @@
+{
+ "clwr_of": "G-11-MANIFEST",
+ "formula": "w_id & w_acct",
+ "formula_sha256": "ce1f30648236d9889f3b877b6e3ab3bfb2e47a5fa11c4537fb2012d102035e17",
+ "marking": {
+  "w_id": {
+   "status": "T",
+   "witness": {
+    "kind": "git-blob",
+    "head": "060efa2cc295e0d7d9960f725aece264fc471935",
+    "path": "stage-m1-closure/15-M1-CLOSURE-EVIDENCE-MANIFEST.json",
+    "bytes": 36845,
+    "sha256": "8aca2ce0ba631b2cc62f41bf774329dcc459415db09d7fcadc0137ab1327a1e3"
+   }
+  },
+  "w_acct": {
+   "status": "T",
+   "witness": {
+    "kind": "git-manifest",
+    "head": "060efa2cc295e0d7d9960f725aece264fc471935",
+    "manifest": "stage-m1-closure/15-M1-CLOSURE-EVIDENCE-MANIFEST.json",
+    "detail": "ok"
+   }
+  }
+ },
+ "marking_sha256": "2fc3a74dd1be2ac3e8bfda06de397df64a3376735fbebb7b86dbfcd597151357",
+ "status_map_sha256": "8c5c2e6cff6f18fb291f749a1271cc9f319b942e4c1b5c6838a45ed7e702e498",
+ "judge_identity": {
+  "judge_pin_id": "M1-EXPERIMENT-JUDGE-PIN-v0.1",
+  "note": "The pinned judge identity is the ZTL repository commit recorded at package freeze plus the kernel module hashes below. Every experimental CLWR must carry this identity (Protocol R-06/R-07). The commit recorded here is the parent of the EFP commit; the EFP commit hash itself is recorded in the package return.",
+  "ztl_repo_commit_at_build": "61a470b41eccf8e57633d0abee7bbc795329a411",
+  "kernel_modules": {
+   "ztl.py": {
+    "bytes": 5335,
+    "sha256": "c15006a5dcd9f06ac6325ab1e8e935556c8c52310883453fd7bf57248c33679e"
+   },
+   "ztljudge.py": {
+    "bytes": 17122,
+    "sha256": "c13cdbf12a344533b58996e39e1f5932df18716af6407f86874b04247273a885"
+   },
+   "zverify.py": {
+    "bytes": 12216,
+    "sha256": "0567b7be5b40c174c42de1a30253a1cc84e73e710913fb2e84a8075b5b4ed1ea"
+   }
+  },
+  "judge_pin_sha256": "cd79148bb9be8d54740c43bdc0e322780b7f884e03b9323d3ac8c0350743e06c"
+ },
+ "verdict_and_disposition": {
+  "verdict": "T",
+  "disposition": "EARNED"
+ },
+ "grade": "hereditary",
+ "weak_links": [],
+ "atom_provenance": {
+  "w_id": {
+   "kind": "git-blob",
+   "head": "060efa2cc295e0d7d9960f725aece264fc471935",
+   "path": "stage-m1-closure/15-M1-CLOSURE-EVIDENCE-MANIFEST.json",
+   "bytes": 36845,
+   "sha256": "8aca2ce0ba631b2cc62f41bf774329dcc459415db09d7fcadc0137ab1327a1e3"
+  },
+  "w_acct": {
+   "kind": "git-manifest",
+   "head": "060efa2cc295e0d7d9960f725aece264fc471935",
+   "manifest": "stage-m1-closure/15-M1-CLOSURE-EVIDENCE-MANIFEST.json",
+   "detail": "ok"
+  }
+ },
+ "input_artifacts": {
+  "marking_document": {
+   "path": "G-11-MANIFEST.marking.json",
+   "bytes": 734,
+   "sha256": "19fcfccc2aab8014570bbb52d3dd65f8a7af61935a7d8b98797836ac896c982a"
+  },
+  "formula_set": {
+   "path": "formulas.json",
+   "sha256": "36e8bbdadcf8f24fcca6045916a55abc151583924ef8db5f6f665d4f29ba3dde",
+   "bytes": 59632
+  },
+  "source_anchors": [
+   {
+    "kind": "persisted-artifact",
+    "head": "060efa2cc295e0d7d9960f725aece264fc471935",
+    "path": "owner-decisions/AUTHORIZE-M1-CLOSURE-ENV-001-CONDITIONAL-R1-001.md",
+    "sha256": "e485d95eaa0416f8ac3c1a7666b3357a21f64d454c8b188f70da5169bc083ad7",
+    "bytes": 20814,
+    "clause": "§8: 'The manifest is self-excluded and must bind every other persisted member by path, bytes, SHA-256, and SHA-512.'"
+   },
+   {
+    "kind": "accepted-decision-registry",
+    "item_id": "LEDGER-PR-11",
+    "review_id": 4889786951,
+    "accepted_review_token": "ACCEPT_M1_CLOSURE_EVIDENCE_H1_FALSIFIED_001",
+    "note": "accepted manifest identity 36845/8aca2ce0/d24422f0 per review 4889786951"
+   }
+  ]
+ },
+ "invocation_time": "2026-08-09T06:46:59Z",
+ "judge_context_id": "0468277995fdd4951559bb1a80656eabbe64f8ed8b7a6cd913b56166f07efefc",
+ "claim_context_id": "fc60f0f99a0e1410df03599b2b244e583eebf21655658aecc68883183a1fa51c",
+ "claim_context_template": {
+  "stipulation_identity": {
+   "kind": "persisted-artifact",
+   "head": "060efa2cc295e0d7d9960f725aece264fc471935",
+   "path": "owner-decisions/AUTHORIZE-M1-CLOSURE-ENV-001-CONDITIONAL-R1-001.md",
+   "sha256": "e485d95eaa0416f8ac3c1a7666b3357a21f64d454c8b188f70da5169bc083ad7"
+  },
+  "authority_identity": "Arkadiy Miteiko, Owner / Design Authority (persisted owner-decision artifact)",
+  "institutional_reading_scope": "LEDGER-PR-11: §8: 'The manifest is self-excluded and must bind every other persisted member by path, bytes, SHA-256, and SHA-512.'"
+ }
+}

@@ -1,0 +1,101 @@
+{
+ "clwr_of": "G-M1S1-CONFINEMENT",
+ "formula": "zc_ast",
+ "formula_sha256": "4ab182aa9cd040045a96b91ae0e3af72b194d2473bdb6d46e3a75e5b326dcd26",
+ "marking": {
+  "zc_ast": {
+   "status": "T",
+   "witness": {
+    "kind": "zip-ast-diff",
+    "zip_sha256": "e9250d1938bbbd5f607add695ce2273c52d00428da26481834b2dd020348d30a",
+    "changed": [
+     "test_currentness_is_unaffected_by_filesystem_tricks",
+     "test_focused_audit_tests_do_not_mutate_the_reviewed_repository",
+     "test_lineage_is_a_single_root_injective_linear_chain",
+     "test_operational_index_validates_and_verifies",
+     "test_supersession_lineage_is_a_single_normalized_graph"
+    ],
+    "hunks": 7,
+    "iso_identical": true
+   }
+  }
+ },
+ "marking_sha256": "29639fa86a8e370744df53988e4f6c2bc91f4f96e15539bcb1d7c70453008abf",
+ "status_map_sha256": "dc3d1399b051419a0b60be791cdb3628bff92d936673e2eafc675d83240bb8ee",
+ "judge_identity": {
+  "judge_pin_id": "M1-EXPERIMENT-JUDGE-PIN-v0.1",
+  "note": "The pinned judge identity is the ZTL repository commit recorded at package freeze plus the kernel module hashes below. Every experimental CLWR must carry this identity (Protocol R-06/R-07). The commit recorded here is the parent of the EFP commit; the EFP commit hash itself is recorded in the package return.",
+  "ztl_repo_commit_at_build": "61a470b41eccf8e57633d0abee7bbc795329a411",
+  "kernel_modules": {
+   "ztl.py": {
+    "bytes": 5335,
+    "sha256": "c15006a5dcd9f06ac6325ab1e8e935556c8c52310883453fd7bf57248c33679e"
+   },
+   "ztljudge.py": {
+    "bytes": 17122,
+    "sha256": "c13cdbf12a344533b58996e39e1f5932df18716af6407f86874b04247273a885"
+   },
+   "zverify.py": {
+    "bytes": 12216,
+    "sha256": "0567b7be5b40c174c42de1a30253a1cc84e73e710913fb2e84a8075b5b4ed1ea"
+   }
+  },
+  "judge_pin_sha256": "cd79148bb9be8d54740c43bdc0e322780b7f884e03b9323d3ac8c0350743e06c"
+ },
+ "verdict_and_disposition": {
+  "verdict": "T",
+  "disposition": "EARNED"
+ },
+ "grade": "hereditary",
+ "weak_links": [],
+ "atom_provenance": {
+  "zc_ast": {
+   "kind": "zip-ast-diff",
+   "zip_sha256": "e9250d1938bbbd5f607add695ce2273c52d00428da26481834b2dd020348d30a",
+   "changed": [
+    "test_currentness_is_unaffected_by_filesystem_tricks",
+    "test_focused_audit_tests_do_not_mutate_the_reviewed_repository",
+    "test_lineage_is_a_single_root_injective_linear_chain",
+    "test_operational_index_validates_and_verifies",
+    "test_supersession_lineage_is_a_single_normalized_graph"
+   ],
+   "hunks": 7,
+   "iso_identical": true
+  }
+ },
+ "input_artifacts": {
+  "marking_document": {
+   "path": "G-M1S1-CONFINEMENT.marking.json",
+   "bytes": 746,
+   "sha256": "ee0208ba25b7318158e5366eaa65764026428aaaa1f7a53fa4f22f9fe5093703"
+  },
+  "formula_set": {
+   "path": "formulas.json",
+   "sha256": "36e8bbdadcf8f24fcca6045916a55abc151583924ef8db5f6f665d4f29ba3dde",
+   "bytes": 59632
+  },
+  "source_anchors": [
+   {
+    "kind": "legacy-zip-member",
+    "zip_sha256": "e9250d1938bbbd5f607add695ce2273c52d00428da26481834b2dd020348d30a",
+    "member": "01-OWNER-ACCEPTANCE-CHECKPOINT-B-AND-M1-S1-EXECUTION-ORDER-001.md",
+    "sha256": "a05729a43e88e37dcdc47fb6a38960a3cd9780b493a4eabc3fa8f2c5b96041b0",
+    "bytes": 11627,
+    "clause": "§4: only the seven enumerated functions may receive semantic edits; _isolated must remain byte-for-byte at S0; §5: seven enumerated sites; EXECUTION NOTE: seven sites fall inside five functions"
+   }
+  ]
+ },
+ "invocation_time": "2026-08-09T06:46:59Z",
+ "judge_context_id": "c83e59c7d7f55c355801dbd0d2037611d43b1d971eb4702cb5b6ed28fb88e880",
+ "claim_context_id": "e2b4911e8235b5bafe094788b2044131e9ebc24bb5810e8014245ca6104d30d1",
+ "claim_context_template": {
+  "stipulation_identity": {
+   "kind": "legacy-zip-member",
+   "zip_sha256": "e9250d1938bbbd5f607add695ce2273c52d00428da26481834b2dd020348d30a",
+   "member": "01-OWNER-ACCEPTANCE-CHECKPOINT-B-AND-M1-S1-EXECUTION-ORDER-001.md",
+   "sha256": "a05729a43e88e37dcdc47fb6a38960a3cd9780b493a4eabc3fa8f2c5b96041b0"
+  },
+  "authority_identity": "Arkadiy Miteiko, Owner / Design Authority (verbatim owner order persisted in the accepted package)",
+  "institutional_reading_scope": "LEGACY-M1-S1-PACKAGE: §4: only the seven enumerated functions may receive semantic edits; _isolated must remain byte-for-byte at S0; §5: seven enumerated sites; EXECUTION NOTE: seven sites fall inside five functions"
+ }
+}

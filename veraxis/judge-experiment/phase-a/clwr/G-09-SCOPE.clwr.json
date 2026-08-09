@@ -1,0 +1,104 @@
+{
+ "clwr_of": "G-09-SCOPE",
+ "formula": "g_paths & g_tree",
+ "formula_sha256": "92008a6cafda50887a9e1559e1a55f62c3a5698409f6387d53b095a8741d6219",
+ "marking": {
+  "g_paths": {
+   "status": "T",
+   "witness": {
+    "kind": "git-tree-diff",
+    "base": "88a81aba060806157c6d3b63f36c0dcd1a99827a",
+    "head": "6bbdaf60dea4ddeeeb820a515fa717083211c2fc",
+    "paths_sha256": "caaad9dc99b5ade81e409fd03e9a58e0c0412bcdf97efe921cf5fb2de93402f4",
+    "n": 219
+   }
+  },
+  "g_tree": {
+   "status": "T",
+   "witness": {
+    "kind": "git-commit",
+    "head": "6bbdaf60dea4ddeeeb820a515fa717083211c2fc",
+    "expected_tree": "2fdd8bcdbe9b856fe5c3fadf78f5c27532ff8e27",
+    "observed_tree": "2fdd8bcdbe9b856fe5c3fadf78f5c27532ff8e27"
+   }
+  }
+ },
+ "marking_sha256": "13a2303e357e79b82bf5fb966f2c988be62a27098d7c0dd54114ebcfba2d8d71",
+ "status_map_sha256": "938c45411ace53733e696c9c8a7a0d7acc9344029c585a8ada2c1381a3334873",
+ "judge_identity": {
+  "judge_pin_id": "M1-EXPERIMENT-JUDGE-PIN-v0.1",
+  "note": "The pinned judge identity is the ZTL repository commit recorded at package freeze plus the kernel module hashes below. Every experimental CLWR must carry this identity (Protocol R-06/R-07). The commit recorded here is the parent of the EFP commit; the EFP commit hash itself is recorded in the package return.",
+  "ztl_repo_commit_at_build": "61a470b41eccf8e57633d0abee7bbc795329a411",
+  "kernel_modules": {
+   "ztl.py": {
+    "bytes": 5335,
+    "sha256": "c15006a5dcd9f06ac6325ab1e8e935556c8c52310883453fd7bf57248c33679e"
+   },
+   "ztljudge.py": {
+    "bytes": 17122,
+    "sha256": "c13cdbf12a344533b58996e39e1f5932df18716af6407f86874b04247273a885"
+   },
+   "zverify.py": {
+    "bytes": 12216,
+    "sha256": "0567b7be5b40c174c42de1a30253a1cc84e73e710913fb2e84a8075b5b4ed1ea"
+   }
+  },
+  "judge_pin_sha256": "cd79148bb9be8d54740c43bdc0e322780b7f884e03b9323d3ac8c0350743e06c"
+ },
+ "verdict_and_disposition": {
+  "verdict": "T",
+  "disposition": "EARNED"
+ },
+ "grade": "hereditary",
+ "weak_links": [],
+ "atom_provenance": {
+  "g_paths": {
+   "kind": "git-tree-diff",
+   "base": "88a81aba060806157c6d3b63f36c0dcd1a99827a",
+   "head": "6bbdaf60dea4ddeeeb820a515fa717083211c2fc",
+   "paths_sha256": "caaad9dc99b5ade81e409fd03e9a58e0c0412bcdf97efe921cf5fb2de93402f4",
+   "n": 219
+  },
+  "g_tree": {
+   "kind": "git-commit",
+   "head": "6bbdaf60dea4ddeeeb820a515fa717083211c2fc",
+   "expected_tree": "2fdd8bcdbe9b856fe5c3fadf78f5c27532ff8e27",
+   "observed_tree": "2fdd8bcdbe9b856fe5c3fadf78f5c27532ff8e27"
+  }
+ },
+ "input_artifacts": {
+  "marking_document": {
+   "path": "G-09-SCOPE.marking.json",
+   "bytes": 764,
+   "sha256": "063fc6eb98e580957f0987587a3319973312116c7748571b20856a4eb0dd2899"
+  },
+  "formula_set": {
+   "path": "formulas.json",
+   "sha256": "36e8bbdadcf8f24fcca6045916a55abc151583924ef8db5f6f665d4f29ba3dde",
+   "bytes": 59632
+  },
+  "source_anchors": [
+   {
+    "kind": "persisted-artifact",
+    "head": "6bbdaf60dea4ddeeeb820a515fa717083211c2fc",
+    "path": "owner-decisions/AUTHORIZE-M1-S2-DIAGNOSTIC-001.md",
+    "sha256": "3fae0fe4bdf8c60761ff9d6c25e5122280b9553f906fbf8f7952130b61d3a321",
+    "bytes": 7570,
+    "clause": "§4: 'Authorized evidence branch: evidence/m1-s2-diag-001 ... Authorized ledger path: stage-m1-s2-diag/**'"
+   }
+  ]
+ },
+ "invocation_time": "2026-08-09T06:46:59Z",
+ "judge_context_id": "ee2191df5d3e13559dd44a770800f628e3fc6653462629f76504bb457ba9534a",
+ "claim_context_id": "d051cdcbff0b49e5948ab7d4d1b759505c9b9148b31d9893b5a2d236370bf326",
+ "claim_context_template": {
+  "stipulation_identity": {
+   "kind": "persisted-artifact",
+   "head": "6bbdaf60dea4ddeeeb820a515fa717083211c2fc",
+   "path": "owner-decisions/AUTHORIZE-M1-S2-DIAGNOSTIC-001.md",
+   "sha256": "3fae0fe4bdf8c60761ff9d6c25e5122280b9553f906fbf8f7952130b61d3a321"
+  },
+  "authority_identity": "Arkadiy Miteiko, Owner / Design Authority (persisted owner-decision artifact)",
+  "institutional_reading_scope": "LEDGER-PR-09: §4: 'Authorized evidence branch: evidence/m1-s2-diag-001 ... Authorized ledger path: stage-m1-s2-diag/**'"
+ }
+}

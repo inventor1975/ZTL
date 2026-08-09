@@ -1,0 +1,63 @@
+{
+ "gate_id": "G-11-EDIT-IDS",
+ "item_id": "LEDGER-PR-11",
+ "formula": "e_cnt & e_iso & e_bytes & e_sha & e_sha512",
+ "marking": {
+  "e_cnt": {
+   "status": "T",
+   "witness": {
+    "kind": "git-json",
+    "head": "060efa2cc295e0d7d9960f725aece264fc471935",
+    "path": "stage-m1-closure/06-M1-CLOSURE-R1-RECONSTRUCTION-CONFINEMENT.json",
+    "sha256": "b6d691ff942acc4e2e08d725b35d01305f0bb076323de3c8043656a73fc40c4a",
+    "field": "scientific_edits",
+    "value": 1
+   }
+  },
+  "e_iso": {
+   "status": "T",
+   "witness": {
+    "kind": "git-json",
+    "head": "060efa2cc295e0d7d9960f725aece264fc471935",
+    "path": "stage-m1-closure/06-M1-CLOSURE-R1-RECONSTRUCTION-CONFINEMENT.json",
+    "sha256": "b6d691ff942acc4e2e08d725b35d01305f0bb076323de3c8043656a73fc40c4a",
+    "field": "isolated_sha256",
+    "value": "9a11894fc361911fe9a6273062686e88e9018b2299aa61a1f03373919a4c19d8"
+   }
+  },
+  "e_bytes": {
+   "status": "T",
+   "witness": {
+    "kind": "git-json",
+    "head": "060efa2cc295e0d7d9960f725aece264fc471935",
+    "path": "stage-m1-closure/06-M1-CLOSURE-R1-RECONSTRUCTION-CONFINEMENT.json",
+    "sha256": "b6d691ff942acc4e2e08d725b35d01305f0bb076323de3c8043656a73fc40c4a",
+    "field": "post_test_bytes",
+    "value": 40975
+   }
+  },
+  "e_sha": {
+   "status": "T",
+   "witness": {
+    "kind": "git-json",
+    "head": "060efa2cc295e0d7d9960f725aece264fc471935",
+    "path": "stage-m1-closure/06-M1-CLOSURE-R1-RECONSTRUCTION-CONFINEMENT.json",
+    "sha256": "b6d691ff942acc4e2e08d725b35d01305f0bb076323de3c8043656a73fc40c4a",
+    "field": "post_test_sha256",
+    "value": "04bd2679de95ec831ba010d99fee1cb578f70497916951035e9518340371f2cc"
+   }
+  },
+  "e_sha512": {
+   "status": "T",
+   "witness": {
+    "kind": "git-json",
+    "head": "060efa2cc295e0d7d9960f725aece264fc471935",
+    "path": "stage-m1-closure/06-M1-CLOSURE-R1-RECONSTRUCTION-CONFINEMENT.json",
+    "sha256": "b6d691ff942acc4e2e08d725b35d01305f0bb076323de3c8043656a73fc40c4a",
+    "field": "post_test_sha512",
+    "value": "5c56b9a105122586e1fe1d26855d54d5b695179dbd1d7325a8b1f714f0c2dd397e45361a6dfa5b1b949eb9b1b347e9095477a96eb65e69aa5f0fbed3a0046f9b"
+   }
+  }
+ },
+ "harvester_sha256": "0f2d486f438682164ab8962863de2f5f1ccca7f7d2736b5de9453ebeea6cb147"
+}

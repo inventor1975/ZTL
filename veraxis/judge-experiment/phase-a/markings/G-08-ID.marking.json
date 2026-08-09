@@ -1,0 +1,27 @@
+{
+ "gate_id": "G-08-ID",
+ "item_id": "LEDGER-PR-08",
+ "formula": "d_id & d_tree",
+ "marking": {
+  "d_id": {
+   "status": "T",
+   "witness": {
+    "kind": "git-blob",
+    "head": "88a81aba060806157c6d3b63f36c0dcd1a99827a",
+    "path": "owner-decisions/AUTHORIZE-M1-S2-DIAGNOSTIC-001.md",
+    "bytes": 7570,
+    "sha256": "3fae0fe4bdf8c60761ff9d6c25e5122280b9553f906fbf8f7952130b61d3a321"
+   }
+  },
+  "d_tree": {
+   "status": "T",
+   "witness": {
+    "kind": "git-commit",
+    "head": "88a81aba060806157c6d3b63f36c0dcd1a99827a",
+    "expected_tree": "1b0fb440970718bc7ce03195f4ec03d381c5b870",
+    "observed_tree": "1b0fb440970718bc7ce03195f4ec03d381c5b870"
+   }
+  }
+ },
+ "harvester_sha256": "0f2d486f438682164ab8962863de2f5f1ccca7f7d2736b5de9453ebeea6cb147"
+}

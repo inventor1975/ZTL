@@ -1,0 +1,111 @@
+{
+ "clwr_of": "G-08-ID",
+ "formula": "d_id & d_tree",
+ "formula_sha256": "05d3c8ec3dd410d12c5b3256c86b14c5a7664100eaa7d4c76aba9011ec8e072f",
+ "marking": {
+  "d_id": {
+   "status": "T",
+   "witness": {
+    "kind": "git-blob",
+    "head": "88a81aba060806157c6d3b63f36c0dcd1a99827a",
+    "path": "owner-decisions/AUTHORIZE-M1-S2-DIAGNOSTIC-001.md",
+    "bytes": 7570,
+    "sha256": "3fae0fe4bdf8c60761ff9d6c25e5122280b9553f906fbf8f7952130b61d3a321"
+   }
+  },
+  "d_tree": {
+   "status": "T",
+   "witness": {
+    "kind": "git-commit",
+    "head": "88a81aba060806157c6d3b63f36c0dcd1a99827a",
+    "expected_tree": "1b0fb440970718bc7ce03195f4ec03d381c5b870",
+    "observed_tree": "1b0fb440970718bc7ce03195f4ec03d381c5b870"
+   }
+  }
+ },
+ "marking_sha256": "c3223ef3680bf71a7daae0430e54cfab7d4189f784ccd1f87dbd3820819adcfc",
+ "status_map_sha256": "bf92aa5c38703f18bbd5f049070c8400b49b3b117367e14eefe9f3a6c56f21e7",
+ "judge_identity": {
+  "judge_pin_id": "M1-EXPERIMENT-JUDGE-PIN-v0.1",
+  "note": "The pinned judge identity is the ZTL repository commit recorded at package freeze plus the kernel module hashes below. Every experimental CLWR must carry this identity (Protocol R-06/R-07). The commit recorded here is the parent of the EFP commit; the EFP commit hash itself is recorded in the package return.",
+  "ztl_repo_commit_at_build": "61a470b41eccf8e57633d0abee7bbc795329a411",
+  "kernel_modules": {
+   "ztl.py": {
+    "bytes": 5335,
+    "sha256": "c15006a5dcd9f06ac6325ab1e8e935556c8c52310883453fd7bf57248c33679e"
+   },
+   "ztljudge.py": {
+    "bytes": 17122,
+    "sha256": "c13cdbf12a344533b58996e39e1f5932df18716af6407f86874b04247273a885"
+   },
+   "zverify.py": {
+    "bytes": 12216,
+    "sha256": "0567b7be5b40c174c42de1a30253a1cc84e73e710913fb2e84a8075b5b4ed1ea"
+   }
+  },
+  "judge_pin_sha256": "cd79148bb9be8d54740c43bdc0e322780b7f884e03b9323d3ac8c0350743e06c"
+ },
+ "verdict_and_disposition": {
+  "verdict": "T",
+  "disposition": "EARNED"
+ },
+ "grade": "hereditary",
+ "weak_links": [],
+ "atom_provenance": {
+  "d_id": {
+   "kind": "git-blob",
+   "head": "88a81aba060806157c6d3b63f36c0dcd1a99827a",
+   "path": "owner-decisions/AUTHORIZE-M1-S2-DIAGNOSTIC-001.md",
+   "bytes": 7570,
+   "sha256": "3fae0fe4bdf8c60761ff9d6c25e5122280b9553f906fbf8f7952130b61d3a321"
+  },
+  "d_tree": {
+   "kind": "git-commit",
+   "head": "88a81aba060806157c6d3b63f36c0dcd1a99827a",
+   "expected_tree": "1b0fb440970718bc7ce03195f4ec03d381c5b870",
+   "observed_tree": "1b0fb440970718bc7ce03195f4ec03d381c5b870"
+  }
+ },
+ "input_artifacts": {
+  "marking_document": {
+   "path": "G-08-ID.marking.json",
+   "bytes": 758,
+   "sha256": "4357c2e19b10907b58fd7baffe1d087ee8b445e22f47b24e1d937b92f65fc768"
+  },
+  "formula_set": {
+   "path": "formulas.json",
+   "sha256": "36e8bbdadcf8f24fcca6045916a55abc151583924ef8db5f6f665d4f29ba3dde",
+   "bytes": 59632
+  },
+  "source_anchors": [
+   {
+    "kind": "persisted-artifact",
+    "head": "6bbdaf60dea4ddeeeb820a515fa717083211c2fc",
+    "path": "stage-m1-s2-diag/01-M1-S2-DIAG-OWNER-AUTHORIZATION-REFERENCE.json",
+    "sha256": "a452e8e945376e83993fd9c394866efd3716eacc97f4228578d40896448f7e97",
+    "bytes": 797,
+    "clause": "persisted resolution of this artifact's bytes/SHA-256/SHA-512 and decision token"
+   },
+   {
+    "kind": "accepted-decision-registry",
+    "item_id": "LEDGER-PR-08",
+    "review_id": 4889485795,
+    "accepted_review_token": "ACCEPT_M1_S2_INFRASTRUCTURE_DIAGNOSTIC_AUTHORIZATION_001",
+    "note": "accepted coordinate; one-file-scope requirement existed only in the relay order — scope atom removed"
+   }
+  ]
+ },
+ "invocation_time": "2026-08-09T06:46:59Z",
+ "judge_context_id": "3b67d7eb14031715313293672be54b8d686ad7721a1f3651b358d03c08b97ea9",
+ "claim_context_id": "e1d2f4a5978a1a1a65619dbbebfc98cf0daaee0793b76bc60b8e79b23fb97f92",
+ "claim_context_template": {
+  "stipulation_identity": {
+   "kind": "persisted-artifact",
+   "head": "6bbdaf60dea4ddeeeb820a515fa717083211c2fc",
+   "path": "stage-m1-s2-diag/01-M1-S2-DIAG-OWNER-AUTHORIZATION-REFERENCE.json",
+   "sha256": "a452e8e945376e83993fd9c394866efd3716eacc97f4228578d40896448f7e97"
+  },
+  "authority_identity": "Implementer evidence record under owner authorization; accepted by independent review",
+  "institutional_reading_scope": "LEDGER-PR-08: persisted resolution of this artifact's bytes/SHA-256/SHA-512 and decision token"
+ }
+}

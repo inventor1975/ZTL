@@ -1,0 +1,112 @@
+{
+ "clwr_of": "G-07-SCOPE",
+ "formula": "c_paths & c_tree",
+ "formula_sha256": "a13102216bbd38f9f38e365ae8eb41f4fb1e678c8acc6838e671037ab8d334bb",
+ "marking": {
+  "c_paths": {
+   "status": "T",
+   "witness": {
+    "kind": "git-tree-diff",
+    "base": "86adb7d84d4a6bb469705afc04397a8260553f23",
+    "head": "f44d1cc337d20cb8b01f85d232795b7bff93954a",
+    "paths_sha256": "f134c0e3c92fc2cb764bc7100f7f268cf7198a96a94dd62c89c988150e4e8552",
+    "n": 19
+   }
+  },
+  "c_tree": {
+   "status": "T",
+   "witness": {
+    "kind": "git-commit",
+    "head": "f44d1cc337d20cb8b01f85d232795b7bff93954a",
+    "expected_tree": "8c48fe4bd01eca42abde77b55618023a4260c618",
+    "observed_tree": "8c48fe4bd01eca42abde77b55618023a4260c618"
+   }
+  }
+ },
+ "marking_sha256": "df41a4f76506bacc307d04c7756c8c41890606c8b3585001e7413e20729ea992",
+ "status_map_sha256": "cf3160ef02fc1107c58c27d65f2fa36171b5e0e44809009e05a5c4f839ae1493",
+ "judge_identity": {
+  "judge_pin_id": "M1-EXPERIMENT-JUDGE-PIN-v0.1",
+  "note": "The pinned judge identity is the ZTL repository commit recorded at package freeze plus the kernel module hashes below. Every experimental CLWR must carry this identity (Protocol R-06/R-07). The commit recorded here is the parent of the EFP commit; the EFP commit hash itself is recorded in the package return.",
+  "ztl_repo_commit_at_build": "61a470b41eccf8e57633d0abee7bbc795329a411",
+  "kernel_modules": {
+   "ztl.py": {
+    "bytes": 5335,
+    "sha256": "c15006a5dcd9f06ac6325ab1e8e935556c8c52310883453fd7bf57248c33679e"
+   },
+   "ztljudge.py": {
+    "bytes": 17122,
+    "sha256": "c13cdbf12a344533b58996e39e1f5932df18716af6407f86874b04247273a885"
+   },
+   "zverify.py": {
+    "bytes": 12216,
+    "sha256": "0567b7be5b40c174c42de1a30253a1cc84e73e710913fb2e84a8075b5b4ed1ea"
+   }
+  },
+  "judge_pin_sha256": "cd79148bb9be8d54740c43bdc0e322780b7f884e03b9323d3ac8c0350743e06c"
+ },
+ "verdict_and_disposition": {
+  "verdict": "T",
+  "disposition": "EARNED"
+ },
+ "grade": "hereditary",
+ "weak_links": [],
+ "atom_provenance": {
+  "c_paths": {
+   "kind": "git-tree-diff",
+   "base": "86adb7d84d4a6bb469705afc04397a8260553f23",
+   "head": "f44d1cc337d20cb8b01f85d232795b7bff93954a",
+   "paths_sha256": "f134c0e3c92fc2cb764bc7100f7f268cf7198a96a94dd62c89c988150e4e8552",
+   "n": 19
+  },
+  "c_tree": {
+   "kind": "git-commit",
+   "head": "f44d1cc337d20cb8b01f85d232795b7bff93954a",
+   "expected_tree": "8c48fe4bd01eca42abde77b55618023a4260c618",
+   "observed_tree": "8c48fe4bd01eca42abde77b55618023a4260c618"
+  }
+ },
+ "input_artifacts": {
+  "marking_document": {
+   "path": "G-07-SCOPE.marking.json",
+   "bytes": 763,
+   "sha256": "5178579efa73e38bc24283801726b96aabbd246502a7058cff5e9eaf253ad5aa"
+  },
+  "formula_set": {
+   "path": "formulas.json",
+   "sha256": "36e8bbdadcf8f24fcca6045916a55abc151583924ef8db5f6f665d4f29ba3dde",
+   "bytes": 59632
+  },
+  "source_anchors": [
+   {
+    "kind": "persisted-artifact",
+    "head": "f44d1cc337d20cb8b01f85d232795b7bff93954a",
+    "path": "owner-decisions/AUTHORIZE-M1-S2-LEDGER-NATIVE-EXECUTION-001.md",
+    "sha256": "971ce005d0771dadf7ad7e6827c8b9f19ce63d22f408a462cad53bc014cdd020",
+    "bytes": 10506,
+    "clause": "§8: 'Authorized evidence branch: evidence/m1-s2-001 ... Authorized path class: stage-m1-s2/**'"
+   },
+   {
+    "kind": "persisted-artifact",
+    "head": "88a81aba060806157c6d3b63f36c0dcd1a99827a",
+    "path": "owner-decisions/AUTHORIZE-M1-S2-DIAGNOSTIC-001.md",
+    "sha256": "3fae0fe4bdf8c60761ff9d6c25e5122280b9553f906fbf8f7952130b61d3a321",
+    "bytes": 7570,
+    "clause": "§1: 'ledger commit: f44d1cc3...' + 'tree: 8c48fe4b...' — persisted recitation of this transaction's coordinate"
+   }
+  ]
+ },
+ "invocation_time": "2026-08-09T06:46:59Z",
+ "judge_context_id": "8697485debaf8efdf9d9ac2150db1369173a5735b356db4101c03699c1b441f1",
+ "claim_context_id": "fa6e89cad819d75ae04e6380e1ccfefd8f9581e4d1be130f40162903f1077e9a",
+ "claim_context_template": {
+  "stipulation_identity": {
+   "kind": "persisted-artifact",
+   "head": "f44d1cc337d20cb8b01f85d232795b7bff93954a",
+   "path": "owner-decisions/AUTHORIZE-M1-S2-LEDGER-NATIVE-EXECUTION-001.md",
+   "sha256": "971ce005d0771dadf7ad7e6827c8b9f19ce63d22f408a462cad53bc014cdd020"
+  },
+  "authority_identity": "Arkadiy Miteiko, Owner / Design Authority (persisted owner-decision artifact)",
+  "institutional_reading_scope": "LEDGER-PR-07: §8: 'Authorized evidence branch: evidence/m1-s2-001 ... Authorized path class: stage-m1-s2/**'"
+ }
+}

@@ -1,0 +1,89 @@
+{
+ "clwr_of": "G-11-SCOPE",
+ "formula": "z_paths",
+ "formula_sha256": "5ec06ade9cecb4b03dd6d9a98bf7e9c5b016c51f76549c5c09bd71c70ddd91ab",
+ "marking": {
+  "z_paths": {
+   "status": "T",
+   "witness": {
+    "kind": "git-tree-diff",
+    "base": "3308a02ca288c2b95cbf1d56cc53c59a0140390f",
+    "head": "060efa2cc295e0d7d9960f725aece264fc471935",
+    "paths_sha256": "b40f8d676404700e725a1e4e37ce99c4957539a58b02895a0bd4a5c40cef3ea8",
+    "n": 115
+   }
+  }
+ },
+ "marking_sha256": "d69468ec96bd980d2be6d6b51d8fcf27f6c24ebb839b1ff57d13e2f25ec3d7e1",
+ "status_map_sha256": "c6b92a3c0d89590042bf59ac15242c345177624ceeb9be2a883c49acead465c7",
+ "judge_identity": {
+  "judge_pin_id": "M1-EXPERIMENT-JUDGE-PIN-v0.1",
+  "note": "The pinned judge identity is the ZTL repository commit recorded at package freeze plus the kernel module hashes below. Every experimental CLWR must carry this identity (Protocol R-06/R-07). The commit recorded here is the parent of the EFP commit; the EFP commit hash itself is recorded in the package return.",
+  "ztl_repo_commit_at_build": "61a470b41eccf8e57633d0abee7bbc795329a411",
+  "kernel_modules": {
+   "ztl.py": {
+    "bytes": 5335,
+    "sha256": "c15006a5dcd9f06ac6325ab1e8e935556c8c52310883453fd7bf57248c33679e"
+   },
+   "ztljudge.py": {
+    "bytes": 17122,
+    "sha256": "c13cdbf12a344533b58996e39e1f5932df18716af6407f86874b04247273a885"
+   },
+   "zverify.py": {
+    "bytes": 12216,
+    "sha256": "0567b7be5b40c174c42de1a30253a1cc84e73e710913fb2e84a8075b5b4ed1ea"
+   }
+  },
+  "judge_pin_sha256": "cd79148bb9be8d54740c43bdc0e322780b7f884e03b9323d3ac8c0350743e06c"
+ },
+ "verdict_and_disposition": {
+  "verdict": "T",
+  "disposition": "EARNED"
+ },
+ "grade": "hereditary",
+ "weak_links": [],
+ "atom_provenance": {
+  "z_paths": {
+   "kind": "git-tree-diff",
+   "base": "3308a02ca288c2b95cbf1d56cc53c59a0140390f",
+   "head": "060efa2cc295e0d7d9960f725aece264fc471935",
+   "paths_sha256": "b40f8d676404700e725a1e4e37ce99c4957539a58b02895a0bd4a5c40cef3ea8",
+   "n": 115
+  }
+ },
+ "input_artifacts": {
+  "marking_document": {
+   "path": "G-11-SCOPE.marking.json",
+   "bytes": 486,
+   "sha256": "d6c67e207f1b52c9b323f0ba3790e2763eac83a6d7d3ddc5bfdaddab4ec2ce2c"
+  },
+  "formula_set": {
+   "path": "formulas.json",
+   "sha256": "36e8bbdadcf8f24fcca6045916a55abc151583924ef8db5f6f665d4f29ba3dde",
+   "bytes": 59632
+  },
+  "source_anchors": [
+   {
+    "kind": "persisted-artifact",
+    "head": "060efa2cc295e0d7d9960f725aece264fc471935",
+    "path": "owner-decisions/AUTHORIZE-M1-CLOSURE-ENV-001-CONDITIONAL-R1-001.md",
+    "sha256": "e485d95eaa0416f8ac3c1a7666b3357a21f64d454c8b188f70da5169bc083ad7",
+    "bytes": 20814,
+    "clause": "§8: 'Branch: evidence/m1-closure-001 ... Paths: stage-m1-closure/**'"
+   }
+  ]
+ },
+ "invocation_time": "2026-08-09T06:46:59Z",
+ "judge_context_id": "f0b70b1fb924c79597e822e5b2cf5166a210c28337a4e63c98cfe95a825bbc61",
+ "claim_context_id": "e6ab94acea47c79462a77cfe4a0458deff45f1cd4cc880454a4f729020df441e",
+ "claim_context_template": {
+  "stipulation_identity": {
+   "kind": "persisted-artifact",
+   "head": "060efa2cc295e0d7d9960f725aece264fc471935",
+   "path": "owner-decisions/AUTHORIZE-M1-CLOSURE-ENV-001-CONDITIONAL-R1-001.md",
+   "sha256": "e485d95eaa0416f8ac3c1a7666b3357a21f64d454c8b188f70da5169bc083ad7"
+  },
+  "authority_identity": "Arkadiy Miteiko, Owner / Design Authority (persisted owner-decision artifact)",
+  "institutional_reading_scope": "LEDGER-PR-11: §8: 'Branch: evidence/m1-closure-001 ... Paths: stage-m1-closure/**'"
+ }
+}

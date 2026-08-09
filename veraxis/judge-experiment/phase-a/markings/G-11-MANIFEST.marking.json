@@ -1,0 +1,27 @@
+{
+ "gate_id": "G-11-MANIFEST",
+ "item_id": "LEDGER-PR-11",
+ "formula": "w_id & w_acct",
+ "marking": {
+  "w_id": {
+   "status": "T",
+   "witness": {
+    "kind": "git-blob",
+    "head": "060efa2cc295e0d7d9960f725aece264fc471935",
+    "path": "stage-m1-closure/15-M1-CLOSURE-EVIDENCE-MANIFEST.json",
+    "bytes": 36845,
+    "sha256": "8aca2ce0ba631b2cc62f41bf774329dcc459415db09d7fcadc0137ab1327a1e3"
+   }
+  },
+  "w_acct": {
+   "status": "T",
+   "witness": {
+    "kind": "git-manifest",
+    "head": "060efa2cc295e0d7d9960f725aece264fc471935",
+    "manifest": "stage-m1-closure/15-M1-CLOSURE-EVIDENCE-MANIFEST.json",
+    "detail": "ok"
+   }
+  }
+ },
+ "harvester_sha256": "0f2d486f438682164ab8962863de2f5f1ccca7f7d2736b5de9453ebeea6cb147"
+}

@@ -1,0 +1,27 @@
+{
+ "gate_id": "G-M1S1-FILE-IDS",
+ "item_id": "LEGACY-M1-S1-PACKAGE",
+ "formula": "zs0 & zs1",
+ "marking": {
+  "zs0": {
+   "status": "T",
+   "witness": {
+    "kind": "zip-member",
+    "zip_sha256": "e9250d1938bbbd5f607add695ce2273c52d00428da26481834b2dd020348d30a",
+    "member": "evidence/S0-test_audit_lineage.py",
+    "bytes": 40741,
+    "sha256": "582906143f3c740e9889562d7719eb09d236a9107eb8c3df64e1fd46de8e9476"
+   }
+  },
+  "zs1": {
+   "status": "T",
+   "witness": {
+    "kind": "zip-member",
+    "zip_sha256": "e9250d1938bbbd5f607add695ce2273c52d00428da26481834b2dd020348d30a",
+    "member": "evidence/S1-test_audit_lineage.py",
+    "present": true
+   }
+  }
+ },
+ "harvester_sha256": "0f2d486f438682164ab8962863de2f5f1ccca7f7d2736b5de9453ebeea6cb147"
+}

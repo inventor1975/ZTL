@@ -1,0 +1,111 @@
+{
+ "clwr_of": "G-10-ID",
+ "formula": "r_id & r_tree",
+ "formula_sha256": "f889882fcd4617dee5abcb83d8c10462bf5056d70bb987490c73209347d864bc",
+ "marking": {
+  "r_id": {
+   "status": "T",
+   "witness": {
+    "kind": "git-blob",
+    "head": "3308a02ca288c2b95cbf1d56cc53c59a0140390f",
+    "path": "owner-decisions/AUTHORIZE-M1-CLOSURE-ENV-001-CONDITIONAL-R1-001.md",
+    "bytes": 20814,
+    "sha256": "e485d95eaa0416f8ac3c1a7666b3357a21f64d454c8b188f70da5169bc083ad7"
+   }
+  },
+  "r_tree": {
+   "status": "T",
+   "witness": {
+    "kind": "git-commit",
+    "head": "3308a02ca288c2b95cbf1d56cc53c59a0140390f",
+    "expected_tree": "3c7737c7be67a332413e0cf30c41a9f012d397d0",
+    "observed_tree": "3c7737c7be67a332413e0cf30c41a9f012d397d0"
+   }
+  }
+ },
+ "marking_sha256": "a1c39ef56b18b7a0a30f9fb804ec89c6d7b3639662e46b2ea1671570c7a3f290",
+ "status_map_sha256": "685e57829becdcff6e0dec985dd07d779dca009718fa902989b2c9b3239c28a4",
+ "judge_identity": {
+  "judge_pin_id": "M1-EXPERIMENT-JUDGE-PIN-v0.1",
+  "note": "The pinned judge identity is the ZTL repository commit recorded at package freeze plus the kernel module hashes below. Every experimental CLWR must carry this identity (Protocol R-06/R-07). The commit recorded here is the parent of the EFP commit; the EFP commit hash itself is recorded in the package return.",
+  "ztl_repo_commit_at_build": "61a470b41eccf8e57633d0abee7bbc795329a411",
+  "kernel_modules": {
+   "ztl.py": {
+    "bytes": 5335,
+    "sha256": "c15006a5dcd9f06ac6325ab1e8e935556c8c52310883453fd7bf57248c33679e"
+   },
+   "ztljudge.py": {
+    "bytes": 17122,
+    "sha256": "c13cdbf12a344533b58996e39e1f5932df18716af6407f86874b04247273a885"
+   },
+   "zverify.py": {
+    "bytes": 12216,
+    "sha256": "0567b7be5b40c174c42de1a30253a1cc84e73e710913fb2e84a8075b5b4ed1ea"
+   }
+  },
+  "judge_pin_sha256": "cd79148bb9be8d54740c43bdc0e322780b7f884e03b9323d3ac8c0350743e06c"
+ },
+ "verdict_and_disposition": {
+  "verdict": "T",
+  "disposition": "EARNED"
+ },
+ "grade": "hereditary",
+ "weak_links": [],
+ "atom_provenance": {
+  "r_id": {
+   "kind": "git-blob",
+   "head": "3308a02ca288c2b95cbf1d56cc53c59a0140390f",
+   "path": "owner-decisions/AUTHORIZE-M1-CLOSURE-ENV-001-CONDITIONAL-R1-001.md",
+   "bytes": 20814,
+   "sha256": "e485d95eaa0416f8ac3c1a7666b3357a21f64d454c8b188f70da5169bc083ad7"
+  },
+  "r_tree": {
+   "kind": "git-commit",
+   "head": "3308a02ca288c2b95cbf1d56cc53c59a0140390f",
+   "expected_tree": "3c7737c7be67a332413e0cf30c41a9f012d397d0",
+   "observed_tree": "3c7737c7be67a332413e0cf30c41a9f012d397d0"
+  }
+ },
+ "input_artifacts": {
+  "marking_document": {
+   "path": "G-10-ID.marking.json",
+   "bytes": 776,
+   "sha256": "d6476dccd375aeeba815d117ac3a2bc5b9fd1d841eb2ff78797208eda3a01e91"
+  },
+  "formula_set": {
+   "path": "formulas.json",
+   "sha256": "36e8bbdadcf8f24fcca6045916a55abc151583924ef8db5f6f665d4f29ba3dde",
+   "bytes": 59632
+  },
+  "source_anchors": [
+   {
+    "kind": "persisted-artifact",
+    "head": "060efa2cc295e0d7d9960f725aece264fc471935",
+    "path": "stage-m1-closure/01-M1-CLOSURE-OWNER-AUTHORIZATION-REFERENCE.json",
+    "sha256": "f8eb1c8f940470790d4051c70cb19bc3106a3080bd7327133013133bfdeac520",
+    "bytes": 672,
+    "clause": "persisted resolution of this artifact's identity, ratification and persistence events"
+   },
+   {
+    "kind": "accepted-decision-registry",
+    "item_id": "LEDGER-PR-10",
+    "review_id": 4889632543,
+    "accepted_review_token": "ACCEPT_M1_CLOSURE_ENV_001_CONDITIONAL_M1_S2_R1_AUTHORIZATION_001",
+    "note": "accepted coordinate; net-one-file requirement existed only in the relay order — scope atom removed"
+   }
+  ]
+ },
+ "invocation_time": "2026-08-09T06:46:59Z",
+ "judge_context_id": "7c5e980b415e1bcc8bfded855162a83650ca3dab65f5205ef6d3ebee12b2d205",
+ "claim_context_id": "4a389330358b54610b105069ef7fa2a7f8cefbfd3d8d28805bebc0a03f5d6f84",
+ "claim_context_template": {
+  "stipulation_identity": {
+   "kind": "persisted-artifact",
+   "head": "060efa2cc295e0d7d9960f725aece264fc471935",
+   "path": "stage-m1-closure/01-M1-CLOSURE-OWNER-AUTHORIZATION-REFERENCE.json",
+   "sha256": "f8eb1c8f940470790d4051c70cb19bc3106a3080bd7327133013133bfdeac520"
+  },
+  "authority_identity": "Implementer evidence record under owner authorization; accepted by independent review",
+  "institutional_reading_scope": "LEDGER-PR-10: persisted resolution of this artifact's identity, ratification and persistence events"
+ }
+}

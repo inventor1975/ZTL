@@ -1,0 +1,87 @@
+{
+ "clwr_of": "G-11-R1-NINE",
+ "formula": "n9_pop",
+ "formula_sha256": "71ea74fea86178172b01c0a79c561f86dde4101b8398e6d4d5501ca18fac2d3e",
+ "marking": {
+  "n9_pop": {
+   "status": "T",
+   "witness": {
+    "kind": "git-blob",
+    "head": "060efa2cc295e0d7d9960f725aece264fc471935",
+    "path": "stage-m1-closure/evidence/r1/authorized-nine.junit.xml",
+    "population_size": 9
+   }
+  }
+ },
+ "marking_sha256": "628cf2d2df17a21931183ea6f72f9905383c2ae59741b2ccf13a6d21ec4f0906",
+ "status_map_sha256": "8943b36bbb94d707a4c5275ba7ac9da86b92f8aa1506f4da290bcfab640f40c2",
+ "judge_identity": {
+  "judge_pin_id": "M1-EXPERIMENT-JUDGE-PIN-v0.1",
+  "note": "The pinned judge identity is the ZTL repository commit recorded at package freeze plus the kernel module hashes below. Every experimental CLWR must carry this identity (Protocol R-06/R-07). The commit recorded here is the parent of the EFP commit; the EFP commit hash itself is recorded in the package return.",
+  "ztl_repo_commit_at_build": "61a470b41eccf8e57633d0abee7bbc795329a411",
+  "kernel_modules": {
+   "ztl.py": {
+    "bytes": 5335,
+    "sha256": "c15006a5dcd9f06ac6325ab1e8e935556c8c52310883453fd7bf57248c33679e"
+   },
+   "ztljudge.py": {
+    "bytes": 17122,
+    "sha256": "c13cdbf12a344533b58996e39e1f5932df18716af6407f86874b04247273a885"
+   },
+   "zverify.py": {
+    "bytes": 12216,
+    "sha256": "0567b7be5b40c174c42de1a30253a1cc84e73e710913fb2e84a8075b5b4ed1ea"
+   }
+  },
+  "judge_pin_sha256": "cd79148bb9be8d54740c43bdc0e322780b7f884e03b9323d3ac8c0350743e06c"
+ },
+ "verdict_and_disposition": {
+  "verdict": "T",
+  "disposition": "EARNED"
+ },
+ "grade": "hereditary",
+ "weak_links": [],
+ "atom_provenance": {
+  "n9_pop": {
+   "kind": "git-blob",
+   "head": "060efa2cc295e0d7d9960f725aece264fc471935",
+   "path": "stage-m1-closure/evidence/r1/authorized-nine.junit.xml",
+   "population_size": 9
+  }
+ },
+ "input_artifacts": {
+  "marking_document": {
+   "path": "G-11-R1-NINE.marking.json",
+   "bytes": 419,
+   "sha256": "973b655a5183511a02d9019c91964ee7bd3c11ce641d89afe426a07b50736d75"
+  },
+  "formula_set": {
+   "path": "formulas.json",
+   "sha256": "36e8bbdadcf8f24fcca6045916a55abc151583924ef8db5f6f665d4f29ba3dde",
+   "bytes": 59632
+  },
+  "source_anchors": [
+   {
+    "kind": "persisted-artifact",
+    "head": "060efa2cc295e0d7d9960f725aece264fc471935",
+    "path": "owner-decisions/AUTHORIZE-M1-CLOSURE-ENV-001-CONDITIONAL-R1-001.md",
+    "sha256": "e485d95eaa0416f8ac3c1a7666b3357a21f64d454c8b188f70da5169bc083ad7",
+    "bytes": 20814,
+    "clause": "§B6: 'The first scientific command must target exactly these nine IDs and no others' (population stipulated pre-result); §B7: result-bearing = parseable JUnit for the intended population — the observed 8P/1F is ground truth, not a stipulated expectation"
+   }
+  ]
+ },
+ "invocation_time": "2026-08-09T06:46:59Z",
+ "judge_context_id": "453973c1aac075fc588ac726639c26506c179ad5e6388760860959a2d8afce46",
+ "claim_context_id": "5df7c9d4fd4a1e977b808b35463bc2b8f9c9bb144ed54759d5cce3f0cfddfa78",
+ "claim_context_template": {
+  "stipulation_identity": {
+   "kind": "persisted-artifact",
+   "head": "060efa2cc295e0d7d9960f725aece264fc471935",
+   "path": "owner-decisions/AUTHORIZE-M1-CLOSURE-ENV-001-CONDITIONAL-R1-001.md",
+   "sha256": "e485d95eaa0416f8ac3c1a7666b3357a21f64d454c8b188f70da5169bc083ad7"
+  },
+  "authority_identity": "Arkadiy Miteiko, Owner / Design Authority (persisted owner-decision artifact)",
+  "institutional_reading_scope": "LEDGER-PR-11: §B6: 'The first scientific command must target exactly these nine IDs and no others' (population stipulated pre-result); §B7: result-bearing = parseable JUnit for the intended population — the observed 8P/1F is ground truth, not a stipulated expectation"
+ }
+}

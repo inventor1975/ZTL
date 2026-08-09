@@ -1,0 +1,27 @@
+{
+ "gate_id": "G-09-SCOPE",
+ "item_id": "LEDGER-PR-09",
+ "formula": "g_paths & g_tree",
+ "marking": {
+  "g_paths": {
+   "status": "T",
+   "witness": {
+    "kind": "git-tree-diff",
+    "base": "88a81aba060806157c6d3b63f36c0dcd1a99827a",
+    "head": "6bbdaf60dea4ddeeeb820a515fa717083211c2fc",
+    "paths_sha256": "caaad9dc99b5ade81e409fd03e9a58e0c0412bcdf97efe921cf5fb2de93402f4",
+    "n": 219
+   }
+  },
+  "g_tree": {
+   "status": "T",
+   "witness": {
+    "kind": "git-commit",
+    "head": "6bbdaf60dea4ddeeeb820a515fa717083211c2fc",
+    "expected_tree": "2fdd8bcdbe9b856fe5c3fadf78f5c27532ff8e27",
+    "observed_tree": "2fdd8bcdbe9b856fe5c3fadf78f5c27532ff8e27"
+   }
+  }
+ },
+ "harvester_sha256": "0f2d486f438682164ab8962863de2f5f1ccca7f7d2736b5de9453ebeea6cb147"
+}

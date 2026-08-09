@@ -1,0 +1,93 @@
+{
+ "clwr_of": "SEAM-S4-F4-MISLABEL",
+ "formula": "~s4_seam",
+ "formula_sha256": "7e07d38db8f306bb2ec1237204e6b1a81c9297f2b1ff599651d3a5408fe9ecc2",
+ "marking": {
+  "s4_seam": {
+   "status": "T",
+   "witness": {
+    "kind": "git-blob",
+    "head": "060efa2cc295e0d7d9960f725aece264fc471935",
+    "path": "stage-m1-closure/evidence/r1/suite.junit.xml",
+    "regressed": []
+   }
+  }
+ },
+ "marking_sha256": "c3a97bfb76ebb54bb92a08a033efd0ae3f88397c34a6c0d8b6915005f4ab76f7",
+ "status_map_sha256": "e6dce1b31fb0bcf3bf89c9f0db73620a6bfb10a5113112ebfe9237903a70500a",
+ "judge_identity": {
+  "judge_pin_id": "M1-EXPERIMENT-JUDGE-PIN-v0.1",
+  "note": "The pinned judge identity is the ZTL repository commit recorded at package freeze plus the kernel module hashes below. Every experimental CLWR must carry this identity (Protocol R-06/R-07). The commit recorded here is the parent of the EFP commit; the EFP commit hash itself is recorded in the package return.",
+  "ztl_repo_commit_at_build": "61a470b41eccf8e57633d0abee7bbc795329a411",
+  "kernel_modules": {
+   "ztl.py": {
+    "bytes": 5335,
+    "sha256": "c15006a5dcd9f06ac6325ab1e8e935556c8c52310883453fd7bf57248c33679e"
+   },
+   "ztljudge.py": {
+    "bytes": 17122,
+    "sha256": "c13cdbf12a344533b58996e39e1f5932df18716af6407f86874b04247273a885"
+   },
+   "zverify.py": {
+    "bytes": 12216,
+    "sha256": "0567b7be5b40c174c42de1a30253a1cc84e73e710913fb2e84a8075b5b4ed1ea"
+   }
+  },
+  "judge_pin_sha256": "cd79148bb9be8d54740c43bdc0e322780b7f884e03b9323d3ac8c0350743e06c"
+ },
+ "verdict_and_disposition": {
+  "verdict": "F",
+  "disposition": "REFUTED"
+ },
+ "grade": "hereditary",
+ "weak_links": [],
+ "atom_provenance": {
+  "s4_seam": {
+   "kind": "git-blob",
+   "head": "060efa2cc295e0d7d9960f725aece264fc471935",
+   "path": "stage-m1-closure/evidence/r1/suite.junit.xml",
+   "regressed": []
+  }
+ },
+ "input_artifacts": {
+  "marking_document": {
+   "path": "SEAM-S4-F4-MISLABEL.marking.json",
+   "bytes": 414,
+   "sha256": "a7e46f3f0235bfed4a45fc39bdab4f67f945b0e0121d418c22c26a08f67bf7d9"
+  },
+  "formula_set": {
+   "path": "formulas.json",
+   "sha256": "36e8bbdadcf8f24fcca6045916a55abc151583924ef8db5f6f665d4f29ba3dde",
+   "bytes": 59632
+  },
+  "source_anchors": [
+   {
+    "kind": "persisted-artifact",
+    "head": "060efa2cc295e0d7d9960f725aece264fc471935",
+    "path": "stage-m1-closure/12-M1-CLOSURE-R1-ADJUDICATION.json",
+    "sha256": "eac1179f7e80dbc4b7764456c7353d3d88740a0c917d2263bfd0cd13aad77401",
+    "bytes": 256,
+    "clause": "triggered_conditions include F4"
+   },
+   {
+    "kind": "accepted-decision-registry",
+    "item_id": "LEDGER-PR-11",
+    "review_id": 4889786951,
+    "accepted_review_token": "ACCEPT_M1_CLOSURE_EVIDENCE_H1_FALSIFIED_001",
+    "note": "owner ruled F4 NOT_SUSTAINED_AS_LABELED"
+   }
+  ]
+ },
+ "invocation_time": "2026-08-09T06:46:59Z",
+ "judge_context_id": "4d51d1abfc48edb363ac3849b7b15c479356b2abc6b953720b44e0251e3148b2",
+ "claim_context_id": "c143641a5f6303f8fa5a293254275be3d624c00c91bdf310af0ebff0863e686b",
+ "claim_context_template": {
+  "stipulation_identity": {
+   "kind": "experiment-freeze-package",
+   "protocol_commit": "61a470b41eccf8e57633d0abee7bbc795329a411",
+   "seam_gate": "SEAM-S4-F4-MISLABEL"
+  },
+  "authority_identity": "Experiment authority under frozen Protocol v0.1 §22/§28 and the Experiment Freeze Package (steering: V. Reznik). NOT stipulated by the historical institution.",
+  "institutional_reading_scope": "Known-seam evaluation claim: EH-2 detection of the seam bound in seam-detection-mapping.json for SEAM-S4-F4-MISLABEL."
+ }
+}

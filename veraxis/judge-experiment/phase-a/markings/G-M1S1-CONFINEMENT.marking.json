@@ -1,0 +1,24 @@
+{
+ "gate_id": "G-M1S1-CONFINEMENT",
+ "item_id": "LEGACY-M1-S1-PACKAGE",
+ "formula": "zc_ast",
+ "marking": {
+  "zc_ast": {
+   "status": "T",
+   "witness": {
+    "kind": "zip-ast-diff",
+    "zip_sha256": "e9250d1938bbbd5f607add695ce2273c52d00428da26481834b2dd020348d30a",
+    "changed": [
+     "test_currentness_is_unaffected_by_filesystem_tricks",
+     "test_focused_audit_tests_do_not_mutate_the_reviewed_repository",
+     "test_lineage_is_a_single_root_injective_linear_chain",
+     "test_operational_index_validates_and_verifies",
+     "test_supersession_lineage_is_a_single_normalized_graph"
+    ],
+    "hunks": 7,
+    "iso_identical": true
+   }
+  }
+ },
+ "harvester_sha256": "0f2d486f438682164ab8962863de2f5f1ccca7f7d2736b5de9453ebeea6cb147"
+}

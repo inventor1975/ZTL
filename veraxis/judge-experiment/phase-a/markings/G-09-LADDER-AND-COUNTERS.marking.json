@@ -1,0 +1,40 @@
+{
+ "gate_id": "G-09-LADDER-AND-COUNTERS",
+ "item_id": "LEDGER-PR-09",
+ "formula": "l_disp_vocab & l_pytest & l_reruns",
+ "marking": {
+  "l_disp_vocab": {
+   "status": "T",
+   "witness": {
+    "kind": "git-json",
+    "head": "6bbdaf60dea4ddeeeb820a515fa717083211c2fc",
+    "path": "stage-m1-s2-diag/09-M1-S2-DIAG-ADJUDICATION.json",
+    "sha256": "bc79507165efc3ec18fa42623a6cc408c42081ee677b24a1cb143ca3b5f441f0",
+    "value": "ROOT_CAUSE_NARROWED"
+   }
+  },
+  "l_pytest": {
+   "status": "T",
+   "witness": {
+    "kind": "git-json",
+    "head": "6bbdaf60dea4ddeeeb820a515fa717083211c2fc",
+    "path": "stage-m1-s2-diag/03-M1-S2-DIAG-PLAN-AND-COMMAND-MATRIX.json",
+    "sha256": "394dd004f3dcea9c2b3d874d090a14bd55892cab0fe48f84281bfad3bdb79f6d",
+    "field": "pytest_runs",
+    "value": 0
+   }
+  },
+  "l_reruns": {
+   "status": "T",
+   "witness": {
+    "kind": "git-json",
+    "head": "6bbdaf60dea4ddeeeb820a515fa717083211c2fc",
+    "path": "stage-m1-s2-diag/03-M1-S2-DIAG-PLAN-AND-COMMAND-MATRIX.json",
+    "sha256": "394dd004f3dcea9c2b3d874d090a14bd55892cab0fe48f84281bfad3bdb79f6d",
+    "field": "m1_s2_measurement_reruns",
+    "value": 0
+   }
+  }
+ },
+ "harvester_sha256": "0f2d486f438682164ab8962863de2f5f1ccca7f7d2736b5de9453ebeea6cb147"
+}

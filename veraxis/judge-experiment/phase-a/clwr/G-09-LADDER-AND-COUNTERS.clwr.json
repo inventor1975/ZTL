@@ -1,0 +1,127 @@
+{
+ "clwr_of": "G-09-LADDER-AND-COUNTERS",
+ "formula": "l_disp_vocab & l_pytest & l_reruns",
+ "formula_sha256": "3ac23bc49a4a6bedfa0576ba02729bc679156a3c38dcda7a339eaa520daba516",
+ "marking": {
+  "l_disp_vocab": {
+   "status": "T",
+   "witness": {
+    "kind": "git-json",
+    "head": "6bbdaf60dea4ddeeeb820a515fa717083211c2fc",
+    "path": "stage-m1-s2-diag/09-M1-S2-DIAG-ADJUDICATION.json",
+    "sha256": "bc79507165efc3ec18fa42623a6cc408c42081ee677b24a1cb143ca3b5f441f0",
+    "value": "ROOT_CAUSE_NARROWED"
+   }
+  },
+  "l_pytest": {
+   "status": "T",
+   "witness": {
+    "kind": "git-json",
+    "head": "6bbdaf60dea4ddeeeb820a515fa717083211c2fc",
+    "path": "stage-m1-s2-diag/03-M1-S2-DIAG-PLAN-AND-COMMAND-MATRIX.json",
+    "sha256": "394dd004f3dcea9c2b3d874d090a14bd55892cab0fe48f84281bfad3bdb79f6d",
+    "field": "pytest_runs",
+    "value": 0
+   }
+  },
+  "l_reruns": {
+   "status": "T",
+   "witness": {
+    "kind": "git-json",
+    "head": "6bbdaf60dea4ddeeeb820a515fa717083211c2fc",
+    "path": "stage-m1-s2-diag/03-M1-S2-DIAG-PLAN-AND-COMMAND-MATRIX.json",
+    "sha256": "394dd004f3dcea9c2b3d874d090a14bd55892cab0fe48f84281bfad3bdb79f6d",
+    "field": "m1_s2_measurement_reruns",
+    "value": 0
+   }
+  }
+ },
+ "marking_sha256": "409100f2e63af8dfd883b026b17a003ad12a13db1cf9e712806ab8cbb68d074c",
+ "status_map_sha256": "7bad2afe6f31a04131033d67d142c27dc4a3b1c42c4a37a656f38a683b4c7440",
+ "judge_identity": {
+  "judge_pin_id": "M1-EXPERIMENT-JUDGE-PIN-v0.1",
+  "note": "The pinned judge identity is the ZTL repository commit recorded at package freeze plus the kernel module hashes below. Every experimental CLWR must carry this identity (Protocol R-06/R-07). The commit recorded here is the parent of the EFP commit; the EFP commit hash itself is recorded in the package return.",
+  "ztl_repo_commit_at_build": "61a470b41eccf8e57633d0abee7bbc795329a411",
+  "kernel_modules": {
+   "ztl.py": {
+    "bytes": 5335,
+    "sha256": "c15006a5dcd9f06ac6325ab1e8e935556c8c52310883453fd7bf57248c33679e"
+   },
+   "ztljudge.py": {
+    "bytes": 17122,
+    "sha256": "c13cdbf12a344533b58996e39e1f5932df18716af6407f86874b04247273a885"
+   },
+   "zverify.py": {
+    "bytes": 12216,
+    "sha256": "0567b7be5b40c174c42de1a30253a1cc84e73e710913fb2e84a8075b5b4ed1ea"
+   }
+  },
+  "judge_pin_sha256": "cd79148bb9be8d54740c43bdc0e322780b7f884e03b9323d3ac8c0350743e06c"
+ },
+ "verdict_and_disposition": {
+  "verdict": "T",
+  "disposition": "EARNED"
+ },
+ "grade": "hereditary",
+ "weak_links": [],
+ "atom_provenance": {
+  "l_disp_vocab": {
+   "kind": "git-json",
+   "head": "6bbdaf60dea4ddeeeb820a515fa717083211c2fc",
+   "path": "stage-m1-s2-diag/09-M1-S2-DIAG-ADJUDICATION.json",
+   "sha256": "bc79507165efc3ec18fa42623a6cc408c42081ee677b24a1cb143ca3b5f441f0",
+   "value": "ROOT_CAUSE_NARROWED"
+  },
+  "l_pytest": {
+   "kind": "git-json",
+   "head": "6bbdaf60dea4ddeeeb820a515fa717083211c2fc",
+   "path": "stage-m1-s2-diag/03-M1-S2-DIAG-PLAN-AND-COMMAND-MATRIX.json",
+   "sha256": "394dd004f3dcea9c2b3d874d090a14bd55892cab0fe48f84281bfad3bdb79f6d",
+   "field": "pytest_runs",
+   "value": 0
+  },
+  "l_reruns": {
+   "kind": "git-json",
+   "head": "6bbdaf60dea4ddeeeb820a515fa717083211c2fc",
+   "path": "stage-m1-s2-diag/03-M1-S2-DIAG-PLAN-AND-COMMAND-MATRIX.json",
+   "sha256": "394dd004f3dcea9c2b3d874d090a14bd55892cab0fe48f84281bfad3bdb79f6d",
+   "field": "m1_s2_measurement_reruns",
+   "value": 0
+  }
+ },
+ "input_artifacts": {
+  "marking_document": {
+   "path": "G-09-LADDER-AND-COUNTERS.marking.json",
+   "bytes": 1244,
+   "sha256": "ea319f521bd79b3ff7d5cbbe86f7a07fbc9c90a7c6d18be7b2fd161ea6ff9726"
+  },
+  "formula_set": {
+   "path": "formulas.json",
+   "sha256": "36e8bbdadcf8f24fcca6045916a55abc151583924ef8db5f6f665d4f29ba3dde",
+   "bytes": 59632
+  },
+  "source_anchors": [
+   {
+    "kind": "persisted-artifact",
+    "head": "6bbdaf60dea4ddeeeb820a515fa717083211c2fc",
+    "path": "owner-decisions/AUTHORIZE-M1-S2-DIAGNOSTIC-001.md",
+    "sha256": "3fae0fe4bdf8c60761ff9d6c25e5122280b9553f906fbf8f7952130b61d3a321",
+    "bytes": 7570,
+    "clause": "§7: 'Return exactly one: ROOT_CAUSE_IDENTIFIED / ROOT_CAUSE_NARROWED / ROOT_CAUSE_UNRESOLVED / DIAGNOSTIC_BLOCKED'; §5: no pytest, no rerunning authorized-nine — the specific NARROWED value is ground truth"
+   }
+  ]
+ },
+ "invocation_time": "2026-08-09T06:46:59Z",
+ "judge_context_id": "2089a46e5b117b16945102454e5b64358bcef507758e14045e3776ec42a84d05",
+ "claim_context_id": "587144a724207e5b2f57344affccdba89cd4e86d2f01edc81e1b3ddccf071b5b",
+ "claim_context_template": {
+  "stipulation_identity": {
+   "kind": "persisted-artifact",
+   "head": "6bbdaf60dea4ddeeeb820a515fa717083211c2fc",
+   "path": "owner-decisions/AUTHORIZE-M1-S2-DIAGNOSTIC-001.md",
+   "sha256": "3fae0fe4bdf8c60761ff9d6c25e5122280b9553f906fbf8f7952130b61d3a321"
+  },
+  "authority_identity": "Arkadiy Miteiko, Owner / Design Authority (persisted owner-decision artifact)",
+  "institutional_reading_scope": "LEDGER-PR-09: §7: 'Return exactly one: ROOT_CAUSE_IDENTIFIED / ROOT_CAUSE_NARROWED / ROOT_CAUSE_UNRESOLVED / DIAGNOSTIC_BLOCKED'; §5: no pytest, no rerunning authorized-nine — the specific NARROWED value is ground truth"
+ }
+}

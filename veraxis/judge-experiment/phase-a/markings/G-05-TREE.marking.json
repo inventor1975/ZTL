@@ -1,0 +1,17 @@
+{
+ "gate_id": "G-05-TREE",
+ "item_id": "LEDGER-PR-05",
+ "formula": "s_tree",
+ "marking": {
+  "s_tree": {
+   "status": "T",
+   "witness": {
+    "kind": "git-commit",
+    "head": "ecdabc7ba4ca026391f0b64b6d793df67abecc29",
+    "expected_tree": "25f1cdab32b5e21de0e2d73b69a4a3ea10997042",
+    "observed_tree": "25f1cdab32b5e21de0e2d73b69a4a3ea10997042"
+   }
+  }
+ },
+ "harvester_sha256": "0f2d486f438682164ab8962863de2f5f1ccca7f7d2736b5de9453ebeea6cb147"
+}

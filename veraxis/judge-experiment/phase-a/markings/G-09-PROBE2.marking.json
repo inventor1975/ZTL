@@ -1,0 +1,62 @@
+{
+ "gate_id": "G-09-PROBE2",
+ "item_id": "LEDGER-PR-09",
+ "formula": "p2_code & p2_delta & p2_exit & p2_out & p2_err & p_no4",
+ "marking": {
+  "p2_code": {
+   "status": "T",
+   "witness": {
+    "kind": "git-json",
+    "head": "6bbdaf60dea4ddeeeb820a515fa717083211c2fc",
+    "path": "stage-m1-s2-diag/evidence/probes/probe-02.argv.json",
+    "sha256": "156a107015ec0984f8a2fc88aaa033c10880173ce52e1a8225a6651a487e6dd9"
+   }
+  },
+  "p2_delta": {
+   "status": "T",
+   "witness": {
+    "kind": "git-tree",
+    "head": "6bbdaf60dea4ddeeeb820a515fa717083211c2fc",
+    "path": "stage-m1-s2-diag/evidence/probes/probe-02.environment-delta.json",
+    "present": true
+   }
+  },
+  "p2_exit": {
+   "status": "T",
+   "witness": {
+    "kind": "git-tree",
+    "head": "6bbdaf60dea4ddeeeb820a515fa717083211c2fc",
+    "path": "stage-m1-s2-diag/evidence/probes/probe-02.exit-code.txt",
+    "present": true
+   }
+  },
+  "p2_out": {
+   "status": "T",
+   "witness": {
+    "kind": "git-tree",
+    "head": "6bbdaf60dea4ddeeeb820a515fa717083211c2fc",
+    "path": "stage-m1-s2-diag/evidence/probes/probe-02.stdout.txt",
+    "present": true
+   }
+  },
+  "p2_err": {
+   "status": "T",
+   "witness": {
+    "kind": "git-tree",
+    "head": "6bbdaf60dea4ddeeeb820a515fa717083211c2fc",
+    "path": "stage-m1-s2-diag/evidence/probes/probe-02.stderr.txt",
+    "present": true
+   }
+  },
+  "p_no4": {
+   "status": "T",
+   "witness": {
+    "kind": "git-tree",
+    "head": "6bbdaf60dea4ddeeeb820a515fa717083211c2fc",
+    "path": "stage-m1-s2-diag/evidence/probes/probe-04.argv.json",
+    "present": false
+   }
+  }
+ },
+ "harvester_sha256": "0f2d486f438682164ab8962863de2f5f1ccca7f7d2736b5de9453ebeea6cb147"
+}

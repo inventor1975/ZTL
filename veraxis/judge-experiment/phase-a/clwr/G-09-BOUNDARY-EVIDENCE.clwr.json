@@ -1,0 +1,102 @@
+{
+ "clwr_of": "G-09-BOUNDARY-EVIDENCE",
+ "formula": "y_frozen & y_probe",
+ "formula_sha256": "aaf1df7510f8bcb38eae69df79829a380696adaf17bbb8b67f7b64da1deb7787",
+ "marking": {
+  "y_frozen": {
+   "status": "T",
+   "witness": {
+    "kind": "git-tree",
+    "head": "6bbdaf60dea4ddeeeb820a515fa717083211c2fc",
+    "path": "stage-m1-s2-diag/evidence/crash-diagnostics/frozen-m1-s2-stack-boundary.txt",
+    "present": true
+   }
+  },
+  "y_probe": {
+   "status": "T",
+   "witness": {
+    "kind": "git-tree",
+    "head": "6bbdaf60dea4ddeeeb820a515fa717083211c2fc",
+    "path": "stage-m1-s2-diag/evidence/crash-diagnostics/probe-01-stack-boundary.txt",
+    "present": true
+   }
+  }
+ },
+ "marking_sha256": "779473f086f6fc2ad9379015638199fd5380e42eaab6fa24ba74343f981eb262",
+ "status_map_sha256": "aa805af9c3fe5cf4a1d65e0e96b0fea27856be8e909bb879f4c8bca7e5890d47",
+ "judge_identity": {
+  "judge_pin_id": "M1-EXPERIMENT-JUDGE-PIN-v0.1",
+  "note": "The pinned judge identity is the ZTL repository commit recorded at package freeze plus the kernel module hashes below. Every experimental CLWR must carry this identity (Protocol R-06/R-07). The commit recorded here is the parent of the EFP commit; the EFP commit hash itself is recorded in the package return.",
+  "ztl_repo_commit_at_build": "61a470b41eccf8e57633d0abee7bbc795329a411",
+  "kernel_modules": {
+   "ztl.py": {
+    "bytes": 5335,
+    "sha256": "c15006a5dcd9f06ac6325ab1e8e935556c8c52310883453fd7bf57248c33679e"
+   },
+   "ztljudge.py": {
+    "bytes": 17122,
+    "sha256": "c13cdbf12a344533b58996e39e1f5932df18716af6407f86874b04247273a885"
+   },
+   "zverify.py": {
+    "bytes": 12216,
+    "sha256": "0567b7be5b40c174c42de1a30253a1cc84e73e710913fb2e84a8075b5b4ed1ea"
+   }
+  },
+  "judge_pin_sha256": "cd79148bb9be8d54740c43bdc0e322780b7f884e03b9323d3ac8c0350743e06c"
+ },
+ "verdict_and_disposition": {
+  "verdict": "T",
+  "disposition": "EARNED"
+ },
+ "grade": "hereditary",
+ "weak_links": [],
+ "atom_provenance": {
+  "y_frozen": {
+   "kind": "git-tree",
+   "head": "6bbdaf60dea4ddeeeb820a515fa717083211c2fc",
+   "path": "stage-m1-s2-diag/evidence/crash-diagnostics/frozen-m1-s2-stack-boundary.txt",
+   "present": true
+  },
+  "y_probe": {
+   "kind": "git-tree",
+   "head": "6bbdaf60dea4ddeeeb820a515fa717083211c2fc",
+   "path": "stage-m1-s2-diag/evidence/crash-diagnostics/probe-01-stack-boundary.txt",
+   "present": true
+  }
+ },
+ "input_artifacts": {
+  "marking_document": {
+   "path": "G-09-BOUNDARY-EVIDENCE.marking.json",
+   "bytes": 705,
+   "sha256": "f5b1224be6f3d3c8b37b1bd0853ed0d98e0a307f6eb9ac3a32a579076d45cfd7"
+  },
+  "formula_set": {
+   "path": "formulas.json",
+   "sha256": "36e8bbdadcf8f24fcca6045916a55abc151583924ef8db5f6f665d4f29ba3dde",
+   "bytes": 59632
+  },
+  "source_anchors": [
+   {
+    "kind": "persisted-artifact",
+    "head": "6bbdaf60dea4ddeeeb820a515fa717083211c2fc",
+    "path": "owner-decisions/AUTHORIZE-M1-S2-DIAGNOSTIC-001.md",
+    "sha256": "3fae0fe4bdf8c60761ff9d6c25e5122280b9553f906fbf8f7952130b61d3a321",
+    "bytes": 7570,
+    "clause": "§6.F: 'Compare those observations to the frozen crash report' — requires both comparanda preserved; the equality outcome is ground truth"
+   }
+  ]
+ },
+ "invocation_time": "2026-08-09T06:46:59Z",
+ "judge_context_id": "28e0d560705a7ddaf6a1206a84effc007a5bf6044535de7ccaa84ea9fe498c68",
+ "claim_context_id": "cfb3c780e70672472e1f59e8ff159f40b92118cbe8e23265641bb83f471feff2",
+ "claim_context_template": {
+  "stipulation_identity": {
+   "kind": "persisted-artifact",
+   "head": "6bbdaf60dea4ddeeeb820a515fa717083211c2fc",
+   "path": "owner-decisions/AUTHORIZE-M1-S2-DIAGNOSTIC-001.md",
+   "sha256": "3fae0fe4bdf8c60761ff9d6c25e5122280b9553f906fbf8f7952130b61d3a321"
+  },
+  "authority_identity": "Arkadiy Miteiko, Owner / Design Authority (persisted owner-decision artifact)",
+  "institutional_reading_scope": "LEDGER-PR-09: §6.F: 'Compare those observations to the frozen crash report' — requires both comparanda preserved; the equality outcome is ground truth"
+ }
+}

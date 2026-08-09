@@ -1,0 +1,85 @@
+{
+ "clwr_of": "G-04-HEAD",
+ "formula": "t_head",
+ "formula_sha256": "be02e3f55169d350fdbac3d5db559df400bfedf416bc355eb80bf580cceec291",
+ "marking": {
+  "t_head": {
+   "status": "T",
+   "witness": {
+    "kind": "git-commit",
+    "head": "ec66062ed9a63fae77eeb840b766b84162059c69",
+    "tree": "af5ce11bd0618fd10d3678dea705b88b81f666a7"
+   }
+  }
+ },
+ "marking_sha256": "a2b74011cd2fb3571cdd236ea9552f729083c9d1b8c8666a0b0648cf18864556",
+ "status_map_sha256": "bedd1a46621de799b36ff329f64ea39166f567d62b9e0b3cf5a813a9f1b1339a",
+ "judge_identity": {
+  "judge_pin_id": "M1-EXPERIMENT-JUDGE-PIN-v0.1",
+  "note": "The pinned judge identity is the ZTL repository commit recorded at package freeze plus the kernel module hashes below. Every experimental CLWR must carry this identity (Protocol R-06/R-07). The commit recorded here is the parent of the EFP commit; the EFP commit hash itself is recorded in the package return.",
+  "ztl_repo_commit_at_build": "61a470b41eccf8e57633d0abee7bbc795329a411",
+  "kernel_modules": {
+   "ztl.py": {
+    "bytes": 5335,
+    "sha256": "c15006a5dcd9f06ac6325ab1e8e935556c8c52310883453fd7bf57248c33679e"
+   },
+   "ztljudge.py": {
+    "bytes": 17122,
+    "sha256": "c13cdbf12a344533b58996e39e1f5932df18716af6407f86874b04247273a885"
+   },
+   "zverify.py": {
+    "bytes": 12216,
+    "sha256": "0567b7be5b40c174c42de1a30253a1cc84e73e710913fb2e84a8075b5b4ed1ea"
+   }
+  },
+  "judge_pin_sha256": "cd79148bb9be8d54740c43bdc0e322780b7f884e03b9323d3ac8c0350743e06c"
+ },
+ "verdict_and_disposition": {
+  "verdict": "T",
+  "disposition": "EARNED"
+ },
+ "grade": "hereditary",
+ "weak_links": [],
+ "atom_provenance": {
+  "t_head": {
+   "kind": "git-commit",
+   "head": "ec66062ed9a63fae77eeb840b766b84162059c69",
+   "tree": "af5ce11bd0618fd10d3678dea705b88b81f666a7"
+  }
+ },
+ "input_artifacts": {
+  "marking_document": {
+   "path": "G-04-HEAD.marking.json",
+   "bytes": 378,
+   "sha256": "28f5c3db59785280990d8adfdc9ac349ba0f5213b48464ad1ccbaf717e9f15ce"
+  },
+  "formula_set": {
+   "path": "formulas.json",
+   "sha256": "36e8bbdadcf8f24fcca6045916a55abc151583924ef8db5f6f665d4f29ba3dde",
+   "bytes": 59632
+  },
+  "source_anchors": [
+   {
+    "kind": "persisted-artifact",
+    "head": "ecdabc7ba4ca026391f0b64b6d793df67abecc29",
+    "path": "LEDGER-INVARIANTS.md",
+    "sha256": "40f97003724df8cddf45559c11274a39334fef486cef4a44a859f81f67b19e95",
+    "bytes": 4154,
+    "clause": "'Bootstrap acceptance is persisted at ec66062ed9a63fae77eeb840b766b84162059c69' (head recited; tree not recited)"
+   }
+  ]
+ },
+ "invocation_time": "2026-08-09T06:46:59Z",
+ "judge_context_id": "34b204f3a48fda63864c4fc150b11a2019cbf84759c4986ec4af3a0f2d48be6f",
+ "claim_context_id": "e7ae25f0f9e9d837489a79e2c42ec0ab0fbb11109ac30096a8e72ac2b3e65c0f",
+ "claim_context_template": {
+  "stipulation_identity": {
+   "kind": "persisted-artifact",
+   "head": "ecdabc7ba4ca026391f0b64b6d793df67abecc29",
+   "path": "LEDGER-INVARIANTS.md",
+   "sha256": "40f97003724df8cddf45559c11274a39334fef486cef4a44a859f81f67b19e95"
+  },
+  "authority_identity": "Implementer evidence record under owner authorization; accepted by independent review",
+  "institutional_reading_scope": "LEDGER-PR-04: 'Bootstrap acceptance is persisted at ec66062ed9a63fae77eeb840b766b84162059c69' (head recited; tree not recited)"
+ }
+}

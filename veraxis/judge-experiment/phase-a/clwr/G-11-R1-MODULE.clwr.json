@@ -1,0 +1,87 @@
+{
+ "clwr_of": "G-11-R1-MODULE",
+ "formula": "md_coll",
+ "formula_sha256": "790c69b27b9c63d04b058ed0c763cd7fd4b2b0e5d3ab652e4c7ea91dc0593325",
+ "marking": {
+  "md_coll": {
+   "status": "T",
+   "witness": {
+    "kind": "git-blob",
+    "head": "060efa2cc295e0d7d9960f725aece264fc471935",
+    "path": "stage-m1-closure/evidence/r1/module.junit.xml",
+    "collected": 87
+   }
+  }
+ },
+ "marking_sha256": "2ebea7c93e9b0858616bd99d49dc0abb72fc950cc3c21df17cd38ba3e12e9039",
+ "status_map_sha256": "8a8c6d18c292627cb9de0e8615ce9af8f482e4c17eeda8b82b87758c99b6336e",
+ "judge_identity": {
+  "judge_pin_id": "M1-EXPERIMENT-JUDGE-PIN-v0.1",
+  "note": "The pinned judge identity is the ZTL repository commit recorded at package freeze plus the kernel module hashes below. Every experimental CLWR must carry this identity (Protocol R-06/R-07). The commit recorded here is the parent of the EFP commit; the EFP commit hash itself is recorded in the package return.",
+  "ztl_repo_commit_at_build": "61a470b41eccf8e57633d0abee7bbc795329a411",
+  "kernel_modules": {
+   "ztl.py": {
+    "bytes": 5335,
+    "sha256": "c15006a5dcd9f06ac6325ab1e8e935556c8c52310883453fd7bf57248c33679e"
+   },
+   "ztljudge.py": {
+    "bytes": 17122,
+    "sha256": "c13cdbf12a344533b58996e39e1f5932df18716af6407f86874b04247273a885"
+   },
+   "zverify.py": {
+    "bytes": 12216,
+    "sha256": "0567b7be5b40c174c42de1a30253a1cc84e73e710913fb2e84a8075b5b4ed1ea"
+   }
+  },
+  "judge_pin_sha256": "cd79148bb9be8d54740c43bdc0e322780b7f884e03b9323d3ac8c0350743e06c"
+ },
+ "verdict_and_disposition": {
+  "verdict": "T",
+  "disposition": "EARNED"
+ },
+ "grade": "hereditary",
+ "weak_links": [],
+ "atom_provenance": {
+  "md_coll": {
+   "kind": "git-blob",
+   "head": "060efa2cc295e0d7d9960f725aece264fc471935",
+   "path": "stage-m1-closure/evidence/r1/module.junit.xml",
+   "collected": 87
+  }
+ },
+ "input_artifacts": {
+  "marking_document": {
+   "path": "G-11-R1-MODULE.marking.json",
+   "bytes": 409,
+   "sha256": "cec2f0fe9b786aa2e3838829fc23f685fa38f8e0207128b295a2993de9fe600f"
+  },
+  "formula_set": {
+   "path": "formulas.json",
+   "sha256": "36e8bbdadcf8f24fcca6045916a55abc151583924ef8db5f6f665d4f29ba3dde",
+   "bytes": 59632
+  },
+  "source_anchors": [
+   {
+    "kind": "persisted-artifact",
+    "head": "060efa2cc295e0d7d9960f725aece264fc471935",
+    "path": "owner-decisions/AUTHORIZE-M1-CLOSURE-ENV-001-CONDITIONAL-R1-001.md",
+    "sha256": "e485d95eaa0416f8ac3c1a7666b3357a21f64d454c8b188f70da5169bc083ad7",
+    "bytes": 20814,
+    "clause": "§B7: 'tests/test_audit_lineage.py module' executed once, result-bearing; §B2: 'S1 module predecessor: 85P / 2F' stipulates the 87-ID module population pre-result — the observed 84P/3F is ground truth"
+   }
+  ]
+ },
+ "invocation_time": "2026-08-09T06:46:59Z",
+ "judge_context_id": "c59fea972fa77ca82d3db830c43d10c3b1991c51590c0478cdc41e1470a558fc",
+ "claim_context_id": "0047543a02fb5518bf021d031f60f36475ae363c0562866559021b4f08bda17d",
+ "claim_context_template": {
+  "stipulation_identity": {
+   "kind": "persisted-artifact",
+   "head": "060efa2cc295e0d7d9960f725aece264fc471935",
+   "path": "owner-decisions/AUTHORIZE-M1-CLOSURE-ENV-001-CONDITIONAL-R1-001.md",
+   "sha256": "e485d95eaa0416f8ac3c1a7666b3357a21f64d454c8b188f70da5169bc083ad7"
+  },
+  "authority_identity": "Arkadiy Miteiko, Owner / Design Authority (persisted owner-decision artifact)",
+  "institutional_reading_scope": "LEDGER-PR-11: §B7: 'tests/test_audit_lineage.py module' executed once, result-bearing; §B2: 'S1 module predecessor: 85P / 2F' stipulates the 87-ID module population pre-result — the observed 84P/3F is ground truth"
+ }
+}

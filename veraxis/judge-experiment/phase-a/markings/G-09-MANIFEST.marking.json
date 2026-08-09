@@ -1,0 +1,27 @@
+{
+ "gate_id": "G-09-MANIFEST",
+ "item_id": "LEDGER-PR-09",
+ "formula": "n_id & n_acct",
+ "marking": {
+  "n_id": {
+   "status": "T",
+   "witness": {
+    "kind": "git-blob",
+    "head": "6bbdaf60dea4ddeeeb820a515fa717083211c2fc",
+    "path": "stage-m1-s2-diag/12-M1-S2-DIAG-EVIDENCE-MANIFEST.json",
+    "bytes": 69457,
+    "sha256": "b210ee6cccb622d43d47c62c841aad7ab683b40a4ea9c8a3d10c55f55f8651d4"
+   }
+  },
+  "n_acct": {
+   "status": "T",
+   "witness": {
+    "kind": "git-manifest",
+    "head": "6bbdaf60dea4ddeeeb820a515fa717083211c2fc",
+    "manifest": "stage-m1-s2-diag/12-M1-S2-DIAG-EVIDENCE-MANIFEST.json",
+    "detail": "ok"
+   }
+  }
+ },
+ "harvester_sha256": "0f2d486f438682164ab8962863de2f5f1ccca7f7d2736b5de9453ebeea6cb147"
+}

@@ -1,0 +1,29 @@
+{
+ "gate_id": "G-11-ACTIVATION",
+ "item_id": "LEDGER-PR-11",
+ "formula": "act_all & act_auth",
+ "marking": {
+  "act_all": {
+   "status": "T",
+   "witness": {
+    "kind": "git-json",
+    "head": "060efa2cc295e0d7d9960f725aece264fc471935",
+    "path": "stage-m1-closure/05-M1-CLOSURE-PHASE-A-ACTIVATION.json",
+    "sha256": "61bab391e6a4b5204172fdbcac1d823e7ea63d77bb9641cdc95553d4df7a812f",
+    "n": 18
+   }
+  },
+  "act_auth": {
+   "status": "T",
+   "witness": {
+    "kind": "git-json",
+    "head": "060efa2cc295e0d7d9960f725aece264fc471935",
+    "path": "stage-m1-closure/05-M1-CLOSURE-PHASE-A-ACTIVATION.json",
+    "sha256": "61bab391e6a4b5204172fdbcac1d823e7ea63d77bb9641cdc95553d4df7a812f",
+    "field": "phase_b_authority",
+    "value": "ACTIVE_BY_PREAUTHORIZED_CONDITION"
+   }
+  }
+ },
+ "harvester_sha256": "0f2d486f438682164ab8962863de2f5f1ccca7f7d2736b5de9453ebeea6cb147"
+}

@@ -1,0 +1,146 @@
+{
+ "clwr_of": "G-11-ADJUDICATION",
+ "formula": "j_vocab & j_rr & j_ce & j_blocked",
+ "formula_sha256": "178180ca5a078568d826461d7fb74f064c3a64d39387cbc3c19377b569a0e5fa",
+ "marking": {
+  "j_vocab": {
+   "status": "T",
+   "witness": {
+    "kind": "git-json",
+    "head": "060efa2cc295e0d7d9960f725aece264fc471935",
+    "path": "stage-m1-closure/12-M1-CLOSURE-R1-ADJUDICATION.json",
+    "sha256": "eac1179f7e80dbc4b7764456c7353d3d88740a0c917d2263bfd0cd13aad77401",
+    "value": "H1_FALSIFIED_BY_PREREGISTERED_R1"
+   }
+  },
+  "j_rr": {
+   "status": "T",
+   "witness": {
+    "kind": "git-json",
+    "head": "060efa2cc295e0d7d9960f725aece264fc471935",
+    "path": "stage-m1-closure/12-M1-CLOSURE-R1-ADJUDICATION.json",
+    "sha256": "eac1179f7e80dbc4b7764456c7353d3d88740a0c917d2263bfd0cd13aad77401",
+    "field": "r1_reruns",
+    "value": 0
+   }
+  },
+  "j_ce": {
+   "status": "T",
+   "witness": {
+    "kind": "git-json",
+    "head": "060efa2cc295e0d7d9960f725aece264fc471935",
+    "path": "stage-m1-closure/12-M1-CLOSURE-R1-ADJUDICATION.json",
+    "sha256": "eac1179f7e80dbc4b7764456c7353d3d88740a0c917d2263bfd0cd13aad77401",
+    "field": "corrective_edits",
+    "value": 0
+   }
+  },
+  "j_blocked": {
+   "status": "T",
+   "witness": {
+    "kind": "git-json",
+    "head": "060efa2cc295e0d7d9960f725aece264fc471935",
+    "path": "stage-m1-closure/12-M1-CLOSURE-R1-ADJUDICATION.json",
+    "sha256": "eac1179f7e80dbc4b7764456c7353d3d88740a0c917d2263bfd0cd13aad77401",
+    "field": "original_m1_s2",
+    "value": "BLOCKED"
+   }
+  }
+ },
+ "marking_sha256": "1fd1b54e5b066d0b62b37a10e532e78a844adbe535650e139b8518c911938199",
+ "status_map_sha256": "40887513ec4a3a2261f42ea8afd9f276bcd5dd23144260e280beff4929ebf47a",
+ "judge_identity": {
+  "judge_pin_id": "M1-EXPERIMENT-JUDGE-PIN-v0.1",
+  "note": "The pinned judge identity is the ZTL repository commit recorded at package freeze plus the kernel module hashes below. Every experimental CLWR must carry this identity (Protocol R-06/R-07). The commit recorded here is the parent of the EFP commit; the EFP commit hash itself is recorded in the package return.",
+  "ztl_repo_commit_at_build": "61a470b41eccf8e57633d0abee7bbc795329a411",
+  "kernel_modules": {
+   "ztl.py": {
+    "bytes": 5335,
+    "sha256": "c15006a5dcd9f06ac6325ab1e8e935556c8c52310883453fd7bf57248c33679e"
+   },
+   "ztljudge.py": {
+    "bytes": 17122,
+    "sha256": "c13cdbf12a344533b58996e39e1f5932df18716af6407f86874b04247273a885"
+   },
+   "zverify.py": {
+    "bytes": 12216,
+    "sha256": "0567b7be5b40c174c42de1a30253a1cc84e73e710913fb2e84a8075b5b4ed1ea"
+   }
+  },
+  "judge_pin_sha256": "cd79148bb9be8d54740c43bdc0e322780b7f884e03b9323d3ac8c0350743e06c"
+ },
+ "verdict_and_disposition": {
+  "verdict": "T",
+  "disposition": "EARNED"
+ },
+ "grade": "hereditary",
+ "weak_links": [],
+ "atom_provenance": {
+  "j_vocab": {
+   "kind": "git-json",
+   "head": "060efa2cc295e0d7d9960f725aece264fc471935",
+   "path": "stage-m1-closure/12-M1-CLOSURE-R1-ADJUDICATION.json",
+   "sha256": "eac1179f7e80dbc4b7764456c7353d3d88740a0c917d2263bfd0cd13aad77401",
+   "value": "H1_FALSIFIED_BY_PREREGISTERED_R1"
+  },
+  "j_rr": {
+   "kind": "git-json",
+   "head": "060efa2cc295e0d7d9960f725aece264fc471935",
+   "path": "stage-m1-closure/12-M1-CLOSURE-R1-ADJUDICATION.json",
+   "sha256": "eac1179f7e80dbc4b7764456c7353d3d88740a0c917d2263bfd0cd13aad77401",
+   "field": "r1_reruns",
+   "value": 0
+  },
+  "j_ce": {
+   "kind": "git-json",
+   "head": "060efa2cc295e0d7d9960f725aece264fc471935",
+   "path": "stage-m1-closure/12-M1-CLOSURE-R1-ADJUDICATION.json",
+   "sha256": "eac1179f7e80dbc4b7764456c7353d3d88740a0c917d2263bfd0cd13aad77401",
+   "field": "corrective_edits",
+   "value": 0
+  },
+  "j_blocked": {
+   "kind": "git-json",
+   "head": "060efa2cc295e0d7d9960f725aece264fc471935",
+   "path": "stage-m1-closure/12-M1-CLOSURE-R1-ADJUDICATION.json",
+   "sha256": "eac1179f7e80dbc4b7764456c7353d3d88740a0c917d2263bfd0cd13aad77401",
+   "field": "original_m1_s2",
+   "value": "BLOCKED"
+  }
+ },
+ "input_artifacts": {
+  "marking_document": {
+   "path": "G-11-ADJUDICATION.marking.json",
+   "bytes": 1557,
+   "sha256": "0a8c8a4a0c34c0f2fbf557b4ad33b770134e595b2f11c915b46640e15275574c"
+  },
+  "formula_set": {
+   "path": "formulas.json",
+   "sha256": "36e8bbdadcf8f24fcca6045916a55abc151583924ef8db5f6f665d4f29ba3dde",
+   "bytes": 59632
+  },
+  "source_anchors": [
+   {
+    "kind": "persisted-artifact",
+    "head": "060efa2cc295e0d7d9960f725aece264fc471935",
+    "path": "owner-decisions/AUTHORIZE-M1-CLOSURE-ENV-001-CONDITIONAL-R1-001.md",
+    "sha256": "e485d95eaa0416f8ac3c1a7666b3357a21f64d454c8b188f70da5169bc083ad7",
+    "bytes": 20814,
+    "clause": "§B7-B8: disposition vocabulary {H1_SUPPORTED_BY_PREREGISTERED_R1, H1_FALSIFIED_BY_PREREGISTERED_R1, BLOCKED_INFRASTRUCTURE}; §9: no R1 rerun, no retry-until-green; §B1: 'The original M1-S2 remains permanently BLOCKED' — all pre-result; the specific FALSIFIED value is ground truth"
+   }
+  ]
+ },
+ "invocation_time": "2026-08-09T06:46:59Z",
+ "judge_context_id": "271f3b5f6f05346621659e671f7b2a570c1b974ac380c742a9109df59b7d1e19",
+ "claim_context_id": "f5fad2daaafad1bd0c85b3cc1bfb7b96646697c5d70361310100b56f2f22ac46",
+ "claim_context_template": {
+  "stipulation_identity": {
+   "kind": "persisted-artifact",
+   "head": "060efa2cc295e0d7d9960f725aece264fc471935",
+   "path": "owner-decisions/AUTHORIZE-M1-CLOSURE-ENV-001-CONDITIONAL-R1-001.md",
+   "sha256": "e485d95eaa0416f8ac3c1a7666b3357a21f64d454c8b188f70da5169bc083ad7"
+  },
+  "authority_identity": "Arkadiy Miteiko, Owner / Design Authority (persisted owner-decision artifact)",
+  "institutional_reading_scope": "LEDGER-PR-11: §B7-B8: disposition vocabulary {H1_SUPPORTED_BY_PREREGISTERED_R1, H1_FALSIFIED_BY_PREREGISTERED_R1, BLOCKED_INFRASTRUCTURE}; §9: no R1 rerun, no retry-until-green; §B1: 'The original M1-S2 remains permanently BLOCKED' — all pre-result; the specific FALSIFIED value is ground truth"
+ }
+}

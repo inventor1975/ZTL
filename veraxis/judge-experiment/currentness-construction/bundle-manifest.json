@@ -1,0 +1,24 @@
+{
+ "manifest_id": "CURRENTNESS-CONSTRUCTION-BLOCKED-BUNDLE-MANIFEST-v0.1",
+ "manifest_self_inclusion": false,
+ "members": [
+  {
+   "path": "00-CONSTRUCTION-BLOCKED-RETURN.md",
+   "bytes": 6425,
+   "sha256": "222f0d3a5998dc77899b0b3d61d8e7ac874d4ecc3882f97f1971aaad1f25709c",
+   "sha512": "85f5a0ec85e774e5228da56d1a29c513e0404015e0bdc136f985880b256b120bd881bd8def5ad4f44f3af9ed5dc9daebdc9e50ac1ab5fdbc9bc0673365323574"
+  },
+  {
+   "path": "blocked-cases.json",
+   "bytes": 6384,
+   "sha256": "3129be52ae7aa127219ad60993c8270b5fed88561591bc79ef66783f0b7268c3",
+   "sha512": "9b60fa2890d4ab21e36518f339aca30ad4333538954c64f627c3d09ad5bf20bfdb71aae02b12d9bba274b58da9305e66087d6a31b501e2d4e3a6a15290c0dd60"
+  },
+  {
+   "path": "search-evidence.txt",
+   "bytes": 2378,
+   "sha256": "c644d32a1a4a66792b2b1524777e94cb3725dfff179bdb13072ecc557c8afe35",
+   "sha512": "4045f6caa2e5bad7d727bd7b91ac1538f9da6db1c62f05bccf626a6dccbd3e59e6ac84945d063f75da1e503811ff8e950f4822553cba3920a279954a4ef394b0"
+  }
+ ]
+}

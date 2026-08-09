@@ -1,0 +1,39 @@
+# EXACT REPRODUCIBLE CODE-SEARCH EVIDENCE — executable currentness/reliance substrate
+# frozen EFP commit (accepted): 673a8854e68d03f0cc30655b168343cf47887e0f  tree c02c5b1e1078aef385908c1ab64cad077bbe9b12
+# generated under construction authority (A); no execution; no capability added
+
+## (1) EFP evaluator inventory (efp/*.py) — bytes + sha256
+   40456  524da4c2b57552e44822268eb8cfa34f2fd3ee5b3bf5ab4ecb8219afdc1e6f20  efp/build_formulas.py
+    2780  99894763a51df07e4834333d9fd777f71373a21a1d280b958354bf91f88862d5  efp/enumerate_mutations.py
+    4953  f52fd4b67ce338c7ddcf3fbf1ac80ea96011779d0abc9ed5986f78019d9bcee7  efp/evaluate.py
+   15971  0f2d486f438682164ab8962863de2f5f1ccca7f7d2736b5de9453ebeea6cb147  efp/harvester.py
+    1932  bfa9b7a5ac7f343fa2b3b366935cee8bb690c1de1cdb20a2112959a83bcaf63b  efp/package_integrity.py
+    1124  c61506c0b9722d66f03739e40b8697a1b3ea721f1c5a07764068fc6c0b6b1ac3  efp/provenance_audit.py
+
+## (2) evaluate.py docstring — declares CLWR-only role (R-06/R-07/R-15)
+"""Phase A evaluator — emits one R-06/R-07/R-15-conformant CLWR per gate.
+
+PROHIBITED for result-bearing use before EXPERIMENT_FREEZE_PACKAGE_ACCEPTED=true.
+
+Usage: evaluate.py <markings_dir> <formulas.json> <judge-pin.json> <claim-context-templates.json> <out_dir>
+
+Canonicalization (frozen): canon(obj) = json.dumps(obj, sort_keys=True,
+separators=(",", ":")) encoded UTF-8. formula_sha256 = SHA-256 of the exact
+formula string (UTF-8). marking_sha256 = SHA-256 of canon(marking-status-map).
+JudgeContext identity = SHA-256 of canon({formula_sha256, marking_sha256,
+
+## (3) grep in evaluate.py for institutional-currentness/reliance/lifecycle terms
+$ grep -niE 'issuance|reliance|current.?status|lifecycle|supersed|revocation|R-26|R-17' veraxis/judge-experiment/efp/evaluate.py
+(no matches)
+
+## (4) grep across ALL efp/*.py
+$ grep -rilE 'issuance|reliance|current.?status|lifecycle|supersed' veraxis/judge-experiment/efp/*.py
+(no files match)
+
+## (5) grep repo-wide (*.py + *.json) for an executable R-26/R-17 currentness/reliance carrier
+$ grep -rilE 'issuance|reliance|current.?status|R-26|R-17' veraxis/ --include=*.py --include=*.json
+(no files match outside preregistration docs)
+
+## (6) evaluate.py imports — only ztljudge kernel (logical), no institutional layer
+16:import hashlib, json, os, sys, time
+19:from ztljudge import judge  # the pinned kernel

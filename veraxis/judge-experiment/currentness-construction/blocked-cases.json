@@ -1,0 +1,138 @@
+{
+ "artifact_id": "OIC-ZTL-OAM-CURRENTNESS-CONSTRUCTION-BLOCKED-v0.1",
+ "authority": {
+  "construction_authority": "CONTINUE_FOR_BLOCKED_FINDING_ONLY",
+  "execution_authority": "NONE"
+ },
+ "frozen_stack_under_test": "EFP executable Phase-A substrate as preregistered",
+ "alternate_runtime_substrate": "NONE",
+ "governing_preregistration": {
+  "version": "v0.2",
+  "bytes": 12585,
+  "sha256": "5c8c4bb337cba02f34df54d90d485f2cab324e01e9bf5856c4f551aa8a29fb3d",
+  "commit": "61772f78b98f009f93c01a21ded7a64c3d35ff19"
+ },
+ "frozen_efp": {
+  "commit": "673a8854e68d03f0cc30655b168343cf47887e0f",
+  "tree": "c02c5b1e1078aef385908c1ab64cad077bbe9b12"
+ },
+ "protocol_anchors": {
+  "commit": "61a470b41eccf8e57633d0abee7bbc795329a411",
+  "R-26": "current status fail-closed from issuance terms AND lifecycle events (revocation/supersession/correction)",
+  "R-17": "reliance requires ACTIVE issuance at the reliance event (D2)",
+  "R-08": "CLWRs immutable; corrections are new records",
+  "R-25": "markings immutable; correction only via successor markings; predecessor preserved",
+  "R-15": "load-bearing references resolve to content hashes"
+ },
+ "sole_evaluator": {
+  "file": "efp/evaluate.py",
+  "bytes": 4953,
+  "sha256": "f52fd4b67ce338c7ddcf3fbf1ac80ea96011779d0abc9ed5986f78019d9bcee7",
+  "emits": "one R-06/R-07/R-15-conformant CLWR per gate",
+  "imports": "ztljudge.judge (pinned logical kernel) only"
+ },
+ "system_finding": "The frozen executable Phase-A substrate implements logical-warrant evaluation but does not implement the institutional-currentness, issuance, reliance, and lifecycle execution required to operationalize Protocol R-26/R-17. Constructing executable CURRENTNESS cases would therefore require adding the capability under test.",
+ "representability": {
+  "design": "PRESENT",
+  "executable_in_frozen_substrate": "ABSENT",
+  "the_gap_is_the_finding": true,
+  "not_an_architecture_failure": "architecture already requires the property; the Phase-A executable boundary does not yet reach it",
+  "not_a_measured_detection_failure": true,
+  "not_characterized_as_stronger_A3": true,
+  "characterization": "an earlier structural boundary: no executable carrier of the property the preregistration set out to measure"
+ },
+ "executable_currentness_case_denominator": 0,
+ "cases": [
+  {
+   "case_id": "C1",
+   "class": "LATEST_CORRECTION_REMOVED",
+   "construction_disposition": "BLOCKED_CASE_CONSTRUCTION",
+   "reason": "EXECUTABLE_CURRENTNESS_RELIANCE_SUBSTRATE_ABSENT",
+   "primary_seam_under_test": "OIC currentness / OAM state binding",
+   "case_spec_status": "NON_EXECUTABLE_PREREGISTERED_CASE_SPEC",
+   "case_spec_ref": "preregistration v0.2 §7",
+   "executable_instance_constructed": false,
+   "lifecycle_schema_invented": false,
+   "case_executed": false,
+   "detection": null,
+   "containment": null,
+   "observed_first_failing_layer": null,
+   "discipline_note": "construction failure is not a detection/containment result; outcome fields intentionally unset"
+  },
+  {
+   "case_id": "C2",
+   "class": "PRE_WITHDRAWAL_STATE_RESTORED",
+   "construction_disposition": "BLOCKED_CASE_CONSTRUCTION",
+   "reason": "EXECUTABLE_CURRENTNESS_RELIANCE_SUBSTRATE_ABSENT",
+   "primary_seam_under_test": "OAM import / state binding, and ZTL input currentness",
+   "case_spec_status": "NON_EXECUTABLE_PREREGISTERED_CASE_SPEC",
+   "case_spec_ref": "preregistration v0.2 §7",
+   "executable_instance_constructed": false,
+   "lifecycle_schema_invented": false,
+   "case_executed": false,
+   "detection": null,
+   "containment": null,
+   "observed_first_failing_layer": null,
+   "discipline_note": "construction failure is not a detection/containment result; outcome fields intentionally unset"
+  },
+  {
+   "case_id": "C3",
+   "class": "SUPERSEDED_OIC_PACK_RESTORED",
+   "construction_disposition": "BLOCKED_CASE_CONSTRUCTION",
+   "reason": "EXECUTABLE_CURRENTNESS_RELIANCE_SUBSTRATE_ABSENT",
+   "primary_seam_under_test": "OIC currentness",
+   "case_spec_status": "NON_EXECUTABLE_PREREGISTERED_CASE_SPEC",
+   "case_spec_ref": "preregistration v0.2 §7",
+   "executable_instance_constructed": false,
+   "lifecycle_schema_invented": false,
+   "case_executed": false,
+   "detection": null,
+   "containment": null,
+   "observed_first_failing_layer": null,
+   "discipline_note": "construction failure is not a detection/containment result; outcome fields intentionally unset"
+  },
+  {
+   "case_id": "C4",
+   "class": "RELIED_UPON_TO_CORRECTED_SUFFIX_TRUNCATED",
+   "construction_disposition": "BLOCKED_CASE_CONSTRUCTION",
+   "reason": "EXECUTABLE_CURRENTNESS_RELIANCE_SUBSTRATE_ABSENT",
+   "primary_seam_under_test": "VEIP reliance gate, and ZTL input currentness",
+   "case_spec_status": "NON_EXECUTABLE_PREREGISTERED_CASE_SPEC",
+   "case_spec_ref": "preregistration v0.2 §7",
+   "executable_instance_constructed": false,
+   "lifecycle_schema_invented": false,
+   "case_executed": false,
+   "detection": null,
+   "containment": null,
+   "observed_first_failing_layer": null,
+   "discipline_note": "construction failure is not a detection/containment result; outcome fields intentionally unset"
+  },
+  {
+   "case_id": "C5",
+   "class": "HISTORICALLY_VALID_STATE_PRESENTED_AS_CURRENT",
+   "construction_disposition": "BLOCKED_CASE_CONSTRUCTION",
+   "reason": "EXECUTABLE_CURRENTNESS_RELIANCE_SUBSTRATE_ABSENT",
+   "primary_seam_under_test": "presentation / report currentness",
+   "case_spec_status": "NON_EXECUTABLE_PREREGISTERED_CASE_SPEC",
+   "case_spec_ref": "preregistration v0.2 §7",
+   "executable_instance_constructed": false,
+   "lifecycle_schema_invented": false,
+   "case_executed": false,
+   "detection": null,
+   "containment": null,
+   "observed_first_failing_layer": null,
+   "discipline_note": "construction failure is not a detection/containment result; outcome fields intentionally unset"
+  }
+ ],
+ "successor_workstream": {
+  "id": "OAM-EXEC-CURRENTNESS-001",
+  "status": "NOT_STARTED",
+  "not_authorized_here": true,
+  "note": "implement R-26/R-17 behind the OAM semantic gate against a real lifecycle/reliance substrate under separate authorization; not via repair or substitution of this experiment"
+ },
+ "cdc_state": {
+  "semantic_implementation_gate": "BLOCKED",
+  "runtime_execution": "NOT_AUTHORIZED",
+  "sar05_not_a_substitute": "SAR-05 audit-lineage current/superseded report selection does not establish present institutional authority or reliance"
+ }
+}

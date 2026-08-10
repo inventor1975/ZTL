@@ -1,6 +1,6 @@
 # The Gettier Case File: Knowledge as an Earned Verdict
 
-**Draft, 2026-08-10. English edition.**
+**v1.0 — 2026-08-10. English edition.**
 
 *Vitaly Reznik (curator), with AI participation — see Acknowledgements.*
 
@@ -122,12 +122,12 @@ What has changed after the hearing? The word "justification," which epistemology
 
 The text, code and measurements were prepared in co-authorship with an AI (Claude Fable 5, Anthropic; Variant A — the human sets the tasks, verifies, and answers for the result). Curator — Vitaly Reznik. Instruments: ZTL (concept DOI 10.5281/zenodo.21318981), the modules `ztljudge` and `zpassport` (E18), the reference bench `zgettier.py` (E36), and the ZTLStudio web interface.
 
-## References (sketch; to be finalized at typesetting)
+## References
 
 1. Gettier, E. Is Justified True Belief Knowledge? *Analysis* 23 (1963), 121–123.
-2. Artemov, S. The Logic of Justification. *The Review of Symbolic Logic* 1:4 (2008), 477–513. — §10 (the formalization of Case I; Comment 10.5), §10.5 (the streamlined case), §11 (inconsistency under factivity), §4 (Red Barn), §2.4 (the temporal boundary).
+2. Artemov, S. The Logic of Justification. *The Review of Symbolic Logic* 1:4 (2008), 477–513. doi:10.1017/S1755020308090060. — §10 (the formalization of Case I; Comment 10.5), §10.5 (the streamlined case), §11 (inconsistency under factivity), §4 (Red Barn), §2.4 (the temporal boundary).
 3. Williamson, T. A Note on Gettier Cases in Epistemic Logic. *Philosophical Studies* 172 (2015), 129–140.
-4. Williamson, T. Gettier Cases in Epistemic Logic. *Inquiry* (2013).
+4. Williamson, T. Gettier Cases in Epistemic Logic. *Inquiry* 56:1 (2013), 1–14.
 5. Floridi, L. On the Logical Unsolvability of the Gettier Problem. *Synthese* 142 (2004), 61–79.
 6. Goldman, A. Discrimination and Perceptual Knowledge. *The Journal of Philosophy* 73 (1976), 771–791.
 7. Goldman, A. A Causal Theory of Knowing. *The Journal of Philosophy* 64 (1967), 335–372.
@@ -135,7 +135,7 @@ The text, code and measurements were prepared in co-authorship with an AI (Claud
 9. Lehrer, K., Paxson, T. Knowledge: Undefeated Justified True Belief. *The Journal of Philosophy* 66 (1969), 1–22.
 10. Chisholm, R. *Theory of Knowledge*. Prentice-Hall, 1966.
 11. Reznik, V. ZTL — Zero-Trust Logic. Zenodo, DOI 10.5281/zenodo.21318981 (v1.3, 2026).
-12. Reznik, V. The Paradox Docket. (in preparation; the genre predecessor of this paper.)
+12. Reznik, V. The Paradox Docket: A Computable Classification of the Classical Paradoxes. Zenodo, DOI 10.5281/zenodo.21864082 (v1.0, 2026). — the genre predecessor of this paper.
 
 ## Appendix A. The reference run
 

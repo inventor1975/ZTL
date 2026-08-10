@@ -45,9 +45,8 @@ from znum import EARNED, CREDIT, INF, qty, compare          # noqa: E402
 
 # ------------------------------------------------------------ sheet parsing
 _QTY = re.compile(
-    r"^(?P<name>\w+)\s*=\s*(?:\[(?P<lo>-?[\d.]+|-inf)\s*,\s*(?P<hi>[\d.]+|inf)\]"
-    r"|(?P<point>-?[\d.]+)|(?P<unk>\?))\s*"
-    r"(?:(?P<prov>earned|credit)(?::(?P<wit>[\w.-]+))?)?$")
+    r"^(?P<name>\w+)=(?:\[(?P<lo>-?[\d.]+|-inf),(?P<hi>[\d.]+|inf)\]"
+    r"|(?P<point>-?[\d.]+)|(?P<unk>\?))$")
 _CMP = re.compile(r"(<=|>=|==|<|>)")
 
 
@@ -75,16 +74,31 @@ def parse_quantities(text):
             cur += c
     parts.append(cur)
     for part in filter(None, (p.strip() for p in parts)):
-        m = _QTY.match(part)
+        m = _QTY.match(part.split()[0]) if part.split() else None
         if m and (m.group("lo") or m.group("point") or m.group("unk")):
-            prov = EARNED if m.group("prov") == "earned" else CREDIT
             if m.group("unk"):
                 lo, hi = -INF, INF
             elif m.group("point") is not None:
                 lo = hi = _num(m.group("point"))
             else:
                 lo, hi = _num(m.group("lo")), _num(m.group("hi"))
-            quantities[m.group("name")] = qty(lo, hi, prov, m.group("wit"))
+            # trailing tokens: discreteness | provenance | unit (free order)
+            prov, wit, discrete, unit = CREDIT, None, None, None
+            for tok in part.split()[1:]:
+                if tok == "int":
+                    discrete = "int"
+                elif re.match(r"^decimal\d+$", tok):
+                    discrete = ("decimal", int(tok[7:]))
+                elif tok.startswith("earned"):
+                    prov = EARNED
+                    _, _, w = tok.partition(":")
+                    wit = w or None
+                elif tok == "credit":
+                    prov = CREDIT
+                else:
+                    unit = tok
+            quantities[m.group("name")] = qty(lo, hi, prov, wit,
+                                              discrete=discrete, unit=unit)
         else:
             name, _, val = part.partition("=")
             if val.strip().upper() in ("T", "F", "Z"):

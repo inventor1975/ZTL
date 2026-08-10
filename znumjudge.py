@@ -181,18 +181,20 @@ def judge_sheet_claim(formula, quantities, marks):
         disposition = "ON CREDIT"
 
     next_check = []
-    # numeric atoms still Z that the core lists as unverified: their cure
-    # is narrowing whichever used quantity is still wide
-    for n in natoms:
-        if numeric[n]["verdict"] == "Z" and n in core["unverified"]:
-            for q in numeric[n]["used"]:
-                if quantities[q]["lo"] != quantities[q]["hi"]:
-                    next_check.append(f"measure {q}")
+    # §21 discipline: once the verdict is hereditary, remaining checks buy
+    # nothing — measure/verify cures are offered only while the claim is
+    # still open or riding credit; document cures always accompany credit
+    if disposition in ("OPEN", "ON CREDIT"):
+        for n in natoms:
+            if numeric[n]["verdict"] == "Z" and n in core["unverified"]:
+                for q in numeric[n]["used"]:
+                    if quantities[q]["lo"] != quantities[q]["hi"]:
+                        next_check.append(f"measure {q}")
+        for a in core["unverified"]:
+            if a not in natoms:
+                next_check.append(f"verify {a}")
     for q in credit_quantities:
         next_check.append(f"document {q}")
-    for a in core["unverified"]:
-        if a not in natoms:
-            next_check.append(f"verify {a}")
 
     return {"formula": formula, "core_formula": core_formula.strip(),
             "numeric_atoms": numeric, "core": core,

@@ -72,7 +72,7 @@ Measured: the sheep — `['s1']` against `['s2']`, empty intersection; the coins
 
 **The passport axis.** Run the honestly-marked sheep through the passport office: `s1 → INPUT`, `s2 → INPUT`, `B → DOWNSTREAM (conditional)` — the refusal is inherited, the culprits named. After the world's correction — everything GROUNDED. And not a single PARADOX cell. In *Docket* terms: **the Gettier file is not a paradox but a conditional refusal with a named culprit, whom the naive agent walked past customs.** The judge and the passport office are two axes of one core, and they agree.
 
-![**Two Roads of Truth.** The town is the belief B; the bridge road is the justification s1 ("what I see is a sheep" — below it, the dog); the hill road past the grazing sheep is s2, the road the truth actually came by. The traveler plants his EARNED flag on the bridge. The carriers do not intersect: truth arrived by a different road than the justification.](figures/gettier-fig2-two-roads.png)
+![**Two Roads of Truth.** The castle is the belief B. The road of justification — s1, "what I see is a sheep" — breaks off into the void: the bridge is down, the planks float in the river, and the dog he actually saw watches from the far slope. The traveler plants his EARNED flag one step from the gap. The truth reached B by the other road — s2, past the grazing sheep. The carriers do not intersect: truth arrived by a different road than the justification.](figures/gettier-fig2-two-roads.png)
 
 ## 5. The honest frame: who cut this before us
 

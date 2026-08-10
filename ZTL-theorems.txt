@@ -1,7 +1,7 @@
 ZTL — the theorem inventory
 ============================================================
 
-371 theorems across 21 modules, all on the empty axiom list.
+405 theorems across 26 modules, all on the empty axiom list.
 
 Every theorem below is machine-checked by the Lean 4 kernel
 on the EMPTY axiom list (no Classical.choice, no Quot.sound,
@@ -446,4 +446,48 @@ inventory/axiom_audit.py, which re-checks every line in CI.
     ZEps.eps_witness_denotes
     ZEps.iota_eps_split
     ZEps.eps_axiom_instance
+
+## Plato_Equality.lean  (9)
+    Plato.deficiency_universal_absurd
+    Plato.injective_imp_deficiency
+    Plato.deficiency_imp_injective
+    Plato.deficiency_fails_discrete
+    Plato.le_zero_eq
+    Plato.exact_is_approx_zero
+    Plato.standard_from_deviation
+    Plato.third_man
+    Plato.no_grounded_regress
+
+## Plato_Conservativity.lean  (5)
+    PlatoConservativity.bears_preserved
+    PlatoConservativity.app_preserved
+    PlatoConservativity.old_injective
+    PlatoConservativity.ground_is_fresh
+    PlatoConservativity.extension_grounded
+
+## Hume_Guillotine.lean  (4)
+    HumeGuillotine.facts_preserved
+    HumeGuillotine.ought_underdetermined
+    HumeGuillotine.bridge_delivers
+    HumeGuillotine.bridge_necessary
+
+## Cogito_Conservativity.lean  (5)
+    CogitoConservativity.thinking_preserved
+    CogitoConservativity.bearer_underdetermined
+    CogitoConservativity.occurrence_exists
+    CogitoConservativity.bridge_delivers
+    CogitoConservativity.bridge_necessary
+
+## ZNum.lean  (11)
+    reads_mono
+    forcedLE_hereditary
+    forcedNotLE_hereditary
+    forcedLT_hereditary
+    forcedNotLT_hereditary
+    forcedEQ_hereditary
+    forcedNE_hereditary
+    endpoint_narrows
+    narrows_trans
+    reads_exists
+    decorrelation_witness
 

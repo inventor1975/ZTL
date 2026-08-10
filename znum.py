@@ -135,16 +135,37 @@ def judge_claim(kind, e1, e2, quantities):
         disp = "ON CREDIT"
     else:
         disp = "EARNED" if v == "T" else "REFUTED"
-    # carriers: a quantity is load-bearing if degrading it changes the verdict
-    carriers = []
+    # carriers, SPLIT BY AXIS (F3 continued): each axis degrades separately,
+    # so next_check can say WHICH cure the quantity needs.
+    #   interval carrier:   widening the interval to full ignorance (its own
+    #                       provenance kept) changes the verdict -> MEASURE it;
+    #   provenance carrier: the verdict is forced and stays forced, but this
+    #                       quantity's CREDIT bounds are what the claim rides
+    #                       on -> DOCUMENT it (witness converts the claim
+    #                       from ON CREDIT toward EARNED).
+    interval_carriers = []
     for name in sorted(used):
         degraded = dict(quantities)
-        degraded[name] = qty(-INF, INF, CREDIT)
+        degraded[name] = qty(-INF, INF, quantities[name]["prov"])
         if compare(kind, e1, e2, degraded)[0] != v:
-            carriers.append(name)
+            interval_carriers.append(name)
+    provenance_carriers = []
+    if v in ("T", "F"):
+        # a credit quantity is a provenance carrier iff witnessing it (alone)
+        # removes it from the pedigree the forced verdict rides on
+        for name in sorted(ped):
+            healed = dict(quantities)
+            healed[name] = dict(quantities[name], prov=EARNED)
+            _, ped2, _ = compare(kind, e1, e2, healed)
+            if ped2 == ped - {name}:
+                provenance_carriers.append(name)
     return {"verdict": v, "interval_axis": interval_axis,
             "provenance_axis": prov_axis, "credit_pedigree": sorted(ped),
-            "disposition": disp, "carriers": carriers}
+            "disposition": disp, "interval_carriers": interval_carriers,
+            "provenance_carriers": provenance_carriers,
+            "next_check": (
+                [f"measure {n}" for n in interval_carriers if v == "Z"]
+                + [f"document {n}" for n in provenance_carriers])}
 
 
 # ============================================================== the bench
@@ -183,10 +204,12 @@ def sec2_claims_sheet():
          "budget": qty(5000, 5000, EARNED, "order-o4")}
     smeta = judge_claim("le", ("sum", ["line1", "line2", "line3"]), "budget", q)
     print(f"   smeta: sum(lines) <= budget -> {smeta['disposition']}, "
-          f"weak link {smeta['credit_pedigree']}, carriers {smeta['carriers']}")
+          f"weak link {smeta['credit_pedigree']}")
+    print(f"     next_check: {smeta['next_check']}")
     assert smeta["disposition"] == "ON CREDIT"
     assert smeta["credit_pedigree"] == ["line3"]
-    assert "line3" in smeta["carriers"]
+    assert smeta["provenance_carriers"] == ["line3"]   # cure: DOCUMENT line3
+    assert smeta["next_check"] == ["document line3"]   # not "measure" anything
     # the same claim after the witness arrives:
     q2 = dict(q); q2["line3"] = qty(1800, 1800, EARNED, "invoice-19")
     assert judge_claim("le", ("sum", ["line1", "line2", "line3"]),
@@ -245,8 +268,10 @@ def sec3_theorem_hunt():
     assert revocations == 0, "the bet is DEAD — record the counterexample"
     print("   THE BET STANDS on this grid: narrowing is monotone, a forced")
     print("   verdict is hereditary BY ONE PASS — no m-1 enumeration needed.")
-    print("   (Honest boundary: measured on an integer grid, depth <= 3,")
-    print("   two quantities; a structural Lean proof remains future work.)")
+    print("   (Kernel half: lean/ZNum.lean proves it STRUCTURALLY for every")
+    print("   expression, marking and narrowing chain — readings semantics,")
+    print("   empty axiom list; division excluded there by the grammar and")
+    print("   measured here instead.)")
 
 
 def sec4_seam_with_the_judge():

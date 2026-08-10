@@ -36,11 +36,42 @@ EARNED, CREDIT = "earned", "credit"
 
 
 # ------------------------------------------------------------- quantities
-def qty(lo, hi, provenance=CREDIT, witness=None):
-    """A quantity: interval [lo, hi] + provenance of its bounds."""
+def qty(lo, hi, provenance=CREDIT, witness=None, discrete=None, unit=None):
+    """A quantity: interval [lo, hi] + provenance of its bounds + TYPE.
+
+    The type is a FORMALIZATION commitment, not knowledge: it filters the
+    READING SET (readings = lattice(discrete) ∩ [lo, hi]) and needs no
+    witness; expire never touches it. `discrete`: None (continuous
+    rationals), "int", or ("decimal", k) — the lattice of multiples of
+    10^-k. `unit`: a name ("candies", "RUB") or None (dimensionless).
+    The declared bounds are tightened to the lattice at construction; an
+    EMPTY reading set is a formalization error (E_EMPTY_DOMAIN), never a
+    vacuous verdict."""
     assert lo <= hi
     assert provenance in (EARNED, CREDIT)
-    return {"lo": lo, "hi": hi, "prov": provenance, "witness": witness}
+    step = _step(discrete)
+    if step is not None:
+        tlo = lo if lo == -INF else math.ceil(lo / step - 1e-12) * step
+        thi = hi if hi == INF else math.floor(hi / step + 1e-12) * step
+        if tlo > thi:
+            raise ValueError(
+                f"E_EMPTY_DOMAIN: no {discrete} reading in [{lo}, {hi}]")
+        lo, hi = tlo, thi
+    return {"lo": lo, "hi": hi, "prov": provenance, "witness": witness,
+            "discrete": discrete, "unit": unit}
+
+
+def _step(discrete):
+    """Lattice step of a discreteness type; None = continuous."""
+    if discrete == "int":
+        return 1
+    if isinstance(discrete, tuple) and discrete[0] == "decimal":
+        return 10 ** (-discrete[1])
+    return None
+
+
+def _on_lattice(value, step):
+    return abs(value / step - round(value / step)) < 1e-9
 
 
 def bare(x):
@@ -66,34 +97,69 @@ def _iv_div(a, b):
     return _iv_mul(a, inv)
 
 
-def ev(expr, quantities):
-    """Evaluate an expression to (interval | None, credit_pedigree, atoms).
+def _unify_units(u1, u2, ctx):
+    """Dimensionless (None) unifies with anything; named units must match
+    for additive/comparative contexts — a mismatch is a FORMALIZATION
+    error (E_UNIT), caught before any verdict."""
+    if u1 is None:
+        return u2
+    if u2 is None or u1 == u2:
+        return u1
+    raise ValueError(f"E_UNIT: cannot {ctx} '{u1}' with '{u2}'")
 
-    Occurrences decorrelated (F1): every leaf reads its quantity's whole
-    interval independently — Moore arithmetic, the lazy register.
-    Credit pedigree flows pessimistically: one CREDIT operand infects the
-    result; the pedigree names the infecting quantities (future carriers).
-    """
+
+def _ev(expr, quantities):
+    """Rich evaluator: (interval|None, pedigree, used, lattice_step, unit).
+    Discreteness is tracked exactly through +, -, *, sum (integer lattices
+    are closed there) and is dropped at division — a conservative
+    over-approximation: derived-expression verdicts may stay Z where a
+    finer analysis could refute, but a forced verdict is never wrong."""
     if isinstance(expr, (int, float)):
-        return (expr, expr), set(), set()
+        step = 1 if float(expr).is_integer() else None
+        return (expr, expr), set(), set(), step, None
     if isinstance(expr, str):
         q = quantities[expr]
         pedigree = {expr} if q["prov"] == CREDIT else set()
-        return (q["lo"], q["hi"]), pedigree, {expr}
+        return ((q["lo"], q["hi"]), pedigree, {expr},
+                _step(q.get("discrete")), q.get("unit"))
     op, *args = expr
     if op == "sum":
-        iv, ped, used = (0, 0), set(), set()
+        iv, ped, used, step, unit = (0, 0), set(), set(), 1, None
         for a in args[0]:
-            r, p, u = ev(a, quantities)
+            r, p, u, st, un = _ev(a, quantities)
+            unit = _unify_units(unit, un, "add")
             if r is None:
-                return None, ped | p, used | u
+                return None, ped | p, used | u, None, unit
+            step = st if step is None or st is None else (
+                st if st == step else None)
             iv, ped, used = _iv_add(iv, r), ped | p, used | u
-        return iv, ped, used
-    (ra, pa, ua), (rb, pb, ub) = ev(args[0], quantities), ev(args[1], quantities)
+        return iv, ped, used, step, unit
+    ra, pa, ua, sa, una = _ev(args[0], quantities)
+    rb, pb, ub, sb, unb = _ev(args[1], quantities)
+    ped, used = pa | pb, ua | ub
+    if op in ("add", "sub"):
+        unit = _unify_units(una, unb, "add")
+        step = sa if sa == sb else None
+    elif op == "mul":
+        unit = una if unb is None else (unb if una is None else f"{una}·{unb}")
+        step = 1 if sa == 1 and sb == 1 else None
+    else:  # div
+        unit = (None if una == unb else
+                una if unb is None else
+                f"{una or '1'}/{unb}")
+        step = None
     if ra is None or rb is None:
-        return None, pa | pb, ua | ub
+        return None, ped, used, step, unit
     f = {"add": _iv_add, "sub": _iv_sub, "mul": _iv_mul, "div": _iv_div}[op]
-    return f(ra, rb), pa | pb, ua | ub
+    return f(ra, rb), ped, used, step, unit
+
+
+def ev(expr, quantities):
+    """Public 3-tuple view (interval | None, credit_pedigree, atoms) —
+    unchanged contract; see _ev for types. Occurrences decorrelated (F1);
+    credit pedigree flows pessimistically."""
+    iv, ped, used, _, _ = _ev(expr, quantities)
+    return iv, ped, used
 
 
 # ---------------------------------------------------- comparisons -> atoms
@@ -101,8 +167,9 @@ def compare(kind, e1, e2, quantities):
     """A numeric atom. Verdict by the generating principle over intervals:
     T if forced under every reading, F if the negation is forced, else Z.
     Returns (verdict, credit_pedigree, quantities_read)."""
-    r1, p1, u1 = ev(e1, quantities)
-    r2, p2, u2 = ev(e2, quantities)
+    r1, p1, u1, s1, un1 = _ev(e1, quantities)
+    r2, p2, u2, s2, un2 = _ev(e2, quantities)
+    _unify_units(un1, un2, "compare")     # unit mismatch = E_UNIT, pre-verdict
     ped, used = p1 | p2, u1 | u2
     if r1 is None or r2 is None:
         return "Z", ped, used             # undefined subterm: mark, not verdict
@@ -113,6 +180,11 @@ def compare(kind, e1, e2, quantities):
     elif kind == "eq":                     # equality within exactness (§13:
         d = _iv_sub(r1, r2)                # only forced equality is earned)
         v = "T" if d == (0, 0) else ("F" if d[0] > 0 or d[1] < 0 else "Z")
+        if v == "Z":                       # lattice miss: an int-typed side
+            for sa, rb in ((s1, r2), (s2, r1)):   # can never equal a point
+                if sa is not None and rb[0] == rb[1] \
+                        and not _on_lattice(rb[0], sa):
+                    v = "F"                # off the lattice: forced false
     else:
         raise ValueError(kind)
     return v, ped, used

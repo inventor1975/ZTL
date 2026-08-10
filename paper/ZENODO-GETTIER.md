@@ -1,5 +1,9 @@
 # Zenodo upload sheet — The Gettier Case File v1.0
 
+**PUBLISHED 2026-08-10: DOI 10.5281/zenodo.21877469** (relations used:
+Derived from 10.5281/zenodo.21318981; References 10.5281/zenodo.21864082 —
+note: `isRelatedTo` is not in the Zenodo/DataCite vocabulary).
+
 ## Title
 
 The Gettier Case File: Knowledge as an Earned Verdict

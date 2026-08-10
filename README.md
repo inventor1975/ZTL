@@ -66,6 +66,13 @@ verdicts with warranties, quarantine passports, stipulation options.
 `python3 tool/ztlstudio.py` → http://localhost:8190 (no dependencies;
 without GROQ_API_KEY it runs in pro mode — write ZFL by hand).
 
+Companion papers, both built on this core: **The Paradox Docket** — a
+computable classification of the classical paradoxes (`zclassify.py`, E35;
+DOI [10.5281/zenodo.21864082](https://doi.org/10.5281/zenodo.21864082)),
+and **The Gettier Case File** — knowledge as an earned verdict
+(`zgettier.py`, E36; DOI
+[10.5281/zenodo.21877469](https://doi.org/10.5281/zenodo.21877469)).
+
 The specification and all design decisions are in `SPEC.md`; the
 preprint is `paper/ZTL-draft_1.3.md` —
 **published on Zenodo, latest v1.3

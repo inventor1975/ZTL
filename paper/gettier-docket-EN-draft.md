@@ -1,6 +1,6 @@
 # The Gettier Case File: Knowledge as an Earned Verdict
 
-**v1.0 — 2026-08-10. English edition.**
+**v1.0 — 2026-08-10. English edition. Published on Zenodo: DOI [10.5281/zenodo.21877469](https://doi.org/10.5281/zenodo.21877469).**
 
 *Vitaly Reznik. AI participation disclosed — see Acknowledgements.*
 

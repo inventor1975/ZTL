@@ -128,7 +128,10 @@ _KINDMAP = {"<=": ("le", False), "<": ("lt", False), "==": ("eq", False),
 def extract_comparisons(formula, quantities):
     """Replace each comparison in the formula with a fresh atom nc<i>;
     return (core_formula, {atom: (kind, e1, e2)})."""
-    atoms, out, i = {}, formula, 0
+    # the implication arrow contains '>', which is NOT a comparison:
+    # normalize '->' to the core's unicode arrow before extraction
+    # (bug found by the curator's question "if 4 > 3 then 5 > 3?")
+    atoms, out, i = {}, formula.replace("->", "→"), 0
     # a comparison = maximal operator-free chunk containing a _CMP sign
     pattern = re.compile(r"[\w.+\-*\s(),]+?(?:<=|>=|==|<|>)[\w.+\-*\s(),]+")
     while True:

@@ -22,7 +22,7 @@ Preprint
 
 ## Authors
 
-Reznik, Vitaly (ORCID as in previous uploads)
+Reznik, Vitaly — ORCID 0009-0002-4103-6387
 
 ## Description (paste into Zenodo)
 

@@ -23,7 +23,8 @@ Sheet line format (extends ztljudge's ledger format):
     formula     propositional over comparisons and plain atoms:
                 sum(a,b) <= c & deadline_ok
                 operators: & | ~ -> ^ =  (the core's own), comparisons:
-                <= < >= > ==  over +, -, *, sum(...), numbers, quantities
+                <= < >= > ==  over +, -, *, /, sum(...), numbers, quantities
+                (a divisor whose interval spans 0 makes the atom Z, §25 echo)
     quantities  name=1000 earned:ref | name=[lo,hi] credit | name=? credit
                 (=? means no bounds at all: (-inf, inf));
                 plain atoms keep ztljudge marks: atom=T / atom=F
@@ -101,7 +102,8 @@ def _parse_arith(s, quantities):
     if m:
         return ("sum", [_parse_arith(a, quantities)
                         for a in m.group("args").split(",")])
-    for op, tag in (("+", "add"), ("-", "sub"), ("*", "mul")):
+    _TAG = {"+": "add", "-": "sub", "*": "mul", "/": "div"}
+    for level in (("+",), ("-",), ("*", "/")):   # * and / share one tier
         depth = 0
         for i in range(len(s) - 1, 0, -1):      # rightmost, outside parens
             c = s[i]
@@ -109,8 +111,8 @@ def _parse_arith(s, quantities):
                 depth += 1
             elif c == "(":
                 depth -= 1
-            elif c == op and depth == 0:
-                return (tag, _parse_arith(s[:i], quantities),
+            elif c in level and depth == 0:
+                return (_TAG[c], _parse_arith(s[:i], quantities),
                         _parse_arith(s[i + 1:], quantities))
     if s.startswith("(") and s.endswith(")"):
         return _parse_arith(s[1:-1], quantities)
@@ -133,7 +135,7 @@ def extract_comparisons(formula, quantities):
     # (bug found by the curator's question "if 4 > 3 then 5 > 3?")
     atoms, out, i = {}, formula.replace("->", "→"), 0
     # a comparison = maximal operator-free chunk containing a _CMP sign
-    pattern = re.compile(r"[\w.+\-*\s(),]+?(?:<=|>=|==|<|>)[\w.+\-*\s(),]+")
+    pattern = re.compile(r"[\w.+\-*/\s(),]+?(?:<=|>=|==|<|>)[\w.+\-*/\s(),]+")
     while True:
         m = pattern.search(out)
         if not m:

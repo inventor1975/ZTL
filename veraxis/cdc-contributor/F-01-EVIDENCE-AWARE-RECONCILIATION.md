@@ -43,10 +43,29 @@ traceability supplement §D), never the current state. Currentness:
 `5 × BLOCKED_CASE_CONSTRUCTION`, `EXECUTABLE_DENOMINATOR = 0`, no
 pass/fail/measurement.
 
-## 2. EXTERNAL_NOVELTY_CEILING — fixed from F-03D + owner adjudications
+## 2. EXTERNAL_PUBLISHED_CLAIM_PRIOR_ART_CEILING — fixed from F-03D + owner adjudications
 
-Withdrawn (established or heavily anticipated in reviewed SOTA — XACML,
-VC 2.0, Catala, SACM, sovereign-boundary/broker lines, records-management
+**Epistemic class of the whole external track (owner correction 2026-08-10):
+`EXTERNAL_PUBLISHED_CLAIM_AND_SPECIFICATION_ANALYSIS`** — papers, standards/
+specifications, formal models, reported architectures, author-reported
+implementations/results. It is NOT independently verified competing-system
+capability evidence. Rules: paper reports capability ≠ capability
+independently verified; reported benchmark ≠ independently reproduced;
+open-source repo exists ≠ property demonstrated. Per-neighbor
+`external_evidence_class` vocabulary: `CONCEPTUAL_PRIOR_ART` ·
+`FORMAL_SPECIFICATION` · `REPORTED_ARCHITECTURE` · `REPORTED_IMPLEMENTATION`
+· `INSPECTABLE_IMPLEMENTATION` · `INDEPENDENTLY_REPRODUCED_CAPABILITY` ·
+`OBSERVED_OPERATIONAL_DEPLOYMENT`; no source promoted above its established
+class. Mandatory statuses:
+
+```
+EXTERNAL_IMPLEMENTATION_STATUS = NOT_SYSTEMATICALLY_ASSESSED
+EXTERNAL_INDEPENDENT_REPRODUCTION_STATUS = NOT_ASSESSED
+```
+
+Withdrawn as novelty (established or heavily anticipated in the reviewed
+published-claim corpus — XACML, VC 2.0, Catala, SACM, CXI,
+sovereign-boundary/broker lines, Hohfeld formalizations, records-management
 lineage):
 
 ```
@@ -57,17 +76,23 @@ GENERAL_WARRANT_VS_AUTHORITY_NOVELTY = WITHDRAWN
 ADVERSE_EVIDENCE_NON_PROMOTION_NOVELTY = WITHDRAWN
 ```
 
-Survived (residual core, still exposed to falsification):
+Residual published-claim prior-art statuses (normalized — the `SURVIVES`
+shorthand is superseded and must not be used):
 
 ```
-S2_INSTITUTIONAL_MEANING_ADMISSION = SURVIVES_REVIEWED_SOTA_WITH_STRONG_PARTIAL_NEIGHBORS
-T1_SEMANTIC_CONSERVATION_ACROSS_HETEROGENEOUS_IMPLEMENTATION_SUBSTITUTION = SURVIVES_REVIEWED_SOTA
-S2_PLUS_T1 = SURVIVES_REVIEWED_SOTA
+S2_PUBLISHED_CLAIM_PRIOR_ART_STATUS = STRONG_PARTIAL_NEIGHBORS_FOUND;
+  NO_REVIEWED_PUBLICATION_OR_SPECIFICATION_DOCUMENTS_FULL_S2_TEST_SATISFACTION
+T1_PUBLISHED_CLAIM_PRIOR_ART_STATUS = SEMANTIC_PRESERVATION_PRIOR_ART_FOUND;
+  NO_REVIEWED_PUBLICATION_OR_SPECIFICATION_DOCUMENTS_T1_TEST_SATISFACTION_ACROSS_HETEROGENEOUS_IMPLEMENTATION_SUBSTITUTION
+S2_PLUS_T1 = NO_FULL_DOCUMENTED_MATCH_FOUND_IN_REVIEWED_CORPUS
 NOVELTY_FINDING = NOT_CLAIMED
 ```
 
-Canonical formulation: **overall comparative surface was narrowed; residual
-core survived.** The residual proposition: the system treats institutionally
+We do NOT assert "no working system can do this"; we assert only "no full
+documented match was found in the reviewed published claim/specification
+corpus." Canonical formulation: **the comparative surface was narrowed; in
+the reviewed corpus no full documented match to the residual core was
+found.** The residual proposition: the system treats institutionally
 admitted meaning as a distinct computational state and requires that state's
 *meaning* — not merely its bytes — to remain conserved across heterogeneous
 implementation change.

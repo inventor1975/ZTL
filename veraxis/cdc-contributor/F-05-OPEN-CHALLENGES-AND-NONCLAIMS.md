@@ -59,18 +59,44 @@ External (F-03D SOTA challenge records; owner-adjudicated):
   `VC_2_0 = STRONG_PARTIAL_EQUIVALENT` under the 8-point S2
   operationalization (the reviewed spec does not establish the
   source→candidate-represented-meaning→institutional-admission/refusal
-  transition). **OPEN WORK carried forward:** state and defend the exact
-  deltas — (i) admitted content that is not a claim about a subject;
+  transition). **OPEN WORK carried forward:** the three candidate deltas —
+  (i) admitted content that is not a claim about a subject;
   (ii) conservation of admitted content under transformation;
-  (iii) downstream reliance correction on supersession. If none survives
-  scrutiny, S2 is withdrawn and only T1 retained.
+  (iii) downstream reliance correction on supersession — are retained as
+  **challenge probes: secondary discriminators, not exhaustive necessary
+  conditions for retaining S2.** Withdrawal condition (owner-controlled):
+  **S2 is withdrawn only if a reviewed source documents full satisfaction
+  of the controlling eight-point S2 test, or if the S2 operationalization
+  itself is invalidated.**
 - `SCR-17` (MEDIUM): definition-precedence must be verifiable, not
-  asserted — **CLOSED: frozen A–E coordinates published**: freeze commit
-  `973f9eba2dfe410efdadad132ce2348d3875e302` (2026-08-10, public repository
-  `inventor1975/ZTL`, `veraxis/cdc-contributor/`), file SHA-256s in
-  `00-A-E-FREEZE-MANIFEST.md`; S2/T1 operational tests are stated in the
-  owner delta and F-03D. A third party can verify precedence and apply the
-  tests without trusting either party.
+  asserted — **`SCR-17 = PARTIALLY_CLOSED`**:
+
+  ```
+  BYTE_IDENTITY = VERIFIED
+  PUBLIC_FREEZE_COORDINATE = VERIFIED
+  CURRENT_DEFINITION_CONTENT = VERIFIED
+  PRE_SOTA_PUBLIC_DEFINITION_PRECEDENCE = NOT_YET_INDEPENDENTLY_ESTABLISHED
+  ```
+
+  What the freeze commit `973f9eba2dfe410efdadad132ce2348d3875e302`
+  (2026-08-10, public `inventor1975/ZTL`, `veraxis/cdc-contributor/`, file
+  SHA-256s in `00-A-E-FREEZE-MANIFEST.md`) proves: exact bytes, public
+  coordinates, current definition content — from its own timestamp onward.
+  What it does not prove: that the frozen definitions were independently
+  timestamped **before** the start of the external SOTA review.
+  **Historical-object search performed (2026-08-10, measurement not
+  assumption):** repository history before 2026-08-10 contains no commit
+  carrying the A–E definitional content (content search over all branches:
+  zero hits; `cdc-contributor/` first exists at `973f9eb`); no Zenodo or
+  other immutable publication of A–E exists; local file mtimes and
+  party-held transmission receipts are not independent timestamps. Nearest
+  existing public precursor: Protocol v0.1, commit
+  `61a470b41eccf8e57633d0abee7bbc795329a411` (pushed public 2026-08-09) —
+  admission/issuance/reliance/currentness semantics; a conceptual
+  precursor, NOT the frozen A–E/S2/T1 definitions. Nothing retrospective
+  was created. The precedence line therefore stays honestly
+  OPEN/PARTIAL; this does not affect S2/T1 retention — we simply do not
+  assert proven public precedence.
 
 ## 3. Nonclaims (binding on all public wording)
 

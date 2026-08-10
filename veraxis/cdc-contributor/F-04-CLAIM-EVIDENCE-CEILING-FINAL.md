@@ -69,7 +69,8 @@ preservation as generic properties) is binding on final wording.
   meaning→institutional-admission/refusal transition (owner S2 8-point
   operationalization controls). SCR-16 candidate deltas (non-subject-claim
   content; conservation under transformation; reliance correction on
-  supersession) remain open work, carried in F-05.
+  supersession) remain open challenge probes — secondary discriminators,
+  not exhaustive necessary conditions — carried in F-05.
 - EXTERNAL_VERIFIED_SYSTEM_CAPABILITY: `NOT_ASSESSED`.
 - FINAL_PERMITTED_CLAIM: OIC is designed as the boundary at which
   institutionally admitted meaning is represented, recorded and versioned;
@@ -155,8 +156,8 @@ preservation as generic properties) is binding on final wording.
   inputs; role alone is insufficient."
 - EXTERNAL_PUBLISHED_CLAIM_PRIOR_ART_CEILING: standing as a general
   principle — novelty withdrawn (attribute/role/context authorization =
-  established art, XACML et al.); the specific 10-tuple institutional
-  standing model remains design-level architecture.
+  established art, XACML et al.); the frozen bounded institutional-standing
+  relation remains design-level architecture.
 - EXTERNAL_VERIFIED_SYSTEM_CAPABILITY: `NOT_ASSESSED`.
 - FINAL_PERMITTED_CLAIM: The OPEN model defines institutional standing as a
   bounded, non-transitive relation computed from the listed inputs; role

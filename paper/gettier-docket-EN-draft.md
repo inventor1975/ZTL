@@ -42,7 +42,7 @@ To the judge we add one measurement — **carriers**: the verified atoms the dis
 
 The second instrument is the passport office (`zpassport`, E18), familiar to readers of the *Docket*: it counts the classical solutions of a system of definitions and issues a passport of refusal — PARADOX (refusal forever), INTRINSIC (the verdict is forced), UNDERDETERMINED (a blank awaiting a decree), INPUT (until verification), DOWNSTREAM (refusal inherited; culprits named). In this paper it sits in the acquitting role: its job is to show that the Gettier file contains *no paradox*.
 
-> *[FIGURE 1 — here. "The Admission Customs." A checkpoint in front of the courthouse. A queue of atom-characters carrying witness-suitcases. An atom with an honest witness (stamp: "witness matches") passes into the hall marked T. An atom whose suitcase holds a witness *about something else* (a sheep silhouette instead of a sheep) is turned by the inspector to the bench marked Z — "until verification." Caption: "Gettier's fraud happens here — before any logic."]*
+![**The Admission Customs.** A queue of atoms with witness-suitcases before the court. A genuine witness passes toward the hall marked T; a suitcase holding only a sheep-shaped silhouette — a witness about something else — is turned to the waiting bench marked Z, "until verification." Gettier's fraud happens here, before any logic.](figures/gettier-fig1-customs.png)
 
 ## 3. Three floors: the case is heard
 
@@ -72,7 +72,7 @@ Measured: the sheep — `['s1']` against `['s2']`, empty intersection; the coins
 
 **The passport axis.** Run the honestly-marked sheep through the passport office: `s1 → INPUT`, `s2 → INPUT`, `B → DOWNSTREAM (conditional)` — the refusal is inherited, the culprits named. After the world's correction — everything GROUNDED. And not a single PARADOX cell. In *Docket* terms: **the Gettier file is not a paradox but a conditional refusal with a named culprit, whom the naive agent walked past customs.** The judge and the passport office are two axes of one core, and they agree.
 
-> *[FIGURE 2 — here. "Two Roads of Truth." A map. On the left, the town "Belief B." Two roads lead to it. The upper one, "the road of justification," crosses the bridge s1 — drawn collapsed (a sign under it: "dog"). The lower one, "the road of the world," crosses the hill s2 — intact; that is the road the truth came by. The naive agent stands on the collapsed bridge holding an EARNED flag. Caption: "The carriers do not intersect: truth arrived by a different road than the justification."]*
+![**Two Roads of Truth.** The town is the belief B; the bridge road is the justification s1 ("what I see is a sheep" — below it, the dog); the hill road past the grazing sheep is s2, the road the truth actually came by. The traveler plants his EARNED flag on the bridge. The carriers do not intersect: truth arrived by a different road than the justification.](figures/gettier-fig2-two-roads.png)
 
 ## 5. The honest frame: who cut this before us
 
@@ -96,7 +96,7 @@ A census that does not know its own borders is just one more total theory; we re
 
 **Outside the jurisdiction entirely:** the lottery paradox (probability), the sorites (vagueness), the knowability paradox (second-order modality), experimental philosophy (whose intuitions count). Some of these families are covered by other instruments of the ZTL corpus; some by no one.
 
-> *[FIGURE 3 — here. "The Group Photo, by Axes." Four enclosures. "EARNED, carriers match" (green) — the honest observer with the sheep. "EARNED, Gettier signature" (red) — Smith with the coins and the watcher on the collapsed bridge; above the pen a blinking sign: "carriers disjoint." "OPEN — knowledge not claimed" (blue) — the gated agent calmly awaiting verification. Beyond a fence labeled "different jurisdiction" — Henry against a backdrop of cardboard façades. Caption: "The warranty court: who was acquitted, who was caught, who was not tried."]*
+![**The Group Photo, by Axes.** Left enclosure — honest knowledge: the shepherd with a real sheep (EARNED, carriers match). Middle — the Gettier pen: the clerk with his coins (EARNED, carriers disjoint). Right — the gated agent, calmly waiting (OPEN, knowledge not claimed). Beyond the fence, a different jurisdiction: Henry before a row of cardboard barn façades.](figures/gettier-fig3-group-photo.png)
 
 ## 7. Don't believe it — press the button
 

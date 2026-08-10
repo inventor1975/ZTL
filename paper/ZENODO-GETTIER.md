@@ -59,10 +59,12 @@ https://github.com/inventor1975/ZTL; the appendix is the verbatim output of
 the bench at the publication commit. The interactive studio
 (https://ztl.vitalyreznik.com) runs the same core in the browser.
 
-AI disclosure: the text, code and measurements were prepared in
-co-authorship with an AI (Claude Fable 5, Anthropic; Variant A — the human
-sets the tasks, verifies, and answers for the result). Curator: Vitaly
-Reznik.
+AI disclosure: this work was carried out with the substantial
+participation of the AI system Claude Fable 5 (Anthropic) under the
+Variant A collaboration model — the human sets the tasks, verifies the
+results, and answers for the content. Per COPE/ICMJE recommendations the
+AI system is not listed as an author; the human author bears full
+responsibility.
 
 ## Keywords
 

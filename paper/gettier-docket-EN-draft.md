@@ -2,7 +2,7 @@
 
 **v1.0 — 2026-08-10. English edition.**
 
-*Vitaly Reznik (curator), with AI participation — see Acknowledgements.*
+*Vitaly Reznik. AI participation disclosed — see Acknowledgements.*
 
 ---
 
@@ -120,7 +120,7 @@ What has changed after the hearing? The word "justification," which epistemology
 
 ## Acknowledgements and disclosure
 
-The text, code and measurements were prepared in co-authorship with an AI (Claude Fable 5, Anthropic; Variant A — the human sets the tasks, verifies, and answers for the result). Curator — Vitaly Reznik. Instruments: ZTL (concept DOI 10.5281/zenodo.21318981), the modules `ztljudge` and `zpassport` (E18), the reference bench `zgettier.py` (E36), and the ZTLStudio web interface.
+This work was carried out with the substantial participation of the AI system Claude Fable 5 (Anthropic) in a dialogue setting, under the Variant A collaboration model: the human — in this project's vocabulary, the curator — sets the tasks, verifies the results, and answers for the content. In accordance with COPE/ICMJE recommendations, the AI system is not listed as an author; the human author bears full responsibility. The reliability of the results does not depend on trusting the AI: every claim re-checks via the repository code. Instruments: ZTL (concept DOI 10.5281/zenodo.21318981), the modules `ztljudge` and `zpassport` (E18), the reference bench `zgettier.py` (E36), and the ZTLStudio web interface.
 
 ## References
 

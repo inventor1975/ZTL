@@ -5,9 +5,9 @@ One page, four columns, every number produced by `python3 zledger.py`
 
 | | |
 |---|---|
-| **Shared** | On Z-free markings ZTL **is** classical logic: 2906 formulas × 4 verified markings, **0 divergences**. Verify everything and the classical machine is back untouched. |
+| **Shared** | On Z-free markings ZTL **is** classical logic. Not sampled — **proved**: `lean/ClassicalAgreement.lean`, `evalF_agrees`, structural induction over the whole formula language, empty axiom list. (The 2906 × 4 measurement that preceded it stands as the sanity check.) |
 | **Lost** | As a system of laws we are strictly weaker: 12 classical laws alive, **14 fallen** (`audit.py`) — both De Morgans, contraposition, `¬¬p = p`, excluded middle, `p → p`, idempotence. In the depth-2 pool: 584 classical tautologies, **212** ours. |
-| **Gained (laws)** | **Zero, and provably so.** A ZTL tautology holds under every marking, hence under the Z-free ones, where we are classical — so our validities are a subset by construction. This column can never fill. |
+| **Gained (laws)** | **Zero, and now machine-checked:** `ztl_taut_is_classical` — every ZTL tautology is a classical one, for every formula, empty axiom list. And the inclusion is **strict** (`not_conversely`: `p → p` is classically valid and fails here at a mark), so "conservative" never reads as "the same logic". This column can never fill. |
 | **Gained (sight)** | Classical logic sorts two-variable formulas into **16** equivalence classes; we sort them into **195**, and **all 16** classical classes are split. Twelvefold refinement: same truths, finer eyes. |
 | **Only here** | `¬(p ↔ p)` answers F, F, **T** on T, F, Z — the mark is sayable *inside the object language*. A two-valued logic has no words for the question, not merely no proof. |
 

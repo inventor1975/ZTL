@@ -223,6 +223,86 @@ def sec4_are_we_unique(kin, ours):
     print("   mirror sin of granting truth that is not.")
 
 
+def sec5_the_periodic_table():
+    print("-" * 72)
+    print("5. THE TABLE: which property combinations exist at all")
+    keys = ["C", "MP", "ORD", "ID", "NOCREDIT", "CONTRA", "DT"]
+    seen = {}
+    for t in all_arrows():
+        pr = profile(t)
+        seen.setdefault(tuple(pr[k] for k in keys), 0)
+        seen[tuple(pr[k] for k in keys)] += 1
+    print(f"   conceivable profiles: {2 ** len(keys)};  realized by some "
+          f"arrow: {len(seen)}")
+    print("   In an EXHAUSTIVE census an empty cell is not a vacancy — it is")
+    print("   an impossibility. So the empty cells are theorems, and these")
+    print("   are the ones worth naming (restricted to arrows that agree")
+    print("   with classical logic on verified inputs):")
+    forced = []
+    for i, a in enumerate(keys):
+        for b in keys[i + 1:]:
+            both = any(v[keys.index(a)] and v[keys.index(b)] and v[0]
+                       for v in seen)
+            if not both:
+                forced.append((a, b))
+    for a, b in forced:
+        print(f"     no C-extending arrow has both {a} and {b}")
+    assert ("ID", "NOCREDIT") in forced
+    return keys, seen
+
+
+def sec6_dependencies():
+    print("-" * 72)
+    print("6. THE DEPENDENCIES: what each property drags in with it")
+    keys = ["MP", "ORD", "ID", "NOCREDIT", "CONTRA", "DT"]
+    rows = [(profile(t), t) for t in all_arrows() if c_extending(arrow(t))]
+    print(f"   over the {len(rows)} C-extending arrows:")
+    for a in keys:
+        for b in keys:
+            if a == b:
+                continue
+            if all((not pr[a]) or pr[b] for pr, _ in rows):
+                print(f"     {a}  =>  {b}")
+    print("   (read them as prices: take the left, you have bought the")
+    print("   right, and nothing you do to the free cells can undo it.)")
+
+
+def sec7_the_empty_cell():
+    print("-" * 72)
+    print("7. THE ONE VACANCY WORTH THE NAME, AND WHO LIVES IN IT")
+    # The cell we would most like: refuse credit AND keep p -> p.
+    both = [t for t in all_arrows()
+            if c_extending(arrow(t)) and no_credit(arrow(t), (T,))
+            and identity(arrow(t), (T,))]
+    print(f"   arrows that refuse credit AND keep p -> p: {len(both)}")
+    assert both == []
+    print("   empty, and the reason is one cell: at p = Z the pair (Z, Z) is")
+    print("   not forced — reading the two occurrences independently gives")
+    print("   T -> F among the readings — so designating it IS credit.")
+    # but that argument used DECORRELATION. Read the two occurrences of the
+    # SAME variable coherently and the cell becomes forced.
+    coherent = all((not x) or x for x in (True, False))   # p -> p, one reading
+    print(f"   BUT that used decorrelation (fork F1). Read both occurrences")
+    print(f"   of the same variable coherently and p -> p is forced: "
+          f"{coherent}")
+    assert coherent
+    print("   So the incompatibility is not about three values at all — it")
+    print("   is about F1. And here is why no table can take the vacancy: an")
+    print("   arrow sees VALUES, not formulas. At p = Z the pairs (p -> p)")
+    print("   and (p -> q with q also unverified) are the SAME cell (Z, Z),")
+    print("   so any table that designates the first designates the second —")
+    print("   which is credit in the plainest form. The occupant of this")
+    print("   cell must therefore be NON-TRUTH-FUNCTIONAL.")
+    print("   And it exists: supervaluationism, which evaluates over")
+    print("   completions rather than by a table, keeps p -> p and grants no")
+    print("   credit. That is the Mendeleev answer — the vacancy is real,")
+    print("   the occupant is known, and the rent is truth-functionality:")
+    print("   no tables, no cell-by-cell computation, no cheap decision")
+    print("   procedure. Our own SPEC has listed supervaluationism as")
+    print("   'kindred in spirit, rigid, non-tabular' since day one; the")
+    print("   census now says exactly what the kinship costs.")
+
+
 if __name__ == "__main__":
     print("=" * 72)
     print("THE CENSUS OF ARROWS — 19683 implications, mapped")
@@ -231,6 +311,9 @@ if __name__ == "__main__":
     ours = sec2_where_ztl_sits()
     kin = sec3_forced_or_chosen()
     sec4_are_we_unique(kin, ours)
+    sec5_the_periodic_table()
+    sec6_dependencies()
+    sec7_the_empty_cell()
     print("=" * 72)
     print("ZSWEEP GREEN — the census reproduces the published counts of the")
     print("natural-implication family (6 and 24), which is the licence to")

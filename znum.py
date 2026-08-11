@@ -220,7 +220,7 @@ class _NotLinear(Exception):
     pass
 
 
-def _linear(expr, quantities, counter):
+def _linear(expr, quantities, counter, seen=None):
     """Read the expression as  c + Σ k·x  over KEYS, or give up.
 
     A correlated quantity contributes its own name as the key, so repeated
@@ -234,7 +234,14 @@ def _linear(expr, quantities, counter):
         return num(expr), {}, None, Fraction(1) if num(expr).denominator == 1 else None
     if isinstance(expr, str):
         q = quantities[expr]
+        if seen is not None:
+            seen.add(expr)
         counter[0] += 1
+        if q["lo"] == q["hi"] and not isinstance(q["lo"], float):
+            # a pinned quantity IS a constant, and saying so keeps whole
+            # expressions inside the linear fragment (k * kids with kids
+            # known). Its provenance still travels, via `seen`.
+            return q["lo"], {}, q.get("unit"), _step(q.get("discrete"))
         key = (expr, counter[0]) if q.get("sample") else expr
         return Fraction(0), {key: (Fraction(1), expr)}, q.get("unit"), \
             _step(q.get("discrete"))
@@ -242,7 +249,7 @@ def _linear(expr, quantities, counter):
     if op == "sum":
         c, terms, unit, step = Fraction(0), {}, None, Fraction(1)
         for a in args[0]:
-            c2, t2, u2, s2 = _linear(a, quantities, counter)
+            c2, t2, u2, s2 = _linear(a, quantities, counter, seen)
             unit = _unify_units(unit, u2, "add")
             step = s2 if step is None or s2 is None else (
                 s2 if s2 == step else None)
@@ -252,8 +259,8 @@ def _linear(expr, quantities, counter):
                 terms[k] = (old[0] + coef, nm)
         return c, terms, unit, step
     if op in ("add", "sub"):
-        c1, t1, u1, s1 = _linear(args[0], quantities, counter)
-        c2, t2, u2, s2 = _linear(args[1], quantities, counter)
+        c1, t1, u1, s1 = _linear(args[0], quantities, counter, seen)
+        c2, t2, u2, s2 = _linear(args[1], quantities, counter, seen)
         unit = _unify_units(u1, u2, "add")
         sign = Fraction(1) if op == "add" else Fraction(-1)
         terms = dict(t1)
@@ -263,8 +270,8 @@ def _linear(expr, quantities, counter):
         step = s1 if s1 == s2 else None
         return c1 + sign * c2, terms, unit, step
     if op in ("mul", "div"):
-        c1, t1, u1, s1 = _linear(args[0], quantities, counter)
-        c2, t2, u2, s2 = _linear(args[1], quantities, counter)
+        c1, t1, u1, s1 = _linear(args[0], quantities, counter, seen)
+        c2, t2, u2, s2 = _linear(args[1], quantities, counter, seen)
         if op == "mul" and not t2:                 # variable times constant
             k = c2
             return (c1 * k, {kk: (co * k, nm) for kk, (co, nm) in t1.items()},
@@ -288,17 +295,16 @@ def _linear(expr, quantities, counter):
 def _ev_linear(expr, quantities):
     """(interval, pedigree, used, step, unit) via the coherent linear read,
     or None when the expression is not linear."""
+    seen = set()
     try:
-        c, terms, unit, step = _linear(expr, quantities, [0])
+        c, terms, unit, step = _linear(expr, quantities, [0], seen)
     except (_NotLinear, KeyError):
         return None
     lo = hi = c
-    ped, used = set(), set()
+    used = set(seen)
+    ped = {n for n in seen if quantities[n]["prov"] == CREDIT}
     for _, (coef, name) in terms.items():
         q = quantities[name]
-        used.add(name)
-        if q["prov"] == CREDIT:
-            ped.add(name)
         a, b = q["lo"], q["hi"]
         ends = sorted((coef * a, coef * b), key=lambda x: (x == -INF and -1)
                       or (x == INF and 1) or 0) if isinstance(a, float) \

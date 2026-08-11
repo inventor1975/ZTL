@@ -49,6 +49,15 @@ FROZEN = {"paper/ZENODO.md": "the published v1.2 record (DOI 21440066)",
 WORDS = {"twelve": 12, "thirteen": 13, "fourteen": 14, "fifteen": 15,
          "sixteen": 16, "seventeen": 17, "eighteen": 18, "nineteen": 19,
          "twenty": 20}
+# hyphenated number words too: '\w+' stops at the hyphen, so "twenty-five
+# modules" used to reach the checker as "five" — absent from WORDS, hence
+# silently unchecked. A counter no one audits is exactly what this stand
+# exists to catch (found 2026-08-11, the module count had drifted 25 -> 26)
+_ONES = ["", "-one", "-two", "-three", "-four", "-five",
+         "-six", "-seven", "-eight", "-nine"]
+for _tens, _base in (("twenty", 20), ("thirty", 30)):
+    for _i, _suf in enumerate(_ONES):
+        WORDS[_tens + _suf] = _base + _i
 
 failures = []
 
@@ -116,7 +125,7 @@ if __name__ == "__main__":
     d = text("paper/ZTL-draft_1.3.md")
     for claimed in set(re.findall(r"(\d+) theorems", d)):
         check("theorems in the corpus", claimed, str(thms), "ZTL-draft_1.3.md")
-    words = set(re.findall(r"(\w+) modules in all|(\w+) modules", d))
+    words = set(re.findall(r"([\w-]+) modules in all|([\w-]+) modules", d))
     for w in {a or b for a, b in words}:
         if w.lower() in WORDS:
             check(f"modules ('{w}')", str(WORDS[w.lower()]), str(mods),

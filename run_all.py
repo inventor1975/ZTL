@@ -51,7 +51,7 @@ STANDS = [
                         "share == 8/3 :  int -> F,  decimal2 -> F,  frac3 -> Z",
                         "not 'document share'"]),
     ("znumjudge.py",   ["ZNUMJUDGE GREEN", "contest type share:int"]),
-    ("znumride.py",    ["ZNUMRIDE GREEN", "расхождений: 0"]),
+    ("znumride.py",    ["ZNUMRIDE GREEN", "mismatches: 0 of 12"]),
     ("zparadox.py", ["E28 GREEN", "PARADOX (0 tables)",
                      "strong liar", "INTRINSIC"]),
     ("bridge.py",      ["ALL ANSWERS COINCIDE"]),

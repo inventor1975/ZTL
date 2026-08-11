@@ -23,8 +23,12 @@ from znumjudge import judge_sheet_claim, parse_quantities  # noqa: E402
 CASES = [
     ("arrow_is_not_a_comparison", "4 > 3 -> 5 > 3", "",
      "EARNED", []),
-    ("decorrelated_occurrences", "m - m == 0", "m=[0,9] earned:sensor",
+    ("one_thing_cancels", "m - m == 0", "m=[0,9] earned:sensor",
+     "EARNED", []),
+    ("two_acts_do_not", "m - m == 0", "m=[0,9] earned:sensor sample",
      "OPEN", ["measure m"]),
+    ("unknown_doubles", "x + x == 10", "x=? int",
+     "OPEN", ["measure x", "document x"]),
     ("one_half_two_lattices", "a == b",
      "a=0.5 decimal1 earned:x, b=1/2 frac2 earned:y",
      "EARNED", []),

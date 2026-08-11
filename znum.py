@@ -61,7 +61,8 @@ def fmt(x):
 
 
 # ------------------------------------------------------------- quantities
-def qty(lo, hi, provenance=CREDIT, witness=None, discrete=None, unit=None):
+def qty(lo, hi, provenance=CREDIT, witness=None, discrete=None, unit=None,
+        sample=False):
     """A quantity: interval [lo, hi] + provenance of its bounds + TYPE.
 
     The type is a FORMALIZATION commitment, not knowledge: it filters the
@@ -73,7 +74,19 @@ def qty(lo, hi, provenance=CREDIT, witness=None, discrete=None, unit=None):
     claim, not a refuted one). `unit`: a name ("candies", "RUB") or None
     (dimensionless). The declared bounds are tightened to the lattice at
     construction; an EMPTY reading set is a formalization error
-    (E_EMPTY_DOMAIN), never a vacuous verdict."""
+    (E_EMPTY_DOMAIN), never a vacuous verdict.
+
+    `sample`: what a repeated NAME means. Default False — the quantity is
+    ONE THING IN THE WORLD, so every occurrence co-refers and m - m is 0.
+    True — each occurrence is a separate ACT of measurement (the same rod
+    measured twice), so the occurrences are read independently and
+    m - m is not 0. This is a formalization commitment like the type, not
+    knowledge: it says what the symbol denotes, needs no witness, and is
+    contestable as an encoding. Until 2026-08-11 the floor read EVERY
+    quantity as a sample, decorrelated — inherited by analogy from the
+    propositional lift, where decorrelation is FORCED because a connective
+    sees values and not names. Down here the names are right there, so it
+    was a choice, and the default was the wrong way round."""
     lo, hi = num(lo), num(hi)
     assert lo <= hi
     assert provenance in (EARNED, CREDIT)
@@ -87,7 +100,8 @@ def qty(lo, hi, provenance=CREDIT, witness=None, discrete=None, unit=None):
                 f"[{fmt(lo)}, {fmt(hi)}]")
         lo, hi = tlo, thi
     return {"lo": lo, "hi": hi, "prov": provenance, "witness": witness,
-            "discrete": discrete, "unit": _unit_str(_unit_map(unit))}
+            "discrete": discrete, "unit": _unit_str(_unit_map(unit)),
+            "sample": sample}
 
 
 def _step(discrete):
@@ -201,12 +215,107 @@ def _unify_units(u1, u2, ctx):
     raise ValueError(f"E_UNIT: cannot {ctx} '{u1}' with '{u2}'")
 
 
+# ------------------------------------ the linear fragment, read coherently
+class _NotLinear(Exception):
+    pass
+
+
+def _linear(expr, quantities, counter):
+    """Read the expression as  c + Σ k·x  over KEYS, or give up.
+
+    A correlated quantity contributes its own name as the key, so repeated
+    occurrences ADD UP and cancel — this is what makes m - m zero and
+    x + x equal to 2x. A `sample` quantity contributes a fresh key per
+    occurrence, which reproduces the old decorrelated reading exactly.
+    On the linear fragment the resulting interval is EXACT (each key is
+    counted once), which is the whole gain; outside it we raise and the
+    caller falls back to plain interval arithmetic, wide but sound."""
+    if isinstance(expr, (int, float, Fraction)):
+        return num(expr), {}, None, Fraction(1) if num(expr).denominator == 1 else None
+    if isinstance(expr, str):
+        q = quantities[expr]
+        counter[0] += 1
+        key = (expr, counter[0]) if q.get("sample") else expr
+        return Fraction(0), {key: (Fraction(1), expr)}, q.get("unit"), \
+            _step(q.get("discrete"))
+    op, *args = expr
+    if op == "sum":
+        c, terms, unit, step = Fraction(0), {}, None, Fraction(1)
+        for a in args[0]:
+            c2, t2, u2, s2 = _linear(a, quantities, counter)
+            unit = _unify_units(unit, u2, "add")
+            step = s2 if step is None or s2 is None else (
+                s2 if s2 == step else None)
+            c += c2
+            for k, (coef, nm) in t2.items():
+                old = terms.get(k, (Fraction(0), nm))
+                terms[k] = (old[0] + coef, nm)
+        return c, terms, unit, step
+    if op in ("add", "sub"):
+        c1, t1, u1, s1 = _linear(args[0], quantities, counter)
+        c2, t2, u2, s2 = _linear(args[1], quantities, counter)
+        unit = _unify_units(u1, u2, "add")
+        sign = Fraction(1) if op == "add" else Fraction(-1)
+        terms = dict(t1)
+        for k, (coef, nm) in t2.items():
+            old = terms.get(k, (Fraction(0), nm))
+            terms[k] = (old[0] + sign * coef, nm)
+        step = s1 if s1 == s2 else None
+        return c1 + sign * c2, terms, unit, step
+    if op in ("mul", "div"):
+        c1, t1, u1, s1 = _linear(args[0], quantities, counter)
+        c2, t2, u2, s2 = _linear(args[1], quantities, counter)
+        if op == "mul" and not t2:                 # variable times constant
+            k = c2
+            return (c1 * k, {kk: (co * k, nm) for kk, (co, nm) in t1.items()},
+                    _unit_combine(u1, u2, +1),
+                    Fraction(1) if (s1 == Fraction(1) and k.denominator == 1
+                                    and s2 == Fraction(1)) else None)
+        if op == "mul" and not t1:
+            k = c1
+            return (k * c2, {kk: (k * co, nm) for kk, (co, nm) in t2.items()},
+                    _unit_combine(u1, u2, +1),
+                    Fraction(1) if (s2 == Fraction(1) and k.denominator == 1
+                                    and s1 == Fraction(1)) else None)
+        if op == "div" and not t2 and c2 != 0:     # divided by a constant
+            return (c1 / c2,
+                    {kk: (co / c2, nm) for kk, (co, nm) in t1.items()},
+                    _unit_combine(u1, u2, -1), None)
+        raise _NotLinear()
+    raise _NotLinear()
+
+
+def _ev_linear(expr, quantities):
+    """(interval, pedigree, used, step, unit) via the coherent linear read,
+    or None when the expression is not linear."""
+    try:
+        c, terms, unit, step = _linear(expr, quantities, [0])
+    except (_NotLinear, KeyError):
+        return None
+    lo = hi = c
+    ped, used = set(), set()
+    for _, (coef, name) in terms.items():
+        q = quantities[name]
+        used.add(name)
+        if q["prov"] == CREDIT:
+            ped.add(name)
+        a, b = q["lo"], q["hi"]
+        ends = sorted((coef * a, coef * b), key=lambda x: (x == -INF and -1)
+                      or (x == INF and 1) or 0) if isinstance(a, float) \
+            or isinstance(b, float) else sorted((coef * a, coef * b))
+        lo, hi = lo + ends[0], hi + ends[1]
+    return (lo, hi), ped, used, step, unit
+
+
 def _ev(expr, quantities):
     """Rich evaluator: (interval|None, pedigree, used, lattice_step, unit).
     Discreteness is tracked exactly through +, -, *, sum (integer lattices
     are closed there) and is dropped at division — a conservative
     over-approximation: derived-expression verdicts may stay Z where a
     finer analysis could refute, but a forced verdict is never wrong."""
+    lin = _ev_linear(expr, quantities)
+    if lin is not None:
+        return lin
     if isinstance(expr, (int, float, Fraction)):
         v = num(expr)
         step = Fraction(1) if v.denominator == 1 else None
@@ -396,10 +505,26 @@ def judge_claim(kind, e1, e2, quantities):
 def sec1_lift_and_axes():
     print("-" * 72)
     print("1. THE LIFT AND THE TWO AXES")
+    # WHAT A REPEATED NAME MEANS (settled 2026-08-11, replacing F1's global
+    # decorrelation): by default a quantity is ONE THING IN THE WORLD, so
+    # occurrences co-refer and cancel; `sample` says each occurrence is a
+    # separate act of measurement, and then they do not.
     m = {"m": qty(0, 9, EARNED, "sensor-a")}
     iv, _, _ = ev(("sub", "m", "m"), m)
-    print(f"   decorrelation (F1): m - m over m=[0,9]  ->  {iv}")
-    assert iv == (-9, 9)                       # not 0: occurrences independent
+    ms = {"m": qty(0, 9, EARNED, "sensor-a", sample=True)}
+    ivs, _, _ = ev(("sub", "m", "m"), ms)
+    print(f"   one thing in the world: m - m over m=[0,9]  ->  "
+          f"({fmt(iv[0])}, {fmt(iv[1])})")
+    print(f"   two acts of measuring : m - m over m=[0,9]  ->  "
+          f"({fmt(ivs[0])}, {fmt(ivs[1])})")
+    assert iv == (0, 0) and ivs == (-9, 9)
+    x = {"x": qty(0, 10, EARNED, "doc")}
+    assert ev(("add", "x", "x"), x)[0] == (0, 20)      # x + x is 2x, not 2 boxes
+    print("   and x + x is 2x, not two independent boxes — which is what")
+    print("   makes an unknown solvable at all. Outside the linear fragment")
+    print("   (a variable times a variable, a variable in a divisor) the")
+    print("   floor falls back to plain interval arithmetic: wider, still")
+    print("   sound, and the fallback is reported rather than hidden.")
     d = {"x": qty(1, 2, EARNED), "z": qty(-1, 1, EARNED)}
     r, _, _ = ev(("div", "x", "z"), d)
     assert r is None                           # divisor spans 0: undefined

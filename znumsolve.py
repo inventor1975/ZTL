@@ -71,18 +71,21 @@ def _hull(kind, form_c, terms, name, quantities):
         ends = (coef * q["lo"], coef * q["hi"])
         rlo, rhi = rlo + min(ends), rhi + max(ends)
     # k·x ⋈ -rest, with rest ranging over [rlo, rhi]
+    strict_lo = strict_hi = False
     if kind == "eq":
         lo, hi = -rhi, -rlo
     elif kind == "le":
         lo, hi = -INF, -rlo
-    else:                                    # lt: strict, keep the closure
+    else:                                    # lt: the upper bound is STRICT
         lo, hi = -INF, -rlo
+        strict_hi = True
     if k < 0:
         lo, hi = (-hi if hi != INF else -INF), (-lo if lo != -INF else INF)
+        strict_lo, strict_hi = strict_hi, strict_lo
         k = -k
     lo = lo if lo == -INF else lo / k
     hi = hi if hi == INF else hi / k
-    return lo, hi
+    return lo, hi, strict_lo, strict_hi
 
 
 def _solve_linear_system(qs, atoms):
@@ -194,7 +197,18 @@ def narrow(quantities, formula, rounds=MAX_ROUNDS):
                 got = _hull(kind, c, terms, name, qs)
                 if got is None:
                     continue
-                lo, hi = max(q["lo"], got[0]), min(q["hi"], got[1])
+                glo, ghi, slo, shi = got
+                # a STRICT bound on a lattice is one step tighter: age > 10
+                # over the integers means age >= 11, and saying [10, 14] for
+                # "older than 10, younger than 14" would be an answer nobody
+                # asked for (measured: it was the first thing this got wrong)
+                step = _step(q["discrete"])
+                if step is not None:
+                    if shi and ghi != INF and (ghi / step).denominator == 1:
+                        ghi = ghi - step
+                    if slo and glo != -INF and (glo / step).denominator == 1:
+                        glo = glo + step
+                lo, hi = max(q["lo"], glo), min(q["hi"], ghi)
                 if lo == q["lo"] and hi == q["hi"]:
                     continue
                 if lo > hi:
@@ -219,14 +233,51 @@ def narrow(quantities, formula, rounds=MAX_ROUNDS):
 
 
 def solve_claim(formula, quantities, marks):
-    """Narrow first, then judge on the narrowed ledger."""
+    """Narrow first, then judge on the narrowed ledger — and say, for every
+    answer the narrowing produced, what it is worth and what would fix it.
+
+    A solved value is not a number: it is a number with a warranty and a
+    cure. `x = 5 ON CREDIT, document total` is a different object from
+    `x = 5 EARNED`, and the difference is the only thing an auditor is
+    paid to look at."""
     qs, log = narrow(quantities, formula)
     empty = [n for n, q in qs.items() if q.get("empty")]
     if empty:
         return {"disposition": "REFUTED", "narrowed": qs, "log": log,
-                "empty": empty, "next_check": []}
+                "empty": empty, "next_check": [], "solved": {}}
     r = judge_sheet_claim(formula, qs, marks)
     r["narrowed"], r["log"] = qs, log
+    solved, cures = {}, list(r["next_check"])
+    derived = {n for n, q in qs.items()
+               if (quantities[n]["lo"], quantities[n]["hi"])
+               != (q["lo"], q["hi"])}
+    # a cure must be addressed to someone who can act on it. Nobody can
+    # document or measure the ANSWER: line3 is what the sheet is asking
+    # for, not a source. Cures naming a derived quantity are dropped, and
+    # the one thing worth saying about it — that it is still a box — is
+    # said once, below.
+    cures = [c for c in cures
+             if c.split(" ", 1)[-1] not in derived]
+    for name, q in sorted(qs.items()):
+        before = quantities[name]
+        if (before["lo"], before["hi"]) == (q["lo"], q["hi"]):
+            continue                          # this one was not narrowed
+        pinned = q["lo"] == q["hi"]
+        # who paid for it: the witness records the derivation
+        sources = ((q["witness"] or "").split(":", 1)[-1].split(",")
+                   if q["witness"] else [])
+        weak = [c for c in sources if c and quantities[c]["prov"] == CREDIT]
+        solved[name] = {"lo": q["lo"], "hi": q["hi"], "pinned": pinned,
+                        "prov": q["prov"], "from": sources, "weak": weak}
+        for c in weak:
+            if f"document {c}" not in cures:
+                cures.append(f"document {c}")
+        if not pinned:
+            cures.append(f"narrow {name} further (still a box)")
+    seen = set()
+    r["solved"] = solved
+    r["next_check"] = [c for c in cures
+                       if not (c in seen or seen.add(c))]
     return r
 
 
@@ -347,6 +398,101 @@ def sec4_the_receipt():
     print("   an auditor is paid to see.")
 
 
+def sec5_word_problems():
+    print("-" * 72)
+    print("5. A SHEET OF WORD PROBLEMS, INCLUDING ONES THAT MUST NOT SOLVE")
+    sheet = [
+        ("Masha had apples, gave 7 away, 5 left",
+         "had - 7 == 5", "had=? int"),
+        ("three equal boxes hold 12",
+         "3 * box == 12", "box=? int"),
+        ("two numbers, sum 10, difference 2",
+         "sum(a,b) == 10 & a - b == 2", "a=? int, b=? int"),
+        ("the change from 1000 for a 743 purchase",
+         "paid - price == change",
+         "paid=1000 earned:till, price=743 earned:till, change=? int"),
+        ("8 sweets shared equally among 3 children",
+         "k * kids == sweets",
+         "k=? int, sweets=8 earned:cheque, kids=3 earned:cheque"),
+        ("a number whose double is odd",
+         "2 * n == 7", "n=? int"),
+        ("she is older than 10 and younger than 14",
+         "age > 10 & age < 14", "age=? int"),
+    ]
+    for title, formula, data in sheet:
+        q, m = parse_quantities(data)
+        r = solve_claim(formula, q, m)
+        answers = ", ".join(
+            f"{n} = {fmt(v['lo'])}" if v["pinned"]
+            else f"{n} in [{fmt(v['lo'])}, {fmt(v['hi'])}]"
+            for n, v in sorted(r["solved"].items())) or "—"
+        print(f"   {title:44} {answers:26} [{r['disposition']}]")
+    # the ones that must solve
+    q, m = parse_quantities("had=? int")
+    assert solve_claim("had - 7 == 5", q, m)["solved"]["had"]["lo"] == 12
+    # the one that must NOT: an odd double has no integer solution
+    q, m = parse_quantities("n=? int")
+    assert solve_claim("2 * n == 7", q, m)["disposition"] == "REFUTED"
+    # and the one that must stay a box, honestly
+    q, m = parse_quantities("age=? int")
+    r = solve_claim("age > 10 & age < 14", q, m)
+    assert (r["solved"]["age"]["lo"], r["solved"]["age"]["hi"]) == (11, 13)
+    assert not r["solved"]["age"]["pinned"]
+    print("   the last three are the point: a double that is odd gets an")
+    print("   EMPTY box (refuted, not 'no idea'), and 'older than 10,")
+    print("   younger than 14' answers [11, 13] and says so — a box is an")
+    print("   answer when a box is the truth.")
+
+
+def sec6_the_audit_sheet():
+    print("-" * 72)
+    print("6. THE SAME MACHINE ON AN AUDIT SHEET")
+    rows = [
+        ("total documented, one line missing",
+         "sum(line1,line2,line3) == total",
+         "line1=1000 earned:inv-17, line2=2000 earned:inv-18, "
+         "line3=? int, total=4500 earned:contract"),
+        ("same, but the total is nobody's",
+         "sum(line1,line2,line3) == total",
+         "line1=1000 earned:inv-17, line2=2000 earned:inv-18, "
+         "line3=? int, total=4500 credit"),
+        ("the claimed line contradicts the total",
+         "sum(line1,line2,line3) == total & line3 == 1600",
+         "line1=1000 earned:inv-17, line2=2000 earned:inv-18, "
+         "line3=? int, total=4500 earned:contract"),
+        ("bounds only: the total is a range",
+         "sum(line1,line2,line3) == total",
+         "line1=1000 earned:inv-17, line2=2000 earned:inv-18, "
+         "line3=? int, total=[4200,4400] earned:contract"),
+    ]
+    for title, formula, data in rows:
+        q, m = parse_quantities(data)
+        r = solve_claim(formula, q, m)
+        got = r["solved"].get("line3")
+        if got is None:
+            answer = "— (refuted)"
+        elif got["pinned"]:
+            answer = f"line3 = {fmt(got['lo'])} [{got['prov']}]"
+        else:
+            answer = f"line3 in [{fmt(got['lo'])}, {fmt(got['hi'])}]"
+        print(f"   {title:38} {answer:34} cure {r['next_check']}")
+    q, m = parse_quantities(
+        "line1=1000 earned:inv-17, line2=2000 earned:inv-18, "
+        "line3=? int, total=4500 credit")
+    r = solve_claim("sum(line1,line2,line3) == total", q, m)
+    assert r["solved"]["line3"]["prov"] == CREDIT
+    assert r["next_check"] == ["document total"]      # not "document line3"
+    q2, m2 = parse_quantities(
+        "line1=1000 earned:inv-17, line2=2000 earned:inv-18, "
+        "line3=? int, total=[4200,4400] earned:contract")
+    r2 = solve_claim("sum(line1,line2,line3) == total", q2, m2)
+    assert (r2["solved"]["line3"]["lo"], r2["solved"]["line3"]["hi"]) == (1200, 1400)
+    print("   the cure is not 'measure line3' — nobody can measure a line")
+    print("   that does not exist yet. It is 'document total', naming the")
+    print("   quantity whose credit the answer rides on. That is the whole")
+    print("   difference between a solver and an auditor.")
+
+
 if __name__ == "__main__":
     print("=" * 72)
     print("ZNUMSOLVE — narrowing backwards, with receipts")
@@ -355,6 +501,8 @@ if __name__ == "__main__":
     sec2_the_type_finishes_it()
     sec3_soundness_measured()
     sec4_the_receipt()
+    sec5_word_problems()
+    sec6_the_audit_sheet()
     print("=" * 72)
     print("ZNUMSOLVE GREEN — the floor now runs backwards as well as")
     print("forwards: constraints narrow their quantities to a fixed point,")

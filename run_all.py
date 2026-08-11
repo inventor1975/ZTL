@@ -47,6 +47,8 @@ STANDS = [
                         "parity cross-check: 62 of 62 ✓"]),
     ("ztljudge.py",     ["ZTLJUDGE GREEN", "over an unchanged core",
                         "a mark reached the join"]),
+    ("zledger.py",     ["ZLEDGER GREEN", "divergences: 0",
+                        "NEW in ZTL: 0", "classical 16, ZTL 195"]),
     ("znum.py",        ["E37 GREEN", "0 revocations",
                         "share == 8/3 :  int -> F,  decimal2 -> F,  frac3 -> Z",
                         "not 'document share'"]),
@@ -132,6 +134,10 @@ STANDS = [
     ("dilemmas/solved/sorites/sorites.py", ["SORITES GREEN",
                              "'some grain is a cliff' (H & ~H-) = F",
                              "the same sum against a cited norm: EARNED"]),
+    ("dilemmas/surprise.py", ["SURPRISE GREEN",
+                              "days left for a surprise: 0",
+                              "days left for a surprise: 5",
+                              "WARRANTY BELONGS TO A LEDGER"]),
     ("dilemmas/collatz.py", ["COLLATZ GREEN",
                              "changes of verdict or grade as the checked part grows: 0",
                              "the two F's are not the same F"]),
@@ -167,6 +173,20 @@ def _run_one(item):
 
 
 def main():
+    """Flags, because a full pass costs about two minutes and most edits
+    touch one stand: `--only <substring>` runs the matching stands (and
+    skips Lean unless a Lean file is what changed), `--no-lean` drops the
+    `lake build`. No flag = everything, which is what a commit deserves."""
+    argv = sys.argv[1:]
+    pattern = None
+    if "--only" in argv:
+        pattern = argv[argv.index("--only") + 1]
+    skip_lean = "--no-lean" in argv or pattern is not None
+    if pattern:
+        globals()["STANDS"] = [(s_, m) for s_, m in STANDS if pattern in s_]
+        if not STANDS:
+            print(f"no stand matches {pattern!r}")
+            return 1
     failures = []
     # Stands are independent processes; run them on a pool. Kept
     # deterministic in REPORTING order (STANDS order), not completion
@@ -207,15 +227,18 @@ def main():
         elif not ok:
             failures.append(script)
 
-    print(f"  [....] lean: lake build ...  ({workers} stands ran in parallel)")
-    r = subprocess.run(["lake", "build"], cwd="lean",
-                       capture_output=True, text=True, timeout=900)
-    lean_ok = r.returncode == 0 and \
-        "does not depend on any axioms" in r.stdout + r.stderr
-    print(f"  [{'OK ' if lean_ok else 'FAIL'}] lean (zero axioms: "
-          f"{'confirmed' if lean_ok else 'NOT CONFIRMED'})")
-    if not lean_ok:
-        failures.append("lean")
+    if skip_lean:
+        print("  [skip] lean (not asked for — nothing claimed for it here)")
+    else:
+        print(f"  [....] lean: lake build ...  ({workers} stands ran in parallel)")
+        r = subprocess.run(["lake", "build"], cwd="lean",
+                           capture_output=True, text=True, timeout=900)
+        lean_ok = r.returncode == 0 and \
+            "does not depend on any axioms" in r.stdout + r.stderr
+        print(f"  [{'OK ' if lean_ok else 'FAIL'}] lean (zero axioms: "
+              f"{'confirmed' if lean_ok else 'NOT CONFIRMED'})")
+        if not lean_ok:
+            failures.append("lean")
 
     print()
     if failures:
@@ -229,7 +252,9 @@ def main():
               f"({len(skipped)} SKIPPED, backend absent: "
               f"{', '.join(skipped)} — nothing claimed for them).")
     else:
-        print(f"ALL GREEN: {len(STANDS)} stands + Lean.")
+        print(f"ALL GREEN: {len(STANDS)} stands"
+              + ("" if skip_lean else " + Lean")
+              + ("" if not skip_lean else " (Lean not run)") + ".")
     return 0
 
 

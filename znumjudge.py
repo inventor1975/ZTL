@@ -8,12 +8,22 @@ their T/F/Z verdicts from the numeric floor (znum), and has the UNCHANGED
 core (ztljudge) judge the formula. Diagnostics merge both floors:
 
   disposition   EARNED / ON CREDIT / OPEN / REFUTED — core disposition,
-                then capped by the numeric provenance axis: a claim that
-                rides a forced-but-unearned comparison cannot rise above
-                ON CREDIT (a bare number is credit, F2);
-  next_check    one merged list, each entry naming its cure:
+                then capped by the numeric provenance axis: NO forced
+                verdict rises above ON CREDIT while it rides unearned
+                LOAD-BEARING bounds — in either direction, since if truth
+                is not taken on credit neither is falsity (a bare number
+                is credit, F2). The direction is kept in `polarity`
+                ("toward T" / "toward F"), not in a fifth word;
+  next_check    one merged list, each entry naming a cure that can
+                actually cure (a quantity merely PRESENT in the pedigree
+                is no carrier — the probe is widening it to full ignorance
+                and seeing whether the verdict survives):
                   measure <quantity>   — interval too wide (numeric Z);
-                  document <quantity>  — bounds unearned (credit);
+                  document <quantity>  — bounds unearned AND load-bearing;
+                  contest type <q>:<t> — the LATTICE is what forces the
+                                         verdict; a type is a formalization
+                                         commitment, so no witness helps —
+                                         the appeal is against the encoding;
                   verify <atom>        — propositional atom still a mark.
 
 Sheet line format (extends ztljudge's ledger format):
@@ -26,8 +36,13 @@ Sheet line format (extends ztljudge's ledger format):
                 <= < >= > ==  over +, -, *, /, sum(...), numbers, quantities
                 (a divisor whose interval spans 0 makes the atom Z, §25 echo)
     quantities  name=1000 earned:ref | name=[lo,hi] credit | name=? credit
-                (=? means no bounds at all: (-inf, inf));
-                plain atoms keep ztljudge marks: atom=T / atom=F
+                (=? means no bounds at all: (-inf, inf)); optional type
+                token int | decimalK | fracM (multiples of 1/M: thirds,
+                eighths — the lattice no decimal one can say) and an
+                optional unit token. Numbers are read EXACTLY (0.1 is a
+                tenth, 8/3 a third of eight): on floats the lattice
+                tightening produced FALSE refutations of honest sums.
+                Plain atoms keep ztljudge marks: atom=T / atom=F
 
 Run:  python3 znumjudge.py     (the riding sheet: our own live claims)
 """
@@ -40,22 +55,26 @@ _HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, _HERE)
 
 from ztljudge import judge                                  # noqa: E402
-from znum import EARNED, CREDIT, INF, qty, compare          # noqa: E402
+from znum import (EARNED, CREDIT, INF, qty, compare, num,   # noqa: E402
+                  typename, bounds_bearing, type_bearing)
 
 
 # ------------------------------------------------------------ sheet parsing
+_VAL = r"-?\d+(?:\.\d+)?(?:/\d+)?"      # 5, 0.75, 8/3 — read exactly
 _QTY = re.compile(
-    r"^(?P<name>\w+)=(?:\[(?P<lo>-?[\d.]+|-inf),(?P<hi>[\d.]+|inf)\]"
-    r"|(?P<point>-?[\d.]+)|(?P<unk>\?))$")
+    rf"^(?P<name>\w+)=(?:\[(?P<lo>{_VAL}|-inf),(?P<hi>{_VAL}|inf)\]"
+    rf"|(?P<point>{_VAL})|(?P<unk>\?))$")
 _CMP = re.compile(r"(<=|>=|==|<|>)")
 
 
 def _num(s):
-    if s in ("-inf",):
+    """Sheet numbers are EXACT: '0.10' is a tenth, '8/3' is a third of
+    eight — never the binary float that happens to be nearby."""
+    if s == "-inf":
         return -INF
-    if s in ("inf",):
+    if s == "inf":
         return INF
-    return float(s) if "." in s else int(s)
+    return num(s)
 
 
 def parse_quantities(text):
@@ -89,6 +108,8 @@ def parse_quantities(text):
                     discrete = "int"
                 elif re.match(r"^decimal\d+$", tok):
                     discrete = ("decimal", int(tok[7:]))
+                elif re.match(r"^frac\d+$", tok):
+                    discrete = ("frac", int(tok[4:]))
                 elif tok.startswith("earned"):
                     prov = EARNED
                     _, _, w = tok.partition(":")
@@ -130,7 +151,7 @@ def _parse_arith(s, quantities):
                         _parse_arith(s[i + 1:], quantities))
     if s.startswith("(") and s.endswith(")"):
         return _parse_arith(s[1:-1], quantities)
-    if re.match(r"^-?[\d.]+$", s):
+    if re.match(rf"^{_VAL}$", s):
         return _num(s)
     if s in quantities:
         return s
@@ -188,12 +209,21 @@ def judge_sheet_claim(formula, quantities, marks):
         if judge(core_formula, d)["disposition"] != core["disposition"]:
             bearing.append(name)
 
-    # provenance cap (F2/F3): EARNED that rides an unearned forced
-    # comparison is only ON CREDIT; the pedigree names the culprits
+    # provenance cap (F2/F3): NO forced verdict rises above ON CREDIT while
+    # it rides unearned bounds — in EITHER direction. If truth is not taken
+    # on credit, neither is falsity: a refutation bought with borrowed
+    # bounds is a refutation on credit. The direction is not lost, it moves
+    # to `polarity`; the disposition vocabulary stays the four words.
+    # Only LOAD-BEARING credit caps (probe = widening, see znum): a
+    # quantity that merely appears in the pedigree buys nothing.
     credit_quantities = sorted({q for n in bearing
                                 for q in numeric[n]["pedigree"]})
-    disposition = core["disposition"]
-    if disposition == "EARNED" and credit_quantities:
+    bearing_credit = sorted({q for n in bearing
+                             for q in numeric[n]["pedigree"]
+                             if bounds_bearing(*natoms[n][:3], quantities, q)})
+    disposition, polarity = core["disposition"], None
+    if disposition in ("EARNED", "REFUTED") and bearing_credit:
+        polarity = "toward T" if disposition == "EARNED" else "toward F"
         disposition = "ON CREDIT"
 
     next_check = []
@@ -206,16 +236,40 @@ def judge_sheet_claim(formula, quantities, marks):
                 for q in numeric[n]["used"]:
                     if quantities[q]["lo"] != quantities[q]["hi"]:
                         next_check.append(f"measure {q}")
+                # the witness falls due the moment the measurement lands:
+                # a Z atom can show nothing non-bearing yet (re-marking it Z
+                # is a no-op, so it never enters `bearing`), and surprising
+                # the reader with 'document' AFTER the measure is worse than
+                # naming the second-order cure now
+                for q in numeric[n]["pedigree"]:
+                    next_check.append(f"document {q}")
         for a in core["unverified"]:
             if a not in natoms:
                 next_check.append(f"verify {a}")
-    for q in credit_quantities:
-        next_check.append(f"document {q}")
+    # a cure must be able to cure: a credit quantity earns a 'document'
+    # line only where the verdict RIDES on its bounds (probe = widening it
+    # to full ignorance, type kept), and where the LATTICE is what forces
+    # the verdict the open appeal is a different one — contest the type,
+    # since a type is a formalization commitment and no witness touches it
+    for n in bearing:
+        kind, e1, e2, _ = natoms[n]
+        # (an atom that is already Z never enters `bearing` — re-marking it
+        # Z is a no-op — so every atom here is forced and the probe applies)
+        for q in numeric[n]["pedigree"]:
+            if bounds_bearing(kind, e1, e2, quantities, q):
+                next_check.append(f"document {q}")
+        if numeric[n]["verdict"] in ("T", "F"):
+            for q in numeric[n]["used"]:
+                if type_bearing(kind, e1, e2, quantities, q):
+                    next_check.append(
+                        f"contest type {q}:"
+                        f"{typename(quantities[q]['discrete'])}")
 
     return {"formula": formula, "core_formula": core_formula.strip(),
             "numeric_atoms": numeric, "core": core,
-            "disposition": disposition,
+            "disposition": disposition, "polarity": polarity,
             "credit_quantities": credit_quantities,
+            "bearing_credit": bearing_credit,
             "next_check": sorted(set(next_check), key=next_check.index)}
 
 
@@ -266,6 +320,16 @@ SHEET = [
     ("snapshot_vs_current",                    # same words, current corpus
      "theorems == 371",
      "theorems=405 earned:axiom-audit-2026-08-10"),
+    ("kopecks",                                # exactness: an honest sum
+     "line1 + line2 == total",                 # floats refuted this one
+     "line1=29.7 decimal1 earned:inv-1, line2=0.3 decimal1 earned:inv-2, "
+     "total=30 earned:order-44"),
+    ("shared_whole",                           # 8 slices, 3 eaters, no knife
+     "share == slices / eaters",
+     "share=? int, slices=8 earned:cheque-771, eaters=3 earned:cheque-771"),
+    ("shared_thirds",                          # the same words, knife allowed
+     "share == slices / eaters",
+     "share=? frac3, slices=8 earned:cheque-771, eaters=3 earned:cheque-771"),
 ]
 
 
@@ -280,6 +344,7 @@ if __name__ == "__main__":
             ped = f"  credit:{info['pedigree']}" if info["pedigree"] else ""
             print(f"      {n}: {info['comparison']}  ->  {info['verdict']}{ped}")
         print(f"      -> {r['disposition']}"
+              + (f" ({r['polarity']})" if r["polarity"] else "")
               + (f"   next: {r['next_check']}" if r["next_check"] else ""))
 
     by = {r["label"]: r for r in rows}
@@ -288,21 +353,37 @@ if __name__ == "__main__":
     # the padded 8-class rate is REFUTED: 50 == 70 is forced false — and
     # the falsity itself rides the CREDIT denominator, so the refutation
     # is on credit too; either way, never EARNED
-    assert by["phase_a_rate_padded"]["disposition"] in ("REFUTED", "ON CREDIT")
+    # falsity is not taken on credit either: the padded rate is refuted by
+    # a denominator nobody witnessed, so it is capped, with its direction kept
+    assert by["phase_a_rate_padded"]["disposition"] == "ON CREDIT"
+    assert by["phase_a_rate_padded"]["polarity"] == "toward F"
     assert by["phase_a_rate_padded"]["credit_quantities"] == ["attempted"]
     # smeta: numeric side open (wide line3) AND a propositional atom rides
     assert by["smeta"]["disposition"] == "OPEN"
-    assert "measure line3" in by["smeta"]["next_check"]
+    assert by["smeta"]["next_check"] == ["measure line3", "document line3"]
     # eligibility: the UNRESOLVED_OWNER_FACT, mechanically
     assert by["eligibility_employees"]["disposition"] == "OPEN"
-    assert by["eligibility_employees"]["next_check"] == ["measure employees"]
+    assert by["eligibility_employees"]["next_check"] == ["measure employees",
+                                                         "document employees"]
     # snapshot discipline: pinned figure EARNED; same words against the
     # current corpus REFUTED — the citation catch as a verdict
     assert by["snapshot_pin"]["disposition"] == "EARNED"
     assert by["snapshot_vs_current"]["disposition"] == "REFUTED"
+    # exact rationals: 29.7 + 0.3 == 30 is EARNED (on floats it was REFUTED —
+    # a false accusation against an honest invoice, MEASURED 2026-08-11)
+    assert by["kopecks"]["disposition"] == "EARNED"
+    # the lattice refutes, and says the appeal that is actually open: no
+    # document about `share` can help, only contesting the encoding
+    assert by["shared_whole"]["disposition"] == "REFUTED"
+    assert by["shared_whole"]["next_check"] == ["contest type share:int"]
+    # allow thirds and the same words stop being a refutation
+    assert by["shared_thirds"]["disposition"] == "OPEN"
+    assert by["shared_thirds"]["next_check"] == ["measure share",
+                                                 "document share"]
     print()
     print("=" * 72)
     print("ZNUMJUDGE GREEN — mixed formulas judged by the unchanged core;")
     print("numeric atoms carry their two axes; the provenance cap holds")
     print("(no claim rises above ON CREDIT on unearned bounds); next_check")
-    print("names the cure per quantity: measure / document / verify.")
+    print("names the cure per quantity: measure / document / contest type /")
+    print("verify — and only cures that can cure (carriers probed by widening).")

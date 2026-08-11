@@ -25,6 +25,7 @@ import itertools
 import math
 import os
 import sys
+from fractions import Fraction
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, _HERE)
@@ -35,6 +36,29 @@ INF = math.inf
 EARNED, CREDIT = "earned", "credit"
 
 
+def num(x):
+    """Every finite value is an EXACT rational; ±INF stays the float
+    sentinel. A float is read as the decimal it prints (0.7 means 7/10,
+    not its binary neighbour) — the floor judges the number the claim
+    says, not the one the machine stores. MEASURED 2026-08-11: on floats
+    the lattice tightening turned 0.7 into 0.7000000000000001 and forced
+    two FALSE refutations ('p == r' with both sides 0.7, and
+    '29.7 + 0.3 == 30'); exact rationals are what makes eq trustworthy."""
+    if isinstance(x, Fraction):
+        return x
+    if isinstance(x, float):
+        return x if math.isinf(x) else Fraction(str(x))
+    return Fraction(x)                       # int, or a string like "8/3"
+
+
+def fmt(x):
+    """Display form: ∞, an integer, or a/b — never a float artefact."""
+    if isinstance(x, float):
+        return "∞" if x > 0 else "-∞"
+    return (str(x.numerator) if x.denominator == 1
+            else f"{x.numerator}/{x.denominator}")
+
+
 # ------------------------------------------------------------- quantities
 def qty(lo, hi, provenance=CREDIT, witness=None, discrete=None, unit=None):
     """A quantity: interval [lo, hi] + provenance of its bounds + TYPE.
@@ -42,20 +66,24 @@ def qty(lo, hi, provenance=CREDIT, witness=None, discrete=None, unit=None):
     The type is a FORMALIZATION commitment, not knowledge: it filters the
     READING SET (readings = lattice(discrete) ∩ [lo, hi]) and needs no
     witness; expire never touches it. `discrete`: None (continuous
-    rationals), "int", or ("decimal", k) — the lattice of multiples of
-    10^-k. `unit`: a name ("candies", "RUB") or None (dimensionless).
-    The declared bounds are tightened to the lattice at construction; an
-    EMPTY reading set is a formalization error (E_EMPTY_DOMAIN), never a
-    vacuous verdict."""
+    rationals), "int", ("decimal", k) — multiples of 10^-k — or
+    ("frac", m) — multiples of 1/m, the lattice a decimal one cannot
+    express (thirds, eighths: "she shared it out in thirds" is a sayable
+    claim, not a refuted one). `unit`: a name ("candies", "RUB") or None
+    (dimensionless). The declared bounds are tightened to the lattice at
+    construction; an EMPTY reading set is a formalization error
+    (E_EMPTY_DOMAIN), never a vacuous verdict."""
+    lo, hi = num(lo), num(hi)
     assert lo <= hi
     assert provenance in (EARNED, CREDIT)
     step = _step(discrete)
     if step is not None:
-        tlo = lo if lo == -INF else math.ceil(lo / step - 1e-12) * step
-        thi = hi if hi == INF else math.floor(hi / step + 1e-12) * step
+        tlo = lo if lo == -INF else Fraction(math.ceil(lo / step)) * step
+        thi = hi if hi == INF else Fraction(math.floor(hi / step)) * step
         if tlo > thi:
             raise ValueError(
-                f"E_EMPTY_DOMAIN: no {discrete} reading in [{lo}, {hi}]")
+                f"E_EMPTY_DOMAIN: no {typename(discrete)} reading in "
+                f"[{fmt(lo)}, {fmt(hi)}]")
         lo, hi = tlo, thi
     return {"lo": lo, "hi": hi, "prov": provenance, "witness": witness,
             "discrete": discrete, "unit": unit}
@@ -64,14 +92,31 @@ def qty(lo, hi, provenance=CREDIT, witness=None, discrete=None, unit=None):
 def _step(discrete):
     """Lattice step of a discreteness type; None = continuous."""
     if discrete == "int":
-        return 1
+        return Fraction(1)
     if isinstance(discrete, tuple) and discrete[0] == "decimal":
-        return 10 ** (-discrete[1])
+        return Fraction(1, 10 ** discrete[1])
+    if isinstance(discrete, tuple) and discrete[0] == "frac":
+        assert discrete[1] >= 1
+        return Fraction(1, discrete[1])
     return None
 
 
+def typename(discrete):
+    """The type as the sheet writes it — the name a cure must quote."""
+    if discrete is None:
+        return "continuous"
+    if discrete == "int":
+        return "int"
+    return f"{discrete[0]}{discrete[1]}"
+
+
 def _on_lattice(value, step):
-    return abs(value / step - round(value / step)) < 1e-9
+    """Exactly on the lattice — no tolerance window: with rationals the
+    question has an answer, and a tolerance would silently earn equality
+    the claim never bought (§13)."""
+    if isinstance(value, float):             # ±INF lies on no lattice
+        return False
+    return (value / step).denominator == 1
 
 
 def bare(x):
@@ -114,9 +159,10 @@ def _ev(expr, quantities):
     are closed there) and is dropped at division — a conservative
     over-approximation: derived-expression verdicts may stay Z where a
     finer analysis could refute, but a forced verdict is never wrong."""
-    if isinstance(expr, (int, float)):
-        step = 1 if float(expr).is_integer() else None
-        return (expr, expr), set(), set(), step, None
+    if isinstance(expr, (int, float, Fraction)):
+        v = num(expr)
+        step = Fraction(1) if v.denominator == 1 else None
+        return (v, v), set(), set(), step, None
     if isinstance(expr, str):
         q = quantities[expr]
         pedigree = {expr} if q["prov"] == CREDIT else set()
@@ -190,6 +236,38 @@ def compare(kind, e1, e2, quantities):
     return v, ped, used
 
 
+# ------------------------------------------------- what holds a verdict up
+def _degrade(q):
+    """Full ignorance about the VALUE, the TYPE kept. Credit means the
+    bounds may be wrong — the honest probe is therefore WIDENING, not
+    narrowing: narrowing can never revoke a forced verdict (that is the
+    hereditary theorem, lean/ZNum.lean), so it can never tell us what the
+    verdict rides on. The lattice is not a bound and does not drop here."""
+    return qty(-INF, INF, q["prov"], None,
+               discrete=q["discrete"], unit=q["unit"])
+
+
+def bounds_bearing(kind, e1, e2, quantities, name):
+    """Does the verdict ride on THIS quantity's bounds? (Widen it to full
+    ignorance and see whether the verdict survives.)"""
+    v = compare(kind, e1, e2, quantities)[0]
+    wide = dict(quantities)
+    wide[name] = _degrade(quantities[name])
+    return compare(kind, e1, e2, wide)[0] != v
+
+
+def type_bearing(kind, e1, e2, quantities, name):
+    """Does the verdict ride on this quantity's TYPE? A type is a
+    formalization commitment, not knowledge, so its appeal is a different
+    one: no document can cure it, only contesting the encoding."""
+    if quantities[name]["discrete"] is None:
+        return False
+    v = compare(kind, e1, e2, quantities)[0]
+    loose = dict(quantities)
+    loose[name] = dict(quantities[name], discrete=None)
+    return compare(kind, e1, e2, loose)[0] != v
+
+
 # --------------------------------------- the two axes (F3) + the numeric judge
 def judge_claim(kind, e1, e2, quantities):
     """Judge one numeric claim on BOTH axes, kept separate (F3):
@@ -201,43 +279,71 @@ def judge_claim(kind, e1, e2, quantities):
     v, ped, used = compare(kind, e1, e2, quantities)
     interval_axis = "FORCED" if v in ("T", "F") else "NOT_FORCED"
     prov_axis = "ON_CREDIT" if ped else "EARNED"
-    if v == "Z":
-        disp = "OPEN"
-    elif ped:
-        disp = "ON CREDIT"
-    else:
-        disp = "EARNED" if v == "T" else "REFUTED"
     # carriers, SPLIT BY AXIS (F3 continued): each axis degrades separately,
     # so next_check can say WHICH cure the quantity needs.
     #   interval carrier:   widening the interval to full ignorance (its own
-    #                       provenance kept) changes the verdict -> MEASURE it;
-    #   provenance carrier: the verdict is forced and stays forced, but this
-    #                       quantity's CREDIT bounds are what the claim rides
-    #                       on -> DOCUMENT it (witness converts the claim
-    #                       from ON CREDIT toward EARNED).
-    interval_carriers = []
-    for name in sorted(used):
-        degraded = dict(quantities)
-        degraded[name] = qty(-INF, INF, quantities[name]["prov"])
-        if compare(kind, e1, e2, degraded)[0] != v:
-            interval_carriers.append(name)
-    provenance_carriers = []
+    #                       provenance and type kept) changes the verdict
+    #                       -> MEASURE it;
+    #   provenance carrier: the verdict is forced, this quantity's CREDIT
+    #                       bounds are what it rides on -> DOCUMENT it;
+    #   type carrier:       the verdict is forced by the LATTICE, and no
+    #                       document can touch that -> CONTEST THE TYPE.
+    # A quantity that is merely present is no carrier: MEASURED 2026-08-11
+    # on 'share == 8/3' with share:int — share is in the pedigree, yet the
+    # refutation stands under any bounds whatsoever, so 'document share'
+    # was a cure that cures nothing. The bounds probe below removes it and
+    # the type probe names the appeal that is actually open.
+    interval_carriers = [n for n in sorted(used)
+                         if bounds_bearing(kind, e1, e2, quantities, n)]
+    provenance_carriers, type_carriers = [], []
     if v in ("T", "F"):
         # a credit quantity is a provenance carrier iff witnessing it (alone)
-        # removes it from the pedigree the forced verdict rides on
+        # removes it from the pedigree the forced verdict rides on AND its
+        # bounds are load-bearing at all
         for name in sorted(ped):
             healed = dict(quantities)
             healed[name] = dict(quantities[name], prov=EARNED)
             _, ped2, _ = compare(kind, e1, e2, healed)
-            if ped2 == ped - {name}:
+            if ped2 == ped - {name} \
+                    and bounds_bearing(kind, e1, e2, quantities, name):
                 provenance_carriers.append(name)
+        type_carriers = [n for n in sorted(used)
+                         if type_bearing(kind, e1, e2, quantities, n)]
+    # DOES the forced verdict ride on credit at all? Probe the credit
+    # quantities JOINTLY (two bounds can bear together what neither bears
+    # alone). Presence in the pedigree is not bearing: a claim refuted by
+    # the lattice alone is refuted outright, not refuted-on-credit.
+    if v == "Z":
+        # nothing is forced yet, so nothing can be shown non-bearing; a
+        # credit quantity whose interval already bears the openness will
+        # owe a witness the moment it is measured — name that cure now
+        provenance_carriers = [n for n in sorted(ped)
+                               if n in interval_carriers]
+    riding_credit = False
+    if v in ("T", "F") and ped:
+        wide = dict(quantities)
+        for name in ped:
+            wide[name] = _degrade(quantities[name])
+        riding_credit = compare(kind, e1, e2, wide)[0] != v
+        if riding_credit and not provenance_carriers:
+            provenance_carriers = sorted(ped)      # jointly borne: name all
+    if v == "Z":
+        disp = "OPEN"
+    elif riding_credit:
+        disp = "ON CREDIT"
+    else:
+        disp = "EARNED" if v == "T" else "REFUTED"
     return {"verdict": v, "interval_axis": interval_axis,
             "provenance_axis": prov_axis, "credit_pedigree": sorted(ped),
-            "disposition": disp, "interval_carriers": interval_carriers,
+            "disposition": disp, "riding_credit": riding_credit,
+            "interval_carriers": interval_carriers,
             "provenance_carriers": provenance_carriers,
+            "type_carriers": type_carriers,
             "next_check": (
                 [f"measure {n}" for n in interval_carriers if v == "Z"]
-                + [f"document {n}" for n in provenance_carriers])}
+                + [f"document {n}" for n in provenance_carriers]
+                + [f"contest type {n}:{typename(quantities[n]['discrete'])}"
+                   for n in type_carriers])}
 
 
 # ============================================================== the bench
@@ -363,6 +469,56 @@ def sec4_seam_with_the_judge():
     print("   ztljudge untouched: znum is an atom supplier, not a new logic")
 
 
+def sec5_exact_lattices_and_carriers():
+    print("-" * 72)
+    print("5. EXACT LATTICES, AND WHAT A VERDICT REALLY RIDES ON")
+    # (a) the two false refutations floats produced, now gone
+    p = {"p": qty(0.7, 0.7, EARNED, "price-tag", discrete=("decimal", 1)),
+         "r": qty(0.7, 0.7, EARNED, "price-tag")}
+    assert p["p"]["lo"] == Fraction(7, 10)     # not 0.7000000000000001
+    assert compare("eq", "p", "r", p)[0] == "T"
+    s = {"a": qty(29.7, 29.7, EARNED, "inv-1", discrete=("decimal", 1)),
+         "b": qty(0.3, 0.3, EARNED, "inv-2", discrete=("decimal", 1))}
+    assert compare("eq", ("add", "a", "b"), 30, s)[0] == "T"
+    print("   0.7 == 0.7 (typed vs untyped) -> T;  29.7 + 0.3 == 30 -> T")
+    print("   (both were REFUTED on floats — MEASURED 2026-08-11)")
+    # (b) the lattice a decimal type cannot say: thirds
+    eaters, slices = qty(3, 3, EARNED, "cheque"), qty(8, 8, EARNED, "cheque")
+    div = ("div", "slices", "eaters")
+    ints = {"share": qty(-INF, INF, CREDIT, None, discrete="int"),
+            "slices": slices, "eaters": eaters}
+    thirds = dict(ints, share=qty(-INF, INF, CREDIT, None,
+                                  discrete=("frac", 3)))
+    dec = dict(ints, share=qty(-INF, INF, CREDIT, None,
+                               discrete=("decimal", 2)))
+    assert compare("eq", "share", div, ints)[0] == "F"      # whole pieces: no
+    assert compare("eq", "share", div, dec)[0] == "F"       # hundredths: no
+    assert compare("eq", "share", div, thirds)[0] == "Z"    # thirds: sayable
+    print("   share == 8/3 :  int -> F,  decimal2 -> F,  frac3 -> Z")
+    print("   'she shared it out in thirds' is now a claim, not a refutation")
+    # (c) carriers: presence is not bearing
+    r = judge_claim("eq", "share", div, ints)
+    assert r["disposition"] == "REFUTED"
+    assert r["credit_pedigree"] == ["share"]           # still on the pedigree
+    assert r["provenance_carriers"] == []              # but bounds bear nothing
+    assert r["type_carriers"] == ["share"]
+    assert r["next_check"] == ["contest type share:int"]
+    print(f"   8/3 into whole pieces: {r['disposition']}, "
+          f"cure {r['next_check']} — not 'document share'")
+    # the genuine document-carrier still reports itself — and here the
+    # falsity really is bought on credit, so it stays ON CREDIT
+    g = judge_claim("eq", "x", 5, {"x": qty(7, 9, CREDIT)})
+    assert g["verdict"] == "F" and g["riding_credit"]
+    assert g["disposition"] == "ON CREDIT"
+    assert g["provenance_carriers"] == ["x"] and g["type_carriers"] == []
+    print(f"   x == 5 with x=[7,9] on credit: {g['disposition']}, "
+          f"cure {g['next_check']} — the bounds DO bear it")
+    print("   so the two refutations no longer wear one face: the lattice")
+    print("   one is REFUTED outright, the borrowed one stays ON CREDIT")
+    print("   probe = WIDENING (narrowing cannot revoke a forced verdict —")
+    print("   that is the hereditary theorem, so it can never test a carrier)")
+
+
 if __name__ == "__main__":
     print("=" * 72)
     print("E37: ZNUM — the numeric floor of ZTL (probe)")
@@ -371,10 +527,14 @@ if __name__ == "__main__":
     sec2_claims_sheet()
     sec3_theorem_hunt()
     sec4_seam_with_the_judge()
+    sec5_exact_lattices_and_carriers()
     print("=" * 72)
     print("E37 GREEN — the lift extends to numbers (decorrelated, F1); bare")
     print("numbers are credit (F2); the two credit axes stay separate and")
     print("name their different cures (F3); forced numeric verdicts survived")
     print("every narrowing on the measured grid (the one-pass hereditary bet")
     print("stands, boundary stated); and the core judges numeric atoms")
-    print("without changing a single line.")
+    print("without changing a single line. Values are EXACT rationals, so")
+    print("kopecks no longer refute honest sums and frac(m) lets a claim say")
+    print("'in thirds'; and a carrier is what the verdict RIDES on, probed by")
+    print("widening — presence in the pedigree buys no cure.")

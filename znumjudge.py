@@ -39,6 +39,9 @@ Sheet line format (extends ztljudge's ledger format):
                 (=? means no bounds at all: (-inf, inf)); optional type
                 token int | decimalK | fracM (multiples of 1/M: thirds,
                 eighths — the lattice no decimal one can say) and an
+                optional `sample` token (each occurrence of the name is a
+                separate act of measurement; without it the name denotes
+                ONE THING and repeated occurrences co-refer, so m - m is 0),
                 optional unit token read as EXPONENTS (m2, RUB/m2, km/h:
                 m·m unifies with m2, m2·RUB/m2 with RUB, m/m with a bare
                 number — but km never with m, since a conversion factor is
@@ -106,7 +109,7 @@ def parse_quantities(text):
             else:
                 lo, hi = _num(m.group("lo")), _num(m.group("hi"))
             # trailing tokens: discreteness | provenance | unit (free order)
-            prov, wit, discrete, unit = CREDIT, None, None, None
+            prov, wit, discrete, unit, sample = CREDIT, None, None, None, False
             for tok in part.split()[1:]:
                 if tok == "int":
                     discrete = "int"
@@ -120,10 +123,13 @@ def parse_quantities(text):
                     wit = w or None
                 elif tok == "credit":
                     prov = CREDIT
+                elif tok == "sample":
+                    sample = True          # each occurrence is its own act
                 else:
                     unit = tok
             quantities[m.group("name")] = qty(lo, hi, prov, wit,
-                                              discrete=discrete, unit=unit)
+                                              discrete=discrete, unit=unit,
+                                              sample=sample)
         else:
             name, _, val = part.partition("=")
             if val.strip().upper() in ("T", "F", "Z"):

@@ -11,6 +11,27 @@ One page, four columns, every number produced by `python3 zledger.py`
 | **Gained (sight)** | Classical logic sorts two-variable formulas into **16** equivalence classes; we sort them into **195**, and **all 16** classical classes are split. Twelvefold refinement: same truths, finer eyes. |
 | **Only here** | `¬(p ↔ p)` answers F, F, **T** on T, F, Z — the mark is sayable *inside the object language*. A two-valued logic has no words for the question, not merely no proof. |
 
+## "So you abolished De Morgan?" — the schedule
+
+No. A classical law costs exactly the verification of its atoms, and the
+toolbox returns as they are paid for (measured, `zledger.py` §1):
+
+| verified | classical tautologies that hold |
+|---|---|
+| both atoms | 584 / 584 — **100%**, and this one is a theorem, not a sample |
+| one of two | 379 — 64% |
+| nothing | 212 — 36% |
+
+De Morgan itself: `p=T, q=T → T`; `p=T, q=Z → F`. The licence is per
+FORMULA and needs EVERY atom in it verified — not most of them.
+
+**Expiry is a WORLD problem, not a proof problem.** A verification can
+lapse (§E25), and the licence lapses with it — but only for empirical
+grounds: invoices, measurements, inspections, certificates. In
+mathematics a proof does not expire, so the temporal layer never fires
+there; what mathematics has instead is refutation, which is a different
+transition. Audit needs both; proof needs only one.
+
 ## The instance to quote
 
 ```

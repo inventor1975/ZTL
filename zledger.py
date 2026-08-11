@@ -76,6 +76,31 @@ def sec1_shared():
     print("   so nothing is taken away where everything is checked. The")
     print("   third value is a discipline about UNVERIFIED ground, not a")
     print("   rival arithmetic of truth.")
+    # and the answer to the question everyone actually asks — "so you
+    # abolished De Morgan?" — is a schedule, not a yes or a no: the
+    # classical toolbox comes back as the atoms are paid for.
+    cl = [phi for phi in pool if all(sig(phi, CL))
+          and all(v == T for v in sig(phi, CL))]
+    one = [phi for phi in cl
+           if all(ev(phi, {"p": a, "q": Z}) == T for a in CL)]
+    none = [phi for phi in cl if all(v == T for v in sig(phi, V))]
+    print(f"   classical tautologies in this pool: {len(cl)}")
+    print(f"     hold with BOTH atoms verified : {len(cl)} (100%) — the theorem")
+    print(f"     hold with ONE of two verified : {len(one)} "
+          f"({100 * len(one) // len(cl)}%)")
+    print(f"     hold with nothing verified    : {len(none)} "
+          f"({100 * len(none) // len(cl)}%)")
+    assert len(cl) == 584 and len(one) == 379 and len(none) == 212
+    dm = ("xnor", ("not", ("and", "p", "q")),
+          ("or", ("not", "p"), ("not", "q")))
+    print("   De Morgan itself: " + "   ".join(
+        f"p={a},q={b} -> {ev(dm, {'p': a, 'q': b})}"
+        for a, b in ((T, T), (T, Z), (Z, Z))))
+    assert ev(dm, {"p": T, "q": T}) == T and ev(dm, {"p": T, "q": Z}) == F
+    print("   so the licence is granted per FORMULA and needs EVERY atom in")
+    print("   it verified — not most of them. Pay for both and De Morgan is")
+    print("   yours; leave one unpaid and it is gone. Nothing was abolished:")
+    print("   a classical law costs exactly the verification of its atoms.")
     return pool
 
 

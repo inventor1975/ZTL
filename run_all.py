@@ -56,6 +56,7 @@ STANDS = [
                         "must therefore be NON-TRUTH-FUNCTIONAL"]),
     ("zledger.py",     ["ZLEDGER GREEN", "divergences: 0",
                         "NEW in ZTL: 0", "classical 16, ZTL 195",
+                        "hold with ONE of two verified : 379",
                         "violations: [('Z', 'Z')]"]),
     ("zprove.py",      ["ZPROVE GREEN", "minimum verification bill: 3 atoms",
                         "markings that EARN the antecedent: 125"]),

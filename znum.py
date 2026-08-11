@@ -23,6 +23,7 @@ Run:  python3 znum.py
 """
 import itertools
 import math
+import re
 import os
 import sys
 from fractions import Fraction
@@ -86,7 +87,7 @@ def qty(lo, hi, provenance=CREDIT, witness=None, discrete=None, unit=None):
                 f"[{fmt(lo)}, {fmt(hi)}]")
         lo, hi = tlo, thi
     return {"lo": lo, "hi": hi, "prov": provenance, "witness": witness,
-            "discrete": discrete, "unit": unit}
+            "discrete": discrete, "unit": _unit_str(_unit_map(unit))}
 
 
 def _step(discrete):
@@ -142,6 +143,53 @@ def _iv_div(a, b):
     return _iv_mul(a, inv)
 
 
+def _unit_map(u):
+    """A unit read as EXPONENTS: 'm2' -> {m: 2}, 'RUB/m2' -> {RUB: 1, m: -2},
+    None -> {} (dimensionless). '·' (or '*') makes the next factor positive,
+    '/' makes it negative — so 'km/h' is km·h^-1. No conversion factors live
+    here and none ever will silently: km and m are DIFFERENT units, and
+    turning one into the other is a claim about the world, not arithmetic."""
+    if not u:
+        return {}
+    out, sign = {}, 1
+    for part in re.split(r"([·*/])", u):
+        if part in ("·", "*"):
+            sign = 1
+            continue
+        if part == "/":
+            sign = -1
+            continue
+        part = part.strip()
+        if not part:
+            continue
+        m = re.fullmatch(r"([A-Za-z_][A-Za-z_]*)(-?\d+)?", part)
+        if not m:
+            raise ValueError(f"E_UNIT: cannot read the unit {u!r}")
+        out[m.group(1)] = out.get(m.group(1), 0) + sign * int(m.group(2) or 1)
+        sign = 1
+    return {k: v for k, v in out.items() if v}
+
+
+def _unit_str(m):
+    """The canonical spelling: 'm2', 'km/h', 'RUB/m2' — dimensionless is
+    None, so a ratio of like units (m/m) comes back a bare number."""
+    if not m:
+        return None
+    top = "·".join(k if m[k] == 1 else f"{k}{m[k]}"
+                   for k in sorted(k for k in m if m[k] > 0)) or "1"
+    bot = "·".join(k if m[k] == -1 else f"{k}{-m[k]}"
+                   for k in sorted(k for k in m if m[k] < 0))
+    return top if not bot else f"{top}/{bot}"
+
+
+def _unit_combine(u1, u2, power):
+    """Multiply (power=+1) or divide (power=-1) two units."""
+    m = dict(_unit_map(u1))
+    for k, e in _unit_map(u2).items():
+        m[k] = m.get(k, 0) + power * e
+    return _unit_str({k: e for k, e in m.items() if e})
+
+
 def _unify_units(u1, u2, ctx):
     """Dimensionless (None) unifies with anything; named units must match
     for additive/comparative contexts — a mismatch is a FORMALIZATION
@@ -187,12 +235,10 @@ def _ev(expr, quantities):
         unit = _unify_units(una, unb, "add")
         step = sa if sa == sb else None
     elif op == "mul":
-        unit = una if unb is None else (unb if una is None else f"{una}·{unb}")
+        unit = _unit_combine(una, unb, +1)
         step = 1 if sa == 1 and sb == 1 else None
     else:  # div
-        unit = (None if una == unb else
-                una if unb is None else
-                f"{una or '1'}/{unb}")
+        unit = _unit_combine(una, unb, -1)
         step = None
     if ra is None or rb is None:
         return None, ped, used, step, unit

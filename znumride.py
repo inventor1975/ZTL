@@ -33,8 +33,18 @@ CASES = [
     ("composed_unit", "speed == dist / time",
      "speed=[50,60] credit km/h, dist=110 earned:odo km, time=2 earned:clock h",
      "OPEN", ["measure speed", "document speed"]),
-    ("unit_mismatch_in_product", "area == w * h",
-     "area=6 earned:doc m2, w=2 earned:t m, h=3 earned:t m",
+    ("product_makes_a_square", "area == w * h",       # m·m IS m2 since
+     "area=6 earned:doc m2, w=2 earned:t m, h=3 earned:t m",   # 2026-08-11
+     "EARNED", []),
+    ("smeta_by_the_square_metre", "cost == s * rate",
+     "cost=30000 earned:contract RUB, s=60 earned:plan m2, "
+     "rate=500 earned:price RUB/m2",
+     "EARNED", []),
+    ("like_over_like_is_a_number", "a / b == 2",
+     "a=4 earned:doc m, b=2 earned:doc m",
+     "EARNED", []),
+    ("no_silent_conversion", "x == y",                # a conversion is a
+     "x=1000 earned:doc m, y=1 earned:doc km",        # claim, not arithmetic
      "ERROR:E_UNIT", []),
     ("two_bounds_on_credit", "x <= y", "x=[0,1] credit, y=[5,6] credit",
      "ON CREDIT", ["document x", "document y"]),

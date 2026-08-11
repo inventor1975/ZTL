@@ -39,7 +39,11 @@ Sheet line format (extends ztljudge's ledger format):
                 (=? means no bounds at all: (-inf, inf)); optional type
                 token int | decimalK | fracM (multiples of 1/M: thirds,
                 eighths — the lattice no decimal one can say) and an
-                optional unit token. Numbers are read EXACTLY (0.1 is a
+                optional unit token read as EXPONENTS (m2, RUB/m2, km/h:
+                m·m unifies with m2, m2·RUB/m2 with RUB, m/m with a bare
+                number — but km never with m, since a conversion factor is
+                a claim about the world, not arithmetic).
+                Numbers are read EXACTLY (0.1 is a
                 tenth, 8/3 a third of eight): on floats the lattice
                 tightening produced FALSE refutations of honest sums.
                 Plain atoms keep ztljudge marks: atom=T / atom=F
@@ -369,6 +373,10 @@ SHEET = [
     ("shared_whole",                           # 8 slices, 3 eaters, no knife
      "share == slices / eaters",
      "share=? int, slices=8 earned:cheque-771, eaters=3 earned:cheque-771"),
+    ("remont_estimate",                        # derived units, the first
+     "s * rate <= budget & contract_signed",   # thing a real estimate needs
+     "s=60 earned:plan m2, rate=500 earned:price RUB/m2, "
+     "budget=[30000,35000] credit RUB, contract_signed=T"),
     ("negated_rate",                           # a comparison under '~'
      "~(detected == attempted)",               # (parenthesised: unparseable
      "detected=50 earned:eh3-scored-40712058, attempted=70 credit"),  # till
@@ -436,6 +444,11 @@ if __name__ == "__main__":
     assert by["negated_rate"]["disposition"] == "ON CREDIT"
     assert by["negated_rate"]["polarity"] == "toward T"   # ~F, on credit
     assert by["negated_rate"]["next_check"] == ["document attempted"]
+    # derived units compose by EXPONENTS: m2 · RUB/m2 = RUB, so the estimate
+    # is judged, not rejected as a formalization error
+    assert by["remont_estimate"]["disposition"] == "ON CREDIT"
+    assert by["remont_estimate"]["polarity"] == "toward T"
+    assert by["remont_estimate"]["next_check"] == ["document budget"]
     assert by["parens_xor"]["disposition"] == "EARNED"
     assert by["nested_parens"]["disposition"] == "EARNED"
     print()

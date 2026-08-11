@@ -49,6 +49,8 @@ STANDS = [
                         "a mark reached the join"]),
     ("zledger.py",     ["ZLEDGER GREEN", "divergences: 0",
                         "NEW in ZTL: 0", "classical 16, ZTL 195"]),
+    ("zprove.py",      ["ZPROVE GREEN", "minimum verification bill: 3 atoms",
+                        "markings that EARN the antecedent: 125"]),
     ("znum.py",        ["E37 GREEN", "0 revocations",
                         "share == 8/3 :  int -> F,  decimal2 -> F,  frac3 -> Z",
                         "not 'document share'"]),

@@ -28,19 +28,45 @@ The two moves we lack are exactly the engines of the paradoxes:
 
 * `¬(p → q) ≡ p ∧ ¬q` — classically valid, **not** here. This is the
   sorites' engine: it turns "this step failed" into "here is the cliff".
-* `p ∨ ¬p` at an unchecked `p` — **F** here. Case analysis on the
-  undecided is what launches the surprise-exam elimination.
+* `p ∨ ¬p` at an unchecked `p` — **F** here. Asserting the excluded
+  middle about the undecided is what launches the surprise-exam
+  elimination.
 
-Modus ponens is **untouched**. The resolutions were not bought by
+Modus ponens is **untouched**, and so is the rest of the working kit —
+syllogism, reductio, and **proof by cases** `((p→q) ∧ (¬p→q)) → q`, which
+is ZTL-valid (measured in `zprove.py`; an earlier claim in this corpus
+that case analysis was lost was simply wrong). What dies is Peirce's law
+— the one that separates classical from intuitionistic logic — and the
+excluded middle on unchecked atoms. The resolutions were not bought by
 breaking inference; what is gone is the free-truth kit.
+
+## Two traps in our own numbers
+
+* **Vacuous validity.** Under default deny an unverified antecedent is
+  F, so *every* conditional over unchecked atoms is ZTL-valid for free.
+  "ZTL-valid" for a conditional must always be read with "and its
+  antecedent is earnable at all" (`zprove.py`, section 2).
+* **Validity is not derivability.** From an empty ledger nothing is
+  derivable, not even a guarded tautology (E26); the twelve rules are
+  incomplete. Inference *transports* verification into compound claims —
+  the pigeonhole conclusion is earned with three of six atoms still
+  unverified — but never mints the first coin.
+
+## What a theorem costs
+
+The pigeonhole principle (3 pigeons, 2 holes) is ZTL-valid, and valid
+non-vacuously: of 729 markings, 125 earn the antecedent and all 125 give
+the conclusion. The **verification bill is exactly 3 atoms** — one
+witness per pigeon, the price of the theorem's own subject matter. That
+is the currency here: not steps, witnesses.
 
 ## The honest boundary
 
-This makes a good **auditor** and a poor **mathematician**. Case analysis
-on an undecided proposition is ordinary mathematical practice and we
-cannot do it; from an empty ledger nothing is derivable here, not even a
-guarded tautology (E26). Narrow search is a virtue when judging claims
-and a cage when building proofs.
+This makes a good **auditor** and a thin **mathematician** — thinner than
+classical, not crippled. Real theorems go through and cost their own
+data; what cannot be done is starting from nothing, or reasoning by
+excluded middle about something nobody checked. Narrow search is a virtue
+when judging claims and a constraint when building proofs.
 
 ## What NOT to say
 

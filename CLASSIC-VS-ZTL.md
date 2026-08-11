@@ -68,6 +68,31 @@ data; what cannot be done is starting from nothing, or reasoning by
 excluded middle about something nobody checked. Narrow search is a virtue
 when judging claims and a constraint when building proofs.
 
+## The first objection from a logician: "p → p fails, that is not a logic"
+
+Nobody in the literature says that. What exists is Tomova's class of
+**natural implications** (Reports on Mathematical Logic 47, 2012), four
+criteria: (1) classical on {0,1}; (2) Łukasiewicz–Tarski normality —
+modus ponens preserves the designated value; (3) `p ≤ q ⇒ p→q`
+designated; (4) free elsewhere. **We meet (1) and (2)** — (1) is now a
+Lean theorem — **and violate (3) in exactly one cell: (Z, Z)** (measured,
+`zledger.py` §6).
+
+`p → p` is not a primitive of that definition; it is the diagonal of (3),
+and (3) presupposes a linear order on the values — the middle one being a
+*degree* of truth (Łukasiewicz's ½, "possible, not yet determined").
+Ours is a status mark barred from compounds: `Z ≤ Z` does not say
+"equally true", it says "neither side examined", and designating the
+conditional there is exactly granting truth on credit. So we are outside
+the family the classification is built for, not in breach of a law.
+
+The constitutive test of logicality is elsewhere and we pass it: the
+consequence relation is Tarskian — reflexive, monotone, closed under cut
+— so **`p ⊨ p` holds where `⊨ p→p` fails**. The price, named: the
+deduction theorem holds left to right only (→-elimination works,
+→-introduction does not). Ł3 lacks the deduction theorem too, so this is
+a family trait, not an exile.
+
 ## What NOT to say
 
 * ~~"ZTL equals classical logic"~~ — false: strictly fewer validities.

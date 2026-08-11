@@ -156,9 +156,43 @@ def sec5_poverty_is_the_point():
     print("   week run on precisely those two moves.")
 
 
-def sec6_the_card():
+def sec6_tomova():
     print("-" * 72)
-    print("6. THE CARD (what to answer when asked 'how do you compare?')")
+    print("6. THE FIRST OBJECTION A LOGICIAN WILL MAKE: 'p → p fails'")
+    # Tomova's four criteria for a NATURAL implication (Reports on Math.
+    # Logic 47, 2012; the normality clause is Łukasiewicz–Tarski 1930,
+    # p. 134). p → p is nowhere a primitive of the definition — it is the
+    # diagonal case of criterion (3).
+    from ztl import IMP
+    designated = (T,)
+    c1 = all(IMP(a, b) == (T if (a == F or b == T) else F)
+             for a in (T, F) for b in (T, F))
+    c2 = all((not (a in designated and IMP(a, b) in designated))
+             or b in designated for a in V for b in V)
+    order = {F: 0, Z: 1, T: 2}
+    broken = [(a, b) for a in V for b in V
+              if order[a] <= order[b] and IMP(a, b) not in designated]
+    print(f"   (1) C-extending, classical on T/F        : {c1}")
+    print(f"   (2) Łukasiewicz-Tarski normality (MP)    : {c2}")
+    print(f"   (3) p <= q  =>  p -> q designated        : "
+          f"{not broken}   violations: {broken}")
+    assert c1 and c2 and broken == [(Z, Z)]
+    print("   two of three met, and the third broken in ONE cell. That")
+    print("   cell is the diagonal of an ORDER condition, which presupposes")
+    print("   the middle value is a DEGREE of truth between F and T")
+    print("   (Łukasiewicz's ½: 'possible, not yet determined'). Ours is a")
+    print("   status mark barred from compounds, so Z <= Z does not say")
+    print("   'equally true' but 'neither side examined' — designating the")
+    print("   conditional there is exactly granting truth on credit.")
+    print("   The constitutive test lives elsewhere and we pass it: the")
+    print("   consequence relation is Tarskian, so p |= p holds where")
+    print("   |= p -> p fails (entailment.py). The price is named: the")
+    print("   deduction theorem holds left to right only.")
+
+
+def sec7_the_card():
+    print("-" * 72)
+    print("7. THE CARD (what to answer when asked 'how do you compare?')")
     print("   We are NOT a stronger logic. On verified ground we are the")
     print("   classical one, cell for cell; as a system of laws we are a")
     print("   strict fragment and can never gain a law. What we add is")
@@ -182,7 +216,8 @@ if __name__ == "__main__":
     sec3_distinctions(pool)
     sec4_only_here(pool)
     sec5_poverty_is_the_point()
-    sec6_the_card()
+    sec6_tomova()
+    sec7_the_card()
     print("=" * 72)
     print("ZLEDGER GREEN — shared on verified ground (0 divergences);")
     print("strictly fewer laws and provably no new ones; 16 classical")

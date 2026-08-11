@@ -1,6 +1,26 @@
-# ZTL — Zero-Trust Logic — v1.3
+# ZTL — Zero-Trust Logic — v1.4 (IN PREPARATION, not published)
 
-**V. Reznik. Preprint, v1.3 — 2026-07-21. Version DOI:
+**V. Reznik. Preprint, v1.4 — IN PREPARATION. No DOI yet: this file is
+the working text of the next version, not the published one. The
+published version is v1.3 (2026-07-21), version DOI
+[10.5281/zenodo.21472971](https://doi.org/10.5281/zenodo.21472971) — a
+frozen PDF on Zenodo; nothing edited here changes it. Zenodo publication
+is the curator's manual step.**
+
+**v1.4 will add** (accumulated since v1.3, not yet written into this
+text): the numeric floor ZNUM — quantities with provenance, exact
+rational lattices including `frac(m)`, units as exponents, the two
+credit axes and their cures, and the kernel-checked narrowing-heredity
+theorem (`lean/ZNum.lean`); the carrier discipline — a cure must be able
+to cure, probed by widening, with the fourth cure `contest type` and the
+polarity of a refutation bought on credit; and the four-column ledger
+against classical logic, whose "shared" and "no new laws" columns are
+now theorems rather than samples (`lean/ClassicalAgreement.lean`, empty
+axiom list). Present in this text already: corrected corpus figures and
+the precise position against Tomova's natural-implication criterion
+(§28).**
+
+**Carried over from the published v1.3 — version DOI
 [10.5281/zenodo.21472971](https://doi.org/10.5281/zenodo.21472971).
 Concept DOI:
 [10.5281/zenodo.21318981](https://doi.org/10.5281/zenodo.21318981)
@@ -542,9 +562,35 @@ That is the precise sense in which ZTL is a two-valued logic with a mark,
 not a three-valued logic. ZTL's implication is Bochvar's
 ◇A⊃□B taken as a primitive; a polarity-adaptive translation (□ in
 positive positions, ◇ in negative ones) instead of a uniform one. ZTL
-falls outside Tomova's classification of "natural implications" (it
-fails p→p) and coincides with none of the literal paralogics of the
-Karpenko–Tomova lattice (2017). The *meaning* of the mark, as
+coincides with none of the literal paralogics of the Karpenko–Tomova
+lattice (2017), and its position against Tomova's class of **natural
+implications** [38] deserves stating precisely, because the loose
+version — "it fails p→p" — invites a charge it does not deserve. The
+class is defined by four criteria: (1) the restriction to {0,1} is the
+classical implication; (2) normality in the sense of Łukasiewicz–Tarski
+[39, p. 134] — modus ponens preserves the designated value; (3) if
+p ≤ q then p→q is designated; (4) anything elsewhere. ZTL satisfies
+(1) — proved for the whole language, not sampled, in
+`lean/ClassicalAgreement.lean` (`evalF_agrees`, empty axiom list) — and
+satisfies (2), since T→Z = F blocks the only counterexample. It
+violates (3), and MEASURED, in exactly **one cell**: (Z, Z). The law
+p→p is not a primitive requirement anywhere in the definition; it is the
+diagonal case of (3), and (3) presupposes a linear order on the values,
+i.e. that the middle symbol is a *degree of truth* standing between
+falsity and truth. Under that reading — Łukasiewicz's ½, "possible, not
+yet determined" — the condition is compelling: an antecedent no truer
+than its consequent should not falsify the conditional. Under ours it
+has no subject. Z is not a degree but a mark of status, barred from the
+value of compounds (the greediness theorem above); Z ≤ Z does not say
+"equally true on both sides", it says "neither side has been examined",
+and to designate the conditional there is precisely to grant truth on
+credit. ZTL is therefore outside the class not by breaking a law of
+logic but by falling outside the family the classification is built
+for — and the constitutive test of logicality is met elsewhere and
+independently: the consequence relation is Tarskian (reflexive,
+monotone, closed under cut) by the shape of its definition, so p ⊨ p
+holds even where ⊨ p→p fails. The price of that gap is named in §19:
+the deduction theorem holds left to right only. The *meaning* of the mark, as
 against its tables, has a separate and earlier ancestor:
 Łukasiewicz's Ł₃ [36] (1920), the first three-valued logic, whose
 middle value read *possible / not yet determined* — the nearest
@@ -1958,6 +2004,24 @@ already ships in the repository (`tool/`); a possible essay,
     undesignated). ZTL takes this as architecture — the mark is barred
     from the value of assertions by construction (greediness) — rather
     than recovering bivalence by the Suszko reduction after the fact.
+38. Tomova, N. E. A lattice of implicative extensions of regular
+    Kleene's logics. *Reports on Mathematical Logic* 47 (2012), 173–182;
+    and *Estestvennye trekhznachnye logiki* [Natural three-valued
+    logics], Moscow: IFRAN, 2012. The definition of a **natural
+    implication** by four criteria (C-extension, Łukasiewicz–Tarski
+    normality, the order condition p ≤ q ⇒ p→q designated, freedom
+    elsewhere); see also Tomova, N. E. Natural implication and modus
+    ponens principle. *Logical Investigations* 21 (2015), 138–143, where
+    the normality criterion is weakened to the tautologousness-preserving
+    form of modus ponens (a distinction due to Rescher, *Many-Valued
+    Logic*, 1969, p. 70). ZTL meets criteria (1) and (2) and violates
+    (3) in the single cell (Z, Z) — §4.
+
+39. Łukasiewicz, J., Tarski, A. Investigations into the sentential
+    calculus. In: J. Łukasiewicz, *Selected Works*, ed. L. Borkowski,
+    Amsterdam & Warszawa: North-Holland & PWN, 1970, pp. 131–152. The
+    normality of a logical matrix (p. 134): modus ponens preserves the
+    designated value — criterion (2) of the natural-implication class.
 
 ## Acknowledgements and AI disclosure
 

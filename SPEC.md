@@ -141,10 +141,18 @@ Karpenko–Tomova 2017)
   T⊕Z) — a systematic closing of the places where Bochvar's quarantine
   grants vacuous truth. ZTL's implication = his ◇A ⊃ □B, taken as a
   primitive.
-* ZTL **falls outside Tomova's classification of "natural
-  implications"** (it fails reflexivity p→p on Z) — a signature of
-  novelty and, simultaneously, the first expected objection from
-  logicians.
+* ZTL is **outside Tomova's class of "natural implications"**, and
+  precisely: of her four criteria it MEETS (1) C-extension (proved for
+  the whole language, `lean/ClassicalAgreement.lean`) and (2)
+  Łukasiewicz–Tarski normality (modus ponens preserves the designated
+  value), and VIOLATES (3) "p ≤ q ⇒ p→q designated" in exactly ONE cell,
+  (Z, Z) — MEASURED. p→p is not a primitive of the definition; it is the
+  diagonal of (3), and (3) presupposes the middle value is a DEGREE of
+  truth on a linear order. Z is a status mark barred from compounds, so
+  the condition has no subject here. The constitutive test is met
+  elsewhere: the consequence relation is Tarskian, p ⊨ p holds where
+  ⊨ p→p fails. Expect this as the first objection from logicians, and
+  answer with the one cell, not with a shrug.
 * Kindred in spirit: supervaluationism (rigid, non-tabular), SQL NULL
   (lazy), IEEE NaN (comparisons fail), exceptions with try/catch at
   every node (greediness). The motivation "greedy local supervaluation
@@ -192,7 +200,7 @@ contradiction.
 * `tableau.py` — the calculus: signed tableaux (signs T, F, P={T,Z},
   N={F,Z}); preimage coverage and a check against ⊨ on 2462
   entailments — MEASURED, all coincided. The rules are written out in
-  paper/ZTL-draft_1.3.md §5.
+  paper/ZTL-draft_1.4.md §5.
 * `quantifiers.py` — quantifiers on finite domains: ∀/∃ with strict
   witnesses; UI alive as a law, EG only as a rule, ¬∃⊨∀¬ fell (the
   quantifier twin of ¬¬-elimination), the drinker fell. Preprint §6.

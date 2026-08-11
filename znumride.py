@@ -21,32 +21,32 @@ from znumjudge import judge_sheet_claim, parse_quantities  # noqa: E402
 
 # (label, formula, quantities, expected disposition | "ERROR:<code>", cures)
 CASES = [
-    ("стрелка_не_сравнение", "4 > 3 -> 5 > 3", "",
+    ("arrow_is_not_a_comparison", "4 > 3 -> 5 > 3", "",
      "EARNED", []),
-    ("декорреляция", "m - m == 0", "m=[0,9] earned:sensor",
+    ("decorrelated_occurrences", "m - m == 0", "m=[0,9] earned:sensor",
      "OPEN", ["measure m"]),
-    ("половина_двумя_решётками", "a == b",
+    ("one_half_two_lattices", "a == b",
      "a=0.5 decimal1 earned:x, b=1/2 frac2 earned:y",
      "EARNED", []),
-    ("пустой_домен", "k >= 1", "k=[0.2,0.9] int credit",
+    ("empty_domain", "k >= 1", "k=[0.2,0.9] int credit",
      "ERROR:E_EMPTY_DOMAIN", []),
-    ("составная_единица", "speed == dist / time",
+    ("composed_unit", "speed == dist / time",
      "speed=[50,60] credit km/h, dist=110 earned:odo km, time=2 earned:clock h",
      "OPEN", ["measure speed", "document speed"]),
-    ("единицы_умножения", "area == w * h",
+    ("unit_mismatch_in_product", "area == w * h",
      "area=6 earned:doc m2, w=2 earned:t m, h=3 earned:t m",
      "ERROR:E_UNIT", []),
-    ("двое_в_кредит", "x <= y", "x=[0,1] credit, y=[5,6] credit",
+    ("two_bounds_on_credit", "x <= y", "x=[0,1] credit, y=[5,6] credit",
      "ON CREDIT", ["document x", "document y"]),
-    ("делитель_через_ноль", "n / d < 10", "n=5 earned:doc, d=[-1,1] earned:doc",
+    ("divisor_spans_zero", "n / d < 10", "n=5 earned:doc, d=[-1,1] earned:doc",
      "OPEN", ["measure d"]),
-    ("чистое_опровержение", "n == 7", "n=8 earned:doc int",
+    ("clean_refutation", "n == 7", "n=8 earned:doc int",
      "REFUTED", []),
-    ("отрицание_на_кредите", "~(a == b)", "a=50 earned:log, b=70 credit",
+    ("negation_over_credit", "~(a == b)", "a=50 earned:log, b=70 credit",
      "ON CREDIT", ["document b"]),
-    ("исключающее_или", "(x > 10) ^ ok", "x=[20,30] earned:m, ok=F",
+    ("parenthesised_xor", "(x > 10) ^ ok", "x=[20,30] earned:m, ok=F",
      "EARNED", []),
-    ("копейки_с_умножением", "sum(a,b,c) * 2 <= budget",
+    ("kopecks_under_multiplication", "sum(a,b,c) * 2 <= budget",
      "a=1.05 decimal2 earned:i1, b=2.15 decimal2 earned:i2, "
      "c=0.80 decimal2 earned:i3, budget=8.00 decimal2 earned:o1",
      "EARNED", []),
@@ -64,11 +64,11 @@ for label, formula, data, want_disp, want_cures in CASES:
         got_cures = []
     ok = got_disp.split(" (")[0] == want_disp and got_cures == want_cures
     bad += not ok
-    print(f"  {'ok  ' if ok else 'РАЗОШЛОСЬ'} [{label}] {formula}")
+    print(f"  {'ok   ' if ok else 'MISMATCH'} [{label}] {formula}")
     if not ok:
-        print(f"        ждал: {want_disp} {want_cures}")
-        print(f"        дал:  {got_disp} {got_cures}")
+        print(f"        predicted: {want_disp} {want_cures}")
+        print(f"        machine:   {got_disp} {got_cures}")
 
-print(f"\n  расхождений: {bad} из {len(CASES)}")
+print(f"\n  mismatches: {bad} of {len(CASES)}")
 assert bad == 0, "a predicted verdict and the machine's disagree — read both"
 print("ZNUMRIDE GREEN — every predicted verdict met the machine's")

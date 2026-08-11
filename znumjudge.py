@@ -162,6 +162,43 @@ _KINDMAP = {"<=": ("le", False), "<": ("lt", False), "==": ("eq", False),
             ">=": ("le", True), ">": ("lt", True)}
 
 
+def _trim_parens(s, lo, hi):
+    """Shrink [lo, hi) until it is a comparison and nothing but one: give
+    back a ')' whose '(' lies outside, a '(' whose ')' lies outside, and
+    a matched pair that merely WRAPS the comparison (the core keeps those
+    parentheses and reads ' nc1 ' in their place)."""
+    while lo < hi:
+        chunk = s[lo:hi]
+        if chunk[0].isspace():
+            lo += 1
+            continue
+        if chunk[-1].isspace():
+            hi -= 1
+            continue
+        bal, low = 0, 0
+        for c in chunk:
+            bal += (c == "(") - (c == ")")
+            low = min(low, bal)
+        if low < 0:                       # ')' with its opener outside
+            hi = s.rindex(")", lo, hi)
+            continue
+        if bal > 0:                       # '(' with its closer outside
+            lo = s.index("(", lo, hi) + 1
+            continue
+        if chunk[0] == "(" and chunk[-1] == ")":
+            inner, wraps = 0, True        # do the two actually match?
+            for k, c in enumerate(chunk[:-1]):
+                inner += (c == "(") - (c == ")")
+                if inner == 0 and k:
+                    wraps = False
+                    break
+            if wraps:
+                lo, hi = lo + 1, hi - 1
+                continue
+        break
+    return lo, hi
+
+
 def extract_comparisons(formula, quantities):
     """Replace each comparison in the formula with a fresh atom nc<i>;
     return (core_formula, {atom: (kind, e1, e2)})."""
@@ -175,7 +212,12 @@ def extract_comparisons(formula, quantities):
         m = pattern.search(out)
         if not m:
             return out, atoms
-        chunk = m.group(0).strip()
+        # the chunk may have swallowed parentheses that belong to the
+        # FORMULA, not to the comparison — '~(a == b)', '(x > 10) ^ ok'
+        # were unparseable until this trim (found 2026-08-11 by riding
+        # invented claims against predicted verdicts)
+        lo, hi = _trim_parens(out, m.start(), m.end())
+        chunk = out[lo:hi].strip()
         sign = _CMP.search(chunk).group(0)
         left, right = chunk.split(sign, 1)
         kind, swap = _KINDMAP[sign]
@@ -185,7 +227,7 @@ def extract_comparisons(formula, quantities):
         i += 1
         name = f"nc{i}"
         atoms[name] = (kind, e1, e2, chunk)
-        out = out[:m.start()] + f" {name} " + out[m.end():]
+        out = out[:lo] + f" {name} " + out[hi:]
 
 
 # ----------------------------------------------------------------- judging
@@ -327,6 +369,15 @@ SHEET = [
     ("shared_whole",                           # 8 slices, 3 eaters, no knife
      "share == slices / eaters",
      "share=? int, slices=8 earned:cheque-771, eaters=3 earned:cheque-771"),
+    ("negated_rate",                           # a comparison under '~'
+     "~(detected == attempted)",               # (parenthesised: unparseable
+     "detected=50 earned:eh3-scored-40712058, attempted=70 credit"),  # till
+    ("parens_xor",                             #  2026-08-11)
+     "(x > 10) ^ ok",
+     "x=[20,30] earned:meter-3, ok=F"),
+    ("nested_parens",
+     "((line1 + 1) <= budget) & booked",
+     "line1=1000 earned:inv-17, budget=5000 earned:order-o4, booked=T"),
     ("shared_thirds",                          # the same words, knife allowed
      "share == slices / eaters",
      "share=? frac3, slices=8 earned:cheque-771, eaters=3 earned:cheque-771"),
@@ -380,6 +431,13 @@ if __name__ == "__main__":
     assert by["shared_thirds"]["disposition"] == "OPEN"
     assert by["shared_thirds"]["next_check"] == ["measure share",
                                                  "document share"]
+    # a comparison wrapped in parentheses is still a comparison: the
+    # formula's parens stay with the formula, the atom is read out of them
+    assert by["negated_rate"]["disposition"] == "ON CREDIT"
+    assert by["negated_rate"]["polarity"] == "toward T"   # ~F, on credit
+    assert by["negated_rate"]["next_check"] == ["document attempted"]
+    assert by["parens_xor"]["disposition"] == "EARNED"
+    assert by["nested_parens"]["disposition"] == "EARNED"
     print()
     print("=" * 72)
     print("ZNUMJUDGE GREEN — mixed formulas judged by the unchanged core;")

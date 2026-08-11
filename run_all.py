@@ -201,6 +201,17 @@ def main():
     # Green on the author's machine is exactly the assurance this project
     # refuses to grant itself, so the runner sets the width.
     workers = max(2, min(30, os.cpu_count() or 4, len(STANDS)))
+    # Warm the Lean build ONCE before the pool. Several stands shell out to
+    # `lake build` themselves (bridge.py compares 141 answers against the
+    # kernel; inventory/paper_claims.py counts the #print axioms lines), and
+    # on a COLD cache two of them racing over the same build directory come
+    # back red. Locally the cache is always warm, so this was invisible here
+    # and fatal in CI — found 2026-08-11 by running the suite in a fresh
+    # clone, which is the only honest imitation of what CI sees.
+    if not skip_lean:
+        print("  warming the Lean build (cold cache would race the stands)…")
+        subprocess.run(["lake", "build"], cwd="lean",
+                       capture_output=True, text=True, timeout=1800)
     total = len(STANDS)
     results = {}
     # Live progress: the stands run in parallel and would otherwise print

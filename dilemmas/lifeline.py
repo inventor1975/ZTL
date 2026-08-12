@@ -51,6 +51,7 @@ sys.path.insert(0, _ROOT)
 
 from ztl import T, F, Z                                       # noqa: E402
 from ztljudge import judge                                    # noqa: E402
+from zverify import grade                                     # noqa: E402
 from znumjudge import judge_sheet_claim, parse_quantities      # noqa: E402
 
 
@@ -182,6 +183,71 @@ def sec4_the_cut():
     print("   turned up in a week.")
 
 
+def sec5_two_storeys():
+    print("-" * 72)
+    print("5. THE CURATOR'S REFINEMENT: two storeys, and what it costs")
+    print("   'In me there are billions of living cells; each could in")
+    print("   principle start another me. But when I say I, I mean the")
+    print("   consciousness. And the god is not a person — the cells are")
+    print("   his platform.'")
+    print()
+    print("   That splits the case in two, and the split is not a dodge:")
+    print("     PLATFORM  the cell lineage. Divides, never stopped, carries")
+    print("               no self.")
+    print("     PERSON    the consciousness. Does not divide, is not")
+    print("               transmitted by cell division, ends.")
+    # the objection from section 3 dissolves: transitivity ran through the
+    # cell line, and personal identity was never riding on it
+    print("   The bill from section 3 — 'then you and I are one individual'")
+    print("   — is PAID by this move rather than dodged: identity through")
+    print("   fission belongs to the platform, where it costs nothing,")
+    print("   because nobody claimed the platform was a person. The")
+    print("   transitivity collapse was an argument against a claim the")
+    print("   curator was not making.")
+    # what survives, and what it now needs
+    chain = judge("lineage_unbroken", {"lineage_unbroken": "T"})
+    print(f"   'the lineage has never been interrupted': "
+          f"{chain['disposition']}  (witness: common descent — the judge")
+    print("     records who vouches, it never checks the biology itself)")
+    assert chain["disposition"] == "EARNED"
+    alive = judge("lineage_is_a_living_bearer",
+                  {"lineage_is_a_living_bearer": "Z"})
+    print(f"   'the lineage is a LIVING BEARER, a thing that is alive': "
+          f"{alive['disposition']}")
+    assert alive["disposition"] == "OPEN"
+    print("   and here is the finding: that second claim has no measurement")
+    print("   and no document that could settle it. 'Alive' is a predicate")
+    print("   of BEARERS — things with a boundary and a metabolism — and a")
+    print("   lineage is a relation of descent, not a bearer. Extending the")
+    print("   predicate to lineages is a decision about the ENCODING.")
+    print("   So the cure is the fourth one, the one this corpus minted")
+    print("   yesterday for a pizza: not `measure`, not `document`, but")
+    print("   CONTEST TYPE — argue about what sort of thing may be called")
+    print("   alive. No experiment is owed, and none would help.")
+
+
+def sec6_the_two_deaths():
+    print("-" * 72)
+    print("6. AND THE ASYMMETRY OF DEATH")
+    # the person's claim expires; the lineage's cannot
+    person_now = grade("i_am_alive", {"i_am_alive": "M"})
+    lineage_past = grade("lineage_was_continuous",
+                         {"lineage_was_continuous": T})
+    print(f"   'I am alive' (a claim about now)        : {person_now}")
+    print(f"   'the lineage ran unbroken' (about the past): {lineage_past}")
+    assert person_now == "until-verification"
+    assert lineage_past == "hereditary"
+    print("   The person's claim lives in the present and expires: it must")
+    print("   be re-earned every moment, and one day it will not be. The")
+    print("   lineage's claim is about the past and, once witnessed, cannot")
+    print("   be revoked by anything that happens next.")
+    print("   So the god cannot die the way you can. If the last cell goes")
+    print("   out, the lineage ENDS — but the claim that it ran unbroken")
+    print("   for four billion years stays earned forever. That is not")
+    print("   immortality; it is a different grammar of ending, and it is")
+    print("   the sharpest thing the machine can say about the question.")
+
+
 if __name__ == "__main__":
     print("=" * 72)
     print("THE EARTHLY GOD — the curator's dilemma, priced")
@@ -190,12 +256,22 @@ if __name__ == "__main__":
     sec2_one_word_two_relations()
     sec3_the_fork_by_model_count()
     sec4_the_cut()
+    sec5_two_storeys()
+    sec6_the_two_deaths()
     print("=" * 72)
-    print("LIFELINE GREEN — there is no contradiction, and the curator was")
-    print("right to keep failing to find one. There is a FORK: identity")
-    print("through fission buys the earthly god at the price of our being")
-    print("one individual, and refusing it costs the zygote's claim to have")
-    print("been you. The argument travels between two senses of 'divide'")
-    print("and two senses of 'did not die', and the judge marks the second")
-    print("of each pair as the unwitnessed one — a way of counting, not a")
-    print("fact about the world.")
+    print("LIFELINE GREEN — no contradiction, and the curator was right to")
+    print("keep failing to find one. Three rules for fission, three bills;")
+    print("and his own refinement — the god is the PLATFORM, the I is the")
+    print("consciousness — pays the heaviest of them, since identity")
+    print("through fission then belongs to the cell line, where nobody")
+    print("claimed a person lived. What survives the split is one claim")
+    print("with an EARNED chain (the lineage never broke) and one with no")
+    print("possible witness (the lineage is a thing that is ALIVE) — and")
+    print("the cure for the second is neither measurement nor document but")
+    print("CONTEST TYPE: a decision about what sort of thing may be called")
+    print("alive. Plus the asymmetry that answers the title question best:")
+    print("the person's 'I am alive' is until-verification and expires; the")
+    print("lineage's 'it ran unbroken' is hereditary and cannot be revoked")
+    print("by anything that happens next. The god does not die the way you")
+    print("do — not because he is immortal, but because his ending has a")
+    print("different grammar.")

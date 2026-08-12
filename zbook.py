@@ -24,8 +24,20 @@ changed", which is the difference between a finding and an artefact.
 
 Format: a claim is a sheet line, `id :: formula :: quantities`, so the
 book is a claims sheet with a history. Witnesses live where they always
-did, inside the quantities (`earned:inv-17`) — and in stage 2 they will be
-allowed to name another claim.
+did, inside the quantities — and one may now name another claim,
+`earned:claim/c1`, which is the single change that turns the book into a
+graph. Three things follow, none of them needing a new rule:
+
+  * warranty is INHERITED. A citation is honoured exactly as far as the
+    cited claim currently stands; cite anything short of EARNED and the
+    quantity drops to credit;
+  * retraction TRAVELS. Withdraw one invoice and the whole subtree moves,
+    including claims that never named it — the auditor's question, "what
+    falls if this is a lie", answered by name instead of by memory;
+  * a CIRCLE of support is classified, not rejected. Mutual citation
+    without negation is the truth-teller's shape, and the passport calls
+    it UNDERDETERMINED: ungrounded rather than refuted, curable only by
+    stipulating a member. Agrippa's second horn, mechanically.
 
 Run:  python3 zbook.py
 """
@@ -67,23 +79,130 @@ def fingerprint():
     return hashlib.sha256("|".join(parts).encode()).hexdigest()[:12]
 
 
+CITE = "claim/"
+
+
+def _cited(quantities):
+    """The claims this one leans on: witnesses of the form claim/<id>."""
+    return sorted({v["witness"][len(CITE):] for v in quantities.values()
+                   if (v.get("witness") or "").startswith(CITE)})
+
+
+def _order(book):
+    """Dependency order, plus the cycles. A cycle is not an error here —
+    it is a CIRCULAR JUSTIFICATION, which is a thing the corpus can
+    classify rather than reject (Agrippa's second horn)."""
+    deps, ids = {}, [c[0] for c in book]
+    for cid, _f, data in book:
+        q, _m = parse_quantities(data)
+        deps[cid] = [d for d in _cited(q) if d in ids]
+    order, seen, stack, cycles = [], set(), set(), []
+
+    def visit(n, path):
+        if n in seen:
+            return
+        if n in stack:                       # found a circle of support
+            cycles.append(path[path.index(n):] + [n])
+            return
+        stack.add(n)
+        for d in deps[n]:
+            visit(d, path + [n])
+        stack.discard(n)
+        seen.add(n)
+        order.append(n)
+
+    for cid in ids:
+        visit(cid, [])
+    return order, deps, cycles
+
+
 def judge_book(claims):
-    """Recompute every claim in the book. Nothing is read from a cache;
-    the cache exists only to be compared with, never to answer from."""
+    """Recompute the whole book, in dependency order, resolving citations.
+
+    A witness of the form `claim/<id>` is honoured only as far as that
+    claim currently stands: cite an EARNED claim and the citation carries
+    its weight; cite anything else and the quantity drops to credit. The
+    inheritance needs no special rule — it is the ordinary refusal to take
+    a ground on somebody else's word, applied to our own book."""
+    book = list(claims)
+    order, deps, cycles = _order(book)
+    by_id = {cid: (f, data) for cid, f, data in book}
+    in_cycle = {n for cyc in cycles for n in cyc}
     out = {}
-    for claim_id, formula, data in claims:
+    for cid in order:
+        formula, data = by_id[cid]
         q, m = parse_quantities(data)
+        cites = _cited(q)
+        # resolve each citation against the claim it names
+        weakened = []
+        for name, qty_ in q.items():
+            w = qty_.get("witness", "") or ""
+            if not w.startswith(CITE):
+                continue
+            target = w[len(CITE):]
+            stands = out.get(target, {}).get("disposition") == "EARNED"
+            if not stands:
+                qty_["prov"] = "credit"
+                qty_["witness"] = None
+                weakened.append((name, target))
         r = judge_sheet_claim(formula, q, m)
-        out[claim_id] = {
+        out[cid] = {
             "formula": formula,
-            "disposition": r["disposition"],
+            "disposition": ("CIRCULAR" if cid in in_cycle
+                            else r["disposition"]),
             "lazy": r.get("lazy"),
             "next_check": r.get("next_check", []),
             "why": r.get("why"),
+            "cites": cites,
+            "weakened_by": weakened,
             "witnesses": sorted({v["witness"] for v in q.values()
                                  if v.get("witness")}),
         }
+    for cid, _f, _d in book:                 # cycles never reach `order`
+        out.setdefault(cid, {"formula": by_id[cid][0],
+                             "disposition": "CIRCULAR", "lazy": None,
+                             "next_check": [], "why": "circular support",
+                             "cites": deps[cid], "weakened_by": [],
+                             "witnesses": []})
     return out
+
+
+def classify_cycles(book):
+    """A circle of support, handed to the instrument that already knows
+    what to do with self-reference. Mutual citation with no negation is
+    the truth-teller's shape, and the passport calls it what it is:
+    UNDERDETERMINED — not refuted, ungrounded, and curable only by
+    stipulating one of its members. That is Agrippa's second horn,
+    classified rather than deplored."""
+    from zpassport import passports
+    _order_, deps, cycles = _order(list(book))
+    out = []
+    for cyc in cycles:
+        members = sorted(set(cyc))
+        system = {m: (deps[m][0] if deps[m] else m) for m in members}
+        reports = passports(system)[1]
+        kinds = sorted({k for _c, k, _w in reports}) or ["GROUNDED"]
+        out.append((members, kinds))
+    return out
+
+
+def retract(book, witness):
+    """A ground goes: the document is forged, or the certificate expired.
+    Everything that named it drops to credit, and the book is recomputed —
+    so the damage travels along citations by itself."""
+    out = []
+    for cid, formula, data in book:
+        out.append((cid, formula,
+                    data.replace(f"earned:{witness}", "credit")))
+    return out
+
+
+def fallout(book, witness):
+    """What a retraction costs, claim by claim: (id, before, after)."""
+    before, after = judge_book(book), judge_book(retract(book, witness))
+    return [(cid, before[cid]["disposition"], after[cid]["disposition"])
+            for cid in before
+            if before[cid]["disposition"] != after[cid]["disposition"]]
 
 
 def snapshot(results):
@@ -173,17 +292,73 @@ def sec2_the_judge_has_a_fingerprint(results):
     print("   have been news about the machine, and the book says which.")
 
 
-def sec3_what_stage_one_does_not_do():
+CHAIN = [
+    ("c1", "line == amount",
+     "line=1500 earned:inv-19, amount=1500 earned:inv-19"),
+    ("c2", "total == sum(a,b)",
+     "total=4500 earned:claim/c1, a=3000 earned:inv-17, b=1500 earned:inv-18"),
+    ("c3", "total <= budget",
+     "total=4500 earned:claim/c2, budget=5000 earned:order-o4"),
+]
+
+CIRCLE = [
+    ("a1", "x == y", "x=1 earned:claim/a2, y=1 earned:doc"),
+    ("a2", "y == x", "y=1 earned:claim/a1, x=1 earned:doc"),
+]
+
+
+def sec3_a_claim_may_rest_on_a_claim():
     print("-" * 72)
-    print("3. WHAT THIS STAGE DOES NOT DO YET")
-    print("   A witness is still an external name — `earned:inv-17`. Stage")
-    print("   two lets it name another CLAIM, and then the book becomes a")
-    print("   graph: warranty is inherited along citations (rest on a")
-    print("   credit claim and yours cannot rise above it), retraction has")
-    print("   a closure to compute, and a circular justification is caught")
-    print("   by the passport we already own.")
-    print("   Until then this is a ledger that recomputes itself honestly —")
-    print("   which is little, and is the part everything else stands on.")
+    print("3. STAGE TWO: A WITNESS MAY NAME ANOTHER CLAIM")
+    res = judge_book(CHAIN)
+    for cid in ("c1", "c2", "c3"):
+        v = res[cid]
+        print(f"   {cid}  {v['disposition']:9} cites={v['cites']} "
+              f"weakened_by={v['weakened_by']}")
+    assert all(res[c]["disposition"] == "EARNED" for c in ("c1", "c2", "c3"))
+    print("   a chain three deep, every link earned. And the inheritance is")
+    print("   not a special rule: a citation is honoured exactly as far as")
+    print("   the cited claim currently stands.")
+
+
+def sec4_retraction_travels_by_itself():
+    print("-" * 72)
+    print("4. STAGE THREE: WHAT FALLS WHEN A GROUND GOES")
+    hits = fallout(CHAIN, "inv-19")
+    for cid, before, after in hits:
+        print(f"   {cid}: {before} -> {after}")
+    assert [h[0] for h in hits] == ["c1", "c2", "c3"]
+    assert all(b == "EARNED" and a == "ON CREDIT" for _c, b, a in hits)
+    print("   one invoice withdrawn and three claims move, two of them")
+    print("   never naming it: the damage travelled along the citations by")
+    print("   itself. This is the auditor's question — WHAT FALLS IF THIS")
+    print("   IS A LIE — answered by name instead of by memory, and it is")
+    print("   the reason the book stores grounds rather than verdicts.")
+
+
+def sec5_a_circle_is_classified_not_rejected():
+    print("-" * 72)
+    print("5. STAGE FOUR: A CIRCLE OF SUPPORT, CLASSIFIED")
+    res = judge_book(CIRCLE)
+    print(f"   a1 {res['a1']['disposition']}, a2 {res['a2']['disposition']}")
+    assert all(v["disposition"] == "CIRCULAR" for v in res.values())
+    for members, kinds in classify_cycles(CIRCLE):
+        print(f"   the circle {members}: passport {kinds}")
+        assert kinds == ["UNDERDETERMINED"]
+    print("   UNDERDETERMINED — not refuted, UNGROUNDED, and curable only")
+    print("   by stipulating one member. That is Agrippa's circle, and the")
+    print("   book reaches the verdict with the instrument it already had:")
+    print("   mutual citation without negation is the truth-teller's shape.")
+
+
+def sec6_what_is_still_missing():
+    print("-" * 72)
+    print("6. WHAT IS STILL MISSING")
+    print("   Search. Nothing here finds the relevant stored claims for a")
+    print("   new question — that is premise selection, a crowded field")
+    print("   with strong tools (Sledgehammer and its kin), and this corpus")
+    print("   would lose there. Citations are written by whoever writes the")
+    print("   claim, and the machine only honours them honestly.")
 
 
 if __name__ == "__main__":
@@ -192,9 +367,17 @@ if __name__ == "__main__":
     print("=" * 72)
     res = sec1_the_book_reads_itself()
     sec2_the_judge_has_a_fingerprint(res)
-    sec3_what_stage_one_does_not_do()
+    sec3_a_claim_may_rest_on_a_claim()
+    sec4_retraction_travels_by_itself()
+    sec5_a_circle_is_classified_not_rejected()
+    sec6_what_is_still_missing()
     print("=" * 72)
     print("ZBOOK GREEN — the book stores claims and grounds and never a")
     print("verdict: every reading recomputes. A snapshot carries the")
     print("judge's fingerprint, so a moved verdict can be told from a moved")
-    print("machine — news about the world, or news about us.")
+    print("machine — news about the world, or news about us. A witness may")
+    print("name another claim, and then warranty is inherited without a")
+    print("special rule; withdraw one invoice and three claims move, two of")
+    print("them never naming it; and a circle of support is classified")
+    print("UNDERDETERMINED by the passport — Agrippa's second horn, cured")
+    print("only by stipulating a member.")

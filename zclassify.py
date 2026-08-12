@@ -167,6 +167,26 @@ CURRY_DOWNSTREAM = {"γ": ("imp", "γ", "⊥"), "⊥": ("and", "s", n("s")), "s"
 AGRIPPA_DOGMA = {"p": "f", "f": "f"}
 
 
+def genre(system, comp):
+    """LOOP or EMPTY — the second axis, computed rather than declared.
+
+    A case is a LOOP when its component depends on itself: the expression
+    NAMES something and the loop is real, which is why its models can be
+    counted and the count reported. The other genre names nothing at all —
+    a type no value satisfies, a comparison between magnitudes that cannot
+    meet — and there the reading set is empty and the status is E.
+
+    This instrument cannot produce the second genre BY CONSTRUCTION: a
+    system of definitions always names its sentences. That the whole
+    docket is therefore LOOP is not a limitation quietly passed over — it
+    is the finding, and the E genre is measured on the numeric floor
+    instead (znum.py, dilemmas/omnipotence.py)."""
+    if not comp:
+        return "loop" if False else "grounded"
+    names = set(comp)
+    return "loop" if any(names & deps(system[s]) for s in comp) else "flat"
+
+
 def measure(system):
     """(kind, models, period) of the focus component; GROUNDED if none."""
     lfp, reports, kinds = passports(system)
@@ -186,19 +206,38 @@ def measure(system):
 def run():
     print("E35. THE DOCKET: MACHINE-CERTIFIED CLASSIFICATION OF PARADOXES")
     print("=" * 74)
-    print(f"{'case':32s} {'passport':16s} {'mod':>3} {'per':>3} {'par':>3}")
+    print(f"{'case':32s} {'passport':16s} {'mod':>3} {'per':>3} {'par':>3} "
+          f"{'genre':>8}")
     print("-" * 74)
 
-    rows = {}
+    rows, genres = {}, {}
     for name, system, (ekind, emods, eper), par in DOCKET:
         kind, mods, per, comp = measure(system)
         rows[name] = (kind, mods, per, par)
+        genres[name] = genre(system, comp)
         print(f"{name:32s} {kind:16s} {str(mods) if mods is not None else '-':>3} "
-              f"{str(per):>3} {str(par) if par is not None else '-':>3}")
+              f"{str(per):>3} {str(par) if par is not None else '-':>3} "
+              f"{genres[name]:>8}")
         assert kind == ekind, (name, kind, ekind)
         if emods is not None:
             assert mods == emods, (name, mods, emods)
         assert per == eper, (name, per, eper)
+
+    # the second axis, computed per case rather than declared once
+    kinds = {g for n, g in genres.items() if rows[n][0] != "GROUNDED"}
+    print(f"\n### V0. The second axis: every classified case is a LOOP")
+    print(f"ok  genres present among the classified cases: {sorted(kinds)}")
+    assert kinds == {"loop"}
+    print("    every case NAMES something, so its models can be counted and")
+    print("    the count reported; the other genre — an expression that")
+    print("    names nothing, whose reading set is empty and whose status")
+    print("    is E — cannot arise here BY CONSTRUCTION, since a system of")
+    print("    definitions always names its sentences. That the docket is")
+    print("    entirely loop is the finding, not an omission: the classical")
+    print("    paradoxes are failures of settlement, not of reference.")
+    print("    The E genre is measured on the numeric floor instead")
+    print("    (znum.py; dilemmas/omnipotence.py, where the same puzzle")
+    print("    lands in either genre depending on how one word is read).")
 
     print("\n### V1. Parity law: no exception on pure negation cycles")
     for name, (kind, mods, per, par) in rows.items():

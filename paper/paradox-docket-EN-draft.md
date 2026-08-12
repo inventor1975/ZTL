@@ -1,6 +1,6 @@
 # The Paradox Docket: A Computable Classification of the Classical Paradoxes
 
-**Draft v0.1 (2026-08-08). English translation of the Russian original (`paradox-docket-RU-draft.md`).**
+**Draft, 2026-08-12. English edition.**
 
 *Vitaly Reznik (curator), with AI participation — see Acknowledgements.*
 
@@ -146,7 +146,17 @@ We foresee the metaphysician's objection: "planks, form, history — those are y
 
 ## 5. The limits of jurisdiction
 
-The passport office judges finite systems of definitions — the genre of self-reference. It honestly does **not** judge: the sorites (vagueness — there is no loop there, only a creeping boundary), the surprise exam (epistemic time), the lottery and St. Petersburg (probability), Berry and Richard (definability — that requires arithmetized naming, which a finite language does not express), Newcomb (decision theory). Some of these families are covered by other instruments of the ZTL corpus; some are covered by no one. We name the edges explicitly for a principled reason: a classification that does not know its own borders is just one more total theory. Knowing the edges is part of the strength, not a confession of weakness.
+The passport office judges finite systems of definitions — the genre of self-reference. It honestly does **not** judge: the sorites (vagueness — there is no loop there, only a creeping boundary), the surprise exam (epistemic time), the lottery and St. Petersburg (probability), Berry and Richard (definability — that requires arithmetized naming, which a finite language does not express), Newcomb (decision theory). We name the edges explicitly for a principled reason: a classification that does not know its own borders is just one more total theory. Knowing the edges is part of the strength, not a confession of weakness.
+
+Two of those edges have since been crossed by other instruments of the corpus, and the results are stated here so that this paper's borders stay accurate rather than merely modest. The **sorites** is resolved in `dilemmas/solved/sorites/`: tolerance is refuted hereditarily by the two witnessed ends alone, every instance touching the unwitnessed middle is denied outright (`Z → Z` is `F`), and yet no sharp grain is asserted — the unpaid step is the classical identification of `¬(p → q)` with `p ∧ ¬q`, and the boundary arrives only with the act that draws it. The **surprise exam** is in `dilemmas/surprise.py`: with the announcement held as knowledge, no day survives the elimination; held on credit, all five do — and the sentence "the exam is today and you do not know it" is EARNED in the teacher's ledger and OPEN in the class's, because a warranty belongs to a ledger and not to a sentence. The lottery and Berry remain unbuilt.
+
+### 5.1. The second genre of defect: a loop, or an empty description
+
+There is a second way for a claim to resist judgment, and this table contains none of it. Every case above **names something**: the liar names a sentence, the barber a barber, Russell a set. The loop is real, its models are countable, and the count is zero — which is what the PARADOX passport reports. The other way is for an expression to name **nothing at all**: a type no value satisfies, a quantity required to be both unbounded and exceeded, a comparison between magnitudes that cannot meet. There the reading set is empty, there is nothing to quantify over, and the numeric floor returns the status **E** — not a verdict but a refusal to judge, carrying the reason and charged to the declaration that produced it (`znum.py`; the attribution and its census, `znumjudge.e_census`).
+
+The discriminator is exactly "does the expression name something?", and it sorts the two genres cleanly. The stone an omnipotent being cannot lift is the instructive case, because it lands in **both** depending on how the word is read (`dilemmas/omnipotence.py`): read omnipotence as power over the logically possible and the STONE is refuted — a request with no instance, no limit on anyone's power; read it as power over anything whatever and the BEING is unjudgeable, E, charged to the definition, since nothing consistent answers to the term. No machine picks the reading; that is a stipulation about a word, and it is what the dispute was always about.
+
+That all twenty-one classical cases fall on the loop side is itself a finding, and a mildly surprising one: the canonical paradoxes are not failures of reference but failures of settlement. The empty-description genre is populated mostly by definitions people write on purpose — impossible norms, unfulfillable clauses, contradictory specifications — which is why its instrument grew out of an audit ledger rather than out of the theory of truth.
 
 ## 6. The honest frame
 
@@ -191,7 +201,9 @@ The text, code and measurements were prepared in co-authorship with an AI (Claud
 
 ## Appendix A. The reference run
 
-The full output of `python3 zclassify.py` (all `ok` lines), identical to the one published in the repository at the publication commit. **[Insert at typesetting.]**
+The full output of `python3 zclassify.py`, identical to the one published in the repository at the publication commit:
+
+@@APPENDIXA@@
 
 ## Appendix B. A pocket glossary
 

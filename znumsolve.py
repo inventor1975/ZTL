@@ -170,16 +170,21 @@ def narrow(quantities, formula, rounds=MAX_ROUNDS):
         others = sorted(contributors - {name})
         derived_prov = (EARNED if all(qs[o]["prov"] == EARNED for o in others)
                         else CREDIT)
-        try:
-            qs[name] = qty(value, value, derived_prov,
-                           "derived:" + ",".join(others) if others else None,
-                           discrete=q["discrete"], unit=q["unit"],
-                           sample=False)
-        except ValueError:                   # off the lattice: refuted
+        pinned_q = qty(value, value, derived_prov,
+                       "derived:" + ",".join(others) if others else None,
+                       discrete=q["discrete"], unit=q["unit"], sample=False)
+        # KEEP THE TWO EMPTINESSES APART (2026-08-12). A quantity DECLARED
+        # with no reading is E: the sheet cannot be judged at all. A value
+        # DERIVED onto a point the lattice does not contain is something
+        # else entirely — the judging succeeded and found no solution, so
+        # the claim is REFUTED. Same empty set, opposite meanings: one is a
+        # broken description, the other is an answer.
+        if pinned_q.get("no_readings"):
             log.append(f"{name}: {fmt(value)} is off the "
-                       f"{typename(q['discrete'])} lattice")
+                       f"{typename(q['discrete'])} lattice — no solution")
             qs[name] = dict(q, empty=True)
             return qs, log
+        qs[name] = pinned_q
         log.append(f"{name} = {fmt(value)} by exact elimination"
                    f" ({derived_prov})")
     for _ in range(rounds):

@@ -7,7 +7,13 @@ comparisons over quantities stand INSIDE propositional formulas, supplies
 their T/F/Z verdicts from the numeric floor (znum), and has the UNCHANGED
 core (ztljudge) judge the formula. Diagnostics merge both floors:
 
-  disposition   EARNED / ON CREDIT / OPEN / REFUTED — core disposition,
+  disposition   EARNED / ON CREDIT / OPEN / REFUTED / E — the last is the
+                fourth corner of the reading-set construction: no admissible
+                reading exists, so there is nothing to quantify over and no
+                verdict to give (a type with no lattice point, units that do
+                not unify). It is a VALUE of the floor, not an exception:
+                the atom halts, the rest of the sheet is judged. Otherwise:
+                core disposition,
                 then capped by the numeric provenance axis: NO forced
                 verdict rises above ON CREDIT while it rides unearned
                 LOAD-BEARING bounds — in either direction, since if truth
@@ -248,7 +254,21 @@ def judge_sheet_claim(formula, quantities, marks):
     core_formula, natoms = extract_comparisons(formula, quantities)
     marking, numeric = dict(marks), {}
     for name, (kind, e1, e2, chunk) in natoms.items():
-        v, ped, used = compare(kind, e1, e2, quantities)
+        v, ped, used, why = compare(kind, e1, e2, quantities)
+        if v == "E":
+            # THE FOURTH CORNER (2026-08-12): no admissible reading, so
+            # this atom cannot be judged at all — and a claim resting on an
+            # unjudgeable atom is not OPEN, not REFUTED, it is UNJUDGEABLE.
+            # The judge stops here and says what to repair; every other
+            # claim on the sheet is untouched, which is the whole point of
+            # keeping E a value rather than an exception.
+            return {"formula": formula, "core_formula": core_formula.strip(),
+                    "numeric_atoms": {name: {"comparison": chunk,
+                                             "verdict": "E", "why": why,
+                                             "pedigree": [], "used": []}},
+                    "core": None, "disposition": "E", "polarity": None,
+                    "why": why, "credit_quantities": [], "bearing_credit": [],
+                    "next_check": [f"repair the claim: {why}"]}
         marking[name] = v
         numeric[name] = {"comparison": chunk, "verdict": v,
                          "pedigree": sorted(ped), "used": sorted(used)}

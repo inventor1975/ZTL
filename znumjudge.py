@@ -74,9 +74,12 @@ from znum import (EARNED, CREDIT, INF, qty, compare, num,   # noqa: E402
 
 # ------------------------------------------------------------ sheet parsing
 _VAL = r"-?\d+(?:\.\d+)?(?:/\d+)?"      # 5, 0.75, 8/3 — read exactly
+# `inf` is admissible as a bound on either side and as a point value: an
+# unlimited capacity is a legitimate declaration, not a syntax error
+# (needed the moment a sheet had to say "lifts any weight whatsoever").
 _QTY = re.compile(
-    rf"^(?P<name>\w+)=(?:\[(?P<lo>{_VAL}|-inf),(?P<hi>{_VAL}|inf)\]"
-    rf"|(?P<point>{_VAL})|(?P<unk>\?))$")
+    rf"^(?P<name>\w+)=(?:\[(?P<lo>{_VAL}|-inf|inf),(?P<hi>{_VAL}|inf|-inf)\]"
+    rf"|(?P<point>{_VAL}|-inf|inf)|(?P<unk>\?))$")
 _CMP = re.compile(r"(<=|>=|==|<|>)")
 
 

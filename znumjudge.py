@@ -349,8 +349,15 @@ def judge_sheet_claim(formula, quantities, marks):
                         f"contest type {q}:"
                         f"{typename(quantities[q]['discrete'])}")
 
+    # the second register, carried through to the sheet: the core reports
+    # it over the extracted atoms (nc1, nc2 ...), so translate those back
+    # into the comparisons a reader of the sheet actually wrote
+    def _say(a):
+        return natoms[a][3] if a in natoms else a
     return {"formula": formula, "core_formula": core_formula.strip(),
             "numeric_atoms": numeric, "core": core,
+            "lazy": core["lazy"],
+            "pending": [_say(a) for a in core["pending"]],
             "disposition": disposition, "polarity": polarity,
             "credit_quantities": credit_quantities,
             "bearing_credit": bearing_credit,
@@ -529,6 +536,25 @@ if __name__ == "__main__":
     assert by["remont_estimate"]["next_check"] == ["document budget"]
     assert by["parens_xor"]["disposition"] == "EARNED"
     assert by["nested_parens"]["disposition"] == "EARNED"
+    # ---- the second register on the sheet
+    print()
+    print("-" * 72)
+    print("THE LAZY COLUMN ON A SHEET — which part is still running")
+    for data, formula in (("a=[0,10] credit, b=5 earned:doc, ok=Z", "a <= b & ok"),
+                          ("a=1 earned:doc, b=5 earned:doc, ok=Z", "a <= b | ok")):
+        q, m = parse_quantities(data)
+        r = judge_sheet_claim(formula, q, m)
+        print(f"   {formula:14} {r['disposition']:8} lazy={r['lazy']} "
+              f"pending={r['pending']}")
+    q, m = parse_quantities("a=[0,10] credit, b=5 earned:doc, ok=Z")
+    assert judge_sheet_claim("a <= b & ok", q, m)["pending"] == ["a <= b", "ok"]
+    q, m = parse_quantities("a=1 earned:doc, b=5 earned:doc, ok=Z")
+    assert judge_sheet_claim("a <= b | ok", q, m)["pending"] == []
+    print("   and the pending list speaks the sheet's own language: the")
+    print("   comparison as written, not the internal atom name. In the")
+    print("   second line the hole in `ok` is real and irrelevant — the")
+    print("   comparison already decided the matter.")
+
     # ---- the E census: counting what cannot be judged, by signature
     print()
     print("-" * 72)

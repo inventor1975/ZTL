@@ -110,8 +110,17 @@ def qty(lo, hi, provenance=CREDIT, witness=None, discrete=None, unit=None,
     sees values and not names. Down here the names are right there, so it
     was a choice, and the default was the wrong way round."""
     lo, hi = num(lo), num(hi)
-    assert lo <= hi
     assert provenance in (EARNED, CREDIT)
+    if lo > hi:
+        # An INVERTED interval is the purest empty reading set there is,
+        # and until 2026-08-12 it was an `assert` — the same mistake as the
+        # lattice case, caught the same day by the curator's Vasya/Petya
+        # story: emptiness kept leaking out of the logic through a
+        # different hole. There is one emptiness and it has one status.
+        return {"lo": lo, "hi": hi, "prov": provenance, "witness": witness,
+                "discrete": discrete, "unit": _unit_str(_unit_map(unit)),
+                "sample": sample,
+                "no_readings": f"empty interval [{fmt(lo)}, {fmt(hi)}]"}
     step = _step(discrete)
     if step is not None:
         tlo = lo if lo == -INF else Fraction(math.ceil(lo / step)) * step

@@ -166,6 +166,8 @@ STANDS = [
     ("inventory/paper_claims.py", ["PAPER CLAIMS GREEN"]),
     ("inventory/docket_claims.py", ["DOCKET TABLE GREEN",
                                     "rows printed in the paper: 21"]),
+    ("inventory/corpus_book.py", ["CORPUS BOOK GREEN", "census: {'EARNED': 15}",
+                                  "at 8 of 15 claims"]),
     ("pssl/E27_instrument.py", ["E27 GREEN", "7 blindnesses reproduced",
                                 "blindnesses that silently changed the answer: 7 of 7"]),
     ("dilemmas/solved/sorites/sorites.py", ["SORITES GREEN",

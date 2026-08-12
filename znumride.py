@@ -33,7 +33,7 @@ CASES = [
      "a=0.5 decimal1 earned:x, b=1/2 frac2 earned:y",
      "EARNED", []),
     ("empty_domain", "k >= 1", "k=[0.2,0.9] int credit",
-     "ERROR:E_EMPTY_DOMAIN", []),
+     "E", ["repair the claim: k: no int reading in [1/5, 9/10]"]),
     ("composed_unit", "speed == dist / time",
      "speed=[50,60] credit km/h, dist=110 earned:odo km, time=2 earned:clock h",
      "OPEN", ["measure speed", "document speed"]),
@@ -49,7 +49,7 @@ CASES = [
      "EARNED", []),
     ("no_silent_conversion", "x == y",                # a conversion is a
      "x=1000 earned:doc m, y=1 earned:doc km",        # claim, not arithmetic
-     "ERROR:E_UNIT", []),
+     "E", ["repair the claim: cannot compare 'm' with 'km'"]),
     ("two_bounds_on_credit", "x <= y", "x=[0,1] credit, y=[5,6] credit",
      "ON CREDIT", ["document x", "document y"]),
     ("divisor_spans_zero", "n / d < 10", "n=5 earned:doc, d=[-1,1] earned:doc",

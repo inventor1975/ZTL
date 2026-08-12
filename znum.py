@@ -36,6 +36,27 @@ from ztljudge import judge                              # noqa: E402
 INF = math.inf
 EARNED, CREDIT = "earned", "credit"
 
+# The four corners of ONE construction. A formula's meaning here is its SET
+# OF READINGS, and every status is a fact about that set:
+#     T   readings exist and all of them make it true
+#     F   readings exist and all of them make it false
+#     Z   readings exist and they disagree
+#     E   THERE ARE NO READINGS AT ALL — the set is empty
+# E was raised as a Python exception until 2026-08-12, which put it OUTSIDE
+# the logic: a breakage of the implementation rather than a value of the
+# system. It is not. It is the fourth corner, and the corpus had already
+# stumbled over it twice — as the two ValueErrors below, and as the vacuity
+# trap measured in zprove.py, where "all readings are true" comes for free
+# when there are no readings to check. Emptiness must be SEPARATED, not
+# quantified over.
+#
+# Note what this answers, since the question came from the ethics thread:
+# the norm behind E is not imposed from outside (Augustine had to hang it
+# on a Creator). Judging IS quantification over readings; E is what happens
+# when there is nothing to quantify over. The judge halts because it has
+# nothing to inspect, not because it broke somebody's design.
+E = "E"
+
 
 def num(x):
     """Every finite value is an EXACT rational; ±INF stays the float
@@ -73,8 +94,9 @@ def qty(lo, hi, provenance=CREDIT, witness=None, discrete=None, unit=None,
     express (thirds, eighths: "she shared it out in thirds" is a sayable
     claim, not a refuted one). `unit`: a name ("candies", "RUB") or None
     (dimensionless). The declared bounds are tightened to the lattice at
-    construction; an EMPTY reading set is a formalization error
-    (E_EMPTY_DOMAIN), never a vacuous verdict.
+    construction; if nothing survives, the quantity carries `no_readings`
+    and every comparison touching it comes back E — never a vacuous
+    verdict, and never an exception either.
 
     `sample`: what a repeated NAME means. Default False — the quantity is
     ONE THING IN THE WORLD, so every occurrence co-refers and m - m is 0.
@@ -95,13 +117,19 @@ def qty(lo, hi, provenance=CREDIT, witness=None, discrete=None, unit=None,
         tlo = lo if lo == -INF else Fraction(math.ceil(lo / step)) * step
         thi = hi if hi == INF else Fraction(math.floor(hi / step)) * step
         if tlo > thi:
-            raise ValueError(
-                f"E_EMPTY_DOMAIN: no {typename(discrete)} reading in "
-                f"[{fmt(lo)}, {fmt(hi)}]")
+            # no lattice point inside the bounds: the reading set is EMPTY.
+            # Not an exception any more — a status the floor computes and
+            # carries, with the offending declaration kept for the report.
+            return {"lo": lo, "hi": hi, "prov": provenance,
+                    "witness": witness, "discrete": discrete,
+                    "unit": _unit_str(_unit_map(unit)), "sample": sample,
+                    "no_readings":
+                        f"no {typename(discrete)} reading in "
+                        f"[{fmt(lo)}, {fmt(hi)}]"}
         lo, hi = tlo, thi
     return {"lo": lo, "hi": hi, "prov": provenance, "witness": witness,
             "discrete": discrete, "unit": _unit_str(_unit_map(unit)),
-            "sample": sample}
+            "sample": sample, "no_readings": None}
 
 
 def _step(discrete):
@@ -212,7 +240,14 @@ def _unify_units(u1, u2, ctx):
         return u2
     if u2 is None or u1 == u2:
         return u1
-    raise ValueError(f"E_UNIT: cannot {ctx} '{u1}' with '{u2}'")
+    raise _NoReadings(f"cannot {ctx} '{u1}' with '{u2}'")
+
+
+class _NoReadings(Exception):
+    """Raised inside the evaluator, caught at the verdict boundary, turned
+    into the value E. Units that do not unify leave the comparison with no
+    admissible reading at all — the same emptiness as a type with no
+    lattice point, arrived at from the other side."""
 
 
 # ------------------------------------ the linear fragment, read coherently
@@ -234,6 +269,8 @@ def _linear(expr, quantities, counter, seen=None):
         return num(expr), {}, None, Fraction(1) if num(expr).denominator == 1 else None
     if isinstance(expr, str):
         q = quantities[expr]
+        if q.get("no_readings"):
+            raise _NoReadings(f"{expr}: {q['no_readings']}")
         if seen is not None:
             seen.add(expr)
         counter[0] += 1
@@ -328,6 +365,8 @@ def _ev(expr, quantities):
         return (v, v), set(), set(), step, None
     if isinstance(expr, str):
         q = quantities[expr]
+        if q.get("no_readings"):
+            raise _NoReadings(f"{expr}: {q['no_readings']}")
         pedigree = {expr} if q["prov"] == CREDIT else set()
         return ((q["lo"], q["hi"]), pedigree, {expr},
                 _step(q.get("discrete")), q.get("unit"))
@@ -374,12 +413,19 @@ def compare(kind, e1, e2, quantities):
     """A numeric atom. Verdict by the generating principle over intervals:
     T if forced under every reading, F if the negation is forced, else Z.
     Returns (verdict, credit_pedigree, quantities_read)."""
-    r1, p1, u1, s1, un1 = _ev(e1, quantities)
-    r2, p2, u2, s2, un2 = _ev(e2, quantities)
-    _unify_units(un1, un2, "compare")     # unit mismatch = E_UNIT, pre-verdict
+    try:
+        r1, p1, u1, s1, un1 = _ev(e1, quantities)
+        r2, p2, u2, s2, un2 = _ev(e2, quantities)
+        _unify_units(un1, un2, "compare")
+    except _NoReadings as why:
+        # THE FOURTH CORNER: no admissible reading, so there is nothing to
+        # quantify over and no verdict to give. E is returned as a value,
+        # with the reason attached — the judge stops on this atom and on
+        # nothing else.
+        return E, set(), set(), str(why)
     ped, used = p1 | p2, u1 | u2
     if r1 is None or r2 is None:
-        return "Z", ped, used             # undefined subterm: mark, not verdict
+        return "Z", ped, used, None       # undefined subterm: mark, not verdict
     if kind == "le":
         v = "T" if r1[1] <= r2[0] else ("F" if r1[0] > r2[1] else "Z")
     elif kind == "lt":
@@ -394,7 +440,7 @@ def compare(kind, e1, e2, quantities):
                     v = "F"                # off the lattice: forced false
     else:
         raise ValueError(kind)
-    return v, ped, used
+    return v, ped, used, None
 
 
 # ------------------------------------------------- what holds a verdict up
@@ -437,7 +483,14 @@ def judge_claim(kind, e1, e2, quantities):
       provenance axis:  EARNED or ON_CREDIT — cured by a witness.
 
     Disposition = the meet of the axes; carriers name what holds it up."""
-    v, ped, used = compare(kind, e1, e2, quantities)
+    v, ped, used, why = compare(kind, e1, e2, quantities)
+    if v == E:
+        # nothing to judge: the atom halts here and says why
+        return {"verdict": E, "interval_axis": "NO_READINGS",
+                "provenance_axis": "NO_READINGS", "credit_pedigree": [],
+                "disposition": "E", "why": why, "riding_credit": False,
+                "interval_carriers": [], "provenance_carriers": [],
+                "type_carriers": [], "next_check": [f"repair the claim: {why}"]}
     interval_axis = "FORCED" if v in ("T", "F") else "NOT_FORCED"
     prov_axis = "ON_CREDIT" if ped else "EARNED"
     # carriers, SPLIT BY AXIS (F3 continued): each axis degrades separately,
@@ -464,7 +517,7 @@ def judge_claim(kind, e1, e2, quantities):
         for name in sorted(ped):
             healed = dict(quantities)
             healed[name] = dict(quantities[name], prov=EARNED)
-            _, ped2, _ = compare(kind, e1, e2, healed)
+            _, ped2, _, _ = compare(kind, e1, e2, healed)
             if ped2 == ped - {name} \
                     and bounds_bearing(kind, e1, e2, quantities, name):
                 provenance_carriers.append(name)
@@ -646,6 +699,47 @@ def sec4_seam_with_the_judge():
     print("   ztljudge untouched: znum is an atom supplier, not a new logic")
 
 
+def sec6_the_fourth_corner():
+    print("-" * 72)
+    print("6. THE FOURTH CORNER: E, computed rather than raised")
+    print("   A formula's meaning here is its SET OF READINGS, and every")
+    print("   status is one fact about that set:")
+    ok = {"x": qty(1, 3, EARNED, "doc", discrete="int")}
+    empty = {"k": qty(0.2, 0.9, EARNED, "doc", discrete="int")}
+    units = {"a": qty(5, 5, EARNED, "doc", unit="m"),
+             "b": qty(3, 3, EARNED, "doc", unit="RUB")}
+    wide = {"x": qty(1, 9, EARNED, "doc", discrete="int")}
+    print(f"     all readings true      x in [1,3] <= 5 : "
+          f"{compare('le', 'x', 5, ok)[0]}")
+    print(f"     all readings false     x in [1,3] >= 9 : "
+          f"{compare('le', 9, 'x', ok)[0]}")
+    print(f"     readings disagree      x in [1,9] <= 5 : "
+          f"{compare('le', 'x', 5, wide)[0]}")
+    print(f"     NO readings at all     k int in [.2,.9]: "
+          f"{compare('le', 'k', 5, empty)[0]}   "
+          f"({compare('le', 'k', 5, empty)[3]})")
+    print(f"     NO readings, units     5 m == 3 RUB    : "
+          f"{compare('eq', 'a', 'b', units)[0]}   "
+          f"({compare('eq', 'a', 'b', units)[3]})")
+    assert compare("le", "x", 5, ok)[0] == "T"
+    assert compare("le", 9, "x", ok)[0] == "F"
+    assert compare("le", "x", 5, wide)[0] == "Z"
+    assert compare("le", "k", 5, empty)[0] == E
+    assert compare("eq", "a", "b", units)[0] == E
+    # and the judge stops on that atom, with the repair named
+    r = judge_claim("le", "k", 5, empty)
+    assert r["disposition"] == "E" and r["next_check"][0].startswith("repair")
+    print(f"   the atom's disposition: {r['disposition']}, "
+          f"cure {r['next_check']}")
+    print("   Two things this fixes. First, E was a Python exception until")
+    print("   2026-08-12 — an accident of the implementation sitting")
+    print("   OUTSIDE the logic; now it is a value the floor computes, so")
+    print("   one broken claim halts itself and not the sheet. Second, the")
+    print("   empty set is exactly where 'all readings are true' comes for")
+    print("   free — the vacuity trap measured in zprove.py. Separating E")
+    print("   is what stops emptiness from being read as truth.")
+
+
 def sec5_exact_lattices_and_carriers():
     print("-" * 72)
     print("5. EXACT LATTICES, AND WHAT A VERDICT REALLY RIDES ON")
@@ -705,6 +799,7 @@ if __name__ == "__main__":
     sec3_theorem_hunt()
     sec4_seam_with_the_judge()
     sec5_exact_lattices_and_carriers()
+    sec6_the_fourth_corner()
     print("=" * 72)
     print("E37 GREEN — the lift extends to numbers (decorrelated, F1); bare")
     print("numbers are credit (F2); the two credit axes stay separate and")

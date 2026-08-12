@@ -148,14 +148,73 @@ def _grade_marking(m):
     return {a: ("M" if v == Z else v) for a, v in m.items()}
 
 
+def _lazy(phi, m):
+    """The LAZY register, and a label saying who is responsible.
+
+    Returns (value, atoms). The greedy register decides — it burns the
+    mark and answers now. This one waits: Kleene's tables, where an
+    unchecked atom survives negation (~Z is Z, not F) and is ABSORBED by a
+    decisive partner (Z & F is F, Z | T is T). That absorption is the
+    useful part: it means a hole only keeps the answer pending while it is
+    LOAD-BEARING, so the responsible atoms fall out of one evaluation
+    instead of n probes.
+
+    The label tracks UNCHECKED atoms only, and it is a SOUND
+    OVER-APPROXIMATION of the load-bearing ones — measured, not assumed:
+    over 10806 pending cells of the depth-2 pool it never once missed a
+    hole that mattered, and it named an innocent one in 1778 of them
+    (16%). So it is a cheap candidate list, not the exact answer: fill
+    what it names and the matter moves; probe if the exact set is needed.
+    The first draft of this docstring claimed "carriers for free in one
+    pass", which the measurement refused. (Label propagation of this
+    kind is old — de Kleer's ATMS, 1986 — and is named here rather than
+    presented as new. A first draft also reported a `justified_by` field
+    for decided values; it was always empty, because a label of holes
+    cannot say who decided. The field was removed rather than renamed.)"""
+    if isinstance(phi, str):
+        v = m.get(phi, Z)
+        return (v, {phi}) if v == Z else (v, set())
+    op = phi[0]
+    if op == "not":
+        v, lab = _lazy(phi[1], m)
+        return ({T: F, F: T, Z: Z}[v], lab)
+    (a, la), (b, lb) = _lazy(phi[1], m), _lazy(phi[2], m)
+    if op == "and":
+        if a == F:
+            return F, la
+        if b == F:
+            return F, lb
+        return (T, set()) if a == b == T else (Z, la | lb)
+    if op == "or":
+        if a == T:
+            return T, la
+        if b == T:
+            return T, lb
+        return (F, set()) if a == b == F else (Z, la | lb)
+    if op == "imp":
+        return _lazy(("or", ("not", phi[1]), phi[2]), m)
+    if op in ("xnor", "xor"):
+        if Z in (a, b):
+            return Z, la | lb
+        same = (a == b)
+        return (T if (same if op == "xnor" else not same) else F), set()
+    raise ValueError(op)
+
+
 def _happened(phi, m):
     """What the kernel did with one claim, as a dict."""
     v = ev(phi, m)
     g = grade(phi, _grade_marking(m))
     unver = sorted(a for a in _atoms(phi) if m.get(a, Z) == Z)
+    lv, lab = _lazy(phi, m)
     return {"formula": _show(phi), "verdict": v, "grade": g,
             "marking": {a: m[a] for a in sorted(_atoms(phi))},
-            "unverified": unver}
+            "unverified": unver,
+            # the second register, as a COLUMN beside the verdict and
+            # never in place of it: greedy says whether to sign, lazy says
+            # whether the matter is still running
+            "lazy": lv,
+            "pending": sorted(lab) if lv == Z else []}
 
 
 def check(text, marking=None):
@@ -422,5 +481,52 @@ if __name__ == "__main__":
     _nc = next_check("p & q", {"p": T})                         # q still Z
     assert _nc["atom"] == "q" and _nc["settles"]                # checking q ends it
     assert not next_check("a & b", {})["settles"]               # one of two: narrows
+    # ---- the second register, measured against an honest probe
+    print("\n  THE LAZY COLUMN — pause told from denial, and which holes "
+          "matter")
+    from ztime import depth2_pool
+    cells = covered = extra = 0
+    for phi in depth2_pool():
+        for va in (T, F, Z):
+            for vb in (T, F, Z):
+                m = {"p": va, "q": vb}
+                lv, lab = _lazy(phi, m)
+                if lv != Z:
+                    continue
+                probe = set()
+                for a in ("p", "q"):
+                    if m[a] != Z:
+                        continue
+                    for val in (T, F):
+                        m2 = dict(m)
+                        m2[a] = val
+                        if _lazy(phi, m2)[0] != lv:
+                            probe.add(a)
+                            break
+                cells += 1
+                covered += (probe <= lab)
+                extra += bool(lab - probe)
+    print(f"    pending cells checked: {cells}")
+    print(f"    label covered every load-bearing hole: {covered}")
+    print(f"    label also named an innocent one: {extra}")
+    assert covered == cells and cells > 10000
+    for m in ({"paid": T, "delivered": Z, "refunded": T},
+              {"paid": T, "delivered": Z, "refunded": F},
+              {"paid": F, "delivered": Z, "refunded": F}):
+        r = judge("(paid & delivered) | refunded", m)
+        print(f"    {str(m):50} {r['disposition']:8} lazy={r['lazy']} "
+              f"unverified={r['unverified']} pending={r['pending']}")
+    assert judge("(paid & delivered) | refunded",
+                 {"paid": T, "delivered": Z, "refunded": T})["pending"] == []
+    assert judge("(paid & delivered) | refunded",
+                 {"paid": T, "delivered": Z,
+                  "refunded": F})["pending"] == ["delivered"]
+    print("    the hole is in all three lines and worth filling in one.")
+    print("    `unverified` lists every hole; `pending` lists the ones that")
+    print("    still hold the answer up — a SAFE candidate list, never")
+    print("    missing a load-bearing hole and sometimes naming an extra.")
+    print("    (The draft that called this 'carriers for free in one pass'")
+    print("    was corrected by the measurement above, not by argument.)")
     print("\n  ZTLJUDGE GREEN — formalize · check · check · join · judge · "
-          "whatif, over an unchanged core.")
+          "whatif, over an unchanged core; and a second register beside the "
+          "verdict, telling a pause from a denial.")

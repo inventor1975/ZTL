@@ -409,6 +409,19 @@ def ev(expr, quantities):
 
 
 # ---------------------------------------------------- comparisons -> atoms
+def names_in(expr, acc=None):
+    """Every quantity name occurring in an expression — needed on the E
+    path, where the evaluator aborts before it can collect them."""
+    acc = set() if acc is None else acc
+    if isinstance(expr, str):
+        acc.add(expr)
+    elif isinstance(expr, tuple):
+        op, *args = expr
+        for a in (args[0] if op == "sum" else args):
+            names_in(a, acc)
+    return acc
+
+
 def compare(kind, e1, e2, quantities):
     """A numeric atom. Verdict by the generating principle over intervals:
     T if forced under every reading, F if the negation is forced, else Z.
@@ -418,11 +431,12 @@ def compare(kind, e1, e2, quantities):
         r2, p2, u2, s2, un2 = _ev(e2, quantities)
         _unify_units(un1, un2, "compare")
     except _NoReadings as why:
+        touched = {n for n in names_in(e1) | names_in(e2) if n in quantities}
         # THE FOURTH CORNER: no admissible reading, so there is nothing to
         # quantify over and no verdict to give. E is returned as a value,
         # with the reason attached — the judge stops on this atom and on
         # nothing else.
-        return E, set(), set(), str(why)
+        return E, set(), touched, str(why)
     ped, used = p1 | p2, u1 | u2
     if r1 is None or r2 is None:
         return "Z", ped, used, None       # undefined subterm: mark, not verdict

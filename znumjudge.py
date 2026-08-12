@@ -265,7 +265,16 @@ def judge_sheet_claim(formula, quantities, marks):
             return {"formula": formula, "core_formula": core_formula.strip(),
                     "numeric_atoms": {name: {"comparison": chunk,
                                              "verdict": "E", "why": why,
-                                             "pedigree": [], "used": []}},
+                                             "pedigree": [],
+                                             "used": sorted(used)}},
+                    # ATTRIBUTE PRECISELY. An empty domain names its own
+                    # quantity, and that one is the culprit. A unit
+                    # mismatch has no single culprit — neither declaration
+                    # is wrong alone, the PAIRING is — so it is recorded
+                    # as a pair and never charged to one signature. Blaming
+                    # a quantity for standing next to a broken one is the
+                    # same unpaid verdict this whole corpus is against.
+                    **_attribute(why, used, quantities),
                     "core": None, "disposition": "E", "polarity": None,
                     "why": why, "credit_quantities": [], "bearing_credit": [],
                     "next_check": [f"repair the claim: {why}"]}
@@ -343,6 +352,46 @@ def judge_sheet_claim(formula, quantities, marks):
             "credit_quantities": credit_quantities,
             "bearing_credit": bearing_credit,
             "next_check": sorted(set(next_check), key=next_check.index)}
+
+
+def _attribute(why, used, quantities):
+    """Who is answerable for this E: a named quantity, or a pairing."""
+    m = re.match(r"^(\w+):", why or "")
+    if m and m.group(1) in quantities:
+        n = m.group(1)
+        return {"culprits": [n], "culprit_kind": "declaration",
+                "signatures": [quantities[n]["witness"] or "(unsigned)"]}
+    return {"culprits": sorted(used), "culprit_kind": "pairing",
+            "signatures": []}
+
+
+def e_census(claims):
+    """Who produces the unjudgeable, and how often.
+
+    One E is an honest mistake — a type nobody thought through, two units
+    that should never have met. A STREAM of E from one signature is
+    something else, and it is the only handle we have on intent: a single
+    claim never shows whether the broken declaration was careless or
+    deliberate, and a distribution does. Built 2026-08-12 after the
+    curator's question about living with an attack that cannot be
+    prevented: do not try to bar E — COUNT it, and give it an address."""
+    by_signature, by_quantity, judged, stopped, pairings = {}, {}, 0, [], []
+    for label, formula, data in claims:
+        quantities, marks = parse_quantities(data)
+        r = judge_sheet_claim(formula, quantities, marks)
+        judged += 1
+        if r["disposition"] != "E":
+            continue
+        stopped.append((label, r["why"]))
+        for n in r.get("culprits", []):
+            by_quantity[n] = by_quantity.get(n, 0) + 1
+        for sig in r.get("signatures", []):
+            by_signature[sig] = by_signature.get(sig, 0) + 1
+        if r.get("culprit_kind") == "pairing":
+            pairings.append(tuple(r["culprits"]))
+    return {"claims": judged, "unjudgeable": len(stopped),
+            "stopped": stopped, "pairings": pairings,
+            "by_signature": by_signature, "by_quantity": by_quantity}
 
 
 def load_sheet(path):
@@ -477,6 +526,35 @@ if __name__ == "__main__":
     assert by["remont_estimate"]["next_check"] == ["document budget"]
     assert by["parens_xor"]["disposition"] == "EARNED"
     assert by["nested_parens"]["disposition"] == "EARNED"
+    # ---- the E census: counting what cannot be judged, by signature
+    print()
+    print("-" * 72)
+    print("THE E CENSUS — who produces the unjudgeable, and how often")
+    audit = [
+        ("clause_7a", "headcount <= cap",
+         "headcount=[0.2,0.9] earned:reg-7 int, cap=75 earned:law"),
+        ("clause_7b", "fee == area",
+         "fee=5 earned:reg-7 RUB, area=3 earned:plan m2"),
+        ("invoice_11", "line <= total",
+         "line=1000 earned:inv-2, total=5000 earned:inv-2"),
+        ("clause_7c", "quota >= 1",
+         "quota=[0.1,0.4] earned:reg-7 int, floor=1 earned:law"),
+    ]
+    census = e_census(audit)
+    print(f"   claims judged: {census['claims']}, "
+          f"unjudgeable: {census['unjudgeable']}")
+    for label, why in census["stopped"]:
+        print(f"     {label:11} E — {why}")
+    print(f"   charged to a signature: {census['by_signature']}")
+    print(f"   charged to no one, a pairing: {census['pairings']}")
+    assert census["unjudgeable"] == 3
+    assert census["by_signature"] == {"reg-7": 2}
+    assert census["pairings"] == [("area", "fee")]
+    print("   two of the three are charged to reg-7; the third is charged")
+    print("   to nobody, because a unit mismatch has no single author.")
+    print("   Intent is invisible in a single claim and perfectly visible")
+    print("   in the distribution — which is the only handle this corpus")
+    print("   has on it, and it is enough to name a source.")
     print()
     print("=" * 72)
     print("ZNUMJUDGE GREEN — mixed formulas judged by the unchanged core;")

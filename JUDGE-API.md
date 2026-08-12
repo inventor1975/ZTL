@@ -20,6 +20,20 @@ judge('paid & delivered', {'paid': 'T', 'delivered': 'Z'})
 
 Operators: `&  |  ~  ->  ^  =`. Marks: `T`, `F`, `Z` (unverified).
 
+The report carries **two registers side by side**:
+
+| field | register | question it answers |
+|---|---|---|
+| `disposition`, `verdict`, `grade` | greedy | do I sign this, and how well is it held up? |
+| `lazy` | Kleene | is the matter still running (`Z`) or settled? |
+| `unverified` | — | every hole |
+| `pending` | Kleene label | the holes still holding the answer up |
+
+`pending` is a **safe candidate list**: measured over 10806 pending cells
+it never missed a load-bearing hole and named an innocent one in 1778 of
+them. Fill what it names and the matter moves; probe (`bounds_bearing`)
+when the exact set is needed.
+
 ## 2. A claim with numbers
 
 ```python

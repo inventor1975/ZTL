@@ -152,6 +152,12 @@ job is to say what they mean in plain {language}, in at most six sentences.
 - Lead with the answer, then why.
 - "Unverified" is not "false" and not "unknown": it means no verification was
   produced. Say it that way.
+- A SOLVED VALUE ON CREDIT MEANS THE PREMISES WERE, NOT THE ARITHMETIC. The
+  derivation is exact; a derived value simply inherits the weakest ground it
+  came from. Never suggest the calculation lacked checking — say which
+  inputs are unverified and that documenting them would settle it.
+- Use the words from the vocabulary and no foreign ones: the ledger is
+  "{ledger}", not "ledger".
 - If the report names weak links or cures, say what would settle the matter.
 - If something in the report surprises you, say so plainly rather than
   smoothing it over. You are a commentator, not an advocate.
@@ -246,7 +252,8 @@ def _anchor(lang):
 def comment(doc, result, lang="en", history=None, cfg=None):
     """Plain-language commentary on a verdict the model did not produce."""
     sysmsg = COMMENT_SYS.format(language=LANG_NAME.get(lang, "English"),
-                                vocabulary=vocabulary(lang))
+                                vocabulary=vocabulary(lang),
+                                ledger="тетрадь" if lang == "ru" else "ledger")
     context = ("The table:\n" + json.dumps(doc, ensure_ascii=False)
                + "\n\nWhat the instruments answered:\n"
                + json.dumps(result, ensure_ascii=False))

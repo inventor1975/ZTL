@@ -54,6 +54,16 @@ CODE_HELP = {
     "E_CLAIM": ("the claim does not parse", "утверждение не разбирается"),
     "E_UNKNOWN_NAME": ("a formula names a row that does not exist",
                        "формула называет несуществующую строку"),
+    "E_OPEN_INTERVAL": ("an open bound like (0,10) — put the strictness in "
+                        "the claim instead",
+                        "открытая граница вроде (0,10) — строгость пишется "
+                        "в утверждении"),
+    "E_VALUE_SET": ("a choice between values, {0,10} — that is two rows, "
+                    "not one quantity",
+                    "выбор между величинами, {0,10} — это две строки, "
+                    "а не одна величина"),
+    "E_VALUE_FORM": ("a value that is neither a number, an interval nor ?",
+                     "величина, которая не число, не интервал и не ?"),
     "W_UNIT_NO_VALUE": ("a unit with no value", "единица без величины"),
     "W_NO_GLOSS": ("no gloss, so nobody can check the name means what it "
                    "seems to",
@@ -164,9 +174,15 @@ VALUE_HELP = {
     "1500": ("a number you have measured or read off a document",
              "число, которое вы измерили или прочли в документе"),
     "[0,10]": ("a box: somewhere in this range, and the machine keeps the "
-               "range rather than picking a point",
+               "range rather than picking a point. Both ends are INCLUDED; "
+               "for a strict bound put it in the claim — `x > 0`. Write it "
+               "backwards, [10,0], and you get E: the row names nothing, "
+               "which is a verdict rather than a typo",
                "коробка: где-то в этих пределах, и машина хранит пределы, "
-               "а не выбирает точку"),
+               "а не выбирает точку. Обе границы ВКЛЮЧЕНЫ; строгую границу "
+               "пишите в утверждении — `x > 0`. Напишете наоборот, [10,0], "
+               "получите E: строка не называет ничего, и это вердикт, "
+               "а не опечатка"),
     "?": ("A QUESTION. You do not know it and you are asking. If the rest of "
           "the table determines it, the solver answers with the value AND "
           "the provenance it inherited — `x = 30, earned`. If it does not, "

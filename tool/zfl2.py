@@ -256,6 +256,30 @@ def validate(doc):
             except Exception as exc:
                 issues.append(_issue("error", "E_FORMULA",
                                      f"{at} / ground", str(exc)))
+        # THE SHAPE OF A VALUE, answered at the cell rather than by a parse
+        # error. `(0,10)` and `{0,10}` are the two a person reaches for
+        # next after `[0,10]`, and the floor accepts neither — but
+        # "cannot parse sheet entry: 'x=(0'" is not an answer to anybody.
+        val = (r.get("value") or "").strip()
+        if val:
+            if re.match(r"^[(\[]\s*[-\d.]+\s*,\s*[-\d.]+\s*[)\]]$", val) \
+                    and not re.match(r"^\[[^,]+,[^,]+\]$", val):
+                issues.append(_issue(
+                    "error", "E_OPEN_INTERVAL", f"{at} / value",
+                    "an open bound is not part of a value here: write the "
+                    "closed interval [0,10], or put the strictness in the "
+                    "claim — `x > 0 & x < 10`"))
+            elif val.startswith("{"):
+                issues.append(_issue(
+                    "error", "E_VALUE_SET", f"{at} / value",
+                    "a choice between separate values is not a quantity: "
+                    "give each its own row, or write the interval that "
+                    "covers them"))
+            elif not re.match(r"^(\?|\[[^\]]+\]|[-\d][\d.,/eE+-]*)$", val):
+                issues.append(_issue(
+                    "error", "E_VALUE_FORM", f"{at} / value",
+                    "a value is a number, an interval [0,10], or ? — "
+                    f"'{val}' is none of them"))
         if r.get("unit") and not (r.get("value") or "").strip():
             issues.append(_issue("warn", "W_UNIT_NO_VALUE",
                                  f"{at} / unit",

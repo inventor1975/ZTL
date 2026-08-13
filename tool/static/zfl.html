@@ -57,7 +57,7 @@
 </table>
 <h2>what can go in a value</h2><table>
 <tr><td><code>1500</code></td><td>a number you have measured or read off a document</td></tr>
-<tr><td><code>[0,10]</code></td><td>a box: somewhere in this range, and the machine keeps the range rather than picking a point</td></tr>
+<tr><td><code>[0,10]</code></td><td>a box: somewhere in this range, and the machine keeps the range rather than picking a point. Both ends are INCLUDED; for a strict bound put it in the claim — `x &gt; 0`. Write it backwards, [10,0], and you get E: the row names nothing, which is a verdict rather than a typo</td></tr>
 <tr><td><code>?</code></td><td>A QUESTION. You do not know it and you are asking. If the rest of the table determines it, the solver answers with the value AND the provenance it inherited — `x = 30, earned`. If it does not, you get told what would settle it.</td></tr>
 </table>
 <h2>a worked example</h2><table><tr><th>column</th><th>means</th><th>status</th><th>ground</th><th>value</th></tr>
@@ -76,8 +76,11 @@
 <tr><td><code>E_KIND</code></td><td>a kind of ground outside the list</td></tr>
 <tr><td><code>E_NOGROUND</code></td><td>verified, refuted or defined, with nothing backing it</td></tr>
 <tr><td><code>E_NONAME</code></td><td>a row without a name</td></tr>
+<tr><td><code>E_OPEN_INTERVAL</code></td><td>an open bound like (0,10) — put the strictness in the claim instead</td></tr>
 <tr><td><code>E_STATUS</code></td><td>a status outside the four</td></tr>
 <tr><td><code>E_UNKNOWN_NAME</code></td><td>a formula names a row that does not exist</td></tr>
+<tr><td><code>E_VALUE_FORM</code></td><td>a value that is neither a number, an interval nor ?</td></tr>
+<tr><td><code>E_VALUE_SET</code></td><td>a choice between values, {0,10} — that is two rows, not one quantity</td></tr>
 <tr><td><code>W_NO_GLOSS</code></td><td>no gloss, so nobody can check the name means what it seems to</td></tr>
 <tr><td><code>W_UNIT_NO_VALUE</code></td><td>a unit with no value</td></tr>
 </table></div><div class='lang' id='ru' hidden><h1>ZFL — язык студии</h1>
@@ -124,7 +127,7 @@
 </table>
 <h2>что можно писать в величине</h2><table>
 <tr><td><code>1500</code></td><td>число, которое вы измерили или прочли в документе</td></tr>
-<tr><td><code>[0,10]</code></td><td>коробка: где-то в этих пределах, и машина хранит пределы, а не выбирает точку</td></tr>
+<tr><td><code>[0,10]</code></td><td>коробка: где-то в этих пределах, и машина хранит пределы, а не выбирает точку. Обе границы ВКЛЮЧЕНЫ; строгую границу пишите в утверждении — `x &gt; 0`. Напишете наоборот, [10,0], получите E: строка не называет ничего, и это вердикт, а не опечатка</td></tr>
 <tr><td><code>?</code></td><td>ВОПРОС. Вы его не знаете и спрашиваете. Если остальная таблица его определяет, решатель отвечает величиной И происхождением, которое она унаследовала — `x = 30, заработано`. Если не определяет — вам скажут, что это решит.</td></tr>
 </table>
 <h2>разобранный пример</h2><table><tr><th>колонка</th><th>значит</th><th>статус</th><th>основание</th><th>величина</th></tr>
@@ -143,8 +146,11 @@
 <tr><td><code>E_KIND</code></td><td>вид основания вне списка</td></tr>
 <tr><td><code>E_NOGROUND</code></td><td>проверено, опровергнуто или определено — но без основания</td></tr>
 <tr><td><code>E_NONAME</code></td><td>строка без имени</td></tr>
+<tr><td><code>E_OPEN_INTERVAL</code></td><td>открытая граница вроде (0,10) — строгость пишется в утверждении</td></tr>
 <tr><td><code>E_STATUS</code></td><td>статус вне четырёх</td></tr>
 <tr><td><code>E_UNKNOWN_NAME</code></td><td>формула называет несуществующую строку</td></tr>
+<tr><td><code>E_VALUE_FORM</code></td><td>величина, которая не число, не интервал и не ?</td></tr>
+<tr><td><code>E_VALUE_SET</code></td><td>выбор между величинами, {0,10} — это две строки, а не одна величина</td></tr>
 <tr><td><code>W_NO_GLOSS</code></td><td>нет пояснения — некому проверить, то ли значит имя</td></tr>
 <tr><td><code>W_UNIT_NO_VALUE</code></td><td>единица без величины</td></tr>
 </table></div>

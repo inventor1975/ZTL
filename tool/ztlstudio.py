@@ -477,6 +477,9 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.write(data)
 
     def do_GET(self):
+        # the query string is the page's business, not the router's:
+        # /zfl?l=ru must reach the same handler as /zfl
+        self.path = self.path.split("?", 1)[0] or "/"
         if self.path in ("/", "/index.html"):
             with open(os.path.join(HERE, "static", "index.html"), "rb") as f:
                 self._send(200, f.read(), "text/html; charset=utf-8")

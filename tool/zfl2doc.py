@@ -104,12 +104,12 @@ HEAD = {"en": ("ZFL — the language of the studio", "column", "required",
                "always", "in context", "no", "operators", "error codes",
                "a worked example", "means", "status", "ground",
                "what it is", "options / examples", "the document itself",
-               "value"),
+               "value", "the columns of a row"),
         "ru": ("ZFL — язык студии", "колонка", "обязательна",
                "всегда", "по условию", "нет", "операторы", "коды ошибок",
                "разобранный пример", "значит", "статус", "основание",
                "что это", "варианты / примеры", "сам документ",
-               "величина")}
+               "величина", "колонки строки")}
 
 
 def codes_in_source():
@@ -154,7 +154,10 @@ def render(lang="en"):
     for title, body in PROSE[lang]:
         parts.append(f"<h2>{_esc(title)}</h2><p>{_esc(body)}</p>")
 
-    parts.append(f"<h2>{_esc(h[1])}s</h2><table><tr>"
+    # a heading is a phrase, not a word with an English plural glued on:
+    # "колонкаs" is what that shortcut produced, and it was visible on the
+    # first look at the Russian page
+    parts.append(f"<h2>{_esc(h[16])}</h2><table><tr>"
                  f"<th>{_esc(h[1])}</th><th>{_esc(h[12])}</th>"
                  f"<th>{_esc(h[2])}</th><th>{_esc(h[13])}</th></tr>")
     for c in spec["columns"]:
@@ -228,10 +231,22 @@ def page():
  h1 {{ font-size: 24px; }} h2 {{ font-size: 17px; margin-top: 1.6em; }}
  nav {{ float: right; font-size: 13px; }}
 </style>
-<nav><a href="#" onclick="t('en')">EN</a> · <a href="#" onclick="t('ru')">RU</a></nav>
+<nav><a href="?l=en" onclick="return t('en')">EN</a> ·
+ <a href="?l=ru" onclick="return t('ru')">RU</a></nav>
 {body}
-<script>function t(l){{for(const d of document.querySelectorAll('.lang'))
- d.hidden = d.id !== l;}}</script>"""
+<script>
+// ?l=ru opens the page already in Russian, so a link can be handed to
+// somebody in their own language. Switching also rewrites the address bar,
+// so whatever you are reading is what you copy.
+function t(l) {{
+  if (l !== 'en' && l !== 'ru') l = 'en';
+  for (const d of document.querySelectorAll('.lang')) d.hidden = d.id !== l;
+  document.documentElement.lang = l;
+  history.replaceState(null, '', '?l=' + l);
+  return false;
+}}
+t(new URLSearchParams(location.search).get('l') || 'en');
+</script>"""
 
 
 def main():

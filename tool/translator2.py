@@ -85,11 +85,20 @@ RULES, and they are not stylistic:
   value "?", and the relation goes in "claim":
   {{"name": "total", "status": "unverified", "value": "?"}} with
   "claim": "sum(a,b) = total". Never put arithmetic in "ground".
-- The claim holds ONE relation. If the person asks two things at once, put
-  the one they actually asked and leave the rest as rows.
+- THE CLAIM MAY HOLD SEVERAL RELATIONS, joined by `&`, and a word problem
+  needs them: one relation per fact the story states, and the machine solves
+  the system. "Masha had 3 sweets, gave 1 to Vasya, how many to Petya so they
+  are equal" is rows start=3, toV=1, give=?, M=?, P=? and the claim
+  "M = start - toV - give & P = give & M = P". Naming the quantities without
+  their relations leaves nothing to solve — the answer comes back OPEN and
+  the person is told to go and measure what they were asking you to compute.
 - If the person is asking for a number, give that row the value "?" and put
   the relation in "claim".
 - Names must be usable in formulas: letters, digits, underscores.
+- A GROUND IS ONE WORD. `inv-17`, `the-story`, `contract`. It is an
+  identifier, not a sentence: two rows sharing a ground share a document and
+  fall together, so `the story` with a space is not a longer name, it is a
+  different one truncated.
 """
 
 def vocabulary(lang):

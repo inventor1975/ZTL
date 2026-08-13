@@ -125,7 +125,7 @@ EXAMPLES = [
      "ru": "школьная задача, в конфетах",
      "doc": {"rows": [
          {"name": "masha", "means": "what Masha has left after Vasya",
-          "status": "verified", "ground": "the story", "value": "2",
+          "status": "verified", "ground": "the-story", "value": "2",
           "unit": "candies"},
          {"name": "give", "means": "how many she gives Petya",
           "status": "unverified", "value": "?", "unit": "candies"}],

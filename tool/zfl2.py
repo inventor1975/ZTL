@@ -313,6 +313,16 @@ def validate(doc):
             issues.append(_issue("error", "E_NOGROUND", f"{at} / ground",
                                  "a verified, refuted or defined name has to "
                                  "say what backs it"))
+        # A GROUND IS AN IDENTIFIER. The sheet is space-separated, so a
+        # ground with a space is silently CUT — and a ground's whole job is
+        # identity, which makes a truncated one a different document that
+        # happens to look right. Seen live: "утверждение пользователя"
+        # became the ground "утверждение".
+        if status in ("verified", "refuted") and re.search(r"[\s,]", ground):
+            issues.append(_issue(
+                "error", "E_GROUND_SPACES", f"{at} / ground",
+                "a ground is one word — it names a document, and a space "
+                "would cut the name in half: write the-story or inv-17"))
         kind = (r.get("ground_kind") or "document").strip()
         if kind not in GROUND_KINDS:
             issues.append(_issue("error", "E_KIND", f"{at} / kind of ground",

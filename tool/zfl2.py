@@ -556,6 +556,44 @@ def applies(doc):
     }
 
 
+def missing_facts(claim, sheet, unknowns, limit=4):
+    """How many more FACTS the question needs, found by trying.
+
+    "I have 2 more than Petya and 3 less than Vasya — how much do I have?"
+    has no answer: two relations, three unknowns. The solver says OPEN and
+    lists six cures, `measure me · measure petya · measure vasya · …`, which
+    is true and reads as though all of them were needed. One would do.
+
+    Rather than reason about the rank of a system, this MEASURES it the way
+    everything else here is measured: pin one unknown at a trial value,
+    re-solve, and see what follows. If the rest fall into place, the
+    question was one fact short, and the report can say so and name the
+    choices. That is a different sentence from "measure everything", and it
+    is the one the person asked for."""
+    if not unknowns:
+        return None
+    enough = []
+    for name in unknowns:
+        parts = []
+        for piece in sheet.split(", "):
+            n = piece.split("=", 1)[0].strip()
+            parts.append(f"{n}=7 credit" if n == name else piece)
+        try:
+            q2, m2 = parse_quantities(", ".join(parts))
+            r2 = solve_claim(claim, q2, m2)
+        except Exception:
+            continue
+        pinned = {k for k, v in (r2.get("solved") or {}).items()
+                  if v.get("pinned")}
+        if len(pinned | {name}) >= len(unknowns):
+            enough.append(name)
+        if len(enough) >= limit:
+            break
+    if enough:
+        return {"needs": 1, "any_of": enough}
+    return {"needs": None, "any_of": []}
+
+
 def run(doc):
     """Validate, then ask whichever instruments apply.
 
@@ -610,6 +648,11 @@ def run(doc):
                                  "next_check": r.get("next_check", []),
                                  "solved": solved, "claim": claim,
                                  "sheet": sheet}
+            if unknown and not solved:
+                names = [x["name"] for x in numeric_rows(rows)
+                         if (x.get("value") or "").strip() == "?"]
+                report["numeric"]["missing"] = missing_facts(claim, sheet,
+                                                             names)
         except Exception as exc:
             issues.append(_issue("error", "E_UNREADABLE", "claim",
                                  f"the instruments could not read this "

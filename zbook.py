@@ -560,6 +560,34 @@ def naming_assumption(book):
                           f"{len(names)} distinct grounds"}
 
 
+def if_same_paper(book):
+    """The QUIET case, given a bracket at last.
+
+    Two external names may denote one paper, and the book cannot tell. Its
+    loud cousin — two names inside one claim — opens a bracket; this one
+    printed a reassuring width of zero. But the cost IS computable without
+    resolving the question: if `a` and `b` are the same document, losing it
+    takes everything that either takes, so the cost is the UNION of the two
+    fallouts. No re-judging needed and nothing assumed — the pair is
+    reported, and a human who knows the papers reads off which line applies.
+
+    Returned per pair, only where the union exceeds both parts, since a pair
+    whose merger costs no more than its halves is not news."""
+    sets = {}
+    for g in all_grounds(book):
+        try:
+            sets[g] = {h[0] for h in fallout(book, g)}
+        except NotAMove:
+            sets[g] = set()
+    names, out = sorted(sets), []
+    for i, a in enumerate(names):
+        for b in names[i + 1:]:
+            union = sets[a] | sets[b]
+            if len(union) > max(len(sets[a]), len(sets[b])):
+                out.append((a, b, len(sets[a]), len(sets[b]), len(union)))
+    return out
+
+
 def trust_interval(book):
     """The book's honest answer to "what falls if this ground goes" is not a
     number but a BRACKET, and this returns it per ground.
@@ -1026,6 +1054,20 @@ def sec12_the_answer_is_a_bracket():
     print("   most reassuring width there is. The loud photocopy opens a")
     print("   bracket; this quiet one opens nothing, so the assumption is")
     print("   printed instead of detected.")
+    twins = [("t1", "x == 1", "x=1 earned:inv-17"),
+             ("t2", "x == 1", "x=1 earned:invoice-17"),
+             ("t3", "x == 1", "x=1 earned:claim/t1"),
+             ("t4", "x == 1", "x=1 earned:claim/t2")]
+    pairs = if_same_paper(twins)
+    for a, b, na, nb, u in pairs:
+        print(f"   if {a} and {b} are one paper: {na} + {nb} -> {u}")
+    assert pairs == [("inv-17", "invoice-17", 2, 2, 4)]
+    print("   And the quiet case gets its number after all. The machine")
+    print("   still cannot say whether the two names are one paper — but it")
+    print("   can say what it would COST if they were, because that is the")
+    print("   union of the two fallouts and needs no answer to the question.")
+    print("   So the reader is handed both lines and reads off the one that")
+    print("   applies, which is the whole of what disclosure can be here.")
 
 
 DESCENT = [

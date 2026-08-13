@@ -85,6 +85,13 @@ silent failure in a file nobody opens, while the machine goes on printing a
 reassuring width of zero, would have been the documentation-shaped version of
 the same offence.
 
+The quiet case also has its NUMBER now, which the disclosure alone did not give
+it. `if_same_paper(book)` reports, per pair of external names, what a
+coincidence would cost: the union of the two fallouts, which needs no answer to
+the question — `if inv-17 and invoice-17 are one paper: 2 + 2 -> 4`. The
+machine still cannot say whether they are one; it can price the possibility, and
+a reader who knows the papers reads off the line that applies.
+
 **Citations are honoured, never discovered.** The book computes what falls when
 a ground goes, but only along links a human wrote down. A dependence nobody
 recorded is invisible, so a measured blast radius can be UNDERSTATED and never

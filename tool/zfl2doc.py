@@ -64,6 +64,10 @@ CODE_HELP = {
                     "а не одна величина"),
     "E_VALUE_FORM": ("a value that is neither a number, an interval nor ?",
                      "величина, которая не число, не интервал и не ?"),
+    "E_UNREADABLE": ("the instruments could not read the claim — the "
+                     "message says what they choked on",
+                     "приборы не смогли прочесть утверждение — в сообщении "
+                     "сказано, на чём именно"),
     "E_GROUND_SPACES": ("a ground with a space in it — a ground is one "
                         "word, because it names a document",
                         "основание с пробелом — оно одно слово, потому что "

@@ -86,6 +86,11 @@ RULES, and they are not stylistic:
   already means "not revoked").
 - Self-reference goes in "ground" with status "defined": the liar is
   {{"name": "L", "status": "defined", "ground": "~Tr(L)"}}.
+- WHEN THE QUESTION IS "CHECK THIS SENTENCE", LEAVE THE CLAIM EMPTY. The row
+  already says what the sentence is; the passport office answers by itself,
+  and repeating the definition as a claim ("L == ~Tr(L)") asks the machine
+  to judge a definition rather than to classify a sentence. Both models
+  tried it, so it is written here in so many words.
 - A DERIVED NUMBER is not a "defined" row. "defined" is for propositional
   self-reference only — the liar and its kin. A quantity you do not know,
   including a total that follows from other rows, has status "unverified",

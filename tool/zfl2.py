@@ -412,6 +412,16 @@ def names_in(text):
 _LONE_EQ = re.compile(r"(?<![<>=!])=(?!=)")
 
 
+# The connectives people (and models) actually type. `and` is not a second
+# operator, it is the same one spelled out — refusing it teaches nobody
+# anything and costs an answer. Found when the model wrote
+# "M = start - toV - give and P = give" and the arithmetic reader choked.
+_WORDS = [(r"\band\b", "&"), (r"\bи\b", "&"),
+          (r"\bor\b", "|"), (r"\bили\b", "|"),
+          (r"\bnot\b", "~"), (r"\bне\b", "~"),
+          (r"\bimplies\b", "->")]
+
+
 def normalise(claim, rows):
     """`x - 10 = 20` is what a person writes, and it is not wrong.
 
@@ -420,9 +430,12 @@ def normalise(claim, rows):
     know that. Where the document has quantities, a lone `=` is read as
     equality — the reading anyone typing an equation intends. Elsewhere it
     keeps its propositional sense."""
-    if numeric_rows(rows) and _LONE_EQ.search(claim or ""):
-        return _LONE_EQ.sub("==", claim)
-    return claim
+    out = claim or ""
+    for pat, sym in _WORDS:
+        out = re.sub(pat, sym, out)
+    if numeric_rows(rows) and _LONE_EQ.search(out):
+        out = _LONE_EQ.sub("==", out)
+    return out
 
 
 def _formula(text, _names):
@@ -432,7 +445,8 @@ def _formula(text, _names):
     being a formula over names, not a separate operator the reader has to
     know."""
     t = re.sub(r"\bTr\s*\(\s*([^)]+?)\s*\)", r"\1", text)
-    t = re.sub(r"\bnot\b", "~", t)
+    for pat, sym in _WORDS:
+        t = re.sub(pat, sym, t)
     if re.search(r"(<=|>=|==|<|>)", t):
         return ("comparison", t)          # the sheet judge parses these
     return formalize(t)
@@ -543,8 +557,17 @@ def applies(doc):
 
 
 def run(doc):
-    """Validate, then ask whichever instruments apply. One entry point for
-    what used to be three tabs."""
+    """Validate, then ask whichever instruments apply.
+
+    THE INVARIANT, learned the hard way over an evening of one-at-a-time
+    fixes: a document that PASSES validation may not make this function
+    raise. The core's parsers throw on syntax they do not know, and every
+    such throw arrived at the user as "internal studio error — the detail is
+    in the server log", which tells them nothing and tells us only after
+    they complain. Anything the instruments refuse becomes an issue
+    addressed to the claim, in the same shape as every other issue. The
+    underlying gap still gets fixed; it just stops being invisible while it
+    waits."""
     doc = coerce(doc)
     issues = validate(doc)
     if any(i["level"] == "error" for i in issues):
@@ -561,32 +584,45 @@ def run(doc):
             for comp, kind, why in reports]
 
     if what["numeric"] and claim:
-        sheet = to_sheet(rows)
-        q, m = parse_quantities(sheet)
-        m.update(to_marking(rows))
-        # An UNKNOWN in the table is a question, not a gap: `x=?` with
-        # `x - 10 = 20` asks the solver for x, and the solver answers with
-        # the provenance the answer inherited from the derivation. Judging
-        # alone would have said "measure x", which is true and useless when
-        # the sheet already determines it.
-        unknown = any((r.get("value") or "").strip() == "?"
-                      for r in numeric_rows(rows))
-        if unknown:
-            r = solve_claim(claim, q, m)
-            solved = {n: {"lo": str(v["lo"]), "hi": str(v["hi"]),
-                          "pinned": v["pinned"], "prov": v["prov"],
-                          "from": v.get("from", []), "weak": v.get("weak", [])}
-                      for n, v in (r.get("solved") or {}).items()}
-        else:
-            r = judge_sheet_claim(claim, q, m)
-            solved = {}
-        report["numeric"] = {"disposition": r["disposition"],
-                             "lazy": r.get("lazy"),
-                             "next_check": r.get("next_check", []),
-                             "solved": solved, "claim": claim,
-                             "sheet": sheet}
+        try:
+            sheet = to_sheet(rows)
+            q, m = parse_quantities(sheet)
+            m.update(to_marking(rows))
+            # An UNKNOWN in the table is a question, not a gap: `x=?` with
+            # `x - 10 = 20` asks the solver for x, and the solver answers
+            # with the provenance the answer inherited from the derivation.
+            # Judging alone would have said "measure x", which is true and
+            # useless when the sheet already determines it.
+            unknown = any((r.get("value") or "").strip() == "?"
+                          for r in numeric_rows(rows))
+            if unknown:
+                r = solve_claim(claim, q, m)
+                solved = {n: {"lo": str(v["lo"]), "hi": str(v["hi"]),
+                              "pinned": v["pinned"], "prov": v["prov"],
+                              "from": v.get("from", []),
+                              "weak": v.get("weak", [])}
+                          for n, v in (r.get("solved") or {}).items()}
+            else:
+                r = judge_sheet_claim(claim, q, m)
+                solved = {}
+            report["numeric"] = {"disposition": r["disposition"],
+                                 "lazy": r.get("lazy"),
+                                 "next_check": r.get("next_check", []),
+                                 "solved": solved, "claim": claim,
+                                 "sheet": sheet}
+        except Exception as exc:
+            issues.append(_issue("error", "E_UNREADABLE", "claim",
+                                 f"the instruments could not read this "
+                                 f"claim: {exc}"))
+            return {"ok": False, "issues": issues}
     elif what["judge"]:
-        r = judge(claim, to_marking(rows))
+        try:
+            r = judge(claim, to_marking(rows))
+        except Exception as exc:
+            issues.append(_issue("error", "E_UNREADABLE", "claim",
+                                 f"the instruments could not read this "
+                                 f"claim: {exc}"))
+            return {"ok": False, "issues": issues}
         report["judge"] = {"verdict": r["verdict"],
                            "disposition": r["disposition"],
                            "grade": r["grade"],

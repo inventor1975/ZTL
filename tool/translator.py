@@ -154,13 +154,32 @@ def any_key():
     return any(p["has_key"] for p in providers.available())
 
 
+# Strongest first. Measured 2026-08-13 on a five-question battery: the free
+# default (groq / llama-3.3-70b, whose own description says "weaker, may
+# misformalize") got 2 of 5, inventing a row to hold the answer and chaining
+# `a <= b = c`; Claude got 4 of 5 on the same battery with the same prompt.
+# Defaulting to the weakest key that happens to exist is a measurement about
+# the studio disguised as a measurement about AI.
+_PREFERRED = ["anthropic", "openai", "gemini", "deepseek", "xai",
+              "openrouter", "groq"]
+
+
+def best_provider():
+    """The strongest provider that actually has a key."""
+    have = {p["provider"] for p in providers.available() if p["has_key"]}
+    for name in _PREFERRED:
+        if name in have:
+            return name
+    return next(iter(sorted(have)), "groq")
+
+
 def llm(messages, cfg, temperature=0.2):
     """cfg: {provider, model, key} chosen in the UI (any field optional —
     falls back to env / local key file / provider default)."""
     cfg = cfg or {}
     try:
         return providers.chat(
-            messages, provider=cfg.get("provider", "groq"),
+            messages, provider=cfg.get("provider") or best_provider(),
             model=cfg.get("model", ""), key=cfg.get("key", ""),
             temperature=temperature)
     except providers.ProviderError as e:

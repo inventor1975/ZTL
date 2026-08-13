@@ -1,0 +1,77 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>ZTL Studio</title>
+<!--
+  One tab. The table is built from /api/formspec, which is the same spec the
+  validator enforces and the reference page describes — so a column added in
+  tool/zfl2.py appears here without this file being touched. Widgets follow
+  from a column's TYPE: choice becomes a dropdown, bool a toggle, everything
+  else a field. The front-end decides nothing about the language.
+-->
+<style>
+ :root { --bad:#b3261e; --warn:#8a6d00; --ok:#1a6b2f; --line:#d6d6d6; }
+ body { font: 14px/1.45 system-ui, sans-serif; margin: 0; color: #111;
+        background: #fafafa; }
+ header { display:flex; align-items:center; gap:1em; padding:.7em 1.2em;
+          background:#fff; border-bottom:1px solid var(--line); }
+ header h1 { font-size:15px; margin:0; font-weight:600; letter-spacing:.02em; }
+ header .sp { flex:1 }
+ header a, header button { font-size:13px; }
+ main { padding: 1.2em; max-width: 1180px; margin: 0 auto; }
+ table.grid { border-collapse: collapse; width:100%; background:#fff; }
+ .grid th, .grid td { border:1px solid var(--line); padding:3px 5px;
+                      text-align:left; vertical-align:middle; }
+ .grid th { background:#f0f0f0; font-weight:600; font-size:12px;
+            white-space:nowrap; }
+ .grid th small { display:block; font-weight:400; color:#666; }
+ .grid input[type=text], .grid select { width:100%; box-sizing:border-box;
+    border:1px solid transparent; background:transparent; padding:3px;
+    font:inherit; }
+ .grid input[type=text]:focus, .grid select:focus { border-color:#7aa7ff;
+    background:#fff; outline:none; }
+ .grid td.err input { background:#fde8e6; }
+ .adv { display:none; } body.showadv .adv { display:table-cell; }
+ body.showadv th.adv { display:table-cell; }
+ .rowbtn { border:none; background:none; color:#999; cursor:pointer; }
+ .bar { margin:.9em 0; display:flex; gap:.6em; align-items:center;
+        flex-wrap:wrap; }
+ .bar input[type=text] { flex:1; min-width:16em; padding:.45em .6em;
+        border:1px solid var(--line); font:inherit; }
+ button.primary { background:#111; color:#fff; border:none; padding:.5em 1.1em;
+        cursor:pointer; font:inherit; }
+ .issues div { padding:.25em 0; }
+ .issues .error { color:var(--bad); } .issues .warn { color:var(--warn); }
+ .panel { background:#fff; border:1px solid var(--line); padding:.8em 1em;
+          margin:.8em 0; }
+ .panel h3 { margin:.1em 0 .5em; font-size:13px; text-transform:uppercase;
+             letter-spacing:.06em; color:#555; }
+ .panel table { border-collapse:collapse; font-size:13px; }
+ .panel td, .panel th { border:1px solid var(--line); padding:2px 6px; }
+ .v-EARNED,.v-T { color:var(--ok); font-weight:600; }
+ .v-REFUTED,.v-F { color:var(--bad); font-weight:600; }
+ .muted { color:#777; }
+</style>
+
+<header>
+  <h1>ZTL STUDIO</h1>
+  <span class="sp"></span>
+  <label><input type="checkbox" id="adv"> <span data-t="advanced"></span></label>
+  <a id="ref" href="/zfl" target="_blank" data-t="reference"></a>
+  <button id="lang">RU</button>
+</header>
+
+<main>
+  <table class="grid" id="grid"></table>
+  <div class="bar">
+    <button class="rowbtn" id="addrow">+ <span data-t="addrow"></span></button>
+  </div>
+  <div class="bar">
+    <label id="claimlabel"></label>
+    <input type="text" id="claim" placeholder="line &lt;= budget">
+    <button class="primary" id="run" data-t="run"></button>
+  </div>
+  <div class="issues" id="issues"></div>
+  <div id="report"></div>
+</main>
+
+<script src="/static/studio2.js"></script>

@@ -66,6 +66,23 @@ exact: transparent grounds are checked, opaque grounds are declared. It is also
 why VR's machine-confirmed `[]` is stronger than any label here could be, since
 the elaborator walks the whole construction and reports what it leans on.
 
+**The identity of external grounds is not checked either — and this one is
+SILENT.** Found 2026-08-13 while asking whether the independence ceiling really
+costs anything. It has a mirror twin, and the twin is worse. One paper under two
+names inside a single claim (`inv-17|inv-17-copy`) at least OPENS a bracket, so
+the reader can see that something is being taken on trust. One paper under two
+names across DIFFERENT claims — `inv-17` here, `invoice-17` there — opens
+nothing: the book reports [2, 2] where the true cost is 4, and prints width
+zero, which reads as "nothing taken on trust" at exactly the moment it is wrong.
+The loud hole shows itself; the quiet one does not.
+
+Unverifiable for the same reason as independence — the grounds are opaque names
+— so the available move is the same one: disclosure rather than detection. The
+book can list its external ground names (`all_grounds`) for a human to scan for
+near-duplicates. Not wired into any report, because this corpus has six grounds
+and all of them are distinct; a live ledger with hundreds would want it on the
+first page.
+
 **Citations are honoured, never discovered.** The book computes what falls when
 a ground goes, but only along links a human wrote down. A dependence nobody
 recorded is invisible, so a measured blast radius can be UNDERSTATED and never

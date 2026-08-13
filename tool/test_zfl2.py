@@ -166,6 +166,18 @@ def sec4b_every_example_runs_and_json_types_are_taken_as_they_come():
         kinds.setdefault(e["kind"], 0)
         kinds[e["kind"]] += 1
     print(f"   {len(X.EXAMPLES)} examples, all validating and running: {kinds}")
+    # THE PUBLISHED PROMISE. §7 of the paradox docket (v1.1, DOI
+    # 10.5281/zenodo.21916017) tells the reader the studio holds this
+    # paper's entire collection and names the cases. A studio missing one
+    # of them does not have a gap — it makes an issued paper false. So the
+    # list is checked here, by the names the v1 studio used, which are the
+    # names the paper quotes.
+    import ztlstudio
+    promised = {e["name"] for e in ztlstudio.EXAMPLES}
+    present = {e.get("paper") for e in X.EXAMPLES if e.get("paper")}
+    print(f"   cases the docket promises: {len(promised)}, present: "
+          f"{len(present & promised)}")
+    assert promised <= present, sorted(promised - present)
     assert set(kinds) == set(X.KINDS)
     print("   An example is a promise about the machine, so a broken one may")
     print("   not ship. This caught a real crash on the first run: a row with")

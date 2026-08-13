@@ -155,6 +155,10 @@ def sec3_the_machine_cannot_verify_it():
         print("   ... and its retraction is refused, exactly as VR's zero is.")
     print(f"   declared_structural: {declared_structural(liar)}")
     assert declared_structural(liar) == ["performed/my-favourite-axiom"]
+    v = judge_book(liar)["d1"]
+    print(f"   and the verdict itself: {v['disposition']} / "
+          f"warranty {v['warranty']} / {v['declared']}")
+    assert v["warranty"] == "declared"
     print("   Nullarity is DECLARED, never verified. Anyone can buy immunity")
     print("   with a prefix, and this file's machinery cannot stop them.")
     print("   What it does instead is the whole of the gain: every claim of")
@@ -163,6 +167,12 @@ def sec3_the_machine_cannot_verify_it():
     print("   point does not announce itself. Here it must, by name, or it")
     print("   does not get the immunity. We do not detect honest")
     print("   foundations; we make a dishonest one impossible to hide.")
+    print("   And the immunity is no longer free of charge in the record:")
+    print("   the verdict carries the warranty, so a claim standing on a")
+    print("   declared act reads EARNED / declared rather than plain")
+    print("   EARNED, and the qualification is inherited by everything")
+    print("   above it. A book of pure declarations no longer looks like a")
+    print("   book of documents.")
 
 
 def sec4_where_the_declaration_has_a_machine():

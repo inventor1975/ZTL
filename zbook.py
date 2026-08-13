@@ -81,6 +81,30 @@ def fingerprint():
 
 CITE = "claim/"
 
+# A ground that takes no inputs. Withdrawing a document is a move — it may
+# be forged, expired, withdrawn. Withdrawing an operation with no arguments
+# is not a move at all: there is nothing to fail to supply. The book must
+# not model that as "protected"; it must REFUSE the move, which is what
+# NotAMove is for. The book cannot verify that a witness really takes no
+# inputs — nullarity is DECLARED here, and `declared_structural` lists
+# every declaration so the claim of immunity is itemised and attributable
+# rather than silent.
+PERFORMED = "performed/"
+
+
+class NotAMove(Exception):
+    """Retraction was asked of a ground that has nothing to withdraw."""
+
+
+def declared_structural(book):
+    """Every ground in this book that claims to take no inputs."""
+    out = set()
+    for _cid, _f, data in book:
+        q, _m = parse_quantities(data)
+        out |= {v["witness"] for v in q.values()
+                if (v.get("witness") or "").startswith(PERFORMED)}
+    return sorted(out)
+
 
 def _cited(quantities):
     """The claims this one leans on: witnesses of the form claim/<id>."""
@@ -189,7 +213,12 @@ def classify_cycles(book):
 def retract(book, witness):
     """A ground goes: the document is forged, or the certificate expired.
     Everything that named it drops to credit, and the book is recomputed —
-    so the damage travels along citations by itself."""
+    so the damage travels along citations by itself.
+
+    A ground with no inputs is refused rather than survived: see PERFORMED."""
+    if witness.startswith(PERFORMED):
+        raise NotAMove(f"{witness} takes no inputs — "
+                       f"withdrawing it is not a performable move")
     out = []
     for cid, formula, data in book:
         out.append((cid, formula,

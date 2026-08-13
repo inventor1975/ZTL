@@ -49,6 +49,8 @@ Quantity syntax — `name=` then one of `5` / `[lo,hi]` / `?` (unknown) /
 | token | meaning |
 |---|---|
 | `earned:ref` | the bounds have a witness, and this is it |
+| `earned:a\|b` | ALTERNATIVE grounds — either one suffices; the quantity holds while at least one stands (independence is declared, never verified) |
+| `earned:performed/x` | a ground with no inputs; withdrawing it raises `NotAMove` — the move is refused, not survived (nullarity is declared, never verified) |
 | `credit` | bounds unwitnessed (the default) |
 | `int`, `decimal2`, `frac3` | the lattice: whole numbers, hundredths, thirds |
 | `RUB`, `m2`, `RUB/m2` | units, read as exponents (`m·m` = `m2`; `km` never meets `m`) |

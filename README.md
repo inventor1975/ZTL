@@ -93,3 +93,9 @@ logic of streams). License: MIT.
 *AI participation: designed and written in a dialogue between the
 curator (Vitaly Reznik) and Claude (Anthropic); all fork decisions are
 the curator's.*
+
+## Known limits
+
+What the instrument cannot do (ceilings) and what is unfinished (gaps) is
+kept in [KNOWN-LIMITS.md](KNOWN-LIMITS.md), apart from the commit log so it
+cannot dissolve into it.

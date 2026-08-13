@@ -42,6 +42,11 @@ graph. Three things follow, none of them needing a new rule:
     independence outright and names the shared ancestor that refutes it;
     between documents it cannot, and that line is drawn rather than
     blurred;
+  * and all of that is read through ONE frame with three axes — where a
+    ground came from (`tested`), what is left to check (`under_learning`),
+    what the calendar costs (`under_expiry`). Not a single merged grade:
+    `epochs_matter` proves on an empty axiom list that invariance under
+    learning and invariance under world-change are different properties;
   * a ground may carry a CLOCK. Retraction asks the adversarial question,
     what if this is a lie; a certificate can also simply run out, and
     nobody lied. That second move is E25's anti-tick `expire`, which this
@@ -234,6 +239,42 @@ def _false_independence(alts, deps):
     return out
 
 
+# ------------------------------------------------------- the assurance frame
+#
+# THREE AXES, NOT THREE NAMES FOR ONE THING. The book grew three separate
+# words for "how well is this earned" — documented/declared, the clock, and
+# the judge's own hereditary/sound/until-verification next door — and the
+# obvious tidy-up is to fuse them. The corpus forbids it, and proves the
+# ban: `epochs_matter` in lean/EpochBoundary.lean exhibits a formula that is
+# Hereditary (invariant under EVERY epistemic refinement) and yet not
+# epoch-blind. Invariance under learning and invariance under world-change
+# are provably different notions, on an empty axiom list.
+#
+# So the fix is a FRAME rather than a merger: one record, three axes, each
+# defined by what it is invariant under, in one place instead of scattered.
+#
+#   tested          — was any ground taken on the author's word?
+#                     `documented` / `declared`. Not an invariance at all:
+#                     this is about the ORIGIN of the ground.
+#   under_learning  — does anything remain to be checked? `settled` /
+#                     `pending`, read off the cures the judge still names.
+#                     The book's analogue of the judge's grade axis.
+#   under_expiry    — what does the calendar cost? `perpetual` (grounds that
+#                     take no inputs and cannot be withdrawn), `exposed`
+#                     (every standing ground carries a clock), `plain` (an
+#                     ordinary document: losable to a lie, not to time).
+#
+# The judge's published vocabulary is deliberately NOT renamed — it is in
+# the papers — and the correspondence is stated here instead.
+
+
+def _assurance(tested, pending, clocks, perpetual):
+    return {"tested": "declared" if tested else "documented",
+            "under_learning": "pending" if pending else "settled",
+            "under_expiry": ("perpetual" if perpetual else
+                             "exposed" if clocks else "plain")}
+
+
 def _clocked(alt, judged):
     """Does this one ground live on a clock — directly, or by resting on a
     claim that does?"""
@@ -299,7 +340,7 @@ def judge_book(claims):
         cites = _cited(q)
         # resolve each citation against the claim it names
         weakened, carried, declared = [], [], []
-        unindependent, clocks = [], []
+        unindependent, clocks, perpetual = [], [], []
         for name, qty_ in q.items():
             alts = _alts(qty_.get("witness"))
             if not alts:
@@ -323,6 +364,8 @@ def judge_book(claims):
                 # was a label lying about arithmetic that was already right:
                 # the insured claim survived expiry and the field said it
                 # was exposed.)
+                if all(a.startswith(PERFORMED) for a in standing):
+                    perpetual.append(name)
                 exposed = [a for a in standing if _clocked(a, out)]
                 if len(exposed) == len(standing):
                     clocks.append((name, exposed[0] if len(exposed) == 1
@@ -352,6 +395,9 @@ def judge_book(claims):
             "weakened_by": weakened,
             "carried_by": carried,
             "declared": declared,
+            "assurance": _assurance(declared, r.get("next_check"),
+                                    clocks, perpetual and
+                                    len(perpetual) == len(q)),
             "warranty": "declared" if declared else "documented",
             "clock": clocks,
             "not_independent": unindependent,
@@ -364,6 +410,7 @@ def judge_book(claims):
                              "next_check": [], "why": "circular support",
                              "cites": deps[cid], "weakened_by": [],
                              "carried_by": [], "declared": [],
+                             "assurance": _assurance(False, None, [], False),
                              "warranty": "documented", "clock": [],
                              "not_independent": [],
                              "witnesses": []})
@@ -768,9 +815,51 @@ def sec10_and_why_the_scope_must_be_declared():
     print("   not a ground that might fail — it is one nobody ever tested.")
 
 
-def sec11_what_is_still_missing():
+FRAME = [
+    ("f1", "x == 1", "x=1 earned:deed"),
+    ("f2", "x == 1", "x=1 earned:performed/zero"),
+    ("f3", "x == 1", "x=1 earned:expiring/cert-7"),
+    ("f4", "x == y", "x=1 earned:deed, y=? credit int"),
+    ("f5", "x == 1", "x=1 earned:deed|ledger-page"),
+]
+
+
+def sec11_one_frame_three_axes():
     print("-" * 72)
-    print("11. WHAT IS STILL MISSING")
+    print("11. STAGE EIGHT: ONE FRAME FOR 'HOW WELL IS THIS EARNED'")
+    res = judge_book(FRAME)
+    for cid, _f, _d in FRAME:
+        a = res[cid]["assurance"]
+        print(f"   {cid}  {res[cid]['disposition']:7} "
+              f"tested={a['tested']:10} learning={a['under_learning']:7} "
+              f"expiry={a['under_expiry']}")
+    axes = {c: res[c]["assurance"] for c, _f, _d in FRAME}
+    assert axes["f1"] == {"tested": "documented", "under_learning": "settled",
+                          "under_expiry": "plain"}
+    assert axes["f2"]["under_expiry"] == "perpetual"
+    assert axes["f3"]["under_expiry"] == "exposed"
+    assert axes["f4"]["under_learning"] == "pending"
+    assert axes["f5"]["tested"] == "declared"
+    print("   The book had grown three separate words for one question —")
+    print("   documented/declared, the clock, and the judge's own")
+    print("   hereditary/sound/until-verification next door — and the")
+    print("   obvious tidy-up is to fuse them into a single grade.")
+    print("   THE CORPUS FORBIDS IT, AND PROVES THE BAN. `epochs_matter`")
+    print("   (lean/EpochBoundary.lean, empty axiom list) exhibits a formula")
+    print("   invariant under EVERY epistemic refinement which is still not")
+    print("   epoch-blind: surviving what you learn and surviving what")
+    print("   changes are different properties, not two names for one.")
+    print("   So this is a frame, not a merger. Three axes, each defined by")
+    print("   what it is invariant under, in one place instead of scattered:")
+    print("   where the ground CAME FROM, what is left to CHECK, and what")
+    print("   the CALENDAR costs. The judge's published vocabulary is not")
+    print("   renamed — it is in the papers — and the correspondence is")
+    print("   written down here instead.")
+
+
+def sec12_what_is_still_missing():
+    print("-" * 72)
+    print("12. WHAT IS STILL MISSING")
     print("   Search. Nothing here finds the relevant stored claims for a")
     print("   new question — that is premise selection, a crowded field")
     print("   with strong tools (Sledgehammer and its kin), and this corpus")
@@ -792,7 +881,8 @@ if __name__ == "__main__":
     sec8_where_the_graph_can_check_a_declaration()
     sec9_what_the_calendar_costs()
     sec10_and_why_the_scope_must_be_declared()
-    sec11_what_is_still_missing()
+    sec11_one_frame_three_axes()
+    sec12_what_is_still_missing()
     print("=" * 72)
     print("ZBOOK GREEN — the book stores claims and grounds and never a")
     print("verdict: every reading recomputes. A snapshot carries the")

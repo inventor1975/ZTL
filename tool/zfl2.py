@@ -81,11 +81,44 @@ COLUMNS = [
         },
     },
     {
+        # ONE CELL, TWO KINDS OF CONTENT, and the curator was right that this
+        # is a trap: `inv-17` is an opaque name the machine never looks
+        # inside, `~Tr(L)` is a formula it reads and evaluates. The status
+        # decides which — which is coherent, and is exactly the sort of rule
+        # a person should not have to hold in their head. So the cell says
+        # per row what it wants, and the form asks again whenever the status
+        # changes. They are mutually exclusive by construction — a name is
+        # witnessed or defined, never both — so two columns would leave one
+        # of them always empty; the fix is a cell that announces its mode,
+        # not a wider table.
         "key": "ground", "type": "text", "advanced": False,
         "required_when": {"status": ["verified", "refuted", "defined"]},
         "en": ("ground", "what backs it, or the formula defining it"),
         "ru": ("основание", "чем подтверждено или как определено"),
         "eg": ["inv-17", "~Tr(L)"],
+        "help_when": {
+            "verified": {
+                "en": ("the name of the document or act that verified it — "
+                       "just a name; the machine never looks inside",
+                       "inv-17"),
+                "ru": ("имя документа или акта, который это подтвердил — "
+                       "просто имя; машина внутрь не смотрит", "inv-17")},
+            "refuted": {
+                "en": ("the name of what refuted it", "inv-17"),
+                "ru": ("имя того, что это опровергло", "inv-17")},
+            "defined": {
+                "en": ("A FORMULA over other names — this one IS read: "
+                       "~Tr(L) says the row is false exactly when L is true",
+                       "~Tr(L)"),
+                "ru": ("ФОРМУЛА через другие имена — вот её машина читает: "
+                       "~Tr(L) значит, что строка ложна ровно когда L "
+                       "истинно", "~Tr(L)")},
+            "unverified": {
+                "en": ("nothing needed — an unverified name has no ground",
+                       ""),
+                "ru": ("ничего не нужно — у непроверенного имени основания "
+                       "нет", "")},
+        },
     },
     {
         "key": "ground_kind", "type": "choice", "required": False,
@@ -172,6 +205,9 @@ def form_spec(lang="en"):
     def render(c):
         label, help_ = c.get(lang, c["en"])
         out = {"key": c["key"], "label": label, "help": help_,
+               "help_when": {k: {"help": v.get(lang, v["en"])[0],
+                                 "eg": v.get(lang, v["en"])[1]}
+                             for k, v in (c.get("help_when") or {}).items()},
                "widget": c["type"], "advanced": c.get("advanced", False),
                "required": c.get("required", False),
                "required_when": c.get("required_when"),

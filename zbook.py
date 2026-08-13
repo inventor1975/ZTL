@@ -321,14 +321,20 @@ def _order(book):
     return order, deps, cycles
 
 
-def judge_book(claims):
+def judge_book(claims, strict=False):
     """Recompute the whole book, in dependency order, resolving citations.
 
     A witness of the form `claim/<id>` is honoured only as far as that
     claim currently stands: cite an EARNED claim and the citation carries
     its weight; cite anything else and the quantity drops to credit. The
     inheritance needs no special rule — it is the ordinary refusal to take
-    a ground on somebody else's word, applied to our own book."""
+    a ground on somebody else's word, applied to our own book.
+
+    The STRICT reading lives in `retract`, where the declarations are
+    actually cashed: alternatives are treated as one paper under several
+    names, and a `performed/` ground loses its immunity. The point is not
+    pessimism but a BRACKET — the book's honest answer is the pair, and the
+    truth is inside it. See `trust_interval`."""
     book = list(claims)
     order, deps, cycles = _order(book)
     by_id = {cid: (f, data) for cid, f, data in book}
@@ -436,29 +442,71 @@ def classify_cycles(book):
     return out
 
 
-def retract(book, witness):
+def retract(book, witness, strict=False):
     """A ground goes: the document is forged, or the certificate expired.
     Everything that named it drops to credit, and the book is recomputed —
     so the damage travels along citations by itself.
 
-    A ground with no inputs is refused rather than survived: see PERFORMED."""
-    if witness.startswith(PERFORMED):
+    A ground with no inputs is refused rather than survived (see PERFORMED)
+    — except in STRICT mode, which refuses that immunity along with every
+    other declaration the machine cannot check."""
+    if witness.startswith(PERFORMED) and not strict:
         raise NotAMove(f"{witness} takes no inputs — "
                        f"withdrawing it is not a performable move")
+
     def drop(m):
-        rest = [a for a in m.group(1).split(ALT) if a != witness]
+        alts = m.group(1).split(ALT)
+        if strict and witness in alts:
+            return "credit"        # they were one paper under several names
+        rest = [a for a in alts if a != witness]
         return f"earned:{ALT.join(rest)}" if rest else "credit"
 
     return [(cid, formula, _WITNESS.sub(drop, data))
             for cid, formula, data in book]
 
 
-def fallout(book, witness):
+def fallout(book, witness, strict=False):
     """What a retraction costs, claim by claim: (id, before, after)."""
-    before, after = judge_book(book), judge_book(retract(book, witness))
+    before = judge_book(book, strict=strict)
+    after = judge_book(retract(book, witness, strict=strict), strict=strict)
     return [(cid, before[cid]["disposition"], after[cid]["disposition"])
             for cid in before
             if before[cid]["disposition"] != after[cid]["disposition"]]
+
+
+def all_grounds(book):
+    """Every external ground named anywhere in the book."""
+    out = set()
+    for _cid, _f, data in book:
+        for w in _WITNESS.findall(data):
+            out |= set(w.split(ALT))
+    return sorted(g for g in out if not g.startswith(CITE))
+
+
+def trust_interval(book):
+    """The book's honest answer to "what falls if this ground goes" is not a
+    number but a BRACKET, and this returns it per ground.
+
+    The low end reads the book AS DECLARED — every claim of independence
+    and of nullarity believed. The high end reads it STRICT — every such
+    claim assumed false, since the machine cannot check them and between
+    external documents never will (KNOWN-LIMITS.md). The true cost lies
+    between, and the WIDTH of the bracket is exactly the price of the
+    author's unverifiable word.
+
+    This is the corpus's own habit turned on itself. The numeric floor does
+    not drop an unknown and does not guess it: it returns an interval and a
+    theorem that the answer is inside. A ledger built on declarations owes
+    the same, and a book whose brackets are all zero-width is one that took
+    nothing on trust."""
+    out = {}
+    for g in all_grounds(book):
+        try:
+            low = len(fallout(book, g))
+        except NotAMove:
+            low = 0                    # withdrawal is not an available move
+        out[g] = (low, len(fallout(book, g, strict=True)))
+    return out
 
 
 def snapshot(results):
@@ -857,9 +905,46 @@ def sec11_one_frame_three_axes():
     print("   written down here instead.")
 
 
-def sec12_what_is_still_missing():
+BRACKETED = [
+    ("g1", "x == 1", "x=1 earned:inv-17|inv-17-photocopy"),
+    ("g2", "x == 1", "x=1 earned:claim/g1"),
+    ("g3", "x == 1", "x=1 earned:performed/zero"),
+    ("g4", "x == 1", "x=1 earned:plain-deed"),
+]
+
+
+def sec12_the_answer_is_a_bracket():
     print("-" * 72)
-    print("12. WHAT IS STILL MISSING")
+    print("12. STAGE NINE: THE HONEST ANSWER IS A BRACKET, NOT A NUMBER")
+    iv = trust_interval(BRACKETED)
+    for g, (lo, hi) in iv.items():
+        width = hi - lo
+        print(f"   {g:22} [{lo}, {hi}]"
+              f"{'   <- zero width: nothing taken on trust' if not width else ''}")
+    assert iv["inv-17"] == (0, 2) and iv["inv-17-photocopy"] == (0, 2)
+    assert iv["performed/zero"] == (0, 1)
+    assert iv["plain-deed"] == (1, 1)
+    print("   The low end believes every declaration; the high end assumes")
+    print("   each one false — alternatives are one paper under several")
+    print("   names, and a `performed/` ground loses its immunity. The true")
+    print("   cost is between, and the WIDTH is exactly the price of the")
+    print("   author's unverifiable word.")
+    print("   This is not new machinery, it is the corpus's own habit turned")
+    print("   on itself: the numeric floor never drops an unknown and never")
+    print("   guesses it — it returns an interval and a theorem that the")
+    print("   answer is inside. A ledger built on declarations owes the same.")
+    print("   And it repairs the thing that made the book worth distrusting.")
+    print("   The judge's guarantee was always conditional AND total: given")
+    print("   this marking, this verdict, and nothing claimed outside its")
+    print("   jurisdiction. The book was the first component whose output")
+    print("   could be wrong in a way its input did not show. Now it cannot:")
+    print("   it no longer reports a number it might miss, it reports a")
+    print("   range it cannot. Right in the small, and totally.")
+
+
+def sec13_what_is_still_missing():
+    print("-" * 72)
+    print("13. WHAT IS STILL MISSING")
     print("   Search. Nothing here finds the relevant stored claims for a")
     print("   new question — that is premise selection, a crowded field")
     print("   with strong tools (Sledgehammer and its kin), and this corpus")
@@ -882,7 +967,8 @@ if __name__ == "__main__":
     sec9_what_the_calendar_costs()
     sec10_and_why_the_scope_must_be_declared()
     sec11_one_frame_three_axes()
-    sec12_what_is_still_missing()
+    sec12_the_answer_is_a_bracket()
+    sec13_what_is_still_missing()
     print("=" * 72)
     print("ZBOOK GREEN — the book stores claims and grounds and never a")
     print("verdict: every reading recomputes. A snapshot carries the")

@@ -54,7 +54,7 @@ sys.path.insert(0, _ROOT)
 
 from ztl import T, F, Z, IMP                                    # noqa: E402
 from zbook import (judge_book, fallout, census, _order,          # noqa: E402
-                   trust_surface)
+                   trust_surface, trust_interval)
 import zsweep as S                                              # noqa: E402
 import zledger as L                                             # noqa: E402
 import zclassify as C                                           # noqa: E402
@@ -277,6 +277,17 @@ def sec4_the_trust_surface_of_our_own_corpus(book):
     print("   claims, which is the same conclusion §2 reached from the other")
     print("   side, and the two roads meeting on it is the strongest thing")
     print("   this file says.")
+    iv = trust_interval(book)
+    widths = {g: hi - lo for g, (lo, hi) in iv.items()}
+    print(f"   and the trust brackets, ground by ground: "
+          f"{sorted(set(iv.values()))}")
+    assert set(widths.values()) == {0}
+    print("   Every bracket is zero-width. Read the book believing every")
+    print("   declaration in it and read it assuming each one false, and")
+    print("   the answer does not move — because there are no declarations")
+    print("   to disbelieve. That is the strongest thing this book can say")
+    print("   about itself, and unlike the sentence above it, it is checked")
+    print("   rather than promised.")
 
 
 def sec5_what_this_cannot_see():

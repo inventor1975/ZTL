@@ -48,6 +48,25 @@ world-change are different properties, so "how well is this earned" cannot
 collapse to a single grade. Three axes are read through one frame instead
 (`zbook`, section 11) — the frame is the fix; the merger is impossible.
 
+### How the ceilings are handled rather than hidden
+
+The two unverifiable declarations above are not left to rot inside a verdict.
+Every ground carries a **trust bracket** (`zbook.trust_interval`): the low end
+reads the book believing every declaration, the high end assumes each one
+false, and the true cost lies between. The WIDTH of the bracket is exactly the
+price of the author's unverifiable word, and a book that took nothing on trust
+has zero-width brackets throughout — which `inventory/corpus_book.py` now
+checks of this corpus rather than promising.
+
+This is the corpus's own habit turned on itself. The numeric floor never drops
+an unknown and never guesses it; it returns an interval and a theorem that the
+answer is inside. A ledger built on declarations owes the same. The point is
+worth stating precisely: the judge's guarantee was always conditional AND total
+— given this marking, this verdict, nothing claimed outside its jurisdiction —
+and the book was the first component here whose output could be wrong in a way
+its input did not show. With the bracket it no longer reports a number it might
+miss; it reports a range it cannot.
+
 ---
 
 ## Gaps — unfinished, with a known shape

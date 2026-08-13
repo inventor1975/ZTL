@@ -92,7 +92,33 @@ RULES, and they are not stylistic:
 - Names must be usable in formulas: letters, digits, underscores.
 """
 
+def vocabulary(lang):
+    """The words the interface uses, handed to the model so it stops
+    inventing its own. Measured need: with only "reply in Russian" the
+    commentary came back saying "уневерифицированный", which is not a word.
+    The status names come from the spec, so they cannot drift from the
+    dropdown the reader is looking at."""
+    spec = zfl2.form_spec(lang)
+    st = [c for c in spec["columns"] if c["key"] == "status"][0]
+    words = {o["value"]: o["label"] for o in st["options"]}
+    extra = {
+        "ru": {"EARNED": "заработано", "REFUTED": "опровергнуто",
+               "OPEN": "открыто", "ON CREDIT": "в кредит", "E": "E — "
+               "нечего читать", "PARADOX": "парадокс",
+               "UNDERDETERMINED": "недоопределено (нужна оговорка)",
+               "INTRINSIC": "вынужденно", "warranty": "гарантия",
+               "weak links": "слабые звенья", "passport": "паспорт",
+               "trust bracket": "вилка доверия", "ground": "основание"},
+        "en": {},
+    }[lang if lang in ("ru", "en") else "en"]
+    pairs = [f'"{k}" = "{v}"' for k, v in {**words, **extra}.items()]
+    return ("Use exactly these words, and invent none of your own:\n"
+            + "; ".join(pairs)) if pairs else ""
+
+
 COMMENT_SYS = """You explain what the ZTL core has already decided.
+
+{vocabulary}
 
 You did not compute this and you cannot change it. The verdict, the
 passports, the brackets and the weak links come from the instruments; your
@@ -114,7 +140,11 @@ def fill(history, lang="en", cfg=None):
     were built for."""
     sysmsg = FILL_SYS.format(schema=schema(lang),
                              language=LANG_NAME.get(lang, "English"))
-    msgs = [{"role": "system", "content": sysmsg}] + list(history)
+    msgs = [{"role": "system", "content": sysmsg}] + [dict(m) for m in history]
+    if msgs[-1]["role"] == "user":
+        msgs[-1]["content"] += (
+            f"\n\n[Write every \"means\" gloss in "
+            f"{LANG_NAME.get(lang, 'English')}.]")
     raw = translator.strip_fences(translator.llm(msgs, cfg))
     doc, issues = _parse(raw)
     if doc is not None:
@@ -146,12 +176,26 @@ def _parse(raw):
     return doc, []
 
 
+def _anchor(lang):
+    """A language instruction in the SYSTEM prompt loses to a wall of English
+    context — measured: with the interface in Russian and the report in
+    English JSON, the reply came back in English anyway. The instruction has
+    to sit in the last turn, where it is the most recent thing said."""
+    return (f"\n\n[Reply STRICTLY in {LANG_NAME.get(lang, 'English')}, "
+            f"whatever language the data above happens to be in.]")
+
+
 def comment(doc, result, lang="en", history=None, cfg=None):
     """Plain-language commentary on a verdict the model did not produce."""
-    sysmsg = COMMENT_SYS.format(language=LANG_NAME.get(lang, "English"))
+    sysmsg = COMMENT_SYS.format(language=LANG_NAME.get(lang, "English"),
+                                vocabulary=vocabulary(lang))
     context = ("The table:\n" + json.dumps(doc, ensure_ascii=False)
                + "\n\nWhat the instruments answered:\n"
                + json.dumps(result, ensure_ascii=False))
     msgs = [{"role": "system", "content": sysmsg},
-            {"role": "user", "content": context}] + list(history or [])
+            {"role": "user", "content": context + _anchor(lang)}]
+    for m in (history or []):
+        msgs.append(dict(m))
+    if msgs[-1]["role"] == "user":
+        msgs[-1]["content"] += _anchor(lang)
     return translator.llm(msgs, cfg)

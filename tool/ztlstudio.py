@@ -457,18 +457,32 @@ def api_assert(payload):
             "report": report}
 
 
+def _v2(name):
+    """Import a v2 module, RELOADED in development.
+
+    A long-running dev server holds every module from process start, so a
+    tightened prompt or a fixed validator keeps serving its old self until
+    somebody restarts — which cost three separate confusions today, each
+    time diagnosed as a bug in code that had already been fixed. In public
+    mode the process is restarted deliberately and the reload is skipped."""
+    import importlib
+    mod = importlib.import_module(name)
+    if not PUBLIC:
+        mod = importlib.reload(mod)
+    return mod
+
+
 def api_v2run(payload):
     """ZFL v2: one table in, whichever instruments apply out. The whole of
     what used to be three tabs, with no genre to declare."""
-    import zfl2
     doc = payload.get("doc") or {}
-    return zfl2.run(doc)
+    return _v2("zfl2").run(doc)
 
 
 def api_v2fill(payload):
     """A question in plain language becomes a filled table. The model never
     decides anything — it fills cells, and the core judges them after."""
-    import translator2
+    translator2 = _v2("translator2")
     try:
         return translator2.fill(payload.get("history", []),
                                 payload.get("lang", "en"),
@@ -479,7 +493,7 @@ def api_v2fill(payload):
 
 def api_v2comment(payload):
     """Commentary on a verdict the model did not produce."""
-    import translator2
+    translator2 = _v2("translator2")
     try:
         return {"ok": True, "reply": translator2.comment(
             payload.get("doc") or {}, payload.get("result") or {},
@@ -490,9 +504,8 @@ def api_v2comment(payload):
 
 
 def api_v2validate(payload):
-    import zfl2
     doc = payload.get("doc") or {}
-    return {"ok": True, "issues": zfl2.validate(doc)}
+    return {"ok": True, "issues": _v2("zfl2").validate(doc)}
 
 
 ROUTES = {"/api/v2run": api_v2run, "/api/v2validate": api_v2validate,
@@ -556,13 +569,12 @@ class Handler(BaseHTTPRequestHandler):
             else:
                 self._send(404, {"error": "reference not built"})
         elif self.path == "/api/v2examples":
-            import zfl2examples
+            zfl2examples = _v2("zfl2examples")
             self._send(200, zfl2examples.catalogue(
                 "ru" if "l=ru" in query else "en"))
         elif self.path == "/api/formspec":
-            import zfl2
             lang = "ru" if "l=ru" in query else "en"
-            self._send(200, zfl2.form_spec(lang))
+            self._send(200, _v2("zfl2").form_spec(lang))
         elif self.path == "/api/examples":
             self._send(200, EXAMPLES)
         elif self.path.startswith("/static/"):

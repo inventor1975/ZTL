@@ -14,3 +14,14 @@ paper/*.out
 paper/*.aux
 mindreef_topics.json
 ztljudgenode.db
+
+# ---------------------------------------------------------------------------
+# DECIDED, not forgotten (2026-08-13). The blog essays are published on
+# vitalyreznik.com and are the curator's outward-facing copy; a second copy on
+# GitHub would only rot out of step with the live one. They are ignored here so
+# that "untracked" cannot be misread as "somebody forgot to commit this" —
+# which is exactly how `dilemmas/cogito.py` sat outside the repository for
+# months and then turned CI red the day a stand was wired to it. An explicit
+# decision belongs in the machine, not in someone's memory.
+essays/
+Reproduce-ZTL.docx

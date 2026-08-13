@@ -50,7 +50,8 @@ PORT = int(os.environ.get("PORT", "8190"))   # copy: 8191 (live studio uses 8190
 import time                                                     # noqa: E402
 from collections import defaultdict, deque                      # noqa: E402
 PUBLIC = os.environ.get("ZTLSTUDIO_PUBLIC") == "1"
-_LLM_ROUTES = {"/api/chat", "/api/emit", "/api/explain", "/api/repair"}
+_LLM_ROUTES = {"/api/chat", "/api/emit", "/api/explain", "/api/repair",
+               "/api/v2fill", "/api/v2comment"}
 _RL = defaultdict(deque)          # ip -> timestamps of free-AI calls
 _RL_MAX, _RL_WINDOW = 20, 600     # ≤20 free-AI calls / 10 min / IP
 
@@ -464,6 +465,30 @@ def api_v2run(payload):
     return zfl2.run(doc)
 
 
+def api_v2fill(payload):
+    """A question in plain language becomes a filled table. The model never
+    decides anything — it fills cells, and the core judges them after."""
+    import translator2
+    try:
+        return translator2.fill(payload.get("history", []),
+                                payload.get("lang", "en"),
+                                payload.get("cfg"))
+    except translator.TranslatorError as e:
+        return {"ok": False, "error": str(e)}
+
+
+def api_v2comment(payload):
+    """Commentary on a verdict the model did not produce."""
+    import translator2
+    try:
+        return {"ok": True, "reply": translator2.comment(
+            payload.get("doc") or {}, payload.get("result") or {},
+            payload.get("lang", "en"), payload.get("history", []),
+            payload.get("cfg"))}
+    except translator.TranslatorError as e:
+        return {"ok": False, "error": str(e)}
+
+
 def api_v2validate(payload):
     import zfl2
     doc = payload.get("doc") or {}
@@ -471,6 +496,7 @@ def api_v2validate(payload):
 
 
 ROUTES = {"/api/v2run": api_v2run, "/api/v2validate": api_v2validate,
+          "/api/v2fill": api_v2fill, "/api/v2comment": api_v2comment,
           "/api/validate": api_validate, "/api/run": api_run,
           "/api/chat": api_chat, "/api/emit": api_emit,
           "/api/repair": api_repair, "/api/explain": api_explain,
@@ -529,6 +555,10 @@ class Handler(BaseHTTPRequestHandler):
                     self._send(200, f.read(), "text/html; charset=utf-8")
             else:
                 self._send(404, {"error": "reference not built"})
+        elif self.path == "/api/v2examples":
+            import zfl2examples
+            self._send(200, zfl2examples.catalogue(
+                "ru" if "l=ru" in query else "en"))
         elif self.path == "/api/formspec":
             import zfl2
             lang = "ru" if "l=ru" in query else "en"

@@ -248,12 +248,43 @@ def _issue(level, code, where, hint):
     return {"level": level, "code": code, "where": where, "hint": hint}
 
 
+def coerce(doc):
+    """A document arriving as JSON has JSON's types, not ours: a model that
+    writes `"value": 3000` is not wrong, and neither is a caller who does.
+    Everything below reads cells as text, so cells become text here — once,
+    at the door, rather than defensively in twenty places.
+
+    Found the moment the AI first filled the table (AttributeError: 'int'
+    object has no attribute 'strip'), which is the argument for letting it
+    try rather than only testing by hand."""
+    if not isinstance(doc, dict):
+        return {"rows": [], "claim": ""}
+    out = {"claim": str(doc.get("claim") or ""),
+           "ask": doc.get("ask") or [], "rows": []}
+    for r in (doc.get("rows") or []):
+        if not isinstance(r, dict):
+            continue
+        row = {}
+        for k, v in r.items():
+            if k == "sample":
+                row[k] = bool(v)
+            elif v is None:
+                row[k] = ""
+            elif isinstance(v, bool):
+                row[k] = v
+            else:
+                row[k] = str(v)
+        out["rows"].append(row)
+    return out
+
+
 def validate(doc):
     """Machine-readable issues, addressed to a CELL. The repair loop and the
     form's inline errors read the same list — `where` is `row 2 / ground`
     rather than a path into a JSON tree, because the person fixing it is
     looking at a table."""
-    issues, rows = [], doc.get("rows") or []
+    doc = coerce(doc)
+    issues, rows = [], doc["rows"]
     if not rows:
         issues.append(_issue("error", "E_EMPTY", "table",
                              "the table has no rows"))
@@ -453,6 +484,12 @@ def to_book(rows):
     from the same table."""
     book = []
     for r in numeric_rows(rows):
+        # a `?` is a QUESTION, not a claim about a value: there is nothing
+        # for the ledger to hold, and building `b == ?` crashed the sheet
+        # parser outright (found by running every catalogue example, which
+        # is the whole reason they are run rather than merely stored)
+        if (r.get("value") or "").strip() == "?":
+            continue
         prov = (f"earned:{_witness(r)}"
                 if (r.get("status") == "verified" and r.get("ground"))
                 else "credit")
@@ -486,6 +523,7 @@ def applies(doc):
 def run(doc):
     """Validate, then ask whichever instruments apply. One entry point for
     what used to be three tabs."""
+    doc = coerce(doc)
     issues = validate(doc)
     if any(i["level"] == "error" for i in issues):
         return {"ok": False, "issues": issues}

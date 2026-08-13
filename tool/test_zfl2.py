@@ -151,6 +151,38 @@ def sec4_an_unknown_is_a_question_not_a_gap():
     print("   type `==` would be the machine's convenience charged to them.")
 
 
+def sec4b_every_example_runs_and_json_types_are_taken_as_they_come():
+    print("-" * 72)
+    print("4b. THE CATALOGUE, AND WHAT ARRIVES FROM A MODEL")
+    import zfl2examples as X
+    kinds = {}
+    for e in X.EXAMPLES:
+        r = zfl2.run(e["doc"])
+        assert r["ok"], (e["en"], r["issues"])
+        kinds.setdefault(e["kind"], 0)
+        kinds[e["kind"]] += 1
+    print(f"   {len(X.EXAMPLES)} examples, all validating and running: {kinds}")
+    assert set(kinds) == set(X.KINDS)
+    print("   An example is a promise about the machine, so a broken one may")
+    print("   not ship. This caught a real crash on the first run: a row with")
+    print("   value `?` was being turned into the ledger claim `b == ?`,")
+    print("   which the sheet parser rightly refused — a question is not a")
+    print("   claim about a value.")
+    # a model writes JSON, and JSON has JSON's types
+    doc = {"rows": [{"name": "a", "means": "x", "status": "verified",
+                     "ground": "inv-1", "value": 3000, "unit": "RUB"},
+                    {"name": "cap", "means": "y", "status": "verified",
+                     "ground": "c", "value": 5000, "unit": "RUB"}],
+           "claim": "a <= cap"}
+    r = zfl2.run(doc)
+    print(f"   values arriving as NUMBERS: {r['report']['numeric']['sheet']}")
+    assert r["ok"] and r["report"]["numeric"]["disposition"] == "EARNED"
+    print("   `\"value\": 3000` is not wrong of a model or of a caller, and it")
+    print("   crashed the validator the first time the AI filled the table.")
+    print("   Types are coerced once at the door instead of defensively in")
+    print("   twenty places.")
+
+
 def sec5_the_spec_can_build_the_form_and_the_page():
     print("-" * 72)
     print("5. ONE SPEC BEHIND THE FORM, THE VALIDATOR AND THE PAGE")
@@ -185,6 +217,7 @@ if __name__ == "__main__":
     sec3_the_ledger_appears_when_it_is_wanted()
     sec3b_what_the_ground_column_is_actually_for()
     sec4_an_unknown_is_a_question_not_a_gap()
+    sec4b_every_example_runs_and_json_types_are_taken_as_they_come()
     sec5_the_spec_can_build_the_form_and_the_page()
     print("=" * 72)
     print("ZFL2 GREEN — one table, the genre computed rather than declared,")

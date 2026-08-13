@@ -42,6 +42,13 @@ graph. Three things follow, none of them needing a new rule:
     independence outright and names the shared ancestor that refutes it;
     between documents it cannot, and that line is drawn rather than
     blurred;
+  * a ground may carry a CLOCK. Retraction asks the adversarial question,
+    what if this is a lie; a certificate can also simply run out, and
+    nobody lied. That second move is E25's anti-tick `expire`, which this
+    book's retraction has been at the ledger level all along. E25 also
+    measured the discipline it needs — unrestricted expiry trivializes
+    warranties — so the scope is DECLARED: `expiring/` must expire,
+    `performed/` cannot, everything unmarked is an ordinary document;
   * a CIRCLE of support is classified, not rejected. Mutual citation
     without negation is the truth-teller's shape, and the passport calls
     it UNDERDETERMINED: ungrounded rather than refuted, curable only by
@@ -110,12 +117,55 @@ PERFORMED = "performed/"
 # grounds are INDEPENDENT. Two copies of one invoice are one witness under
 # two names, and nothing here detects that. `declared_alternatives` lists
 # every such claim so the independence is itemised rather than assumed.
+# A ground that carries a CLOCK. `retract` asks the adversarial question —
+# what if this is a lie — and a lie is not the only way to lose a ground: a
+# certificate expires, a registry is re-pledged, a warranty runs out, and
+# nobody lied. That second move is not new to this corpus; it is E25's
+# anti-tick `expire(m, a)`, and this book's `retract` has been the same
+# operation at the ledger level all along, built without noticing.
+#
+# E25 measured what makes it survivable: UNRESTRICTED EXPIRY TRIVIALIZES
+# WARRANTIES — from any marking {expire, verify} reaches every marking, so a
+# test invariant under both is a test that cannot fail; on the depth-2 pool
+# only constant verdicts survive. The cure it names is a DECLARED SCOPE:
+# say which grounds carry clocks. `performed/` was already half of that
+# discipline — the class that cannot expire at all. This is the other half.
+EXPIRING = "expiring/"
+
 ALT = "|"
 _WITNESS = re.compile(r"earned:([^\s,]+)")
 
 
 def _alts(witness):
     return [a for a in (witness or "").split(ALT) if a]
+
+
+def expiry_scope(book):
+    """The grounds in this book that carry a declared clock."""
+    out = set()
+    for _cid, _f, data in book:
+        q, _m = parse_quantities(data)
+        for v in q.values():
+            out |= {a for a in _alts(v.get("witness"))
+                    if a.startswith(EXPIRING)}
+    return sorted(out)
+
+
+def expire_all(book):
+    """Every clock runs out at once — the worst case the scope allows."""
+    for w in expiry_scope(book):
+        book = retract(book, w)
+    return book
+
+
+def scheduled_fallout(book):
+    """What the CALENDAR costs, as against what a lie costs. Same shape as
+    `fallout`, but the ground is not withdrawn by an adversary — it simply
+    ran out, which is the ordinary way ledgers rot."""
+    before, after = judge_book(book), judge_book(expire_all(book))
+    return [(cid, before[cid]["disposition"], after[cid]["disposition"])
+            for cid in before
+            if before[cid]["disposition"] != after[cid]["disposition"]]
 
 
 def declared_alternatives(book):
@@ -184,6 +234,16 @@ def _false_independence(alts, deps):
     return out
 
 
+def _clocked(alt, judged):
+    """Does this one ground live on a clock — directly, or by resting on a
+    claim that does?"""
+    if alt.startswith(EXPIRING):
+        return True
+    if alt.startswith(CITE):
+        return bool(judged.get(alt[len(CITE):], {}).get("clock"))
+    return False
+
+
 def _stands(alt, judged):
     """Does this one ground currently hold? A document holds while it is in
     the book; a cited claim holds only while that claim is EARNED."""
@@ -238,7 +298,8 @@ def judge_book(claims):
         q, m = parse_quantities(data)
         cites = _cited(q)
         # resolve each citation against the claim it names
-        weakened, carried, declared, unindependent = [], [], [], []
+        weakened, carried, declared = [], [], []
+        unindependent, clocks = [], []
         for name, qty_ in q.items():
             alts = _alts(qty_.get("witness"))
             if not alts:
@@ -254,6 +315,18 @@ def judge_book(claims):
             if standing:
                 if len(alts) > 1:
                     carried.append((name, standing[0]))
+                # EXPOSURE, not presence. A quantity is on the calendar only
+                # if EVERY ground still standing under it carries a clock —
+                # one clock-free alternative is insurance, and E25 measured
+                # that insurance as the thing that keeps a warranty alive.
+                # (First written as "the carrying ground has a clock", which
+                # was a label lying about arithmetic that was already right:
+                # the insured claim survived expiry and the field said it
+                # was exposed.)
+                exposed = [a for a in standing if _clocked(a, out)]
+                if len(exposed) == len(standing):
+                    clocks.append((name, exposed[0] if len(exposed) == 1
+                                   else exposed))
                 if standing[0].startswith(PERFORMED):
                     declared.append((name, "nullarity", standing[0]))
                 elif standing[0].startswith(CITE):
@@ -280,6 +353,7 @@ def judge_book(claims):
             "carried_by": carried,
             "declared": declared,
             "warranty": "declared" if declared else "documented",
+            "clock": clocks,
             "not_independent": unindependent,
             "witnesses": sorted({v["witness"] for v in q.values()
                                  if v.get("witness")}),
@@ -290,7 +364,8 @@ def judge_book(claims):
                              "next_check": [], "why": "circular support",
                              "cites": deps[cid], "weakened_by": [],
                              "carried_by": [], "declared": [],
-                             "warranty": "documented", "not_independent": [],
+                             "warranty": "documented", "clock": [],
+                             "not_independent": [],
                              "witnesses": []})
     return out
 
@@ -587,9 +662,75 @@ def sec8_where_the_graph_can_check_a_declaration():
     print("   is worth more than either half of it.")
 
 
-def sec9_what_is_still_missing():
+CLOCKED = [
+    ("p1", "x == 1", "x=1 earned:expiring/cert-7"),
+    ("p2", "x == 1", "x=1 earned:claim/p1"),
+    ("p3", "x == 1", "x=1 earned:deed-of-sale"),
+    ("p4", "x == 1", "x=1 earned:expiring/warranty|deed-of-sale"),
+]
+
+
+def sec9_what_the_calendar_costs():
     print("-" * 72)
-    print("9. WHAT IS STILL MISSING")
+    print("9. STAGE SEVEN: A GROUND MAY RUN OUT WITHOUT ANYBODY LYING")
+    print(f"   declared expiry scope: {expiry_scope(CLOCKED)}")
+    res = judge_book(CLOCKED)
+    for cid, _f, _d in CLOCKED:
+        print(f"   {cid}  {res[cid]['disposition']:7} "
+              f"clock={res[cid]['clock']}")
+    assert res["p2"]["clock"] == [("x", "claim/p1")]
+    assert res["p3"]["clock"] == [] and res["p4"]["clock"] == []
+    hits = [(c, a) for c, _b, a in scheduled_fallout(CLOCKED)]
+    print(f"   when every clock runs out: {hits}")
+    assert hits == [("p1", "ON CREDIT"), ("p2", "ON CREDIT")]
+    print("   `retract` asks the adversarial question — what if this is a")
+    print("   lie. A lie is not the only way to lose a ground: certificates")
+    print("   expire and nobody lied. That second move is E25's anti-tick")
+    print("   `expire`, and this book's retraction has been the same")
+    print("   operation at the ledger level all along, built without")
+    print("   noticing. Naming the correspondence is most of the fix.")
+    print("   The clock is inherited like every other property here, so p2")
+    print("   knows it is living on p1's certificate without naming it. p3")
+    print("   holds a deed and keeps standing; p4 is INSURED — its warranty")
+    print("   expires and the deed carries it, which is exactly E25's")
+    print("   expiry-insurance written as an alternative ground.")
+
+
+def sec10_and_why_the_scope_must_be_declared():
+    print("-" * 72)
+    print("10. WHY THE SCOPE HAS TO BE DECLARED — E25's THEOREM, IN MINIATURE")
+    everything = [
+        ("q1", "x == 1", "x=1 earned:expiring/a"),
+        ("q2", "x == 1", "x=1 earned:claim/q1"),
+        ("q3", "x == 1", "x=1 earned:expiring/b"),
+        ("q4", "x == 1", "x=1 earned:expiring/c|expiring/d"),
+    ]
+    res = judge_book(everything)
+    print(f"   every ground on a clock, nothing off the calendar: "
+          f"{census(res)}, scope {len(expiry_scope(everything))}")
+    print(f"   after they all run out: "
+          f"{census(judge_book(expire_all(everything)))}")
+    hits = scheduled_fallout(everything)
+    assert all(v["disposition"] == "EARNED" for v in res.values())
+    assert len(hits) == len(everything)
+    print("   Nothing survives — not even q4, which holds two grounds and")
+    print("   was insured a section ago. Insurance is not redundancy; it is")
+    print("   having something OFF the calendar, and two clocks are not one")
+    print("   clock's cure.")
+    print("   This is the ledger's copy of what E25 proved and measured:")
+    print("   with {expire, verify} unrestricted every marking is reachable")
+    print("   from every other, so a warranty required to hold under")
+    print("   arbitrary expiry is a warranty on nothing — on the depth-2")
+    print("   pool only the constant verdicts lived through it.")
+    print("   Hence one discipline in both halves: say WHICH grounds carry")
+    print("   clocks. `performed/` is the class that cannot expire,")
+    print("   `expiring/` the class that must, and everything unmarked is an")
+    print("   ordinary document — losable to a lie, not to the calendar.")
+
+
+def sec11_what_is_still_missing():
+    print("-" * 72)
+    print("11. WHAT IS STILL MISSING")
     print("   Search. Nothing here finds the relevant stored claims for a")
     print("   new question — that is premise selection, a crowded field")
     print("   with strong tools (Sledgehammer and its kin), and this corpus")
@@ -609,7 +750,9 @@ if __name__ == "__main__":
     sec6_a_ground_may_have_an_alternative()
     sec7_a_declaration_may_not_hide_inside_earned()
     sec8_where_the_graph_can_check_a_declaration()
-    sec9_what_is_still_missing()
+    sec9_what_the_calendar_costs()
+    sec10_and_why_the_scope_must_be_declared()
+    sec11_what_is_still_missing()
     print("=" * 72)
     print("ZBOOK GREEN — the book stores claims and grounds and never a")
     print("verdict: every reading recomputes. A snapshot carries the")
@@ -628,4 +771,7 @@ if __name__ == "__main__":
     print("the bottom cannot come out clean a storey up. Where the grounds")
     print("are claims the graph checks the independence outright and names")
     print("the shared ancestor; where they are documents it cannot, and that")
-    print("line is drawn rather than blurred.")
+    print("line is drawn rather than blurred. And a ground may run out")
+    print("instead of being disputed — the calendar's fallout is computed")
+    print("apart from the adversary's, over a declared scope, because E25")
+    print("measured that unrestricted expiry leaves no warranty standing.")

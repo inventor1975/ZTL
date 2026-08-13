@@ -540,6 +540,26 @@ def cost(book, ground):
             "width": len(high) - len(low)}
 
 
+def naming_assumption(book):
+    """The assumption every bracket in this book silently rests on: that
+    its external ground names denote as many distinct things as there are
+    names.
+
+    The book cannot check it. `inv-17` and `invoice-17` may be one paper,
+    and then a cost printed as [2, 2] is really 4 — with a width of zero,
+    which reads as "nothing taken on trust" at exactly the moment it is
+    wrong. That is the QUIET version of the photocopy problem: the loud one
+    at least opens a bracket (KNOWN-LIMITS.md).
+
+    So the names travel with the numbers. Not detection — there is none to
+    be had here — but the assumption printed beside the figure it holds up,
+    which is the same bargain struck everywhere else in this file."""
+    names = all_grounds(book)
+    return {"names": names, "count": len(names),
+            "assumption": f"the {len(names)} external names below denote "
+                          f"{len(names)} distinct grounds"}
+
+
 def trust_interval(book):
     """The book's honest answer to "what falls if this ground goes" is not a
     number but a BRACKET, and this returns it per ground.
@@ -612,6 +632,7 @@ def trust_surface(book):
             "share": (0 if not earned
                       else round(len(declared) / len(earned), 3)),
             "declarations": items,
+            "naming": naming_assumption(book),
             "refuted_independence": sorted({str(x) for v in res.values()
                                             for x in v["not_independent"]})}
 
@@ -994,6 +1015,17 @@ def sec12_the_answer_is_a_bracket():
     print("   could be wrong in a way its input did not show. Now it cannot:")
     print("   it no longer reports a number it might miss, it reports a")
     print("   range it cannot. Right in the small, and totally.")
+    na = naming_assumption(BRACKETED)
+    print(f"   ASSUMED, and unverifiable: {na['assumption']}")
+    print(f"   {na['names']}")
+    assert na["count"] == 4
+    print("   That line travels with every bracket from here on. A width of")
+    print("   zero means nothing was taken on trust ONLY if the names are")
+    print("   what they look like: `inv-17` and `invoice-17` may be one")
+    print("   paper, and then a [2, 2] is really a 4 while printing the")
+    print("   most reassuring width there is. The loud photocopy opens a")
+    print("   bracket; this quiet one opens nothing, so the assumption is")
+    print("   printed instead of detected.")
 
 
 DESCENT = [

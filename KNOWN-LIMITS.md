@@ -77,11 +77,13 @@ zero, which reads as "nothing taken on trust" at exactly the moment it is wrong.
 The loud hole shows itself; the quiet one does not.
 
 Unverifiable for the same reason as independence — the grounds are opaque names
-— so the available move is the same one: disclosure rather than detection. The
-book can list its external ground names (`all_grounds`) for a human to scan for
-near-duplicates. Not wired into any report, because this corpus has six grounds
-and all of them are distinct; a live ledger with hundreds would want it on the
-first page.
+— so the available move is the same one: disclosure rather than detection, and
+it is now WIRED rather than described. `naming_assumption(book)` states the
+assumption in words and prints the names beside it, and every report that shows
+brackets shows it too (`zbook` §12, `inventory/corpus_book.py` §4). Recording a
+silent failure in a file nobody opens, while the machine goes on printing a
+reassuring width of zero, would have been the documentation-shaped version of
+the same offence.
 
 **Citations are honoured, never discovered.** The book computes what falls when
 a ground goes, but only along links a human wrote down. A dependence nobody

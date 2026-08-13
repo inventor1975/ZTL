@@ -52,14 +52,32 @@ since the input space may have moved too and the difference would be a
 difference of questions rather than of answers. Hence ZTL_ROOT: this file
 stays put, the modules it imports come from the worktree.
 
+PARALLELISM. The sweep is embarrassingly parallel — every case is independent
+— and `--jobs 0` spreads it over the machine: 12.9s on one process, 1.2s on
+32, with the fingerprint UNCHANGED. That last part was the design constraint,
+not a bonus. Combining per-worker digests would have been simpler and would
+have moved the fingerprint for a reason having nothing to do with the judge:
+an alarm going off because somebody rewired the alarm. So only the judging is
+spread; the stream is assembled and hashed in the parent, in enumeration
+order.
+
+The default is nevertheless ONE process, and deliberately. `run_all.py`
+already saturates the machine with thirty stands at once, and a stand that
+forks thirty-two more would fight the suite for the same cores; 13 seconds
+inside a run whose wall time is set by a 52-second stand costs nothing. Use
+`--jobs 0` when running this alone, and with `--against`, where two full
+sweeps happen.
+
 Run:  python3 conformance/judge_table.py                 (check against stored)
       python3 conformance/judge_table.py --update        (re-bless the table)
       python3 conformance/judge_table.py --against REV   (diff two revisions)
+      python3 conformance/judge_table.py --jobs 0        (use every core)
 """
 import hashlib
 import json
 import os
 import sys
+import time
 from collections import Counter
 from itertools import product
 
@@ -122,17 +140,50 @@ def verdict(formula, data):
         return ("!" + type(exc).__name__, "-", 0)
 
 
-def sweep():
+def _slice(bounds):
+    """Judge one contiguous slice of the enumeration. Workers regenerate the
+    case list rather than receiving it: the generator is deterministic and
+    cheap, and shipping 184k strings across a pipe is not."""
+    start, end = bounds
+    out = []
+    for i, (formula, data) in enumerate(cases()):
+        if i >= end:
+            break
+        if i >= start:
+            out.append(verdict(formula, data))
+    return out
+
+
+def _judged(jobs):
+    """Every verdict, in enumeration order — computed in parallel when it is
+    worth it, and always ASSEMBLED serially.
+
+    The order matters more than the speed: the fingerprint is a hash over
+    the stream, so only the judging is spread across cores and the hashing
+    stays in the parent. Combining per-worker digests would have been
+    simpler and would have moved the fingerprint for a reason that has
+    nothing to do with the judge — an alarm going off because the alarm was
+    rewired."""
+    total = sum(1 for _ in cases())
+    if jobs <= 1:
+        return [verdict(f, d) for f, d in cases()], total
+    import multiprocessing as mp
+    step = (total + jobs - 1) // jobs
+    bounds = [(i, min(i + step, total)) for i in range(0, total, step)]
+    with mp.get_context("fork").Pool(jobs) as pool:
+        parts = pool.map(_slice, bounds)
+    return [v for part in parts for v in part], total
+
+
+def sweep(jobs=1):
     """Returns (fingerprint, census, rare, total)."""
     h = hashlib.sha256()
     census, examples = Counter(), {}
-    total = 0
-    for formula, data in cases():
-        v = verdict(formula, data)
+    verdicts, total = _judged(jobs)
+    for (formula, data), v in zip(cases(), verdicts):
         h.update(f"{formula}|{data}|{v}".encode())
         census[v] += 1
         examples.setdefault(v, (formula, data))
-        total += 1
     rare = sorted((n, list(v), list(examples[v]))
                   for v, n in census.items() if n <= total // 1000)
     return (h.hexdigest()[:16],
@@ -140,7 +191,7 @@ def sweep():
             rare, total)
 
 
-def against(rev):
+def against(rev, jobs=1):
     """Run this same sweep against another revision's judge, via a throwaway
     git worktree — which is what a "separate copy of the repository" should
     be, since git already keeps every copy and a hand-made one rots.
@@ -162,7 +213,8 @@ def against(rev):
         try:
             env = dict(os.environ, ZTL_ROOT=tree)
             out = subprocess.run(
-                [sys.executable, os.path.abspath(__file__), "--emit"],
+                [sys.executable, os.path.abspath(__file__), "--emit",
+                 "--jobs", str(jobs)],
                 env=env, capture_output=True, text=True, timeout=1800)
             if out.returncode:
                 print(out.stderr[-1500:])
@@ -175,8 +227,14 @@ def against(rev):
 
 def main():
     update = "--update" in sys.argv
+    jobs = 1
+    for i, a in enumerate(sys.argv):
+        if a == "--jobs" and i + 1 < len(sys.argv):
+            jobs = int(sys.argv[i + 1])
+    if jobs <= 0:
+        jobs = min(32, os.cpu_count() or 1)
     if "--emit" in sys.argv:                    # used by `against`
-        fp, census, rare, total = sweep()
+        fp, census, rare, total = sweep(jobs)
         print(json.dumps({"fingerprint": fp, "census": census,
                           "cases": total}))
         return 0
@@ -187,8 +245,11 @@ def main():
     print("=" * 78)
     print("THE JUDGE'S TABLE — an exhaustive sweep of its input space")
     print("=" * 78)
-    fp, census, rare, total = sweep()
+    t0 = time.time()
+    fp, census, rare, total = sweep(jobs)
     print(f"\n  cases swept: {total:,}   fingerprint: {fp}")
+    print(f"  {time.time() - t0:.1f}s on {jobs} process"
+          f"{'' if jobs == 1 else 'es'}")
     print("\n  CENSUS — what the judge does, by verdict:")
     for k, n in census.items():
         print(f"    {k:34} {n:>8,}  ({100 * n / total:5.2f}%)")
@@ -221,7 +282,7 @@ def main():
 
     if rev:
         print(f"\n  AGAINST {rev} — same sweep, that revision's judge")
-        old = against(rev)
+        old = against(rev, jobs)
         if old is None:
             print("  could not run the old revision; nothing compared.")
             return 1

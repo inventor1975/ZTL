@@ -329,7 +329,7 @@ def validate(doc):
                                  f"kind must be one of {GROUND_KINDS}"))
         if status == "defined":
             try:
-                _formula(ground, {})
+                _formula_prop(ground)
             except Exception as exc:
                 issues.append(_issue("error", "E_FORMULA",
                                      f"{at} / ground", str(exc)))
@@ -438,6 +438,17 @@ def normalise(claim, rows):
     return out
 
 
+def _formula_prop(text):
+    """A DEFINED row's ground is always propositional, so `=` there is the
+    biconditional and never a numeric comparison. Reading it as a comparison
+    is how converting the docket's own examples first crashed the fixed
+    point with KeyError('comparison')."""
+    t = re.sub(r"\bTr\s*\(\s*([^)]+?)\s*\)", r"\1", text or "")
+    for pat, sym in _WORDS:
+        t = re.sub(pat, sym, t)
+    return formalize(t)
+
+
 def _formula(text, _names):
     """One infix syntax for the whole language: `~a & b -> c`, `Tr(L)`, and
     comparisons `x <= y` where the numeric floor takes over. Tr() is folded
@@ -504,7 +515,7 @@ def to_system(rows):
         return {}
     system = {}
     for name, r in defined.items():
-        system[name] = _formula(r.get("ground") or "", {})
+        system[name] = _formula_prop(r.get("ground") or "")
     for r in rows:
         if r["name"] in defined:
             continue

@@ -23,38 +23,118 @@ KINDS = {
 }
 
 EXAMPLES = [
-    # ---------------------------------------------------------- paradoxes
-    {"kind": "paradox",
-     "en": "the liar", "ru": "лжец",
-     "doc": {"rows": [
-         {"name": "L", "means": "this sentence is false",
-          "status": "defined", "ground": "~Tr(L)"}]}},
-    {"kind": "paradox",
-     "en": "the truth-teller", "ru": "правдоруб",
-     "doc": {"rows": [
-         {"name": "T1", "means": "this sentence is true",
-          "status": "defined", "ground": "Tr(T1)"}]}},
-    {"kind": "paradox",
-     "en": "the barber", "ru": "брадобрей",
-     "doc": {"rows": [
-         {"name": "shaves", "means": "the barber shaves himself",
-          "status": "defined", "ground": "~Tr(shaves)"}]}},
-    {"kind": "paradox",
-     "en": "an even cycle — a blank, not a paradox",
-     "ru": "чётный круг — бланк, а не парадокс",
-     "doc": {"rows": [
-         {"name": "A", "means": "B is false", "status": "defined",
-          "ground": "~Tr(B)"},
-         {"name": "B", "means": "A is false", "status": "defined",
-          "ground": "~Tr(A)"}]}},
-    {"kind": "paradox",
-     "en": "a claim resting on the liar",
-     "ru": "утверждение, стоящее на лжеце",
-     "doc": {"rows": [
-         {"name": "L", "means": "this sentence is false",
-          "status": "defined", "ground": "~Tr(L)"},
-         {"name": "g", "means": "the grass is green", "status": "defined",
-          "ground": "~Tr(L)"}]}},
+    # ------------------------------------- the paradox docket, entire
+    # Every case §7 of the published docket promises is in the studio
+    # (v1.1, DOI 10.5281/zenodo.21916017). Converted from the v1
+    # examples, and `paper` names the case the paper names — the stand
+    # asserts none of them can go missing, because the promise is
+    # published and a studio without them makes the paper false.
+    {"kind": "paradox", "paper": "Liar",
+     "en": "Liar", "ru": "лжец",
+     "doc": {
+         "rows": [{"name": "L", "means": "", "status": "defined", "ground": "~(Tr(L))"}]}},
+    {"kind": "paradox", "paper": "Barber (the liar in a barber's apron)",
+     "en": "Barber (the liar in a barber's apron)", "ru": "брадобрей",
+     "doc": {
+         "rows": [{"name": "shaves", "means": "", "status": "defined", "ground": "~(Tr(shaves))"}]}},
+    {"kind": "paradox", "paper": "Grelling's 'heterological'",
+     "en": "Grelling's 'heterological'", "ru": "«гетерологичное» Греллинга",
+     "doc": {
+         "rows": [{"name": "het", "means": "", "status": "defined", "ground": "~(Tr(het))"}]}},
+    {"kind": "paradox", "paper": "Russell",
+     "en": "Russell", "ru": "Рассел",
+     "doc": {
+         "rows": [{"name": "a_in_a", "means": "", "status": "refuted", "ground": "the-story"}, {"name": "a_in_b", "means": "", "status": "refuted", "ground": "the-story"}, {"name": "a_in_R", "means": "", "status": "defined", "ground": "~(Tr(a_in_a))"}, {"name": "b_in_a", "means": "", "status": "refuted", "ground": "the-story"}, {"name": "b_in_b", "means": "", "status": "verified", "ground": "the-story"}, {"name": "b_in_R", "means": "", "status": "defined", "ground": "~(Tr(b_in_b))"}, {"name": "R_in_a", "means": "", "status": "refuted", "ground": "the-story"}, {"name": "R_in_b", "means": "", "status": "refuted", "ground": "the-story"}, {"name": "R_in_R", "means": "", "status": "defined", "ground": "~(Tr(R_in_R))"}]}},
+    {"kind": "paradox", "paper": "Jourdain's postcard",
+     "en": "Jourdain's postcard", "ru": "открытка Жордена",
+     "doc": {
+         "rows": [{"name": "front", "means": "", "status": "defined", "ground": "Tr(back)"}, {"name": "back", "means": "", "status": "defined", "ground": "~(Tr(front))"}]}},
+    {"kind": "paradox", "paper": "Crocodile",
+     "en": "Crocodile", "ru": "крокодил",
+     "doc": {
+         "rows": [{"name": "R", "means": "", "status": "defined", "ground": "Tr(M)"}, {"name": "M", "means": "", "status": "defined", "ground": "~(Tr(R))"}]}},
+    {"kind": "paradox", "paper": "Odd 3-cycle",
+     "en": "Odd 3-cycle", "ru": "нечётный трёхцикл",
+     "doc": {
+         "rows": [{"name": "a", "means": "", "status": "defined", "ground": "~(Tr(b))"}, {"name": "b", "means": "", "status": "defined", "ground": "~(Tr(c))"}, {"name": "c", "means": "", "status": "defined", "ground": "~(Tr(a))"}]}},
+    {"kind": "paradox", "paper": "Curry (grounded falsum)",
+     "en": "Curry (grounded falsum)", "ru": "Карри (ложь настоящая)",
+     "doc": {
+         "rows": [{"name": "g", "means": "", "status": "defined", "ground": "(Tr(g) ->  F)"}]}},
+    {"kind": "paradox", "paper": "Curry (suspended falsum)",
+     "en": "Curry (suspended falsum)", "ru": "Карри (ложь подвешенная)",
+     "doc": {
+         "rows": [{"name": "gamma", "means": "", "status": "defined", "ground": "(Tr(gamma) ->  Tr(bot))"}, {"name": "bot", "means": "", "status": "defined", "ground": "(Tr(s) &  ~(Tr(s)))"}, {"name": "s", "means": "", "status": "defined", "ground": "Tr(s)"}]}},
+    {"kind": "paradox", "paper": "Strong liar (forced FALSE)",
+     "en": "Strong liar (forced FALSE)", "ru": "усиленный лжец (вынужденно ЛОЖЬ)",
+     "doc": {
+         "rows": [{"name": "sigma", "means": "", "status": "defined", "ground": "(~(Tr(sigma)) &  Tr(sigma))"}]}},
+    {"kind": "paradox", "paper": "Revenge / avenger (forced FALSE)",
+     "en": "Revenge / avenger (forced FALSE)", "ru": "мститель (вынужденно ЛОЖЬ)",
+     "doc": {
+         "rows": [{"name": "mu", "means": "", "status": "defined", "ground": "not((Tr(mu) =  Tr(mu)))"}]}},
+    {"kind": "paradox", "paper": "Henkin-style sentence (forced TRUE)",
+     "en": "Henkin-style sentence (forced TRUE)", "ru": "предложение Хенкина (вынужденно ИСТИНА)",
+     "doc": {
+         "rows": [{"name": "h", "means": "", "status": "defined", "ground": "(Tr(h) ->  Tr(h))"}]}},
+    {"kind": "paradox", "paper": "Truth-teller",
+     "en": "Truth-teller", "ru": "правдоруб",
+     "doc": {
+         "rows": [{"name": "tau", "means": "", "status": "defined", "ground": "Tr(tau)"}]}},
+    {"kind": "paradox", "paper": "Russell's twin S∈S",
+     "en": "Russell's twin S∈S", "ru": "близнец Рассела S∈S",
+     "doc": {
+         "rows": [{"name": "S_in_S", "means": "", "status": "defined", "ground": "Tr(S_in_S)"}]}},
+    {"kind": "paradox", "paper": "Crocodile control (optimistic mother)",
+     "en": "Crocodile control (optimistic mother)", "ru": "крокодил, контроль (мать-оптимистка)",
+     "doc": {
+         "rows": [{"name": "R", "means": "", "status": "defined", "ground": "Tr(M)"}, {"name": "M", "means": "", "status": "defined", "ground": "Tr(R)"}]}},
+    {"kind": "paradox", "paper": "Even 2-cycle",
+     "en": "Even 2-cycle", "ru": "чётный двуцикл",
+     "doc": {
+         "rows": [{"name": "A", "means": "", "status": "defined", "ground": "~(Tr(B))"}, {"name": "B", "means": "", "status": "defined", "ground": "~(Tr(A))"}]}},
+    {"kind": "paradox", "paper": "Even 4-cycle",
+     "en": "Even 4-cycle", "ru": "чётный четырёхцикл",
+     "doc": {
+         "rows": [{"name": "a", "means": "", "status": "defined", "ground": "~(Tr(b))"}, {"name": "b", "means": "", "status": "defined", "ground": "~(Tr(c))"}, {"name": "c", "means": "", "status": "defined", "ground": "~(Tr(d))"}, {"name": "d", "means": "", "status": "defined", "ground": "~(Tr(a))"}]}},
+    {"kind": "paradox", "paper": "Yablo (truncated at 3)",
+     "en": "Yablo (truncated at 3)", "ru": "Ябло (обрезанный до 3)",
+     "doc": {
+         "rows": [{"name": "s0", "means": "", "status": "defined", "ground": "(~(Tr(s1)) &  ~(Tr(s2)))"}, {"name": "s1", "means": "", "status": "defined", "ground": "~(Tr(s2))"}, {"name": "s2", "means": "", "status": "verified", "ground": "the-story"}]}},
+    {"kind": "paradox", "paper": "Contingent liar — world A (harmless)",
+     "en": "Contingent liar — world A (harmless)", "ru": "контингентный лжец — мир A (безобидный)",
+     "doc": {
+         "rows": [{"name": "S", "means": "", "status": "defined", "ground": "~(Tr(J))"}, {"name": "J", "means": "", "status": "defined", "ground": "Tr(g)"}, {"name": "g", "means": "", "status": "verified", "ground": "the-story"}]}},
+    {"kind": "paradox", "paper": "Contingent liar — world B (unlucky)",
+     "en": "Contingent liar — world B (unlucky)", "ru": "контингентный лжец — мир B (неудачный)",
+     "doc": {
+         "rows": [{"name": "S", "means": "", "status": "defined", "ground": "~(Tr(J))"}, {"name": "J", "means": "", "status": "defined", "ground": "Tr(S)"}]}},
+    {"kind": "paradox", "paper": "Contingent liar — world C (unverified)",
+     "en": "Contingent liar — world C (unverified)", "ru": "контингентный лжец — мир C (непроверенный)",
+     "doc": {
+         "rows": [{"name": "J", "means": "what Jones said is true", "status": "unverified"}, {"name": "S", "means": "", "status": "defined", "ground": "~(Tr(J))"}]}},
+    {"kind": "paradox", "paper": "Ship of Theseus: the title contest",
+     "en": "Ship of Theseus: the title contest", "ru": "Корабль Тесея: спор о титуле",
+     "doc": {
+         "rows": [{"name": "theA", "means": "", "status": "defined", "ground": "~(Tr(theB))"}, {"name": "theB", "means": "", "status": "defined", "ground": "~(Tr(theA))"}]}},
+    {"kind": "paradox", "paper": "Agrippa's dogma (foundation with a passport)",
+     "en": "Agrippa's dogma (foundation with a passport)", "ru": "догма Агриппы (основание с паспортом)",
+     "doc": {
+         "rows": [{"name": "p", "means": "", "status": "defined", "ground": "Tr(f)"}, {"name": "f", "means": "", "status": "defined", "ground": "Tr(f)"}]}},
+    {"kind": "paradox", "paper": "Same person? (corecursion, all observations match)",
+     "en": "Same person? (corecursion, all observations match)", "ru": "тот же человек? (корекурсия)",
+     "doc": {
+         "rows": [{"name": "obs", "means": "every observation so far matches", "status": "verified", "ground": "the-story"}, {"name": "S", "means": "", "status": "defined", "ground": "(Tr(obs) &  Tr(S))"}]}},
+    {"kind": "everyday", "paper": "Sensor",
+     "en": "Sensor", "ru": "датчик",
+     "doc": {
+         "rows": [{"name": "overheat", "means": "the sensor reads overheating", "status": "unverified"}, {"name": "shutdown", "means": "the shutdown fires", "status": "unverified"}],
+         "claim": "(overheat ->  shutdown)"}},
+    {"kind": "everyday", "paper": "Modus ponens (Carroll's tortoise)",
+     "en": "Modus ponens (Carroll's tortoise)", "ru": "modus ponens (черепаха Кэрролла)",
+     "doc": {
+         "rows": [{"name": "p", "means": "the premise p holds", "status": "unverified"}, {"name": "q", "means": "the conclusion q holds", "status": "unverified"}],
+         "claim": "(((p -> q) & p) -> q)"}},
 
     # -------------------------------------------------------------- audit
     {"kind": "audit",

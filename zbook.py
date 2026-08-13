@@ -43,6 +43,7 @@ Run:  python3 zbook.py
 """
 import hashlib
 import json
+import re
 import os
 import sys
 
@@ -91,6 +92,36 @@ CITE = "claim/"
 # rather than silent.
 PERFORMED = "performed/"
 
+# ALTERNATIVE grounds: `earned:inv-17|inv-18` — two independent invoices for
+# the same sum, EITHER of which suffices. Until this existed the book knew
+# only conjunctive support, every ground necessary, so a second ground was a
+# second liability and `agrippa_book.py` had to score a web below a tower.
+# That score belonged to the instrument, not to the world.
+#
+# The same honesty applies as to PERFORMED: the book cannot check that two
+# grounds are INDEPENDENT. Two copies of one invoice are one witness under
+# two names, and nothing here detects that. `declared_alternatives` lists
+# every such claim so the independence is itemised rather than assumed.
+ALT = "|"
+_WITNESS = re.compile(r"earned:([^\s,]+)")
+
+
+def _alts(witness):
+    return [a for a in (witness or "").split(ALT) if a]
+
+
+def declared_alternatives(book):
+    """Every quantity in this book that claims two or more independent
+    grounds — the claims of independence, by name."""
+    out = []
+    for cid, _f, data in book:
+        q, _m = parse_quantities(data)
+        for name, v in sorted(q.items()):
+            alts = _alts(v.get("witness"))
+            if len(alts) > 1:
+                out.append((cid, name, alts))
+    return out
+
 
 class NotAMove(Exception):
     """Retraction was asked of a ground that has nothing to withdraw."""
@@ -107,9 +138,18 @@ def declared_structural(book):
 
 
 def _cited(quantities):
-    """The claims this one leans on: witnesses of the form claim/<id>."""
-    return sorted({v["witness"][len(CITE):] for v in quantities.values()
-                   if (v.get("witness") or "").startswith(CITE)})
+    """The claims this one leans on: witnesses of the form claim/<id>,
+    including those offered as one alternative among several."""
+    return sorted({a[len(CITE):] for v in quantities.values()
+                   for a in _alts(v.get("witness")) if a.startswith(CITE)})
+
+
+def _stands(alt, judged):
+    """Does this one ground currently hold? A document holds while it is in
+    the book; a cited claim holds only while that claim is EARNED."""
+    if alt.startswith(CITE):
+        return judged.get(alt[len(CITE):], {}).get("disposition") == "EARNED"
+    return True
 
 
 def _order(book):
@@ -158,17 +198,21 @@ def judge_book(claims):
         q, m = parse_quantities(data)
         cites = _cited(q)
         # resolve each citation against the claim it names
-        weakened = []
+        weakened, carried = [], []
         for name, qty_ in q.items():
-            w = qty_.get("witness", "") or ""
-            if not w.startswith(CITE):
+            alts = _alts(qty_.get("witness"))
+            if not alts:
                 continue
-            target = w[len(CITE):]
-            stands = out.get(target, {}).get("disposition") == "EARNED"
-            if not stands:
-                qty_["prov"] = "credit"
-                qty_["witness"] = None
-                weakened.append((name, target))
+            standing = [a for a in alts if _stands(a, out)]
+            if standing:
+                if len(alts) > 1:
+                    carried.append((name, standing[0]))
+                continue
+            # every ground it offered has failed
+            qty_["prov"] = "credit"
+            qty_["witness"] = None
+            weakened.extend((name, a[len(CITE):]) for a in alts
+                            if a.startswith(CITE))
         r = judge_sheet_claim(formula, q, m)
         out[cid] = {
             "formula": formula,
@@ -179,6 +223,7 @@ def judge_book(claims):
             "why": r.get("why"),
             "cites": cites,
             "weakened_by": weakened,
+            "carried_by": carried,
             "witnesses": sorted({v["witness"] for v in q.values()
                                  if v.get("witness")}),
         }
@@ -187,7 +232,7 @@ def judge_book(claims):
                              "disposition": "CIRCULAR", "lazy": None,
                              "next_check": [], "why": "circular support",
                              "cites": deps[cid], "weakened_by": [],
-                             "witnesses": []})
+                             "carried_by": [], "witnesses": []})
     return out
 
 
@@ -219,11 +264,12 @@ def retract(book, witness):
     if witness.startswith(PERFORMED):
         raise NotAMove(f"{witness} takes no inputs — "
                        f"withdrawing it is not a performable move")
-    out = []
-    for cid, formula, data in book:
-        out.append((cid, formula,
-                    data.replace(f"earned:{witness}", "credit")))
-    return out
+    def drop(m):
+        rest = [a for a in m.group(1).split(ALT) if a != witness]
+        return f"earned:{ALT.join(rest)}" if rest else "credit"
+
+    return [(cid, formula, _WITNESS.sub(drop, data))
+            for cid, formula, data in book]
 
 
 def fallout(book, witness):
@@ -380,9 +426,50 @@ def sec5_a_circle_is_classified_not_rejected():
     print("   mutual citation without negation is the truth-teller's shape.")
 
 
-def sec6_what_is_still_missing():
+ALTERNATIVES = [
+    ("k1", "line == amount",
+     "line=1500 earned:inv-19|inv-19-duplicate, amount=1500 earned:contract"),
+    ("k2", "total == sum(a,b)",
+     "total=4500 earned:claim/k1|ledger-page-7, a=3000 earned:inv-17, "
+     "b=1500 earned:inv-18"),
+]
+
+
+def sec6_a_ground_may_have_an_alternative():
     print("-" * 72)
-    print("6. WHAT IS STILL MISSING")
+    print("6. STAGE FIVE: EITHER OF TWO GROUNDS")
+    res = judge_book(ALTERNATIVES)
+    for cid in ("k1", "k2"):
+        print(f"   {cid}  {res[cid]['disposition']:9} "
+              f"carried_by={res[cid]['carried_by']}")
+    assert all(v["disposition"] == "EARNED" for v in res.values())
+    for w in ("inv-19", "inv-19-duplicate", "claim/k1"):
+        hits = fallout(ALTERNATIVES, w)
+        print(f"   withdraw {w:18} -> "
+              f"{[h[0] for h in hits] or 'nothing falls'}")
+        assert not hits
+    both = retract(retract(ALTERNATIVES, "inv-19"), "inv-19-duplicate")
+    after = judge_book(both)
+    print(f"   withdraw BOTH of k1's grounds -> k1 {after['k1']['disposition']}"
+          f", k2 {after['k2']['disposition']}")
+    assert after["k1"]["disposition"] == "ON CREDIT"
+    assert after["k2"]["disposition"] == "EARNED"
+    print("   Until this stage every ground was necessary, so a second one")
+    print("   was a second liability and the book had to score a web below a")
+    print("   tower. Now a quantity may name several and one suffices: the")
+    print("   damage stops where an alternative holds — k2 keeps its ledger")
+    print("   page and never learns that k1 fell.")
+    print(f"   declared_alternatives: {declared_alternatives(ALTERNATIVES)}")
+    assert len(declared_alternatives(ALTERNATIVES)) == 2
+    print("   And the honest half: INDEPENDENCE IS DECLARED. `inv-19` and")
+    print("   `inv-19-duplicate` may well be one paper photocopied, and")
+    print("   nothing here can tell. The book itemises every such claim")
+    print("   instead of detecting it — the same bargain as `performed/`.")
+
+
+def sec7_what_is_still_missing():
+    print("-" * 72)
+    print("7. WHAT IS STILL MISSING")
     print("   Search. Nothing here finds the relevant stored claims for a")
     print("   new question — that is premise selection, a crowded field")
     print("   with strong tools (Sledgehammer and its kin), and this corpus")
@@ -399,7 +486,8 @@ if __name__ == "__main__":
     sec3_a_claim_may_rest_on_a_claim()
     sec4_retraction_travels_by_itself()
     sec5_a_circle_is_classified_not_rejected()
-    sec6_what_is_still_missing()
+    sec6_a_ground_may_have_an_alternative()
+    sec7_what_is_still_missing()
     print("=" * 72)
     print("ZBOOK GREEN — the book stores claims and grounds and never a")
     print("verdict: every reading recomputes. A snapshot carries the")
@@ -409,4 +497,8 @@ if __name__ == "__main__":
     print("special rule; withdraw one invoice and three claims move, two of")
     print("them never naming it; and a circle of support is classified")
     print("UNDERDETERMINED by the passport — Agrippa's second horn, cured")
-    print("only by stipulating a member.")
+    print("only by stipulating a member. A ground may take no inputs at all,")
+    print("and then its withdrawal is refused rather than survived; or it may")
+    print("offer alternatives, and then the damage stops where one holds.")
+    print("Both are DECLARED and unverifiable, and both are itemised by name,")
+    print("which is the only honest promise a ledger can make about them.")

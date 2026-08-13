@@ -35,20 +35,28 @@ MEASURED HERE:
      the safest, because each document is another way to break it. Adding
      grounds buys no strength here;
   5. the only structure that limits damage is five claims that do NOT
-     support each other: blast radius 1 apiece. Robustness comes from
-     INDEPENDENCE, never from mutual support — which is the same finding
-     `inventory/corpus_book.py` made about this project's own results,
-     arrived at from the opposite end.
+     support each other: blast radius 1 apiece — SUPERSEDED by point 6,
+     and left standing because the correction is the point;
+  6. because point 4 was never a fact about justification. It was a limit
+     of the machine, and the trilemma is what exposed it: the book knew
+     only CONJUNCTIVE support, every ground necessary, so a second ground
+     was a second liability and a web had to score below a tower. `zbook`
+     can now say EITHER — `earned:inv-17|inv-18`, two independent invoices
+     for one sum, one sufficing. THE SAME WEB, REBUILT: every single
+     retraction costs nothing at all, and taking BOTH grounds under the
+     bottom claim moves that claim and nothing above it. The cascade dies
+     one storey up. So robustness does not come only from independence; it
+     comes from ALTERNATIVES, which is what the coherentist and Bayesian
+     pictures were saying all along — we had no way to write it down;
+  7. and independence itself is DECLARED, never verified: two copies of
+     one invoice are one witness under two names, and the book buys the
+     robustness anyway. Same answer as for the nullary ground — not
+     detection but DISCLOSURE, `declared_alternatives` itemising every
+     claim of independence by name.
 
-THE GAP THIS FOUND. Point 4 is not a fact about justification; it is a
-limitation of the machine, and the trilemma is what exposed it. This
-register knows only CONJUNCTIVE support — every ground is necessary, so a
-second ground is a second liability. It cannot express ALTERNATIVE support
-("two independent invoices for the same sum; either one suffices"), which
-is what coherentist and Bayesian pictures actually rely on, and which is an
-ordinary thing in an audit. Until a quantity may carry alternative
-witnesses, the book will always score a web below a tower, and that score
-should be read as the instrument's, not the world's.
+WHAT THE TRILEMMA ACTUALLY YIELDED, then, is not a verdict on the trilemma.
+It is a missing word in our own instrument, found by building the horns
+instead of discussing them.
 
 Run:  python3 dilemmas/agrippa_book.py
 """
@@ -58,7 +66,8 @@ import sys
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                 ".."))
 
-from zbook import judge_book, fallout, census, classify_cycles  # noqa: E402
+from zbook import (judge_book, fallout, census, classify_cycles,   # noqa: E402
+                   retract, declared_alternatives)
 
 N = 5
 
@@ -89,6 +98,14 @@ def web(n=N):
 def independent(n=N):
     """Five claims that do not support each other at all."""
     return [(f"s{i}", "x == 1", f"x=1 earned:doc{i}") for i in range(1, n + 1)]
+
+
+def alt_web(n=N):
+    """The same web, once the register can say EITHER — each claim on its own
+    document OR a neighbour's claim, one ground sufficing."""
+    book = [(f"v{i}", "x == 1", f"x=1 earned:doc{i}|claim/v{i + 1}")
+            for i in range(1, n)]
+    return book + [(f"v{n}", "x == 1", f"x=1 earned:doc{n}|doc{n}b")]
 
 
 def circle(n=3):
@@ -195,21 +212,69 @@ def sec5_only_independence_helps():
     print("   are five dogmas. The trilemma is untouched; what the ledger")
     print("   adds is that the dogmatic horn is not one thing but a range,")
     print("   from one axiom under everything to one axiom apiece.")
+    print("   READ SECTION 6 BEFORE QUOTING THIS ONE: 'only independence")
+    print("   helps' held of a register that could not say EITHER. It can")
+    print("   now, and the sentence does not survive the change.")
 
 
-def sec6_the_gap_this_found():
+def sec6_the_gap_closed_and_the_web_rebuilt():
     print("-" * 72)
-    print("6. THE HOLE THIS OPENED IN OUR OWN TOOL")
-    print("   Section 4 is not a fact about justification. It is a limit of")
-    print("   the machine, and the trilemma is what exposed it: the book")
-    print("   knows only conjunctive support, so it must score a web below")
-    print("   a tower, and that score belongs to the instrument.")
-    print("   What is missing is ALTERNATIVE witnesses — two independent")
-    print("   invoices for the same sum, either sufficient. That is not an")
-    print("   exotic epistemology; it is an ordinary audit, and it is the")
-    print("   thing coherentist and Bayesian pictures actually run on.")
-    print("   Recorded as a gap, not patched here: it changes what EARNED")
-    print("   means, and a change of that size is settled in words first.")
+    print("6. THE HOLE THIS OPENED IN OUR TOOL — AND WHAT CLOSING IT DID")
+    print("   Section 4 was never a fact about justification. It was a limit")
+    print("   of the machine: the book knew only CONJUNCTIVE support, every")
+    print("   ground necessary, so it had to score a web below a tower.")
+    print("   `zbook` can now say EITHER — `earned:inv-17|inv-18`, two")
+    print("   independent invoices for one sum, one of them sufficing. The")
+    print("   same web, rebuilt:")
+    book = alt_web()
+    grounds = [f"doc{i}" for i in range(1, N + 1)] + [f"doc{N}b"]
+    r = radii(book, grounds)
+    for g in grounds:
+        print(f"     retract {g:7} -> {r[g]} fall")
+    assert census(judge_book(book)) == {"EARNED": N}
+    assert set(r.values()) == {0}
+    # and the deeper question: does the CASCADE stop, or is it merely delayed?
+    stripped = retract(retract(book, f"doc{N}"), f"doc{N}b")
+    before, after = judge_book(book), judge_book(stripped)
+    moved = [c for c in before
+             if before[c]["disposition"] != after[c]["disposition"]]
+    print(f"   take BOTH grounds under the bottom claim: {moved} moves, "
+          f"and nothing above it")
+    assert moved == [f"v{N}"]
+    print("   Every single retraction now costs NOTHING, and even destroying")
+    print("   the bottom claim outright stops there: the storey above still")
+    print("   holds its own document, so the cascade dies one step up.")
+    print("   Against the conjunctive web measured in section 4 — radii 1 to")
+    print("   5, one document taking the lot — that is the whole difference")
+    print("   between a web and a tower, and it was invisible for as long as")
+    print("   the register could only say AND.")
+    print("   So section 5's sentence is retracted: robustness does NOT come")
+    print("   only from independence. It comes from ALTERNATIVES, which is")
+    print("   what coherentist and Bayesian pictures were saying all along —")
+    print("   we simply had no way to write it down. Agrippa's trilemma")
+    print("   found the missing vocabulary in our own instrument, which is a")
+    print("   better return than a verdict on the trilemma would have been.")
+
+
+def sec7_what_the_machine_still_cannot_check():
+    print("-" * 72)
+    print("7. AND WHAT THE MACHINE STILL CANNOT CHECK")
+    fake = [("f1", "x == 1", "x=1 earned:inv-17|inv-17-photocopy")]
+    print(f"   two grounds, one of them a copy of the other: "
+          f"{census(judge_book(fake))}")
+    print(f"   retract the original: "
+          f"{[h[0] for h in fallout(fake, 'inv-17')] or 'nothing falls'}")
+    print(f"   declared_alternatives: {declared_alternatives(fake)}")
+    assert not fallout(fake, "inv-17")
+    assert declared_alternatives(fake) == [("f1", "x",
+                                            ["inv-17", "inv-17-photocopy"])]
+    print("   INDEPENDENCE IS DECLARED, NEVER VERIFIED. Two copies of one")
+    print("   invoice are one witness under two names, and this book buys")
+    print("   the robustness anyway. Exactly the situation the nullary")
+    print("   ground is in (`agrippa_nullary.py` §3), and the answer is the")
+    print("   same: not detection, DISCLOSURE. Every claim of independence")
+    print("   is itemised by name, so a bogus one is visible instead of")
+    print("   silent. That is all a ledger can honestly promise.")
 
 
 if __name__ == "__main__":
@@ -221,15 +286,18 @@ if __name__ == "__main__":
     sec3_the_circle_again()
     sec4_mutual_support_buys_nothing()
     sec5_only_independence_helps()
-    sec6_the_gap_this_found()
+    sec6_the_gap_closed_and_the_web_rebuilt()
+    sec7_what_the_machine_still_cannot_check()
     print("=" * 72)
     print("AGRIPPA-BOOK GREEN — regress warrants nothing at any storey (5 ON")
     print("CREDIT, 0 earned); one document under the bottom earns all five")
     print("and carries a blast radius of 5 of 5; the ring is UNDERDETERMINED.")
-    print("The configuration expected to be robust — mutual support — is not:")
-    print("radii 1,2,3,4,5,5, and the claim with two documents is the most")
-    print("fragile, because support here is conjunctive and every ground is")
-    print("another liability. Only independence limits damage, one apiece,")
-    print("which is five dogmas rather than an escape. The gap the trilemma")
-    print("found in our tool — no alternative witnesses — is recorded, not")
-    print("patched.")
+    print("Under conjunctive support a web scored WORSE than a tower — radii")
+    print("1,2,3,4,5,5 — which was the instrument speaking, not the world.")
+    print("With alternatives in the register the same web takes zero damage")
+    print("from any single retraction, and losing both grounds under the")
+    print("bottom claim moves that claim alone: the cascade dies one storey")
+    print("up. Robustness comes from ALTERNATIVES, not only independence.")
+    print("Independence itself stays declared and unverifiable — a photocopy")
+    print("buys the same immunity — so the promise is disclosure, not")
+    print("detection: every claim of independence itemised by name.")

@@ -353,8 +353,9 @@ def judge_book(claims, strict=False):
     inheritance needs no special rule — it is the ordinary refusal to take
     a ground on somebody else's word, applied to our own book.
 
-    The STRICT reading lives in `retract`, where the declarations are
-    actually cashed: alternatives are treated as one paper under several
+    The STRICT reading applies in both places declarations are cashed —
+    here, where an alternative whose neighbour has fallen no longer counts,
+    and in `retract`: alternatives are treated as one paper under several
     names, and a `performed/` ground loses its immunity. The point is not
     pessimism but a BRACKET — the book's honest answer is the pair, and the
     truth is inside it. See `trust_interval`."""
@@ -382,6 +383,13 @@ def judge_book(claims, strict=False):
                 declared.append((name, "independence", alts))
                 unindependent.extend(_false_independence(alts, deps))
             standing = [a for a in alts if _stands(a, out)]
+            if strict and len(standing) < len(alts):
+                # one ground under several names: if any of them is gone,
+                # whether by retraction or by its own claim falling, the
+                # quantity is gone. Without this the strict reading catches
+                # only DIRECT withdrawal and lets a collapse upstream slip
+                # through the alternative beside it.
+                standing = []
             if standing:
                 if len(alts) > 1:
                     carried.append((name, standing[0]))
@@ -489,7 +497,13 @@ def retract(book, witness, strict=False):
 
 
 def fallout(book, witness, strict=False):
-    """What a retraction costs, claim by claim: (id, before, after)."""
+    """The raw event list for ONE reading: (id, before, after) per claim.
+
+    NOT the answer to "what does this ground cost". A single reading is
+    half a bracket, and quoting its length as the cost is exactly the
+    mistake this book is built to prevent — the as-declared reading is the
+    optimistic end, believed on the author's word. Ask `cost` instead; it
+    cannot hand back a number without the width beside it."""
     before = judge_book(book, strict=strict)
     after = judge_book(retract(book, witness, strict=strict), strict=strict)
     return [(cid, before[cid]["disposition"], after[cid]["disposition"])
@@ -504,6 +518,26 @@ def all_grounds(book):
         for w in _WITNESS.findall(data):
             out |= set(w.split(ALT))
     return sorted(g for g in out if not g.startswith(CITE))
+
+
+def cost(book, ground):
+    """What a ground costs — as a BRACKET, which is the only shape this
+    question has an honest answer in.
+
+    Returns both readings and the width between them. There is deliberately
+    no function here that returns the cost as a bare number: the optimistic
+    end is believed on the author's declarations, and a number quoted
+    without its width is a number quoted without the thing that makes it
+    trustworthy. `fallout` remains available as the raw event list of one
+    reading, and its docstring says what it is not."""
+    try:
+        low = fallout(book, ground)
+    except NotAMove:
+        low = []                       # withdrawal is not an available move
+    high = fallout(book, ground, strict=True)
+    return {"as_declared": low, "strict": high,
+            "low": len(low), "high": len(high),
+            "width": len(high) - len(low)}
 
 
 def trust_interval(book):
@@ -524,11 +558,8 @@ def trust_interval(book):
     nothing on trust."""
     out = {}
     for g in all_grounds(book):
-        try:
-            low = len(fallout(book, g))
-        except NotAMove:
-            low = 0                    # withdrawal is not an available move
-        out[g] = (low, len(fallout(book, g, strict=True)))
+        c = cost(book, g)
+        out[g] = (c["low"], c["high"])
     return out
 
 

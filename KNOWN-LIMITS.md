@@ -53,6 +53,15 @@ world-change are different properties, so "how well is this earned" cannot
 collapse to a single grade. Three axes are read through one frame instead
 (`zbook`, section 11) — the frame is the fix; the merger is impossible.
 
+### The reporting discipline
+
+`cost(book, ground)` is the only way to ask what a ground costs, and it cannot
+answer with a single number: it returns both ends and the width. `fallout`
+remains as the raw event list of ONE reading, with a docstring saying in
+so many words that its length is not the cost. This closes the possibility of
+quoting the optimistic figure without the thing that makes it trustworthy — it
+does not close the ceiling above, and is not meant to.
+
 ### How the ceilings are handled rather than hidden
 
 The two unverifiable declarations above are not left to rot inside a verdict.

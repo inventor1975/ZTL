@@ -17,7 +17,9 @@ const UI = {
         disposition: "disposition", cures: "what would settle it",
         sheet: "assembled sheet", verdict: "verdict", grade: "warranty",
         weak: "weak links", claims: "claims", brackets: "trust brackets",
-        assumed: "assumed and unverifiable", eg: "e.g. " },
+        assumed: "assumed and unverifiable", eg: "e.g. ",
+        solved: "solved", value: "value", from: "derived from",
+        prov: "provenance", still: "still a box" },
   ru: { advanced: "дополнительно", reference: "что такое ZFL?",
         addrow: "добавить строку", run: "запустить", claim: "утверждение",
         remove: "убрать строку",
@@ -29,7 +31,9 @@ const UI = {
         disposition: "диспозиция", cures: "что это решит",
         sheet: "собранный лист", verdict: "вердикт", grade: "гарантия",
         weak: "слабые звенья", claims: "притязания", brackets: "вилки доверия",
-        assumed: "принято на веру и непроверяемо", eg: "напр. " },
+        assumed: "принято на веру и непроверяемо", eg: "напр. ",
+        solved: "решено", value: "величина", from: "выведено из",
+        prov: "происхождение", still: "ещё коробка" },
 };
 
 let LANG = new URLSearchParams(location.search).get("l") === "ru" ? "ru" : "en";
@@ -120,8 +124,16 @@ function showReport(r) {
                              verdictSpan(p.kind), esc(p.detail)]))));
   }
   if (rep.numeric) {
+    const sv = Object.entries(rep.numeric.solved || {});
+    const solvedTable = sv.length ? table(
+      [t("solved"), t("value"), t("prov"), t("from")],
+      sv.map(([n, v]) => [esc(n),
+        `<b>${esc(v.lo === v.hi ? v.lo : `[${v.lo}, ${v.hi}]`)}</b>` +
+        (v.pinned ? "" : ` <span class="muted">${esc(t("still"))}</span>`),
+        verdictSpan(v.prov === "earned" ? "EARNED" : v.prov),
+        esc((v.from || []).join(", ") || "—")])) : "";
     out.push(panel(t("numeric"),
-      `<p>${verdictSpan(rep.numeric.disposition)}</p>` +
+      `<p>${verdictSpan(rep.numeric.disposition)}</p>` + solvedTable +
       (rep.numeric.next_check.length
         ? `<p class="muted">${t("cures")}: ` +
           esc(rep.numeric.next_check.join(" · ")) + "</p>" : "") +

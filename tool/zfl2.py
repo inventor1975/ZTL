@@ -194,6 +194,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from ztljudge import judge, formalize                            # noqa: E402
 from znumjudge import parse_quantities, judge_sheet_claim        # noqa: E402
+from znumsolve import solve_claim                                # noqa: E402
 import zpassport                                                 # noqa: E402
 import zbook                                                     # noqa: E402
 
@@ -271,7 +272,7 @@ def validate(doc):
                 issues.append(_issue(
                     "error", "E_UNKNOWN_NAME", f"row {i} / ground",
                     f"no row is called {sorted(unknown)}"))
-    claim = (doc.get("claim") or "").strip()
+    claim = normalise((doc.get("claim") or "").strip(), rows)
     if claim:
         try:
             _formula(claim, {r.get("name"): r for r in rows})
@@ -293,6 +294,22 @@ def names_in(text):
     return {w for w in words
             if w not in {"not", "and", "or", "imp", "xor", "xnor", "T", "F",
                          "Z", "sum", "min", "max", "abs"}}
+
+
+_LONE_EQ = re.compile(r"(?<![<>=!])=(?!=)")
+
+
+def normalise(claim, rows):
+    """`x - 10 = 20` is what a person writes, and it is not wrong.
+
+    A single `=` is the biconditional in the propositional parser and
+    equality in the numeric one, which is fine as long as nobody has to
+    know that. Where the document has quantities, a lone `=` is read as
+    equality — the reading anyone typing an equation intends. Elsewhere it
+    keeps its propositional sense."""
+    if numeric_rows(rows) and _LONE_EQ.search(claim or ""):
+        return _LONE_EQ.sub("==", claim)
+    return claim
 
 
 def _formula(text, _names):
@@ -403,7 +420,8 @@ def run(doc):
     issues = validate(doc)
     if any(i["level"] == "error" for i in issues):
         return {"ok": False, "issues": issues}
-    rows, claim = doc["rows"], (doc.get("claim") or "").strip()
+    rows = doc["rows"]
+    claim = normalise((doc.get("claim") or "").strip(), rows)
     what, report = applies(doc), {}
 
     if what["passport"]:
@@ -414,13 +432,30 @@ def run(doc):
             for comp, kind, why in reports]
 
     if what["numeric"] and claim:
-        q, m = parse_quantities(to_sheet(rows))
+        sheet = to_sheet(rows)
+        q, m = parse_quantities(sheet)
         m.update(to_marking(rows))
-        r = judge_sheet_claim(claim, q, m)
+        # An UNKNOWN in the table is a question, not a gap: `x=?` with
+        # `x - 10 = 20` asks the solver for x, and the solver answers with
+        # the provenance the answer inherited from the derivation. Judging
+        # alone would have said "measure x", which is true and useless when
+        # the sheet already determines it.
+        unknown = any((r.get("value") or "").strip() == "?"
+                      for r in numeric_rows(rows))
+        if unknown:
+            r = solve_claim(claim, q, m)
+            solved = {n: {"lo": str(v["lo"]), "hi": str(v["hi"]),
+                          "pinned": v["pinned"], "prov": v["prov"],
+                          "from": v.get("from", []), "weak": v.get("weak", [])}
+                      for n, v in (r.get("solved") or {}).items()}
+        else:
+            r = judge_sheet_claim(claim, q, m)
+            solved = {}
         report["numeric"] = {"disposition": r["disposition"],
                              "lazy": r.get("lazy"),
                              "next_check": r.get("next_check", []),
-                             "sheet": to_sheet(rows)}
+                             "solved": solved, "claim": claim,
+                             "sheet": sheet}
     elif what["judge"]:
         r = judge(claim, to_marking(rows))
         report["judge"] = {"verdict": r["verdict"],

@@ -101,9 +101,34 @@ def sec3_the_ledger_appears_when_it_is_wanted():
     print("   never learns a syntax for any of it.")
 
 
-def sec4_the_spec_can_build_the_form_and_the_page():
+def sec4_an_unknown_is_a_question_not_a_gap():
     print("-" * 72)
-    print("4. ONE SPEC BEHIND THE FORM, THE VALIDATOR AND THE PAGE")
+    print("4. ASKING FOR A NUMBER, WHICH IS WHAT PEOPLE ACTUALLY WANT")
+    for claim in ("x - 10 = 20", "x - 10 == 20", "sum(x,x) = 60"):
+        doc = {"rows": [{"name": "x", "means": "the unknown",
+                         "status": "unverified", "value": "?"}],
+               "claim": claim}
+        r = zfl2.run(doc)
+        assert r["ok"], r["issues"]
+        n = r["report"]["numeric"]
+        sv = n["solved"]["x"]
+        print(f"   {claim:16} -> {n['disposition']:8} x = {sv['lo']}"
+              f"  ({sv['prov']})")
+        assert n["disposition"] == "EARNED" and sv["lo"] == "30"
+        assert sv["pinned"] and sv["prov"] == "earned"
+    print("   `x=?` in the table is a QUESTION, not a missing cell, so the")
+    print("   solver answers it — and answers with the provenance the value")
+    print("   inherited from the derivation. Judging alone would have said")
+    print("   'measure x', which is true and useless when the sheet already")
+    print("   determines it.")
+    print("   And a lone `=` is read as equality wherever the document has")
+    print("   quantities. `x - 10 = 20` is what a person writes; making them")
+    print("   type `==` would be the machine's convenience charged to them.")
+
+
+def sec5_the_spec_can_build_the_form_and_the_page():
+    print("-" * 72)
+    print("5. ONE SPEC BEHIND THE FORM, THE VALIDATOR AND THE PAGE")
     for lang in ("en", "ru"):
         spec = zfl2.form_spec(lang)
         cols = spec["columns"]
@@ -133,7 +158,8 @@ if __name__ == "__main__":
     sec1_one_table_three_instruments()
     sec2_the_cells_are_checked_where_the_eye_is()
     sec3_the_ledger_appears_when_it_is_wanted()
-    sec4_the_spec_can_build_the_form_and_the_page()
+    sec4_an_unknown_is_a_question_not_a_gap()
+    sec5_the_spec_can_build_the_form_and_the_page()
     print("=" * 72)
     print("ZFL2 GREEN — one table, the genre computed rather than declared,")
     print("errors addressed to the cell the eye is on, and the numeric floor,")

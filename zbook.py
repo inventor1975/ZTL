@@ -34,6 +34,14 @@ graph. Three things follow, none of them needing a new rule:
   * retraction TRAVELS. Withdraw one invoice and the whole subtree moves,
     including claims that never named it — the auditor's question, "what
     falls if this is a lie", answered by name instead of by memory;
+  * a ground may be DECLARED rather than documented — several grounds
+    asserted independent, or one asserted to take no inputs — and the
+    verdict says so: EARNED with a `declared` warranty, inherited along
+    citations so a declaration at the bottom cannot come out clean a
+    storey up. Where the alternatives are claims the graph checks the
+    independence outright and names the shared ancestor that refutes it;
+    between documents it cannot, and that line is drawn rather than
+    blurred;
   * a CIRCLE of support is classified, not rejected. Mutual citation
     without negation is the truth-teller's shape, and the passport calls
     it UNDERDETERMINED: ungrounded rather than refuted, curable only by
@@ -144,6 +152,38 @@ def _cited(quantities):
                    for a in _alts(v.get("witness")) if a.startswith(CITE)})
 
 
+def _ancestors(node, deps, acc=None):
+    """Every claim this one rests on, transitively."""
+    acc = set() if acc is None else acc
+    for d in deps.get(node, ()):
+        if d not in acc:
+            acc.add(d)
+            _ancestors(d, deps, acc)
+    return acc
+
+
+def _false_independence(alts, deps):
+    """Alternatives that are not alternatives. Declaring `a|b` asserts that
+    the two grounds are independent; where both are CLAIMS the graph can
+    check it, and a shared ancestor refutes it — one paper under two names.
+
+    Note what this does NOT fix: the arithmetic was already right. Retract
+    the common ancestor and both alternatives fall, so the blast radius has
+    always been correct (measured). What was wrong is the DECLARATION, and
+    an author who writes `a|b` is entitled to be told that this particular
+    pair buys nothing. For grounds that are external documents the graph
+    knows nothing and the declaration stands unchecked — which is exactly
+    the boundary worth drawing."""
+    named = [a[len(CITE):] for a in alts if a.startswith(CITE)]
+    out = []
+    for i, x in enumerate(named):
+        for y in named[i + 1:]:
+            common = ({x} | _ancestors(x, deps)) & ({y} | _ancestors(y, deps))
+            if common:
+                out.append((x, y, sorted(common)))
+    return out
+
+
 def _stands(alt, judged):
     """Does this one ground currently hold? A document holds while it is in
     the book; a cited claim holds only while that claim is EARNED."""
@@ -198,15 +238,29 @@ def judge_book(claims):
         q, m = parse_quantities(data)
         cites = _cited(q)
         # resolve each citation against the claim it names
-        weakened, carried = [], []
+        weakened, carried, declared, unindependent = [], [], [], []
         for name, qty_ in q.items():
             alts = _alts(qty_.get("witness"))
             if not alts:
                 continue
+            # WHAT THIS GROUND ASKS US TO TAKE ON TRUST. Naming several
+            # grounds asserts they are independent; naming a `performed/`
+            # one asserts it takes no inputs. Neither is checkable in
+            # general, so neither may hide inside a bare "EARNED".
+            if len(alts) > 1:
+                declared.append((name, "independence", alts))
+                unindependent.extend(_false_independence(alts, deps))
             standing = [a for a in alts if _stands(a, out)]
             if standing:
                 if len(alts) > 1:
                     carried.append((name, standing[0]))
+                if standing[0].startswith(PERFORMED):
+                    declared.append((name, "nullarity", standing[0]))
+                elif standing[0].startswith(CITE):
+                    up = out.get(standing[0][len(CITE):], {})
+                    if up.get("warranty") == "declared":
+                        declared.append((name, "inherited",
+                                         standing[0][len(CITE):]))
                 continue
             # every ground it offered has failed
             qty_["prov"] = "credit"
@@ -224,6 +278,9 @@ def judge_book(claims):
             "cites": cites,
             "weakened_by": weakened,
             "carried_by": carried,
+            "declared": declared,
+            "warranty": "declared" if declared else "documented",
+            "not_independent": unindependent,
             "witnesses": sorted({v["witness"] for v in q.values()
                                  if v.get("witness")}),
         }
@@ -232,7 +289,9 @@ def judge_book(claims):
                              "disposition": "CIRCULAR", "lazy": None,
                              "next_check": [], "why": "circular support",
                              "cites": deps[cid], "weakened_by": [],
-                             "carried_by": [], "witnesses": []})
+                             "carried_by": [], "declared": [],
+                             "warranty": "documented", "not_independent": [],
+                             "witnesses": []})
     return out
 
 
@@ -467,9 +526,70 @@ def sec6_a_ground_may_have_an_alternative():
     print("   instead of detecting it — the same bargain as `performed/`.")
 
 
-def sec7_what_is_still_missing():
+DECLARED = [
+    ("h1", "x == 1", "x=1 earned:doc-c"),
+    ("h2", "x == 1", "x=1 earned:claim/h1"),
+    ("h3", "x == 1", "x=1 earned:claim/h1"),
+    ("h4", "x == 1", "x=1 earned:claim/h2|claim/h3"),
+    ("h5", "x == 1", "x=1 earned:performed/zero"),
+    ("h6", "x == 1", "x=1 earned:claim/h5"),
+]
+
+
+def sec7_a_declaration_may_not_hide_inside_earned():
     print("-" * 72)
-    print("7. WHAT IS STILL MISSING")
+    print("7. STAGE SIX: WHAT THE VERDICT IS TAKING ON TRUST")
+    res = judge_book(DECLARED)
+    for cid, _f, _d in DECLARED:
+        v = res[cid]
+        print(f"   {cid}  {v['disposition']:7} {v['warranty']:10} "
+              f"{v['declared']}")
+    assert all(v["disposition"] == "EARNED" for v in res.values())
+    assert [res[c]["warranty"] for c, _f, _d in DECLARED] == \
+        ["documented", "documented", "documented",
+         "declared", "declared", "declared"]
+    print("   The two witness kinds added earlier are DECLARATIONS: naming")
+    print("   several grounds asserts they are independent, naming a")
+    print("   `performed/` one asserts it takes no inputs, and the machine")
+    print("   verifies neither. Until now that hid inside a bare EARNED —")
+    print("   the book cheerfully reporting the top disposition on the")
+    print("   strength of something it never checked, which is the exact")
+    print("   habit this corpus exists to refuse.")
+    print("   So it is on the verdict now, where the corpus already puts")
+    print("   the quality of an earning: not a new disposition and not a")
+    print("   new value, a WARRANTY — earned, and here is what on.")
+    print(f"   and it does not launder: h6 rests on h5 and reads "
+          f"{res['h6']['declared']}")
+    assert res["h6"]["declared"] == [("x", "inherited", "h5")]
+    print("   One declaration at the bottom would otherwise come out clean")
+    print("   one storey up, which is how such things always get lost.")
+
+
+def sec8_where_the_graph_can_check_a_declaration():
+    print("-" * 72)
+    print("8. AND WHERE A DECLARATION CAN BE CHECKED, IT IS")
+    res = judge_book(DECLARED)
+    print(f"   h4 declared independence: {res['h4']['declared']}")
+    print(f"   the graph on that pair   : {res['h4']['not_independent']}")
+    assert res["h4"]["not_independent"] == [("h2", "h3", ["h1"])]
+    hits = [h[0] for h in fallout(DECLARED, "doc-c")]
+    print(f"   withdraw the common ancestor's document: {hits}")
+    assert hits == ["h1", "h2", "h3", "h4"]
+    print("   h2 and h3 are not alternatives: they are one paper under two")
+    print("   names, and the graph says so by their shared ancestor h1.")
+    print("   NOTE WHAT THIS DOES NOT FIX. The arithmetic was already")
+    print("   right — h4 falls with h1 above, and always did, because a")
+    print("   dead alternative does not stand. What was wrong was the")
+    print("   DECLARATION, and an author who writes `a|b` is owed the news")
+    print("   that this particular pair buys nothing. Where the grounds are")
+    print("   external documents the graph knows nothing and the")
+    print("   declaration stands unchecked — and drawing that line exactly")
+    print("   is worth more than either half of it.")
+
+
+def sec9_what_is_still_missing():
+    print("-" * 72)
+    print("9. WHAT IS STILL MISSING")
     print("   Search. Nothing here finds the relevant stored claims for a")
     print("   new question — that is premise selection, a crowded field")
     print("   with strong tools (Sledgehammer and its kin), and this corpus")
@@ -487,7 +607,9 @@ if __name__ == "__main__":
     sec4_retraction_travels_by_itself()
     sec5_a_circle_is_classified_not_rejected()
     sec6_a_ground_may_have_an_alternative()
-    sec7_what_is_still_missing()
+    sec7_a_declaration_may_not_hide_inside_earned()
+    sec8_where_the_graph_can_check_a_declaration()
+    sec9_what_is_still_missing()
     print("=" * 72)
     print("ZBOOK GREEN — the book stores claims and grounds and never a")
     print("verdict: every reading recomputes. A snapshot carries the")
@@ -500,5 +622,10 @@ if __name__ == "__main__":
     print("only by stipulating a member. A ground may take no inputs at all,")
     print("and then its withdrawal is refused rather than survived; or it may")
     print("offer alternatives, and then the damage stops where one holds.")
-    print("Both are DECLARED and unverifiable, and both are itemised by name,")
-    print("which is the only honest promise a ledger can make about them.")
+    print("Both are DECLARATIONS, and neither may hide inside a bare EARNED:")
+    print("the verdict now carries the warranty — earned, and here is what")
+    print("on — and the declaration is inherited along citations, so one at")
+    print("the bottom cannot come out clean a storey up. Where the grounds")
+    print("are claims the graph checks the independence outright and names")
+    print("the shared ancestor; where they are documents it cannot, and that")
+    print("line is drawn rather than blurred.")

@@ -268,13 +268,21 @@ def sec7_what_the_machine_still_cannot_check():
     assert not fallout(fake, "inv-17")
     assert declared_alternatives(fake) == [("f1", "x",
                                             ["inv-17", "inv-17-photocopy"])]
-    print("   INDEPENDENCE IS DECLARED, NEVER VERIFIED. Two copies of one")
-    print("   invoice are one witness under two names, and this book buys")
-    print("   the robustness anyway. Exactly the situation the nullary")
+    v = judge_book(fake)["f1"]
+    print(f"   the verdict: {v['disposition']} / warranty {v['warranty']}"
+          f" / {v['declared']}")
+    assert v["warranty"] == "declared"
+    print("   INDEPENDENCE IS DECLARED AND, BETWEEN DOCUMENTS, NEVER")
+    print("   VERIFIABLE. Two copies of one invoice are one witness under")
+    print("   two names, and this book buys the robustness anyway. Exactly the situation the nullary")
     print("   ground is in (`agrippa_nullary.py` §3), and the answer is the")
     print("   same: not detection, DISCLOSURE. Every claim of independence")
     print("   is itemised by name, so a bogus one is visible instead of")
-    print("   silent. That is all a ledger can honestly promise.")
+    print("   silent — and the verdict says so too, reading EARNED with a")
+    print("   DECLARED warranty rather than plain EARNED. Between CLAIMS")
+    print("   the graph does better than disclosure: a shared ancestor")
+    print("   refutes the independence outright and is named (`zbook`")
+    print("   sections 7-8). Documents are where the promise stops.")
 
 
 if __name__ == "__main__":

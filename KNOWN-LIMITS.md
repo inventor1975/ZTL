@@ -18,8 +18,42 @@ something is found and not fixed the same day.
 one leaves the claim standing. Two photocopies of one invoice buy the same
 immunity and nothing here detects it (`dilemmas/agrippa_book.py` §7). Where both
 grounds are CLAIMS the graph does check it and a shared ancestor refutes the
-declaration by name — that half is closed. Between external documents it is not,
-and cannot be.
+declaration by name — that half is closed. Between external documents it is not.
+
+SETTLED 2026-08-13, by the curator, after the three ways out were examined and
+each found to be the wrong shape. Recorded so that nobody reopens it by
+accident, this file's author included.
+
+*The statistical way out — watch whether the two grounds always move together
+and report a percentage.* Declined. Co-movement is evidence, its absence proves
+nothing, and the number needs a threshold somebody stipulates. This corpus
+already refused that trade in `dilemmas/lottery.py`: a probability is not a
+witness. A percentage here would be an estimate wearing the clothes of a
+measurement.
+
+*The interventional way out — name the single act that would settle it.* Real,
+and strictly better than a percentage: void the first invoice at its issuer and
+see whether the second survives. If it falls, they were one paper — settled, not
+estimated, which is the corpus's own habit of naming a cure rather than
+guessing. But it decides in ONE direction only (surviving proves they are not
+identical, not that they share no origin), it costs an act in the world that the
+machine cannot perform, and for a historical document there is no issuer left to
+ask. Available to anyone who wants it; not built, because it does not close the
+ceiling either.
+
+*The full-descent way out — keep going down, measurement behind measurement, to
+the foundation.* Impossible for empirical grounds, and not from poverty. A paper
+rests on an act in the world, and an act in the world reaches us only as another
+paper; the descent yields documents forever. The full descent exists exactly
+where the bottom is FORCED rather than chosen — a ground with no inputs — which
+is mathematics, and in this corpus's neighbourhood it is VR's machine-confirmed
+`[]`. An empirical chain ends where somebody decides to stop, always.
+
+So the bracket IS the answer here, not a placeholder for a better one. What a
+ledger can do is make the stop named, priced, and impossible to quote without
+its width — which is done. What it cannot do is turn a decision to stop into a
+foundation, and pretending otherwise would be the same offence this corpus
+exists to catch.
 
 **Nullarity cannot be verified — for OPAQUE grounds only.** Narrowed
 2026-08-13 on the curator's question, "can the descent not catch it?" It can.

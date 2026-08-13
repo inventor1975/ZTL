@@ -170,6 +170,16 @@ def _parse_arith(s, quantities):
                         _parse_arith(s[i + 1:], quantities))
     if s.startswith("(") and s.endswith(")"):
         return _parse_arith(s[1:-1], quantities)
+    # UNARY SIGN. The binary split above starts at index 1, so a leading
+    # `-` is never a split point and `-x + 20` died with "malformed
+    # arithmetic" — found 2026-08-13 by the curator asking the studio to
+    # solve `x - 200 = -x + 20`, an equation that does have an answer.
+    # `20 - x` had always worked, which is why nothing caught it: the
+    # missing case is the sign that opens an expression, not the operator.
+    if s.startswith("-"):
+        return ("sub", _num("0"), _parse_arith(s[1:], quantities))
+    if s.startswith("+"):
+        return _parse_arith(s[1:], quantities)
     if re.match(rf"^{_VAL}$", s):
         return _num(s)
     if s in quantities:

@@ -54,7 +54,7 @@ sys.path.insert(0, _ROOT)
 
 from ztl import T, F, Z, IMP                                    # noqa: E402
 from zbook import (judge_book, fallout, census, _order,          # noqa: E402
-                   trust_surface, trust_interval)
+                   trust_surface, trust_interval, cost)
 import zsweep as S                                              # noqa: E402
 import zledger as L                                             # noqa: E402
 import zclassify as C                                           # noqa: E402
@@ -197,11 +197,17 @@ def sec2_blast_radius(book):
                       if not w.startswith("claim/")})
     rows = []
     for g in grounds:
-        hits = fallout(book, g)
-        rows.append((len(hits), g, [h[0] for h in hits]))
+        c = cost(book, g)
+        rows.append((c["low"], g, [h[0] for h in c["as_declared"]],
+                     c["high"], c["width"]))
     rows.sort(key=lambda r: (-r[0], r[1]))
-    for n, g, who in rows:
-        print(f"   {g:32} {n:>2}  {', '.join(who)}")
+    for n, g, who, high, width in rows:
+        bracket = f"[{n}, {high}]" + ("" if not width else "  <- WIDE")
+        print(f"   {g:32} {bracket:10}  {', '.join(who)}")
+    print("   Every bracket above is a pair, never a single number: the low")
+    print("   end believes the book's declarations and the high end assumes")
+    print("   them false. Here the two coincide everywhere, because this")
+    print("   book declares nothing — see §4.")
     worst = [r for r in rows if r[0] == rows[0][0]]
     names = ", ".join(r[1] for r in worst)
     print(f"   The most expensive single mistake would be in {names},")

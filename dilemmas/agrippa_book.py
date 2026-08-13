@@ -67,7 +67,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                 ".."))
 
 from zbook import (judge_book, fallout, census, classify_cycles,   # noqa: E402
-                   retract, declared_alternatives)
+                   retract, declared_alternatives, cost)
 
 N = 5
 
@@ -115,7 +115,9 @@ def circle(n=3):
 
 
 def radii(book, grounds):
-    return {g: len(fallout(book, g)) for g in grounds}
+    """Brackets, not numbers — see `zbook.cost`. The pair is the answer; a
+    width above zero is the price of a declaration in this book."""
+    return {g: cost(book, g) for g in grounds}
 
 
 def sec1_regress_warrants_nothing():
@@ -178,10 +180,12 @@ def sec4_mutual_support_buys_nothing():
     r = radii(book, grounds)
     print("   each claim on its own document AND on a neighbour's claim:")
     for g in grounds:
-        print(f"     retract {g:7} -> {r[g]} of {N} fall")
-    assert sorted(r.values()) == [1, 2, 3, 4, 5, 5]
+        print(f"     retract {g:7} -> [{r[g]['low']}, {r[g]['high']}] of {N}")
+    assert sorted(c["low"] for c in r.values()) == [1, 2, 3, 4, 5, 5]
+    assert {c["width"] for c in r.values()} == {0}
+    worst = max(c["low"] for c in r.values())
     print(f"   The prediction was that spreading the support would spread")
-    print(f"   the risk. It does not. The worst radius is still {max(r.values())}"
+    print(f"   the risk. It does not. The worst radius is still {worst}"
           f" of {N},")
     print("   and the claim with TWO independent documents is the most")
     print("   fragile object in the book, not the safest: every ground it")
@@ -200,8 +204,10 @@ def sec5_only_independence_helps():
     r = radii(book, grounds)
     print(f"   five claims that do not support each other: "
           f"{census(judge_book(book))}")
-    print(f"   blast radius of each document: {sorted(r.values())}")
-    assert sorted(r.values()) == [1] * N
+    print(f"   blast radius of each document: "
+          f"{sorted((c['low'], c['high']) for c in r.values())}")
+    assert sorted(c["low"] for c in r.values()) == [1] * N
+    assert {c["width"] for c in r.values()} == {0}
     print("   One apiece, and that is the whole of it. In this register")
     print("   robustness comes from INDEPENDENCE and never from mutual")
     print("   support — the same result `inventory/corpus_book.py` reached")
@@ -230,9 +236,18 @@ def sec6_the_gap_closed_and_the_web_rebuilt():
     grounds = [f"doc{i}" for i in range(1, N + 1)] + [f"doc{N}b"]
     r = radii(book, grounds)
     for g in grounds:
-        print(f"     retract {g:7} -> {r[g]} fall")
+        print(f"     retract {g:7} -> [{r[g]['low']}, {r[g]['high']}]")
     assert census(judge_book(book)) == {"EARNED": N}
-    assert set(r.values()) == {0}
+    assert {c["low"] for c in r.values()} == {0}
+    assert sorted(c["high"] for c in r.values()) == [1, 2, 3, 4, 5, 5]
+    print("   and every bracket is WIDE. Read the high ends alone —")
+    print("   1, 2, 3, 4, 5, 5 — and they are EXACTLY section 4's numbers:")
+    print("   the strict reading of the web IS the tower. Which is the")
+    print("   cleanest statement of what a declaration buys and what it")
+    print("   costs, in one line of arithmetic: believe the independence and")
+    print("   nothing falls; disbelieve it and you are back in the tower you")
+    print("   started from. Both ends are printed, always, because the")
+    print("   machine cannot tell you which of them you are living in.")
     # and the deeper question: does the CASCADE stop, or is it merely delayed?
     stripped = retract(retract(book, f"doc{N}"), f"doc{N}b")
     before, after = judge_book(book), judge_book(stripped)

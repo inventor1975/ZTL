@@ -245,7 +245,88 @@ The text, code and measurements were prepared in co-authorship with an AI (Varia
 
 The full output of `python3 zclassify.py`, identical to the one published in the repository at the publication commit:
 
-@@APPENDIXA@@
+```
+E35. THE DOCKET: MACHINE-CERTIFIED CLASSIFICATION OF PARADOXES
+==========================================================================
+case                             passport         mod per par    genre
+--------------------------------------------------------------------------
+liar            L ≡ ¬L           PARADOX            0   2   1     loop
+barber          (alias)          PARADOX            0   2   1     loop
+Grelling        (alias)          PARADOX            0   2   1     loop
+Russell cell    R∈R (alias)      PARADOX            0   2   1     loop
+Jourdain/crocodile R≡M,M≡¬R      PARADOX            0   4   1     loop
+odd 3-cycle                      PARADOX            0   2   3     loop
+Curry, grounded ⊥: γ≡(γ→F)       PARADOX            0   2   -     loop
+truth-teller    τ ≡ τ            UNDERDETERMINED    2   1   0     loop
+Russell twin    S∈S              UNDERDETERMINED    2   1   0     loop
+optimistic crocodile R≡M,M≡R     UNDERDETERMINED    2   1   0     loop
+even 2-cycle    A≡¬B,B≡¬A        UNDERDETERMINED    2   2   2     loop
+even 4-cycle                     UNDERDETERMINED    2   2   4     loop
+strong liar     σ ≡ ¬σ∧σ         INTRINSIC          1   1   -     loop
+revenge         μ ≡ ¬(μ↔μ)       INTRINSIC          1   1   -     loop
+Henkin-style    h ≡ (h→h)        INTRINSIC          1   1   -     loop
+Yablo trunc n=3                  GROUNDED           -   1   - grounded
+Yablo trunc n=6                  GROUNDED           -   1   - grounded
+Theseus title contest            UNDERDETERMINED    2   2   2     loop
+Theseus 'same', criterion-free   UNDERDETERMINED    2   1   0     loop
+person corecursion, obs=T        UNDERDETERMINED    2   1   -     loop
+person corecursion, obs=F        GROUNDED           -   1   - grounded
+
+### V0. The second axis: every classified case is a LOOP
+ok  genres present among the classified cases: ['loop']
+    every case NAMES something, so its models can be counted and
+    the count reported; the other genre — an expression that
+    names nothing, whose reading set is empty and whose status
+    is E — cannot arise here BY CONSTRUCTION, since a system of
+    definitions always names its sentences. That the docket is
+    entirely loop is the finding, not an omission: the classical
+    paradoxes are failures of settlement, not of reference.
+    The E genre is measured on the numeric floor instead
+    (znum.py; dilemmas/omnipotence.py, where the same puzzle
+    lands in either genre depending on how one word is read).
+
+### V1. Parity law: no exception on pure negation cycles
+ok  odd (1,3) ⇒ PARADOX/0 models; even (0,2,4) ⇒ UNDERDETERMINED/2,
+    every even stipulation grounds cleanly — Kripke transported, total
+
+### V2. Alias certificates: one paradox, four costumes
+ok  barber = Grelling = R∈R = liar (passport, models, period)
+ok  full Russell universe: E11 — one cell quarantined, 8/9 grounded;
+    minimal surgery certified; type theory also bans the curable twin
+
+### V3. Yablo: no finite stage is paradoxical
+ok  n=3, n=6 GROUNDED outright — paradoxicality lives only in the
+    actual infinity (measured side in the Priest–Sorensen dispute)
+
+### V4. The intrinsic trio: forced verdicts on both sides
+ok  strong liar forced σ=F; revenge forced μ=F; Henkin forced h=T —
+    'worse' self-reference is TAMER: one model, stipulation forced
+
+### V5. Two Currys, two passports — ⊥ decides
+ok  grounded ⊥ ⇒ PARADOX (Curry IS the liar in arrow costume)
+ok  suspended ⊥ ⇒ DOWNSTREAM (culprits ['⊥'], refusal conditional)
+
+### V6. Period: the second axis is real
+ok  liar 2 vs carousel 4 under one passport; one flipped negation
+    moves the carousel across the parity line
+
+### V7. The dilemma series files into the docket
+ok  Theseus contest / criterion-free same / person / Agrippa's dogma:
+    decree-resolvable non-paradoxes, same instrument, same table
+
+### V8. The contingent liar: paradoxicality is empirical
+ok  world A (Jones told a truth): GROUNDED — S is ordinary falsehood
+ok  world B (Jones said 'Smith speaks truly'): PARADOX, period 4 —
+    the unlucky configuration IS the Jourdain carousel
+ok  world C (Jones unverified): INPUT + DOWNSTREAM (culprits ['J'], refusal conditional)
+ok  one sentence, three passports — a paradox is an EVENT, not a
+    text; no syntactic sieve can quarantine paradoxes in advance
+
+E35: docket complete — every row pinned, every verdict certified.
+Genre borders stand outside the axis by design: tortoise & sensor →
+warranty genre; sorites, surprise exam, lottery, Berry → other
+instruments. The liar earns its title; the impostors are named.
+```
 
 ## Appendix B. A pocket glossary
 

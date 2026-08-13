@@ -438,6 +438,35 @@ def diff(old, new_results):
             "old_judge": old.get("judge"), "new_judge": new["judge"]}
 
 
+def trust_surface(book):
+    """How much of what this book calls EARNED rests on something the
+    machine did not check.
+
+    `fallout` answers "what falls if this ground is a lie". This answers a
+    different question — "how much of this is my own word" — and the two
+    can disagree: a book can be robust to any single withdrawal and still be
+    held up entirely by declarations, because a declaration is not a ground
+    that might fail, it is a ground nobody ever tested.
+
+    It reports only what the BOOK says. Whether a documented ground is one
+    you could re-establish yourself is domain knowledge and belongs to
+    whoever wrote the book — see `inventory/corpus_book.py`, where the
+    corpus's own answer turns out to be the interesting one."""
+    res = judge_book(book)
+    earned = [v for v in res.values() if v["disposition"] == "EARNED"]
+    declared = [v for v in earned if v["warranty"] == "declared"]
+    clocked = [v for v in earned if v["clock"]]
+    items = sorted({d[1] + ":" + str(d[2]) for v in res.values()
+                    for d in v["declared"]})
+    return {"claims": len(res), "earned": len(earned),
+            "on_declarations": len(declared), "on_clocks": len(clocked),
+            "share": (0 if not earned
+                      else round(len(declared) / len(earned), 3)),
+            "declarations": items,
+            "refuted_independence": sorted({str(x) for v in res.values()
+                                            for x in v["not_independent"]})}
+
+
 def census(results):
     by = {}
     for v in results.values():
@@ -726,6 +755,17 @@ def sec10_and_why_the_scope_must_be_declared():
     print("   clocks. `performed/` is the class that cannot expire,")
     print("   `expiring/` the class that must, and everything unmarked is an")
     print("   ordinary document — losable to a lie, not to the calendar.")
+    t = trust_surface(DECLARED)
+    print(f"   and the book-level number, for the declared book of §7: "
+          f"{t['on_declarations']} of {t['earned']} earned claims stand on")
+    print(f"   something nobody checked ({t['share']}), itemised: "
+          f"{t['declarations']}")
+    assert t["on_declarations"] == 3 and t["share"] == 0.5
+    print("   `fallout` asks what falls if a ground is a LIE; this asks how")
+    print("   much of the book is my own word. The two can disagree flatly:")
+    print("   a book can be robust to every single withdrawal and still be")
+    print("   held up entirely by declarations, because a declaration is")
+    print("   not a ground that might fail — it is one nobody ever tested.")
 
 
 def sec11_what_is_still_missing():

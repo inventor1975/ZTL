@@ -1,0 +1,49 @@
+{
+ "fingerprint": "991efdf9a7dc3e97",
+ "verdicts": 1188,
+ "formulas": 132,
+ "census": {
+  "T | EARNED | hereditary | -": 332,
+  "F | REFUTED | hereditary | -": 332,
+  "F | OPEN | until-verification | p": 76,
+  "F | OPEN | until-verification | q": 76,
+  "T | ON CREDIT | until-verification | q": 73,
+  "T | ON CREDIT | until-verification | p": 73,
+  "F | REFUTED | hereditary | q": 39,
+  "F | REFUTED | hereditary | p": 39,
+  "T | EARNED | hereditary | q": 39,
+  "T | EARNED | hereditary | p": 39,
+  "F | OPEN | until-verification | p,q": 32,
+  "T | ON CREDIT | until-verification | p,q": 32,
+  "Z | OPEN | until-verification | p": 3,
+  "Z | OPEN | until-verification | q": 3
+ },
+ "rare": [
+  [
+   3,
+   [
+    "Z",
+    "OPEN",
+    "until-verification",
+    "p"
+   ],
+   [
+    "p",
+    "{'p': 'Z', 'q': 'T'}"
+   ]
+  ],
+  [
+   3,
+   [
+    "Z",
+    "OPEN",
+    "until-verification",
+    "q"
+   ],
+   [
+    "q",
+    "{'p': 'T', 'q': 'Z'}"
+   ]
+  ]
+ ]
+}

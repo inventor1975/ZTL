@@ -1,0 +1,22 @@
+{
+ "fingerprint": "41144bb43436ab4f",
+ "cases": 480,
+ "census": {
+  "ON CREDIT | 1 | credit | document": 88,
+  "EARNED | 1 | earned | -": 72,
+  "ON CREDIT | 0 | - | document": 72,
+  "OPEN | 0 | - | document,measure": 56,
+  "OPEN | 1 | credit | document,measure,narrow": 40,
+  "ON CREDIT | 1 | earned | document,narrow": 28,
+  "ON CREDIT | 1 | credit | document,narrow": 28,
+  "EARNED | 1 | earned | narrow": 20,
+  "ON CREDIT | 1 | credit | narrow": 20,
+  "REFUTED | 0 | - | -": 16,
+  "OPEN | 0 | - | measure": 8,
+  "OPEN | 1 | earned | measure,narrow": 8,
+  "OPEN | 1 | earned | document,measure,narrow": 8,
+  "OPEN | 1 | credit | measure,narrow": 8,
+  "EARNED | 0 | - | -": 8
+ },
+ "rare": []
+}

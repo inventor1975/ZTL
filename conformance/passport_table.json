@@ -1,0 +1,243 @@
+{
+ "fingerprint": "b748439019bc088f",
+ "systems": 1728,
+ "census": {
+  "['GROUNDED-ALL']": 242,
+  "[('UNDERDETERMINED', 2)]": 175,
+  "[('DOWNSTREAM', 1), ('UNDERDETERMINED', 2)]": 136,
+  "[('DOWNSTREAM', 1), ('PARADOX', 0)]": 98,
+  "[('PARADOX', 0)]": 94,
+  "[('INTRINSIC', 1)]": 86,
+  "[('DOWNSTREAM', 1), ('INPUT', 0)]": 74,
+  "[('DOWNSTREAM', 0), ('UNDERDETERMINED', 2)]": 59,
+  "[('DOWNSTREAM', 1), ('INTRINSIC', 1)]": 59,
+  "[('INPUT', 0)]": 55,
+  "[('PARADOX', 0), ('UNDERDETERMINED', 2)]": 41,
+  "[('DOWNSTREAM', 0), ('PARADOX', 0)]": 41,
+  "[('INPUT', 0), ('UNDERDETERMINED', 2)]": 35,
+  "[('DOWNSTREAM', 0), ('DOWNSTREAM', 1), ('INPUT', 0)]": 34,
+  "[('DOWNSTREAM', 0), ('DOWNSTREAM', 1), ('UNDERDETERMINED', 2)]": 34,
+  "[('DOWNSTREAM', 0), ('DOWNSTREAM', 1), ('PARADOX', 0)]": 34,
+  "[('DOWNSTREAM', 0), ('INPUT', 0)]": 29,
+  "[('INPUT', 0), ('PARADOX', 0)]": 24,
+  "[('DOWNSTREAM', 1), ('INPUT', 0), ('UNDERDETERMINED', 2)]": 24,
+  "[('DOWNSTREAM', 1), ('INPUT', 0), ('PARADOX', 0)]": 24,
+  "[('DOWNSTREAM', 1), ('PARADOX', 0), ('UNDERDETERMINED', 2)]": 24,
+  "[('DOWNSTREAM', 0), ('INTRINSIC', 1)]": 23,
+  "[('INTRINSIC', 1), ('UNDERDETERMINED', 2)]": 20,
+  "[('DOWNSTREAM', 2), ('UNDERDETERMINED', 2)]": 19,
+  "[('INTRINSIC', 1), ('PARADOX', 0)]": 15,
+  "[('DOWNSTREAM', 2), ('PARADOX', 0)]": 14,
+  "[('DOWNSTREAM', 1), ('DOWNSTREAM', 2), ('INPUT', 0)]": 13,
+  "[('INPUT', 0), ('INTRINSIC', 1)]": 13,
+  "[('DOWNSTREAM', 1), ('DOWNSTREAM', 2), ('UNDERDETERMINED', 2)]": 13,
+  "[('DOWNSTREAM', 1), ('DOWNSTREAM', 2), ('PARADOX', 0)]": 13,
+  "[('DOWNSTREAM', 0), ('DOWNSTREAM', 1), ('INTRINSIC', 1)]": 13,
+  "[('DOWNSTREAM', 0), ('INPUT', 0), ('UNDERDETERMINED', 2)]": 12,
+  "[('DOWNSTREAM', 0), ('INPUT', 0), ('PARADOX', 0)]": 12,
+  "[('DOWNSTREAM', 0), ('PARADOX', 0), ('UNDERDETERMINED', 2)]": 12,
+  "[('DOWNSTREAM', 2), ('INPUT', 0)]": 10,
+  "[('DOWNSTREAM', 1), ('INPUT', 0), ('INTRINSIC', 1)]": 8,
+  "[('DOWNSTREAM', 1), ('INTRINSIC', 1), ('UNDERDETERMINED', 2)]": 8,
+  "[('DOWNSTREAM', 1), ('INTRINSIC', 1), ('PARADOX', 0)]": 8,
+  "[('DOWNSTREAM', 2), ('INTRINSIC', 1)]": 7,
+  "[('DOWNSTREAM', 0), ('DOWNSTREAM', 2), ('INPUT', 0)]": 6,
+  "[('INPUT', 0), ('PARADOX', 0), ('UNDERDETERMINED', 2)]": 6,
+  "[('DOWNSTREAM', 0), ('DOWNSTREAM', 2), ('UNDERDETERMINED', 2)]": 6,
+  "[('DOWNSTREAM', 0), ('DOWNSTREAM', 2), ('PARADOX', 0)]": 6,
+  "[('UNDERDETERMINED', 3)]": 6,
+  "[('DOWNSTREAM', 1), ('DOWNSTREAM', 2), ('INTRINSIC', 1)]": 5,
+  "[('DOWNSTREAM', 2), ('INPUT', 0), ('UNDERDETERMINED', 2)]": 4,
+  "[('DOWNSTREAM', 2), ('INPUT', 0), ('PARADOX', 0)]": 4,
+  "[('DOWNSTREAM', 2), ('PARADOX', 0), ('UNDERDETERMINED', 2)]": 4,
+  "[('DOWNSTREAM', 0), ('INPUT', 0), ('INTRINSIC', 1)]": 4,
+  "[('DOWNSTREAM', 0), ('INTRINSIC', 1), ('UNDERDETERMINED', 2)]": 4,
+  "[('DOWNSTREAM', 0), ('INTRINSIC', 1), ('PARADOX', 0)]": 4,
+  "[('INPUT', 0), ('INTRINSIC', 1), ('UNDERDETERMINED', 2)]": 2,
+  "[('INPUT', 0), ('INTRINSIC', 1), ('PARADOX', 0)]": 2,
+  "[('DOWNSTREAM', 2), ('INPUT', 0), ('INTRINSIC', 1)]": 2,
+  "[('DOWNSTREAM', 0), ('DOWNSTREAM', 2), ('INTRINSIC', 1)]": 2,
+  "[('INTRINSIC', 1), ('PARADOX', 0), ('UNDERDETERMINED', 2)]": 2,
+  "[('DOWNSTREAM', 2), ('INTRINSIC', 1), ('UNDERDETERMINED', 2)]": 2,
+  "[('DOWNSTREAM', 2), ('INTRINSIC', 1), ('PARADOX', 0)]": 2
+ },
+ "kinds": {
+  "DOWNSTREAM": 1226,
+  "UNDERDETERMINED": 700,
+  "PARADOX": 525,
+  "INPUT": 432,
+  "INTRINSIC": 293
+ },
+ "rare": [
+  [
+   2,
+   "[('DOWNSTREAM', 0), ('DOWNSTREAM', 2), ('INTRINSIC', 1)]",
+   "{'s0': ('xnor', 's0', 's0'), 's1': 's0', 's2': ('or', 's1', 's2')}"
+  ],
+  [
+   2,
+   "[('DOWNSTREAM', 2), ('INPUT', 0), ('INTRINSIC', 1)]",
+   "{'s0': ('xnor', 's0', 's0'), 's1': 'Z', 's2': ('or', 's1', 's2')}"
+  ],
+  [
+   2,
+   "[('DOWNSTREAM', 2), ('INTRINSIC', 1), ('PARADOX', 0)]",
+   "{'s0': ('xnor', 's0', 's0'), 's1': ('not', 's1'), 's2': ('or', 's1', 's2')}"
+  ],
+  [
+   2,
+   "[('DOWNSTREAM', 2), ('INTRINSIC', 1), ('UNDERDETERMINED', 2)]",
+   "{'s0': ('xnor', 's0', 's0'), 's1': 's1', 's2': ('or', 's1', 's2')}"
+  ],
+  [
+   2,
+   "[('INPUT', 0), ('INTRINSIC', 1), ('PARADOX', 0)]",
+   "{'s0': ('xnor', 's0', 's0'), 's1': 'Z', 's2': ('not', 's2')}"
+  ],
+  [
+   2,
+   "[('INPUT', 0), ('INTRINSIC', 1), ('UNDERDETERMINED', 2)]",
+   "{'s0': ('xnor', 's0', 's0'), 's1': 'Z', 's2': 's2'}"
+  ],
+  [
+   2,
+   "[('INTRINSIC', 1), ('PARADOX', 0), ('UNDERDETERMINED', 2)]",
+   "{'s0': ('xnor', 's0', 's0'), 's1': 's1', 's2': ('not', 's2')}"
+  ],
+  [
+   4,
+   "[('DOWNSTREAM', 0), ('INPUT', 0), ('INTRINSIC', 1)]",
+   "{'s0': ('xnor', 's0', 's0'), 's1': 'Z', 's2': 's0'}"
+  ],
+  [
+   4,
+   "[('DOWNSTREAM', 0), ('INTRINSIC', 1), ('PARADOX', 0)]",
+   "{'s0': ('xnor', 's0', 's0'), 's1': 's0', 's2': ('not', 's2')}"
+  ],
+  [
+   4,
+   "[('DOWNSTREAM', 0), ('INTRINSIC', 1), ('UNDERDETERMINED', 2)]",
+   "{'s0': ('xnor', 's0', 's0'), 's1': 's0', 's2': 's2'}"
+  ],
+  [
+   4,
+   "[('DOWNSTREAM', 2), ('INPUT', 0), ('PARADOX', 0)]",
+   "{'s0': 'Z', 's1': ('not', 's1'), 's2': ('or', 's1', 's2')}"
+  ],
+  [
+   4,
+   "[('DOWNSTREAM', 2), ('INPUT', 0), ('UNDERDETERMINED', 2)]",
+   "{'s0': 'Z', 's1': 's1', 's2': ('or', 's1', 's2')}"
+  ],
+  [
+   4,
+   "[('DOWNSTREAM', 2), ('PARADOX', 0), ('UNDERDETERMINED', 2)]",
+   "{'s0': 's0', 's1': ('not', 's1'), 's2': ('or', 's1', 's2')}"
+  ],
+  [
+   5,
+   "[('DOWNSTREAM', 1), ('DOWNSTREAM', 2), ('INTRINSIC', 1)]",
+   "{'s0': ('xnor', 's0', 's0'), 's1': ('not', 's0'), 's2': ('or', 's1', 's2')}"
+  ],
+  [
+   6,
+   "[('DOWNSTREAM', 0), ('DOWNSTREAM', 2), ('INPUT', 0)]",
+   "{'s0': 'Z', 's1': 's0', 's2': ('or', 's1', 's2')}"
+  ],
+  [
+   6,
+   "[('DOWNSTREAM', 0), ('DOWNSTREAM', 2), ('PARADOX', 0)]",
+   "{'s0': 's1', 's1': ('not', 's1'), 's2': ('or', 's1', 's2')}"
+  ],
+  [
+   6,
+   "[('DOWNSTREAM', 0), ('DOWNSTREAM', 2), ('UNDERDETERMINED', 2)]",
+   "{'s0': 's0', 's1': 's0', 's2': ('or', 's1', 's2')}"
+  ],
+  [
+   6,
+   "[('INPUT', 0), ('PARADOX', 0), ('UNDERDETERMINED', 2)]",
+   "{'s0': 'Z', 's1': 's1', 's2': ('not', 's2')}"
+  ],
+  [
+   6,
+   "[('UNDERDETERMINED', 3)]",
+   "{'s0': 's2', 's1': ('and', 's0', 's1'), 's2': ('or', 's1', 's2')}"
+  ],
+  [
+   7,
+   "[('DOWNSTREAM', 2), ('INTRINSIC', 1)]",
+   "{'s0': 's1', 's1': ('xnor', 's0', 's0'), 's2': ('or', 's1', 's2')}"
+  ],
+  [
+   8,
+   "[('DOWNSTREAM', 1), ('INPUT', 0), ('INTRINSIC', 1)]",
+   "{'s0': ('xnor', 's0', 's0'), 's1': 'Z', 's2': ('not', 's0')}"
+  ],
+  [
+   8,
+   "[('DOWNSTREAM', 1), ('INTRINSIC', 1), ('PARADOX', 0)]",
+   "{'s0': ('xnor', 's0', 's0'), 's1': ('not', 's0'), 's2': ('not', 's2')}"
+  ],
+  [
+   8,
+   "[('DOWNSTREAM', 1), ('INTRINSIC', 1), ('UNDERDETERMINED', 2)]",
+   "{'s0': ('xnor', 's0', 's0'), 's1': 's1', 's2': ('not', 's0')}"
+  ],
+  [
+   10,
+   "[('DOWNSTREAM', 2), ('INPUT', 0)]",
+   "{'s0': 'T', 's1': 'Z', 's2': ('or', 's1', 's2')}"
+  ],
+  [
+   12,
+   "[('DOWNSTREAM', 0), ('INPUT', 0), ('PARADOX', 0)]",
+   "{'s0': 'Z', 's1': 's0', 's2': ('not', 's2')}"
+  ],
+  [
+   12,
+   "[('DOWNSTREAM', 0), ('INPUT', 0), ('UNDERDETERMINED', 2)]",
+   "{'s0': 'Z', 's1': 's0', 's2': 's2'}"
+  ],
+  [
+   12,
+   "[('DOWNSTREAM', 0), ('PARADOX', 0), ('UNDERDETERMINED', 2)]",
+   "{'s0': 's0', 's1': 's0', 's2': ('not', 's2')}"
+  ],
+  [
+   13,
+   "[('DOWNSTREAM', 0), ('DOWNSTREAM', 1), ('INTRINSIC', 1)]",
+   "{'s0': ('xnor', 's0', 's0'), 's1': 's0', 's2': ('not', 's0')}"
+  ],
+  [
+   13,
+   "[('DOWNSTREAM', 1), ('DOWNSTREAM', 2), ('INPUT', 0)]",
+   "{'s0': 'Z', 's1': ('not', 's0'), 's2': ('or', 's1', 's2')}"
+  ],
+  [
+   13,
+   "[('DOWNSTREAM', 1), ('DOWNSTREAM', 2), ('PARADOX', 0)]",
+   "{'s0': ('not', 's0'), 's1': ('not', 's0'), 's2': ('or', 's1', 's2')}"
+  ],
+  [
+   13,
+   "[('DOWNSTREAM', 1), ('DOWNSTREAM', 2), ('UNDERDETERMINED', 2)]",
+   "{'s0': 's0', 's1': ('not', 's0'), 's2': ('or', 's1', 's2')}"
+  ],
+  [
+   13,
+   "[('INPUT', 0), ('INTRINSIC', 1)]",
+   "{'s0': 'Z', 's1': ('not', 's2'), 's2': ('or', 's1', 's2')}"
+  ],
+  [
+   14,
+   "[('DOWNSTREAM', 2), ('PARADOX', 0)]",
+   "{'s0': 'T', 's1': ('not', 's1'), 's2': ('or', 's1', 's2')}"
+  ],
+  [
+   15,
+   "[('INTRINSIC', 1), ('PARADOX', 0)]",
+   "{'s0': 's1', 's1': ('xnor', 's0', 's0'), 's2': ('not', 's2')}"
+  ]
+ ]
+}

@@ -154,9 +154,19 @@ sweeps the ledger: every ground kind in every position, three claims deep, 1,536
 books. The book got its net last and needed it first — every surprise of the day
 that prompted this machinery was in the ledger, not in the judge.
 
+Three more followed and the list is now complete: `passport_table.py` (1,728
+three-sentence systems — the instrument behind the published docket, so a
+change here is a correction to an issued paper), `ztl_table.py` (the
+propositional judge, 132 depth-2 formulas over every marking) and
+`solver_table.py` (480 shapes of unknown, plus the provenance invariant).
+Every instrument in the corpus now has a net: judge, book, passport,
+propositional judge, solver.
+
 None of them VERIFIES. They record what the instruments do, including whatever
-they do wrongly; agreeing tomorrow proves that nothing moved unnoticed. Still
-unswept: `zpassport`, `znumsolve`, and the propositional `ztljudge`.
+they do wrongly; agreeing tomorrow proves that nothing moved unnoticed. What
+they DID do on their first runs is find one real bug (a crash and a latent
+mis-attribution in `znumsolve`) and refute three claims their own author had
+printed — which is the argument for sweeps over asserts in one line.
 
 ---
 

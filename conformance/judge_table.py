@@ -61,17 +61,18 @@ an alarm going off because somebody rewired the alarm. So only the judging is
 spread; the stream is assembled and hashed in the parent, in enumeration
 order.
 
-The default is nevertheless ONE process, and deliberately. `run_all.py`
-already saturates the machine with thirty stands at once, and a stand that
-forks thirty-two more would fight the suite for the same cores; 13 seconds
-inside a run whose wall time is set by a 52-second stand costs nothing. Use
-`--jobs 0` when running this alone, and with `--against`, where two full
-sweeps happen.
+Every core BY DEFAULT, and one process inside the suite, which announces
+itself through `ZTL_SUITE`. `run_all.py` already saturates the machine with
+thirty stands at once; a stand forking thirty-two more would fight the run it
+belongs to, and 13 seconds inside a run whose wall time is set by a 52-second
+stand is off the critical path anyway — so parallelising there would cost the
+heavy stand and save nothing. Nobody should have to remember a flag to get
+the obvious behaviour in either place; `--jobs N` overrides both ways.
 
 Run:  python3 conformance/judge_table.py                 (check against stored)
       python3 conformance/judge_table.py --update        (re-bless the table)
       python3 conformance/judge_table.py --against REV   (diff two revisions)
-      python3 conformance/judge_table.py --jobs 0        (use every core)
+      python3 conformance/judge_table.py --jobs 1        (force one process)
 """
 import hashlib
 import json
@@ -227,7 +228,10 @@ def against(rev, jobs=1):
 
 def main():
     update = "--update" in sys.argv
-    jobs = 1
+    # Every core by default; ONE inside the suite, which says so through
+    # ZTL_SUITE. The flag exists for overriding either way, but nobody
+    # should have to remember it to get the obvious behaviour.
+    jobs = 1 if os.environ.get("ZTL_SUITE") else 0
     for i, a in enumerate(sys.argv):
         if a == "--jobs" and i + 1 < len(sys.argv):
             jobs = int(sys.argv[i + 1])

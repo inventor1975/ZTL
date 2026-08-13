@@ -289,7 +289,14 @@ STANDS = [
 
 def _run_one(item):
     script, markers = item
-    r = subprocess.run([sys.executable, script],
+    # ZTL_SUITE tells a stand it is running inside the suite rather than by
+    # hand. Only one stand reads it so far — conformance/judge_table.py,
+    # which spreads its sweep over every core standalone and takes a single
+    # process here, because the suite already saturates the machine and the
+    # sweep is well off its critical path. A stand that forks 32 workers
+    # inside a 30-way pool fights the run it belongs to.
+    r = subprocess.run([sys.executable, script], env=dict(os.environ,
+                       ZTL_SUITE="1"),
                        capture_output=True, text=True, timeout=900)
     # A stand may SKIP when an optional third-party backend is absent (the
     # quantum probes need qiskit-aer). A skip is NOT a pass: it is reported

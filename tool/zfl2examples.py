@@ -121,6 +121,16 @@ EXAMPLES = [
           "value": "?", "unit": "RUB"}],
          "claim": "sum(a,b) = total"}},
     {"kind": "numbers",
+     "en": "a school word problem, in candies",
+     "ru": "школьная задача, в конфетах",
+     "doc": {"rows": [
+         {"name": "masha", "means": "what Masha has left after Vasya",
+          "status": "verified", "ground": "the story", "value": "2",
+          "unit": "candies"},
+         {"name": "give", "means": "how many she gives Petya",
+          "status": "unverified", "value": "?", "unit": "candies"}],
+         "claim": "masha - give = give"}},
+    {"kind": "numbers",
      "en": "a box that stays a box", "ru": "коробка, которая остаётся коробкой",
      "doc": {"rows": [
          {"name": "age", "means": "the age", "status": "unverified",

@@ -347,6 +347,18 @@ def validate(doc):
                     "error", "E_VALUE_FORM", f"{at} / value",
                     "a value is a number, an interval [0,10], or ? — "
                     f"'{val}' is none of them"))
+        # an unreadable unit is an answer at the cell, not an exception
+        # thrown from three modules down
+        unit = (r.get("unit") or "").strip()
+        if unit:
+            try:
+                import znum
+                znum._unit_map(unit)
+            except Exception:
+                issues.append(_issue(
+                    "error", "E_UNIT", f"{at} / unit",
+                    f"'{unit}' cannot be read as a unit: a word, optionally "
+                    f"with a power (m2), joined by · or /"))
         if r.get("unit") and not (r.get("value") or "").strip():
             issues.append(_issue("warn", "W_UNIT_NO_VALUE",
                                  f"{at} / unit",

@@ -341,6 +341,24 @@ def main():
         if not STANDS:
             print(f"no stand matches {pattern!r}")
             return 1
+    # A LISTED STAND MUST BE IN THE REPOSITORY. Learned 2026-08-13 from a
+    # red CI run nobody could reproduce: `dilemmas/cogito.py` was wired into
+    # this list after checking that it RAN, which it did — from the author's
+    # working tree, where it had sat untracked for months. On a clean
+    # checkout the file simply is not there, so the runner was green here and
+    # red on GitHub, which is precisely the assurance this project refuses to
+    # grant itself. Green on one machine is not a result; this check makes
+    # the runner say so.
+    import subprocess as _sp
+    _tracked = set(_sp.run(["git", "ls-files"], capture_output=True,
+                           text=True).stdout.split())
+    if _tracked:                      # empty when run outside a git checkout
+        _absent = [s for s, _m in STANDS if s not in _tracked]
+        if _absent:
+            print(f"RED: stands listed but not in the repository: {_absent}")
+            print("     They may run here and cannot run anywhere else.")
+            return 1
+
     failures = []
     # Stands are independent processes; run them on a pool. Kept
     # deterministic in REPORTING order (STANDS order), not completion

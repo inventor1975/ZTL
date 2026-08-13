@@ -39,7 +39,7 @@ def sec1_one_table_three_instruments():
     assert r["ok"], r["issues"]
     print(f"   applies: {r['applies']}")
     assert r["applies"] == {"numeric": True, "passport": True,
-                            "ledger": False, "judge": True}
+                            "ledger": True, "judge": True}
     rep = r["report"]
     print(f"   assembled sheet    : {rep['numeric']['sheet']}")
     print(f"   the invoice claim  : {rep['numeric']['disposition']}")
@@ -101,6 +101,31 @@ def sec3_the_ledger_appears_when_it_is_wanted():
     print("   never learns a syntax for any of it.")
 
 
+def sec3b_what_the_ground_column_is_actually_for():
+    print("-" * 72)
+    print("3b. WHY THE GROUND NAME IS NOT DECORATION")
+    apart = {"rows": [
+        {"name": "a", "means": "first line", "status": "verified",
+         "ground": "inv-17", "value": "100"},
+        {"name": "b", "means": "second line", "status": "verified",
+         "ground": "inv-18", "value": "200"}]}
+    same = {"rows": [dict(apart["rows"][0]),
+                     dict(apart["rows"][1], ground="inv-17")]}
+    ia = zfl2.run(apart)["report"]["ledger"]["brackets"]
+    isame = zfl2.run(same)["report"]["ledger"]["brackets"]
+    print(f"   two lines on two documents : {ia}")
+    print(f"   two lines on ONE document  : {isame}")
+    assert ia == {"inv-17": [1, 1], "inv-18": [1, 1]}
+    assert isame == {"inv-17": [2, 2]}
+    print("   That is the whole answer to 'the ground column says nothing'.")
+    print("   The name is opaque — the machine never looks inside it — but")
+    print("   its IDENTITY is load-bearing: put two lines on one invoice and")
+    print("   losing it costs two claims instead of one. Nothing else in the")
+    print("   table can say that, and `means` certainly cannot: a gloss is")
+    print("   for the reader, a ground is what the arithmetic of collapse")
+    print("   runs on.")
+
+
 def sec4_an_unknown_is_a_question_not_a_gap():
     print("-" * 72)
     print("4. ASKING FOR A NUMBER, WHICH IS WHAT PEOPLE ACTUALLY WANT")
@@ -158,6 +183,7 @@ if __name__ == "__main__":
     sec1_one_table_three_instruments()
     sec2_the_cells_are_checked_where_the_eye_is()
     sec3_the_ledger_appears_when_it_is_wanted()
+    sec3b_what_the_ground_column_is_actually_for()
     sec4_an_unknown_is_a_question_not_a_gap()
     sec5_the_spec_can_build_the_form_and_the_page()
     print("=" * 72)

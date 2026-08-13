@@ -447,7 +447,7 @@ def to_system(rows):
     return system
 
 
-def to_book(rows, claim):
+def to_book(rows):
     """The ledger's view: one claim per row that has a value, grounded as the
     row says. This is what makes blast radius and trust brackets reachable
     from the same table."""
@@ -468,8 +468,17 @@ def applies(doc):
     return {
         "numeric": bool(numeric_rows(rows)),
         "passport": bool(to_system(rows)),
-        "ledger": any((r.get("ground_kind") or "document") != "document"
-                      for r in rows),
+        # THE LEDGER APPLIES WHENEVER THERE ARE GROUNDS AT ALL, not only
+        # when an exotic kind is chosen. The curator, looking at the form:
+        # "ground is unclear and answers for nothing — remove it and use
+        # `means` instead and nothing changes." Half right, and the half
+        # that was right was ours: the name carries IDENTITY, so two rows
+        # on one document fall together and the blast radius is computed
+        # from it — but none of that was on screen unless you happened to
+        # pick a certificate. A column whose work is invisible is a column
+        # that does nothing, whatever the code knows.
+        "ledger": bool(to_book(rows)) and any(
+            (r.get("ground") or "").strip() for r in numeric_rows(rows)),
         "judge": bool((doc.get("claim") or "").strip()),
     }
 
@@ -524,7 +533,7 @@ def run(doc):
                            "unverified": sorted(r["unverified"])}
 
     if what["ledger"]:
-        book = to_book(rows, claim)
+        book = to_book(rows)
         if book:
             judged = zbook.judge_book(book)
             report["ledger"] = {

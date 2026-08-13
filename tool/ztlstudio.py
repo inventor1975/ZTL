@@ -457,19 +457,43 @@ def api_assert(payload):
             "report": report}
 
 
-def _v2(name):
-    """Import a v2 module, RELOADED in development.
+# The modules the v2 path stands on, in dependency order. Reloading only the
+# studio's own files was not enough: the fourth confusion of the day was a fix
+# in `znumjudge` — the CORE — that the running server could not see, because
+# reloading `zfl2` re-runs its imports and Python hands back the cached core
+# module. So the whole chain is watched by file mtime and reloaded bottom-up
+# when it moves.
+_V2_CHAIN = ["ztl", "znum", "znumjudge", "znumsolve", "zpassport", "zbook",
+             "zfl2", "zfl2examples", "zfl2doc", "translator", "translator2"]
+_MTIMES = {}
 
-    A long-running dev server holds every module from process start, so a
-    tightened prompt or a fixed validator keeps serving its old self until
-    somebody restarts — which cost three separate confusions today, each
-    time diagnosed as a bug in code that had already been fixed. In public
-    mode the process is restarted deliberately and the reload is skipped."""
+
+def _refresh_dev():
+    """Reload whatever changed on disk, in dependency order. Development
+    only: in public mode the process is restarted deliberately."""
+    if PUBLIC:
+        return
     import importlib
-    mod = importlib.import_module(name)
-    if not PUBLIC:
-        mod = importlib.reload(mod)
-    return mod
+    for name in _V2_CHAIN:
+        try:
+            mod = importlib.import_module(name)
+            path = getattr(mod, "__file__", None)
+            if not path:
+                continue
+            m = os.path.getmtime(path)
+            if _MTIMES.get(name) != m:
+                if name in _MTIMES:            # not the first sighting
+                    importlib.reload(mod)
+                _MTIMES[name] = m
+        except Exception:
+            continue
+
+
+def _v2(name):
+    """A v2 module, with the whole chain refreshed first in development."""
+    import importlib
+    _refresh_dev()
+    return importlib.import_module(name)
 
 
 def api_v2run(payload):

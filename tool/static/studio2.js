@@ -7,7 +7,7 @@
 // buttons and headings that are not part of the language.
 
 const UI = {
-  en: { advanced: "advanced", reference: "what is ZFL?", addrow: "add a row",
+  en: { advanced: "advanced", reference: "what is ZFL? (the language)", addrow: "add a row",
         run: "run", claim: "claim", remove: "remove this row",
         nothing: "nothing to show yet — fill a row and press run",
         applies: "instruments that had something to say",
@@ -28,7 +28,7 @@ const UI = {
         askph: "describe the question in your own words…",
         thinking: "filling the table…", pick: "— pick —",
         aioff: "no model key — the table and the verdict work without it" },
-  ru: { advanced: "дополнительно", reference: "что такое ZFL?",
+  ru: { advanced: "дополнительно", reference: "что такое ZFL? (язык)",
         addrow: "добавить строку", run: "запустить", claim: "утверждение",
         remove: "убрать строку",
         nothing: "пока нечего показывать — заполните строку и запустите",
@@ -217,10 +217,19 @@ function fillItems(kind) {
 
 function loadExample(kind, n) {
   const items = EX.items.filter(i => !kind || i.kind === kind);
-  const doc = items[n] && items[n].doc;
-  if (!doc) return;
-  ROWS = JSON.parse(JSON.stringify(doc.rows));
-  $("claim").value = doc.claim || "";
+  const item = items[n];
+  if (!item) return;
+  ROWS = JSON.parse(JSON.stringify(item.doc.rows));
+  $("claim").value = item.doc.claim || "";
+  // the QUESTION goes into the chat, so the commentary below has something
+  // to be an answer TO. Not everyone knows what "Jourdain's postcard" is,
+  // and a verdict with no question above it explains nothing.
+  $("chat").innerHTML = "";
+  HISTORY = [];
+  if (item.ask) {
+    addMsg("user", item.ask);
+    HISTORY = [{ role: "user", content: item.ask }];
+  }
   drawGrid();
   run();
 }

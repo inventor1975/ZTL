@@ -144,13 +144,18 @@ PROSE = {
     ],
 }
 
-HEAD = {"en": ("ZFL — the language of the studio", "column", "required",
+# The abbreviation is spelled out in the title on purpose: one letter apart
+# from ZTL, and a reader who has just come from the papers will otherwise
+# take it for a typo.
+HEAD = {"en": ("ZFL — Zero-trust Formal Language, the language of the "
+               "studio (ZTL is the logic; ZFL is how you write for it)", "column", "required",
                "always", "in context", "no", "operators", "error codes",
                "a worked example", "means", "status", "ground",
                "what it is", "options / examples", "the document itself",
                "value", "the columns of a row", "what can go in a value",
                "arithmetic"),
-        "ru": ("ZFL — язык студии", "колонка", "обязательна",
+        "ru": ("ZFL — Zero-trust Formal Language, язык студии "
+               "(ZTL — сама логика, ZFL — то, как для неё пишут)", "колонка", "обязательна",
                "всегда", "по условию", "нет", "операторы", "коды ошибок",
                "разобранный пример", "значит", "статус", "основание",
                "что это", "варианты / примеры", "сам документ",

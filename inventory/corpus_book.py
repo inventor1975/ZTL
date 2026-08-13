@@ -53,7 +53,8 @@ _ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, _ROOT)
 
 from ztl import T, F, Z, IMP                                    # noqa: E402
-from zbook import judge_book, fallout, census, _order           # noqa: E402
+from zbook import (judge_book, fallout, census, _order,          # noqa: E402
+                   trust_surface)
 import zsweep as S                                              # noqa: E402
 import zledger as L                                             # noqa: E402
 import zclassify as C                                           # noqa: E402
@@ -242,9 +243,45 @@ def sec3_not_one_tower(book, rows):
     print("   talk to each other.")
 
 
-def sec4_what_this_cannot_see():
+# Which of our grounds we could re-establish ourselves, and which we could
+# not. This is domain knowledge, not a graph property — the book cannot know
+# it, so it is declared here, by hand, and it is the honest place for it.
+RECOMPUTABLE = {"zsweep", "zledger", "zclassify", "zpassport", "lake-build"}
+
+
+def sec4_the_trust_surface_of_our_own_corpus(book):
     print("-" * 72)
-    print("4. WHAT THIS CANNOT SEE")
+    print("4. HOW MUCH OF THIS IS OUR OWN WORD")
+    t = trust_surface(book)
+    print(f"   the machine's own trust surface: {t['on_declarations']} of "
+          f"{t['earned']} earned claims rest on a declaration ({t['share']})")
+    assert t["on_declarations"] == 0 and t["on_clocks"] == 0
+    print("   Empty, and that is worth saying rather than assuming: this")
+    print("   book contains no nullary grounds and no alternatives, so")
+    print("   nothing here is earned on our unverifiable say-so.")
+    grounds = sorted({w for _c, _f, d in book
+                      for w in re.findall(r"earned:([^\s,]+)", d)
+                      if not w.startswith("claim/")})
+    outside = [g for g in grounds if g not in RECOMPUTABLE]
+    hit = sorted({c for g in outside for c, _b, _a in fallout(book, g)})
+    print(f"   grounds we re-establish on every run: "
+          f"{sorted(set(grounds) & RECOMPUTABLE)}")
+    print(f"   grounds we cannot re-establish at all: {outside}")
+    print(f"   claims standing on those: {len(hit)} of {len(book)} — {hit}")
+    assert outside == ["tomova"] and len(hit) == 8
+    print("   So the real surface is not the machine's. Five of our six")
+    print("   grounds are re-run from scratch every regression: if one had")
+    print("   rotted we would know within the minute. The sixth is a pair of")
+    print("   numbers read out of a paper, and no run of ours re-establishes")
+    print("   it — only a person opening the source can. It carries 8 of 15")
+    print("   claims, which is the same conclusion §2 reached from the other")
+    print("   side, and the two roads meeting on it is the strongest thing")
+    print("   this file says.")
+
+
+def sec5_what_this_cannot_see():
+    print("-" * 72)
+    print("5. WHAT THIS CANNOT SEE")
     print("   The citations are hand-written. The machine honours them; it")
     print("   does not find them, and a dependence nobody wrote down is")
     print("   invisible here — so this file's own risk is an UNDERSTATED")
@@ -264,7 +301,8 @@ def main():
     sec1_the_corpus_recomputes(book)
     rows = sec2_blast_radius(book)
     sec3_not_one_tower(book, rows)
-    sec4_what_this_cannot_see()
+    sec4_the_trust_surface_of_our_own_corpus(book)
+    sec5_what_this_cannot_see()
     print("=" * 72)
     print("CORPUS BOOK GREEN — every headline result re-measured this run and")
     print("EARNED, with its grounds named. The blast radius is computed per")

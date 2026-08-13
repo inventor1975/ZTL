@@ -456,7 +456,22 @@ def api_assert(payload):
             "report": report}
 
 
-ROUTES = {"/api/validate": api_validate, "/api/run": api_run,
+def api_v2run(payload):
+    """ZFL v2: one table in, whichever instruments apply out. The whole of
+    what used to be three tabs, with no genre to declare."""
+    import zfl2
+    doc = payload.get("doc") or {}
+    return zfl2.run(doc)
+
+
+def api_v2validate(payload):
+    import zfl2
+    doc = payload.get("doc") or {}
+    return {"ok": True, "issues": zfl2.validate(doc)}
+
+
+ROUTES = {"/api/v2run": api_v2run, "/api/v2validate": api_v2validate,
+          "/api/validate": api_validate, "/api/run": api_run,
           "/api/chat": api_chat, "/api/emit": api_emit,
           "/api/repair": api_repair, "/api/explain": api_explain,
           "/api/providers": api_providers, "/api/savekey": api_savekey,
@@ -478,10 +493,17 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         # the query string is the page's business, not the router's:
-        # /zfl?l=ru must reach the same handler as /zfl
-        self.path = self.path.split("?", 1)[0] or "/"
+        # /zfl?l=ru must reach the same handler as /zfl. Kept, not
+        # discarded — /api/formspec reads the language out of it, and the
+        # first version of this line threw it away an hour after the route
+        # that needed it was written.
+        self.path, _, query = self.path.partition("?")
+        self.path = self.path or "/"
         if self.path in ("/", "/index.html"):
             with open(os.path.join(HERE, "static", "index.html"), "rb") as f:
+                self._send(200, f.read(), "text/html; charset=utf-8")
+        elif self.path in ("/v2", "/studio2"):
+            with open(os.path.join(HERE, "static", "studio2.html"), "rb") as f:
                 self._send(200, f.read(), "text/html; charset=utf-8")
         elif self.path in ("/zfl", "/zfl.html"):
             # The ZFL reference, generated from the language itself by
@@ -501,7 +523,7 @@ class Handler(BaseHTTPRequestHandler):
                 self._send(404, {"error": "reference not built"})
         elif self.path == "/api/formspec":
             import zfl2
-            lang = "ru" if "lang=ru" in (self.path + "") else "en"
+            lang = "ru" if "l=ru" in query else "en"
             self._send(200, zfl2.form_spec(lang))
         elif self.path == "/api/examples":
             self._send(200, EXAMPLES)

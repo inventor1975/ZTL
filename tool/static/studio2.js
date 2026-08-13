@@ -20,6 +20,10 @@ const UI = {
         assumed: "assumed and unverifiable", eg: "e.g. ",
         solved: "solved", value: "value", from: "derived from",
         prov: "provenance", still: "still a box",
+        needone: "the question does not fix a number: say any ONE of these "
+                 + "and the rest follow —",
+        needmore: "the question does not fix a number, and one more fact "
+                  + "would not be enough",
         examples: "examples", send: "ask", commentary: "in plain language",
         askph: "describe the question in your own words…",
         thinking: "filling the table…", pick: "— pick —",
@@ -38,6 +42,9 @@ const UI = {
         assumed: "принято на веру и непроверяемо", eg: "напр. ",
         solved: "решено", value: "величина", from: "выведено из",
         prov: "происхождение", still: "ещё коробка",
+        needone: "вопрос не определяет числа: назовите ЛЮБОЕ одно из этих — "
+                 + "остальные встанут сами:",
+        needmore: "вопрос не определяет числа, и одного факта не хватит",
         examples: "примеры", send: "спросить", commentary: "по-человечески",
         askph: "опишите вопрос своими словами…",
         thinking: "заполняю таблицу…", pick: "— выберите —",
@@ -147,8 +154,13 @@ function showReport(r) {
         (v.pinned ? "" : ` <span class="muted">${esc(t("still"))}</span>`),
         verdictSpan(v.prov === "earned" ? "EARNED" : v.prov),
         esc((v.from || []).join(", ") || "—")])) : "";
+    const miss = rep.numeric.missing;
+    const missLine = !miss ? ""
+      : miss.needs === 1
+        ? `<p><b>${esc(t("needone"))}</b> ${esc(miss.any_of.join(" · "))}</p>`
+        : `<p><b>${esc(t("needmore"))}</b></p>`;
     out.push(panel(t("numeric"),
-      `<p>${verdictSpan(rep.numeric.disposition)}</p>` + solvedTable +
+      `<p>${verdictSpan(rep.numeric.disposition)}</p>` + missLine + solvedTable +
       (rep.numeric.next_check.length
         ? `<p class="muted">${t("cures")}: ` +
           esc(rep.numeric.next_check.join(" · ")) + "</p>" : "") +

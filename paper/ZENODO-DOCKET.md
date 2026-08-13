@@ -8,9 +8,8 @@ matching this repository byte for byte; related identifiers verified live —
 isNewVersionOf 21864082, isDerivedFrom 21318981 (ZTL), isSupplementedBy the
 GitHub corpus.
 
-OPEN, cosmetic: the record's **Version** metadata field is empty (v1.0 carries
-`1.0`). Zenodo allows editing metadata without minting a new version — set it
-to `1.1` when convenient. Nothing else differs from this sheet.
+The record's **Version** field reads `1.1` (corrected by the curator right
+after publication and verified live). Nothing differs from this sheet.
 
 Source of truth: `paper/paradox-docket-EN-draft.md` (v1.1 header, 2026-08-13).
 Assembled file with Appendix A substituted: `paper/paradox-docket-EN-build.md`.

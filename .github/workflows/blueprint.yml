@@ -1,9 +1,24 @@
 name: Build blueprint pages
 
+# PATHS FILTER, added 2026-08-13. The job runs `leanblueprint web`, which
+# builds the site out of blueprint/ and reads nothing else; before the filter
+# it fired on every push to master and spent a runner rebuilding an unchanged
+# site — a dozen times in one working day, none of which touched blueprint/.
+#
+# The trade-off, stated rather than assumed: a change elsewhere that the
+# blueprint QUOTES will no longer trigger a rebuild, so the published site can
+# lag the repository. `workflow_dispatch` is kept for exactly that, and it is
+# one click. Contrast regression.yml, which deliberately has NO filter,
+# because there a missed run means an undetected divergence rather than a
+# stale page.
+
 on:
   push:
     branches:
       - master
+    paths:
+      - "blueprint/**"
+      - ".github/workflows/blueprint.yml"
   workflow_dispatch:
 
 permissions:

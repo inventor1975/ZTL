@@ -64,10 +64,15 @@ to a minute and a half. The free-AI rate limit (20 per 10 minutes per IP)
 bounds abuse from one address and does nothing about a slow provider or a
 handful of addresses.
 
-*Fix:* `ThreadingHTTPServer`. NOT applied here, and deliberately: it
-introduces concurrency into code with module-level mutable state (`_RL`, the
-translator's caches), so it wants a read of that state and a test, not a
-one-word substitution on a live service. That is the curator's call.
+*Fixed 2026-08-13*, after the curator watched it happen: a `curl` to the page
+hung while a browser tab waited on a completion. `ThreadingHTTPServer`, with
+the read the audit asked for rather than a bare substitution — the rate
+limiter's deque and the development module-reloader are behind locks, the
+reloader being the dangerous one, since reloading a module under a second
+thread is a real hazard (and it only runs off the public instance).
+Everything else in the request path is per-call. Measured after: a model call
+taking 4.8s no longer delays a page request issued one second into it —
+0.008s, against the full 4.8s wait it would have suffered before.
 
 ### 2. The exception message is returned to the client — LOW (disclosure)
 

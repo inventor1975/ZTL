@@ -342,17 +342,10 @@ $("lang").onclick = async () => {
   await loadSpec();
   await loadExamples();
   chrome();
-  // one row of each kind, so the first screen shows what the table is FOR
-  // rather than an empty grid: an invoice line, its ceiling, and the liar.
-  ROWS = [
-    { name: "line", means: "the invoice line", status: "verified",
-      ground: "inv-17", ground_kind: "document", value: "1500", unit: "RUB" },
-    { name: "budget", means: "the ceiling", status: "verified",
-      ground: "order-4", ground_kind: "document", value: "5000", unit: "RUB" },
-    { name: "L", means: "this sentence is false", status: "defined",
-      ground: "~Tr(L)", ground_kind: "document" },
-  ];
-  drawGrid();
-  $("claim").value = "line <= budget";
-  run();
+  // ONE EMPTY ROW, and nothing runs. The first version seeded three rows and
+  // ran them on load, which also fired a model call on every page open — a
+  // request to a provider per visitor, unasked. The way in is the examples
+  // drop-down or the question box; the table starts as a table.
+  addRow();
+  $("report").innerHTML = `<p class="muted">${esc(t("nothing"))}</p>`;
 })();

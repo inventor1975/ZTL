@@ -183,6 +183,16 @@ single marking and the surprise exam is monotone time; only Berry needs an
 expire. v1.1 is published (DOI 10.5281/zenodo.21916017), so this is a v1.2 line.
 The Berry sentences are correct as they stand.
 
+**The docket describes a studio flow that no longer exists.** §7 tells the
+reader to "press Validate — the studio shows a human back-reading of the formal
+record — then Run on the core". Studio v2 became the studio on 2026-08-13 and
+has neither a Validate button nor a back-reading; a table is filled and run.
+The curator's call, and the right one: an interface description ages, and no
+MEASURED claim is touched — the paper's collection of cases moved across entire
+and `tool/test_zfl2.py` asserts that all 26 are present. A v1.2 line, not a
+correction. v1 stays reachable at `/v1` because it costs nothing, not because
+the sentence needs propping up.
+
 **The docket's glossary overstates one ceiling.** It says the machine "records
 and cannot verify" both declarations. Since the shared-ancestor check went in,
 that is true only between documents. Also a v1.2 line.

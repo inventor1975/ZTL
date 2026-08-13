@@ -15,8 +15,9 @@ import json
 import os
 import sys
 import webbrowser
+import threading
 import traceback
-from http.server import HTTPServer, BaseHTTPRequestHandler
+from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 from threading import Timer
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -53,6 +54,7 @@ PUBLIC = os.environ.get("ZTLSTUDIO_PUBLIC") == "1"
 _LLM_ROUTES = {"/api/chat", "/api/emit", "/api/explain", "/api/repair",
                "/api/v2fill", "/api/v2comment"}
 _RL = defaultdict(deque)          # ip -> timestamps of free-AI calls
+_RL_LOCK = threading.Lock()       # the server is threaded; the deque is not
 _RL_MAX, _RL_WINDOW = 20, 600     # ≤20 free-AI calls / 10 min / IP
 
 
@@ -63,14 +65,15 @@ def _client_ip(handler):
 
 
 def _rate_ok(ip):
-    now = time.time()
-    q = _RL[ip]
-    while q and q[0] < now - _RL_WINDOW:
-        q.popleft()
-    if len(q) >= _RL_MAX:
-        return False
-    q.append(now)
-    return True
+    with _RL_LOCK:
+        now = time.time()
+        q = _RL[ip]
+        while q and q[0] < now - _RL_WINDOW:
+            q.popleft()
+        if len(q) >= _RL_MAX:
+            return False
+        q.append(now)
+        return True
 
 EXAMPLES = [
     # ------------------------------------------------ the docket: convicted
@@ -466,6 +469,7 @@ def api_assert(payload):
 _V2_CHAIN = ["ztl", "znum", "znumjudge", "znumsolve", "zpassport", "zbook",
              "zfl2", "zfl2examples", "zfl2doc", "translator", "translator2"]
 _MTIMES = {}
+_RELOAD_LOCK = threading.Lock()   # never reload a module under two threads
 
 
 def _refresh_dev():
@@ -474,6 +478,11 @@ def _refresh_dev():
     if PUBLIC:
         return
     import importlib
+    with _RELOAD_LOCK:
+        _refresh_locked(importlib)
+
+
+def _refresh_locked(importlib):
     for name in _V2_CHAIN:
         try:
             mod = importlib.import_module(name)
@@ -562,11 +571,19 @@ class Handler(BaseHTTPRequestHandler):
         # that needed it was written.
         self.path, _, query = self.path.partition("?")
         self.path = self.path or "/"
-        if self.path in ("/", "/index.html"):
-            with open(os.path.join(HERE, "static", "index.html"), "rb") as f:
-                self._send(200, f.read(), "text/html; charset=utf-8")
-        elif self.path in ("/v2", "/studio2"):
+        # v2 IS THE STUDIO from 2026-08-13; v1 stays reachable at /v1
+        # rather than being deleted, because §7 of the published paradox
+        # docket describes ITS flow — "press Validate … the studio shows a
+        # human back-reading … then Run on the core" — and v2 has neither a
+        # Validate button nor a back-reading yet. The collection itself did
+        # move across, entire, and a stand asserts it. Until the back-reading
+        # exists, an archived-but-live v1 is what keeps an issued sentence
+        # true.
+        if self.path in ("/", "/index.html", "/v2", "/studio2"):
             with open(os.path.join(HERE, "static", "studio2.html"), "rb") as f:
+                self._send(200, f.read(), "text/html; charset=utf-8")
+        elif self.path in ("/v1", "/v1.html", "/classic"):
+            with open(os.path.join(HERE, "static", "index.html"), "rb") as f:
                 self._send(200, f.read(), "text/html; charset=utf-8")
         elif self.path in ("/zfl", "/zfl.html"):
             # The ZFL reference, generated from the language itself by
@@ -664,4 +681,13 @@ if __name__ == "__main__":
               "tool/.<provider>_key.")
     if not PUBLIC:
         Timer(0.7, lambda: webbrowser.open(f"http://localhost:{PORT}")).start()
-    HTTPServer(("127.0.0.1", PORT), Handler).serve_forever()
+    # THREADED, from 2026-08-13. It was HTTPServer, which serves ONE request
+    # at a time, and the AI routes wait on a provider for up to ninety
+    # seconds — so a single slow completion froze the studio for everyone.
+    # The security audit named this and deliberately did not fix it,
+    # because threads plus module-level mutable state wants a look rather
+    # than a one-word substitution. The look: the rate limiter and the
+    # development module-reloader are now behind locks (a reload racing a
+    # request is the dangerous one, and it only exists off the public
+    # instance); everything else in the request path is per-call.
+    ThreadingHTTPServer(("127.0.0.1", PORT), Handler).serve_forever()

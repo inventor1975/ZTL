@@ -1,0 +1,142 @@
+# -*- coding: utf-8 -*-
+"""
+ZFL v2 end to end, with no browser in the way.
+
+The studio is the point of this work, but a language that can only be
+exercised through a web page is a language nobody can test. Everything the
+form will do — validate a cell, assemble the sheet, decide which
+instruments apply, run them — happens here first, headless and under
+assert, so the UI can be a view over something already known to work rather
+than the only place it works at all.
+
+Run:  python3 tool/test_zfl2.py
+"""
+import os
+import sys
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+import zfl2                                                      # noqa: E402
+
+MIXED = {
+    "rows": [
+        {"name": "line", "means": "the invoice line", "status": "verified",
+         "ground": "inv-17", "value": "1500", "unit": "RUB"},
+        {"name": "budget", "means": "the ceiling", "status": "verified",
+         "ground": "order-4", "value": "5000", "unit": "RUB"},
+        {"name": "rain", "means": "it is raining", "status": "unverified"},
+        {"name": "L", "means": "this sentence is false", "status": "defined",
+         "ground": "~Tr(L)"},
+    ],
+    "claim": "line <= budget",
+}
+
+
+def sec1_one_table_three_instruments():
+    print("-" * 72)
+    print("1. ONE TABLE, AND NOBODY DECLARED A GENRE")
+    r = zfl2.run(MIXED)
+    assert r["ok"], r["issues"]
+    print(f"   applies: {r['applies']}")
+    assert r["applies"] == {"numeric": True, "passport": True,
+                            "ledger": False, "judge": True}
+    rep = r["report"]
+    print(f"   assembled sheet    : {rep['numeric']['sheet']}")
+    print(f"   the invoice claim  : {rep['numeric']['disposition']}")
+    print(f"   the liar row       : {rep['passport'][0]['kind']} "
+          f"({rep['passport'][0]['detail'][:38]}…)")
+    assert rep["numeric"]["disposition"] == "EARNED"
+    assert rep["passport"][0]["kind"] == "PARADOX"
+    print("   Four rows in one table, and two instruments answered without")
+    print("   being chosen: the numeric floor compared roubles to roubles,")
+    print("   the passport office convicted the liar. In v1 these were two")
+    print("   genres, two tabs, and a declaration the writer had to get")
+    print("   right before writing anything.")
+
+
+def sec2_the_cells_are_checked_where_the_eye_is():
+    print("-" * 72)
+    print("2. ERRORS ADDRESSED TO A CELL, NOT TO A JSON PATH")
+    bad = {"rows": [
+        {"name": "a", "status": "verified"},
+        {"name": "a", "status": "nonsense"},
+        {"name": "L", "status": "defined", "ground": "~Tr(nowhere)"},
+    ], "claim": "a <= budget"}
+    issues = zfl2.validate(bad)
+    for i in issues:
+        if i["level"] == "error":
+            print(f"   {i['code']:16} {i['where']:18} {i['hint'][:44]}")
+    codes = {i["code"] for i in issues}
+    assert {"E_NOGROUND", "E_DUPNAME", "E_STATUS", "E_UNKNOWN_NAME"} <= codes
+    print("   A verified name with nothing backing it, a duplicate, a status")
+    print("   outside the four, a formula naming a row that does not exist —")
+    print("   each answered at the cell the person is looking at. The typo")
+    print("   in a name matters most: it is the commonest way to ask a")
+    print("   perfectly well-formed question about nothing at all.")
+
+
+def sec3_the_ledger_appears_when_it_is_wanted():
+    print("-" * 72)
+    print("3. TODAY'S LEDGER, REACHED FROM THE SAME TABLE")
+    doc = {"rows": [
+        {"name": "fee", "means": "the fee", "status": "verified",
+         "ground": "cert-7", "ground_kind": "certificate", "value": "100"},
+        {"name": "base", "means": "the base", "status": "verified",
+         "ground": "deed", "value": "80"},
+    ], "claim": "base <= fee"}
+    r = zfl2.run(doc)
+    assert r["ok"], r["issues"]
+    led = r["report"]["ledger"]
+    print(f"   applies: {r['applies']}")
+    for cid, v in led["claims"].items():
+        print(f"   {cid:6} {v['disposition']:8} {v['assurance']}")
+    print(f"   brackets: {led['brackets']}")
+    print(f"   {led['naming']['assumption']}")
+    assert r["applies"]["ledger"]
+    assert led["claims"]["fee"]["assurance"]["under_expiry"] == "exposed"
+    assert led["claims"]["base"]["assurance"]["under_expiry"] == "plain"
+    print("   One dropdown — 'kind of ground: certificate' — and the whole")
+    print("   of this morning's work arrives: the assurance frame, the trust")
+    print("   brackets, the naming assumption printed beside them. The user")
+    print("   never learns a syntax for any of it.")
+
+
+def sec4_the_spec_can_build_the_form_and_the_page():
+    print("-" * 72)
+    print("4. ONE SPEC BEHIND THE FORM, THE VALIDATOR AND THE PAGE")
+    for lang in ("en", "ru"):
+        spec = zfl2.form_spec(lang)
+        cols = spec["columns"]
+        assert len(cols) == len(zfl2.COLUMNS)
+        assert all(c["label"] and c["help"] for c in cols)
+        widgets = sorted({c["widget"] for c in cols})
+        print(f"   {lang}: {len(cols)} columns, widgets {widgets}")
+        for c in cols:
+            if c["widget"] in ("choice", "multi"):
+                assert c["options"] and all(o["label"] for o in c["options"])
+    req = [c["key"] for c in zfl2.form_spec()["columns"] if c["required"]]
+    cond = [c["key"] for c in zfl2.form_spec()["columns"]
+            if c["required_when"]]
+    print(f"   always required: {req}   required in context: {cond}")
+    assert req == ["name", "status"] and cond == ["ground"]
+    print("   The widget follows from the column's TYPE, so a dropdown, a")
+    print("   toggle and a stepper are not decisions the front-end makes —")
+    print("   they are read off the same table that the validator enforces")
+    print("   and the reference page will describe. Add a column here and")
+    print("   it appears in all three, or in none of them.")
+
+
+if __name__ == "__main__":
+    print("=" * 72)
+    print("ZFL v2 — the table, headless")
+    print("=" * 72)
+    sec1_one_table_three_instruments()
+    sec2_the_cells_are_checked_where_the_eye_is()
+    sec3_the_ledger_appears_when_it_is_wanted()
+    sec4_the_spec_can_build_the_form_and_the_page()
+    print("=" * 72)
+    print("ZFL2 GREEN — one table, the genre computed rather than declared,")
+    print("errors addressed to the cell the eye is on, and the numeric floor,")
+    print("the passport office and the ledger all reachable without choosing")
+    print("a tab or learning a syntax. The form and the reference page are")
+    print("views over the same spec the validator enforces.")

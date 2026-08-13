@@ -17,13 +17,23 @@
  header h1 { font-size:15px; margin:0; font-weight:600; letter-spacing:.02em; }
  header .sp { flex:1 }
  header a, header button { font-size:13px; }
- main { padding: 1.2em; max-width: 1180px; margin: 0 auto; }
- table.grid { border-collapse: collapse; width:100%; background:#fff; }
+ main { padding: 1.2em; max-width: 1320px; margin: 0 auto; }
+ /* the grid is wider than the page on a narrow window: it scrolls INSIDE
+    this box rather than pushing the whole layout off centre, which is what
+    it did before the curator pointed at the screenshot */
+ .gridwrap { overflow-x: auto; background:#fff;
+             border:1px solid var(--line); }
+ table.grid { border-collapse: collapse; width:100%; background:#fff;
+              table-layout: fixed; }
  .grid th, .grid td { border:1px solid var(--line); padding:3px 5px;
                       text-align:left; vertical-align:middle; }
  .grid th { background:#f0f0f0; font-weight:600; font-size:12px;
-            white-space:nowrap; }
- .grid th small { display:block; font-weight:400; color:#666; }
+            white-space:normal; }
+ .grid th small { display:block; font-weight:400; color:#666;
+                  font-size:11px; line-height:1.25; }
+ /* a dropdown must show its longest option, or a status reads "провере…" */
+ .grid select { min-width: 9.5em; }
+ .grid td:last-child, .grid th:last-child { width: 2em; }
  .grid input[type=text], .grid select { width:100%; box-sizing:border-box;
     border:1px solid transparent; background:transparent; padding:3px;
     font:inherit; }
@@ -61,7 +71,7 @@
 </header>
 
 <main>
-  <table class="grid" id="grid"></table>
+  <div class="gridwrap"><table class="grid" id="grid"></table></div>
   <div class="bar">
     <button class="rowbtn" id="addrow">+ <span data-t="addrow"></span></button>
   </div>

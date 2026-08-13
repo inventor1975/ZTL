@@ -17,7 +17,7 @@ const UI = {
         disposition: "disposition", cures: "what would settle it",
         sheet: "assembled sheet", verdict: "verdict", grade: "warranty",
         weak: "weak links", claims: "claims", brackets: "trust brackets",
-        assumed: "assumed and unverifiable" },
+        assumed: "assumed and unverifiable", eg: "e.g. " },
   ru: { advanced: "дополнительно", reference: "что такое ZFL?",
         addrow: "добавить строку", run: "запустить", claim: "утверждение",
         remove: "убрать строку",
@@ -29,7 +29,7 @@ const UI = {
         disposition: "диспозиция", cures: "что это решит",
         sheet: "собранный лист", verdict: "вердикт", grade: "гарантия",
         weak: "слабые звенья", claims: "притязания", brackets: "вилки доверия",
-        assumed: "принято на веру и непроверяемо" },
+        assumed: "принято на веру и непроверяемо", eg: "напр. " },
 };
 
 let LANG = new URLSearchParams(location.search).get("l") === "ru" ? "ru" : "en";
@@ -62,8 +62,11 @@ function widget(col, row, i) {
     return `<input type="checkbox" data-i="${i}" data-k="${esc(col.key)}"` +
            `${v ? " checked" : ""}>`;
   }
+  // "e.g." matters: a bare `1500` in an empty cell reads as a value that
+  // is already there, which is exactly how the first screenshot looked
+  const hint = (col.eg || [])[0];
   return `<input type="text" data-i="${i}" data-k="${esc(col.key)}" ` +
-         `value="${esc(v)}" placeholder="${esc((col.eg || [])[0] || "")}">`;
+         `value="${esc(v)}" placeholder="${hint ? esc(t("eg") + hint) : ""}">`;
 }
 
 function drawGrid() {

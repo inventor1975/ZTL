@@ -16,6 +16,7 @@
 <div class='lang' id='en'><h1>ZFL — the language of the studio</h1>
 <h2>Why a table and not a syntax</h2><p>Everything you write here is one document: a list of NAMES, each saying where it stands with you, plus what you CLAIM about them. There is no genre to declare and no mode to pick. Which instruments answer — the numeric floor, the passport office, the ledger, the judge — follows from which cells you filled.</p>
 <h2>The one rule underneath</h2><p>Truth is not granted on credit. A name is verified when a verification was produced, and the ground column is where you say what produced it. A name with nothing backing it is not false — it is unverified, which is an honest third answer and the reason this logic exists.</p>
+<h2>Asking for a number</h2><p>Put `?` in a value and the row stops being an answer and becomes a question. `x = ?` with a claim of `x - 10 = 20` is answered: x is 30, and earned. This is the one cell that changes what the machine DOES — everywhere else you are telling it what you know, and here you are asking.</p>
 <h2>Where formulas survive</h2><p>In two cells only. In GROUND, when a name is defined by a formula over other names — that is how self-reference is written, and it is why the liar needs no special mode. And in CLAIM, which is what you are actually asserting.</p>
 <h2>the columns of a row</h2><table><tr><th>column</th><th>what it is</th><th>required</th><th>options / examples</th></tr>
 <tr><td><b>name</b></td><td>what we call it; formulas use this</td><td>always</td><td>line · budget · L</td></tr>
@@ -46,6 +47,19 @@
 <tr><td><code>&lt;</code></td><td>less than</td></tr>
 <tr><td><code>&gt;</code></td><td>greater than</td></tr>
 </table>
+<h2>arithmetic</h2><table>
+<tr><td><code>*</code></td><td>times</td></tr>
+<tr><td><code>+</code></td><td>plus</td></tr>
+<tr><td><code>-</code></td><td>minus</td></tr>
+<tr><td><code>/</code></td><td>divided by</td></tr>
+<tr><td><code>sum(a,b,…)</code></td><td>the sum of several — the same as a + b + …</td></tr>
+<tr><td><code>( )</code></td><td>brackets, to say what goes first</td></tr>
+</table>
+<h2>what can go in a value</h2><table>
+<tr><td><code>1500</code></td><td>a number you have measured or read off a document</td></tr>
+<tr><td><code>[0,10]</code></td><td>a box: somewhere in this range, and the machine keeps the range rather than picking a point</td></tr>
+<tr><td><code>?</code></td><td>A QUESTION. You do not know it and you are asking. If the rest of the table determines it, the solver answers with the value AND the provenance it inherited — `x = 30, earned`. If it does not, you get told what would settle it.</td></tr>
+</table>
 <h2>a worked example</h2><table><tr><th>column</th><th>means</th><th>status</th><th>ground</th><th>value</th></tr>
 <tr><td>line</td><td>the invoice line</td><td>verified</td><td>inv-17</td><td>1500</td></tr>
 <tr><td>budget</td><td>the ceiling</td><td>verified</td><td>order-4</td><td>5000</td></tr>
@@ -69,6 +83,7 @@
 </table></div><div class='lang' id='ru' hidden><h1>ZFL — язык студии</h1>
 <h2>Почему таблица, а не синтаксис</h2><p>Всё, что вы здесь пишете, — один документ: список ИМЁН, каждое из которых говорит, откуда оно у вас, плюс то, что вы про них УТВЕРЖДАЕТЕ. Никакого жанра объявлять не надо и режим выбирать не надо. Какие приборы ответят — числовой пол, паспортный стол, тетрадь, судья — следует из того, какие клетки вы заполнили.</p>
 <h2>Правило, лежащее под всем</h2><p>Истина не даётся в кредит. Имя проверено, когда проверка произведена, и колонка «основание» — это место, где вы говорите, чем именно. Имя без основания не ложно — оно НЕ ПРОВЕРЕНО, и это честный третий ответ, ради которого вся эта логика и существует.</p>
+<h2>Как спросить число</h2><p>Поставьте `?` в величину — и строка перестаёт быть ответом и становится вопросом. `x = ?` при утверждении `x - 10 = 20` получает ответ: x равен 30, и заработан. Это единственная клетка, которая меняет то, что машина ДЕЛАЕТ: везде вы сообщаете ей, что знаете, а здесь — спрашиваете.</p>
 <h2>Где остаются формулы</h2><p>Ровно в двух клетках. В ОСНОВАНИИ — когда имя определено формулой через другие имена; так пишется самоссылка, и поэтому лжецу не нужен отдельный режим. И в УТВЕРЖДЕНИИ — том, что вы, собственно, заявляете.</p>
 <h2>колонки строки</h2><table><tr><th>колонка</th><th>что это</th><th>обязательна</th><th>варианты / примеры</th></tr>
 <tr><td><b>имя</b></td><td>как называем; им же пользуемся в формулах</td><td>всегда</td><td>line · budget · L</td></tr>
@@ -98,6 +113,19 @@
 <tr><td><code>==</code></td><td>равно</td></tr>
 <tr><td><code>&lt;</code></td><td>меньше</td></tr>
 <tr><td><code>&gt;</code></td><td>больше</td></tr>
+</table>
+<h2>арифметика</h2><table>
+<tr><td><code>*</code></td><td>умножить</td></tr>
+<tr><td><code>+</code></td><td>плюс</td></tr>
+<tr><td><code>-</code></td><td>минус</td></tr>
+<tr><td><code>/</code></td><td>разделить</td></tr>
+<tr><td><code>sum(a,b,…)</code></td><td>сумма нескольких — то же, что a + b + …</td></tr>
+<tr><td><code>( )</code></td><td>скобки — чтобы сказать, что раньше</td></tr>
+</table>
+<h2>что можно писать в величине</h2><table>
+<tr><td><code>1500</code></td><td>число, которое вы измерили или прочли в документе</td></tr>
+<tr><td><code>[0,10]</code></td><td>коробка: где-то в этих пределах, и машина хранит пределы, а не выбирает точку</td></tr>
+<tr><td><code>?</code></td><td>ВОПРОС. Вы его не знаете и спрашиваете. Если остальная таблица его определяет, решатель отвечает величиной И происхождением, которое она унаследовала — `x = 30, заработано`. Если не определяет — вам скажут, что это решит.</td></tr>
 </table>
 <h2>разобранный пример</h2><table><tr><th>колонка</th><th>значит</th><th>статус</th><th>основание</th><th>величина</th></tr>
 <tr><td>line</td><td>the invoice line</td><td>verified</td><td>inv-17</td><td>1500</td></tr>

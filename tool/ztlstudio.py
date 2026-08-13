@@ -512,7 +512,15 @@ class Handler(BaseHTTPRequestHandler):
             path = os.path.join(HERE, "static", "zfl.html")
             if not PUBLIC:
                 try:
+                    # RELOAD, not just import: a long-running dev server
+                    # holds the generator from process start, so without
+                    # this it regenerates the page from stale code and
+                    # overwrites the freshly built file with the old one.
+                    import importlib
+                    import zfl2
                     import zfl2doc
+                    importlib.reload(zfl2)
+                    importlib.reload(zfl2doc)
                     open(path, "w", encoding="utf-8").write(zfl2doc.page())
                 except Exception:
                     pass

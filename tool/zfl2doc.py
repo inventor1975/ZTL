@@ -74,6 +74,12 @@ PROSE = {
          "what produced it. A name with nothing backing it is not false — it "
          "is unverified, which is an honest third answer and the reason this "
          "logic exists."),
+        ("Asking for a number",
+         "Put `?` in a value and the row stops being an answer and becomes a "
+         "question. `x = ?` with a claim of `x - 10 = 20` is answered: x is "
+         "30, and earned. This is the one cell that changes what the machine "
+         "DOES — everywhere else you are telling it what you know, and here "
+         "you are asking."),
         ("Where formulas survive",
          "In two cells only. In GROUND, when a name is defined by a formula "
          "over other names — that is how self-reference is written, and it "
@@ -92,6 +98,12 @@ PROSE = {
          "произведена, и колонка «основание» — это место, где вы говорите, "
          "чем именно. Имя без основания не ложно — оно НЕ ПРОВЕРЕНО, и это "
          "честный третий ответ, ради которого вся эта логика и существует."),
+        ("Как спросить число",
+         "Поставьте `?` в величину — и строка перестаёт быть ответом и "
+         "становится вопросом. `x = ?` при утверждении `x - 10 = 20` "
+         "получает ответ: x равен 30, и заработан. Это единственная клетка, "
+         "которая меняет то, что машина ДЕЛАЕТ: везде вы сообщаете ей, что "
+         "знаете, а здесь — спрашиваете."),
         ("Где остаются формулы",
          "Ровно в двух клетках. В ОСНОВАНИИ — когда имя определено формулой "
          "через другие имена; так пишется самоссылка, и поэтому лжецу не "
@@ -104,12 +116,19 @@ HEAD = {"en": ("ZFL — the language of the studio", "column", "required",
                "always", "in context", "no", "operators", "error codes",
                "a worked example", "means", "status", "ground",
                "what it is", "options / examples", "the document itself",
-               "value", "the columns of a row"),
+               "value", "the columns of a row", "what can go in a value",
+               "arithmetic"),
         "ru": ("ZFL — язык студии", "колонка", "обязательна",
                "всегда", "по условию", "нет", "операторы", "коды ошибок",
                "разобранный пример", "значит", "статус", "основание",
                "что это", "варианты / примеры", "сам документ",
-               "величина", "колонки строки")}
+               "величина", "колонки строки", "что можно писать в величине",
+               "арифметика")}
+
+
+def column_examples(key):
+    """The examples a column advertises, read off the spec."""
+    return (zfl2.column(key) or {}).get("eg", [])
 
 
 def codes_in_source():
@@ -133,6 +152,53 @@ OP_HELP = {
     "==": ("equal to", "равно"), "<": ("less than", "меньше"),
     ">": ("greater than", "больше"),
 }
+
+
+# The three shapes a VALUE cell can take. `?` was documented as one of them
+# in a clause at the end of a help line, which the curator rightly called
+# not designating it: it is not a formatting option among others, it is the
+# switch that turns the judge into a SOLVER. Every example the value column
+# offers must appear here, checked below, so a fourth form cannot be added
+# without a word about what it does.
+VALUE_HELP = {
+    "1500": ("a number you have measured or read off a document",
+             "число, которое вы измерили или прочли в документе"),
+    "[0,10]": ("a box: somewhere in this range, and the machine keeps the "
+               "range rather than picking a point",
+               "коробка: где-то в этих пределах, и машина хранит пределы, "
+               "а не выбирает точку"),
+    "?": ("A QUESTION. You do not know it and you are asking. If the rest of "
+          "the table determines it, the solver answers with the value AND "
+          "the provenance it inherited — `x = 30, earned`. If it does not, "
+          "you get told what would settle it.",
+          "ВОПРОС. Вы его не знаете и спрашиваете. Если остальная таблица "
+          "его определяет, решатель отвечает величиной И происхождением, "
+          "которое она унаследовала — `x = 30, заработано`. Если не "
+          "определяет — вам скажут, что это решит."),
+}
+
+
+# ARITHMETIC, which the reference did not mention at all until the curator
+# pointed it out: `x - 10 = 20` works and nothing on this page said `-`
+# existed. The symbols are read out of the numeric reader's own tag table,
+# so a fifth operation cannot appear there without appearing here.
+ARITH_HELP = {
+    "+": ("plus", "плюс"), "-": ("minus", "минус"),
+    "*": ("times", "умножить"), "/": ("divided by", "разделить"),
+    "sum(a,b,…)": ("the sum of several — the same as a + b + …",
+                   "сумма нескольких — то же, что a + b + …"),
+    "( )": ("brackets, to say what goes first",
+            "скобки — чтобы сказать, что раньше"),
+}
+
+
+def arithmetic():
+    """The operations the numeric reader accepts, from its own table."""
+    import znumjudge
+    src = open(znumjudge.__file__, encoding="utf-8").read()
+    m = re.search(r'_TAG = \{([^}]*)\}', src)
+    ops = re.findall(r'"([^"]+)":', m.group(1)) if m else []
+    return sorted(ops) + ["sum(a,b,…)", "( )"]
 
 
 def operators():
@@ -194,6 +260,20 @@ def render(lang="en"):
                      f"<td>{_esc(en if lang == 'en' else ru)}</td></tr>")
     parts.append("</table>")
 
+    parts.append(f"<h2>{_esc(h[18])}</h2><table>")
+    for op in arithmetic():
+        en, ru = ARITH_HELP.get(op, ("—", "—"))
+        parts.append(f"<tr><td><code>{_esc(op)}</code></td>"
+                     f"<td>{_esc(en if lang == 'en' else ru)}</td></tr>")
+    parts.append("</table>")
+
+    parts.append(f"<h2>{_esc(h[17])}</h2><table>")
+    for form in column_examples("value"):
+        en, ru = VALUE_HELP.get(form, ("—", "—"))
+        parts.append(f"<tr><td><code>{_esc(form)}</code></td>"
+                     f"<td>{_esc(en if lang == 'en' else ru)}</td></tr>")
+    parts.append("</table>")
+
     parts.append(f"<h2>{_esc(h[8])}</h2><table><tr>"
                  f"<th>{_esc(h[1])}</th><th>{_esc(h[9])}</th>"
                  f"<th>{_esc(h[10])}</th><th>{_esc(h[11])}</th>"
@@ -250,10 +330,14 @@ t(new URLSearchParams(location.search).get('l') || 'en');
 
 
 def main():
-    missing = (codes_in_source() - set(CODE_HELP)) | (
-        set(operators()) - set(OP_HELP))
-    stale = (set(CODE_HELP) - codes_in_source()) | (
-        set(OP_HELP) - set(operators()))
+    missing = ((codes_in_source() - set(CODE_HELP))
+               | (set(operators()) - set(OP_HELP))
+               | (set(column_examples("value")) - set(VALUE_HELP))
+               | (set(arithmetic()) - set(ARITH_HELP)))
+    stale = ((set(CODE_HELP) - codes_in_source())
+             | (set(OP_HELP) - set(operators()))
+             | (set(VALUE_HELP) - set(column_examples("value")))
+             | (set(ARITH_HELP) - set(arithmetic())))
     print(f"codes raised by the validator: {len(codes_in_source())}")
     if missing or stale:
         print(f"  RED — undocumented: {sorted(missing)}")

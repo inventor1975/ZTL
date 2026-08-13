@@ -54,7 +54,8 @@ sys.path.insert(0, _ROOT)
 
 from ztl import T, F, Z, IMP                                    # noqa: E402
 from zbook import (judge_book, fallout, census, _order,          # noqa: E402
-                   trust_surface, trust_interval, cost)
+                   trust_surface, trust_interval, cost,
+                   naming_assumption)
 import zsweep as S                                              # noqa: E402
 import zledger as L                                             # noqa: E402
 import zclassify as C                                           # noqa: E402
@@ -294,6 +295,15 @@ def sec4_the_trust_surface_of_our_own_corpus(book):
     print("   to disbelieve. That is the strongest thing this book can say")
     print("   about itself, and unlike the sentence above it, it is checked")
     print("   rather than promised.")
+    na = naming_assumption(book)
+    print(f"   ASSUMED and unverifiable: {na['assumption']}")
+    print(f"   {na['names']}")
+    assert na["count"] == 6
+    print("   Six names, and a human can see they are six different things —")
+    print("   five module names and one citation. That is the whole check")
+    print("   available: the machine cannot tell `zsweep` from a second name")
+    print("   for `zsweep`, so it prints the list beside the numbers rather")
+    print("   than pretending to have verified it.")
 
 
 def sec5_what_this_cannot_see():

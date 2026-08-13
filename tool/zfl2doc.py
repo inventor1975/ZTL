@@ -90,11 +90,16 @@ PROSE = {
          "30, and earned. This is the one cell that changes what the machine "
          "DOES — everywhere else you are telling it what you know, and here "
          "you are asking."),
-        ("Where formulas survive",
-         "In two cells only. In GROUND, when a name is defined by a formula "
+        ("Where formulas survive, and the one cell that reads two ways",
+         "In two cells only. In GROUND, when a name is DEFINED by a formula "
          "over other names — that is how self-reference is written, and it "
          "is why the liar needs no special mode. And in CLAIM, which is what "
-         "you are actually asserting."),
+         "you are actually asserting. Note what the ground cell is doing: "
+         "for a verified name it holds `inv-17`, an opaque name the machine "
+         "never looks inside and which means nothing but its own identity; "
+         "for a defined name it holds `~Tr(L)`, a formula the machine reads "
+         "and evaluates. The status decides which, and the form asks again "
+         "whenever you change it."),
     ],
     "ru": [
         ("Почему таблица, а не синтаксис",
@@ -114,11 +119,16 @@ PROSE = {
          "получает ответ: x равен 30, и заработан. Это единственная клетка, "
          "которая меняет то, что машина ДЕЛАЕТ: везде вы сообщаете ей, что "
          "знаете, а здесь — спрашиваете."),
-        ("Где остаются формулы",
-         "Ровно в двух клетках. В ОСНОВАНИИ — когда имя определено формулой "
+        ("Где остаются формулы, и клетка, которая читается двояко",
+         "Ровно в двух клетках. В ОСНОВАНИИ — когда имя ОПРЕДЕЛЕНО формулой "
          "через другие имена; так пишется самоссылка, и поэтому лжецу не "
          "нужен отдельный режим. И в УТВЕРЖДЕНИИ — том, что вы, собственно, "
-         "заявляете."),
+         "заявляете. Заметьте, что делает клетка основания: у проверенного "
+         "имени там `inv-17` — непрозрачное имя, внутрь которого машина не "
+         "смотрит и которое не значит ничего, кроме собственного тождества; "
+         "у определённого — `~Tr(L)`, формула, которую машина читает и "
+         "вычисляет. Что именно там ждут, решает статус, и форма "
+         "переспрашивает, как только вы его меняете."),
     ],
 }
 

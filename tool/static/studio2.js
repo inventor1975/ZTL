@@ -56,6 +56,10 @@ async function loadSpec() {
 // ---------------------------------------------------------------- the grid
 function widget(col, row, i) {
   const v = row[col.key] ?? col.default ?? "";
+  // a cell whose meaning depends on another cell must SAY so, per row:
+  // `inv-17` and `~Tr(L)` are not the same kind of thing, and the status
+  // is what decides which one this cell wants
+  const mode = col.help_when && col.help_when[row.status || ""];
   if (col.widget === "choice") {
     const opts = col.options.map(o =>
       `<option value="${esc(o.value)}"${o.value === v ? " selected" : ""}>` +
@@ -68,9 +72,12 @@ function widget(col, row, i) {
   }
   // "e.g." matters: a bare `1500` in an empty cell reads as a value that
   // is already there, which is exactly how the first screenshot looked
-  const hint = (col.eg || [])[0];
+  const hint = mode ? mode.eg : (col.eg || [])[0];
+  const title = mode ? mode.help : col.help;
   return `<input type="text" data-i="${i}" data-k="${esc(col.key)}" ` +
-         `value="${esc(v)}" placeholder="${hint ? esc(t("eg") + hint) : ""}">`;
+         `value="${esc(v)}" title="${esc(title)}" ` +
+         `${mode && !mode.eg ? 'class="dim" ' : ""}` +
+         `placeholder="${hint ? esc(t("eg") + hint) : ""}">`;
 }
 
 function drawGrid() {
@@ -199,6 +206,9 @@ document.addEventListener("input", e => {
   if (i == null) return;
   const k = e.target.dataset.k;
   ROWS[i][k] = e.target.type === "checkbox" ? e.target.checked : e.target.value;
+  // changing the status changes what the ground cell is asking for, so the
+  // row is drawn again rather than left showing the previous question
+  if (k === "status") { drawGrid(); }
 });
 document.addEventListener("click", e => {
   const d = e.target.dataset?.del;

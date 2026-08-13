@@ -11,12 +11,13 @@
  h1 { font-size: 24px; } h2 { font-size: 17px; margin-top: 1.6em; }
  nav { float: right; font-size: 13px; }
 </style>
-<nav><a href="#" onclick="t('en')">EN</a> · <a href="#" onclick="t('ru')">RU</a></nav>
+<nav><a href="?l=en" onclick="return t('en')">EN</a> ·
+ <a href="?l=ru" onclick="return t('ru')">RU</a></nav>
 <div class='lang' id='en'><h1>ZFL — the language of the studio</h1>
 <h2>Why a table and not a syntax</h2><p>Everything you write here is one document: a list of NAMES, each saying where it stands with you, plus what you CLAIM about them. There is no genre to declare and no mode to pick. Which instruments answer — the numeric floor, the passport office, the ledger, the judge — follows from which cells you filled.</p>
 <h2>The one rule underneath</h2><p>Truth is not granted on credit. A name is verified when a verification was produced, and the ground column is where you say what produced it. A name with nothing backing it is not false — it is unverified, which is an honest third answer and the reason this logic exists.</p>
 <h2>Where formulas survive</h2><p>In two cells only. In GROUND, when a name is defined by a formula over other names — that is how self-reference is written, and it is why the liar needs no special mode. And in CLAIM, which is what you are actually asserting.</p>
-<h2>columns</h2><table><tr><th>column</th><th>what it is</th><th>required</th><th>options / examples</th></tr>
+<h2>the columns of a row</h2><table><tr><th>column</th><th>what it is</th><th>required</th><th>options / examples</th></tr>
 <tr><td><b>name</b></td><td>what we call it; formulas use this</td><td>always</td><td>line · budget · L</td></tr>
 <tr><td><b>means</b></td><td>what it MEANS for this to be true</td><td>no</td><td>the invoice line · this sentence is false</td></tr>
 <tr><td><b>status</b></td><td>where it stands with us</td><td>always</td><td>verified · refuted · not verified · defined</td></tr>
@@ -69,7 +70,7 @@
 <h2>Почему таблица, а не синтаксис</h2><p>Всё, что вы здесь пишете, — один документ: список ИМЁН, каждое из которых говорит, откуда оно у вас, плюс то, что вы про них УТВЕРЖДАЕТЕ. Никакого жанра объявлять не надо и режим выбирать не надо. Какие приборы ответят — числовой пол, паспортный стол, тетрадь, судья — следует из того, какие клетки вы заполнили.</p>
 <h2>Правило, лежащее под всем</h2><p>Истина не даётся в кредит. Имя проверено, когда проверка произведена, и колонка «основание» — это место, где вы говорите, чем именно. Имя без основания не ложно — оно НЕ ПРОВЕРЕНО, и это честный третий ответ, ради которого вся эта логика и существует.</p>
 <h2>Где остаются формулы</h2><p>Ровно в двух клетках. В ОСНОВАНИИ — когда имя определено формулой через другие имена; так пишется самоссылка, и поэтому лжецу не нужен отдельный режим. И в УТВЕРЖДЕНИИ — том, что вы, собственно, заявляете.</p>
-<h2>колонкаs</h2><table><tr><th>колонка</th><th>что это</th><th>обязательна</th><th>варианты / примеры</th></tr>
+<h2>колонки строки</h2><table><tr><th>колонка</th><th>что это</th><th>обязательна</th><th>варианты / примеры</th></tr>
 <tr><td><b>имя</b></td><td>как называем; им же пользуемся в формулах</td><td>всегда</td><td>line · budget · L</td></tr>
 <tr><td><b>значит</b></td><td>что означает истинность этого имени</td><td>нет</td><td>the invoice line · this sentence is false</td></tr>
 <tr><td><b>статус</b></td><td>откуда оно у нас</td><td>всегда</td><td>проверено · опровергнуто · не проверено · определено</td></tr>
@@ -119,5 +120,16 @@
 <tr><td><code>W_NO_GLOSS</code></td><td>нет пояснения — некому проверить, то ли значит имя</td></tr>
 <tr><td><code>W_UNIT_NO_VALUE</code></td><td>единица без величины</td></tr>
 </table></div>
-<script>function t(l){for(const d of document.querySelectorAll('.lang'))
- d.hidden = d.id !== l;}</script>
+<script>
+// ?l=ru opens the page already in Russian, so a link can be handed to
+// somebody in their own language. Switching also rewrites the address bar,
+// so whatever you are reading is what you copy.
+function t(l) {
+  if (l !== 'en' && l !== 'ru') l = 'en';
+  for (const d of document.querySelectorAll('.lang')) d.hidden = d.id !== l;
+  document.documentElement.lang = l;
+  history.replaceState(null, '', '?l=' + l);
+  return false;
+}
+t(new URLSearchParams(location.search).get('l') || 'en');
+</script>

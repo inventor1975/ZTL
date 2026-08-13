@@ -215,6 +215,12 @@ ARITH_HELP = {
                    "сумма нескольких — то же, что a + b + …"),
     "( )": ("brackets, to say what goes first",
             "скобки — чтобы сказать, что раньше"),
+    "-x": ("a leading minus: the sign of a term, not the operation between "
+           "two — `-x + 100 = 70` is a fair question and was not accepted "
+           "until 2026-08-13",
+           "минус в начале: знак самого члена, а не действие между двумя — "
+           "`-x + 100 = 70` законный вопрос, и до 2026-08-13 он не "
+           "принимался"),
 }
 
 
@@ -224,7 +230,7 @@ def arithmetic():
     src = open(znumjudge.__file__, encoding="utf-8").read()
     m = re.search(r'_TAG = \{([^}]*)\}', src)
     ops = re.findall(r'"([^"]+)":', m.group(1)) if m else []
-    return sorted(ops) + ["sum(a,b,…)", "( )"]
+    return sorted(ops) + ["sum(a,b,…)", "( )", "-x"]
 
 
 def operators():

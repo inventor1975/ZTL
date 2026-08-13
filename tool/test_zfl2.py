@@ -129,7 +129,8 @@ def sec3b_what_the_ground_column_is_actually_for():
 def sec4_an_unknown_is_a_question_not_a_gap():
     print("-" * 72)
     print("4. ASKING FOR A NUMBER, WHICH IS WHAT PEOPLE ACTUALLY WANT")
-    for claim in ("x - 10 = 20", "x - 10 == 20", "sum(x,x) = 60"):
+    for claim in ("x - 10 = 20", "x - 10 == 20", "sum(x,x) = 60",
+                  "-x + 100 = 70"):
         doc = {"rows": [{"name": "x", "means": "the unknown",
                          "status": "unverified", "value": "?"}],
                "claim": claim}
@@ -140,6 +141,9 @@ def sec4_an_unknown_is_a_question_not_a_gap():
         print(f"   {claim:16} -> {n['disposition']:8} x = {sv['lo']}"
               f"  ({sv['prov']})")
         assert n["disposition"] == "EARNED" and sv["lo"] == "30"
+        # the last one carries a UNARY minus, which the arithmetic reader
+        # could not parse until the curator asked it to solve an equation
+        # that opened with one
         assert sv["pinned"] and sv["prov"] == "earned"
     print("   `x=?` in the table is a QUESTION, not a missing cell, so the")
     print("   solver answers it — and answers with the provenance the value")

@@ -268,6 +268,29 @@ def _false_independence(alts, deps):
 # the papers — and the correspondence is stated here instead.
 
 
+def _perpetual_ground(alt, judged):
+    """Can this ground be taken away at all?
+
+    Two ways to answer, and they are worth a long way apart. `performed/`
+    is DECLARED: the author says the ground takes no inputs and the machine
+    believes them. A cited claim that is itself perpetual is CHECKED: the
+    book descends into it and finds nothing that could be withdrawn. The
+    descent bottoms out at a claim with NO QUANTITIES — `1 == 1` — which
+    demanded nothing in the first place, so there is nothing to remove.
+
+    That is the curator's question answered (2026-08-13): nullarity IS
+    catchable by descent, and the declaration is only the fallback for
+    grounds the book cannot see into. VR's `[]` is the same move at a
+    bigger scale — the elaborator walks the whole construction and reports
+    that it leans on nothing."""
+    if alt.startswith(PERFORMED):
+        return True
+    if alt.startswith(CITE):
+        return (judged.get(alt[len(CITE):], {})
+                .get("assurance", {}).get("under_expiry") == "perpetual")
+    return False
+
+
 def _assurance(tested, pending, clocks, perpetual):
     return {"tested": "declared" if tested else "documented",
             "under_learning": "pending" if pending else "settled",
@@ -370,7 +393,7 @@ def judge_book(claims, strict=False):
                 # was a label lying about arithmetic that was already right:
                 # the insured claim survived expiry and the field said it
                 # was exposed.)
-                if all(a.startswith(PERFORMED) for a in standing):
+                if all(_perpetual_ground(a, out) for a in standing):
                     perpetual.append(name)
                 exposed = [a for a in standing if _clocked(a, out)]
                 if len(exposed) == len(standing):
@@ -401,9 +424,9 @@ def judge_book(claims, strict=False):
             "weakened_by": weakened,
             "carried_by": carried,
             "declared": declared,
-            "assurance": _assurance(declared, r.get("next_check"),
-                                    clocks, perpetual and
-                                    len(perpetual) == len(q)),
+            "assurance": _assurance(declared, r.get("next_check"), clocks,
+                                    not q or (perpetual and
+                                              len(perpetual) == len(q))),
             "warranty": "declared" if declared else "documented",
             "clock": clocks,
             "not_independent": unindependent,
@@ -942,9 +965,53 @@ def sec12_the_answer_is_a_bracket():
     print("   range it cannot. Right in the small, and totally.")
 
 
-def sec13_what_is_still_missing():
+DESCENT = [
+    ("k0", "1 == 1", ""),
+    ("k1", "x == 1", "x=1 earned:claim/k0"),
+    ("k2", "x == 1", "x=1 earned:performed/zero"),
+    ("k3", "x == 1", "x=1 earned:deed"),
+]
+
+
+def sec13_nullarity_is_catchable_by_descent():
     print("-" * 72)
-    print("13. WHAT IS STILL MISSING")
+    print("13. STAGE TEN: NULLARITY, CHECKED INSTEAD OF DECLARED")
+    res = judge_book(DESCENT)
+    for cid, _f, _d in DESCENT:
+        a = res[cid]["assurance"]
+        print(f"   {cid}  {res[cid]['disposition']:7} "
+              f"tested={a['tested']:10} expiry={a['under_expiry']}")
+    assert res["k0"]["assurance"] == {"tested": "documented",
+                                      "under_learning": "settled",
+                                      "under_expiry": "perpetual"}
+    assert res["k1"]["assurance"]["under_expiry"] == "perpetual"
+    assert res["k1"]["assurance"]["tested"] == "documented"
+    assert res["k2"]["assurance"]["tested"] == "declared"
+    iv = trust_interval(DESCENT)
+    print(f"   trust brackets: {iv}")
+    assert iv["deed"] == (1, 1) and iv["performed/zero"] == (0, 1)
+    print("   `performed/` was a LABEL: the author says a ground takes no")
+    print("   inputs and the machine believes them, which is why it costs a")
+    print("   bracket at all — [0, 1] here, and as wide as the subtree that")
+    print("   leans on it. k0 is not a label. It is a claim with NO")
+    print("   QUANTITIES — `1 == 1` — which demanded nothing in the first")
+    print("   place, so there is nothing anyone could withdraw. Its")
+    print("   perpetuity is computed, not asserted, and it is `documented`")
+    print("   rather than `declared`: it took nothing on trust at all.")
+    print("   k1 shows the descent carrying: a claim resting on k0 inherits")
+    print("   the perpetuity as a CHECKED property, because the book walked")
+    print("   down into its ground and found the bottom.")
+    print("   So nullarity is catchable after all, and the rule is exact:")
+    print("   checkable exactly where the ground is TRANSPARENT, declared")
+    print("   only where it is opaque. VR's `[]` is the same move at scale —")
+    print("   the elaborator walks the whole construction and reports that")
+    print("   it leans on nothing, which is why VR's zero is stronger than")
+    print("   any `performed/` here could be.")
+
+
+def sec14_what_is_still_missing():
+    print("-" * 72)
+    print("14. WHAT IS STILL MISSING")
     print("   Search. Nothing here finds the relevant stored claims for a")
     print("   new question — that is premise selection, a crowded field")
     print("   with strong tools (Sledgehammer and its kin), and this corpus")
@@ -968,7 +1035,8 @@ if __name__ == "__main__":
     sec10_and_why_the_scope_must_be_declared()
     sec11_one_frame_three_axes()
     sec12_the_answer_is_a_bracket()
-    sec13_what_is_still_missing()
+    sec13_nullarity_is_catchable_by_descent()
+    sec14_what_is_still_missing()
     print("=" * 72)
     print("ZBOOK GREEN — the book stores claims and grounds and never a")
     print("verdict: every reading recomputes. A snapshot carries the")

@@ -159,8 +159,15 @@ def sec3_the_machine_cannot_verify_it():
     print(f"   and the verdict itself: {v['disposition']} / "
           f"warranty {v['warranty']} / {v['declared']}")
     assert v["warranty"] == "declared"
-    print("   Nullarity is DECLARED, never verified. Anyone can buy immunity")
-    print("   with a prefix, and this file's machinery cannot stop them.")
+    print("   Nullarity is DECLARED here, and anyone can buy immunity with")
+    print("   a prefix — but only where the ground is OPAQUE. Where the book")
+    print("   can descend into it, nullarity is CHECKED rather than believed:")
+    print("   a claim with no quantities at all demanded nothing, so there")
+    print("   is nothing anyone could withdraw, and its perpetuity is")
+    print("   computed (`zbook` §13). The rule is exact — transparent")
+    print("   grounds are checked, opaque ones are declared — and it is")
+    print("   why VR's machine-confirmed `[]` is stronger than any label:")
+    print("   the elaborator descends through the whole construction.")
     print("   What it does instead is the whole of the gain: every claim of")
     print("   a structural stop is itemised and attributable. Agrippa's")
     print("   dogma horn is dangerous because it is SILENT — the stopping")

@@ -176,6 +176,25 @@ STANDS = [
     ("dilemmas/solved/sorites/sorites.py", ["SORITES GREEN",
                              "'some grain is a cliff' (H & ~H-) = F",
                              "the same sum against a cited norm: EARNED"]),
+    # The philosophical case stands. They were written 2026-08-08 and were
+    # never wired here — measured 2026-08-13: all five still green, but for
+    # three months they held by luck while the judge kept changing. The
+    # markers below pin the FINDING of each file, not merely its exit code.
+    ("dilemmas/plato_third_man.py", [
+        "ok  regress engine, all links unverified                                ON CREDIT T  until-verification weak=['g', 'n', 'r', 's']",
+        "ok  middle Plato: every premise granted — regress still not delivered   OPEN      F  until-verification weak=['r']"]),
+    ("dilemmas/agrippa.py", [
+        "ok  F1 inference itself, everything unverified                 EARNED    T hereditary         weak=['j', 'k', 'ra', 'rb', 'rc']",
+        "ok  F2 everything granted EXCEPT j                             OPEN      F until-verification weak=['j']"]),
+    ("dilemmas/hume_guillotine.py", [
+        "ok  F1 is -> ought, fact granted: nothing is delivered       OPEN      F until-verification weak=['o']",
+        "ok  F2 bridge in place: bare modus ponens, earned            EARNED    T hereditary         weak=['d', 'o']"]),
+    ("dilemmas/cogito.py", [
+        "ok  F1 t -> i, thinking granted: no delivery                 OPEN      F until-verification weak=['i']",
+        "ok  F2 bridge in place: bare modus ponens, earned            EARNED    T hereditary         weak=['i', 't']"]),
+    ("dilemmas/theseus.py", [
+        "ok  step 0: material T (ledger)       structural T (witness re-checked)",
+        "ok  step 1: material F (culprit n0)   structural T (witness re-checked)"]),
     ("dilemmas/agrippa_nullary.py", ["AGRIPPA-NULLARY GREEN",
                         "UNDERDETERMINED  settings=2",
                         "INTRINSIC        settings=1",

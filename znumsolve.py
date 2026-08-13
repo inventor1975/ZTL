@@ -224,6 +224,18 @@ def narrow(quantities, formula, rounds=MAX_ROUNDS):
                 narrowed = qty(lo, hi, q["prov"], q["witness"],
                                discrete=q["discrete"], unit=q["unit"],
                                sample=q.get("sample", False))
+                # WHO PAID FOR THIS BOUND — recorded here, where it is
+                # known, instead of being reconstructed downstream from
+                # the witness text. Reconstructing it was a real bug
+                # (found by conformance/solver_table.py on its first run):
+                # a narrowed quantity keeps its ORIGINAL witness, so
+                # `earned:doc` was read as the source quantity `doc` and
+                # crashed on lookup — and would silently have attributed
+                # the value to the wrong source had a document ever been
+                # named like a quantity.
+                narrowed["derived_from"] = sorted(
+                    set(q.get("derived_from") or [])
+                    | {o for o in names if o != name})
                 # a narrowed bound inherits the credit that produced it
                 if any(qs[o]["prov"] == CREDIT for o in names if o != name):
                     narrowed["prov"] = CREDIT
@@ -268,10 +280,9 @@ def solve_claim(formula, quantities, marks):
         if (before["lo"], before["hi"]) == (q["lo"], q["hi"]):
             continue                          # this one was not narrowed
         pinned = q["lo"] == q["hi"]
-        # who paid for it: the witness records the derivation
-        sources = ((q["witness"] or "").split(":", 1)[-1].split(",")
-                   if q["witness"] else [])
-        weak = [c for c in sources if c and quantities[c]["prov"] == CREDIT]
+        # who paid for it: the narrowing recorded its own sources
+        sources = [c for c in (q.get("derived_from") or []) if c in quantities]
+        weak = [c for c in sources if quantities[c]["prov"] == CREDIT]
         solved[name] = {"lo": q["lo"], "hi": q["hi"], "pinned": pinned,
                         "prov": q["prov"], "from": sources, "weak": weak}
         for c in weak:

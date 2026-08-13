@@ -21,11 +21,16 @@ grounds are CLAIMS the graph does check it and a shared ancestor refutes the
 declaration by name — that half is closed. Between external documents it is not,
 and cannot be.
 
-**Nullarity cannot be verified.** `earned:performed/x` asserts that a ground
-takes no inputs, so withdrawing it is not a move. Relabel an ordinary axiom and
-it collects the same immunity (`dilemmas/agrippa_nullary.py` §3). The promise
-here is disclosure, never detection: every such claim is itemized by name, which
-is more than Agrippa's dogmatic horn offers, since that one is silent by nature.
+**Nullarity cannot be verified — for OPAQUE grounds only.** Narrowed
+2026-08-13 on the curator's question, "can the descent not catch it?" It can.
+Where the book can descend into a ground, nullarity is COMPUTED: a claim with no
+quantities demanded nothing, so there is nothing anyone could withdraw, and
+claims resting on it inherit the perpetuity as a checked property (`zbook` §13).
+`earned:performed/x` remains a declaration, and remains unverifiable, only for
+grounds the book cannot see into — an act performed outside it. The rule is
+exact: transparent grounds are checked, opaque grounds are declared. It is also
+why VR's machine-confirmed `[]` is stronger than any label here could be, since
+the elaborator walks the whole construction and reports what it leans on.
 
 **Citations are honoured, never discovered.** The book computes what falls when
 a ground goes, but only along links a human wrote down. A dependence nobody

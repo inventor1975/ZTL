@@ -70,10 +70,17 @@ FILL_SYS = """You turn a person's question into one ZFL v2 document.
 
 RULES, and they are not stylistic:
 - Reply with the JSON object ALONE. No prose, no code fence.
-- Never invent a verification. If the person did not say what backs a fact,
-  its status is "unverified" and its ground is empty. Writing "verified" with
-  a made-up document name is the one thing you must never do here: this
-  system exists to refuse truth on credit, and you would be granting it.
+- NEVER INVENT A VERIFICATION, and this is the one rule the whole system
+  exists for. If the person did not say what backs a fact, its status is
+  "unverified" and its ground is EMPTY. Writing "verified" with a document
+  name they never mentioned is granting truth on credit, which is the
+  failure this machine was built to refuse.
+- THE EXAMPLES IN THE SCHEMA ARE FORMS, NOT CONTENT. `inv-17` and `order-4`
+  are shapes of a name; copying one into a story about sweets asserts an
+  invoice that does not exist. A ground must be a word the PERSON used. If
+  the fact comes from their own telling and nothing else, either leave the
+  status "unverified", or — when the story itself is the source — write
+  `the-story`, and nothing dressed up as a document.
 - "means" is not decoration. Write what it MEANS for the row to be TRUE, in
   {language}, so a reader can catch a name that lies (a name like `fresh`
   already means "not revoked").
@@ -133,6 +140,10 @@ You did not compute this and you cannot change it. The verdict, the
 passports, the brackets and the weak links come from the instruments; your
 job is to say what they mean in plain {language}, in at most six sentences.
 
+- MENTION ONLY WHAT IS IN THE REPORT. If there is no passport section, say
+  nothing about passports; if no bracket, nothing about brackets. The
+  vocabulary below is for TRANSLATING what is there, not a list of things to
+  bring up. Naming an instrument that did not speak is a false report.
 - Lead with the answer, then why.
 - "Unverified" is not "false" and not "unknown": it means no verification was
   produced. Say it that way.
@@ -141,6 +152,38 @@ job is to say what they mean in plain {language}, in at most six sentences.
   smoothing it over. You are a commentator, not an advocate.
 - Never restate the JSON. The reader can see the table.
 """
+
+
+def _invented_grounds(doc, history):
+    """Grounds the person never mentioned.
+
+    The machine cannot know whether `inv-17` exists — but it can see that
+    nobody in the conversation ever said it. A model reaching for a document
+    name out of the schema's own examples is the exact failure this corpus
+    refuses, so it is flagged rather than trusted. A warning, not an error:
+    the person may genuinely have an invoice they did not name in so many
+    words, and that judgement is theirs."""
+    # the sanctioned label for "the person's own telling" is not an
+    # invention — the prompt asks for it by name, and flagging it would
+    # teach the model to dress the same thing up as a document instead
+    TOLD = {"the-story", "the_story", "story", "рассказ", "условие",
+            "со-слов", "stated"}
+    said = " ".join(m.get("content", "") for m in history).lower()
+    out = []
+    for i, r in enumerate((doc.get("rows") or []), 1):
+        g = str(r.get("ground") or "").strip()
+        if not g or r.get("status") == "defined":
+            continue
+        stem = g.lower().replace("-", " ").split()[0]
+        if g.lower() in TOLD:
+            continue
+        if len(stem) > 2 and stem not in said and g.lower() not in said:
+            out.append({"level": "warn", "code": "W_AI_INVENTED_GROUND",
+                        "where": f"row {i} / ground",
+                        "hint": f"'{g}' was never mentioned — the model "
+                                f"supplied it. If no such document exists, "
+                                f"this row is unverified."})
+    return out
 
 
 def fill(history, lang="en", cfg=None):
@@ -159,7 +202,8 @@ def fill(history, lang="en", cfg=None):
     if doc is not None:
         issues = zfl2.validate(doc)
         if not any(i["level"] == "error" for i in issues):
-            return {"ok": True, "doc": doc, "issues": issues, "repaired": False}
+            return {"ok": True, "doc": doc, "repaired": False,
+                    "issues": issues + _invented_grounds(doc, history)}
     msgs += [{"role": "assistant", "content": raw},
              {"role": "user", "content":
               "That document was rejected:\n"
@@ -169,8 +213,8 @@ def fill(history, lang="en", cfg=None):
     doc2, parse_issues = _parse(raw2)
     if doc2 is None:
         return {"ok": False, "issues": parse_issues}
-    return {"ok": True, "doc": doc2, "issues": zfl2.validate(doc2),
-            "repaired": True}
+    return {"ok": True, "doc": doc2, "repaired": True,
+            "issues": zfl2.validate(doc2) + _invented_grounds(doc2, history)}
 
 
 def _parse(raw):

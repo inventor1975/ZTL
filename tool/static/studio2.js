@@ -19,7 +19,11 @@ const UI = {
         weak: "weak links", claims: "claims", brackets: "trust brackets",
         assumed: "assumed and unverifiable", eg: "e.g. ",
         solved: "solved", value: "value", from: "derived from",
-        prov: "provenance", still: "still a box" },
+        prov: "provenance", still: "still a box",
+        examples: "examples", send: "ask", commentary: "in plain language",
+        askph: "describe the question in your own words…",
+        thinking: "filling the table…", pick: "— pick —",
+        aioff: "no model key — the table and the verdict work without it" },
   ru: { advanced: "дополнительно", reference: "что такое ZFL?",
         addrow: "добавить строку", run: "запустить", claim: "утверждение",
         remove: "убрать строку",
@@ -33,7 +37,11 @@ const UI = {
         weak: "слабые звенья", claims: "притязания", brackets: "вилки доверия",
         assumed: "принято на веру и непроверяемо", eg: "напр. ",
         solved: "решено", value: "величина", from: "выведено из",
-        prov: "происхождение", still: "ещё коробка" },
+        prov: "происхождение", still: "ещё коробка",
+        examples: "примеры", send: "спросить", commentary: "по-человечески",
+        askph: "опишите вопрос своими словами…",
+        thinking: "заполняю таблицу…", pick: "— выберите —",
+        aioff: "ключа модели нет — таблица и вердикт работают и без неё" },
 };
 
 let LANG = new URLSearchParams(location.search).get("l") === "ru" ? "ru" : "en";
@@ -175,19 +183,100 @@ function showReport(r) {
   $("report").innerHTML = out.join("");
 }
 
+// ------------------------------------------------------- examples and chat
+let EX = null;
+
+async function loadExamples() {
+  EX = await fetch(`/api/v2examples?l=${LANG}`).then(r => r.json());
+  const k = $("exkind");
+  k.innerHTML = `<option value="">${esc(t("pick"))}</option>` +
+    EX.kinds.map(x => `<option value="${esc(x.key)}">${esc(x.label)}</option>`)
+      .join("");
+  fillItems("");
+}
+
+function fillItems(kind) {
+  const items = EX.items.filter(i => !kind || i.kind === kind);
+  $("exitem").innerHTML = `<option value="">${esc(t("pick"))}</option>` +
+    items.map((i, n) => `<option value="${n}">${esc(i.label)}</option>`)
+      .join("");
+  $("exitem").disabled = !kind;
+}
+
+function loadExample(kind, n) {
+  const items = EX.items.filter(i => !kind || i.kind === kind);
+  const doc = items[n] && items[n].doc;
+  if (!doc) return;
+  ROWS = JSON.parse(JSON.stringify(doc.rows));
+  $("claim").value = doc.claim || "";
+  drawGrid();
+  run();
+}
+
+function addMsg(role, text) {
+  const d = document.createElement("div");
+  d.className = "msg " + role;
+  d.textContent = text;
+  $("chat").appendChild(d);
+  $("chat").scrollTop = $("chat").scrollHeight;
+  return d;
+}
+
+let HISTORY = [];
+
+async function ask() {
+  const q = $("ask").value.trim();
+  if (!q) return;
+  $("ask").value = "";
+  addMsg("user", q);
+  HISTORY.push({ role: "user", content: q });
+  const pending = addMsg("sys", t("thinking"));
+  const r = await fetch("/api/v2fill", {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ history: HISTORY, lang: LANG }),
+  }).then(x => x.json());
+  pending.remove();
+  if (!r.ok) { addMsg("sys", r.error || (r.issues || []).map(i => i.hint)
+                             .join("; ")); return; }
+  ROWS = r.doc.rows || [];
+  $("claim").value = r.doc.claim || "";
+  HISTORY.push({ role: "assistant", content: JSON.stringify(r.doc) });
+  drawGrid();
+  run();
+}
+
+async function commentary(doc, result) {
+  const r = await fetch("/api/v2comment", {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ doc, result, lang: LANG }),
+  }).then(x => x.json());
+  if (!r.ok) return;
+  const d = document.createElement("div");
+  d.className = "panel comment";
+  d.innerHTML = `<h3>${esc(t("commentary"))}</h3><p>${esc(r.reply)}</p>`;
+  $("report").appendChild(d);
+}
+
 // ------------------------------------------------------------------ wiring
 async function run() {
+  const doc = collect();
   const r = await fetch("/api/v2run", {
     method: "POST", headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ doc: collect() }),
+    body: JSON.stringify({ doc }),
   }).then(x => x.json());
   showIssues(r.issues);
-  if (r.ok) showReport(r); else $("report").innerHTML = "";
+  if (!r.ok) { $("report").innerHTML = ""; return; }
+  showReport(r);
+  // the commentary is asked for AFTER the verdict exists, and never
+  // stands between the core and the screen
+  commentary(doc, r);
 }
 
 function chrome() {
   document.querySelectorAll("[data-t]").forEach(e =>
     e.textContent = t(e.dataset.t));
+  document.querySelectorAll("[data-ph]").forEach(e =>
+    e.placeholder = t(e.dataset.ph));
   $("claimlabel").textContent = t("claim");
   $("lang").textContent = LANG === "en" ? "RU" : "EN";
   $("ref").href = `/zfl?l=${LANG}`;
@@ -215,17 +304,22 @@ document.addEventListener("click", e => {
   if (d != null) { ROWS.splice(+d, 1); drawGrid(); }
 });
 $("addrow").onclick = addRow;
+$("send").onclick = ask;
+$("ask").onkeydown = e => { if (e.key === "Enter") ask(); };
+$("exkind").onchange = e => fillItems(e.target.value);
+$("exitem").onchange = e => loadExample($("exkind").value, +e.target.value);
 $("run").onclick = run;
 $("adv").onchange = e => document.body.classList.toggle("showadv",
                                                        e.target.checked);
 $("lang").onclick = async () => {
   LANG = LANG === "en" ? "ru" : "en";
   history.replaceState(null, "", `?l=${LANG}`);
-  await loadSpec(); chrome(); drawGrid();
+  await loadSpec(); await loadExamples(); chrome(); drawGrid();
 };
 
 (async () => {
   await loadSpec();
+  await loadExamples();
   chrome();
   // one row of each kind, so the first screen shows what the table is FOR
   // rather than an empty grid: an invoice line, its ceiling, and the liar.

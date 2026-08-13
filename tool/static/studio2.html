@@ -62,6 +62,16 @@
  .v-EARNED,.v-T { color:var(--ok); font-weight:600; }
  .v-REFUTED,.v-F { color:var(--bad); font-weight:600; }
  .muted { color:#777; }
+ .top { background:#fff; border:1px solid var(--line); padding:.7em .9em;
+        margin-bottom:1em; }
+ .chat { max-height:12em; overflow-y:auto; margin:.5em 0; }
+ .msg { padding:.3em 0; } .msg.user { color:#333; }
+ .msg.ai { color:#0b3d91; } .msg.sys { color:#777; font-style:italic; }
+ .ex { display:flex; gap:.6em; align-items:center; flex-wrap:wrap;
+       margin-bottom:.6em; }
+ .ex select { padding:.35em .5em; font:inherit; border:1px solid var(--line);
+              max-width:22em; }
+ .comment { background:#f4f7ff; border-color:#c9d8ff; }
 </style>
 
 <header>
@@ -73,6 +83,18 @@
 </header>
 
 <main>
+  <div class="top">
+    <div class="ex">
+      <label data-t="examples"></label>
+      <select id="exkind"></select>
+      <select id="exitem"></select>
+    </div>
+    <div class="chat" id="chat"></div>
+    <div class="bar">
+      <input type="text" id="ask" data-ph="askph">
+      <button class="primary" id="send" data-t="send"></button>
+    </div>
+  </div>
   <div class="gridwrap"><table class="grid" id="grid"></table></div>
   <div class="bar">
     <button class="rowbtn" id="addrow">+ <span data-t="addrow"></span></button>

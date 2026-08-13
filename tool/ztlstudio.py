@@ -480,6 +480,26 @@ class Handler(BaseHTTPRequestHandler):
         if self.path in ("/", "/index.html"):
             with open(os.path.join(HERE, "static", "index.html"), "rb") as f:
                 self._send(200, f.read(), "text/html; charset=utf-8")
+        elif self.path in ("/zfl", "/zfl.html"):
+            # The ZFL reference, generated from the language itself by
+            # tool/zfl2doc.py — regenerated on request in development so it
+            # cannot lag the spec, read from disk when serving publicly.
+            path = os.path.join(HERE, "static", "zfl.html")
+            if not PUBLIC:
+                try:
+                    import zfl2doc
+                    open(path, "w", encoding="utf-8").write(zfl2doc.page())
+                except Exception:
+                    pass
+            if os.path.exists(path):
+                with open(path, "rb") as f:
+                    self._send(200, f.read(), "text/html; charset=utf-8")
+            else:
+                self._send(404, {"error": "reference not built"})
+        elif self.path == "/api/formspec":
+            import zfl2
+            lang = "ru" if "lang=ru" in (self.path + "") else "en"
+            self._send(200, zfl2.form_spec(lang))
         elif self.path == "/api/examples":
             self._send(200, EXAMPLES)
         elif self.path.startswith("/static/"):

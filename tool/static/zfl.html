@@ -1,0 +1,123 @@
+<!doctype html><meta charset="utf-8">
+<title>ZFL</title>
+<style>
+ body { font: 15px/1.5 Georgia, serif; max-width: 52em; margin: 3em auto;
+        padding: 0 1em; color: #111; }
+ table { border-collapse: collapse; width: 100%; margin: 1em 0; }
+ th, td { border: 1px solid #bbb; padding: 5px 8px; text-align: left;
+          vertical-align: top; font-size: 14px; }
+ th { background: #eee; } tr.adv td { color: #666; }
+ code { background: #f4f4f4; padding: 1px 4px; }
+ h1 { font-size: 24px; } h2 { font-size: 17px; margin-top: 1.6em; }
+ nav { float: right; font-size: 13px; }
+</style>
+<nav><a href="#" onclick="t('en')">EN</a> · <a href="#" onclick="t('ru')">RU</a></nav>
+<div class='lang' id='en'><h1>ZFL — the language of the studio</h1>
+<h2>Why a table and not a syntax</h2><p>Everything you write here is one document: a list of NAMES, each saying where it stands with you, plus what you CLAIM about them. There is no genre to declare and no mode to pick. Which instruments answer — the numeric floor, the passport office, the ledger, the judge — follows from which cells you filled.</p>
+<h2>The one rule underneath</h2><p>Truth is not granted on credit. A name is verified when a verification was produced, and the ground column is where you say what produced it. A name with nothing backing it is not false — it is unverified, which is an honest third answer and the reason this logic exists.</p>
+<h2>Where formulas survive</h2><p>In two cells only. In GROUND, when a name is defined by a formula over other names — that is how self-reference is written, and it is why the liar needs no special mode. And in CLAIM, which is what you are actually asserting.</p>
+<h2>columns</h2><table><tr><th>column</th><th>what it is</th><th>required</th><th>options / examples</th></tr>
+<tr><td><b>name</b></td><td>what we call it; formulas use this</td><td>always</td><td>line · budget · L</td></tr>
+<tr><td><b>means</b></td><td>what it MEANS for this to be true</td><td>no</td><td>the invoice line · this sentence is false</td></tr>
+<tr><td><b>status</b></td><td>where it stands with us</td><td>always</td><td>verified · refuted · not verified · defined</td></tr>
+<tr><td><b>ground</b></td><td>what backs it, or the formula defining it</td><td>in context</td><td>inv-17 · ~Tr(L)</td></tr>
+<tr><td><b>kind of ground</b></td><td>a document unless you say otherwise</td><td>no</td><td>document · act (nothing to withdraw) · certificate (expires) · another row</td></tr>
+<tr><td><b>value</b></td><td>a number, an interval [0,10], or ? for unknown</td><td>no</td><td>1500 · [0,10] · ?</td></tr>
+<tr><td><b>unit</b></td><td>only with a value; metres never meet roubles</td><td>no</td><td>RUB · m · m2</td></tr>
+<tr><td><b>scale</b></td><td>what it rounds to</td><td>no</td><td>exact · whole · hundredths · thirds</td></tr>
+<tr class="adv"><td><b>separate measurements</b></td><td>each occurrence is its own act of measuring</td><td>no</td><td></td></tr>
+</table>
+<h2>the document itself</h2><table><tr><th>column</th><th>what it is</th><th>required</th><th>options / examples</th></tr>
+<tr><td><b>claim</b></td><td>what you are actually asserting</td><td>no</td><td>line &lt;= budget · rain -&gt; umbrella</td></tr>
+<tr><td><b>ask</b></td><td>narrow the report; empty shows everything that applies</td><td>no</td><td>verdict · warranty · passport · stipulations · blast · brackets</td></tr>
+</table>
+<h2>operators</h2><table>
+<tr><td><code>&amp;</code></td><td>and</td></tr>
+<tr><td><code>-&gt;</code></td><td>if … then</td></tr>
+<tr><td><code>=</code></td><td>the same value as</td></tr>
+<tr><td><code>^</code></td><td>exactly one of</td></tr>
+<tr><td><code>|</code></td><td>or</td></tr>
+<tr><td><code>~</code></td><td>not</td></tr>
+<tr><td><code>Tr(x)</code></td><td>the value of the row x — this is how self-reference is written</td></tr>
+<tr><td><code>&lt;=</code></td><td>at most</td></tr>
+<tr><td><code>&gt;=</code></td><td>at least</td></tr>
+<tr><td><code>==</code></td><td>equal to</td></tr>
+<tr><td><code>&lt;</code></td><td>less than</td></tr>
+<tr><td><code>&gt;</code></td><td>greater than</td></tr>
+</table>
+<h2>a worked example</h2><table><tr><th>column</th><th>means</th><th>status</th><th>ground</th><th>value</th></tr>
+<tr><td>line</td><td>the invoice line</td><td>verified</td><td>inv-17</td><td>1500</td></tr>
+<tr><td>budget</td><td>the ceiling</td><td>verified</td><td>order-4</td><td>5000</td></tr>
+<tr><td>rain</td><td>it is raining</td><td>unverified</td><td>—</td><td>—</td></tr>
+<tr><td>L</td><td>this sentence is false</td><td>defined</td><td>~Tr(L)</td><td>—</td></tr>
+</table>
+<p><b>claim:</b> <code>line &lt;= budget</code></p>
+<h2>error codes</h2><table>
+<tr><td><code>E_BADNAME</code></td><td>a name a formula could not use</td></tr>
+<tr><td><code>E_CLAIM</code></td><td>the claim does not parse</td></tr>
+<tr><td><code>E_DUPNAME</code></td><td>the same name twice</td></tr>
+<tr><td><code>E_EMPTY</code></td><td>the table has no rows</td></tr>
+<tr><td><code>E_FORMULA</code></td><td>the defining formula does not parse</td></tr>
+<tr><td><code>E_KIND</code></td><td>a kind of ground outside the list</td></tr>
+<tr><td><code>E_NOGROUND</code></td><td>verified, refuted or defined, with nothing backing it</td></tr>
+<tr><td><code>E_NONAME</code></td><td>a row without a name</td></tr>
+<tr><td><code>E_STATUS</code></td><td>a status outside the four</td></tr>
+<tr><td><code>E_UNKNOWN_NAME</code></td><td>a formula names a row that does not exist</td></tr>
+<tr><td><code>W_NO_GLOSS</code></td><td>no gloss, so nobody can check the name means what it seems to</td></tr>
+<tr><td><code>W_UNIT_NO_VALUE</code></td><td>a unit with no value</td></tr>
+</table></div><div class='lang' id='ru' hidden><h1>ZFL — язык студии</h1>
+<h2>Почему таблица, а не синтаксис</h2><p>Всё, что вы здесь пишете, — один документ: список ИМЁН, каждое из которых говорит, откуда оно у вас, плюс то, что вы про них УТВЕРЖДАЕТЕ. Никакого жанра объявлять не надо и режим выбирать не надо. Какие приборы ответят — числовой пол, паспортный стол, тетрадь, судья — следует из того, какие клетки вы заполнили.</p>
+<h2>Правило, лежащее под всем</h2><p>Истина не даётся в кредит. Имя проверено, когда проверка произведена, и колонка «основание» — это место, где вы говорите, чем именно. Имя без основания не ложно — оно НЕ ПРОВЕРЕНО, и это честный третий ответ, ради которого вся эта логика и существует.</p>
+<h2>Где остаются формулы</h2><p>Ровно в двух клетках. В ОСНОВАНИИ — когда имя определено формулой через другие имена; так пишется самоссылка, и поэтому лжецу не нужен отдельный режим. И в УТВЕРЖДЕНИИ — том, что вы, собственно, заявляете.</p>
+<h2>колонкаs</h2><table><tr><th>колонка</th><th>что это</th><th>обязательна</th><th>варианты / примеры</th></tr>
+<tr><td><b>имя</b></td><td>как называем; им же пользуемся в формулах</td><td>всегда</td><td>line · budget · L</td></tr>
+<tr><td><b>значит</b></td><td>что означает истинность этого имени</td><td>нет</td><td>the invoice line · this sentence is false</td></tr>
+<tr><td><b>статус</b></td><td>откуда оно у нас</td><td>всегда</td><td>проверено · опровергнуто · не проверено · определено</td></tr>
+<tr><td><b>основание</b></td><td>чем подтверждено или как определено</td><td>по условию</td><td>inv-17 · ~Tr(L)</td></tr>
+<tr><td><b>вид основания</b></td><td>документ, если не сказано иное</td><td>нет</td><td>документ · акт (отзывать нечего) · сертификат (истекает) · другая строка</td></tr>
+<tr><td><b>величина</b></td><td>число, интервал [0,10] или ? для неизвестного</td><td>нет</td><td>1500 · [0,10] · ?</td></tr>
+<tr><td><b>единица</b></td><td>только с величиной; метры не встречаются с рублями</td><td>нет</td><td>RUB · m · m2</td></tr>
+<tr><td><b>шкала</b></td><td>до чего округляем</td><td>нет</td><td>точно · целые · сотые · трети</td></tr>
+<tr class="adv"><td><b>отдельные измерения</b></td><td>каждое вхождение — свой акт измерения</td><td>нет</td><td></td></tr>
+</table>
+<h2>сам документ</h2><table><tr><th>колонка</th><th>что это</th><th>обязательна</th><th>варианты / примеры</th></tr>
+<tr><td><b>утверждение</b></td><td>что мы, собственно, заявляем</td><td>нет</td><td>line &lt;= budget · rain -&gt; umbrella</td></tr>
+<tr><td><b>спросить</b></td><td>сузить отчёт; пусто — показывается всё применимое</td><td>нет</td><td>verdict · warranty · passport · stipulations · blast · brackets</td></tr>
+</table>
+<h2>операторы</h2><table>
+<tr><td><code>&amp;</code></td><td>и</td></tr>
+<tr><td><code>-&gt;</code></td><td>если … то</td></tr>
+<tr><td><code>=</code></td><td>то же значение, что</td></tr>
+<tr><td><code>^</code></td><td>ровно одно из</td></tr>
+<tr><td><code>|</code></td><td>или</td></tr>
+<tr><td><code>~</code></td><td>не</td></tr>
+<tr><td><code>Tr(x)</code></td><td>значение строки x — так пишется самоссылка</td></tr>
+<tr><td><code>&lt;=</code></td><td>не больше</td></tr>
+<tr><td><code>&gt;=</code></td><td>не меньше</td></tr>
+<tr><td><code>==</code></td><td>равно</td></tr>
+<tr><td><code>&lt;</code></td><td>меньше</td></tr>
+<tr><td><code>&gt;</code></td><td>больше</td></tr>
+</table>
+<h2>разобранный пример</h2><table><tr><th>колонка</th><th>значит</th><th>статус</th><th>основание</th><th>величина</th></tr>
+<tr><td>line</td><td>the invoice line</td><td>verified</td><td>inv-17</td><td>1500</td></tr>
+<tr><td>budget</td><td>the ceiling</td><td>verified</td><td>order-4</td><td>5000</td></tr>
+<tr><td>rain</td><td>it is raining</td><td>unverified</td><td>—</td><td>—</td></tr>
+<tr><td>L</td><td>this sentence is false</td><td>defined</td><td>~Tr(L)</td><td>—</td></tr>
+</table>
+<p><b>утверждение:</b> <code>line &lt;= budget</code></p>
+<h2>коды ошибок</h2><table>
+<tr><td><code>E_BADNAME</code></td><td>имя, непригодное для формулы</td></tr>
+<tr><td><code>E_CLAIM</code></td><td>утверждение не разбирается</td></tr>
+<tr><td><code>E_DUPNAME</code></td><td>имя повторяется</td></tr>
+<tr><td><code>E_EMPTY</code></td><td>в таблице нет строк</td></tr>
+<tr><td><code>E_FORMULA</code></td><td>определяющая формула не разбирается</td></tr>
+<tr><td><code>E_KIND</code></td><td>вид основания вне списка</td></tr>
+<tr><td><code>E_NOGROUND</code></td><td>проверено, опровергнуто или определено — но без основания</td></tr>
+<tr><td><code>E_NONAME</code></td><td>строка без имени</td></tr>
+<tr><td><code>E_STATUS</code></td><td>статус вне четырёх</td></tr>
+<tr><td><code>E_UNKNOWN_NAME</code></td><td>формула называет несуществующую строку</td></tr>
+<tr><td><code>W_NO_GLOSS</code></td><td>нет пояснения — некому проверить, то ли значит имя</td></tr>
+<tr><td><code>W_UNIT_NO_VALUE</code></td><td>единица без величины</td></tr>
+</table></div>
+<script>function t(l){for(const d of document.querySelectorAll('.lang'))
+ d.hidden = d.id !== l;}</script>

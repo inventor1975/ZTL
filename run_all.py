@@ -136,6 +136,8 @@ STANDS = [
                         "GENUINE entries into sound-only (predecessor not S): 0",
                         "FULL STRICT LADDER U → S → H: realized, rung by rung."]),
     ("tool/test_zfl.py", ["ZFL FOUNDATION GREEN"]),
+    ("tool/zfl2doc.py", ["ZFL DOC GREEN",
+                         "every code the validator raises is documented"]),
     ("tool/test_zfl2.py", ["ZFL2 GREEN",
                            "applies: {'numeric': True, 'passport': True, 'ledger': False, 'judge': True}",
                            "assembled sheet    : line=1500 earned:inv-17 RUB, budget=5000 earned:order-4 RUB",

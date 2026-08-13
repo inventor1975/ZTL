@@ -37,8 +37,24 @@ judge DOES, including whatever it does wrongly; agreeing with it tomorrow
 proves only that nothing moved. It is a regression net and a map, not a
 proof — the proofs are in `lean/`.
 
-Run:  python3 conformance/judge_table.py            (check against stored)
-      python3 conformance/judge_table.py --update   (re-bless the table)
+TWO RUNS INSTEAD OF ONE, the curator's addition. The stored table answers
+"has anything moved since a human looked at it and approved it". It does not
+answer "when did it move, and because of what" — for that you want the same
+sweep run against an older revision's judge, which `--against <rev>` does
+through a throwaway git worktree. That is what a "separate copy of the
+repository" should be: git already keeps every copy, and a copy made by hand
+rots the first time somebody forgets to refresh it.
+
+One subtlety decides whether the comparison means anything. The SWEEP must
+come from the current revision and only the JUDGE from the old one — run the
+old script against the old code and you have compared apples to oranges,
+since the input space may have moved too and the difference would be a
+difference of questions rather than of answers. Hence ZTL_ROOT: this file
+stays put, the modules it imports come from the worktree.
+
+Run:  python3 conformance/judge_table.py                 (check against stored)
+      python3 conformance/judge_table.py --update        (re-bless the table)
+      python3 conformance/judge_table.py --against REV   (diff two revisions)
 """
 import hashlib
 import json
@@ -47,7 +63,13 @@ import sys
 from collections import Counter
 from itertools import product
 
-_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# The judge modules are taken from ZTL_ROOT when set. That is what lets the
+# SAME sweep definition — this file, the current one — be run against an old
+# revision's judge. Running the old script on the old code instead would
+# compare apples to oranges: the input space may have moved too, and the
+# difference would be a difference of QUESTIONS rather than of answers.
+_ROOT = os.environ.get("ZTL_ROOT") or os.path.dirname(
+    os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, _ROOT)
 
 from znumjudge import judge_sheet_claim, parse_quantities        # noqa: E402
@@ -118,8 +140,50 @@ def sweep():
             rare, total)
 
 
+def against(rev):
+    """Run this same sweep against another revision's judge, via a throwaway
+    git worktree — which is what a "separate copy of the repository" should
+    be, since git already keeps every copy and a hand-made one rots.
+
+    The stored table answers "has anything moved since a human looked and
+    approved". This answers a different question the table cannot: WHEN did
+    it move, and against which revision — the tool for bisecting a verdict
+    change back to the commit that caused it."""
+    import subprocess
+    import tempfile
+    here = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    with tempfile.TemporaryDirectory() as tmp:
+        tree = os.path.join(tmp, "old")
+        r = subprocess.run(["git", "worktree", "add", "--detach", tree, rev],
+                           cwd=here, capture_output=True, text=True)
+        if r.returncode:
+            print(r.stderr.strip())
+            return None
+        try:
+            env = dict(os.environ, ZTL_ROOT=tree)
+            out = subprocess.run(
+                [sys.executable, os.path.abspath(__file__), "--emit"],
+                env=env, capture_output=True, text=True, timeout=1800)
+            if out.returncode:
+                print(out.stderr[-1500:])
+                return None
+            return json.loads(out.stdout)
+        finally:
+            subprocess.run(["git", "worktree", "remove", "--force", tree],
+                           cwd=here, capture_output=True)
+
+
 def main():
     update = "--update" in sys.argv
+    if "--emit" in sys.argv:                    # used by `against`
+        fp, census, rare, total = sweep()
+        print(json.dumps({"fingerprint": fp, "census": census,
+                          "cases": total}))
+        return 0
+    rev = None
+    for i, a in enumerate(sys.argv):
+        if a == "--against" and i + 1 < len(sys.argv):
+            rev = sys.argv[i + 1]
     print("=" * 78)
     print("THE JUDGE'S TABLE — an exhaustive sweep of its input space")
     print("=" * 78)
@@ -154,6 +218,24 @@ def main():
     print("    fact about the input space, not a defect of the judge: the")
     print("    fourth corner is where nonsense goes, and nonsense is common")
     print("    when you enumerate rather than curate.")
+
+    if rev:
+        print(f"\n  AGAINST {rev} — same sweep, that revision's judge")
+        old = against(rev)
+        if old is None:
+            print("  could not run the old revision; nothing compared.")
+            return 1
+        print(f"    {old['cases']:,} cases there, {total:,} here")
+        if old["fingerprint"] == fp:
+            print(f"    IDENTICAL ({fp}). The judge answers exactly as it")
+            print("    did at that revision, over the whole space.")
+            return 0
+        print(f"    MOVED: {old['fingerprint']} -> {fp}")
+        for k in sorted(set(old["census"]) | set(census)):
+            a, b = old["census"].get(k, 0), census.get(k, 0)
+            if a != b:
+                print(f"      {k:34} {a:>8,} -> {b:>8,}")
+        return 0
 
     stored = None
     if os.path.exists(STORE):

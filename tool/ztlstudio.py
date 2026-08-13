@@ -15,6 +15,7 @@ import json
 import os
 import sys
 import webbrowser
+import traceback
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from threading import Timer
 
@@ -524,10 +525,16 @@ class Handler(BaseHTTPRequestHandler):
         try:
             self._send(200, fn(payload))
         except Exception as e:                      # never die on input
+            # The TYPE goes to the client, the message does not: an
+            # exception's text can carry absolute paths, module internals
+            # or fragments of another visitor's input. The detail belongs
+            # in the server's own log, not in a stranger's browser.
+            traceback.print_exc(file=sys.stderr)
             self._send(200, {"ok": False, "issues": [{
                 "level": "error", "code": "E_INTERNAL",
                 "where": type(e).__name__,
-                "hint": f"internal studio error: {e}"}]})
+                "hint": "internal studio error — the detail is in the "
+                        "server log, not here"}]})
 
 
 if __name__ == "__main__":

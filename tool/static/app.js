@@ -176,17 +176,23 @@ $("explain-input").addEventListener("keydown", e => {
 });
 
 function el(tag, html) { const d = document.createElement(tag); d.innerHTML = html; return d; }
-function esc(s) { return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;"); }
+// Quotes too: esc() is used in ATTRIBUTE positions below, where escaping
+// only & and < lets a value close the attribute and open an event handler.
+// No live vector today — the values interpolated into class="…" come from
+// the core's closed vocabulary — but the day a sentence NAME lands in one,
+// this is the difference between a report and an injection.
+function esc(s) { return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;")
+                                  .replace(/"/g,"&quot;").replace(/'/g,"&#39;"); }
 
 function renderStatement(rep, out) {
   out.appendChild(el("div",
-    `<div class="verdict">verdict: <span class="${rep.verdict}">${rep.verdict}</span>
+    `<div class="verdict">verdict: <span class="${esc(rep.verdict)}">${esc(rep.verdict)}</span>
      <small>· warranty: ${esc(rep.warranty)}</small></div>`));
   out.appendChild(el("p", esc(rep.verdict_class)));
   out.appendChild(el("p", `passport: ${esc(rep.passport)}`));
   if (rep.completions.length) {
     let rows = rep.completions.map(c =>
-      `<tr><td>${esc(c.case)}</td><td class="verdict"><span class="${c.value}">${c.value}</span></td></tr>`).join("");
+      `<tr><td>${esc(c.case)}</td><td class="verdict"><span class="${esc(c.value)}">${esc(c.value)}</span></td></tr>`).join("");
     out.appendChild(el("table",
       `<tr><th>completion of the unverified</th><th>value</th></tr>${rows}`));
   }
@@ -197,11 +203,11 @@ function renderSystem(rep, out) {
   const g = Object.entries(rep.grounded);
   if (g.length) {
     out.appendChild(el("div", "grounded: " + g.map(([k, v]) =>
-      `<span class="pill">${esc(k)} = <b class="${v}">${v}</b></span>`).join("")));
+      `<span class="pill">${esc(k)} = <b class="${esc(v)}">${esc(v)}</b></span>`).join("")));
   }
   let rows = rep.passports.map(p =>
     `<tr><td>${esc(p.component.join(", "))}</td>
-     <td class="kind-${p.kind}">${esc(p.kind_txt)}</td>
+     <td class="kind-${esc(p.kind)}">${esc(p.kind_txt)}</td>
      <td>${esc(p.detail)}</td></tr>`).join("");
   if (rows) out.appendChild(el("table",
     `<tr><th>component</th><th>passport</th><th>details</th></tr>${rows}`));

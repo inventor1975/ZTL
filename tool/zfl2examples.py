@@ -32,99 +32,99 @@ EXAMPLES = [
     {"kind": "paradox", "paper": "Liar",
      "en": "Liar", "ru": "лжец",
      "doc": {
-         "rows": [{"name": "L", "means": "", "status": "defined", "ground": "~(Tr(L))"}]}},
+         "rows": [{"name": "L", "means": "это предложение ложно", "status": "defined", "ground": "~(Tr(L))"}]}},
     {"kind": "paradox", "paper": "Barber (the liar in a barber's apron)",
      "en": "Barber (the liar in a barber's apron)", "ru": "брадобрей",
      "doc": {
-         "rows": [{"name": "shaves", "means": "", "status": "defined", "ground": "~(Tr(shaves))"}]}},
+         "rows": [{"name": "shaves", "means": "брадобрей бреет самого себя", "status": "defined", "ground": "~(Tr(shaves))"}]}},
     {"kind": "paradox", "paper": "Grelling's 'heterological'",
      "en": "Grelling's 'heterological'", "ru": "«гетерологичное» Греллинга",
      "doc": {
-         "rows": [{"name": "het", "means": "", "status": "defined", "ground": "~(Tr(het))"}]}},
+         "rows": [{"name": "het", "means": "«гетерологичное» не описывает само себя", "status": "defined", "ground": "~(Tr(het))"}]}},
     {"kind": "paradox", "paper": "Russell",
      "en": "Russell", "ru": "Рассел",
      "doc": {
-         "rows": [{"name": "a_in_a", "means": "", "status": "refuted", "ground": "the-story"}, {"name": "a_in_b", "means": "", "status": "refuted", "ground": "the-story"}, {"name": "a_in_R", "means": "", "status": "defined", "ground": "~(Tr(a_in_a))"}, {"name": "b_in_a", "means": "", "status": "refuted", "ground": "the-story"}, {"name": "b_in_b", "means": "", "status": "verified", "ground": "the-story"}, {"name": "b_in_R", "means": "", "status": "defined", "ground": "~(Tr(b_in_b))"}, {"name": "R_in_a", "means": "", "status": "refuted", "ground": "the-story"}, {"name": "R_in_b", "means": "", "status": "refuted", "ground": "the-story"}, {"name": "R_in_R", "means": "", "status": "defined", "ground": "~(Tr(R_in_R))"}]}},
+         "rows": [{"name": "a_in_a", "means": "a принадлежит a", "status": "refuted", "ground": "the-story"}, {"name": "a_in_b", "means": "a принадлежит b", "status": "refuted", "ground": "the-story"}, {"name": "a_in_R", "means": "a принадлежит R", "status": "defined", "ground": "~(Tr(a_in_a))"}, {"name": "b_in_a", "means": "b принадлежит a", "status": "refuted", "ground": "the-story"}, {"name": "b_in_b", "means": "b принадлежит b", "status": "verified", "ground": "the-story"}, {"name": "b_in_R", "means": "b принадлежит R", "status": "defined", "ground": "~(Tr(b_in_b))"}, {"name": "R_in_a", "means": "R принадлежит a", "status": "refuted", "ground": "the-story"}, {"name": "R_in_b", "means": "R принадлежит b", "status": "refuted", "ground": "the-story"}, {"name": "R_in_R", "means": "R принадлежит самому себе", "status": "defined", "ground": "~(Tr(R_in_R))"}]}},
     {"kind": "paradox", "paper": "Jourdain's postcard",
      "en": "Jourdain's postcard", "ru": "открытка Жордена",
      "doc": {
-         "rows": [{"name": "front", "means": "", "status": "defined", "ground": "Tr(back)"}, {"name": "back", "means": "", "status": "defined", "ground": "~(Tr(front))"}]}},
+         "rows": [{"name": "front", "means": "написанное на обороте — правда", "status": "defined", "ground": "Tr(back)"}, {"name": "back", "means": "написанное на лицевой стороне — ложь", "status": "defined", "ground": "~(Tr(front))"}]}},
     {"kind": "paradox", "paper": "Crocodile",
      "en": "Crocodile", "ru": "крокодил",
      "doc": {
-         "rows": [{"name": "R", "means": "", "status": "defined", "ground": "Tr(M)"}, {"name": "M", "means": "", "status": "defined", "ground": "~(Tr(R))"}]}},
+         "rows": [{"name": "R", "means": "крокодил возвращает ребёнка", "status": "defined", "ground": "Tr(M)"}, {"name": "M", "means": "мать угадала, что он сделает", "status": "defined", "ground": "~(Tr(R))"}]}},
     {"kind": "paradox", "paper": "Odd 3-cycle",
      "en": "Odd 3-cycle", "ru": "нечётный трёхцикл",
      "doc": {
-         "rows": [{"name": "a", "means": "", "status": "defined", "ground": "~(Tr(b))"}, {"name": "b", "means": "", "status": "defined", "ground": "~(Tr(c))"}, {"name": "c", "means": "", "status": "defined", "ground": "~(Tr(a))"}]}},
+         "rows": [{"name": "a", "means": "первое предложение цикла истинно", "status": "defined", "ground": "~(Tr(b))"}, {"name": "b", "means": "второе предложение цикла истинно", "status": "defined", "ground": "~(Tr(c))"}, {"name": "c", "means": "третье предложение цикла истинно", "status": "defined", "ground": "~(Tr(a))"}]}},
     {"kind": "paradox", "paper": "Curry (grounded falsum)",
      "en": "Curry (grounded falsum)", "ru": "Карри (ложь настоящая)",
      "doc": {
-         "rows": [{"name": "g", "means": "", "status": "defined", "ground": "(Tr(g) ->  F)"}]}},
+         "rows": [{"name": "g", "means": "предложение Карри истинно", "status": "defined", "ground": "(Tr(g) ->  F)"}]}},
     {"kind": "paradox", "paper": "Curry (suspended falsum)",
      "en": "Curry (suspended falsum)", "ru": "Карри (ложь подвешенная)",
      "doc": {
-         "rows": [{"name": "gamma", "means": "", "status": "defined", "ground": "(Tr(gamma) ->  Tr(bot))"}, {"name": "bot", "means": "", "status": "defined", "ground": "(Tr(s) &  ~(Tr(s)))"}, {"name": "s", "means": "", "status": "defined", "ground": "Tr(s)"}]}},
+         "rows": [{"name": "gamma", "means": "предложение Карри истинно", "status": "defined", "ground": "(Tr(gamma) ->  Tr(bot))"}, {"name": "bot", "means": "невозможное имеет место", "status": "defined", "ground": "(Tr(s) &  ~(Tr(s)))"}, {"name": "s", "means": "следствие Карри истинно", "status": "defined", "ground": "Tr(s)"}]}},
     {"kind": "paradox", "paper": "Strong liar (forced FALSE)",
      "en": "Strong liar (forced FALSE)", "ru": "усиленный лжец (вынужденно ЛОЖЬ)",
      "doc": {
-         "rows": [{"name": "sigma", "means": "", "status": "defined", "ground": "(~(Tr(sigma)) &  Tr(sigma))"}]}},
+         "rows": [{"name": "sigma", "means": "это предложение не истинно", "status": "defined", "ground": "(~(Tr(sigma)) &  Tr(sigma))"}]}},
     {"kind": "paradox", "paper": "Revenge / avenger (forced FALSE)",
      "en": "Revenge / avenger (forced FALSE)", "ru": "мститель (вынужденно ЛОЖЬ)",
      "doc": {
-         "rows": [{"name": "mu", "means": "", "status": "defined", "ground": "not((Tr(mu) =  Tr(mu)))"}]}},
+         "rows": [{"name": "mu", "means": "это предложение не является заработанной истиной", "status": "defined", "ground": "not((Tr(mu) =  Tr(mu)))"}]}},
     {"kind": "paradox", "paper": "Henkin-style sentence (forced TRUE)",
      "en": "Henkin-style sentence (forced TRUE)", "ru": "предложение Хенкина (вынужденно ИСТИНА)",
      "doc": {
-         "rows": [{"name": "h", "means": "", "status": "defined", "ground": "(Tr(h) ->  Tr(h))"}]}},
+         "rows": [{"name": "h", "means": "это предложение доказуемо", "status": "defined", "ground": "(Tr(h) ->  Tr(h))"}]}},
     {"kind": "paradox", "paper": "Truth-teller",
      "en": "Truth-teller", "ru": "правдоруб",
      "doc": {
-         "rows": [{"name": "tau", "means": "", "status": "defined", "ground": "Tr(tau)"}]}},
+         "rows": [{"name": "tau", "means": "это предложение истинно", "status": "defined", "ground": "Tr(tau)"}]}},
     {"kind": "paradox", "paper": "Russell's twin S∈S",
      "en": "Russell's twin S∈S", "ru": "близнец Рассела S∈S",
      "doc": {
-         "rows": [{"name": "S_in_S", "means": "", "status": "defined", "ground": "Tr(S_in_S)"}]}},
+         "rows": [{"name": "S_in_S", "means": "множество S принадлежит самому себе", "status": "defined", "ground": "Tr(S_in_S)"}]}},
     {"kind": "paradox", "paper": "Crocodile control (optimistic mother)",
      "en": "Crocodile control (optimistic mother)", "ru": "крокодил, контроль (мать-оптимистка)",
      "doc": {
-         "rows": [{"name": "R", "means": "", "status": "defined", "ground": "Tr(M)"}, {"name": "M", "means": "", "status": "defined", "ground": "Tr(R)"}]}},
+         "rows": [{"name": "R", "means": "крокодил возвращает ребёнка", "status": "defined", "ground": "Tr(M)"}, {"name": "M", "means": "мать угадала, что он сделает", "status": "defined", "ground": "Tr(R)"}]}},
     {"kind": "paradox", "paper": "Even 2-cycle",
      "en": "Even 2-cycle", "ru": "чётный двуцикл",
      "doc": {
-         "rows": [{"name": "A", "means": "", "status": "defined", "ground": "~(Tr(B))"}, {"name": "B", "means": "", "status": "defined", "ground": "~(Tr(A))"}]}},
+         "rows": [{"name": "A", "means": "A истинно", "status": "defined", "ground": "~(Tr(B))"}, {"name": "B", "means": "B истинно", "status": "defined", "ground": "~(Tr(A))"}]}},
     {"kind": "paradox", "paper": "Even 4-cycle",
      "en": "Even 4-cycle", "ru": "чётный четырёхцикл",
      "doc": {
-         "rows": [{"name": "a", "means": "", "status": "defined", "ground": "~(Tr(b))"}, {"name": "b", "means": "", "status": "defined", "ground": "~(Tr(c))"}, {"name": "c", "means": "", "status": "defined", "ground": "~(Tr(d))"}, {"name": "d", "means": "", "status": "defined", "ground": "~(Tr(a))"}]}},
+         "rows": [{"name": "a", "means": "первое предложение цикла истинно", "status": "defined", "ground": "~(Tr(b))"}, {"name": "b", "means": "второе предложение цикла истинно", "status": "defined", "ground": "~(Tr(c))"}, {"name": "c", "means": "третье предложение цикла истинно", "status": "defined", "ground": "~(Tr(d))"}, {"name": "d", "means": "четвёртое предложение цикла истинно", "status": "defined", "ground": "~(Tr(a))"}]}},
     {"kind": "paradox", "paper": "Yablo (truncated at 3)",
      "en": "Yablo (truncated at 3)", "ru": "Ябло (обрезанный до 3)",
      "doc": {
-         "rows": [{"name": "s0", "means": "", "status": "defined", "ground": "(~(Tr(s1)) &  ~(Tr(s2)))"}, {"name": "s1", "means": "", "status": "defined", "ground": "~(Tr(s2))"}, {"name": "s2", "means": "", "status": "verified", "ground": "the-story"}]}},
+         "rows": [{"name": "s0", "means": "ни одно из последующих не истинно", "status": "defined", "ground": "(~(Tr(s1)) &  ~(Tr(s2)))"}, {"name": "s1", "means": "ни одно из последующих не истинно", "status": "defined", "ground": "~(Tr(s2))"}, {"name": "s2", "means": "ни одно из последующих не истинно", "status": "verified", "ground": "the-story"}]}},
     {"kind": "paradox", "paper": "Contingent liar — world A (harmless)",
      "en": "Contingent liar — world A (harmless)", "ru": "контингентный лжец — мир A (безобидный)",
      "doc": {
-         "rows": [{"name": "S", "means": "", "status": "defined", "ground": "~(Tr(J))"}, {"name": "J", "means": "", "status": "defined", "ground": "Tr(g)"}, {"name": "g", "means": "", "status": "verified", "ground": "the-story"}]}},
+         "rows": [{"name": "S", "means": "сказанное Смитом истинно", "status": "defined", "ground": "~(Tr(J))"}, {"name": "J", "means": "сказанное Джонсом истинно", "status": "defined", "ground": "Tr(g)"}, {"name": "g", "means": "предложение Карри истинно", "status": "verified", "ground": "the-story"}]}},
     {"kind": "paradox", "paper": "Contingent liar — world B (unlucky)",
      "en": "Contingent liar — world B (unlucky)", "ru": "контингентный лжец — мир B (неудачный)",
      "doc": {
-         "rows": [{"name": "S", "means": "", "status": "defined", "ground": "~(Tr(J))"}, {"name": "J", "means": "", "status": "defined", "ground": "Tr(S)"}]}},
+         "rows": [{"name": "S", "means": "сказанное Смитом истинно", "status": "defined", "ground": "~(Tr(J))"}, {"name": "J", "means": "сказанное Джонсом истинно", "status": "defined", "ground": "Tr(S)"}]}},
     {"kind": "paradox", "paper": "Contingent liar — world C (unverified)",
      "en": "Contingent liar — world C (unverified)", "ru": "контингентный лжец — мир C (непроверенный)",
      "doc": {
-         "rows": [{"name": "J", "means": "what Jones said is true", "status": "unverified"}, {"name": "S", "means": "", "status": "defined", "ground": "~(Tr(J))"}]}},
+         "rows": [{"name": "J", "means": "what Jones said is true", "status": "unverified"}, {"name": "S", "means": "сказанное Смитом истинно", "status": "defined", "ground": "~(Tr(J))"}]}},
     {"kind": "paradox", "paper": "Ship of Theseus: the title contest",
      "en": "Ship of Theseus: the title contest", "ru": "Корабль Тесея: спор о титуле",
      "doc": {
-         "rows": [{"name": "theA", "means": "", "status": "defined", "ground": "~(Tr(theB))"}, {"name": "theB", "means": "", "status": "defined", "ground": "~(Tr(theA))"}]}},
+         "rows": [{"name": "theA", "means": "титул принадлежит кораблю A", "status": "defined", "ground": "~(Tr(theB))"}, {"name": "theB", "means": "титул принадлежит кораблю B", "status": "defined", "ground": "~(Tr(theA))"}]}},
     {"kind": "paradox", "paper": "Agrippa's dogma (foundation with a passport)",
      "en": "Agrippa's dogma (foundation with a passport)", "ru": "догма Агриппы (основание с паспортом)",
      "doc": {
-         "rows": [{"name": "p", "means": "", "status": "defined", "ground": "Tr(f)"}, {"name": "f", "means": "", "status": "defined", "ground": "Tr(f)"}]}},
+         "rows": [{"name": "p", "means": "утверждение, стоящее на фундаменте", "status": "defined", "ground": "Tr(f)"}, {"name": "f", "means": "фундамент держится сам собой", "status": "defined", "ground": "Tr(f)"}]}},
     {"kind": "paradox", "paper": "Same person? (corecursion, all observations match)",
      "en": "Same person? (corecursion, all observations match)", "ru": "тот же человек? (корекурсия)",
      "doc": {
-         "rows": [{"name": "obs", "means": "every observation so far matches", "status": "verified", "ground": "the-story"}, {"name": "S", "means": "", "status": "defined", "ground": "(Tr(obs) &  Tr(S))"}]}},
+         "rows": [{"name": "obs", "means": "every observation so far matches", "status": "verified", "ground": "the-story"}, {"name": "S", "means": "сказанное Смитом истинно", "status": "defined", "ground": "(Tr(obs) &  Tr(S))"}]}},
     {"kind": "everyday", "paper": "Sensor",
      "en": "Sensor", "ru": "датчик",
      "doc": {

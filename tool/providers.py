@@ -27,7 +27,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 # name -> (family, url, default model, env var, key-file, label, key-console)
 PROVIDERS = {
     "groq": ("openai", "https://api.groq.com/openai/v1/chat/completions",
-             "llama-3.3-70b-versatile", "GROQ_API_KEY", ".groq_key",
+             "openai/gpt-oss-120b", "GROQ_API_KEY", ".groq_key",
              "Groq (free · weaker, may misformalize)",
              "https://console.groq.com/keys"),
     "anthropic": ("anthropic", "https://api.anthropic.com/v1/messages",
@@ -67,7 +67,11 @@ MODELS = {
     "openrouter": ["anthropic/claude-sonnet-5", "anthropic/claude-opus-4-8",
                    "openai/gpt-5", "google/gemini-2.5-pro"],
     "deepseek":   ["deepseek-reasoner"],
-    "groq":       ["llama-3.3-70b-versatile"],   # free, but weak — mis-formalizes
+    # gpt-oss-120b added 2026-08-13 on the curator's tip and measured before
+    # being made the default: on the five-question battery it fills the table
+    # correctly where llama-3.3-70b invents a row to hold the answer. Still
+    # free, and the label no longer has to warn quite so loudly.
+    "groq":       ["openai/gpt-oss-120b", "llama-3.3-70b-versatile"],
 }
 
 

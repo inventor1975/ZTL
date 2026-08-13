@@ -64,6 +64,10 @@ CODE_HELP = {
                     "а не одна величина"),
     "E_VALUE_FORM": ("a value that is neither a number, an interval nor ?",
                      "величина, которая не число, не интервал и не ?"),
+    "E_UNIT": ("a unit that cannot be read — a word, optionally with a "
+               "power (m2), joined by · or /",
+               "единица, которую нельзя прочесть — слово, при желании "
+               "со степенью (m2), соединяется через · или /"),
     "W_UNIT_NO_VALUE": ("a unit with no value", "единица без величины"),
     "W_NO_GLOSS": ("no gloss, so nobody can check the name means what it "
                    "seems to",

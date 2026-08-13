@@ -213,7 +213,12 @@ def _unit_map(u):
         part = part.strip()
         if not part:
             continue
-        m = re.fullmatch(r"([A-Za-z_][A-Za-z_]*)(-?\d+)?", part)
+        # LETTERS, not Latin letters. Nothing in this floor cares which
+        # alphabet a unit is written in — the whole content of a unit is
+        # that DIFFERENT symbols never meet, and `конфеты` are as
+        # incomparable with roubles as metres are. Found 2026-08-13, when a
+        # word problem about sweets crashed on its own unit.
+        m = re.fullmatch(r"((?:[^\W\d]|_)+)(-?\d+)?", part)
         if not m:
             raise ValueError(f"E_UNIT: cannot read the unit {u!r}")
         out[m.group(1)] = out.get(m.group(1), 0) + sign * int(m.group(2) or 1)

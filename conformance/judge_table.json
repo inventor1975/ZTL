@@ -1,0 +1,18 @@
+{
+ "fingerprint": "fb44584076b673d6",
+ "cases": 184320,
+ "census": {
+  "OPEN Z document,measure": 64512,
+  "E None repair": 40960,
+  "OPEN Z measure": 21504,
+  "OPEN Z document,measure,verify": 16128,
+  "ON CREDIT F document": 13440,
+  "ON CREDIT T document": 8064,
+  "OPEN Z verify": 5376,
+  "OPEN Z measure,verify": 5376,
+  "REFUTED F -": 4928,
+  "EARNED T -": 2688,
+  "ON CREDIT F document,verify": 1344
+ },
+ "rare": []
+}

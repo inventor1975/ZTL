@@ -1,7 +1,8 @@
 # The Paradox Docket: A Computable Classification of the Classical Paradoxes
 
-**v1.1 — 2026-08-13. English edition.** Supersedes v1.0 (2026-08-09, DOI
-10.5281/zenodo.21864082). *Changes:* a ninth verdict — Agrippa's dogmatic horn
+**v1.1 — 2026-08-13. English edition.** Published: DOI 10.5281/zenodo.21916017.
+Supersedes v1.0 (2026-08-09, DOI 10.5281/zenodo.21864082); the concept DOI
+10.5281/zenodo.21864081 always resolves to the current version. *Changes:* a ninth verdict — Agrippa's dogmatic horn
 splits under this paper's own count (§4.9); four jurisdiction edges crossed rather
 than merely declared — the sorites, the surprise exam, the lottery and Berry, plus
 Moore (§5); the second genre of defect, the empty description and the status E

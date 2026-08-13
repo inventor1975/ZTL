@@ -1,9 +1,16 @@
-# Zenodo upload sheet — The Paradox Docket v1.1 (PREPARED, NOT UPLOADED)
+# Zenodo sheet — The Paradox Docket (v1.1 PUBLISHED 2026-08-13)
 
-**v1.0 PUBLISHED 2026-08-09: version DOI 10.5281/zenodo.21864082**
-(https://zenodo.org/records/21864082). Concept DOI 10.5281/zenodo.21864081
-resolves to the latest version. This sheet prepares **v1.1**; the upload and
-the publish button are the curator's.
+**v1.1 PUBLISHED 2026-08-13: version DOI 10.5281/zenodo.21916017**
+(https://zenodo.org/records/21916017). Prior: v1.0 10.5281/zenodo.21864082
+(2026-08-09). Concept DOI 10.5281/zenodo.21864081 resolves to the latest
+version (now v1.1). Uploaded file: `paradox-docket-EN-v1.1.pdf`, 642596 bytes,
+matching this repository byte for byte; related identifiers verified live —
+isNewVersionOf 21864082, isDerivedFrom 21318981 (ZTL), isSupplementedBy the
+GitHub corpus.
+
+OPEN, cosmetic: the record's **Version** metadata field is empty (v1.0 carries
+`1.0`). Zenodo allows editing metadata without minting a new version — set it
+to `1.1` when convenient. Nothing else differs from this sheet.
 
 Source of truth: `paper/paradox-docket-EN-draft.md` (v1.1 header, 2026-08-13).
 Assembled file with Appendix A substituted: `paper/paradox-docket-EN-build.md`.

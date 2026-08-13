@@ -1,0 +1,255 @@
+{
+ "fingerprint": "a254a77ca39aae5f",
+ "books": 1536,
+ "census": {
+  "EARNED | declared,documented | plain | wide": 190,
+  "EARNED | declared,documented | exposed,plain | wide": 149,
+  "EARNED,ON CREDIT | declared,documented | plain | wide": 122,
+  "EARNED | declared,documented | perpetual,plain | wide": 92,
+  "EARNED | documented | exposed,plain | tight": 78,
+  "EARNED,ON CREDIT | documented | plain | tight": 78,
+  "EARNED,ON CREDIT | documented | exposed,plain | tight": 66,
+  "EARNED,ON CREDIT | declared,documented | perpetual,plain | wide": 64,
+  "CIRCULAR,EARNED | declared,documented | plain | wide": 58,
+  "CIRCULAR,EARNED,ON CREDIT | declared,documented | plain | wide": 56,
+  "EARNED | documented | plain | tight": 54,
+  "EARNED | declared | plain | wide": 50,
+  "EARNED | declared,documented | exposed,perpetual,plain | wide": 44,
+  "EARNED | declared | perpetual,plain | wide": 38,
+  "CIRCULAR,EARNED | declared,documented | exposed,plain | wide": 31,
+  "EARNED,ON CREDIT | declared,documented | exposed,plain | wide": 30,
+  "CIRCULAR,EARNED | declared,documented | plain | tight": 27,
+  "EARNED,ON CREDIT | declared,documented | plain | tight": 27,
+  "CIRCULAR,EARNED | declared,documented | perpetual,plain | wide": 26,
+  "CIRCULAR,EARNED,ON CREDIT | documented | plain | tight": 24,
+  "CIRCULAR,EARNED,ON CREDIT | declared,documented | plain | tight": 24,
+  "EARNED | declared,documented | exposed,perpetual | wide": 20,
+  "CIRCULAR,EARNED,ON CREDIT | declared,documented | perpetual,plain | wide": 16,
+  "CIRCULAR,EARNED | documented | exposed,plain | tight": 15,
+  "CIRCULAR,EARNED | declared | plain | wide": 14,
+  "CIRCULAR,EARNED | documented | plain | tight": 12,
+  "CIRCULAR,ON CREDIT | documented | plain | tight": 12,
+  "CIRCULAR,EARNED,ON CREDIT | documented | exposed,plain | tight": 12,
+  "CIRCULAR,EARNED | declared,documented | exposed,plain | tight": 12,
+  "EARNED,ON CREDIT | declared,documented | exposed,perpetual,plain | wide": 12,
+  "EARNED | documented | exposed | tight": 12,
+  "CIRCULAR,ON CREDIT | declared,documented | plain | wide": 12,
+  "CIRCULAR,EARNED,ON CREDIT | declared,documented | exposed,plain | wide": 12,
+  "ON CREDIT | documented | plain | tight": 12,
+  "CIRCULAR,EARNED | declared | perpetual,plain | wide": 10,
+  "CIRCULAR,EARNED | declared,documented | exposed,perpetual,plain | wide": 8,
+  "EARNED | declared | perpetual | wide": 8,
+  "EARNED,ON CREDIT | declared,documented | exposed,plain | tight": 6,
+  "CIRCULAR,EARNED | declared | plain | tight": 3
+ },
+ "rare": [
+  [
+   3,
+   [
+    "CIRCULAR,EARNED",
+    "declared",
+    "plain",
+    "tight"
+   ],
+   [
+    "x == 1",
+    "('earned:claim/c0|doc-b', 'earned:claim/c0|doc-b', 'earned:claim/c0|doc-b')"
+   ]
+  ],
+  [
+   6,
+   [
+    "EARNED,ON CREDIT",
+    "declared,documented",
+    "exposed,plain",
+    "tight"
+   ],
+   [
+    "x == 1",
+    "('credit', 'earned:expiring/cert', 'earned:claim/c0|doc-b')"
+   ]
+  ],
+  [
+   8,
+   [
+    "CIRCULAR,EARNED",
+    "declared,documented",
+    "exposed,perpetual,plain",
+    "wide"
+   ],
+   [
+    "x == 1",
+    "('earned:claim/c0', 'earned:performed/zero', 'earned:expiring/cert')"
+   ]
+  ],
+  [
+   8,
+   [
+    "EARNED",
+    "declared",
+    "perpetual",
+    "wide"
+   ],
+   [
+    "x == 1",
+    "('earned:performed/zero', 'earned:claim/c0', 'earned:claim/c0')"
+   ]
+  ],
+  [
+   10,
+   [
+    "CIRCULAR,EARNED",
+    "declared",
+    "perpetual,plain",
+    "wide"
+   ],
+   [
+    "x == 1",
+    "('earned:claim/c0|doc-b', 'earned:performed/zero', 'earned:performed/zero')"
+   ]
+  ],
+  [
+   12,
+   [
+    "CIRCULAR,EARNED",
+    "declared,documented",
+    "exposed,plain",
+    "tight"
+   ],
+   [
+    "x == 1",
+    "('earned:claim/c0', 'earned:expiring/cert', 'earned:claim/c0|doc-b')"
+   ]
+  ],
+  [
+   12,
+   [
+    "CIRCULAR,EARNED",
+    "documented",
+    "plain",
+    "tight"
+   ],
+   [
+    "x == 1",
+    "('earned:claim/c0', 'earned:doc-own', 'earned:doc-own')"
+   ]
+  ],
+  [
+   12,
+   [
+    "CIRCULAR,EARNED,ON CREDIT",
+    "declared,documented",
+    "exposed,plain",
+    "wide"
+   ],
+   [
+    "x == 1",
+    "('earned:claim/c0|doc-b', 'earned:claim/c0', 'earned:expiring/cert')"
+   ]
+  ],
+  [
+   12,
+   [
+    "CIRCULAR,EARNED,ON CREDIT",
+    "documented",
+    "exposed,plain",
+    "tight"
+   ],
+   [
+    "x == 1",
+    "('earned:claim/c0', 'earned:claim/c0', 'earned:expiring/cert')"
+   ]
+  ],
+  [
+   12,
+   [
+    "CIRCULAR,ON CREDIT",
+    "declared,documented",
+    "plain",
+    "wide"
+   ],
+   [
+    "x == 1",
+    "('earned:claim/c0|doc-b', 'earned:claim/c0', 'earned:claim/c0')"
+   ]
+  ],
+  [
+   12,
+   [
+    "CIRCULAR,ON CREDIT",
+    "documented",
+    "plain",
+    "tight"
+   ],
+   [
+    "x == 1",
+    "('earned:claim/c0', 'earned:claim/c0', 'earned:claim/c0')"
+   ]
+  ],
+  [
+   12,
+   [
+    "EARNED",
+    "documented",
+    "exposed",
+    "tight"
+   ],
+   [
+    "x == 1",
+    "('earned:expiring/cert', 'earned:claim/c0', 'earned:claim/c0')"
+   ]
+  ],
+  [
+   12,
+   [
+    "EARNED,ON CREDIT",
+    "declared,documented",
+    "exposed,perpetual,plain",
+    "wide"
+   ],
+   [
+    "x == 1",
+    "('earned:performed/zero', 'earned:expiring/cert', 'credit')"
+   ]
+  ],
+  [
+   12,
+   [
+    "ON CREDIT",
+    "documented",
+    "plain",
+    "tight"
+   ],
+   [
+    "x == 1",
+    "('credit', 'earned:claim/c0', 'earned:claim/c0')"
+   ]
+  ],
+  [
+   14,
+   [
+    "CIRCULAR,EARNED",
+    "declared",
+    "plain",
+    "wide"
+   ],
+   [
+    "x == 1",
+    "('earned:claim/c0|doc-b', 'earned:doc-a|doc-b', 'earned:doc-a|doc-b')"
+   ]
+  ],
+  [
+   15,
+   [
+    "CIRCULAR,EARNED",
+    "documented",
+    "exposed,plain",
+    "tight"
+   ],
+   [
+    "x == 1",
+    "('earned:claim/c0', 'earned:doc-own', 'earned:expiring/cert')"
+   ]
+  ]
+ ]
+}

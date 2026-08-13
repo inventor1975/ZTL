@@ -7,8 +7,17 @@ the publish button are the curator's.
 
 Source of truth: `paper/paradox-docket-EN-draft.md` (v1.1 header, 2026-08-13).
 Assembled file with Appendix A substituted: `paper/paradox-docket-EN-build.md`.
-No PDF toolchain exists in this environment — the PDF is produced on the
-curator's side from the build file.
+
+**The file to upload: `paper/paradox-docket-EN-v1.1.pdf`** — 14 pages, A4, all
+three figures in place. Rebuild it at any time with
+
+    python3 paper/mkpdf.py
+
+which reproduces v1.0's own route (markdown -> print HTML -> headless Chrome;
+v1.0's PDF metadata says Creator HeadlessChrome, Producer Skia/PDF). The
+figures of v1.0 were never stored in the repository — they were extracted back
+out of the published PDF into `paper/figures/docket-*.jpg` and are mapped in
+`mkpdf.py`, so the two versions cannot drift apart illustration-wise.
 
 ---
 
@@ -76,8 +85,8 @@ paradox; foundations of mathematics
 - [ ] `python3 run_all.py` green (83 stands + Lean) — the paper's claims are
       pinned by `inventory/docket_claims.py`, which fails the run if one cell
       of the published table stops matching the machine
-- [ ] Appendix A in the build file is the CURRENT `zclassify.py` output
-- [ ] Figures 1–3 present in the PDF (placeholders in the markdown)
-- [ ] AI disclosure paragraph names the model of the session that wrote the
-      version, Variant A, curator Vitaly Reznik
-- [ ] DOI of v1.0 cited in the header of the new version
+- [x] Appendix A in the build file is the CURRENT `zclassify.py` output
+- [x] Figures 1–3 present in the PDF (v1.0's own images, reused)
+- [x] AI disclosure names which model wrote which version (v1.0 Fable 5,
+      v1.1 additions Opus 5), Variant A, curator Vitaly Reznik
+- [x] DOI of v1.0 cited in the header of the new version

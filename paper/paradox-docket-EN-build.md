@@ -33,7 +33,7 @@ The instrument is built on ZTL (Zero-Trust Logic), organized around a single pri
 
 ### 2.2. ZTLJudge: the judge
 
-The first of the two working instruments is the judge (module `ztljudge`). Given a formula and a marking (what is earned, what refuted, what on credit), it returns three things: the **verdict** (true/false/refusal), the **grade** — the quality of the verdict (the highest grade, *hereditary*, means "earned under every possible future"; the lowest holds only until the first verification), and, most importantly, a **named list of weak links**: exactly which verifications are missing. The judge never says "something is wrong with your argument" — it says "your conclusion hangs on the unverified link j". In this paper the judge works in the eighth, acquitting verdict; the main work is done by the second instrument.
+The first of the two working instruments is the judge (module `ztljudge`). Given a formula and a marking (what is earned, what refuted, what on credit), it returns three things: the **verdict** (true/false/refusal), the **grade** — the quality of the verdict (the highest grade, *hereditary*, means "earned under every possible future"; the lowest holds only until the first verification), and, most importantly, a **named list of weak links**: exactly which verifications are missing. The judge never says "something is wrong with your argument" — it says "your conclusion hangs on the unverified link j". In this paper the judge works in the eighth, acquitting verdict, and again in §5 wherever a case has no loop to count — the sorites, the surprise exam, the lottery, Moore; the main work is done by the second instrument.
 
 ### 2.3. The passport office: the classifier
 

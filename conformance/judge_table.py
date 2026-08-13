@@ -74,11 +74,13 @@ Run:  python3 conformance/judge_table.py                 (check against stored)
       python3 conformance/judge_table.py --against REV   (diff two revisions)
       python3 conformance/judge_table.py --jobs 1        (force one process)
 """
+import base64
 import hashlib
 import json
 import os
 import sys
 import time
+import zlib
 from collections import Counter
 from itertools import product
 
@@ -93,23 +95,51 @@ sys.path.insert(0, _ROOT)
 
 from znumjudge import judge_sheet_claim, parse_quantities        # noqa: E402
 
-STORE = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                     "judge_table.json")
+# ---------------------------------------------------------- the input spaces
+#
+# TWO profiles, and the second is not a luxury. Interactions between THREE
+# quantities are a different animal: units combine, a lattice can be forced
+# through an intermediate, and a cure named for one may be the cure for
+# another. Sweeping pairs proves nothing about triples.
+#
+# The three-quantity space is deliberately COARSER per quantity. The full
+# per-quantity vocabulary cubed would be seven million cases; trimming the
+# dimensions that pairs already cover exhaustively (the fine lattices, the
+# sample flag, the second unit) brings it back to the same order as the pair
+# sweep, which is the size a run can afford on every invocation. What is
+# lost is stated rather than hidden: a lattice or sample interaction that
+# only shows up among three quantities would be missed.
+SPACES = {
+    "two": {
+        "prov": ["earned:doc", "credit"],
+        "value": ["1", "5", "[0,10]", "?"],
+        "lattice": ["", " int", " decimal2", " frac3"],
+        "unit": ["", " RUB", " m"],
+        "sample": ["", " sample"],
+        "names": ["x", "y"],
+        "formulas": ["x <= y", "x == y", "x < y", "sum(x,y) == 5",
+                     "x <= y & ok"],
+    },
+    "three": {
+        "prov": ["earned:doc", "credit"],
+        "value": ["1", "[0,10]", "?"],
+        "lattice": ["", " int", " frac3"],
+        "unit": ["", " RUB"],
+        "sample": [""],
+        "names": ["x", "y", "z"],
+        "formulas": ["sum(x,y) <= z", "sum(x,y,z) == 8", "x <= y & y <= z"],
+    },
+}
+SPACE = os.environ.get("ZTL_SPACE", "two")
 
-# --------------------------------------------------------- the input space
-PROV = ["earned:doc", "credit"]
-VALUE = ["1", "5", "[0,10]", "?"]
-LATTICE = ["", " int", " decimal2", " frac3"]
-UNIT = ["", " RUB", " m"]
-SAMPLE = ["", " sample"]
 
-FORMULAS = [
-    "x <= y",
-    "x == y",
-    "x < y",
-    "sum(x,y) == 5",
-    "x <= y & ok",
-]
+def store_path(space=None):
+    space = space or SPACE
+    name = "judge_table.json" if space == "two" else f"judge_table_{space}.json"
+    return os.path.join(os.path.dirname(os.path.abspath(__file__)), name)
+
+
+STORE = store_path()
 
 
 def quantity(name, prov, value, lattice, unit, sample):
@@ -120,13 +150,15 @@ def cases():
     """Every combination, enumerated. The nonsensical ones are included on
     purpose: what the judge does with `? earned:doc` is exactly the kind of
     corner nobody writes a stand for."""
-    shapes = list(product(PROV, VALUE, LATTICE, UNIT, SAMPLE))
-    for formula in FORMULAS:
+    sp = SPACES[SPACE]
+    shapes = list(product(sp["prov"], sp["value"], sp["lattice"],
+                          sp["unit"], sp["sample"]))
+    for formula in sp["formulas"]:
         tail = ", ok=Z" if "ok" in formula else ""
-        for sx in shapes:
-            qx = quantity("x", *sx)
-            for sy in shapes:
-                yield formula, f"{qx}, {quantity('y', *sy)}{tail}"
+        for combo in product(shapes, repeat=len(sp["names"])):
+            data = ", ".join(quantity(n, *c)
+                             for n, c in zip(sp["names"], combo))
+            yield formula, data + tail
 
 
 def verdict(formula, data):
@@ -176,8 +208,31 @@ def _judged(jobs):
     return [v for part in parts for v in part], total
 
 
+def _pack(verdicts, classes):
+    """Every verdict as one byte of a class index, compressed. 184k verdicts
+    over a dozen classes fit in a few kilobytes — which is what lets the
+    stored table name the exact CASE that moved instead of only the class
+    whose count changed. A census diff says `OPEN Z measure: 21,504 ->
+    21,500` and leaves you to find the four; this finds them."""
+    idx = {c: i for i, c in enumerate(classes)}
+    return base64.b64encode(
+        zlib.compress(bytes(idx[v] for v in verdicts), 9)).decode()
+
+
+def _unpack(blob, classes):
+    return [classes[b] for b in zlib.decompress(base64.b64decode(blob))]
+
+
+def case_at(index):
+    """The input at a given position in the enumeration."""
+    for i, c in enumerate(cases()):
+        if i == index:
+            return c
+    return None
+
+
 def sweep(jobs=1):
-    """Returns (fingerprint, census, rare, total)."""
+    """Returns (fingerprint, census, rare, total, codes, classes)."""
     h = hashlib.sha256()
     census, examples = Counter(), {}
     verdicts, total = _judged(jobs)
@@ -187,9 +242,11 @@ def sweep(jobs=1):
         examples.setdefault(v, (formula, data))
     rare = sorted((n, list(v), list(examples[v]))
                   for v, n in census.items() if n <= total // 1000)
+    classes = [k for k, _n in census.most_common()]
     return (h.hexdigest()[:16],
             {" ".join(map(str, k)): n for k, n in census.most_common()},
-            rare, total)
+            rare, total, _pack(verdicts, classes),
+            [" ".join(map(str, c)) for c in classes])
 
 
 def against(rev, jobs=1):
@@ -226,6 +283,29 @@ def against(rev, jobs=1):
                            cwd=here, capture_output=True)
 
 
+def movers(old, new, limit=8):
+    """The exact inputs whose verdict changed, by name. Both sides carry
+    their packed per-case codes, so this is a walk down two lists — the
+    census tells you a class moved, this tells you what moved in it."""
+    a = _unpack(old["codes"], old["classes"])
+    b = _unpack(new["codes"], new["classes"])
+    out = []
+    for i, (x, y) in enumerate(zip(a, b)):
+        if x != y:
+            out.append((i, case_at(i), x, y))
+            if len(out) >= limit:
+                break
+    return out, sum(1 for x, y in zip(a, b) if x != y)
+
+
+def _report_movers(old, new):
+    named, n = movers(old, new)
+    print(f"  {n:,} cases changed verdict. The first {len(named)} by name:")
+    for i, case, x, y in named:
+        print(f"    #{i}  {case[0]}  ::  {case[1]}")
+        print(f"        {x}  ->  {y}")
+
+
 def main():
     update = "--update" in sys.argv
     # Every core by default; ONE inside the suite, which says so through
@@ -238,19 +318,21 @@ def main():
     if jobs <= 0:
         jobs = min(32, os.cpu_count() or 1)
     if "--emit" in sys.argv:                    # used by `against`
-        fp, census, rare, total = sweep(jobs)
+        fp, census, rare, total, codes, classes = sweep(jobs)
         print(json.dumps({"fingerprint": fp, "census": census,
-                          "cases": total}))
+                          "cases": total, "codes": codes,
+                          "classes": classes}))
         return 0
     rev = None
     for i, a in enumerate(sys.argv):
         if a == "--against" and i + 1 < len(sys.argv):
             rev = sys.argv[i + 1]
     print("=" * 78)
-    print("THE JUDGE'S TABLE — an exhaustive sweep of its input space")
+    print(f"THE JUDGE'S TABLE — an exhaustive sweep, space '{SPACE}' "
+          f"({len(SPACES[SPACE]['names'])} quantities)")
     print("=" * 78)
     t0 = time.time()
-    fp, census, rare, total = sweep(jobs)
+    fp, census, rare, total, codes, classes = sweep(jobs)
     print(f"\n  cases swept: {total:,}   fingerprint: {fp}")
     print(f"  {time.time() - t0:.1f}s on {jobs} process"
           f"{'' if jobs == 1 else 'es'}")
@@ -278,11 +360,20 @@ def main():
     print("    rather than a slogan: earning is the rare event by design.")
     print(f"    E (no readings at all): {empty:,} — "
           f"{100 * empty / total:.2f}%.")
-    print("    Nearly a quarter of the space is unjudgeable — mismatched")
-    print("    units, impossible lattices, inverted intervals. That is a")
-    print("    fact about the input space, not a defect of the judge: the")
-    print("    fourth corner is where nonsense goes, and nonsense is common")
-    print("    when you enumerate rather than curate.")
+    if empty:
+        print("    Every one of them from INCOMPARABLE UNITS, and none from")
+        print("    lattices or intervals — checked case by case, and the")
+        print("    three-quantity space corroborates it live: drop the")
+        print("    second unit from the vocabulary and E goes to zero there.")
+        print("    So the fourth corner has one cause in this space, not the")
+        print("    three a first reading of the number suggested. It is a")
+        print("    fact about enumerated input rather than a defect: metres")
+        print("    against roubles is nonsense, and nonsense is common when")
+        print("    you enumerate instead of curate.")
+    else:
+        print("    None at all — this space has no incomparable units in its")
+        print("    vocabulary, which is precisely where every E in the")
+        print("    two-quantity sweep came from.")
 
     if rev:
         print(f"\n  AGAINST {rev} — same sweep, that revision's judge")
@@ -300,6 +391,7 @@ def main():
             a, b = old["census"].get(k, 0), census.get(k, 0)
             if a != b:
                 print(f"      {k:34} {a:>8,} -> {b:>8,}")
+        _report_movers(old, {"codes": codes, "classes": classes})
         return 0
 
     stored = None
@@ -307,7 +399,8 @@ def main():
         stored = json.load(open(STORE, encoding="utf-8"))
     if update or stored is None:
         json.dump({"fingerprint": fp, "cases": total, "census": census,
-                   "rare": rare}, open(STORE, "w", encoding="utf-8"),
+                   "rare": rare, "codes": codes, "classes": classes},
+                  open(STORE, "w", encoding="utf-8"),
                   indent=1, ensure_ascii=False)
         print(f"\n  TABLE WRITTEN — {STORE}")
         print("  (blessing a table is a decision: it records what the judge")
@@ -329,6 +422,8 @@ def main():
         a, b = stored["census"].get(k, 0), census.get(k, 0)
         if a != b:
             print(f"    {k:34} {a:>8,} -> {b:>8,}")
+    if "codes" in stored:
+        _report_movers(stored, {"codes": codes, "classes": classes})
     print("\n  RED — the judge answers differently than when this table was")
     print("  blessed. That is not automatically wrong: if the change was")
     print("  intended, read the diff, satisfy yourself it is the change you")

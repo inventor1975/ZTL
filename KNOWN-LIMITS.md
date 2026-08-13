@@ -143,6 +143,23 @@ miss; it reports a range it cannot.
 
 ---
 
+## The nets, and what each one covers
+
+Three characterization sweeps, and it is worth knowing which instrument each
+one watches, because the first was built over the wrong one.
+`conformance/judge_table.py` sweeps the numeric judge over two quantities
+(184,320 cases) and `judge_table_three.py` over three (139,968, a coarser
+per-quantity vocabulary — the full one cubed is seven million). `book_table.py`
+sweeps the ledger: every ground kind in every position, three claims deep, 1,536
+books. The book got its net last and needed it first — every surprise of the day
+that prompted this machinery was in the ledger, not in the judge.
+
+None of them VERIFIES. They record what the instruments do, including whatever
+they do wrongly; agreeing tomorrow proves that nothing moved unnoticed. Still
+unswept: `zpassport`, `znumsolve`, and the propositional `ztljudge`.
+
+---
+
 ## Gaps — unfinished, with a known shape
 
 **Three built cases are placed nowhere.** `dilemmas/lifeline.py`,

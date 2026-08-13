@@ -14,5 +14,19 @@
   "EARNED T -": 2688,
   "ON CREDIT F document,verify": 1344
  },
- "rare": []
+ "rare": [],
+ "codes": "eNrt3UFypDAMBdCQzEzSuf+Bp7xuVLQaC2N4WvylIlL4rXDr8cjVZ7L+JusjWY8LzL8sr2ebKZNtpky2mTI5//y5Z8hN396f3DPkpm/vz+zz84c//OEPf/jDH/7whz/84Q9/jpj/J6he5/dPUL3O7xXmX5bn7HV+26xr2ev8zj//+jP0Or/r07f3p9f5nX1+/vCHP/zhD3/4wx/+8Ic//OHPEfN/FtdHcV1h/vypfD2z5zGb889f+wy107f3Z/b5+cMf/vCHP/zhD3/4wx/+8Ic//OEPf/jDH/7whz/84Q9/+MMf/vCHP/zhz96svl+p/3b/yvuV+m/1r71fqT9/+KM/f/ijP3/4oz9/+KM/f87Qv/p+pf7b/SvvV+q/1b/2fqX+/OGP/vzhj/784Y/+/OGP/vw5Q381vuq/spNx+i+MTcUf/kj+8Efyhz+KP/yR/OGP5A9/FH/4I/nDH8kf/ij+8EfuzWhPX7TXL/v7XdF3etF3fdmze4X51zbFRXv9sr8gFX2nF33Xl32D5p9//RmivX7Z3++KvtOLvuvLn9/Z5+cPf/jDH/7whz/84Q9/+MMf/hwxf3ROo3OdPb/V9zevMP/amxKd6+z5rb6/Of/8688Qnevs+a2+vzn//PzhD3/4wx/+8Ic//OEPf/jDnyPmt3/Q/sE9af+g/YP2n/KHP/zhD3/4wx/+8Ic//OEPf/jDH/7whz/84Q9/+MMf/vCHP/zhD3/4M3b+6vuV+m/3r7xfqf9W/9r7lfrzhz/684c/+vOHP/rzhz/68+cM/avvV+q/3b/yfqX+W/1r71fqzx/+6M8f/ujPH/7ozx/+6M+fM/RX48smOvsH75uKP/yR/OGP5A9/FH/4I/nDH8kf/ij+8Efyhz+SP/xR/OGP3Jv2D9o/aP+g/YP2n/KHP/zhD3/4wx/+8Ic//OHPPf2Jqtf57fX7XVeYPz7Fz9nr/Pb6/a755889Q6/z2+v3u+afnz/84Q9/+MMf/vCHP/zhD3/4c8T89g/aP7gn7R+0f9D+U/7whz/84Q9/+MMf/vCHP/zhD3/4wx/+8Ic//OEPf/jDH/7whz/84Q9/xs5vP+D4/vYD2j9o/ykf+MMfPvCHP3zgD3/4wB/+8GeEP73uV+r/nj+97lfq/54/ve5X6s8f/ujPH/7ozx/+6M8f/ujPnzP0V+PLJjr7B++bij/8kfzhj+QPfxR/+CP5wx/JH/4o/vBH8oc/kj/8Ufzhj9yb9g/aP2j/oP2D9p/yhz/84Q9/+MMf/vCHP/zhD3/4wx/+8Ic//OEPf/jDH/7whz/84Q9/+DPv/PYP2j+4J+0ftH/Q/lP+8Ic//OEPf/jDH/7whz/84Q9/+MMf/vCHP/zhD3/4wx/+8Ic//OEPf8bObz/g+P72A9o/aP8pH/jDHz7whz984A9/+MAf/vCHP/zhD3/4wx/+8Ic//OEPf/jDH/7whz/8ebe/Gl820dk/eN9U/OGP5A9/JH/4o/jDH8kf/kj+8Efxhz+SP/yR/OGP4g9/5N78l6zvZGX7fyXrCvMvy+vZZspktn+bKZPzz5/7G7np2/uT65+bvr0/s8/PH/7whz/84Q9/+MMf/vCHP/w5Yv6foHqd39+gep3fK8y/LM/Z6/y2Wdey1/mdf/71Z+h1ftenb+9Pr/M7+/z84Q9/+MMf/vCHP/zhD3/4w58j5v8urq/iusL8+VP5embPYzbnn7/2GWqnb+/P7PPzhz/84Q9/+MMf/vCHP/zhD3/4wx/+8Ic//OEPf/jDH/7whz/84Q9/+MOfvXm2+6F37H+m+6H363+u+6H3688H/vCHD/zhDx/4wx8+8Ic/fDiif/X9Sv23+1fer9R/q3/t/Ur9+cMf/fnDH/35wx/9+cMf/flzhv5qfNV/ZSfj9F8Ym4o//JH84Y/kD38Uf/gj+cMfyR/+KP7wR/KHP5I//FH84Y/cm/8B26CyzA==",
+ "classes": [
+  "OPEN Z document,measure",
+  "E None repair",
+  "OPEN Z measure",
+  "OPEN Z document,measure,verify",
+  "ON CREDIT F document",
+  "ON CREDIT T document",
+  "OPEN Z verify",
+  "OPEN Z measure,verify",
+  "REFUTED F -",
+  "EARNED T -",
+  "ON CREDIT F document,verify"
+ ]
 }

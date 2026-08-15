@@ -69,8 +69,68 @@ async function loadSpec() {
 }
 
 // ---------------------------------------------------------------- the grid
+// ---------------------------------------------------- suggested ground names
+// The spec says WHICH column offers names, under which statuses, and what to
+// call them; this file still knows none of that by name.
+// A sentinel, never a ground: parentheses are not legal in a name, so
+// this value cannot collide with anything a person could pick or type.
+const OWN = "(own)";
+
+function suggestState(col, row) {
+  const s = col.suggest;
+  if (!s || row["_own_" + col.key]) return null;
+  return s.when_status.includes(row.status || "") ? s : null;
+}
+
+function usedGrounds(col, skip) {
+  const out = [];
+  ROWS.forEach((r, j) => {
+    const v = (r[col.key] || "").trim();
+    if (j !== skip && v && !out.includes(v)) out.push(v);
+  });
+  return out;
+}
+
+// The next name nobody is using yet. Not "count the rows and offer ten" —
+// offering ten meaningless items is the same confusion in a new shape. Show
+// what is already in play, plus one fresh one, and the list grows only as
+// fast as the ledger actually needs it.
+function freshGround(s, used) {
+  for (let n = 1; ; n++) if (!used.includes(s.prefix + n)) return s.prefix + n;
+}
+
+function groundLabel(s, value) {
+  const m = value.startsWith(s.prefix) && /^\d+$/.test(value.slice(s.prefix.length));
+  return m ? s.label.replace("%d", value.slice(s.prefix.length)) : value;
+}
+
 function widget(col, row, i) {
   const v = row[col.key] ?? col.default ?? "";
+  const sg = suggestState(col, row);
+  if (sg) {
+    const used = usedGrounds(col, i);
+    const list = used.slice();
+    if (v && !list.includes(v)) list.unshift(v);
+    // A fresh name is only worth offering when there is another row to
+    // share it with or differ from. With a single row, renaming ground-1 to
+    // ground-2 says nothing, and an option that says nothing is the same
+    // noise this change set out to remove.
+    if (ROWS.length > 1) {
+      const fresh = freshGround(sg, list);
+      if (!list.includes(fresh)) list.push(fresh);
+    }
+    // Generated names read as a sequence, so they must be offered as one:
+    // "Ground 2, Ground 1, Ground 3" is a list a person has to re-sort in
+    // their head. Names of their own keep their place at the front.
+    const num = g => g.startsWith(sg.prefix) && /^\d+$/.test(g.slice(sg.prefix.length))
+                     ? +g.slice(sg.prefix.length) : -1;
+    list.sort((a, b) => num(a) - num(b));
+    const opts = list.map(g =>
+      `<option value="${esc(g)}"${g === v ? " selected" : ""}>` +
+      `${esc(groundLabel(sg, g))}</option>`).join("");
+    return `<select data-i="${i}" data-k="${esc(col.key)}">${opts}` +
+           `<option value="${esc(OWN)}">${esc(sg.own)}</option></select>`;
+  }
   // a cell whose meaning depends on another cell must SAY so, per row:
   // `inv-17` and `~Tr(L)` are not the same kind of thing, and the status
   // is what decides which one this cell wants
@@ -109,7 +169,12 @@ function drawGrid() {
 }
 
 function collect() {
-  return { rows: ROWS.filter(r => (r.name || "").trim()),
+  // `_own_*` is the form remembering that this cell was switched to free
+  // text. It is interface state, not part of the document, and the runner
+  // must never see a key the language does not have.
+  const clean = r => Object.fromEntries(
+    Object.entries(r).filter(([k]) => !k.startsWith("_")));
+  return { rows: ROWS.filter(r => (r.name || "").trim()).map(clean),
            claim: $("claim").value };
 }
 
@@ -316,10 +381,30 @@ document.addEventListener("input", e => {
   if (i == null) return;
   const k = e.target.dataset.k;
   ROWS[i][k] = e.target.type === "checkbox" ? e.target.checked : e.target.value;
+  // "a name of my own" is not a ground, it is a request for the text box
+  const own = SPEC.columns.find(c => c.key === k && c.suggest);
+  if (own && ROWS[i][k] === OWN) {
+    ROWS[i]["_own_" + k] = true;
+    ROWS[i][k] = "";
+    drawGrid();
+    return;
+  }
   // changing the status changes what the ground cell is asking for, so the
   // row is drawn again rather than left showing the previous question
-  if (k === "status") { drawGrid(); }
+  if (k === "status") { fillSuggested(i); drawGrid(); }
 });
+
+// A status that needs a ground gets one immediately, rather than a refusal
+// the reader has to decode. This is the whole point of the change: the
+// commonest error in the studio was raised against a row the person had
+// filled in good faith.
+function fillSuggested(i) {
+  SPEC.columns.forEach(c => {
+    const sg = suggestState(c, ROWS[i]);
+    if (sg && !(ROWS[i][c.key] || "").trim())
+      ROWS[i][c.key] = freshGround(sg, usedGrounds(c, i));
+  });
+}
 document.addEventListener("click", e => {
   const d = e.target.dataset?.del;
   if (d != null) { ROWS.splice(+d, 1); drawGrid(); }

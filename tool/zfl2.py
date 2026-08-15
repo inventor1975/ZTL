@@ -71,6 +71,17 @@ COLUMNS = [
     {
         "key": "status", "type": "choice", "required": True, "advanced": False,
         "options": ["verified", "refuted", "unverified", "defined"],
+        # A WIDGET THAT LIED. With no default the cell held "" while the
+        # browser, having no matching option, displayed the first one —
+        # "verified". So a fresh row SHOWED verified and STORED nothing, and
+        # the reader was answering for a status they had never chosen. Found
+        # 2026-08-15 by reading the live page rather than the source.
+        #
+        # The default is the doctrine's own: unverified. Zero trust means a
+        # name arrives unearned, the judge already reads an unlisted atom as
+        # Z, and a studio whose default was `verified` would be granting
+        # truth on credit in its very first row.
+        "default": "unverified",
         "en": ("status", "where it stands with us"),
         "ru": ("статус", "откуда оно у нас"),
         "labels": {
@@ -96,6 +107,32 @@ COLUMNS = [
         "en": ("ground", "what backs it, or the formula defining it"),
         "ru": ("основание", "чем подтверждено или как определено"),
         "eg": ["inv-17", "~Tr(L)"],
+        # THE FIELD OFFERS NAMES INSTEAD OF DEMANDING THEM. Reported live by
+        # the curator: a free-text ground made people think the CONTENT
+        # mattered. It does not — the machine never looks inside an opaque
+        # ground, so the only decision carrying meaning is whether two rows
+        # name the SAME ground or different ones. A dropdown of ready-made
+        # names leaves exactly that decision and removes the rest, and the
+        # commonest refusal in the studio (E_NOGROUND on a row someone
+        # marked verified) stops being reachable at all.
+        #
+        # What is STORED is `ground-1`; what is SHOWN is "Ground 1" or
+        # "Основание 1". Two reasons, both load-bearing: the whole cascade
+        # rests on ground identity, so switching the interface language must
+        # not silently rename anything, and a displayed name with a space in
+        # it would be cut in half by E_GROUND_SPACES.
+        #
+        # `defined` is deliberately absent from `when_status`: there the cell
+        # holds a formula the machine reads, not a name it only compares.
+        "suggest": {
+            "when_status": ["verified", "refuted"],
+            "prefix": "ground-",
+            "label": {"en": "Ground %d", "ru": "Основание %d"},
+            # free text stays reachable, and it is not a courtesy: `inv-17`
+            # is the only thing tying a row to a real piece of paper, and a
+            # ledger of Ground 1..10 would have thrown that away.
+            "own": {"en": "a name of my own…", "ru": "своё имя…"},
+        },
         "help_when": {
             "verified": {
                 "en": ("the name of the document or act that verified it — "
@@ -216,6 +253,12 @@ def form_spec(lang="en"):
             labels = c.get("labels", {}).get(lang, {})
             out["options"] = [{"value": o, "label": labels.get(o, o)}
                               for o in c["options"]]
+        s = c.get("suggest")
+        if s:
+            out["suggest"] = {"when_status": s["when_status"],
+                              "prefix": s["prefix"],
+                              "label": s["label"].get(lang, s["label"]["en"]),
+                              "own": s["own"].get(lang, s["own"]["en"])}
         return out
     return {"columns": [render(c) for c in COLUMNS],
             "document": [render(c) for c in DOC_FIELDS]}
@@ -310,9 +353,20 @@ def validate(doc):
             continue
         ground = (r.get("ground") or "").strip()
         if status in ("verified", "refuted", "defined") and not ground:
+            # NAMES THE EXIT, not just the rule. Reported live: two atoms
+            # marked verified for a toy `rain -> umbrella` produced two
+            # refusals and no way forward — the message stated the law and
+            # left the reader to guess the move. Both moves are legitimate,
+            # and the second one is the doctrine rather than a loophole: a
+            # supposition IS a ground once it is named, because then it is
+            # visible and can be withdrawn. What the machine refuses is an
+            # ANONYMOUS stipulation, never a declared one.
             issues.append(_issue("error", "E_NOGROUND", f"{at} / ground",
-                                 "a verified, refuted or defined name has to "
-                                 "say what backs it"))
+                                 "'verified', 'refuted' and 'defined' need a "
+                                 "ground. Either name what backs it — a "
+                                 "supposition counts once it is named, e.g. "
+                                 "by-assumption — or set the status to "
+                                 "'not verified'"))
         # A GROUND IS AN IDENTIFIER. The sheet is space-separated, so a
         # ground with a space is silently CUT — and a ground's whole job is
         # identity, which makes a truncated one a different document that

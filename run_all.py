@@ -206,7 +206,7 @@ STANDS = [
                                      "cases swept: 480",
                                      "case: 0 laundered values"]),
     ("db/probe_ledger.py", ["LEDGER PROBE GREEN",
-                            "4: line_a, line_b, billed, margin",
+                            "4: billed, line_a, line_b, margin",
                             "6500 EARNED  ->  6500 ON CREDIT"]),
     ("db/probe_assertions.py", ["ASSERTIONS PROBE GREEN",
                                 "NEITHER 2   of 12",

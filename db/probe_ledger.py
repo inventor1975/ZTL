@@ -86,7 +86,9 @@ class HonestSum:
 
     def finalize(self):
         if self.weak:
-            return f"{self.total:g} ON CREDIT (weak: {','.join(self.weak)})"
+            # sorted for the same reason as the cascade: the order rows reach
+            # an aggregate is a query-plan detail, not a fact about the ledger
+            return f"{self.total:g} ON CREDIT (weak: {','.join(sorted(self.weak))})"
         return f"{self.total:g} EARNED"
 
 
@@ -210,6 +212,9 @@ def main():
     print("=" * 78)
     print("ONE LEDGER, TWO WAYS — what an auditor can actually ask")
     print("=" * 78)
+    # Printed because this stand went red in CI and green here, and there was
+    # no way to tell from the log which of the two machines was unusual.
+    print(f"  python {sys.version.split()[0]}   sqlite {sqlite3.sqlite_version}")
     p, z = plain_db(), ztl_db()
     verdicts = []
 
@@ -269,7 +274,12 @@ def main():
         UNION
         SELECT r.name FROM rests_on r JOIN fallen f ON r.witness = f.name)
       SELECT name FROM fallen"""
-    fallen = [r[0] for r in z.execute(CASCADE, ("inv-17",))]
+    # SORTED, and not for looks. What falls is a set; the order SQLite
+    # happens to walk the recursion in is an engine detail, and a stand whose
+    # marker depends on one is a stand that can go red on somebody else's
+    # machine for no reason at all. Ordering nothing is cheaper than
+    # explaining a red CI.
+    fallen = sorted(r[0] for r in z.execute(CASCADE, ("inv-17",)))
     verdicts.append(q(
         "6. inv-17 turns out to be forged. What falls?",
         "no query, at any length",

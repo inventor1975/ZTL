@@ -105,6 +105,8 @@ STANDS = [
                         "partner-a-report     carries      300",
                         "RUB        5000", "m2            3",
                         "exposure(inv-17) is empty",
+                        "mission.advance  both grounds are authority",
+                        "survey.width    both grounds are evidence",
                         "k2  EARNED  tested=declared   expiry=perpetual"]),
     ("znumride.py",    ["ZNUMRIDE GREEN", "mismatches: 0 of 17"]),
     ("zparadox.py", ["E28 GREEN", "PARADOX (0 tables)",

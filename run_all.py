@@ -271,6 +271,8 @@ STANDS = [
                           "CONTAINS A FAILURE OF MY OWN",
                           "an autonomous",
                           "may continue to RELY on its current warrant only while it"]),
+    ("inventory/note_claims.py", ["NOTE CLAIMS GREEN",
+                                  "27 claims and 19 figures"]),
     ("inventory/paper_claims.py", ["PAPER CLAIMS GREEN"]),
     ("inventory/docket_claims.py", ["DOCKET TABLE GREEN",
                                     "rows printed in the paper: 21"]),

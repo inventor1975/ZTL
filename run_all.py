@@ -232,6 +232,11 @@ STANDS = [
                                    "the formula as WRITTEN   -> EARNED",
                                    "-> ['dataset', 'finding', 'policy']",
                                    "CAUGHT 2 of 3"]),
+    ("db/probe_sheet.py", ["SHEET PROBE GREEN",
+                           "B6 <- B1, B2, B3, B4",
+                           "(B2) turns out wrong  ->  margin, over_ceiling, "
+                           "subtotal, vat, total",
+                           "the count of links anybody typed is ZERO"]),
     ("inventory/paper_claims.py", ["PAPER CLAIMS GREEN"]),
     ("inventory/docket_claims.py", ["DOCKET TABLE GREEN",
                                     "rows printed in the paper: 21"]),

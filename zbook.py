@@ -138,12 +138,54 @@ PERFORMED = "performed/"
 # discipline — the class that cannot expire at all. This is the other half.
 EXPIRING = "expiring/"
 
+# THE DIMENSION OF A GROUND. `performed/`, `expiring/` and `claim/` already
+# say what KIND a ground is in the sense of how it can be lost. This says
+# something else and orthogonal: whether the ground SUPPORTS a claim or
+# PERMITS it. Measured 2026-08-16 (db/probe_classes.py) and load-bearing:
+# at full genuine redundancy in every dimension, losing one agent or one
+# evidence source costs 0.0000 of a collective while losing the authority
+# root costs 1.0000. Evidence redundancy does not substitute for authority
+# redundancy, because a conclusion needs both and falls from either.
+#
+# Everything unmarked is evidence, so every book ever written here keeps its
+# meaning. A ground may carry one prefix, not two — `authority/expiring/x` is
+# not accepted, and that limit is stated rather than discovered.
+AUTHORITY = "authority/"
+
 ALT = "|"
 _WITNESS = re.compile(r"earned:([^\s,]+)")
 
 
 def _alts(witness):
     return [a for a in (witness or "").split(ALT) if a]
+
+
+def dimension(ground):
+    """Which dependency dimension a ground lives in. Unmarked is evidence."""
+    return "authority" if (ground or "").startswith(AUTHORITY) else "evidence"
+
+
+def single_dimension_risk(book):
+    """Quantities whose alternatives ALL live in one dimension — declared
+    redundancy that buys nothing against the failure that matters.
+
+    This is the measured rule in one function: two orders under one commander
+    are one order, and counting grounds says nothing until something
+    establishes they are grounds in different dimensions. The book still
+    cannot check that two grounds are INDEPENDENT; what it can now see is
+    that they are not even of different KINDS, which is the cheap half of the
+    question and was previously invisible."""
+    out = []
+    for cid, _f, data in book:
+        q, _m = parse_quantities(data)
+        for name, v in sorted(q.items()):
+            alts = _alts(v.get("witness"))
+            if len(alts) < 2:
+                continue
+            dims = {dimension(a) for a in alts}
+            if len(dims) == 1:
+                out.append((cid, name, dims.pop(), alts))
+    return out
 
 
 def expiry_scope(book):
@@ -1252,6 +1294,38 @@ def sec15_how_much_rests_on_it_not_how_many():
     print("   the independence is DECLARED and cannot be checked.")
 
 
+def sec16_a_ground_has_a_dimension():
+    """Two orders under one commander are one order.
+
+    Added 2026-08-16 with its user rather than ahead of it: db/probe_classes
+    measured that at full genuine redundancy losing an agent costs 0.0000 of
+    a collective while losing the authority root costs 1.0000, so evidence
+    redundancy and authority redundancy are not interchangeable. The ledger
+    could not see the difference; now it can see the cheap half of it."""
+    print()
+    print("16. A GROUND HAS A DIMENSION")
+    book = [
+        ("mission", "advance == 1",
+         "advance=1 earned:authority/order-4|authority/order-9"),
+        ("supply", "fuel > 0", "fuel=500 earned:inv-17|authority/order-4"),
+        ("survey", "width == 3", "width=3 earned:photo-a|photo-b"),
+    ]
+    for cid, name, dim, alts in single_dimension_risk(book):
+        print(f"     {cid}.{name:8} both grounds are {dim:9} {alts}")
+    risky = {r[0] for r in single_dimension_risk(book)}
+    assert risky == {"mission", "survey"}
+    print("   `supply` is not listed: it stands on a document AND on an")
+    print("   order, so losing either leaves it standing. `mission` carries")
+    print("   two orders and `survey` two photographs — declared redundancy")
+    print("   that buys nothing against the loss of the commander in the")
+    print("   first case and of the camera in the second.")
+    print("   The ceiling is unmoved and worth restating beside a new")
+    print("   function: this checks that two grounds are of different KINDS,")
+    print("   never that they are INDEPENDENT. Two orders from two")
+    print("   commanders under one general are still one order, and nothing")
+    print("   here sees it.")
+
+
 if __name__ == "__main__":
     print("=" * 72)
     print("ZBOOK — the book of claims, stage one")
@@ -1271,6 +1345,7 @@ if __name__ == "__main__":
     sec13_nullarity_is_catchable_by_descent()
     sec14_what_is_still_missing()
     sec15_how_much_rests_on_it_not_how_many()
+    sec16_a_ground_has_a_dimension()
     print("=" * 72)
     print("ZBOOK GREEN — the book stores claims and grounds and never a")
     print("verdict: every reading recomputes. A snapshot carries the")

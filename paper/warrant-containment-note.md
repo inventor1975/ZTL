@@ -364,6 +364,33 @@ maintainer, unverifiable by the system, and defeated entirely if both
 alternatives rest on the same underlying library. That is §3.3's problem
 inside a package manager forty years old, and it is unsolved there too.
 
+### 3.9 The parameters were carrying the conclusions
+
+Anchoring the sweep on §3.8's real numbers rather than on chosen ones:
+
+| density | alternatives | worst sampled | worst chosen | |
+|---|---|---|---|---|
+| 10.00 | 90% | 0.013 | 1.000 | as swept |
+| 10.00 | 2.6% | 0.933 | 1.000 | real redundancy |
+| 5.18 | 90% | 0.000 | 0.977 | real density |
+| **5.18** | **2.6%** | **0.926** | **0.994** | **both real** |
+
+At a density and a redundancy a real dependency graph actually has, **there is
+no containment**: a randomly located loss costs 93% of the collective, because
+2.6% of conclusions carrying an alternative is indistinguishable from none.
+Containment appears only above about 75% redundancy, and real systems sit at
+the other end of that axis.
+
+Density turned out not to be the dial an earlier draft of the probe claimed:
+the collective is uncontained at every density tried, from 2 edges per node
+(0.719) upward, saturating by about 3. That was a third conclusion written
+before its table was read, and it is recorded in the source with the others.
+
+**And the chosen-target column does not move anywhere.** Across every row of
+every table in §§3.2, 3.8 and 3.9, an adversary aiming at the root takes
+essentially the whole collective at any density and any redundancy. It is the
+most robust result in this note, and it is a negative one.
+
 ---
 
 ## 4. Five things a system must know, and none of them are here

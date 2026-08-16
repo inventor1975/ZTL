@@ -331,6 +331,39 @@ Ten seeds of one model is still one model. This answers whether a figure is
 an artefact of a lucky draw; it does not make it general, and it does not
 apply at all to a model that has no draw in it.
 
+### 3.8 A graph nobody designed
+
+Every result above was measured on graphs the author generated. Real ones at
+this scale are ordinary — a Debian installation carries one on disk — and the
+omission had no defence. The machine's own package database, 2,444 packages
+and 12,266 requirement groups, parsed into the graph it already is:
+
+| | synthetic probes | Debian, this machine |
+|---|---|---|
+| edges per node | 10.00 | **5.18** |
+| declared alternatives | swept 0–95% | **2.6%** |
+| median in-degree | — | 1 (top node: 1,588) |
+| shape | two of three hierarchical / local | heavy-tailed |
+| A_crit | 1.000 (one root) | **0.868** (`libgcc-s1`, `libc6`) |
+
+**What it confirms.** The phenomenon is real and is not an artefact of a
+generated tree: one package carries 87% of a working system, and losing it
+takes that share with it.
+
+**What it unsettles, which is more.** The synthetic collectives are twice as
+dense. Two of the three topologies are shapes this graph does not have — and
+they are the two that carried the threshold in §3.2. Above all, **real
+declared redundancy here is 2.6%**, while §3.2 located containment somewhere
+in the seventies. If this graph is at all typical, the region where the
+threshold was found is a region real systems do not occupy, and the sweep
+was largely hypothetical.
+
+**One thing transfers without qualification.** Debian's `|` is this corpus's
+`|`: a requirement satisfied by either of two packages, declared by a
+maintainer, unverifiable by the system, and defeated entirely if both
+alternatives rest on the same underlying library. That is §3.3's problem
+inside a package manager forty years old, and it is unsolved there too.
+
 ---
 
 ## 4. Five things a system must know, and none of them are here
@@ -516,9 +549,11 @@ it can and cannot promise.
 
 ## 6. Limits
 
-**These are simulations on synthetic graphs.** The existence of a redundancy
-threshold is probably robust; its location is a property of the model. No
-result here has been validated against a deployed system.
+**These are simulations on synthetic graphs, and §3.8 measures how unlike a
+real one they are** — twice the density, a shape two of three generators do
+not share, and a redundancy sweep across a region where real systems sit at
+2.6%. The existence of a threshold may be robust; its location is a property
+of the model, and the model is not close to the one real graph tested.
 
 **Citations are honoured, never discovered.** A dependence nobody recorded is
 invisible, so a measured blast radius can be understated and never overstated.

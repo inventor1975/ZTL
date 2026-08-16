@@ -617,7 +617,7 @@ async function commentary(doc, result) {
   const slot = document.createElement("div");
   slot.className = "panel comment pending";
   slot.innerHTML = `<h3>${esc(t("commentary"))}</h3>` +
-                   `<p class="wait"><span class="bar"></span>` +
+                   `<p class="wait"><span class="aibar"></span>` +
                    `${esc(t("thinking_note"))}</p>`;
   $("report").appendChild(slot);
   const r = await fetch("/api/v2comment", {

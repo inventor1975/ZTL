@@ -158,6 +158,33 @@ COLUMNS = [
         },
     },
     {
+        # WHICH DEPENDENCY THIS IS, which is not the same question as
+        # `ground_kind` and must not be folded into it. `ground_kind` says how
+        # a ground can be LOST — a document is withdrawn, a certificate
+        # expires, an act cannot be taken back. This says what the ground DOES
+        # — supports a claim, or permits it. An order and an invoice are both
+        # documents and are not interchangeable.
+        #
+        # Measured, not supposed: db/probe_classes ran a collective at full
+        # genuine redundancy in every dimension and losing one agent cost
+        # 0.0000 while losing the authority root cost 1.0000. Redundancy in
+        # one dimension does not substitute for redundancy in another.
+        #
+        # ADVANCED and defaulted to evidence, so the table a person fills to
+        # count sweets is exactly the table they filled yesterday.
+        "key": "dimension", "type": "choice", "required": False,
+        "advanced": True, "default": "evidence",
+        "options": ["evidence", "authority"],
+        "en": ("dimension", "does this SUPPORT the claim or PERMIT it"),
+        "ru": ("измерение", "оно ПОДПИРАЕТ утверждение или РАЗРЕШАЕТ его"),
+        "labels": {
+            "en": {"evidence": "evidence (supports)",
+                   "authority": "authority (permits)"},
+            "ru": {"evidence": "опора (подпирает)",
+                   "authority": "разрешение (даёт право)"},
+        },
+    },
+    {
         "key": "ground_kind", "type": "choice", "required": False,
         "advanced": False, "default": "document",
         "options": ["document", "act", "certificate", "row"],
@@ -377,7 +404,17 @@ def validate(doc):
                 "error", "E_GROUND_SPACES", f"{at} / ground",
                 "a ground is one word — it names a document, and a space "
                 "would cut the name in half: write the-story or inv-17"))
+        dim = (r.get("dimension") or "evidence").strip()
+        if dim not in ("evidence", "authority"):
+            issues.append(_issue("error", "E_DIM", f"{at} / dimension",
+                                 "dimension must be evidence or authority"))
         kind = (r.get("ground_kind") or "document").strip()
+        if dim == "authority" and kind not in ("document", ""):
+            issues.append(_issue(
+                "error", "E_DIM_CLASH", f"{at} / dimension",
+                "a ground carries one mark, not two: 'authority' cannot be "
+                "combined with an act, a certificate or another row. Say "
+                "which one matters more and use that"))
         if kind not in GROUND_KINDS:
             issues.append(_issue("error", "E_KIND", f"{at} / kind of ground",
                                  f"kind must be one of {GROUND_KINDS}"))
@@ -525,6 +562,12 @@ def _formula(text, _names):
 
 def _witness(row):
     kind = (row.get("ground_kind") or "document").strip() or "document"
+    # One prefix per ground, never two — the ledger accepts `authority/x` or
+    # `expiring/x` and not `authority/expiring/x`. The clash is refused in
+    # `validate` with the reason, rather than silently resolved here in favour
+    # of whichever branch happens to run first.
+    if (row.get("dimension") or "evidence").strip() == "authority":
+        return "authority/" + (row.get("ground") or "").strip()
     return _KIND_PREFIX.get(kind, "") + (row.get("ground") or "").strip()
 
 

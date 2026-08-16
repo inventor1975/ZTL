@@ -27,7 +27,18 @@ const UI = {
         examples: "examples", send: "ask", commentary: "in plain language",
         askph: "describe the question in your own words…",
         thinking: "filling the table…", pick: "— pick —",
-        aioff: "no model key — the table and the verdict work without it" },
+        aioff: "no model key — the table and the verdict work without it",
+        ownai: "use my own AI", keyph: "paste your API key",
+        keysave: "use it", keyclear: "back to the free AI",
+        keynote: "The key is kept in this browser tab only, for this session, "
+                 + "and is sent to this server solely to call the provider "
+                 + "you picked. Nothing is written to disk. Closing the tab "
+                 + "forgets it.",
+        keyon: "your own AI is in use", keyoff: "using the free AI",
+        limit: "The free AI is used up (20 requests per 10 minutes per "
+               + "visitor). Press \u00abuse my own AI\u00bb above to carry on "
+               + "with your own key \u2014 or keep working without it: the "
+               + "table and the verdict never needed the AI." },
   ru: { advanced: "дополнительно", reference: "что такое ZFL? (язык)",
         addrow: "добавить строку", run: "запустить", claim: "утверждение",
         remove: "убрать строку",
@@ -48,7 +59,18 @@ const UI = {
         examples: "примеры", send: "спросить", commentary: "по-человечески",
         askph: "опишите вопрос своими словами…",
         thinking: "заполняю таблицу…", pick: "— выберите —",
-        aioff: "ключа модели нет — таблица и вердикт работают и без неё" },
+        aioff: "ключа модели нет — таблица и вердикт работают и без неё",
+        ownai: "свой ИИ", keyph: "вставьте свой API-ключ",
+        keysave: "использовать", keyclear: "вернуться к бесплатному",
+        keynote: "Ключ хранится только в этой вкладке браузера и только на "
+                 + "текущий сеанс, а на сервер уходит единственно ради вызова "
+                 + "выбранного вами провайдера. На диск ничего не пишется. "
+                 + "Закроете вкладку — он забудется.",
+        keyon: "работает ваш ИИ", keyoff: "работает бесплатный ИИ",
+        limit: "Бесплатный ИИ исчерпан (20 запросов за 10 минут на "
+               + "посетителя). Нажмите «свой ИИ» вверху и продолжите со "
+               + "своим ключом — или работайте без него: таблица и вердикт "
+               + "в ИИ никогда не нуждались." },
 };
 
 let LANG = new URLSearchParams(location.search).get("l") === "ru" ? "ru" : "en";
@@ -319,11 +341,10 @@ async function ask() {
   const pending = addMsg("sys", t("thinking"));
   const r = await fetch("/api/v2fill", {
     method: "POST", headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ history: HISTORY, lang: LANG }),
+    body: JSON.stringify({ history: HISTORY, lang: LANG, cfg: cfg() }),
   }).then(x => x.json());
   pending.remove();
-  if (!r.ok) { addMsg("sys", r.error || (r.issues || []).map(i => i.hint)
-                             .join("; ")); return; }
+  if (!r.ok) { addMsg("sys", aiError(r)); return; }
   ROWS = r.doc.rows || [];
   $("claim").value = r.doc.claim || "";
   HISTORY.push({ role: "assistant", content: JSON.stringify(r.doc) });
@@ -331,10 +352,97 @@ async function ask() {
   run();
 }
 
+
+// ------------------------------------------------------ your own model key
+// The server already refuses past 20 free calls per ten minutes and its
+// refusal used to say "enter your own key in ⚙ Model" — a control that
+// existed in v1 and was never rebuilt here, so the message named a button
+// nobody could find. This is that button.
+//
+// SESSION ONLY, and that is not a slogan: the key lives in sessionStorage,
+// which the browser drops when the tab closes, and it is never sent to
+// /api/savekey (which is disabled on the public instance anyway). It travels
+// with each AI request because that is the only way the server can call the
+// provider on the user's behalf, and the panel says so in plain words rather
+// than leaving the reader to assume.
+let PROVIDERS = [];
+
+function cfg() {
+  try {
+    const raw = sessionStorage.getItem("ztl_cfg");
+    return raw ? JSON.parse(raw) : null;
+  } catch (e) { return null; }
+}
+
+function cfgLabel() {
+  const c = cfg();
+  $("ownai").textContent = c && c.key
+    ? `${t("ownai")} · ${t("keyon")}` : t("ownai");
+}
+
+async function keyPanel() {
+  const p = $("keypanel");
+  if (!p.hidden) { p.hidden = true; return; }
+  if (!PROVIDERS.length) {
+    const r = await fetch("/api/providers", { method: "POST",
+      headers: { "Content-Type": "application/json" }, body: "{}" })
+      .then(x => x.json()).catch(() => ({ providers: [] }));
+    PROVIDERS = r.providers || [];
+  }
+  const c = cfg() || {};
+  const opts = PROVIDERS.map(pr =>
+    `<option value="${esc(pr.provider)}"${pr.provider === c.provider ?
+      " selected" : ""}>${esc(pr.label)}</option>`).join("");
+  p.innerHTML =
+    `<div class="keybox">` +
+    `<select id="kprov">${opts}</select> ` +
+    `<select id="kmodel"></select> ` +
+    `<input id="kkey" type="password" placeholder="${esc(t("keyph"))}" ` +
+    `value="${esc(c.key || "")}"> ` +
+    `<button id="ksave">${esc(t("keysave"))}</button> ` +
+    `<button id="kclear">${esc(t("keyclear"))}</button>` +
+    `<div class="keynote">${esc(t("keynote"))}</div>` +
+    `<div class="keynote"><a id="kconsole" target="_blank" rel="noopener"></a>` +
+    `</div></div>`;
+  p.hidden = false;
+  const models = () => {
+    const pr = PROVIDERS.find(x => x.provider === $("kprov").value);
+    $("kmodel").innerHTML = (pr ? pr.models : []).map(m =>
+      `<option value="${esc(m)}"${m === c.model ? " selected" : ""}>` +
+      `${esc(m)}</option>`).join("");
+    const a = $("kconsole");
+    a.href = pr ? pr.console : "#";
+    a.textContent = pr ? pr.console : "";
+  };
+  models();
+  $("kprov").onchange = models;
+  $("ksave").onclick = () => {
+    sessionStorage.setItem("ztl_cfg", JSON.stringify({
+      provider: $("kprov").value, model: $("kmodel").value,
+      key: $("kkey").value.trim() }));
+    p.hidden = true;
+    cfgLabel();
+  };
+  $("kclear").onclick = () => {
+    sessionStorage.removeItem("ztl_cfg");
+    p.hidden = true;
+    cfgLabel();
+  };
+}
+
+// The server's refusal is a sentence in English written for v1. When it is
+// the rate limit talking, say it in the reader's language and point at the
+// control that now exists — and say, because it is true, that nothing they
+// came for is blocked.
+function aiError(r) {
+  const raw = r.error || (r.issues || []).map(i => i.hint).join("; ");
+  return /free-AI limit|limit reached/i.test(raw || "") ? t("limit") : raw;
+}
+
 async function commentary(doc, result) {
   const r = await fetch("/api/v2comment", {
     method: "POST", headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ doc, result, lang: LANG }),
+    body: JSON.stringify({ doc, result, lang: LANG, cfg: cfg() }),
   }).then(x => x.json());
   if (!r.ok) return;
   const d = document.createElement("div");
@@ -366,6 +474,7 @@ function chrome() {
   $("claimlabel").textContent = t("claim");
   $("lang").textContent = LANG === "en" ? "RU" : "EN";
   $("ref").href = `/zfl?l=${LANG}`;
+  cfgLabel();
   document.documentElement.lang = LANG;
 }
 
@@ -409,6 +518,7 @@ document.addEventListener("click", e => {
   const d = e.target.dataset?.del;
   if (d != null) { ROWS.splice(+d, 1); drawGrid(); }
 });
+$("ownai").onclick = e => { e.preventDefault(); keyPanel(); };
 $("addrow").onclick = addRow;
 $("send").onclick = ask;
 $("ask").onkeydown = e => { if (e.key === "Enter") ask(); };

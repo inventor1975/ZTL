@@ -53,6 +53,12 @@
         cursor:pointer; font:inherit; }
  .issues div { padding:.25em 0; }
  .issues .error { color:var(--bad); } .issues .warn { color:var(--warn); }
+ .keybox { background:#fff; border:1px solid var(--line); padding:.7em 1em;
+   margin:.4em 0; }
+ .keybox select, .keybox input { margin:.15em .3em .15em 0; }
+ .keybox input { min-width:16em; }
+ .keynote { color:#666; font-size:.85em; margin-top:.4em; max-width:52em; }
+ #ownai { margin-left:1em; }
  .panel { background:#fff; border:1px solid var(--line); padding:.8em 1em;
           margin:.8em 0; }
  .panel h3 { margin:.1em 0 .5em; font-size:13px; text-transform:uppercase;
@@ -74,11 +80,13 @@
  .comment { background:#f4f7ff; border-color:#c9d8ff; }
 </style>
 
+<div id="keypanel" hidden></div>
 <header>
   <h1>ZTL STUDIO</h1>
   <span class="sp"></span>
   <label><input type="checkbox" id="adv"> <span data-t="advanced"></span></label>
   <a id="ref" href="/zfl" target="_blank" data-t="reference"></a>
+  <a id="ownai" href="#" data-t="ownai"></a>
   <button id="lang">RU</button>
 </header>
 

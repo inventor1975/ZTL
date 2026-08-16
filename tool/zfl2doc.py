@@ -49,6 +49,14 @@ CODE_HELP = {
     "E_NOGROUND": ("verified, refuted or defined, with nothing backing it",
                    "проверено, опровергнуто или определено — но без основания"),
     "E_KIND": ("a kind of ground outside the list", "вид основания вне списка"),
+    "E_DIM": ("a dimension outside the list — a ground either supports a "
+              "claim or permits it",
+              "измерение вне списка — основание либо подпирает утверждение, "
+              "либо даёт на него право"),
+    "E_DIM_CLASH": ("a ground carries one mark, not two: 'authority' cannot "
+                    "be combined with an act, a certificate or another row",
+                    "основание несёт одну пометку, а не две: «разрешение» не "
+                    "сочетается с актом, сертификатом или другой строкой"),
     "E_FORMULA": ("the defining formula does not parse",
                   "определяющая формула не разбирается"),
     "E_CLAIM": ("the claim does not parse", "утверждение не разбирается"),

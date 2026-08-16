@@ -373,10 +373,13 @@ def page():
     body = "".join(
         f"<div class='lang' id='{code}' dir='{'rtl' if code in zfl2.RTL else 'ltr'}'"
         f"{'' if code == 'en' else ' hidden'}>" + render(code) + "</div>"
-        for code, _name in zfl2.LANGS)
+        for code, *_rest in zfl2.LANGS)
+    # `c, n, *_` and not `c, n`: this row grew a third field once already
+    # and a fixed-width unpack turned the whole page into a traceback. Read
+    # what you need, let the row grow.
     nav = " · ".join(f"<a href='?l={c}' onclick=\"return t('{c}')\">{n}</a>"
-                     for c, n in zfl2.LANGS)
-    codes = ",".join(f"'{c}'" for c, _n in zfl2.LANGS)
+                     for c, n, *_ in zfl2.LANGS)
+    codes = ",".join(f"'{c}'" for c, *_ in zfl2.LANGS)
     return f"""<!doctype html><meta charset="utf-8">
 <title>ZFL</title>
 <style>

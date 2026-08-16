@@ -1,0 +1,569 @@
+<!doctype html><meta charset="utf-8">
+<title>ZFL</title>
+<style>
+ body { font: 15px/1.5 Georgia, serif; max-width: 52em; margin: 3em auto;
+        padding: 0 1em; color: #111; }
+ table { border-collapse: collapse; width: 100%; margin: 1em 0; }
+ th, td { border: 1px solid #bbb; padding: 5px 8px; text-align: left;
+          vertical-align: top; font-size: 14px; }
+ th { background: #eee; } tr.adv td { color: #666; }
+ code { background: #f4f4f4; padding: 1px 4px; }
+ [dir=rtl] th, [dir=rtl] td { text-align: right; }
+ nav { float: right; font-size: 13px; }
+</style>
+<nav><a href='?l=en' onclick="return t('en')">English</a> · <a href='?l=ru' onclick="return t('ru')">Русский</a> · <a href='?l=uk' onclick="return t('uk')">Українська</a> · <a href='?l=he' onclick="return t('he')">עברית</a> · <a href='?l=de' onclick="return t('de')">Deutsch</a> · <a href='?l=fr' onclick="return t('fr')">Français</a> · <a href='?l=es' onclick="return t('es')">Español</a></nav>
+<div class='lang' id='en' dir='ltr'><h1>ZFL — Zero-trust Formal Language, the language of the studio (ZTL is the logic; ZFL is how you write for it)</h1>
+<h2>Why a table and not a syntax</h2><p>Everything you write here is one document: a list of NAMES, each saying where it stands with you, plus what you CLAIM about them. There is no genre to declare and no mode to pick. Which instruments answer — the numeric floor, the passport office, the ledger, the judge — follows from which cells you filled.</p>
+<h2>The one rule underneath</h2><p>Truth is not granted on credit. A name is verified when a verification was produced, and the ground column is where you say what produced it. A name with nothing backing it is not false — it is unverified, which is an honest third answer and the reason this logic exists.</p>
+<h2>Asking for a number</h2><p>Put `?` in a value and the row stops being an answer and becomes a question. `x = ?` with a claim of `x - 10 = 20` is answered: x is 30, and earned. This is the one cell that changes what the machine DOES — everywhere else you are telling it what you know, and here you are asking.</p>
+<h2>Where formulas survive, and the one cell that reads two ways</h2><p>In two cells only. In GROUND, when a name is DEFINED by a formula over other names — that is how self-reference is written, and it is why the liar needs no special mode. And in CLAIM, which is what you are actually asserting. Note what the ground cell is doing: for a verified name it holds `inv-17`, an opaque name the machine never looks inside and which means nothing but its own identity; for a defined name it holds `~Tr(L)`, a formula the machine reads and evaluates. The status decides which, and the form asks again whenever you change it.</p>
+<h2>the columns of a row</h2><table><tr><th>column</th><th>what it is</th><th>required</th><th>options / examples</th></tr>
+<tr><td><b>name</b></td><td>what we call it; formulas use this</td><td>always</td><td>line · budget · L</td></tr>
+<tr><td><b>means</b></td><td>what it MEANS for this to be true</td><td>no</td><td>the invoice line · this sentence is false</td></tr>
+<tr><td><b>status</b></td><td>where it stands with us</td><td>always</td><td>verified · refuted · not verified · defined</td></tr>
+<tr><td><b>ground</b></td><td>what backs it, or the formula defining it</td><td>in context</td><td>inv-17 · ~Tr(L)</td></tr>
+<tr class="adv"><td><b>dimension</b></td><td>does this SUPPORT the claim or PERMIT it</td><td>no</td><td>evidence (supports) · authority (permits)</td></tr>
+<tr><td><b>kind of ground</b></td><td>a document unless you say otherwise</td><td>no</td><td>document · act (nothing to withdraw) · certificate (expires) · another row</td></tr>
+<tr><td><b>value</b></td><td>a number, an interval [0,10], or ? for unknown</td><td>no</td><td>1500 · [0,10] · ?</td></tr>
+<tr><td><b>unit</b></td><td>only with a value; metres never meet roubles</td><td>no</td><td>RUB · m · m2</td></tr>
+<tr><td><b>scale</b></td><td>what it rounds to</td><td>no</td><td>exact · whole · hundredths · thirds</td></tr>
+<tr class="adv"><td><b>separate measurements</b></td><td>each occurrence is its own act of measuring</td><td>no</td><td></td></tr>
+</table>
+<h2>the document itself</h2><table><tr><th>column</th><th>what it is</th><th>required</th><th>options / examples</th></tr>
+<tr><td><b>claim</b></td><td>what you are actually asserting</td><td>no</td><td>line &lt;= budget · rain -&gt; umbrella</td></tr>
+<tr><td><b>ask</b></td><td>narrow the report; empty shows everything that applies</td><td>no</td><td>verdict · warranty · passport · stipulations · blast · brackets</td></tr>
+</table>
+<h2>operators</h2><table>
+<tr><td><code>&amp;</code></td><td>and</td></tr>
+<tr><td><code>-&gt;</code></td><td>if … then</td></tr>
+<tr><td><code>=</code></td><td>the same value as</td></tr>
+<tr><td><code>^</code></td><td>exactly one of</td></tr>
+<tr><td><code>|</code></td><td>or</td></tr>
+<tr><td><code>~</code></td><td>not</td></tr>
+<tr><td><code>Tr(x)</code></td><td>the value of the row x — this is how self-reference is written</td></tr>
+<tr><td><code>&lt;=</code></td><td>at most</td></tr>
+<tr><td><code>&gt;=</code></td><td>at least</td></tr>
+<tr><td><code>==</code></td><td>equal to</td></tr>
+<tr><td><code>&lt;</code></td><td>less than</td></tr>
+<tr><td><code>&gt;</code></td><td>greater than</td></tr>
+</table>
+<h2>arithmetic</h2><table>
+<tr><td><code>*</code></td><td>times</td></tr>
+<tr><td><code>+</code></td><td>plus</td></tr>
+<tr><td><code>-</code></td><td>minus</td></tr>
+<tr><td><code>/</code></td><td>divided by</td></tr>
+<tr><td><code>sum(a,b,…)</code></td><td>the sum of several — the same as a + b + …</td></tr>
+<tr><td><code>( )</code></td><td>brackets, to say what goes first</td></tr>
+<tr><td><code>-x</code></td><td>a leading minus: the sign of a term, not the operation between two — `-x + 100 = 70` is a fair question and was not accepted until 2026-08-13</td></tr>
+</table>
+<h2>what can go in a value</h2><table>
+<tr><td><code>1500</code></td><td>a number you have measured or read off a document</td></tr>
+<tr><td><code>[0,10]</code></td><td>a box: somewhere in this range, and the machine keeps the range rather than picking a point. Both ends are INCLUDED; for a strict bound put it in the claim — `x &gt; 0`. Write it backwards, [10,0], and you get E: the row names nothing, which is a verdict rather than a typo</td></tr>
+<tr><td><code>?</code></td><td>A QUESTION. You do not know it and you are asking. If the rest of the table determines it, the solver answers with the value AND the provenance it inherited — `x = 30, earned`. If it does not, you get told what would settle it.</td></tr>
+</table>
+<h2>a worked example</h2><table><tr><th>column</th><th>means</th><th>status</th><th>ground</th><th>value</th></tr>
+<tr><td>line</td><td>the invoice line</td><td>verified</td><td>inv-17</td><td>1500</td></tr>
+<tr><td>budget</td><td>the ceiling</td><td>verified</td><td>order-4</td><td>5000</td></tr>
+<tr><td>rain</td><td>it is raining</td><td>unverified</td><td>—</td><td>—</td></tr>
+<tr><td>L</td><td>this sentence is false</td><td>defined</td><td>~Tr(L)</td><td>—</td></tr>
+</table>
+<p><b>claim:</b> <code>line &lt;= budget</code></p>
+<h2>error codes</h2><table>
+<tr><td><code>E_BADNAME</code></td><td>a name a formula could not use</td></tr>
+<tr><td><code>E_CLAIM</code></td><td>the claim does not parse</td></tr>
+<tr><td><code>E_DIM</code></td><td>a dimension outside the list — a ground either supports a claim or permits it</td></tr>
+<tr><td><code>E_DIM_CLASH</code></td><td>a ground carries one mark, not two: &#x27;authority&#x27; cannot be combined with an act, a certificate or another row</td></tr>
+<tr><td><code>E_DUPNAME</code></td><td>the same name twice</td></tr>
+<tr><td><code>E_EMPTY</code></td><td>the table has no rows</td></tr>
+<tr><td><code>E_FORMULA</code></td><td>the defining formula does not parse</td></tr>
+<tr><td><code>E_GROUND_SPACES</code></td><td>a ground with a space in it — a ground is one word, because it names a document</td></tr>
+<tr><td><code>E_KIND</code></td><td>a kind of ground outside the list</td></tr>
+<tr><td><code>E_NOGROUND</code></td><td>verified, refuted or defined, with nothing backing it</td></tr>
+<tr><td><code>E_NONAME</code></td><td>a row without a name</td></tr>
+<tr><td><code>E_OPEN_INTERVAL</code></td><td>an open bound like (0,10) — put the strictness in the claim instead</td></tr>
+<tr><td><code>E_STATUS</code></td><td>a status outside the four</td></tr>
+<tr><td><code>E_UNIT</code></td><td>a unit that cannot be read — a word, optionally with a power (m2), joined by · or /</td></tr>
+<tr><td><code>E_UNKNOWN_NAME</code></td><td>a formula names a row that does not exist</td></tr>
+<tr><td><code>E_UNREADABLE</code></td><td>the instruments could not read the claim — the message says what they choked on</td></tr>
+<tr><td><code>E_VALUE_FORM</code></td><td>a value that is neither a number, an interval nor ?</td></tr>
+<tr><td><code>E_VALUE_SET</code></td><td>a choice between values, {0,10} — that is two rows, not one quantity</td></tr>
+<tr><td><code>W_NO_GLOSS</code></td><td>no gloss, so nobody can check the name means what it seems to</td></tr>
+<tr><td><code>W_UNIT_NO_VALUE</code></td><td>a unit with no value</td></tr>
+</table></div><div class='lang' id='ru' dir='ltr' hidden><h1>ZFL — Zero-trust Formal Language, язык студии (ZTL — сама логика, ZFL — то, как для неё пишут)</h1>
+<h2>Почему таблица, а не синтаксис</h2><p>Всё, что вы здесь пишете, — один документ: список ИМЁН, каждое из которых говорит, откуда оно у вас, плюс то, что вы про них УТВЕРЖДАЕТЕ. Никакого жанра объявлять не надо и режим выбирать не надо. Какие приборы ответят — числовой пол, паспортный стол, тетрадь, судья — следует из того, какие клетки вы заполнили.</p>
+<h2>Правило, лежащее под всем</h2><p>Истина не даётся в кредит. Имя проверено, когда проверка произведена, и колонка «основание» — это место, где вы говорите, чем именно. Имя без основания не ложно — оно НЕ ПРОВЕРЕНО, и это честный третий ответ, ради которого вся эта логика и существует.</p>
+<h2>Как спросить число</h2><p>Поставьте `?` в величину — и строка перестаёт быть ответом и становится вопросом. `x = ?` при утверждении `x - 10 = 20` получает ответ: x равен 30, и заработан. Это единственная клетка, которая меняет то, что машина ДЕЛАЕТ: везде вы сообщаете ей, что знаете, а здесь — спрашиваете.</p>
+<h2>Где остаются формулы, и клетка, которая читается двояко</h2><p>Ровно в двух клетках. В ОСНОВАНИИ — когда имя ОПРЕДЕЛЕНО формулой через другие имена; так пишется самоссылка, и поэтому лжецу не нужен отдельный режим. И в УТВЕРЖДЕНИИ — том, что вы, собственно, заявляете. Заметьте, что делает клетка основания: у проверенного имени там `inv-17` — непрозрачное имя, внутрь которого машина не смотрит и которое не значит ничего, кроме собственного тождества; у определённого — `~Tr(L)`, формула, которую машина читает и вычисляет. Что именно там ждут, решает статус, и форма переспрашивает, как только вы его меняете.</p>
+<h2>колонки строки</h2><table><tr><th>колонка</th><th>что это</th><th>обязательна</th><th>варианты / примеры</th></tr>
+<tr><td><b>имя</b></td><td>как называем; им же пользуемся в формулах</td><td>всегда</td><td>line · budget · L</td></tr>
+<tr><td><b>значит</b></td><td>что означает истинность этого имени</td><td>нет</td><td>the invoice line · this sentence is false</td></tr>
+<tr><td><b>статус</b></td><td>откуда оно у нас</td><td>всегда</td><td>проверено · опровергнуто · не проверено · определено</td></tr>
+<tr><td><b>основание</b></td><td>чем подтверждено или как определено</td><td>по условию</td><td>inv-17 · ~Tr(L)</td></tr>
+<tr class="adv"><td><b>измерение</b></td><td>оно ПОДПИРАЕТ утверждение или РАЗРЕШАЕТ его</td><td>нет</td><td>опора (подпирает) · разрешение (даёт право)</td></tr>
+<tr><td><b>вид основания</b></td><td>документ, если не сказано иное</td><td>нет</td><td>документ · акт (отзывать нечего) · сертификат (истекает) · другая строка</td></tr>
+<tr><td><b>величина</b></td><td>число, интервал [0,10] или ? для неизвестного</td><td>нет</td><td>1500 · [0,10] · ?</td></tr>
+<tr><td><b>единица</b></td><td>только с величиной; метры не встречаются с рублями</td><td>нет</td><td>RUB · m · m2</td></tr>
+<tr><td><b>шкала</b></td><td>до чего округляем</td><td>нет</td><td>точно · целые · сотые · трети</td></tr>
+<tr class="adv"><td><b>отдельные измерения</b></td><td>каждое вхождение — свой акт измерения</td><td>нет</td><td></td></tr>
+</table>
+<h2>сам документ</h2><table><tr><th>колонка</th><th>что это</th><th>обязательна</th><th>варианты / примеры</th></tr>
+<tr><td><b>утверждение</b></td><td>что мы, собственно, заявляем</td><td>нет</td><td>line &lt;= budget · rain -&gt; umbrella</td></tr>
+<tr><td><b>спросить</b></td><td>сузить отчёт; пусто — показывается всё применимое</td><td>нет</td><td>verdict · warranty · passport · stipulations · blast · brackets</td></tr>
+</table>
+<h2>операторы</h2><table>
+<tr><td><code>&amp;</code></td><td>и</td></tr>
+<tr><td><code>-&gt;</code></td><td>если … то</td></tr>
+<tr><td><code>=</code></td><td>то же значение, что</td></tr>
+<tr><td><code>^</code></td><td>ровно одно из</td></tr>
+<tr><td><code>|</code></td><td>или</td></tr>
+<tr><td><code>~</code></td><td>не</td></tr>
+<tr><td><code>Tr(x)</code></td><td>значение строки x — так пишется самоссылка</td></tr>
+<tr><td><code>&lt;=</code></td><td>не больше</td></tr>
+<tr><td><code>&gt;=</code></td><td>не меньше</td></tr>
+<tr><td><code>==</code></td><td>равно</td></tr>
+<tr><td><code>&lt;</code></td><td>меньше</td></tr>
+<tr><td><code>&gt;</code></td><td>больше</td></tr>
+</table>
+<h2>арифметика</h2><table>
+<tr><td><code>*</code></td><td>умножить</td></tr>
+<tr><td><code>+</code></td><td>плюс</td></tr>
+<tr><td><code>-</code></td><td>минус</td></tr>
+<tr><td><code>/</code></td><td>разделить</td></tr>
+<tr><td><code>sum(a,b,…)</code></td><td>сумма нескольких — то же, что a + b + …</td></tr>
+<tr><td><code>( )</code></td><td>скобки — чтобы сказать, что раньше</td></tr>
+<tr><td><code>-x</code></td><td>минус в начале: знак самого члена, а не действие между двумя — `-x + 100 = 70` законный вопрос, и до 2026-08-13 он не принимался</td></tr>
+</table>
+<h2>что можно писать в величине</h2><table>
+<tr><td><code>1500</code></td><td>число, которое вы измерили или прочли в документе</td></tr>
+<tr><td><code>[0,10]</code></td><td>коробка: где-то в этих пределах, и машина хранит пределы, а не выбирает точку. Обе границы ВКЛЮЧЕНЫ; строгую границу пишите в утверждении — `x &gt; 0`. Напишете наоборот, [10,0], получите E: строка не называет ничего, и это вердикт, а не опечатка</td></tr>
+<tr><td><code>?</code></td><td>ВОПРОС. Вы его не знаете и спрашиваете. Если остальная таблица его определяет, решатель отвечает величиной И происхождением, которое она унаследовала — `x = 30, заработано`. Если не определяет — вам скажут, что это решит.</td></tr>
+</table>
+<h2>разобранный пример</h2><table><tr><th>колонка</th><th>значит</th><th>статус</th><th>основание</th><th>величина</th></tr>
+<tr><td>line</td><td>the invoice line</td><td>verified</td><td>inv-17</td><td>1500</td></tr>
+<tr><td>budget</td><td>the ceiling</td><td>verified</td><td>order-4</td><td>5000</td></tr>
+<tr><td>rain</td><td>it is raining</td><td>unverified</td><td>—</td><td>—</td></tr>
+<tr><td>L</td><td>this sentence is false</td><td>defined</td><td>~Tr(L)</td><td>—</td></tr>
+</table>
+<p><b>утверждение:</b> <code>line &lt;= budget</code></p>
+<h2>коды ошибок</h2><table>
+<tr><td><code>E_BADNAME</code></td><td>имя, непригодное для формулы</td></tr>
+<tr><td><code>E_CLAIM</code></td><td>утверждение не разбирается</td></tr>
+<tr><td><code>E_DIM</code></td><td>измерение вне списка — основание либо подпирает утверждение, либо даёт на него право</td></tr>
+<tr><td><code>E_DIM_CLASH</code></td><td>основание несёт одну пометку, а не две: «разрешение» не сочетается с актом, сертификатом или другой строкой</td></tr>
+<tr><td><code>E_DUPNAME</code></td><td>имя повторяется</td></tr>
+<tr><td><code>E_EMPTY</code></td><td>в таблице нет строк</td></tr>
+<tr><td><code>E_FORMULA</code></td><td>определяющая формула не разбирается</td></tr>
+<tr><td><code>E_GROUND_SPACES</code></td><td>основание с пробелом — оно одно слово, потому что называет документ</td></tr>
+<tr><td><code>E_KIND</code></td><td>вид основания вне списка</td></tr>
+<tr><td><code>E_NOGROUND</code></td><td>проверено, опровергнуто или определено — но без основания</td></tr>
+<tr><td><code>E_NONAME</code></td><td>строка без имени</td></tr>
+<tr><td><code>E_OPEN_INTERVAL</code></td><td>открытая граница вроде (0,10) — строгость пишется в утверждении</td></tr>
+<tr><td><code>E_STATUS</code></td><td>статус вне четырёх</td></tr>
+<tr><td><code>E_UNIT</code></td><td>единица, которую нельзя прочесть — слово, при желании со степенью (m2), соединяется через · или /</td></tr>
+<tr><td><code>E_UNKNOWN_NAME</code></td><td>формула называет несуществующую строку</td></tr>
+<tr><td><code>E_UNREADABLE</code></td><td>приборы не смогли прочесть утверждение — в сообщении сказано, на чём именно</td></tr>
+<tr><td><code>E_VALUE_FORM</code></td><td>величина, которая не число, не интервал и не ?</td></tr>
+<tr><td><code>E_VALUE_SET</code></td><td>выбор между величинами, {0,10} — это две строки, а не одна величина</td></tr>
+<tr><td><code>W_NO_GLOSS</code></td><td>нет пояснения — некому проверить, то ли значит имя</td></tr>
+<tr><td><code>W_UNIT_NO_VALUE</code></td><td>единица без величины</td></tr>
+</table></div><div class='lang' id='uk' dir='ltr' hidden><h1>ZFL — Zero-trust Formal Language, the language of the studio (ZTL is the logic; ZFL is how you write for it)</h1>
+<h2>Why a table and not a syntax</h2><p>Everything you write here is one document: a list of NAMES, each saying where it stands with you, plus what you CLAIM about them. There is no genre to declare and no mode to pick. Which instruments answer — the numeric floor, the passport office, the ledger, the judge — follows from which cells you filled.</p>
+<h2>The one rule underneath</h2><p>Truth is not granted on credit. A name is verified when a verification was produced, and the ground column is where you say what produced it. A name with nothing backing it is not false — it is unverified, which is an honest third answer and the reason this logic exists.</p>
+<h2>Asking for a number</h2><p>Put `?` in a value and the row stops being an answer and becomes a question. `x = ?` with a claim of `x - 10 = 20` is answered: x is 30, and earned. This is the one cell that changes what the machine DOES — everywhere else you are telling it what you know, and here you are asking.</p>
+<h2>Where formulas survive, and the one cell that reads two ways</h2><p>In two cells only. In GROUND, when a name is DEFINED by a formula over other names — that is how self-reference is written, and it is why the liar needs no special mode. And in CLAIM, which is what you are actually asserting. Note what the ground cell is doing: for a verified name it holds `inv-17`, an opaque name the machine never looks inside and which means nothing but its own identity; for a defined name it holds `~Tr(L)`, a formula the machine reads and evaluates. The status decides which, and the form asks again whenever you change it.</p>
+<h2>the columns of a row</h2><table><tr><th>column</th><th>what it is</th><th>required</th><th>options / examples</th></tr>
+<tr><td><b>ім&#x27;я</b></td><td>як називаємо; ним же користуємось у формулах</td><td>always</td><td>line · budget · L</td></tr>
+<tr><td><b>означає</b></td><td>що означає істинність цього імені</td><td>no</td><td>the invoice line · this sentence is false</td></tr>
+<tr><td><b>статус</b></td><td>звідки воно в нас</td><td>always</td><td>перевірено · спростовано · не перевірено · визначено</td></tr>
+<tr><td><b>підстава</b></td><td>чим підтверджено або як визначено</td><td>in context</td><td>inv-17 · ~Tr(L)</td></tr>
+<tr class="adv"><td><b>вимір</b></td><td>воно ПІДПИРАЄ твердження чи ДОЗВОЛЯЄ його</td><td>no</td><td>опора (підпирає) · дозвіл (дає право)</td></tr>
+<tr><td><b>вид підстави</b></td><td>документ, якщо не сказано інакше</td><td>no</td><td>документ · акт (відкликати нічого) · сертифікат (спливає) · інший рядок</td></tr>
+<tr><td><b>величина</b></td><td>число, інтервал [0,10] або ? для невідомого</td><td>no</td><td>1500 · [0,10] · ?</td></tr>
+<tr><td><b>одиниця</b></td><td>лише з величиною; метри не зустрічаються з гривнями</td><td>no</td><td>RUB · m · m2</td></tr>
+<tr><td><b>шкала</b></td><td>до чого округлюємо</td><td>no</td><td>цілі · соті · третини</td></tr>
+<tr class="adv"><td><b>окремі виміри</b></td><td>число з вибірки, а не одне вимірювання</td><td>no</td><td></td></tr>
+</table>
+<h2>the document itself</h2><table><tr><th>column</th><th>what it is</th><th>required</th><th>options / examples</th></tr>
+<tr><td><b>claim</b></td><td>what you are actually asserting</td><td>no</td><td>line &lt;= budget · rain -&gt; umbrella</td></tr>
+<tr><td><b>ask</b></td><td>narrow the report; empty shows everything that applies</td><td>no</td><td>verdict · warranty · passport · stipulations · blast · brackets</td></tr>
+</table>
+<h2>operators</h2><table>
+<tr><td><code>&amp;</code></td><td>and</td></tr>
+<tr><td><code>-&gt;</code></td><td>if … then</td></tr>
+<tr><td><code>=</code></td><td>the same value as</td></tr>
+<tr><td><code>^</code></td><td>exactly one of</td></tr>
+<tr><td><code>|</code></td><td>or</td></tr>
+<tr><td><code>~</code></td><td>not</td></tr>
+<tr><td><code>Tr(x)</code></td><td>the value of the row x — this is how self-reference is written</td></tr>
+<tr><td><code>&lt;=</code></td><td>at most</td></tr>
+<tr><td><code>&gt;=</code></td><td>at least</td></tr>
+<tr><td><code>==</code></td><td>equal to</td></tr>
+<tr><td><code>&lt;</code></td><td>less than</td></tr>
+<tr><td><code>&gt;</code></td><td>greater than</td></tr>
+</table>
+<h2>arithmetic</h2><table>
+<tr><td><code>*</code></td><td>times</td></tr>
+<tr><td><code>+</code></td><td>plus</td></tr>
+<tr><td><code>-</code></td><td>minus</td></tr>
+<tr><td><code>/</code></td><td>divided by</td></tr>
+<tr><td><code>sum(a,b,…)</code></td><td>the sum of several — the same as a + b + …</td></tr>
+<tr><td><code>( )</code></td><td>brackets, to say what goes first</td></tr>
+<tr><td><code>-x</code></td><td>a leading minus: the sign of a term, not the operation between two — `-x + 100 = 70` is a fair question and was not accepted until 2026-08-13</td></tr>
+</table>
+<h2>what can go in a value</h2><table>
+<tr><td><code>1500</code></td><td>a number you have measured or read off a document</td></tr>
+<tr><td><code>[0,10]</code></td><td>a box: somewhere in this range, and the machine keeps the range rather than picking a point. Both ends are INCLUDED; for a strict bound put it in the claim — `x &gt; 0`. Write it backwards, [10,0], and you get E: the row names nothing, which is a verdict rather than a typo</td></tr>
+<tr><td><code>?</code></td><td>A QUESTION. You do not know it and you are asking. If the rest of the table determines it, the solver answers with the value AND the provenance it inherited — `x = 30, earned`. If it does not, you get told what would settle it.</td></tr>
+</table>
+<h2>a worked example</h2><table><tr><th>column</th><th>means</th><th>status</th><th>ground</th><th>value</th></tr>
+<tr><td>line</td><td>the invoice line</td><td>verified</td><td>inv-17</td><td>1500</td></tr>
+<tr><td>budget</td><td>the ceiling</td><td>verified</td><td>order-4</td><td>5000</td></tr>
+<tr><td>rain</td><td>it is raining</td><td>unverified</td><td>—</td><td>—</td></tr>
+<tr><td>L</td><td>this sentence is false</td><td>defined</td><td>~Tr(L)</td><td>—</td></tr>
+</table>
+<p><b>claim:</b> <code>line &lt;= budget</code></p>
+<h2>error codes</h2><table>
+<tr><td><code>E_BADNAME</code></td><td>a name a formula could not use</td></tr>
+<tr><td><code>E_CLAIM</code></td><td>the claim does not parse</td></tr>
+<tr><td><code>E_DIM</code></td><td>a dimension outside the list — a ground either supports a claim or permits it</td></tr>
+<tr><td><code>E_DIM_CLASH</code></td><td>a ground carries one mark, not two: &#x27;authority&#x27; cannot be combined with an act, a certificate or another row</td></tr>
+<tr><td><code>E_DUPNAME</code></td><td>the same name twice</td></tr>
+<tr><td><code>E_EMPTY</code></td><td>the table has no rows</td></tr>
+<tr><td><code>E_FORMULA</code></td><td>the defining formula does not parse</td></tr>
+<tr><td><code>E_GROUND_SPACES</code></td><td>a ground with a space in it — a ground is one word, because it names a document</td></tr>
+<tr><td><code>E_KIND</code></td><td>a kind of ground outside the list</td></tr>
+<tr><td><code>E_NOGROUND</code></td><td>verified, refuted or defined, with nothing backing it</td></tr>
+<tr><td><code>E_NONAME</code></td><td>a row without a name</td></tr>
+<tr><td><code>E_OPEN_INTERVAL</code></td><td>an open bound like (0,10) — put the strictness in the claim instead</td></tr>
+<tr><td><code>E_STATUS</code></td><td>a status outside the four</td></tr>
+<tr><td><code>E_UNIT</code></td><td>a unit that cannot be read — a word, optionally with a power (m2), joined by · or /</td></tr>
+<tr><td><code>E_UNKNOWN_NAME</code></td><td>a formula names a row that does not exist</td></tr>
+<tr><td><code>E_UNREADABLE</code></td><td>the instruments could not read the claim — the message says what they choked on</td></tr>
+<tr><td><code>E_VALUE_FORM</code></td><td>a value that is neither a number, an interval nor ?</td></tr>
+<tr><td><code>E_VALUE_SET</code></td><td>a choice between values, {0,10} — that is two rows, not one quantity</td></tr>
+<tr><td><code>W_NO_GLOSS</code></td><td>no gloss, so nobody can check the name means what it seems to</td></tr>
+<tr><td><code>W_UNIT_NO_VALUE</code></td><td>a unit with no value</td></tr>
+</table></div><div class='lang' id='he' dir='rtl' hidden><h1>ZFL — Zero-trust Formal Language, the language of the studio (ZTL is the logic; ZFL is how you write for it)</h1>
+<h2>Why a table and not a syntax</h2><p>Everything you write here is one document: a list of NAMES, each saying where it stands with you, plus what you CLAIM about them. There is no genre to declare and no mode to pick. Which instruments answer — the numeric floor, the passport office, the ledger, the judge — follows from which cells you filled.</p>
+<h2>The one rule underneath</h2><p>Truth is not granted on credit. A name is verified when a verification was produced, and the ground column is where you say what produced it. A name with nothing backing it is not false — it is unverified, which is an honest third answer and the reason this logic exists.</p>
+<h2>Asking for a number</h2><p>Put `?` in a value and the row stops being an answer and becomes a question. `x = ?` with a claim of `x - 10 = 20` is answered: x is 30, and earned. This is the one cell that changes what the machine DOES — everywhere else you are telling it what you know, and here you are asking.</p>
+<h2>Where formulas survive, and the one cell that reads two ways</h2><p>In two cells only. In GROUND, when a name is DEFINED by a formula over other names — that is how self-reference is written, and it is why the liar needs no special mode. And in CLAIM, which is what you are actually asserting. Note what the ground cell is doing: for a verified name it holds `inv-17`, an opaque name the machine never looks inside and which means nothing but its own identity; for a defined name it holds `~Tr(L)`, a formula the machine reads and evaluates. The status decides which, and the form asks again whenever you change it.</p>
+<h2>the columns of a row</h2><table><tr><th>column</th><th>what it is</th><th>required</th><th>options / examples</th></tr>
+<tr><td><b>שם</b></td><td>איך קוראים לו; באותו שם משתמשים בנוסחאות</td><td>always</td><td>line · budget · L</td></tr>
+<tr><td><b>פירושו</b></td><td>מה זה אומר שהשם הזה אמיתי</td><td>no</td><td>the invoice line · this sentence is false</td></tr>
+<tr><td><b>מעמד</b></td><td>מאיפה זה הגיע אלינו</td><td>always</td><td>מאומת · הופרך · לא אומת · מוגדר</td></tr>
+<tr><td><b>אסמכתא</b></td><td>מה מאשש אותו, או הנוסחה שמגדירה אותו</td><td>in context</td><td>inv-17 · ~Tr(L)</td></tr>
+<tr class="adv"><td><b>ממד</b></td><td>האם זה תומך בטענה או מתיר אותה</td><td>no</td><td>תמיכה (מבססת) · סמכות (מתירה)</td></tr>
+<tr><td><b>סוג האסמכתא</b></td><td>מסמך, אלא אם נאמר אחרת</td><td>no</td><td>מסמך · מעשה (אין מה לבטל) · אישור (פג תוקף) · שורה אחרת</td></tr>
+<tr><td><b>ערך</b></td><td>מספר, תחום [0,10] או ? ללא ידוע</td><td>no</td><td>1500 · [0,10] · ?</td></tr>
+<tr><td><b>יחידה</b></td><td>רק עם ערך; מטרים לא נפגשים עם שקלים</td><td>no</td><td>RUB · m · m2</td></tr>
+<tr><td><b>סולם</b></td><td>לאן מעגלים</td><td>no</td><td>שלמים · מאיות · שלישים</td></tr>
+<tr class="adv"><td><b>מדידות נפרדות</b></td><td>מספר מתוך מדגם, לא מדידה אחת</td><td>no</td><td></td></tr>
+</table>
+<h2>the document itself</h2><table><tr><th>column</th><th>what it is</th><th>required</th><th>options / examples</th></tr>
+<tr><td><b>claim</b></td><td>what you are actually asserting</td><td>no</td><td>line &lt;= budget · rain -&gt; umbrella</td></tr>
+<tr><td><b>ask</b></td><td>narrow the report; empty shows everything that applies</td><td>no</td><td>verdict · warranty · passport · stipulations · blast · brackets</td></tr>
+</table>
+<h2>operators</h2><table>
+<tr><td><code>&amp;</code></td><td>and</td></tr>
+<tr><td><code>-&gt;</code></td><td>if … then</td></tr>
+<tr><td><code>=</code></td><td>the same value as</td></tr>
+<tr><td><code>^</code></td><td>exactly one of</td></tr>
+<tr><td><code>|</code></td><td>or</td></tr>
+<tr><td><code>~</code></td><td>not</td></tr>
+<tr><td><code>Tr(x)</code></td><td>the value of the row x — this is how self-reference is written</td></tr>
+<tr><td><code>&lt;=</code></td><td>at most</td></tr>
+<tr><td><code>&gt;=</code></td><td>at least</td></tr>
+<tr><td><code>==</code></td><td>equal to</td></tr>
+<tr><td><code>&lt;</code></td><td>less than</td></tr>
+<tr><td><code>&gt;</code></td><td>greater than</td></tr>
+</table>
+<h2>arithmetic</h2><table>
+<tr><td><code>*</code></td><td>times</td></tr>
+<tr><td><code>+</code></td><td>plus</td></tr>
+<tr><td><code>-</code></td><td>minus</td></tr>
+<tr><td><code>/</code></td><td>divided by</td></tr>
+<tr><td><code>sum(a,b,…)</code></td><td>the sum of several — the same as a + b + …</td></tr>
+<tr><td><code>( )</code></td><td>brackets, to say what goes first</td></tr>
+<tr><td><code>-x</code></td><td>a leading minus: the sign of a term, not the operation between two — `-x + 100 = 70` is a fair question and was not accepted until 2026-08-13</td></tr>
+</table>
+<h2>what can go in a value</h2><table>
+<tr><td><code>1500</code></td><td>a number you have measured or read off a document</td></tr>
+<tr><td><code>[0,10]</code></td><td>a box: somewhere in this range, and the machine keeps the range rather than picking a point. Both ends are INCLUDED; for a strict bound put it in the claim — `x &gt; 0`. Write it backwards, [10,0], and you get E: the row names nothing, which is a verdict rather than a typo</td></tr>
+<tr><td><code>?</code></td><td>A QUESTION. You do not know it and you are asking. If the rest of the table determines it, the solver answers with the value AND the provenance it inherited — `x = 30, earned`. If it does not, you get told what would settle it.</td></tr>
+</table>
+<h2>a worked example</h2><table><tr><th>column</th><th>means</th><th>status</th><th>ground</th><th>value</th></tr>
+<tr><td>line</td><td>the invoice line</td><td>verified</td><td>inv-17</td><td>1500</td></tr>
+<tr><td>budget</td><td>the ceiling</td><td>verified</td><td>order-4</td><td>5000</td></tr>
+<tr><td>rain</td><td>it is raining</td><td>unverified</td><td>—</td><td>—</td></tr>
+<tr><td>L</td><td>this sentence is false</td><td>defined</td><td>~Tr(L)</td><td>—</td></tr>
+</table>
+<p><b>claim:</b> <code>line &lt;= budget</code></p>
+<h2>error codes</h2><table>
+<tr><td><code>E_BADNAME</code></td><td>a name a formula could not use</td></tr>
+<tr><td><code>E_CLAIM</code></td><td>the claim does not parse</td></tr>
+<tr><td><code>E_DIM</code></td><td>a dimension outside the list — a ground either supports a claim or permits it</td></tr>
+<tr><td><code>E_DIM_CLASH</code></td><td>a ground carries one mark, not two: &#x27;authority&#x27; cannot be combined with an act, a certificate or another row</td></tr>
+<tr><td><code>E_DUPNAME</code></td><td>the same name twice</td></tr>
+<tr><td><code>E_EMPTY</code></td><td>the table has no rows</td></tr>
+<tr><td><code>E_FORMULA</code></td><td>the defining formula does not parse</td></tr>
+<tr><td><code>E_GROUND_SPACES</code></td><td>a ground with a space in it — a ground is one word, because it names a document</td></tr>
+<tr><td><code>E_KIND</code></td><td>a kind of ground outside the list</td></tr>
+<tr><td><code>E_NOGROUND</code></td><td>verified, refuted or defined, with nothing backing it</td></tr>
+<tr><td><code>E_NONAME</code></td><td>a row without a name</td></tr>
+<tr><td><code>E_OPEN_INTERVAL</code></td><td>an open bound like (0,10) — put the strictness in the claim instead</td></tr>
+<tr><td><code>E_STATUS</code></td><td>a status outside the four</td></tr>
+<tr><td><code>E_UNIT</code></td><td>a unit that cannot be read — a word, optionally with a power (m2), joined by · or /</td></tr>
+<tr><td><code>E_UNKNOWN_NAME</code></td><td>a formula names a row that does not exist</td></tr>
+<tr><td><code>E_UNREADABLE</code></td><td>the instruments could not read the claim — the message says what they choked on</td></tr>
+<tr><td><code>E_VALUE_FORM</code></td><td>a value that is neither a number, an interval nor ?</td></tr>
+<tr><td><code>E_VALUE_SET</code></td><td>a choice between values, {0,10} — that is two rows, not one quantity</td></tr>
+<tr><td><code>W_NO_GLOSS</code></td><td>no gloss, so nobody can check the name means what it seems to</td></tr>
+<tr><td><code>W_UNIT_NO_VALUE</code></td><td>a unit with no value</td></tr>
+</table></div><div class='lang' id='de' dir='ltr' hidden><h1>ZFL — Zero-trust Formal Language, the language of the studio (ZTL is the logic; ZFL is how you write for it)</h1>
+<h2>Why a table and not a syntax</h2><p>Everything you write here is one document: a list of NAMES, each saying where it stands with you, plus what you CLAIM about them. There is no genre to declare and no mode to pick. Which instruments answer — the numeric floor, the passport office, the ledger, the judge — follows from which cells you filled.</p>
+<h2>The one rule underneath</h2><p>Truth is not granted on credit. A name is verified when a verification was produced, and the ground column is where you say what produced it. A name with nothing backing it is not false — it is unverified, which is an honest third answer and the reason this logic exists.</p>
+<h2>Asking for a number</h2><p>Put `?` in a value and the row stops being an answer and becomes a question. `x = ?` with a claim of `x - 10 = 20` is answered: x is 30, and earned. This is the one cell that changes what the machine DOES — everywhere else you are telling it what you know, and here you are asking.</p>
+<h2>Where formulas survive, and the one cell that reads two ways</h2><p>In two cells only. In GROUND, when a name is DEFINED by a formula over other names — that is how self-reference is written, and it is why the liar needs no special mode. And in CLAIM, which is what you are actually asserting. Note what the ground cell is doing: for a verified name it holds `inv-17`, an opaque name the machine never looks inside and which means nothing but its own identity; for a defined name it holds `~Tr(L)`, a formula the machine reads and evaluates. The status decides which, and the form asks again whenever you change it.</p>
+<h2>the columns of a row</h2><table><tr><th>column</th><th>what it is</th><th>required</th><th>options / examples</th></tr>
+<tr><td><b>Name</b></td><td>wie wir es nennen; damit rechnen auch die Formeln</td><td>always</td><td>line · budget · L</td></tr>
+<tr><td><b>bedeutet</b></td><td>was es HEISST, dass dies wahr ist</td><td>no</td><td>the invoice line · this sentence is false</td></tr>
+<tr><td><b>Status</b></td><td>woher wir es haben</td><td>always</td><td>geprüft · widerlegt · ungeprüft · definiert</td></tr>
+<tr><td><b>Grundlage</b></td><td>was es belegt, oder die definierende Formel</td><td>in context</td><td>inv-17 · ~Tr(L)</td></tr>
+<tr class="adv"><td><b>Dimension</b></td><td>STÜTZT es die Aussage oder ERLAUBT es sie</td><td>no</td><td>Stütze (belegt) · Befugnis (erlaubt)</td></tr>
+<tr><td><b>Art der Grundlage</b></td><td>ein Dokument, sofern nicht anders gesagt</td><td>no</td><td>Dokument · Handlung (nichts zurückzunehmen) · Zertifikat (läuft ab) · andere Zeile</td></tr>
+<tr><td><b>Wert</b></td><td>Zahl, Intervall [0,10] oder ? für unbekannt</td><td>no</td><td>1500 · [0,10] · ?</td></tr>
+<tr><td><b>Einheit</b></td><td>nur mit einem Wert; Meter treffen nie auf Euro</td><td>no</td><td>RUB · m · m2</td></tr>
+<tr><td><b>Skala</b></td><td>worauf gerundet wird</td><td>no</td><td>ganze · Hundertstel · Drittel</td></tr>
+<tr class="adv"><td><b>Einzelmessungen</b></td><td>eine Zahl aus einer Stichprobe, keine einzelne Messung</td><td>no</td><td></td></tr>
+</table>
+<h2>the document itself</h2><table><tr><th>column</th><th>what it is</th><th>required</th><th>options / examples</th></tr>
+<tr><td><b>claim</b></td><td>what you are actually asserting</td><td>no</td><td>line &lt;= budget · rain -&gt; umbrella</td></tr>
+<tr><td><b>ask</b></td><td>narrow the report; empty shows everything that applies</td><td>no</td><td>verdict · warranty · passport · stipulations · blast · brackets</td></tr>
+</table>
+<h2>operators</h2><table>
+<tr><td><code>&amp;</code></td><td>and</td></tr>
+<tr><td><code>-&gt;</code></td><td>if … then</td></tr>
+<tr><td><code>=</code></td><td>the same value as</td></tr>
+<tr><td><code>^</code></td><td>exactly one of</td></tr>
+<tr><td><code>|</code></td><td>or</td></tr>
+<tr><td><code>~</code></td><td>not</td></tr>
+<tr><td><code>Tr(x)</code></td><td>the value of the row x — this is how self-reference is written</td></tr>
+<tr><td><code>&lt;=</code></td><td>at most</td></tr>
+<tr><td><code>&gt;=</code></td><td>at least</td></tr>
+<tr><td><code>==</code></td><td>equal to</td></tr>
+<tr><td><code>&lt;</code></td><td>less than</td></tr>
+<tr><td><code>&gt;</code></td><td>greater than</td></tr>
+</table>
+<h2>arithmetic</h2><table>
+<tr><td><code>*</code></td><td>times</td></tr>
+<tr><td><code>+</code></td><td>plus</td></tr>
+<tr><td><code>-</code></td><td>minus</td></tr>
+<tr><td><code>/</code></td><td>divided by</td></tr>
+<tr><td><code>sum(a,b,…)</code></td><td>the sum of several — the same as a + b + …</td></tr>
+<tr><td><code>( )</code></td><td>brackets, to say what goes first</td></tr>
+<tr><td><code>-x</code></td><td>a leading minus: the sign of a term, not the operation between two — `-x + 100 = 70` is a fair question and was not accepted until 2026-08-13</td></tr>
+</table>
+<h2>what can go in a value</h2><table>
+<tr><td><code>1500</code></td><td>a number you have measured or read off a document</td></tr>
+<tr><td><code>[0,10]</code></td><td>a box: somewhere in this range, and the machine keeps the range rather than picking a point. Both ends are INCLUDED; for a strict bound put it in the claim — `x &gt; 0`. Write it backwards, [10,0], and you get E: the row names nothing, which is a verdict rather than a typo</td></tr>
+<tr><td><code>?</code></td><td>A QUESTION. You do not know it and you are asking. If the rest of the table determines it, the solver answers with the value AND the provenance it inherited — `x = 30, earned`. If it does not, you get told what would settle it.</td></tr>
+</table>
+<h2>a worked example</h2><table><tr><th>column</th><th>means</th><th>status</th><th>ground</th><th>value</th></tr>
+<tr><td>line</td><td>the invoice line</td><td>verified</td><td>inv-17</td><td>1500</td></tr>
+<tr><td>budget</td><td>the ceiling</td><td>verified</td><td>order-4</td><td>5000</td></tr>
+<tr><td>rain</td><td>it is raining</td><td>unverified</td><td>—</td><td>—</td></tr>
+<tr><td>L</td><td>this sentence is false</td><td>defined</td><td>~Tr(L)</td><td>—</td></tr>
+</table>
+<p><b>claim:</b> <code>line &lt;= budget</code></p>
+<h2>error codes</h2><table>
+<tr><td><code>E_BADNAME</code></td><td>a name a formula could not use</td></tr>
+<tr><td><code>E_CLAIM</code></td><td>the claim does not parse</td></tr>
+<tr><td><code>E_DIM</code></td><td>a dimension outside the list — a ground either supports a claim or permits it</td></tr>
+<tr><td><code>E_DIM_CLASH</code></td><td>a ground carries one mark, not two: &#x27;authority&#x27; cannot be combined with an act, a certificate or another row</td></tr>
+<tr><td><code>E_DUPNAME</code></td><td>the same name twice</td></tr>
+<tr><td><code>E_EMPTY</code></td><td>the table has no rows</td></tr>
+<tr><td><code>E_FORMULA</code></td><td>the defining formula does not parse</td></tr>
+<tr><td><code>E_GROUND_SPACES</code></td><td>a ground with a space in it — a ground is one word, because it names a document</td></tr>
+<tr><td><code>E_KIND</code></td><td>a kind of ground outside the list</td></tr>
+<tr><td><code>E_NOGROUND</code></td><td>verified, refuted or defined, with nothing backing it</td></tr>
+<tr><td><code>E_NONAME</code></td><td>a row without a name</td></tr>
+<tr><td><code>E_OPEN_INTERVAL</code></td><td>an open bound like (0,10) — put the strictness in the claim instead</td></tr>
+<tr><td><code>E_STATUS</code></td><td>a status outside the four</td></tr>
+<tr><td><code>E_UNIT</code></td><td>a unit that cannot be read — a word, optionally with a power (m2), joined by · or /</td></tr>
+<tr><td><code>E_UNKNOWN_NAME</code></td><td>a formula names a row that does not exist</td></tr>
+<tr><td><code>E_UNREADABLE</code></td><td>the instruments could not read the claim — the message says what they choked on</td></tr>
+<tr><td><code>E_VALUE_FORM</code></td><td>a value that is neither a number, an interval nor ?</td></tr>
+<tr><td><code>E_VALUE_SET</code></td><td>a choice between values, {0,10} — that is two rows, not one quantity</td></tr>
+<tr><td><code>W_NO_GLOSS</code></td><td>no gloss, so nobody can check the name means what it seems to</td></tr>
+<tr><td><code>W_UNIT_NO_VALUE</code></td><td>a unit with no value</td></tr>
+</table></div><div class='lang' id='fr' dir='ltr' hidden><h1>ZFL — Zero-trust Formal Language, the language of the studio (ZTL is the logic; ZFL is how you write for it)</h1>
+<h2>Why a table and not a syntax</h2><p>Everything you write here is one document: a list of NAMES, each saying where it stands with you, plus what you CLAIM about them. There is no genre to declare and no mode to pick. Which instruments answer — the numeric floor, the passport office, the ledger, the judge — follows from which cells you filled.</p>
+<h2>The one rule underneath</h2><p>Truth is not granted on credit. A name is verified when a verification was produced, and the ground column is where you say what produced it. A name with nothing backing it is not false — it is unverified, which is an honest third answer and the reason this logic exists.</p>
+<h2>Asking for a number</h2><p>Put `?` in a value and the row stops being an answer and becomes a question. `x = ?` with a claim of `x - 10 = 20` is answered: x is 30, and earned. This is the one cell that changes what the machine DOES — everywhere else you are telling it what you know, and here you are asking.</p>
+<h2>Where formulas survive, and the one cell that reads two ways</h2><p>In two cells only. In GROUND, when a name is DEFINED by a formula over other names — that is how self-reference is written, and it is why the liar needs no special mode. And in CLAIM, which is what you are actually asserting. Note what the ground cell is doing: for a verified name it holds `inv-17`, an opaque name the machine never looks inside and which means nothing but its own identity; for a defined name it holds `~Tr(L)`, a formula the machine reads and evaluates. The status decides which, and the form asks again whenever you change it.</p>
+<h2>the columns of a row</h2><table><tr><th>column</th><th>what it is</th><th>required</th><th>options / examples</th></tr>
+<tr><td><b>nom</b></td><td>comme nous l&#x27;appelons ; les formules s&#x27;en servent</td><td>always</td><td>line · budget · L</td></tr>
+<tr><td><b>signifie</b></td><td>ce que cela VEUT DIRE que ce soit vrai</td><td>no</td><td>the invoice line · this sentence is false</td></tr>
+<tr><td><b>statut</b></td><td>d&#x27;où cela nous vient</td><td>always</td><td>vérifié · réfuté · non vérifié · défini</td></tr>
+<tr><td><b>fondement</b></td><td>ce qui l&#x27;atteste, ou la formule qui le définit</td><td>in context</td><td>inv-17 · ~Tr(L)</td></tr>
+<tr class="adv"><td><b>dimension</b></td><td>cela SOUTIENT l&#x27;affirmation ou l&#x27;AUTORISE</td><td>no</td><td>appui (soutient) · autorité (autorise)</td></tr>
+<tr><td><b>type de fondement</b></td><td>un document, sauf mention contraire</td><td>no</td><td>document · acte (rien à retirer) · certificat (expire) · autre ligne</td></tr>
+<tr><td><b>valeur</b></td><td>nombre, intervalle [0,10] ou ? pour inconnu</td><td>no</td><td>1500 · [0,10] · ?</td></tr>
+<tr><td><b>unité</b></td><td>seulement avec une valeur ; les mètres ne rencontrent pas les euros</td><td>no</td><td>RUB · m · m2</td></tr>
+<tr><td><b>échelle</b></td><td>jusqu&#x27;où l&#x27;on arrondit</td><td>no</td><td>entiers · centièmes · tiers</td></tr>
+<tr class="adv"><td><b>mesures séparées</b></td><td>un nombre issu d&#x27;un échantillon, pas d&#x27;une seule mesure</td><td>no</td><td></td></tr>
+</table>
+<h2>the document itself</h2><table><tr><th>column</th><th>what it is</th><th>required</th><th>options / examples</th></tr>
+<tr><td><b>claim</b></td><td>what you are actually asserting</td><td>no</td><td>line &lt;= budget · rain -&gt; umbrella</td></tr>
+<tr><td><b>ask</b></td><td>narrow the report; empty shows everything that applies</td><td>no</td><td>verdict · warranty · passport · stipulations · blast · brackets</td></tr>
+</table>
+<h2>operators</h2><table>
+<tr><td><code>&amp;</code></td><td>and</td></tr>
+<tr><td><code>-&gt;</code></td><td>if … then</td></tr>
+<tr><td><code>=</code></td><td>the same value as</td></tr>
+<tr><td><code>^</code></td><td>exactly one of</td></tr>
+<tr><td><code>|</code></td><td>or</td></tr>
+<tr><td><code>~</code></td><td>not</td></tr>
+<tr><td><code>Tr(x)</code></td><td>the value of the row x — this is how self-reference is written</td></tr>
+<tr><td><code>&lt;=</code></td><td>at most</td></tr>
+<tr><td><code>&gt;=</code></td><td>at least</td></tr>
+<tr><td><code>==</code></td><td>equal to</td></tr>
+<tr><td><code>&lt;</code></td><td>less than</td></tr>
+<tr><td><code>&gt;</code></td><td>greater than</td></tr>
+</table>
+<h2>arithmetic</h2><table>
+<tr><td><code>*</code></td><td>times</td></tr>
+<tr><td><code>+</code></td><td>plus</td></tr>
+<tr><td><code>-</code></td><td>minus</td></tr>
+<tr><td><code>/</code></td><td>divided by</td></tr>
+<tr><td><code>sum(a,b,…)</code></td><td>the sum of several — the same as a + b + …</td></tr>
+<tr><td><code>( )</code></td><td>brackets, to say what goes first</td></tr>
+<tr><td><code>-x</code></td><td>a leading minus: the sign of a term, not the operation between two — `-x + 100 = 70` is a fair question and was not accepted until 2026-08-13</td></tr>
+</table>
+<h2>what can go in a value</h2><table>
+<tr><td><code>1500</code></td><td>a number you have measured or read off a document</td></tr>
+<tr><td><code>[0,10]</code></td><td>a box: somewhere in this range, and the machine keeps the range rather than picking a point. Both ends are INCLUDED; for a strict bound put it in the claim — `x &gt; 0`. Write it backwards, [10,0], and you get E: the row names nothing, which is a verdict rather than a typo</td></tr>
+<tr><td><code>?</code></td><td>A QUESTION. You do not know it and you are asking. If the rest of the table determines it, the solver answers with the value AND the provenance it inherited — `x = 30, earned`. If it does not, you get told what would settle it.</td></tr>
+</table>
+<h2>a worked example</h2><table><tr><th>column</th><th>means</th><th>status</th><th>ground</th><th>value</th></tr>
+<tr><td>line</td><td>the invoice line</td><td>verified</td><td>inv-17</td><td>1500</td></tr>
+<tr><td>budget</td><td>the ceiling</td><td>verified</td><td>order-4</td><td>5000</td></tr>
+<tr><td>rain</td><td>it is raining</td><td>unverified</td><td>—</td><td>—</td></tr>
+<tr><td>L</td><td>this sentence is false</td><td>defined</td><td>~Tr(L)</td><td>—</td></tr>
+</table>
+<p><b>claim:</b> <code>line &lt;= budget</code></p>
+<h2>error codes</h2><table>
+<tr><td><code>E_BADNAME</code></td><td>a name a formula could not use</td></tr>
+<tr><td><code>E_CLAIM</code></td><td>the claim does not parse</td></tr>
+<tr><td><code>E_DIM</code></td><td>a dimension outside the list — a ground either supports a claim or permits it</td></tr>
+<tr><td><code>E_DIM_CLASH</code></td><td>a ground carries one mark, not two: &#x27;authority&#x27; cannot be combined with an act, a certificate or another row</td></tr>
+<tr><td><code>E_DUPNAME</code></td><td>the same name twice</td></tr>
+<tr><td><code>E_EMPTY</code></td><td>the table has no rows</td></tr>
+<tr><td><code>E_FORMULA</code></td><td>the defining formula does not parse</td></tr>
+<tr><td><code>E_GROUND_SPACES</code></td><td>a ground with a space in it — a ground is one word, because it names a document</td></tr>
+<tr><td><code>E_KIND</code></td><td>a kind of ground outside the list</td></tr>
+<tr><td><code>E_NOGROUND</code></td><td>verified, refuted or defined, with nothing backing it</td></tr>
+<tr><td><code>E_NONAME</code></td><td>a row without a name</td></tr>
+<tr><td><code>E_OPEN_INTERVAL</code></td><td>an open bound like (0,10) — put the strictness in the claim instead</td></tr>
+<tr><td><code>E_STATUS</code></td><td>a status outside the four</td></tr>
+<tr><td><code>E_UNIT</code></td><td>a unit that cannot be read — a word, optionally with a power (m2), joined by · or /</td></tr>
+<tr><td><code>E_UNKNOWN_NAME</code></td><td>a formula names a row that does not exist</td></tr>
+<tr><td><code>E_UNREADABLE</code></td><td>the instruments could not read the claim — the message says what they choked on</td></tr>
+<tr><td><code>E_VALUE_FORM</code></td><td>a value that is neither a number, an interval nor ?</td></tr>
+<tr><td><code>E_VALUE_SET</code></td><td>a choice between values, {0,10} — that is two rows, not one quantity</td></tr>
+<tr><td><code>W_NO_GLOSS</code></td><td>no gloss, so nobody can check the name means what it seems to</td></tr>
+<tr><td><code>W_UNIT_NO_VALUE</code></td><td>a unit with no value</td></tr>
+</table></div><div class='lang' id='es' dir='ltr' hidden><h1>ZFL — Zero-trust Formal Language, the language of the studio (ZTL is the logic; ZFL is how you write for it)</h1>
+<h2>Why a table and not a syntax</h2><p>Everything you write here is one document: a list of NAMES, each saying where it stands with you, plus what you CLAIM about them. There is no genre to declare and no mode to pick. Which instruments answer — the numeric floor, the passport office, the ledger, the judge — follows from which cells you filled.</p>
+<h2>The one rule underneath</h2><p>Truth is not granted on credit. A name is verified when a verification was produced, and the ground column is where you say what produced it. A name with nothing backing it is not false — it is unverified, which is an honest third answer and the reason this logic exists.</p>
+<h2>Asking for a number</h2><p>Put `?` in a value and the row stops being an answer and becomes a question. `x = ?` with a claim of `x - 10 = 20` is answered: x is 30, and earned. This is the one cell that changes what the machine DOES — everywhere else you are telling it what you know, and here you are asking.</p>
+<h2>Where formulas survive, and the one cell that reads two ways</h2><p>In two cells only. In GROUND, when a name is DEFINED by a formula over other names — that is how self-reference is written, and it is why the liar needs no special mode. And in CLAIM, which is what you are actually asserting. Note what the ground cell is doing: for a verified name it holds `inv-17`, an opaque name the machine never looks inside and which means nothing but its own identity; for a defined name it holds `~Tr(L)`, a formula the machine reads and evaluates. The status decides which, and the form asks again whenever you change it.</p>
+<h2>the columns of a row</h2><table><tr><th>column</th><th>what it is</th><th>required</th><th>options / examples</th></tr>
+<tr><td><b>nombre</b></td><td>cómo lo llamamos; las fórmulas lo usan</td><td>always</td><td>line · budget · L</td></tr>
+<tr><td><b>significa</b></td><td>qué SIGNIFICA que esto sea verdadero</td><td>no</td><td>the invoice line · this sentence is false</td></tr>
+<tr><td><b>estado</b></td><td>de dónde nos viene</td><td>always</td><td>verificado · refutado · sin verificar · definido</td></tr>
+<tr><td><b>fundamento</b></td><td>qué lo respalda, o la fórmula que lo define</td><td>in context</td><td>inv-17 · ~Tr(L)</td></tr>
+<tr class="adv"><td><b>dimensión</b></td><td>¿SOSTIENE la afirmación o la PERMITE?</td><td>no</td><td>apoyo (sostiene) · autoridad (permite)</td></tr>
+<tr><td><b>tipo de fundamento</b></td><td>un documento, salvo que se diga otra cosa</td><td>no</td><td>documento · acto (nada que retirar) · certificado (caduca) · otra fila</td></tr>
+<tr><td><b>valor</b></td><td>número, intervalo [0,10] o ? para desconocido</td><td>no</td><td>1500 · [0,10] · ?</td></tr>
+<tr><td><b>unidad</b></td><td>solo con un valor; los metros no se cruzan con los euros</td><td>no</td><td>RUB · m · m2</td></tr>
+<tr><td><b>escala</b></td><td>hasta dónde redondeamos</td><td>no</td><td>enteros · centésimas · tercios</td></tr>
+<tr class="adv"><td><b>mediciones separadas</b></td><td>un número de una muestra, no una sola medición</td><td>no</td><td></td></tr>
+</table>
+<h2>the document itself</h2><table><tr><th>column</th><th>what it is</th><th>required</th><th>options / examples</th></tr>
+<tr><td><b>claim</b></td><td>what you are actually asserting</td><td>no</td><td>line &lt;= budget · rain -&gt; umbrella</td></tr>
+<tr><td><b>ask</b></td><td>narrow the report; empty shows everything that applies</td><td>no</td><td>verdict · warranty · passport · stipulations · blast · brackets</td></tr>
+</table>
+<h2>operators</h2><table>
+<tr><td><code>&amp;</code></td><td>and</td></tr>
+<tr><td><code>-&gt;</code></td><td>if … then</td></tr>
+<tr><td><code>=</code></td><td>the same value as</td></tr>
+<tr><td><code>^</code></td><td>exactly one of</td></tr>
+<tr><td><code>|</code></td><td>or</td></tr>
+<tr><td><code>~</code></td><td>not</td></tr>
+<tr><td><code>Tr(x)</code></td><td>the value of the row x — this is how self-reference is written</td></tr>
+<tr><td><code>&lt;=</code></td><td>at most</td></tr>
+<tr><td><code>&gt;=</code></td><td>at least</td></tr>
+<tr><td><code>==</code></td><td>equal to</td></tr>
+<tr><td><code>&lt;</code></td><td>less than</td></tr>
+<tr><td><code>&gt;</code></td><td>greater than</td></tr>
+</table>
+<h2>arithmetic</h2><table>
+<tr><td><code>*</code></td><td>times</td></tr>
+<tr><td><code>+</code></td><td>plus</td></tr>
+<tr><td><code>-</code></td><td>minus</td></tr>
+<tr><td><code>/</code></td><td>divided by</td></tr>
+<tr><td><code>sum(a,b,…)</code></td><td>the sum of several — the same as a + b + …</td></tr>
+<tr><td><code>( )</code></td><td>brackets, to say what goes first</td></tr>
+<tr><td><code>-x</code></td><td>a leading minus: the sign of a term, not the operation between two — `-x + 100 = 70` is a fair question and was not accepted until 2026-08-13</td></tr>
+</table>
+<h2>what can go in a value</h2><table>
+<tr><td><code>1500</code></td><td>a number you have measured or read off a document</td></tr>
+<tr><td><code>[0,10]</code></td><td>a box: somewhere in this range, and the machine keeps the range rather than picking a point. Both ends are INCLUDED; for a strict bound put it in the claim — `x &gt; 0`. Write it backwards, [10,0], and you get E: the row names nothing, which is a verdict rather than a typo</td></tr>
+<tr><td><code>?</code></td><td>A QUESTION. You do not know it and you are asking. If the rest of the table determines it, the solver answers with the value AND the provenance it inherited — `x = 30, earned`. If it does not, you get told what would settle it.</td></tr>
+</table>
+<h2>a worked example</h2><table><tr><th>column</th><th>means</th><th>status</th><th>ground</th><th>value</th></tr>
+<tr><td>line</td><td>the invoice line</td><td>verified</td><td>inv-17</td><td>1500</td></tr>
+<tr><td>budget</td><td>the ceiling</td><td>verified</td><td>order-4</td><td>5000</td></tr>
+<tr><td>rain</td><td>it is raining</td><td>unverified</td><td>—</td><td>—</td></tr>
+<tr><td>L</td><td>this sentence is false</td><td>defined</td><td>~Tr(L)</td><td>—</td></tr>
+</table>
+<p><b>claim:</b> <code>line &lt;= budget</code></p>
+<h2>error codes</h2><table>
+<tr><td><code>E_BADNAME</code></td><td>a name a formula could not use</td></tr>
+<tr><td><code>E_CLAIM</code></td><td>the claim does not parse</td></tr>
+<tr><td><code>E_DIM</code></td><td>a dimension outside the list — a ground either supports a claim or permits it</td></tr>
+<tr><td><code>E_DIM_CLASH</code></td><td>a ground carries one mark, not two: &#x27;authority&#x27; cannot be combined with an act, a certificate or another row</td></tr>
+<tr><td><code>E_DUPNAME</code></td><td>the same name twice</td></tr>
+<tr><td><code>E_EMPTY</code></td><td>the table has no rows</td></tr>
+<tr><td><code>E_FORMULA</code></td><td>the defining formula does not parse</td></tr>
+<tr><td><code>E_GROUND_SPACES</code></td><td>a ground with a space in it — a ground is one word, because it names a document</td></tr>
+<tr><td><code>E_KIND</code></td><td>a kind of ground outside the list</td></tr>
+<tr><td><code>E_NOGROUND</code></td><td>verified, refuted or defined, with nothing backing it</td></tr>
+<tr><td><code>E_NONAME</code></td><td>a row without a name</td></tr>
+<tr><td><code>E_OPEN_INTERVAL</code></td><td>an open bound like (0,10) — put the strictness in the claim instead</td></tr>
+<tr><td><code>E_STATUS</code></td><td>a status outside the four</td></tr>
+<tr><td><code>E_UNIT</code></td><td>a unit that cannot be read — a word, optionally with a power (m2), joined by · or /</td></tr>
+<tr><td><code>E_UNKNOWN_NAME</code></td><td>a formula names a row that does not exist</td></tr>
+<tr><td><code>E_UNREADABLE</code></td><td>the instruments could not read the claim — the message says what they choked on</td></tr>
+<tr><td><code>E_VALUE_FORM</code></td><td>a value that is neither a number, an interval nor ?</td></tr>
+<tr><td><code>E_VALUE_SET</code></td><td>a choice between values, {0,10} — that is two rows, not one quantity</td></tr>
+<tr><td><code>W_NO_GLOSS</code></td><td>no gloss, so nobody can check the name means what it seems to</td></tr>
+<tr><td><code>W_UNIT_NO_VALUE</code></td><td>a unit with no value</td></tr>
+</table></div>
+<script>
+// ?l=xx opens the page already in that language, so a link can be handed to
+// somebody in their own. Switching also rewrites the address bar, so
+// whatever you are reading is what you copy.
+const LANGS = ['en','ru','uk','he','de','fr','es'];
+function t(l) {
+  if (!LANGS.includes(l)) l = 'en';
+  for (const d of document.querySelectorAll('.lang')) d.hidden = d.id !== l;
+  document.documentElement.lang = l;
+  document.documentElement.dir = document.getElementById(l).dir;
+  history.replaceState(null, '', '?l=' + l);
+  return false;
+}
+t(new URLSearchParams(location.search).get('l') || 'en');
+</script>

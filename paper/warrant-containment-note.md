@@ -27,12 +27,13 @@ loss and does **nothing whatever** against a chosen one — at ninety-five per
 cent redundancy an adversary aiming at the root still takes everything.
 Declared redundancy resting on a shared origin reports safety it does not
 provide. Permission and support are different requirements, so a collective
-with perfect evidence redundancy still dies of one commander. And a dependency
-map that is complete but stale is wrong in one direction only: never
-pessimistic, always flattering.
+with perfect evidence redundancy still dies of one commander. And an incomplete dependency map is wrong
+in a direction that depends on which edge is missing — a hidden shared origin
+flatters, a hidden alternative frightens — which is a correction to an earlier
+claim of one direction for both.
 
-Eleven predictions made in the course of this work were refuted by its own
-runs — six by the author, five more by an adversarial review that also found
+Twelve predictions made in the course of this work were refuted by its own
+runs — six by the author, six more by an adversarial review that also found
 one figure quoted here that no program produces. All are reported with the
 rest, and the corrections they forced are larger than the results they left
 standing. Every number below is printed by a program in
@@ -262,9 +263,13 @@ quorum earns its keep against a root that is *captured* rather than lost.
 
 ### 3.6 An incomplete map, and a stale one
 
-When edges are missing from the observed graph, the error runs **one way
-only**: a missing edge can make two grounds look more independent than they
-are, never less. Measured, worst case against predicted:
+When edges are missing from the observed graph the error has a direction, and
+**which** direction depends on what kind of edge is missing. An earlier draft
+of this note claimed one direction for incompleteness as such; that was wrong,
+and both tables are below.
+
+A missing **shared origin** flatters — grounds look more independent than they
+are:
 
 | hidden | C_predicted | C_actual | error |
 |---|---|---|---|
@@ -272,10 +277,28 @@ are, never less. Measured, worst case against predicted:
 | 5% | 0.086 | 0.089 | +0.004 |
 | 50% | 0.064 | 0.089 | +0.025 |
 
-The magnitude is modest here — a 28% relative underestimate — and the reason
-matters more than the number: the gap can only be as large as the share of the
-collective whose fate rides on the *hidden* edges. Five per cent of the wrong
-edges beats fifty per cent of harmless ones.
+A missing **alternative** frightens — a conclusion the system believes lost is
+in fact still standing on its other ground:
+
+| hidden alternatives | C_predicted | C_actual | error |
+|---|---|---|---|
+| 0% | 0.1444 | 0.1444 | +0.0000 |
+| 50% | 0.1734 | 0.1444 | −0.0290 |
+| 100% | 0.2031 | 0.1444 | −0.0587 |
+
+The note's own §1 supports alternative grounds, so both cases live inside its
+own model, and the claim that incompleteness is one-directional survived only
+because one of the two was never run.
+
+The two errors are not equally serious, and that is what survives: an
+optimistic error lets a system act on warrant it does not hold; a pessimistic
+one makes it withdraw from warrant it does. The first causes accidents, the
+second idleness.
+
+The magnitude in the first table is modest — a 28% relative underestimate at
+full hiding — and the reason matters more than the number: the gap can only be
+as large as the share of the collective whose fate rides on the *hidden*
+edges. Five per cent of the wrong edges beats fifty per cent of harmless ones.
 
 Under delay and loss, a collective acting without a gate spends **about two
 thirds of its actions outside its own containment requirement** — 66% even at
@@ -389,6 +412,10 @@ selection.
     its random argument unused; ten seeds measured one graph ten times.
     0.117 is 4681/40000, a closed form in the branching factor.
 11. *"C = 0.789."* No program produces this number. It was invented.
+12. *"The error from incompleteness runs one way only."* It runs one way per
+    KIND of edge. A missing shared origin flatters; a missing alternative —
+    which §1 explicitly supports — makes the prediction too large. The claim
+    survived because only one of the two was ever run.
 
 Adversarial review raised 48 findings of which 32 survived a refutation pass;
 the full list is in the repository beside this note. The reader should assume

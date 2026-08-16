@@ -97,6 +97,39 @@ def worst(ev, au, up):
     return max(cascade(ev, au, up, n) for n in cands)
 
 
+def alternatives(hidden, rnd, share=0.30):
+    """THE OTHER KIND OF MISSING EDGE, and it runs the other way.
+
+    This file claimed the error from incompleteness is one-directional — a
+    missing edge can only make grounds look MORE independent. Adversarial
+    review pointed at §1 of the note, which supports ALTERNATIVE grounds
+    (`inv-17|inv-18`), and the objection is correct: if the map does not know
+    about an alternative, the system believes a conclusion falls when its
+    single known ground falls, while in truth it survives on the other. The
+    prediction is then too LARGE — pessimistic, the direction declared
+    impossible.
+
+    Both kinds are real and they are not symmetric in consequence: an
+    optimistic error lets a system act on warrant it does not have, a
+    pessimistic one makes it withdraw from warrant it does. Only the first is
+    dangerous; only the second is wasteful."""
+    base = [rnd.randrange(SOURCES) for _ in range(N)]
+    true_alt, seen_alt = {}, {}
+    for c in range(N):
+        if rnd.random() < share:
+            b = (base[c] + 1 + rnd.randrange(SOURCES - 1)) % SOURCES
+            true_alt[c] = b
+            if rnd.random() >= hidden:
+                seen_alt[c] = b
+    return base, true_alt, seen_alt
+
+
+def alt_loss(base, alt, dead):
+    """A conclusion falls only if its ground AND its alternative are gone."""
+    return sum(1 for c in range(N)
+               if base[c] == dead and alt.get(c, dead) == dead) / N
+
+
 def main():
     print("=" * 78)
     print("CONTAINMENT ERROR — the map is not the dependencies")
@@ -116,10 +149,24 @@ def main():
         print(f"  {int(hidden * 100):>12}% {pred:>13.3f} {act:>10.3f}"
               f" {act - pred:>+9.3f}")
 
+    print("\n  THE OTHER KIND OF MISSING EDGE — a hidden ALTERNATIVE")
+    print(f"\n  {'hidden alternatives':>20} {'C_predicted':>13}"
+          f" {'C_actual':>10} {'error':>9}")
+    alt_rows = []
+    for hidden in (0.0, 0.25, 0.50, 1.00):
+        rnd = random.Random(SEED)
+        b, ta, sa = alternatives(hidden, rnd)
+        pred = max(alt_loss(b, sa, d) for d in range(SOURCES))
+        act = max(alt_loss(b, ta, d) for d in range(SOURCES))
+        alt_rows.append((hidden, pred, act))
+        print(f"  {int(hidden * 100):>19}% {pred:>13.4f} {act:>10.4f}"
+              f" {act - pred:>+9.4f}")
+    assert alt_rows[-1][2] < alt_rows[-1][1]      # pessimistic, pinned
+
     base, full = rows[0], rows[-1]
     rel = (full[2] - full[1]) / full[2]
     print(f"""
-  THE DIRECTION HOLDS EXACTLY. Zero hidden, prediction equals reality
+  THE DIRECTION HOLDS FOR THIS KIND OF EDGE. Zero hidden, prediction equals reality
   ({base[1]:.3f}); every other row has the error POSITIVE and growing —
   {rows[2][2] - rows[2][1]:+.3f} at 5% hidden, {full[2] - full[1]:+.3f} at
   full. It is never negative, and cannot be: a missing edge can only make
@@ -148,6 +195,18 @@ def main():
   incompleteness even though the missing edges are not. "We might be
   missing something" becomes "if we are missing these, here is the
   ceiling on how wrong we are".
+
+  AND THE DIRECTION CLAIM WAS TOO STRONG. See the second table: when the
+  missing edge is an ALTERNATIVE ground rather than a shared origin, the
+  system predicts MORE fallout than occurs. Incompleteness is not
+  one-directional; it is one-directional PER KIND OF EDGE. A missing
+  common origin flatters, a missing alternative frightens, and this note
+  asserted the first as a property of incompleteness itself.
+
+  The two are not equally serious, which is the part worth keeping: an
+  optimistic error lets a system act on warrant it does not hold, and a
+  pessimistic one makes it withdraw from warrant it does. The first
+  causes accidents and the second causes idleness.
 
   WHICH STILL NAMES A FOURTH UNOWNED THING. Attestation says who signed;
   provenance says what a ground descended from; the independence warrant

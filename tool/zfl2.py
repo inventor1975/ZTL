@@ -61,10 +61,15 @@ Run:  python3 tool/test_zfl2.py
 # The hand-written rule stands and is why this list is short: this vocabulary
 # IS the content, and an automatic translation turns "on credit" into "on
 # loan" — precisely the word that carries the meaning.
+# (code, what the language calls itself, what to CALL IT TO A MODEL). The
+# third field exists because the AI is part of the interface: a studio in
+# Hebrew whose assistant answers in English is not localised, it is
+# half-localised, and the half that talks is the one people notice.
 LANGS = [
-    ("en", "English"), ("ru", "Русский"), ("uk", "Українська"),
-    ("he", "עברית"), ("de", "Deutsch"), ("fr", "Français"),
-    ("es", "Español"),
+    ("en", "English", "English"), ("ru", "Русский", "Russian"),
+    ("uk", "Українська", "Ukrainian"), ("he", "עברית", "Hebrew"),
+    ("de", "Deutsch", "German"), ("fr", "Français", "French"),
+    ("es", "Español", "Spanish"),
 ]
 RTL = {"he"}
 
@@ -74,6 +79,9 @@ COLUMNS = [
         "key": "name", "type": "text", "required": True, "advanced": False,
         "en": ("name", "what we call it; formulas use this"),
         "ru": ("имя", "как называем; им же пользуемся в формулах"),
+        "de": ("Name", "wie wir es nennen; damit rechnen auch die Formeln"),
+        "fr": ("nom", "comme nous l'appelons ; les formules s'en servent"),
+        "es": ("nombre", "cómo lo llamamos; las fórmulas lo usan"),
         "uk": ("ім'я", "як називаємо; ним же користуємось у формулах"),
         "he": ("שם", "איך קוראים לו; באותו שם משתמשים בנוסחאות"),
         "eg": ["line", "budget", "L"],
@@ -82,6 +90,9 @@ COLUMNS = [
         "key": "means", "type": "text", "required": False, "advanced": False,
         "en": ("means", "what it MEANS for this to be true"),
         "ru": ("значит", "что означает истинность этого имени"),
+        "de": ("bedeutet", "was es HEISST, dass dies wahr ist"),
+        "fr": ("signifie", "ce que cela VEUT DIRE que ce soit vrai"),
+        "es": ("significa", "qué SIGNIFICA que esto sea verdadero"),
         "uk": ("означає", "що означає істинність цього імені"),
         "he": ("פירושו", "מה זה אומר שהשם הזה אמיתי"),
         "eg": ["the invoice line", "this sentence is false"],
@@ -105,6 +116,9 @@ COLUMNS = [
         "default": "unverified",
         "en": ("status", "where it stands with us"),
         "ru": ("статус", "откуда оно у нас"),
+        "de": ("Status", "woher wir es haben"),
+        "fr": ("statut", "d'où cela nous vient"),
+        "es": ("estado", "de dónde nos viene"),
         "uk": ("статус", "звідки воно в нас"),
         "he": ("מעמד", "מאיפה זה הגיע אלינו"),
         "labels": {
@@ -112,6 +126,9 @@ COLUMNS = [
                    "unverified": "not verified", "defined": "defined"},
             "ru": {"verified": "проверено", "refuted": "опровергнуто",
                    "unverified": "не проверено", "defined": "определено"},
+            "de": {"verified": "geprüft", "refuted": "widerlegt", "unverified": "ungeprüft", "defined": "definiert"},
+            "fr": {"verified": "vérifié", "refuted": "réfuté", "unverified": "non vérifié", "defined": "défini"},
+            "es": {"verified": "verificado", "refuted": "refutado", "unverified": "sin verificar", "defined": "definido"},
             "uk": {"verified": "перевірено", "refuted": "спростовано", "unverified": "не перевірено", "defined": "визначено"},
             "he": {"verified": "מאומת", "refuted": "הופרך", "unverified": "לא אומת", "defined": "מוגדר"},
         },
@@ -131,6 +148,9 @@ COLUMNS = [
         "required_when": {"status": ["verified", "refuted", "defined"]},
         "en": ("ground", "what backs it, or the formula defining it"),
         "ru": ("основание", "чем подтверждено или как определено"),
+        "de": ("Grundlage", "was es belegt, oder die definierende Formel"),
+        "fr": ("fondement", "ce qui l'atteste, ou la formule qui le définit"),
+        "es": ("fundamento", "qué lo respalda, o la fórmula que lo define"),
         "uk": ("підстава", "чим підтверджено або як визначено"),
         "he": ("אסמכתא", "מה מאשש אותו, או הנוסחה שמגדירה אותו"),
         "eg": ["inv-17", "~Tr(L)"],
@@ -204,6 +224,9 @@ COLUMNS = [
         "options": ["evidence", "authority"],
         "en": ("dimension", "does this SUPPORT the claim or PERMIT it"),
         "ru": ("измерение", "оно ПОДПИРАЕТ утверждение или РАЗРЕШАЕТ его"),
+        "de": ("Dimension", "STÜTZT es die Aussage oder ERLAUBT es sie"),
+        "fr": ("dimension", "cela SOUTIENT l'affirmation ou l'AUTORISE"),
+        "es": ("dimensión", "¿SOSTIENE la afirmación o la PERMITE?"),
         "uk": ("вимір", "воно ПІДПИРАЄ твердження чи ДОЗВОЛЯЄ його"),
         "he": ("ממד", "האם זה תומך בטענה או מתיר אותה"),
         "labels": {
@@ -211,6 +234,9 @@ COLUMNS = [
                    "authority": "authority (permits)"},
             "ru": {"evidence": "опора (подпирает)",
                    "authority": "разрешение (даёт право)"},
+            "de": {"evidence": "Stütze (belegt)", "authority": "Befugnis (erlaubt)"},
+            "fr": {"evidence": "appui (soutient)", "authority": "autorité (autorise)"},
+            "es": {"evidence": "apoyo (sostiene)", "authority": "autoridad (permite)"},
             "uk": {"evidence": "опора (підпирає)", "authority": "дозвіл (дає право)"},
             "he": {"evidence": "תמיכה (מבססת)", "authority": "סמכות (מתירה)"},
         },
@@ -221,6 +247,9 @@ COLUMNS = [
         "options": ["document", "act", "certificate", "row"],
         "en": ("kind of ground", "a document unless you say otherwise"),
         "ru": ("вид основания", "документ, если не сказано иное"),
+        "de": ("Art der Grundlage", "ein Dokument, sofern nicht anders gesagt"),
+        "fr": ("type de fondement", "un document, sauf mention contraire"),
+        "es": ("tipo de fundamento", "un documento, salvo que se diga otra cosa"),
         "uk": ("вид підстави", "документ, якщо не сказано інакше"),
         "he": ("סוג האסמכתא", "מסמך, אלא אם נאמר אחרת"),
         "labels": {
@@ -230,6 +259,9 @@ COLUMNS = [
             "ru": {"document": "документ", "act": "акт (отзывать нечего)",
                    "certificate": "сертификат (истекает)",
                    "row": "другая строка"},
+            "de": {"document": "Dokument", "act": "Handlung (nichts zurückzunehmen)", "certificate": "Zertifikat (läuft ab)", "row": "andere Zeile"},
+            "fr": {"document": "document", "act": "acte (rien à retirer)", "certificate": "certificat (expire)", "row": "autre ligne"},
+            "es": {"document": "documento", "act": "acto (nada que retirar)", "certificate": "certificado (caduca)", "row": "otra fila"},
             "uk": {"document": "документ", "act": "акт (відкликати нічого)", "certificate": "сертифікат (спливає)", "row": "інший рядок"},
             "he": {"document": "מסמך", "act": "מעשה (אין מה לבטל)", "certificate": "אישור (פג תוקף)", "row": "שורה אחרת"},
         },
@@ -238,6 +270,9 @@ COLUMNS = [
         "key": "value", "type": "text", "required": False, "advanced": False,
         "en": ("value", "a number, an interval [0,10], or ? for unknown"),
         "ru": ("величина", "число, интервал [0,10] или ? для неизвестного"),
+        "de": ("Wert", "Zahl, Intervall [0,10] oder ? für unbekannt"),
+        "fr": ("valeur", "nombre, intervalle [0,10] ou ? pour inconnu"),
+        "es": ("valor", "número, intervalo [0,10] o ? para desconocido"),
         "uk": ("величина", "число, інтервал [0,10] або ? для невідомого"),
         "he": ("ערך", "מספר, תחום [0,10] או ? ללא ידוע"),
         "eg": ["1500", "[0,10]", "?"],
@@ -246,6 +281,9 @@ COLUMNS = [
         "key": "unit", "type": "text", "required": False, "advanced": False,
         "en": ("unit", "only with a value; metres never meet roubles"),
         "ru": ("единица", "только с величиной; метры не встречаются с рублями"),
+        "de": ("Einheit", "nur mit einem Wert; Meter treffen nie auf Euro"),
+        "fr": ("unité", "seulement avec une valeur ; les mètres ne rencontrent pas les euros"),
+        "es": ("unidad", "solo con un valor; los metros no se cruzan con los euros"),
         "uk": ("одиниця", "лише з величиною; метри не зустрічаються з гривнями"),
         "he": ("יחידה", "רק עם ערך; מטרים לא נפגשים עם שקלים"),
         "eg": ["RUB", "m", "m2"],
@@ -255,6 +293,9 @@ COLUMNS = [
         "default": "", "options": ["", "int", "decimal2", "frac3"],
         "en": ("scale", "what it rounds to"),
         "ru": ("шкала", "до чего округляем"),
+        "de": ("Skala", "worauf gerundet wird"),
+        "fr": ("échelle", "jusqu'où l'on arrondit"),
+        "es": ("escala", "hasta dónde redondeamos"),
         "uk": ("шкала", "до чого округлюємо"),
         "he": ("סולם", "לאן מעגלים"),
         "labels": {
@@ -262,6 +303,9 @@ COLUMNS = [
                    "frac3": "thirds"},
             "ru": {"": "точно", "int": "целые", "decimal2": "сотые",
                    "frac3": "трети"},
+            "de": {"int": "ganze", "decimal2": "Hundertstel", "frac3": "Drittel"},
+            "fr": {"int": "entiers", "decimal2": "centièmes", "frac3": "tiers"},
+            "es": {"int": "enteros", "decimal2": "centésimas", "frac3": "tercios"},
             "uk": {"int": "цілі", "decimal2": "соті", "frac3": "третини"},
             "he": {"int": "שלמים", "decimal2": "מאיות", "frac3": "שלישים"},
         },
@@ -273,6 +317,9 @@ COLUMNS = [
                "each occurrence is its own act of measuring"),
         "ru": ("отдельные измерения",
                "каждое вхождение — свой акт измерения"),
+        "de": ("Einzelmessungen", "eine Zahl aus einer Stichprobe, keine einzelne Messung"),
+        "fr": ("mesures séparées", "un nombre issu d'un échantillon, pas d'une seule mesure"),
+        "es": ("mediciones separadas", "un número de una muestra, no una sola medición"),
         "uk": ("окремі виміри", "число з вибірки, а не одне вимірювання"),
         "he": ("מדידות נפרדות", "מספר מתוך מדגם, לא מדידה אחת"),
     },
@@ -334,7 +381,7 @@ def form_spec(lang="en"):
         return out
     return {"columns": [render(c) for c in COLUMNS],
             "document": [render(c) for c in DOC_FIELDS],
-            "langs": [{"code": c, "label": n} for c, n in LANGS],
+            "langs": [{"code": c, "label": n} for c, n, _e in LANGS],
             "rtl": lang in RTL}
 
 

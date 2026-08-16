@@ -385,7 +385,12 @@ def _lang(query):
     m = re.search(r"(?:^|&)l=([A-Za-z-]{2,5})", query or "")
     want = (m.group(1).lower() if m else "en")
     try:
-        codes = {c for c, _n in _v2("zfl2").LANGS}
+        # `entry[0]`, not tuple unpacking: LANGS grew a third field the day
+        # the AI was tied to the interface language, and a fixed-width unpack
+        # here raised inside the try, fell to the two-language default, and
+        # served English for every new code while the module itself was
+        # perfectly correct. Read the field you need and let the row grow.
+        codes = {entry[0] for entry in _v2("zfl2").LANGS}
     except Exception:
         codes = {"en", "ru"}
     return want if want in codes else "en"

@@ -133,6 +133,104 @@ const UI = {
         limit: "ה־AI החינמי מוצה (20 בקשות ל־10 דקות למבקר). לחצו על "
                + "«ה־AI שלי» למעלה והמשיכו עם מפתח משלכם — או עבדו בלעדיו: "
                + "הטבלה והפסק מעולם לא נזקקו ל־AI." },
+  de: { advanced: "erweitert", reference: "Was ist ZFL? (die Sprache)",
+        addrow: "Zeile hinzufügen", run: "ausführen", claim: "Behauptung",
+        remove: "diese Zeile entfernen",
+        nothing: "noch nichts zu zeigen — Zeile ausfüllen und ausführen",
+        applies: "Instrumente, die etwas zu sagen hatten",
+        passport: "Pässe", numeric: "die Zahlenebene",
+        judge: "der Richter", ledger: "das Buch",
+        component: "Komponente", kind: "Pass", detail: "Einzelheiten",
+        disposition: "Befund", cures: "was es entscheiden würde",
+        sheet: "zusammengesetztes Blatt", verdict: "Urteil", grade: "Gewähr",
+        weak: "schwache Glieder", claims: "Ansprüche", brackets: "Vertrauensspannen",
+        assumed: "auf Treu und Glauben, nicht prüfbar", eg: "z. B. ",
+        solved: "gelöst", value: "Wert", from: "abgeleitet aus",
+        prov: "Herkunft", still: "noch eine Schachtel",
+        needone: "die Frage legt keine Zahl fest: nennen Sie IRGENDEINE davon — "
+                 + "der Rest folgt:",
+        needmore: "die Frage legt keine Zahl fest, und eine weitere Tatsache "
+                  + "würde nicht reichen",
+        examples: "Beispiele", send: "fragen", commentary: "in Klartext",
+        askph: "beschreiben Sie die Frage in eigenen Worten…",
+        thinking: "fülle die Tabelle…", pick: "— wählen —",
+        aioff: "kein Modellschlüssel — Tabelle und Urteil arbeiten auch ohne",
+        ownai: "eigene KI", keyph: "Ihren API-Schlüssel einfügen",
+        keysave: "verwenden", keyclear: "zurück zur kostenlosen KI",
+        keynote: "Der Schlüssel bleibt nur in diesem Browser-Tab und nur für "
+                 + "diese Sitzung; an den Server geht er einzig, um den von "
+                 + "Ihnen gewählten Anbieter aufzurufen. Nichts wird auf die "
+                 + "Festplatte geschrieben. Tab zu — Schlüssel vergessen.",
+        keyon: "Ihre eigene KI ist aktiv", keyoff: "die kostenlose KI ist aktiv",
+        limit: "Die kostenlose KI ist aufgebraucht (20 Anfragen pro 10 Minuten "
+               + "je Besucher). Klicken Sie oben auf «eigene KI» und machen Sie "
+               + "mit Ihrem Schlüssel weiter — oder arbeiten Sie ohne: Tabelle "
+               + "und Urteil haben die KI nie gebraucht." },
+  fr: { advanced: "avancé", reference: "qu'est-ce que ZFL ? (le langage)",
+        addrow: "ajouter une ligne", run: "exécuter", claim: "affirmation",
+        remove: "retirer cette ligne",
+        nothing: "rien à montrer pour l'instant — remplissez une ligne et exécutez",
+        applies: "les instruments qui avaient quelque chose à dire",
+        passport: "passeports", numeric: "le socle numérique",
+        judge: "le juge", ledger: "le registre",
+        component: "composant", kind: "passeport", detail: "détails",
+        disposition: "disposition", cures: "ce qui trancherait",
+        sheet: "feuille assemblée", verdict: "verdict", grade: "garantie",
+        weak: "maillons faibles", claims: "prétentions", brackets: "fourchettes de confiance",
+        assumed: "admis sur parole et invérifiable", eg: "p. ex. ",
+        solved: "résolu", value: "valeur", from: "dérivé de",
+        prov: "provenance", still: "encore une boîte",
+        needone: "la question ne fixe aucun nombre : donnez N'IMPORTE LEQUEL "
+                 + "de ceux-ci — le reste suivra :",
+        needmore: "la question ne fixe aucun nombre, et un fait de plus ne "
+                  + "suffirait pas",
+        examples: "exemples", send: "demander", commentary: "en clair",
+        askph: "décrivez la question avec vos mots…",
+        thinking: "je remplis le tableau…", pick: "— choisir —",
+        aioff: "pas de clé de modèle — le tableau et le verdict marchent sans",
+        ownai: "mon IA", keyph: "collez votre clé API",
+        keysave: "l'utiliser", keyclear: "revenir à l'IA gratuite",
+        keynote: "La clé ne reste que dans cet onglet et seulement pour cette "
+                 + "session ; elle ne part vers le serveur que pour appeler le "
+                 + "fournisseur que vous avez choisi. Rien n'est écrit sur "
+                 + "disque. Fermez l'onglet et elle est oubliée.",
+        keyon: "votre IA est active", keyoff: "l'IA gratuite est active",
+        limit: "L'IA gratuite est épuisée (20 requêtes par 10 minutes et par "
+               + "visiteur). Cliquez sur «mon IA» en haut et continuez avec "
+               + "votre clé — ou travaillez sans : le tableau et le verdict "
+               + "n'ont jamais eu besoin de l'IA." },
+  es: { advanced: "avanzado", reference: "¿qué es ZFL? (el lenguaje)",
+        addrow: "añadir fila", run: "ejecutar", claim: "afirmación",
+        remove: "quitar esta fila",
+        nothing: "todavía nada que mostrar — rellene una fila y ejecute",
+        applies: "instrumentos que tuvieron algo que decir",
+        passport: "pasaportes", numeric: "el suelo numérico",
+        judge: "el juez", ledger: "el registro",
+        component: "componente", kind: "pasaporte", detail: "detalles",
+        disposition: "disposición", cures: "qué lo resolvería",
+        sheet: "hoja compuesta", verdict: "veredicto", grade: "garantía",
+        weak: "eslabones débiles", claims: "pretensiones", brackets: "horquillas de confianza",
+        assumed: "aceptado de palabra y no verificable", eg: "p. ej. ",
+        solved: "resuelto", value: "valor", from: "derivado de",
+        prov: "procedencia", still: "todavía una caja",
+        needone: "la pregunta no fija ningún número: diga CUALQUIERA de "
+                 + "estos — el resto se sigue:",
+        needmore: "la pregunta no fija ningún número, y un dato más no bastaría",
+        examples: "ejemplos", send: "preguntar", commentary: "en lenguaje llano",
+        askph: "describa la pregunta con sus palabras…",
+        thinking: "rellenando la tabla…", pick: "— elija —",
+        aioff: "sin clave de modelo — la tabla y el veredicto funcionan igual",
+        ownai: "mi IA", keyph: "pegue su clave API",
+        keysave: "usarla", keyclear: "volver a la IA gratuita",
+        keynote: "La clave se guarda solo en esta pestaña y solo para esta "
+                 + "sesión; al servidor va únicamente para llamar al proveedor "
+                 + "que usted eligió. Nada se escribe en disco. Al cerrar la "
+                 + "pestaña se olvida.",
+        keyon: "su propia IA está en uso", keyoff: "la IA gratuita está en uso",
+        limit: "La IA gratuita se agotó (20 peticiones por 10 minutos por "
+               + "visitante). Pulse «mi IA» arriba y siga con su propia clave "
+               + "— o trabaje sin ella: la tabla y el veredicto nunca "
+               + "necesitaron la IA." },
 };
 
 let LANG = new URLSearchParams(location.search).get("l") || "en";

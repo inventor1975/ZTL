@@ -71,14 +71,78 @@ const UI = {
                + "посетителя). Нажмите «свой ИИ» вверху и продолжите со "
                + "своим ключом — или работайте без него: таблица и вердикт "
                + "в ИИ никогда не нуждались." },
+  uk: { advanced: "додатково", reference: "що таке ZFL? (мова)",
+        addrow: "додати рядок", run: "запустити", claim: "твердження",
+        remove: "прибрати рядок",
+        nothing: "поки нічого показувати — заповніть рядок і запустіть",
+        applies: "прилади, яким було що сказати",
+        passport: "паспорти", numeric: "числова підлога",
+        judge: "суддя", ledger: "зошит",
+        component: "компонент", kind: "паспорт", detail: "подробиці",
+        disposition: "диспозиція", cures: "що це вирішить",
+        sheet: "зібраний аркуш", verdict: "вердикт", grade: "гарантія",
+        weak: "слабкі ланки", claims: "домагання", brackets: "вилки довіри",
+        assumed: "прийнято на віру і неперевірне", eg: "напр. ",
+        solved: "розв'язано", value: "величина", from: "виведено з",
+        prov: "походження", still: "ще коробка",
+        needone: "питання не визначає числа: назвіть БУДЬ-ЯКЕ одне з цих — "
+                 + "решта стане сама:",
+        needmore: "питання не визначає числа, і одного факту не вистачить",
+        examples: "приклади", send: "запитати", commentary: "по-людськи",
+        askph: "опишіть питання своїми словами…",
+        thinking: "заповнюю таблицю…", pick: "— оберіть —",
+        aioff: "ключа моделі немає — таблиця і вердикт працюють і без неї",
+        ownai: "свій ШІ", keyph: "вставте свій API-ключ",
+        keysave: "використати", keyclear: "повернутись до безкоштовного",
+        keynote: "Ключ зберігається лише в цій вкладці браузера й лише на "
+                 + "поточний сеанс, а на сервер іде єдино заради виклику "
+                 + "обраного вами провайдера. На диск нічого не пишеться. "
+                 + "Закриєте вкладку — він забудеться.",
+        keyon: "працює ваш ШІ", keyoff: "працює безкоштовний ШІ",
+        limit: "Безкоштовний ШІ вичерпано (20 запитів за 10 хвилин на "
+               + "відвідувача). Натисніть «свій ШІ» вгорі й продовжте зі "
+               + "своїм ключем — або працюйте без нього: таблиця і вердикт "
+               + "у ШІ ніколи не потребували." },
+  he: { advanced: "מתקדם", reference: "מהי ZFL? (השפה)",
+        addrow: "הוספת שורה", run: "הרצה", claim: "הטענה",
+        remove: "הסרת השורה",
+        nothing: "עדיין אין מה להראות — מלאו שורה והריצו",
+        applies: "הכלים שהיה להם מה לומר",
+        passport: "דרכונים", numeric: "הרצפה המספרית",
+        judge: "השופט", ledger: "הפנקס",
+        component: "רכיב", kind: "דרכון", detail: "פרטים",
+        disposition: "מצב", cures: "מה יכריע את זה",
+        sheet: "הגיליון שהורכב", verdict: "פסק", grade: "ערובה",
+        weak: "חוליות חלשות", claims: "תביעות", brackets: "תחומי אמון",
+        assumed: "נלקח באמון ואינו ניתן לאימות", eg: "לדוגמה ",
+        solved: "נפתר", value: "ערך", from: "נגזר מ־",
+        prov: "מקור", still: "עדיין קופסה",
+        needone: "השאלה אינה קובעת מספר: אמרו אחד כלשהו מאלה — "
+                 + "והשאר ייקבע מעצמו:",
+        needmore: "השאלה אינה קובעת מספר, ועובדה אחת נוספת לא תספיק",
+        examples: "דוגמאות", send: "שאלו", commentary: "בשפה פשוטה",
+        askph: "תארו את השאלה במילים שלכם…",
+        thinking: "ממלא את הטבלה…", pick: "— בחרו —",
+        aioff: "אין מפתח למודל — הטבלה והפסק עובדים גם בלעדיו",
+        ownai: "ה־AI שלי", keyph: "הדביקו את מפתח ה־API שלכם",
+        keysave: "להשתמש", keyclear: "חזרה ל־AI החינמי",
+        keynote: "המפתח נשמר רק בלשונית הזו ורק לסשן הנוכחי, ונשלח לשרת אך " 
+                 + "ורק כדי לקרוא לספק שבחרתם. דבר אינו נכתב לדיסק. סגירת "
+                 + "הלשונית מוחקת אותו.",
+        keyon: "ה־AI שלכם פועל", keyoff: "ה־AI החינמי פועל",
+        limit: "ה־AI החינמי מוצה (20 בקשות ל־10 דקות למבקר). לחצו על "
+               + "«ה־AI שלי» למעלה והמשיכו עם מפתח משלכם — או עבדו בלעדיו: "
+               + "הטבלה והפסק מעולם לא נזקקו ל־AI." },
 };
 
-let LANG = new URLSearchParams(location.search).get("l") === "ru" ? "ru" : "en";
+let LANG = new URLSearchParams(location.search).get("l") || "en";
 let SPEC = null;
 let ROWS = [];
 
 const $ = id => document.getElementById(id);
-const t = k => UI[LANG][k] || k;
+// A word that has no translation yet shows its English rather than its key.
+// The same rule as the spec's: a half-translated language works.
+const t = k => (UI[LANG] && UI[LANG][k]) || UI.en[k] || k;
 
 function esc(s) {
   return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;")
@@ -472,8 +536,14 @@ function chrome() {
   document.querySelectorAll("[data-ph]").forEach(e =>
     e.placeholder = t(e.dataset.ph));
   $("claimlabel").textContent = t("claim");
-  $("lang").textContent = LANG === "en" ? "RU" : "EN";
+  const sel = $("lang");
+  sel.innerHTML = (SPEC.langs || [{ code: "en", label: "English" }]).map(l =>
+    `<option value="${esc(l.code)}"${l.code === LANG ? " selected" : ""}>` +
+    `${esc(l.label)}</option>`).join("");
+  // Hebrew is not merely another column of strings: the page turns round.
+  document.documentElement.dir = SPEC.rtl ? "rtl" : "ltr";
   $("ref").href = `/zfl?l=${LANG}`;
+  $("home").href = `/?l=${LANG}`;
   cfgLabel();
   document.documentElement.lang = LANG;
 }
@@ -527,8 +597,8 @@ $("exitem").onchange = e => loadExample($("exkind").value, +e.target.value);
 $("run").onclick = run;
 $("adv").onchange = e => document.body.classList.toggle("showadv",
                                                        e.target.checked);
-$("lang").onclick = async () => {
-  LANG = LANG === "en" ? "ru" : "en";
+$("lang").onchange = async e => {
+  LANG = e.target.value;
   history.replaceState(null, "", `?l=${LANG}`);
   await loadSpec(); await loadExamples(); chrome(); drawGrid();
 };

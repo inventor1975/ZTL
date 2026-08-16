@@ -52,17 +52,38 @@ Run:  python3 tool/test_zfl2.py
 # `required_when` is a rule the validator reads and the form renders as a
 # field that lights up only when it is actually needed.
 
+# THE LANGUAGES, in one place, each written in its own. Adding one is DATA:
+# every lookup falls back to English for a string not there yet, so a
+# half-translated language works instead of breaking. That fallback is the
+# design — it lets a language ship the day somebody needs it rather than the
+# day it is finished.
+#
+# The hand-written rule stands and is why this list is short: this vocabulary
+# IS the content, and an automatic translation turns "on credit" into "on
+# loan" — precisely the word that carries the meaning.
+LANGS = [
+    ("en", "English"), ("ru", "Русский"), ("uk", "Українська"),
+    ("he", "עברית"), ("de", "Deutsch"), ("fr", "Français"),
+    ("es", "Español"),
+]
+RTL = {"he"}
+
+
 COLUMNS = [
     {
         "key": "name", "type": "text", "required": True, "advanced": False,
         "en": ("name", "what we call it; formulas use this"),
         "ru": ("имя", "как называем; им же пользуемся в формулах"),
+        "uk": ("ім'я", "як називаємо; ним же користуємось у формулах"),
+        "he": ("שם", "איך קוראים לו; באותו שם משתמשים בנוסחאות"),
         "eg": ["line", "budget", "L"],
     },
     {
         "key": "means", "type": "text", "required": False, "advanced": False,
         "en": ("means", "what it MEANS for this to be true"),
         "ru": ("значит", "что означает истинность этого имени"),
+        "uk": ("означає", "що означає істинність цього імені"),
+        "he": ("פירושו", "מה זה אומר שהשם הזה אמיתי"),
         "eg": ["the invoice line", "this sentence is false"],
         # not decoration: the gloss is the polarity auditor. `fresh` already
         # means "not revoked", so "not fresh" asserts a positive fact —
@@ -84,11 +105,15 @@ COLUMNS = [
         "default": "unverified",
         "en": ("status", "where it stands with us"),
         "ru": ("статус", "откуда оно у нас"),
+        "uk": ("статус", "звідки воно в нас"),
+        "he": ("מעמד", "מאיפה זה הגיע אלינו"),
         "labels": {
             "en": {"verified": "verified", "refuted": "refuted",
                    "unverified": "not verified", "defined": "defined"},
             "ru": {"verified": "проверено", "refuted": "опровергнуто",
                    "unverified": "не проверено", "defined": "определено"},
+            "uk": {"verified": "перевірено", "refuted": "спростовано", "unverified": "не перевірено", "defined": "визначено"},
+            "he": {"verified": "מאומת", "refuted": "הופרך", "unverified": "לא אומת", "defined": "מוגדר"},
         },
     },
     {
@@ -106,6 +131,8 @@ COLUMNS = [
         "required_when": {"status": ["verified", "refuted", "defined"]},
         "en": ("ground", "what backs it, or the formula defining it"),
         "ru": ("основание", "чем подтверждено или как определено"),
+        "uk": ("підстава", "чим підтверджено або як визначено"),
+        "he": ("אסמכתא", "מה מאשש אותו, או הנוסחה שמגדירה אותו"),
         "eg": ["inv-17", "~Tr(L)"],
         # THE FIELD OFFERS NAMES INSTEAD OF DEMANDING THEM. Reported live by
         # the curator: a free-text ground made people think the CONTENT
@@ -177,11 +204,15 @@ COLUMNS = [
         "options": ["evidence", "authority"],
         "en": ("dimension", "does this SUPPORT the claim or PERMIT it"),
         "ru": ("измерение", "оно ПОДПИРАЕТ утверждение или РАЗРЕШАЕТ его"),
+        "uk": ("вимір", "воно ПІДПИРАЄ твердження чи ДОЗВОЛЯЄ його"),
+        "he": ("ממד", "האם זה תומך בטענה או מתיר אותה"),
         "labels": {
             "en": {"evidence": "evidence (supports)",
                    "authority": "authority (permits)"},
             "ru": {"evidence": "опора (подпирает)",
                    "authority": "разрешение (даёт право)"},
+            "uk": {"evidence": "опора (підпирає)", "authority": "дозвіл (дає право)"},
+            "he": {"evidence": "תמיכה (מבססת)", "authority": "סמכות (מתירה)"},
         },
     },
     {
@@ -190,6 +221,8 @@ COLUMNS = [
         "options": ["document", "act", "certificate", "row"],
         "en": ("kind of ground", "a document unless you say otherwise"),
         "ru": ("вид основания", "документ, если не сказано иное"),
+        "uk": ("вид підстави", "документ, якщо не сказано інакше"),
+        "he": ("סוג האסמכתא", "מסמך, אלא אם נאמר אחרת"),
         "labels": {
             "en": {"document": "document", "act": "act (nothing to withdraw)",
                    "certificate": "certificate (expires)",
@@ -197,18 +230,24 @@ COLUMNS = [
             "ru": {"document": "документ", "act": "акт (отзывать нечего)",
                    "certificate": "сертификат (истекает)",
                    "row": "другая строка"},
+            "uk": {"document": "документ", "act": "акт (відкликати нічого)", "certificate": "сертифікат (спливає)", "row": "інший рядок"},
+            "he": {"document": "מסמך", "act": "מעשה (אין מה לבטל)", "certificate": "אישור (פג תוקף)", "row": "שורה אחרת"},
         },
     },
     {
         "key": "value", "type": "text", "required": False, "advanced": False,
         "en": ("value", "a number, an interval [0,10], or ? for unknown"),
         "ru": ("величина", "число, интервал [0,10] или ? для неизвестного"),
+        "uk": ("величина", "число, інтервал [0,10] або ? для невідомого"),
+        "he": ("ערך", "מספר, תחום [0,10] או ? ללא ידוע"),
         "eg": ["1500", "[0,10]", "?"],
     },
     {
         "key": "unit", "type": "text", "required": False, "advanced": False,
         "en": ("unit", "only with a value; metres never meet roubles"),
         "ru": ("единица", "только с величиной; метры не встречаются с рублями"),
+        "uk": ("одиниця", "лише з величиною; метри не зустрічаються з гривнями"),
+        "he": ("יחידה", "רק עם ערך; מטרים לא נפגשים עם שקלים"),
         "eg": ["RUB", "m", "m2"],
     },
     {
@@ -216,11 +255,15 @@ COLUMNS = [
         "default": "", "options": ["", "int", "decimal2", "frac3"],
         "en": ("scale", "what it rounds to"),
         "ru": ("шкала", "до чего округляем"),
+        "uk": ("шкала", "до чого округлюємо"),
+        "he": ("סולם", "לאן מעגלים"),
         "labels": {
             "en": {"": "exact", "int": "whole", "decimal2": "hundredths",
                    "frac3": "thirds"},
             "ru": {"": "точно", "int": "целые", "decimal2": "сотые",
                    "frac3": "трети"},
+            "uk": {"int": "цілі", "decimal2": "соті", "frac3": "третини"},
+            "he": {"int": "שלמים", "decimal2": "מאיות", "frac3": "שלישים"},
         },
     },
     {
@@ -230,6 +273,8 @@ COLUMNS = [
                "each occurrence is its own act of measuring"),
         "ru": ("отдельные измерения",
                "каждое вхождение — свой акт измерения"),
+        "uk": ("окремі виміри", "число з вибірки, а не одне вимірювання"),
+        "he": ("מדידות נפרדות", "מספר מתוך מדגם, לא מדידה אחת"),
     },
 ]
 
@@ -288,7 +333,9 @@ def form_spec(lang="en"):
                               "own": s["own"].get(lang, s["own"]["en"])}
         return out
     return {"columns": [render(c) for c in COLUMNS],
-            "document": [render(c) for c in DOC_FIELDS]}
+            "document": [render(c) for c in DOC_FIELDS],
+            "langs": [{"code": c, "label": n} for c, n in LANGS],
+            "rtl": lang in RTL}
 
 
 # ------------------------------------------------------- validation

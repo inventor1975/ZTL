@@ -270,11 +270,22 @@ def _esc(s):
     return html.escape(str(s), quote=True)
 
 
+def pick(entry, lang):
+    """A localised string, however it is stored. Two-language entries were
+    written as positional tuples `(en, ru)`, which cannot hold a third
+    language at all; new ones are dicts keyed by code. Both are read here so
+    that adding a language never means rewriting the ones already written,
+    and a code with no translation yet shows its English rather than a gap."""
+    if isinstance(entry, dict):
+        return entry.get(lang) or entry["en"]
+    return entry[1] if lang == "ru" and len(entry) > 1 else entry[0]
+
+
 def render(lang="en"):
     spec = zfl2.form_spec(lang)
-    h = HEAD[lang]
+    h = HEAD.get(lang) or HEAD["en"]
     parts = [f"<h1>{_esc(h[0])}</h1>"]
-    for title, body in PROSE[lang]:
+    for title, body in (PROSE.get(lang) or PROSE["en"]):
         parts.append(f"<h2>{_esc(title)}</h2><p>{_esc(body)}</p>")
 
     # a heading is a phrase, not a word with an English plural glued on:
@@ -314,21 +325,21 @@ def render(lang="en"):
     for op in operators():
         en, ru = OP_HELP.get(op, ("—", "—"))
         parts.append(f"<tr><td><code>{_esc(op)}</code></td>"
-                     f"<td>{_esc(en if lang == 'en' else ru)}</td></tr>")
+                     f"<td>{_esc(pick((en, ru), lang))}</td></tr>")
     parts.append("</table>")
 
     parts.append(f"<h2>{_esc(h[18])}</h2><table>")
     for op in arithmetic():
         en, ru = ARITH_HELP.get(op, ("—", "—"))
         parts.append(f"<tr><td><code>{_esc(op)}</code></td>"
-                     f"<td>{_esc(en if lang == 'en' else ru)}</td></tr>")
+                     f"<td>{_esc(pick((en, ru), lang))}</td></tr>")
     parts.append("</table>")
 
     parts.append(f"<h2>{_esc(h[17])}</h2><table>")
     for form in column_examples("value"):
         en, ru = VALUE_HELP.get(form, ("—", "—"))
         parts.append(f"<tr><td><code>{_esc(form)}</code></td>"
-                     f"<td>{_esc(en if lang == 'en' else ru)}</td></tr>")
+                     f"<td>{_esc(pick((en, ru), lang))}</td></tr>")
     parts.append("</table>")
 
     parts.append(f"<h2>{_esc(h[8])}</h2><table><tr>"
@@ -347,14 +358,25 @@ def render(lang="en"):
     for code in sorted(codes_in_source()):
         en, ru = CODE_HELP.get(code, ("—", "—"))
         parts.append(f"<tr><td><code>{_esc(code)}</code></td>"
-                     f"<td>{_esc(en if lang == 'en' else ru)}</td></tr>")
+                     f"<td>{_esc(pick((en, ru), lang))}</td></tr>")
     parts.append("</table>")
     return "\n".join(parts)
 
 
 def page():
-    body = ("<div class='lang' id='en'>" + render("en") + "</div>"
-            "<div class='lang' id='ru' hidden>" + render("ru") + "</div>")
+    """One file, every language, switched in the browser.
+
+    Built for two and now built from the list, which is the same move as the
+    spec's: a language is data. Each block carries its own `dir`, so Hebrew
+    turns the page round without a second stylesheet, and a language with no
+    prose yet renders its English rather than an empty page."""
+    body = "".join(
+        f"<div class='lang' id='{code}' dir='{'rtl' if code in zfl2.RTL else 'ltr'}'"
+        f"{'' if code == 'en' else ' hidden'}>" + render(code) + "</div>"
+        for code, _name in zfl2.LANGS)
+    nav = " · ".join(f"<a href='?l={c}' onclick=\"return t('{c}')\">{n}</a>"
+                     for c, n in zfl2.LANGS)
+    codes = ",".join(f"'{c}'" for c, _n in zfl2.LANGS)
     return f"""<!doctype html><meta charset="utf-8">
 <title>ZFL</title>
 <style>
@@ -365,20 +387,21 @@ def page():
           vertical-align: top; font-size: 14px; }}
  th {{ background: #eee; }} tr.adv td {{ color: #666; }}
  code {{ background: #f4f4f4; padding: 1px 4px; }}
- h1 {{ font-size: 24px; }} h2 {{ font-size: 17px; margin-top: 1.6em; }}
+ [dir=rtl] th, [dir=rtl] td {{ text-align: right; }}
  nav {{ float: right; font-size: 13px; }}
 </style>
-<nav><a href="?l=en" onclick="return t('en')">EN</a> ·
- <a href="?l=ru" onclick="return t('ru')">RU</a></nav>
+<nav>{nav}</nav>
 {body}
 <script>
-// ?l=ru opens the page already in Russian, so a link can be handed to
-// somebody in their own language. Switching also rewrites the address bar,
-// so whatever you are reading is what you copy.
+// ?l=xx opens the page already in that language, so a link can be handed to
+// somebody in their own. Switching also rewrites the address bar, so
+// whatever you are reading is what you copy.
+const LANGS = [{codes}];
 function t(l) {{
-  if (l !== 'en' && l !== 'ru') l = 'en';
+  if (!LANGS.includes(l)) l = 'en';
   for (const d of document.querySelectorAll('.lang')) d.hidden = d.id !== l;
   document.documentElement.lang = l;
+  document.documentElement.dir = document.getElementById(l).dir;
   history.replaceState(null, '', '?l=' + l);
   return false;
 }}

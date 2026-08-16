@@ -13,6 +13,7 @@ key the studio runs in pro mode).
 
 import json
 import os
+import re
 import sys
 import webbrowser
 import threading
@@ -371,6 +372,26 @@ def api_providers(payload):
     return {"ok": True, "providers": providers.available(), "public": PUBLIC}
 
 
+def _lang(query):
+    """Which language was asked for. Checked against the spec's own list
+    rather than against a pair hard-coded here: the routes were written when
+    there were two languages and would have silently served English for
+    every new one, which is the sort of gap that looks like a translation
+    bug for a week."""
+    # `query` arrives WITHOUT its leading "?" (do_GET partitions it off), so
+    # anchoring on "?" matched nothing and every language fell back to
+    # English — including the one that had worked for weeks. Caught by
+    # checking `l=ru` after the change rather than only the new codes.
+    m = re.search(r"(?:^|&)l=([A-Za-z-]{2,5})", query or "")
+    want = (m.group(1).lower() if m else "en")
+    try:
+        codes = {c for c, _n in _v2("zfl2").LANGS}
+    except Exception:
+        codes = {"en", "ru"}
+    return want if want in codes else "en"
+
+
+
 def api_savekey(payload):
     """Persist a key into tool/.<provider>_key (gitignored). Optional
     convenience — the UI can also pass keys per request without saving."""
@@ -611,11 +632,9 @@ class Handler(BaseHTTPRequestHandler):
                 self._send(404, {"error": "reference not built"})
         elif self.path == "/api/v2examples":
             zfl2examples = _v2("zfl2examples")
-            self._send(200, zfl2examples.catalogue(
-                "ru" if "l=ru" in query else "en"))
+            self._send(200, zfl2examples.catalogue(_lang(query)))
         elif self.path == "/api/formspec":
-            lang = "ru" if "l=ru" in query else "en"
-            self._send(200, _v2("zfl2").form_spec(lang))
+            self._send(200, _v2("zfl2").form_spec(_lang(query)))
         elif self.path == "/api/examples":
             self._send(200, EXAMPLES)
         elif self.path.startswith("/static/"):

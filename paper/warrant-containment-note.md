@@ -159,7 +159,9 @@ every row:
 | 100% | 99,992 | 94,180 | 94,180 |
 
 A quarter of nominal redundancy being fake destroys containment while the
-system reports 90%. Nothing in the ledger distinguishes the first row from the
+system reports 90%. This is common-cause failure in the reliability
+engineer's sense (§5a) and is claimed here as a measurement in a warrant
+setting, not as a discovery. Nothing in the ledger distinguishes the first row from the
 last, and neither would an attestation layer: both grounds are genuine
 documents from genuine agents that happen to rest on the same thing.
 
@@ -315,8 +317,33 @@ median that concealed the hub risk it was measuring.
 
 ## 5a. Related work, and where the boundary actually runs
 
-**Truth-maintenance systems** are the nearest neighbour and the first thing a
-reader should be told about. Doyle's TMS (1979) and de Kleer's ATMS (1986)
+**Common-cause failure analysis is the nearest neighbour of §3.3, and was
+missed in the first draft of this section — the more embarrassing omission of
+the two, because it is closer than the one that was cited.** Reliability
+engineering has studied since the 1970s exactly the phenomenon §3.3 reports:
+redundancy defeated by a dependency shared between the redundant parts. The
+β-factor is the fraction of failures arising from a single common cause — the
+same quantity this note calls hidden correlation `q`. IEC 61508 standardises
+its estimation (a 37-question checklist over eight classes of defensive
+measure, among them *diversity/redundancy* and *separation/segregation*), and
+fault-tree analysis, common-mode analysis, NUREG methods in nuclear
+engineering and NASA's work on ultra-reliability all address it.
+
+Two consequences, both against this note. First, §3.3 reports a named,
+standardised phenomenon and claims no discovery. Second, and worth stating
+because it is uncomfortable: design values for β in IEC 61508 run from **0.5%
+to 10%**, while §3.4 measures containment surviving hidden correlation up to
+**q\* ≈ 0.35**. A tolerance of 35% is an order of magnitude looser than what
+the engineering disciplines that build these systems consider acceptable. The
+figure is a property of this model, not a reassurance.
+
+What CCF analysis does not do, so far as I can find, is the part §§3.4 and 3.6
+are about: it quantifies the *probability* that components fail together,
+whereas this work asks what a conclusion is still *warranted* by afterwards —
+and it does not separate an authority dimension from an evidence one, nor
+treat the incompleteness of the dependency map itself as a measured quantity.
+
+**Truth-maintenance systems** are the nearest neighbour of §1. Doyle's TMS (1979) and de Kleer's ATMS (1986)
 already do the central operation here: record which conclusions rest on which
 assumptions, and recompute what stands when an assumption is retracted. The
 cascade of §1 is that operation, and this work claims no priority over it.

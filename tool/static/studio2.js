@@ -26,6 +26,7 @@ const UI = {
                   + "would not be enough",
         examples: "examples", send: "ask", commentary: "in plain language",
         askph: "describe the question in your own words…",
+        thinking_note: "the verdict above is already complete — this is the model catching up",
         thinking: "filling the table…", pick: "— pick —",
         aioff: "no model key — the table and the verdict work without it",
         ownai: "use my own AI", keyph: "paste your API key",
@@ -58,6 +59,7 @@ const UI = {
         needmore: "вопрос не определяет числа, и одного факта не хватит",
         examples: "примеры", send: "спросить", commentary: "по-человечески",
         askph: "опишите вопрос своими словами…",
+        thinking_note: "вердикт выше уже готов — это модель договаривает",
         thinking: "заполняю таблицу…", pick: "— выберите —",
         aioff: "ключа модели нет — таблица и вердикт работают и без неё",
         ownai: "свой ИИ", keyph: "вставьте свой API-ключ",
@@ -90,6 +92,7 @@ const UI = {
         needmore: "питання не визначає числа, і одного факту не вистачить",
         examples: "приклади", send: "запитати", commentary: "по-людськи",
         askph: "опишіть питання своїми словами…",
+        thinking_note: "вердикт вище вже готовий — це модель договорює",
         thinking: "заповнюю таблицю…", pick: "— оберіть —",
         aioff: "ключа моделі немає — таблиця і вердикт працюють і без неї",
         ownai: "свій ШІ", keyph: "вставте свій API-ключ",
@@ -122,6 +125,7 @@ const UI = {
         needmore: "השאלה אינה קובעת מספר, ועובדה אחת נוספת לא תספיק",
         examples: "דוגמאות", send: "שאלו", commentary: "בשפה פשוטה",
         askph: "תארו את השאלה במילים שלכם…",
+        thinking_note: "הפסק שלמעלה כבר מוכן — זה המודל משלים",
         thinking: "ממלא את הטבלה…", pick: "— בחרו —",
         aioff: "אין מפתח למודל — הטבלה והפסק עובדים גם בלעדיו",
         ownai: "ה־AI שלי", keyph: "הדביקו את מפתח ה־API שלכם",
@@ -153,6 +157,7 @@ const UI = {
                   + "würde nicht reichen",
         examples: "Beispiele", send: "fragen", commentary: "in Klartext",
         askph: "beschreiben Sie die Frage in eigenen Worten…",
+        thinking_note: "das Urteil oben steht bereits — das Modell holt nur auf",
         thinking: "fülle die Tabelle…", pick: "— wählen —",
         aioff: "kein Modellschlüssel — Tabelle und Urteil arbeiten auch ohne",
         ownai: "eigene KI", keyph: "Ihren API-Schlüssel einfügen",
@@ -186,6 +191,7 @@ const UI = {
                   + "suffirait pas",
         examples: "exemples", send: "demander", commentary: "en clair",
         askph: "décrivez la question avec vos mots…",
+        thinking_note: "le verdict ci-dessus est déjà complet — le modèle rattrape",
         thinking: "je remplis le tableau…", pick: "— choisir —",
         aioff: "pas de clé de modèle — le tableau et le verdict marchent sans",
         ownai: "mon IA", keyph: "collez votre clé API",
@@ -218,6 +224,7 @@ const UI = {
         needmore: "la pregunta no fija ningún número, y un dato más no bastaría",
         examples: "ejemplos", send: "preguntar", commentary: "en lenguaje llano",
         askph: "describa la pregunta con sus palabras…",
+        thinking_note: "el veredicto de arriba ya está completo — el modelo va detrás",
         thinking: "rellenando la tabla…", pick: "— elija —",
         aioff: "sin clave de modelo — la tabla y el veredicto funcionan igual",
         ownai: "mi IA", keyph: "pegue su clave API",
@@ -602,15 +609,31 @@ function aiError(r) {
 }
 
 async function commentary(doc, result) {
+  // A PLACE IS TAKEN BEFORE THE ANSWER ARRIVES. The verdict appears at once
+  // and the model's plain-language note lands seconds later, so without this
+  // the page looks finished and then twitches. The panel says what is coming
+  // and, in the same breath, that nothing is being waited FOR: the verdict
+  // above it is already complete.
+  const slot = document.createElement("div");
+  slot.className = "panel comment pending";
+  slot.innerHTML = `<h3>${esc(t("commentary"))}</h3>` +
+                   `<p class="wait"><span class="bar"></span>` +
+                   `${esc(t("thinking_note"))}</p>`;
+  $("report").appendChild(slot);
   const r = await fetch("/api/v2comment", {
     method: "POST", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ doc, result, lang: LANG, cfg: cfg() }),
   }).then(x => x.json());
-  if (!r.ok) return;
-  const d = document.createElement("div");
-  d.className = "panel comment";
-  d.innerHTML = `<h3>${esc(t("commentary"))}</h3><p>${esc(r.reply)}</p>`;
-  $("report").appendChild(d);
+  if (!r.ok) {
+    // a refusal is not silence: the reader is told, in their language, and
+    // the limit message names the control that fixes it
+    slot.classList.remove("pending");
+    slot.innerHTML = `<h3>${esc(t("commentary"))}</h3>` +
+                     `<p class="dim">${esc(aiError(r))}</p>`;
+    return;
+  }
+  slot.classList.remove("pending");
+  slot.innerHTML = `<h3>${esc(t("commentary"))}</h3><p>${esc(r.reply)}</p>`;
 }
 
 // ------------------------------------------------------------------ wiring

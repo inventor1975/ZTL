@@ -14,7 +14,10 @@ Frege's mistake lived.
 
 Run:  python3 inventory/note_claims.py
 """
+import concurrent.futures
 import os
+import time
+import pathlib
 import re
 import subprocess
 import sys
@@ -48,6 +51,11 @@ CLAIMS = [
      "q*  hidden correlation tolerated       median 0.35"),
     ("probe_variance.py", "A_crit constant across seeds",
      "A_crit, 1 root                         median 1        constant"),
+    ("probe_criterion.py", "r and q are one crossing", "ONE NUMBER, NOT TWO"),
+    ("probe_topology.py", "no threshold against a chosen target",
+     "THE THRESHOLD IS AN ARTEFACT OF WHERE YOU AIM"),
+    ("probe_roots.py", "closed forms, not measurements",
+     "READ THESE AS ARITHMETIC, NOT AS MEASUREMENTS"),
     ("probe_criterion.py", "the minimum does not govern",
      "The minimum does not determine C"),
     ("probe_classes.py", "four dimensions raise r* to 0.75",
@@ -84,36 +92,59 @@ FIGURES = [
 
 
 def out(probe):
+    return _OUTPUTS[probe]
+
+
+def _run(probe):
     r = subprocess.run([sys.executable, os.path.join(_ROOT, "db", probe)],
                        capture_output=True, text=True, timeout=1800)
-    return r.stdout + r.stderr
+    return probe, r.stdout + r.stderr
+
+
+def _run_all_probes():
+    """EVERY probe, ONCE, IN PARALLEL. This file used to shell out per claim
+    and per figure, sequentially, so its wall time was the SUM of fifteen
+    probes — about eight minutes, most of it spent re-running the same
+    programs. They are independent processes; the wait is not.
+
+    The cache also matters for correctness, not only speed: a checker that
+    ran a probe twice could in principle compare a claim against one run and
+    a figure against another."""
+    names = sorted(f.name for f in pathlib.Path(_ROOT, "db").glob("probe_*.py"))
+    with concurrent.futures.ThreadPoolExecutor(
+            max_workers=min(8, len(names))) as ex:
+        return dict(ex.map(_run, names))
+
+
+_OUTPUTS = {}
 
 
 def main():
     print("=" * 72)
     print("NOTE CLAIMS — every figure in the note, demanded back from the code")
     print("=" * 72)
+    global _OUTPUTS
+    t0 = time.perf_counter()
+    _OUTPUTS = _run_all_probes()
     text = open(NOTE, encoding="utf-8").read()
-    cache, bad = {}, []
+    bad = []
+    print(f"\n  {len(_OUTPUTS)} probes run in parallel, "
+          f"{time.perf_counter() - t0:.0f}s wall")
 
     print(f"\n  the note: {len(text):,} characters, "
           f"{len(text.splitlines())} lines")
 
     print("\n  1. CLAIMS")
     for probe, said, marker in CLAIMS:
-        if probe not in cache:
-            cache[probe] = out(probe)
-        ok = marker in cache[probe]
+        ok = marker in out(probe)
         print(f"     [{'OK ' if ok else 'BAD'}] {said}")
         if not ok:
             bad.append((probe, said, marker))
 
     print("\n  2. FIGURES PRINTED IN THE NOTE")
     for probe, figs in FIGURES:
-        if probe not in cache:
-            cache[probe] = out(probe)
         for f in figs:
-            in_note, in_code = f in text, f in cache[probe]
+            in_note, in_code = f in text, f in out(probe)
             ok = (not in_note) or in_code
             print(f"     [{'OK ' if ok else 'BAD'}] {f:>10}  "
                   f"note={'y' if in_note else 'n'} "
@@ -121,8 +152,42 @@ def main():
             if not ok:
                 bad.append((probe, f, "figure in note, absent from output"))
 
-    print("\n  3. WHAT THIS DOES NOT CHECK")
-    print("     The prose. A note whose figures are right and whose claims")
+    print("\n  3. ORPHAN FIGURES — numbers in the note that no probe prints")
+    print("     Added after an adversarial review found `C = 0.789`, a figure")
+    print("     no program produces, and `52,000` where the probe prints")
+    print("     59,716. The checker above could not catch either: it looks")
+    print("     for figures it was TOLD about. This scan goes the other way,")
+    print("     from the note outward, and needs no list.")
+    # EVERY probe, not only the cited ones. The first version scanned the
+    # probes named in the lists above, so a figure taken from an uncited run
+    # looked like a fabrication — which is the same class of false alarm as
+    # the false assurance this scan was added to remove.
+    every = "\n".join(_OUTPUTS.values())
+    # numbers as a reader meets them: 0.789, 59,716, 95,041, 66.0%
+    nums = set(re.findall(r"(?<![\w.])\d{1,3}(?:,\d{3})+(?![\w.])|"
+                          r"(?<![\w,])\d+\.\d+(?![\w])", text))
+    # figures that belong to the prose rather than to a run
+    # section references, standard numbers and figures the note explicitly
+    # marks as DERIVED rather than run. Every entry here is a decision to
+    # exempt something, so the set is short and each addition is deliberate.
+    PROSE_OK = {"61508", "1.4"} | {f"{a}.{b}" for a in range(1, 8)
+                                   for b in range(0, 10)}
+    orphans = sorted(n for n in nums
+                     if n not in PROSE_OK and n not in every
+                     and n.replace(",", "") not in every)
+    for n in orphans:
+        print(f"     [ORPHAN] {n}")
+    if not orphans:
+        print("     none — every figure in the note appears in some run")
+    else:
+        bad.append(("(note)", f"{len(orphans)} orphan figure(s)", str(orphans)))
+
+    print("\n  4. WHAT THIS DOES NOT CHECK")
+    print("     The prose, and whether a figure MEANS in the note what it")
+    print("     meant in the run. `0.117` passed for a day while the note")
+    print("     called it a measurement and the model was deterministic.")
+    print("     A number can be present, correct, and still misdescribed.")
+    print("     Beyond that: a note whose figures are right and whose claims")
     print("     are wrong passes here — the ceiling named in KNOWN-LIMITS,")
     print("     and the place Frege's mistake lived. This file closes the")
     print("     half that can be closed by machine and says so rather than")

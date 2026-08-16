@@ -146,22 +146,33 @@ def main():
     print("     over.")
     assert e_rich > a_rich * 5
 
-    print("\n  3. r* AND q* — the two numbers a designer actually needs")
+    print("\n  3. ONE NUMBER, NOT TWO — and that is the correction")
+    print("     r and q do not enter separately. A conclusion is genuinely")
+    print("     redundant with probability r(1-q) — whether the fake second")
+    print("     ground is omitted or recorded-and-useless makes no difference")
+    print("     to what falls. So EFFECTIVE REDUNDANCY r_eff = r(1-q) is the")
+    print("     quantity, and r* and q* are the same crossing read from two")
+    print("     ends: 1 - q* = r* exactly, which is arithmetic and was")
+    print("     reported for weeks as two independent measurements.")
     r_star = next(r for r in [i / 20 for i in range(21)]
                   if C(r, 0.0, r, 0.0, 7) < 0.01)
-    print(f"       r*  minimal REAL redundancy, both dimensions, for C<1%"
-          f"   = {r_star:.2f}")
+    print(f"\n       r_eff*  minimal EFFECTIVE redundancy for C<1%"
+          f"        = {r_star:.2f}")
     q_star = None
     for q in [i / 20 for i in range(21)]:
         if C(1.0, q, 1.0, q, 7) >= 0.01:
             q_star = q
             break
-    print(f"       q*  hidden correlation tolerated at r=1.0 before C>=1%"
-          f"  = {q_star:.2f}")
-    print("     Note what q* means. The system declares FULL redundancy and")
-    print("     is destroyed by a hidden overlap well below half. Declared")
-    print("     redundancy is not a safety property; effective redundancy is,")
-    print("     and only an independence warrant tells them apart.")
+    print(f"       the same crossing from the other end: 1 - q* = "
+          f"{1 - q_star:.2f}")
+    assert abs(r_star - (1 - q_star)) < 1e-9      # one number, pinned
+    print("\n     What it means is unchanged and is the useful half: a")
+    print("     system declaring FULL redundancy is destroyed by a hidden")
+    print("     overlap of about a third, because a third of nothing is")
+    print("     still nothing. Declared redundancy is not a safety property;")
+    print("     effective redundancy is, and only an independence warrant")
+    print("     tells them apart. What is corrected is the arithmetic claim")
+    print("     that these were two findings.")
 
     print("\n  4. A_crit — the cost of the single most critical node")
     a_crit = max((C(1.0, 0.0, 1.0, 0.0, t), t) for t in (0, 1, 7, 100, 5000))

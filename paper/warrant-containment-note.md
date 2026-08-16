@@ -21,18 +21,21 @@ carries the ground it rests on. From those, withdrawal propagates by
 arithmetic rather than by memory.
 
 The measurements are simulations, and the useful ones are negative. A cascade
-at the scale of a hundred thousand agents is cheap and, taken alone, useless:
-a single loss takes down half the collective. Containment is recovered by
-redundancy, but only redundancy that is *real* — declared redundancy resting
-on a shared origin reports safety it does not provide, and a quarter of it
-being fake is enough to destroy containment while the report does not move. A
-collective with perfect evidence redundancy still dies of one commander,
-because permission and support are different requirements. And a dependency
+at a hundred thousand agents is cheap and, taken alone, useless: a randomly
+located loss takes down most of the collective. Redundancy contains a random
+loss and does **nothing whatever** against a chosen one — at ninety-five per
+cent redundancy an adversary aiming at the root still takes everything.
+Declared redundancy resting on a shared origin reports safety it does not
+provide. Permission and support are different requirements, so a collective
+with perfect evidence redundancy still dies of one commander. And a dependency
 map that is complete but stale is wrong in one direction only: never
 pessimistic, always flattering.
 
-Six predictions made in the course of this work were refuted by its own runs
-and are reported with the rest. Every number below is printed by a program in
+Eleven predictions made in the course of this work were refuted by its own
+runs — six by the author, five more by an adversarial review that also found
+one figure quoted here that no program produces. All are reported with the
+rest, and the corrections they forced are larger than the results they left
+standing. Every number below is printed by a program in
 a public repository and re-checked by a regression suite of 115 stands.
 
 ---
@@ -81,8 +84,12 @@ express 3**. The middle category is the finding: a confident total over a
 mixture of evidenced and merely-stated figures, with nothing marking it.
 
 Scored against the profession's own list rather than ours — the twelve ISA 315
-assertions and eight accounts-payable procedures — the score falls to **5 of
-20** needing a warrant at all. Most of an auditor's day is ordinary querying.
+assertions and eight accounts-payable procedures — **5 of 20** need a warrant
+at all. That count is not a measurement: the list is the profession's, the
+verdict beside each row was typed by the author, and the program counts his
+labels. The same applies to the 2/2/4 below. They are structured judgements
+made in public and open to correction, and are worth exactly what a reader
+thinks the labels are worth. Most of an auditor's day is ordinary querying.
 Completeness, the assertion ranked hardest for payables, is answerable by **no
 ledger whatever**: the invoice nobody entered leaves no row to carry a
 warrant.
@@ -120,30 +127,41 @@ At 100,000 agents and 1,000,000 dependency links a withdrawal propagates in
 tens of milliseconds. With one ground per conclusion, a single compromised
 agent takes down a **median of half the collective** — median here, and
 worst-case in §3.2, which is not the same statistic and is why §3.2 says so
-explicitly. "About 52,000 of your
+explicitly. "About 59,716 of your
 conclusions no longer stand" is not something anyone can act on.
 
-### 3.2 Redundancy contains it, with a threshold that moves
+### 3.2 Redundancy contains a random loss and not a chosen one
 
 A conclusion resting on two declared-independent grounds falls only if both
-do. Sweeping the share of such conclusions does not give a curve; it gives a
-collapse. On three topologies at the same scale, worst single loss:
+do. Sweeping the share of such conclusions gives two different answers
+depending on where the loss is aimed, and reporting only the first was this
+work's largest error.
 
-| topology | 0% | 75% | 90% | threshold |
+| topology | 0% | 75% | 90% | 95% |
 |---|---|---|---|---|
-| random-local | 95,041 | 20,840 | 56 | **90%** |
-| hierarchy | 95,081 | 194 | 10 | **75%** |
-| scale-free | 33,943 | 139 | 20 | **75%** |
+| random-local, worst of 25 sampled targets | 95,041 | 51,389 | 56 | 4 |
+| random-local, **adversary chooses** | 99,995 | 99,984 | 99,984 | 99,987 |
+| hierarchy, worst of 25 sampled targets | 95,081 | 195 | 10 | 8 |
+| hierarchy, **adversary chooses** | 100,000 | 100,000 | 100,000 | 100,000 |
+| scale-free, worst of 25 sampled targets | 33,943 | 142 | 20 | 8 |
+| scale-free, **adversary chooses** | 100,000 | 100,000 | 100,000 | 100,000 |
 
-The **shape** transfers and the **number** does not: below some redundancy one
-loss costs most of the collective, above it almost nothing, and there is very
-little in between to tune against. A designer cannot take a constant off
-another system's report.
+Against uniformly sampled targets redundancy works as advertised. Against an
+adversary choosing the root or the largest hub, **the collective loses
+everything at every level of redundancy, including 95%.**
 
-A statistic was corrected here. The first run reported medians, and the median
-said scale-free was safe at zero redundancy — on that shape most agents are
-leaves, so a typical loss costs nothing while the few hubs are the entire
-reason the topology is interesting. The table is worst-case.
+There is therefore no threshold against a chosen target. There is one against
+a random target, and an earlier draft of this note reported the second as
+though it were the first, because the estimator sampled 25 nodes out of
+100,000 and a hierarchy's commander is not among them.
+
+The reason is not a defect in redundancy as an idea. The second ground is
+drawn from inside the same structure, so it descends from the same root;
+removing the root removes the alternative with it. That is §3.5 arriving from
+the other direction — **redundancy that is not independent of the thing being
+attacked is not redundancy** — and it means the ordinary failure (an agent
+lost to terrain, a sensor to weather) and the adversarial one need different
+mechanisms rather than more of the same one.
 
 ### 3.3 Declared redundancy resting on a shared origin
 
@@ -170,23 +188,28 @@ documents from genuine agents that happen to rest on the same thing.
 A conclusion needs evidence to be *supported* and authority to be *permitted*,
 so it falls when either fails. Separating the two:
 
-- evidence 100% genuinely redundant, authority not: losing the commander
-  costs **C = 0.789**;
-- both 100% genuinely redundant: the commander still costs **C = 1.000** —
-  the entire collective.
+- both dimensions 100% genuinely redundant: losing the commander still costs
+  **C = 1.000** — the entire collective.
+
+An earlier draft of this note also reported **C = 0.789** for the case where
+evidence is redundant and authority is not. No program produces that figure;
+the probe prints 1.000 for both configurations. It was invented, it was caught
+by adversarial review rather than by the author, and it is recorded here
+rather than quietly deleted.
 
 The dimensions do not average and do not exchange. At an identical minimum
-redundancy of 0.50, an authority-rich collective loses 0.03% where an
-evidence-rich one loses 1.01% — a factor of 31 — because permission is
+redundancy of 0.50, an authority-rich collective loses 0.0003 of itself where
+an evidence-rich one loses 0.0101 — a factor of 31 — because permission is
 hierarchically concentrated while evidence is diffuse.
 
-Four outputs, per configuration: **C** (share lost), **r\*** (minimal real
-redundancy for C < 1%), **q\*** (hidden correlation tolerated at declared
-r = 1.0), and **A_crit** (worst single loss). Measured across ten seeds (§3.7): **r\* median 0.725, range 0.60–0.75** and
-**q\* median 0.35, range 0.30–0.45** across two dimensions. Adding shared
-models and shared sensor feeds raises r\* — measured at 0.75 against 0.65 on
-the same seed — because a world with more things to share has more ways to
-fail.
+Three outputs, per configuration — not four. **C** (share lost), **r_eff\***
+(minimal EFFECTIVE redundancy for C < 1%) and **A_crit** (worst single loss).
+An earlier draft reported r\* and q\* as two quantities; they are one. A
+conclusion is genuinely redundant with probability r(1-q), so containment
+depends on that product alone and `1 - q* = r*` holds exactly — arithmetic,
+not two findings. Measured: **r_eff\* ≈ 0.65** across two dimensions, rising to 0.75 when shared
+models and shared sensor feeds are added — a world with more things to share
+has more ways to fail.
 
 **A_crit is not a function of redundancy at all.** It is a property of where
 authority is concentrated, and is reported beside r\* rather than folded into
@@ -202,6 +225,13 @@ Varying the number of *independent* authority roots:
 | 2 roots, either suffices | 0.117 |
 | 3 roots, quorum 2-of-3 | 0.117 |
 | 3 roots, **shared upstream** | **1.000** |
+
+These are closed forms, not measurements: the model has no stochastic content
+at all — its `rnd` argument is unused — and 0.117 is exactly 4681/40000, the
+subtree of one first-level commander under a branching factor of 8. Set the branching factor to 20 and the same closed form gives roughly a
+twentieth (derived, not run). What the table establishes is the
+structural fact that one root is a single point of failure and two are not;
+the middle figures are arithmetic about a tree that was chosen.
 
 It stops at two, and only if the two are really two. Three roots hanging off
 one hidden super-root behave exactly like one, and the report cannot tell the
@@ -238,23 +268,23 @@ rather than a larger constant. That derivation is not in this work.
 
 ### 3.7 Are these figures, or single observations?
 
-Every probe above runs on one seed. Ten independent seeds give:
+Ten independent seeds, and the answer differs sharply by quantity.
 
-| figure | median | range |
-|---|---|---|
-| r\* minimal real redundancy | 0.725 | 0.60–0.75 |
-| q\* hidden correlation tolerated | 0.35 | 0.30–0.45 |
-| A_crit, one authority root | 1.000 | constant |
-| A_crit, two roots | 0.117 | constant |
-| A_crit, three roots on a shared upstream | 1.000 | constant |
-| redundancy threshold, hierarchy | 0.75 | 0.50–0.75 |
+| figure | across ten seeds |
+|---|---|
+| r_eff\* minimal effective redundancy | median 0.725, range 0.6–0.75 |
+| redundancy threshold, hierarchy (sampled targets) | median 0.75, range 0.50–0.75 |
+| A_crit, one / two / three-on-shared roots | **not a variance result** |
 
-The structural results are constant across every seed; the tuned quantities
-are not, and r\* in particular was quoted at 0.65 from a single run — the
-optimistic end of its range. It is corrected above.
+The last row is a correction rather than a figure. `probe_roots` is
+deterministic — its random-number argument is accepted and never used — so
+running it under ten seeds measured one graph ten times. It printed
+"constant", which is true and vacuous, and was read as robustness for a day
+until adversarial review pointed at the function signature.
 
-Ten seeds of one model is still one model. This answers whether the figures
-are artefacts of a lucky draw; it does not make them general, and §6 says so.
+Ten seeds of one model is still one model. This answers whether a figure is
+an artefact of a lucky draw; it does not make it general, and it does not
+apply at all to a model that has no draw in it.
 
 ---
 
@@ -307,11 +337,37 @@ an assertion in the source so it cannot be quietly tuned away.
    The direction held; the magnitude did not — 28% relative.
 5. *The runtime gate.* Zero violations on three channels, leaks on two.
 6. *"An autonomous collective may act on a warrant only while…"* A normative
-   claim this work does not establish. Corrected to *continue to rely*.
+   claim this work does not establish. Corrected twice: *rely* is also a
+   permission, and the descriptive form is *treat as satisfying*.
 
 Two methodological errors are also recorded in the source: a first blindspot
 model whose shared structure was too redundant for hiding to show, and a
 median that concealed the hub risk it was measuring.
+
+**Five more were found by an adversarial review of this note rather than by
+its author**, and they were the expensive ones. They are listed here because
+a note that reports only the failures its author noticed is reporting a
+selection.
+
+7. *"The table in §3.2 is worst-case."* It was the worst of 25 uniformly
+   sampled targets out of 100,000. The true worst — a chosen root — is
+   100,000 at every level of redundancy, and the note had claimed a
+   correction to exactly this error while continuing to make it.
+8. *"Redundancy means two grounds."* The code appended a parent and switched
+   the node's entire input list from OR to AND. The flagged nodes had a
+   median of eleven inputs and **none** had exactly two, so every figure
+   quoted from that operation was about something else. The semantics is now
+   what the prose always said, and §3.2's numbers changed accordingly.
+9. *"r\* and q\* are two quantities."* They are one crossing read from two
+   ends: `1 - q* = r*` exactly, because effective redundancy is r(1-q).
+10. *"A_crit is constant across ten seeds."* The model is deterministic and
+    its random argument unused; ten seeds measured one graph ten times.
+    0.117 is 4681/40000, a closed form in the branching factor.
+11. *"C = 0.789."* No program produces this number. It was invented.
+
+Adversarial review raised 48 findings of which 32 survived a refutation pass;
+the full list is in the repository beside this note. The reader should assume
+the same density of error in whatever has not yet been reviewed.
 
 ---
 

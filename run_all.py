@@ -449,7 +449,17 @@ def main():
         if ok == "skip":
             skipped.append(script)
         elif not ok:
-            failures.append(script)
+            # THE SUMMARY CARRIES THE DIAGNOSIS, not just the name. Three
+            # times on 2026-08-16 a red CI was reported by pasting the tail
+            # of the log, which held `RED: ['db/probe_ledger.py']` and
+            # nothing else — the missing marker was hundreds of lines above,
+            # in stand order. A summary that says WHICH stand failed and not
+            # WHY sends the reader back up a log they have already scrolled
+            # past, and on somebody else's machine there may be no log left
+            # to scroll. The failure line must be self-sufficient.
+            why = (f"missing {missing}" if missing
+                   else f"exit code {rc}" if rc else "unknown")
+            failures.append(f"{script} ({why})")
 
     if skip_lean:
         print("  [skip] lean (not asked for — nothing claimed for it here)")

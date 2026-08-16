@@ -90,18 +90,40 @@ verdict beside each row was typed by the author, and the program counts his
 labels. The same applies to the 2/2/4 below. They are structured judgements
 made in public and open to correction, and are worth exactly what a reader
 thinks the labels are worth. Most of an auditor's day is ordinary querying.
-Completeness, the assertion ranked hardest for payables, is answerable by **no
-ledger whatever**: the invoice nobody entered leaves no row to carry a
-warrant.
+An earlier draft said completeness is answerable by **no ledger whatever**,
+because the invoice nobody entered leaves no row to carry a warrant. That is
+wrong, and the probe it was drawn from contradicts it: completeness for
+payables is not tested from the payables ledger but by reconciling that
+population against others — subsequent cash disbursements, unmatched
+goods-received notes, open purchase orders, vendor statement reconciliations,
+document-sequence checks, the three-way match. Each of those is a ledger, and
+each detects rows that should be there from rows that are. What is true and
+much narrower: a population cannot certify its own completeness from inside
+itself.
 
 Against documented failures the instrument scores **2 TOUCHES, 2 EXPOSES, 4
-OUT** of eight, and *prevents none of them*. Wirecard's €1.9bn rested on forged
+OUT** of eight — again the author's labels, counted by a program — and
+*prevents none of them*. Wirecard's €1.9bn rested on forged
 bank letters; a forged ground is invisible here by construction, and the
-ledger would have printed a clean EARNED for years. Against system errors
-where nobody lied it does better — **2 caught of 3** — and the two are caught
-outright: a units mismatch (`cannot compare 'lbf' with 'N'`, the Mars Climate
-Orbiter mechanism) and a corrected input whose consequences travel up three
-storeys. The one not caught is instructive: a spreadsheet dividing by a sum
+ledger would have printed a clean EARNED for years. Against system errors where nobody lied it does better, but less well than an
+earlier draft claimed: **1 caught, 1 caught only if declared, 1 not caught.**
+
+The Mars Climate Orbiter is the one that shrank. Given both quantities with
+their units the floor refuses — `cannot compare 'lbf' with 'N'` — but that is
+not the case as it happened. The SM_FORCES file carried numbers; the unit
+lived in an interface specification. Run *that* and the floor returns
+**EARNED**: a quantity with no unit unifies with anything, because
+`_unify_units` compares two strings and a missing string matches. The
+instrument does not detect the absence of a unit. It demonstrates the value of
+carrying one, which is a design rule and not a catch, and whether values carry
+units is upstream of anything here.
+
+The third case is not a documented one at all. It is a shape the author
+constructed — a conclusion, an input beneath it, a later correction — with
+figures echoing the high-debt-threshold episode. The retraction in it is
+stipulated rather than reconstructed, and the actual failure in that episode
+was a spreadsheet range selection, which is the class the London Whale case
+concedes is not catchable. The one not caught is instructive: a spreadsheet dividing by a sum
 where the author meant an average returns EARNED, because the formula is
 well-formed and there is no second copy of the intention to compare it to.
 
@@ -291,8 +313,11 @@ apply at all to a model that has no draw in it.
 ## 4. Five things a system must know, and none of them are here
 
 The measurements above separate into a ladder — arrived at in correspondence
-rather than derived from any single run, and stated here because it organises
-what the runs found:
+rather than derived from any single run, and **three of its five rungs have a
+literature that predates it by decades** (§5a): authority separated from
+evidential support, and currentness as a bounded recency requirement, are both
+formalised in the authentication and authorization logics of 1989–1999. It is
+stated here because it organises what the runs found, not because it is new:
 
 1. **identity** — who or what signed a ground;
 2. **provenance** — what it descended from;
@@ -386,18 +411,44 @@ fault-tree analysis, common-mode analysis, NUREG methods in nuclear
 engineering and NASA's work on ultra-reliability all address it.
 
 Two consequences, both against this note. First, §3.3 reports a named,
-standardised phenomenon and claims no discovery. Second, and worth stating
-because it is uncomfortable: design values for β in IEC 61508 run from **0.5%
-to 10%**, while §3.4 measures containment surviving hidden correlation up to
-**q\* ≈ 0.35**. A tolerance of 35% is an order of magnitude looser than what
-the engineering disciplines that build these systems consider acceptable. The
-figure is a property of this model, not a reassurance.
+standardised phenomenon and claims no discovery. Second, an earlier draft compared β directly with `q` and called this work's
+tolerance "an order of magnitude looser" than engineering practice. That
+comparison is withdrawn: the quantities are not commensurable. β is a
+conditional fraction of component *failure rates* attributable to a common
+cause; `q` here is a structural share of *declared redundancy that is fake*.
+Equating them needs an argument this note does not have. Also, β is not the
+state of the art — it was superseded precisely because it cannot handle k-of-n
+redundancy, by the Multiple Greek Letter, Binomial Failure Rate and α-factor
+models [2].
 
 What CCF analysis does not do, so far as I can find, is the part §§3.4 and 3.6
 are about: it quantifies the *probability* that components fail together,
 whereas this work asks what a conclusion is still *warranted* by afterwards —
 and it does not separate an authority dimension from an evidence one, nor
 treat the incompleteness of the dependency map itself as a measured quantity.
+
+**Distributed authorization logic already separates authority from evidential
+support**, which was §5a's first novelty bullet until adversarial review
+removed it. Abadi, Burrows, Lampson and Plotkin [3] give a modal `says` and a
+`speaks-for` delegation relation; Lampson, Abadi, Burrows and Wobber [4]
+separate the authentication chain from the authorization chain. SPKI/SDSI [5]
+has authorization certificates, delegation-chain reduction and **k-of-n
+threshold subjects** — which is §3.5's "quorum 2-of-3", standardised in 1999.
+Decentralized trust management [6] and the RT framework [7] compute credential
+chains, which is the §3.5 computation. The operational instance of §3.5's last
+row is also familiar to that community: nominally distinct certificate
+authorities cross-signing to a shared root.
+
+**And "currentness" is not new either.** Burrows, Abadi and Needham [8]
+formalise in 1989 both the jurisdiction postulate (`P controls X` — authority,
+kept apart from evidential belief) and nonce-verification (freshness), i.e.
+rungs (1) and (5) of §4 together. Stubblebine [9] is an entire paper on
+bounding the staleness of a credential as an explicit recency requirement, and
+certificate revocation has argued about freshness windows ever since [10].
+
+So of the five rungs in §4, three have a literature this note had not read
+when it named them. What the runs measure is the interaction — but the ladder
+is a re-derivation, and §4 says so now.
 
 **Truth-maintenance systems** are the nearest neighbour of §1. Doyle's TMS (1979) and de Kleer's ATMS (1986)
 already do the central operation here: record which conclusions rest on which
@@ -480,6 +531,57 @@ python3 db/probe_gate.py          python3 run_all.py
 
 `run_all.py` runs 115 stands and the Lean corpus, and asserts the zero-axiom
 line.
+
+---
+
+## References
+
+Assembled after adversarial review pointed out that the first draft carried
+five novelty claims and no bibliography — three named authors in twenty-one
+thousand characters. A priority claim with no citation is not a claim, it is
+an assertion, and "so far as I can find" is unauditable unless the search is
+described. The search behind §5a was conducted with LLM assistance over the
+open web and the author's own reading; it is **not** a systematic review, and
+readers should treat the novelty bullets as an invitation to correct rather
+than as a survey result.
+
+1. Doyle, J. A truth maintenance system. *Artificial Intelligence* 12(3),
+   1979, 231–272.
+2. de Kleer, J. An assumption-based TMS. *Artificial Intelligence* 28(2),
+   1986, 127–162.
+3. Abadi, M., Burrows, M., Lampson, B., Plotkin, G. A calculus for access
+   control in distributed systems. *ACM TOPLAS* 15(4), 1993, 706–734.
+4. Lampson, B., Abadi, M., Burrows, M., Wobber, E. Authentication in
+   distributed systems: theory and practice. *ACM TOCS* 10(4), 1992, 265–310.
+5. Ellison, C., et al. SPKI certificate theory. RFC 2693, IETF, 1999.
+6. Blaze, M., Feigenbaum, J., Lacy, J. Decentralized trust management. *IEEE
+   Symposium on Security and Privacy*, 1996.
+7. Li, N., Mitchell, J., Winsborough, W. Design of a role-based trust
+   management framework. *IEEE Symposium on Security and Privacy*, 2002.
+8. Burrows, M., Abadi, M., Needham, R. A logic of authentication. *ACM TOCS*
+   8(1), 1990, 18–36.
+9. Stubblebine, S. Recent-secure authentication: enforcing revocation in
+   distributed systems. *IEEE Symposium on Security and Privacy*, 1995.
+10. Rivest, R. Can we eliminate certificate revocation lists? *Financial
+    Cryptography*, 1998.
+11. Alchourrón, C., Gärdenfors, P., Makinson, D. On the logic of theory
+    change. *Journal of Symbolic Logic* 50(2), 1985, 510–530.
+12. Green, T., Karvounarakis, G., Tannen, V. Provenance semirings. *PODS*,
+    2007, 31–40.
+13. Cheney, J., Chiticariu, L., Tan, W.-C. Provenance in databases: why, how
+    and where. *Foundations and Trends in Databases* 1(4), 2009, 379–474.
+14. Dung, P. M. On the acceptability of arguments. *Artificial Intelligence*
+    77(2), 1995, 321–357.
+15. IEC 61508-6:2010, Annex D — methodology for quantifying the effect of
+    hardware-related common cause failures.
+16. NUREG/CR-5485. Guidelines on modeling common-cause failures in
+    probabilistic risk assessment. US NRC, 1998.
+17. ISA 315 (Revised 2019), *Identifying and assessing the risks of material
+    misstatement*; ISA 500, *Audit evidence*.
+
+Citations 1–17 were checked for author, venue and year; page ranges for 3, 4,
+7, 9, 10 and the annex structure of 15 were not independently verified against
+the printed sources and should be confirmed before this note is cited in turn.
 
 ---
 

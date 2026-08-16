@@ -237,6 +237,9 @@ STANDS = [
                            "(B2) turns out wrong  ->  margin, over_ceiling, "
                            "subtotal, vat, total",
                            "the count of links anybody typed is ZERO"]),
+    ("db/probe_swarm.py", ["SWARM PROBE GREEN",
+                           "one compromised agent, median fallout",
+                           "Not a curve — a collapse"]),
     ("inventory/paper_claims.py", ["PAPER CLAIMS GREEN"]),
     ("inventory/docket_claims.py", ["DOCKET TABLE GREEN",
                                     "rows printed in the paper: 21"]),

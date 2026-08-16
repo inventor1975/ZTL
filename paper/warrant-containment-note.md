@@ -33,7 +33,7 @@ pessimistic, always flattering.
 
 Six predictions made in the course of this work were refuted by its own runs
 and are reported with the rest. Every number below is printed by a program in
-a public repository and re-checked by a regression suite of 113 stands.
+a public repository and re-checked by a regression suite of 115 stands.
 
 ---
 
@@ -108,11 +108,19 @@ thread.**
 The remaining sections concern collectives of agents whose conclusions rest on
 one another — the shape of a decentralised autonomous system.
 
+**These are separate models, not one experiment.** §§3.1–3.3 run 100,000
+agents over 1,000,000 links; §§3.4–3.5 run 40,000; §3.6 runs 20,000 with an
+explicit source layer. Figures are comparable within a subsection and not
+across them, and no claim below depends on comparing two subsections'
+absolute numbers.
+
 ### 3.1 Speed is not the problem, and the answer is useless anyway
 
 At 100,000 agents and 1,000,000 dependency links a withdrawal propagates in
 tens of milliseconds. With one ground per conclusion, a single compromised
-agent takes down a **median of half the collective**. "About 52,000 of your
+agent takes down a **median of half the collective** — median here, and
+worst-case in §3.2, which is not the same statistic and is why §3.2 says so
+explicitly. "About 52,000 of your
 conclusions no longer stand" is not something anyone can act on.
 
 ### 3.2 Redundancy contains it, with a threshold that moves
@@ -172,10 +180,11 @@ hierarchically concentrated while evidence is diffuse.
 
 Four outputs, per configuration: **C** (share lost), **r\*** (minimal real
 redundancy for C < 1%), **q\*** (hidden correlation tolerated at declared
-r = 1.0), and **A_crit** (worst single loss). Measured: r\* = 0.65 and
-q\* = 0.35 across two dimensions; adding shared models and shared sensor feeds
-raises **r\* to 0.75**. The earlier figure was measured in a world with fewer
-things to share.
+r = 1.0), and **A_crit** (worst single loss). Measured across ten seeds (§3.7): **r\* median 0.725, range 0.60–0.75** and
+**q\* median 0.35, range 0.30–0.45** across two dimensions. Adding shared
+models and shared sensor feeds raises r\* — measured at 0.75 against 0.65 on
+the same seed — because a world with more things to share has more ways to
+fail.
 
 **A_crit is not a function of redundancy at all.** It is a property of where
 authority is concentrated, and is reported beside r\* rather than folded into
@@ -225,12 +234,33 @@ plausible expression that works in some regimes. A gate right most of the time
 is not a gate, and the fix is a margin derived from a model of the channel
 rather than a larger constant. That derivation is not in this work.
 
+### 3.7 Are these figures, or single observations?
+
+Every probe above runs on one seed. Ten independent seeds give:
+
+| figure | median | range |
+|---|---|---|
+| r\* minimal real redundancy | 0.725 | 0.60–0.75 |
+| q\* hidden correlation tolerated | 0.35 | 0.30–0.45 |
+| A_crit, one authority root | 1.000 | constant |
+| A_crit, two roots | 0.117 | constant |
+| A_crit, three roots on a shared upstream | 1.000 | constant |
+| redundancy threshold, hierarchy | 0.75 | 0.50–0.75 |
+
+The structural results are constant across every seed; the tuned quantities
+are not, and r\* in particular was quoted at 0.65 from a single run — the
+optimistic end of its range. It is corrected above.
+
+Ten seeds of one model is still one model. This answers whether the figures
+are artefacts of a lucky draw; it does not make them general, and §6 says so.
+
 ---
 
 ## 4. Five things a system must know, and none of them are here
 
-The measurements above separate into a ladder, of which this instrument
-supplies nothing and prices everything:
+The measurements above separate into a ladder — arrived at in correspondence
+rather than derived from any single run, and stated here because it organises
+what the runs found:
 
 1. **identity** — who or what signed a ground;
 2. **provenance** — what it descended from;
@@ -283,6 +313,46 @@ median that concealed the hub risk it was measuring.
 
 ---
 
+## 5a. Related work, and where the boundary actually runs
+
+**Truth-maintenance systems** are the nearest neighbour and the first thing a
+reader should be told about. Doyle's TMS (1979) and de Kleer's ATMS (1986)
+already do the central operation here: record which conclusions rest on which
+assumptions, and recompute what stands when an assumption is retracted. The
+cascade of §1 is that operation, and this work claims no priority over it.
+
+Nor over **belief revision** (AGM and successors), which studies what a
+rational agent should give up when a new fact contradicts an old one; over
+**provenance semirings**, which annotate query results with the tuples that
+produced them; over **argumentation frameworks**, which compute which
+arguments survive given attacks between them; or over lineage systems in
+databases and workflow engines, which track derivation for exactly this
+purpose.
+
+What is not standard in those, so far as I can find, is the combination the
+measurements above are about:
+
+- an **authority dimension kept separate from evidence**, so that a
+  conclusion falls from losing permission as readily as from losing support
+  (§3.4) — TMS justifications do not distinguish the two;
+- **declared independence that the machine refuses to assume**, reported as a
+  bracket rather than resolved into a confidence value (§1, §3.3);
+- **hidden common origin** treated as a first-class failure mode with a
+  measured tolerance rather than an assumption of independence (§3.3, q\*);
+- **incompleteness and staleness of the dependency map itself** as measured
+  quantities (§3.6), rather than the map being taken as given;
+- and the resulting question of **runtime containment under consequential
+  action**, which is a control problem rather than a maintenance one.
+
+Stated plainly: the mechanism is old, and the object of study is the
+containment behaviour of that mechanism when evidence, authority, hidden
+common dependencies, an incomplete map and a changing world are present at
+once. A reviewer who reads §1 and thinks "this is an ATMS" is reading it
+correctly; the reply is that §§3.3–3.6 are not about the ATMS but about what
+it can and cannot promise.
+
+---
+
 ## 6. Limits
 
 **These are simulations on synthetic graphs.** The existence of a redundancy
@@ -325,7 +395,7 @@ python3 db/probe_blindspot.py     python3 db/probe_currentness.py
 python3 db/probe_gate.py          python3 run_all.py
 ```
 
-`run_all.py` runs 113 stands and the Lean corpus, and asserts the zero-axiom
+`run_all.py` runs 115 stands and the Lean corpus, and asserts the zero-axiom
 line.
 
 ---

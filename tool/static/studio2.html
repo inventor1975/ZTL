@@ -78,6 +78,20 @@
  .ex select { padding:.35em .5em; font:inherit; border:1px solid var(--line);
               max-width:22em; }
  .comment { background:#f4f7ff; border-color:#c9d8ff; }
+
+ /* `.bar` was already taken by a layout row in this sheet, and the new one
+    silently inherited it — a full-width block instead of a small gauge.
+    Named `.aibar` rather than nested deeper: a collision fixed by
+    specificity is a collision waiting for the next edit. */
+ .comment.pending .wait { color:#777; font-size:.9em; display:flex;
+   align-items:center; gap:.6em; margin:0; }
+ .aibar { width:8em; height:3px; background:#e3e3e3; overflow:hidden;
+   position:relative; flex:0 0 auto; }
+ .aibar::after { content:""; position:absolute; top:0; bottom:0; width:35%;
+   background:#999; animation: aislide 1.1s ease-in-out infinite; }
+ @keyframes aislide { 0%{left:-35%} 100%{left:100%} }
+ .comment .dim { color:#777; }
+ h1 a { color: inherit; text-decoration: none; }
 </style>
 
 <div id="keypanel" hidden></div>

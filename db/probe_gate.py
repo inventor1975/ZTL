@@ -177,20 +177,24 @@ def main():
   delivered are reported together. Reporting the first alone would be
   selling a brake as an engine.
 
-  THE CRITERION, and the wording matters more than it looks. An earlier
-  draft of this file said an autonomous collective "may ACT on a warrant
-  only while it can bound how stale it might be". the external reviewer Miteiko caught
-  it: that is a normative claim, and nothing here establishes whether
-  anything may act. Permission comes from outside — it is the authority
-  dimension, and this corpus computes what follows from it rather than
-  conferring it. The same boundary this work draws everywhere else, erased
-  in its own summary sentence.
+  THE CRITERION, and the wording took three passes to get right, which is
+  itself worth recording. The first draft said a collective "may ACT on a
+  warrant" — plainly normative, and nothing here establishes whether
+  anything may act. The second said "may continue to RELY", which is
+  narrower and still a permission. Both were caught in review, and the
+  distinction is not pedantry: this corpus computes the consequences of
+  authority and does not confer it, and its own summary sentence was the
+  one place that boundary kept slipping.
 
-  So, narrowly and correctly:
+  Purely descriptive, third pass:
 
-      a system may continue to RELY on its current warrant only while it
-      can bound that warrant's possible staleness within the stated
-      containment criterion
+      a system may continue to TREAT its current warrant as satisfying the
+      stated containment criterion only while it can bound that warrant's
+      possible staleness within that criterion
+
+  Whether reliance or action is PERMITTED in that state is decided by an
+  external authority layer. This measures the antecedent; it does not
+  reach the consequent.
 
   Where it cannot, the moves left are to act more slowly, to shrink what
   one loss takes down, or to stop relying — and which is affordable is

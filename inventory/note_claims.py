@@ -64,7 +64,7 @@ CLAIMS = [
      "A PREDICTION OF MINE, REFUTED BY ITS OWN TABLE"),
     ("probe_gate.py", "the gate leaks", "CONTAINS A FAILURE OF MY OWN"),
     ("probe_gate.py", "reliance, not permission",
-     "may continue to RELY on its current warrant only while it"),
+     "may continue to TREAT its current warrant as satisfying the"),
 ]
 
 # Figures the note prints in prose or tables, each of which must appear

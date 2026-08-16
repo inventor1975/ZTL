@@ -247,12 +247,16 @@ gate says a warrant is usable only while its staleness can be bounded.
 
 Stated as control rather than observation, and narrowly:
 
-> A system may continue to **rely** on its current warrant only while it can
-> bound that warrant's possible staleness within the stated containment
-> criterion.
+> A system may continue to **treat** its current warrant as satisfying the
+> stated containment criterion only while it can bound that warrant's possible
+> staleness within that criterion.
 
-Not *may act*. Permission comes from outside; it is the authority dimension,
-whose consequences this work computes and whose grant it does not confer.
+Not *may act*, and not *may rely* either: both are permissions, and nothing
+here establishes one. Whether reliance or action is allowed in that state is
+decided by an external authority layer. This work measures the antecedent and
+does not reach the consequent — the same boundary it draws everywhere else,
+which took three drafts to stop slipping in the one sentence meant to
+summarise it.
 
 ---
 
@@ -330,6 +334,6 @@ line.
 
 The instrument and this note were built with Claude (Opus 5) as architect and
 implementer, under Variant A, with Vitaly Reznik as human curator. Several of
-the failed predictions in §5 were the model's; several of the corrections that
-found them came from Arkadiy Miteiko, whose questions shaped §§3.4–3.6, and
-from Ignacio Adrian Lerer, whose reading of the bracket sharpened §1.
+the failed predictions in §5 were the model's, and several of the corrections
+that found them came from correspondence with colleagues whose contribution
+will be acknowledged in the joint work that follows.

@@ -50,6 +50,9 @@ CLAIMS = [
     ("probe_topology.py", "hierarchy threshold 75%", "hierarchy"),
     ("probe_containment.py", "the commander costs everything",
      "THE COMMANDER    -> 100,000 of 100,000 fall"),
+    ("probe_real.py", "A_crit on a real graph", "A_crit = 0.868"),
+    ("probe_real.py", "real declared alternatives are 2.6%", "(2.6%)"),
+    ("probe_real.py", "the real graph is sparser", "5.18"),
     ("probe_variance.py", "r* median 0.725 across ten seeds",
      "median 0.725"),
     ("probe_variance.py", "q* median 0.35 across ten seeds",
@@ -94,6 +97,7 @@ FIGURES = [
     ("probe_roots.py", ["0.117"]),
     ("probe_blindspot.py", ["0.089", "0.086", "0.064", "+0.004", "+0.025"]),
     ("probe_gate.py", ["66.0%", "270", "170"]),
+    ("probe_real.py", ["2,444", "0.868", "5.18", "1,588"]),
     ("probe_variance.py", ["0.725", "0.117"]),
 ]
 

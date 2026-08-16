@@ -66,6 +66,11 @@ def main():
     spread("q*  hidden correlation tolerated", q_stars, 0.35)
 
     print("\n  2. A_crit BY AUTHORITY-ROOT COUNT (probe_roots)")
+    print("     NOT A VARIANCE RESULT. probe_roots is deterministic — its")
+    print("     `rnd` argument is unused — so these rows are one graph")
+    print("     measured ten times. Reported as `constant` below, which is")
+    print("     true and vacuous, and was read as robustness until an")
+    print("     adversarial review pointed at the signature.")
     for roots, quorum, shared, label, quoted in (
             (1, 1, False, "1 root", 1.0),
             (2, 1, False, "2 roots, either", 0.117),

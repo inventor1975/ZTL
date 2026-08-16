@@ -35,11 +35,19 @@ SEED = 20260816
 BRANCH = 8
 
 
-def build(roots, quorum, shared_upstream, rnd):
-    """`roots` separate command trees over the same agents. Each agent draws
-    its authorisations from `roots` of them and stands while `quorum` hold.
-    With `shared_upstream`, every root is itself authorised by one hidden
-    node — the case that looks like diversity from inside."""
+def build(roots, quorum, shared_upstream, rnd=None):
+    """`roots` separate command trees over the same agents.
+
+    THIS MODEL IS DETERMINISTIC and the `rnd` argument is unused — kept only
+    so callers written against the old signature do not break. That was found
+    by adversarial review and it matters twice. It means probe_variance's
+    "A_crit constant across ten seeds" was one graph measured ten times, a
+    vacuous check reported as a robustness result. And it means the figures
+    below are closed forms rather than measurements: A_crit for two roots is
+    the subtree of a first-level commander, (1+8+64+512+4096)/40000 = 0.1170
+    exactly, so it is a function of BRANCH — set BRANCH=20 and it is ~0.05,
+    BRANCH=2 and it is ~0.5. Quoting 0.117 as though a run discovered it was
+    the error; it is arithmetic about a tree the author chose."""
     SUPER = -1
     auth, rev = defaultdict(list), defaultdict(list)
     root_ids = [N + k for k in range(roots)]
@@ -110,6 +118,14 @@ def main():
     sham = a_crit(3, 2, True, "3 roots, SHARED upstream")
 
     print(f"""
+  READ THESE AS ARITHMETIC, NOT AS MEASUREMENTS. This model has no
+  stochastic content at all: the numbers below are closed forms of the
+  branching factor, and 0.117 is exactly 4681/40000, the subtree of one
+  first-level commander under BRANCH=8. What the table shows is a
+  STRUCTURAL fact — one root is a single point of failure and two are not
+  — and the magnitude of the middle rows is a property of the tree that
+  was chosen rather than a discovery about collectives.
+
   IT STOPS AT TWO, AND ONLY IF THE TWO ARE REALLY TWO.
 
   One root: {one:.3f}. Every authorisation in the collective traces to one

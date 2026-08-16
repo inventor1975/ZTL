@@ -36,7 +36,11 @@ import translator                                                # noqa: E402
 import zfl2                                                      # noqa: E402
 import zfl2doc                                                   # noqa: E402
 
-LANG_NAME = {"en": "English", "ru": "Russian"}
+# Built from the spec's own list rather than kept as a second copy. Before
+# 2026-08-16 this was a two-entry dict and every other language silently
+# resolved to "English", so a Hebrew studio had an English-speaking
+# assistant — the localisation gap you would notice first and find last.
+LANG_NAME = {c: e for c, _n, e in zfl2.LANGS}
 
 
 def schema(lang="en"):

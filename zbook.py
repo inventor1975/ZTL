@@ -66,6 +66,7 @@ import json
 import re
 import os
 import sys
+from fractions import Fraction
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, _HERE)
@@ -538,6 +539,79 @@ def cost(book, ground):
     return {"as_declared": low, "strict": high,
             "low": len(low), "high": len(high),
             "width": len(high) - len(low)}
+
+
+def exposure(book, ground):
+    """HOW MUCH rests on a ground — as against how many claims do.
+
+    `cost` counts claims, and counting claims was the whole answer here until
+    2026-08-16, when the Wirecard shape was run through this ledger and the
+    defect showed itself in one line. A trustee letter carrying 35% of a
+    balance sheet came back as `2`, and a partner report carrying a fortieth
+    of that came back as `1`. The graph was right and the metric was
+    answering a different question from the one an auditor asks first, which
+    is not "how many" but "how much".
+
+    BY UNIT, and not for tidiness. Adding metres to roubles is the exact
+    error the numeric floor exists to refuse — the fourth corner E is that
+    refusal — so a single grand total here would import into the ledger the
+    mistake the calculator forbids. Incommensurable exposures are returned
+    side by side and never summed.
+
+    What counts as exposed: a quantity whose own warrant is this ground,
+    directly or through a chain of citations that this ground brings down.
+    Quantities that merely SHARE a claim with an exposed one are not counted
+    — their own grounds are untouched, and inflating a figure an auditor is
+    about to act on would be the same offence in the opposite direction.
+
+    Returns {unit_or_None: {"total": Fraction, "names": [...]}} plus a
+    separate "unbounded" list for quantities with no settled value, which
+    have an exposure that exists and cannot be stated as a number.
+    """
+    try:
+        falling = {cid for cid, _b, _a in fallout(book, ground)}
+    except NotAMove:
+        return {}                      # withdrawal is not an available move
+    dead = {CITE + cid for cid in falling}
+    by_unit, unbounded = {}, []
+    for cid, _f, data in book:
+        q, _m = parse_quantities(data)
+        for name, v in sorted(q.items()):
+            alts = _alts(v.get("witness"))
+            if not alts:
+                continue
+            # A quantity survives if ANY declared alternative survives; it is
+            # exposed only when every one of its grounds is taken by this
+            # withdrawal. Scoring an alternative-backed figure as lost would
+            # undo the very thing alternatives were added for.
+            if any(a != ground and a not in dead for a in alts):
+                continue
+            lo, hi = v["lo"], v["hi"]
+            if lo != hi or lo in (float("-inf"), float("inf")):
+                unbounded.append(f"{cid}.{name}")
+                continue
+            slot = by_unit.setdefault(v.get("unit"),
+                                      {"total": Fraction(0), "names": []})
+            slot["total"] += lo
+            slot["names"].append(f"{cid}.{name}")
+    if unbounded:
+        by_unit["unbounded"] = {"total": None, "names": sorted(unbounded)}
+    return by_unit
+
+
+def concentration(book):
+    """Every ground, ordered by what it carries — the report the Wirecard
+    shape asked for and this ledger could not produce.
+
+    One line per ground per unit, largest first. A ground carrying a third of
+    a balance sheet is a finding whatever its paperwork looks like, and it is
+    computed rather than noticed."""
+    rows = []
+    for g in sorted(all_grounds(book)):
+        for unit, slot in exposure(book, g).items():
+            if slot["total"] is not None:
+                rows.append((g, unit, slot["total"], len(slot["names"])))
+    return sorted(rows, key=lambda r: (-r[2], r[0]))
 
 
 def naming_assumption(book):
@@ -1124,6 +1198,60 @@ def sec14_what_is_still_missing():
     print("   claim, and the machine only honours them honestly.")
 
 
+def sec15_how_much_rests_on_it_not_how_many():
+    """The metric that was answering the wrong question.
+
+    Built 2026-08-16 after the Wirecard shape was run through this ledger and
+    came back saying `2`. The graph was right; the number was counting
+    claims, and the first thing an auditor asks about a ground is not how
+    many things it holds up but how much."""
+    print()
+    print("15. HOW MUCH RESTS ON IT — not how many")
+    book = [
+        ("cash", "escrow <= assets",
+         "escrow=1900 earned:trustee-letter, assets=7600 earned:balance-sheet"),
+        ("rev_a", "partner_a > 0", "partner_a=300 earned:partner-a-report"),
+        ("rev_b", "partner_b > 0", "partner_b=250 earned:partner-b-report"),
+        ("group", "group_rev == 750", "group_rev=750 earned:trustee-letter"),
+    ]
+    print("   the shape of a famous failure: one letter behind a quarter of")
+    print("   the assets, and three partners each behind a fortieth of it")
+    for g, unit, total, n in concentration(book):
+        print(f"     {g:20} carries {float(total):8.0f}   "
+              f"(cost counts {cost(book, g)['low']} claims)")
+    top = concentration(book)
+    assert top[0][0] == "balance-sheet"                 # the assets figure
+    assert [r for r in top if r[0] == "trustee-letter"][0][2] == 2650
+    assert cost(book, "trustee-letter")["low"] == 2
+    print("   trustee-letter carries 2650 against a partner report's 300 —")
+    print("   a ratio of nearly nine, where counting claims said two. The")
+    print("   concentration was computable from the graph all along and was")
+    print("   simply never asked for.")
+
+    print()
+    print("   UNITS ARE NOT SUMMED, and this is the numeric floor's rule")
+    print("   arriving in the ledger rather than a tidiness preference:")
+    mixed = [("c1", "fee == area",
+              "fee=5000 earned:reg-7 RUB, area=3 earned:reg-7 m2")]
+    ex = exposure(mixed, "reg-7")
+    for unit, slot in sorted(ex.items(), key=lambda kv: str(kv[0])):
+        print(f"     {str(unit):6} {float(slot['total']):8.0f}   {slot['names']}")
+    assert set(ex) == {"RUB", "m2"} and ex["RUB"]["total"] == 5000
+    print("   One ground, two exposures, no grand total. Adding them would")
+    print("   import into the ledger the very error corner E exists to")
+    print("   refuse.")
+
+    print()
+    print("   AND AN ALTERNATIVE IS NOT A LOSS")
+    alt = [("c1", "x > 0", "x=100 earned:inv-17|inv-18")]
+    assert exposure(alt, "inv-17") == {}
+    print("     x=100 earned:inv-17|inv-18   ->  exposure(inv-17) is empty")
+    print("   A figure standing on two declared-independent grounds loses")
+    print("   nothing when one goes. Scoring it as lost would undo the thing")
+    print("   alternatives were added for — with the ceiling unchanged: that")
+    print("   the independence is DECLARED and cannot be checked.")
+
+
 if __name__ == "__main__":
     print("=" * 72)
     print("ZBOOK — the book of claims, stage one")
@@ -1142,6 +1270,7 @@ if __name__ == "__main__":
     sec12_the_answer_is_a_bracket()
     sec13_nullarity_is_catchable_by_descent()
     sec14_what_is_still_missing()
+    sec15_how_much_rests_on_it_not_how_many()
     print("=" * 72)
     print("ZBOOK GREEN — the book stores claims and grounds and never a")
     print("verdict: every reading recomputes. A snapshot carries the")

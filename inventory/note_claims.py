@@ -42,8 +42,12 @@ CLAIMS = [
     ("probe_topology.py", "hierarchy threshold 75%", "hierarchy"),
     ("probe_containment.py", "the commander costs everything",
      "THE COMMANDER    -> 100,000 of 100,000 fall"),
-    ("probe_criterion.py", "r* = 0.65", "= 0.65"),
-    ("probe_criterion.py", "q* = 0.35", "= 0.35"),
+    ("probe_variance.py", "r* median 0.725 across ten seeds",
+     "median 0.725"),
+    ("probe_variance.py", "q* median 0.35 across ten seeds",
+     "q*  hidden correlation tolerated       median 0.35"),
+    ("probe_variance.py", "A_crit constant across seeds",
+     "A_crit, 1 root                         median 1        constant"),
     ("probe_criterion.py", "the minimum does not govern",
      "The minimum does not determine C"),
     ("probe_classes.py", "four dimensions raise r* to 0.75",
@@ -75,12 +79,13 @@ FIGURES = [
     ("probe_roots.py", ["0.117"]),
     ("probe_blindspot.py", ["0.089", "0.086", "0.064", "+0.004", "+0.025"]),
     ("probe_gate.py", ["66.0%", "270", "170"]),
+    ("probe_variance.py", ["0.725", "0.117"]),
 ]
 
 
 def out(probe):
     r = subprocess.run([sys.executable, os.path.join(_ROOT, "db", probe)],
-                       capture_output=True, text=True, timeout=900)
+                       capture_output=True, text=True, timeout=1800)
     return r.stdout + r.stderr
 
 

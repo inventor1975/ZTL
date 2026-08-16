@@ -177,12 +177,24 @@ def main():
   delivered are reported together. Reporting the first alone would be
   selling a brake as an engine.
 
-  THE CRITERION, stated as control rather than observation: an autonomous
-  collective may act on a warrant only while it can BOUND how stale that
-  warrant might be. Where it cannot, the moves left are to act more
-  slowly, to shrink what one loss takes down, or to stop — and which is
-  affordable is architecture, decided before the mission rather than
-  during it.""")
+  THE CRITERION, and the wording matters more than it looks. An earlier
+  draft of this file said an autonomous collective "may ACT on a warrant
+  only while it can bound how stale it might be". the external reviewer Miteiko caught
+  it: that is a normative claim, and nothing here establishes whether
+  anything may act. Permission comes from outside — it is the authority
+  dimension, and this corpus computes what follows from it rather than
+  conferring it. The same boundary this work draws everywhere else, erased
+  in its own summary sentence.
+
+  So, narrowly and correctly:
+
+      a system may continue to RELY on its current warrant only while it
+      can bound that warrant's possible staleness within the stated
+      containment criterion
+
+  Where it cannot, the moves left are to act more slowly, to shrink what
+  one loss takes down, or to stop relying — and which is affordable is
+  architecture, decided before the mission rather than during it.""")
     assert leak_free < 5 and leaked > 0        # the gate's own failure, pinned
     return 0
 

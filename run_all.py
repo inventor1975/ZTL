@@ -270,7 +270,7 @@ STANDS = [
     ("db/probe_gate.py", ["A RUNTIME GATE",
                           "CONTAINS A FAILURE OF MY OWN",
                           "an autonomous",
-                          "collective may act on a warrant only while it can BOUND"]),
+                          "may continue to RELY on its current warrant only while it"]),
     ("inventory/paper_claims.py", ["PAPER CLAIMS GREEN"]),
     ("inventory/docket_claims.py", ["DOCKET TABLE GREEN",
                                     "rows printed in the paper: 21"]),

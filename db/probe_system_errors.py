@@ -11,10 +11,14 @@ So the curator asked the right next question — find a case that is NOT fraud.
 A system error. Somebody competent, nobody lying, and a number that went
 wrong anyway. Does the instrument earn its keep there?
 
-Three documented cases, and each is RUN through the actual core rather than
-reasoned about. One is caught outright, one is not caught and the failure is
-demonstrated rather than admitted, and one is the cascade doing exactly what
-it was built for.
+Three cases. TWO are documented (Mars Climate Orbiter 1999, JPMorgan 2012);
+the third is a SHAPE the author constructed, not a case — its figures echo the
+high-debt-threshold episode and it is a stipulated retraction rather than a
+reconstruction of what happened there. An earlier version of this docstring
+said "three documented cases", which was false.
+
+Each is RUN through the actual core rather than reasoned about, and the Mars
+result is weaker than it first appeared: see below.
 
 Run:  python3 db/probe_system_errors.py
 """
@@ -48,8 +52,30 @@ def case_mars():
     print(f"       why         : {r['why']}")
     print(f"       culprits    : {r['culprits']}  (kind: {r['culprit_kind']})")
     print(f"       next check  : {r['next_check'][0]}")
+    # AND NOW THE CASE AS IT ACTUALLY HAPPENED, which this file got wrong
+    # for a day. The SM_FORCES file carried numbers; the unit lived in an
+    # interface specification, not beside the value. Give the judge that and
+    # it does NOT refuse — a quantity with no unit unifies with anything.
+    q2, m2 = parse_quantities(
+        "impulse_reported=1 earned:small-forces-file, "
+        "impulse_expected=1 earned:nav-spec N")
+    r2 = judge_sheet_claim("impulse_reported == impulse_expected", q2, m2)
+    print(f"\n       and with NO unit on the source, as in the real file:")
+    print(f"       disposition : {r2['disposition']}   <- the wrong answer")
+    assert r2["disposition"] == "EARNED"
     assert r["disposition"] == "E" and "lbf" in r["why"]
-    print("     CAUGHT, and not by a stretch. The fourth corner is exactly")
+    print("     SO THE CATCH IS A RECONSTRUCTION, NOT A CATCH. The refusal")
+    print("     above requires that somebody already recorded `lbf` beside")
+    print("     the number — which is exactly the thing that was missing in")
+    print("     1999. Where the unit is absent the floor returns EARNED and")
+    print("     the orbiter is lost with the machine's blessing. What the")
+    print("     run demonstrates is the VALUE OF CARRYING THE UNIT, not an")
+    print("     ability to detect its absence: `_unify_units` compares two")
+    print("     strings and a missing string unifies with anything.")
+    print("     The honest claim is the design rule, and it is narrower than")
+    print("     the case: a value that carries its unit cannot be silently")
+    print("     mixed. Whether values carry units is upstream of us.")
+    print("     CAUGHT ONLY IF DECLARED. The fourth corner is exactly")
     print("     this refusal: two quantities that cannot be compared do not")
     print("     produce a wrong number, they produce E and say which two.")
     print("     THE CONDITION, and it is the whole design point: the unit")
@@ -57,7 +83,7 @@ def case_mars():
     print("     in a document nobody re-reads is what failed here. A value")
     print("     that carries its own unit cannot be silently mixed, because")
     print("     the comparison refuses rather than converts.")
-    return "CAUGHT"
+    return "DECLARED-ONLY"
 
 
 def case_whale():
@@ -141,6 +167,7 @@ def main():
     verdicts = [case_mars(), case_whale(), case_cascade()]
     print("\n" + "=" * 78)
     print(f"  CAUGHT {verdicts.count('CAUGHT')} of {len(verdicts)}"
+          f"   CAUGHT ONLY IF DECLARED {verdicts.count('DECLARED-ONLY')}"
           f"   NOT CAUGHT {verdicts.count('OUT')} of {len(verdicts)}")
     print("""
   READ AGAINST DAY FIVE. Against fraud this instrument scored 2 of 8 and
@@ -160,7 +187,8 @@ def main():
   written down. Where a graph already exists — a spreadsheet, a pipeline,
   a chain of model calls — the second condition costs nothing. That is a
   HYPOTHESIS, not a measurement, and it is the next thing to test.""")
-    assert verdicts.count("CAUGHT") == 2
+    assert verdicts.count("CAUGHT") == 1
+    assert verdicts.count("DECLARED-ONLY") == 1
     print("\nSYSTEM ERRORS PROBE GREEN — two caught, one not, all three run.")
     return 0
 

@@ -233,7 +233,7 @@ STANDS = [
                                    "cannot compare 'lbf' with 'N'",
                                    "the formula as WRITTEN   -> EARNED",
                                    "-> ['dataset', 'finding', 'policy']",
-                                   "CAUGHT 2 of 3"]),
+                                   "CAUGHT 1 of 3   CAUGHT ONLY IF DECLARED 1"]),
     ("db/probe_sheet.py", ["SHEET PROBE GREEN",
                            "B6 <- B1, B2, B3, B4",
                            "(B2) turns out wrong  ->  margin, over_ceiling, "
@@ -276,7 +276,7 @@ STANDS = [
                               "median 0.725", "varies 0.6..0.75",
                               "A_crit, 2 roots, either                median 0.117"]),
     ("inventory/note_claims.py", ["NOTE CLAIMS GREEN",
-                                  "31 claims and 21 figures"]),
+                                  "33 claims and 21 figures"]),
     ("inventory/paper_claims.py", ["PAPER CLAIMS GREEN"]),
     ("inventory/docket_claims.py", ["DOCKET TABLE GREEN",
                                     "rows printed in the paper: 21"]),

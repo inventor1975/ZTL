@@ -137,9 +137,9 @@ def main():
         ("credit vs earned as a grade", "no", "yes",
          "every base row is its own variable; `quoted` gets a bare token "
          "like any document"),
-        ("bracket for unverified independence", "no", "yes",
-         "measured: inv17 (+) invoice17 at p=.9 gives 0.9900, bounds "
-         "[0.99,0.99] — zero width"),
+        ("bracket for unverified independence", "twice", "yes",
+         "0.9900 by default; encode the ledger twice and it computes BOTH "
+         "ends, 0.99 and 0.90 — a default, not a capability"),
         ("evidence vs authority", "user", "yes",
          "WEAKENED: its own test suite defines a capability semiring over a "
          "permission lattice"),
@@ -169,9 +169,16 @@ def main():
     print("     point of zero width. If the two names are one piece of paper")
     print("     the figure is 0.9. Nothing in the output marks that the")
     print("     difference was assumed away; independence is the model's")
-    print("     premise, not an oversight. This is the one place where")
-    print("     reporting the assumption as a bracket is a different")
-    print("     instrument rather than a worse one.")
+    print("     premise, not an oversight.")
+    print("\n     AND THEN THE OBJECTION TO OUR OWN CLAIM WAS RUN, AND HELD.")
+    print("     Encode the ledger twice — two names as two papers, then as")
+    print("     one — and ProvSQL returns 0.9900 and 0.9000 itself. The")
+    print("     bracket [0.90, 0.99] is COMPUTABLE THERE. What this ledger")
+    print("     has is a DEFAULT, not a capability: it computes both readings")
+    print("     unasked and refuses to print a bare number, where ProvSQL")
+    print("     prints 0.9900 unless the reader knew to ask twice. That was")
+    print("     the last property claimed as our own, and it did not survive")
+    print("     being run. db/provsql_ledger.sql holds the transcript.")
     assert both_dead and not same_dead
 
     print("""
@@ -187,20 +194,23 @@ def main():
   said semirings do not do. That was reasoning where a measurement was
   available, and it was wrong.
 
-  What is left, after both losses, is two and a half things: a fact
-  graded EARNED or ON CREDIT rather than only supported or unsupported
-  (every base row in a semiring is its own variable, so a figure standing
-  on nothing is shaped like a figure standing on a document); an
-  unverifiable independence declaration REPORTED as a bracket rather than
-  evaluated to a zero-width point; and magnitudes tagged with a unit that
-  refuses to be added to another — which is real, and is a type-system
-  property that owes nothing to provenance.
+  What is left, after every loss, is NO CAPABILITY GAP AT ALL. The
+  earned/credit grade is a two-element lattice with min for multiplication
+  — a user-defined semiring, of exactly the kind ProvSQL's own test suite
+  writes for capabilities. Authority as a second dimension is a product
+  of two such. The bracket is a default. Units are not a provenance
+  question. Each is something nobody has written, not something the
+  formalism forbids, and saying otherwise would be the fourth version of
+  the same error this file has now made and corrected three times.
 
-  AND THE HONEST WARNING, now sharper than when it was written. Authority
-  as a second dimension is no longer even hypothetical: ProvSQL's own
-  test suite defines a capability semiring over a permission lattice. The
-  remaining distance between the two instruments is a product semiring
-  and a reporting convention, and anyone who wanted to close it could.""")
+  SO WHAT IS THE ARTEFACT? Not the ledger. This comparison. Eight
+  auditor's questions asked of a working provenance system, with two
+  answers an auditor should not accept: a figure standing on nothing
+  carries a token exactly like a documented one, and an unverifiable
+  independence comes back as 0.9900 with bounds of zero width. Both are
+  correct under the model's premises. Neither answers the question that
+  was asked. That finding is small, it is checkable, and unlike every
+  claim this file has had to withdraw, it survived being run.""")
     print("\nPROVENANCE PROBE GREEN — the older formalism, and then the "
           "shipped package, cover more of this than expected.")
     return 0

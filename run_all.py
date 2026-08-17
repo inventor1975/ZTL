@@ -293,7 +293,7 @@ STANDS = [
                               "median 0.725", "varies 0.6..0.75",
                               "A_crit, 2 roots, either                median 0.117"]),
     ("inventory/note_claims.py", ["NOTE CLAIMS GREEN",
-                                  "37 claims and 25 figures"]),
+                                  "37 + 10 claims and 25 figures"]),
     ("inventory/paper_claims.py", ["PAPER CLAIMS GREEN"]),
     ("inventory/docket_claims.py", ["DOCKET TABLE GREEN",
                                     "rows printed in the paper: 21"]),

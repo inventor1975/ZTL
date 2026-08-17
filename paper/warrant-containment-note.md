@@ -564,17 +564,32 @@ purpose.
 What is not standard in those, so far as I can find, is the combination the
 measurements above are about:
 
-- an **authority dimension kept separate from evidence**, so that a
-  conclusion falls from losing permission as readily as from losing support
-  (§3.4) — TMS justifications do not distinguish the two;
-- **declared independence that the machine refuses to assume**, reported as a
-  bracket rather than resolved into a confidence value (§1, §3.3);
+- ~~an **authority dimension kept separate from evidence**~~ — **WITHDRAWN
+  2026-08-17.** It is standard: ProvSQL ships `sr_minmax`, and its own
+  documentation demonstrates it computing the clearance level required to
+  have inferred a derived fact. TMS justifications indeed do not distinguish
+  permission from support; provenance semirings over an ordered carrier do;
+- ~~**declared independence that the machine refuses to assume**, reported as
+  a bracket~~ — **WITHDRAWN 2026-08-17.** Tuple-independence is a documented
+  *default* in ProvSQL, not an assumption of the formalism, and one statement
+  yields the dependent reading. Beskales et al. (PVLDB 2(1), 2009) return
+  min/max counts and confidence intervals precisely where record identity is
+  unresolved — this bracket, this problem, seventeen years earlier;
 - **hidden common origin** treated as a first-class failure mode with a
   measured tolerance rather than an assumption of independence (§3.3, q\*);
 - **incompleteness and staleness of the dependency map itself** as measured
   quantities (§3.6), rather than the map being taken as given;
 - and the resulting question of **runtime containment under consequential
   action**, which is a control problem rather than a maintenance one.
+
+**Two of those five were struck on 2026-08-17**, after the free
+implementation of provenance semirings was installed and asked the same
+questions rather than only cited. What that costs this section is stated
+rather than absorbed: the list is now three items, not five, and the two
+removed were the two that spoke about a *capability* others lack. The three
+that remain speak about *measured behaviour of a map that is incomplete and
+late* — which is a different kind of claim and is the one this note is
+actually about. `paper/PROVSQL-REVIEW-FINDINGS.md` records the run.
 
 Stated plainly: the mechanism is old, and the object of study is the
 containment behaviour of that mechanism when evidence, authority, hidden

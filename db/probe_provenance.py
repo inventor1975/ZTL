@@ -18,13 +18,20 @@ than they do. They cover more, and the file says so.
 
 AND THEN THE PACKAGE ITSELF WAS RUN, which moved the line again. An earlier
 version of this file compared the formalism because Postgres was not on the
-machine; it now is (PostgreSQL 16.10, ProvSQL 1.13.0-dev built from source),
-and `db/provsql_ledger.sql` asks the same eight questions of the shipped tool.
-One row of the table below was WRONG in consequence and is corrected here:
-ProvSQL does carry magnitudes through aggregation, and answers "what does the
-total become once inv-17 is withdrawn" exactly, with `expected(sum(amount))`
-= 2000. Reasoning about what a formalism "does not do" is not a substitute
-for installing it.
+machine; it now is, and `db/provsql_ledger.sql` asks the same eight questions
+of the shipped tool. One row of the table below was WRONG in consequence and
+is corrected here: ProvSQL does carry magnitudes through aggregation, and
+answers "what does the total become once inv-17 is withdrawn" exactly, with
+`expected(sum(amount))` = 2000. Reasoning about what a formalism "does not
+do" is not a substitute for installing it.
+
+THE ENVIRONMENT LINE BELOW IS PRINTED HERE ON PURPOSE. The note quoted
+"PostgreSQL 16.10" and this machine runs 16.14 — it never ran 16.10 — and the
+error survived the repo's own orphan-figure scan because a version string had
+been added to that scan's exemption list as harmless. An exemption added to
+silence a false alarm is a place where a real one can hide. So the version
+lives in ONE place, is printed by a stand CI runs, and `provsql_ledger.sql`
+prints the LIVE `version()` beside it, so a machine that has moved on says so.
 
 Run:  python3 db/probe_provenance.py
 """
@@ -37,6 +44,13 @@ from itertools import product
 # monomials, each monomial a frozenset of variables — which is the semiring
 # N[X] collapsed to B[X] (idempotent: x*x = x, x+x = x). Idempotence is the
 # right choice here because a ground used twice is not used "twice".
+
+
+# The environment of the ProvSQL measurements, recorded once. Anything that
+# quotes a version quotes THIS, and `db/provsql_ledger.sql` prints the live
+# `version()` next to its results so a drift is visible rather than assumed.
+MEASURED_ON = ("measured on PostgreSQL 16.14 / ProvSQL 1.13.0-dev, "
+               "2026-08-17")
 
 
 def var(name):
@@ -101,6 +115,10 @@ def main():
     print("=" * 78)
     print("PROVENANCE SEMIRINGS vs THIS LEDGER — same scenario, both ways")
     print("=" * 78)
+    print(f"\n  {MEASURED_ON}")
+    print("  (the single place this corpus records that environment; "
+          "provsql_ledger.sql\n   prints the live version(), so a machine "
+          "that has moved on contradicts it)")
     p = build_polys()
 
     print("\n  the polynomials, as a semiring system would carry them\n")
@@ -134,15 +152,15 @@ def main():
          "brackets it [0,6500]"),
         ("...in a declared unit", "no", "yes",
          "sum() over 2000 EUR and 40 hours returned 2040, silently"),
-        ("credit vs earned as a grade", "no", "yes",
-         "every base row is its own variable; `quoted` gets a bare token "
-         "like any document"),
+        ("credit vs earned as a grade", "SHIPS", "yes",
+         "REFUTED: sr_maxmin is a built-in (+ = enum-max, * = enum-min) over "
+         "any ENUM — one CREATE TYPE and it grades our own ledger"),
+        ("...and permission as a second grade", "SHIPS", "yes",
+         "sr_minmax, demonstrated in their docs as Minimum Security "
+         "Clearance — question 8"),
         ("bracket for unverified independence", "twice", "yes",
-         "0.9900 by default; encode the ledger twice and it computes BOTH "
-         "ends, 0.99 and 0.90 — a default, not a capability"),
-        ("evidence vs authority", "user", "yes",
-         "WEAKENED: its own test suite defines a capability semiring over a "
-         "permission lattice"),
+         "0.9900 by default; both ends computable — 0.99 and 0.90 — with ONE "
+         "statement pointing one row's token at the other's"),
     ]
     print(f"    {'':38} {'ProvSQL':>9} {'ledger':>7}")
     for label, sem, led, why in rows:
@@ -176,9 +194,15 @@ def main():
     print("     bracket [0.90, 0.99] is COMPUTABLE THERE. What this ledger")
     print("     has is a DEFAULT, not a capability: it computes both readings")
     print("     unasked and refuses to print a bare number, where ProvSQL")
-    print("     prints 0.9900 unless the reader knew to ask twice. That was")
-    print("     the last property claimed as our own, and it did not survive")
-    print("     being run. db/provsql_ledger.sql holds the transcript.")
+    print("     prints 0.9900 unless the reader knew to ask twice.")
+    print("\n     AND EVEN THAT UNDERSTATED IT, per review: two encodings are")
+    print("     not needed. Point the second row's provsql column at the")
+    print("     first row's token — one UPDATE — and the same query returns")
+    print("     0.9000. Their manual also states tuple-independence as a")
+    print("     DEFAULT, not a limit ('correlations between tuples are not")
+    print("     modelled. To model correlated probabilities, derive them")
+    print("     explicitly with queries'), and ships repair_key for the")
+    print("     block-independent-disjoint case, with tests.")
     assert both_dead and not same_dead
 
     print("""
@@ -194,23 +218,28 @@ def main():
   said semirings do not do. That was reasoning where a measurement was
   available, and it was wrong.
 
-  What is left, after every loss, is NO CAPABILITY GAP AT ALL. The
-  earned/credit grade is a two-element lattice with min for multiplication
-  — a user-defined semiring, of exactly the kind ProvSQL's own test suite
-  writes for capabilities. Authority as a second dimension is a product
-  of two such. The bracket is a default. Units are not a provenance
-  question. Each is something nobody has written, not something the
-  formalism forbids, and saying otherwise would be the fourth version of
-  the same error this file has now made and corrected three times.
+  WHAT IS LEFT, after three rounds: NOTHING THAT IS OURS.
 
-  SO WHAT IS THE ARTEFACT? Not the ledger. This comparison. Eight
-  auditor's questions asked of a working provenance system, with two
-  answers an auditor should not accept: a figure standing on nothing
-  carries a token exactly like a documented one, and an unverifiable
-  independence comes back as 0.9900 with bounds of zero width. Both are
-  correct under the model's premises. Neither answers the question that
-  was asked. That finding is small, it is checkable, and unlike every
-  claim this file has had to withdraw, it survived being run.""")
+  This file said twice that the earned/credit grade was a semiring
+  "nobody has written". It ships. `sr_maxmin` is a compiled built-in
+  with + = enum-max and * = enum-min over any PostgreSQL ENUM, which is
+  that lattice, and one CREATE TYPE grades the ledger above. Its dual
+  `sr_minmax` ships too, demonstrated in their own documentation as
+  Minimum Security Clearance — the permission dimension, question 8.
+  Units are not a provenance question. The bracket is a default.
+
+  THE SHAPE OF THE ERROR, since it recurred three times. Each round
+  withdrew a claim and kept a remainder; each next round found the
+  remainder was also available; and the reason is the same every time —
+  a conclusion about what a tool does NOT do, reached by reasoning
+  instead of by reading its function list. `\\df provsql.sr_*` would
+  have ended this at the start.
+
+  WHAT THAT MEASURES is distance, not just error: on this subject we are
+  far enough from the frontier that an hour of checking finds another
+  shipped feature, and there is no reason to expect a fourth round to
+  end differently. The corpus keeps the comparison because it is true
+  and reproducible, and claims nothing from it.""")
     print("\nPROVENANCE PROBE GREEN — the older formalism, and then the "
           "shipped package, cover more of this than expected.")
     return 0

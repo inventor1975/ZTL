@@ -56,9 +56,25 @@ free implementation of mechanisms that are individually old and collectively
 scattered, with its ceilings computed rather than asserted. Whether that is
 useful depends on whether the reader needs the combination and cannot buy it.
 
-## What would settle it properly
+## Done since: the comparison, and it went against us
 
-A real comparison rather than a survey: encode the same scenario in ProvSQL
-and in this ledger and report what each can answer, in the shape of
-`db/probe_ledger.py`'s eight questions. That is a day's work, it would either
-find a real gap or close this line honestly, and it has not been done.
+`db/probe_provenance.py` implements provenance semirings directly — Postgres
+is not on this machine, so the FORMALISM is compared rather than the package —
+and runs the same scenario through both.
+
+**The semiring already does three of the ledger's four operations.** The
+cascade is not a cascade there at all: set a variable to zero and evaluate.
+Alternatives are addition. The exposed set is the polynomial's support. All
+published in 2007, with a maintained free PostgreSQL implementation. Anyone
+who needs those three should use ProvSQL and not this.
+
+What is left is narrower and checkable rather than novel: magnitudes carried
+with units and refused when incommensurable; a fact graded earned or on credit
+rather than only supported or unsupported; evidence kept apart from authority;
+and the unverifiability of an independence declaration reported as a bracket
+instead of left implicit in the choice of variable names.
+
+**And the warning that goes with it.** Four of those are things a semiring
+could be extended to do — units and grades in a richer semiring, dimensions in
+a product of two. That nobody has packaged the extension is an availability
+fact with a shelf life, not a limit of the formalism.

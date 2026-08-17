@@ -273,6 +273,10 @@ STANDS = [
                           "CONTAINS A FAILURE OF MY OWN",
                           "Purely descriptive, third pass",
                           "may continue to TREAT its current warrant as satisfying the"]),
+    ("db/probe_provenance.py", ["PROVENANCE PROBE GREEN",
+                                "inv-17 forged, what falls: line_a, line_b, "
+                                "billed, margin",
+                                "covers more of this than expected"]),
     ("db/probe_sensitivity.py", ["SENSITIVITY PROBE GREEN",
                                  "BOTH REAL",
                                  "ANOTHER CONCLUSION WRITTEN BEFORE THE TABLE"]),

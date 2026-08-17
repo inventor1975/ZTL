@@ -24,6 +24,27 @@ import sys
 
 _ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 NOTE = os.path.join(_ROOT, "paper", "warrant-containment-note.md")
+# The second note, written for a different reader and made of the material
+# that survived adversarial review. Same rule: nothing in it may be a figure
+# no program prints.
+LEDGER_NOTE = os.path.join(_ROOT, "paper", "ledger-of-grounds-note.md")
+LEDGER_CLAIMS = [
+    ("zbook.py", "the bracket, with its width",
+     "plain-deed             [1, 1]   <- zero width: nothing taken on trust"),
+    ("zbook.py", "the naming assumption is printed with its names",
+     "ASSUMED, and unverifiable: the 4 external names below denote 4"),
+    ("zbook.py", "a coincidence is priced without being resolved",
+     "if inv-17 and invoice-17 are one paper: 2 + 2 -> 4"),
+    ("zbook.py", "two orders under one commander",
+     "mission.advance  both grounds are authority"),
+    ("zbook.py", "two photographs from one camera",
+     "survey.width    both grounds are evidence"),
+    ("zbook.py", "metres against roubles is refused",
+     "cannot compare 'RUB' with 'm2'"),
+    ("probe_real.py", "Debian: packages and groups", "2,444"),
+    ("probe_real.py", "Debian: alternatives are 2.6%", "(2.6%)"),
+    ("probe_real.py", "Debian: libc6 carries 86.8%", "86.8%"),
+]
 
 # (probe, what the note says, the substring that must appear in the output)
 CLAIMS = [
@@ -116,6 +137,12 @@ def _run(probe):
     return probe, r.stdout + r.stderr
 
 
+def _zbook_out():
+    r = subprocess.run([sys.executable, os.path.join(_ROOT, "zbook.py")],
+                       capture_output=True, text=True, timeout=900)
+    return r.stdout + r.stderr
+
+
 def _run_all_probes():
     """EVERY probe, ONCE, IN PARALLEL. This file used to shell out per claim
     and per figure, sequentially, so its wall time was the SUM of fifteen
@@ -167,7 +194,16 @@ def main():
             if not ok:
                 bad.append((probe, f, "figure in note, absent from output"))
 
-    print("\n  3. ORPHAN FIGURES — numbers in the note that no probe prints")
+    print("\n  3. THE SECOND NOTE — the ledger of grounds")
+    ltext = open(LEDGER_NOTE, encoding="utf-8").read()
+    for probe, said, marker in LEDGER_CLAIMS:
+        src = out(probe) if probe.startswith("probe_") else _zbook_out()
+        ok = marker in src
+        print(f"     [{'OK ' if ok else 'BAD'}] {said}")
+        if not ok:
+            bad.append((probe, said, marker))
+
+    print("\n  4. ORPHAN FIGURES — numbers in the note that no probe prints")
     print("     Added after an adversarial review found `C = 0.789`, a figure")
     print("     no program produces, and `52,000` where the probe prints")
     print("     59,716. The checker above could not catch either: it looks")
@@ -177,7 +213,7 @@ def main():
     # probes named in the lists above, so a figure taken from an uncited run
     # looked like a fabrication — which is the same class of false alarm as
     # the false assurance this scan was added to remove.
-    every = "\n".join(_OUTPUTS.values())
+    every = "\n".join(_OUTPUTS.values()) + "\n" + _zbook_out()
     # numbers as a reader meets them: 0.789, 59,716, 95,041, 66.0%
     nums = set(re.findall(r"(?<![\w.])\d{1,3}(?:,\d{3})+(?![\w.])|"
                           r"(?<![\w,])\d+\.\d+(?![\w])", text))
@@ -187,6 +223,9 @@ def main():
     # exempt something, so the set is short and each addition is deliberate.
     PROSE_OK = {"61508", "1.4"} | {f"{a}.{b}" for a in range(1, 8)
                                    for b in range(0, 10)}
+    lnums = set(re.findall(r"(?<![\w.])\d{1,3}(?:,\d{3})+(?![\w.])|"
+                           r"(?<![\w,])\d+\.\d+(?![\w])", ltext))
+    nums |= lnums
     orphans = sorted(n for n in nums
                      if n not in PROSE_OK and n not in every
                      and n.replace(",", "") not in every)
@@ -197,7 +236,7 @@ def main():
     else:
         bad.append(("(note)", f"{len(orphans)} orphan figure(s)", str(orphans)))
 
-    print("\n  4. WHAT THIS DOES NOT CHECK")
+    print("\n  5. WHAT THIS DOES NOT CHECK")
     print("     The prose, and whether a figure MEANS in the note what it")
     print("     meant in the run. `0.117` passed for a day while the note")
     print("     called it a measurement and the model was deterministic.")

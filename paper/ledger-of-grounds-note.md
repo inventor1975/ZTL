@@ -123,8 +123,9 @@ here detects it. Where both alternatives are claims *inside* the ledger the
 shared ancestor is computed and named by name; between external papers it is
 not, and the line is drawn rather than blurred.
 
-That ceiling is not peculiar to this work. A dependency graph on the machine this note was written on — a Debian package
-database, 2,444 packages and 12,266 requirement groups, on 2026-08-17 —
+That ceiling is not peculiar to this work. A dependency graph on the machine
+this note was written on — a Debian package database of roughly two and a half
+thousand packages and twelve thousand requirement groups, read on 2026-08-17 —
 writes alternatives with **the same mark**: `Depends: libfoo | libbar`.
 
 **The same mark and not the same idea**, and an earlier draft of this note had
@@ -133,15 +134,24 @@ providers — `libcurl3-gnutls | libcurl3-nss | libcurl4` are one library with
 different backends — and it declares nothing about independence, so it cannot
 fail to verify one. The convergence argument that stood here is withdrawn.
 
-What the measurement still gives, on that host:
-
-- **2.6%** of requirement groups offer an alternative at all;
-- `libgcc-s1` and `libc6` each carry **86.8%** of the installed system;
-and 2.6% is worth one inference and no more: it **bounds from above** how much
+What the measurement still gives, on that host: **under three percent** of
+requirement groups offer an alternative at all, and a single package —
+`libgcc-s1` — is carried by **more than five sixths** of the installed system.
+That is worth one inference and no more: it **bounds from above** how much
 genuine redundancy a graph of that kind could have, even if every alternative
 listed were independent — which they are not, since several are the same
 library with different backends. Real systems offer a choice of provider
 rarely, and independence rarer still.
+
+**Why those figures are stated as bands rather than digits.** An earlier draft
+gave them to three decimals. Installing PostgreSQL on the same machine, in
+order to run the comparison of §7.1, moved every one of them within the hour —
+2,444 packages became 2,483, and the share carried by `libgcc-s1` went from
+0.868 to 0.870. Nothing was measured wrongly either time. The quantity is a
+property of one host at one moment, and a note that pins its digits is quoting
+a ground that expires without notice, which is the subject of §1 arriving
+uninvited. The exact figures for any given host are printed by
+`db/probe_real.py`, which is where a number that moves belongs.
 
 ---
 
@@ -191,12 +201,15 @@ ledger of ordinary claims*, that the answer is recomputed on every reading
 rather than stored, and that it costs nothing to run.
 
 **It refuses to compress an unverifiable declaration into a number.** This is
-the part with no equivalent in the systems of §6. A TMS returns the
-assumption set behind a conclusion; it does not price the fact that
-"assumption A and assumption B are independent" is itself unchecked. Here
-that unverifiability is a first-class output: a bracket whose width is the
-cost of the author's word, an itemised list of which names the assumption
-covers, and a computed price for the coincidence the machine cannot rule out.
+the part with no equivalent in the systems of §7, and it is the one claim here
+that has been checked against a running predecessor rather than argued: §7.1
+puts the same two grounds into ProvSQL and gets 0.9900 with bounds of zero
+width. A TMS likewise returns the assumption set behind a conclusion; neither
+prices the fact that "assumption A and assumption B are independent" is itself
+unchecked. Here that unverifiability is a first-class output: a bracket whose
+width is the cost of the author's word, an itemised list of which names the
+assumption covers, and a computed price for the coincidence the machine cannot
+rule out.
 
 **It keeps support and permission apart in the same store.** Authorization
 logics separate them for access control [3, 4, 5]; ledgers of claims do not
@@ -268,11 +281,52 @@ compute which claims survive attacks between them. Redundancy defeated by a
 shared dependency — §3 — is **common-cause failure**, standardised in
 reliability engineering [15, 16].
 
-What this note offers is not a new mechanism but a small implementation in
-which the ceilings are first-class: the bracket that refuses to collapse, the
-assumption printed with the names it covers, the dimension that says which
-kind of loss a ground protects against. Whether that is worth having is for a
-reader with a normative memory to judge.
+### 7.1 The nearest predecessor, run rather than cited
+
+Citing a predecessor is cheap. **ProvSQL** [17] — the maintained free
+PostgreSQL implementation of [12] — was therefore built from source and asked
+the same questions as this ledger, on the same scenario. The script is
+`db/provsql_ledger.sql` and reproduces end to end.
+
+It answered more than was predicted. Which figures rest on invoice inv-17:
+cleanly. What falls when inv-17 is withdrawn: cleanly — withdrawal is
+`set_prob(token, 0)`. **What the numbers become afterwards: exactly**, by
+`expected(sum(amount))`, which returned the correct 2000. The prediction
+recorded before the run was that this last one would need a ledger. It does
+not. ProvSQL carries magnitudes through aggregation, and `support(sum(amount))`
+returns a genuine interval — [0, 6500] on the worked example.
+
+Three things did not carry over, and they are what remains of §§1–4 after the
+comparison.
+
+A fact is either supported or it is not: **every base row is its own
+variable**, so a figure standing on nothing is shaped exactly like a figure
+standing on a document, and the EARNED/CREDIT grade of §1 has nowhere to live.
+
+An independence declaration is **evaluated rather than bracketed**. Two grounds
+named `inv17` and `invoice17`, each at probability 0.9, give 0.9900 with
+`probability_bounds` [0.99, 0.99] — a point of zero width. If the two names
+are one piece of paper the figure is 0.9, and nothing in the output records
+that the difference was assumed away. This is not a defect: independence is
+the model's premise. It is the difference §3 is about. (`support()` is nearby
+and is not the same thing: it brackets the *total* across all worlds, and
+ignores the probabilities, so it does not narrow to a scenario.)
+
+Units are not carried: `sum()` over 2000 EUR and 40 hours returned 2040,
+silently. That one is real and small, and it is a type-system property that
+owes nothing to provenance.
+
+The dimension of §4 is the weakest of the four claims: ProvSQL's own test
+suite defines a **capability semiring** over a permission lattice, so
+authority-as-a-second-dimension is a product semiring away.
+
+What this note offers, then, is not a new mechanism and not four properties
+but roughly two: a fact graded rather than merely supported, and an
+unverifiable independence reported as a bracket instead of collapsed to a
+point — in a small implementation where the ceilings are first-class. A reader
+who needs lineage, cascade, alternatives or post-withdrawal magnitudes should
+use ProvSQL. Whether the remainder is worth having is for a reader with a
+normative memory to judge.
 
 ---
 
@@ -281,10 +335,20 @@ reader with a normative memory to judge.
 Standard library only, no dependencies:
 
 ```
-python3 zbook.py                 the ledger, sections 1-16
-python3 db/probe_real.py         the Debian measurement of §3
-python3 db/probe_ledger.py       the same facts with and without warrants
-python3 run_all.py               115 stands and the Lean corpus
+python3 zbook.py                    the ledger, sections 1-16
+python3 db/probe_real.py            the Debian measurement of §3
+python3 db/probe_ledger.py          the same facts with and without warrants
+python3 db/probe_provenance.py      the semiring comparison of §7.1
+python3 run_all.py                  115 stands and the Lean corpus
+```
+
+§7.1 additionally needs PostgreSQL with the ProvSQL extension loaded
+(`shared_preload_libraries = 'provsql'`, `CREATE EXTENSION provsql CASCADE`,
+`SELECT provsql.setup_search_path()`); the figures quoted there were measured
+on PostgreSQL 16.10 with ProvSQL 1.13.0-dev:
+
+```
+psql -d provtest -v ON_ERROR_STOP=1 -f db/provsql_ledger.sql
 ```
 
 The logic underneath is machine-checked in Lean 4 and prints an empty axiom
@@ -323,11 +387,15 @@ two are separate contributions.
     77(2), 1995, 321–357.
 15. IEC 61508-6:2010, Annex D.
 16. NUREG/CR-5485. US NRC, 1998.
+17. Senellart, P., Jachiet, L., Maniu, S., Ramusat, Y. ProvSQL: provenance and
+    probability management in PostgreSQL. *PVLDB* 11(12), 2018, 2034–2037.
 
 Author, venue and year were checked for each; page ranges and annex structure
 were not independently verified against printed sources. The search behind §7
 was LLM-assisted and is not a systematic review, so the absence of a field
-from that list is weak evidence of anything.
+from that list is weak evidence of anything. Reference [17] is the exception:
+it was not only cited but installed and run, and doing so refuted a claim this
+note previously made.
 
 ---
 

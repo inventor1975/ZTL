@@ -4,10 +4,9 @@ Provenance semirings against this ledger — the same scenario, both formalisms.
 
 The availability survey ended by naming what would settle the question it
 could not: encode one scenario in a provenance system and in this ledger and
-report what each answers. ProvSQL is a PostgreSQL extension and Postgres is
-not on this machine, so what is compared here is the FORMALISM rather than the
-package — provenance semirings (Green, Karvounarakis & Tannen, PODS 2007)
-implemented directly, faithfully enough to be argued with.
+report what each answers. This file implements provenance semirings (Green,
+Karvounarakis & Tannen, PODS 2007) directly, faithfully enough to be argued
+with, and runs the scenario through both.
 
 The encoding is the standard one. Every source fact is a variable. A
 conjunctive requirement multiplies; an alternative adds. A derived result
@@ -16,6 +15,16 @@ that variable to zero and evaluate.
 
 The expectation going in was that semirings would cover less of this ledger
 than they do. They cover more, and the file says so.
+
+AND THEN THE PACKAGE ITSELF WAS RUN, which moved the line again. An earlier
+version of this file compared the formalism because Postgres was not on the
+machine; it now is (PostgreSQL 16.10, ProvSQL 1.13.0-dev built from source),
+and `db/provsql_ledger.sql` asks the same eight questions of the shipped tool.
+One row of the table below was WRONG in consequence and is corrected here:
+ProvSQL does carry magnitudes through aggregation, and answers "what does the
+total become once inv-17 is withdrawn" exactly, with `expected(sum(amount))`
+= 2000. Reasoning about what a formalism "does not do" is not a substitute
+for installing it.
 
 Run:  python3 db/probe_provenance.py
 """
@@ -113,23 +122,29 @@ def main():
     assert fell == ["line_a", "line_b", "billed", "margin"]
 
     print("\n  2. WHERE THE TWO ANSWER DIFFERENTLY\n")
+    print("     The `ProvSQL` column is MEASURED on the installed package")
+    print("     (see db/provsql_ledger.sql), not reasoned about.\n")
     rows = [
         ("cascade on withdrawal", "yes", "yes",
-         "the polynomial is the cascade"),
+         "the polynomial is the cascade; set_prob(t,0) in the package"),
         ("alternatives (a|b)", "yes", "yes", "addition in the semiring"),
         ("who is exposed, by name", "yes", "yes", "the support of the poly"),
-        ("HOW MUCH is exposed, by unit", "no", "yes",
-         "semirings annotate, they do not carry magnitudes or units"),
+        ("HOW MUCH is exposed", "yes", "yes",
+         "CORRECTED: expected(sum)=2000 after withdrawal, support(sum) "
+         "brackets it [0,6500]"),
+        ("...in a declared unit", "no", "yes",
+         "sum() over 2000 EUR and 40 hours returned 2040, silently"),
         ("credit vs earned as a grade", "no", "yes",
-         "an unsupported fact has the empty polynomial; there is no third "
-         "status"),
+         "every base row is its own variable; `quoted` gets a bare token "
+         "like any document"),
         ("bracket for unverified independence", "no", "yes",
-         "x+y assumes x and y distinct; nothing in the formalism decides it"),
-        ("evidence vs authority", "no", "yes",
-         "one semiring, one kind of edge"),
-        ("refusing incommensurable units", "no", "yes", "not its subject"),
+         "measured: inv17 (+) invoice17 at p=.9 gives 0.9900, bounds "
+         "[0.99,0.99] — zero width"),
+        ("evidence vs authority", "user", "yes",
+         "WEAKENED: its own test suite defines a capability semiring over a "
+         "permission lattice"),
     ]
-    print(f"    {'':38} {'semiring':>9} {'ledger':>7}")
+    print(f"    {'':38} {'ProvSQL':>9} {'ledger':>7}")
     for label, sem, led, why in rows:
         print(f"    {label:38} {sem:>9} {led:>7}   {why}")
 
@@ -148,34 +163,46 @@ def main():
     print("     the variable names. That is a reporting decision, not a")
     print("     capability, and calling it a capability was the error the")
     print("     ledger note has now withdrawn.")
+    print("\n     ON THE PACKAGE, measured rather than argued: ProvSQL renders")
+    print("     this as `inv17 (+) invoice17`, evaluates it at 0.9900 from")
+    print("     p=0.9 each, and reports probability_bounds [0.99, 0.99] — a")
+    print("     point of zero width. If the two names are one piece of paper")
+    print("     the figure is 0.9. Nothing in the output marks that the")
+    print("     difference was assumed away; independence is the model's")
+    print("     premise, not an oversight. This is the one place where")
+    print("     reporting the assumption as a bracket is a different")
+    print("     instrument rather than a worse one.")
     assert both_dead and not same_dead
 
     print("""
-  WHAT THIS SETTLES, and it is against us on the larger half.
+  WHAT THIS SETTLES, and it is against us twice over.
 
   Provenance semirings already do the cascade, already do alternatives,
-  and already name the exposed set — three of the ledger's operations,
-  published in 2007, with a maintained free implementation for
-  PostgreSQL. Anyone needing those three should use ProvSQL and not this.
+  and already name the exposed set. Published 2007, free implementation
+  for PostgreSQL. Anyone needing those three should use ProvSQL.
 
-  What is left is narrower and, unlike a novelty claim, checkable: this
-  ledger carries MAGNITUDES with units and refuses to add incommensurable
-  ones; it grades a fact as earned or on credit rather than only
-  supported or unsupported; it keeps evidence apart from authority; and
-  it reports the unverifiability of an independence declaration as a
-  bracket rather than leaving it implicit in the choice of variable
-  names. None of those is a new idea. Together they are a different
-  instrument for a different question — the auditor's `how much rests on
-  this, and how sure are we allowed to be`, rather than the database's
-  `which tuples produced this row`.
+  The installed package then took a fourth. It carries magnitudes
+  through aggregation and returns the correct post-withdrawal total
+  directly — `expected(sum(amount))` = 2000 — which this file previously
+  said semirings do not do. That was reasoning where a measurement was
+  available, and it was wrong.
 
-  AND THE HONEST WARNING. Four of the eight rows above are things a
-  semiring could be extended to do — units and grades in a richer
-  semiring, dimensions in a product of two. That nobody has packaged the
-  extension is an availability fact with a shelf life, not a limit of
-  the formalism.""")
-    print("\nPROVENANCE PROBE GREEN — the older formalism covers more of this "
-          "than expected.")
+  What is left, after both losses, is two and a half things: a fact
+  graded EARNED or ON CREDIT rather than only supported or unsupported
+  (every base row in a semiring is its own variable, so a figure standing
+  on nothing is shaped like a figure standing on a document); an
+  unverifiable independence declaration REPORTED as a bracket rather than
+  evaluated to a zero-width point; and magnitudes tagged with a unit that
+  refuses to be added to another — which is real, and is a type-system
+  property that owes nothing to provenance.
+
+  AND THE HONEST WARNING, now sharper than when it was written. Authority
+  as a second dimension is no longer even hypothetical: ProvSQL's own
+  test suite defines a capability semiring over a permission lattice. The
+  remaining distance between the two instruments is a product semiring
+  and a reporting convention, and anyone who wanted to close it could.""")
+    print("\nPROVENANCE PROBE GREEN — the older formalism, and then the "
+          "shipped package, cover more of this than expected.")
     return 0
 
 

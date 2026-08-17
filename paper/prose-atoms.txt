@@ -50,7 +50,7 @@ abs | (orphan_scan_runs & every_figure_entered) -> every_number_printed_by_progr
 §3.3 | sweep_ran & ccf_is_prior_art | sweep_ran, ccf_is_prior_art | q* is claimed as a measurement in a warrant setting, not as a discovery. | !
 §3.4 | commander_loss_measured & c_is_one | commander_loss_measured, c_is_one | Both dimensions 100% redundant: losing the commander still costs C = 1.000. | !
 §3.4 | factor_31_measured | factor_31_measured | At an identical minimum the dimensions differ by a factor of 31. | !
-§3.4 | c_0789_no_program | c_0789_no_program | C = 0.789 was invented; no program produces it. | !
+§3.4 | probe_prints_07891 & wrong_row_not_invented | probe_prints_07891, wrong_row_not_invented | 0.7891 is printed by the probe; the figure was read off the wrong row, not invented. | !
 §3.4 | coincide_at_shipped_seed & gap_at_finer_step | coincide_at_shipped_seed, gap_at_finer_step | On the shipped seed the crossings share a cell of the 0.05 grid and separate by 0.04 at 0.01. | !
 §3.4 | seeds_swept & two_of_seven | seeds_swept, two_of_seven | The coarse agreement holds on 2 of 7 seeds; it is not a property of the grid. | !
 §3.4 | acrit_measured_apart | acrit_measured_apart | A_crit is not a function of redundancy at all. | !
@@ -76,7 +76,7 @@ abs | (orphan_scan_runs & every_figure_entered) -> every_number_printed_by_progr
 
 # ============================================================ 4. THE LADDER
 §4 | ladder_from_correspondence & three_rungs_have_literature | ladder_from_correspondence, three_rungs_have_literature | Three of the ladder's five rungs have a literature that predates it by decades. | !
-§4 | attestation_supplies_1 & provenance_supplies_2 & not_found_in_sources_read | attestation_supplies_1, provenance_supplies_2, not_found_in_sources_read | Attestation supplies (1), provenance (2); (3)-(5) were not found in the sources read. | !
+§4 | attestation_supplies_1 & provenance_supplies_2 & currentness_has_literature & completeness_is_nureg_category | attestation_supplies_1, provenance_supplies_2, currentness_has_literature, completeness_is_nureg_category | Attestation supplies (1), provenance (2); currentness has a literature and bounded completeness is NUREG-1855's completeness uncertainty. | !
 §4 | q_star_measured & tables_run & gate_measured | q_star_measured, tables_run, gate_measured | The runs establish what each rung is worth. | !
 §4 | (gate_measured & bound_holds_in_general) -> staleness_criterion | gate_measured | A system may treat its warrant as satisfying the criterion only while staleness can be bounded.
 §4 | permission_not_established | permission_not_established | Not may act, and not may rely: both are permissions, and nothing here establishes one. | !
@@ -90,7 +90,7 @@ abs | (orphan_scan_runs & every_figure_entered) -> every_number_printed_by_progr
 §5a | looked_in_databases_lit & did_not_search_reliability | looked_in_databases_lit, did_not_search_reliability | Hidden common origin: not found in the databases literature; the reliability literature was NOT searched. | !
 §5a | not_in_sources_read & did_not_search_control | not_in_sources_read, did_not_search_control | Map incompleteness: not in the sources read; observer design and networked control were NOT searched. | !
 §5a | naming_it_control_admits_a_literature | naming_it_control_admits_a_literature | Naming it control is an admission that a literature exists which this work has not read. | !
-§5a | mechanism_is_old | mechanism_is_old | The mechanism is old; the object of study is its containment behaviour. | !
+§5a | mechanism_is_old & measurements_are_negative | mechanism_is_old, measurements_are_negative | The mechanism is old; what this note contains is measurements of it, mostly negative. | !
 
 # ============================================================ 6. LIMITS
 §6 | synthetic_vs_real_measured | synthetic_vs_real_measured | These are simulations, and §3.8 measures how unlike a real graph they are. | !
@@ -108,3 +108,8 @@ broke:§3.8 | (measured_on_this_host & host_stable) -> stated_figure | measured_
 broke:commit | (withdrawn_in_probe & withdrawn_everywhere) -> withdrawal_done | withdrawn_in_probe | The Debian analogy is withdrawn, in the probe and in both notes.
 §3.9 | tables_printed & floor_is_0791 | tables_printed, floor_is_0791 | The chosen column barely moves, with a floor of 0.791. | !
 broke:§3.9 | (tables_printed & every_row_checked) -> column_never_moves | tables_printed | The chosen-target column does not move anywhere, at any density and any redundancy.
+
+# ---------------------- added after round four, which found these still live
+§3.4 | probe_prints_07891 & mirror_configuration | probe_prints_07891, mirror_configuration | 0.7891 belongs to authority-redundant/evidence-not, the mirror of the case it was attached to. | !
+§5a | beta_and_q_not_commensurable | beta_and_q_not_commensurable | Beta and q occupy the same role in their models and are not the same quantity. | !
+§5a | five_became_three & two_died_in_an_hour | five_became_three, two_died_in_an_hour | This section should not be read as a boundary: two of its five items died within an hour. | !

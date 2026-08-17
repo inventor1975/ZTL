@@ -1,6 +1,6 @@
 # Warrant Containment in Dependency Graphs
 
-### What falls when a ground falls, and when the answer can be trusted
+### What falls when a ground falls — and mostly negative results about when the answer can be trusted
 
 **Vitaly Reznik** · Independent researcher · 2026-08-16
 
@@ -39,11 +39,12 @@ flatters, a hidden alternative frightens — which is a correction to an earlier
 claim of one direction for both.
 
 Twelve predictions made in the course of this work were refuted by its own
-runs — six by the author, six more by an adversarial review that also found
-one figure quoted here that no program produces. All are reported with the
-rest, and the corrections they forced are larger than the results they left
-standing. Every number below is printed by a program in
-a public repository and re-checked by a regression suite of 119 stands.
+runs — six by the author, six more by adversarial review. One of those
+refutations was **itself refuted** four rounds later (§3.4), which is reported
+with the rest. The corrections they forced are larger than the results they
+left standing. Every number below that is entered into
+`paper/prose-atoms.txt` is printed by a program in a public repository and
+re-checked by a regression suite of 121 stands.
 
 ---
 
@@ -220,11 +221,26 @@ so it falls when either fails. Separating the two:
 - both dimensions 100% genuinely redundant: losing the commander still costs
   **C = 1.000** — the entire collective.
 
-An earlier draft of this note also reported **C = 0.789** for the case where
-evidence is redundant and authority is not. No program produces that figure;
-the probe prints 1.000 for both configurations. It was invented, it was caught
-by adversarial review rather than by the author, and it is recorded here
-rather than quietly deleted.
+An earlier draft reported **C = 0.789** for the case where evidence is
+redundant and authority is not. A review called that figure invented, this note
+recorded it as invented, and **both were wrong** — which took a fourth reading
+to establish and is the reason the whole table is printed here:
+
+| configuration | commander lost | mid-level agent lost |
+|---|---|---|
+| evidence redundant, authority not | 1.000 | **0.1316** |
+| authority redundant, evidence not | 1.000 | **0.7891** |
+| both redundant | 1.000 | 0.0000 |
+
+`db/probe_criterion.py` prints **0.7891**. The figure was never invented; it was
+read off the wrong row — it belongs to *authority* redundant and *evidence*
+not, the mirror of the case it was attached to. And "the probe prints 1.000 for
+both configurations" is true only when the lost node is the commander, which is
+a different column. So the original defect was a mislabelled configuration, the
+first correction replaced it with a false accusation of fabrication, and this
+is the third statement of the same three numbers. It is left in full because a
+corpus that advertises its self-corrections owes the reader the one that was
+itself wrong.
 
 The dimensions do not average and do not exchange. At an identical minimum
 redundancy of 0.50, an authority-rich collective loses 0.0003 of itself where
@@ -461,7 +477,7 @@ left standing where it was not, which is why
 
 ---
 
-## 4. Five things a system must know, and none of them are here
+## 4. Five things a system must know, and what these runs measure about them
 
 The measurements above separate into a ladder — arrived at in correspondence
 rather than derived from any single run, and **three of its five rungs have a
@@ -477,8 +493,16 @@ stated here because it organises what the runs found, not because it is new:
    scope and this decision;
 5. **currentness** — whether that judgement is still true now.
 
-Attestation supplies (1). Provenance systems supply (2). Nothing found
-supplies (3), (4) or (5), and the runs above establish what each is worth: q\*
+Attestation supplies (1) and provenance systems (2). Of the remaining three,
+**currentness (5) has a literature this note had not read** — Burrows, Abadi
+and Needham formalise freshness in 1989 and Stubblebine [9] is an entire paper
+on bounding a credential's staleness (§5a) — and **bounded completeness (4) is
+the regulatory category of completeness uncertainty**, NUREG-1855 §2.3.3, in
+the same corpus this note already cites at [15, 16]. An earlier sentence here
+read "nothing found supplies (3), (4) or (5)", contradicting this section's own
+opening line thirteen lines above; the contradiction was prescribed for repair
+by a review two rounds ago and applied everywhere except here. What the runs
+establish is what each rung is worth, not that anyone lacks it: q\*
 says containment survives about 35% hidden correlation and no more; the
 blindspot **tables** — two of them, and that is the point — say the error from
 incompleteness has a direction fixed by the KIND of missing edge, a hidden
@@ -543,7 +567,11 @@ selection.
 10. *"A_crit is constant across ten seeds."* The model is deterministic and
     its random argument unused; ten seeds measured one graph ten times.
     0.117 is 4681/40000, a closed form in the branching factor.
-11. *"C = 0.789."* No program produces this number. It was invented.
+11. *"C = 0.789 was invented; no program produces it."* **This entry was
+    itself refuted, 2026-08-17.** `probe_criterion` prints 0.7891 — the figure
+    is real and was attached to the mirror-image configuration (§3.4). A list
+    of refuted predictions that contains a refuted refutation is the honest
+    state of it.
 12. *"The error from incompleteness runs one way only."* It runs one way per
     KIND of edge. A missing shared origin flatters; a missing alternative —
     which §1 explicitly supports — makes the prediction too large. The claim
@@ -555,15 +583,20 @@ the same density of error in whatever has not yet been reviewed.
 
 ---
 
-## 5a. Related work, and where the boundary actually runs
+## 5a. Neighbours, and what was and was not searched
 
 **Common-cause failure analysis is the nearest neighbour of §3.3, and was
 missed in the first draft of this section — the more embarrassing omission of
 the two, because it is closer than the one that was cited.** Reliability
 engineering has studied since the 1970s exactly the phenomenon §3.3 reports:
 redundancy defeated by a dependency shared between the redundant parts. The
-β-factor is the fraction of failures arising from a single common cause — the
-same quantity this note calls hidden correlation `q`. IEC 61508 standardises
+β-factor is the fraction of failures arising from a single common cause. This
+paragraph called it "the same quantity this note calls hidden correlation
+`q`" — **and the paragraph below withdraws exactly that equation**, on the
+ground that the two are not commensurable. Both stood in this section for a
+day. The withdrawal is the correct one and this sentence is corrected to match
+it: β and `q` occupy the same *role* in their respective models and are not
+the same quantity. IEC 61508 standardises
 its estimation (a 37-question checklist over eight classes of defensive
 measure, among them *diversity/redundancy* and *separation/segregation*), and
 fault-tree analysis, common-mode analysis, NUREG methods in nuclear
@@ -580,11 +613,15 @@ state of the art — it was superseded precisely because it cannot handle k-of-n
 redundancy, by the Multiple Greek Letter, Binomial Failure Rate and α-factor
 models [2].
 
-What CCF analysis does not do, so far as I can find, is the part §§3.4 and 3.6
-are about: it quantifies the *probability* that components fail together,
-whereas this work asks what a conclusion is still *warranted* by afterwards —
-and it does not separate an authority dimension from an evidence one, nor
-treat the incompleteness of the dependency map itself as a measured quantity.
+A sentence here used to begin "What CCF analysis does not do, so far as I can
+find…". **It is cut.** Four sentences of that form were destroyed in one day —
+three by installing one package, one by reading a function list — and the
+common factor is that "so far as I can find" cannot be paid for by finding.
+What the difference of subject is, without any claim about who lacks what: CCF
+quantifies the *probability* that components fail together; the measurements
+here ask what a conclusion is still *warranted* by afterwards. Whether that
+difference is interesting, and whether it is already someone's subject, is for
+a reader who knows that literature.
 
 **Distributed authorization logic already separates authority from evidential
 support**, which was §5a's first novelty bullet until adversarial review
@@ -658,19 +695,23 @@ offered as weak evidence**:
 
 **Two of those five were struck on 2026-08-17**, after the free
 implementation of provenance semirings was installed and asked the same
-questions rather than only cited. What that costs this section is stated
-rather than absorbed: the list is now three items, not five, and the two
-removed were the two that spoke about a *capability* others lack. The three
-that remain speak about *measured behaviour of a map that is incomplete and
-late* — which is a different kind of claim and is the one this note is
-actually about. `paper/PROVSQL-REVIEW-FINDINGS.md` records the run.
+questions rather than only cited (`paper/PROVSQL-REVIEW-FINDINGS.md`). The
+three that survive have been rewritten from claims into **directions a reader
+should check**, because that is all the search behind them supports.
 
-Stated plainly: the mechanism is old, and the object of study is the
-containment behaviour of that mechanism when evidence, authority, hidden
-common dependencies, an incomplete map and a changing world are present at
-once. A reviewer who reads §1 and thinks "this is an ATMS" is reading it
-correctly; the reply is that §§3.3–3.6 are not about the ATMS but about what
-it can and cannot promise.
+**And the honest reading of the whole section is that it should not be read as
+a boundary.** Its history: five items, of which two died within an hour of
+someone installing the neighbouring tool, and three now carry a note saying
+which literature was not searched. A section whose claims have that mortality
+rate is evidence about the search, not about the field. It is kept because
+naming one's neighbours is owed to a reader, and it is stripped of every
+assertion about what those neighbours lack.
+
+Stated plainly: the mechanism is old. What this note contains is a set of
+measurements of that mechanism under evidence, authority, hidden common
+dependencies, an incomplete map and a changing world — and the measurements
+are mostly negative. A reviewer who reads §1 and thinks "this is an ATMS" is
+reading it correctly.
 
 ---
 
@@ -728,7 +769,7 @@ python3 db/probe_blindspot.py     python3 db/probe_currentness.py
 python3 db/probe_gate.py          python3 run_all.py
 ```
 
-`run_all.py` runs 119 stands and the Lean corpus, and asserts the zero-axiom
+`run_all.py` runs 121 stands and the Lean corpus, and asserts the zero-axiom
 line.
 
 ---

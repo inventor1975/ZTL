@@ -105,7 +105,11 @@ SKIP = ("withdrawn_claims.py", "NOTE-REVIEW-FINDINGS.md",
         "PROVSQL-REVIEW-FINDINGS.md", "LEDGER-NOTE-REVIEW.md")
 # Directories with no claims of our own in them.
 SKIP_DIRS = (".git", "_attic", "archive", "OLD", ".lake", "node_modules",
-             "__pycache__", ".claude")
+             "__pycache__", ".claude",
+             # `lab/` holds copies of PRE-FIX text on purpose — it is the
+             # experimental record of what the defects looked like. Scanning
+             # it flags the specimens as if they were live claims.
+             "lab")
 
 
 def files():

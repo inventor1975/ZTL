@@ -73,6 +73,13 @@ _BRIEF = re.compile(r"^> \*\*\[FIGURE (\d+).*?\*\*\]\*\*\s*$",
                     re.MULTILINE | re.DOTALL)
 
 
+def _h1(text):
+    """The document's first `# ` heading, for the PDF's Title metadata."""
+    for line in text.splitlines():
+        if line.startswith("# "):
+            return re.sub(r"[*`]", "", line[2:]).strip()
+    return ""
+
 def _figure_html(num):
     imgs, caption = FIGURES[num]
     cls = " class=\"panels\"" if len(imgs) > 1 else ""
@@ -107,7 +114,10 @@ def build(src, dst):
     html_path = os.path.splitext(dst)[0] + ".html"
     open(html_path, "w", encoding="utf-8").write(
         f"<!doctype html><meta charset='utf-8'>"
-        f"<title>{os.path.basename(src)}</title>"
+        # The document's own H1, not the filename — Chrome writes <title> into
+        # the PDF's Title metadata, and Zenodo and every reader's PDF viewer
+        # show it. v1.0 of the earlier docket shipped with a filename there.
+        f"<title>{_h1(text) or os.path.basename(src)}</title>"
         f"<style>{CSS}</style>\n{body}\n")
     cmd = ["google-chrome", "--headless", "--disable-gpu", "--no-sandbox",
            "--no-pdf-header-footer", "--virtual-time-budget=20000",

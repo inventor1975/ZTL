@@ -15,6 +15,7 @@ there any containment left?
 
 Run:  python3 db/probe_sensitivity.py
 """
+import os
 import random
 import sys
 from collections import defaultdict
@@ -22,6 +23,21 @@ from collections import defaultdict
 N = 40_000
 SEED = 20260816
 REAL_DENSITY, REAL_ALT = 5.18, 0.026        # measured in probe_real
+
+# THE GROUND, RECORDED BY THE ACT. `swept` yields the same values and notes
+# that they were swept, so a sentence about this probe can be checked against
+# what it actually varied rather than against what its author remembers. If
+# lab/ is absent the probe runs unchanged — the recorder is not a dependency.
+try:                                                     # noqa: E402
+    sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(
+        os.path.abspath(__file__))), "lab"))
+    from swept import swept, save as _save_ground
+except Exception:                                        # pragma: no cover
+    def swept(_dim, values):
+        return list(values)
+
+    def _save_ground(_name):
+        return {}
 
 
 def collective(n, density, frac_alt, rnd, span=200):
@@ -92,7 +108,7 @@ def main():
 
     print("\n  2. DENSITY, AT REAL REDUNDANCY\n")
     print(f"  {'edges/node':>11} {'sampled':>9} {'chosen':>9}")
-    for dens in (2, 3, REAL_DENSITY, 8, 10, 15, 20):
+    for dens in swept('density', (2, 3, REAL_DENSITY, 8, 10, 15, 20)):
         rnd = random.Random(SEED)
         par, rev, B = collective(N, dens, REAL_ALT, rnd)
         s_, c_ = worst(par, rev, B)
@@ -112,7 +128,7 @@ def main():
 
     print("\n  3. WHAT THE SWEEP RANGE SHOULD HAVE BEEN\n")
     print(f"  {'alternatives':>13} {'sampled':>9} {'chosen':>9}")
-    for alt in (0.0, 0.026, 0.10, 0.25, 0.50, 0.75, 0.90):
+    for alt in swept('redundancy', (0.0, 0.026, 0.10, 0.25, 0.50, 0.75, 0.90)):
         rnd = random.Random(SEED)
         par, rev, B = collective(N, REAL_DENSITY, alt, rnd)
         s_, c_ = worst(par, rev, B)
@@ -139,6 +155,10 @@ def main():
   more. The sensitivity is to whether the attacker chooses, not to density
   or redundancy — which is the §3.2 correction arriving from a third
   direction, stated without the universal it does not own.""")
+    g = _save_ground("probe_sensitivity")
+    if g:
+        print("\n  ground recorded by the act (lab/ground.json): "
+              + ", ".join(f"{k}={len(v)}" for k, v in sorted(g.items())))
     print("\nSENSITIVITY PROBE GREEN — the parameters carried more than the "
           "conclusions did.")
     return 0

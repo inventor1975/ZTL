@@ -23,10 +23,15 @@ cannot check. And a ground carries a **dimension** — whether it *supports* a
 conclusion or *permits* it — because losing permission and losing support are
 different failures and a conclusion needs both.
 
-None of the mechanisms are novel; the note says where each has been done
-before. What is offered is a small implementation in which the ceilings are
-computed rather than assumed, and a set of them stated plainly enough to be
-argued with.
+None of the mechanisms are novel and §7 says where each was done first. What
+is offered is narrower and, for some readers, more useful: a working ledger in
+which a withdrawal is computed rather than remembered, in which the
+unverifiability of a declared independence is a **first-class output** rather
+than a footnote — a bracket, an itemised assumption, a priced coincidence —
+and in which support and permission are held apart so that losing one is not
+mistaken for losing the other. It is a few hundred lines over a calculus
+machine-checked on an empty axiom list, and every figure below is printed by
+a program a reader can run.
 
 ---
 
@@ -169,10 +174,54 @@ one order, and nothing here sees it.
 
 ---
 
-## 5. What this does not do
+## 5. What this does do
 
-Stated at length because the mechanisms above are simple and their limits are
-where the interest lies.
+Stated plainly, because the two sections that follow are about limits and
+about other people's work, and a reader is entitled to know what is left.
+
+**It answers, by computation, a question normally answered from memory.**
+Given a ledger and a withdrawn ground, it names what stops standing —
+including claims that never mentioned that ground. The mechanism is a
+truth-maintenance system's [1, 2]; what is offered is that it is *in a
+ledger of ordinary claims*, that the answer is recomputed on every reading
+rather than stored, and that it costs nothing to run.
+
+**It refuses to compress an unverifiable declaration into a number.** This is
+the part with no equivalent in the systems of §6. A TMS returns the
+assumption set behind a conclusion; it does not price the fact that
+"assumption A and assumption B are independent" is itself unchecked. Here
+that unverifiability is a first-class output: a bracket whose width is the
+cost of the author's word, an itemised list of which names the assumption
+covers, and a computed price for the coincidence the machine cannot rule out.
+
+**It keeps support and permission apart in the same store.** Authorization
+logics separate them for access control [3, 4, 5]; ledgers of claims do not
+separate them at all. Holding both, with retraction travelling through each,
+is what lets the ledger say that two orders under one commander are one
+order.
+
+**It holds six kinds of ground in one structure and retracts them
+uniformly** — an opaque document, another claim, a clock, an act with no
+inputs, an authority, and a declared alternative. Adding a kind did not
+require a new rule for retraction; that is a property of the shape rather
+than an achievement, and it is why the dimension of §4 could be added in an
+afternoon without disturbing anything.
+
+**And it is small.** The core is machine-checked in Lean 4 on an empty axiom
+list, the ledger is a few hundred lines of standard-library Python, and every
+figure in this note is printed by a program that a reader can run.
+
+What it is NOT is a discovery. Everything above is either an old mechanism
+put in a new place or a design decision about what to refuse. Whether that is
+worth having depends entirely on whether the refusals are the ones a
+particular reader needs.
+
+---
+
+## 6. What this does not do
+
+Stated at length because the mechanisms of §§1-4 are simple and their
+limits are where most of the interest lies.
 
 **It does not detect a lie.** Every ground is a name taken on trust. Measured
 against the Wirecard collapse, where €1.9bn rested on forged bank letters: the
@@ -200,7 +249,7 @@ authority and does not confer it.
 
 ---
 
-## 6. Where this has been done before
+## 7. Where this has been done before
 
 The retraction cascade of §1 is the central operation of a **truth-maintenance
 system** [1, 2], and no priority is claimed over it. The separation of
@@ -223,7 +272,7 @@ reader with a normative memory to judge.
 
 ---
 
-## 7. Reproduction
+## 8. Reproduction
 
 Standard library only, no dependencies:
 
@@ -272,7 +321,7 @@ two are separate contributions.
 16. NUREG/CR-5485. US NRC, 1998.
 
 Author, venue and year were checked for each; page ranges and annex structure
-were not independently verified against printed sources. The search behind §6
+were not independently verified against printed sources. The search behind §7
 was LLM-assisted and is not a systematic review, so the absence of a field
 from that list is weak evidence of anything.
 

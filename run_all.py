@@ -417,24 +417,71 @@ def _run_one(item):
     # separately, its markers are not claimed, and the summary says how many
     # stands actually ran. It is also not a failure — an unavailable device
     # is not a refuted theorem.
+    # ONE EXIT, deliberately. This function used to return early on the skip
+    # path, and when `why` was added to the normal path the two shapes
+    # diverged — 4 values against 5. The suite then died with
+    # `ValueError: not enough values to unpack` the moment a stand actually
+    # skipped, which never happens on the author's machine (qiskit-aer is
+    # installed here) and always happens on CI, where it is not. The change
+    # that made CI failures legible was the change that broke CI. A single
+    # exit makes that particular divergence unrepresentable.
+    missing, why = [], ""
     if r.returncode == 0 and "SKIPPED" in r.stdout:
-        return script, "skip", [], 0
-    missing = [m for m in markers if m not in r.stdout]
-    ok = r.returncode == 0 and not missing
-    # WHY, not only WHAT. Three times a stand went red on CI while passing
-    # here, and the report said which markers were absent and nothing about
-    # the cause — so the author guessed, twice wrongly, at a machine he
-    # cannot open. When a stand fails, its last stderr line goes with the
-    # verdict: an exception type and message is usually the whole diagnosis,
-    # and it costs nothing to carry.
-    why = ""
-    if not ok:
-        tail = [ln for ln in (r.stderr or "").strip().splitlines() if ln.strip()]
-        if tail:
-            why = tail[-1][:200]
-        elif not r.stdout.strip():
-            why = "no output at all"
+        # A skip is NOT a pass: it is reported separately, its markers are not
+        # claimed, and the summary says how many stands actually ran. It is
+        # also not a failure — an unavailable device is not a refuted theorem.
+        ok = "skip"
+    else:
+        missing = [m for m in markers if m not in r.stdout]
+        ok = r.returncode == 0 and not missing
+        # WHY, not only WHAT. Three times a stand went red on CI while passing
+        # here, and the report said which markers were absent and nothing
+        # about the cause — so the author guessed, twice wrongly, at a machine
+        # he cannot open. When a stand fails, its last stderr line goes with
+        # the verdict: an exception type and message is usually the whole
+        # diagnosis, and it costs nothing to carry.
+        if not ok:
+            tail = [ln for ln in (r.stderr or "").strip().splitlines()
+                    if ln.strip()]
+            if tail:
+                why = tail[-1][:200]
+            elif not r.stdout.strip():
+                why = "no output at all"
     return script, ok, missing, r.returncode, why
+
+
+def _selftest_runner():
+    """The runner runs the stands; nothing ran the runner.
+
+    `_run_one` has three outcomes — pass, fail, skip — and the SKIP branch is
+    dead code on the author's machine, where every optional backend is
+    installed. It was therefore the branch that broke: it kept returning a
+    4-tuple after the other two grew a fifth field, and the suite died on CI
+    with `ValueError: not enough values to unpack` in the middle of a run.
+    Green here, red there, and the cause invisible from here.
+
+    So the branch that cannot fire locally is fired deliberately, on two
+    throwaway scripts, before the real run. It costs a fraction of a second
+    and it is the only part of this file that tests this file.
+    """
+    import tempfile
+    cases = [("print('SKIPPED — no backend')", "skip"),
+             ("import sys; sys.exit('boom')", False),
+             ("print('MARKER HERE')", True)]
+    d = tempfile.mkdtemp()
+    for i, (src, want) in enumerate(cases):
+        p = os.path.join(d, f"case{i}.py")
+        with open(p, "w", encoding="utf-8") as fh:
+            fh.write(src + "\n")
+        got = _run_one((p, ["MARKER HERE"]))
+        assert len(got) == 5, (
+            f"_run_one returned {len(got)} values for the "
+            f"{'skip' if want == 'skip' else want} case, not 5 — the bug that "
+            f"crashed CI on 2026-08-17")
+        _script, ok, _missing, _rc, _why = got
+        assert ok == want, f"expected {want!r} for case{i}, got {ok!r}"
+        os.unlink(p)
+    os.rmdir(d)
 
 
 def main():
@@ -442,6 +489,7 @@ def main():
     touch one stand: `--only <substring>` runs the matching stands (and
     skips Lean unless a Lean file is what changed), `--no-lean` drops the
     `lake build`. No flag = everything, which is what a commit deserves."""
+    _selftest_runner()
     argv = sys.argv[1:]
     pattern = None
     if "--only" in argv:

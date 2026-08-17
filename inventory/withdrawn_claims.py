@@ -75,6 +75,13 @@ WITHDRAWN = [
      "the error from incompleteness runs one way only (refuted pred. 12)"),
     ("understated blast radius, never an overstated",
      "the error from incompleteness runs one way only (refuted pred. 12)"),
+    # Added after the control round found this one live in TWO places while
+    # this file reported GREEN — the checker only sees what it was told, and
+    # it had not been told. Third instance of the same class in one day.
+    ("column does not move anywhere",
+     "the chosen-target column does not move (floor is 0.791 at density 2)"),
+    ("at any density and any redundancy",
+     "the chosen-target column does not move (floor is 0.791 at density 2)"),
     ("transfers without qualification",
      "Debian's `|` is this corpus's `|` (withdrawn 2026-08-17)"),
     ("debian's `|` is this corpus's `|`",

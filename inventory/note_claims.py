@@ -41,8 +41,22 @@ LEDGER_CLAIMS = [
      "survey.width    both grounds are evidence"),
     ("zbook.py", "metres against roubles is refused",
      "cannot compare 'RUB' with 'm2'"),
-    ("probe_real.py", "the Debian measurement runs at all",
-     "REAL PROBE GREEN"),
+    # The Debian entry was dropped when the note was rewritten around the
+    # ProvSQL measurement: §3's dependency-graph material went with it and
+    # lives on in warrant-containment-note.md. A claim nobody makes must not
+    # be checked, or a green line starts meaning less than it says.
+    #
+    # The measured ProvSQL figures below cannot be re-run in CI — no Postgres
+    # there — so they are checked against probe_provenance.py, which prints
+    # the same numbers and IS run. db/provsql_ledger.sql is the transcript.
+    ("probe_provenance.py", "question 7 answered exactly",
+     "expected(sum(amount))` = 2000"),
+    ("probe_provenance.py", "the zero-width bounds of §4",
+     "[0.99, 0.99]"),
+    ("probe_provenance.py", "both ends computable there — §4.1",
+     "0.99 and 0.90"),
+    ("probe_provenance.py", "EUR added to hours without complaint",
+     "returned 2040"),
 ]
 
 # (probe, what the note says, the substring that must appear in the output)
@@ -272,9 +286,12 @@ def main():
         for p, s, m in bad:
             print(f"     {p}: {s}  (missing: {m!r})")
         return 1
-    print(f"\nNOTE CLAIMS GREEN — {len(CLAIMS)} claims and "
-          f"{sum(len(f) for _p, f in FIGURES)} figures still printed by the "
-          f"code.")
+    # Both lists, because the headline counted only CLAIMS and the ledger
+    # note's checks were done and then not reported — a green line that
+    # understates itself is the same class of fault as one that overstates.
+    print(f"\nNOTE CLAIMS GREEN — {len(CLAIMS)} + {len(LEDGER_CLAIMS)} claims "
+          f"and {sum(len(f) for _p, f in FIGURES)} figures still printed by "
+          f"the code.")
     return 0
 
 

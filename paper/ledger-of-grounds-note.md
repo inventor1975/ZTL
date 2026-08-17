@@ -1,6 +1,6 @@
-# A Ledger of Grounds
+# Eight Questions to a Provenance System
 
-### What falls when a ground falls, and what the machine refuses to tell you
+### What a working lineage engine answers, and two answers an auditor should not accept
 
 **Vitaly Reznik** · Independent researcher · 2026-08-17
 
@@ -8,80 +8,213 @@
 
 ## Abstract
 
-A conclusion rests on grounds: a document, an act, an authority, another
-conclusion. When a ground is withdrawn — a paper turns out to be forged, a
-certificate lapses, a delegation is revoked — some conclusions stop standing
-and others do not, and which is which is normally something a person
-remembers. This note describes a small machine that computes it instead, and
-spends most of its length on what the machine refuses to do.
+Database provenance answers *which tuples produced this row*. An auditor asks
+something adjacent and not identical: *how much rests on this document, and how
+sure am I allowed to be*. This note takes eight questions from the second
+vocabulary, puts them to the leading free implementation of the first —
+**ProvSQL** [17], the PostgreSQL realisation of provenance semirings [12] —
+and reports what came back.
 
-Three properties are the subject. Withdrawal **propagates prospectively**
-through the dependency structure, reaching conclusions that never named the
-withdrawn ground. The cost of a withdrawal is reported as a **bracket, never
-as a single number**, because part of it rests on a declaration the machine
-cannot check. And a ground carries a **dimension** — whether it *supports* a
-conclusion or *permits* it — because losing permission and losing support are
-different failures and a conclusion needs both.
+It answered six of the eight, one of them better than predicted: given a ledger
+whose invoice has been withdrawn, `expected(sum(amount))` returns the correct
+post-withdrawal total directly. The prediction that it could not do this was
+written down before the run and was wrong.
 
-None of the mechanisms are novel and §7 says where each was done first. What
-is offered is narrower and, for some readers, more useful: a working ledger in
-which a withdrawal is computed rather than remembered, in which the
-unverifiability of a declared independence is a **first-class output** rather
-than a footnote — a bracket, an itemised assumption, a priced coincidence —
-and in which support and permission are held apart so that losing one is not
-mistaken for losing the other. It is a few hundred lines over a calculus
-machine-checked on an empty axiom list, and every figure below is printed by
-a program a reader can run.
+Two answers are the subject of this note, because both are **correct under the
+system's premises and are not answers to the question that was asked**. A
+figure standing on no document at all carries a provenance token exactly like a
+documented one, so *which of my figures were never documented* has no home in
+the formalism. And two grounds named `inv-17` and `invoice-17`, each at
+probability 0.9, come back as **0.9900 with probability bounds of zero width** —
+a confident number that silently assumes the two names are two pieces of paper.
+
+Neither is a defect in ProvSQL, and the note says so at length. Independence is
+the model's stated premise, and the second reading is computable there: encode
+the ledger twice and the same engine returns 0.90. What separates the two
+instruments is therefore a **default**, not a capability — and for a reader
+whose subject is evidence rather than data, defaults are where the damage
+happens. Every figure here is printed by a script in a public repository.
 
 ---
 
-## 1. The ledger
+## 1. Why these questions, and whose they are
 
-The store holds claims and grounds and **never verdicts**. A verdict is
-recomputed on every reading, because a stored one is a judgement taken on
-credit from a past moment, when the ground may since have expired and the
-judge may since have changed.
+A provenance system and an auditor are interested in the same graph for
+different reasons. The first wants to explain a result. The second wants to
+know what a lie would cost.
 
-A quantity's ground may be:
+The eight questions below are a day's ordinary work on a small ledger: three
+invoice lines, a quoted figure nobody has documented, a contractual ceiling, a
+payment. Two lines rest on one invoice.
 
-| form | meaning |
+| | question |
 |---|---|
-| `inv-17` | an opaque external name — the machine never looks inside |
-| `claim/c1` | another claim in the same ledger |
-| `expiring/cert-9` | a ground carrying a clock |
-| `performed/x` | an act with no inputs, which cannot be withdrawn |
-| `authority/order-4` | a permission rather than a support (§4) |
-| `inv-17\|inv-18` | two grounds declared independent, either sufficing |
+| 1 | What was spent in total? |
+| 2 | What is the whole ledger's total? |
+| 3 | Are we inside the ceiling? |
+| 4 | Which figures have never been documented? |
+| 5 | What rests on invoice inv-17? |
+| 6 | inv-17 is forged. What falls? |
+| 7 | What do the numbers become once it is withdrawn? |
+| 8 | May I quote the margin in the report? |
 
-Three operations follow from that shape without further rules.
-
-**Warranty is inherited.** A citation is honoured exactly as far as the cited
-claim currently stands. Cite anything short of EARNED and the citing quantity
-drops to credit.
-
-**Retraction travels.** Withdraw one ground and the whole subtree moves,
-including claims that never mentioned it. In the corpus's own example, a
-correction to a spreadsheet moves three storeys and reaches a recommendation
-that never named the spreadsheet.
-
-**Exposure is measured by unit.** The ledger reports *how much* rests on a
-ground rather than how many claims do — and never sums across incommensurable
-units. One ground carrying both a fee and an area returns two lines and no
-grand total; adding metres to roubles is refused outright, and the refusal
-names both culprits.
-
-This last is worth a sentence for a reader from law rather than engineering.
-The machine's answer to an ill-posed comparison is not an error and not a
-guess: it is a fourth verdict, computed, meaning *these two cannot be
-compared and here is why*.
+**The list is the author's, and a list one writes oneself is a list one wins.**
+It was drawn from the vocabulary of the ledger described in §6, which is the
+strongest objection available to everything below: a differently-drawn list
+would very likely leave nothing standing. The next measurement worth making is
+against somebody else's list, and it has not been made.
 
 ---
 
-## 2. Cost is a bracket, never a number
+## 2. What ProvSQL answers
 
-Asked what a ground costs, the ledger returns **both readings and the width
-between them**: the low end believes every declaration of independence in the
-book, the high end assumes each one false, and the truth lies between.
+PostgreSQL 16.10 with ProvSQL 1.13.0-dev, built from source; the ledger is one
+table of seven rows with `add_provenance` applied and a token→document mapping
+made by `create_provenance_mapping`. The transcript is `db/provsql_ledger.sql`
+and runs end to end.
+
+| question | answer |
+|---|---|
+| 1–3 | **yes** — arithmetic; provenance is not what answers them |
+| 4 | **no** — see §3 |
+| 5 | **yes**, cleanly: the formula for each line is the document's name |
+| 6 | **yes** — withdrawal is `set_prob(token, 0)` |
+| 7 | **yes, and exactly** — `expected(sum(amount))` returns the correct total |
+| 8 | not in stock; a user-defined capability semiring appears in its own tests |
+
+Question 7 deserves emphasis because it went against the prediction. ProvSQL
+carries magnitudes through aggregation — `expected`, `variance`, moments — and
+`support(sum(amount))` returns a genuine interval over the total. An earlier
+draft of this note asserted that provenance systems annotate results without
+carrying magnitudes. That was reasoning where a measurement was available, and
+installing the package took under an hour.
+
+There is one thing `support()` is worth separating from the bracket of §4: it
+is the **unconditional** range across all possible worlds and ignores the
+probabilities, so it does not narrow to a scenario. It brackets a total. It
+does not bracket an assumption.
+
+---
+
+## 3. The first answer: a figure standing on nothing
+
+Question 4 asks which figures have never been documented. In the test ledger
+two of them have not: a quoted price and a payment, neither of which points at
+any paper.
+
+Asked for their provenance, ProvSQL returns a token for each — a bare
+identifier, structurally identical to the token of a line that stands on a real
+invoice. **Every base row is its own variable.** In the semiring, a fact
+supported by a document and a fact supported by nothing but its own presence in
+the table are the same kind of object, and the distinction the auditor is
+asking about has nowhere to live.
+
+This is not a gap someone forgot to fill. It follows from what the formalism
+is *for*: provenance explains a derived result in terms of the base data, and
+base data is where explanation stops. Asking a provenance system which of its
+base rows are unjustified is asking it to look outside its own boundary.
+
+The practical consequence is small and worth stating anyway. Detecting the
+undocumented figures degenerates to `WHERE ground IS NULL` — plain SQL, no
+provenance involved — and, more importantly, **the grade does not propagate**.
+A total computed from a documented line and an undocumented one is, in the
+semiring, just a total. Whether that matters depends on whether one's subject
+tolerates a figure being *partly* on credit.
+
+A grade that propagates is itself a semiring: a two-element lattice, EARNED
+above CREDIT, with minimum for multiplication. ProvSQL supports user-defined
+semirings and its own test suite writes one. **Nobody has written this one.**
+That is an availability fact with a shelf life, not a limitation, and this note
+claims nothing stronger.
+
+---
+
+## 4. The second answer: a point where there should be a width
+
+Two grounds named `inv-17` and `invoice-17`, each believed at probability 0.9,
+supporting one conclusion that stands if either does. ProvSQL renders the
+provenance as `inv17 ⊕ invoice17` and evaluates it:
+
+```
+formula              probability   bounds
+inv17 ⊕ invoice17    0.9900        [0.99, 0.99]
+```
+
+The number is right and the bounds are honest about what they are — they report
+the precision of the *computation*, which is exact here. What neither reports
+is that the whole result rests on an assumption nobody checked: that two names
+are two pieces of paper. If they are one document filed twice, the conclusion
+stands at 0.9, not 0.99, and **nothing in the output distinguishes the case**.
+
+For a reader from data management this is unremarkable: independence is the
+stated premise of the probabilistic model, and a model is entitled to its
+premises. For a reader whose subject is evidence it is the whole problem. Two
+photographs from one camera are one photograph; two orders under one commander
+are one order; two copies of one invoice buy no redundancy whatsoever. An
+instrument that prices such a pair at 0.9900 without remark is not lying, but
+it is answering a question about *data* while being asked a question about
+*the world*.
+
+### 4.1 The objection to this note's own claim, run rather than argued
+
+The obvious reply is that the bracket is no achievement, because ProvSQL can
+compute both ends itself. **That reply is correct**, and it was tested rather
+than conceded on argument. Encoding the same scenario twice — once with two
+rows, once with one — the same engine returns:
+
+```
+reading A, two names are two papers    inv17 ⊕ invoice17    0.99
+reading B, two names are one paper     inv17                0.90
+```
+
+So `[0.90, 0.99]` is available in ProvSQL to anyone who thinks to ask for it and
+who is willing to build two encodings and combine them by hand.
+
+What remains is therefore a **default and not a capability**, and this note
+would be dishonest to describe it otherwise. One instrument prints 0.9900
+unless the reader knows to ask twice; the other computes both readings unasked,
+prints the width, and has no function that returns the cost as a bare figure.
+The difference is entirely in what happens to the reader who does *not* already
+know the question — which is, in an audit, most readers.
+
+That is a modest claim. It is offered as one.
+
+---
+
+## 5. What the eight questions actually established
+
+Stated compactly, because the tally moved twice during the writing and the
+final position is less flattering than either earlier one.
+
+**ProvSQL answers the lineage questions, and answers them better than this
+author's alternative.** The cascade, the alternatives, the exposed set and the
+post-withdrawal magnitudes are its subject; it is a compiled extension inside a
+real database, and anyone who needs those should use it.
+
+**No capability gap was found.** The earned/credit grade is a user-defined
+semiring nobody has written. The support/authority distinction is a product of
+two such. The bracket is a default. The one remaining difference — that a
+magnitude carries a unit and refuses to be added to an incommensurable one;
+`sum()` over 2000 EUR and 40 hours returned 2040 without complaint — is a
+property of a type system and owes nothing to provenance.
+
+**What survived is the measurement itself**: two questions to which a working
+provenance engine returns a confident answer that is not an answer to the
+question. Both are correct under its premises. Neither is visible to a reader
+who does not already know to look. That finding is small and checkable, and
+unlike every claim this note has had to withdraw, it survived being run.
+
+---
+
+## 6. The other default, briefly
+
+The alternative referred to above is a small ledger the author maintains, and
+it is described here only as far as is needed to say what "the other default"
+means. It holds claims and grounds and **never verdicts** — a verdict is
+recomputed on every reading, because a stored one is a judgement taken on credit
+from a past moment.
+
+Asked what a ground costs it returns both readings and the width between them:
 
 ```
 inv-17                 [0, 2]
@@ -89,271 +222,107 @@ inv-17-photocopy       [0, 2]
 plain-deed             [1, 1]   <- zero width: nothing taken on trust
 ```
 
-There is deliberately **no function that returns this cost as a bare
-figure**. A number quoted without its width is a number quoted without the
-thing that makes it trustworthy, and the omission is a design decision rather
-than an oversight — the raw event list remains available and its
-documentation says, in so many words, that its length is not the cost.
-
-The width has a precise meaning: it is the **price of the author's
-unverifiable word**. A ledger that took nothing on trust has zero-width
-brackets throughout.
-
-Where a book takes something on trust it also says so by name, and prices the
-possibility it cannot resolve:
+There is deliberately no function returning that cost as a bare figure, and
+where the book takes something on trust it says so by name and prices the
+coincidence it cannot resolve:
 
 ```
 ASSUMED, and unverifiable: the 4 external names below denote 4 distinct grounds
 if inv-17 and invoice-17 are one paper: 2 + 2 -> 4
 ```
 
-The machine cannot determine whether those two names are one document. It can
-state the assumption, list the names it applies to, and compute what a
-coincidence would cost — which is a different thing from resolving it, and is
-said to be.
+Exposure is reported by unit and never summed across incommensurable ones: a
+ground carrying both a fee and an area returns two lines and no grand total,
+and the refusal names both culprits. A ground records whether it *supports* a
+conclusion or *permits* it, because a conclusion needs evidence to be supported
+and authority to be permitted and falls when either fails — a distinction a
+reader from law meets daily, since a fact survives the repeal of a statute and
+a statute survives the discrediting of a witness.
+
+None of that is a new mechanism, and §7 says where each was done first. It is
+offered here as the worked example of a different default, not as a tool a
+reader is urged to adopt.
 
 ---
 
-## 3. Alternatives, and a confirmation from outside
+## 7. What this note does not do
 
-`inv-17|inv-18` declares that two grounds are independent, so that losing one
-leaves the claim standing. **The machine cannot verify the declaration.** Two
-photocopies of one invoice buy the same immunity as two documents, and nothing
-here detects it. Where both alternatives are claims *inside* the ledger the
-shared ancestor is computed and named by name; between external papers it is
-not, and the line is drawn rather than blurred.
-
-That ceiling is not peculiar to this work. A dependency graph on the machine
-this note was written on — a Debian package database of roughly two and a half
-thousand packages and twelve thousand requirement groups, read on 2026-08-17 —
-writes alternatives with **the same mark**: `Depends: libfoo | libbar`.
-
-**The same mark and not the same idea**, and an earlier draft of this note had
-that wrong. Debian's `|` is an ordered preference list over interchangeable
-providers — `libcurl3-gnutls | libcurl3-nss | libcurl4` are one library with
-different backends — and it declares nothing about independence, so it cannot
-fail to verify one. The convergence argument that stood here is withdrawn.
-
-What the measurement still gives, on that host: **under three percent** of
-requirement groups offer an alternative at all, and a single package —
-`libgcc-s1` — is carried by **more than five sixths** of the installed system.
-That is worth one inference and no more: it **bounds from above** how much
-genuine redundancy a graph of that kind could have, even if every alternative
-listed were independent — which they are not, since several are the same
-library with different backends. Real systems offer a choice of provider
-rarely, and independence rarer still.
-
-**Why those figures are stated as bands rather than digits.** An earlier draft
-gave them to three decimals. Installing PostgreSQL on the same machine, in
-order to run the comparison of §7.1, moved every one of them within the hour —
-2,444 packages became 2,483, and the share carried by `libgcc-s1` went from
-0.868 to 0.870. Nothing was measured wrongly either time. The quantity is a
-property of one host at one moment, and a note that pins its digits is quoting
-a ground that expires without notice, which is the subject of §1 arriving
-uninvited. The exact figures for any given host are printed by
-`db/probe_real.py`, which is where a number that moves belongs.
-
----
-
-## 4. The dimension of a ground
-
-`earned:inv-17` and `earned:order-4` were, until recently, the same kind of
-thing to this ledger — though the first attests a fact and the second confers
-a right. They are not the same. A conclusion needs evidence to be *supported*
-and authority to be *permitted*, and it falls when **either** fails.
-
-The ledger now records which, and computes the consequence a reader from law
-will recognise:
-
-```
-mission.advance  both grounds are authority  ['authority/order-4', 'authority/order-9']
-survey.width     both grounds are evidence   ['photo-a', 'photo-b']
-```
-
-`supply.fuel`, which stands on a document *and* an order, is not listed:
-losing either leaves it standing. The two listed claims carry declared
-redundancy that buys nothing against the failure that matters — two orders
-under one commander are one order, two photographs from one camera are one
-photograph.
-
-For a normative memory this is the ordinary case rather than the exotic one.
-An interpretation rests on evidence about the world and on the authority of
-the norm it reads, and those lapse independently: a fact survives the repeal
-of a statute, and a statute survives the discrediting of a witness.
-
-The ceiling here is exact and worth stating beside the function: this checks
-that two grounds are of different **kinds**, never that they are
-**independent**. Two orders from two commanders under one general are still
-one order, and nothing here sees it.
-
----
-
-## 5. What this does do
-
-Stated plainly, because the two sections that follow are about limits and
-about other people's work, and a reader is entitled to know what is left.
-
-**It answers, by computation, a question normally answered from memory.**
-Given a ledger and a withdrawn ground, it names what stops standing —
-including claims that never mentioned that ground. The mechanism is a
-truth-maintenance system's [1, 2]; what is offered is that it is *in a
-ledger of ordinary claims*, that the answer is recomputed on every reading
-rather than stored, and that it costs nothing to run.
-
-**It refuses to compress an unverifiable declaration into a number.** This is
-the part with no equivalent in the systems of §7, and it is the one claim here
-that has been checked against a running predecessor rather than argued: §7.1
-puts the same two grounds into ProvSQL and gets 0.9900 with bounds of zero
-width. A TMS likewise returns the assumption set behind a conclusion; neither
-prices the fact that "assumption A and assumption B are independent" is itself
-unchecked. Here that unverifiability is a first-class output: a bracket whose
-width is the cost of the author's word, an itemised list of which names the
-assumption covers, and a computed price for the coincidence the machine cannot
-rule out.
-
-**It keeps support and permission apart in the same store.** Authorization
-logics separate them for access control [3, 4, 5]; ledgers of claims do not
-separate them at all. Holding both, with retraction travelling through each,
-is what lets the ledger say that two orders under one commander are one
-order.
-
-**It holds six kinds of ground in one structure and retracts them
-uniformly** — an opaque document, another claim, a clock, an act with no
-inputs, an authority, and a declared alternative. Adding a kind did not
-require a new rule for retraction; that is a property of the shape rather
-than an achievement, and it is why the dimension of §4 could be added in an
-afternoon without disturbing anything.
-
-**And it is small.** The core is machine-checked in Lean 4 on an empty axiom
-list, the ledger is a few hundred lines of standard-library Python, and every
-figure in this note is printed by a program that a reader can run.
-
-What it is NOT is a discovery. Everything above is either an old mechanism
-put in a new place or a design decision about what to refuse. Whether that is
-worth having depends entirely on whether the refusals are the ones a
-particular reader needs.
-
----
-
-## 6. What this does not do
-
-Stated at length because the mechanisms of §§1-4 are simple and their
-limits are where most of the interest lies.
+**It does not find a defect in ProvSQL.** Every behaviour in §§3–4 follows
+correctly from the model's stated premises. The note is about what those
+premises cost a reader who brought a different question.
 
 **It does not detect a lie.** Every ground is a name taken on trust. Measured
-against the Wirecard collapse, where €1.9bn rested on forged bank letters: the
-ledger would have found the ground present and printed a clean EARNED for
-years. Against an adversary who controls the input this machine is not weak,
-it is **inert**.
+against the Wirecard collapse, where €1.9bn rested on forged bank letters:
+both instruments would have found the ground present and reported it clean, for
+years. Against an adversary who controls the input, neither is weak — both are
+**inert**.
 
 **It does not discover a dependency.** Citations are honoured, never found. A
-dependence nobody recorded is invisible, so a measured blast radius can be
-understated and never overstated by this omission.
+dependence nobody recorded is invisible to both, so a measured blast radius can
+be understated and never overstated by this omission.
 
-**It does not verify independence.** §3. Nor, therefore, can it be trusted
-about redundancy: declared redundancy resting on a shared origin reports a
-safety it does not provide.
+**It does not verify independence** — §4 — and therefore cannot be trusted
+about redundancy. Declared redundancy resting on a shared origin reports a
+safety it does not provide. Naming the assumption is not resolving it, and the
+note claims only the naming.
 
 **It does not compare a formula to an intention.** A spreadsheet dividing by a
-sum where the author meant an average is well-formed, grounded, and returns
-EARNED on a figure that is half of what was meant. There is no second copy of
-the intention to compare against.
+sum where the author meant an average is well-formed, grounded, and returns a
+clean verdict on a figure that is half of what was meant.
 
-**It does not establish permission.** The dimension of §4 records that a
-ground is an authority; whether that authority holds, and whether anyone may
-act on the result, is decided outside. This work computes the consequences of
-authority and does not confer it.
-
----
-
-## 7. Where this has been done before
-
-The retraction cascade of §1 is the central operation of a **truth-maintenance
-system** [1, 2], and no priority is claimed over it. The separation of
-authority from evidential support in §4 is older than this work by three
-decades: a modal `says` and a `speaks-for` delegation relation [3, 4],
-authorization certificates with k-of-n threshold subjects [5], credential-chain
-discovery [6, 7]. Withdrawal and staleness of a credential are the subject of
-[8, 9, 10]. **Belief revision** [11] studies what to give up when a new fact
-contradicts an old one; **provenance semirings** [12] and lineage systems [13]
-annotate results with what produced them; **argumentation frameworks** [14]
-compute which claims survive attacks between them. Redundancy defeated by a
-shared dependency — §3 — is **common-cause failure**, standardised in
-reliability engineering [15, 16].
-
-### 7.1 The nearest predecessor, run rather than cited
-
-Citing a predecessor is cheap. **ProvSQL** [17] — the maintained free
-PostgreSQL implementation of [12] — was therefore built from source and asked
-the same questions as this ledger, on the same scenario. The script is
-`db/provsql_ledger.sql` and reproduces end to end.
-
-It answered more than was predicted. Which figures rest on invoice inv-17:
-cleanly. What falls when inv-17 is withdrawn: cleanly — withdrawal is
-`set_prob(token, 0)`. **What the numbers become afterwards: exactly**, by
-`expected(sum(amount))`, which returned the correct 2000. The prediction
-recorded before the run was that this last one would need a ledger. It does
-not. ProvSQL carries magnitudes through aggregation, and `support(sum(amount))`
-returns a genuine interval — [0, 6500] on the worked example.
-
-Three things did not carry over, and they are what remains of §§1–4 after the
-comparison.
-
-A fact is either supported or it is not: **every base row is its own
-variable**, so a figure standing on nothing is shaped exactly like a figure
-standing on a document, and the EARNED/CREDIT grade of §1 has nowhere to live.
-
-An independence declaration is **evaluated rather than bracketed**. Two grounds
-named `inv17` and `invoice17`, each at probability 0.9, give 0.9900 with
-`probability_bounds` [0.99, 0.99] — a point of zero width. If the two names
-are one piece of paper the figure is 0.9, and nothing in the output records
-that the difference was assumed away. This is not a defect: independence is
-the model's premise. It is the difference §3 is about. (`support()` is nearby
-and is not the same thing: it brackets the *total* across all worlds, and
-ignores the probabilities, so it does not narrow to a scenario.)
-
-Units are not carried: `sum()` over 2000 EUR and 40 hours returned 2040,
-silently. That one is real and small, and it is a type-system property that
-owes nothing to provenance.
-
-The dimension of §4 is the weakest of the four claims: ProvSQL's own test
-suite defines a **capability semiring** over a permission lattice, so
-authority-as-a-second-dimension is a product semiring away.
-
-What this note offers, then, is not a new mechanism and not four properties
-but roughly two: a fact graded rather than merely supported, and an
-unverifiable independence reported as a bracket instead of collapsed to a
-point — in a small implementation where the ceilings are first-class. A reader
-who needs lineage, cascade, alternatives or post-withdrawal magnitudes should
-use ProvSQL. Whether the remainder is worth having is for a reader with a
-normative memory to judge.
+**And the finding is audience-dependent.** To a database researcher §§3–4 are
+restatements of the model's premises and are not news. Their value, if any, is
+to a reader who reaches for a provenance engine to answer an evidential
+question and would otherwise take 0.9900 at face value.
 
 ---
 
-## 8. Reproduction
+## 8. Where this has been done before
 
-Standard library only, no dependencies:
+The retraction cascade is the central operation of a **truth-maintenance
+system** [1, 2] and no priority is claimed over it. Separating authority from
+evidential support is older than this work by three decades: a modal `says` and
+a `speaks-for` relation [3, 4], authorization certificates with k-of-n
+threshold subjects [5], credential-chain discovery [6, 7]; withdrawal and
+staleness of a credential are the subject of [8, 9, 10]. **Belief revision**
+[11] studies what to give up when a new fact contradicts an old one.
+**Provenance semirings** [12] and lineage systems [13] are the subject of this
+note's measurement. **Argumentation frameworks** [14] compute which claims
+survive attacks between them. Redundancy defeated by a shared dependency is
+**common-cause failure**, standardised in reliability engineering [15, 16] —
+where the unverifiable-independence problem of §4 has a name, a β-factor, and
+sixty years of practice behind it.
+
+That last citation is the strongest objection to this note's framing and is
+placed here rather than buried: the problem of §4 is not new, and reliability
+engineering priced it before database provenance existed. What is offered is
+narrower — that a modern free provenance engine, asked an auditor's question,
+returns the un-bracketed number, and that this is checkable in a few lines.
+
+---
+
+## 9. Reproduction
+
+The ledger and its probes need the standard library only:
 
 ```
-python3 zbook.py                    the ledger, sections 1-16
-python3 db/probe_real.py            the Debian measurement of §3
+python3 zbook.py                    the ledger of §6
+python3 db/probe_provenance.py      the semiring comparison
 python3 db/probe_ledger.py          the same facts with and without warrants
-python3 db/probe_provenance.py      the semiring comparison of §7.1
-python3 run_all.py                  115 stands and the Lean corpus
+python3 run_all.py                  the full suite and the Lean corpus
 ```
 
-§7.1 additionally needs PostgreSQL with the ProvSQL extension loaded
-(`shared_preload_libraries = 'provsql'`, `CREATE EXTENSION provsql CASCADE`,
-`SELECT provsql.setup_search_path()`); the figures quoted there were measured
-on PostgreSQL 16.10 with ProvSQL 1.13.0-dev:
+The measurements of §§2–4 need PostgreSQL with ProvSQL loaded
+(`shared_preload_libraries = 'provsql'`, then `CREATE EXTENSION provsql
+CASCADE` and `SELECT provsql.setup_search_path()`):
 
 ```
 psql -d provtest -v ON_ERROR_STOP=1 -f db/provsql_ledger.sql
 ```
 
-The logic underneath is machine-checked in Lean 4 and prints an empty axiom
-list. That result concerns the calculus, not the ledger built on it, and the
-two are separate contributions.
+The logic underneath the ledger is machine-checked in Lean 4 and prints an
+empty axiom list. That result concerns the calculus, not the ledger built on
+it, and the two are separate contributions.
 
 ---
 
@@ -391,16 +360,16 @@ two are separate contributions.
     probability management in PostgreSQL. *PVLDB* 11(12), 2018, 2034–2037.
 
 Author, venue and year were checked for each; page ranges and annex structure
-were not independently verified against printed sources. The search behind §7
-was LLM-assisted and is not a systematic review, so the absence of a field
-from that list is weak evidence of anything. Reference [17] is the exception:
-it was not only cited but installed and run, and doing so refuted a claim this
-note previously made.
+were not independently verified against printed sources. The search behind §8
+was LLM-assisted and is not a systematic review, so the absence of a field from
+that list is weak evidence of anything. Reference [17] is the exception: it was
+not only cited but installed and run, and doing so refuted two claims an
+earlier version of this note had made.
 
 ---
 
 ## Acknowledgement
 
 Built with Claude (Opus 5) as architect and implementer, under Variant A, with
-Vitaly Reznik as human curator. Every figure above is printed by a program in
-a public repository and re-checked by its regression suite.
+Vitaly Reznik as human curator. Every figure above is printed by a program in a
+public repository and re-checked by its regression suite.

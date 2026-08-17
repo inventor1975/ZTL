@@ -120,6 +120,39 @@ DROP TABLE tn_map;
 SELECT remove_provenance('twonames');
 DROP TABLE twonames;
 
+\echo ''
+\echo '=== AND THE OBJECTION TO OUR OWN CLAIM, run rather than argued.'
+\echo '    If the bracket is just the two readings of "are these one paper",'
+\echo '    ProvSQL can compute BOTH ENDS ITSELF — encode the ledger twice.'
+DROP TABLE IF EXISTS w2 CASCADE;
+DROP TABLE IF EXISTS w1 CASCADE;
+DROP TABLE IF EXISTS m2;
+DROP TABLE IF EXISTS m1;
+DROP TABLE IF EXISTS r2;
+DROP TABLE IF EXISTS r1;
+-- READING A: two names, two papers.
+CREATE TABLE w2(doc text, amount numeric);
+INSERT INTO w2 VALUES ('inv17', 3000), ('invoice17', 3000);
+SELECT add_provenance('w2');
+SELECT create_provenance_mapping('m2', 'w2', 'doc');
+DO $$ BEGIN PERFORM set_prob(provenance(), 0.9) FROM w2; END $$;
+CREATE TABLE r2 AS SELECT DISTINCT amount FROM w2 WHERE amount = 3000;
+-- READING B: two names, one paper.
+CREATE TABLE w1(doc text, amount numeric);
+INSERT INTO w1 VALUES ('inv17', 3000);
+SELECT add_provenance('w1');
+SELECT create_provenance_mapping('m1', 'w1', 'doc');
+DO $$ BEGIN PERFORM set_prob(provenance(), 0.9) FROM w1; END $$;
+CREATE TABLE r1 AS SELECT DISTINCT amount FROM w1 WHERE amount = 3000;
+SELECT sr_formula(provsql, 'm2') AS reading_a,
+       round(probability_evaluate(provsql)::numeric, 4) AS p FROM r2;
+SELECT sr_formula(provsql, 'm1') AS reading_b,
+       round(probability_evaluate(provsql)::numeric, 4) AS p FROM r1;
+DROP TABLE r2; DROP TABLE r1; DROP TABLE m2; DROP TABLE m1;
+SELECT remove_provenance('w2');
+SELECT remove_provenance('w1');
+DROP TABLE w2; DROP TABLE w1;
+
 DROP TABLE names;
 SELECT remove_provenance('ledger');
 DROP TABLE ledger;
@@ -171,7 +204,25 @@ DROP TABLE ledger;
 --     a provenance one; a Postgres domain or composite type would do it
 --     without ProvSQL's involvement. Worth little.
 --
--- NET.  Of the four properties the note still claimed, one is gone
--- (magnitudes), one is weakened to a user-defined semiring (authority), one
--- is real but small (units), and one stands (grading a fact earned or on
--- credit, and reporting an unverifiable independence as a bracket).
+-- THE OBJECTION, and it holds. Reading A returns **0.9900**, reading B
+--     returns **0.9000**. So [0.90, 0.99] — the ledger's bracket — is
+--     COMPUTABLE IN PROVSQL, by encoding the ledger twice and taking both
+--     ends. What the ledger has is not a capability the older tool lacks. It
+--     is a DEFAULT: it computes both readings unasked and refuses to print a
+--     bare number, where ProvSQL prints 0.9900 unless you knew to ask twice.
+--     Stated plainly because it is the last thing the note claimed as its
+--     own, and it did not survive being run.
+--
+-- NET.  Of the four properties the note claimed, none is a capability gap.
+-- Magnitudes: gone, ProvSQL has them. Authority and the earned/credit grade:
+-- user-defined semirings — a two-element lattice with min as multiplication,
+-- and a product of two — which ProvSQL supports and nobody has written.
+-- Units: real, and not a provenance question at all. The bracket: a default,
+-- shown above.
+--
+-- WHAT IS LEFT IS NOT THE LEDGER. It is this file. Eight auditor questions
+-- asked of a working provenance system, with two answers an auditor should
+-- not accept: a figure standing on nothing carries a token exactly like a
+-- documented one, and an unverifiable independence is reported as 0.9900
+-- with bounds of zero width. Both are correct behaviour under the model's
+-- premises. Neither is the answer to the question that was asked.

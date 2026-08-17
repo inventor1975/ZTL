@@ -276,14 +276,17 @@ STANDS = [
     ("db/probe_sensitivity.py", ["SENSITIVITY PROBE GREEN",
                                  "BOTH REAL",
                                  "ANOTHER CONCLUSION WRITTEN BEFORE THE TABLE"]),
-    ("db/probe_real.py", ["REAL PROBE GREEN", "A_crit = 0.868",
+    # NO NUMERIC MARKERS. This stand reads the host's own package database,
+    # so its figures differ per machine by design; pinning one machine's
+    # A_crit made GitHub red for measuring correctly.
+    ("db/probe_real.py", ["REAL PROBE GREEN",
                           "requirement groups offering an alternative",
-                          "measured on a graph nobody designed"]),
+                          "figures are this host's"]),
     ("db/probe_variance.py", ["VARIANCE PROBE GREEN",
                               "median 0.725", "varies 0.6..0.75",
                               "A_crit, 2 roots, either                median 0.117"]),
     ("inventory/note_claims.py", ["NOTE CLAIMS GREEN",
-                                  "39 claims and 29 figures"]),
+                                  "37 claims and 25 figures"]),
     ("inventory/paper_claims.py", ["PAPER CLAIMS GREEN"]),
     ("inventory/docket_claims.py", ["DOCKET TABLE GREEN",
                                     "rows printed in the paper: 21"]),
@@ -411,7 +414,20 @@ def _run_one(item):
         return script, "skip", [], 0
     missing = [m for m in markers if m not in r.stdout]
     ok = r.returncode == 0 and not missing
-    return script, ok, missing, r.returncode
+    # WHY, not only WHAT. Three times a stand went red on CI while passing
+    # here, and the report said which markers were absent and nothing about
+    # the cause — so the author guessed, twice wrongly, at a machine he
+    # cannot open. When a stand fails, its last stderr line goes with the
+    # verdict: an exception type and message is usually the whole diagnosis,
+    # and it costs nothing to carry.
+    why = ""
+    if not ok:
+        tail = [ln for ln in (r.stderr or "").strip().splitlines() if ln.strip()]
+        if tail:
+            why = tail[-1][:200]
+        elif not r.stdout.strip():
+            why = "no output at all"
+    return script, ok, missing, r.returncode, why
 
 
 def main():
@@ -480,19 +496,20 @@ def main():
     with ThreadPoolExecutor(max_workers=workers) as pool:
         futures = [pool.submit(_run_one, item) for item in STANDS]
         for done, fut in enumerate(as_completed(futures), 1):
-            script, ok, missing, rc = fut.result()
-            results[script] = (ok, missing, rc)
+            script, ok, missing, rc, why = fut.result()
+            results[script] = (ok, missing, rc, why)
             print(f"\r    {done}/{total} stands finished…", end="", flush=True)
     print()
     skipped = []
     for script, _markers in STANDS:
-        ok, missing, rc = results[script]
+        ok, missing, rc, why = results[script]
         status = "SKIP" if ok == "skip" else ("OK " if ok else "FAIL")
         print(f"  [{status}] {script}"
               + ("  — optional backend absent; nothing claimed"
                  if ok == "skip" else "")
               + (f"  — missing markers: {missing}" if missing else "")
-              + (f"  — exit code {rc}" if rc else ""))
+              + (f"  — exit code {rc}" if rc else "")
+              + (f"\n           why: {why}" if why else ""))
         if ok == "skip":
             skipped.append(script)
         elif not ok:
@@ -504,9 +521,9 @@ def main():
             # WHY sends the reader back up a log they have already scrolled
             # past, and on somebody else's machine there may be no log left
             # to scroll. The failure line must be self-sufficient.
-            why = (f"missing {missing}" if missing
-                   else f"exit code {rc}" if rc else "unknown")
-            failures.append(f"{script} ({why})")
+            reason = why or (f"missing {missing}" if missing
+                             else f"exit code {rc}" if rc else "unknown")
+            failures.append(f"{script} ({reason})")
 
     if skip_lean:
         print("  [skip] lean (not asked for — nothing claimed for it here)")

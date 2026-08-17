@@ -41,9 +41,8 @@ LEDGER_CLAIMS = [
      "survey.width    both grounds are evidence"),
     ("zbook.py", "metres against roubles is refused",
      "cannot compare 'RUB' with 'm2'"),
-    ("probe_real.py", "Debian: packages and groups", "2,444"),
-    ("probe_real.py", "Debian: alternatives are 2.6%", "(2.6%)"),
-    ("probe_real.py", "Debian: libc6 carries 86.8%", "86.8%"),
+    ("probe_real.py", "the Debian measurement runs at all",
+     "REAL PROBE GREEN"),
 ]
 
 # (probe, what the note says, the substring that must appear in the output)
@@ -71,12 +70,16 @@ CLAIMS = [
     ("probe_topology.py", "hierarchy threshold 75%", "hierarchy"),
     ("probe_containment.py", "the commander costs everything",
      "THE COMMANDER    -> 100,000 of 100,000 fall"),
-    ("probe_real.py", "A_crit on a real graph", "A_crit = 0.868"),
+    # NO HOST-SPECIFIC FIGURES. probe_real reads whatever machine it runs
+    # on, so `A_crit = 0.868` is this author's laptop and not a fact. It was
+    # pinned here and turned CI red for measuring a different computer
+    # correctly. Only the shape is checked.
+    ("probe_real.py", "the real graph is measured, not assumed",
+     "figures are this host's"),
     ("probe_sensitivity.py", "no containment at real parameters", "BOTH REAL"),
     ("probe_sensitivity.py", "density is not the dial",
      "ANOTHER CONCLUSION WRITTEN BEFORE THE TABLE"),
-    ("probe_real.py", "real declared alternatives are 2.6%", "(2.6%)"),
-    ("probe_real.py", "the real graph is sparser", "5.18"),
+
     ("probe_variance.py", "r* median 0.725 across ten seeds",
      "median 0.725"),
     ("probe_variance.py", "q* median 0.35 across ten seeds",
@@ -121,7 +124,7 @@ FIGURES = [
     ("probe_roots.py", ["0.117"]),
     ("probe_blindspot.py", ["0.089", "0.086", "0.064", "+0.004", "+0.025"]),
     ("probe_gate.py", ["66.0%", "270", "170"]),
-    ("probe_real.py", ["2,444", "0.868", "5.18", "1,588"]),
+
     ("probe_sensitivity.py", ["0.926", "0.994", "0.719", "0.013"]),
     ("probe_variance.py", ["0.725", "0.117"]),
 ]

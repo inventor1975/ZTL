@@ -335,8 +335,9 @@ apply at all to a model that has no draw in it.
 
 Every result above was measured on graphs the author generated. Real ones at
 this scale are ordinary — a Debian installation carries one on disk — and the
-omission had no defence. The machine's own package database, 2,444 packages
-and 12,266 requirement groups, parsed into the graph it already is:
+omission had no defence. The machine's own package database — 2,444 packages and 12,266 requirement
+groups on the author's laptop, 2026-08-17; the program reads whatever host it
+runs on and a different machine gives different figures:
 
 | | synthetic probes | Debian, this machine |
 |---|---|---|

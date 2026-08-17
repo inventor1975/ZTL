@@ -22,9 +22,15 @@ arithmetic rather than by memory.
 
 The measurements are simulations, and the useful ones are negative. A cascade
 at a hundred thousand agents is cheap and, taken alone, useless: a randomly
-located loss takes down most of the collective. Redundancy contains a random
-loss and does **nothing whatever** against a chosen one — at ninety-five per
-cent redundancy an adversary aiming at the root still takes everything.
+located loss takes down most of the collective. Redundancy does **nothing
+whatever** against a chosen loss — at ninety-five per cent redundancy an
+adversary aiming at the root still takes everything, and that column does not
+move at any density or redundancy tried. Against a *random* loss redundancy
+works only at levels no real system has: anchored on the one real dependency
+graph measured here — its density, its declared redundancy — **a random loss
+costs 93% of the collective as well** (§3.9). Containment appears above roughly
+seventy-five per cent redundancy; real systems sit at the other end of that
+axis.
 Declared redundancy resting on a shared origin reports safety it does not
 provide. Permission and support are different requirements, so a collective
 with perfect evidence redundancy still dies of one commander. And an incomplete dependency map is wrong
@@ -227,10 +233,14 @@ hierarchically concentrated while evidence is diffuse.
 
 Three outputs, per configuration — not four. **C** (share lost), **r_eff\***
 (minimal EFFECTIVE redundancy for C < 1%) and **A_crit** (worst single loss).
-An earlier draft reported r\* and q\* as two quantities; they are one. A
-conclusion is genuinely redundant with probability r(1-q), so containment
-depends on that product alone and `1 - q* = r*` holds exactly — arithmetic,
-not two findings. Measured: **r_eff\* ≈ 0.65** across two dimensions, rising to 0.75 when shared
+An earlier draft reported r\* and q\* as two quantities; a later one said
+they were exactly one, and **that correction was itself too strong**. The
+argument stands: a conclusion is genuinely redundant with probability r(1-q),
+so containment should depend on that product alone. The measurement does not
+support the word *exactly*. The two crossings coincide at the sweep's own step
+of 0.05 and **separate by 0.04 at a step of 0.01** — the probe's `1e-9` assert
+was comparing two numbers quantised to 0.05, so it could not see a gap smaller
+than its own grid. Both step sizes are now swept and printed. Measured: **r_eff\* ≈ 0.65** across two dimensions, rising to 0.75 when shared
 models and shared sensor feeds are added — a world with more things to share
 has more ways to fail.
 
@@ -369,11 +379,25 @@ in the seventies. If this graph is at all typical, the region where the
 threshold was found is a region real systems do not occupy, and the sweep
 was largely hypothetical.
 
-**One thing transfers without qualification.** Debian's `|` is this corpus's
-`|`: a requirement satisfied by either of two packages, declared by a
-maintainer, unverifiable by the system, and defeated entirely if both
-alternatives rest on the same underlying library. That is §3.3's problem
-inside a package manager forty years old, and it is unsolved there too.
+**And one thing does NOT transfer, corrected after review.** An earlier version
+of this paragraph read Debian's `|` as this corpus's `|` and concluded that two
+fields had reached the same mark and stopped at the same wall. They have not.
+Debian's `|` is an **ordered preference list over interchangeable providers** —
+`libcurl3-gnutls | libcurl3-nss | libcurl4` are one library with different
+backends — and it declares nothing about independence, so it cannot fail to
+verify one. The notation coincides; the claim does not.
+
+*This withdrawal was made in `db/probe_real.py` on 2026-08-17 and the commit
+message announcing it said it had been applied "in the probe and in both
+notes". It had not been applied here; the paragraph above stood for another
+seven hours, including the words "without qualification". The commit message
+was false, and it is left recorded because a corpus that logs its refuted
+predictions should also log the one time its log lied.*
+
+What survives is smaller and still worth having: the **2.6%** measured above is
+how often a real system offers ANY choice of provider at all, which bounds from
+above how much genuine redundancy such a graph could have even if every
+alternative listed were independent — far below the range §3.3 swept.
 
 ### 3.9 The parameters were carrying the conclusions
 
@@ -423,7 +447,9 @@ stated here because it organises what the runs found, not because it is new:
 Attestation supplies (1). Provenance systems supply (2). Nothing found
 supplies (3), (4) or (5), and the runs above establish what each is worth: q\*
 says containment survives about 35% hidden correlation and no more; the
-blindspot table says the error from incompleteness is one-directional; the
+blindspot **tables** — two of them, and that is the point — say the error from
+incompleteness has a direction fixed by the KIND of missing edge, a hidden
+shared origin flattering and a hidden alternative frightening (§3.6); the
 gate says a warrant is usable only while its staleness can be bounded.
 
 Stated as control rather than observation, and narrowly:
@@ -477,8 +503,9 @@ selection.
    median of eleven inputs and **none** had exactly two, so every figure
    quoted from that operation was about something else. The semantics is now
    what the prose always said, and §3.2's numbers changed accordingly.
-9. *"r\* and q\* are two quantities."* They are one crossing read from two
-   ends: `1 - q* = r*` exactly, because effective redundancy is r(1-q).
+9. *"r\* and q\* are two quantities."* Read from two ends they nearly
+   coincide, because effective redundancy is r(1-q) — but the follow-up
+   claim that `1 - q* = r*` holds *exactly* is refuted too (see 13).
 10. *"A_crit is constant across ten seeds."* The model is deterministic and
     its random argument unused; ten seeds measured one graph ten times.
     0.117 is 4681/40000, a closed form in the branching factor.
@@ -609,7 +636,17 @@ not share, and a redundancy sweep across a region where real systems sit at
 of the model, and the model is not close to the one real graph tested.
 
 **Citations are honoured, never discovered.** A dependence nobody recorded is
-invisible, so a measured blast radius can be understated and never overstated.
+invisible, and the error it causes runs in a direction set by the kind of edge
+that is missing: an unrecorded **shared origin** makes a measured blast radius
+too small, an unrecorded **alternative ground** makes it too large (§3.6, where
+the second table predicts 0.2031 against an actual 0.1444). The ledger cannot
+tell which kind it is missing, so neither reading may be assumed.
+
+*An earlier version of this paragraph said the radius "can be understated and
+never overstated". That is the claim §3.6 and refuted prediction 12 withdraw,
+and it stood here for a day after the withdrawal — in the section a reader
+consults for the honest boundary, which is the worst place in the document for
+it to have survived.*
 
 **Independence between external grounds cannot be verified.** Two photocopies
 of one invoice buy the same immunity as two documents. Where both grounds are

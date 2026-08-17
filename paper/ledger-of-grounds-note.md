@@ -310,8 +310,14 @@ years. Against an adversary who controls the input, neither is weak — both are
 **inert**.
 
 **It does not discover a dependency.** Citations are honoured, never found. A
-dependence nobody recorded is invisible to both, so a measured blast radius can
-be understated and never overstated by this omission.
+dependence nobody recorded is invisible to both, and the error runs in a
+direction set by the kind of missing edge: an unrecorded shared origin makes a
+measured blast radius too small, an unrecorded alternative makes it too large.
+Neither reading may be assumed, because the ledger cannot tell which kind it is
+missing. *An earlier version of this sentence said "understated and never
+overstated" — the one-directionality claim withdrawn in the companion note, and
+it stood here after that withdrawal because the correction was applied only
+where it had been found.*
 
 **It does not verify independence** — §4 — and therefore cannot be trusted
 about redundancy. Declared redundancy resting on a shared origin reports a

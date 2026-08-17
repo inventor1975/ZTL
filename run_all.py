@@ -250,9 +250,14 @@ STANDS = [
                                  "THE COMMANDER    -> 100,000 of 100,000 fall",
                                  "the commander costs 100,000"]),
     ("db/probe_criterion.py", ["CRITERION PROBE GREEN",
-                               "The minimum does not determine C",
-                               "ONE NUMBER, NOT TWO", "r_eff*  minimal EFFECTIVE redundancy",
-                               "C = 1.000 at agent 0"]),
+                                 "The minimum does not determine C",
+                                 # These two pin the CORRECTED claim. `1 - q* =
+                                 # r* exactly` was pinned by a 1e-9 assert over
+                                 # a 0.05 grid — it could not fail. The markers
+                                 # now hold the gap the finer sweep shows, so
+                                 # `exactly` cannot creep back.
+                                 "ONE NUMBER OR TWO",
+                                 "<- the gap the grid hid"]),
     ("db/probe_classes.py", ["CLASSES PROBE GREEN",
                              "two dimensions (evidence, authority)   r* = 0.65",
                              "four (plus shared model and sensor)    r* = 0.75",
@@ -294,6 +299,13 @@ STANDS = [
                               "A_crit, 2 roots, either                median 0.117"]),
     ("inventory/note_claims.py", ["NOTE CLAIMS GREEN",
                                   "37 + 10 claims and 25 figures"]),
+    # Added 2026-08-17 after a pre-deposit review found the same defect four
+    # times: a claim withdrawn in one place and left standing in another. The
+    # figure scan cannot see it — the numbers were right and the sentences
+    # were false. On its first run it found a fifth site, in a third document
+    # neither review had opened.
+    ("inventory/withdrawn_claims.py", ["WITHDRAWN CLAIMS GREEN",
+                                       "none live"]),
     ("inventory/paper_claims.py", ["PAPER CLAIMS GREEN"]),
     ("inventory/docket_claims.py", ["DOCKET TABLE GREEN",
                                     "rows printed in the paper: 21"]),

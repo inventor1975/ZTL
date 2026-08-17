@@ -91,7 +91,7 @@ WITHDRAWN = [
     ("holds exactly — arithmetic",
      "1 - q* = r* exactly (refuted 2026-08-17: coincides only at step 0.05)"),
     ("c = 0.789",
-     "C = 0.789 — a figure no program produces (refuted pred. 11)"),
+     "C = 0.789 is invented — the ACCUSATION was false; the probe prints 0.7891 at the mirror configuration (2026-08-17)"),
     ("lag zero is not safe",
      "lag zero is not safe (refuted pred. 3: at zero lag the window is zero)"),
     ("nobody has written this one",

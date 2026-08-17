@@ -609,8 +609,23 @@ def main():
         print(f"  [....] lean: lake build ...  ({workers} stands ran in parallel)")
         r = subprocess.run(["lake", "build"], cwd="lean",
                            capture_output=True, text=True, timeout=900)
-        lean_ok = r.returncode == 0 and \
-            "does not depend on any axioms" in r.stdout + r.stderr
+        # A SUBSTRING CHECK THAT CANNOT FAIL IS NOT A CHECK. This used to be
+        # `"does not depend on any axioms" in output` — with 428 theorems
+        # printing that line, it is true even when others print [propext].
+        # The real audit is per-object and already exists; it simply was not
+        # wired in here, only into CI. Found 2026-08-17 while registering a
+        # new module.
+        out = r.stdout + r.stderr
+        leaked = [ln for ln in out.splitlines()
+                  if "depends on axioms" in ln]
+        audit = subprocess.run([sys.executable, "inventory/axiom_audit.py"],
+                               capture_output=True, text=True, timeout=900)
+        lean_ok = (r.returncode == 0 and not leaked
+                   and audit.returncode == 0
+                   and "ALL CLEAN" in audit.stdout)
+        if leaked:
+            print(f"  [FAIL] lean: {len(leaked)} object(s) carry axioms, "
+                  f"first: {leaked[0].strip()[:90]}")
         print(f"  [{'OK ' if lean_ok else 'FAIL'}] lean (zero axioms: "
               f"{'confirmed' if lean_ok else 'NOT CONFIRMED'})")
         if not lean_ok:

@@ -169,10 +169,16 @@ def main():
   THE DIRECTION HOLDS FOR THIS KIND OF EDGE. Zero hidden, prediction equals reality
   ({base[1]:.3f}); every other row has the error POSITIVE and growing —
   {rows[2][2] - rows[2][1]:+.3f} at 5% hidden, {full[2] - full[1]:+.3f} at
-  full. It is never negative, and cannot be: a missing edge can only make
-  two grounds look more independent than they are. There is no symmetric
-  case where an incomplete map flatters the danger instead of hiding it.
-  A one-directional error is the kind you cannot average away.
+  full. Within THIS table it is never negative, and for this kind of edge it
+  cannot be: a missing SHARED ORIGIN can only make two grounds look more
+  independent than they are.
+
+  An earlier version of this paragraph continued "there is no symmetric case
+  where an incomplete map flatters the danger instead of hiding it", and that
+  is false — the second table below is the symmetric case. The sentence stood
+  here for a day AFTER the table refuting it was added thirty lines down, so
+  this program asserted and withdrew the same claim in one run. It is left
+  recorded because that is the defect the corpus keeps making.
 
   THE MAGNITUDE DID NOT REPRODUCE, and the honest report is that it did
   not. The hypothesis as put to me was "predicts under 1%, actually 40%".
@@ -216,14 +222,16 @@ def main():
   discovered — and can price it, which is the shape every honest answer
   here has taken.""")
     assert base[2] == base[1]                     # exact on a visible graph
-    assert all(a >= p for _h, p, a in rows)       # the error never runs the
-                                                 # other way — the structural
-                                                 # claim, and the one that
-                                                 # survived the magnitude not
-                                                 # reproducing
+    # SCOPED, and the scope is the correction. `rows` is the SHARED-ORIGIN
+    # table only; within it the error never runs the other way. The comment
+    # here used to call that "the structural claim", which is the withdrawn
+    # over-generalisation — the alternatives table below runs the other way,
+    # and the assert on it is the one that pins the correction.
+    assert all(a >= p for _h, p, a in rows)       # shared origin: optimistic
     assert full[2] - full[1] > 0.02
-    print("\nBLINDSPOT PROBE GREEN — the error runs one way, and it is the "
-          "dangerous way.")
+    print("\nBLINDSPOT PROBE GREEN — the error runs one way PER KIND OF EDGE: "
+          "a hidden\nshared origin flatters, a hidden alternative frightens, "
+          "and only the first is dangerous.")
     return 0
 
 

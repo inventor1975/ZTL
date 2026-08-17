@@ -43,10 +43,17 @@ _ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # Text that marks a nearby hit as a WITHDRAWAL rather than an assertion.
 MARKERS = (
-    "earlier", "withdraw", "refut", "was wrong", "correct", "no longer",
-    "too strong", "did not survive", "an earlier draft", "an earlier version",
-    "struck", "retract", "no program produces", "invented",
+    "withdraw", "refut", "was wrong", "no longer", "too strong",
+    "did not survive", "an earlier draft", "an earlier version",
+    "an earlier paragraph", "an earlier version of this", "used to",
+    "struck", "retract", "no program produces", "was invented",
+    "corrected after review", "this was wrong", "this file claimed",
+    "objection is correct", "declared impossible", "claimed the error",
 )
+# `earlier` and `correct` were markers until 2026-08-17 and were removed: both
+# are near-ubiquitous in this corpus, so over a ±6-line window almost any
+# assertion sitting near any correction was auto-allowed. A marker list that
+# forgives everything is a green light with no lamp behind it.
 
 # (signature, the withdrawn claim it belongs to). Signatures are literal and
 # lowercased; keep them long enough to be distinctive and short enough to
@@ -55,6 +62,18 @@ WITHDRAWN = [
     ("understated and never overstated",
      "the error from incompleteness runs one way only (refuted pred. 12)"),
     ("error from incompleteness is one-directional",
+     "the error from incompleteness runs one way only (refuted pred. 12)"),
+    # The canonical §5 wording was absent from this list — the claim's own
+    # name, missed. Added with the phrasings a re-read found still standing.
+    ("error from incompleteness runs one way only",
+     "the error from incompleteness runs one way only (refuted pred. 12)"),
+    ("no symmetric case where an incomplete map flatters",
+     "the error from incompleteness runs one way only (refuted pred. 12)"),
+    ("a one-directional error is the kind you cannot average",
+     "the error from incompleteness runs one way only (refuted pred. 12)"),
+    ("the error runs one way, and it is the dangerous way",
+     "the error from incompleteness runs one way only (refuted pred. 12)"),
+    ("understated blast radius, never an overstated",
      "the error from incompleteness runs one way only (refuted pred. 12)"),
     ("transfers without qualification",
      "Debian's `|` is this corpus's `|` (withdrawn 2026-08-17)"),
@@ -74,28 +93,42 @@ WITHDRAWN = [
      "the earned/credit grade is an unwritten semiring (sr_maxmin ships)"),
 ]
 
-SCAN_DIRS = ("paper", "db", "inventory", ".")
 SCAN_EXT = (".md", ".py", ".sql")
 SKIP = ("withdrawn_claims.py", "NOTE-REVIEW-FINDINGS.md",
         "PROVSQL-REVIEW-FINDINGS.md", "LEDGER-NOTE-REVIEW.md")
+# Directories with no claims of our own in them.
+SKIP_DIRS = (".git", "_attic", "archive", "OLD", ".lake", "node_modules",
+             "__pycache__", ".claude")
 
 
 def files():
+    """RECURSIVE. The first version listed four directories non-recursively,
+    so `essays/`, `veraxis/`, `tool/`, `conformance/`, `dilemmas/` and the
+    blueprint were never scanned at all — and a re-read found live withdrawn
+    claims in files it could not reach. A checker that reports GREEN over a
+    fraction of the corpus reports nothing."""
     out = []
-    for d in SCAN_DIRS:
-        p = os.path.join(_ROOT, d)
-        if not os.path.isdir(p):
-            continue
-        for name in sorted(os.listdir(p)):
+    for base, dirs, names in os.walk(_ROOT):
+        dirs[:] = [d for d in dirs if d not in SKIP_DIRS]
+        for name in names:
             if name in SKIP or not name.endswith(SCAN_EXT):
                 continue
-            out.append(os.path.join(p, name))
+            out.append(os.path.join(base, name))
     return sorted(set(out))
 
 
-def window(lines, i, span=6):
-    lo, hi = max(0, i - span), min(len(lines), i + span + 1)
-    return " ".join(lines[lo:hi]).lower()
+def joined(text):
+    """Whitespace-collapsed text, so a signature broken across a line break
+    is still found. The first version matched per line and promised in its own
+    comment that signatures were `short enough to survive rewrapping'; they
+    were not, and the claim standing in KNOWN-LIMITS.md was missed for exactly
+    that reason — `...UNDERSTATED and never' / `overstated.'"""
+    text = re.sub(r'"\s*\)\s*\n?\s*print\(\s*f?"', " ", text)
+    return re.sub(r"\s+", " ", text).lower()
+
+
+def line_of(text, char_index):
+    return text.count("\n", 0, char_index) + 1
 
 
 def main():
@@ -108,24 +141,37 @@ def main():
     print("  false, so the figure scan passed. This is the other direction.\n")
 
     bad, checked = [], 0
-    for path in files():
+    scanned = files()
+    for path in scanned:
         try:
-            lines = open(path, encoding="utf-8").read().splitlines()
+            raw = open(path, encoding="utf-8").read()
         except (OSError, UnicodeDecodeError):
             continue
-        low = [ln.lower() for ln in lines]
-        for i, ln in enumerate(low):
-            for sig, claim in WITHDRAWN:
-                if sig not in ln:
-                    continue
+        flat = joined(raw)
+        if not any(sig in flat for sig, _c in WITHDRAWN):
+            continue
+        # Only files with a hit pay for the expensive per-offset work.
+        for sig, claim in WITHDRAWN:
+            start = 0
+            while True:
+                j = flat.find(sig, start)
+                if j < 0:
+                    break
+                start = j + 1
                 checked += 1
-                ctx = window(low, i)
+                # Context measured in CHARACTERS of collapsed text, so it is
+                # the same amount of prose either side regardless of wrapping.
+                ctx = flat[max(0, j - 420):j + len(sig) + 420]
                 if not any(m in ctx for m in MARKERS):
                     rel = os.path.relpath(path, _ROOT)
-                    bad.append((rel, i + 1, sig, claim))
+                    # map back to a line number in the original text
+                    words = sig.split()[0]
+                    k = raw.lower().find(words)
+                    bad.append((rel, line_of(raw, k if k >= 0 else 0),
+                                sig, claim))
 
     print(f"  signatures tracked      {len(WITHDRAWN):>4}")
-    print(f"  files scanned           {len(files()):>4}")
+    print(f"  files scanned           {len(scanned):>4}")
     print(f"  occurrences examined    {checked:>4}")
 
     if bad:

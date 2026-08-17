@@ -146,26 +146,47 @@ def main():
     print("     over.")
     assert e_rich > a_rich * 5
 
-    print("\n  3. ONE NUMBER, NOT TWO — and that is the correction")
-    print("     r and q do not enter separately. A conclusion is genuinely")
-    print("     redundant with probability r(1-q) — whether the fake second")
-    print("     ground is omitted or recorded-and-useless makes no difference")
-    print("     to what falls. So EFFECTIVE REDUNDANCY r_eff = r(1-q) is the")
-    print("     quantity, and r* and q* are the same crossing read from two")
-    print("     ends: 1 - q* = r* exactly, which is arithmetic and was")
-    print("     reported for weeks as two independent measurements.")
-    r_star = next(r for r in [i / 20 for i in range(21)]
+    print("\n  3. ONE NUMBER OR TWO — and the correction has itself been")
+    print("     corrected. The argument is that r and q do not enter")
+    print("     separately: a conclusion is genuinely redundant with")
+    print("     probability r(1-q), and whether the fake second ground is")
+    print("     omitted or recorded-and-useless makes no difference to what")
+    print("     falls. This file then reported `1 - q* = r* exactly, which is")
+    print("     arithmetic' — and pinned it with a 1e-9 assert over a sweep")
+    print("     quantised to 0.05. That assert tested whether two crossings")
+    print("     land in the SAME GRID CELL. It cannot see a gap smaller than")
+    print("     the grid, and there is one.")
+    # THE SWEEP STEP IS THE RESOLUTION OF EVERYTHING BELOW, and a 1e-9 assert
+    # on numbers quantised to 0.05 measures nothing but grid coincidence. That
+    # is what stood here until 2026-08-17, printing `exactly` about a crossing
+    # never tested finer than the grid. Both step sizes are now swept and both
+    # are printed, because the answer depends on which one is used.
+    STEP, FINE = 20, 100
+    r_star = next(r for r in [i / STEP for i in range(STEP + 1)]
                   if C(r, 0.0, r, 0.0, 7) < 0.01)
-    print(f"\n       r_eff*  minimal EFFECTIVE redundancy for C<1%"
-          f"        = {r_star:.2f}")
-    q_star = None
-    for q in [i / 20 for i in range(21)]:
-        if C(1.0, q, 1.0, q, 7) >= 0.01:
-            q_star = q
-            break
-    print(f"       the same crossing from the other end: 1 - q* = "
-          f"{1 - q_star:.2f}")
-    assert abs(r_star - (1 - q_star)) < 1e-9      # one number, pinned
+    q_star = next(q for q in [i / STEP for i in range(STEP + 1)]
+                  if C(1.0, q, 1.0, q, 7) >= 0.01)
+    r_fine = next(r for r in [i / FINE for i in range(FINE + 1)]
+                  if C(r, 0.0, r, 0.0, 7) < 0.01)
+    q_fine = next(q for q in [i / FINE for i in range(FINE + 1)]
+                  if C(1.0, q, 1.0, q, 7) >= 0.01)
+    print(f"\n       step   r_eff*   1 - q*    gap")
+    print(f"       {1/STEP:<6.2f} {r_star:>6.3f} {1 - q_star:>8.3f} "
+          f"{abs(r_star - (1 - q_star)):>6.3f}   the sweep this file used")
+    print(f"       {1/FINE:<6.2f} {r_fine:>6.3f} {1 - q_fine:>8.3f} "
+          f"{abs(r_fine - (1 - q_fine)):>6.3f}   <- the gap the grid hid")
+    print("     The two crossings coincide at 0.05 and separate at 0.01.")
+    print("     `exactly' was false; the identity holds to the resolution")
+    print("     of the coarse sweep and no further. The likely mechanism is")
+    print("     in build(): the second ground is added by a short-circuited")
+    print("     pair of draws, so r and q consume different amounts of the")
+    print("     random stream and construct different graphs at equal")
+    print("     r(1-q). The ARGUMENT above may still be right; what is")
+    print("     withdrawn is the claim that this file MEASURED it.")
+    # Pinned as what it is: coincidence at the coarse grid, separation at the
+    # fine one. An assert that cannot fail is not a measurement.
+    assert abs(r_star - (1 - q_star)) < 1e-9, "coarse grid no longer coincides"
+    assert abs(r_fine - (1 - q_fine)) > 0.02, "the fine gap vanished — recheck"
     print("\n     What it means is unchanged and is the useful half: a")
     print("     system declaring FULL redundancy is destroyed by a hidden")
     print("     overlap of about a third, because a third of nothing is")

@@ -100,7 +100,12 @@ CLAIMS = [
      "q*  hidden correlation tolerated       median 0.35"),
     ("probe_variance.py", "A_crit constant across seeds",
      "A_crit, 1 root                         median 1        constant"),
-    ("probe_criterion.py", "r and q are one crossing", "ONE NUMBER, NOT TWO"),
+    # Was "r and q are one crossing" / "ONE NUMBER, NOT TWO". That claim was
+    # refuted on 2026-08-17: the two crossings coincide only at the sweep's own
+    # 0.05 step and separate by 0.04 at 0.01. The marker now holds the GAP, so
+    # the stronger claim cannot return without turning this stand red.
+    ("probe_criterion.py", "the r*/q* identity holds only at the coarse grid",
+     "<- the gap the grid hid"),
     ("probe_topology.py", "no threshold against a chosen target",
      "THE THRESHOLD IS AN ARTEFACT OF WHERE YOU AIM"),
     ("probe_roots.py", "closed forms, not measurements",

@@ -13,13 +13,25 @@ make it the right test rather than a gesture.
 
   * It is not designed. Nobody chose its branching factor or its degree
     distribution to make a point.
-  * Debian's `Depends` syntax has ALTERNATIVES written with `|` — exactly the
-    notation this corpus uses for declared-independent grounds, arrived at
-    separately. Real alternatives, in the wild, at a scale where they can be
-    counted rather than assumed.
+  * Debian's `Depends` syntax writes alternatives with `|`, the same mark this
+    corpus uses. THE SAME MARK AND NOT THE SAME IDEA, which an earlier version
+    of this file got wrong: Debian's `|` is an ORDERED PREFERENCE LIST over
+    interchangeable providers (`libcurl3-gnutls | libcurl3-nss | libcurl4`),
+    and declares nothing about independence — those three are one library with
+    different backends. Ours declares independence. So the notation coincides
+    and the claim does not, and the "two fields stopped at the same wall"
+    argument was wrong: dpkg never walked toward that wall.
 
 Nothing here is downloaded and nothing personal is read: package metadata
 only, from the machine's own database.
+
+THE FIGURES BELOW ARE HOST-SPECIFIC and that is not a caveat, it is the
+point: this reads whatever machine it runs on. A CI runner has a different
+package set, so pinning `A_crit = 0.868` as a regression marker was a
+mistake — the stand went red on GitHub for measuring correctly. Only the
+STRUCTURAL claims are asserted here; the numbers are printed with the host
+that produced them so a reader can tell one machine's measurement from a
+property of the world.
 
 Run:  python3 db/probe_real.py
 """
@@ -94,7 +106,9 @@ def main():
                 rdeps[a].add(pkg)
                 edges += 1
     n = len(deps)
-    print(f"\n  packages                     {n:>8,}")
+    import platform
+    print(f"\n  host                         {platform.node()[:24]:>8}")
+    print(f"  packages                     {n:>8,}")
     print(f"  requirement groups           {groups:>8,}")
     print(f"  edges                        {edges:>8,}")
     print(f"  edges per package            {edges / n:>8.2f}")
@@ -150,14 +164,24 @@ def main():
   properties of a model until a real graph has been run through the same
   sweep — which this file begins and does not finish.
 
-  ONE THING TRANSFERS WITHOUT QUALIFICATION. Debian's `|` is this
-  corpus's `|`: a requirement satisfied by either of two packages,
-  declared by a maintainer, unverifiable by the system, and defeated
-  entirely if both alternatives pull in the same underlying library.
-  That is the shared-origin problem in a package manager forty years
-  old, and nobody there solved it either.""")
+  AND ONE THING THAT DOES NOT TRANSFER, corrected after review. An
+  earlier version read Debian's `|` as this corpus's `|` and concluded
+  that two fields had reached the same mark and stopped at the same
+  wall. They have not. Debian's is a preference list over interchangeable
+  providers and makes no independence claim, so it cannot fail to verify
+  one. What survives is smaller and still worth having: the 2.6% above is
+  a measurement of how often a real system offers ANY choice of provider
+  at all, which bounds from above how much genuine redundancy such a
+  graph could have even if every alternative were independent — and it
+  is far below the range this corpus swept.""")
+    # STRUCTURAL, not numeric: any real installation has a heavy tail and a
+    # package that most of the system rests on. The magnitudes are this
+    # host's and are not asserted.
     assert n > 100 and edges > 100
-    print("\nREAL PROBE GREEN — measured on a graph nobody designed.")
+    assert top[0] / n > 0.2, "no package carries a large share — unexpected"
+    assert alt_groups / max(groups, 1) < 0.5, "alternatives unexpectedly common"
+    print("\nREAL PROBE GREEN — measured on a graph nobody designed "
+          "(figures are this host's).")
     return 0
 
 

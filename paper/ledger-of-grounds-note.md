@@ -123,21 +123,25 @@ here detects it. Where both alternatives are claims *inside* the ledger the
 shared ancestor is computed and named by name; between external papers it is
 not, and the line is drawn rather than blurred.
 
-That ceiling is not peculiar to this work. A dependency graph on the machine
-this note was written on — a Debian package database, 2,444 packages and
-12,266 requirement groups — uses **the same notation for the same idea**:
-`Depends: libfoo | libbar`, a requirement satisfied by either. Measured there:
+That ceiling is not peculiar to this work. A dependency graph on the machine this note was written on — a Debian package
+database, 2,444 packages and 12,266 requirement groups, on 2026-08-17 —
+writes alternatives with **the same mark**: `Depends: libfoo | libbar`.
+
+**The same mark and not the same idea**, and an earlier draft of this note had
+that wrong. Debian's `|` is an ordered preference list over interchangeable
+providers — `libcurl3-gnutls | libcurl3-nss | libcurl4` are one library with
+different backends — and it declares nothing about independence, so it cannot
+fail to verify one. The convergence argument that stood here is withdrawn.
+
+What the measurement still gives, on that host:
 
 - **2.6%** of requirement groups offer an alternative at all;
 - `libgcc-s1` and `libc6` each carry **86.8%** of the installed system;
-- and an alternative is defeated in exactly the way described above if both
-  branches rest on the same library underneath — which a package manager
-  forty years old does not detect either.
-
-The notation was arrived at here independently, from a philosophical problem
-about regress rather than from software distribution. That two fields reached
-the same mark for the same idea, and stopped at the same wall, is the reason
-the wall is described in this note rather than apologised for.
+and 2.6% is worth one inference and no more: it **bounds from above** how much
+genuine redundancy a graph of that kind could have, even if every alternative
+listed were independent — which they are not, since several are the same
+library with different backends. Real systems offer a choice of provider
+rarely, and independence rarer still.
 
 ---
 

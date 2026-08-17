@@ -379,7 +379,7 @@ takes that share with it.
 **What it unsettles, which is more.** The synthetic collectives are twice as
 dense. Two of the three topologies are shapes this graph does not have — and
 they are the two that carried the threshold in §3.2. Above all, **real
-declared redundancy here is 2.6%**, while §3.2 located containment somewhere
+declared redundancy here is **under 3% of requirement groups**, while §3.2 located containment somewhere
 in the seventies. If this graph is at all typical, the region where the
 threshold was found is a region real systems do not occupy, and the sweep
 was largely hypothetical.
@@ -399,7 +399,7 @@ seven hours, including the words "without qualification". The commit message
 was false, and it is left recorded because a corpus that logs its refuted
 predictions should also log the one time its log lied.*
 
-What survives is smaller and still worth having: the **2.6%** measured above is
+What survives is smaller and still worth having: the share measured above is
 how often a real system offers ANY choice of provider at all, which bounds from
 above how much genuine redundancy such a graph could have even if every
 alternative listed were independent — far below the range §3.3 swept.
@@ -417,7 +417,26 @@ Anchoring the sweep on §3.8's real numbers rather than on chosen ones:
 
 At a density and a redundancy a real dependency graph actually has, **there is
 no containment**: a randomly located loss costs 93% of the collective, because
-2.6% of conclusions carrying an alternative is indistinguishable from none.
+a per-node redundancy that low is indistinguishable from none.
+
+**And the redundancy parameter is in the wrong denominator**, which review
+found and which is stated here rather than absorbed. The `2.6%` fed to the
+sweep is the share of *requirement groups* offering an alternative; the model
+consumes it per *conclusion node*. Measured on the same package database, the
+per-node figures are **9.9%** of packages carrying at least one alternative and
+**0.8%** where every group has one. So this row is anchored on a real number
+used in the wrong sense — about four times too small in the model's own units,
+or three times too large against the stricter reading. The conclusion survives
+the correction, because the sweep is flat here: the *sampled* column reads
+0.930 at 0% alternatives and 0.909 at 10%, and the *chosen* column is 0.994 at
+both. What does not survive is the phrase "anchored on real parameters"
+without this paragraph beside it.
+
+*The sentence above named the wrong column on its first writing — the sampled
+figures attributed to the chosen one, which is precisely the confusion review
+had just found in the abstract. It was caught by re-running the probe before
+committing rather than by reading, and that is the only method that has worked
+today.*
 Containment appears only above about 75% redundancy, and real systems sit at
 the other end of that axis.
 
@@ -426,10 +445,19 @@ the collective is uncontained at every density tried, from 2 edges per node
 (0.719) upward, saturating by about 3. That was a third conclusion written
 before its table was read, and it is recorded in the source with the others.
 
-**And the chosen-target column does not move anywhere.** Across every row of
-every table in §§3.2, 3.8 and 3.9, an adversary aiming at the root takes
-essentially the whole collective at any density and any redundancy. It is the
-most robust result in this note, and it is a negative one.
+**And the chosen-target column barely moves, with a floor of 0.791.** Across
+every row of every table in §§3.2 and 3.9, an adversary aiming at the root
+takes at least that share of the collective, and at every density above 3
+edges per node at least 0.94. The sensitivity is to whether the attacker
+chooses, not to density or redundancy. It is the most robust result in this
+note, and it is a negative one.
+
+*This paragraph said the column "does not move anywhere ... at any density and
+any redundancy" until 2026-08-17, while the sweep it summarises printed 0.791
+at density 2. The abstract was corrected first and this sentence was not —
+the third time in one day that a withdrawal was applied where it was found and
+left standing where it was not, which is why
+`inventory/withdrawn_claims.py` now carries a signature for it.*
 
 ---
 
@@ -594,8 +622,14 @@ arguments survive given attacks between them; or over lineage systems in
 databases and workflow engines, which track derivation for exactly this
 purpose.
 
-What is not standard in those, so far as I can find, is the combination the
-measurements above are about:
+The next sentence used to read "what is not standard in those, so far as I can
+find, is the combination…". **It has been narrowed, because the claim rode an
+atom no search can pay for.** "Not standard" needs the search to have been
+systematic; this one was thirty minutes with LLM assistance, and §5a says so
+two paragraphs down. Twice today a bullet of exactly that form was destroyed
+within the hour by installing one package. So what follows is stated as what
+it is — **places I looked and did not find, which is weak evidence and is
+offered as weak evidence**:
 
 - ~~an **authority dimension kept separate from evidence**~~ — **WITHDRAWN
   2026-08-17.** It is standard: ProvSQL ships `sr_minmax`, and its own
@@ -608,12 +642,19 @@ measurements above are about:
   yields the dependent reading. Beskales et al. (PVLDB 2(1), 2009) return
   min/max counts and confidence intervals precisely where record identity is
   unresolved — this bracket, this problem, seventeen years earlier;
-- **hidden common origin** treated as a first-class failure mode with a
-  measured tolerance rather than an assumption of independence (§3.3, q\*);
+- **hidden common origin** with a measured tolerance (§3.3, q\*). I did not
+  find it priced this way in the databases literature; I did NOT search the
+  reliability literature for it, and [15, 16] are exactly where it would be —
+  the β-factor prices correlated failure among components known to be
+  distinct, which is adjacent and may be nearer than adjacent;
 - **incompleteness and staleness of the dependency map itself** as measured
-  quantities (§3.6), rather than the map being taken as given;
-- and the resulting question of **runtime containment under consequential
-  action**, which is a control problem rather than a maintenance one.
+  quantities (§3.6). Not found in the sources read; not searched for in
+  observer design or networked control, where "the state estimate is partial
+  and late" is the standing subject and the nearest thing to a refutation of
+  this bullet would live;
+- and **runtime containment under consequential action**, which is a control
+  problem rather than a maintenance one. Naming it as control is precisely an
+  admission that a literature exists which this work has not read.
 
 **Two of those five were struck on 2026-08-17**, after the free
 implementation of provenance semirings was installed and asked the same
@@ -638,7 +679,7 @@ it can and cannot promise.
 **These are simulations on synthetic graphs, and §3.8 measures how unlike a
 real one they are** — twice the density, a shape two of three generators do
 not share, and a redundancy sweep across a region where real systems sit at
-2.6%. The existence of a threshold may be robust; its location is a property
+under three per cent. The existence of a threshold may be robust; its location is a property
 of the model, and the model is not close to the one real graph tested.
 
 **Citations are honoured, never discovered.** A dependence nobody recorded is

@@ -129,12 +129,16 @@ def main():
   across every density tried — which is a third conclusion of mine
   corrected by its own table in one afternoon.
 
-  AND THE CHOSEN-TARGET COLUMN DOES NOT MOVE ANYWHERE. Across every row
-  of every table above, an adversary aiming at the root takes essentially
-  the whole collective, at any density and any redundancy. That is the
-  §3.2 correction arriving again from a third direction, and it is the
-  most robust thing in this file: the only parameter it is sensitive to
-  is whether the attacker chooses.""")
+  THE CHOSEN-TARGET COLUMN BARELY MOVES, AND ITS FLOOR IS PRINTED ABOVE.
+  This paragraph read "does not move anywhere ... at any density and any
+  redundancy" until 2026-08-17, thirty lines below its own density-2 row
+  reading 0.791 — the program contradicting itself in one run, and the
+  third instance in one day of a claim withdrawn in one place and left
+  standing in another. What the tables support: across every row above the
+  chosen column stays at or above 0.791, and above density 3 it is 0.94 or
+  more. The sensitivity is to whether the attacker chooses, not to density
+  or redundancy — which is the §3.2 correction arriving from a third
+  direction, stated without the universal it does not own.""")
     print("\nSENSITIVITY PROBE GREEN — the parameters carried more than the "
           "conclusions did.")
     return 0

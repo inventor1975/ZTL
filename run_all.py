@@ -306,6 +306,13 @@ STANDS = [
     # neither review had opened.
     ("inventory/withdrawn_claims.py", ["WITHDRAWN CLAIMS GREEN",
                                        "none live"]),
+    # The corpus's own prose through the corpus's own judge. Added after three
+    # review rounds each found the same class and each fix produced a fresh
+    # instance: a review reports what a reviewer noticed, this reports every
+    # sentence entered, and what is NOT entered shows up as a gap in the count.
+    ("inventory/prose_warrant.py", ["PROSE WARRANT GREEN",
+                                    "4 corrections that pay them off"]),
+    ("inventory/prose_batch.py", ["PROSE BATCH GREEN", "none drifted"]),
     ("inventory/paper_claims.py", ["PAPER CLAIMS GREEN"]),
     ("inventory/docket_claims.py", ["DOCKET TABLE GREEN",
                                     "rows printed in the paper: 21"]),

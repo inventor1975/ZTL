@@ -1,0 +1,110 @@
+# Formalised sentences of the corpus's papers, judged by inventory/prose_batch.py
+#
+#   LOCATION | FORMULA | WITNESSED atoms | SENTENCE | ! to pin as EARNED
+#
+# Everything not listed as witnessed is Z. That is the point: an atom is
+# unpaid until a run pays it, and the `rides` column names what to go and buy.
+#
+# THE SHAPE RULE, learned by getting it wrong twice in one hour. A sentence
+# that REPORTS what a run delivered is a conjunction of witnessed atoms and
+# comes out EARNED. A sentence that needs `(witnessed & X) -> conclusion` is
+# reaching past the run, and X is the unpaid atom — the form of the formula
+# is itself the diagnosis.
+#
+# WHY THIS FILE IS SYSTEMATIC RATHER THAN A SAMPLE. Three adversarial review
+# rounds on 2026-08-17 each found the same defect class and each fix commit
+# produced a fresh instance of it. A review reports what a reviewer noticed;
+# this file reports every sentence that was entered, and the ones not entered
+# are visible as a gap in the count. That is the difference the switch was
+# made for.
+
+# ============================================================ ABSTRACT
+abs | cascade_cheap_measured & random_loss_takes_most | cascade_cheap_measured, random_loss_takes_most | A cascade at 100,000 agents is cheap and, taken alone, useless. | !
+abs | chosen_col_measured & floor_is_0791 | chosen_col_measured, floor_is_0791 | No density or redundancy tried brings the chosen column below 0.791. | !
+abs | real_density & real_redundancy & random_loss_93 | real_density, real_redundancy, random_loss_93 | Anchored on the real graph, a random loss costs 93% of the collective. | !
+abs | shared_origin_table_run | shared_origin_table_run | Declared redundancy resting on a shared origin reports safety it does not provide. | !
+abs | commander_loss_measured | commander_loss_measured | A collective with perfect evidence redundancy still dies of one commander. | !
+abs | both_tables_run & direction_per_kind | both_tables_run, direction_per_kind | An incomplete map is wrong in a direction that depends on which edge is missing. | !
+abs | (orphan_scan_runs & every_figure_entered) -> every_number_printed_by_program | orphan_scan_runs | Every number below is printed by a program in a public repository.
+
+# ============================================================ 1. INSTRUMENT
+§1 | lean_empty_axioms | lean_empty_axioms | The core is machine-checked in Lean 4 and prints an empty axiom list. | !
+§1 | cascade_recomputed_each_read | cascade_recomputed_each_read | The ledger stores claims and grounds and never verdicts. | !
+§1 | no_bare_cost_function | no_bare_cost_function | There is deliberately no function returning that cost as a bare figure. | !
+§1 | unit_refusal_measured | unit_refusal_measured | Exposure never sums across incommensurable units. | !
+
+# ============================================================ 2. ORDINARY STORE
+§2 | probe_ledger_run | probe_ledger_run | Plain SQL answers 2, answers 3 wrongly, and cannot express 3. | !
+§2 | labels_typed_by_author & program_counts_labels & five_of_twenty | labels_typed_by_author, program_counts_labels, five_of_twenty | 5 of 20 assertions need a warrant — the author's labels, counted by a program. | !
+§2 | failures_scored & prevents_none | failures_scored, prevents_none | Against documented failures it scores 2/2/4 and prevents none of them. | !
+§2 | forged_ground_invisible | forged_ground_invisible | A forged ground is invisible here by construction. | !
+§2 | mars_rerun_without_unit | mars_rerun_without_unit | With no unit on the source the floor returns EARNED; it does not detect the absence of a unit. | !
+§2 | completeness_probe_run | completeness_probe_run | A population cannot certify its own completeness from inside itself. | !
+
+# ============================================================ 3. CONTAINMENT
+§3.1 | speed_measured & median_half_measured | speed_measured, median_half_measured | A single compromised agent takes down a median of half the collective. | !
+§3.2 | three_topologies_swept & chosen_takes_all_in_them | three_topologies_swept, chosen_takes_all_in_them | Against an adversary choosing the root, the collective loses everything at every swept level. | !
+§3.2 | (three_topologies_swept & no_other_topology_matters) -> no_threshold_against_chosen | three_topologies_swept | There is therefore no threshold against a chosen target.
+§3.2 | second_ground_same_structure | second_ground_same_structure | Redundancy that is not independent of the thing being attacked is not redundancy. | !
+§3.3 | shared_origin_sweep_run & report_never_moves | shared_origin_sweep_run, report_never_moves | A quarter of nominal redundancy being fake destroys containment while the system reports 90%. | !
+§3.3 | sweep_ran & ccf_is_prior_art | sweep_ran, ccf_is_prior_art | q* is claimed as a measurement in a warrant setting, not as a discovery. | !
+§3.4 | commander_loss_measured & c_is_one | commander_loss_measured, c_is_one | Both dimensions 100% redundant: losing the commander still costs C = 1.000. | !
+§3.4 | factor_31_measured | factor_31_measured | At an identical minimum the dimensions differ by a factor of 31. | !
+§3.4 | c_0789_no_program | c_0789_no_program | C = 0.789 was invented; no program produces it. | !
+§3.4 | coincide_at_shipped_seed & gap_at_finer_step | coincide_at_shipped_seed, gap_at_finer_step | On the shipped seed the crossings share a cell of the 0.05 grid and separate by 0.04 at 0.01. | !
+§3.4 | seeds_swept & two_of_seven | seeds_swept, two_of_seven | The coarse agreement holds on 2 of 7 seeds; it is not a property of the grid. | !
+§3.4 | acrit_measured_apart | acrit_measured_apart | A_crit is not a function of redundancy at all. | !
+§3.5 | closed_form_derived & rnd_unused | closed_form_derived, rnd_unused | These are closed forms, not measurements: the model has no stochastic content. | !
+§3.5 | branching_20_derived_not_run | branching_20_derived_not_run | Branching factor 20 gives roughly a twentieth — derived, not run. | !
+§3.5 | roots_table_run | roots_table_run | One root is a single point of failure and two are not. | !
+§3.5 | shared_upstream_row | shared_upstream_row | Three roots on one hidden super-root behave exactly like one. | !
+§3.6 | shared_positive | shared_positive | A missing shared origin flatters: grounds look more independent than they are. | !
+§3.6 | alt_table_negative | alt_table_negative | A missing alternative frightens: predicted 0.2031 against an actual 0.1444. | !
+§3.6 | both_tables_run & asymmetry_of_consequence | both_tables_run, asymmetry_of_consequence | The two errors are not equally serious: one causes accidents, the other idleness. | !
+§3.6 | gate_probe_run & leaks_on_two | gate_probe_run, leaks_on_two | The gate holds violations at zero on three channels and leaks on two. | !
+§3.6 | gate_probe_run & margin_not_sound | gate_probe_run, margin_not_sound | The margin used is not a sound bound; it is a plausible expression. | !
+§3.6 | no_gate_measured & two_thirds_outside | no_gate_measured, two_thirds_outside | Without a gate a collective spends about two thirds of its actions outside its requirement. | !
+§3.7 | ten_seeds_run & variance_reported | ten_seeds_run, variance_reported | r_eff* has median 0.725 across ten seeds, range 0.6-0.75. | !
+§3.7 | probe_roots_deterministic | probe_roots_deterministic | probe_roots is deterministic; ten seeds measured one graph ten times. | !
+§3.7 | ten_seeds_run & one_model_only | ten_seeds_run, one_model_only | Ten seeds of one model is still one model. | !
+§3.8 | measured_on_this_host | measured_on_this_host | Some two and a half thousand packages; exact figures printed by probe_real. | !
+§3.8 | host_moved_within_hour | host_moved_within_hour | Installing a database moved every entry in that column within the hour. | !
+§3.8 | real_graph_read & one_package_carries_most | real_graph_read, one_package_carries_most | One package carries most of a working system. | !
+§3.8 | debian_bar_is_preference_list | debian_bar_is_preference_list | Debian's | is an ordered preference list and declares nothing about independence. | !
+§3.9 | real_params_run & no_containment_measured & denominator_stated | real_params_run, no_containment_measured, denominator_stated | At a real density and redundancy there is no containment — with the denominator mismatch stated. | !
+§3.9 | density_swept & uncontained_at_every_density | density_swept, uncontained_at_every_density | The collective is uncontained at every density tried, from 2 edges per node upward. | !
+
+# ============================================================ 4. THE LADDER
+§4 | ladder_from_correspondence & three_rungs_have_literature | ladder_from_correspondence, three_rungs_have_literature | Three of the ladder's five rungs have a literature that predates it by decades. | !
+§4 | attestation_supplies_1 & provenance_supplies_2 & not_found_in_sources_read | attestation_supplies_1, provenance_supplies_2, not_found_in_sources_read | Attestation supplies (1), provenance (2); (3)-(5) were not found in the sources read. | !
+§4 | q_star_measured & tables_run & gate_measured | q_star_measured, tables_run, gate_measured | The runs establish what each rung is worth. | !
+§4 | (gate_measured & bound_holds_in_general) -> staleness_criterion | gate_measured | A system may treat its warrant as satisfying the criterion only while staleness can be bounded.
+§4 | permission_not_established | permission_not_established | Not may act, and not may rely: both are permissions, and nothing here establishes one. | !
+
+# ============================================================ 5a. RELATED WORK
+§5a | tms_does_the_cascade | tms_does_the_cascade | Truth-maintenance systems already do the central operation of §1. | !
+§5a | authz_separates_authority | authz_separates_authority | Distributed authorization logic already separates authority from evidential support. | !
+§5a | currentness_in_ban_logic | currentness_in_ban_logic | Currentness is not new either; it is formalised in 1989. | !
+§5a | provsql_ships_sr_minmax | provsql_ships_sr_minmax | The authority dimension is standard: ProvSQL ships sr_minmax. | !
+§5a | provsql_default_independence & beskales_returns_intervals | provsql_default_independence, beskales_returns_intervals | The bracket is a documented default, and Beskales et al. returned intervals in 2009. | !
+§5a | looked_in_databases_lit & did_not_search_reliability | looked_in_databases_lit, did_not_search_reliability | Hidden common origin: not found in the databases literature; the reliability literature was NOT searched. | !
+§5a | not_in_sources_read & did_not_search_control | not_in_sources_read, did_not_search_control | Map incompleteness: not in the sources read; observer design and networked control were NOT searched. | !
+§5a | naming_it_control_admits_a_literature | naming_it_control_admits_a_literature | Naming it control is an admission that a literature exists which this work has not read. | !
+§5a | mechanism_is_old | mechanism_is_old | The mechanism is old; the object of study is its containment behaviour. | !
+
+# ============================================================ 6. LIMITS
+§6 | synthetic_vs_real_measured | synthetic_vs_real_measured | These are simulations, and §3.8 measures how unlike a real graph they are. | !
+§6 | both_tables_run & direction_per_kind | both_tables_run, direction_per_kind | An unrecorded shared origin makes the radius too small; an alternative makes it too large. | !
+§6 | forged_ground_invisible | forged_ground_invisible | It does not detect a lie. | !
+§6 | independence_unverifiable | independence_unverifiable | It does not verify independence, and cannot be trusted about redundancy. | !
+§6 | intention_not_represented | intention_not_represented | It does not compare a formula to an intention. | !
+
+# ============================================================ WITHDRAWN, kept
+# The four sentences that failed on 2026-08-17, in their broken form, so the
+# shape that produced them stays visible beside the corrections above.
+broke:blindspot | (shared_positive & all_kinds_checked) -> one_directional | shared_positive | There is no symmetric case where an incomplete map flatters the danger.
+broke:criterion | (coincide_at_shipped_seed & all_seeds) -> property_of_step | coincide_at_shipped_seed | The two crossings coincide at the sweep's own step of 0.05.
+broke:§3.8 | (measured_on_this_host & host_stable) -> stated_figure | measured_on_this_host | 2,444 packages ... A_crit = 0.868, quoted as the figure.
+broke:commit | (withdrawn_in_probe & withdrawn_everywhere) -> withdrawal_done | withdrawn_in_probe | The Debian analogy is withdrawn, in the probe and in both notes.
+§3.9 | tables_printed & floor_is_0791 | tables_printed, floor_is_0791 | The chosen column barely moves, with a floor of 0.791. | !
+broke:§3.9 | (tables_printed & every_row_checked) -> column_never_moves | tables_printed | The chosen-target column does not move anywhere, at any density and any redundancy.

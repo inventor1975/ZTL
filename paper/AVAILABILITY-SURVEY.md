@@ -38,7 +38,9 @@ adequate and it is not a selling point; nothing here has been optimised once,
 and an engine written for the purpose would beat it comfortably. Speed is not
 our argument and should not be made one.
 
-**Licensed, and modestly:** the combination appears not to be available in one
+**Licensed, and modestly** — *and REFUTED the same day; the two sections below
+are the retraction, left after this paragraph rather than replacing it because
+the sequence is the point*: the combination appears not to be available in one
 free runnable object. Cascade with inheritance, a bracket that refuses to
 collapse an unverifiable independence, exposure reported by unit, and a
 support/permission distinction — each exists somewhere, two of them only
@@ -71,18 +73,18 @@ who needs those three should use ProvSQL and not this.
 
 The paragraph above compared the **formalism**, because Postgres was not on
 this machine. That is a weaker thing to do than it sounds, and it produced an
-error in our favour. PostgreSQL 16.10 and ProvSQL 1.13.0-dev were built from
+error in our favour. PostgreSQL 16.14 and ProvSQL 1.13.0-dev were built from
 source on 2026-08-17 and the eight auditor questions asked of the running
 tool: `db/provsql_ledger.sql`, reproducible end to end.
 
 | auditor question | ProvSQL 1.13, measured |
 |---|---|
 | 1–3. the plain figures | yes (arithmetic; provenance is not what answers them) |
-| 4. which figures were never documented | **no** — every base row is its own variable, so an undocumented figure carries a token exactly like a documented one; the check degenerates to `ground IS NULL`, which plain SQL does |
+| 4. which figures were never documented | **yes** — the DEFAULT mapping gives an undocumented row a bare token like any document, but `create_provenance_mapping` takes any column *or expression*, so `(ground IS NOT NULL)` with `sr_boolean` carries documented-ness to derived rows |
 | 5. what rests on inv-17 | **yes**, cleanly |
 | 6. inv-17 is forged, what falls | **yes** — withdrawal is `set_prob(token, 0)` |
 | 7. what do the numbers become | **yes, and exactly**: `expected(sum(amount))` returns **2000** |
-| 8. may I quote it | not in stock; its own test suite defines a capability semiring over a permission lattice |
+| 8. may I quote it | **yes** — `sr_minmax`, a shipped built-in, demonstrated in ProvSQL's documentation as *Minimum Security Clearance* |
 
 **Question 7 is the one that was predicted wrongly, and the prediction was
 written down first.** ProvSQL carries magnitudes through aggregation —
@@ -93,26 +95,33 @@ corrected. Reasoning about what a package does not do is not a substitute for
 installing it; a bare thirty minutes of building saved a false claim from
 reaching a citing reader.
 
-**What survived the run**, and it is two and a half things:
+**What survived the run** was recorded here as "two and a half things": a
+graded fact, a bracketed independence, and units. **Adversarial review the same
+day took the first two.** They are shipped:
 
-- a fact graded **earned or on credit** — the third status has nowhere to live
-  when every base row is already its own variable;
-- an unverifiable independence **reported as a bracket**. Measured: `inv17 ⊕
-  invoice17` at p=0.9 each evaluates to **0.9900** with `probability_bounds`
-  **[0.99, 0.99]** — a point of zero width. If the two names are one piece of
-  paper the figure is 0.9, and nothing in the output marks that the difference
-  was assumed away. Independence is the model's premise, not a defect;
-- **units**: `sum()` over 2000 EUR and 40 hours returned **2040**, silently.
-  Real, and a type-system property that owes nothing to provenance. Worth
-  little.
+- **the earned/credit grade** — `sr_maxmin(token, token2value, element_one
+  anyenum)`, a compiled built-in with ⊕ = enum-max and ⊗ = enum-min over any
+  PostgreSQL ENUM. That is the lattice, generic over its carrier. Verified on
+  this corpus's own ledger: one `CREATE TYPE`, zero lines of semiring code, and
+  `line_a × quoted → credit`;
+- **permission as a second grade** — `sr_minmax`, the shipped dual, which
+  ProvSQL's documentation demonstrates under *Minimum Security Clearance*: the
+  clearance needed to have inferred a derived fact. That is auditor question 8;
+- **the bracket** — a default, not a capability. Their manual states
+  tuple-independence as a default and ships `repair_key` for correlated
+  annotation; one `UPDATE` pointing a row's token at another's yields the
+  0.9000 reading directly;
+- **units** — `sum()` over 2000 EUR and 40 hours returned **2040**, silently.
+  Real, and a type-system property owing nothing to provenance. Worth little.
 
 `support()` deserves its own line because it is nearly the bracket and is not:
 it is the **unconditional** range over all worlds and stayed [0, 6500] after
 conditioning, because it ignores the probabilities. ProvSQL brackets a total;
-it does not narrow the bracket to a scenario, and it does not bracket an
-assumption.
+it does not narrow the bracket to a scenario.
 
-**And the warning, now sharper.** Authority as a second dimension is no longer
-hypothetical — the tool ships a capability semiring in its tests. The distance
-between the two instruments is a product semiring and a reporting convention.
-Anyone who wanted to close it could.
+**The verdict this survey was built to reach, reached.** The question it opened
+with was whether a mechanism described in a paper exists as software one can
+run. For this corpus's four properties the answer is yes, in one package, free,
+maintained, and compiled. The survey's own closing warning — "an availability
+fact with a shelf life" — turned out to have a shelf life of about six hours.
+See `paper/PROVSQL-REVIEW-FINDINGS.md`.

@@ -4,6 +4,15 @@
 
 **Vitaly Reznik** · Independent researcher · 2026-08-17
 
+> **STATUS: NOT FOR PUBLICATION — kept as a record.** Adversarial review on
+> 2026-08-17 refuted the last claim this note made for itself: the earned/credit
+> grade is a shipped ProvSQL built-in (`sr_maxmin`), as is the permission
+> dimension (`sr_minmax`). Three rounds of checking each withdrew a claim and
+> kept a remainder, and each next round found the remainder was also available.
+> The document is corrected rather than deleted, and the corrections are left
+> visible, because the sequence is the only thing here worth reading. See
+> `paper/PROVSQL-REVIEW-FINDINGS.md`.
+
 ---
 
 ## Abstract
@@ -15,25 +24,28 @@ vocabulary, puts them to the leading free implementation of the first —
 **ProvSQL** [17], the PostgreSQL realisation of provenance semirings [12] —
 and reports what came back.
 
-It answered six of the eight, one of them better than predicted: given a ledger
-whose invoice has been withdrawn, `expected(sum(amount))` returns the correct
-post-withdrawal total directly. The prediction that it could not do this was
-written down before the run and was wrong.
+**It answered all eight.** Two of those answers were written here as failures
+before review corrected them, and the corrections are the substance of what
+follows. `expected(sum(amount))` returns the correct post-withdrawal total
+directly — predicted impossible, in writing, before the run. The earned/credit
+grade propagates through `sr_maxmin`, a shipped built-in over any enum, for the
+price of a type declaration. The permission dimension is its shipped dual
+`sr_minmax`, which ProvSQL's own documentation demonstrates as *Minimum
+Security Clearance*.
 
-Two answers are the subject of this note, because both are **correct under the
-system's premises and are not answers to the question that was asked**. A
-figure standing on no document at all carries a provenance token exactly like a
-documented one, so *which of my figures were never documented* has no home in
-the formalism. And two grounds named `inv-17` and `invoice-17`, each at
-probability 0.9, come back as **0.9900 with probability bounds of zero width** —
-a confident number that silently assumes the two names are two pieces of paper.
+One observation survives, and it is smaller than a finding. Two grounds named
+`inv-17` and `invoice-17`, each at probability 0.9, come back as **0.9900 with
+probability bounds of zero width** — a confident number that assumes the two
+names are two pieces of paper. That is not a defect and not a property of the
+formalism: ProvSQL's manual states tuple-independence as a **default** and
+ships `repair_key` for correlated annotation. The other reading is one
+statement away — point the second row's token at the first's and the same query
+returns 0.9000.
 
-Neither is a defect in ProvSQL, and the note says so at length. Independence is
-the model's stated premise, and the second reading is computable there: encode
-the ledger twice and the same engine returns 0.90. What separates the two
-instruments is therefore a **default**, not a capability — and for a reader
-whose subject is evidence rather than data, defaults are where the damage
-happens. Every figure here is printed by a script in a public repository.
+So what separates this author's ledger from the engine is a **default**, not a
+capability, and this note claims nothing beyond that. Every figure here is
+printed by a script in a public repository; where an earlier draft printed one
+that was not, §6 says so.
 
 ---
 
@@ -68,7 +80,7 @@ against somebody else's list, and it has not been made.
 
 ## 2. What ProvSQL answers
 
-PostgreSQL 16.10 with ProvSQL 1.13.0-dev, built from source; the ledger is one
+PostgreSQL 16.14 with ProvSQL 1.13.0-dev, built from source; the ledger is one
 table of seven rows with `add_provenance` applied and a token→document mapping
 made by `create_provenance_mapping`. The transcript is `db/provsql_ledger.sql`
 and runs end to end.
@@ -76,11 +88,11 @@ and runs end to end.
 | question | answer |
 |---|---|
 | 1–3 | **yes** — arithmetic; provenance is not what answers them |
-| 4 | **no** — see §3 |
+| 4 | **yes**, once the mapping is pointed at the right thing — see §3 |
 | 5 | **yes**, cleanly: the formula for each line is the document's name |
 | 6 | **yes** — withdrawal is `set_prob(token, 0)` |
 | 7 | **yes, and exactly** — `expected(sum(amount))` returns the correct total |
-| 8 | not in stock; a user-defined capability semiring appears in its own tests |
+| 8 | **yes** — `sr_minmax`, shipped, demonstrated in their docs as Minimum Security Clearance |
 
 Question 7 deserves emphasis because it went against the prediction. ProvSQL
 carries magnitudes through aggregation — `expected`, `variance`, moments — and
@@ -102,30 +114,38 @@ Question 4 asks which figures have never been documented. In the test ledger
 two of them have not: a quoted price and a payment, neither of which points at
 any paper.
 
-Asked for their provenance, ProvSQL returns a token for each — a bare
+Under the **default** mapping, ProvSQL returns a token for each — a bare
 identifier, structurally identical to the token of a line that stands on a real
-invoice. **Every base row is its own variable.** In the semiring, a fact
-supported by a document and a fact supported by nothing but its own presence in
-the table are the same kind of object, and the distinction the auditor is
-asking about has nowhere to live.
+invoice. Every base row is its own variable, so a fact supported by a document
+and a fact supported by nothing but its own presence in the table arrive
+looking the same.
 
-This is not a gap someone forgot to fill. It follows from what the formalism
-is *for*: provenance explains a derived result in terms of the base data, and
-base data is where explanation stops. Asking a provenance system which of its
-base rows are unjustified is asking it to look outside its own boundary.
-
-The practical consequence is small and worth stating anyway. Detecting the
-undocumented figures degenerates to `WHERE ground IS NULL` — plain SQL, no
-provenance involved — and, more importantly, **the grade does not propagate**.
-A total computed from a documented line and an undocumented one is, in the
-semiring, just a total. Whether that matters depends on whether one's subject
-tolerates a figure being *partly* on credit.
+That is where this section stopped, and stopping there was the error. The
+default is not the formalism. What follows is the correction.
 
 A grade that propagates is itself a semiring: a two-element lattice, EARNED
-above CREDIT, with minimum for multiplication. ProvSQL supports user-defined
-semirings and its own test suite writes one. **Nobody has written this one.**
-That is an availability fact with a shelf life, not a limitation, and this note
-claims nothing stronger.
+above CREDIT, with minimum for multiplication. An earlier version of this
+section said that ProvSQL supports user-defined semirings and that **nobody
+had written this one**.
+
+**It ships.** `provsql.sr_maxmin(token, token2value, element_one anyenum)` is
+a compiled built-in with ⊕ = enum-max and ⊗ = enum-min over any PostgreSQL
+ENUM — that lattice exactly, generic over its carrier. Instantiating it on
+this ledger costs a type declaration and no semiring code at all:
+
+```
+CREATE TYPE zgrade AS ENUM ('credit','earned');
+SELECT sr_maxmin(provenance(),'zgmap','credit'::zgrade) ...
+  line_a x line_c -> earned
+  line_a x quoted -> credit
+  line_c x quoted -> credit
+```
+
+The premise this section opened with — that the distinction "has nowhere to
+live" — is false with it. It lives in the leaf annotation, and
+`create_provenance_mapping` builds that from any column *or expression*, so
+`(ground IS NOT NULL)` with `sr_boolean` carries documented-ness to derived
+rows, which `WHERE ground IS NULL` cannot do.
 
 ---
 
@@ -167,42 +187,57 @@ reading A, two names are two papers    inv17 ⊕ invoice17    0.99
 reading B, two names are one paper     inv17                0.90
 ```
 
-So `[0.90, 0.99]` is available in ProvSQL to anyone who thinks to ask for it and
-who is willing to build two encodings and combine them by hand.
+So `[0.90, 0.99]` is available in ProvSQL to anyone who thinks to ask for it.
 
-What remains is therefore a **default and not a capability**, and this note
-would be dishonest to describe it otherwise. One instrument prints 0.9900
-unless the reader knows to ask twice; the other computes both readings unasked,
-prints the width, and has no function that returns the cost as a bare figure.
-The difference is entirely in what happens to the reader who does *not* already
-know the question — which is, in an audit, most readers.
+**And even this concession was too generous to us**, as review then showed. Two
+encodings are not needed and nothing has to be combined by hand: one `UPDATE`
+pointing the second row's `provsql` column at the first row's token expresses
+"two names, one paper" inside a single table, and the identical query returns
+0.9000 directly. ProvSQL's manual states the independence assumption as a
+default in so many words — *"correlations between tuples are not modelled. To
+model correlated probabilities, derive them explicitly with queries"* — and the
+extension ships `repair_key` for block-independent-disjoint annotation, with
+its own tests. §4 above called it a premise of the model; it is a setting.
 
-That is a modest claim. It is offered as one.
+What remains is therefore a **default and not a capability**. One instrument
+prints 0.9900 unless the reader knows to ask otherwise; the other computes both
+readings unasked, prints the width, and has no function that returns the cost
+as a bare figure. The difference is entirely in what happens to the reader who
+does *not* already know the question.
+
+That is a very modest claim, and it is the only one this note still makes.
 
 ---
 
 ## 5. What the eight questions actually established
 
-Stated compactly, because the tally moved twice during the writing and the
-final position is less flattering than either earlier one.
+Stated compactly, because the tally moved three times during the writing and
+each position was less flattering than the last.
 
 **ProvSQL answers the lineage questions, and answers them better than this
 author's alternative.** The cascade, the alternatives, the exposed set and the
 post-withdrawal magnitudes are its subject; it is a compiled extension inside a
 real database, and anyone who needs those should use it.
 
-**No capability gap was found.** The earned/credit grade is a user-defined
-semiring nobody has written. The support/authority distinction is a product of
-two such. The bracket is a default. The one remaining difference — that a
-magnitude carries a unit and refuses to be added to an incommensurable one;
-`sum()` over 2000 EUR and 40 hours returned 2040 without complaint — is a
-property of a type system and owes nothing to provenance.
+**And it answers the other four too.** The earned/credit grade: `sr_maxmin`,
+shipped. Permission as a second grade: `sr_minmax`, shipped, with a worked
+example in their documentation. The bracket: a default, one `UPDATE` from the
+other reading. The single remaining difference — that a magnitude carries a
+unit and refuses to be added to an incommensurable one; `sum()` over 2000 EUR
+and 40 hours returned 2040 without complaint — is a property of a type system
+and owes nothing to provenance.
 
-**What survived is the measurement itself**: two questions to which a working
-provenance engine returns a confident answer that is not an answer to the
-question. Both are correct under its premises. Neither is visible to a reader
-who does not already know to look. That finding is small and checkable, and
-unlike every claim this note has had to withdraw, it survived being run.
+**So nothing here is this author's**, and the useful part of the note is the
+shape of how that was discovered. Three rounds. Round one withdrew a novelty
+claim and kept four properties. Round two installed the package and lost two of
+them. Round three read the function list and lost the rest. Every time, the
+sentence that failed had the same form — *the tool does not do X* — and every
+time it had been reached by reasoning rather than by typing `\df provsql.sr_*`.
+
+That is worth recording as a measurement of distance rather than a list of
+mistakes: on this subject the frontier is far enough ahead that an hour of
+checking keeps finding another shipped feature, and there is no reason to
+expect a fourth round to end differently.
 
 ---
 
@@ -214,22 +249,39 @@ means. It holds claims and grounds and **never verdicts** — a verdict is
 recomputed on every reading, because a stored one is a judgement taken on credit
 from a past moment.
 
-Asked what a ground costs it returns both readings and the width between them:
+Asked what a ground costs it returns both readings and the width between them.
+`zbook.py` §12, complete and unedited:
 
 ```
-inv-17                 [0, 2]
-inv-17-photocopy       [0, 2]
-plain-deed             [1, 1]   <- zero width: nothing taken on trust
+   inv-17                 [0, 2]
+   inv-17-photocopy       [0, 2]
+   performed/zero         [0, 1]
+   plain-deed             [1, 1]   <- zero width: nothing taken on trust
 ```
+
+An earlier draft of this note printed that block with the third row removed
+and no ellipsis — and it was the awkward row, whose low end of 0 is a refused
+question coded as an integer rather than a measured cost. It is restored, and
+the flaw it exposes is left visible: an integer low end cannot distinguish
+"costs nothing" from "the question does not apply".
 
 There is deliberately no function returning that cost as a bare figure, and
-where the book takes something on trust it says so by name and prices the
-coincidence it cannot resolve:
+where the book takes something on trust it says so by name. §12 again:
 
 ```
-ASSUMED, and unverifiable: the 4 external names below denote 4 distinct grounds
-if inv-17 and invoice-17 are one paper: 2 + 2 -> 4
+   ASSUMED, and unverifiable: the 4 external names below denote 4 distinct grounds
+   ['inv-17', 'inv-17-photocopy', 'performed/zero', 'plain-deed']
 ```
+
+and, nine lines later and about a different pair, it prices a coincidence it
+cannot resolve:
+
+```
+   if inv-17 and invoice-17 are one paper: 2 + 2 -> 4
+```
+
+The earlier draft ran those two together as one block, which put names into
+the assumption line that were not in it. Both are quoted here as they print.
 
 Exposure is reported by unit and never summed across incommensurable ones: a
 ground carrying both a fee and an area returns two lines and no grand total,
@@ -293,11 +345,27 @@ survive attacks between them. Redundancy defeated by a shared dependency is
 where the unverifiable-independence problem of §4 has a name, a β-factor, and
 sixty years of practice behind it.
 
-That last citation is the strongest objection to this note's framing and is
-placed here rather than buried: the problem of §4 is not new, and reliability
-engineering priced it before database provenance existed. What is offered is
-narrower — that a modern free provenance engine, asked an auditor's question,
-returns the un-bracketed number, and that this is checkable in a few lines.
+That last citation was called, in an earlier draft, the strongest objection to
+this note's framing. It is not, and the real one was missing entirely: **this
+note's reference list contained no probabilistic-database entry at all.**
+
+Tuple-independence is the standing assumption of that field and the standing
+subject of its criticism. Dalvi & Suciu [18] and Fuhr & Rölleke [19] are the
+model ProvSQL implements; **Sen & Deshpande [20]** exists because "current
+probabilistic databases make simplistic assumptions about the data (e.g.,
+complete independence among tuples)" — §4's observation, as a paper's opening
+motivation, in 2007. **Trio/ULDB [21]** computes confidence through lineage
+precisely because derived tuples are correlated. And most directly of all,
+**Beskales et al. [22]** treat record identity as an unresolved decision and
+return **min/max counts and confidence intervals instead of point values** —
+which is this note's bracket, for this note's problem, in a database venue,
+seventeen years before it.
+
+Naming [22] is not a formality. It means the "different default" of §4.1 is
+not even a different default: it is a published one, in the field the
+measurement was made in. What survives is the narrow observation that the
+default *shipped* in ProvSQL is the un-bracketed one, which is checkable in a
+few lines and is a fact about a package rather than about a subject.
 
 ---
 
@@ -358,13 +426,27 @@ it, and the two are separate contributions.
 16. NUREG/CR-5485. US NRC, 1998.
 17. Senellart, P., Jachiet, L., Maniu, S., Ramusat, Y. ProvSQL: provenance and
     probability management in PostgreSQL. *PVLDB* 11(12), 2018, 2034–2037.
+18. Dalvi, N., Suciu, D. Efficient query evaluation on probabilistic databases.
+    *The VLDB Journal* 16(4), 2007, 523–544.
+19. Fuhr, N., Rölleke, T. A probabilistic relational algebra for the
+    integration of information retrieval and database systems. *ACM TOIS*
+    15(1), 1997, 32–66.
+20. Sen, P., Deshpande, A. Representing and querying correlated tuples in
+    probabilistic databases. *ICDE*, 2007, 596–605.
+21. Benjelloun, O., Das Sarma, A., Halevy, A., Widom, J. ULDBs: databases with
+    uncertainty and lineage. *VLDB*, 2006, 953–964.
+22. Beskales, G., Soliman, M., Ilyas, I., Ben-David, S. Modeling and querying
+    possible repairs in duplicate detection. *PVLDB* 2(1), 2009, 598–609.
 
 Author, venue and year were checked for each; page ranges and annex structure
 were not independently verified against printed sources. The search behind §8
-was LLM-assisted and is not a systematic review, so the absence of a field from
-that list is weak evidence of anything. Reference [17] is the exception: it was
-not only cited but installed and run, and doing so refuted two claims an
-earlier version of this note had made.
+was LLM-assisted and is not a systematic review — and [18]–[22] are there
+because an adversarial review found that the first version of this list had no
+probabilistic-database entry at all, while making a claim about probabilistic
+databases. The absence of a field from such a list is not weak evidence of
+anything; it is evidence about the list. Reference [17] is a further exception:
+it was not only cited but installed and run, and doing so refuted four claims
+earlier versions of this note had made.
 
 ---
 

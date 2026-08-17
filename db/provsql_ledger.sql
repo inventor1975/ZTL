@@ -17,6 +17,15 @@
 \pset format aligned
 \set ON_ERROR_STOP on
 
+-- FIRST LINE OF OUTPUT IS THE ENVIRONMENT, and it is not decoration. The note
+-- built on this file quoted "PostgreSQL 16.10"; this machine runs 16.14 and
+-- never ran 16.10, and the error survived the repo's own figure scan because
+-- a version string sat on that scan's exemption list. So the live version is
+-- printed on every run: a machine that has moved on contradicts the record
+-- instead of silently outdating it.
+SELECT version() AS server,
+       extversion AS provsql FROM pg_extension WHERE extname = 'provsql';
+
 DROP TABLE IF EXISTS ledger CASCADE;
 DROP TABLE IF EXISTS names;
 
@@ -93,10 +102,31 @@ SELECT * FROM qunit;
 DROP TABLE qunit;
 
 \echo ''
-\echo '=== Q8. May I quote it? (authority, not support)'
-\echo '    ProvSQL ships a user-defined capability semiring in its own test'
-\echo '    suite (test/sql/capability.sql): bitwise OR / AND over a permission'
-\echo '    lattice. So the second dimension is not outside the tool.'
+\echo '=== Q4 AND Q8, REOPENED BY REVIEW — both answered by SHIPPED semirings.'
+\echo '    An earlier version of this file said the earned/credit grade was a'
+\echo '    semiring "nobody has written". sr_maxmin is a compiled built-in:'
+\echo '    (+) = enum-max, (*) = enum-min over any ENUM. One CREATE TYPE.'
+DROP TABLE IF EXISTS zg CASCADE;
+DROP TABLE IF EXISTS zgmap;
+DROP TABLE IF EXISTS zgb;
+DROP TYPE IF EXISTS zgrade CASCADE;
+CREATE TYPE zgrade AS ENUM ('credit', 'earned');
+CREATE TABLE zg(name text, amount numeric, ground text, grade zgrade);
+INSERT INTO zg VALUES ('line_a', 3000, 'inv17', 'earned'),
+                      ('line_c', 2000, 'inv18', 'earned'),
+                      ('quoted', 1200, NULL,    'credit');
+SELECT add_provenance('zg');
+SELECT create_provenance_mapping('zgmap', 'zg', 'grade');
+CREATE TABLE zgb AS
+  SELECT a.name || ' x ' || b.name AS pair,
+         sr_maxmin(provenance(), 'zgmap', 'credit'::zgrade) AS grade
+    FROM zg a, zg b WHERE a.name < b.name;
+SELECT remove_provenance('zgb');
+SELECT pair, grade FROM zgb ORDER BY pair;
+DROP TABLE zgb; DROP TABLE zgmap;
+SELECT remove_provenance('zg'); DROP TABLE zg; DROP TYPE zgrade;
+\echo '    And Q8 the same way: sr_minmax is the shipped dual, demonstrated in'
+\echo '    ProvSQL''s own documentation under "Minimum Security Clearance".'
 
 \echo ''
 \echo '=== The independence question, measured on the engine'
@@ -158,16 +188,18 @@ SELECT remove_provenance('ledger');
 DROP TABLE ledger;
 
 -- ============================================================ WHAT IT SAID
--- Measured 2026-08-17, PostgreSQL 16.10 / ProvSQL 1.13.0-dev, this machine.
+-- Measured 2026-08-17 on this machine; the run prints its own server and
+-- extension versions as its first line, which is the record.
 --
 -- Q1,Q2,Q3  both. Plain arithmetic; provenance is not what answers them.
 --
--- Q4  NO, and the reason is structural rather than a missing feature. Every
---     base row is its own variable, so `quoted` — a figure standing on
---     nothing — gets a formula too: the bare token `92b6b585…`. A fact
---     supported by a document and a fact supported by itself are the same
---     kind of object here. Detecting the second degenerates to `ground IS
---     NULL`, which plain SQL already does; provenance adds nothing.
+-- Q4  Answered "no" here for a day, and REVIEW REFUTED IT. It is true that
+--     the DEFAULT mapping gives `quoted` a bare token like any document. It
+--     is false that the distinction has nowhere to live: the leaf annotation
+--     is whatever `create_provenance_mapping` is pointed at — a column OR an
+--     expression, e.g. `(ground IS NOT NULL)` — and `sr_boolean` then carries
+--     it to derived rows, which `WHERE ground IS NULL` cannot do. And the
+--     graded form ships: see the sr_maxmin block above.
 --
 -- Q5  YES, cleanly.  `sr_formula(provsql,'names') = 'inv17'` -> line_a,line_b.
 --
@@ -181,9 +213,10 @@ DROP TABLE ledger;
 --     had claimed semirings do not do. That claim was wrong about the
 --     shipped tool and has been corrected there.
 --
--- Q8  Not in stock, but its own test suite defines a capability semiring
---     over a permission lattice, so authority-as-a-second-dimension is a
---     product semiring away, not a limitation.
+-- Q8  Said "not in stock" here, and that was wrong too. `sr_minmax` is a
+--     shipped built-in and ProvSQL's documentation demonstrates it as
+--     Minimum Security Clearance: the clearance needed to have inferred a
+--     derived fact. That IS question 8.
 --
 -- THE BRACKET, both halves.
 --     `support(sum(amount))` = **[0, 6500]** — a real interval over
@@ -191,13 +224,14 @@ DROP TABLE ledger;
 --     stayed [0, 6500] after conditioning, because support() ignores the
 --     probabilities. So ProvSQL brackets a total, and does not narrow the
 --     bracket to a scenario.
---     The epistemic half is different and is where the ledger still stands.
---     `inv17 ⊕ invoice17` at p=0.9 each evaluates to **0.9900**, with
---     probability_bounds **[0.99, 0.99]** — a point of zero width. If the
---     two names are one piece of paper the true figure is 0.9, and nothing
---     in the output says the difference was assumed away. Not a defect:
---     independence is the model's premise. It is the one place where
---     reporting the assumption as a bracket is a different instrument.
+--     The epistemic half: `inv17 ⊕ invoice17` at p=0.9 each evaluates to
+--     **0.9900**, with probability_bounds **[0.99, 0.99]** — a point of zero
+--     width. If the two names are one piece of paper the true figure is 0.9.
+--     Not a defect and NOT a property of the formalism either, which is how
+--     an earlier version of this file put it: ProvSQL's manual states it as
+--     a default — "correlations between tuples are not modelled. To model
+--     correlated probabilities, derive them explicitly with queries" — and
+--     ships `repair_key` for the block-independent-disjoint case, with tests.
 --
 -- UNITS.  `sum(amount)` over 2000 EUR and 40 hours returns **2040**,
 --     silently. The refusal survives — and it is a type-system property, not
@@ -206,23 +240,22 @@ DROP TABLE ledger;
 --
 -- THE OBJECTION, and it holds. Reading A returns **0.9900**, reading B
 --     returns **0.9000**. So [0.90, 0.99] — the ledger's bracket — is
---     COMPUTABLE IN PROVSQL, by encoding the ledger twice and taking both
---     ends. What the ledger has is not a capability the older tool lacks. It
---     is a DEFAULT: it computes both readings unasked and refuses to print a
---     bare number, where ProvSQL prints 0.9900 unless you knew to ask twice.
---     Stated plainly because it is the last thing the note claimed as its
---     own, and it did not survive being run.
+--     COMPUTABLE IN PROVSQL. This file first said that took two encodings
+--     combined by hand; review showed it takes ONE statement — point the
+--     second row's `provsql` column at the first row's token and the same
+--     query returns 0.9000. What the ledger has is a DEFAULT, not a
+--     capability, and even the concession was too generous to us.
 --
--- NET.  Of the four properties the note claimed, none is a capability gap.
--- Magnitudes: gone, ProvSQL has them. Authority and the earned/credit grade:
--- user-defined semirings — a two-element lattice with min as multiplication,
--- and a product of two — which ProvSQL supports and nobody has written.
--- Units: real, and not a provenance question at all. The bracket: a default,
--- shown above.
+-- NET, after review.  NOTHING HERE IS OURS. Magnitudes: shipped. Grade and
+-- permission: shipped, `sr_maxmin` and `sr_minmax`, demonstrated above on
+-- this file's own ledger for the price of a CREATE TYPE. The bracket: a
+-- default, and one UPDATE from the other reading. Units: not a provenance
+-- question at all.
 --
--- WHAT IS LEFT IS NOT THE LEDGER. It is this file. Eight auditor questions
--- asked of a working provenance system, with two answers an auditor should
--- not accept: a figure standing on nothing carries a token exactly like a
--- documented one, and an unverifiable independence is reported as 0.9900
--- with bounds of zero width. Both are correct behaviour under the model's
--- premises. Neither is the answer to the question that was asked.
+-- THE SHAPE OF THE ERROR, because it happened three times. Each round
+-- withdrew a claim and kept a remainder; each next round found the remainder
+-- was also available; and every time the conclusion "the tool does not do X"
+-- had been reached by reasoning rather than by reading the function list.
+-- `\df provsql.sr_*` would have ended it on day one. What that measures is
+-- distance from the frontier, not just an error. The file is kept because
+-- the comparison is true and reproducible. Nothing is claimed from it.

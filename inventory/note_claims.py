@@ -242,8 +242,13 @@ def main():
     PROSE_EXEMPT = {
         "61508": "IEC standard number, not a measurement",
         "1.4": "quoted from a cited source",
-        "1.13": "ProvSQL version string (§7.1 of the ledger note)",
-        "16.10": "PostgreSQL version string (§7.1 of the ledger note)",
+        # NO VERSION STRINGS HERE ANY MORE. "16.10" sat on this list as a
+        # harmless version string for six hours, and the version was wrong —
+        # this machine runs 16.14 and never ran 16.10. An exemption added to
+        # silence a false alarm is exactly where a real one hides. Versions now
+        # live in probe_provenance.MEASURED_ON, which is PRINTED, so the scan
+        # sees them like any other figure and provsql_ledger.sql contradicts
+        # the record on any machine that has moved on.
         # Quoted BY the notes as figures that moved when a database was
         # installed on the measuring host. They are the evidence for the
         # paragraph that explains why the surrounding column is given in

@@ -273,10 +273,13 @@ STANDS = [
                           "CONTAINS A FAILURE OF MY OWN",
                           "Purely descriptive, third pass",
                           "may continue to TREAT its current warrant as satisfying the"]),
+    # The measured-against-the-package rows, so a future edit to the ledger's
+    # claims cannot quietly drop what installing ProvSQL cost us.
     ("db/probe_provenance.py", ["PROVENANCE PROBE GREEN",
                                 "inv-17 forged, what falls: line_a, line_b, "
                                 "billed, margin",
-                                "covers more of this than expected"]),
+                                "expected(sum(amount))` = 2000",
+                                "cover more of this than expected"]),
     ("db/probe_sensitivity.py", ["SENSITIVITY PROBE GREEN",
                                  "BOTH REAL",
                                  "ANOTHER CONCLUSION WRITTEN BEFORE THE TABLE"]),
@@ -445,7 +448,11 @@ def main():
         pattern = argv[argv.index("--only") + 1]
     skip_lean = "--no-lean" in argv or pattern is not None
     if pattern:
-        globals()["STANDS"] = [(s_, m) for s_, m in STANDS if pattern in s_]
+        # `a|b` selects either, because the stands one wants to re-check after
+        # a change are rarely a common substring.
+        pats = pattern.split("|")
+        globals()["STANDS"] = [(s_, m) for s_, m in STANDS
+                               if any(p in s_ for p in pats)]
         if not STANDS:
             print(f"no stand matches {pattern!r}")
             return 1

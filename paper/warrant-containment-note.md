@@ -335,20 +335,30 @@ apply at all to a model that has no draw in it.
 
 Every result above was measured on graphs the author generated. Real ones at
 this scale are ordinary — a Debian installation carries one on disk — and the
-omission had no defence. The machine's own package database — 2,444 packages and 12,266 requirement
-groups on the author's laptop, 2026-08-17; the program reads whatever host it
-runs on and a different machine gives different figures:
+omission had no defence. The machine's own package database — some two and a
+half thousand packages and twelve thousand requirement groups on the author's
+laptop, read 2026-08-17; the program reads whatever host it runs on, and the
+column below is given in bands for a reason stated after the table:
 
 | | synthetic probes | Debian, this machine |
 |---|---|---|
-| edges per node | 10.00 | **5.18** |
-| declared alternatives | swept 0–95% | **2.6%** |
-| median in-degree | — | 1 (top node: 1,588) |
+| edges per node | 10.00 | **about half that** |
+| declared alternatives | swept 0–95% | **under 3%** |
+| median in-degree | — | 1 (top node: over 1,500) |
 | shape | two of three hierarchical / local | heavy-tailed |
-| A_crit | 1.000 (one root) | **0.868** (`libgcc-s1`, `libc6`) |
+| A_crit | 1.000 (one root) | **over five sixths** (`libgcc-s1`) |
+
+**Why bands and not digits.** An earlier draft gave this column to three
+decimals. Installing a database on the same laptop, hours later and for an
+unrelated reason, moved every entry in it: the package count rose by 39 and
+`libgcc-s1`'s share went from 0.868 to 0.870. Neither reading was wrong. The
+quantity is a property of one host at one moment, and pinning its digits in a
+document is quoting a ground that expires without notice — this note's own
+subject, arriving uninvited. The exact figures for any host are printed by
+`db/probe_real.py`, and that is where a number that moves belongs.
 
 **What it confirms.** The phenomenon is real and is not an artefact of a
-generated tree: one package carries 87% of a working system, and losing it
+generated tree: one package carries most of a working system, and losing it
 takes that share with it.
 
 **What it unsettles, which is more.** The synthetic collectives are twice as

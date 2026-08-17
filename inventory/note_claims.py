@@ -220,12 +220,26 @@ def main():
     # numbers as a reader meets them: 0.789, 59,716, 95,041, 66.0%
     nums = set(re.findall(r"(?<![\w.])\d{1,3}(?:,\d{3})+(?![\w.])|"
                           r"(?<![\w,])\d+\.\d+(?![\w])", text))
-    # figures that belong to the prose rather than to a run
-    # section references, standard numbers and figures the note explicitly
-    # marks as DERIVED rather than run. Every entry here is a decision to
-    # exempt something, so the set is short and each addition is deliberate.
-    PROSE_OK = {"61508", "1.4"} | {f"{a}.{b}" for a in range(1, 8)
-                                   for b in range(0, 10)}
+    # figures that belong to the prose rather than to a run: section
+    # references, standard numbers, and figures the note explicitly marks as
+    # DERIVED or as SUPERSEDED. Every entry is a decision to exempt something,
+    # so each carries its reason and the list is printed — an exemption a
+    # reader cannot see is a hole in the instrument rather than a setting.
+    PROSE_EXEMPT = {
+        "61508": "IEC standard number, not a measurement",
+        "1.4": "quoted from a cited source",
+        "1.13": "ProvSQL version string (§7.1 of the ledger note)",
+        "16.10": "PostgreSQL version string (§7.1 of the ledger note)",
+        # Quoted BY the notes as figures that moved when a database was
+        # installed on the measuring host. They are the evidence for the
+        # paragraph that explains why the surrounding column is given in
+        # bands, so they must be present and must NOT match a current run.
+        "0.868": "superseded host figure, quoted as superseded",
+        "2,444": "superseded host figure, quoted as superseded",
+        "12,266": "superseded host figure, quoted as superseded",
+    }
+    PROSE_OK = set(PROSE_EXEMPT) | {f"{a}.{b}" for a in range(1, 8)
+                                    for b in range(0, 10)}
     lnums = set(re.findall(r"(?<![\w.])\d{1,3}(?:,\d{3})+(?![\w.])|"
                            r"(?<![\w,])\d+\.\d+(?![\w])", ltext))
     nums |= lnums
@@ -235,7 +249,10 @@ def main():
     for n in orphans:
         print(f"     [ORPHAN] {n}")
     if not orphans:
-        print("     none — every figure in the note appears in some run")
+        print("     none — every figure in the note appears in some run,")
+        print("     except these, exempted deliberately and visibly:")
+        for n, why in sorted(PROSE_EXEMPT.items()):
+            print(f"       {n:>8}  {why}")
     else:
         bad.append(("(note)", f"{len(orphans)} orphan figure(s)", str(orphans)))
 

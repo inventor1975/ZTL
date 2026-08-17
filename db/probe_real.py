@@ -124,6 +124,20 @@ def main():
     share = 100 * alt_groups / max(groups, 1)
     print(f"       requirement groups offering an alternative  "
           f"{alt_groups:>6,}  ({share:.1f}%)")
+    # THREE DENOMINATORS, and the corpus was quietly using the wrong one.
+    # `probe_sensitivity` feeds this share in as a PER-NODE probability — the
+    # chance that a given conclusion carries an alternative — but the figure
+    # above is per REQUIREMENT GROUP. They are not the same population and
+    # they differ by nearly four times. Both are printed so that whoever
+    # borrows a number can see which question it answers.
+    any_alt = sum(1 for gs in deps.values() if any(len(g) > 1 for g in gs))
+    all_alt = sum(1 for gs in deps.values()
+                  if gs and all(len(g) > 1 for g in gs))
+    print(f"       PACKAGES with at least one alternative      "
+          f"{any_alt:>6,}  ({100 * any_alt / n:.1f}%)   <- per-node sense")
+    print(f"       PACKAGES where EVERY group has one          "
+          f"{all_alt:>6,}  ({100 * all_alt / n:.1f}%)   <- protected against"
+          f" any single parent loss")
     print("     The corpus swept redundancy from 0% to 95% and located a")
     print("     threshold in the seventies. Real declared redundancy here is")
     print(f"     {share:.1f}% — an order of magnitude below the range where")
@@ -151,7 +165,7 @@ def main():
     print("     swept, the two that carried the headline threshold are the")
     print("     two this graph least resembles.")
 
-    print("""
+    print(f"""
   WHAT THIS SETTLES. The phenomenon is real: one package carries a
   large share of a real system, and losing it takes that share with it.
   A_crit is not an artefact of a generated tree.
@@ -169,11 +183,22 @@ def main():
   that two fields had reached the same mark and stopped at the same
   wall. They have not. Debian's is a preference list over interchangeable
   providers and makes no independence claim, so it cannot fail to verify
-  one. What survives is smaller and still worth having: the 2.6% above is
+  one. What survives is smaller and still worth having: the share above is
   a measurement of how often a real system offers ANY choice of provider
   at all, which bounds from above how much genuine redundancy such a
   graph could have even if every alternative were independent — and it
-  is far below the range this corpus swept.""")
+  is far below the range this corpus swept.
+
+  THAT SENTENCE USED TO QUOTE A HARDCODED `2.6%` while the line above it
+  computed the value from the file. On this host the computed figure is now
+  {share:.1f}%, so the program contradicted itself inside one run for as long
+  as the package set had moved. Numbers in prose are quoted from the run or
+  not at all.
+
+  AND THE DENOMINATOR MATTERS MORE THAN THE DIGIT. The group-level share is
+  not the per-node redundancy `probe_sensitivity` consumes; the per-node
+  figures are printed above and are several times larger. A number borrowed
+  across denominators is the kind of error a green suite cannot see.""")
     # STRUCTURAL, not numeric: any real installation has a heavy tail and a
     # package that most of the system rests on. The magnitudes are this
     # host's and are not asserted.

@@ -94,8 +94,17 @@ a reader who knows the papers reads off the line that applies.
 
 **Citations are honoured, never discovered.** The book computes what falls when
 a ground goes, but only along links a human wrote down. A dependence nobody
-recorded is invisible, so a measured blast radius can be UNDERSTATED and never
-overstated. Stated in `inventory/corpus_book.py` as that file's own ceiling.
+recorded is invisible, and the error it causes runs in a direction set by the
+KIND of missing link: an unrecorded shared origin makes a measured blast radius
+too SMALL, an unrecorded alternative ground makes it too LARGE
+(`db/probe_blindspot.py`, second table). Neither may be assumed, because
+nothing here can tell which kind is missing. Stated in
+`inventory/corpus_book.py` as that file's own ceiling.
+
+*This paragraph said "UNDERSTATED and never overstated" until 2026-08-17. That
+is the claim refuted as prediction 12 in the containment note, and it stood
+here — in the corpus's own limits document — for a day after the refutation,
+because the correction was applied only where it had been found.*
 
 **No premise selection.** Nothing finds the relevant stored claims for a new
 question. That is a crowded field with strong tools (Sledgehammer and its kin)

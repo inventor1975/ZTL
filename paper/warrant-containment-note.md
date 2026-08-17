@@ -24,8 +24,8 @@ The measurements are simulations, and the useful ones are negative. A cascade
 at a hundred thousand agents is cheap and, taken alone, useless: a randomly
 located loss takes down most of the collective. Redundancy does **nothing
 whatever** against a chosen loss — at ninety-five per cent redundancy an
-adversary aiming at the root still takes everything, and that column does not
-move at any density or redundancy tried. Against a *random* loss redundancy
+adversary aiming at the root still takes everything, and no density or
+redundancy tried brings that column below 0.791 (§3.9). Against a *random* loss redundancy
 works only at levels no real system has: anchored on the one real dependency
 graph measured here — its density, its declared redundancy — **a random loss
 costs 93% of the collective as well** (§3.9). Containment appears above roughly
@@ -43,7 +43,7 @@ runs — six by the author, six more by an adversarial review that also found
 one figure quoted here that no program produces. All are reported with the
 rest, and the corrections they forced are larger than the results they left
 standing. Every number below is printed by a program in
-a public repository and re-checked by a regression suite of 115 stands.
+a public repository and re-checked by a regression suite of 119 stands.
 
 ---
 
@@ -237,10 +237,15 @@ An earlier draft reported r\* and q\* as two quantities; a later one said
 they were exactly one, and **that correction was itself too strong**. The
 argument stands: a conclusion is genuinely redundant with probability r(1-q),
 so containment should depend on that product alone. The measurement does not
-support the word *exactly*. The two crossings coincide at the sweep's own step
-of 0.05 and **separate by 0.04 at a step of 0.01** — the probe's `1e-9` assert
-was comparing two numbers quantised to 0.05, so it could not see a gap smaller
-than its own grid. Both step sizes are now swept and printed. Measured: **r_eff\* ≈ 0.65** across two dimensions, rising to 0.75 when shared
+support the word *exactly*. On the shipped seed the two crossings land in the
+same cell of the sweep's own 0.05 grid and **separate by 0.04 once the step is
+0.01** — the probe's `1e-9` assert was comparing two numbers quantised to 0.05,
+so it could not see a gap smaller than its own grid.
+
+Nor is the coarse agreement a property of the grid: it **holds on 2 of 7 seeds
+tried**, and this note said otherwise for two hours, which is the same error as
+refuted prediction 10 committed while correcting refuted prediction 9. Both
+step sizes and all seven seeds are now swept and printed. Measured: **r_eff\* ≈ 0.65** across two dimensions, rising to 0.75 when shared
 models and shared sensor feeds are added — a world with more things to share
 has more ways to fail.
 
@@ -489,7 +494,7 @@ Two methodological errors are also recorded in the source: a first blindspot
 model whose shared structure was too redundant for hiding to show, and a
 median that concealed the hub risk it was measuring.
 
-**Five more were found by an adversarial review of this note rather than by
+**Six more were found by an adversarial review of this note rather than by
 its author**, and they were the expensive ones. They are listed here because
 a note that reports only the failures its author noticed is reporting a
 selection.
@@ -505,7 +510,8 @@ selection.
    what the prose always said, and §3.2's numbers changed accordingly.
 9. *"r\* and q\* are two quantities."* Read from two ends they nearly
    coincide, because effective redundancy is r(1-q) — but the follow-up
-   claim that `1 - q* = r*` holds *exactly* is refuted too (see 13).
+   claim that `1 - q* = r*` holds *exactly* is refuted too (§3.4): the two
+   crossings coincide only at the sweep's own 0.05 step.
 10. *"A_crit is constant across ten seeds."* The model is deterministic and
     its random argument unused; ten seeds measured one graph ten times.
     0.117 is 4681/40000, a closed form in the branching factor.
@@ -681,7 +687,7 @@ python3 db/probe_blindspot.py     python3 db/probe_currentness.py
 python3 db/probe_gate.py          python3 run_all.py
 ```
 
-`run_all.py` runs 115 stands and the Lean corpus, and asserts the zero-axiom
+`run_all.py` runs 119 stands and the Lean corpus, and asserts the zero-axiom
 line.
 
 ---

@@ -175,9 +175,29 @@ def main():
           f"{abs(r_star - (1 - q_star)):>6.3f}   the sweep this file used")
     print(f"       {1/FINE:<6.2f} {r_fine:>6.3f} {1 - q_fine:>8.3f} "
           f"{abs(r_fine - (1 - q_fine)):>6.3f}   <- the gap the grid hid")
-    print("     The two crossings coincide at 0.05 and separate at 0.01.")
-    print("     `exactly' was false; the identity holds to the resolution")
-    print("     of the coarse sweep and no further. The likely mechanism is")
+    # ACROSS SEEDS, because the line that stood here for two hours said the
+    # crossings "coincide at the sweep's own step of 0.05" — which is a
+    # ONE-SEED fact stated as a property of the step. It is the same error
+    # probe_roots was corrected for (ten seeds over a deterministic model),
+    # made while correcting this file. Measured rather than assumed:
+    seeds = (SEED, 1, 2, 3, 7, 12345, 20260817)
+    agree = 0
+    for s in seeds:
+        g = globals()
+        old = g["SEED"]
+        g["SEED"] = s
+        r_c = next(x for x in [i / STEP for i in range(STEP + 1)]
+                   if C(x, 0.0, x, 0.0, 7) < 0.01)
+        q_c = next(x for x in [i / STEP for i in range(STEP + 1)]
+                   if C(1.0, x, 1.0, x, 7) >= 0.01)
+        g["SEED"] = old
+        agree += abs(r_c - (1 - q_c)) < 1e-9
+    print(f"\n     coarse-grid coincidence holds on {agree} of {len(seeds)}"
+          f" seeds — it is NOT")
+    print("     a property of the step size, and saying so was this file's")
+    print("     own instance of the error it was correcting.")
+    print("     `exactly' was false; the identity does not survive a finer")
+    print("     grid on any seed tried. The likely mechanism is")
     print("     in build(): the second ground is added by a short-circuited")
     print("     pair of draws, so r and q consume different amounts of the")
     print("     random stream and construct different graphs at equal")
@@ -185,8 +205,11 @@ def main():
     print("     withdrawn is the claim that this file MEASURED it.")
     # Pinned as what it is: coincidence at the coarse grid, separation at the
     # fine one. An assert that cannot fail is not a measurement.
-    assert abs(r_star - (1 - q_star)) < 1e-9, "coarse grid no longer coincides"
+    # Pinned as what was actually measured. The first assert is about THIS
+    # SEED at THIS grid and says so; the second is the finding.
+    assert abs(r_star - (1 - q_star)) < 1e-9, "shipped seed no longer coincides"
     assert abs(r_fine - (1 - q_fine)) > 0.02, "the fine gap vanished — recheck"
+    assert agree < len(seeds), "coincidence now holds on every seed — recheck"
     print("\n     What it means is unchanged and is the useful half: a")
     print("     system declaring FULL redundancy is destroyed by a hidden")
     print("     overlap of about a third, because a third of nothing is")

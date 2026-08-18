@@ -27,6 +27,8 @@ import random
 import sys
 from collections import defaultdict
 
+from _ground import swept, save_ground    # the sweep records what it varied
+
 N, E = 100_000, 1_000_000
 SEED = 20260816
 
@@ -127,7 +129,7 @@ def main():
     print(f"\n       {'secretly shared':>16} {'random':>10} {'top hub':>10}"
           f" {'top three':>11}")
     row = {}
-    for shared in (0.0, 0.10, 0.25, 0.50, 0.75, 1.00):
+    for shared in swept('shared_origin', (0.0, 0.10, 0.25, 0.50, 0.75, 1.00)):
         cells = []
         for picks in ([7], [tgt[0]], tgt):
             rnd = random.Random(SEED)
@@ -159,6 +161,7 @@ def main():
   it has a measurable boundary set by all four together. That sentence is
   Arkadiy's; this file is the measurement under it.""")
     assert row[1.0][2] > row[0.0][2] * 5
+    save_ground(__file__)
     print("\nCONTAINMENT PROBE GREEN — the report holds still while the "
           "collective fails.")
     return 0

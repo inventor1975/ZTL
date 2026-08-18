@@ -36,6 +36,8 @@ import random
 import statistics
 import sys
 
+from _ground import swept, save_ground    # the sweep records what it varied
+
 N, SOURCES = 20_000, 5
 STEPS = 300
 LIMIT = 0.02
@@ -134,7 +136,7 @@ def main():
           f" {'actions delivered':>18}")
     for loss, d in ((0.0, 3), (0.1, 3), (0.3, 10), (0.5, 10)):
         best, delivered = 0, 0
-        for rate in (1, 2, 5, 10, 20, 50, 100):
+        for rate in swept('rate', (1, 2, 5, 10, 20, 50, 100)):
             r = mission(20, rate, loss, d, gated=True)
             if r["violations"] == 0:
                 best, delivered = rate, r["acted"]
@@ -200,6 +202,7 @@ def main():
   one loss takes down, or to stop relying — and which is affordable is
   architecture, decided before the mission rather than during it.""")
     assert leak_free < 5 and leaked > 0        # the gate's own failure, pinned
+    save_ground(__file__)
     return 0
 
 

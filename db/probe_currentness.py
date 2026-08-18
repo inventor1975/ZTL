@@ -33,6 +33,8 @@ Run:  python3 db/probe_currentness.py
 import random
 import sys
 
+from _ground import swept, save_ground    # the sweep records what it varied
+
 N, SOURCES = 20_000, 5
 STEPS = 200
 LIMIT = 0.02                  # containment requirement: worst loss under 2%
@@ -101,7 +103,7 @@ def main():
     print(f"  {'update lag':>11} {'blind steps':>12} {'longest window':>15}"
           f" {'actions in it':>14} {'worst gap':>11}")
     rows = []
-    for lag in (0, 1, 2, 5, 10, 20, 50):
+    for lag in swept('lag', (0, 1, 2, 5, 10, 20, 50)):
         r = run(lag, drift, rate)
         rows.append((lag, r))
         print(f"  {lag:>11} {r['blind_steps']:>12} {r['stale']:>15}"
@@ -138,7 +140,7 @@ def main():
           f" {'budget 1000':>13}")
     for rate2 in (1, 5, 10, 50):
         cells = []
-        for budget in (50, 200, 1000):
+        for budget in swept('budget', (50, 200, 1000)):
             ok = [lag for lag in (0, 1, 2, 5, 10, 20, 50)
                   if run(lag, drift, rate2)["acted"] <= budget]
             cells.append(str(max(ok)) if ok else "none")
@@ -165,6 +167,7 @@ def main():
   computes what each of them is worth, and that is the fourth time in
   three days a run has priced a primitive nobody owns.""")
     assert rows[-1][1]["acted"] > rows[0][1]["acted"]
+    save_ground(__file__)
     print("\nCURRENTNESS PROBE GREEN — the window IS the lag, exactly.")
     return 0
 

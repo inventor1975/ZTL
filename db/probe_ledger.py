@@ -305,11 +305,19 @@ def main():
         "the arithmetic is the same and the standing is not; plain SQL "
         "reports the first and has no room for the second"))
 
+    # PULLED OUT OF THE f-STRING, 2026-08-18. This query used to sit inside the
+    # replacement field, built with chr(34)/chr(39) to dodge quote nesting — a
+    # dodge that only works because the expression spans three lines, which
+    # Python allows from 3.12 (PEP 701) and CI's 3.11 tokenizer rejects with
+    # "unterminated string literal". The machine that wrote it ran 3.12 and was
+    # green; CI was red on a file nobody had touched. Green on one interpreter
+    # is not a result, which is the same lesson `dilemmas/cogito.py` taught
+    # about green on one filesystem.
+    margin = p.execute(
+        "SELECT amount FROM ledger WHERE name='margin'").fetchone()[0]
     verdicts.append(q(
         "8. May I quote the margin in the report?",
-        f"{p.execute(chr(34) * 0 + 'SELECT amount FROM ledger'
-                     ' WHERE name=' + chr(39) + 'margin' + chr(39)
-                     ).fetchone()[0]:g} — nothing else to say",
+        f"{margin:g} — nothing else to say",
         " / ".join(f"{r[0]} {r[1]:g} {r[2]}" for r in z.execute(
             "SELECT name, amount, amount_status FROM ledger "
             "WHERE name IN ('billed','margin')")),

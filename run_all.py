@@ -297,6 +297,12 @@ STANDS = [
     ("db/probe_variance.py", ["VARIANCE PROBE GREEN",
                               "median 0.725", "varies 0.6..0.75",
                               "A_crit, 2 roots, either                median 0.117"]),
+    # GREEN ON ONE INTERPRETER IS NOT A RESULT. Added 2026-08-18 after CI went
+    # red on a file nobody had touched: an f-string with a line-spanning
+    # replacement field, legal from 3.12 and a SyntaxError on the 3.11 the
+    # workflow installs. The author's machine ran 3.12 and this runner said
+    # ALL GREEN. Same shape as the cogito.py lesson, different costume.
+    ("inventory/py_version_floor.py", ["PYTHON FLOOR"]),
     ("inventory/note_claims.py", ["NOTE CLAIMS GREEN",
                                   "37 + 10 claims and 25 figures"]),
     # Added 2026-08-17 after a pre-deposit review found the same defect four

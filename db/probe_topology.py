@@ -27,6 +27,8 @@ import statistics
 import sys
 from collections import defaultdict
 
+from _ground import swept, save_ground    # the sweep records what it varied
+
 N, E = 100_000, 1_000_000
 SEED = 20260816
 
@@ -134,7 +136,7 @@ def threshold(make, samples=25):
     probe_containment had already named in its own docstring while this file
     went on repeating it."""
     row, found = [], None
-    for frac in (0.0, 0.5, 0.75, 0.85, 0.90, 0.95):
+    for frac in swept('redundancy', (0.0, 0.5, 0.75, 0.85, 0.90, 0.95)):
         rnd = random.Random(SEED)
         par, rev = make(rnd)
         two = redundant(par, rev, frac, rnd)
@@ -210,6 +212,7 @@ def main():
     # the finding, pinned: a threshold against sampling, none against aim
     assert all(t is not None for t in results.values())
     assert all(adv > 0.9 * N for _f, _w, adv in rows_all)
+    save_ground(__file__)
     print("\nTOPOLOGY PROBE GREEN — a threshold against sampling, none "
           "against aim.")
     return 0

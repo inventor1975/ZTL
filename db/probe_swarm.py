@@ -37,6 +37,8 @@ import sys
 import time
 from collections import defaultdict
 
+from _ground import swept, save_ground    # the sweep records what it varied
+
 N, E = 100_000, 1_000_000            # DICE phase 3, verbatim
 SEED = 20260816
 
@@ -126,7 +128,7 @@ def main():
     print(f"\n       {'redundant conclusions':>24} {'1 compromise':>14}"
           f" {'10 compromises':>16}")
     curve = {}
-    for frac in (0.0, 0.5, 0.75, 0.80, 0.85, 0.90, 1.0):
+    for frac in swept('redundancy', (0.0, 0.5, 0.75, 0.80, 0.85, 0.90, 1.0)):
         a, _ = sweep(frac, 1)
         b, _ = sweep(frac, 10)
         curve[frac] = a
@@ -157,6 +159,7 @@ def main():
   oldest published ceiling stops being a footnote and becomes the
   dominant risk. Closing it needs authentication of the source, which is
   a different machine and must be said to be one.""")
+    save_ground(__file__)
     print("\nSWARM PROBE GREEN — fast, useless alone, and bounded by a "
           "threshold.")
     return 0

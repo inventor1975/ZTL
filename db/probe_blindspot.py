@@ -24,6 +24,8 @@ import random
 import sys
 from collections import defaultdict
 
+from _ground import swept, save_ground    # the sweep records what it varied
+
 N = 20_000
 SEED = 20260816
 SOURCES, ROOTS = 5, 4        # sensors/models an agent can rest on
@@ -141,7 +143,7 @@ def main():
     print(f"  {'hidden edges':>13} {'C_predicted':>13} {'C_actual':>10}"
           f" {'error':>9}")
     rows = []
-    for hidden in (0.0, 0.01, 0.05, 0.10, 0.20, 0.50, 1.00):
+    for hidden in swept('hidden', (0.0, 0.01, 0.05, 0.10, 0.20, 0.50, 1.00)):
         rnd = random.Random(SEED)
         ev, seen_ev, au, up, n_alias = world(hidden, rnd)
         pred, act = worst(seen_ev, au, up), worst(ev, au, up)
@@ -153,7 +155,7 @@ def main():
     print(f"\n  {'hidden alternatives':>20} {'C_predicted':>13}"
           f" {'C_actual':>10} {'error':>9}")
     alt_rows = []
-    for hidden in (0.0, 0.25, 0.50, 1.00):
+    for hidden in swept('hidden', (0.0, 0.25, 0.50, 1.00)):
         rnd = random.Random(SEED)
         b, ta, sa = alternatives(hidden, rnd)
         pred = max(alt_loss(b, sa, d) for d in range(SOURCES))
@@ -229,6 +231,7 @@ def main():
     # and the assert on it is the one that pins the correction.
     assert all(a >= p for _h, p, a in rows)       # shared origin: optimistic
     assert full[2] - full[1] > 0.02
+    save_ground(__file__)
     print("\nBLINDSPOT PROBE GREEN — the error runs one way PER KIND OF EDGE: "
           "a hidden\nshared origin flatters, a hidden alternative frightens, "
           "and only the first is dangerous.")

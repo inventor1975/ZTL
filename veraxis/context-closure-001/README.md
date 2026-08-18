@@ -102,12 +102,21 @@ That formalisation is not done.
   concluded.
 * **A boundary admitting nothing returns `BOUNDARY_INVALID`**, not a vacuous
   `T`.
-* The declared boundary changes the answer, visibly.
+* The declared boundary changes the answer, visibly — **and now prints a
+  receipt**: which completions it excluded, and which of those would have
+  defeated the claim. A boundary that turns `F` into `T` names the reading it
+  removed, so its admissibility can be contested by whoever has standing.
 
 ## Two limits that do not move
 
 1. **The boundary is declared, not discovered.** Whether `B` is the right
-   boundary is an institutional question, not a computational one.
+   boundary is an institutional question, not a computational one. What the
+   machine can do is print the boundary's price (the receipt above) and, if the
+   boundary is later contested, **recompute** rather than ask to be trusted —
+   the verdict is reproducible from pinned inputs.
+   Note also that the machine-checked theorem covers the **unrestricted**
+   boundary; under a declared narrower one, closure is a reproducible
+   computation, not a theorem.
 2. **A dependency that was never encoded is invisible.** The bench defends
    against selective disclosure from a committed structure. It does nothing
    against a formalizer who never recorded the proviso. Internal correctness

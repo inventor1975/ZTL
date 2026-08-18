@@ -149,6 +149,38 @@ completions outside it. Enumeration is the reference oracle of the bench, not a
 requirement of the theory: any complete method (SAT, BDD, symbolic checking)
 satisfies the same condition.
 
+## What the bench can already give the legal side
+
+Two things, both concrete, offered because they bear directly on the question
+of the boundary.
+
+**A receipt for every declared boundary.** When a boundary turns an unwarranted
+claim into a warranted one, it does so by removing readings. The bench now
+prints which ones — and, of those, which would have defeated the conclusion:
+
+    BOUNDARY RECEIPT for boundary B2
+      admitted   1: exception=F
+      excluded   1: exception=T
+      of those, DEFEATING under B_top   1: exception=T
+
+So a declared boundary stops being a word and becomes an object with a named
+price: *this conclusion is warranted only because this specific reading was
+excluded.* Whoever has standing to decide admissibility can then contest that
+reading rather than the abstraction.
+
+**Re-adjudication rather than trust, if a boundary is later contested.** The
+verdict is reproducible — formula, grounds and the judging kernel are all
+pinned by hash — so a challenged boundary does not require anyone to trust the
+earlier verdict. It is recomputed under the new boundary, deterministically and
+cheaply. That moves the legal question from *was the verdict right* to *under
+which boundary was it obtained*, which is a question law already knows how to
+handle.
+
+**One precision, so the strength is not over-read.** The machine-checked
+theorem covers the UNRESTRICTED boundary. Under a declared, narrower boundary
+the closure is a reproducible computation, not a theorem — the kernel does not
+take a boundary as an input at all.
+
 ---
 
 *Prepared with AI assistance (Claude, Anthropic) under my direction; the

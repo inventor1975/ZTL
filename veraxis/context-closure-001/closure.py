@@ -144,6 +144,56 @@ def closure_verdict(phi, disclosed, hidden, boundary=None):
     return T, None
 
 
+def boundary_receipt(phi, disclosed, hidden, boundary):
+    """What a declared boundary EXCLUDED, and what that exclusion bought.
+
+    A boundary that turns F into T does so by removing completions. Which ones,
+    and were any of them the ones that defeated the claim? Without this, a
+    declared boundary is a word; with it, it is an object a lawyer can contest —
+    here are the readings you excluded, and here, by name, are the ones that
+    would have defeated the conclusion.
+
+    Returns (admitted, excluded, defeating): the completions the boundary keeps,
+    the ones it drops, and the subset of the dropped ones that defeat the claim
+    under the unrestricted boundary."""
+    full = admissible_completions(disclosed, hidden, None)
+    admitted = admissible_completions(disclosed, hidden, boundary)
+    excluded = [c for c in full if c not in admitted]
+    defeating = []
+    for c in excluded:
+        env = dict(disclosed)
+        env.update(c)
+        if evaluate(phi, env) != T:
+            defeating.append(c)
+    return admitted, excluded, defeating
+
+
+def print_receipt(phi, disclosed, hidden, boundary, label):
+    admitted, excluded, defeating = boundary_receipt(
+        phi, disclosed, hidden, boundary)
+
+    def fmt(cs):
+        return "; ".join(
+            ", ".join(f"{k}={v}" for k, v in sorted(c.items())) for c in cs
+        ) or "—"
+
+    print(f"\n    BOUNDARY RECEIPT for {label}")
+    print(f"      admitted   {len(admitted)}: {fmt(admitted)}")
+    print(f"      excluded   {len(excluded)}: {fmt(excluded)}")
+    print(f"      of those, DEFEATING under B_top   {len(defeating)}: "
+          f"{fmt(defeating)}")
+    if defeating:
+        print("""      READ THIS AS THE PRICE. The conclusion is warranted here ONLY
+      because the boundary removed a reading that defeats it. The warrant
+      rests on the boundary, not on the disclosure — and the excluded
+      reading is named, so its admissibility can be contested by whoever
+      has standing to decide it.""")
+    else:
+        print("""      The boundary excluded nothing that could defeat the claim, so it
+      is not carrying the conclusion — the disclosure is.""")
+    return defeating
+
+
 # ------------------------------- the commitment, computed rather than assumed
 
 def canonical(obj):
@@ -296,6 +346,8 @@ def four_cases():
                     note="closure now HOLDS — but only because B2 was declared.\n"
                          "    The boundary is a premise, not a proved fact, and this\n"
                          "    pair is the proof that it is doing work.")
+    receipt = print_receipt(claim, {"entitlement": T, "condition": T},
+                            {"exception"}, b_exception_excluded, "boundary B2")
 
     # A boundary that admits nothing. The naive implementation returned T here
     # — universal quantification over the empty set — which would let anyone
@@ -310,7 +362,7 @@ def four_cases():
                             "    itself is inadmissible, so closure is not computed.\n"
                             "    Closure reasons INSIDE an admitted boundary; it has no\n"
                             "    standing to produce that boundary's admissibility.")
-    return r1, r2, r3, (cc_b1, cc_b2), cc_empty
+    return r1, r2, r3, (cc_b1, cc_b2), cc_empty, receipt
 
 
 # ------------------------------- part 2: the occurrence/atom asymmetry
@@ -474,7 +526,7 @@ def main():
     print("""
 CONTEXT CLOSURE BENCH — selective disclosure over an unchanged ZTL core.
 The kernel is imported, not modified: `ztl.py` sha is the corpus's own.""")
-    r1, r2, r3, (cc_b1, cc_b2), cc_empty = four_cases()
+    r1, r2, r3, (cc_b1, cc_b2), cc_empty, receipt = four_cases()
     unsound, incomplete, total = census()
     cond_unsound, safe = condition()
 
@@ -483,6 +535,7 @@ The kernel is imported, not modified: `ztl.py` sha is the corpus's own.""")
           and r3[0] != T and r3[1] != T
           and cc_b1 != T and cc_b2 == T
           and cc_empty == BOUNDARY_INVALID
+          and receipt
           and cond_unsound == 0)
 
     print("\n" + "=" * 78)

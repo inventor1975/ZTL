@@ -20,7 +20,9 @@ grounds and asks where the deduction theorem flips:
                             touching u returns u. This is the cycle's own
                             LAZY REGISTER (kand/kor/knot), already
                             machine-checked in ZTL.lean
-  Ł3   Łukasiewicz          the decisive one: three-valued like ZTL, ZTL's
+  Ł3   Łukasiewicz          the decisive one: a three-symbol matrix as ZTL
+                            is STRUCTURALLY (ZTL is a two-valued LOGIC —
+                            no compound ever takes the mark), ZTL's
                             nearest neighbour in the lineage, and it KEEPS
                             THE INVOLUTION THAT ZTL BREAKS (¬¬x = x)
 

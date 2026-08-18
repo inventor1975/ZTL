@@ -246,6 +246,7 @@ def main():
     # reader cannot see is a hole in the instrument rather than a setting.
     PROSE_EXEMPT = {
         "61508": "IEC standard number, not a measurement",
+        "10.5281": "Zenodo DOI prefix — an identifier, not a measurement",
         "1.4": "quoted from a cited source",
         # NO VERSION STRINGS HERE ANY MORE. "16.10" sat on this list as a
         # harmless version string for six hours, and the version was wrong —

@@ -70,7 +70,8 @@ arrow — it is orthomodularity, not the hook. Confidence: medium. This is
 exactly why it is tested first.
 
 **Q2.** **Ł3 has the deduction theorem.** Its arrow is built for it. If
-so, ZTL and Ł3 are two three-valued neighbours differing precisely on the
+so, ZTL and Ł3 are two neighbours over three symbols — Ł3 three-valued as a
+logic, ZTL two-valued with a mark — differing precisely on the
 deduction theorem — the sharpest available localisation of what ZTL's
 refusal actually costs, against the closest point outside it.
 

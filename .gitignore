@@ -25,3 +25,8 @@ ztljudgenode.db
 # decision belongs in the machine, not in someone's memory.
 essays/
 Reproduce-ZTL.docx
+
+# Working material for the AI-introspection thread. Specimens, predictions and
+# fork output — measured but not part of the corpus, and deliberately not
+# shipped: db/_ground.py degrades to a no-op when this directory is absent.
+lab/

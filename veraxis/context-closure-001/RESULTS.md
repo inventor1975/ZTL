@@ -95,9 +95,26 @@ moves. The kernel does not take `B` as an input. A boundary-relative theorem
 requires `B` to enter the admitted grounds explicitly, and that formalisation
 is not done.
 
-Status: **measured on an enumeration, not proved.** Depth ≤ 2 over two atoms.
-The proof is a monotonicity argument and belongs in Lean before anyone quotes
-it as a theorem.
+Status: **PROVED**, 2026-08-19, `lean/ContextClosure.lean`, and it generalises
+past the census — the statement holds for the whole formula language and every
+valuation, not for depth ≤ 2 over two atoms.
+
+The proof runs where the measurement said it would: through a **monotonicity**
+lemma. On this fragment, reading the withheld ground as `T` instead of `F` can
+only preserve a warrant, and that is exactly what fails outside it. Three
+lemmas and the theorem, all `#print axioms` → *does not depend on any axioms*:
+
+| object | what it says |
+|---|---|
+| `eval_indep` | a formula not mentioning the atom cannot notice the completion |
+| `mono` | on the fragment, `F`-reading ⟹ `T`-reading preserves a warrant |
+| `closure_coincides` | kernel verdict ↔ every completion warrants |
+| `outside_fragment_fails` | `¬¬b` — the coincidence provably fails outside |
+
+Keeping it axiom-free took the corpus's own discipline: `simp` and `by_cases`
+put `propext` and `Classical.choice` into the term on the first attempt, so the
+whole file is `cases` + `noConfusion` + explicit rewrites, and atom equality
+goes through `decide` rather than `BEq`.
 
 ## 4. Two corrections applied after Arkadiy's static read
 

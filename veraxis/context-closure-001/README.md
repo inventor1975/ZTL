@@ -45,13 +45,26 @@ The attack-resistant statement: **under some non-monotone claim structures the
 present kernel can grant a positive warrant even though an admissible
 completion of withheld information defeats that claim.**
 
-**2. Positive-fragment coincidence — measured, not proved.**
+**2. Positive-fragment coincidence — PROVED, on the empty axiom list.**
 Where every withheld atom occurs under no negation, in no antecedent and in no
-xor/xnor, kernel verdict and closure coincide in both directions: 818 of 818
-pairs, against the unrestricted boundary `B_⊤`. The fragment is **sufficient
-and not maximal** — 1,102 formulas outside it also coincide on every disclosure
-tested. Candidate for a monotonicity proof in the Lean corpus; until then it is
-an empirical regularity with an exhibit.
+xor/xnor, kernel verdict and closure coincide in both directions. The bench
+measured this on 818 of 818 pairs; `lean/ContextClosure.lean` now proves it for
+**the whole formula language and every valuation**:
+
+```
+theorem closure_coincides (a : Nat) (v : Nat → V) (hv : v a = Z) :
+    ∀ φ : Fm, negFree a φ = true →
+      (evalF v φ = T ↔
+        (evalF (setA a T v) φ = T ∧ evalF (setA a F v) φ = T))
+```
+
+`#print axioms` → *does not depend on any axioms*, as do the monotonicity
+lemma it runs through and the independence lemma under that. The boundary of
+the theorem is itself a theorem: `outside_fragment_fails` exhibits `¬¬b` with
+`b` withheld — the kernel warrants it, the completion `b := F` does not.
+
+The fragment is **sufficient and not maximal** — 1,102 formulas outside it also
+coincide on every disclosure tested, and none of that is claimed by the proof.
 
 **3. Boundary admissibility — a mine, found and disarmed.**
 A declared boundary that admits **no** completion makes the universal

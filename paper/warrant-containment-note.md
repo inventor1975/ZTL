@@ -2,7 +2,20 @@
 
 ### What falls when a ground falls — and mostly negative results about when the answer can be trusted
 
-**Vitaly Reznik** · Independent researcher · 2026-08-16
+**Vitaly Reznik** · Independent researcher · **v1.1, 2026-08-18**
+
+> **What changed from v1.0** (deposited 2026-08-17,
+> [10.5281/zenodo.21981727](https://doi.org/10.5281/zenodo.21981727)).
+> **One correction, in the abstract only.** v1.0 called the instrument a
+> "three-valued calculus". That is a term of art meaning three TRUTH values,
+> which places a system among K3, LP and Łukasiewicz's Ł₃ — and this one is not
+> there. It is **two-valued**: every verdict is classical, and the third symbol
+> is a mark on an *input*, barred from the value of any compound. §1 stated it
+> correctly; the abstract did not.
+>
+> **Nothing else changed.** No measurement, no table, no figure, no limit, and
+> nothing in §3.6 or §6 — the sections a reader has cited. A citation to v1.0
+> remains accurate for everything except that one phrase.
 
 ---
 
@@ -15,10 +28,15 @@ being remembers. This note reports a machine that computes it instead, and
 then reports, at greater length, the conditions under which its answer is
 worth having.
 
-The instrument is small: a three-valued calculus whose core is machine-checked
-in Lean 4 on an empty axiom list, and a ledger over it in which every quantity
+The instrument is small: a **three-symbol, two-valued** calculus whose core is
+machine-checked in Lean 4 on an empty axiom list — and a ledger over it in which every quantity
 carries the ground it rests on. From those, withdrawal propagates by
-arithmetic rather than by memory.
+arithmetic rather than by memory. (v1.0, deposited as
+10.5281/zenodo.21981727, said "three-valued" here. That is a term of art
+meaning three TRUTH values, which would place this calculus among K3, LP and
+Ł3; it is not there. There are exactly two truth values and the third symbol is
+a mark on an input, barred from the value of any compound. §1 had it right and
+the abstract did not.)
 
 The measurements are simulations, and the useful ones are negative. A cascade
 at a hundred thousand agents is cheap and, taken alone, useless: a randomly

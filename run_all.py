@@ -374,6 +374,13 @@ STANDS = [
                         "moore            single-marking",
                         "surprise exam    verify-only",
                         "berry            needs-expire"]),
+    # THE AVENGER, 2026-08-18. The curator asked whether Tarski's
+    # infinite regress reaches ZTL, whose bullet is in quarantine. The
+    # revenge sentence is buildable — `isZ` is expressible inside, and
+    # `lean/ZTL.lean` calls that "the avenger's door" — and it lands in
+    # a category that already existed. Pinned so the classification
+    # cannot drift silently.
+    ("dilemmas/avenger.py", ["AVENGER STAND GREEN"]),
     ("dilemmas/moore.py", ["MOORE GREEN",
                            "'it is raining but I do not believe it'  : 1 of 9",
                            "'raining, and I do not believe it', asserted: 0 of 9",

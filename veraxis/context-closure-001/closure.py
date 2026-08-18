@@ -2,7 +2,7 @@
 """
 Context Closure Bench — selective disclosure judged by an UNCHANGED ZTL core.
 
-    python3 lab/closure/closure.py
+    python3 veraxis/context-closure-001/closure.py
 
 THE QUESTION, from the Veraxis side, 2026-08-18. Cryptography proves that a
 disclosed fragment came from a signed object. It does not prove that the
@@ -30,7 +30,9 @@ value for an ATOM. ZTL substitutes each OCCURRENCE independently — that is its
 generating principle and the reason `Z or Z = F`. So the two quantifiers are
 not the same, and the interesting question is which way they can differ.
 """
+import hashlib
 import itertools
+import json
 import os
 import sys
 
@@ -90,21 +92,119 @@ def ztl_verdict(phi, disclosed, hidden):
     return evaluate(phi, env)
 
 
+BOUNDARY_INVALID = "BOUNDARY_INVALID"
+
+
+def admissible_completions(disclosed, hidden, boundary=None):
+    """The completions a declared boundary actually admits.
+
+    Two admissibility conditions, and the first one is a mine that a naive
+    implementation steps on. A boundary admitting NO completion makes the
+    universal quantifier vacuously true, so `∀σ ∈ B: eval(q,σ) = T` returns T
+    for every claim — one could "prove closure" by declaring a contradictory
+    boundary. Mathematically ordinary; institutionally it is the whole
+    guarantee handed back for free. Found by Arkadiy on a static read of this
+    file, before it could reach anything.
+
+    The second condition is quieter: a boundary must not contradict what was
+    already disclosed. A completion assigning a value to an atom the discloser
+    already published is not a completion of the withheld part — it is a
+    rewrite of the disclosed part."""
+    hidden = sorted(hidden)
+    out = []
+    for combo in itertools.product((T, F), repeat=len(hidden)):
+        completion = dict(zip(hidden, combo))
+        if any(a in disclosed for a in completion):
+            continue                       # would rewrite a disclosed ground
+        if boundary and not boundary(completion):
+            continue                       # outside the declared boundary
+        out.append(completion)
+    return out
+
+
 def closure_verdict(phi, disclosed, hidden, boundary=None):
     """CC_B: T iff every admissible completion of the hidden atoms yields T.
 
+    Returns (verdict, witness). The verdict is `BOUNDARY_INVALID` when the
+    declared boundary admits nothing — NOT `T`. Admissibility of the boundary
+    is decided BEFORE closure is computed: closure reasons inside an admitted
+    boundary and has no standing to produce the boundary's own admissibility.
+
     `boundary` is a predicate over the completion dict — the declared B. None
-    means the unrestricted boundary {T,F} per hidden atom, independently."""
-    hidden = sorted(hidden)
-    for combo in itertools.product((T, F), repeat=len(hidden)):
-        completion = dict(zip(hidden, combo))
-        if boundary and not boundary(completion):
-            continue                       # outside the declared boundary
+    means the unrestricted boundary `B_⊤` = {T,F} per hidden atom,
+    independently."""
+    completions = admissible_completions(disclosed, hidden, boundary)
+    if not completions:
+        return BOUNDARY_INVALID, None
+    for completion in completions:
         env = dict(disclosed)
         env.update(completion)
         if evaluate(phi, env) != T:
             return F, completion           # the completion that defeats it
     return T, None
+
+
+# ------------------------------- the commitment, computed rather than assumed
+
+def canonical(obj):
+    """The consumer's own canonical serialization, reproduced exactly:
+    UTF-8, keys sorted, no indentation, `,`/`:` separators, no trailing
+    newline, and a self-digest excluded by KEY REMOVAL rather than null
+    substitution (`veraxis/integration-slice-001/…DIGEST-DERIVATION-v0.5.md`)."""
+    return json.dumps(obj, sort_keys=True, ensure_ascii=False,
+                      separators=(",", ":")).encode("utf-8")
+
+
+def digest(obj, self_key=None):
+    body = {k: v for k, v in obj.items() if k != self_key}
+    return hashlib.sha256(canonical(body)).hexdigest()
+
+
+def commitment(phi, disclosed, hidden):
+    """A CLWR-shaped record over this claim: the formula's digest, and a
+    digest per disclosed ground. Withheld grounds are committed BY DIGEST —
+    the discloser cannot silently drop or rewrite one."""
+    grounds = {}
+    for atom in sorted(set(disclosed) | set(hidden)):
+        shown = atom in disclosed
+        grounds[atom] = {
+            "disclosed": shown,
+            # A withheld ground still commits to its content by hash.
+            "value_sha256": hashlib.sha256(
+                f"{atom}={disclosed.get(atom, 'WITHHELD-SECRET')}".encode()
+            ).hexdigest(),
+        }
+    record = {
+        "formula": show(phi),
+        "formula_sha256": hashlib.sha256(show(phi).encode()).hexdigest(),
+        "grounds": grounds,
+    }
+    record["record_sha256"] = digest(record, self_key="record_sha256")
+    return record
+
+
+def verify_commitment(record, phi, disclosed, hidden):
+    """The cryptographic half, actually run: does this disclosure verify
+    against the committed record? Returns (ok, list of check results)."""
+    checks = []
+    fresh = commitment(phi, disclosed, hidden)
+    checks.append(("formula digest matches commitment",
+                   fresh["formula_sha256"] == record["formula_sha256"]))
+    checks.append(("record digest reproduces from its own body",
+                   digest(record, self_key="record_sha256")
+                   == record["record_sha256"]))
+    every_ground = all(
+        record["grounds"].get(a, {}).get("value_sha256")
+        == fresh["grounds"][a]["value_sha256"]
+        for a in fresh["grounds"]
+    )
+    checks.append(("every disclosed ground matches its commitment",
+                   every_ground))
+    checks.append(("withheld grounds are present as digests",
+                   all(not record["grounds"][a]["disclosed"]
+                       and record["grounds"][a]["value_sha256"]
+                       for a in sorted(hidden))))
+    return all(ok for _, ok in checks), checks
 
 
 # ------------------------------------------------ part 1: the four cases
@@ -127,7 +227,7 @@ def case(title, phi, disclosed, hidden, boundary=None, note=""):
 
 def four_cases():
     print("=" * 78)
-    print("PART 1 — the four demonstration cases")
+    print("PART 1 — the demonstration cases")
     print("=" * 78)
 
     # The legal shape, kept deliberately plain: the claim holds if the
@@ -154,10 +254,28 @@ def four_cases():
               claim,
               {"entitlement": T, "condition": T},
               {"exception"},
-              note="THE EXHIBIT. Every cryptographic property still holds — the\n"
-                   "    disclosed atoms are authentic, the signature verifies, the\n"
-                   "    fragment provably came from the committed object — and the\n"
-                   "    conclusion is nonetheless not warranted.")
+              note="THE EXHIBIT — and the crypto half is now RUN, not assumed:")
+
+    # The cryptographic half, computed rather than stipulated. Same disclosure
+    # as case 3; the record is built over the full claim and then verified
+    # against what the discloser actually showed.
+    rec = commitment(claim, {"entitlement": T, "condition": T, "exception": T},
+                     set())
+    rec_disclosed = commitment(claim, {"entitlement": T, "condition": T},
+                               {"exception"})
+    crypto_ok, checks = verify_commitment(
+        rec_disclosed, claim, {"entitlement": T, "condition": T}, {"exception"})
+    for label, ok in checks:
+        print(f"      {'PASS' if ok else 'FAIL'}  {label}")
+    print(f"""      record_sha256 {rec_disclosed['record_sha256'][:32]}…
+
+    CryptographicVerification = {'PASS' if crypto_ok else 'FAIL'}
+    ContextClosure            = {r3[1]}
+
+    Both computed in this run. Authenticity of what is shown is not
+    sufficiency for what is concluded — and the committed record even carries
+    the withheld ground's digest, so nothing was dropped or forged. The
+    conclusion is still unwarranted.""")
 
     # Two declared boundaries over ONE disclosure. B2 encodes an institutional
     # fact: in this jurisdiction the exception cannot fire while the condition
@@ -178,7 +296,21 @@ def four_cases():
                     note="closure now HOLDS — but only because B2 was declared.\n"
                          "    The boundary is a premise, not a proved fact, and this\n"
                          "    pair is the proof that it is doing work.")
-    return r1, r2, r3, (cc_b1, cc_b2)
+
+    # A boundary that admits nothing. The naive implementation returned T here
+    # — universal quantification over the empty set — which would let anyone
+    # "prove closure" by declaring a contradictory boundary.
+    def b_contradictory(c):
+        return c.get("exception") == T and c.get("exception") == F
+
+    _, cc_empty = case("5. EMPTY BOUNDARY — a declared B that admits nothing",
+                       claim, {"entitlement": T, "condition": T},
+                       {"exception"}, b_contradictory,
+                       note="NOT warranted, and not refuted either: the boundary\n"
+                            "    itself is inadmissible, so closure is not computed.\n"
+                            "    Closure reasons INSIDE an admitted boundary; it has no\n"
+                            "    standing to produce that boundary's admissibility.")
+    return r1, r2, r3, (cc_b1, cc_b2), cc_empty
 
 
 # ------------------------------- part 2: the occurrence/atom asymmetry
@@ -342,7 +474,7 @@ def main():
     print("""
 CONTEXT CLOSURE BENCH — selective disclosure over an unchanged ZTL core.
 The kernel is imported, not modified: `ztl.py` sha is the corpus's own.""")
-    r1, r2, r3, (cc_b1, cc_b2) = four_cases()
+    r1, r2, r3, (cc_b1, cc_b2), cc_empty = four_cases()
     unsound, incomplete, total = census()
     cond_unsound, safe = condition()
 
@@ -350,19 +482,24 @@ The kernel is imported, not modified: `ztl.py` sha is the corpus's own.""")
           and r2 == (T, T)
           and r3[0] != T and r3[1] != T
           and cc_b1 != T and cc_b2 == T
+          and cc_empty == BOUNDARY_INVALID
           and cond_unsound == 0)
 
     print("\n" + "=" * 78)
     if ok:
         print(f"""CLOSURE BENCH GREEN — three results, and the middle one is negative.
 
-  THE FOUR CASES. Full disclosure warrants. Immaterial concealment warrants
+  THE FIVE CASES. Full disclosure warrants. Immaterial concealment warrants
   ANYWAY, so this is not a demand for full disclosure — privacy survives when
   what is hidden cannot defeat the claim. Material concealment does NOT
-  warrant, while every cryptographic check on the same disclosure still passes:
-  authenticity of what is shown is not sufficiency for what is concluded. And
-  one disclosure gives two different closure results under two declared
-  boundaries — the proof that the boundary is a premise, not a discovered fact.
+  warrant, while every cryptographic check on the same disclosure passes — and
+  those checks are COMPUTED in this run, over a CLWR-shaped record under the
+  consumer's own canonical serialization, not stipulated in prose. One
+  disclosure gives two different closure results under two declared
+  boundaries, which proves the boundary is a premise and not a discovered
+  fact. And a boundary admitting nothing returns BOUNDARY_INVALID rather than
+  a vacuous T — closure reasons inside an admitted boundary and cannot produce
+  that boundary's own admissibility.
 
   THE CENSUS, AND IT REFUTES THE COMFORTABLE READING. On {total} pairs the
   kernel grants T while closure fails {len(unsound)} times. ZTL is NOT a

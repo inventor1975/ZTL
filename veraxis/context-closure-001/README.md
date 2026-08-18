@@ -26,7 +26,12 @@ python3 veraxis/context-closure-001/closure.py
 
 ~2 seconds, standard library only, deterministic, exit 0 when green.
 
-## Three results, at three different levels of confidence
+**Cite this artifact by tag, not by `master`.** Tag `context-closure-001-v1`
+pins the whole tree; the kernel it imports is `ztl.py` at
+`sha256 a57324b39ebb66ee1fe39d834a1a891f8b1927882b1dc6df4c808cc2ef335d81`.
+`master` moves; a research citation should not.
+
+## Four results, at different levels of confidence
 
 **1. Non-equivalence — established, with an executable minimal witness.**
 The kernel's verdict is not the same property as completion closure. For
@@ -48,7 +53,19 @@ and not maximal** — 1,102 formulas outside it also coincide on every disclosur
 tested. Candidate for a monotonicity proof in the Lean corpus; until then it is
 an empirical regularity with an exhibit.
 
-**3. Boundary relativity — demonstrated.**
+**3. Boundary admissibility — a mine, found and disarmed.**
+A declared boundary that admits **no** completion makes the universal
+quantifier vacuously true, so a naive implementation returns `T` for every
+claim: one could "prove closure" by declaring a contradictory boundary. The
+bench now returns `BOUNDARY_INVALID` instead, and decides admissibility of the
+boundary *before* computing closure — closure reasons inside an admitted
+boundary and has no standing to produce that boundary's own admissibility. A
+second condition rides along: a boundary may not assign values to grounds the
+discloser already published (that is a rewrite of the disclosed part, not a
+completion of the withheld part). *Found by Arkadiy on a static read of the
+file, before it reached anything.*
+
+**4. Boundary relativity — demonstrated.**
 One disclosure, two declared boundaries, two different closure results, with
 the kernel verdict unmoved. Therefore no closure guarantee may be stated
 without an explicit `B` — and, since the kernel does not take `B` as an input,
@@ -61,8 +78,17 @@ That formalisation is not done.
 * **Immaterial concealment warrants anyway** — this is not a demand for full
   disclosure; privacy survives when what is hidden cannot defeat the claim.
 * **Material concealment does not warrant, while every cryptographic check on
-  the same disclosure passes** — authenticity of what is shown is not
-  sufficiency for what is concluded.
+  the same disclosure passes** — and those checks are **computed in the run**,
+  not stipulated: the bench builds a CLWR-shaped record (formula digest, a
+  digest per ground, a self-excluding `record_sha256`) under the consumer's own
+  canonical serialization — sorted keys, `,`/`:` separators, no trailing
+  newline, self-digest excluded by key removal — verifies it, and prints
+  `CryptographicVerification = PASS` beside `ContextClosure = F`. The withheld
+  ground is present in the record *as a digest*, so nothing was dropped or
+  forged. Authenticity of what is shown is not sufficiency for what is
+  concluded.
+* **A boundary admitting nothing returns `BOUNDARY_INVALID`**, not a vacuous
+  `T`.
 * The declared boundary changes the answer, visibly.
 
 ## Two limits that do not move
@@ -88,7 +114,8 @@ satisfies the same condition.
 
 | file | what it is |
 |---|---|
-| `closure.py` | the bench — four cases, census, fragment |
+| `closure.py` | the bench — five cases, crypto fixture, census, fragment |
+| `BRIEF-FOR-ADRIAN.md` | the one-page summary written for the legal side |
 | `PREDICTIONS.md` | frozen before the bench existed; P1 was refuted by the run |
 | `RESULTS.md` | the full reading, including what may and may not be said |
 

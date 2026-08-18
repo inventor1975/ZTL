@@ -99,6 +99,31 @@ Status: **measured on an enumeration, not proved.** Depth ≤ 2 over two atoms.
 The proof is a monotonicity argument and belongs in Lean before anyone quotes
 it as a theorem.
 
+## 4. Two corrections applied after Arkadiy's static read
+
+**The empty boundary was a real hole.** `closure_verdict` iterated the
+completions, skipped those the boundary rejected, and returned `T` if it never
+found a defeating one — so a boundary admitting NOTHING returned `T` for every
+claim. Universal quantification over the empty set, mathematically ordinary and
+institutionally fatal: one could "prove closure" by declaring a contradictory
+boundary. The bench now decides `BoundaryAdmissible(B, D)` FIRST and returns
+`BOUNDARY_INVALID` when the boundary admits nothing — closure reasons inside an
+admitted boundary and has no standing to produce that boundary's own
+admissibility. A second condition came with it: a boundary may not assign a
+value to a ground the discloser already published. Case 5 of the bench pins
+both. **Found by reading, not by running — the bench was green before it.**
+
+**The cryptographic half is now computed, not stipulated.** Case 3 previously
+asserted in prose that signature and provenance still pass. It now builds a
+CLWR-shaped record — formula digest, a digest per ground, a self-excluding
+`record_sha256` — under the consumer's own canonical serialization from
+`INTEGRATION-SLICE-001-DIGEST-DERIVATION-v0.5.md` (sorted keys, `,`/`:`
+separators, no trailing newline, self-digest excluded by key removal), verifies
+it, and prints `CryptographicVerification = PASS` beside `ContextClosure = F`.
+The withheld ground is in the record **as a digest**, so nothing was dropped or
+forged. The claim "authentic ≠ sufficient" is now one executable end-to-end
+witness rather than an illustration.
+
 ## What to say, and what not to say
 
 Sayable: *ZTL permits selective disclosure without requiring full-context

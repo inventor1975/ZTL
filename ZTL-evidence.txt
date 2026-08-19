@@ -528,6 +528,10 @@ A bounded scope is not "less proved"; its claim scope is simply narrower.
     [PROVED · GENERAL          ] V.normal_form_sound
     [PROVED · GENERAL          ] V.normal_form_incomplete
 
+## Receipt.lean
+    [PROVED · GENERAL          ] V.label_empty_of_decided
+    [PROVED · GENERAL          ] V.receipt_complete
+
 ==================================================================
 2. evidence_status = MEASURED_WITH_CEILING · proof_scope = POOL_BOUNDED  (Python stands, not Lean theorems)
 ==================================================================
@@ -547,5 +551,5 @@ A bounded scope is not "less proved"; its claim scope is simply narrower.
     - the passport register reads ONE WAY, physical → operational (§10)
 
 ==================================================================
-proof_scope tally over 440 PROVED Lean declarations: 353 GENERAL, 45 BOUNDED_MODEL, 2 EXISTENCE_WITNESS, 40 CONCRETE_CELL.
+proof_scope tally over 442 PROVED Lean declarations: 355 GENERAL, 45 BOUNDED_MODEL, 2 EXISTENCE_WITNESS, 40 CONCRETE_CELL.
 Heuristic first cut (syntactic scan); the scope of each SELECTED element is confirmed by semantic review.

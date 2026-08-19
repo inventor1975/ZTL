@@ -16,6 +16,7 @@ from zverify import grade, ztl_eval, verify              # noqa: E402
 from zpassport import passports, deps, component_models  # noqa: E402
 from zfl import to_statement, to_system                  # noqa: E402
 from znormal import normalise, on_credit                # noqa: E402
+from znum import E as E_LETTER                          # noqa: E402
 import zderive                                           # noqa: E402
 from entailment import entails                           # noqa: E402
 
@@ -74,6 +75,47 @@ def run_statement(doc, parsed):
                      " — the refusals are liftable by verification"),
         "completions": completions,
     }
+    # --- a DECLARED boundary: which completions the reader admits at all.
+    # `b!=T` says the reading b=T is not to be considered. That is a premise,
+    # not a discovered fact, so the engine prints what it costs: the readings
+    # it removed, and whether any of them would have defeated the verdict. If
+    # a boundary admits nothing, the answer is E — nothing to read — and not a
+    # vacuous T (the empty universal is true only if you let it be).
+    bounds = doc.get("boundary") or {}
+    if bounds and z_atoms:
+        admitted, excluded, defeating = [], [], []
+        for combo in product((T, F), repeat=len(z_atoms)):
+            comp = dict(zip(z_atoms, combo))
+            env2 = dict(env); env2.update(comp)
+            label = ", ".join(f"{a}={v}" for a, v in comp.items())
+            if any(v in bounds.get(a, ()) for a, v in comp.items()):
+                excluded.append(label)
+                if ev(formula, env2) != value:
+                    defeating.append(label)
+            else:
+                admitted.append(label)
+        if not admitted:
+            report["verdict"] = E_LETTER
+            # An E is neither granted nor refused, so the warranty grade and
+            # the credit note describe a verdict that no longer exists.
+            report["warranty"] = "—"
+            report["verdict_class"] = (
+                "E — nothing to read: the declared boundary admits no reading"
+                " at all, so there is nothing to quantify over. Not warranted"
+                " and not refuted; a boundary that excludes everything is not"
+                " a boundary but a contradiction.")
+        report["boundary"] = {
+            "declared": {a: sorted(v) for a, v in bounds.items()},
+            "admitted": admitted, "excluded": excluded,
+            "defeating": defeating,
+            "note": ("the verdict rests on the BOUNDARY, not on what was"
+                     " disclosed: the excluded readings below would have"
+                     " changed it, and they are named so that whoever may"
+                     " decide admissibility can contest them"
+                     if defeating else
+                     "the boundary excluded nothing that could have changed"
+                     " the verdict — it is not carrying the conclusion")}
+
     # --- is this T resting on the mark, and what would remove it?
     # `until-verification` names the grade; this names the CAUSE and the
     # remedy. A verdict that stops being T once negations are pushed to the
@@ -81,7 +123,8 @@ def run_statement(doc, parsed):
     # negation. Normalising removes every such verdict (normal_form_sound) and
     # also costs honest ones (normal_form_incomplete) — so this reports, it
     # does not rewrite the claim.
-    if on_credit(formula, env):
+    # Not for an E: there is no verdict left to be on credit.
+    if report["verdict"] != E_LETTER and on_credit(formula, env):
         report["on_credit"] = (
             "this T rests on the mark: an unverified ground is reading as"
             " FALSE under a negation, and that is what carries the verdict."

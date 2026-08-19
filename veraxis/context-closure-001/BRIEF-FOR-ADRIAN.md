@@ -88,10 +88,19 @@ exclusions, provisos and conditions of defeat sit under a negation by their
 grammar, and for those the closure must be checked over completions rather than
 read off the kernel.
 
-**This fragment is sufficient, and demonstrably not maximal:** a further 1,102
-formulas *outside* it also coincide on every disclosure tested. So it is a safe
-sufficient criterion, not a characterisation, and should not be presented as
-one.
+**This is now a theorem, not a measurement** (`lean/ContextClosure.lean`,
+proved on the empty axiom list, for the whole formula language and every
+valuation — not for the sampled cases only).
+
+**And the criterion cannot be sharpened by looking at the formula alone — also
+a theorem.** Soundness is not a property of the formula: the same claim with
+the same withheld element is safe under one disclosure and unsafe under
+another. `¬(a ∧ b)` with `b` withheld is safe when `a` is false (the
+conjunction fails whatever `b` is) and unsafe when `a` is true (it fails only
+because `b` is unverified). So the syntactic criterion is *maximal in its
+class*: any sharper rule must read the disclosure as well, and ask whether the
+falsity the system reasoned from is a real falsehood or merely an unverified
+ground.
 
 ## Status, stated precisely
 
@@ -99,16 +108,14 @@ Three separable results, at three different levels of confidence:
 
 1. **Non-equivalence** — kernel verdict ≠ completion closure. Established by an
    executable minimal counterexample; the strongest of the three.
-2. **Positive-fragment coincidence** — measured, 818/818, against the
-   unrestricted boundary. A candidate for a monotonicity proof; **not proved**.
+2. **Positive-fragment coincidence** — **proved** (machine-checked, empty axiom
+   list), together with a second theorem showing that no purely syntactic
+   condition can be exact.
 3. **Boundary relativity** — one disclosure yields different closure results
    under two declared boundaries. Therefore no closure guarantee may be stated
    without an explicit `B`.
 
-Result 2 in particular is an empirical regularity with an exhibit, not a
-theorem, and the machine-checked proof belongs in the corpus before anyone
-cites it as one. Note also that the kernel does not take `B` as an input while
-closure does — so any boundary-relative statement needs `B` to enter the
+Note that the kernel does not take `B` as an input while closure does — so any boundary-relative statement needs `B` to enter the
 admitted grounds explicitly, and that formalisation is not yet done.
 
 ## Two limits that do not move
@@ -134,9 +141,17 @@ kernel alone is not sound for this property, and the completions must be
 checked.
 
 **Cannot:** that the kernel computes contextual sufficiency in general; that
-the syntactic fragment characterises the safe cases (it does not — 1,102
-formulas outside it are also safe); any version of the guarantee without the
-boundary index; or that any of this settles what a document means.
+the syntactic fragment *characterises* the safe cases (it does not, and we
+prove it cannot); any version of the guarantee without the boundary index; or
+that any of this settles what a document means.
+
+**One practical addition, measured rather than proved.** Rewriting a claim into
+a normal form before judging it — pushing negations inward — removes every
+credit-warrant we found, at the cost of losing about a sixth of the honest ones,
+and costs nothing at all on fully verified data. Which of those two errors an
+institution prefers — never granting a warrant it should not, versus never
+losing one it should — is a second question of the same kind as the boundary:
+the machine can price both outcomes, and cannot choose between them.
 
 ## One architectural note, since it bears on how you frame the object
 

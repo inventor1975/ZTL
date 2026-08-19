@@ -141,6 +141,31 @@ The withheld ground is in the record **as a digest**, so nothing was dropped or
 forged. The claim "authentic ≠ sufficient" is now one executable end-to-end
 witness rather than an illustration.
 
+**5. No purely syntactic condition can be exact — PROVED.**
+The positive fragment is sufficient and cannot be sharpened into a
+characterisation *by looking at the formula alone*, because soundness is not a
+property of the formula. The same formula with the same withheld atom is sound
+under one disclosure and unsound under another:
+
+    ¬(a ∧ b), with b withheld
+      a = F  →  the conjunction is false whatever b is; the kernel's T
+                survives every completion.            SOUND
+      a = T  →  the conjunction reads F only because b is unverified, and
+                the completion b := T defeats the claim.   UNSOUND
+
+`no_syntactic_characterisation` in `lean/ContextClosure.lean`, on the empty
+axiom list. Measured first: of 2,244 out-of-fragment formulas, 885 are
+degenerate (the kernel can never say `T` at all — it did not swim, so it did
+not drown), 580 are soundly non-lying, 566 always lie, and **213 flip with the
+disclosure**. The curator predicted the 580 before the run, and named
+implication as the source: `b → a` is the first of them, because there the `T`
+comes from a true consequent rather than from an unverified antecedent.
+
+So the syntactic criterion is **maximal in its class**. A sharper condition must
+look at the disclosure as well, and ask the one question the examples point at:
+is the `F` the kernel reasoned from a real falsehood, or merely an unverified
+ground?
+
 ## Where this sits relative to what the corpus already proved
 
 The greedy register's non-monotonicity is **not a discovery of this artifact** —

@@ -332,6 +332,38 @@ theorem outside_fragment_fails :
   rw [evalF, evalF, evalF, setA_self] at h
   exact V.noConfusion h
 
+/-! ## No purely syntactic condition can be exact
+
+The positive fragment is sufficient. It is not necessary, and — more than that
+— NO condition on the formula alone can be necessary and sufficient, because
+soundness is not a property of the formula: the same formula with the same
+withheld atom is sound under one disclosure and unsound under another.
+
+Witness: `¬(a ∧ b)` with `b` withheld.
+
+  * disclosed `a = F` — the conjunction is false whatever `b` is, so the
+    kernel's `T` survives every completion. Sound.
+  * disclosed `a = T` — the conjunction reads `F` only because `b` is
+    unverified, and the completion `b := T` defeats the claim. Unsound.
+
+So the syntactic criterion proved above is **maximal in its class**: a sharper
+condition must look at the disclosure too, and ask whether the `F` the kernel
+reasoned from is a real falsehood or merely an unverified ground. -/
+
+theorem no_syntactic_characterisation :
+    ∃ (φ : Fm) (a : Nat) (v w : Nat → V),
+      v a = Z ∧ w a = Z ∧
+      -- sound under one disclosure: the kernel's T survives every completion
+      (evalF v φ = T ∧ evalF (setA a T v) φ = T ∧ evalF (setA a F v) φ = T) ∧
+      -- unsound under the other: the kernel says T, a completion defeats it
+      (evalF w φ = T ∧ evalF (setA a T w) φ ≠ T) := by
+  refine ⟨.neg (.conj (.atom 0) (.atom 1)), 1,
+          (fun n => if n = 0 then F else Z),
+          (fun n => if n = 0 then T else Z), rfl, rfl, ?_, ?_⟩
+  · exact ⟨by decide, by decide, by decide⟩
+  · exact ⟨by decide, by decide⟩
+
+#print axioms no_syntactic_characterisation
 #print axioms eval_indep
 #print axioms mono
 #print axioms closure_coincides

@@ -6,6 +6,13 @@ A single technical result, with its negative half and its limits. It is offered
 before any joint framing, so that whatever you write about the legal object
 rests on what is measured rather than on what we intend to build.
 
+**Read `PRIOR-ART.md` alongside this.** The problem this addresses — that
+withholding information can change a decision — and the machinery for checking
+it have fourteen years of work behind them in attribute-based access control.
+Eight of the fifteen claims one might make here are already known there. The
+part that is specific to this calculus is small, formal, and marked as such;
+please do not build a novelty claim on anything not marked ZTL-SPECIFIC.
+
 ## The question
 
 Cryptography can prove that a disclosed fragment came from a signed document —
@@ -167,7 +174,11 @@ satisfies the same condition.
 ## What the bench can already give the legal side
 
 Two things, both concrete, offered because they bear directly on the question
-of the boundary.
+of the boundary. **Neither mechanism is new**, and `PRIOR-ART.md` says where
+each comes from — identifying which withheld values could change a decision is
+established work in access control (critical pairs and attribute value power,
+2019). What is offered here is their arrangement around your question, not
+their invention.
 
 **A receipt for every declared boundary.** When a boundary turns an unwarranted
 claim into a warranted one, it does so by removing readings. The bench now

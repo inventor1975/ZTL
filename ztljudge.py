@@ -189,6 +189,16 @@ def _lazy(phi, m):
     (The Lean `labF` is this function, asked of both engines rather than
     argued: `bridge.py`, 609 questions, zero divergences.)
 
+    AND IT COVERS THE VERDICT, not only this column. `pending` is printed
+    beside a GREEDY verdict, and `receipt_complete_greedy` proves the
+    same guarantee there — an unverified atom off the label cannot move
+    `ev` either. That was measured before it was proved and I had
+    predicted the opposite: the greedy register is non-monotone, so a
+    branch Kleene calls decisive looked like where the receipt would
+    leak. It does not, because whenever the lazy register commits the
+    greedy one agrees with it (`greedy_agrees_when_decided`), and the
+    greedy tables absorb exactly where the label drops a branch.
+
     The OVER-approximation half stays measured and stays honest: the
     label also names innocent atoms, and does so more as formulas deepen
     — 16% of pending cells at depth 2 over two atoms, 21% at depth 2 over
@@ -687,6 +697,28 @@ if __name__ == "__main__":
     print(f"    label covered every load-bearing hole: {covered}")
     print(f"    label also named an innocent one: {extra}")
     assert covered == cells and cells > 10000
+    # ...and the same probe against the register that SIGNS. `pending` sits one
+    # column from the greedy verdict, so it had better cover that too — proved
+    # in `receipt_complete_greedy`, guarded here so the claim cannot rot.
+    gcells = gmiss = 0
+    for phi in depth2_pool():
+        for va in (T, F, Z):
+            for vb in (T, F, Z):
+                m = {"p": va, "q": vb}
+                if Z not in (va, vb):
+                    continue
+                gv = ev(phi, m)
+                lab = _lazy(phi, m)[1]
+                for a in ("p", "q"):
+                    if m[a] != Z:
+                        continue
+                    for val in (T, F):
+                        m2 = dict(m); m2[a] = val
+                        if ev(phi, m2) != gv and a not in lab:
+                            gmiss += 1
+                gcells += 1
+    print(f"    greedy cells with a hole: {gcells}   receipt missed: {gmiss}")
+    assert gmiss == 0 and gcells > 5000
     for m in ({"paid": T, "delivered": Z, "refunded": T},
               {"paid": T, "delivered": Z, "refunded": F},
               {"paid": F, "delivered": Z, "refunded": F}):

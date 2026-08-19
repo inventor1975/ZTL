@@ -9,6 +9,25 @@ below carries the command that re-checks it.
 is the whole lesson of the day it was written. Anything here can have gone
 stale; the code is the arbiter.
 
+**And read the preprint's own positioning before saying anything about what ZTL
+is** — `paper/ZTL-draft_1.4.md`, three sections, twenty minutes:
+
+* **§10** — the passport. What Z is (a mark on data, not a truth value), why the
+  verdicts stay two-valued, the passport on three axes (conservative extension
+  by data, strict contraction by law, strict expansion in expressive reach), and
+  the local-versus-global reading of the mark. That last one matters more than
+  it looks: the *global* reading is classical supervaluation, and the whole
+  selective-disclosure branch of §1.5 below is that reading turned operational.
+* **§3.6–3.8** — the algebraic passport, the clone theorem (term operations are
+  exactly the projections plus the external functions — nothing sneaks in), and
+  the census of single-operator completeness.
+* **§7** — limitations and honest caveats. Read it before making any claim
+  outward; it is the list of things this corpus does *not* do.
+
+This file is a briefing for getting to work. The preprint is what the work
+actually says, and where a disagreement between them appears, the preprint and
+the code win over this file.
+
 ---
 
 ## 0. The single most important habit

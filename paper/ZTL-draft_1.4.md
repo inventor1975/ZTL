@@ -1091,6 +1091,29 @@ relation is provably different (LEM fell, the deduction theorem is
 one-directional, ¬¬p ⊭ p — §§3–5). A logic is defined by its
 entailment, not by its palette.
 
+**The passport on three axes.** The comparison with classical logic
+runs in three different directions at once, and collapsing them into
+"stronger" or "weaker" loses all three.
+
+* *Conservative extension by data.* On a mark-free valuation ZTL
+  agrees with classical logic formula for formula
+  (`ClassicalAgreement.evalF_agrees`) — where nothing is unverified,
+  nothing changes.
+* *Strict contraction by law.* Every ZTL validity is classically
+  valid, and not conversely: `p → p` is a classical tautology and
+  fails here on a marked atom (`ztl_taut_is_classical`,
+  `not_conversely`). Strictly fewer laws.
+* *Strict expansion in expressive reach.* The clone is exactly the
+  projections plus the external functions — 1 + 8 unary, 2 + 512
+  binary, nothing else sneaking in (§3.6, §3.7). Those external
+  functions speak about the **status** of a ground, which classical
+  logic has no object to speak about at all; and single-operator
+  completeness is *lost* in exchange (§3.8: NAND and NOR each stall,
+  only `↛` survives).
+
+So the honest one-liner is neither "stronger" nor "weaker": **wider in
+subject, narrower in law, identical on verified data.**
+
 **Local versus global reading of the mark.** "Z is a mark on the atom"
 admits two readings of verdicts: the global one ("a formula is
 assertable if true under all substitutions into the marked atoms at
@@ -1101,6 +1124,30 @@ globally: T); the other five cells coincide. The global reading returns
 all classical tautologies but loses tabularity (supervaluation is not
 truth-functional) and both signature cells — the ladder of floors and
 the NaN signature "not equal to itself". The anchors choose locality.
+
+**The global reading now has a branch of its own, with theorems.**
+Asked by a downstream consumer whether a *partial disclosure* suffices
+for the conclusion drawn from it, the global reading becomes an
+operational question: does the verdict survive every admissible
+completion of what was withheld? `veraxis/context-closure-001/` and
+`lean/ContextClosure.lean` answer it for this calculus, on the empty
+axiom list. The local and global readings **coincide exactly** where
+the withheld atom occurs under no negation, no antecedent and no
+xor/xnor (`closure_coincides`), and provably part company outside it —
+the separating case being `¬¬Z`, the very cell named above
+(`outside_fragment_fails`). No condition on the formula *alone* can be
+exact, because the property belongs to the pair (formula, disclosure)
+(`no_syntactic_characterisation`). Rewriting into a normal form
+restores agreement in one direction — no verdict is then granted that a
+completion could defeat (`normal_form_sound`) — at the cost of
+verdicts every completion upholds, `b ∨ ¬b` being the witness
+(`normal_form_incomplete`). Prior art for the *problem* is fourteen
+years deep in attribute-based access control (attribute-hiding attacks,
+PTaCL, POST 2012; policy resistance certified in Isabelle, 2013;
+extended evaluation, 2019); what belongs to this calculus is the
+behaviour of the **greedy** lift, which admits a class of hiding
+attacks that Kleene-style languages do not, because de Morgan fails
+here.
 
 **Why not four values.** The temptation to include N as a fourth value
 (precedent: Codd's two NULLs for RM/V2, rejected by industry) is

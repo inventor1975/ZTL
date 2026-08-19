@@ -33,8 +33,8 @@ python3 veraxis/context-closure-001/closure.py
 
 ~2 seconds, standard library only, deterministic, exit 0 when green.
 
-**Cite this artifact by tag, not by `master`.** Tag `context-closure-001-v1`
-pins the whole tree; the kernel it imports is `ztl.py` at
+**Cite this artifact by tag, not by `master`.** Tag `context-closure-001-v1.7`
+pins the whole tree (the tags v1 … v1.6 pin earlier states and still resolve); the kernel it imports is `ztl.py` at
 `sha256 a57324b39ebb66ee1fe39d834a1a891f8b1927882b1dc6df4c808cc2ef335d81`.
 `master` moves; a research citation should not.
 
@@ -98,8 +98,8 @@ That formalisation is not done.
 * Full disclosure warrants.
 * **Immaterial concealment warrants anyway** — this is not a demand for full
   disclosure; privacy survives when what is hidden cannot defeat the claim.
-* **Material concealment does not warrant, while every cryptographic check on
-  the same disclosure passes** — and those checks are **computed in the run**,
+* **Material concealment does not warrant, while all commitment and integrity
+  checks implemented by the bench pass on the same disclosure** — and those checks are **computed in the run**,
   not stipulated: the bench builds a CLWR-shaped record (formula digest, a
   digest per ground, a self-excluding `record_sha256`) under the consumer's own
   canonical serialization — sorted keys, `,`/`:` separators, no trailing
@@ -223,9 +223,12 @@ never grant a warrant the hidden ground could defeat; normalise and you lose
 warrants that every completion upholds. The machine proves both and chooses
 neither.
 
-**Status.** The maximality theorem is proved; the census figures are MEASURED — a
-census of depth ≤ 2 over two atoms. "Normalisation implies soundness" needs an
-induction over normal forms and is not done. Normalisation is also *not* an
+**Status.** The theorems are proved — maximality, and both sides of the
+normalisation trade (`normal_form_sound`, `normal_form_incomplete`), all on the
+empty axiom list. What stays MEASURED rather than proved are the census
+FIGURES: 983 credit-verdicts removed, 369 honest ones lost, 2.66 discarded per
+loss — those are counts over formulas of depth ≤ 2 on two atoms, not general
+quantities. Normalisation is also *not* an
 equivalence in ZTL: the normalised formula is a different, strictly weaker
 formula, which is precisely why it is safe.
 
@@ -251,10 +254,25 @@ And it puts the two refusals side by side, which is the part worth keeping:
 | `Z` | no witness | truth **on credit** |
 | `E` | no subject | truth **vacuously** |
 
-Classical logic grants both — an unverified ground reads as false under a
-negation, and a universal over the empty set is true by definition. This
-calculus declines twice, and the second refusal has never been worked out as
-carefully as the first.
+Neither refusal is a claim about classical logic, which has no unverified value
+to begin with. The honest statement is narrower: common two-valued encodings
+collapse a missing ground into ordinary Boolean behaviour, and classical
+universal quantification makes an empty domain vacuously true. ZTL exposes the
+first through `Z`; the evaluation layer around it exposes the second as `E`.
+
+And `E` is not a fourth answer to the proposition being judged. It is a typed
+evaluation event — *no admissible subject to judge* — and what follows from it
+is a separate, institutional step:
+
+    E  --explicit policy-->  {deny, allow, not-applicable, escalate, resolve, …}
+
+That arrow must never be supplied by accident — not by `all([])`, not by a host
+language, not by a database's default. Whenever an institutional predicate
+quantifies over externally supplied objects, an empty domain should yield the
+typed state first, and any mapping from it to a consequence should be explicit,
+attributable, versioned and auditable. That is the corpus's own
+evaluation-versus-issuance distinction in miniature, and it is a compiler rule
+rather than a new theory.
 
 ## Two limits that do not move
 

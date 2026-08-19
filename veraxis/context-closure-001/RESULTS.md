@@ -16,8 +16,10 @@ modified** — the whole bench is a harness, as required.
 
 Case 2 matters as much as case 3: the system does **not** demand full
 disclosure. Privacy survives whenever the withheld ground cannot defeat the
-conclusion. Case 3 is the exhibit — every cryptographic property holds and the
-conclusion is nonetheless unwarranted. Case 4 shows the boundary doing visible
+conclusion. Case 3 is the exhibit — all commitment and integrity checks the bench
+implements pass, and the conclusion is nonetheless unwarranted. (The bench
+verifies digests and commitments; it does not implement a signature stack, and
+the claim must not be widened to one.) Case 4 shows the boundary doing visible
 work, which is what keeps Agrippa outside rather than inside the result.
 
 **P5 held:** case 3 yields `F`, not `Z`. The claim does not become "unknown",

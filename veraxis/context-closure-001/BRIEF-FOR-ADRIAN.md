@@ -35,7 +35,7 @@ Claim modelled: *entitlement ∧ condition ∧ ¬exception*.
 |---|---|
 | everything material disclosed | warranted |
 | a withheld fact that cannot defeat the claim | **still warranted** — privacy without loss of warrant |
-| the **exception** withheld | **not warranted**, while every cryptographic check on the same disclosure passes |
+| the **exception** withheld | **not warranted**, while all commitment and integrity checks implemented by the bench pass |
 | same disclosure, two different declared boundaries `B₁`, `B₂` | **two different results** |
 
 Case 2 matters as much as case 3: the system does **not** demand full

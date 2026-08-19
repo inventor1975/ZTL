@@ -92,7 +92,7 @@ together, and never say "five-valued":
 | `T`, `F` | truth values | input and output |
 | `Z` | **mark on an input** — Łukasiewicz's indeterminate, "a truth not yet settled" | input only; barred from the value of any compound |
 | `N` | **solver state** — Kleene's undefined, "a computation not yet run" | only under self-reference; provably finite; never escapes outward |
-| `E` | **the empty case** — no readings at all | a disposition of the judge |
+| `E` | **the empty case** — no readings at all, no subject at all | a disposition of the judge (both floors — see §1.5), never a value |
 
 The preprint's own §10 is the canonical positioning and beats any paraphrase:
 
@@ -248,6 +248,43 @@ preprint types it as an interface event (§10) and `IDEAS.md` 12.6 stakes an
 unbuilt seam register where `E` is the world's silence, paired with the phase
 `N` it reads too early. The context-closure bench is its fourth independent
 arrival: a boundary admitting no completion returns `E`, not a vacuous `T`.
+
+**And it is a DISPOSITION of the judge, on both floors** (2026-08-19).
+`ztljudge.DISPOSITIONS` is five words, not four — `EARNED / ON CREDIT / OPEN /
+REFUTED / E` — where `E` means *not established and it cannot become
+established: what this rests on has no subject*. The word came from
+`znumjudge`, which has reported it since 2026-08-12 for a comparison with no
+admissible reading; the propositional floor could not reach it, because a plain
+atom has no domain to be empty. It reaches it by DECLARATION: a marking may say
+`{"weapon_carries_trace": E}`.
+
+Measured before it was built (`lab/desc/`, predictions frozen first): the
+distinction **changes no verdict anywhere**, because `E` does not enter the
+connectives. It changes the ORDER. `Z` promises "liftable by verification" and
+`next_check` turns that promise into an instruction — which, with no subject,
+can never be filled. So:
+
+    the weapon has not been identified   OPEN, order issued, order fillable
+    no weapon was entered into the case  E, no order issued, cure is REPAIR
+
+A missing subject halts its own predicate, never the proceeding: `present ∨
+trace` with the weapon absent is still `EARNED`.
+
+**The trapdoor, and why this is not Tarski.** The declaration comes from
+outside the judge, exactly as a boundary does — so declare `E` on the
+inconvenient atom and the judge stops asking. `judge(...)["forgone"]` is the
+guard: it prints the settlement the declaration removed, the same receipt
+`zboundary` prints for excluded readings. Nothing leaves the language (the
+formula is still built, still evaluated, still `F`), and there was no
+contradiction to escape — only an impossible work order to stop issuing.
+`dilemmas/avenger.py` answers the Tarski question for the liar family
+separately: the revenge sentence lands in a category that already existed, so
+there is no level to climb.
+
+Note for the next E32 version: `zdesc.iota` (published, v1.3) marks zero
+satisfiers, several satisfiers and an unverified denotation alike. That is
+correct **as a value** — all three are non-denoting. The distinction is one of
+disposition, not of value, and belongs in the paper as a note, not an erratum.
 
 **So the calculus refuses truth twice, and the second refusal is the
 under-worked one:**

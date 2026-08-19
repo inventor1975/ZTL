@@ -55,7 +55,17 @@ grep the whole corpus for the claim you just withdrew.** Three stands exist for
 the last of these: `inventory/withdrawn_claims.py`, `inventory/note_claims.py`,
 `inventory/prose_batch.py`.
 
-The predecessor rule has a second edge, learned again on 2026-08-19: **search
+The predecessor rule has a third edge, and it is the cheapest to forget:
+**grep THIS repository before calling anything a find.** On 2026-08-19 the
+assistant rediscovered two of the corpus's own results in one night — `¬¬Z` as
+the cell separating the local from the global reading of the mark (named in §10
+of the preprint) and completion-closure (which is `stable_bit` in `zverify.py`,
+running in the studio since E12/E21). Both were built again from scratch. The
+theorems that came out of it are new; the mechanism was not. Two greps would
+have reframed the whole night as *developing a known result* rather than
+*finding a new one* — which is also the honest way to present it.
+
+The predecessor rule has a second edge, learned the same day: **search
 the neighbouring FIELD, not just this one.** A result about withheld grounds
 turned out to have fourteen years of prior art in access control, under a name
 nobody here would have grepped for. An hour of reading before publication is
@@ -204,6 +214,12 @@ compiles is not done; a proof that compiles **on the empty axiom list** is.
   does not go through elaboration and wastes a cycle.
 * **Print the axioms of every new object** and read the output — `#print axioms`
   at the bottom of the file, the way every module here already does.
+* **After adding an object, run `python3 run_all.py` — not just `lake build`.**
+  Theorem counts are baked into the paper's prose and into the CI floor in
+  `.github/workflows/lean.yml`, and only the full regression checks them.
+  2026-08-19: adding `ContextClosure.lean` took the corpus from 428/29 to
+  440/30, the build stayed green, and CI went red on `paper_claims` — which is
+  that stand working exactly as intended, one push later than necessary.
 
 Also proved for the whole formula language (not sampled): on a **Z-free**
 valuation ZTL agrees with classical logic formula for formula

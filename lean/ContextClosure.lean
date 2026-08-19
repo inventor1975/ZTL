@@ -30,6 +30,13 @@ The proof runs through a monotonicity lemma, which is where the syntactic
 condition does its work: on this fragment, replacing the withheld atom's `F`
 reading by `T` can only preserve a warrant, never destroy one.
 
+NOT A DISCOVERY OF NON-MONOTONICITY. The greedy register's non-monotonicity is
+already a theorem of this corpus (`eager_and_not_monotone`,
+`eager_not_not_monotone`), and the lazy register is already proved monotone
+(`kleene_*_monotone`) — ZTL carries both and separates them by role: verdicts
+greedy, self-reference lazy. What is new below is where that known
+non-monotonicity damages context closure and where it provably does not.
+
 BOUNDARY, restated so the theorem is not over-read: this is the UNRESTRICTED
 completion boundary `B_⊤`. A declared boundary that admits fewer completions is
 a separate object, and the kernel does not take it as an input — see the

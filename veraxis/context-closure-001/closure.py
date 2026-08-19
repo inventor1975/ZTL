@@ -92,7 +92,17 @@ def ztl_verdict(phi, disclosed, hidden):
     return evaluate(phi, env)
 
 
-BOUNDARY_INVALID = "BOUNDARY_INVALID"
+# The corpus already has a letter for this, and it is not a new one. `znum.py`
+# says it plainly: "Judging IS quantification over readings; E is what happens
+# when there is nothing to quantify over. The judge halts because it has nothing
+# to inspect." ZTLStudio says the same in user words — "E — нечего читать". A
+# boundary admitting no completion is exactly that case: nothing to read.
+#
+# So this bench does not invent a state. It imports the one that exists, and
+# thereby records a fourth independent arrival of the same letter: the numeric
+# judge, the studio, the interface to the world (paper §10), and now selective
+# disclosure.
+from znum import E                                            # noqa: E402
 
 
 def admissible_completions(disclosed, hidden, boundary=None):
@@ -125,17 +135,20 @@ def admissible_completions(disclosed, hidden, boundary=None):
 def closure_verdict(phi, disclosed, hidden, boundary=None):
     """CC_B: T iff every admissible completion of the hidden atoms yields T.
 
-    Returns (verdict, witness). The verdict is `BOUNDARY_INVALID` when the
-    declared boundary admits nothing — NOT `T`. Admissibility of the boundary
-    is decided BEFORE closure is computed: closure reasons inside an admitted
-    boundary and has no standing to produce the boundary's own admissibility.
+    Returns (verdict, witness). The verdict is `E` when the declared boundary
+    admits nothing — NOT `T`. Admissibility of the boundary is decided BEFORE
+    closure is computed: closure reasons inside an admitted boundary and has no
+    standing to produce the boundary's own admissibility.
+
+    `E` is the corpus's own letter for "nothing to read", not a state invented
+    here — see the note beside its import.
 
     `boundary` is a predicate over the completion dict — the declared B. None
     means the unrestricted boundary `B_⊤` = {T,F} per hidden atom,
     independently."""
     completions = admissible_completions(disclosed, hidden, boundary)
     if not completions:
-        return BOUNDARY_INVALID, None
+        return E, None
     for completion in completions:
         env = dict(disclosed)
         env.update(completion)
@@ -358,10 +371,16 @@ def four_cases():
     _, cc_empty = case("5. EMPTY BOUNDARY — a declared B that admits nothing",
                        claim, {"entitlement": T, "condition": T},
                        {"exception"}, b_contradictory,
-                       note="NOT warranted, and not refuted either: the boundary\n"
-                            "    itself is inadmissible, so closure is not computed.\n"
-                            "    Closure reasons INSIDE an admitted boundary; it has no\n"
-                            "    standing to produce that boundary's admissibility.")
+                       note="E — NOTHING TO READ. Not warranted and not refuted:\n"
+                            "    the boundary admits no completion, so there is nothing\n"
+                            "    to quantify over. Same letter the numeric judge and the\n"
+                            "    studio already use; closure reasons INSIDE an admitted\n"
+                            "    boundary and cannot produce that boundary's own\n"
+                            "    admissibility.\n"
+                            "    Two refusals, one shape: Z withholds truth for want of a\n"
+                            "    WITNESS, E withholds it for want of a SUBJECT. Classical\n"
+                            "    logic grants both — a vacuous universal is true — and this\n"
+                            "    calculus declines twice.")
     return r1, r2, r3, (cc_b1, cc_b2), cc_empty, receipt
 
 
@@ -534,7 +553,7 @@ The kernel is imported, not modified: `ztl.py` sha is the corpus's own.""")
           and r2 == (T, T)
           and r3[0] != T and r3[1] != T
           and cc_b1 != T and cc_b2 == T
-          and cc_empty == BOUNDARY_INVALID
+          and cc_empty == E
           and receipt
           and cond_unsound == 0)
 
@@ -550,9 +569,9 @@ The kernel is imported, not modified: `ztl.py` sha is the corpus's own.""")
   consumer's own canonical serialization, not stipulated in prose. One
   disclosure gives two different closure results under two declared
   boundaries, which proves the boundary is a premise and not a discovered
-  fact. And a boundary admitting nothing returns BOUNDARY_INVALID rather than
-  a vacuous T — closure reasons inside an admitted boundary and cannot produce
-  that boundary's own admissibility.
+  fact. And a boundary admitting nothing returns E — the corpus's own letter
+  for "nothing to read" — rather than a vacuous T. Two refusals of one shape:
+  Z withholds truth for want of a witness, E for want of a subject.
 
   THE CENSUS, AND IT REFUTES THE COMFORTABLE READING. On {total} pairs the
   kernel grants T while closure fails {len(unsound)} times. ZTL is NOT a

@@ -70,8 +70,9 @@ coincide on every disclosure tested, and none of that is claimed by the proof.
 A declared boundary that admits **no** completion makes the universal
 quantifier vacuously true, so a naive implementation returns `T` for every
 claim: one could "prove closure" by declaring a contradictory boundary. The
-bench now returns `BOUNDARY_INVALID` instead, and decides admissibility of the
-boundary *before* computing closure — closure reasons inside an admitted
+bench now returns **`E`** instead — the corpus's own letter, not a state
+invented here — and decides admissibility of the boundary *before* computing
+closure — closure reasons inside an admitted
 boundary and has no standing to produce that boundary's own admissibility. A
 second condition rides along: a boundary may not assign values to grounds the
 discloser already published (that is a rewrite of the disclosed part, not a
@@ -100,8 +101,7 @@ That formalisation is not done.
   ground is present in the record *as a digest*, so nothing was dropped or
   forged. Authenticity of what is shown is not sufficiency for what is
   concluded.
-* **A boundary admitting nothing returns `BOUNDARY_INVALID`**, not a vacuous
-  `T`.
+* **A boundary admitting nothing returns `E`**, not a vacuous `T`.
 * The declared boundary changes the answer, visibly — **and now prints a
   receipt**: which completions it excluded, and which of those would have
   defeated the claim. A boundary that turns `F` into `T` names the reading it
@@ -221,6 +221,33 @@ census of depth ≤ 2 over two atoms. "Normalisation implies soundness" needs an
 induction over normal forms and is not done. Normalisation is also *not* an
 equivalence in ZTL: the normalised formula is a different, strictly weaker
 formula, which is precisely why it is safe.
+
+## E, and why it was already here
+
+The empty-boundary state is not new machinery. `znum.py` states it: *"Judging
+IS quantification over readings; **E is what happens when there is nothing to
+quantify over**. The judge halts because it has nothing to inspect, not because
+it broke somebody's design."* ZTLStudio renders it for readers as **«E — нечего
+читать»**. The preprint (§10) types it as an interface event — the premature
+read of a phase — and stakes an unbuilt seam register in `IDEAS.md` 12.6 where
+`E` is *the world's silence*, paired with the phase `N` it reads too early.
+
+A declared boundary admitting no completion is exactly that case, so this bench
+imports the letter rather than inventing one. That makes **four independent
+arrivals of E** in the corpus: the numeric judge, the studio, the interface to
+the world, and now selective disclosure.
+
+And it puts the two refusals side by side, which is the part worth keeping:
+
+| | refuses because | withholds |
+|---|---|---|
+| `Z` | no witness | truth **on credit** |
+| `E` | no subject | truth **vacuously** |
+
+Classical logic grants both — an unverified ground reads as false under a
+negation, and a universal over the empty set is true by definition. This
+calculus declines twice, and the second refusal has never been worked out as
+carefully as the first.
 
 ## Two limits that do not move
 

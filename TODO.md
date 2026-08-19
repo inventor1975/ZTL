@@ -53,11 +53,11 @@
    surgery: both certificates extended), Russell's grounding half
    kernel-computed (russell_grounded); C-extension of clean sets now
    general theorems (subL_refl_clean / seteq_refl_clean / memL_self).
-6. ✅ DONE (bridge.py): the stitch — 141 kernel-computed answers
+6. ✅ DONE (bridge.py): the stitch — 609 kernel-computed answers
    (tables of both registers, J-ops, E/Δ, certified tproves on a
    shared battery, lfp of the zoo) auto-compared with the Python
    stands on every regression run.
-7. ✅ DONE: run_all.py — markers + exit code; grown to 26 stands
+7. ✅ DONE: run_all.py — markers + exit code; grown to 124 stands
    + Lean + the bridge.
 
 ## Cosmetics before the port (Zenodo)

@@ -475,11 +475,24 @@ def next_check(text, marking=None):
     one direction, otherwise the first open link. Returns the what_if entry, or
     None if there is nothing left to verify.
 
-    `None` now carries two different situations, and the caller must not read
+    `None` now carries three different situations, and the caller must not read
     them alike: everything relevant is settled, OR what the claim rests on has
-    no subject and no amount of checking will reach it. The disposition tells
-    which — `E` for the second — and `judge(...)["why"]` names the cure, which
-    there is to REPAIR the claim, not to verify anything."""
+    no subject and no amount of checking will reach it, OR the matter is already
+    decided hereditarily and further checking cannot move it. The disposition
+    tells which — `E` for the second, `EARNED`/`REFUTED` for the third — and
+    `judge(...)["why"]` names the cure, which for `E` is to REPAIR the claim
+    rather than verify anything.
+
+    THE THIRD CASE WAS A DEFECT UNTIL 2026-08-19, and Meno found it. This
+    returned an order whenever an unverified atom EXISTED, not when one was
+    worth checking, so `p ∧ q` with `p = F` — verdict F, grade hereditary,
+    disposition REFUTED, the matter closed — still sent the reader off to
+    verify `q`. Measured before it was fixed (`lab/meno/`): 27% of settled
+    cells over the depth-2 pool, 30% over a random depth-4 sample. Meno's first
+    horn says you cannot search for what you know; the judge was doing exactly
+    that, and printing it as an instruction."""
+    if judge(text, marking)["disposition"] in ("EARNED", "REFUTED"):
+        return None
     opts = what_if(text, marking)
     if not opts:
         return None
@@ -651,6 +664,10 @@ if __name__ == "__main__":
         == "weapon_carries_trace"
     assert next_check(_CASE, {"suspect_was_present": T,
                               "weapon_carries_trace": E}) is None
+    # Meno's first horn: no order on a matter already decided (2026-08-19).
+    assert judge("p & q", {"p": F})["disposition"] == "REFUTED"
+    assert next_check("p & q", {"p": F}) is None       # q is unverified and moot
+    assert next_check("p | q", {"p": T}) is None       # earned; nothing to seek
     # and a case that stands on OTHER grounds is untouched by the absence
     _stands = judge("suspect_was_present | weapon_carries_trace",
                     {"suspect_was_present": T, "weapon_carries_trace": E})

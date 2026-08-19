@@ -190,6 +190,12 @@ function renderStatement(rep, out) {
      <small>· warranty: ${esc(rep.warranty)}</small></div>`));
   out.appendChild(el("p", esc(rep.verdict_class)));
   out.appendChild(el("p", `passport: ${esc(rep.passport)}`));
+  // A verdict resting on the mark, and the remedy — reported, never applied.
+  if (rep.on_credit) out.appendChild(el("div",
+    `<p class="issue warning"><b>on credit:</b> ${esc(rep.on_credit)}</p>`));
+  // A verdict that reads none of its unverified atoms (the Girard cell).
+  if (rep.frame) out.appendChild(el("div",
+    `<p class="issue warning"><b>frame:</b> ${esc(rep.frame)}</p>`));
   if (rep.completions.length) {
     let rows = rep.completions.map(c =>
       `<tr><td>${esc(c.case)}</td><td class="verdict"><span class="${esc(c.value)}">${esc(c.value)}</span></td></tr>`).join("");

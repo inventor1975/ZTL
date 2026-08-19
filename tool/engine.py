@@ -15,6 +15,7 @@ from ztl import T, F, Z, VALUES, ev, atoms, show         # noqa: E402
 from zverify import grade, ztl_eval, verify              # noqa: E402
 from zpassport import passports, deps, component_models  # noqa: E402
 from zfl import to_statement, to_system                  # noqa: E402
+from znormal import normalise, on_credit                # noqa: E402
 import zderive                                           # noqa: E402
 from entailment import entails                           # noqa: E402
 
@@ -73,6 +74,23 @@ def run_statement(doc, parsed):
                      " — the refusals are liftable by verification"),
         "completions": completions,
     }
+    # --- is this T resting on the mark, and what would remove it?
+    # `until-verification` names the grade; this names the CAUSE and the
+    # remedy. A verdict that stops being T once negations are pushed to the
+    # atoms was carried by an unverified ground reading as false under a
+    # negation. Normalising removes every such verdict (normal_form_sound) and
+    # also costs honest ones (normal_form_incomplete) — so this reports, it
+    # does not rewrite the claim.
+    if on_credit(formula, env):
+        report["on_credit"] = (
+            "this T rests on the mark: an unverified ground is reading as"
+            " FALSE under a negation, and that is what carries the verdict."
+            f" Normalised — {show(normalise(formula))} — it reads"
+            f" {ev(normalise(formula), env)}. Normalising never grants a"
+            " verdict the unverified could overturn, and it does lose"
+            " verdicts every completion upholds; the choice between those"
+            " two errors is yours, not the engine's.")
+
     # A constant completion table means the verdict reads none of the
     # unverified atoms: the assertion is a FRAME, not a fact — a test
     # that cannot fail is not a test (the Girard cell).

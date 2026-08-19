@@ -1145,9 +1145,16 @@ verdicts every completion upholds, `b ∨ ¬b` being the witness
 years deep in attribute-based access control (attribute-hiding attacks,
 PTaCL, POST 2012; policy resistance certified in Isabelle, 2013;
 extended evaluation, 2019); what belongs to this calculus is the
-behaviour of the **greedy** lift, which admits a class of hiding
-attacks that Kleene-style languages do not, because de Morgan fails
-here.
+behaviour of the **greedy** lift. The contrast with PTaCL is not that
+its logic is immune — it is where the collapse is authored. PTaCL's
+unary operators, read from its own table (Fig. 1(e)), are `¬⊥ = ⊥`
+and a separate `∼` with `∼⊥ = 0`: turning an unverified ground into a
+false one is an explicit act the policy author performs locally, by
+writing `opt`. Under the greedy lift the same collapse is the
+semantics, applied everywhere and unwritten. So the exposure is not
+their oversight and not our discovery; it is the price of a default,
+and it is bounded in their calculus by where `opt` appears and
+unbounded in ours.
 
 **Why not four values.** The temptation to include N as a fourth value
 (precedent: Codd's two NULLs for RM/V2, rejected by industry) is

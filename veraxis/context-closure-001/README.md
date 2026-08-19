@@ -3,6 +3,13 @@
 Downstream material, like the rest of `veraxis/`: it exists because a consumer
 asked the question. Nothing here changes the logic.
 
+**Read `PRIOR-ART.md` first.** The problem, the mechanism, machine-checked
+resistance, monotonicity as a sufficient condition, constraining the completion
+space, and even naming which hidden values are decisive — all of that is
+established work in attribute-based access control, 2012–2019. What is this
+artifact's own is narrow and marked as such in that file. Do not build a
+novelty claim on anything here without reading it.
+
 **The question.** Cryptography proves a disclosed fragment came from a signed
 object. It does not prove the fragment SUFFICES for the conclusion drawn from
 it. Three clauses of forty are shown, every hash verifies, and the picture is
@@ -281,6 +288,7 @@ satisfies the same condition.
 | `closure.py` | round 1 — five cases, crypto fixture, census, fragment |
 | `normalize.py` | round 2 — maximality, the normalisation recipe, its price |
 | `BRIEF-FOR-ADRIAN.md` | the one-page summary written for the legal side |
+| `PRIOR-ART.md` | claim-by-claim crosswalk: what is known, what is ours |
 | `PREDICTIONS.md` | frozen before the bench existed; P1 was refuted by the run |
 | `RESULTS.md` | the full reading, including what may and may not be said |
 

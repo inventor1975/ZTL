@@ -16,7 +16,8 @@ from zverify import grade, ztl_eval, verify              # noqa: E402
 from zpassport import passports, deps, component_models  # noqa: E402
 from zfl import to_statement, to_system                  # noqa: E402
 from znormal import normalise, on_credit                # noqa: E402
-import zboundary                                        # noqa: E402
+import zboundary
+from ztljudge import joint_grounds                                        # noqa: E402
 import zderive                                           # noqa: E402
 from entailment import entails                           # noqa: E402
 
@@ -108,6 +109,20 @@ def run_statement(doc, parsed):
             " verdict the unverified could overturn, and it does lose"
             " verdicts every completion upholds; the choice between those"
             " two errors is yours, not the engine's.")
+
+    # --- must these grounds be filled TOGETHER? The JUDGE answers; this
+    # displays. Measured 2026-08-19 (`lab/width/`): for 91-93% of unsettled
+    # claims some single ground moves the matter and an order is honest; for
+    # the rest none does, and "check this one first" is empty work.
+    if z_atoms:
+        jg = joint_grounds(formula, env)
+        if jg:
+            report["joint"] = (
+                f"no single ground moves this: {', '.join(jg)} must be"
+                " verified TOGETHER. Checking one of them and stopping buys"
+                " nothing — the answer does not move until all of them are in."
+                " ('Do the two witnesses agree?' is the everyday shape: hear"
+                " the first and you know nothing about agreement.)")
 
     # A constant completion table means the verdict reads none of the
     # unverified atoms: the assertion is a FRAME, not a fact — a test

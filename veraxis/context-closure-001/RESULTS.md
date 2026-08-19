@@ -141,6 +141,27 @@ The withheld ground is in the record **as a digest**, so nothing was dropped or
 forged. The claim "authentic ≠ sufficient" is now one executable end-to-end
 witness rather than an illustration.
 
+## Where this sits relative to what the corpus already proved
+
+The greedy register's non-monotonicity is **not a discovery of this artifact** —
+it has been a theorem since the kernel was written: `eager_and_not_monotone` and
+`eager_not_not_monotone` in `lean/ZTL.lean`. The corpus also proves the other
+half: the LAZY register (`knot`/`kand`/`kor`, strong Kleene) **is** monotone —
+`kleene_not_monotone`, `kleene_and_monotone`, `kleene_or_monotone` — and that is
+where the liar has a home (`liar_kleene_home : knot Z = Z`).
+
+So ZTL is not a logic that lacks the monotone, sound-under-completions
+behaviour. It carries **both registers and separates them by role**: verdicts
+are greedy, self-reference is lazy. The risk this artifact measures lives
+specifically in the register that issues verdicts.
+
+What is new here is therefore narrower than "the kernel is unsound under
+partial disclosure": that non-monotonicity was known. New is **where exactly it
+damages context closure and where it provably does not** — the first is a fact
+about connectives, the second a fact about what those connectives do to partial
+disclosure.
+
+
 ## What to say, and what not to say
 
 Sayable: *ZTL permits selective disclosure without requiring full-context

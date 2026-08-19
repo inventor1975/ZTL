@@ -289,6 +289,43 @@ def join(text_a, text_b, operator, marking=None):
                              rb["verdict"], vj)}
 
 
+def _moves(phi, m, a):
+    """Would filling this one ground move the matter — verdict or grade?
+
+    Deliberately NOT via `what_if`: that calls `judge`, and `judge` calls this,
+    so the kernel is asked directly. Cheap, and no recursion."""
+    v = ev(phi, _kernel(m))
+    g = grade(phi, _grade_marking(m))
+    for val in (T, F):
+        m2 = dict(m); m2[a] = val
+        if (ev(phi, _kernel(m2)) != v
+                or grade(phi, _grade_marking(m2)) != g):
+            return True
+    return False
+
+
+def _joint(phi, m, unv):
+    """The grounds that must be filled TOGETHER, when no single one will do.
+
+    Measured 2026-08-19 (`lab/width/`): for 91-93% of unsettled claims some
+    single ground moves the matter, and inquiry is incremental. For the rest it
+    is not — and the width goes as high as the number of unverified grounds, 4
+    of 4 and 5 of 5 in the hunt. There a one-ground order is worse than none:
+    it names a check that provably achieves nothing on its own.
+
+    This does NOT compute the exact width. That search is exponential in the
+    number of marks and buys little; what a reader needs is the difference
+    between "go check this" and "no single check will move this", and that
+    costs two kernel calls per ground.
+
+    (The xor chain was my predicted witness and it was wrong: `p ⊕ q ⊕ r` has
+    width 1, because the inner xor collapses to a definite value and the outer
+    one is sensitive to the last ground alone. The wide cases are irregular.)"""
+    if len(unv) < 2:
+        return []
+    return [] if any(_moves(phi, m, a) for a in unv) else list(unv)
+
+
 def _besides(unv, gone):
     """Name what did not matter — without pretending the two are one thing."""
     bits = []
@@ -400,7 +437,13 @@ def judge(text, marking=None):
             why += f"; {gone} is not on that list — it has no subject"
     # The declaration is billed, always — an absence that removes a settlement
     # is a claim about the world, and must be contestable as one.
-    return {**r, "disposition": disp, "why": why,
+    phi = formalize(text)
+    joint = ([] if disp in ("EARNED", "REFUTED", "E")
+             else _joint(phi, _full(phi, marking), unv))
+    if joint:
+        why += (f"; and NO SINGLE ground moves it — {joint} must be filled"
+                f" together, so a one-at-a-time order would be empty work")
+    return {**r, "disposition": disp, "why": why, "joint": joint,
             "forgone": _forgone(text, marking, gone, disp) if gone else []}
 
 
@@ -668,6 +711,18 @@ if __name__ == "__main__":
     assert judge("p & q", {"p": F})["disposition"] == "REFUTED"
     assert next_check("p & q", {"p": F}) is None       # q is unverified and moot
     assert next_check("p | q", {"p": T}) is None       # earned; nothing to seek
+    # ...and Meno's residue: claims where NO single ground moves anything, so a
+    # one-at-a-time order is empty work. Measured in lab/width/: 6-7% of
+    # unsettled cells, and the width reaches the number of grounds.
+    assert judge("p ^ q", {})["joint"] == ["p", "q"]
+    assert judge("p = q", {})["joint"] == ["p", "q"]
+    assert judge("p & q", {})["joint"] == []          # here one ground does move it
+    print("\n  THE WIDTH OF AN INQUIRY — where step-by-step is not possible")
+    for _t in ("p & q", "p ^ q"):
+        _w = judge(_t, {})
+        print(f"    {_t:8} {_w['disposition']:6} joint={_w['joint']}"
+              + ("   one ground at a time works" if not _w["joint"]
+                 else "   no single ground moves it"))
     # and a case that stands on OTHER grounds is untouched by the absence
     _stands = judge("suspect_was_present | weapon_carries_trace",
                     {"suspect_was_present": T, "weapon_carries_trace": E})

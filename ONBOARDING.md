@@ -306,7 +306,60 @@ idea status fails closed (`Z`), while *no ideas at all* passes open and yields
 `resolved` (`E`). Both readings are defensible; the point is that **someone
 chose**, and that the choice is institutional rather than derivable.
 
-### 1.6 The live branch, 2026-08-19 — selective disclosure
+### 1.6 The judge's report, and what it now guarantees (2026-08-19)
+
+`ztljudge` reports more than a verdict, and three of its fields carry proved or
+measured guarantees. Read this before trusting — or changing — any of them.
+
+**`pending` — the receipt, and it provably never misses.** The lazy register
+returns a value plus a label of the unverified atoms still holding the answer
+up. `lean/Receipt.lean` proves, on the empty axiom list, that an unverified
+ground the label OMITS cannot change the answer — first for `evalK`
+(`receipt_complete`), then for `evalF`, the register that actually issues
+verdicts (`receipt_complete_greedy`). Read the other way: **an atom that could
+change the answer is always on the receipt.** A refusal here never withholds a
+verdict for a reason it failed to name.
+
+The crossing into the greedy register was predicted to FAIL and did not; it
+holds because `greedy_agrees_when_decided` — whenever the lazy register commits,
+the greedy one agrees — and because the greedy tables absorb exactly where the
+label drops a branch. The Lean `labF` is the judge's own function, asked of both
+engines rather than argued (`bridge.py`, 609 questions, zero divergences).
+
+What is NOT proved, and stays measured: the label also names INNOCENT atoms, and
+more as formulas deepen — 16% of pending cells at depth 2 over two atoms, 35% at
+depth ≤6 over four. Soundness, never exactness.
+
+**`absent` and `forgone` — a ground with no subject.** A marking may declare an
+atom `E`: not unverified, *absent*. See §1.5. `forgone` bills the declaration —
+which settlement it removed — because a declaration that comes from outside the
+judge is otherwise a trapdoor.
+
+**`joint` — where step-by-step inquiry is impossible.** Measured 2026-08-19
+(`lab/width/`): for 91-93% of unsettled claims some single ground moves the
+matter. For the rest none does, and the width reaches the number of unverified
+grounds — 4 of 4, 5 of 5 in the hunt. "The two witnesses agree" is the everyday
+shape: check the first and you know nothing about agreement. `joint` names the
+grounds that must be filled TOGETHER; the exact width is deliberately not
+computed (exponential, and the useful bit is the yes/no).
+
+**`next_check` returns `None` for THREE different reasons** and the caller must
+not read them alike: everything relevant is settled; the ground has no subject
+(`E`); or the matter is already decided hereditarily. Until 2026-08-19 the third
+was a defect — the judge issued "verify q" on `p ∧ q` with `p = F`, a closed
+matter, in 27-30% of settled cells. Meno's first horn says you cannot search for
+what you know; the judge was doing exactly that and printing it as an
+instruction (`lab/meno/`).
+
+**What Meno's bench established, since it is the reason for two of these
+fields.** Two thirds of cells are settled — the first horn is correct. In a
+quarter, the order's two outcomes are labelled terminal BEFORE you look, so you
+never search for the answer, only for a named ground — the second horn is false
+wherever the ground is nameable. And `E` — inquiry genuinely impossible — never
+arises on its own: it must be declared. Meno is right in the one case the
+machine cannot discover for itself.
+
+### 1.7 The live branch, 2026-08-19 — selective disclosure
 
 `downstream/context-closure-001/` (cite by tag `context-closure-001-v1.5`, never by
 `master`) plus `lean/ContextClosure.lean`. Cryptography proves a disclosed

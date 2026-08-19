@@ -79,6 +79,28 @@ the property; issuance creates the reliance*. Resistance inside a constrained
 state space is established. That an institution was entitled to choose that
 state space as the operative one is not.
 
+## Held back on purpose: E, and the case that will call for it
+
+`E` is not in the brief for the legal side, and should not be added until a
+legal distinction actually needs it. The distinction it would carry is between
+*no proposition established* and *no proposition presented for adjudication* —
+and the curator's example shows the difference is operational, not academic:
+
+> **The murder weapon.** "The weapon has not been identified" — the object
+> exists, the question is open, the case proceeds: examination, search, burden
+> of proof. That is `Z`. "No weapon was entered into the case" — there is
+> nothing to judge on that point at all. That is `E`.
+
+The hazard is the one this artifact keeps meeting: **a vacuum reads in either
+direction.** An unpresented object can be read silently as *the link is not
+proven* or as *the prosecution's account stands unrefuted*, and both readings
+come from the quantifier's default rather than from the case.
+
+Note also that `E` attaches to a PREDICATE, not to a proceeding. A case may
+stand without the weapon; then the predicate "the weapon carries trace X" is
+`E` while the case rests on other grounds. `E` does not void the process — it
+says this statement has no subject, so do not read its silence as an answer.
+
 ## Standing of this document
 
 The PTaCL operator table was read from the paper itself. Everything else here

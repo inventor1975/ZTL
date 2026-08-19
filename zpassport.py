@@ -125,7 +125,12 @@ def oscillation_period(comp, system, env, steps=32):
 
 
 def passports(system):
-    """Passport per component; returns (lfp, list of reports)."""
+    """Passport per component.
+
+    Returns THREE things, not two: `(lfp, reports, comp_kind)` — the least
+    fixed point, a report per component as `(members, kind, why)`, and the
+    kind-with-model-count per name. The docstring said two until 2026-08-19,
+    which cost a caller two unpacking errors before anyone read the code."""
     lfp = least_fp_lazy(system)
     comp_kind = {}
     reports = []

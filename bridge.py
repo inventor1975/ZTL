@@ -19,6 +19,7 @@ from ztl import T, F, Z, VALUES, NOT, OPS2
 from fixedpoint import LAZY, least_fp_lazy
 from zalgebra import jT, jF, jZ, dEq
 from tableau import prove
+from ztljudge import _lazy
 
 LEAN_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "lean")
 GEN = os.path.join(LEAN_DIR, "BridgeGen.lean")
@@ -101,6 +102,22 @@ K_LEAN = {"not": "V.knot", "and": "V.kand", "or": "V.kor",
           "imp": "V.kimp", "xor": "V.kxor", "xnor": "V.kxnor"}
 
 
+def _label_pool():
+    """Formulas the receipt is asked about: every shape that can drop a
+    branch's label, plus the ones where nothing may be dropped."""
+    p_, q_ = "p", "q"
+    base = [p_, q_, ("not", p_), ("not", ("not", p_))]
+    out = list(base)
+    for op in ("and", "or", "imp", "xor", "xnor"):
+        out.append((op, p_, q_))
+        out.append((op, ("not", p_), q_))
+        out.append((op, p_, ("not", q_)))
+        out.append((op, ("and", p_, q_), ("or", p_, q_)))
+    out.append(("or", p_, ("not", p_)))
+    out.append(("and", ("or", p_, ("not", p_)), ("or", q_, ("not", q_))))
+    return out
+
+
 def build_items():
     """(tag, lean #eval expression, expected answer as Lean text)."""
     items = []
@@ -140,6 +157,22 @@ def build_items():
                 + "] " + to_lean_fm(concl))
         items.append((f"tproves {name}", lean,
                       "true" if prove(prems, concl) else "false"))
+    # THE RECEIPT. lean/Receipt.lean proves that whatever the label omits is
+    # inert — but a theorem about `labF` only reaches the judge if `labF` IS
+    # the judge's label. That is not an argument, it is a question for both
+    # engines, so it is asked here like every other.
+    for phi in _label_pool():
+        for va in VALUES:
+            for vb in VALUES:
+                m = {"p": va, "q": vb}
+                lab = _lazy(phi, m)[1]
+                lean_v = (f"(fun n => if n = 0 then {VNAMES[va]} "
+                          f"else {VNAMES[vb]})")
+                for atom, name in ((0, "p"), (1, "q")):
+                    items.append(
+                        (f"label {phi} {m} @{name}",
+                         f"V.labF {lean_v} {to_lean_fm(phi)} {atom}",
+                         "true" if name in lab else "false"))
     # lazy lfp of the constant-free zoo (ZGround.iter vs fixedpoint)
     for name, system, lean_sys in ZOO:
         lfp = least_fp_lazy(system)
@@ -152,7 +185,7 @@ def build_items():
 def main():
     items = build_items()
     lines = ["import ZTL", "import TableauCert", "import ZAlgebra",
-             "import ZGround", ""]
+             "import ZGround", "import Receipt", ""]
     for _, expr, _ in items:
         lines.append(f"#eval {expr}")
     with open(GEN, "w") as f:

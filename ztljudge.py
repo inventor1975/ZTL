@@ -180,11 +180,21 @@ def _lazy(phi, m):
     instead of n probes.
 
     The label tracks UNCHECKED atoms only, and it is a SOUND
-    OVER-APPROXIMATION of the load-bearing ones — measured, not assumed:
-    over 10806 pending cells of the depth-2 pool it never once missed a
-    hole that mattered, and it named an innocent one in 1778 of them
-    (16%). So it is a cheap candidate list, not the exact answer: fill
-    what it names and the matter moves; probe if the exact set is needed.
+    OVER-APPROXIMATION of the load-bearing ones. The sound half is now
+    PROVED, not merely measured: `lean/Receipt.lean`, `receipt_complete`,
+    empty axiom list — for the whole language and every valuation, an
+    unverified atom the label omits cannot change the answer. Read the
+    other way, an atom that could change it is always on the receipt, so
+    a refusal never withholds a verdict for a reason it failed to name.
+    (The Lean `labF` is this function, asked of both engines rather than
+    argued: `bridge.py`, 609 questions, zero divergences.)
+
+    The OVER-approximation half stays measured and stays honest: the
+    label also names innocent atoms, and does so more as formulas deepen
+    — 16% of pending cells at depth 2 over two atoms, 21% at depth 2 over
+    three, 35% at depth <= 6 over four (`lab/receipt/`). So it is a cheap
+    candidate list, not the exact answer: fill what it names and the
+    matter moves; probe if the exact set is needed.
     The first draft of this docstring claimed "carriers for free in one
     pass", which the measurement refused. (Label propagation of this
     kind is old — de Kleer's ATMS, 1986 — and is named here rather than

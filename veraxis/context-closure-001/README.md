@@ -153,6 +153,51 @@ about connectives, the second a fact about what those connectives do to partial
 disclosure.
 
 
+## Round 2 — maximality, a recipe, and where it meets the corpus
+
+Run: `python3 veraxis/context-closure-001/normalize.py` (~2s, exit 0 when green).
+
+**No purely syntactic condition can be exact — proved.** 213 formulas outside
+the fragment are sound under one disclosure and unsound under another; the
+witness is `¬(a ∧ b)` with `b` withheld, sound at `a = F` and unsound at
+`a = T`. So soundness is a property of the PAIR (formula, disclosure), and the
+round-1 criterion is maximal in its class. `no_syntactic_characterisation`,
+empty axiom list.
+
+Of 2,244 out-of-fragment formulas: 885 degenerate (the kernel can never say `T`
+at all — it did not swim, so it did not drown; counting these as "agreement" was
+round 1's own measurement bug), 580 soundly honest, 566 always lying, 213
+flipping with the disclosure.
+
+**A recipe, without touching the kernel.** Normalise before judging a partial
+disclosure — expand `xor`/`xnor` by the corpus's proved definitions
+(`xor_def`, `xnor_def`), push negations to the atoms — and **every one of the
+983 credit-warrants disappears**.
+
+**Its price, measured.** 369 honest warrants go with them (2.66 lies discarded
+per honest warrant lost), because normalisation surfaces the excluded middle,
+which this logic gave up by construction (`lem_fails`). What is lost is exactly
+what rested on a classical law ZTL declines. And on verified data the recipe
+costs nothing at all: 11,624 comparisons, zero disagreements — where nothing
+carries the mark, ZTL agrees with classical logic formula for formula
+(`ClassicalAgreement.evalF_agrees`).
+
+**Where this meets what the corpus already knew.** The unsound witness is the
+Sheffer stroke, and `ZClone.lean` proved long before this work that NAND and
+NOR *lose functional completeness* under the greedy lift — `nand_cannot_and`,
+`nand_cannot_or`, and their NOR twins — with both stalling in the same 18-table
+cage, reaching negation but, in that file's own words, unable to *rebuild
+their own De Morgan partner*. Loss of completeness and loss of soundness under
+partial disclosure are therefore **two projections of one break: de Morgan
+fails** (`deMorgan1_fails`). This result is not a separate discovery; it is the
+second face of a fracture the corpus had already mapped from the other side.
+
+**Status.** The theorem is proved; the recipe and its price are MEASURED — a
+census of depth ≤ 2 over two atoms. "Normalisation implies soundness" needs an
+induction over normal forms and is not done. Normalisation is also *not* an
+equivalence in ZTL: the normalised formula is a different, strictly weaker
+formula, which is precisely why it is safe.
+
 ## Two limits that do not move
 
 1. **The boundary is declared, not discovered.** Whether `B` is the right
@@ -182,7 +227,8 @@ satisfies the same condition.
 
 | file | what it is |
 |---|---|
-| `closure.py` | the bench — five cases, crypto fixture, census, fragment |
+| `closure.py` | round 1 — five cases, crypto fixture, census, fragment |
+| `normalize.py` | round 2 — maximality, the normalisation recipe, its price |
 | `BRIEF-FOR-ADRIAN.md` | the one-page summary written for the legal side |
 | `PREDICTIONS.md` | frozen before the bench existed; P1 was refuted by the run |
 | `RESULTS.md` | the full reading, including what may and may not be said |

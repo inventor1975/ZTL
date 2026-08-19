@@ -18,12 +18,22 @@ WHAT IS PROVED. For every formula of the whole language, every valuation, and
 every atom the reader never verified: if the label leaves that atom out, then
 changing it changes nothing.
 
-    receipt_complete :  v a = Z  →  labF v φ a = false
-                                 →  evalK (setA a x v) φ = evalK v φ
+    receipt_complete        :  v a = Z  →  labF v φ a = false
+                                        →  evalK (setA a x v) φ = evalK v φ
+    receipt_complete_greedy :  the same, for `evalF` — the register that
+                               actually issues verdicts
 
 Contrapositively — and this is the reading that matters — **an atom that could
 change the answer is always on the receipt.** The judge never withholds a
 verdict for a reason it failed to name.
+
+THE SECOND THEOREM WAS PREDICTED TO BE FALSE, by me, in writing
+(`lab/greedy/PREDICTIONS.md`, P1), on the ground that the greedy lift is
+non-monotone and connective-local. The census refuted the prediction — zero
+misses in 296,161 cells carrying an unverified atom — and the reason is
+`greedy_agrees_when_decided` plus the shape of the greedy tables. Recorded here
+rather than quietly dropped, because a prediction that was wrong is the only
+kind worth keeping.
 
 WHY THE HYPOTHESIS `v a = Z` IS NOT DECORATION. Without it the statement is
 false, and cheaply: `p ∧ q` with `p = T`, `q = Z` labels `{q}`, yet flipping the
@@ -282,6 +292,169 @@ theorem receipt_complete (a : Nat) (x : V) (v : Nat → V) (hv : v a = Z) :
         | (rw [ihφ h, hφ]; cases hy : evalK (setA a x v) ψ <;> rfl)
         | (rw [ihψ h, hψ]; cases hy : evalK (setA a x v) φ <;> rfl)
 
+/-! ## The register that issues verdicts
+
+`receipt_complete` covers the LAZY value, but the judge prints the label beside
+a GREEDY verdict, and a reader has every reason to take it as covering that. I
+predicted it would not (`lab/greedy/PREDICTIONS.md`, P1): the greedy lift is
+connective-local and non-monotone — `eager_and_not_monotone` and
+`eager_not_not_monotone` are theorems of this corpus — so a branch Kleene calls
+decisive, whose holes the label therefore drops, looked like the obvious place
+for the receipt to leak.
+
+The census refuted the prediction: zero misses in 296,161 cells carrying at
+least one unverified atom. It holds because of a fact worth stating on its own —
+
+    greedy_agrees_when_decided :  whenever the LAZY register commits,
+                                  the GREEDY one agrees with it
+
+— and because the greedy tables absorb exactly where the label drops a branch:
+`F` on either side of `∧`, `T` on either side of `∨`, a false antecedent or a
+true consequent of `→`. `xor` and `xnor` absorb nowhere, and there the label
+drops nothing. The two facts line up, which is why the receipt survives the
+crossing. -/
+
+theorem greedy_agrees_when_decided (v : Nat → V) :
+    ∀ φ : Fm, decidedB (evalK v φ) = true → evalF v φ = evalK v φ := by
+  intro φ
+  induction φ with
+  | atom n => intro _; rfl
+  | top => intro _; rfl
+  | bot => intro _; rfl
+  | neg φ ihφ =>
+      show decidedB (knot (evalK v φ)) = true → znot (evalF v φ) = knot (evalK v φ)
+      cases hφ : evalK v φ <;> intro h <;> first
+        | (rw [ihφ (by rw [hφ]; rfl), hφ]; rfl)
+        | exact absurd h (by decide)
+  | conj φ ψ ihφ ihψ =>
+      show decidedB (kand (evalK v φ) (evalK v ψ)) = true →
+           zand (evalF v φ) (evalF v ψ) = kand (evalK v φ) (evalK v ψ)
+      cases hφ : evalK v φ <;> cases hψ : evalK v ψ <;> intro h <;> first
+        | (rw [ihφ (by rw [hφ]; rfl), ihψ (by rw [hψ]; rfl), hφ, hψ]; rfl)
+        | exact absurd h (by decide)
+        | (rw [ihφ (by rw [hφ]; rfl), hφ]; cases hy : evalF v ψ <;> rfl)
+        | (rw [ihψ (by rw [hψ]; rfl), hψ]; cases hy : evalF v φ <;> rfl)
+  | disj φ ψ ihφ ihψ =>
+      show decidedB (kor (evalK v φ) (evalK v ψ)) = true →
+           zor (evalF v φ) (evalF v ψ) = kor (evalK v φ) (evalK v ψ)
+      cases hφ : evalK v φ <;> cases hψ : evalK v ψ <;> intro h <;> first
+        | (rw [ihφ (by rw [hφ]; rfl), ihψ (by rw [hψ]; rfl), hφ, hψ]; rfl)
+        | exact absurd h (by decide)
+        | (rw [ihφ (by rw [hφ]; rfl), hφ]; cases hy : evalF v ψ <;> rfl)
+        | (rw [ihψ (by rw [hψ]; rfl), hψ]; cases hy : evalF v φ <;> rfl)
+  | imp φ ψ ihφ ihψ =>
+      show decidedB (kimp (evalK v φ) (evalK v ψ)) = true →
+           zimp (evalF v φ) (evalF v ψ) = kimp (evalK v φ) (evalK v ψ)
+      cases hφ : evalK v φ <;> cases hψ : evalK v ψ <;> intro h <;> first
+        | (rw [ihφ (by rw [hφ]; rfl), ihψ (by rw [hψ]; rfl), hφ, hψ]; rfl)
+        | exact absurd h (by decide)
+        | (rw [ihφ (by rw [hφ]; rfl), hφ]; cases hy : evalF v ψ <;> rfl)
+        | (rw [ihψ (by rw [hψ]; rfl), hψ]; cases hy : evalF v φ <;> rfl)
+  | xor φ ψ ihφ ihψ =>
+      show decidedB (kxor (evalK v φ) (evalK v ψ)) = true →
+           zxor (evalF v φ) (evalF v ψ) = kxor (evalK v φ) (evalK v ψ)
+      cases hφ : evalK v φ <;> cases hψ : evalK v ψ <;> intro h <;> first
+        | (rw [ihφ (by rw [hφ]; rfl), ihψ (by rw [hψ]; rfl), hφ, hψ]; rfl)
+        | exact absurd h (by decide)
+        | (rw [ihφ (by rw [hφ]; rfl), hφ]; cases hy : evalF v ψ <;> rfl)
+        | (rw [ihψ (by rw [hψ]; rfl), hψ]; cases hy : evalF v φ <;> rfl)
+  | xnor φ ψ ihφ ihψ =>
+      show decidedB (kxnor (evalK v φ) (evalK v ψ)) = true →
+           zxnor (evalF v φ) (evalF v ψ) = kxnor (evalK v φ) (evalK v ψ)
+      cases hφ : evalK v φ <;> cases hψ : evalK v ψ <;> intro h <;> first
+        | (rw [ihφ (by rw [hφ]; rfl), ihψ (by rw [hψ]; rfl), hφ, hψ]; rfl)
+        | exact absurd h (by decide)
+        | (rw [ihφ (by rw [hφ]; rfl), hφ]; cases hy : evalF v ψ <;> rfl)
+        | (rw [ihψ (by rw [hψ]; rfl), hψ]; cases hy : evalF v φ <;> rfl)
+
+/-! ## The receipt crosses the register -/
+
+/-- The same guarantee for the register that actually issues verdicts: an
+unverified atom the label omits cannot move the greedy verdict either. -/
+theorem receipt_complete_greedy (a : Nat) (x : V) (v : Nat → V) (hv : v a = Z) :
+    ∀ φ : Fm, labF v φ a = false → evalF (setA a x v) φ = evalF v φ := by
+  intro φ
+  induction φ with
+  | atom n =>
+      intro h
+      show setA a x v n = v n
+      cases hna : decide (n = a) with
+      | false => exact setA_other x v (of_decide_eq_false hna)
+      | true =>
+          have hn : n = a := of_decide_eq_true hna
+          have hvn : v n = Z := by rw [hn]; exact hv
+          have h2 : atomL (v n) n a = false := h
+          rw [hvn] at h2
+          have h3 : decide (n = a) = false := h2
+          rw [hna] at h3
+          exact Bool.noConfusion h3
+  | top => intro _; rfl
+  | bot => intro _; rfl
+  | neg φ ihφ =>
+      intro h
+      show znot (evalF (setA a x v) φ) = znot (evalF v φ)
+      rw [ihφ h]
+  | conj φ ψ ihφ ihψ =>
+      show conjL (evalK v φ) (evalK v ψ) (labF v φ a) (labF v ψ a) = false →
+           zand (evalF (setA a x v) φ) (evalF (setA a x v) ψ)
+             = zand (evalF v φ) (evalF v ψ)
+      cases hφ : evalK v φ <;> cases hψ : evalK v ψ <;> intro h <;> first
+        | rw [ihφ (label_empty_of_decided v a φ (by rw [hφ]; rfl)),
+              ihψ (label_empty_of_decided v a ψ (by rw [hψ]; rfl))]
+        | rw [ihφ (orF h).1, ihψ (orF h).2]
+        | (rw [ihφ h, greedy_agrees_when_decided v φ (by rw [hφ]; rfl), hφ];
+           cases hy : evalF (setA a x v) ψ <;> cases hz : evalF v ψ <;> rfl)
+        | (rw [ihψ h, greedy_agrees_when_decided v ψ (by rw [hψ]; rfl), hψ];
+           cases hy : evalF (setA a x v) φ <;> cases hz : evalF v φ <;> rfl)
+  | disj φ ψ ihφ ihψ =>
+      show disjL (evalK v φ) (evalK v ψ) (labF v φ a) (labF v ψ a) = false →
+           zor (evalF (setA a x v) φ) (evalF (setA a x v) ψ)
+             = zor (evalF v φ) (evalF v ψ)
+      cases hφ : evalK v φ <;> cases hψ : evalK v ψ <;> intro h <;> first
+        | rw [ihφ (label_empty_of_decided v a φ (by rw [hφ]; rfl)),
+              ihψ (label_empty_of_decided v a ψ (by rw [hψ]; rfl))]
+        | rw [ihφ (orF h).1, ihψ (orF h).2]
+        | (rw [ihφ h, greedy_agrees_when_decided v φ (by rw [hφ]; rfl), hφ];
+           cases hy : evalF (setA a x v) ψ <;> cases hz : evalF v ψ <;> rfl)
+        | (rw [ihψ h, greedy_agrees_when_decided v ψ (by rw [hψ]; rfl), hψ];
+           cases hy : evalF (setA a x v) φ <;> cases hz : evalF v φ <;> rfl)
+  | imp φ ψ ihφ ihψ =>
+      show impL (evalK v φ) (evalK v ψ) (labF v φ a) (labF v ψ a) = false →
+           zimp (evalF (setA a x v) φ) (evalF (setA a x v) ψ)
+             = zimp (evalF v φ) (evalF v ψ)
+      cases hφ : evalK v φ <;> cases hψ : evalK v ψ <;> intro h <;> first
+        | rw [ihφ (label_empty_of_decided v a φ (by rw [hφ]; rfl)),
+              ihψ (label_empty_of_decided v a ψ (by rw [hψ]; rfl))]
+        | rw [ihφ (orF h).1, ihψ (orF h).2]
+        | (rw [ihφ h, greedy_agrees_when_decided v φ (by rw [hφ]; rfl), hφ];
+           cases hy : evalF (setA a x v) ψ <;> cases hz : evalF v ψ <;> rfl)
+        | (rw [ihψ h, greedy_agrees_when_decided v ψ (by rw [hψ]; rfl), hψ];
+           cases hy : evalF (setA a x v) φ <;> cases hz : evalF v φ <;> rfl)
+  | xor φ ψ ihφ ihψ =>
+      show xorL (evalK v φ) (evalK v ψ) (labF v φ a) (labF v ψ a) = false →
+           zxor (evalF (setA a x v) φ) (evalF (setA a x v) ψ)
+             = zxor (evalF v φ) (evalF v ψ)
+      cases hφ : evalK v φ <;> cases hψ : evalK v ψ <;> intro h <;> first
+        | rw [ihφ (label_empty_of_decided v a φ (by rw [hφ]; rfl)),
+              ihψ (label_empty_of_decided v a ψ (by rw [hψ]; rfl))]
+        | rw [ihφ (orF h).1, ihψ (orF h).2]
+        | (rw [ihφ h, greedy_agrees_when_decided v φ (by rw [hφ]; rfl), hφ];
+           cases hy : evalF (setA a x v) ψ <;> cases hz : evalF v ψ <;> rfl)
+        | (rw [ihψ h, greedy_agrees_when_decided v ψ (by rw [hψ]; rfl), hψ];
+           cases hy : evalF (setA a x v) φ <;> cases hz : evalF v φ <;> rfl)
+  | xnor φ ψ ihφ ihψ =>
+      show xorL (evalK v φ) (evalK v ψ) (labF v φ a) (labF v ψ a) = false →
+           zxnor (evalF (setA a x v) φ) (evalF (setA a x v) ψ)
+             = zxnor (evalF v φ) (evalF v ψ)
+      cases hφ : evalK v φ <;> cases hψ : evalK v ψ <;> intro h <;> first
+        | rw [ihφ (label_empty_of_decided v a φ (by rw [hφ]; rfl)),
+              ihψ (label_empty_of_decided v a ψ (by rw [hψ]; rfl))]
+        | rw [ihφ (orF h).1, ihψ (orF h).2]
+        | (rw [ihφ h, greedy_agrees_when_decided v φ (by rw [hφ]; rfl), hφ];
+           cases hy : evalF (setA a x v) ψ <;> cases hz : evalF v ψ <;> rfl)
+        | (rw [ihψ h, greedy_agrees_when_decided v ψ (by rw [hψ]; rfl), hψ];
+           cases hy : evalF (setA a x v) φ <;> cases hz : evalF v φ <;> rfl)
+
 #print axioms conjL
 #print axioms disjL
 #print axioms impL
@@ -289,5 +462,7 @@ theorem receipt_complete (a : Nat) (x : V) (v : Nat → V) (hv : v a = Z) :
 #print axioms labF
 #print axioms label_empty_of_decided
 #print axioms receipt_complete
+#print axioms greedy_agrees_when_decided
+#print axioms receipt_complete_greedy
 
 end V

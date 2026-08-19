@@ -212,7 +212,48 @@ logic and is cautious *only* where the unknown enters. Never say "weaker than
 classical" without that second half — strictly fewer *tautologies*, identical
 on verified data.
 
-### 1.5 The live branch, 2026-08-19 — selective disclosure
+### 1.5 E — the letter that arrives from outside
+
+`E` is the fourth symbol and the one most often misread. It is **not** a truth
+value, not a fourth register, and not an error code. Read it as *nothing to
+read*, and remember where it can and cannot occur.
+
+**Inside the logic, emptiness is not expressible.** `lean/ZQuant.lean` types the
+quantifiers as `Fm → List Fm → Fm` — head *and* tail — so an empty domain cannot
+be written down. The judge can never reach "nothing to quantify over" there, and
+that is why §10 can say *E is hardware, not logic* without losing anything.
+
+**At the boundary, emptiness arrives.** Wherever the subject comes from outside
+— a numeric claim, a user's text, a declared set of admissible completions — the
+list can be empty, and then `E` is the answer. `znum.py` states it: *judging IS
+quantification over readings; E is what happens when there is nothing to
+quantify over*. ZTLStudio renders it for readers as «E — нечего читать». The
+preprint types it as an interface event (§10) and `IDEAS.md` 12.6 stakes an
+unbuilt seam register where `E` is the world's silence, paired with the phase
+`N` it reads too early. The context-closure bench is its fourth independent
+arrival: a boundary admitting no completion returns `E`, not a vacuous `T`.
+
+**So the calculus refuses truth twice, and the second refusal is the
+under-worked one:**
+
+    Z   no witness  ->  no truth ON CREDIT
+    E   no subject  ->  no truth VACUOUSLY
+
+Classical logic grants both: an unverified ground reads as false under a
+negation, and a universal over the empty set is true by definition.
+
+**THE OPERATIONAL RULE, and it was learned by walking into it twice.** Any
+universal quantification over data that came from OUTSIDE must first ask
+whether there is anything to quantify over. Inside the corpus the question is
+settled by construction; at the boundary it is not, and `all(...)` over an empty
+external list silently returns `True`. When you meet such a place, do not call
+it a bug on sight — check whether the norm decided it deliberately.
+`conformance/MR-WARRANT-RESOLUTION-001.json` did exactly that: an unrecognised
+idea status fails closed (`Z`), while *no ideas at all* passes open and yields
+`resolved` (`E`). Both readings are defensible; the point is that **someone
+chose**, and that the choice is institutional rather than derivable.
+
+### 1.6 The live branch, 2026-08-19 — selective disclosure
 
 `veraxis/context-closure-001/` (cite by tag `context-closure-001-v1.5`, never by
 `master`) plus `lean/ContextClosure.lean`. Cryptography proves a disclosed

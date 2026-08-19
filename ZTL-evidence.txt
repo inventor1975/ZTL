@@ -441,6 +441,93 @@ A bounded scope is not "less proved"; its claim scope is simply narrower.
     [PROVED · BOUNDED_MODEL    ] ZEps.iota_eps_split
     [PROVED · BOUNDED_MODEL    ] ZEps.eps_axiom_instance
 
+## Plato_Equality.lean
+    [PROVED · GENERAL          ] Plato.deficiency_universal_absurd
+    [PROVED · GENERAL          ] Plato.injective_imp_deficiency
+    [PROVED · GENERAL          ] Plato.deficiency_imp_injective
+    [PROVED · GENERAL          ] Plato.deficiency_fails_discrete
+    [PROVED · GENERAL          ] Plato.le_zero_eq
+    [PROVED · GENERAL          ] Plato.exact_is_approx_zero
+    [PROVED · GENERAL          ] Plato.standard_from_deviation
+    [PROVED · GENERAL          ] Plato.third_man
+    [PROVED · GENERAL          ] Plato.no_grounded_regress
+
+## Plato_Conservativity.lean
+    [PROVED · GENERAL          ] PlatoConservativity.bears_preserved
+    [PROVED · GENERAL          ] PlatoConservativity.app_preserved
+    [PROVED · GENERAL          ] PlatoConservativity.old_injective
+    [PROVED · GENERAL          ] PlatoConservativity.ground_is_fresh
+    [PROVED · GENERAL          ] PlatoConservativity.extension_grounded
+
+## Hume_Guillotine.lean
+    [PROVED · GENERAL          ] HumeGuillotine.facts_preserved
+    [PROVED · GENERAL          ] HumeGuillotine.ought_underdetermined
+    [PROVED · GENERAL          ] HumeGuillotine.bridge_delivers
+    [PROVED · GENERAL          ] HumeGuillotine.bridge_necessary
+
+## Cogito_Conservativity.lean
+    [PROVED · GENERAL          ] CogitoConservativity.thinking_preserved
+    [PROVED · GENERAL          ] CogitoConservativity.bearer_underdetermined
+    [PROVED · GENERAL          ] CogitoConservativity.occurrence_exists
+    [PROVED · GENERAL          ] CogitoConservativity.bridge_delivers
+    [PROVED · GENERAL          ] CogitoConservativity.bridge_necessary
+
+## ZNum.lean
+    [PROVED · GENERAL          ] reads_mono
+    [PROVED · GENERAL          ] forcedLE_hereditary
+    [PROVED · GENERAL          ] forcedNotLE_hereditary
+    [PROVED · GENERAL          ] forcedLT_hereditary
+    [PROVED · GENERAL          ] forcedNotLT_hereditary
+    [PROVED · GENERAL          ] forcedEQ_hereditary
+    [PROVED · GENERAL          ] forcedNE_hereditary
+    [PROVED · GENERAL          ] endpoint_narrows
+    [PROVED · GENERAL          ] narrows_trans
+    [PROVED · GENERAL          ] reads_exists
+    [PROVED · CONCRETE_CELL    ] decorrelation_witness
+
+## ClassicalAgreement.lean
+    [PROVED · GENERAL          ] V.lift1_emb
+    [PROVED · GENERAL          ] V.lift2_emb
+    [PROVED · GENERAL          ] V.evalF_agrees
+    [PROVED · GENERAL          ] V.ztl_taut_is_classical
+    [PROVED · GENERAL          ] V.not_conversely
+
+## ZNumCoherent.lean
+    [PROVED · GENERAL          ] Coherent.creads_mono
+    [PROVED · GENERAL          ] Coherent.forcedLE_hereditary
+    [PROVED · GENERAL          ] Coherent.forcedNotLE_hereditary
+    [PROVED · GENERAL          ] Coherent.forcedLT_hereditary
+    [PROVED · GENERAL          ] Coherent.forcedNotLT_hereditary
+    [PROVED · GENERAL          ] Coherent.forcedEQ_hereditary
+    [PROVED · GENERAL          ] Coherent.forcedNE_hereditary
+    [PROVED · GENERAL          ] Coherent.coherent_refines
+    [PROVED · GENERAL          ] Coherent.forced_sample_implies_coherent
+    [PROVED · GENERAL          ] Coherent.int_sub_self
+    [PROVED · GENERAL          ] Coherent.coherent_strictly_finer
+
+## Layering.lean
+    [PROVED · GENERAL          ] V.Layering.fold_unmarked
+    [PROVED · GENERAL          ] V.Layering.eval_upd_not_occurs
+    [PROVED · GENERAL          ] V.Layering.fold_value_conj
+    [PROVED · GENERAL          ] V.Layering.fold_value_disj
+    [PROVED · GENERAL          ] V.Layering.fold_value_imp
+    [PROVED · GENERAL          ] V.Layering.fold_exact_and_unmarked
+    [PROVED · GENERAL          ] V.Layering.fold_never_marks
+
+## ContextClosure.lean
+    [PROVED · GENERAL          ] V.orF
+    [PROVED · GENERAL          ] V.andT
+    [PROVED · GENERAL          ] V.notT
+    [PROVED · GENERAL          ] V.setA_self
+    [PROVED · GENERAL          ] V.setA_other
+    [PROVED · GENERAL          ] V.eval_indep
+    [PROVED · GENERAL          ] V.mono
+    [PROVED · GENERAL          ] V.closure_coincides
+    [PROVED · GENERAL          ] V.outside_fragment_fails
+    [PROVED · GENERAL          ] V.no_syntactic_characterisation
+    [PROVED · GENERAL          ] V.normal_form_sound
+    [PROVED · GENERAL          ] V.normal_form_incomplete
+
 ==================================================================
 2. evidence_status = MEASURED_WITH_CEILING · proof_scope = POOL_BOUNDED  (Python stands, not Lean theorems)
 ==================================================================
@@ -460,5 +547,5 @@ A bounded scope is not "less proved"; its claim scope is simply narrower.
     - the passport register reads ONE WAY, physical → operational (§10)
 
 ==================================================================
-proof_scope tally over 371 PROVED Lean declarations: 285 GENERAL, 45 BOUNDED_MODEL, 2 EXISTENCE_WITNESS, 39 CONCRETE_CELL.
+proof_scope tally over 440 PROVED Lean declarations: 353 GENERAL, 45 BOUNDED_MODEL, 2 EXISTENCE_WITNESS, 40 CONCRETE_CELL.
 Heuristic first cut (syntactic scan); the scope of each SELECTED element is confirmed by semantic review.

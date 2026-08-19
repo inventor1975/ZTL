@@ -36,6 +36,17 @@ grep the whole corpus for the claim you just withdrew.** Three stands exist for
 the last of these: `inventory/withdrawn_claims.py`, `inventory/note_claims.py`,
 `inventory/prose_batch.py`.
 
+The predecessor rule has a second edge, learned again on 2026-08-19: **search
+the neighbouring FIELD, not just this one.** A result about withheld grounds
+turned out to have fourteen years of prior art in access control, under a name
+nobody here would have grepped for. An hour of reading before publication is
+cheaper than a correction after it.
+
+**`lab/` is the laboratory — a store of our own mistakes, and it is in
+`.gitignore` on purpose.** One folder per idea inside it. Only what survives
+leaves, and it leaves as a self-contained artifact under `downstream/`. If a `git
+add` is refused there, that is the rule working, not an obstacle.
+
 ---
 
 ## 1. ZTL — what it is, in the order that matters
@@ -106,6 +117,15 @@ it needs none. The machine-measurable discriminator: does the third symbol ever
 appear as the value of a *compound*? Neighbours: 602–784 of 784 depth-2
 compounds. ZTL: **0 of 784** (the greediness theorem, `evalF_classical`).
 
+**Expressiveness is NOT classical, and this surprises people (it surprised the
+curator).** Under the greedy lift, Sheffer's stroke and Peirce's arrow each
+*lose* functional completeness — `ZClone.lean`: `nand_cannot_and`,
+`nand_cannot_or`, `nor_cannot_and`, `nor_cannot_or`. Both stall in the same
+18-table cage; both still reach negation, and neither can rebuild its own De
+Morgan partner. The sole surviving solo basis is **nonimplication `↛`**. Say
+"identical to classical logic on verified data" (true, `evalF_agrees`); do not
+say "as expressive as classical logic" (false in this sense).
+
 **Known gap in §4:** strict-tolerant logic (ST — Cobreros, Egré, Ripley, van
 Rooij) is not mentioned anywhere in the preprint. It is the leading contemporary
 paradox-handling logic. The contrast is favourable and should be *written*: ST
@@ -116,10 +136,14 @@ machine-checkably" — that is false, and it is the exact claim-shape from §0.
 
 ### 1.3 What is machine-checked
 
-421 theorems, 28 modules, Lean 4, **empty axiom list including definitions**,
-audited per object (`inventory/axiom_audit.py`, re-run on every push).
+**Empty axiom list including definitions**, audited per object. Do not quote a
+count from this file — print it, the corpus grows:
 
-    python3 run_all.py             # 121 stands + Lean, all green
+    python3 inventory/axiom_audit.py   # -> ALL CLEAN: N theorems across M modules
+    python3 run_all.py                 # all stands + Lean, green or it exits non-zero
+
+At 2026-08-19 that reads 440 theorems across 30 modules, and `run_all.py` runs
+123 stands.
     cd lean && lake env lean <<< 'import ZTL
     #print axioms V.ax_xnor_ZZ'    # -> does not depend on any axioms
 
@@ -131,12 +155,75 @@ each:
 
 Classically `(x=x)=T` always and `(x=¬x)` is impossible. **Z overturns both.**
 
+**THE TWO REGISTERS ARE NOT A DETAIL — get them wrong and you will misdescribe
+the logic.** The assistant did, on 2026-08-19, saying "ZTL lacks the monotone,
+sound-under-partial-information behaviour". It does not. It has both, and both
+halves are proved:
+
+    kleene_not_monotone / kleene_and_monotone / kleene_or_monotone
+        the LAZY register (knot/kand/kor = strong Kleene) IS monotone
+    eager_and_not_monotone / eager_not_not_monotone
+        the GREEDY register (znot/zand/zor) is NOT, and that is a theorem too
+
+So: **verdicts are greedy, self-reference is lazy.** ZTL does not lack the
+well-behaved register — it separates the two by role. Any sentence of the form
+"ZTL cannot do X" must first say *in which register*.
+
+### 1.4 Lean traps — read before writing a proof, not after
+
+Every one of these cost the assistant a rewrite on 2026-08-19. A proof that
+compiles is not done; a proof that compiles **on the empty axiom list** is.
+
+* **`simp` and `by_cases` pull `propext` and `Classical.choice` into the term.**
+  Use `cases` + `noConfusion` + explicit `rw`. This is the single most common
+  way to land on the full classical tier without noticing.
+* **Nested patterns and wildcard rows pull `propext` through the compiled
+  matcher** — the warning already stands beside `kand` in `ZTL.lean`. Enumerate
+  every constructor instead of writing `| _ => false` or `| .neg (.atom _)`.
+* **Atom equality: use `decide (n = a)` with `of_decide_eq_true` /
+  `of_decide_eq_false`, not `==`.** The `BEq` bridge `n == a` → `Nat.beq n a`
+  does not go through elaboration and wastes a cycle.
+* **Print the axioms of every new object** and read the output — `#print axioms`
+  at the bottom of the file, the way every module here already does.
+
 Also proved for the whole formula language (not sampled): on a **Z-free**
 valuation ZTL agrees with classical logic formula for formula
 (`lean/ClassicalAgreement.lean:evalF_agrees`). So ZTL expresses all of classical
 logic and is cautious *only* where the unknown enters. Never say "weaker than
 classical" without that second half — strictly fewer *tautologies*, identical
 on verified data.
+
+### 1.5 The live branch, 2026-08-19 — selective disclosure
+
+`downstream/context-closure-001/` (cite by tag `context-closure-001-v1.5`, never by
+`master`) plus `lean/ContextClosure.lean`. Cryptography proves a disclosed
+fragment came from a signed object; it does not prove the fragment SUFFICES for
+the conclusion drawn from it. Five theorems, empty axiom list:
+
+    closure_coincides            kernel verdict = completion closure, on the
+                                 positive fragment (withheld atom under no
+                                 negation, no antecedent, no xor/xnor)
+    outside_fragment_fails       and provably not outside it (¬¬b)
+    no_syntactic_characterisation  no condition on the FORMULA alone can be
+                                 exact — soundness belongs to the pair
+                                 (formula, disclosure)
+    normal_form_sound            normalise first and no warrant is granted on
+                                 credit
+    normal_form_incomplete       and you lose warrants every completion upholds
+                                 (b ∨ ¬b) — the excluded middle, priced
+
+Two facts to carry into any conversation about it. **The prior art is 14 years
+deep**: attribute-hiding attacks (Crampton & Morisset, PTaCL, POST 2012), policy
+resistance certified in Isabelle (ATRAP, 2013), extended evaluation with BDDs
+(2019). Never present the problem or the enumeration mechanism as new. **What is
+ours** is the behaviour of THIS semantics — the greedy lift breaks de Morgan, so
+it admits an attack Kleene-style languages do not have — and the two theorems
+bounding it.
+
+And the second fact: what the machine cannot decide is where the legal side
+begins. Which completions are admissible, and whether to prefer never granting
+a false warrant over never losing a true one, are institutional questions. The
+bench prices both and chooses neither.
 
 ---
 

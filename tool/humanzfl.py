@@ -9,6 +9,21 @@ Rules:
   * `assert` separates the verified-atom header from the claim.
   * status only for VERIFIED atoms (`a=F`, `b=T`); everything unnamed is Z
     (unverified) — the ZTL default.
+  * `b excludes T` DECLARES A BOUNDARY: `b` stays unverified, but the reading
+    `b=T` is not admitted. The word is long on purpose. `b != T` would read as
+    a claim about how things ARE — and that claim is `b=F`, which the language
+    already has. This says something else: which completions are IN VIEW at
+    all.
+
+    That distinction is what lets the studio serve constructed worlds and not
+    only the physical one. A jurisdiction may decline to consider a reading; a
+    hypothesis may set one aside; a fiction may never contain it. In none of
+    those cases is the reading false — it is out of view, and the two are not
+    the same. So a boundary is a premise, never a discovery, and the engine
+    prints what it costs: which readings it removed, and whether any of them
+    would have changed the verdict. If it removes every reading, the answer is
+    E — nothing to read — because a world with no admissible readings is not a
+    world.
   * word operators, infix, fully parenthesised except the top:
         !x / not x   → not      x and y   → and     x or y   → or
         x impl y     → imp      x xor y   → xor
@@ -95,12 +110,23 @@ def human_to_doc(text):
     if len(parts) != 2:
         raise ValueError("нужно ключевое слово 'assert' между статусами и формулой")
     header, formula = parts
+    # Boundaries first, so `b excludes T` is not read as the atom `excludes`.
+    excluded = {}
+    for a, st in re.findall(
+            r"([A-Za-z_][A-Za-z0-9_]*)\s+excludes\s+([TFtf])\b", header, re.I):
+        excluded.setdefault(a, set()).add(st.upper())
+    header_wo_bounds = re.sub(
+        r"[A-Za-z_][A-Za-z0-9_]*\s+excludes\s+[TFtf]\b", " ", header, flags=re.I)
     declared = {a: st.upper() for a, st in
-                re.findall(r"([A-Za-z_][A-Za-z0-9_]*)\s*=\s*([TFZtfz])", header)}
+                re.findall(r"([A-Za-z_][A-Za-z0-9_]*)\s*=\s*([TFZtfz])",
+                           header_wo_bounds)}
     tree = _parse_formula(formula)
     atoms = {a: {"status": declared.get(a, "Z")}
              for a in _atoms_in_order(tree, [])}
-    return {"genre": "statement", "atoms": atoms, "assert": _to_prefix(tree)}
+    doc = {"genre": "statement", "atoms": atoms, "assert": _to_prefix(tree)}
+    if excluded:
+        doc["boundary"] = {a: sorted(v) for a, v in excluded.items()}
+    return doc
 
 
 # ---- reverse: document → human line (for display / editing) ----------------

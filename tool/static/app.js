@@ -196,6 +196,20 @@ function renderStatement(rep, out) {
   // A verdict that reads none of its unverified atoms (the Girard cell).
   if (rep.frame) out.appendChild(el("div",
     `<p class="issue warning"><b>frame:</b> ${esc(rep.frame)}</p>`));
+  if (rep.boundary) {
+    const b = rep.boundary;
+    const decl = Object.entries(b.declared)
+      .map(([k, vs]) => `${esc(k)} excludes ${vs.map(esc).join(", ")}`).join("; ");
+    let rows = `<tr><td>declared</td><td>${decl}</td></tr>`
+      + `<tr><td>in view</td><td>${b.admitted.length ? b.admitted.map(esc).join("; ") : "—"}</td></tr>`
+      + `<tr><td>out of view</td><td>${b.excluded.length ? b.excluded.map(esc).join("; ") : "—"}</td></tr>`
+      + `<tr><td>of those, would have changed the verdict</td>`
+      + `<td>${b.defeating.length ? b.defeating.map(esc).join("; ") : "none"}</td></tr>`;
+    out.appendChild(el("table",
+      `<tr><th>boundary</th><th>readings</th></tr>${rows}`));
+    out.appendChild(el("div",
+      `<p class="issue ${b.defeating.length ? "warning" : ""}">${esc(b.note)}</p>`));
+  }
   if (rep.completions.length) {
     let rows = rep.completions.map(c =>
       `<tr><td>${esc(c.case)}</td><td class="verdict"><span class="${esc(c.value)}">${esc(c.value)}</span></td></tr>`).join("");

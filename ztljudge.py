@@ -35,6 +35,15 @@ sys.path.insert(0, _HERE)
 from ztl import T, F, Z, VALUES, NOT, AND, OR, IMP, XOR, XNOR, ev  # noqa: E402
 from zverify import grade                                          # noqa: E402
 
+# The mark of a MISSING SUBJECT. Spelled out here rather than imported: `znum`
+# imports this module, so the dependency may not run the other way. It is the
+# same symbol and the same meaning as `znum.E` — and the same disposition the
+# numeric floor has carried since 2026-08-12, where no admissible reading of a
+# comparison exists. That floor could reach it (an empty domain names itself);
+# this one could not, because a plain atom has no domain to be empty. Now it
+# can, by DECLARATION: a marking may say `{"weapon_carries_trace": E}`.
+E = "E"
+
 # ---- the operators a join may glue by (the kernel's own connectives) -------
 BINOPS = {"∧": AND, "&": AND, "∨": OR, "|": OR, "→": IMP, "->": IMP,
           "⊕": XOR, "^": XOR, "↔": XNOR, "=": XNOR}
@@ -139,13 +148,24 @@ def _full(phi, marking):
     return m
 
 
+def _kernel(m):
+    """What the KERNEL is allowed to see. An absent subject reaches the
+    connectives as an ordinary mark, and this is a measured decision, not a
+    convenience: distinguishing 'no subject' from 'not yet checked' changes no
+    verdict anywhere (`lab/desc/`), because E is not a value of the logic — it
+    is a fact about the claim's subject. So the kernel is left exactly as it
+    was, and the distinction is spent where it was measured to bite: on the
+    DISPOSITION and on the order to verify."""
+    return {a: (Z if v == E else v) for a, v in m.items()}
+
+
 # ------------------------------------------------------------------- report
 def _grade_marking(m):
     """zverify speaks the E12 mark dialect, where the mark symbol is 'M';
     ztljudge marks the unverified atom with the value Z. Translate Z→'M' so
     the warranty grade actually SEES the marks — otherwise it finds none, the
     refinement set is a singleton, and every verdict reads 'hereditary'."""
-    return {a: ("M" if v == Z else v) for a, v in m.items()}
+    return {a: ("M" if v in (Z, E) else v) for a, v in m.items()}
 
 
 def _lazy(phi, m):
@@ -203,13 +223,19 @@ def _lazy(phi, m):
 
 def _happened(phi, m):
     """What the kernel did with one claim, as a dict."""
-    v = ev(phi, m)
+    k = _kernel(m)
+    v = ev(phi, k)
     g = grade(phi, _grade_marking(m))
     unver = sorted(a for a in _atoms(phi) if m.get(a, Z) == Z)
-    lv, lab = _lazy(phi, m)
+    gone = sorted(a for a in _atoms(phi) if m.get(a) == E)
+    lv, lab = _lazy(phi, k)
     return {"formula": _show(phi), "verdict": v, "grade": g,
             "marking": {a: m[a] for a in sorted(_atoms(phi))},
             "unverified": unver,
+            # NOT a sub-list of `unverified`, and the separation is the whole
+            # point: an unverified atom is an open question, an absent one is
+            # no question at all. Nothing may be ASKED of the atoms named here.
+            "absent": gone,
             # the second register, as a COLUMN beside the verdict and
             # never in place of it: greedy says whether to sign, lazy says
             # whether the matter is still running
@@ -243,6 +269,57 @@ def join(text_a, text_b, operator, marking=None):
                              rb["verdict"], vj)}
 
 
+def _besides(unv, gone):
+    """Name what did not matter — without pretending the two are one thing."""
+    bits = []
+    if unv:
+        bits.append(f"the unverified {unv}")
+    if gone:
+        bits.append(f"the subjectless {gone}")
+    return " nor ".join(bits)
+
+
+def _forgone(text, marking, gone, disp):
+    """What declaring a subject ABSENT cost — the audit line that keeps `E`
+    from being a trapdoor.
+
+    Asked by the curator 2026-08-19: is this Tarski's move, sending the bullet
+    up a level where it cannot be stated? The declaration does come from
+    outside the judge, exactly as a boundary does, so the danger is real in its
+    practical form — declare `E` on the inconvenient atom and the judge stops
+    asking. `zboundary` already answers that shape by printing which excluded
+    readings would have CHANGED the verdict. This is the same receipt: restore
+    the absent subjects, and report the settlement the declaration removed.
+
+    An `E` that costs a settlement is a heavy claim about the world and should
+    be contested on the world. One that costs nothing was never load-bearing.
+
+    BILL ONLY WHAT WAS TAKEN. The first version of this reported the settlement
+    a restored subject would reach, and the corpus's own regression refused it:
+    on `present ∨ trace` the matter is EARNED already, so a check that "would
+    have settled the claim" takes nothing away — the label was lying about
+    arithmetic that was right. A claim already terminal without the subject has
+    forgone nothing, whatever a restored probe could reach."""
+    if disp in ("EARNED", "REFUTED"):
+        return []
+    restored = {a: (Z if v == E else v)
+                for a, v in _full(formalize(text), marking).items()}
+    out = []
+    for o in what_if(text, restored):
+        if o["atom"] in gone:
+            out.append({"atom": o["atom"],
+                        "would_have": ("settled the claim" if o["settles"] else
+                                       "narrowed it")})
+    return out
+
+
+def _no_subject(gone):
+    return (f"not established, and it cannot become established: {gone} has no "
+            "subject, so there is nothing to verify. The cure is to repair the "
+            "claim or withdraw it — and the silence must not be read as an "
+            "answer in either direction")
+
+
 def judge(text, marking=None):
     """Triage a claim by its WARRANT, not merely its truth. The verdict alone
     cannot tell 'earned' from 'true-on-credit', nor 'refuted' from 'not yet
@@ -253,30 +330,58 @@ def judge(text, marking=None):
       ON CREDIT verdict T, but not hereditary — true only while an unverified
                 link holds; if it flips, the claim can die.
       OPEN      not established — a mark actually matters; verify it.
+      E         not established, and it CANNOT BE: what the claim rests on has
+                no subject. Not a fifth kind of ignorance — the same fourth
+                corner `znumjudge` has reported since 2026-08-12, arriving here
+                by declaration instead of by an empty numeric domain.
+
+    OPEN and E are the distinction the whole of `lab/desc/` was built to
+    measure, and the curator's case states it in one line: "the weapon has not
+    been identified" is OPEN — the object exists, the question stands, the
+    matter proceeds. "No weapon was entered into the case" is E — there is
+    nothing to judge on that point, and its silence is not an answer in either
+    direction. Under one mark for both, the judge issues a verification order
+    that can never be filled.
 
     This is the sort a plain truth-check and a proof kernel do NOT give: which
     conclusions ride on something unchecked, and exactly which link that is."""
     r = check(text, marking)
-    v, g, unv = r["verdict"], r["grade"], r["unverified"]
+    v, g, unv, gone = (r["verdict"], r["grade"],
+                       r["unverified"], r["absent"])
     if g == "hereditary":
         if v == T:
             disp = "EARNED"
-            why = ("grounded outright" if not unv
-                   else f"grounded; the unverified {unv} do not matter")
+            why = (f"grounded; {_besides(unv, gone)} do not matter"
+                   if unv or gone else "grounded outright")
         elif v == F:
             disp = "REFUTED"
-            why = ("grounded false" if not unv
-                   else f"false regardless of the unverified {unv}")
+            why = (f"false regardless of {_besides(unv, gone)}"
+                   if unv or gone else "grounded false")
+        elif gone and not unv:
+            disp, why = "E", _no_subject(gone)
         else:
             disp, why = "OPEN", "not established"
     elif v == T:
+        # Still T, and still on credit: the verdict is not the judge's to
+        # revise here. What changes is whether the credit can EVER be redeemed.
         disp = "ON CREDIT"
         why = (f"true only on credit — rides the unverified {unv}; "
-               "if one flips, the claim can die")
+               "if one flips, the claim can die" if unv else
+               f"true only on credit, and the credit CANNOT BE REDEEMED — it "
+               f"rides {gone}, which has no subject to verify")
+        if unv and gone:
+            why += f"; and {gone} cannot be verified at all — no subject"
+    elif gone and not unv:
+        disp, why = "E", _no_subject(gone)
     else:
         disp = "OPEN"
         why = f"not established — verify {unv} (it could still turn either way)"
-    return {**r, "disposition": disp, "why": why}
+        if gone:
+            why += f"; {gone} is not on that list — it has no subject"
+    # The declaration is billed, always — an absence that removes a settlement
+    # is a claim about the world, and must be contestable as one.
+    return {**r, "disposition": disp, "why": why,
+            "forgone": _forgone(text, marking, gone, disp) if gone else []}
 
 
 def load_claims(path):
@@ -306,7 +411,7 @@ def load_claims(path):
     return claims
 
 
-DISPOSITIONS = ("EARNED", "ON CREDIT", "OPEN", "REFUTED")
+DISPOSITIONS = ("EARNED", "ON CREDIT", "OPEN", "REFUTED", "E")
 
 
 def ledger(claims):
@@ -326,7 +431,12 @@ def what_if(text, marking=None):
     """The actionable half of the judge: for each still-unverified link, what
     verifying it would do to the claim. Returns [{atom, if_T, if_F, settles}],
     where `settles` means BOTH outcomes are terminal (EARNED/REFUTED) — i.e.
-    checking that link resolves the claim whichever way it turns."""
+    checking that link resolves the claim whichever way it turns.
+
+    An atom declared to have NO SUBJECT never appears here. Probing it would
+    ask what happens 'if the weapon turns out to carry the trace' when no
+    weapon was entered — a question with no procedure behind it. The list is
+    an order to be filled, so an order that cannot be filled is not issued."""
     base = check(text, marking)
     known = {k: v for k, v in _full(formalize(text), marking).items() if v != Z}
     terminal = {"EARNED", "REFUTED"}
@@ -343,7 +453,13 @@ def next_check(text, marking=None):
     """Recommend which unverified link to check next: one that settles the
     claim either way if possible, otherwise one that can settle it in at least
     one direction, otherwise the first open link. Returns the what_if entry, or
-    None if there is nothing left to verify."""
+    None if there is nothing left to verify.
+
+    `None` now carries two different situations, and the caller must not read
+    them alike: everything relevant is settled, OR what the claim rests on has
+    no subject and no amount of checking will reach it. The disposition tells
+    which — `E` for the second — and `judge(...)["why"]` names the cure, which
+    there is to REPAIR the claim, not to verify anything."""
     opts = what_if(text, marking)
     if not opts:
         return None
@@ -381,13 +497,23 @@ def _print_whatif(text, marking):
     _print_judge(r)
     nc = next_check(text, marking)
     if nc is None:
-        print("      settled — nothing left to verify")
+        print("      settled — nothing left to verify" if not r["absent"]
+              else f"      NO ORDER ISSUED — {r['absent']} has no subject; "
+                   f"there is nothing to go and check")
+        _print_forgone(r)
         return
     for o in what_if(text, marking):
         star = " ⇐ check this next" if o["atom"] == nc["atom"] else ""
         tag = "settles" if o["settles"] else "narrows"
         print(f"      verify {o['atom']:12s} →  T: {o['if_T']:9s} "
               f"F: {o['if_F']:9s} ({tag}){star}")
+    _print_forgone(r)
+
+
+def _print_forgone(r):
+    for f in r.get("forgone", []):
+        print(f"      COST OF THE DECLARATION: had {f['atom']} had a subject, "
+              f"checking it would have {f['would_have']}")
 
 
 def _print_join(r):
@@ -481,6 +607,47 @@ if __name__ == "__main__":
     _nc = next_check("p & q", {"p": T})                         # q still Z
     assert _nc["atom"] == "q" and _nc["settles"]                # checking q ends it
     assert not next_check("a & b", {})["settles"]               # one of two: narrows
+    # ---- the fourth corner, reached by declaration (2026-08-19)
+    print("\n  NO SUBJECT vs NOT YET CHECKED — the two silences")
+    _CASE = "weapon_carries_trace & suspect_was_present"
+    for _label, _mk in (
+            ("the weapon has not been identified",
+             {"suspect_was_present": T}),
+            ("no weapon was entered into the case",
+             {"suspect_was_present": T, "weapon_carries_trace": E})):
+        print(f"    {_label}")
+        _print_whatif(_CASE, _mk)
+    # the verdict is the SAME in both — E is not a value of the logic
+    assert (judge(_CASE, {"suspect_was_present": T})["verdict"]
+            == judge(_CASE, {"suspect_was_present": T,
+                             "weapon_carries_trace": E})["verdict"] == F)
+    # what differs is the disposition and the order
+    assert judge(_CASE, {"suspect_was_present": T})["disposition"] == "OPEN"
+    _r = judge(_CASE, {"suspect_was_present": T, "weapon_carries_trace": E})
+    assert _r["disposition"] == "E" and _r["absent"] == ["weapon_carries_trace"]
+    assert _r["unverified"] == []                # absent is NOT unverified
+    # THE FIX ITSELF: no order is issued that could not be filled
+    assert next_check(_CASE, {"suspect_was_present": T})["atom"] \
+        == "weapon_carries_trace"
+    assert next_check(_CASE, {"suspect_was_present": T,
+                              "weapon_carries_trace": E}) is None
+    # and a case that stands on OTHER grounds is untouched by the absence
+    _stands = judge("suspect_was_present | weapon_carries_trace",
+                    {"suspect_was_present": T, "weapon_carries_trace": E})
+    assert _stands["disposition"] == "EARNED"
+    print("    a missing subject halts its own predicate, never the matter:")
+    print(f"    'present ∨ trace' with the weapon absent → "
+          f"{_stands['disposition']}")
+    # THE DECLARATION IS BILLED — the guard against E as a trapdoor. Asked by
+    # the curator: is this Tarski, sending the bullet up a level? It is not,
+    # while the level-shift prints what it took away.
+    assert _r["forgone"] == [{"atom": "weapon_carries_trace",
+                              "would_have": "settled the claim"}]
+    # ...and takes NOTHING when the matter already stands: the first draft of
+    # this receipt billed a settlement here too, and this line refused it.
+    assert _stands["forgone"] == []
+    print(f"    and the declaration is billed: {_r['forgone'][0]['would_have']}"
+          f" — while on standing grounds it costs {_stands['forgone']}")
     # ---- the second register, measured against an honest probe
     print("\n  THE LAZY COLUMN — pause told from denial, and which holes "
           "matter")

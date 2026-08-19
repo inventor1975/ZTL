@@ -425,6 +425,8 @@ STANDS = [
                         "0 of 64",
                         "Sasaki MP a∧(a→s b) ≤ b: True (216/216 triples)",
                         "iron at every rung"]),
+    # The judge decides inside a declared world; the studio only displays it.
+    ("zboundary.py", ["ZBOUNDARY GREEN"]),
     ("zclassify.py",   ["genres present among the classified cases: ['loop']",
                         "docket complete — every row pinned",
                         "Kripke transported, total",

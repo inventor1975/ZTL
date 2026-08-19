@@ -193,6 +193,9 @@ function renderStatement(rep, out) {
   // A verdict resting on the mark, and the remedy — reported, never applied.
   if (rep.on_credit) out.appendChild(el("div",
     `<p class="issue warning"><b>on credit:</b> ${esc(rep.on_credit)}</p>`));
+  // Grounds that must be filled together — where step-by-step is impossible.
+  if (rep.joint) out.appendChild(el("div",
+    `<p class="issue warning"><b>together, or not at all:</b> ${esc(rep.joint)}</p>`));
   // A verdict that reads none of its unverified atoms (the Girard cell).
   if (rep.frame) out.appendChild(el("div",
     `<p class="issue warning"><b>frame:</b> ${esc(rep.frame)}</p>`));

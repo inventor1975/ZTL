@@ -326,6 +326,20 @@ def _joint(phi, m, unv):
     return [] if any(_moves(phi, m, a) for a in unv) else list(unv)
 
 
+def joint_grounds(phi, marking=None):
+    """PUBLIC: the grounds that must be filled TOGETHER, for a kernel AST.
+
+    Exists because the studio needs this and must not recompute it — the judge
+    decides, the studio displays. Takes the AST rather than text, since a
+    caller that has already parsed should not serialise back and re-parse.
+
+    Returns `[]` when some single ground moves the matter, which is the
+    ordinary case (91-93%, `lab/width/`)."""
+    m = _full(phi, marking)
+    unv = sorted(a for a, v in m.items() if v == Z)
+    return _joint(phi, m, unv)
+
+
 def _besides(unv, gone):
     """Name what did not matter — without pretending the two are one thing."""
     bits = []

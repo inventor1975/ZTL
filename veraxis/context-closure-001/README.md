@@ -192,7 +192,31 @@ partial disclosure are therefore **two projections of one break: de Morgan
 fails** (`deMorgan1_fails`). This result is not a separate discovery; it is the
 second face of a fracture the corpus had already mapped from the other side.
 
-**Status.** The theorem is proved; the recipe and its price are MEASURED — a
+**Round 2 addendum, 2026-08-19 — the recipe is now proved, and so is its cost.**
+`normal_form_sound`: on a formula in normal form, a warrant granted by the
+kernel survives every completion of the withheld ground. No `T` on credit, for
+the whole language rather than a census. The reason is one sentence: in a normal
+form the withheld atom can only appear in a literal, and a literal over a
+withheld atom is never `T` — the atom reads `Z`, its negation reads `F` — so no
+warrant can rest on it, and one that does not rest on it survives every
+completion.
+
+`normal_form_incomplete`: and the loss is real. `b ∨ ¬b` is in normal form,
+upheld by every completion, and refused by the kernel, because the excluded
+middle fails here by construction. That is the 369 honest warrants of the
+census, as a theorem.
+
+Both on the empty axiom list. Keeping them there took the corpus's own warning
+twice over: a nested pattern (`.neg (.atom _)`) and a wildcard row each pull
+`propext` in through the compiled matcher, exactly as `ZTL.lean` notes beside
+`kand`; the definitions enumerate every constructor instead.
+
+**So the trade-off is now machine-checked on both sides.** Normalise and you
+never grant a warrant the hidden ground could defeat; normalise and you lose
+warrants that every completion upholds. The machine proves both and chooses
+neither.
+
+**Status.** The maximality theorem is proved; the census figures are MEASURED — a
 census of depth ≤ 2 over two atoms. "Normalisation implies soundness" needs an
 induction over normal forms and is not done. Normalisation is also *not* an
 equivalence in ZTL: the normalised formula is a different, strictly weaker

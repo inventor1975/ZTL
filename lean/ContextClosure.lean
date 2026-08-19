@@ -363,6 +363,117 @@ theorem no_syntactic_characterisation :
   · exact ⟨by decide, by decide, by decide⟩
   · exact ⟨by decide, by decide⟩
 
+/-! ## Normal form: the kernel stops granting warrants on credit
+
+`veraxis/context-closure-001/normalize.py` measured that rewriting a claim into
+a normal form — expanding `xor`/`xnor` by their proved definitions and pushing
+negations down to the atoms — removes EVERY credit-warrant in the census. Here
+is why, for the whole language rather than a census.
+
+The reason is short. In a normal form the only place a withheld atom can appear
+is a literal, and a literal over a withheld atom can never be `T`: the atom
+itself evaluates to `Z`, and its negation to `znot Z = F`. So no `T` can rest on
+the withheld ground at all — and a warrant that does not rest on it survives
+every completion of it.
+
+This is soundness, NOT completeness, and the loss is real: `b ∨ ¬b` is upheld by
+every completion and refused by the kernel, because the excluded middle fails
+here by construction. `normal_form_incomplete` below is that witness. Which of
+the two errors an institution prefers — never granting what it should not,
+versus never losing what it should — is not a question this file can answer. -/
+
+/-- Negations sit only on atoms; no implication, no xor/xnor. This is the shape
+`normalize.py` produces. -/
+def isLit : Fm → Bool
+  | .atom _ => true
+  | .top => false
+  | .bot => false
+  | .neg _ => false
+  | .conj _ _ => false
+  | .disj _ _ => false
+  | .imp _ _ => false
+  | .xor _ _ => false
+  | .xnor _ _ => false
+
+def isNNF : Fm → Bool
+  | .atom _ => true
+  | .top => true
+  | .bot => true
+  | .neg φ => isLit φ
+  | .conj φ ψ => isNNF φ && isNNF ψ
+  | .disj φ ψ => isNNF φ && isNNF ψ
+  | .imp _ _ => false
+  | .xor _ _ => false
+  | .xnor _ _ => false
+
+/-- **Normal-form soundness.** On a formula in normal form, a warrant granted
+by the kernel survives every completion of the withheld ground — no `T` on
+credit. -/
+theorem normal_form_sound (a : Nat) (v : Nat → V) (hv : v a = Z) :
+    ∀ φ : Fm, isNNF φ = true → evalF v φ = T →
+      ∀ x : V, evalF (setA a x v) φ = T := by
+  intro φ
+  induction φ with
+  | atom n =>
+      intro _ h x
+      cases hd : decide (n = a) with
+      | true =>
+          have hn : n = a := of_decide_eq_true hd
+          subst hn
+          rw [evalF, hv] at h
+          exact V.noConfusion h
+      | false =>
+          have hne := of_decide_eq_false hd
+          rw [evalF, setA_other _ _ hne]
+          rw [evalF] at h
+          exact h
+  | top => intro _ h _; exact h
+  | bot => intro _ h _; exact h
+  | neg φ _ =>
+      intro hnf h x
+      match φ, hnf with
+      | .atom n, _ =>
+          cases hd : decide (n = a) with
+          | true =>
+              have hn : n = a := of_decide_eq_true hd
+              subst hn
+              rw [evalF, evalF, hv] at h
+              exact V.noConfusion h
+          | false =>
+              have hne := of_decide_eq_false hd
+              rw [evalF, evalF, setA_other _ _ hne]
+              rw [evalF, evalF] at h
+              exact h
+  | conj φ ψ ihφ ihψ =>
+      intro hnf h x
+      have hs := andT hnf
+      rw [evalF] at h ⊢
+      have hc := (cover_and_T _ _).mp h
+      exact (cover_and_T _ _).mpr ⟨ihφ hs.1 hc.1 x, ihψ hs.2 hc.2 x⟩
+  | disj φ ψ ihφ ihψ =>
+      intro hnf h x
+      have hs := andT hnf
+      rw [evalF] at h ⊢
+      match (cover_or_T _ _).mp h with
+      | Or.inl hl => exact (cover_or_T _ _).mpr (Or.inl (ihφ hs.1 hl x))
+      | Or.inr hr => exact (cover_or_T _ _).mpr (Or.inr (ihψ hs.2 hr x))
+  | imp _ _ _ _ => intro hnf; exact Bool.noConfusion hnf
+  | xor _ _ _ _ => intro hnf; exact Bool.noConfusion hnf
+  | xnor _ _ _ _ => intro hnf; exact Bool.noConfusion hnf
+
+/-- **And it is not complete.** `b ∨ ¬b` is in normal form and upheld by every
+completion, yet the kernel refuses it: the excluded middle fails here by
+construction. This is the price the census measured at 369 honest warrants. -/
+theorem normal_form_incomplete :
+    ∃ (a : Nat) (v : Nat → V) (φ : Fm),
+      v a = Z ∧ isNNF φ = true ∧
+      (evalF (setA a T v) φ = T ∧ evalF (setA a F v) φ = T) ∧
+      evalF v φ ≠ T := by
+  refine ⟨0, (fun _ => Z), .disj (.atom 0) (.neg (.atom 0)), rfl, by decide,
+          ⟨by decide, by decide⟩, by decide⟩
+
+#print axioms normal_form_sound
+#print axioms normal_form_incomplete
 #print axioms no_syntactic_characterisation
 #print axioms eval_indep
 #print axioms mono

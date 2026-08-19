@@ -9,6 +9,16 @@ Rules:
   * `assert` separates the verified-atom header from the claim.
   * status only for VERIFIED atoms (`a=F`, `b=T`); everything unnamed is Z
     (unverified) — the ZTL default.
+  * `w has no subject` DECLARES ABSENCE, and it is not `w=F` nor a boundary.
+    `w=F` says the ground is false; a boundary says a reading is out of view;
+    this says there is no ground to read at all. The judge keeps the three
+    apart because they owe different things: `F` owes nothing, an unverified
+    ground owes a check, and an absent one owes a REPAIR — no amount of
+    checking will reach it. "The weapon has not been identified" leaves the
+    question open; "no weapon was entered into the case" closes the order.
+    A declaration of absence is billed: the report says which settlement it
+    removed, so it cannot be used as a quiet way to stop being asked.
+
   * `b excludes T` DECLARES A BOUNDARY: `b` stays unverified, but the reading
     `b=T` is not admitted. The word is long on purpose. `b != T` would read as
     a claim about how things ARE — and that claim is `b=F`, which the language
@@ -117,9 +127,20 @@ def human_to_doc(text):
         excluded.setdefault(a, set()).add(st.upper())
     header_wo_bounds = re.sub(
         r"[A-Za-z_][A-Za-z0-9_]*\s+excludes\s+[TFtf]\b", " ", header, flags=re.I)
+    # `w has no subject` DECLARES ABSENCE: not "nobody checked w" but "there is
+    # no w to check". The judge treats the two differently — the first keeps a
+    # verification order open, the second cannot be filled at all — so the
+    # surface language has to be able to say which one is meant.
+    absent = set(re.findall(
+        r"([A-Za-z_][A-Za-z0-9_]*)\s+has\s+no\s+subject\b",
+        header_wo_bounds, re.I))
+    header_wo_bounds = re.sub(
+        r"[A-Za-z_][A-Za-z0-9_]*\s+has\s+no\s+subject\b", " ",
+        header_wo_bounds, flags=re.I)
     declared = {a: st.upper() for a, st in
                 re.findall(r"([A-Za-z_][A-Za-z0-9_]*)\s*=\s*([TFZtfz])",
                            header_wo_bounds)}
+    declared.update({a: "E" for a in absent})
     tree = _parse_formula(formula)
     atoms = {a: {"status": declared.get(a, "Z")}
              for a in _atoms_in_order(tree, [])}

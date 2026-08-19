@@ -39,7 +39,7 @@ import re
 GENRES = ("statement", "system")
 CONNECTIVES = {"not": 1, "and": 2, "or": 2, "imp": 2, "xor": 2, "xnor": 2}
 RESERVED = {"T", "F", "Z", "Tr", "not", "and", "or", "imp", "xor", "xnor"}
-STATUSES = ("T", "F", "Z")
+STATUSES = ("T", "F", "Z", "E")
 ASKS = ("verdict", "warranty", "passport", "stipulations")
 
 # Cyrillic stays in NAME_RE on purpose: atom names may be in any language
@@ -214,7 +214,7 @@ def validate(text):
         st = spec.get("status") if isinstance(spec, dict) else None
         if st not in STATUSES:
             issues.append(err("E_ATOM_STATUS", a,
-                              'an atom needs "status": "T" | "F" | "Z"'))
+                              'an atom needs "status": "T" | "F" | "Z" | "E"'))
 
     ask = doc.get("ask", [])
     if not isinstance(ask, list):
@@ -360,7 +360,8 @@ def validate(text):
 
 # ----------------------------------------------- deterministic back-reading
 STATUS_TXT = {"T": "verified: true", "F": "verified: false",
-              "Z": "UNVERIFIED (mark Z)"}
+              "Z": "UNVERIFIED (mark Z)",
+              "E": "NO SUBJECT — nothing to verify (E)"}
 
 
 def say(tree, system=False, glosses=None):

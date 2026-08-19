@@ -461,6 +461,21 @@ def judge(text, marking=None):
             "forgone": _forgone(text, marking, gone, disp) if gone else []}
 
 
+def absence_report(phi, marking=None):
+    """PUBLIC: what a DECLARED absence costs, for a kernel AST.
+
+    Same reason as `joint_grounds`: the studio must display this, not compute
+    it. Goes through `judge` on the judge's own rendering of the AST, which
+    round-trips exactly (`_show` and `formalize` are the same module's pair).
+
+    Returns the absent grounds, the disposition, and the BILL — which
+    settlement the declaration removed. The bill is the guard that keeps a
+    declaration of absence from being a trapdoor."""
+    r = judge(_show(phi), marking)
+    return {"absent": r["absent"], "forgone": r["forgone"],
+            "disposition": r["disposition"], "why": r["why"]}
+
+
 def load_claims(path):
     """Read a stream of claims from a file. One per line:
 

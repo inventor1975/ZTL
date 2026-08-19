@@ -17,7 +17,7 @@ from zpassport import passports, deps, component_models  # noqa: E402
 from zfl import to_statement, to_system                  # noqa: E402
 from znormal import normalise, on_credit                # noqa: E402
 import zboundary
-from ztljudge import joint_grounds                                        # noqa: E402
+from ztljudge import joint_grounds, absence_report                                        # noqa: E402
 import zderive                                           # noqa: E402
 from entailment import entails                           # noqa: E402
 
@@ -33,11 +33,21 @@ KIND_TXT = {
 
 
 def run_statement(doc, parsed):
-    env, formula = to_statement(doc, parsed)
+    declared, formula = to_statement(doc, parsed)
+    # A ground declared ABSENT reaches the kernel as an ordinary mark — E is not
+    # a value of the logic, and distinguishing "no subject" from "not checked"
+    # was measured to change no verdict anywhere (`lab/desc/`). What it changes
+    # is the DISPOSITION and the order to verify, and those come from the judge.
+    absent = sorted(a for a, v in declared.items() if v == "E")
+    env = {a: (Z if v == "E" else v) for a, v in declared.items()}
     value = ev(formula, env)
     marking = {a: (v if v in (T, F) else "M") for a, v in env.items()}
     g = grade(formula, marking)
-    z_atoms = sorted(a for a, v in env.items() if v == Z)
+    z_atoms = sorted(a for a, v in declared.items() if v == Z)
+    # every ground the KERNEL reads as a mark: unverified plus absent. The
+    # completion table has to range over all of them or it cannot explain the
+    # verdict; the labels keep the two kinds apart for the reader.
+    mark_atoms = sorted(set(z_atoms) | set(absent))
 
     if value == T:
         cls = {"hereditary": "hereditary T — build on it: no verification"
@@ -56,12 +66,14 @@ def run_statement(doc, parsed):
                                      " refusal until the inputs are checked"}[g]
 
     completions = []
-    if 0 < len(z_atoms) <= 3:
-        for combo in product((T, F), repeat=len(z_atoms)):
+    if 0 < len(mark_atoms) <= 3:
+        for combo in product((T, F), repeat=len(mark_atoms)):
             env2 = dict(env)
-            env2.update(dict(zip(z_atoms, combo)))
+            env2.update(dict(zip(mark_atoms, combo)))
             completions.append({
-                "case": ", ".join(f"{a}={v}" for a, v in zip(z_atoms, combo)),
+                "case": ", ".join(
+                    f"{a}={v}" + (" (no subject)" if a in absent else "")
+                    for a, v in zip(mark_atoms, combo)),
                 "value": ev(formula, env2)})
 
     report = {
@@ -115,7 +127,7 @@ def run_statement(doc, parsed):
     # claims some single ground moves the matter and an order is honest; for
     # the rest none does, and "check this one first" is empty work.
     if z_atoms:
-        jg = joint_grounds(formula, env)
+        jg = joint_grounds(formula, declared)
         if jg:
             report["joint"] = (
                 f"no single ground moves this: {', '.join(jg)} must be"
@@ -123,6 +135,28 @@ def run_statement(doc, parsed):
                 " nothing — the answer does not move until all of them are in."
                 " ('Do the two witnesses agree?' is the everyday shape: hear"
                 " the first and you know nothing about agreement.)")
+
+    # --- a ground DECLARED to have no subject. The judge decides what that
+    # means and bills the declaration; this displays both. The bill is what
+    # keeps a declaration of absence from being a trapdoor: if excluding a
+    # ground removes a settlement, that is a heavy claim about the world and
+    # should be contested on the world.
+    if absent:
+        ar = absence_report(formula, declared)
+        e_note = (" The judge's disposition is E: not established, and it"
+                  " cannot become established."
+                  if ar["disposition"] == "E" else
+                  " The matter still stands on other grounds.")
+        report["absent"] = (
+            f"no subject: {', '.join(absent)} — there is nothing to verify"
+            " there, so a verification order could never be filled, and the"
+            " silence must not be read as an answer in either direction."
+            + e_note + " The cure is to repair the claim or withdraw it, not"
+            " to go and check.")
+        if ar["forgone"]:
+            report["forgone"] = "; ".join(
+                f"had {f['atom']} had a subject, checking it would have"
+                f" {f['would_have']}" for f in ar["forgone"])
 
     # A constant completion table means the verdict reads none of the
     # unverified atoms: the assertion is a FRAME, not a fact — a test

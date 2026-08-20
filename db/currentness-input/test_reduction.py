@@ -46,7 +46,7 @@ def main() -> int:
     print("REDUCTION — the generalization must collapse to the original quantity")
     print("=" * 74)
     print(f"  {'lag':>5} {'probe acted':>12} {'emitter':>9} {'records':>9}"
-          f" {'indeterminate':>14}  verdict")
+          f" {'unresolved':>14}  verdict")
     ok = True
     for lag in LAGS:
         original = probe.run(lag, DRIFT, RATE)["acted"]
@@ -54,11 +54,11 @@ def main() -> int:
         inline = data["probe_inline"]["acted"]
         m = measure_mod.measure(data)
         same = (inline == original
-                and m["acted_certain"] == original
-                and m["acted_indeterminate"] == 0)
+                and m["acted_certainly_inside"] == original
+                and m["acted_unresolved"] == 0)
         ok &= same
-        print(f"  {lag:>5} {original:>12} {inline:>9} {m['acted_certain']:>9}"
-              f" {m['acted_indeterminate']:>14}  {'REDUCES' if same else 'DRIFT'}")
+        print(f"  {lag:>5} {original:>12} {inline:>9} {m['acted_certainly_inside']:>9}"
+              f" {m['acted_unresolved']:>14}  {'REDUCES' if same else 'DRIFT'}")
 
     print()
     if not ok:
@@ -78,14 +78,14 @@ def main() -> int:
   AND IT IS NOT DECORATIVE. The same run, re-read with a declared bound of
   +/-2 steps on the change times and +/-1 on the acts:
 
-      certain          {m0['acted_certain']:>6}  ->  {m1['acted_certain']:>6}
-      indeterminate    {m0['acted_indeterminate']:>6}  ->  {m1['acted_indeterminate']:>6}
+      certain          {m0['acted_certainly_inside']:>6}  ->  {m1['acted_certainly_inside']:>6}
+      indeterminate    {m0['acted_unresolved']:>6}  ->  {m1['acted_unresolved']:>6}
       upper bound      {m0['acted_upper_bound']:>6}  ->  {m1['acted_upper_bound']:>6}
 
   The number the experiment used to report now sits inside an interval, and
   the acts whose membership the records cannot settle are counted rather than
   assigned to whichever side is convenient.""")
-    if m1["acted_indeterminate"] == 0:
+    if m1["acted_unresolved"] == 0:
         print("\n  WARNING: uncertainty produced no indeterminacy — check the bounds.")
         return 1
     print("\nREDUCTION TEST GREEN.")

@@ -71,7 +71,10 @@ MODELS = {
     # being made the default: on the five-question battery it fills the table
     # correctly where llama-3.3-70b invents a row to hold the answer. Still
     # free, and the label no longer has to warn quite so loudly.
-    "groq":       ["openai/gpt-oss-120b", "llama-3.3-70b-versatile"],
+    # Groq снимает модели без предупреждения: llama-3.3-70b-versatile умерла
+    # 2026-08-20 (HTTP 404, не 403 — 403 это отсутствующий User-Agent).
+    # Живой список: GET https://api.groq.com/openai/v1/models
+    "groq":       ["openai/gpt-oss-120b", "qwen/qwen3.6-27b", "openai/gpt-oss-20b"],
 }
 
 

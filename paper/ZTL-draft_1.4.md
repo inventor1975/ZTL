@@ -950,8 +950,13 @@ expedition remainder: **Russell's grounding half is kernel-computed**
 — `lfp RUSSELL = [F,F,T,F,T,F,F,F,Z]` by the certified iteration of
 §9: eight membership facts ground, exactly R∈R stays quarantined
 (`russell_grounded`, `russell_verdicts`); ⊢ ⊤, ⊥ ⊢ φ and ⊬ ⊥ run
-through the certified engine. **The stitch (`bridge.py`):** one questionnaire, two
-engines — 141 kernel-computed answers (both registers cell by cell,
+through the certified engine. **The receipt trio (`Receipt`, `Linear`, `LabelExact`, zero
+axioms):** the label's completeness in both registers, the
+no-loss theorem at multiplicity ≤ 1, and the label's exactness on
+linear claims with a proved counterexample showing the hypothesis is
+load-bearing (§19). **The stitch (`bridge.py`):** one questionnaire, two
+engines — 609 kernel-computed answers (both registers cell by cell,
+the label battery of §19,
 the J-operators, E and Δ, certified-engine verdicts on a shared
 propositional and quantified battery with constants, lazy lfp of the
 zoo up to the nine-fact Russell system) compared mechanically against
@@ -1587,6 +1592,72 @@ check; symmetrically for F, with F-until-verification as default deny.
 The Frege cell is fenced by the top grade only; the middle grade
 fences lying, not spoiling.
 
+**A verdict carries a warranty; a refusal carries a receipt** (Lean,
+`Receipt.lean` and `LabelExact.lean`, zero axioms). The lazy register
+answers Z together with a label — which unverified atoms the answer is
+still waiting on. That label is what makes a refusal accountable rather
+than merely withheld, and it is now bounded from both sides.
+
+*Nothing that could matter is omitted* (`receipt_complete`): for every
+formula of the language, every valuation and every unverified atom, if
+the label leaves that atom out then no value of it changes the answer.
+Contrapositively — the reading that matters — **an atom that could
+change the answer is always named.** The same holds in the register
+that actually issues verdicts (`receipt_complete_greedy`). That second
+theorem was predicted in writing to be FALSE, by us, before the census,
+on the ground that the greedy lift is non-monotone and
+connective-local; the census refuted the prediction (zero misses in
+296,161 cells carrying an unverified atom) and the reason turned out to
+be `greedy_agrees_when_decided` plus the shape of the greedy tables.
+The prediction is recorded rather than dropped.
+
+*And nothing idle is named — on a linear claim* (`label_exact_linear`):
+if no unverified atom is read twice, every atom on the receipt is one
+the answer is genuinely waiting on — there is a definite reading of the
+other unverified atoms under which answering this one T and answering
+it F give different verdicts.
+
+Three things this pair does not say, each of them measured.
+
+* **Relevance cannot be tested one atom at a time.** `p ⊕ q` is linear,
+  both atoms are named correctly, and neither moves the answer alone
+  (kxor Z Z = kxor T Z = kxor F Z = Z). Single-atom probing — the
+  notion we first measured against, which produced our own inflated
+  over-approximation figures of 16% at depth 2 and 35% at depth 6 —
+  systematically reports jointly relevant atoms as idle. Against the
+  joint notion (the union of minimal jointly moving sets) the label is
+  exact in 93% of 14,530 pending cells and never once too small.
+* **The linearity hypothesis is load-bearing, not decorative**, and
+  this is proved rather than asserted: `clash_names_an_idle_atom`
+  exhibits `p ∧ ¬p`, where the receipt names an atom that no reading
+  can move. All of the residual inexactness (13–18%, pool-dependent)
+  sits in cells where a marked atom occurs more than once — the same
+  occurrence-independence that costs `p → p` and `p ∨ ¬p`.
+* **The residue was attacked and did not yield.** A demand-driven label
+  computed against reachable sibling values was built as a prototype
+  and matched the existing label cell for cell — the existing analysis
+  already IS that analysis. Closing the gap needs relational tracking
+  of shared occurrences across branches, which is not cheap.
+
+Two auxiliaries carry the result. `drivable`: a pending linear claim
+can be driven to T and to F (48,759 pending linear cells, every one
+reachable both ways) — so a refusal never hides a foregone conclusion;
+this is also what makes the exactness proof go through, since holding a
+pending sibling at Z would hide the pivot. And `Linear.linear_no_loss`,
+from the other direction: at multiplicity ≤ 1 no truth is lost.
+Together, **on a linear claim the judge is exact in both directions —
+it loses no truth and names no idle ground.** What remains imperfect
+there is the over-grant, and that one comes from the collapse ¬Z = F
+rather than from multiplicity (`¬¬p` has one occurrence and still
+grants).
+
+Measured before each proof was attempted, in the order the method
+requires: 412,593 cells for completeness, 14,530 pending cells for the
+joint-exactness figure, 128,372 linear cells for exactness (zero
+inexact), 48,759 for drivability. Label propagation of this kind is old
+— de Kleer's ATMS [40] — and is named here rather than presented as
+new; what is ours is the pair of bounds on this particular label.
+
 ## 20. Evidence combination: conflict is not laundered (MEASURED)
 
 Pieces of evidence about one value are constraints; **combination =
@@ -2077,6 +2148,9 @@ already ships in the repository (`tool/`); a possible essay,
     normality of a logical matrix (p. 134): modus ponens preserves the
     designated value — criterion (2) of the natural-implication class.
 
+40. de Kleer, J. An assumption-based TMS. *Artificial Intelligence*
+    28:2 (1986), 127–162.
+
 ## Acknowledgements and AI disclosure
 
 This work was carried out with the substantial participation of the AI
@@ -2091,7 +2165,9 @@ the v1.1 same-day correction and the v1.2 assembly (the census of
 sixteen and its Lean clone equalities, the fence-depth theorem, the
 warranty ladder at scale, the naming of the lift, the temporal layer
 §§21–23 with `ZTime.lean` and `EpochBoundary.lean`, the expiry and
-derivation stands, and this PDF build). All design
+derivation stands, and this PDF build); Claude Opus 5 — the receipt
+results of §19 with `Receipt.lean`, `Linear.lean` and `LabelExact.lean`,
+and the accompanying benches. All design
 decisions, fork choices, hypotheses, and the final responsibility for
 the content rest with the human author. In accordance with COPE/ICMJE
 recommendations, the AI system is not listed as an author. The

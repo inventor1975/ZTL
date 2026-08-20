@@ -2025,6 +2025,53 @@ Hilbert operator — a choice is an act, and only an act grounds a term —
 the same discipline the whole logic runs on, now at the level of singular
 terms.
 
+**Note (v1.4): three kinds of non-denoting are marked alike, and that is
+the right answer at the level of value.** A description can fail to denote
+in three ways — no satisfier, several satisfiers, or a satisfier whose
+denotation is simply unverified — and `zdesc` gives all three the same
+mark. The Lean theorems say so directly: `iota_empty_marked` and
+`iota_multiple_marked` both return Z, and they are right to. Both are
+non-denoting, neither earns existence, and *as a value* nothing separates
+them. The distinction between the three is real, but it does not live in
+the calculus.
+
+We looked, because it seemed as though it should. Measured 2026-08-19
+against the published code, imported and unmodified: **no verdict changes
+anywhere.** `E` is a typed evaluation event, not a value; it does not
+enter connectives; every compound answers exactly as before. So the
+honest headline is the negative one — *the distinction buys no logical
+power at all*, and nothing in the published semantics of this section
+needs correcting.
+
+**Where it does live is one floor up, in the work order.** The judge does
+not only answer; it names the next check. In all three cases it named the
+same one, and only one of the three can be carried out. With no
+satisfier there is nothing to examine and never will be. With several
+satisfiers examining does not help either, for a different reason: the
+world is not missing anything, the claim is, and what is owed is a
+*stipulation* rather than a check — the corpus already had the word and
+was not using it here (`zpassport`: UNDERDETERMINED, several classical
+models fit; stipulate one and the claim grounds). Only where the
+denotation is merely unverified is "go and check" a real instruction.
+Worse, the first two were marked OPEN — a status asserting the question
+can be opened.
+
+That is a defect of instruction, not of verdict, and the two are
+different objects. It was invisible from inside the calculus precisely
+because the calculus was behaving. The repair is in the disposition
+layer: a fifth disposition for "this ground has no subject", a rule that
+no order is issued which is already known to be unfillable, and — since a
+declaration of absence is a premise rather than a discovery — a bill: on
+declaring that a ground has no subject, the judge names which settlement
+that declaration foreclosed. Where the ground would have decided the
+matter, the bill is heavy and the declaration becomes contestable on the
+world; where the matter stands on other grounds, the bill is empty. A
+missing subject halts its own predicate, never the proceeding. None of this is an erratum against the published
+record, and it is recorded here rather than quietly folded in, because
+the temptation to inflate a correct verdict with a wrong instruction into
+a semantic correction is exactly the kind of over-claim this paper spends
+its caveats resisting.
+
 ## 26. Cross-cutting regularities
 
 Three facts recurred in every applied chapter; we fix them once.

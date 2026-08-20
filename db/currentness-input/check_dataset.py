@@ -20,7 +20,17 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
-SCHEMA_VERSION = "CURRENTNESS-INPUT-v0.1"
+ACCEPTED_VERSIONS = ("CURRENTNESS-INPUT-v0.1", "CURRENTNESS-INPUT-v0.2")
+
+#: A9, designed by Ignacio Adrián Lerer. The materials a competent reviewer would
+#: need in order to evaluate the threshold declaration at all.
+GOVERNANCE_FIELDS = (
+    "asserted_mandate",
+    "procedure",
+    "evidentiary_basis",
+    "review_conditions",
+    "conflict_safeguards",
+)
 
 
 def _t(value: str) -> datetime:
@@ -73,6 +83,34 @@ def conditions(d: dict) -> list[dict]:
           "an absent change event means 'no change', not 'not recorded'",
           f"completeness={completeness!r}")
 
+    # A9 — Threshold Governance Record Completeness.
+    #
+    # PASSING THIS CONDITION ESTABLISHES NOTHING ABOUT LEGITIMACY. It does not
+    # establish the declarant's competence, does not validate the procedure, and
+    # does not make the threshold legally sufficient for reliance. It establishes
+    # only that the institutional claim is documented well enough to become
+    # evaluable by someone who is competent to evaluate it.
+    #
+    # Two gates therefore remain OUTSIDE this mechanical test, and their being
+    # outside it is part of the result rather than a gap in it:
+    #
+    #   competence   whether the asserted mandate and procedure are
+    #                institutionally sufficient, and whether the resulting
+    #                threshold may govern this class of decisions at all
+    #   admissibility  whether a particular output may be relied upon for a
+    #                particular use under the facts, authority, jurisdiction,
+    #                evidence and review conditions then in force
+    #
+    # Collapsing either into this check would convert evidence of documentation
+    # into a certificate of legitimate use.
+    if d.get("schema_version") == "CURRENTNESS-INPUT-v0.2":
+        record = (d.get("requirement") or {}).get("governance_record") or {}
+        missing = [f for f in GOVERNANCE_FIELDS if not record.get(f)]
+        check("A9-threshold-record-complete", not missing,
+              "the threshold declaration is documented enough to BE evaluated "
+              "(not enough to be legitimate)",
+              "complete" if not missing else "absent: " + ", ".join(missing))
+
     ordering = d.get("ordering") or {}
     clock = ordering.get("clock", "SINGLE_TRUSTED")
     skew = ordering.get("max_skew_seconds")
@@ -96,8 +134,9 @@ def main(argv: list[str]) -> int:
     print("=" * 74)
     print("CURRENTNESS DATASET ADEQUACY — v0.1")
     print("=" * 74)
-    if d.get("schema_version") != SCHEMA_VERSION:
-        print(f"  REFUSED: schema_version is {d.get('schema_version')!r}, not {SCHEMA_VERSION!r}")
+    if d.get("schema_version") not in ACCEPTED_VERSIONS:
+        print(f"  REFUSED: schema_version is {d.get('schema_version')!r}; accepted: "
+              f"{', '.join(ACCEPTED_VERSIONS)}")
         return 1
 
     results = conditions(d)
@@ -111,8 +150,30 @@ def main(argv: list[str]) -> int:
     hard = [r for r in failed if r["id"] in
             {"A1-both-timestamps", "A2-effective-time-known", "A4-acts-attributable",
              "A6-requirement-is-theirs", "A8-lag-separable-from-skew"}]
+    # An incomplete governance record is not a defective dataset. The proper
+    # answer is that the question cannot yet be asked, and the cure is to supply
+    # the materials — so it gets its own verdict rather than being counted as
+    # invalidity.
+    indeterminate = [r for r in failed if r["id"] == "A9-threshold-record-complete"]
 
     print()
+    if not hard and indeterminate:
+        print("  VERDICT: INDETERMINATE PENDING COMPLETION — not a defect of the")
+        print("  data. The threshold declaration is not yet documented well enough")
+        print("  to be evaluated by anyone; supply the missing materials and ask")
+        print("  again. This is not a finding that the threshold is illegitimate.")
+        for r in indeterminate:
+            print(f"    {r['detail']}")
+        print("""
+  AND WHAT WOULD STILL REMAIN OUTSIDE THIS TEST once they are supplied:
+  whether the declarant is competent, and whether a particular output may be
+  relied upon for a particular use. Both are legal gates. Their being outside
+  the mechanical test is part of the result, not a gap in it.""")
+        Path("adequacy-report.json").write_text(
+            json.dumps({"verdict": "INDETERMINATE_PENDING_COMPLETION",
+                        "conditions": results}, indent=2) + "\n", encoding="utf-8")
+        print("\n  written: adequacy-report.json")
+        return 1
     if hard:
         print("  VERDICT: INADEQUATE — the measurement must not be run.")
         for r in hard:

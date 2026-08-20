@@ -534,6 +534,30 @@ A bounded scope is not "less proved"; its claim scope is simply narrower.
     [PROVED · GENERAL          ] V.greedy_agrees_when_decided
     [PROVED · GENERAL          ] V.receipt_complete_greedy
 
+## Linear.lean
+    [PROVED · GENERAL          ] V.occCount_zero_iff
+    [PROVED · GENERAL          ] V.and_absorb_r
+    [PROVED · GENERAL          ] V.and_absorb_l
+    [PROVED · GENERAL          ] V.or_absorb_r
+    [PROVED · GENERAL          ] V.or_absorb_l
+    [PROVED · GENERAL          ] V.imp_absorb_r
+    [PROVED · GENERAL          ] V.imp_absorb_l
+    [PROVED · GENERAL          ] V.xor_absorb_r
+    [PROVED · GENERAL          ] V.xor_absorb_l
+    [PROVED · GENERAL          ] V.xnor_absorb_r
+    [PROVED · GENERAL          ] V.xnor_absorb_l
+    [PROVED · GENERAL          ] V.znot_ne_Z
+    [PROVED · GENERAL          ] V.zand_ne_Z
+    [PROVED · GENERAL          ] V.zor_ne_Z
+    [PROVED · GENERAL          ] V.zimp_ne_Z
+    [PROVED · GENERAL          ] V.zxor_ne_Z
+    [PROVED · GENERAL          ] V.zxnor_ne_Z
+    [PROVED · GENERAL          ] V.z_pins
+    [PROVED · GENERAL          ] V.z_pins'
+    [PROVED · GENERAL          ] V.split_zero
+    [PROVED · GENERAL          ] V.split_succ
+    [PROVED · GENERAL          ] V.linear_no_loss
+
 ==================================================================
 2. evidence_status = MEASURED_WITH_CEILING · proof_scope = POOL_BOUNDED  (Python stands, not Lean theorems)
 ==================================================================
@@ -553,5 +577,5 @@ A bounded scope is not "less proved"; its claim scope is simply narrower.
     - the passport register reads ONE WAY, physical → operational (§10)
 
 ==================================================================
-proof_scope tally over 444 PROVED Lean declarations: 357 GENERAL, 45 BOUNDED_MODEL, 2 EXISTENCE_WITNESS, 40 CONCRETE_CELL.
+proof_scope tally over 466 PROVED Lean declarations: 379 GENERAL, 45 BOUNDED_MODEL, 2 EXISTENCE_WITNESS, 40 CONCRETE_CELL.
 Heuristic first cut (syntactic scan); the scope of each SELECTED element is confirmed by semantic review.

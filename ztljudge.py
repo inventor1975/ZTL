@@ -216,6 +216,23 @@ def _lazy(phi, m):
     decided the matter. Occurrence-independence again, the same root as
     `¬¬Z = T` and as the lost tautologies.
 
+    AND THE 7% IS ENTIRELY A MULTIPLICITY EFFECT — measured 2026-08-20
+    (`lab/label/`: 128,372 linear cells, zero inexact) and then PROVED
+    (`lean/LabelExact.lean:label_exact_linear`, zero axioms). On a LINEAR
+    claim — every unverified ground mentioned at most once — every atom
+    the receipt names is one the answer is genuinely waiting on: there is
+    a definite reading of the other unverified grounds under which
+    answering this one yes and answering it no give different verdicts.
+    All 13-18% of the inexactness sits in cells where some marked atom
+    occurs twice, and `clash_names_an_idle_atom` shows the hypothesis is
+    load-bearing: `p ∧ ¬p` names `p`, which no reading can move.
+
+    Put beside `Linear.linear_no_loss`, that gives the whole picture for
+    linear claims, both halves now machine-checked: **the judge loses no
+    truth and names no irrelevant ground.** The only imperfection left
+    there is the over-grant, and that one comes from the collapse
+    `¬Z = F`, not from multiplicity.
+
     NOT CLOSABLE BY DEMAND PROPAGATION — tried and measured. A
     demand-driven label over reachable sibling values was built as a
     prototype and matched this one cell for cell: same 93%, not one cell

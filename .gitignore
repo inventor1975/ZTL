@@ -30,3 +30,4 @@ Reproduce-ZTL.docx
 # fork output — measured but not part of the corpus, and deliberately not
 # shipped: db/_ground.py degrades to a no-op when this directory is absent.
 lab/
+LinkedIn/

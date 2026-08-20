@@ -139,9 +139,9 @@ cannot mint it — from no premises nothing is derivable, even the guarded
 tautologies, even on credit). The entire development — the core, both
 engine certificates with cut admissibility, the algebraic witnesses, the
 general fixed-point theorem, the expedition twins, the temporal modules
-and the frame's own mini-theorems, thirty-three modules in all — is
+and the frame's own mini-theorems, thirty-four modules in all — is
 formalized in Lean 4 **with an empty axiom list, definitions
-included**: 483 theorems, each one audited individually rather than by
+included**: 491 theorems, each one audited individually rather than by
 sample (`inventory/axiom_audit.py`, re-run on every push). As a
 test bench the logic is run over the classical paradoxes — the liar,
 Jourdain's carousel, Curry, Yablo, the crocodile, Russell — and in every
@@ -855,7 +855,7 @@ an axiom infects every theorem that uses it), but an argument, and one
 that an unused orphan theorem would escape. It is now a measurement:
 `inventory/axiom_audit.py` extracts every theorem name from every
 module, generates one `#print axioms` per name, and fails if a single
-line reads otherwise. **483 of 483 clean**, re-run by CI on every push.
+line reads otherwise. **491 of 491 clean**, re-run by CI on every push.
 The same stand refuses a module that carries theorems and is built by no
 target — the failure mode that let one module (`QuantumWitness.lean`) go
 unchecked by any automation until 2026-07-20.
@@ -1650,6 +1650,42 @@ it loses no truth and names no idle ground.** What remains imperfect
 there is the over-grant, and that one comes from the collapse ¬Z = F
 rather than from multiplicity (`¬¬p` has one occurrence and still
 grants).
+
+**And the over-grant has its own fence (Lean, `NoGift.lean`, zero
+axioms).** The gift is the dangerous half — an unearned T is
+indistinguishable from an earned one, where a refusal at least announces
+itself — so the question is which claims cannot produce one. The answer
+is an axis orthogonal to multiplicity: **negation.** If every unverified
+atom of a claim stands under no negation (`ContextClosure.negFree` for
+each mark — which also bars it from an implication's antecedent and from
+`⊕`/`↔` entirely), then a greedy T survives every refinement of the
+marks:
+
+    no_gift : posMarks v φ → refines v w → evalF v φ = T → evalF w φ = T
+
+`closure_coincides` was the one-atom case; what is added is all marks at
+once and all PARTIAL refinements, which is what the hereditary grade
+actually asks for.
+
+Three things must be said with it, and each is proved rather than
+asserted. **Only T is protected** (`F_is_not_protected`): `p ∧ p` sits
+inside the fragment, is greedily F, and revives at `p := T` — measured,
+950 of 1700 in-fragment F cells are revocable. The asymmetry is the
+point: a refusal that later becomes a verdict is inquiry working. **The
+fragment is sufficient and narrow** (`fragment_is_not_necessary`):
+`p → q` with `p` unverified and `q` verified true cannot be moved by any
+refinement, and sits outside — and outside is where most safe verdicts
+live, 66% of hereditary verdicts at depth 2, rising to 99% at depth 6.
+Outside is unguaranteed, not unsafe. **And the two fragments are
+incomparable**: gifts do not need multiplicity (594 linear cells gift at
+depth 2) and in-fragment claims may read a mark twice without gifting
+(184 such cells). Negation is the axis of the gift; multiplicity is the
+axis of the loss.
+
+Measured before the proof was attempted, predictions frozen in
+`lab/nogift/PREDICTIONS.md`: 323,530 cells over three pools, zero gifts
+inside the fragment; all five predictions held, including the one
+recorded as the weakest.
 
 Measured before each proof was attempted, in the order the method
 requires: 412,593 cells for completeness, 14,530 pending cells for the

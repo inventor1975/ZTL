@@ -1,0 +1,36 @@
+{
+  "schema_version": "CURRENTNESS-INPUT-v0.1",
+  "scope": {
+    "basis_ids": ["listing-EU-2026-218", "licence-A-77"],
+    "window_start": "2026-07-01T00:00:00Z",
+    "window_end": "2026-07-31T00:00:00Z",
+    "completeness": "COMPLETE_FOR_LISTED_BASES"
+  },
+  "bases": [
+    { "basis_id": "listing-EU-2026-218", "kind": "sanctions_listing" },
+    { "basis_id": "licence-A-77", "kind": "licence" }
+  ],
+  "changes": [
+    { "change_id": "c1", "basis_id": "listing-EU-2026-218",
+      "effective_at": "2026-07-04T00:00:00Z", "recorded_at": "2026-07-09T12:00:00Z",
+      "effective_at_precision": "EXACT", "effect": "WIDENED" }
+  ],
+  "dependencies": [
+    { "conclusion_id": "onboard-ok-991", "basis_id": "listing-EU-2026-218",
+      "relied_from": "2026-07-01T00:00:00Z", "relied_until": null }
+  ],
+  "acts": [
+    { "act_id": "a1", "conclusion_id": "onboard-ok-991",
+      "occurred_at": "2026-07-06T09:00:00Z", "act_type": "payment_released",
+      "reversible": false, "magnitude": 12000 },
+    { "act_id": "a2", "conclusion_id": "onboard-ok-991",
+      "occurred_at": "2026-07-08T09:00:00Z", "act_type": "customer_onboarded",
+      "reversible": true, "magnitude": null }
+  ],
+  "requirement": {
+    "declared_by": "record holder, compliance function",
+    "statement": "No payment may be released against a listing state older than the last published update.",
+    "threshold": null
+  },
+  "ordering": { "clock": "SINGLE_TRUSTED", "max_skew_seconds": null, "tie_break": "BY_ID" }
+}

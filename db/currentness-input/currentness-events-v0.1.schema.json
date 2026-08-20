@@ -1,0 +1,131 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vitalyreznik.com/schemas/currentness-events-v0.1.schema.json",
+  "title": "Currentness probe — dataset input, v0.1",
+  "description": "What a body of institutional records must supply so that the currentness measurement can be computed from records rather than simulated. Nothing here is about how the records are stored; it is about what must be recoverable from them.",
+  "type": "object",
+  "required": ["schema_version", "scope", "bases", "changes", "dependencies", "acts", "requirement"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "const": "CURRENTNESS-INPUT-v0.1" },
+
+    "scope": {
+      "type": "object",
+      "description": "The closure statement. Without it, a missing change event is ambiguous between 'no change occurred', 'a change occurred and was not recorded', and 'this basis was never in scope'. The probe treats the three differently and cannot guess which it is looking at.",
+      "required": ["basis_ids", "window_start", "window_end", "completeness"],
+      "additionalProperties": false,
+      "properties": {
+        "basis_ids": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+        "window_start": { "type": "string", "format": "date-time" },
+        "window_end": { "type": "string", "format": "date-time" },
+        "completeness": {
+          "enum": ["COMPLETE", "COMPLETE_FOR_LISTED_BASES", "UNKNOWN"],
+          "description": "UNKNOWN is accepted and is not a defect; it caps what the run may claim."
+        }
+      }
+    },
+
+    "bases": {
+      "type": "array",
+      "description": "The upstream things a conclusion can rest on: a rule, a licence, a precedent, a sanctions listing, an approval.",
+      "items": {
+        "type": "object",
+        "required": ["basis_id", "kind"],
+        "additionalProperties": false,
+        "properties": {
+          "basis_id": { "type": "string" },
+          "kind": { "type": "string" },
+          "label": { "type": "string" }
+        }
+      }
+    },
+
+    "changes": {
+      "type": "array",
+      "description": "Upstream changes. The two timestamps are the whole measurement: without both, lag is not computable, and lag is the quantity under test.",
+      "items": {
+        "type": "object",
+        "required": ["change_id", "basis_id", "effective_at", "recorded_at", "effect"],
+        "additionalProperties": false,
+        "properties": {
+          "change_id": { "type": "string" },
+          "basis_id": { "type": "string" },
+          "effective_at": {
+            "type": "string", "format": "date-time",
+            "description": "When the change became true in the world."
+          },
+          "recorded_at": {
+            "type": "string", "format": "date-time",
+            "description": "When the organisation's own dependency record reflected it. Never inferred from effective_at."
+          },
+          "effective_at_precision": {
+            "enum": ["EXACT", "DAY", "MONTH", "UNKNOWN"],
+            "default": "EXACT",
+            "description": "UNKNOWN disqualifies the change from the lag measurement and is counted separately, never silently treated as EXACT."
+          },
+          "effect": { "enum": ["WITHDRAWN", "SUPERSEDED", "NARROWED", "WIDENED", "EXPIRED", "OTHER"] }
+        }
+      }
+    },
+
+    "dependencies": {
+      "type": "array",
+      "description": "Which conclusions rested on which bases, over which interval. A conclusion with no recorded dependency is not evidence that it had none.",
+      "items": {
+        "type": "object",
+        "required": ["conclusion_id", "basis_id", "relied_from"],
+        "additionalProperties": false,
+        "properties": {
+          "conclusion_id": { "type": "string" },
+          "basis_id": { "type": "string" },
+          "relied_from": { "type": "string", "format": "date-time" },
+          "relied_until": {
+            "type": ["string", "null"], "format": "date-time",
+            "description": "null means still relied upon at window_end."
+          }
+        }
+      }
+    },
+
+    "acts": {
+      "type": "array",
+      "description": "Consequential acts taken in reliance on a conclusion. The finding under test is that these, not elapsed time, carry the exposure — so an act without a type cannot support the 'number and TYPE' half of it.",
+      "items": {
+        "type": "object",
+        "required": ["act_id", "conclusion_id", "occurred_at", "act_type"],
+        "additionalProperties": false,
+        "properties": {
+          "act_id": { "type": "string" },
+          "conclusion_id": { "type": "string" },
+          "occurred_at": { "type": "string", "format": "date-time" },
+          "act_type": { "type": "string" },
+          "reversible": { "type": ["boolean", "null"] },
+          "magnitude": { "type": ["number", "null"] }
+        }
+      }
+    },
+
+    "requirement": {
+      "type": "object",
+      "description": "The institution's own threshold for what counts as adequate containment. It is declared by the record holder, never chosen by whoever runs the probe: 'blind' is defined relative to it, so the analyst choosing it would be choosing the result.",
+      "required": ["declared_by", "statement"],
+      "additionalProperties": false,
+      "properties": {
+        "declared_by": { "type": "string" },
+        "statement": { "type": "string" },
+        "threshold": { "type": ["number", "null"] }
+      }
+    },
+
+    "ordering": {
+      "type": "object",
+      "description": "How simultaneity and clock skew are resolved. Absent, the probe assumes a single trusted clock and says so in its output.",
+      "additionalProperties": false,
+      "properties": {
+        "clock": { "enum": ["SINGLE_TRUSTED", "MULTIPLE_SYNCHRONISED", "MULTIPLE_UNSYNCHRONISED"] },
+        "max_skew_seconds": { "type": ["number", "null"] },
+        "tie_break": { "enum": ["BY_ID", "UNDEFINED"] }
+      }
+    }
+  }
+}

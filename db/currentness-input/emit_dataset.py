@@ -33,7 +33,8 @@ def worst(ground: list[tuple[int, int]]) -> float:
     return max(both) / N
 
 
-def emit(lag: int, drift: int, actions_per_step: int, seed: int = SEED) -> dict:
+def emit(lag: int, drift: int, actions_per_step: int, seed: int = SEED,
+         receipt_offset: int = 2) -> dict:
     rnd = random.Random(seed)
     true = [(rnd.randrange(SOURCES), rnd.randrange(SOURCES)) for _ in range(N)]
     true = [(a, b if b != a else (a + 1) % SOURCES) for a, b in true]
@@ -53,10 +54,15 @@ def emit(lag: int, drift: int, actions_per_step: int, seed: int = SEED) -> dict:
             true[i] = (a, a)
             pending.append((step + lag, i, (a, a)))
             changes.append({
+                # The receipt time is INVENTED and declared as invented in
+                # SENSITIVITY-PREDECLARATION-v0.1.md. The simulation never had
+                # one; it exists so that two interval definitions exist to
+                # compare. It is not a claim about real institutions.
                 "change_id": f"c{len(changes)}",
                 "subject": i,
                 "new_ground": [a, a],
                 "effective_at": step,
+                "received_at": step + receipt_offset,
                 "recorded_at": step + lag,
             })
         for when, i, val in [p for p in pending if p[0] <= step]:

@@ -55,7 +55,7 @@ def _worst(ground: list[list[int]], sources: int, n: int) -> float:
     return max(both) / n
 
 
-def blind_sets(d: dict) -> tuple[set[int], set[int]]:
+def blind_sets(d: dict, opens: str = "effective_at") -> tuple[set[int], set[int]]:
     """(certainly blind, possibly blind), over the declared temporal bounds.
 
     A change's effective time may sit anywhere in its bound, and so may its
@@ -76,7 +76,7 @@ def blind_sets(d: dict) -> tuple[set[int], set[int]]:
         by_eff: dict[int, list[dict]] = {}
         by_rec: dict[int, list[dict]] = {}
         for c in d["changes"]:
-            by_eff.setdefault(c["effective_at"] + eff_shift, []).append(c)
+            by_eff.setdefault(c[opens] + eff_shift, []).append(c)
             by_rec.setdefault(c["recorded_at"] + rec_shift, []).append(c)
         out: set[int] = set()
         for step in range(steps):
@@ -95,8 +95,16 @@ def blind_sets(d: dict) -> tuple[set[int], set[int]]:
     return (widest & narrowest), (widest | narrowest)
 
 
-def measure(d: dict) -> dict:
-    certain_blind, possible_blind = blind_sets(d)
+def measure(d: dict, opens: str = "effective_at") -> dict:
+    """``opens`` names the event that opens the interval.
+
+    It is a PARAMETER and has no default that means anything institutionally:
+    which event opens the legally relevant window is a declaration that must
+    come from an identified authority, and this layer does not make it. The
+    fallback exists only so the reduction test can reproduce the original
+    probe, whose world had exactly one temporality.
+    """
+    certain_blind, possible_blind = blind_sets(d, opens)
     ua = d["uncertainty"].get("occurred_at", 0)
 
     # Condition 6, act-level conservation: every act ends in exactly one state.
@@ -122,6 +130,7 @@ def measure(d: dict) -> dict:
 
     return {
         "record_class": "CURRENTNESS_EPISTEMIC_CLASSIFICATION",
+        "interval_opens_at": opens,
         # Condition 2: named, so a later reader can check that this is still the
         # quantity the experiment was designed to measure and not a neighbour.
         "proposition_tested": (

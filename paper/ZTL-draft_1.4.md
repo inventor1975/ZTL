@@ -1658,6 +1658,51 @@ inexact), 48,759 for drivability. Label propagation of this kind is old
 — de Kleer's ATMS [40] — and is named here rather than presented as
 new; what is ours is the pair of bounds on this particular label.
 
+**What the receipt cannot answer: how many at once (MEASURED).** The
+label says which grounds could matter. It never says how many must be
+settled *together* before anything moves, and the difference is
+operational. Define, for an unsettled claim, its **width**: the size of
+the smallest set of unverified grounds that, filled together, moves the
+verdict. Width 1 is ordinary incremental inquiry — go check this one.
+Width ≥ 2 means no partial progress is possible: the whole
+configuration must be produced before anything at all happens.
+
+**Width 1 dominates, and the judge's one-ground order is usually
+honest**: 93% of unsettled cells over the exhaustive depth-2 pool, 91%
+over random depth-5 formulas across five atoms. **But width is not
+bounded.** The hunt found width reaching the number of available
+grounds — 4 of 4 at four atoms, 5 of 5 at five, over ~24,000 unsettled
+cells. The honest statement is a limit rather than a defect:
+
+> **Step-by-step inquiry is not always possible.** There are claims of
+> any size for which nothing moves until every unverified ground is
+> filled at once.
+
+That is Meno's second horn in a measurable form, and it is measured
+narrowly: the claim is about this calculus's own pool, not about
+inquiry in general.
+
+**The prediction behind this was right in its conclusion and wrong in
+its witness**, which is worth recording. We predicted unbounded width
+with xor chains as the witnesses, having worked `p ⊕ q ⊕ r` by hand.
+That formula has width **1** — the inner xor collapses to a definite
+value and the outer one is sensitive to the last ground alone; the
+hand-calculation had tested two atoms of three. The genuinely wide
+cases are irregular mixed formulas, and they had to be hunted rather
+than constructed.
+
+**Width is invisible to the label**, and this is the
+over-approximation half of §19 showing its operational face: `p ⊕ q ⊕ r`
+names all three grounds and has width 1; `p ⊕ q` names both and has
+width 2. So the fix could not be a better label — it had to be a new
+computation. The judge now reports a `joint` field: when no single
+ground moves the matter, it names the grounds that must be filled
+together and says plainly that a one-at-a-time order would be empty
+work. The exact width is **deliberately not computed** — that search is
+exponential in the number of marks, and what a reader needs is the
+difference between "go check this" and "no single check will move
+this", not the cardinality.
+
 ## 20. Evidence combination: conflict is not laundered (MEASURED)
 
 Pieces of evidence about one value are constraints; **combination =

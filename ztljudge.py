@@ -199,12 +199,29 @@ def _lazy(phi, m):
     greedy one agrees with it (`greedy_agrees_when_decided`), and the
     greedy tables absorb exactly where the label drops a branch.
 
-    The OVER-approximation half stays measured and stays honest: the
-    label also names innocent atoms, and does so more as formulas deepen
-    — 16% of pending cells at depth 2 over two atoms, 21% at depth 2 over
-    three, 35% at depth <= 6 over four (`lab/receipt/`). So it is a cheap
-    candidate list, not the exact answer: fill what it names and the
-    matter moves; probe if the exact set is needed.
+    THE OVER-APPROXIMATION IS MUCH SMALLER THAN WE SAID (measured
+    2026-08-20, `lab/label/`). The earlier figures — 16% of pending cells
+    at depth 2, 35% at depth 6 — counted an atom as innocent when no
+    change to it ALONE moved the answer. That probe is too weak: this
+    corpus's own width measurement shows cells where no single ground
+    moves the matter and a pair does. Against the right notion — the
+    union of minimal JOINTLY moving sets — the label is EXACT in 93% of
+    cells, and never once too small (14,530 cells, zero violations).
+
+    The remaining 7% is a genuine over-approximation and it has one
+    cause. `p ∧ (p ∨ q)` with both unverified names `q`, which cannot
+    move anything: the analysis reads the two branches independently,
+    sees the right one could reach F, and does not notice that it gets
+    there only when `p` is F — at which point the left branch has already
+    decided the matter. Occurrence-independence again, the same root as
+    `¬¬Z = T` and as the lost tautologies.
+
+    NOT CLOSABLE BY DEMAND PROPAGATION — tried and measured. A
+    demand-driven label over reachable sibling values was built as a
+    prototype and matched this one cell for cell: same 93%, not one cell
+    narrower. The existing label already IS that analysis. Closing the 7%
+    needs relational tracking of shared occurrences across branches,
+    which is not cheap.
     The first draft of this docstring claimed "carriers for free in one
     pass", which the measurement refused. (Label propagation of this
     kind is old — de Kleer's ATMS, 1986 — and is named here rather than

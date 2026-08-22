@@ -1,0 +1,12 @@
+ZTL — Zero-Trust Logic
+Copyright (c) 2026 Vitaly Reznik
+
+Dual-licensed under Apache License 2.0 or the MIT License, at your option.
+See LICENSE, LICENSE-APACHE and LICENSE-MIT.
+
+The Lean 4 development, the tableau engine and the tooling were built by the
+author working with an AI assistant. This is stated in every published artifact
+of this project.
+
+The preprints deposited on Zenodo are documents and carry CC BY 4.0; that is a
+separate licence for a separate thing and is unaffected by the terms above.

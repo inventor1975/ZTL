@@ -82,13 +82,21 @@ concept DOI
 [10.5281/zenodo.21318981](https://doi.org/10.5281/zenodo.21318981)
 always resolves to the latest version** (v1.0:
 [10.5281/zenodo.21318982](https://doi.org/10.5281/zenodo.21318982);
-text CC BY 4.0, code MIT). **Formalization blueprint**
+text CC BY 4.0, code MIT — since 2026-08-22 the code is
+dual-licensed Apache-2.0 OR MIT, at your option). **Formalization blueprint**
 (theorem map with dependency graph):
 https://inventor1975.github.io/ZTL/
 
 The project originated on 2026-07-10 from an analysis of the liar
 paradox; its shipyard predecessor is VSPL (a temporal paraconsistent
-logic of streams). License: MIT.
+logic of streams).
+
+**License.** The code is dual-licensed **Apache-2.0 OR MIT**, at your option
+(`LICENSE`, `LICENSE-APACHE`, `LICENSE-MIT`). Apache 2.0 was added on
+2026-08-22 for its explicit patent grant, which is what an organisation's
+counsel looks for; MIT was kept rather than replaced, so that every earlier
+statement that this code is MIT-licensed remains true. Nothing was withdrawn
+from anyone. The preprints on Zenodo are documents and carry CC BY 4.0.
 
 *AI participation: designed and written in a dialogue between the
 curator (Vitaly Reznik) and Claude (Anthropic); all fork decisions are

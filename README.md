@@ -2,6 +2,8 @@
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21318981.svg)](https://doi.org/10.5281/zenodo.21318981)
 
+**Try it without installing anything: [ztl.vitalyreznik.com](https://ztl.vitalyreznik.com)** — the judge, running, on your own sentence.
+
 A logic built on one principle: **truth is never granted on credit**.
 Verdicts are always two-valued (T/F); the third symbol Z (zero-trust,
 "truth not earned") is a mark on an unverified input: it never produces
@@ -63,8 +65,10 @@ understanding → ZFL, the Zero-trust Formal Language, with a
 deterministic Russian back-reading as the non-hallucinating auditor and
 a validator-driven repair loop), and the measured ZTL core *judges*:
 verdicts with warranties, quarantine passports, stipulation options.
-`python3 tool/ztlstudio.py` → http://localhost:8190 (no dependencies;
-without GROQ_API_KEY it runs in pro mode — write ZFL by hand).
+A public instance runs at **https://ztl.vitalyreznik.com** — nothing to
+install. To run your own: `python3 tool/ztlstudio.py` →
+http://localhost:8190 (no dependencies; without GROQ_API_KEY it runs in
+pro mode — write ZFL by hand).
 
 Companion papers, both built on this core: **The Paradox Docket** — a
 computable classification of the classical paradoxes (`zclassify.py`, E35;

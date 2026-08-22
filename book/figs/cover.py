@@ -17,6 +17,9 @@ p = [f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" '
      f'text-anchor="middle">Проверили?</text>',
      f'<text x="{W/2}" y="308" font-size="33" fill="#555" text-anchor="middle" '
      f'font-style="italic">Введение в логику, которая не верит на слово</text>',
+     # автор — байлайн под подзаголовком (без «куратор», по правилу)
+     f'<text x="{W/2}" y="366" font-size="30" fill="{INK}" text-anchor="middle" '
+     f'font-weight="600">Виталий Резник</text>',
      f'<g text-anchor="middle" font-size="46" font-weight="700">',
      f'<text x="{W/2-120}" y="{H-150}" fill="{GREEN}">T</text>',
      f'<text x="{W/2}" y="{H-150}" fill="{RED}">F</text>',

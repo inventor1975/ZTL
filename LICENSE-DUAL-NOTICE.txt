@@ -1,0 +1,23 @@
+ZTL is dual-licensed, at your option, under EITHER of
+
+    Apache License, Version 2.0    see LICENSE-APACHE
+    MIT License                    see LICENSE-MIT
+
+Take whichever suits you; you need not comply with both.
+
+WHY TWO. The MIT licence is short and permissive but says nothing about
+patents. Apache 2.0 permits the same things and adds an explicit patent grant
+from every contributor, plus a termination clause for anyone who sues over
+patents in this code. For an individual the difference is small. For an
+organisation it is the clause its counsel looks for first, and its absence is
+what turns a decision into an escalation.
+
+Adding Apache 2.0 rather than replacing MIT is deliberate: every earlier
+publication of this work states that the code is MIT-licensed, and those
+statements remain true. Nothing is withdrawn from anyone; an option is added.
+
+Dual licensing on these two terms follows the practice of the Rust project.
+
+Contributions are offered under the same dual terms unless stated otherwise.
+
+Copyright (c) 2026 Vitaly Reznik

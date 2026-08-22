@@ -1,21 +1,23 @@
-MIT License
+ZTL is dual-licensed, at your option, under EITHER of
+
+    Apache License, Version 2.0    see LICENSE-APACHE
+    MIT License                    see LICENSE-MIT
+
+Take whichever suits you; you need not comply with both.
+
+WHY TWO. The MIT licence is short and permissive but says nothing about
+patents. Apache 2.0 permits the same things and adds an explicit patent grant
+from every contributor, plus a termination clause for anyone who sues over
+patents in this code. For an individual the difference is small. For an
+organisation it is the clause its counsel looks for first, and its absence is
+what turns a decision into an escalation.
+
+Adding Apache 2.0 rather than replacing MIT is deliberate: every earlier
+publication of this work states that the code is MIT-licensed, and those
+statements remain true. Nothing is withdrawn from anyone; an option is added.
+
+Dual licensing on these two terms follows the practice of the Rust project.
+
+Contributions are offered under the same dual terms unless stated otherwise.
 
 Copyright (c) 2026 Vitaly Reznik
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.

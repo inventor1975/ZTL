@@ -118,11 +118,61 @@ def choose(text: str, model: str, key: str) -> str:
     return "".join(b.text for b in msg.content if b.type == "text").strip()
 
 
+# ЧАНКИНГ — промерен 2026-08-23 (см. память project_atom_notebook_experiment). Целый
+# длинный текст упирается в потолок ответа и ОБРЫВАЕТСЯ; чанки — единственный способ
+# досчитать. Не быстрее и не дешевле (рубрика повторяется), плата — режем раму. Потому
+# режем по ЕСТЕСТВЕННЫМ швам (заголовки/границы абзацев), НИКОГДА не поперёк абзаца:
+# на ценностной оси рамка И ЕСТЬ суждение, и край куска пере-обрамляет пограничные T?/T.
+def chunk_prose(text: str, target_lines: int = 50) -> list[tuple[str, str]]:
+    """Резать прозу по швам: копим абзацы до target_lines непустых строк, заголовок
+    (#…) открывает новый чанк. Возвращает [(метка-зачин, текст-чанка)]."""
+    paras = [p for p in text.split("\n\n") if p.strip()]
+    chunks: list[str] = []
+    cur: list[str] = []
+    cnt = 0
+    for p in paras:
+        stripped = p.lstrip()
+        # ЖЁСТКИЙ шов — только заголовок ВЕРХНЕГО уровня (глава/часть: «# …», не «## …»),
+        # иначе книга с подзаголовками крошится в сотню огрызков. «##»+ — мягкие, едут в куске.
+        is_top = stripped.startswith("# ") or stripped.rstrip() in ("#",)
+        if is_top and cur:                          # глава — естественный шов
+            chunks.append("\n\n".join(cur)); cur, cnt = [], 0
+        cur.append(p); cnt += p.count("\n") + 1
+        if cnt >= target_lines and not is_top:      # добрали размер — рвём по границе абзаца
+            chunks.append("\n\n".join(cur)); cur, cnt = [], 0
+    if cur:
+        chunks.append("\n\n".join(cur))
+    out = []
+    for c in chunks:
+        first = next((l.strip() for l in c.splitlines() if l.strip()), "")
+        out.append((first[:60], c))
+    return out
+
+
+def choose_chunked(chunks: list[tuple[str, str]], model: str, key: str,
+                   jobs: int = 6) -> list[tuple[str, str]]:
+    """Судить каждый чанк параллельно (как форки). Порядок чанков сохраняется."""
+    import concurrent.futures as cf
+
+    def one(item: tuple[str, str]) -> tuple[str, str]:
+        label, ctext = item
+        try:
+            return label, choose(ctext, model, key)
+        except Exception as e:                      # один чанк не роняет прогон
+            return label, f"(ОШИБКА: {type(e).__name__}: {e})"
+
+    with cf.ThreadPoolExecutor(max_workers=jobs) as pool:
+        return list(pool.map(one, chunks))
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description="ярус 3: выбрать доброе среди истинного")
     ap.add_argument("target", help="текст-файл рассуждения")
     ap.add_argument("--model", default=os.environ.get("INTROSPECT_MODEL", DEFAULT_MODEL))
     ap.add_argument("--key", default=None)
+    ap.add_argument("--chunk", choices=["auto", "on", "off"], default="auto",
+                    help="резать длинную прозу по швам (auto: по размеру; целое обрывается на потолке)")
+    ap.add_argument("--jobs", type=int, default=6, help="чанков разом")
     args = ap.parse_args()
 
     text = pathlib.Path(args.target).read_text(encoding="utf-8", errors="replace")
@@ -133,9 +183,23 @@ def main() -> int:
     print("\n".join(f"  {f}" for f in flags) if flags else "  (абсолютов не найдено)")
     print()
 
-    # 2) суждение яруса 3 — судья Опус
-    print(f"=== ВЫБОР (судья {args.model}) ===")
-    print(choose(text, args.model, load_key(args.key)))
+    # 2) чанковать ли: длинное целиком обрывается на потолке ответа (промерено)
+    nonempty = sum(1 for ln in text.splitlines() if ln.strip())
+    do_chunk = args.chunk == "on" or (args.chunk == "auto" and nonempty > 60)
+    key = load_key(args.key)
+
+    if do_chunk:
+        chunks = chunk_prose(text)
+        print(f"=== ВЫБОР по {len(chunks)} чанкам (судья {args.model}); швы — заголовки/абзацы ===")
+        print("(!) РАМКА: край чанка ПЕРЕ-ОБРАМЛЯЕТ пограничные T?/T — резано по естественным "
+              "швам, но вердикт на стыке читай с этой поправкой.\n")
+        for label, judg in choose_chunked(chunks, args.model, key, args.jobs):
+            print(f"----- [{label}] -----")
+            print(judg)
+            print()
+    else:
+        print(f"=== ВЫБОР (судья {args.model}) ===")
+        print(choose(text, args.model, key))
     return 0
 
 

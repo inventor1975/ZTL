@@ -1,19 +1,26 @@
 #!/usr/bin/env python3
 # Copyright 2026 Vitaly Reznik
 # SPDX-License-Identifier: Apache-2.0
-"""zchoose — ТЕЛО яруса 3: выбиратель доброго среди истинного.
+"""zchoose — ТЕЛО яруса 3: выбиратель доброго среди истинного. БЕЗ КЛЮЧА.
 
-    ./zchoose.py <текст-файл> [--model claude-opus-4-8] [--key <файл>]
+    ./zchoose.py prepare  <текст-файл> [--out DIR] [--target N]
+    ./zchoose.py assemble <папка-вердиктов> [--out ledger.md]
 
 Ярус 3 (этика/выбор). Ниже: проверка (ztl.py — T/F/Z) и суд (zboundary — E).
 Сюда приходит уже ИСТИННОЕ. Вопрос не «истинно ли», а «истинное — ДОБРОЕ ли,
 или СОБЛАЗН (истинно, но во вред)». Задача — выбрать доброе, отбросить соблазн.
 
+СУДЬЯ — НЕ КЛЮЧ, А ФОРК ИЛИ Я САМ (решение куратора 2026-08-23). Раньше тело
+ходило по API-ключу Anthropic и жгло деньги орга. Теперь тело НЕ зовёт API вовсе:
+оно РЕЖЕТ текст по швам и готовит task'и (рубрика + кусок), а судит их либо ФОРК
+(субагент в сессии — как линза, только вместо «найди баги» задача «размерь атомы»),
+либо Я САМ в своём контексте (для малого — ради абзаца форк не нужен). Оба — по
+бюджету сессии, ключ не тронут.
+
 ЧЕСТНАЯ ГРАНИЦА. Соблазн НЕ вычислим из частей: вред живёт в УПОТРЕБЛЕНИИ, не в
 утверждении — та же причина, по которой S не пускают в ядро (сломало бы truth-
-functionality). Поэтому тело — НЕ алгоритм, а КОДИФИЦИРОВАННАЯ ПРОЦЕДУРА СУЖДЕНИЯ:
-одна алгоритмическая зацепка (тэлл абсолюта) НАВОДИТ, а сам вердикт даёт судья
-(Опус) по рубрике. Код-арбитр T/F/Z остаётся на ярусе 1; здесь честно — суждение.
+functionality). Потому тело — НЕ алгоритм, а КОДИФИЦИРОВАННАЯ ПРОЦЕДУРА СУЖДЕНИЯ:
+одна алгоритмическая зацепка (тэлл абсолюта) НАВОДИТ, вердикт даёт судья по рубрике.
 
 ТРИ МЕТКИ ОСИ ЦЕННОСТИ (промерены обкаткой на границе, «О помощи», 2026-08-23):
     T   доброе — истинно и стоит само, не во вред.
@@ -30,16 +37,11 @@ functionality). Поэтому тело — НЕ алгоритм, а КОДИФ
 from __future__ import annotations
 
 import argparse
-import os
 import pathlib
 import re
 import sys
 
-import anthropic
-
 HERE = pathlib.Path(__file__).resolve().parent
-DEFAULT_MODEL = "claude-opus-4-8"
-MAX_TOKENS = 4000
 
 # Тэлл абсолюта — единственная АЛГОРИТМИЧЕСКАЯ зацепка тела: наводит на места, где
 # правда чаще всего оборачивается в яд. Это не вердикт, а «смотри сюда»: соблазн
@@ -85,6 +87,9 @@ RUBRIC = """Ты — ярус ЭТИКИ/ВЫБОРА над логикой пр
 КЛЮЧ РАЗЛИЧЕНИЯ T? и S — РАМКА: T? лишь ОБОРАЧИВАЕМО, S УЖЕ обёрнуто в этом тексте. \
 Соблазн часто ЕДЕТ НА АБСОЛЮТЕ («всякий/никогда/сколько ни») — размашистость и есть \
 обёртка. Дисциплина: НЕ мазать доброе в S из паранойи; НЕ пропускать тонкий яд.
+ВАЖНО — УПОТРЕБЛЕНИЕ, НЕ УПОМИНАНИЕ: если текст ЦИТИРУЕТ соблазн/ложь как ход \
+оппонента и тут же ОПРОВЕРГАЕТ — это НЕ дефект текста; помечай статус САМОГО текста, \
+а не процитированного ножа.
 
 Верни каждый ход: цитата (кратко) — [МЕТКА] — одна строка почему (для T?/S — в чём \
 оборачивание/рамка). В конце — раздел ВЫБОР: какие ходы ОСТАВить (T, и T? с явным \
@@ -96,110 +101,117 @@ RUBRIC = """Ты — ярус ЭТИКИ/ВЫБОРА над логикой пр
 {text}"""
 
 
-def load_key(keyfile: str | None) -> str:
-    k = os.environ.get("ANTHROPIC_API_KEY", "").strip()
-    if k:
-        return k
-    for cand in (keyfile, os.environ.get("INTROSPECT_KEYFILE"),
-                 str(HERE / ".anthropic_key"), str(HERE.parent / ".anthropic_key")):
-        if cand and pathlib.Path(cand).is_file():
-            return pathlib.Path(cand).read_text(encoding="utf-8").strip()
-    sys.exit("нет ключа: ANTHROPIC_API_KEY, --key <файл> или .anthropic_key рядом")
-
-
-def choose(text: str, model: str, key: str) -> str:
-    """Суждение яруса 3: разметка T/T?/S + выбор. Судья — Опус."""
-    client = anthropic.Anthropic(api_key=key)
-    with client.messages.stream(
-            model=model, max_tokens=MAX_TOKENS,
-            thinking={"type": "adaptive"},
-            messages=[{"role": "user", "content": RUBRIC.format(text=text)}]) as st:
-        msg = st.get_final_message()
-    return "".join(b.text for b in msg.content if b.type == "text").strip()
-
-
 # ЧАНКИНГ — промерен 2026-08-23 (см. память project_atom_notebook_experiment). Целый
-# длинный текст упирается в потолок ответа и ОБРЫВАЕТСЯ; чанки — единственный способ
-# досчитать. Не быстрее и не дешевле (рубрика повторяется), плата — режем раму. Потому
-# режем по ЕСТЕСТВЕННЫМ швам (заголовки/границы абзацев), НИКОГДА не поперёк абзаца:
-# на ценностной оси рамка И ЕСТЬ суждение, и край куска пере-обрамляет пограничные T?/T.
+# длинный текст судье не по зубам за раз; чанки — способ досчитать. Режем по
+# ЕСТЕСТВЕННЫМ швам (заголовки/границы абзацев), НИКОГДА не поперёк абзаца: на
+# ценностной оси рамка И ЕСТЬ суждение, и край куска пере-обрамляет пограничные T?/T.
 def chunk_prose(text: str, target_lines: int = 50) -> list[tuple[str, str]]:
     """Резать прозу по швам: копим абзацы до target_lines непустых строк, заголовок
-    (#…) открывает новый чанк. Возвращает [(метка-зачин, текст-чанка)]."""
+    верхнего уровня (# …) открывает новый чанк. Возвращает [(метка-зачин, текст)]."""
     paras = [p for p in text.split("\n\n") if p.strip()]
     chunks: list[str] = []
     cur: list[str] = []
     cnt = 0
     for p in paras:
         stripped = p.lstrip()
-        # ЖЁСТКИЙ шов — только заголовок ВЕРХНЕГО уровня (глава/часть: «# …», не «## …»),
-        # иначе книга с подзаголовками крошится в сотню огрызков. «##»+ — мягкие, едут в куске.
-        is_top = stripped.startswith("# ") or stripped.rstrip() in ("#",)
-        if is_top and cur:                          # глава — естественный шов
+        is_top = stripped.startswith("# ") or stripped.rstrip() == "#"
+        if is_top and cur:
             chunks.append("\n\n".join(cur)); cur, cnt = [], 0
         cur.append(p); cnt += p.count("\n") + 1
-        if cnt >= target_lines and not is_top:      # добрали размер — рвём по границе абзаца
+        if cnt >= target_lines and not is_top:
             chunks.append("\n\n".join(cur)); cur, cnt = [], 0
     if cur:
         chunks.append("\n\n".join(cur))
     out = []
     for c in chunks:
-        first = next((l.strip() for l in c.splitlines() if l.strip()), "")
+        first = next((ln.strip() for ln in c.splitlines() if ln.strip()), "")
         out.append((first[:60], c))
     return out
 
 
-def choose_chunked(chunks: list[tuple[str, str]], model: str, key: str,
-                   jobs: int = 6) -> list[tuple[str, str]]:
-    """Судить каждый чанк параллельно (как форки). Порядок чанков сохраняется."""
-    import concurrent.futures as cf
+def prepare(text: str, out_dir: pathlib.Path, target_lines: int = 50) -> list[pathlib.Path]:
+    """Нарезать текст и написать по task'у на кусок (рубрика+кусок). Судья — форк/я,
+    НЕ ключ. Возвращает пути task'ов; печатает тэлл и как потреблять (форк/сам)."""
+    chunks = chunk_prose(text, target_lines)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    tasks = []
+    for i, (label, ctext) in enumerate(chunks, 1):
+        tell = absolute_flags(ctext)
+        tell_block = ""
+        if tell:
+            tell_block = ("\n\n<!-- ТЭЛЛ АБСОЛЮТА (наводка, не вердикт):\n"
+                          + "\n".join(f"  {t}" for t in tell) + "\n-->")
+        body = f"<!-- task {i:02d} — {label} -->\n\n" + RUBRIC.format(text=ctext) + tell_block
+        p = out_dir / f"task-{i:02d}.md"
+        p.write_text(body, encoding="utf-8")
+        tasks.append(p)
+    n = len(tasks)
+    print(f"подготовлено {n} task'ов в {out_dir}", file=sys.stderr)
+    if n == 1:
+        print("  → 1 кусок: СУДИ САМ в своём контексте (форк ради абзаца — лишнее).",
+              file=sys.stderr)
+    else:
+        print(f"  → {n} кусков: раздай ФОРКАМ (по субагенту на task, параллельно) или суди подряд сам;",
+              file=sys.stderr)
+        print("    каждый вердикт положи в verdicts/verdict-NN.md, потом `assemble verdicts/`.",
+              file=sys.stderr)
+    return tasks
 
-    def one(item: tuple[str, str]) -> tuple[str, str]:
-        label, ctext = item
-        try:
-            return label, choose(ctext, model, key)
-        except Exception as e:                      # один чанк не роняет прогон
-            return label, f"(ОШИБКА: {type(e).__name__}: {e})"
 
-    with cf.ThreadPoolExecutor(max_workers=jobs) as pool:
-        return list(pool.map(one, chunks))
+def assemble(verdicts_dir: pathlib.Path, out: pathlib.Path, source_name: str = "") -> pathlib.Path:
+    """Сшить вердикты (verdict-NN.md, судья — форк/я) в единый credit-ledger."""
+    files = sorted(verdicts_dir.glob("verdict-*.md"))
+    if not files:
+        sys.exit(f"нет вердиктов в {verdicts_dir} (ждём verdict-NN.md)")
+    body = "\n\n".join(f.read_text(encoding="utf-8").strip() for f in files)
+    # Считаем метки ТОЛЬКО на строках-атомах (буллет «- …»), не в прозе ВЫБОРа —
+    # иначе повтор метки в выборе задваивает счёт (S=2 атома читались как 4).
+    counts = {}
+    for ln in body.splitlines():
+        if re.match(r"\s*[-*]\s", ln):
+            for m in re.findall(r"\[(T\?|S|T|F|Z|E)\]", ln):
+                counts[m] = counts.get(m, 0) + 1
+    head = [f"# credit-ledger — {source_name or verdicts_dir.name}", "",
+            "Ярус 3 (zchoose), судья — ФОРК/сам (без ключа). "
+            "Метки: T доброе / T? уязвимое / S соблазн / F ложь / Z кредит / E не на чем.",
+            f"Кусков: {len(files)}. Сводка меток: "
+            + ("  ".join(f"{k}={v}" for k, v in sorted(counts.items())) or "—") + ".",
+            "", "---", ""]
+    out.write_text("\n".join(head) + body + "\n", encoding="utf-8")
+    print(f"ledger -> {out}  (кусков {len(files)}, метки { {k: counts[k] for k in counts} })",
+          file=sys.stderr)
+    return out
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description="ярус 3: выбрать доброе среди истинного")
-    ap.add_argument("target", help="текст-файл рассуждения")
-    ap.add_argument("--model", default=os.environ.get("INTROSPECT_MODEL", DEFAULT_MODEL))
-    ap.add_argument("--key", default=None)
-    ap.add_argument("--chunk", choices=["auto", "on", "off"], default="auto",
-                    help="резать длинную прозу по швам (auto: по размеру; целое обрывается на потолке)")
-    ap.add_argument("--jobs", type=int, default=6, help="чанков разом")
+    ap = argparse.ArgumentParser(description="ярус 3 БЕЗ КЛЮЧА: подготовить куски для форка/себя, сшить ledger")
+    sub = ap.add_subparsers(dest="cmd", required=True)
+
+    pp = sub.add_parser("prepare", help="нарезать текст на task'и (рубрика+кусок), судья — форк/я")
+    pp.add_argument("target", help="текст-файл рассуждения")
+    pp.add_argument("--out", default=None, help="куда класть task'и (по умолч. <файл>.tasks/)")
+    pp.add_argument("--lines", type=int, default=50, dest="target_lines",
+                    help="целевой размер куска в строках")
+
+    pa = sub.add_parser("assemble", help="сшить вердикты форков/мои в credit-ledger")
+    pa.add_argument("verdicts", help="папка с verdict-NN.md")
+    pa.add_argument("--out", default=None, help="куда писать ledger")
+
     args = ap.parse_args()
 
-    text = pathlib.Path(args.target).read_text(encoding="utf-8", errors="replace")
+    if args.cmd == "prepare":
+        target = pathlib.Path(args.target).resolve()
+        text = target.read_text(encoding="utf-8", errors="replace")
+        out_dir = pathlib.Path(args.out) if args.out else target.with_suffix(target.suffix + ".tasks")
+        prepare(text, out_dir, args.target_lines)
+        return 0
 
-    # 1) алгоритмическая зацепка — наводка, не вердикт
-    flags = absolute_flags(text)
-    print("=== ТЭЛЛ АБСОЛЮТА (где чаще прячется соблазн) ===")
-    print("\n".join(f"  {f}" for f in flags) if flags else "  (абсолютов не найдено)")
-    print()
+    if args.cmd == "assemble":
+        vdir = pathlib.Path(args.verdicts).resolve()
+        out = pathlib.Path(args.out) if args.out else (vdir.parent / f"credit-ledger-{vdir.parent.name}.md")
+        assemble(vdir, out)
+        return 0
 
-    # 2) чанковать ли: длинное целиком обрывается на потолке ответа (промерено)
-    nonempty = sum(1 for ln in text.splitlines() if ln.strip())
-    do_chunk = args.chunk == "on" or (args.chunk == "auto" and nonempty > 60)
-    key = load_key(args.key)
-
-    if do_chunk:
-        chunks = chunk_prose(text)
-        print(f"=== ВЫБОР по {len(chunks)} чанкам (судья {args.model}); швы — заголовки/абзацы ===")
-        print("(!) РАМКА: край чанка ПЕРЕ-ОБРАМЛЯЕТ пограничные T?/T — резано по естественным "
-              "швам, но вердикт на стыке читай с этой поправкой.\n")
-        for label, judg in choose_chunked(chunks, args.model, key, args.jobs):
-            print(f"----- [{label}] -----")
-            print(judg)
-            print()
-    else:
-        print(f"=== ВЫБОР (судья {args.model}) ===")
-        print(choose(text, args.model, key))
     return 0
 
 

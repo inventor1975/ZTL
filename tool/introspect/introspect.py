@@ -1,45 +1,36 @@
 #!/usr/bin/env python3
 # Copyright 2026 Vitaly Reznik
 # SPDX-License-Identifier: Apache-2.0
-"""introspect — разложение кода на АТОМЫ с метками ZTL, через Опуса.
+"""introspect — тетрадь: разложение КОДА на атомы с метками ZTL. БЕЗ КЛЮЧА.
 
-    ./introspect.py <файл-или-папка> [--out ledger.md] [--model claude-opus-4-8]
+    ./introspect.py prepare  <файл-или-папка> [--out DIR]
+    ./introspect.py assemble <папка-вердиктов> [--out ledger.md]
 
-Для каждого .py файла Опус размечает элементарные claim'ы и допущения, на
-которых код держится, пятью метками:
+Тетрадь применяет метки оси ценности ТЕЛА (zchoose.VALUE_MARKS: T/T?/S) к коду плюс
+проверочные F/Z/E: для каждого .py размечается СТАТУС элементарных claim'ов и
+допущений, на которых код держится. Это разметка статуса проверки, не поиск багов.
 
-    T  проверено ВЕРНО самим кодом (гарантирует на всех входах)
-    F  утверждается, но ЛОЖНО
-    Z  взято в КРЕДИТ — допущение, которое код НЕ проверяет
-    E  судить не на чем
-    S  СОБЛАЗН (Seduction) — истинно, но во ВРЕД (утечка, рост без предела,
-       пропавший инвариант без падения): правда, употреблённая во вред
+СУДЬЯ — НЕ КЛЮЧ, А ФОРК ИЛИ Я САМ (решение куратора 2026-08-23). Раньше тетрадь
+ходила по API-ключу Anthropic и жгла деньги. Теперь она НЕ зовёт API: `prepare`
+пишет по task'у на файл (рубрика + код), а судит их либо ФОРК (субагент — как линза),
+либо Я САМ в контексте (для одного мелкого файла форк — лишнее). `assemble` сшивает
+вердикты в credit-ledger. Оба — по бюджету сессии, ключ не тронут.
 
-Собирает единый credit-ledger: где проект берёт в кредит, где лжёт, где соблазн.
-Судья — Опус, не эвристика; это разметка СТАТУСА ПРОВЕРКИ, не поиск багов.
-
-Ключ: env ANTHROPIC_API_KEY, иначе файл, указанный в --key / $INTROSPECT_KEYFILE,
-иначе ./.anthropic_key рядом. Токены биллятся на этот ключ.
+ТЕТРАДЬ НА ТЕЛЕ: метки оси ценности (T/T?/S) берутся из zchoose.VALUE_MARKS — одно
+определение на две руки. Улучшил тело — улучшил тетрадь.
 """
 from __future__ import annotations
 
 import argparse
-import concurrent.futures as cf
-import os
 import pathlib
+import re
 import sys
-
-import anthropic
 
 HERE = pathlib.Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 import zchoose                             # noqa: E402 — ТЕЛО яруса 3 (источник меток)
 
-DEFAULT_MODEL = "claude-opus-4-8"        # промерено на нём; «Опус только» — слово куратора
-MAX_TOKENS = 8000
-CONCURRENCY = 6                          # файлов разом — как форки в сессии
-
-# ТЕТРАДЬ НА ТЕЛЕ. Метки оси ценности (T/T?/S) берутся из тела zchoose.VALUE_MARKS —
+# ТЕТРАДЬ НА ТЕЛЕ. Метки оси ценности (T/T?/S) из тела zchoose.VALUE_MARKS —
 # одно определение на две руки, а не два. Тетрадь — рука; улучшил тело — улучшил тетрадь.
 PROMPT = """Разложи этот код на АТОМАРНЫЕ утверждения — элементарные claim'ы и \
 допущения, на которых он держится (что каждая функция ожидает от входа, что \
@@ -56,7 +47,7 @@ PROMPT = """Разложи этот код на АТОМАРНЫЕ утверж�
 Не ищи баги специально и не делай code review — честно размечай СТАТУС каждого атома.
 
 Верни ТОЛЬКО действенные атомы (Z, F, S, T?), компактно, по одному на строку:
-    [MARK] функция:строка — formulation (краткая заметка; для T?/S — во что оборачивается)
+    - [MARK] функция:строка — formulation (краткая заметка; для T?/S — во что оборачивается)
 В самом конце ОДНОЙ строкой: `T=<число> E=<число>` (сколько атомов вышло T и E).
 
 Файл: {name}
@@ -66,94 +57,93 @@ PROMPT = """Разложи этот код на АТОМАРНЫЕ утверж�
 ```"""
 
 
-def load_key(keyfile: str | None) -> str:
-    k = os.environ.get("ANTHROPIC_API_KEY", "").strip()
-    if k:
-        return k
-    for cand in (keyfile, os.environ.get("INTROSPECT_KEYFILE"), str(HERE / ".anthropic_key")):
-        if cand and pathlib.Path(cand).is_file():
-            return pathlib.Path(cand).read_text(encoding="utf-8").strip()
-    sys.exit("нет ключа: задай ANTHROPIC_API_KEY, --key <файл> или положи .anthropic_key рядом")
-
-
 def py_files(target: pathlib.Path) -> list[pathlib.Path]:
     if target.is_file():
         return [target]
-    # весь проект .py, кроме тестов и служебного
     out = [p for p in sorted(target.rglob("*.py"))
            if not p.name.startswith("test_") and "__pycache__" not in p.parts]
     return out
 
 
-def introspect_one(client: anthropic.Anthropic, model: str, path: pathlib.Path,
-                   root: pathlib.Path) -> dict:
-    rel = path.relative_to(root) if root in path.parents or root == path.parent else path.name
-    code = path.read_text(encoding="utf-8", errors="replace")
-    prompt = PROMPT.format(name=str(rel), code=code)
-    try:
-        # Стрим + adaptive thinking: разложение — сложное рассуждение, а поток
-        # не даёт длинному ответу упереться в таймаут (см. Anthropic SDK).
-        with client.messages.stream(
-                model=model, max_tokens=MAX_TOKENS,
-                thinking={"type": "adaptive"},
-                messages=[{"role": "user", "content": prompt}]) as stream:
-            msg = stream.get_final_message()
-        text = "".join(b.text for b in msg.content if b.type == "text").strip()
-        usage = msg.usage
-        return {"file": str(rel), "text": text, "ok": True,
-                "in_tok": usage.input_tokens, "out_tok": usage.output_tokens}
-    except Exception as e:                 # один файл не должен ронять весь прогон
-        return {"file": str(rel), "text": f"(ОШИБКА: {type(e).__name__}: {e})",
-                "ok": False, "in_tok": 0, "out_tok": 0}
-
-
-def main() -> int:
-    ap = argparse.ArgumentParser(description="разложение кода на атомы (T/F/Z/E/S) через Опуса")
-    ap.add_argument("target", help="файл .py или папка проекта")
-    ap.add_argument("--out", default=None, help="куда писать ledger (по умолчанию рядом с целью)")
-    ap.add_argument("--model", default=os.environ.get("INTROSPECT_MODEL", DEFAULT_MODEL))
-    ap.add_argument("--key", default=None, help="файл с ключом (иначе env/.anthropic_key)")
-    ap.add_argument("--jobs", type=int, default=CONCURRENCY, help="файлов разом")
-    args = ap.parse_args()
-
-    target = pathlib.Path(args.target).resolve()
-    if not target.exists():
-        sys.exit(f"нет такого пути: {target}")
+def prepare(target: pathlib.Path, out_dir: pathlib.Path) -> list[pathlib.Path]:
+    """По task'у на .py файл (рубрика + код). Судья — форк/я, НЕ ключ."""
     files = py_files(target)
     if not files:
         sys.exit("нет .py файлов для разбора")
     root = target if target.is_dir() else target.parent
+    out_dir.mkdir(parents=True, exist_ok=True)
+    tasks = []
+    for i, path in enumerate(files, 1):
+        rel = path.relative_to(root) if (root in path.parents or root == path.parent) else path.name
+        code = path.read_text(encoding="utf-8", errors="replace")
+        body = f"<!-- task {i:02d} — {rel} -->\n\n" + PROMPT.format(name=str(rel), code=code)
+        p = out_dir / f"task-{i:02d}.md"
+        p.write_text(body, encoding="utf-8")
+        tasks.append(p)
+    n = len(tasks)
+    print(f"подготовлено {n} task'ов в {out_dir}", file=sys.stderr)
+    if n == 1:
+        print("  → 1 файл: СУДИ САМ в своём контексте (форк ради одного файла — лишнее).",
+              file=sys.stderr)
+    else:
+        print(f"  → {n} файлов: раздай ФОРКАМ (по субагенту на task) или суди подряд сам;",
+              file=sys.stderr)
+        print("    каждый вердикт в verdicts/verdict-NN.md, потом `assemble verdicts/`.",
+              file=sys.stderr)
+    return tasks
 
-    client = anthropic.Anthropic(api_key=load_key(args.key))
-    print(f"introspect: {len(files)} файлов, модель {args.model}, по {args.jobs} разом…",
+
+def assemble(verdicts_dir: pathlib.Path, out: pathlib.Path, source_name: str = "") -> pathlib.Path:
+    """Сшить вердикты форков/мои в единый credit-ledger (судья — форк/я, без ключа)."""
+    files = sorted(verdicts_dir.glob("verdict-*.md"))
+    if not files:
+        sys.exit(f"нет вердиктов в {verdicts_dir} (ждём verdict-NN.md)")
+    body = "\n\n".join(f.read_text(encoding="utf-8").strip() for f in files)
+    counts = {}
+    for ln in body.splitlines():                 # метки только на строках-атомах (буллет)
+        if re.match(r"\s*[-*]\s", ln):
+            for m in re.findall(r"\[(T\?|S|T|F|Z|E)\]", ln):
+                counts[m] = counts.get(m, 0) + 1
+    head = [f"# credit-ledger — {source_name or verdicts_dir.name}", "",
+            "Тетрадь на теле (introspect), судья — ФОРК/сам (без ключа). "
+            "Метки: T проверено / T? уязвимое / S соблазн / F ложь / Z кредит / E не на чем.",
+            f"Кусков: {len(files)}. Сводка меток: "
+            + ("  ".join(f"{k}={v}" for k, v in sorted(counts.items())) or "—") + ".",
+            "", "---", ""]
+    out.write_text("\n".join(head) + body + "\n", encoding="utf-8")
+    print(f"ledger -> {out}  (кусков {len(files)}, метки { {k: counts[k] for k in counts} })",
           file=sys.stderr)
+    return out
 
-    results = []
-    with cf.ThreadPoolExecutor(max_workers=args.jobs) as pool:
-        futs = {pool.submit(introspect_one, client, args.model, f, root): f for f in files}
-        for fut in cf.as_completed(futs):
-            r = fut.result()
-            results.append(r)
-            mark = "ok  " if r["ok"] else "СБОЙ"
-            print(f"  {mark} {r['file']}  (+{r['out_tok']} tok)", file=sys.stderr)
-    results.sort(key=lambda r: r["file"])
 
-    in_tok = sum(r["in_tok"] for r in results)
-    out_tok = sum(r["out_tok"] for r in results)
-    lines = [f"# credit-ledger — {target.name}", "",
-             f"Инструмент: introspect (Опус {args.model}) НА ТЕЛЕ яруса 3 (zchoose). "
-             f"Метки T/T?/S/F/Z/E: T? уязвимое, S = соблазн (истинно, но во вред) — "
-             f"оба из тела zchoose.VALUE_MARKS.",
-             f"Файлов: {len(files)}. Токены: вход {in_tok}, выход {out_tok} "
-             f"(всего ~{(in_tok+out_tok)//1000}k).", ""]
-    for r in results:
-        lines += [f"## {r['file']}", "", "```", r["text"], "```", ""]
-    ledger = "\n".join(lines)
+def main() -> int:
+    ap = argparse.ArgumentParser(description="тетрадь БЕЗ КЛЮЧА: подготовить код для форка/себя, сшить ledger")
+    sub = ap.add_subparsers(dest="cmd", required=True)
 
-    out = pathlib.Path(args.out) if args.out else (
-        (target if target.is_dir() else target.parent) / f"credit-ledger-{target.stem}.md")
-    out.write_text(ledger, encoding="utf-8")
-    print(f"\nledger -> {out}  (~{(in_tok+out_tok)//1000}k токенов)", file=sys.stderr)
+    pp = sub.add_parser("prepare", help="по task'у на .py файл (рубрика+код), судья — форк/я")
+    pp.add_argument("target", help="файл .py или папка проекта")
+    pp.add_argument("--out", default=None, help="куда класть task'и (по умолч. <цель>.tasks/)")
+
+    pa = sub.add_parser("assemble", help="сшить вердикты форков/мои в credit-ledger")
+    pa.add_argument("verdicts", help="папка с verdict-NN.md")
+    pa.add_argument("--out", default=None, help="куда писать ledger")
+
+    args = ap.parse_args()
+
+    if args.cmd == "prepare":
+        target = pathlib.Path(args.target).resolve()
+        if not target.exists():
+            sys.exit(f"нет такого пути: {target}")
+        out_dir = pathlib.Path(args.out) if args.out else pathlib.Path(str(target) + ".tasks")
+        prepare(target, out_dir)
+        return 0
+
+    if args.cmd == "assemble":
+        vdir = pathlib.Path(args.verdicts).resolve()
+        out = pathlib.Path(args.out) if args.out else (vdir.parent / f"credit-ledger-{vdir.parent.name}.md")
+        assemble(vdir, out)
+        return 0
+
     return 0
 
 

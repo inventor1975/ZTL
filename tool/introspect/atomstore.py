@@ -46,16 +46,22 @@ def _mirror(src_root: pathlib.Path, f: pathlib.Path, store_root: pathlib.Path,
 
 
 def atomize(corpus: str, src_root: pathlib.Path, store_root: pathlib.Path,
-            tasks_root: pathlib.Path, target_lines: int = 40) -> list[pathlib.Path]:
-    """Нарезать каждый текст-файл источника и подготовить ТАСК на извлечение
-    атомов, ЗЕРКАЛЯ дерево. Судья (форк) заполнит, потом collect()."""
+            tasks_root: pathlib.Path, target_lines: int = 40,
+            per_file: bool = True) -> list[pathlib.Path]:
+    """Подготовить ТАСК на извлечение атомов, ЗЕРКАЛЯ дерево. Судья (форк)
+    заполнит, потом collect().
+
+    per_file=True (норма, модель куратора «1 форк = 1 документ»): один таск на
+    ВЕСЬ файл — форк читает документ целиком. Дёшево: нет 70× накладных от
+    дробления на десятки кусков. per_file=False дробит на куски ~target_lines —
+    запас для файла, что не влезает в окно форка."""
     written = []
     files = [p for p in sorted(src_root.rglob("*"))
              if p.is_file() and p.suffix.lower() in TEXT_EXT]
     for f in files:
         rel = f.relative_to(src_root)
         text = f.read_text(encoding="utf-8", errors="replace")
-        chunks = chunk_prose(text, target_lines=target_lines)
+        chunks = [("", text)] if per_file else chunk_prose(text, target_lines=target_lines)
         atoms_path = _mirror(src_root, f, store_root, corpus)
         atoms_path.parent.mkdir(parents=True, exist_ok=True)
         for i, (title, chunk) in enumerate(chunks, 1):
@@ -244,6 +250,9 @@ def main() -> int:
     pa.add_argument("corpus"); pa.add_argument("src_root")
     pa.add_argument("--store", default="atomstore"); pa.add_argument("--tasks", default="atomstore_tasks")
     pa.add_argument("--lines", type=int, default=40)
+    pa.add_argument("--chunk", action="store_true",
+                    help="дробить файл на куски ~--lines (запас для файлов сверх окна форка); "
+                         "по умолчанию 1 задача = весь файл (1 форк = 1 документ)")
     pc = sub.add_parser("collect", help="сложить извлечённые форками атомы в .atoms.jsonl")
     pc.add_argument("corpus"); pc.add_argument("src_root")
     pc.add_argument("--store", default="atomstore"); pc.add_argument("--verdicts", default="atomstore_tasks")
@@ -263,7 +272,7 @@ def main() -> int:
     a = ap.parse_args()
     if a.cmd == "atomize":
         atomize(a.corpus, pathlib.Path(a.src_root), pathlib.Path(a.store),
-                pathlib.Path(a.tasks), target_lines=a.lines)
+                pathlib.Path(a.tasks), target_lines=a.lines, per_file=not a.chunk)
     elif a.cmd == "collect":
         collect(a.corpus, pathlib.Path(a.src_root), pathlib.Path(a.store),
                 pathlib.Path(a.verdicts))

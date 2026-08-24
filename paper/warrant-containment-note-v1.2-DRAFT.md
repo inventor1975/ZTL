@@ -1,0 +1,882 @@
+<!-- ============================================================= -->
+<!--  UNPUBLISHED DRAFT — v1.2, NOT DEPOSITED. Do not cite, do not   -->
+<!--  circulate. Supersedes nothing until jointly approved with      -->
+<!--  I.A. Lerer. The deposited record is v1.1 / DOI zenodo.21981727 -->
+<!--  (v1.0). This file exists only to hold two wording fixes.       -->
+<!-- ============================================================= -->
+
+> ⚠️ **UNPUBLISHED DRAFT (v1.2) — NOT DEPOSITED, NOT PUBLISHED.** Do not
+> cite or circulate. Holds two wording corrections (see “What changed from
+> v1.1”) pending joint review with I.A. Lerer. The published record remains
+> v1.0 (DOI 10.5281/zenodo.21981727) / working v1.1.
+
+# Warrant Containment in Dependency Graphs
+
+### What falls when a ground falls — and mostly negative results about when the answer can be trusted
+
+**Vitaly Reznik** · Independent researcher · **v1.2-DRAFT — UNPUBLISHED, 2026-08-24**
+
+> **What changed from v1.1** (this file, **v1.2-DRAFT, NOT DEPOSITED**).
+> **Two wording corrections, both where an absolute outran this note's own
+> code** — found by an introspection pass with a value/seduction mark and
+> confirmed by running the probes:
+>
+> 1. **§1** said `exposure` "never sums across incommensurable units". The
+>    guarantee holds between *declared* units; quantities with no declared
+>    unit share one bucket and are summed (`zbook.py`), the undeclared-unit
+>    case §2 already admits the floor cannot catch. Phrasing narrowed.
+> 2. **§3.9** said the sensitivity is "not to density". The note's own
+>    `db/probe_sensitivity.py` prints the chosen column rising 0.791→1.000
+>    with density; the claim is comparative (the attacker's choice dominates),
+>    not absolute. Phrasing corrected to the comparative.
+>
+> **No result, table, figure or number changed. Nothing in §3.6 or §6 — the
+> sections a reader (I.A. Lerer) has cited — was touched.** A citation to v1.1
+> remains accurate for those sections.
+>
+> **What changed from v1.0** (deposited 2026-08-17,
+> [10.5281/zenodo.21981727](https://doi.org/10.5281/zenodo.21981727)).
+> **One correction, in the abstract only.** v1.0 called the instrument a
+> "three-valued calculus". That is a term of art meaning three TRUTH values,
+> which places a system among K3, LP and Łukasiewicz's Ł₃ — and this one is not
+> there. It is **two-valued**: every verdict is classical, and the third symbol
+> is a mark on an *input*, barred from the value of any compound. §1 stated it
+> correctly; the abstract did not.
+>
+> **Nothing else changed.** No measurement, no table, no figure, no limit, and
+> nothing in §3.6 or §6 — the sections a reader has cited. A citation to v1.0
+> remains accurate for everything except that one phrase.
+
+---
+
+## Abstract
+
+A conclusion rests on grounds. When a ground is withdrawn — a document is
+forged, a certificate lapses, a commander is lost — some conclusions stop
+standing and others do not, and which is which is currently something a human
+being remembers. This note reports a machine that computes it instead, and
+then reports, at greater length, the conditions under which its answer is
+worth having.
+
+The instrument is small: a **three-symbol, two-valued** calculus whose core is
+machine-checked in Lean 4 on an empty axiom list — and a ledger over it in which every quantity
+carries the ground it rests on. From those, withdrawal propagates by
+arithmetic rather than by memory. (v1.0, deposited as
+10.5281/zenodo.21981727, said "three-valued" here. That is a term of art
+meaning three TRUTH values, which would place this calculus among K3, LP and
+Ł3; it is not there. There are exactly two truth values and the third symbol is
+a mark on an input, barred from the value of any compound. §1 had it right and
+the abstract did not.)
+
+The measurements are simulations, and the useful ones are negative. A cascade
+at a hundred thousand agents is cheap and, taken alone, useless: a randomly
+located loss takes down most of the collective. Redundancy does **nothing
+whatever** against a chosen loss — at ninety-five per cent redundancy an
+adversary aiming at the root still takes everything, and no density or
+redundancy tried brings that column below 0.791 (§3.9). Against a *random* loss redundancy
+works only at levels no real system has: anchored on the one real dependency
+graph measured here — its density, its declared redundancy — **a random loss
+costs 93% of the collective as well** (§3.9). Containment appears above roughly
+seventy-five per cent redundancy; real systems sit at the other end of that
+axis.
+Declared redundancy resting on a shared origin reports safety it does not
+provide. Permission and support are different requirements, so a collective
+with perfect evidence redundancy still dies of one commander. And an incomplete dependency map is wrong
+in a direction that depends on which edge is missing — a hidden shared origin
+flatters, a hidden alternative frightens — which is a correction to an earlier
+claim of one direction for both.
+
+Twelve predictions made in the course of this work were refuted by its own
+runs — six by the author, six more by adversarial review. One of those
+refutations was **itself refuted** four rounds later (§3.4), which is reported
+with the rest. The corrections they forced are larger than the results they
+left standing. Every number below that is entered into
+`paper/prose-atoms.txt` is printed by a program in a public repository and
+re-checked by a regression suite of 121 stands.
+
+---
+
+## 1. The instrument
+
+**ZTL** (Zero-Trust Logic) is a three-symbol calculus generated by a single
+principle: *truth is not granted on credit*. A connective returns T only if T
+is forced under every classical reading of an unverified mark; otherwise F.
+The mark itself never appears in a compound — it lives on atoms and evaporates
+at the first operator, so verdicts are two-valued while the *reason* for a
+verdict remains inspectable. The core is machine-checked in Lean 4 and prints
+an empty axiom list.
+
+The **ledger** stores claims and grounds and never verdicts: a verdict is
+recomputed on every reading, because a stored one is a judgement taken on
+credit from a past moment. A quantity's ground may be an opaque external name
+(`inv-17`), another claim (`claim/c1`), a clocked certificate
+(`expiring/cert-9`), or an act with no inputs (`performed/x`). Grounds may be
+declared as alternatives (`inv-17|inv-18`), and since this work, a ground
+carries a **dimension**: whether it *supports* a claim or *permits* it.
+
+Three operations follow without further rules.
+
+**Retraction travels.** Withdraw a ground and the whole subtree moves,
+including claims that never named it.
+
+**Cost is a bracket, never a number.** `cost(book, ground)` returns both
+readings — the ledger believed, and every declaration of independence assumed
+false — and the width between them. There is deliberately no function
+returning that cost as a bare figure: a number quoted without its width is a
+number quoted without the thing that makes it trustworthy.
+
+**Exposure is by unit.** `exposure` reports *how much* rests on a ground
+rather than how many claims do, and never sums across two *declared* units. (Quantities carrying **no declared unit** share one bucket and *are* summed — the undeclared-unit case §2 shows the floor cannot catch — so the guarantee is between named units, not a detector of a missing one.)
+Adding metres to roubles is the error the numeric floor exists to refuse.
+
+---
+
+## 2. What an ordinary store cannot say
+
+One accounting scenario was loaded twice — plain SQLite, and the same facts
+with a warrant beside every value — and eight questions an auditor asks were
+put to both. Plain SQL **answers 2**, **answers 3 wrongly**, and **cannot
+express 3**. The middle category is the finding: a confident total over a
+mixture of evidenced and merely-stated figures, with nothing marking it.
+
+Scored against the profession's own list rather than ours — the twelve ISA 315
+assertions and eight accounts-payable procedures — **5 of 20** need a warrant
+at all. That count is not a measurement: the list is the profession's, the
+verdict beside each row was typed by the author, and the program counts his
+labels. The same applies to the 2/2/4 below. They are structured judgements
+made in public and open to correction, and are worth exactly what a reader
+thinks the labels are worth. Most of an auditor's day is ordinary querying.
+An earlier draft said completeness is answerable by **no ledger whatever**,
+because the invoice nobody entered leaves no row to carry a warrant. That is
+wrong, and the probe it was drawn from contradicts it: completeness for
+payables is not tested from the payables ledger but by reconciling that
+population against others — subsequent cash disbursements, unmatched
+goods-received notes, open purchase orders, vendor statement reconciliations,
+document-sequence checks, the three-way match. Each of those is a ledger, and
+each detects rows that should be there from rows that are. What is true and
+much narrower: a population cannot certify its own completeness from inside
+itself.
+
+Against documented failures the instrument scores **2 TOUCHES, 2 EXPOSES, 4
+OUT** of eight — again the author's labels, counted by a program — and
+*prevents none of them*. Wirecard's €1.9bn rested on forged
+bank letters; a forged ground is invisible here by construction, and the
+ledger would have printed a clean EARNED for years. Against system errors where nobody lied it does better, but less well than an
+earlier draft claimed: **1 caught, 1 caught only if declared, 1 not caught.**
+
+The Mars Climate Orbiter is the one that shrank. Given both quantities with
+their units the floor refuses — `cannot compare 'lbf' with 'N'` — but that is
+not the case as it happened. The SM_FORCES file carried numbers; the unit
+lived in an interface specification. Run *that* and the floor returns
+**EARNED**: a quantity with no unit unifies with anything, because
+`_unify_units` compares two strings and a missing string matches. The
+instrument does not detect the absence of a unit. It demonstrates the value of
+carrying one, which is a design rule and not a catch, and whether values carry
+units is upstream of anything here.
+
+The third case is not a documented one at all. It is a shape the author
+constructed — a conclusion, an input beneath it, a later correction — with
+figures echoing the high-debt-threshold episode. The retraction in it is
+stipulated rather than reconstructed, and the actual failure in that episode
+was a spreadsheet range selection, which is the class the London Whale case
+concedes is not catchable. The one not caught is instructive: a spreadsheet dividing by a sum
+where the author meant an average returns EARNED, because the formula is
+well-formed and there is no second copy of the intention to compare it to.
+
+**This is not a fraud detector. It is an instrument against losing the
+thread.**
+
+---
+
+## 3. Containment, measured
+
+The remaining sections concern collectives of agents whose conclusions rest on
+one another — the shape of a decentralised autonomous system.
+
+**These are separate models, not one experiment.** §§3.1–3.3 run 100,000
+agents over 1,000,000 links; §§3.4–3.5 run 40,000; §3.6 runs 20,000 with an
+explicit source layer. Figures are comparable within a subsection and not
+across them, and no claim below depends on comparing two subsections'
+absolute numbers.
+
+### 3.1 Speed is not the problem, and the answer is useless anyway
+
+At 100,000 agents and 1,000,000 dependency links a withdrawal propagates in
+tens of milliseconds. With one ground per conclusion, a single compromised
+agent takes down a **median of half the collective** — median here, and
+worst-case in §3.2, which is not the same statistic and is why §3.2 says so
+explicitly. "About 59,716 of your
+conclusions no longer stand" is not something anyone can act on.
+
+### 3.2 Redundancy contains a random loss and not a chosen one
+
+A conclusion resting on two declared-independent grounds falls only if both
+do. Sweeping the share of such conclusions gives two different answers
+depending on where the loss is aimed, and reporting only the first was this
+work's largest error.
+
+| topology | 0% | 75% | 90% | 95% |
+|---|---|---|---|---|
+| random-local, worst of 25 sampled targets | 95,041 | 51,389 | 56 | 4 |
+| random-local, **adversary chooses** | 99,995 | 99,984 | 99,984 | 99,987 |
+| hierarchy, worst of 25 sampled targets | 95,081 | 195 | 10 | 8 |
+| hierarchy, **adversary chooses** | 100,000 | 100,000 | 100,000 | 100,000 |
+| scale-free, worst of 25 sampled targets | 33,943 | 142 | 20 | 8 |
+| scale-free, **adversary chooses** | 100,000 | 100,000 | 100,000 | 100,000 |
+
+Against uniformly sampled targets redundancy works as advertised. Against an
+adversary choosing the root or the largest hub, **the collective loses
+everything at every level of redundancy, including 95%.**
+
+There is therefore no threshold against a chosen target. There is one against
+a random target, and an earlier draft of this note reported the second as
+though it were the first, because the estimator sampled 25 nodes out of
+100,000 and a hierarchy's commander is not among them.
+
+The reason is not a defect in redundancy as an idea. The second ground is
+drawn from inside the same structure, so it descends from the same root;
+removing the root removes the alternative with it. That is §3.5 arriving from
+the other direction — **redundancy that is not independent of the thing being
+attacked is not redundancy** — and it means the ordinary failure (an agent
+lost to terrain, a sensor to weather) and the adversarial one need different
+mechanisms rather than more of the same one.
+
+### 3.3 Declared redundancy resting on a shared origin
+
+Hold redundancy at 90% and raise the share of "independent" pairs that
+secretly share an origin. **The collective's own report never moves** — 90% at
+every row:
+
+| secretly shared | random target | top hub | top three |
+|---|---|---|---|
+| 0% | 29 | 1 | 15 |
+| 10% | 4,102 | 18 | 49 |
+| 25% | 29,391 | 3,793 | 20,099 |
+| 100% | 99,992 | 94,180 | 94,180 |
+
+A quarter of nominal redundancy being fake destroys containment while the
+system reports 90%. This is common-cause failure in the reliability
+engineer's sense (§5a) and is claimed here as a measurement in a warrant
+setting, not as a discovery. Nothing in the ledger distinguishes the first row from the
+last, and neither would an attestation layer: both grounds are genuine
+documents from genuine agents that happen to rest on the same thing.
+
+### 3.4 Evidence and authority are not interchangeable
+
+A conclusion needs evidence to be *supported* and authority to be *permitted*,
+so it falls when either fails. Separating the two:
+
+- both dimensions 100% genuinely redundant: losing the commander still costs
+  **C = 1.000** — the entire collective.
+
+An earlier draft reported **C = 0.789** for the case where evidence is
+redundant and authority is not. A review called that figure invented, this note
+recorded it as invented, and **both were wrong** — which took a fourth reading
+to establish and is the reason the whole table is printed here:
+
+| configuration | commander lost | mid-level agent lost |
+|---|---|---|
+| evidence redundant, authority not | 1.000 | **0.1316** |
+| authority redundant, evidence not | 1.000 | **0.7891** |
+| both redundant | 1.000 | 0.0000 |
+
+`db/probe_criterion.py` prints **0.7891**. The figure was never invented; it was
+read off the wrong row — it belongs to *authority* redundant and *evidence*
+not, the mirror of the case it was attached to. And "the probe prints 1.000 for
+both configurations" is true only when the lost node is the commander, which is
+a different column. So the original defect was a mislabelled configuration, the
+first correction replaced it with a false accusation of fabrication, and this
+is the third statement of the same three numbers. It is left in full because a
+corpus that advertises its self-corrections owes the reader the one that was
+itself wrong.
+
+The dimensions do not average and do not exchange. At an identical minimum
+redundancy of 0.50, an authority-rich collective loses 0.0003 of itself where
+an evidence-rich one loses 0.0101 — a factor of 31 — because permission is
+hierarchically concentrated while evidence is diffuse.
+
+Three outputs, per configuration — not four. **C** (share lost), **r_eff\***
+(minimal EFFECTIVE redundancy for C < 1%) and **A_crit** (worst single loss).
+An earlier draft reported r\* and q\* as two quantities; a later one said
+they were exactly one, and **that correction was itself too strong**. The
+argument stands: a conclusion is genuinely redundant with probability r(1-q),
+so containment should depend on that product alone. The measurement does not
+support the word *exactly*. On the shipped seed the two crossings land in the
+same cell of the sweep's own 0.05 grid and **separate by 0.04 once the step is
+0.01** — the probe's `1e-9` assert was comparing two numbers quantised to 0.05,
+so it could not see a gap smaller than its own grid.
+
+Nor is the coarse agreement a property of the grid: it **holds on 2 of 7 seeds
+tried**, and this note said otherwise for two hours, which is the same error as
+refuted prediction 10 committed while correcting refuted prediction 9. Both
+step sizes and all seven seeds are now swept and printed. Measured: **r_eff\* ≈ 0.65** across two dimensions, rising to 0.75 when shared
+models and shared sensor feeds are added — a world with more things to share
+has more ways to fail.
+
+**A_crit is not a function of redundancy at all.** It is a property of where
+authority is concentrated, and is reported beside r\* rather than folded into
+it.
+
+### 3.5 Authority-root diversity
+
+Varying the number of *independent* authority roots:
+
+| configuration | A_crit |
+|---|---|
+| 1 authority root | **1.000** |
+| 2 roots, either suffices | 0.117 |
+| 3 roots, quorum 2-of-3 | 0.117 |
+| 3 roots, **shared upstream** | **1.000** |
+
+These are closed forms, not measurements: the model has no stochastic content
+at all — its `rnd` argument is unused — and 0.117 is exactly 4681/40000, the
+subtree of one first-level commander under a branching factor of 8. Set the branching factor to 20 and the same closed form gives roughly a
+twentieth (derived, not run). What the table establishes is the
+structural fact that one root is a single point of failure and two are not;
+the middle figures are arithmetic about a tree that was chosen.
+
+It stops at two, and only if the two are really two. Three roots hanging off
+one hidden super-root behave exactly like one, and the report cannot tell the
+rows apart. A pair and a 2-of-3 quorum lose identically to one loss; the
+quorum earns its keep against a root that is *captured* rather than lost.
+
+### 3.6 An incomplete map, and a stale one
+
+When edges are missing from the observed graph the error has a direction, and
+**which** direction depends on what kind of edge is missing. An earlier draft
+of this note claimed one direction for incompleteness as such; that was wrong,
+and both tables are below.
+
+A missing **shared origin** flatters — grounds look more independent than they
+are:
+
+| hidden | C_predicted | C_actual | error |
+|---|---|---|---|
+| 0% | 0.089 | 0.089 | +0.000 |
+| 5% | 0.086 | 0.089 | +0.004 |
+| 50% | 0.064 | 0.089 | +0.025 |
+
+A missing **alternative** frightens — a conclusion the system believes lost is
+in fact still standing on its other ground:
+
+| hidden alternatives | C_predicted | C_actual | error |
+|---|---|---|---|
+| 0% | 0.1444 | 0.1444 | +0.0000 |
+| 50% | 0.1734 | 0.1444 | −0.0290 |
+| 100% | 0.2031 | 0.1444 | −0.0587 |
+
+The note's own §1 supports alternative grounds, so both cases live inside its
+own model, and the claim that incompleteness is one-directional survived only
+because one of the two was never run.
+
+The two errors are not equally serious, and that is what survives: an
+optimistic error lets a system act on warrant it does not hold; a pessimistic
+one makes it withdraw from warrant it does. The first causes accidents, the
+second idleness.
+
+The magnitude in the first table is modest — a 28% relative underestimate at
+full hiding — and the reason matters more than the number: the gap can only be
+as large as the share of the collective whose fate rides on the *hidden*
+edges. Five per cent of the wrong edges beats fifty per cent of harmless ones.
+
+Under delay and loss, a collective acting without a gate spends **about two
+thirds of its actions outside its own containment requirement** — 66% even at
+zero loss, because delay alone suffices — and nothing reports it at the time.
+
+A gate that acts only while a bound built from observables clears the limit
+holds violations at zero on three channels and **leaks on two** (270 and 170
+violations). The margin used is therefore *not a sound bound*; it is a
+plausible expression that works in some regimes. A gate right most of the time
+is not a gate, and the fix is a margin derived from a model of the channel
+rather than a larger constant. That derivation is not in this work.
+
+### 3.7 Are these figures, or single observations?
+
+Ten independent seeds, and the answer differs sharply by quantity.
+
+| figure | across ten seeds |
+|---|---|
+| r_eff\* minimal effective redundancy | median 0.725, range 0.6–0.75 |
+| redundancy threshold, hierarchy (sampled targets) | median 0.75, range 0.50–0.75 |
+| A_crit, one / two / three-on-shared roots | **not a variance result** |
+
+The last row is a correction rather than a figure. `probe_roots` is
+deterministic — its random-number argument is accepted and never used — so
+running it under ten seeds measured one graph ten times. It printed
+"constant", which is true and vacuous, and was read as robustness for a day
+until adversarial review pointed at the function signature.
+
+Ten seeds of one model is still one model. This answers whether a figure is
+an artefact of a lucky draw; it does not make it general, and it does not
+apply at all to a model that has no draw in it.
+
+### 3.8 A graph nobody designed
+
+Every result above was measured on graphs the author generated. Real ones at
+this scale are ordinary — a Debian installation carries one on disk — and the
+omission had no defence. The machine's own package database — some two and a
+half thousand packages and twelve thousand requirement groups on the author's
+laptop, read 2026-08-17; the program reads whatever host it runs on, and the
+column below is given in bands for a reason stated after the table:
+
+| | synthetic probes | Debian, this machine |
+|---|---|---|
+| edges per node | 10.00 | **about half that** |
+| declared alternatives | swept 0–95% | **under 3%** |
+| median in-degree | — | 1 (top node: over 1,500) |
+| shape | two of three hierarchical / local | heavy-tailed |
+| A_crit | 1.000 (one root) | **over five sixths** (`libgcc-s1`) |
+
+**Why bands and not digits.** An earlier draft gave this column to three
+decimals. Installing a database on the same laptop, hours later and for an
+unrelated reason, moved every entry in it: the package count rose by 39 and
+`libgcc-s1`'s share went from 0.868 to 0.870. Neither reading was wrong. The
+quantity is a property of one host at one moment, and pinning its digits in a
+document is quoting a ground that expires without notice — this note's own
+subject, arriving uninvited. The exact figures for any host are printed by
+`db/probe_real.py`, and that is where a number that moves belongs.
+
+**What it confirms.** The phenomenon is real and is not an artefact of a
+generated tree: one package carries most of a working system, and losing it
+takes that share with it.
+
+**What it unsettles, which is more.** The synthetic collectives are twice as
+dense. Two of the three topologies are shapes this graph does not have — and
+they are the two that carried the threshold in §3.2. Above all, **real
+declared redundancy here is **under 3% of requirement groups**, while §3.2 located containment somewhere
+in the seventies. If this graph is at all typical, the region where the
+threshold was found is a region real systems do not occupy, and the sweep
+was largely hypothetical.
+
+**And one thing does NOT transfer, corrected after review.** An earlier version
+of this paragraph read Debian's `|` as this corpus's `|` and concluded that two
+fields had reached the same mark and stopped at the same wall. They have not.
+Debian's `|` is an **ordered preference list over interchangeable providers** —
+`libcurl3-gnutls | libcurl3-nss | libcurl4` are one library with different
+backends — and it declares nothing about independence, so it cannot fail to
+verify one. The notation coincides; the claim does not.
+
+*This withdrawal was made in `db/probe_real.py` on 2026-08-17 and the commit
+message announcing it said it had been applied "in the probe and in both
+notes". It had not been applied here; the paragraph above stood for another
+seven hours, including the words "without qualification". The commit message
+was false, and it is left recorded because a corpus that logs its refuted
+predictions should also log the one time its log lied.*
+
+What survives is smaller and still worth having: the share measured above is
+how often a real system offers ANY choice of provider at all, which bounds from
+above how much genuine redundancy such a graph could have even if every
+alternative listed were independent — far below the range §3.3 swept.
+
+### 3.9 The parameters were carrying the conclusions
+
+Anchoring the sweep on §3.8's real numbers rather than on chosen ones:
+
+| density | alternatives | worst sampled | worst chosen | |
+|---|---|---|---|---|
+| 10.00 | 90% | 0.013 | 1.000 | as swept |
+| 10.00 | 2.6% | 0.933 | 1.000 | real redundancy |
+| 5.18 | 90% | 0.000 | 0.977 | real density |
+| **5.18** | **2.6%** | **0.926** | **0.994** | **both real** |
+
+At a density and a redundancy a real dependency graph actually has, **there is
+no containment**: a randomly located loss costs 93% of the collective, because
+a per-node redundancy that low is indistinguishable from none.
+
+**And the redundancy parameter is in the wrong denominator**, which review
+found and which is stated here rather than absorbed. The `2.6%` fed to the
+sweep is the share of *requirement groups* offering an alternative; the model
+consumes it per *conclusion node*. Measured on the same package database, the
+per-node figures are **9.9%** of packages carrying at least one alternative and
+**0.8%** where every group has one. So this row is anchored on a real number
+used in the wrong sense — about four times too small in the model's own units,
+or three times too large against the stricter reading. The conclusion survives
+the correction, because the sweep is flat here: the *sampled* column reads
+0.930 at 0% alternatives and 0.909 at 10%, and the *chosen* column is 0.994 at
+both. What does not survive is the phrase "anchored on real parameters"
+without this paragraph beside it.
+
+*The sentence above named the wrong column on its first writing — the sampled
+figures attributed to the chosen one, which is precisely the confusion review
+had just found in the abstract. It was caught by re-running the probe before
+committing rather than by reading, and that is the only method that has worked
+today.*
+Containment appears only above about 75% redundancy, and real systems sit at
+the other end of that axis.
+
+Density turned out not to be the dial an earlier draft of the probe claimed:
+the collective is uncontained at every density tried, from 2 edges per node
+(0.719) upward, saturating by about 3. That was a third conclusion written
+before its table was read, and it is recorded in the source with the others.
+
+**And the chosen-target column barely moves, with a floor of 0.791.** Across
+every row of every table in §§3.2 and 3.9, an adversary aiming at the root
+takes at least that share of the collective, and at every density above 3
+edges per node at least 0.94. The sensitivity is to whether the attacker
+chooses far more than to density or redundancy: the chosen column is flat in redundancy but rises with density — 0.791 at 2 edges per node to 1.000 by 10 — so the attacker's choice is the first-order dial and density a second-order one. It is the most robust result in this
+note, and it is a negative one.
+
+*This paragraph said the column "does not move anywhere ... at any density and
+any redundancy" until 2026-08-17, while the sweep it summarises printed 0.791
+at density 2. The abstract was corrected first and this sentence was not —
+the third time in one day that a withdrawal was applied where it was found and
+left standing where it was not, which is why
+`inventory/withdrawn_claims.py` now carries a signature for it.*
+
+---
+
+## 4. Five things a system must know, and what these runs measure about them
+
+The measurements above separate into a ladder — arrived at in correspondence
+rather than derived from any single run, and **three of its five rungs have a
+literature that predates it by decades** (§5a): authority separated from
+evidential support, and currentness as a bounded recency requirement, are both
+formalised in the authentication and authorization logics of 1989–1999. It is
+stated here because it organises what the runs found, not because it is new:
+
+1. **identity** — who or what signed a ground;
+2. **provenance** — what it descended from;
+3. **independence** — whether two grounds may count as two;
+4. **bounded completeness** — whether the map is finished *enough*, for this
+   scope and this decision;
+5. **currentness** — whether that judgement is still true now.
+
+Attestation supplies (1) and provenance systems (2). Of the remaining three,
+**currentness (5) has a literature this note had not read** — Burrows, Abadi
+and Needham formalise freshness in 1989 and Stubblebine [9] is an entire paper
+on bounding a credential's staleness (§5a) — and **bounded completeness (4) is
+the regulatory category of completeness uncertainty**, NUREG-1855 §2.3.3, in
+the same corpus this note already cites at [15, 16]. An earlier sentence here
+read "nothing found supplies (3), (4) or (5)", contradicting this section's own
+opening line thirteen lines above; the contradiction was prescribed for repair
+by a review two rounds ago and applied everywhere except here. What the runs
+establish is what each rung is worth, not that anyone lacks it: q\*
+says containment survives about 35% hidden correlation and no more; the
+blindspot **tables** — two of them, and that is the point — say the error from
+incompleteness has a direction fixed by the KIND of missing edge, a hidden
+shared origin flattering and a hidden alternative frightening (§3.6); the
+gate says a warrant is usable only while its staleness can be bounded.
+
+Stated as control rather than observation, and narrowly:
+
+> A system may continue to **treat** its current warrant as satisfying the
+> stated containment criterion only while it can bound that warrant's possible
+> staleness within that criterion.
+
+Not *may act*, and not *may rely* either: both are permissions, and nothing
+here establishes one. Whether reliance or action is allowed in that state is
+decided by an external authority layer. This work measures the antecedent and
+does not reach the consequent — the same boundary it draws everywhere else,
+which took three drafts to stop slipping in the one sentence meant to
+summarise it.
+
+---
+
+## 5. Predictions that failed
+
+Reported because a corpus that hides them measures nothing. Each is pinned by
+an assertion in the source so it cannot be quietly tuned away.
+
+1. *"The minimum over dimensions governs containment."* Refuted by its own
+   table: at an identical minimum, a factor of 31 between configurations.
+2. *"A second authority root makes the worst loss negligible."* It is 0.117.
+   The concentration moved from the root to a mid-level agent rather than
+   dissolving.
+3. *"Lag zero is not safe."* It is. At zero lag the blind window is zero.
+4. *"Hiding 5% of dependency edges takes a predicted 1% to an actual 40%."*
+   The direction held; the magnitude did not — 28% relative.
+5. *The runtime gate.* Zero violations on three channels, leaks on two.
+6. *"An autonomous collective may act on a warrant only while…"* A normative
+   claim this work does not establish. Corrected twice: *rely* is also a
+   permission, and the descriptive form is *treat as satisfying*.
+
+Two methodological errors are also recorded in the source: a first blindspot
+model whose shared structure was too redundant for hiding to show, and a
+median that concealed the hub risk it was measuring.
+
+**Six more were found by an adversarial review of this note rather than by
+its author**, and they were the expensive ones. They are listed here because
+a note that reports only the failures its author noticed is reporting a
+selection.
+
+7. *"The table in §3.2 is worst-case."* It was the worst of 25 uniformly
+   sampled targets out of 100,000. The true worst — a chosen root — is
+   100,000 at every level of redundancy, and the note had claimed a
+   correction to exactly this error while continuing to make it.
+8. *"Redundancy means two grounds."* The code appended a parent and switched
+   the node's entire input list from OR to AND. The flagged nodes had a
+   median of eleven inputs and **none** had exactly two, so every figure
+   quoted from that operation was about something else. The semantics is now
+   what the prose always said, and §3.2's numbers changed accordingly.
+9. *"r\* and q\* are two quantities."* Read from two ends they nearly
+   coincide, because effective redundancy is r(1-q) — but the follow-up
+   claim that `1 - q* = r*` holds *exactly* is refuted too (§3.4): the two
+   crossings coincide only at the sweep's own 0.05 step.
+10. *"A_crit is constant across ten seeds."* The model is deterministic and
+    its random argument unused; ten seeds measured one graph ten times.
+    0.117 is 4681/40000, a closed form in the branching factor.
+11. *"C = 0.789 was invented; no program produces it."* **This entry was
+    itself refuted, 2026-08-17.** `probe_criterion` prints 0.7891 — the figure
+    is real and was attached to the mirror-image configuration (§3.4). A list
+    of refuted predictions that contains a refuted refutation is the honest
+    state of it.
+12. *"The error from incompleteness runs one way only."* It runs one way per
+    KIND of edge. A missing shared origin flatters; a missing alternative —
+    which §1 explicitly supports — makes the prediction too large. The claim
+    survived because only one of the two was ever run.
+
+Adversarial review raised 48 findings of which 32 survived a refutation pass;
+the full list is in the repository beside this note. The reader should assume
+the same density of error in whatever has not yet been reviewed.
+
+---
+
+## 5a. Neighbours, and what was and was not searched
+
+**Common-cause failure analysis is the nearest neighbour of §3.3, and was
+missed in the first draft of this section — the more embarrassing omission of
+the two, because it is closer than the one that was cited.** Reliability
+engineering has studied since the 1970s exactly the phenomenon §3.3 reports:
+redundancy defeated by a dependency shared between the redundant parts. The
+β-factor is the fraction of failures arising from a single common cause. This
+paragraph called it "the same quantity this note calls hidden correlation
+`q`" — **and the paragraph below withdraws exactly that equation**, on the
+ground that the two are not commensurable. Both stood in this section for a
+day. The withdrawal is the correct one and this sentence is corrected to match
+it: β and `q` occupy the same *role* in their respective models and are not
+the same quantity. IEC 61508 standardises
+its estimation (a 37-question checklist over eight classes of defensive
+measure, among them *diversity/redundancy* and *separation/segregation*), and
+fault-tree analysis, common-mode analysis, NUREG methods in nuclear
+engineering and NASA's work on ultra-reliability all address it.
+
+Two consequences, both against this note. First, §3.3 reports a named,
+standardised phenomenon and claims no discovery. Second, an earlier draft compared β directly with `q` and called this work's
+tolerance "an order of magnitude looser" than engineering practice. That
+comparison is withdrawn: the quantities are not commensurable. β is a
+conditional fraction of component *failure rates* attributable to a common
+cause; `q` here is a structural share of *declared redundancy that is fake*.
+Equating them needs an argument this note does not have. Also, β is not the
+state of the art — it was superseded precisely because it cannot handle k-of-n
+redundancy, by the Multiple Greek Letter, Binomial Failure Rate and α-factor
+models [2].
+
+A sentence here used to begin "What CCF analysis does not do, so far as I can
+find…". **It is cut.** Four sentences of that form were destroyed in one day —
+three by installing one package, one by reading a function list — and the
+common factor is that "so far as I can find" cannot be paid for by finding.
+What the difference of subject is, without any claim about who lacks what: CCF
+quantifies the *probability* that components fail together; the measurements
+here ask what a conclusion is still *warranted* by afterwards. Whether that
+difference is interesting, and whether it is already someone's subject, is for
+a reader who knows that literature.
+
+**Distributed authorization logic already separates authority from evidential
+support**, which was §5a's first novelty bullet until adversarial review
+removed it. Abadi, Burrows, Lampson and Plotkin [3] give a modal `says` and a
+`speaks-for` delegation relation; Lampson, Abadi, Burrows and Wobber [4]
+separate the authentication chain from the authorization chain. SPKI/SDSI [5]
+has authorization certificates, delegation-chain reduction and **k-of-n
+threshold subjects** — which is §3.5's "quorum 2-of-3", standardised in 1999.
+Decentralized trust management [6] and the RT framework [7] compute credential
+chains, which is the §3.5 computation. The operational instance of §3.5's last
+row is also familiar to that community: nominally distinct certificate
+authorities cross-signing to a shared root.
+
+**And "currentness" is not new either.** Burrows, Abadi and Needham [8]
+formalise in 1989 both the jurisdiction postulate (`P controls X` — authority,
+kept apart from evidential belief) and nonce-verification (freshness), i.e.
+rungs (1) and (5) of §4 together. Stubblebine [9] is an entire paper on
+bounding the staleness of a credential as an explicit recency requirement, and
+certificate revocation has argued about freshness windows ever since [10].
+
+So of the five rungs in §4, three have a literature this note had not read
+when it named them. What the runs measure is the interaction — but the ladder
+is a re-derivation, and §4 says so now.
+
+**Truth-maintenance systems** are the nearest neighbour of §1. Doyle's TMS (1979) and de Kleer's ATMS (1986)
+already do the central operation here: record which conclusions rest on which
+assumptions, and recompute what stands when an assumption is retracted. The
+cascade of §1 is that operation, and this work claims no priority over it.
+
+Nor over **belief revision** (AGM and successors), which studies what a
+rational agent should give up when a new fact contradicts an old one; over
+**provenance semirings**, which annotate query results with the tuples that
+produced them; over **argumentation frameworks**, which compute which
+arguments survive given attacks between them; or over lineage systems in
+databases and workflow engines, which track derivation for exactly this
+purpose.
+
+The next sentence used to read "what is not standard in those, so far as I can
+find, is the combination…". **It has been narrowed, because the claim rode an
+atom no search can pay for.** "Not standard" needs the search to have been
+systematic; this one was thirty minutes with LLM assistance, and §5a says so
+two paragraphs down. Twice today a bullet of exactly that form was destroyed
+within the hour by installing one package. So what follows is stated as what
+it is — **places I looked and did not find, which is weak evidence and is
+offered as weak evidence**:
+
+- ~~an **authority dimension kept separate from evidence**~~ — **WITHDRAWN
+  2026-08-17.** It is standard: ProvSQL ships `sr_minmax`, and its own
+  documentation demonstrates it computing the clearance level required to
+  have inferred a derived fact. TMS justifications indeed do not distinguish
+  permission from support; provenance semirings over an ordered carrier do;
+- ~~**declared independence that the machine refuses to assume**, reported as
+  a bracket~~ — **WITHDRAWN 2026-08-17.** Tuple-independence is a documented
+  *default* in ProvSQL, not an assumption of the formalism, and one statement
+  yields the dependent reading. Beskales et al. (PVLDB 2(1), 2009) return
+  min/max counts and confidence intervals precisely where record identity is
+  unresolved — this bracket, this problem, seventeen years earlier;
+- **hidden common origin** with a measured tolerance (§3.3, q\*). I did not
+  find it priced this way in the databases literature; I did NOT search the
+  reliability literature for it, and [15, 16] are exactly where it would be —
+  the β-factor prices correlated failure among components known to be
+  distinct, which is adjacent and may be nearer than adjacent;
+- **incompleteness and staleness of the dependency map itself** as measured
+  quantities (§3.6). Not found in the sources read; not searched for in
+  observer design or networked control, where "the state estimate is partial
+  and late" is the standing subject and the nearest thing to a refutation of
+  this bullet would live;
+- and **runtime containment under consequential action**, which is a control
+  problem rather than a maintenance one. Naming it as control is precisely an
+  admission that a literature exists which this work has not read.
+
+**Two of those five were struck on 2026-08-17**, after the free
+implementation of provenance semirings was installed and asked the same
+questions rather than only cited (`paper/PROVSQL-REVIEW-FINDINGS.md`). The
+three that survive have been rewritten from claims into **directions a reader
+should check**, because that is all the search behind them supports.
+
+**And the honest reading of the whole section is that it should not be read as
+a boundary.** Its history: five items, of which two died within an hour of
+someone installing the neighbouring tool, and three now carry a note saying
+which literature was not searched. A section whose claims have that mortality
+rate is evidence about the search, not about the field. It is kept because
+naming one's neighbours is owed to a reader, and it is stripped of every
+assertion about what those neighbours lack.
+
+Stated plainly: the mechanism is old. What this note contains is a set of
+measurements of that mechanism under evidence, authority, hidden common
+dependencies, an incomplete map and a changing world — and the measurements
+are mostly negative. A reviewer who reads §1 and thinks "this is an ATMS" is
+reading it correctly.
+
+---
+
+## 6. Limits
+
+**These are simulations on synthetic graphs, and §3.8 measures how unlike a
+real one they are** — twice the density, a shape two of three generators do
+not share, and a redundancy sweep across a region where real systems sit at
+under three per cent. The existence of a threshold may be robust; its location is a property
+of the model, and the model is not close to the one real graph tested.
+
+**Citations are honoured, never discovered.** A dependence nobody recorded is
+invisible, and the error it causes runs in a direction set by the kind of edge
+that is missing: an unrecorded **shared origin** makes a measured blast radius
+too small, an unrecorded **alternative ground** makes it too large (§3.6, where
+the second table predicts 0.2031 against an actual 0.1444). The ledger cannot
+tell which kind it is missing, so neither reading may be assumed.
+
+*An earlier version of this paragraph said the radius "can be understated and
+never overstated". That is the claim §3.6 and refuted prediction 12 withdraw,
+and it stood here for a day after the withdrawal — in the section a reader
+consults for the honest boundary, which is the worst place in the document for
+it to have survived.*
+
+**Independence between external grounds cannot be verified.** Two photocopies
+of one invoice buy the same immunity as two documents. Where both grounds are
+claims inside the ledger, the shared ancestor is computed and named; between
+external papers it is not.
+
+**Against an adversary controlling the input the instrument is inert**, not
+merely weak. It grades what it is told.
+
+**One failure class is absent by construction:** a compromised agent that
+continues to sign and to lie. This work models *loss*, not malice.
+
+**The Lean result and the containment results are two contributions, not
+one.** The calculus is machine-checked; the containment measurements are
+simulation. Nothing here proves a containment property formally.
+
+---
+
+## 7. Reproduction
+
+Public repository, one command each, no dependencies beyond the standard
+library:
+
+```
+python3 db/probe_ledger.py        python3 db/probe_swarm.py
+python3 db/probe_assertions.py    python3 db/probe_topology.py
+python3 db/probe_lattice.py       python3 db/probe_containment.py
+python3 db/probe_override.py      python3 db/probe_criterion.py
+python3 db/probe_failures.py      python3 db/probe_classes.py
+python3 db/probe_system_errors.py python3 db/probe_roots.py
+python3 db/probe_blindspot.py     python3 db/probe_currentness.py
+python3 db/probe_gate.py          python3 run_all.py
+```
+
+`run_all.py` runs 121 stands and the Lean corpus, and asserts the zero-axiom
+line.
+
+---
+
+## References
+
+Assembled after adversarial review pointed out that the first draft carried
+five novelty claims and no bibliography — three named authors in twenty-one
+thousand characters. A priority claim with no citation is not a claim, it is
+an assertion, and "so far as I can find" is unauditable unless the search is
+described. The search behind §5a was conducted with LLM assistance over the
+open web and the author's own reading; it is **not** a systematic review, and
+readers should treat the novelty bullets as an invitation to correct rather
+than as a survey result.
+
+1. Doyle, J. A truth maintenance system. *Artificial Intelligence* 12(3),
+   1979, 231–272.
+2. de Kleer, J. An assumption-based TMS. *Artificial Intelligence* 28(2),
+   1986, 127–162.
+3. Abadi, M., Burrows, M., Lampson, B., Plotkin, G. A calculus for access
+   control in distributed systems. *ACM TOPLAS* 15(4), 1993, 706–734.
+4. Lampson, B., Abadi, M., Burrows, M., Wobber, E. Authentication in
+   distributed systems: theory and practice. *ACM TOCS* 10(4), 1992, 265–310.
+5. Ellison, C., et al. SPKI certificate theory. RFC 2693, IETF, 1999.
+6. Blaze, M., Feigenbaum, J., Lacy, J. Decentralized trust management. *IEEE
+   Symposium on Security and Privacy*, 1996.
+7. Li, N., Mitchell, J., Winsborough, W. Design of a role-based trust
+   management framework. *IEEE Symposium on Security and Privacy*, 2002.
+8. Burrows, M., Abadi, M., Needham, R. A logic of authentication. *ACM TOCS*
+   8(1), 1990, 18–36.
+9. Stubblebine, S. Recent-secure authentication: enforcing revocation in
+   distributed systems. *IEEE Symposium on Security and Privacy*, 1995.
+10. Rivest, R. Can we eliminate certificate revocation lists? *Financial
+    Cryptography*, 1998.
+11. Alchourrón, C., Gärdenfors, P., Makinson, D. On the logic of theory
+    change. *Journal of Symbolic Logic* 50(2), 1985, 510–530.
+12. Green, T., Karvounarakis, G., Tannen, V. Provenance semirings. *PODS*,
+    2007, 31–40.
+13. Cheney, J., Chiticariu, L., Tan, W.-C. Provenance in databases: why, how
+    and where. *Foundations and Trends in Databases* 1(4), 2009, 379–474.
+14. Dung, P. M. On the acceptability of arguments. *Artificial Intelligence*
+    77(2), 1995, 321–357.
+15. IEC 61508-6:2010, Annex D — methodology for quantifying the effect of
+    hardware-related common cause failures.
+16. NUREG/CR-5485. Guidelines on modeling common-cause failures in
+    probabilistic risk assessment. US NRC, 1998.
+17. ISA 315 (Revised 2019), *Identifying and assessing the risks of material
+    misstatement*; ISA 500, *Audit evidence*.
+
+Citations 1–17 were checked for author, venue and year; page ranges for 3, 4,
+7, 9, 10 and the annex structure of 15 were not independently verified against
+the printed sources and should be confirmed before this note is cited in turn.
+
+---
+
+## Acknowledgement
+
+The instrument and this note were built with Claude (Opus 5) as architect and
+implementer, under Variant A, with Vitaly Reznik as human curator. Several of
+the failed predictions in §5 were the model's, and several of the corrections
+that found them came from correspondence with colleagues whose contribution
+will be acknowledged in the joint work that follows.

@@ -96,6 +96,41 @@ def prepare(source: str, question: str, answer: str, out_dir: pathlib.Path,
     return written
 
 
+
+_MARK_FIRST = re.compile(r"^[-*\s]*\[\s*(T|F|Z)\s*\]\s*[—:-]?\s*(.+)$", re.I)
+_MARK_TAIL = re.compile(r"^(.*?)\s+[—–-]\s*\[\s*(T|F|Z)\s*\]\s*(?:[—–-].*)?$", re.I)
+
+
+def _parse_verdict_line(line: str):
+    """Достать метку СУДЬИ и утверждение. Вернуть (метка, утверждение) или (None, None).
+
+    ЗАЧЕМ ТАК СЛОЖНО. Раньше бралась ПЕРВАЯ скобка в строке — а у нас «[T]»
+    встречается внутри самого утверждения на каждом шагу (мы же про таблицы ZTL
+    и пишем). ПРОВЕРЕНО 2026-08-25: судья честно поставил Z и F, а сборка
+    отчиталась «T, T, ВЕРДИКТ: GROUNDED» и обрубила утверждения до бессмыслицы.
+    То есть отказ судьи превращался в обоснование БЕЗ участия модели и без
+    единого предупреждения — самая опасная поломка, какая тут возможна.
+
+    Теперь метка берётся только по ЯКОРЮ ФОРМАТА: либо в начале строки, либо в
+    конце после тире (обе формы рубрика допускает). Строка, где якорь не найден,
+    а метки есть, ОТВЕРГАЕТСЯ с жалобой — гадать тут хуже, чем отказаться.
+    """
+    s = line.strip()
+    if not s:
+        return None, None
+    m = _MARK_FIRST.match(s)
+    if m:
+        return m.group(1).upper(), m.group(2).strip(" -–—•\t")
+    m = _MARK_TAIL.match(s)
+    if m:
+        claim = m.group(1).strip(" -–—•\t")
+        return (m.group(2).upper(), claim) if claim else (None, None)
+    if _MARK.search(s):
+        print(f"  ОТВЕРГНУТА неоднозначная строка (метка не на якоре): {s[:70]}",
+              file=sys.stderr)
+    return None, None
+
+
 def _merge_mark(marks: list[str]) -> str:
     """Слить метку атома по кускам: F доминирует; T только если НИ ОДИН кусок не Z.
 
@@ -127,21 +162,12 @@ def assemble(verdicts_dir: pathlib.Path, out: pathlib.Path) -> pathlib.Path:
             skipped.append(f.name)
             continue
         for line in body.splitlines():
-            m = _MARK.search(line)
-            if not m:
+            mark, claim = _parse_verdict_line(line)
+            if mark is None:
                 continue
-            before = line.split(m.group(0))[0].strip(" -–—•\t").strip()
-            after = line.split(m.group(0), 1)[1].strip(" -–—•:\t").strip()
-            # СУДЬЯ ПИШЕТ И ТАК, И ЭТАК. «утверждение — [T] — почему» и
-            # «- [T] утверждение» одинаково естественны. Раньше бралось только то,
-            # что ДО метки, и вторая форма молча выбрасывалась — а выбрасывались в
-            # основном Z и F судьи, то есть отказ терялся охотнее подтверждения.
-            claim = before or after.split(" — ")[0].strip()
             if claim:
-                atoms.setdefault(claim, []).append(m.group(1).upper())
-            else:
-                print(f"  строка с меткой, но без утверждения — пропущена: {line[:70]}",
-                      file=sys.stderr)
+                atoms.setdefault(claim, []).append(mark)
+
     if skipped:
         print(f"  ОТВЕРГНУТО как НЕ-вердикты (задания/леджеры): {', '.join(skipped)}",
               file=sys.stderr)

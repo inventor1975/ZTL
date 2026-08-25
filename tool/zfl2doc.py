@@ -46,6 +46,8 @@ CODE_HELP = {
                   "имя, непригодное для формулы"),
     "E_DUPNAME": ("the same name twice", "имя повторяется"),
     "E_STATUS": ("a status outside the four", "статус вне четырёх"),
+    "E_SCALE": ("a scale that is not empty/int/decimalK/fracM, or out of bounds",
+                "шкала не пустая/int/decimalK/fracM либо вне границ"),
     "E_NOGROUND": ("verified, refuted or defined, with nothing backing it",
                    "проверено, опровергнуто или определено — но без основания"),
     "E_KIND": ("a kind of ground outside the list", "вид основания вне списка"),

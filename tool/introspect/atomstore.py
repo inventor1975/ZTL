@@ -206,7 +206,15 @@ def atomize_direct(corpus: str, src_root: pathlib.Path, store_root: pathlib.Path
             continue
         rel = f.relative_to(src_root)
         units = []
-        for i, para in enumerate(f.read_text(encoding="utf-8", errors="replace").split("\n\n"), 1):
+        text = f.read_text(encoding="utf-8", errors="replace")
+        blocks = text.split("\n\n")
+        lines = [ln for ln in text.split("\n") if ln.strip()]
+        # два формата абзацев: через пустую строку (wiki/блог) ИЛИ один абзац на
+        # строку (fb2→txt Либрусека — пустых строк нет). Если блоков по пустой
+        # строке почти нет, а строки длинные — режем по строкам, иначе весь файл
+        # склеится в ОДНУ единицу (молча, что хуже всего).
+        parts = lines if (len(blocks) <= 2 and sum(len(ln) > 200 for ln in lines) >= 3) else blocks
+        for i, para in enumerate(parts, 1):
             s = " ".join(para.split())
             if len(s.split()) >= min_words:
                 _u = {"atom": s, "src": str(rel), "chunk": i, "kind": "raw"}
@@ -484,7 +492,13 @@ def query(corpora: list[str], question: str, answer: str, store_root: pathlib.Pa
                 hits.append((score, atom))
     hits.sort(key=lambda x: -x[0])
     if not hits:
-        print("query: ничего не нашлось (пустой индекс?)")
+        # RETRIEVAL-MISS — процедурный промах, НЕ суждение об источнике. Не подаём
+        # судье пустоту как source-silence (внешний рецензент: retrieval-miss ≠ source-silence).
+        print("query: RETRIEVAL-MISS — поиск не выявил атомов под этой процедурой.")
+        print("  Это НЕ «источник не устанавливает» и НЕ «источника нет»: промах "
+              "поиска или пустой индекс.")
+        print("  Прежде вывода: переспроси другими словами, подними -k, проверь "
+              "индекс/язык (--multilingual).")
         return out_dir
     lines = []
     for s, a in hits:
@@ -494,9 +508,11 @@ def query(corpora: list[str], question: str, answer: str, store_root: pathlib.Pa
     print(f"query: top-{len(hits)} атомов (корпуса {corpora}):")
     for ln in lines:
         print("  " + ln)
-    guard.prepare(source, question, answer, out_dir, mode="roll")
-    print(f"  -> guard-таск в {out_dir}; форк судит, потом `guard.py assemble`, "
-          "петля с кап-лимитом — guard_loop.")
+    # ретрив = ВЫБОРКА top-k -> coverage='retrieval': судья не вправе прочесть
+    # отсутствие как source-silence (Z = «не найдено поиском», не «источник молчит»).
+    guard.prepare(source, question, answer, out_dir, mode="roll", coverage="retrieval")
+    print(f"  -> guard-таск (ПОКРЫТИЕ: retrieval) в {out_dir}; форк судит, потом "
+          "`guard.py assemble --coverage retrieval`, петля — guard_loop.")
     return out_dir
 
 

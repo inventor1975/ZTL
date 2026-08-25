@@ -60,14 +60,28 @@ _RL_MAX, _RL_WINDOW = 20, 600     # ≤20 free-AI calls / 10 min / IP
 
 
 def _client_ip(handler):
-    """Real client IP behind the Apache reverse proxy (X-Forwarded-For)."""
+    """Real client IP behind the Apache reverse proxy (X-Forwarded-For).
+
+    ПОСЛЕДНЕЕ значение, не первое. XFF = "клиент, прокси1, ...": левый конец
+    задаёт КЛИЕНТ и его можно подделать (спуфинг → обход rate-limit). Правый
+    конец — то, что добавил НАШ прокси (Apache), клиенту недоступный. За одним
+    доверенным прокси это и есть настоящий адрес; для анти-абуза берём его.
+    """
     xff = handler.headers.get("X-Forwarded-For", "")
-    return xff.split(",")[0].strip() if xff else handler.client_address[0]
+    return xff.split(",")[-1].strip() if xff else handler.client_address[0]
 
 
 def _rate_ok(ip):
     with _RL_LOCK:
         now = time.time()
+        # ОГРАНИЧИТЬ РОСТ. _RL — defaultdict по IP; ключи с пустой/протухшей
+        # очередью раньше не чистились и копились навсегда на публичном
+        # инстансе. Когда словарь распух — сметаем IP, у которых новейшая
+        # отметка старше окна (текущий не трогаем).
+        if len(_RL) > 5000:
+            for k in [k for k, dq in _RL.items()
+                      if k != ip and (not dq or dq[-1] < now - _RL_WINDOW)]:
+                del _RL[k]
         q = _RL[ip]
         while q and q[0] < now - _RL_WINDOW:
             q.popleft()
@@ -410,9 +424,12 @@ def api_savekey(payload):
     if not key:
         return {"ok": False, "error": "empty key"}
     path = os.path.join(HERE, providers.PROVIDERS[prov][4])
-    with open(path, "w") as f:
+    # СОЗДАЁМ СРАЗУ С 0600, без окна на 644. Раньше был open("w") ПОТОМ chmod —
+    # между ними секрет лежал под umask (обычно 644), кратко читаемый другими.
+    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    with os.fdopen(fd, "w") as f:
         f.write(key)
-    os.chmod(path, 0o600)
+    os.chmod(path, 0o600)          # дожать, если файл существовал с иными правами
     return {"ok": True, "saved": prov}
 
 
@@ -667,7 +684,11 @@ class Handler(BaseHTTPRequestHandler):
                 "own key in ⚙ Model for unlimited use — it stays this session "
                 "only. The core verdict never needs the AI."})
             return
-        n = int(self.headers.get("Content-Length", 0))
+        try:
+            n = int(self.headers.get("Content-Length", 0))
+        except (TypeError, ValueError):     # присланный, но кривой заголовок
+            self._send(400, {"error": "bad content-length"})
+            return
         if n > 262144:                      # 256 KB body cap (DoS guard)
             remaining = n                   # drain the proxied body first,
             while remaining > 0:            # else Apache sees a desync -> 502
@@ -679,7 +700,7 @@ class Handler(BaseHTTPRequestHandler):
             return
         try:
             payload = json.loads(self.rfile.read(n).decode() or "{}")
-        except json.JSONDecodeError:
+        except (json.JSONDecodeError, UnicodeDecodeError):  # не-UTF-8 тело тоже
             self._send(400, {"error": "bad json"})
             return
         try:

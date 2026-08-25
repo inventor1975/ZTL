@@ -248,7 +248,16 @@ def atomize_direct(corpus: str, src_root: pathlib.Path, store_root: pathlib.Path
         # строку (fb2→txt Либрусека — пустых строк нет). Если блоков по пустой
         # строке почти нет, а строки длинные — режем по строкам, иначе весь файл
         # склеится в ОДНУ единицу (молча, что хуже всего).
-        parts = lines if (len(blocks) <= 2 and sum(len(ln) > 200 for ln in lines) >= 3) else blocks
+        # ОПРЕДЕЛИТЕЛЬ ФОРМАТА. Первая редакция смотрела только на ДЛИННЫЕ строки
+        # (>200 знаков) и потому провалилась на выгрузке из PDF: там строк много,
+        # но каждая КОРОТКАЯ, а пустых нет вовсе — и вся книга Буля (800 тысяч
+        # знаков) стала ОДНОЙ единицей. Молча, как и в прошлый раз.
+        # Правило теперь простое: если по пустым строкам вышел один кусок, а
+        # текст большой — режем по строкам ВСЕГДА. Абзаца на 800 килобайт не бывает.
+        one_block = len(blocks) <= 2
+        parts = (lines if one_block and (sum(len(ln) > 200 for ln in lines) >= 3
+                                         or len(text) > 20_000)
+                 else blocks)
         parts = _merge_short(parts, min_chars=min_chars)
         for i, para in enumerate(parts, 1):
             s = " ".join(para.split())

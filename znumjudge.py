@@ -122,9 +122,9 @@ def parse_quantities(text):
             for tok in part.split()[1:]:
                 if tok == "int":
                     discrete = "int"
-                elif re.match(r"^decimal\d+$", tok):
+                elif re.match(r"^decimal\d{1,2}$", tok) and int(tok[7:]) <= 30:
                     discrete = ("decimal", int(tok[7:]))
-                elif re.match(r"^frac\d+$", tok):
+                elif re.match(r"^frac\d{1,9}$", tok):
                     discrete = ("frac", int(tok[4:]))
                 elif tok.startswith("earned"):
                     prov = EARNED

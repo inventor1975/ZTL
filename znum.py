@@ -146,6 +146,13 @@ def _step(discrete):
     if discrete == "int":
         return Fraction(1)
     if isinstance(discrete, tuple) and discrete[0] == "decimal":
+        # ПОТОЛОК НА РАЗРЯДНОСТЬ. `10 ** k` с большим k — целое на миллионы цифр:
+        # одно поле запроса вешало публичный сервер (промерено 2026-08-25:
+        # decimal5000000 = 1,33 с только на возведение, дальше арифметика хуже).
+        # Больше 30 знаков после запятой не бывает у величин, которые мы судим.
+        if not (0 <= discrete[1] <= 30):
+            raise ValueError(f"недопустимая разрядность decimal{discrete[1]}: "
+                             f"допустимо 0..30")
         return Fraction(1, 10 ** discrete[1])
     if isinstance(discrete, tuple) and discrete[0] == "frac":
         assert discrete[1] >= 1

@@ -85,6 +85,14 @@ class GroundingCertificate:
     coverage: str                 # retrieval | exhaustive
     retrieval_method: str         # напр. 'paraphrase-multilingual@k=5'
     corpus_epoch: str             # digest/версия состояния корпуса на момент суда
+    # ── оси, добавленные под векторы GAZ-R1. Каждая отвечает на СВОЙ вопрос;
+    # схлопывать их в «не допущено» запрещено (§4 задания).
+    scope: str = ""               # V17: правопорядок/область действия источника
+    valid_until: str = ""         # V16: срок действия САМОГО свидетельства ≠ эпоха корпуса
+    policy_version: str = ""      # V21: версия политики допуска, под которой выдан
+    representation_ok: bool = True  # V14: цело ли представление (OCR/байты)
+    attributed_to: str = ""       # V09: кому приписана поддержка (пусто = source_id)
+    suspect: str = ""             # V10: помеченное внушение в байтах источника
 
     @property
     def proposition_digest(self) -> str:
@@ -130,14 +138,45 @@ class AdmissionDecision:
 
 
 def admit(cert: GroundingCertificate, purpose: str, epoch: str,
-          eligible_sources: dict) -> AdmissionDecision:
+          eligible_sources: dict, *, scope: str = "", now: str = "",
+          policy_version: str = "") -> AdmissionDecision:
     """Ворота: сертификат — НЕОБХОДИМ, но НЕ достаточен. Допуск только если сошлось.
 
     eligible_sources: {purpose: set|list источников, пригодных для этой цели}.
-    Пустое/отсутствие цели → никакой источник не пригоден (отказ по умолчанию)."""
+    Пустое/отсутствие цели → никакой источник не пригоден (отказ по умолчанию).
+
+    scope/now/policy_version — ЗАПРОШЕННЫЙ контекст. Пустые = ось не проверяется;
+    это осознанное послабление для старых вызовов, но в GAZ-R1 они задаются, иначе
+    вектор проверял бы не то, что заявлено."""
     def no(disposition, reason):
         return AdmissionDecision(False, disposition, cert.proposition, reason,
                                  cert.cert_digest, purpose, epoch)
+
+    # ПОРЯДОК ПРОВЕРОК НЕ ПРОИЗВОЛЕН. Сперва — можно ли вообще ЧИТАТЬ свидетельство
+    # (целостность представления), потом — тому ли источнику оно приписано, и лишь
+    # затем вопросы поддержки. Рассуждать о поддержке по нечитаемым или чужим
+    # байтам бессмысленно: ответ будет получен, но ни о чём.
+    if not cert.representation_ok:
+        return no(D_INTEGRITY, "представление свидетельства повреждено "
+                               "(OCR/байты): читать нечего, судить не о чем")
+    if cert.attributed_to and cert.attributed_to != cert.source_id:
+        return no(D_CERT_INVALID,
+                  f"поддержка приписана {cert.attributed_to!r}, а сертификат выдан "
+                  f"на {cert.source_id!r}: «поддержано где-то» ≠ «поддержано ЭТИМ»")
+    # политика допуска — тоже версионируемый источник; допуск по её ПРЕЖНЕЙ версии
+    # есть воспроизведение отменённых правил
+    if policy_version and cert.policy_version and cert.policy_version != policy_version:
+        return no(D_POLICY, f"сертификат выдан под политикой {cert.policy_version}, "
+                            f"действует {policy_version}")
+    # СРОК ДЕЙСТВИЯ СВИДЕТЕЛЬСТВА ≠ ЭПОХА КОРПУСА. Корпус может не меняться, а
+    # свидетельство — протухнуть само по себе (акт истёк, справка просрочена).
+    if cert.valid_until and now and cert.valid_until < now:
+        return no(D_EPOCH, f"свидетельство действовало до {cert.valid_until}, "
+                           f"сейчас {now}")
+    # область действия источника: чужой правопорядок поддерживает СВОЁ P, не наше
+    if scope and cert.scope and cert.scope != scope:
+        return no(D_SCOPE, f"источник действует в области {cert.scope!r}, "
+                           f"запрошена {scope!r}: поддержка чужого правопорядка")
 
     # G1/G2/G4: допускаем ТОЛЬКО подтверждённое источником. Разряд отказа НАЗЫВАЕТ
     # причину: промах поиска, молчание источника и опровержение — РАЗНЫЕ болезни,
@@ -165,18 +204,73 @@ def admit(cert: GroundingCertificate, purpose: str, epoch: str,
                              cert.cert_digest, purpose, epoch)
 
 
+def resolve_conflict(decisions: list) -> AdmissionDecision:
+    """V19: несколько ПРИГОДНЫХ источников, говорящих врозь.
+
+    Противоречие ДОЛЖНО ВЫЖИТЬ. Запрещено: голосовать большинством, брать свежее,
+    брать «более уверенное», просить модель примирить. Пока явного правила
+    разрешения нет — это CONFLICT, и он идёт наружу конфликтом.
+
+    Схлопнуть противоречие в одну сторону — то же самое, что изготовить посылку:
+    источник её не давал, её произвёл наш способ считать."""
+    admitted = [d for d in decisions if d.admitted]
+    if len(admitted) <= 1:
+        return admitted[0] if admitted else (decisions[0] if decisions else None)
+    props = {d.proposition for d in admitted}
+    if len(props) == 1:
+        return admitted[0]            # согласные источники — не конфликт
+    d0 = admitted[0]
+    return AdmissionDecision(
+        False, D_CONFLICT, " | ".join(sorted(props)),
+        f"{len(admitted)} пригодных источника поддерживают несовместимое; "
+        "правила разрешения не задано — противоречие сохраняется, не схлопывается",
+        d0.cert_digest, d0.purpose, d0.epoch)
+
+
+def authorize(decision: AdmissionDecision, actor: str, action: str,
+              authority_grants: dict, performed_action: str = "") -> AdmissionDecision:
+    """V23/V24: ПОСЛЕ допуска посылки — отдельные ворота ПРАВОМОЧИЯ и ИСПОЛНЕНИЯ.
+
+    G3 в полный рост: допущенная посылка и верное следствие НЕ создают права
+    действовать. Право даёт наделение (authority_grants), и оно ограничено
+    актором и КОНКРЕТНЫМ действием. А исполненное действие сверяется с
+    разрешённым: правомочие на X не покрывает Y.
+
+    authority_grants: {актор: [разрешённые действия]}."""
+    def no(disposition, reason):
+        return AdmissionDecision(False, disposition, decision.proposition, reason,
+                                 decision.cert_digest, decision.purpose, decision.epoch)
+    if not decision.admitted:
+        return decision                     # нечего авторизовывать
+    allowed = authority_grants.get(actor) or ()
+    if action not in allowed:
+        return no(D_NO_AUTHORITY,
+                  f"актор {actor!r} не наделён правом на {action!r}; верная посылка "
+                  "и верный вывод правомочия не создают")
+    if performed_action and performed_action != action:
+        return no(D_EXEC_MISMATCH,
+                  f"разрешено {action!r}, исполнено {performed_action!r}: "
+                  "правомочие на одно не покрывает другое")
+    return decision
+
+
 def build_certificate(proposition: str, corpus: str, source_id: str,
                       evidence_atoms: list, mark: str, coverage: str,
-                      retrieval_method: str, corpus_epoch: str) -> GroundingCertificate:
+                      retrieval_method: str, corpus_epoch: str,
+                      **axes) -> GroundingCertificate:
     """Собрать сертификат из результата guard. evidence_atoms — список строк-атомов
-    (их же байты идут в source_digest, чтобы привязка была к содержимому)."""
+    (их же байты идут в source_digest, чтобы привязка была к содержимому).
+
+    axes — необязательные оси GAZ-R1: scope, valid_until, policy_version,
+    representation_ok, attributed_to, suspect. Каждая входит в digest, потому
+    подмена любой из них ломает проверку сертификата (G7)."""
     src_digest = _sha("\n".join(evidence_atoms))
     ids = tuple(f"{corpus}:{source_id}#{i}" for i, _ in enumerate(evidence_atoms, 1))
     return GroundingCertificate(
         proposition=proposition, corpus=corpus, source_id=source_id,
         source_digest=src_digest, evidence_atom_ids=ids,
         support_relation=support_from_mark(mark, coverage), coverage=coverage,
-        retrieval_method=retrieval_method, corpus_epoch=corpus_epoch)
+        retrieval_method=retrieval_method, corpus_epoch=corpus_epoch, **axes)
 
 
 def _selftest() -> int:

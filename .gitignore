@@ -31,3 +31,13 @@ Reproduce-ZTL.docx
 # shipped: db/_ground.py degrades to a no-op when this directory is absent.
 lab/
 LinkedIn/
+
+# GUARD (2026-08-24): невыданный Novelty Test Protocol и его окружение — НЕ в
+# публичный репо. Держать приватно (приватный репо / шифр-бэкап). Эта правка
+# .gitignore НЕ коммитится, чтобы даже имя папки не светить публично.
+novelty/
+requirements.lock
+Containerfile
+
+# Разбор книги прибором — по решению куратора 2026-08-25 живёт в ПРИВАТНОМ репозитории
+book/credit-ledger-KNIGA.md

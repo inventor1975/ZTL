@@ -9,6 +9,15 @@ below carries the command that re-checks it.
 is the whole lesson of the day it was written. Anything here can have gone
 stale; the code is the arbiter.
 
+**MANDATORY — before saying anything about the tables, open `ZTL-TABLES.txt`**
+(this repo root). It holds all ten ZTL connective tables plus the operand,
+generated straight from `ztl.py` (the code is the arbiter — the tables are not
+typed by hand). The tables are the core of the logic and are easy to get wrong
+from memory: read the file, do not reconstruct them from a classical prior
+(that prior is exactly what marked identity `p→p` and excluded middle `p∨¬p`
+"false" once, when the code says they legitimately fail at `Z`). Regenerate any
+time with `python3 -c "import ztl; ztl.print_tables()"` from the repo root.
+
 **And read the preprint's own positioning before saying anything about what ZTL
 is** — `paper/ZTL-draft_1.4.md`, three sections, twenty minutes:
 
@@ -470,6 +479,52 @@ If ZTL "stitches the compiler to the protocol" downstream, this is what stitches
 it to VR upstream.
 
 ---
+
+## 3.5 The introspect toolkit and the grounding store (2026-08-24/25)
+
+Section 0 names the disease: a claim reached by reasoning where a measurement was
+available. Over 2026-08-24/25 the cure was built and turned on itself. It lives in
+`tool/introspect/` — read `КАК-ПОЛЬЗОВАТЬСЯ.md` there for the commands.
+
+- **Atom-store.** Documents are broken into atomic claims and stored; a question
+  retrieves the relevant atoms in milliseconds, and an answer is graded T/F/Z
+  against them. Store holds data, never verdicts — the verdict is recomputed per
+  query, because a saved verdict is credit. Retrieval is cheap and constant; only
+  first-time extraction by forks is dear. Corpora are composable and multilingual.
+- **Machine corpora (LEAN, PY).** Code is *taken*, not paraphrased — zero tokens,
+  and exact. Prose needs forks; code does not.
+- **Predict-then-look** (`predict.py`). Write down what you expect the source to
+  say *before* looking, or you will see the right answer, agree, and never notice
+  you were about to say something else. The mismatch has three causes to keep
+  apart: I drifted, the store is stale/missed, or the source itself is wrong.
+- **Journal** (`journal.py`). Durable memory holds who-is-who and rules; the
+  journal holds the running state that compaction loses. Not a source about the
+  world — do not ground on it.
+
+**The lessons that cost the most, all mine, all found by running not reading:**
+
+1. *A patch can be dead.* Written, committed, and inert — the injection flag was
+   stored but never rendered to the judge; the same detector was imported into two
+   corpora and never called. After any security fix, re-run the exact attack and
+   show the output. Reading the code is not verification.
+2. *Live in the repo, dead in production.* A studio DoS fix was correct on disk
+   while the public server ran the old code, and a later deploy went to the wrong
+   path and a stray file gave a false "it's there". Verify where it runs, and by
+   behaviour, not by grep on a filename you might have duplicated.
+3. *Numbers, hashes, dates, and my own model name come from command output, never
+   from memory.* Four fabricated figures in a day, including a commit hash that did
+   not exist and a model byline (`Opus 4.8`) that was wrong for two days because I
+   trusted the self-description over the session journal. See
+   `CO-AUTHOR-CORRECTION.md`.
+4. *The strongest hole is not in the broken defence but in the trusted seam.* The
+   consent gate held; the bypass was a shell command the bridge handed me to run.
+   The atom-store's judge held; the source could still write its own verdict. Four
+   adversarial audits (atom-store 31 findings, bridge 5, ZTL judges 2, the exam 9)
+   are deposited in `ztl-private/audit/` and loaded as the AUDIT corpus.
+
+**The exam still stands.** The store answers only when asked, and I drift precisely
+when I am sure and will not ask. `SelfCheck/` fires unbidden, and its judge is the
+code, not a text. Do not retire it.
 
 ## 4. What this file does NOT cover
 

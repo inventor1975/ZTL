@@ -24,7 +24,26 @@ import hashlib
 import json
 from typing import Optional
 
-TOOL_VERSION = "admission-0.2"
+TOOL_VERSION = "admission-0.3"
+
+# СЛОВАРЬ ИСХОДОВ (рабочее задание GAZ-R1, §4). Имена могут отличаться, но
+# СМЫСЛОВЫЕ РАЗЛИЧИЯ СХЛОПЫВАТЬ НЕЛЬЗЯ: отказ обязан называть, ЧЕМ именно он
+# вызван, иначе «не допущено» скрывает разные болезни под одним словом.
+D_ADMIT = "ADMIT"
+D_NO_SUPPORT = "NO_SUPPORT_FOUND"                 # поиск не нашёл (процедурное)
+D_SOURCE_SILENT = "SOURCE_SILENT"                 # исчерпывающе проверено, молчит
+D_CONTRADICTED = "CONTRADICTED_BY_SOURCE"
+D_CONFLICT = "CONFLICT"                           # два пригодных источника врозь
+D_CERT_INVALID = "CERTIFICATE_INVALID"
+D_INELIGIBLE = "SOURCE_INELIGIBLE"
+D_SCOPE = "SCOPE_MISMATCH"
+D_EPOCH = "EPOCH_MISMATCH"
+D_POLICY = "POLICY_MISMATCH"
+D_INTEGRITY = "REPRESENTATION_INTEGRITY_FAILURE"  # байты/OCR/представление
+D_NO_AUTHORITY = "NO_AUTHORITY"                   # ось правомочия, не поддержки
+D_EXEC_MISMATCH = "EXECUTION_MISMATCH"
+D_DECLARED_LIMIT = "DECLARED_LIMITATION"          # известный предел, не инвариант
+D_NOT_EVALUATED = "NOT_EVALUATED"                 # НЕ засчитывается как проход
 
 # отношение поддержки — НЕ истина. Маппинг из метки guard под ПОКРЫТИЕМ.
 SUPPORTED = "SUPPORTED_BY_SOURCE"
@@ -97,6 +116,7 @@ def verify_certificate(cert: GroundingCertificate, claimed_digest: str) -> bool:
 @dataclasses.dataclass(frozen=True)
 class AdmissionDecision:
     admitted: bool
+    disposition: str          # ТОЧНЫЙ разряд из словаря выше, не свободный текст
     proposition: str
     reason: str
     cert_digest: str
@@ -115,26 +135,32 @@ def admit(cert: GroundingCertificate, purpose: str, epoch: str,
 
     eligible_sources: {purpose: set|list источников, пригодных для этой цели}.
     Пустое/отсутствие цели → никакой источник не пригоден (отказ по умолчанию)."""
-    def no(reason):
-        return AdmissionDecision(False, cert.proposition, reason, cert.cert_digest,
-                                 purpose, epoch)
+    def no(disposition, reason):
+        return AdmissionDecision(False, disposition, cert.proposition, reason,
+                                 cert.cert_digest, purpose, epoch)
 
-    # G1/G2/G4: допускаем ТОЛЬКО подтверждённое источником. NO_SUPPORT (в т.ч.
-    # retrieval-miss) и SOURCE_SILENT и CONTRADICTED посылкой не становятся.
+    # G1/G2/G4: допускаем ТОЛЬКО подтверждённое источником. Разряд отказа НАЗЫВАЕТ
+    # причину: промах поиска, молчание источника и опровержение — РАЗНЫЕ болезни,
+    # и схлопывать их в одно «не допущено» запрещено рабочим заданием (§4).
     if cert.support_relation != SUPPORTED:
-        return no(f"нет поддержки источника (support={cert.support_relation}); "
+        return no({NO_SUPPORT: D_NO_SUPPORT,
+                   SOURCE_SILENT: D_SOURCE_SILENT,
+                   CONTRADICTED: D_CONTRADICTED}.get(cert.support_relation, D_POLICY),
+                  f"нет поддержки источника (support={cert.support_relation}); "
                   "незнание/промах/опровержение посылкой не становятся")
     # G6: эпоха сертификата должна совпасть с эпохой запроса (без явного правила
     # переноса — не допускаем чужую эпоху).
     if cert.corpus_epoch != epoch:
-        return no(f"эпоха сертификата {cert.corpus_epoch[:12]} ≠ запрошенной "
+        return no(D_EPOCH,
+                  f"эпоха сертификата {cert.corpus_epoch[:12]} ≠ запрошенной "
                   f"{epoch[:12]}; повторное использование через эпоху запрещено")
     # пригодность источника ДЛЯ ЭТОЙ ЦЕЛИ (source ≠ authority — отдельная ось)
     ok = eligible_sources.get(purpose) or ()
     if cert.source_id not in ok:
-        return no(f"источник {cert.source_id!r} не в списке пригодных для цели "
+        return no(D_INELIGIBLE,
+                  f"источник {cert.source_id!r} не в списке пригодных для цели "
                   f"{purpose!r}; поддержка ≠ правомочие источника")
-    return AdmissionDecision(True, cert.proposition,
+    return AdmissionDecision(True, D_ADMIT, cert.proposition,
                              "допущено: поддержка+пригодность+эпоха сошлись",
                              cert.cert_digest, purpose, epoch)
 

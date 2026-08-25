@@ -39,6 +39,13 @@ MAX_CLAIM_LEN = 1024          # characters in the claim string
 MAX_ATOMS = 64                # entries in the atoms list
 MAX_DISTINCT_ATOMS = 12       # atoms in the CLAIM -> 3**12 ~= 5.3e5, sub-second
 MAX_NAME_LEN = 128            # characters in an atom name
+# ИМЕНА, КОТОРЫЕ НЕЛЬЗЯ ОТДАВАТЬ АТОМАМ. `ev` читает голый токен T/F/Z как
+# ЛОГИЧЕСКУЮ КОНСТАНТУ, а не как имя: атом, названный «T» и оставленный
+# НЕПРОВЕРЕННЫМ, молча читается как истина, а его разметка Z игнорируется —
+# то есть истина выдаётся в кредит, и артефакт получает валидную подпись.
+# ПРОВЕРЕНО 2026-08-25: ev("T", {"T": Z}) == T. Студийный слой это ловил
+# (zfl.RESERVED), а коннектор — нет, хотя подписывает наружу именно он.
+RESERVED_NAMES = {"T", "F", "Z", "Tr", "not", "and", "or", "imp", "xor", "xnor"}
 MAX_PROVENANCE_LEN = 4096     # characters in an atom's provenance (audit string)
 
 
@@ -76,6 +83,10 @@ def validate(wf: Any) -> None:
         name = a.get("name")
         _require(isinstance(name, str) and name.strip(),
                  "atom.name must be a non-empty string")
+        _require(name.strip() not in RESERVED_NAMES,
+                 f"atom.name {name!r} is a reserved constant: an atom named "
+                 f"T/F/Z is read as the constant itself and its marking is "
+                 f"ignored, which grants truth on credit")
         _require(len(name) <= MAX_NAME_LEN,
                  f"atom.name too long ({len(name)} > {MAX_NAME_LEN})")
         prov = a.get("provenance")

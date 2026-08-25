@@ -20,11 +20,14 @@ import argparse
 import json
 import pathlib
 import re
+import sys
 
 DECL = re.compile(r"^\s*(?:@\[[^\]]*\]\s*)?(theorem|lemma|def|instance|abbrev|structure)\s+"
                   r"([A-Za-z_0-9'.«»]+)(.*)$")
 AXIOM_LINE = re.compile(r"#print\s+axioms\s+([A-Za-z_0-9'.]+)")
-SKIP_PARTS = (".lake", "_attic", "/build/")
+SKIP_PARTS = (".lake", "_attic", "build")
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+from atomstore import flag_injection  # noqa: E402
 
 
 def declarations(root: pathlib.Path) -> list[dict]:
@@ -32,7 +35,7 @@ def declarations(root: pathlib.Path) -> list[dict]:
     строкам продолжения (в Lean она часто переносится)."""
     out = []
     for f in sorted(root.rglob("*.lean")):
-        if any(s in str(f) for s in SKIP_PARTS):
+        if any(s in str(f.relative_to(root)).split("/") for s in SKIP_PARTS):
             continue
         text = f.read_text(encoding="utf-8", errors="replace")
         audited = set(AXIOM_LINE.findall(text))     # у кого стоит #print axioms
@@ -71,8 +74,10 @@ def build(sources: list[tuple], corpus: str, store_root: pathlib.Path) -> int:
             audit = " [аксиомы проверены #print axioms]" if d["axioms_printed"] else ""
             unit = (f"{d['kind_lean']} {d['name']} : {d['stmt']}"
                     f"  ({rel}:{d['line']}){audit}")
-            by_file.setdefault(rel, []).append(
-                {"atom": unit, "src": rel, "chunk": d["line"], "kind": "lean"})
+            u = {"atom": unit, "src": rel, "chunk": d["line"], "kind": "lean"}
+            if flag_injection(unit):
+                u["suspect"] = "адресовано модели, не читателю"
+            by_file.setdefault(rel, []).append(u)
         for rel, units in by_file.items():
             out = store_root / corpus / (rel + ".atoms.jsonl")
             out.parent.mkdir(parents=True, exist_ok=True)

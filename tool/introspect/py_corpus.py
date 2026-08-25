@@ -24,9 +24,12 @@ import ast
 import json
 import pathlib
 import re
+import sys
 
 MEASURED = re.compile(r"(МЕРЕНО|ИЗМЕРЕНО|ПРОМЕРЕНО|MEASURED|промерено|мерено)", re.I)
-SKIP = ("/venv", "/.venv", "site-packages", "__pycache__", "/.lake/", "/node_modules/")
+SKIP = ("venv", ".venv", "site-packages", "__pycache__", ".lake", "node_modules")
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+from atomstore import flag_injection  # noqa: E402
 
 
 def units_of(path: pathlib.Path, rel: str) -> list[dict]:
@@ -40,8 +43,11 @@ def units_of(path: pathlib.Path, rel: str) -> list[dict]:
     if mod_doc:
         first = " ".join(mod_doc.strip().splitlines()[0:2]).strip()
         if len(first) > 15:
-            out.append({"atom": f"модуль {rel}: {first}", "src": rel, "chunk": 1,
-                        "kind": "py-doc"})
+            u = {"atom": f"модуль {rel}: {first}", "src": rel, "chunk": 1,
+                 "kind": "py-doc"}
+            if flag_injection(first):
+                u["suspect"] = "адресовано модели, не читателю"
+            out.append(u)
     for node in ast.walk(tree):
         if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
             continue
@@ -53,8 +59,11 @@ def units_of(path: pathlib.Path, rel: str) -> list[dict]:
         doc = ast.get_docstring(node) or ""
         first = doc.strip().splitlines()[0].strip() if doc else ""
         text = f"{kind} {node.name}({sig})" + (f" — {first}" if first else "")
-        out.append({"atom": f"{text}  ({rel}:{node.lineno})", "src": rel,
-                    "chunk": node.lineno, "kind": "py-doc"})
+        u = {"atom": f"{text}  ({rel}:{node.lineno})", "src": rel,
+             "chunk": node.lineno, "kind": "py-doc"}
+        if flag_injection(text):
+            u["suspect"] = "адресовано модели, не читателю"
+        out.append(u)
     # МЕРЕНЫЕ строки — отдельной породой, они и есть цель
     for i, line in enumerate(src.splitlines(), 1):
         s = line.strip()
@@ -70,7 +79,7 @@ def build(sources: list[tuple], corpus: str, store_root: pathlib.Path) -> int:
         root = pathlib.Path(root)
         per_file: dict = {}
         for f in sorted(root.rglob("*.py")):
-            if any(s in str(f) for s in SKIP):
+            if any(s in str(f.relative_to(root)).split("/") for s in SKIP):
                 continue
             rel = f"{label}/" + str(f.relative_to(root))
             us = units_of(f, rel)

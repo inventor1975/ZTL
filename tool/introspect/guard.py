@@ -130,9 +130,18 @@ def assemble(verdicts_dir: pathlib.Path, out: pathlib.Path) -> pathlib.Path:
             m = _MARK.search(line)
             if not m:
                 continue
-            claim = line.split(m.group(0))[0].strip(" -–—•\t").strip()
+            before = line.split(m.group(0))[0].strip(" -–—•\t").strip()
+            after = line.split(m.group(0), 1)[1].strip(" -–—•:\t").strip()
+            # СУДЬЯ ПИШЕТ И ТАК, И ЭТАК. «утверждение — [T] — почему» и
+            # «- [T] утверждение» одинаково естественны. Раньше бралось только то,
+            # что ДО метки, и вторая форма молча выбрасывалась — а выбрасывались в
+            # основном Z и F судьи, то есть отказ терялся охотнее подтверждения.
+            claim = before or after.split(" — ")[0].strip()
             if claim:
                 atoms.setdefault(claim, []).append(m.group(1).upper())
+            else:
+                print(f"  строка с меткой, но без утверждения — пропущена: {line[:70]}",
+                      file=sys.stderr)
     if skipped:
         print(f"  ОТВЕРГНУТО как НЕ-вердикты (задания/леджеры): {', '.join(skipped)}",
               file=sys.stderr)
@@ -179,7 +188,12 @@ def main() -> int:
         source = src.read_text(encoding="utf-8")
         answer = (pathlib.Path(a.answer[1:]).read_text(encoding="utf-8")
                   if a.answer.startswith("@") else a.answer)
-        out = pathlib.Path(a.out) if a.out else src.with_suffix(src.suffix + ".guard.tasks")
+        # ТАСК НЕ КЛАДЁМ РЯДОМ С ИСТОЧНИКОМ. В нём наш ВОПРОС и наш ОТВЕТ, а
+        # источник часто лежит в общей синхронизируемой папке обмена — и тогда
+        # наши черновики уезжают к другой стороне. Найдено аудитом 2026-08-25.
+        # По умолчанию пишем в рабочий каталог, а не в каталог источника.
+        out = (pathlib.Path(a.out) if a.out
+               else pathlib.Path.cwd() / f"{src.name}.guard.tasks")
         prepare(source, a.question, answer, out, mode=a.mode, target_lines=a.lines)
     elif a.cmd == "assemble":
         vd = pathlib.Path(a.verdicts)

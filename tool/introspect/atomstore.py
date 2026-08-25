@@ -188,8 +188,43 @@ def atomize_batched(corpus: str, src_root: pathlib.Path, store_root: pathlib.Pat
 
 
 
+_NUMBERED = re.compile(r"^\d+(?:\.\d+)*[\s.)]")   # «6.001 ...» — тезис Трактата, §, пункт
+
+
+def _merge_short(parts: list, min_chars: int = 0) -> list:
+    """Слить подряд идущие КОРОТКИЕ куски до внятного размера.
+
+    ЗАЧЕМ. Источник, пришедший построчно (HTML-разбор, диалог, стихи), даёт
+    единицы по 50 знаков — и ретрив возвращает обрывок посреди фразы: место
+    найдено, а процитировать нечего. ПРОМЕРЕНО 2026-08-25: Трактат медиана 53
+    знака, 84% короче 120; «Государство» — 156 и 39%.
+
+    ГРАНИЦУ НУМЕРАЦИИ НЕ ПЕРЕСЕКАЕМ. Если кусок начинается с номера («6.001»,
+    «§4», «12.»), он открывает НОВУЮ единицу: у Трактата пронумерованный тезис
+    и есть смысловая единица, склеить два тезиса — потерять ту самую адресность,
+    ради которой стор и делался.
+
+    min_chars=0 отключает слияние (прежнее поведение, для уже загруженных корпусов).
+    """
+    if min_chars <= 0:
+        return parts
+    out, buf = [], ""
+    for p in parts:
+        s = p.strip()
+        if not s:
+            continue
+        if buf and (_NUMBERED.match(s) or len(buf) >= min_chars):
+            out.append(buf)
+            buf = s
+        else:
+            buf = f"{buf} {s}".strip()
+    if buf:
+        out.append(buf)
+    return out
+
+
 def atomize_direct(corpus: str, src_root: pathlib.Path, store_root: pathlib.Path,
-                   min_words: int = 8) -> int:
+                   min_words: int = 8, min_chars: int = 0) -> int:
     """БЕЗ ФОРКОВ: абзац = единица, прямо в .atoms.jsonl. Ноль токенов.
 
     Для ПОИСКА, не для заземления. Форк нужен, когда из текста надо ИЗВЛЕЧЬ
@@ -214,6 +249,7 @@ def atomize_direct(corpus: str, src_root: pathlib.Path, store_root: pathlib.Path
         # строке почти нет, а строки длинные — режем по строкам, иначе весь файл
         # склеится в ОДНУ единицу (молча, что хуже всего).
         parts = lines if (len(blocks) <= 2 and sum(len(ln) > 200 for ln in lines) >= 3) else blocks
+        parts = _merge_short(parts, min_chars=min_chars)
         for i, para in enumerate(parts, 1):
             s = " ".join(para.split())
             if len(s.split()) >= min_words:
@@ -525,6 +561,10 @@ def main() -> int:
     pa.add_argument("--lines", type=int, default=40)
     pa.add_argument("--direct", action="store_true",
                     help="БЕЗ форков: абзац = единица, сразу в стор (для ПОИСКА, не для заземления)")
+    pa.add_argument("--min-chars", type=int, default=0,
+                    help="слить подряд идущие короткие куски до N знаков (построчные\n"
+                         "источники: HTML-разбор, диалог, стихи). 0 = не сливать.\n"
+                         "Границу нумерации («6.001», «§4») слияние не пересекает.")
     pa.add_argument("--batch", action="store_true",
                     help="паковать мелкие файлы по нескольку в форк (дешевле в разы на россыпи)")
     pa.add_argument("--target-words", type=int, default=12000, help="слов на пачку")
@@ -554,7 +594,8 @@ def main() -> int:
     a = ap.parse_args()
     if a.cmd == "atomize":
         if a.direct:
-            atomize_direct(a.corpus, pathlib.Path(a.src_root), pathlib.Path(a.store))
+            atomize_direct(a.corpus, pathlib.Path(a.src_root), pathlib.Path(a.store),
+                           min_chars=a.min_chars)
             return 0
         if a.batch:
             atomize_batched(a.corpus, pathlib.Path(a.src_root), pathlib.Path(a.store),

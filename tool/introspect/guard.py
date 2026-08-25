@@ -97,25 +97,48 @@ def prepare(source: str, question: str, answer: str, out_dir: pathlib.Path,
 
 
 def _merge_mark(marks: list[str]) -> str:
-    """Слить метку атома по кускам: F доминирует, потом T, иначе Z."""
+    """Слить метку атома по кускам: F доминирует; T только если НИ ОДИН кусок не Z.
+
+    Прежде T побеждал Z, и правило «отзыв побеждает утверждение» рвалось на швах:
+    судья куска с отзывом честно ставит Z (отзыв не противоречит, он снимает), а
+    судья куска с исходным утверждением ставит T — слияние давало T, то есть
+    снятое возвращалось живым. Теперь Z придерживает T: подтверждено одним куском
+    и не подтверждено другим — это не «доказано», это «смотри оба»."""
     if "F" in marks:
         return "F"
-    if "T" in marks:
-        return "T"
-    return "Z"
+    if "Z" in marks:
+        return "Z"
+    return "T" if "T" in marks else "Z"
 
 
 def assemble(verdicts_dir: pathlib.Path, out: pathlib.Path) -> pathlib.Path:
     """Сшить вердикты: по кускам слить метки, дать сводку и общий вердикт."""
     atoms: dict[str, list[str]] = {}
+    skipped = []
     for f in sorted(verdicts_dir.glob("*.md")):
-        for line in f.read_text(encoding="utf-8").splitlines():
+        body = f.read_text(encoding="utf-8")
+        # ИСТОЧНИК НЕ СУДИТ САМ СЕБЯ. В gtask-файле лежит ТЕКСТ ИСТОЧНИКА, и если
+        # в нём попадаются «— [T] —» (в .tex это обычные ссылки), assemble прежде
+        # засчитывал их как вердикты судьи. ПРОВЕРЕНО 2026-08-25: папка без единого
+        # вердикта дала GROUNDED, метки принёс сам источник. Задания и леджеры
+        # теперь отвергаются по имени И по содержимому.
+        if (f.name.startswith("gtask-") or "guard task" in body[:200]
+                or "=== ИСТОЧНИК" in body or "# guard-ledger" in body[:80]):
+            skipped.append(f.name)
+            continue
+        for line in body.splitlines():
             m = _MARK.search(line)
             if not m:
                 continue
             claim = line.split(m.group(0))[0].strip(" -–—•\t").strip()
             if claim:
                 atoms.setdefault(claim, []).append(m.group(1).upper())
+    if skipped:
+        print(f"  ОТВЕРГНУТО как НЕ-вердикты (задания/леджеры): {', '.join(skipped)}",
+              file=sys.stderr)
+    if not atoms:
+        print("  НИ ОДНОГО ВЕРДИКТА СУДЬИ не найдено — сборка бессмысленна",
+              file=sys.stderr)
     merged = {c: _merge_mark(ms) for c, ms in atoms.items()}
     counts = {"T": 0, "F": 0, "Z": 0}
     for v in merged.values():

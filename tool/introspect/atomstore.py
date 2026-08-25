@@ -79,7 +79,7 @@ def atomize(corpus: str, src_root: pathlib.Path, store_root: pathlib.Path,
     запас для файла, что не влезает в окно форка."""
     written = []
     files = [p for p in sorted(src_root.rglob("*"))
-             if p.is_file() and p.suffix.lower() in TEXT_EXT]
+             if p.is_file() and not p.is_symlink() and p.suffix.lower() in TEXT_EXT]
     for f in files:
         rel = f.relative_to(src_root)
         text = f.read_text(encoding="utf-8", errors="replace")
@@ -135,9 +135,11 @@ def atomize_batched(corpus: str, src_root: pathlib.Path, store_root: pathlib.Pat
 
     Каждый атом в пачке несёт свой файл: форк пишет «- <<путь>> утверждение».
     Так провенанс не теряется, хотя форк читал несколько файлов разом."""
+    # СИМЛИНК НЕ ЧИТАЕМ. В присланном каталоге `appendix.md -> ~/.config/*.env`
+    # утащил бы ключ прямо в стор и в контекст судьи. ПРОВЕРЕНО 2026-08-25.
     files = [(p, len(p.read_text(encoding="utf-8", errors="replace").split()))
              for p in sorted(src_root.rglob("*"))
-             if p.is_file() and p.suffix.lower() in TEXT_EXT]
+             if p.is_file() and not p.is_symlink() and p.suffix.lower() in TEXT_EXT]
     files = [(p, w) for p, w in files if w >= min_words]      # мелочь не атомизируем
     big = [(p, w) for p, w in files if w >= target_words]
     small = sorted([(p, w) for p, w in files if w < target_words], key=lambda x: -x[1])
@@ -189,7 +191,7 @@ def atomize_direct(corpus: str, src_root: pathlib.Path, store_root: pathlib.Path
     """
     total = 0
     for f in sorted(src_root.rglob("*")):
-        if not (f.is_file() and f.suffix.lower() in TEXT_EXT):
+        if not (f.is_file() and not f.is_symlink() and f.suffix.lower() in TEXT_EXT):
             continue
         rel = f.relative_to(src_root)
         units = []
@@ -213,18 +215,31 @@ def atomize_direct(corpus: str, src_root: pathlib.Path, store_root: pathlib.Path
 
 def collect_batched(corpus: str, src_root: pathlib.Path, store_root: pathlib.Path,
                     tasks_root: pathlib.Path) -> int:
-    """Разобрать пачки по файлам: «- <<путь>> атом» -> зеркальные .atoms.jsonl."""
+    """Разобрать пачки по файлам: «- <<путь>> атом» -> зеркальные .atoms.jsonl.
+
+    Метка пути — из выхода форка, то есть НЕДОВЕРЕННАЯ. Мало проверить, что она не
+    ведёт наружу: `./VR-LOGIC.md` и `VR-LOGIC.md` — разные ключи, ведущие в ОДИН
+    файл, и вторая пачка затирала атомы первой, подменяя провенанс на настоящий
+    адрес. ПРОВЕРЕНО 2026-08-25. Потому метка сверяется со списком РЕАЛЬНЫХ файлов
+    источника: чего нет в источнике — не пишем."""
+    real = {str(p.relative_to(src_root)) for p in src_root.rglob("*")
+            if p.is_file() and not p.is_symlink()}
     per_file: dict = {}
     marker = re.compile(r"^-\s*<<([^>]+)>>\s*(.+)$")
     for tf in sorted((tasks_root / corpus).glob("batch-*.md")):
         for line in tf.read_text(encoding="utf-8").splitlines():
             m = marker.match(line.strip())
             if m:
+                _key = m.group(1).strip().lstrip("./")
+                if real and _key not in real:
+                    print(f"  ОТВЕРГНУТ атом: метка «{m.group(1).strip()}» не совпадает "
+                          f"ни с одним файлом источника", file=sys.stderr)
+                    continue
                 _a = m.group(2).strip()
                 _u = {"atom": _a}
                 if flag_injection(_a):
                     _u["suspect"] = "адресовано модели, не читателю"
-                per_file.setdefault(m.group(1).strip(), []).append(_u)
+                per_file.setdefault(_key, []).append(_u)
     # НЕ ТЕРЯТЬ МОЛЧА. Пачка без атомов = форк ещё пишет (или упал), и сбор
     # в этот момент кладёт в стор неполный корпус БЕЗ единой жалобы. Так уже
     # потерялись три главы книги и 137 атомов (2026-08-25) — заметил случайно.
@@ -254,7 +269,7 @@ def collect(corpus: str, src_root: pathlib.Path, store_root: pathlib.Path,
     """Сложить извлечённые форками атомы в <файл>.atoms.jsonl (зеркальный путь)."""
     total = 0
     for f in sorted(src_root.rglob("*")):
-        if not (f.is_file() and f.suffix.lower() in TEXT_EXT):
+        if not (f.is_file() and not f.is_symlink() and f.suffix.lower() in TEXT_EXT):
             continue
         rel = f.relative_to(src_root)
         vdir = verdicts_root / corpus / rel.parent / f.name
@@ -427,7 +442,8 @@ def query(corpora: list[str], question: str, answer: str, store_root: pathlib.Pa
         return out_dir
     lines = []
     for s, a in hits:
-        lines.append(f"[{s:.3f}] ({a['corpus']}:{a['src']}#{a['chunk']}) {a['atom']}")
+        mark = "  ⚠ ПОДОЗРИТЕЛЬНО (адресовано модели, не читателю)" if a.get("suspect") else ""
+        lines.append(f"[{s:.3f}] ({a['corpus']}:{a['src']}#{a['chunk']}) {a['atom']}{mark}")
     source = "\n".join(lines)
     print(f"query: top-{len(hits)} атомов (корпуса {corpora}):")
     for ln in lines:

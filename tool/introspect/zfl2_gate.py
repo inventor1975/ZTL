@@ -25,15 +25,30 @@ import sys
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 from admission import admit, verify_certificate  # noqa: E402
 
-# основания, которые ПРИШЛИ ИЗ ИСТОЧНИКА (не собственное измерение/определение).
-# Только они проходят ворота: своё измерение обосновывает себя само, чужой
-# документ — нет.
-SOURCE_KINDS = {"source", "document", "citation", "источник", "документ"}
+# СЛОВАРЬ zfl2, взятый из кода, а не выдуманный (промерено 2026-08-25: сперва я
+# написал ворота под изобретённые значения вроде "source", и они не совпали бы
+# НИ С ЧЕМ, что zfl2 принимает — то есть ворота молча пропускали бы всё).
+#   ground_kind: document | act | certificate | row
+#   dimension:   evidence (подпирает) | authority (разрешает)
+# Внешние — document/act/certificate: их приносит чужая сторона. `row` внутренняя
+# ссылка на другую строку, своих ворот не требует (её строка их уже прошла).
+SOURCE_KINDS = {"document", "act", "certificate"}
 
 
 def _is_source_backed(row: dict) -> bool:
     kind = (row.get("ground_kind") or "").strip().lower()
     return kind in SOURCE_KINDS
+
+
+def _is_authority_row(row: dict) -> bool:
+    """Строка по оси ПРАВОМОЧИЯ, а не подпорки.
+
+    У zfl2 эта ось СВОЯ, встроенная: evidence = подпирает, authority = разрешает.
+    Она совпадает с G3 внешнего рецензента («поддержка источника сама по себе не делает
+    источник правомочным»), и потому сертификат заземления — доказательство
+    ПОДДЕРЖКИ — правомочия не выдаёт НИКОГДА. Такую строку ворота не пропускают
+    даже с безупречной распиской: расписка отвечает не на тот вопрос."""
+    return (row.get("dimension") or "").strip().lower() == "authority"
 
 
 def gate_document(doc: dict, receipts: dict, purpose: str, epoch: str,
@@ -55,7 +70,14 @@ def gate_document(doc: dict, receipts: dict, purpose: str, epoch: str,
         if status == "verified" and _is_source_backed(r):
             why = None
             got = receipts.get(name)
-            if not got:
+            if _is_authority_row(r):
+                # G3: сертификат заземления — про ПОДДЕРЖКУ. Правомочие он не
+                # устанавливает даже будучи безупречным. Ось authority у zfl2
+                # своя, и допуск по поддержке её не закрывает.
+                why = ("ось ПРАВОМОЧИЯ (authority): сертификат заземления "
+                       "доказывает поддержку источника, а не право решать — "
+                       "это отдельные ворота, здесь их нет")
+            elif not got:
                 why = "нет расписки допуска: внешний источник, а допуск не выдан"
             else:
                 cert, claimed = got

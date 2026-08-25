@@ -137,9 +137,20 @@ def atomize_batched(corpus: str, src_root: pathlib.Path, store_root: pathlib.Pat
     Так провенанс не теряется, хотя форк читал несколько файлов разом."""
     # СИМЛИНК НЕ ЧИТАЕМ. В присланном каталоге `appendix.md -> ~/.config/*.env`
     # утащил бы ключ прямо в стор и в контекст судьи. ПРОВЕРЕНО 2026-08-25.
-    files = [(p, len(p.read_text(encoding="utf-8", errors="replace").split()))
-             for p in sorted(src_root.rglob("*"))
-             if p.is_file() and not p.is_symlink() and p.suffix.lower() in TEXT_EXT]
+    # ПОТОЛОК НА ФАЙЛ. Присланный документ на 200к слов уходил в ОДИН контекст
+    # форка — это либо отказ, либо десятки тысяч токенов за один чужой файл;
+    # многогигабайтный .txt клал процесс на .split(). Найдено аудитом 2026-08-25.
+    MAX_BYTES = 8 * 1024 * 1024
+    files = []
+    for p in sorted(src_root.rglob("*")):
+        if not (p.is_file() and not p.is_symlink() and p.suffix.lower() in TEXT_EXT):
+            continue
+        if p.stat().st_size > MAX_BYTES:
+            print(f"  ПРОПУЩЕН как слишком большой ({p.stat().st_size // 1024**2} МБ, "
+                  f"потолок {MAX_BYTES // 1024**2}): {p.relative_to(src_root)}",
+                  file=sys.stderr)
+            continue
+        files.append((p, len(p.read_text(encoding="utf-8", errors="replace").split())))
     files = [(p, w) for p, w in files if w >= min_words]      # мелочь не атомизируем
     big = [(p, w) for p, w in files if w >= target_words]
     small = sorted([(p, w) for p, w in files if w < target_words], key=lambda x: -x[1])
@@ -256,9 +267,14 @@ def collect_batched(corpus: str, src_root: pathlib.Path, store_root: pathlib.Pat
         if out is None:
             continue
         out.parent.mkdir(parents=True, exist_ok=True)
-        out.write_text("\n".join(json.dumps({**a, "src": rel, "chunk": 1},
-                                            ensure_ascii=False) for a in atoms),
-                       encoding="utf-8")
+        try:
+            out.write_text("\n".join(json.dumps({**a, "src": rel, "chunk": 1},
+                                                ensure_ascii=False) for a in atoms),
+                           encoding="utf-8")
+        except OSError as e:
+            print(f"  {rel}: НЕ ЗАПИСАН ({type(e).__name__}: {e}) — иду дальше",
+                  file=sys.stderr)
+            continue
         total += len(atoms)
     print(f"collect-batch: {total} атомов из {len(per_file)} файлов в {store_root/corpus}")
     return total
@@ -290,9 +306,27 @@ def collect(corpus: str, src_root: pathlib.Path, store_root: pathlib.Path,
                         _u["suspect"] = "адресовано модели, не читателю"
                     atoms.append(_u)
         out = _mirror(src_root, f, store_root, corpus)
+        # НЕ ОБНУЛЯТЬ МОЛЧА. Форк, ответивший прозой без «- » (упал, отказался,
+        # оборвался), давал пустой список — и запись стирала уже собранные атомы
+        # БЕЗ единой жалобы. Присланный документ, на котором форк откажется, мог
+        # так стереть накопленное. Найдено аудитом 2026-08-25.
+        if not atoms:
+            had = out.exists() and out.stat().st_size > 0
+            print(f"  {rel}: форк не дал НИ ОДНОГО атома"
+                  + (" — СТАРОЕ СОХРАНЕНО, не затираю" if had else ""),
+                  file=sys.stderr)
+            if had:
+                continue
         out.parent.mkdir(parents=True, exist_ok=True)
-        out.write_text("\n".join(json.dumps(a, ensure_ascii=False) for a in atoms),
-                       encoding="utf-8")
+        try:
+            out.write_text("\n".join(json.dumps(a, ensure_ascii=False) for a in atoms),
+                           encoding="utf-8")
+        except OSError as e:
+            # ДЛИННОЕ ИМЯ ИЛИ КАТАЛОГ НА ПУТИ рвали цикл, и файлы ПОСЛЕ этого не
+            # писались вовсе, а итог не печатался. Атакующий выбирал, где оборвать.
+            print(f"  {rel}: НЕ ЗАПИСАН ({type(e).__name__}: {e}) — иду дальше",
+                  file=sys.stderr)
+            continue
         total += len(atoms)
         print(f"  {rel}: {len(atoms)} атомов -> {out}")
     print(f"collect: {total} атомов в {store_root/corpus}")
@@ -319,10 +353,20 @@ def load_atoms(store_root: pathlib.Path, corpora: list[str]) -> list[dict]:
 # ---------------------------------------------------------------------------
 # Эмбеддер: одно ядро ЦП по умолчанию (требование куратора). Fallback без модели.
 # ---------------------------------------------------------------------------
+_EMBEDDER_CACHE: dict = {}
+
+
 def get_embedder(prefer_gpu: bool = False, threads: int = 1, model_name: str = None):
     """(name, embed_fn). embed_fn: list[str] -> np.ndarray (нормированные строки).
     Пытается sentence-transformers на CPU/1-поток (GPU только по prefer_gpu).
     Падает на keyword-hash (numpy, без модели, тоже одно ядро) при любой ошибке."""
+    # ОДНА ЗАГРУЗКА НА ПРОГОН. query строит ключи из вопроса И КАЖДОГО предложения
+    # ответа, и каждый ключ заново конструировал модель: ответ из 200 предложений
+    # давал 201 загрузку. Ответ пишет форк, читавший чужой документ, — то есть
+    # длину диктует недоверенная сторона. Найдено аудитом 2026-08-25.
+    key = (bool(prefer_gpu), int(threads or 0), model_name or MODEL_NAME)
+    if key in _EMBEDDER_CACHE:
+        return _EMBEDDER_CACHE[key]
     if threads:
         os.environ.setdefault("OMP_NUM_THREADS", str(threads))
         os.environ.setdefault("MKL_NUM_THREADS", str(threads))
@@ -342,7 +386,8 @@ def get_embedder(prefer_gpu: bool = False, threads: int = 1, model_name: str = N
             return np.asarray(
                 model.encode(list(texts), batch_size=64, show_progress_bar=False,
                              normalize_embeddings=True), dtype="float32")
-        return f"sentence-transformers/{name}@{device}", embed
+        _EMBEDDER_CACHE[key] = (f"sentence-transformers/{name}@{device}", embed)
+        return _EMBEDDER_CACHE[key]
     except Exception as e:  # noqa: BLE001 — любой сбой -> честный fallback
         import hashlib
         import re
@@ -359,7 +404,8 @@ def get_embedder(prefer_gpu: bool = False, threads: int = 1, model_name: str = N
                 nrm = float(np.linalg.norm(out[i])) or 1.0
                 out[i] /= nrm
             return out
-        return "keyword-hash(numpy-fallback)", embed
+        _EMBEDDER_CACHE[key] = ("keyword-hash(numpy-fallback)", embed)
+        return _EMBEDDER_CACHE[key]
 
 
 def index(corpus: str, store_root: pathlib.Path, prefer_gpu: bool = False,
@@ -425,7 +471,7 @@ def query(corpora: list[str], question: str, answer: str, store_root: pathlib.Pa
     keys = [question]
     for s in _re.split(r"(?<=[.!?;])\s+|\n+", answer or ""):
         s = s.strip(" -–—•\t")
-        if len(s) > 15:                      # обрывки не ищем
+        if len(s) > 15 and len(keys) < 25:   # обрывки не ищем; потолок на число ключей
             keys.append(s)
     seen, hits = set(), []
     for key_text in keys:

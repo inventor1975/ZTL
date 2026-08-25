@@ -131,6 +131,10 @@ def _post(url, body, headers):
             raise ProviderError(f"HTTP {e.code}: {detail or e.reason}")
         except Exception as e:
             raise ProviderError(str(e))
+    # Не выпасть из цикла в None. Крайний случай — 429×3, затем temperature-400
+    # на последней попытке: обе ветки делают continue, range(4) исчерпывается, и
+    # раньше функция молча возвращала None → chat() падал на .get у None.
+    raise ProviderError("провайдер не ответил за отведённые попытки")
 
 
 def chat(messages, provider="groq", model="", key="", temperature=0.2):
@@ -171,4 +175,12 @@ def chat(messages, provider="groq", model="", key="", temperature=0.2):
         headers["HTTP-Referer"] = "https://github.com/inventor1975/ZTL"
         headers["X-Title"] = "ZTLStudio"
     data = _post(url, body, headers)
-    return data["choices"][0]["message"]["content"].strip()
+    # Безопасный разбор, как в anthropic-ветке. Пустой choices или content=null
+    # (reasoning-only / отказ модели) раньше роняли жёсткую цепочку индексов.
+    choices = data.get("choices") or []
+    if not choices:
+        raise ProviderError("провайдер вернул пустой choices")
+    content = (choices[0].get("message") or {}).get("content")
+    if content is None:
+        raise ProviderError("провайдер вернул пустой ответ (reasoning-only/отказ?)")
+    return content.strip()

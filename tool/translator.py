@@ -165,21 +165,27 @@ _PREFERRED = ["anthropic", "openai", "gemini", "deepseek", "xai",
 
 
 def best_provider():
-    """The strongest provider that actually has a key."""
+    """The strongest provider that actually has a key, or None if none does."""
     have = {p["provider"] for p in providers.available() if p["has_key"]}
     for name in _PREFERRED:
         if name in have:
             return name
-    return next(iter(sorted(have)), "groq")
+    # None, НЕ "groq". Раньше при пустом have возвращался groq БЕЗ ключа —
+    # докстринг «actually has a key» лгал, а вызов всё равно падал ниже с
+    # «no key». Честнее вернуть None и дать вызывающему сказать это прямо.
+    return next(iter(sorted(have)), None)
 
 
 def llm(messages, cfg, temperature=0.2):
     """cfg: {provider, model, key} chosen in the UI (any field optional —
     falls back to env / local key file / provider default)."""
     cfg = cfg or {}
+    prov = cfg.get("provider") or best_provider()
+    if not prov:                     # best_provider вернул None — ключей нет
+        raise TranslatorError("нет ключа ни у одного провайдера — задай ключ в ⚙ Model")
     try:
         return providers.chat(
-            messages, provider=cfg.get("provider") or best_provider(),
+            messages, provider=prov,
             model=cfg.get("model", ""), key=cfg.get("key", ""),
             temperature=temperature)
     except providers.ProviderError as e:

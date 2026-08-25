@@ -10,6 +10,21 @@ anchor cells are proven as theorems.
 
 VR discipline: `#print axioms` at the end of the file — the whole
 corpus must stand on the empty axiom list (pure enumeration, `decide`).
+
+The mark family, as we see it, ACROSS the tiers (only T/F/Z are core
+truth-values below; the rest live above and are NOT part of `V`):
+  * T, F, Z  — verification core (this file): earned / honest-false / on credit.
+  * N        — Z read in the LAZY (strong-Kleene) register (`ZGround`).
+  * E        — the JUDGE's verdict when a declared world admits nothing
+               to read (boundary tier; "смерть суждения").
+  * S = СОБЛАЗН / Seduction — the ETHICS tier: a claim that is TRUE yet
+               HARMFUL (a truth deployed to harm; a valid step to a cruel
+               end). It is NOT a truth-value and cannot be a cell in a
+               table — harm lives in the USE, not the claim; see
+               `Hume_Guillotine` for why value cannot be derived from fact.
+               The second evil, paired with E: E stops judgment (death),
+               S seduces the choice above it. Applied by the notebook
+               (`tool/introspect`), it never enters this core.
 -/
 
 inductive V where

@@ -471,6 +471,25 @@ def validate(doc):
         if status not in STATUSES:
             issues.append(_issue("error", "E_STATUS", f"{at} / status",
                                  f"status must be one of {STATUSES}"))
+
+        # SCALE — сверять с допустимым, а не глотать молча. Поле объявлено
+        # выбором, но decimalK/fracM параметрические, потому проверяем ФОРМАТ и
+        # границу. Аудит 2026-08-25 показал: без этой проверки decimal5000000
+        # доходил до 10**k и вешал сервер; DoS уже закрыт потолком в znumjudge,
+        # здесь — чтобы кривой scale ПОМЕЧАЛСЯ, а не тихо игнорировался.
+        scale = (r.get("scale") or "").strip()
+        if scale and scale not in ("int",):
+            import re as _re
+            m = _re.fullmatch(r"(decimal(\d+)|frac(\d+))", scale)
+            if not m:
+                issues.append(_issue("error", "E_SCALE", f"{at} / scale",
+                    "scale must be empty, int, decimalK or fracM"))
+            elif m.group(2) is not None and int(m.group(2)) > 30:
+                issues.append(_issue("error", "E_SCALE", f"{at} / scale",
+                    f"decimal places capped at 30 (got {m.group(2)})"))
+            elif m.group(3) is not None and (int(m.group(3)) < 1 or int(m.group(3)) > 10**9):
+                issues.append(_issue("error", "E_SCALE", f"{at} / scale",
+                    "frac denominator must be between 1 and 1e9"))
             continue
         ground = (r.get("ground") or "").strip()
         if status in ("verified", "refuted", "defined") and not ground:

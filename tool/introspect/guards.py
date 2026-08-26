@@ -344,6 +344,22 @@ def conserve_socket(proposition: str, evidence_texts, full_document: str = "",
     claim_p = pointers(proposition)
     base.update(source_pointers=sorted(src_p), claim_pointers=sorted(claim_p),
                 vocab_digest=VOCAB_DIGEST)
+    # ТИПЫ ПРОВЕРЯЮТСЯ ВСЕГДА, а не только на пути указателя. Прежде
+    # conserve_types звался ТОЛЬКО перед выдачей CLEAR, то есть при наличии
+    # указателя, — а указателя нет в 88 % случаев, и там правила о модальности,
+    # границах, акторе и приросте содержания молчали, хотя ЗАПРЕЩАТЬ они вправе
+    # всегда.
+    #
+    # Это была ЛЕНЬ, а не принцип: ровно как с тождеством, где 97 % верных цитат
+    # получали «не знаю», пока правило не было написано. Разрешать без указателя
+    # по-прежнему НЕЛЬЗЯ; запрещать — можно и нужно.
+    т = conserve_types("\n".join(evidence_texts or []), proposition)
+    if not т["ok"]:
+        вид, чем = т["violations"][0]
+        return dict(base, verdict=BLOCK, rule=f"тип: {вид}",
+                    disposition="GUARD_NOT_PRESERVED",
+                    reason=f"нарушен тип «{вид}»: {чем}",
+                    type_violations=т["violations"])
     if not base["ok"]:
         # ВОЗДЕРЖАНИЕ — НЕ ЗАПРЕТ. Первая редакция схлопывала всё «не ok» в BLOCK,
         # и прибор УТВЕРЖДАЛ «сторож уронен» там, где на деле говорил «не знаю»:

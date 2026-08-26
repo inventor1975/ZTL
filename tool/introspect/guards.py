@@ -432,11 +432,13 @@ _NEG_MODAL = re.compile(r"\b(?:shall|must|may|can)\s+not\b|\bno\s+\w+\s+(?:shall
 # срок упрощённого производства). Промерено, а не предположено: у обеих сторон
 # границы выходили пустыми, и правилу нечего было сравнивать.
 _BOUND = re.compile(r"\b(not exceeding|no more than|at most|within|not later than|"
-                    r"not less than|at least|no fewer than|exceeding)\b"
+                    r"not less than|at least|no fewer than|exceeding|more than|"
+                    r"less than|fewer than|longer than|shorter than)\b"
                     r"(?:\s+(?:the|a|an|period|of|more|less|than)){0,4}\s+"
                     r"(\d{1,5})\s*"
                     r"(days?|months?|years?|weeks?|hours?|per ?cent|%)?", re.I)
-_ВЕРХ = {"not exceeding", "no more than", "at most", "within", "not later than"}
+_ВЕРХ = {"not exceeding", "no more than", "at most", "within", "not later than",
+         "less than", "fewer than", "shorter than"}
 _ШУМ = set("the a an of to in and or for by with on at as is are be shall not this that which "
            "such any all from under may must can it its their his her they he she we you".split())
 
@@ -484,6 +486,20 @@ def invented_content(source: str, claim: str, порог: int = 3) -> list:
     return нов if len(нов) >= порог else []
 
 
+# ТОЧНЫЙ СРОК — не граница с направлением. «the period of 6 months» ничего не
+# ограничивает сверху или снизу: это ИМЕННО СТОЛЬКО. Удвоение меняет норму в
+# любую сторону, и сравнивать надо на РАВЕНСТВО, а не на невыход за предел.
+# Найдено разбором оставшихся 87 молчаний: 37 из них — ровно этот оборот.
+_КОЛ = re.compile(r"\b(?:period|term|interval|duration)\s+of\s+(\d{1,5})\s*"
+                  r"(days?|months?|years?|weeks?|hours?)\b", re.I)
+
+
+def exact_quantities(text: str) -> set:
+    """Точные величины: (число, единица). Сохраняются РАВЕНСТВОМ, не пределом."""
+    return {(int(m.group(1)), m.group(2).lower().rstrip("s"))
+            for m in _КОЛ.finditer(text or "")}
+
+
 def conserve_types(source: str, claim: str) -> dict:
     """Проверка ТИПОВ. Возвращает список нарушений; пусто — значит не возразил.
 
@@ -503,6 +519,11 @@ def conserve_types(source: str, claim: str) -> dict:
             ши = пара[0][1]
             if (нап == "ВЕРХ" and зн > ши) or (нап == "НИЗ" and зн < ши):
                 v.append(("числовая граница", f"{нап} {ши}{ед} → {зн}{ед} — РАСШИРЕНА"))
+    ки, кк = exact_quantities(source), exact_quantities(claim)
+    for (зн, ед) in кк:
+        свои = [x for x in ки if x[1] == ед]
+        if свои and зн not in {x[0] for x in свои}:
+            v.append(("точный срок", f"{sorted(x[0] for x in свои)}{ед} → {зн}{ед} — ИЗМЕНЁН"))
     if actor_widened(source, claim):
         v.append(("актор", "введён расширяющий актор, которого нет в источнике"))
     # ПРИРОСТ ОБЪЁМА ЕСТЬ ДОБАВЛЕНИЕ. Порог по НОВЫМ словам оказался дырявым:

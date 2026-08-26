@@ -300,7 +300,18 @@ def conserve_socket(proposition: str, evidence_texts, full_document: str = "",
                     reason=f"источник ссылается на {sorted(src_p - claim_p)}, "
                            f"утверждение эту ссылку не несёт")
     if src_p:
-        return dict(base, verdict=CLEAR, rule="документ объявил и утверждение несёт",
+        # ТИПЫ ПРОВЕРЯЮТСЯ ПЕРЕД ВЫДАЧЕЙ CLEAR. Разъём объявляет, что сторож
+        # доехал, — но сторож есть ОДИН тип из многих. Атака на себя показала:
+        # совпадения указателя достаточно, чтобы протащить усиленную
+        # модальность, расширенную границу, подменённого актора и выдуманное.
+        т = conserve_types("\n".join(evidence_texts or []), proposition)
+        if not т["ok"]:
+            вид, чем = т["violations"][0]
+            return dict(base, verdict=BLOCK, rule=f"тип: {вид}",
+                        disposition="GUARD_NOT_PRESERVED",
+                        reason=f"указатель доехал, но нарушен тип «{вид}»: {чем}",
+                        type_violations=т["violations"])
+        return dict(base, verdict=CLEAR, rule="документ объявил, утверждение несёт, типы целы",
                     reason=f"указатели совпали: {sorted(src_p)}")
     return dict(base, verdict=NO_VERDICT, ok=False,
                 rule="разъём не сошёлся", disposition="ABSTAINED_NO_SOCKET",
@@ -315,3 +326,111 @@ VOCAB_DIGEST = hashlib.sha256(
     json.dumps({"markers": _MARKERS, "definitions": _DEF, "doc_limits": _DOC_LIMITS,
                 "pointers": _PTR}, ensure_ascii=False, sort_keys=True).encode()
 ).hexdigest()[:16]
+
+
+# ══ ТИПИЗИРОВАННОЕ СОХРАНЕНИЕ (TCC): не только сторож ═══════════════════════
+# Найдено АТАКОЙ НА СЕБЯ 2026-08-26 (ztl-private/guard-probe/attack_tcc.py).
+# Куратор поставил диагноз строже моего: «если не детерминировано, то не важно
+# насколько». Я подал 27 ложных допусков как ДОЛЮ — будто есть механизм с
+# погрешностью. Проверка кода показала: правила про модальность, актора и
+# числовые границы НЕ БЫЛО ВОВСЕ. Значит покрытие равно НУЛЮ, а проценты
+# бессмысленны: 392 непрошедших случая не были пойманы — они упёрлись в
+# молчание разъёма, потому что указателя рядом не оказалось.
+#
+# УРОК ИЗ ЧУЖОГО КОДА (P2T, промерено на их выгрузках): типизированное поле в
+# схеме НЕ РАВНО заполненному. У них `exceptions` обязательно и заполнено в
+# 0.5 % из 2462 правил. Потому здесь каждый тип не «поле», а ПРАВИЛО, которое
+# либо срабатывает, либо честно молчит.
+#
+# ПРАВО ТИПОВ: каждый вправе ЗАПРЕТИТЬ и НЕ вправе разрешить. CLEAR по-прежнему
+# даёт только разъём — теперь ДОПОЛНИТЕЛЬНО к прохождению всех типов.
+
+_MODAL = {"must": "ОБЯЗАН", "shall": "ОБЯЗАН", "required": "ОБЯЗАН",
+          "may": "ВПРАВЕ", "can": "ВПРАВЕ", "permitted": "ВПРАВЕ", "entitled": "ВПРАВЕ"}
+_MRX_MODAL = re.compile(r"\b(" + "|".join(_MODAL) + r")\b", re.I)
+_NEG_MODAL = re.compile(r"\b(?:shall|must|may|can)\s+not\b|\bno\s+\w+\s+(?:shall|may|must)\b|"
+                        r"\bnot\s+(?:be\s+)?(?:required|permitted|entitled)\b", re.I)
+# «не более 30 дней» против «не менее 30 дней» — направление решает всё
+# МЕЖДУ ПРЕДЛОГОМ И ЧИСЛОМ БЫВАЮТ СЛОВА. Первая редакция требовала числа сразу
+# после сравнителя и потому не видела «within THE PERIOD OF 6 months» — на этом
+# единственный ложный допуск и уцелел из двадцати семи (Закон о защите данных,
+# срок упрощённого производства). Промерено, а не предположено: у обеих сторон
+# границы выходили пустыми, и правилу нечего было сравнивать.
+_BOUND = re.compile(r"\b(not exceeding|no more than|at most|within|not later than|"
+                    r"not less than|at least|no fewer than|exceeding)\b"
+                    r"(?:\s+(?:the|a|an|period|of|more|less|than)){0,4}\s+"
+                    r"(\d{1,5})\s*"
+                    r"(days?|months?|years?|weeks?|hours?|per ?cent|%)?", re.I)
+_ВЕРХ = {"not exceeding", "no more than", "at most", "within", "not later than"}
+_ШУМ = set("the a an of to in and or for by with on at as is are be shall not this that which "
+           "such any all from under may must can it its their his her they he she we you".split())
+
+
+def modality(text: str) -> set:
+    """Деонтический род: ОБЯЗАН / ВПРАВЕ. Лексика, без модели."""
+    return {_MODAL[m.group(1).lower()] for m in _MRX_MODAL.finditer(text or "")}
+
+
+def polarity_negations(text: str) -> int:
+    """Сколько отрицаемых модальностей. Переворот полярности меняет это число."""
+    return len(_NEG_MODAL.findall(text or ""))
+
+
+def bounds(text: str) -> list:
+    """Числовые границы С НАПРАВЛЕНИЕМ. «не более 30» и «не менее 30» — разное."""
+    out = []
+    for m in _BOUND.finditer(text or ""):
+        comp = " ".join(m.group(1).lower().split())
+        out.append(("ВЕРХ" if comp in _ВЕРХ else "НИЗ", int(m.group(2)),
+                    (m.group(3) or "").lower().rstrip("s")))
+    return out
+
+
+_ACTOR_WIDE = re.compile(r"\b(any person|anyone|any individual|any body|whoever|"
+                         r"any party|a person|any entity)\b", re.I)
+
+
+def actor_widened(source: str, claim: str) -> bool:
+    """Появился ли в утверждении РАСШИРЯЮЩИЙ актор, которого нет в источнике."""
+    в_к = set(m.group(0).lower() for m in _ACTOR_WIDE.finditer(claim or ""))
+    в_и = set(m.group(0).lower() for m in _ACTOR_WIDE.finditer(source or ""))
+    return bool(в_к - в_и)
+
+
+def invented_content(source: str, claim: str, порог: int = 3) -> list:
+    """Знаменательные слова утверждения, которых НЕТ в источнике.
+
+    Обязательный опровергатель по слову владельца: кандидат ничего не роняет, но
+    ДОБАВЛЯЕТ положение, которого источник не содержит. Порог отсекает шум
+    перефразировки; полностью от него не спасает, и это заявленный предел."""
+    ии = set(w.lower() for w in re.findall(r"\w+", source or "") if len(w) > 3)
+    нов = [w for w in re.findall(r"\w+", claim or "")
+           if len(w) > 3 and w.lower() not in ии and w.lower() not in _ШУМ]
+    return нов if len(нов) >= порог else []
+
+
+def conserve_types(source: str, claim: str) -> dict:
+    """Проверка ТИПОВ. Возвращает список нарушений; пусто — значит не возразил.
+
+    ПУСТО НЕ ОЗНАЧАЕТ «сохранено». Означает «эти правила не возразили».
+    Разрешает по-прежнему только разъём."""
+    v = []
+    ми, мк = modality(source), modality(claim)
+    if ми and мк and ми != мк:
+        v.append(("модальность", f"{sorted(ми)} → {sorted(мк)}"))
+    ни, нк = polarity_negations(source), polarity_negations(claim)
+    if ни != нк:
+        v.append(("полярность", f"отрицаний {ни} → {нк}"))
+    би, бк = bounds(source), bounds(claim)
+    for (нап, зн, ед) in бк:
+        пара = [x for x in би if x[0] == нап and x[2] == ед]
+        if пара:
+            ши = пара[0][1]
+            if (нап == "ВЕРХ" and зн > ши) or (нап == "НИЗ" and зн < ши):
+                v.append(("числовая граница", f"{нап} {ши}{ед} → {зн}{ед} — РАСШИРЕНА"))
+    if actor_widened(source, claim):
+        v.append(("актор", "введён расширяющий актор, которого нет в источнике"))
+    нов = invented_content(source, claim)
+    if нов:
+        v.append(("выдуманное", f"слов вне источника: {len(нов)} — {нов[:6]}"))
+    return {"violations": v, "ok": not v}

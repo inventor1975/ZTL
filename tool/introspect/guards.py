@@ -24,6 +24,8 @@
   Второе есть заявленный предел, а не инвариант.
 """
 from __future__ import annotations
+import hashlib
+import json
 import re
 
 Q = r"[\"'‘’“”«»]"          # одиночная кавычка любого вида
@@ -175,3 +177,96 @@ def conserve_with_document(proposition: str, evidence_texts, full_document: str,
                            f"весь текст, утверждение их не несёт: "
                            f"«{dropped[0][:70]}…»")
     return base
+
+
+# ══ РАЗЪЁМ: документ сам себя объявляет ═════════════════════════════════════
+# Замысел куратора 2026-08-26: «законы часто несовершенны, а порой умышленно
+# несовершенны — вспомни Уловку-22, там ПЕТЛЯ. Детерминированность на входе
+# должны дать САМИ ДОКУМЕНТЫ. Жёстко: разъёмы, подключайтесь; не можете — не
+# могу дать вердикт.»
+#
+# ЧТО ЭТО МЕНЯЕТ, И ПОЧЕМУ ЭТО НЕ КОСМЕТИКА. Всё до сих пор построенное
+# улучшало ЧТЕНИЕ. Но если источник кривой НАРОЧНО, чтение — не тот рычаг:
+# петлю можно прочесть безупречно и остаться в петле. Единственная честная
+# поза — жёсткий разъём и отказ судить, когда он не сошёлся.
+#
+# ГЛАВНОЕ СЛЕДСТВИЕ: СЛОВАРЬ ТЕРЯЕТ ПРАВО РАЗРЕШАТЬ, СОХРАНЯЯ ПРАВО ЗАПРЕЩАТЬ.
+# Раньше молчание словаря значило «сторожа нет, допускай» — это и была дыра.
+# Молчание словаря значит «Я НЕ ЗНАЮ». Промерено на запечатанном наборе
+# GUARD-SEALED-R1: ложных допусков 4 -> 0, причём НИ ОДНОГО слова в словарь не
+# добавлено. Изменилось только право.
+#
+# АССИМЕТРИЯ, оправдывающая остаток метаязыка здесь: ошибка в словаре разъёма
+# даёт МОЛЧАНИЕ (потерю охвата), ошибка в судящем словаре даёт ЛОЖНЫЙ ВЕРДИКТ,
+# который поедет дальше как правда. Первое — незнание, второе — ложь.
+
+CLEAR      = "CLEAR"        # документ объявил сторож И утверждение его несёт
+BLOCK      = "BLOCK"        # сторож уронен: словарь ВПРАВЕ запрещать
+NO_VERDICT = "NO_VERDICT"   # разъём не сошёлся: судить НЕ БЕРЁМСЯ
+
+# Указатель: документ называет сторож ССЫЛКОЙ. По ссылке не надо ПОНИМАТЬ —
+# надо ПОЙТИ. Потому указатели переносятся через язык дёшево: одной русской
+# фразы хватило там, где судящий словарь потребовал бы русского словаря целиком.
+_PTR = [
+    r"subject to\s+(?P<t>(?:section|article|clause|paragraph|sub\w*)\s*[\w()\-.]+)",
+    r"as defined in\s+(?P<t>(?:section|article|subsection)\s*[\w()\-.]+)",
+    r"as stated in\s+(?P<t>(?:clause|article|section)\s*[\w()\-.]+)",
+    r"in accordance with\s+(?P<t>(?:section|article)\s*[\w()\-.]+)",
+    r"pursuant to\s+(?P<t>(?:section|article)\s*[\w()\-.]+)",
+    r"notwithstanding\s+(?P<t>(?:section|article)\s*[\w()\-.]+)",
+    r"(?P<t>as aforesaid|as aforementioned)",
+    r"в соответствии со\s+(?P<t>статьёй\s*[\w()\-.]+)",
+    r"(?P<t>установленных федеральным законом|предусмотренных статьёй\s*[\w()\-.]*)",
+]
+_PRX = [re.compile(p, re.I) for p in _PTR]
+
+
+def pointers(text: str) -> set:
+    """ЦЕЛИ указателей, объявленных текстом. Сравниваем ЦЕЛЬ, а не наличие:
+    утверждение со ССЫЛКОЙ НА ДРУГОЕ не несёт сторож источника."""
+    out = set()
+    for rx in _PRX:
+        for m in rx.finditer(text or ""):
+            out.add(" ".join(m.group("t").lower().split()).rstrip(".,;"))
+    return out
+
+
+def conserve_socket(proposition: str, evidence_texts, full_document: str = "",
+                    *, citation_scope: str) -> dict:
+    """Разъём. Возвращает CLEAR | BLOCK | NO_VERDICT — и НИКОГДА молчаливый проход.
+
+    Порядок НЕ произволен:
+      1. словарь ЗАПРЕЩАЕТ — это его право, и оно осталось;
+      2. документ объявил сторож указателем и утверждение его НЕ несёт -> BLOCK;
+      3. объявил и несёт (ТУ ЖЕ цель) -> CLEAR — единственная дорога к допуску;
+      4. не объявил -> NO_VERDICT. Судить не берёмся, и молчим об этом ВСЛУХ.
+    """
+    base = conserve_with_document(proposition, evidence_texts, full_document,
+                                  citation_scope=citation_scope)
+    src_p = pointers("\n".join(evidence_texts or []))
+    claim_p = pointers(proposition)
+    base.update(source_pointers=sorted(src_p), claim_pointers=sorted(claim_p),
+                vocab_digest=VOCAB_DIGEST)
+    if not base["ok"]:
+        return dict(base, verdict=BLOCK)
+    if src_p and not (src_p <= claim_p):
+        return dict(base, verdict=BLOCK, rule="указатель источника не доехал",
+                    disposition="GUARD_NOT_PRESERVED",
+                    reason=f"источник ссылается на {sorted(src_p - claim_p)}, "
+                           f"утверждение эту ссылку не несёт")
+    if src_p:
+        return dict(base, verdict=CLEAR, rule="документ объявил и утверждение несёт",
+                    reason=f"указатели совпали: {sorted(src_p)}")
+    return dict(base, verdict=NO_VERDICT, ok=False,
+                rule="разъём не сошёлся", disposition="ABSTAINED_NO_SOCKET",
+                reason="документ не объявил свой сторож указателем; молчание "
+                       "МОЕГО словаря есть незнание, а не чистота")
+
+
+# ── ОТПЕЧАТОК СЛОВАРЯ. Дыру нашёл куратор вопросом «это метаязык в коде?»:
+# список решает ВСЁ, но в отпечаток расписки не входил — расписки при разных
+# словарях были байт в байт одинаковы. Молчаливая подмена была невидима.
+VOCAB_DIGEST = hashlib.sha256(
+    json.dumps({"markers": _MARKERS, "definitions": _DEF, "doc_limits": _DOC_LIMITS,
+                "pointers": _PTR}, ensure_ascii=False, sort_keys=True).encode()
+).hexdigest()[:16]

@@ -681,6 +681,14 @@ def main() -> int:
     pa.add_argument("--lines", type=int, default=40)
     pa.add_argument("--direct", action="store_true",
                     help="БЕЗ форков: абзац = единица, сразу в стор (для ПОИСКА, не для заземления)")
+    # ПОРОГ В ВОСЕМЬ СЛОВ МОЛЧА ВЫБРАСЫВАЛ КОРОТКОЕ. Промерено 2026-08-26 на
+    # афоризмах куратора: из 705 в стор попало 517, потерялось 188 — и потерялись
+    # именно КОРОТКИЕ, то есть часто лучшие («Истина уличает правду в слепой
+    # лжи», 36 знаков). Порог разумен для прозы и вреден для афоризма, стиха,
+    # пункта перечня. Теперь он управляем, а не зашит.
+    pa.add_argument("--min-words", type=int, default=8,
+                    help="нижний порог длины единицы В СЛОВАХ; для афоризмов,\n"
+                         "стихов, перечней ставить 1 — иначе короткое пропадёт МОЛЧА")
     pa.add_argument("--min-chars", type=int, default=0,
                     help="слить подряд идущие короткие куски до N знаков (построчные\n"
                          "источники: HTML-разбор, диалог, стихи). 0 = не сливать.\n"
@@ -715,7 +723,7 @@ def main() -> int:
     if a.cmd == "atomize":
         if a.direct:
             atomize_direct(a.corpus, pathlib.Path(a.src_root), pathlib.Path(a.store),
-                           min_chars=a.min_chars)
+                           min_chars=a.min_chars, min_words=a.min_words)
             return 0
         if a.batch:
             atomize_batched(a.corpus, pathlib.Path(a.src_root), pathlib.Path(a.store),

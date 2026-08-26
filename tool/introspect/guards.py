@@ -293,7 +293,14 @@ def conserve_socket(proposition: str, evidence_texts, full_document: str = "",
     base.update(source_pointers=sorted(src_p), claim_pointers=sorted(claim_p),
                 vocab_digest=VOCAB_DIGEST)
     if not base["ok"]:
-        return dict(base, verdict=BLOCK)
+        # ВОЗДЕРЖАНИЕ — НЕ ЗАПРЕТ. Первая редакция схлопывала всё «не ok» в BLOCK,
+        # и прибор УТВЕРЖДАЛ «сторож уронен» там, где на деле говорил «не знаю»:
+        # определённый термин не поднят, цитата шире клаузы. Это ровно тот
+        # оверклейм, против которого построено само различение — отказ
+        # УТВЕРЖДАЕТ, молчание СООБЩАЕТ О НЕЗНАНИИ.
+        # Найдено 2026-08-26 замером цены типов на добросовестном пересказе.
+        вид = base.get("disposition") or ""
+        return dict(base, verdict=NO_VERDICT if вид.startswith("ABSTAINED") else BLOCK)
     if src_p and not (src_p <= claim_p):
         return dict(base, verdict=BLOCK, rule="указатель источника не доехал",
                     disposition="GUARD_NOT_PRESERVED",

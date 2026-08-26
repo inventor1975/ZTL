@@ -46,7 +46,14 @@ _DEF = [
 # в КАНДИДАТЕ опасен. Так и заявлено в шапке.
 _MARKERS = [
     r"\bunless\b", r"\bexcept(?:\s+that|\s+where|\s+by|\s+in)?\b",
-    r"\bsave\s+(?:in|where|as|for)\b", r"\bprovided\s+that\b",
+    # «save BY virtue of a law» — промах I2 запечатанного прогона; в корпусе таких 4.
+    r"\bsave\s+(?:in|where|as|for|by|that|to)\b", r"\bprovided\s+that\b",
+    # добавлено по замеру слепых пятен 2026-08-26 (69 единиц корпуса LAW):
+    r"\bnotwithstanding\b",           # 33× — сильнейший сторож английского права
+    r"\bshall\s+not\s+apply\b", r"\bdoes\s+not\s+apply\b",   # 12× и 3×
+    r"\bin\s?so\s?far\s+as\b", r"\bin\s+the\s+event\b",      # 6× и 5×
+    r"\bwithout\s+prejudice\b", r"\bexcluding\b",            # 3× и 2×
+    r"\bexcept\s+as\b", r"\bbut\s+only\b", r"\bwith\s+the\s+exception\b",
     r"\bsubject\s+to\b", r"\bto\s+the\s+extent\b", r"\bso\s+long\s+as\b",
     r"\bon\s+condition\b", r"\bconditioned\s+on\b", r"\bonly\b", r"\bsolely\b",
     r"\bin\s+no\s+case\b", r"\bother\s+than\b", r"\bnot\s+contrary\s+to\b",
@@ -143,11 +150,31 @@ _DOC_LIMITS = [
 _DLRX = [re.compile(p) for p in _DOC_LIMITS]
 
 
+_QUOTE_OPEN = "\u2018\u201c\u00ab\"'"
+
+
+def _is_quoted(text: str, start: int) -> bool:
+    """Стоит ли перед находкой открывающая кавычка — то есть ПРИВЕДЕНА ли она.
+    Приведённый ограничитель принадлежит ДРУГОМУ документу и нас не связывает."""
+    head = (text[max(0, start - 4):start] or "").strip()
+    return bool(head) and head[-1] in _QUOTE_OPEN
+
+
 def document_limits(full_text: str) -> list:
-    """Статьи, ограничивающие ВЕСЬ документ. Регулярка, без модели."""
+    """Статьи, ограничивающие ВЕСЬ документ. Регулярка, без модели.
+
+    ЦИТИРУЕМЫЕ ограничители ОТБРАСЫВАЮТСЯ. Дефект найден запечатанным прогоном
+    (E3, ложный отказ): Хартия ЕС приводит статью 17 ЕКПЧ в пояснительной
+    записке, и правило потребовало нести ЧУЖУЮ статью. Логически это «строку
+    нашли в документе» принято за «строка относится к утверждению» — наша
+    собственная болезнь, поднявшаяся на этаж сторожей."""
+    t = full_text or ""
     out = []
     for rx in _DLRX:
-        out += [" ".join(m.group(0).split()) for m in rx.finditer(full_text or "")]
+        for m in rx.finditer(t):
+            if _is_quoted(t, m.start()):
+                continue
+            out.append(" ".join(m.group(0).split()))
     return out
 
 

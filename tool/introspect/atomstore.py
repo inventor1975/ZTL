@@ -507,7 +507,40 @@ def retrieve(corpora: list[str], question: str, store_root: pathlib.Path,
     q = embed([question])[0]
     sims = V @ q  # обе стороны нормированы -> косинус
     order = np.argsort(sims)[::-1][:k]
-    return [(float(sims[i]), atoms[i]) for i in order]
+    out = [(float(sims[i]), atoms[i]) for i in order]
+    _log_query(store_root, corpora, question, k, out)
+    return out
+
+
+def _log_query(store_root: pathlib.Path, corpora: list, question: str, k: int,
+               hits: list) -> None:
+    """АВТОМАТИЧЕСКИЙ след обращения. Не самоотчёт.
+
+    Заведено 2026-08-26 по вопросу куратора «пользуешься ли ты стором часто, есть
+    статистика?». Ответить было НЕЧЕМ: обращения не журналировались вовсе, и
+    «я не мерил» пришлось выдать за весь ответ.
+
+    Почему именно СЛЕД, а не журнал. Утром того же дня удалён рабочий журнал —
+    он был МОИМ пересказом того, что я делал, и потому врал молча: я записывал
+    то, что помнил, а не то, что было. След пишется САМ, в единственном горле
+    всех запросов, и соврать в нём нечем.
+
+    Ответа результата тут НЕТ — только факт обращения и лучшее совпадение.
+    Хранить ответы значило бы дублировать стор и раздувать файл."""
+    try:
+        import datetime
+        rec = {"at": datetime.datetime.now().isoformat(timespec="seconds"),
+               "corpora": list(corpora), "k": k,
+               "question": (question or "")[:200], "hits": len(hits),
+               "top_sim": round(hits[0][0], 4) if hits else None,
+               # ключ атома — 'src' (проверено по _atoms.jsonl, а не угадано:
+               # первая редакция писала 'source' и клала в журнал пустую строку)
+               "top_src": (hits[0][1].get("src") or "")[:90] if hits else "",
+               "top_chunk": hits[0][1].get("chunk") if hits else None}
+        with open(store_root / "_queries.jsonl", "a", encoding="utf-8") as f:
+            f.write(json.dumps(rec, ensure_ascii=False) + "\n")
+    except Exception:
+        pass   # след НИКОГДА не роняет выдачу: прибор не вправе ломать работу
 
 
 def query(corpora: list[str], question: str, answer: str, store_root: pathlib.Path,

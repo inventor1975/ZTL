@@ -44,6 +44,13 @@ D_NO_AUTHORITY = "NO_AUTHORITY"                   # ось правомочия,
 D_EXEC_MISMATCH = "EXECUTION_MISMATCH"
 D_DECLARED_LIMIT = "DECLARED_LIMITATION"          # известный предел, не инвариант
 D_NOT_EVALUATED = "NOT_EVALUATED"                 # НЕ засчитывается как проход
+# ── оси СОХРАНЕНИЯ СТОРОЖЕЙ (2026-08-26, по замеру ztl-private/guard-probe).
+# Промерено: сертификат может быть безупречен, ворота детерминированы, логика
+# верна — а сторож источника потерян ВЫШЕ всего этого. Воздержание держится
+# ОТДЕЛЬНОЙ диспозицией: это не проход и не отказ по существу, а НЕЗНАНИЕ.
+D_GUARD_LOSS = "GUARD_NOT_PRESERVED"              # сторож источника не доехал
+D_ABSTAIN_TERM = "ABSTAINED_DEFINED_TERM"         # термин определён, определение не поднято
+D_ABSTAIN_WIDE = "ABSTAINED_WIDE_CITATION"        # цитата шире клаузы
 
 # отношение поддержки — НЕ истина. Маппинг из метки guard под ПОКРЫТИЕМ.
 SUPPORTED = "SUPPORTED_BY_SOURCE"
@@ -139,7 +146,8 @@ class AdmissionDecision:
 
 def admit(cert: GroundingCertificate, purpose: str, epoch: str,
           eligible_sources: dict, *, scope: str = "", now: str = "",
-          policy_version: str = "") -> AdmissionDecision:
+          policy_version: str = "",
+          conservation: dict = None) -> AdmissionDecision:
     """Ворота: сертификат — НЕОБХОДИМ, но НЕ достаточен. Допуск только если сошлось.
 
     eligible_sources: {purpose: set|list источников, пригодных для этой цели}.
@@ -147,7 +155,11 @@ def admit(cert: GroundingCertificate, purpose: str, epoch: str,
 
     scope/now/policy_version — ЗАПРОШЕННЫЙ контекст. Пустые = ось не проверяется;
     это осознанное послабление для старых вызовов, но в GAZ-R1 они задаются, иначе
-    вектор проверял бы не то, что заявлено."""
+    вектор проверял бы не то, что заявлено.
+
+    conservation — вердикт guards.conserve_with_document(). ОБЯЗАТЕЛЕН для ADMIT.
+    Не подан → NOT_EVALUATED, а НЕ проход: проверка, которую можно забыть, есть
+    дыра по умолчанию — а ради этой дыры всё и строилось."""
     def no(disposition, reason):
         return AdmissionDecision(False, disposition, cert.proposition, reason,
                                  cert.cert_digest, purpose, epoch)
@@ -193,6 +205,15 @@ def admit(cert: GroundingCertificate, purpose: str, epoch: str,
         return no(D_EPOCH,
                   f"эпоха сертификата {cert.corpus_epoch[:12]} ≠ запрошенной "
                   f"{epoch[:12]}; повторное использование через эпоху запрещено")
+    # СОХРАНЕНИЕ СТОРОЖЕЙ. Стоит ПОСЛЕ поддержки и ДО пригодности: уронённый
+    # сторож означает, что поддержка сказана НЕ О ТОМ утверждении, и назвать это
+    # надо прежде разговора о пригодности источника для цели.
+    if conservation is None:
+        return no(D_NOT_EVALUATED, "сохранение сторожей не проверялось: вердикт "
+                                   "guards.conserve_with_document не подан")
+    if not conservation.get("ok"):
+        return no(conservation.get("disposition") or D_GUARD_LOSS,
+                  conservation.get("reason") or "сторож источника не доехал")
     # пригодность источника ДЛЯ ЭТОЙ ЦЕЛИ (source ≠ authority — отдельная ось)
     ok = eligible_sources.get(purpose) or ()
     if cert.source_id not in ok:
@@ -288,8 +309,27 @@ def _selftest() -> int:
     # 1) SUPPORTED + пригоден + та же эпоха → допущено
     c = build_certificate("Порог памяти 64 ГиБ.", "DOWNSTREAM", "ruleX", atoms,
                           "T", "retrieval", "multi@k=5", ep)
-    d = admit(c, "decision", ep, elig)
-    check("SUPPORTED+пригоден+эпоха → admitted", d.admitted)
+    d = admit(c, "decision", ep, elig, conservation={"ok": True})
+    check("SUPPORTED+пригоден+эпоха+сторожа → admitted", d.admitted)
+
+    # 1a) ЗАБЫТАЯ проверка сторожей НЕ ЕСТЬ ПРОХОД. Проверка, которую можно
+    # опустить, есть дыра по умолчанию — а ровно её и закрывали.
+    check("сохранение сторожей не подано → NOT_EVALUATED, а не допуск",
+          admit(c, "decision", ep, elig).disposition == D_NOT_EVALUATED)
+
+    # 1b) уронённый сторож бьёт ДАЖЕ при безупречном сертификате — тот самый S04
+    d_g = admit(c, "decision", ep, elig,
+                conservation={"ok": False, "disposition": D_GUARD_LOSS,
+                              "reason": "в источнике маркеров 2, в утверждении 0"})
+    check("сторож уронен → отказ при безупречном сертификате",
+          not d_g.admitted and d_g.disposition == D_GUARD_LOSS)
+
+    # 1в) воздержание — ОТДЕЛЬНАЯ диспозиция, не проход и не отказ по существу
+    d_a = admit(c, "decision", ep, elig,
+                conservation={"ok": False, "disposition": D_ABSTAIN_TERM,
+                              "reason": "термин определён источником"})
+    check("воздержание держится своей диспозицией",
+          not d_a.admitted and d_a.disposition == D_ABSTAIN_TERM)
 
     # 2) G4: retrieval-Z (NO_SUPPORT) → отказ, не посылка
     c2 = build_certificate("Порог 128 ГиБ.", "DOWNSTREAM", "ruleX", atoms,

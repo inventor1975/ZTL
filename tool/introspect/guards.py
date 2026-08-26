@@ -286,6 +286,25 @@ def conserve_socket(proposition: str, evidence_texts, full_document: str = "",
       3. объявил и несёт (ТУ ЖЕ цель) -> CLEAR — единственная дорога к допуску;
       4. не объявил -> NO_VERDICT. Судить не берёмся, и молчим об этом ВСЛУХ.
     """
+    # ТОЖДЕСТВО САМОЛИЦЕНЗИРУЕТ. Если утверждение ДОСЛОВНО есть цитируемая
+    # клауза, ронять НЕЧЕГО: сохранение полное по построению, и никакой словарь
+    # для этого не нужен.
+    #
+    # Промерено 2026-08-26: без этого правила 97 % дословно верных цитат (779 из
+    # 800) получали «не знаю». Немота была не принципиальной, а следствием
+    # отсутствующего правила — прибор молчал там, где ответ следует из тождества.
+    #
+    # ЧТО ЭТО УСТАНАВЛИВАЕТ И ЧТО НЕТ: только СОХРАНЕНИЕ. Что цитата взята
+    # верно, что источник пригоден для цели, что утверждение истинно — другие
+    # оси, и их держат ворота допуска, а не это правило.
+    _норм = lambda t: " ".join((t or "").lower().split())
+    if any(_норм(proposition) == _норм(e) for e in (evidence_texts or [])):
+        return {"verdict": CLEAR, "ok": True, "rule": "тождество цитате",
+                "disposition": "", "reason": "утверждение дословно есть цитируемая клауза — "
+                                             "ронять нечего",
+                "source_pointers": [], "claim_pointers": [], "defined_terms_used": [],
+                "source_markers": [], "candidate_markers": [],
+                "citation_scope": citation_scope, "vocab_digest": VOCAB_DIGEST}
     base = conserve_with_document(proposition, evidence_texts, full_document,
                                   citation_scope=citation_scope)
     src_p = pointers("\n".join(evidence_texts or []))

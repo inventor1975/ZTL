@@ -50,9 +50,23 @@ EXTRACT_RUBRIC = """Извлеки из ТЕКСТА атомарные ФАКТ
 # абзац проходит в атомы как обычный (ПРОВЕРЕНО 2026-08-25) и попадает судье в
 # контекст под видом источника. Убрать его молча нельзя — это цензура источника;
 # потому помечаем, чтобы подлог был ВИДЕН и судье, и мне.
+# РАСШИРЕНО 2026-08-26 после ОЧНОЙ ставки против txtai и llama-index. Проба
+# показала, что самая ходовая в мире формулировка внушения — «ignore all
+# PREVIOUS instructions» — не ловилась: шаблон ждал «ignore all instructions»
+# ИЛИ «ignore previous instructions», а порядок слов иной. Один пропущенный
+# порядок слов, и канонический случай проходил насквозь.
+#
+# ЗДЕСЬ РАСШИРЯТЬ БЕЗОПАСНО — и это не то же, что с указателями. Лишняя метка
+# внушения даёт лишнюю ОСТОРОЖНОСТЬ (атом помечен подозрительным), тогда как
+# лишний указатель даёт лишнее РАЗРЕШЕНИЕ. Направление правки решает всё,
+# промерено в GUARD-SEALED-R3.
 INJECTION = re.compile(
-    r"(игнорируй|не сообщай|считай доказан|помечай всё|ignore (previous|all) instructions|"
-    r"disregard .{0,20}instructions|you must (now )?(mark|treat)|system prompt)", re.I)
+    r"(игнорируй|не сообщай|считай доказан|помечай всё|забудь (все )?предыдущ|"
+    r"ты теперь|отныне ты|ignore\s+(all\s+)?(previous\s+|prior\s+|above\s+)?"
+    r"(instructions?|prompts?|rules?)|disregard\s+.{0,25}(instructions?|prompts?|rules?)|"
+    r"forget\s+(all\s+|your\s+)*(previous\s+|prior\s+)*(instructions?|prompts?)|"
+    r"you are (now )?in (developer|admin|debug) mode|you must (now )?(mark|treat)|"
+    r"system prompt|act as (if you are )?(an? )?(admin|developer|unrestricted))", re.I)
 
 
 def flag_injection(text: str) -> bool:
@@ -485,6 +499,29 @@ def retrieve(corpora: list[str], question: str, store_root: pathlib.Path,
              model_name: str = None) -> list[tuple]:
     """Топ-k атомов по косинусу к вопросу через корпуса (composable)."""
     import numpy as np
+    # МОДЕЛЬ БЕРЁТСЯ ИЗ ИНДЕКСА, А НЕ ИЗ УМОЛЧАНИЯ. Правило «корпуса на разных
+    # моделях не смешивать» было записано ЗДЕСЬ ЖЕ в комментарии (строка 37) — и
+    # в коде не проверялось. Правило, живущее только в комментарии, не правило:
+    # 2026-08-26 я сам его нарушил, пересобрав LAW моделью по умолчанию
+    # (англоязычной) при том, что в LAW лежат русские источники.
+    #
+    # Векторы разных моделей живут в РАЗНЫХ пространствах. Косинус между ними
+    # вычисляется без ошибки и выглядит как настоящее сходство — это худший
+    # вид неправды: число есть, смысла нет.
+    used = {}
+    for c in corpora:
+        f = store_root / c / "_embedder.txt"
+        if f.exists():
+            used.setdefault(f.read_text(encoding="utf-8").strip().split("@")[0]
+                            .split("/")[-1], []).append(c)
+    if len(used) > 1:
+        pairs = "; ".join(f"{m}: {', '.join(cs)}" for m, cs in used.items())
+        raise ValueError(
+            "корпуса индексированы РАЗНЫМИ моделями, смешивать нельзя — "
+            f"векторы несопоставимы ({pairs}). Переиндексируй одной моделью "
+            "или спрашивай корпуса по отдельности.")
+    if used and not model_name:
+        model_name = next(iter(used))          # модель ИНДЕКСА, не умолчание
     name, embed = get_embedder(prefer_gpu=prefer_gpu, threads=threads, model_name=model_name)
     vecs, atoms = [], []
     for c in corpora:

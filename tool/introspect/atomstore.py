@@ -38,6 +38,17 @@ MODEL_NAME = "all-MiniLM-L6-v2"   # малая (~80МБ), быстрая на CP
 # единицы). Индекс помнит свою модель в _embedder.txt; корпуса на разных моделях
 # не смешивать в одном запросе — векторы несопоставимы.
 MODEL_MULTILINGUAL = "paraphrase-multilingual-MiniLM-L12-v2"
+# ПЕРЕРАНЖИРОВЩИК — второй проход. Бэк-модель сравнивает вопрос и атом ПОРОЗНЬ,
+# каждый в свой вектор; перекрёстная смотрит на ПАРУ целиком и потому берёт то,
+# что порознь неразличимо. Промерено 2026-08-26 на очной ставке с txtai и
+# llama-index, один корпус, одни двенадцать вопросов по-русски:
+#   без переранжировки  9/12
+#   с переранжировкой  10/12   (починился вопрос, безнадёжный и для слов, и для
+#                                гибридного поиска — он межъязыковой)
+# Цена: 6 мс -> 67 мс на запрос. Куратор: «Ставь. Точность важнее.»
+MODEL_RERANK = "cross-encoder/mmarco-mMiniLMv2-L12-H384-v1"
+_RERANK_CACHE = {}
+RERANK_POOL = 30          # сколько поднять бэк-моделью ПЕРЕД переранжировкой
 
 EXTRACT_RUBRIC = """Извлеки из ТЕКСТА атомарные ФАКТ-утверждения — по одному на
 строку, каждое самодостаточно (без «он/это/выше»), ровно то, что текст УТВЕРЖДАЕТ,
@@ -496,7 +507,7 @@ def index(corpus: str, store_root: pathlib.Path, prefer_gpu: bool = False,
 
 def retrieve(corpora: list[str], question: str, store_root: pathlib.Path,
              k: int = 8, prefer_gpu: bool = False, threads: int = 1,
-             model_name: str = None) -> list[tuple]:
+             model_name: str = None, rerank: bool = True) -> list[tuple]:
     """Топ-k атомов по косинусу к вопросу через корпуса (composable)."""
     import numpy as np
     # МОДЕЛЬ БЕРЁТСЯ ИЗ ИНДЕКСА, А НЕ ИЗ УМОЛЧАНИЯ. Правило «корпуса на разных
@@ -543,14 +554,43 @@ def retrieve(corpora: list[str], question: str, store_root: pathlib.Path,
     V = np.vstack(vecs)
     q = embed([question])[0]
     sims = V @ q  # обе стороны нормированы -> косинус
-    order = np.argsort(sims)[::-1][:k]
+    pool = max(k, RERANK_POOL) if rerank else k
+    order = np.argsort(sims)[::-1][:pool]
     out = [(float(sims[i]), atoms[i]) for i in order]
-    _log_query(store_root, corpora, question, k, out)
+    if rerank:
+        out = _rerank(question, out, k, prefer_gpu=prefer_gpu) or out[:k]
+    _log_query(store_root, corpora, question, k, out, rerank=rerank)
     return out
 
 
+def _rerank(question: str, cand: list, k: int, prefer_gpu: bool = False) -> list:
+    """Второй проход перекрёстной моделью. При ЛЮБОЙ беде возвращает пустое, и
+    вызывающий остаётся на выдаче бэк-модели: прибор не вправе ронять работу.
+
+    Оценка перекрёстной модели НЕ косинус и с ним не сравнима — потому в выдачу
+    идёт она, а не прежнее сходство, и в журнал пишется, каким путём получено."""
+    if not cand:
+        return []
+    try:
+        key = bool(prefer_gpu)
+        if key not in _RERANK_CACHE:
+            import torch
+            from sentence_transformers import CrossEncoder
+            dev = "cuda" if (prefer_gpu and torch.cuda.is_available()) else "cpu"
+            _RERANK_CACHE[key] = CrossEncoder(MODEL_RERANK, device=dev, max_length=384)
+        ce = _RERANK_CACHE[key]
+        texts = [a.get("atom") or "" for _, a in cand]
+        scores = ce.predict([(question, t) for t in texts])
+        pairs = sorted(zip(scores, [a for _, a in cand]), key=lambda x: -x[0])
+        return [(float(sc), a) for sc, a in pairs[:k]]
+    except Exception as e:
+        print(f"  [rerank] не сработал ({type(e).__name__}) — остаюсь на бэк-модели",
+              file=sys.stderr)
+        return []
+
+
 def _log_query(store_root: pathlib.Path, corpora: list, question: str, k: int,
-               hits: list) -> None:
+               hits: list, rerank: bool = False) -> None:
     """АВТОМАТИЧЕСКИЙ след обращения. Не самоотчёт.
 
     Заведено 2026-08-26 по вопросу куратора «пользуешься ли ты стором часто, есть
@@ -569,7 +609,8 @@ def _log_query(store_root: pathlib.Path, corpora: list, question: str, k: int,
         rec = {"at": datetime.datetime.now().isoformat(timespec="seconds"),
                "corpora": list(corpora), "k": k,
                "question": (question or "")[:200], "hits": len(hits),
-               "top_sim": round(hits[0][0], 4) if hits else None,
+               "rerank": bool(rerank),
+               "top_score": round(hits[0][0], 4) if hits else None,
                # ключ атома — 'src' (проверено по _atoms.jsonl, а не угадано:
                # первая редакция писала 'source' и клала в журнал пустую строку)
                "top_src": (hits[0][1].get("src") or "")[:90] if hits else "",

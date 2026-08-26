@@ -51,6 +51,10 @@ D_NOT_EVALUATED = "NOT_EVALUATED"                 # НЕ засчитывает�
 D_GUARD_LOSS = "GUARD_NOT_PRESERVED"              # сторож источника не доехал
 D_ABSTAIN_TERM = "ABSTAINED_DEFINED_TERM"         # термин определён, определение не поднято
 D_ABSTAIN_WIDE = "ABSTAINED_WIDE_CITATION"        # цитата шире клаузы
+# РАЗЪЁМ (замысел куратора): документ не объявил свой сторож указателем ->
+# судить НЕ БЕРЁМСЯ. Это НЕ отказ по существу и НЕ проход: это названное
+# незнание. Молчание моего словаря значит «не знаю», а не «сторожа нет».
+D_ABSTAIN_NO_SOCKET = "ABSTAINED_NO_SOCKET"
 
 # отношение поддержки — НЕ истина. Маппинг из метки guard под ПОКРЫТИЕМ.
 SUPPORTED = "SUPPORTED_BY_SOURCE"
@@ -100,6 +104,11 @@ class GroundingCertificate:
     representation_ok: bool = True  # V14: цело ли представление (OCR/байты)
     attributed_to: str = ""       # V09: кому приписана поддержка (пусто = source_id)
     suspect: str = ""             # V10: помеченное внушение в байтах источника
+    # СЛОВАРЬ СТОРОЖЕЙ ЕСТЬ ПОЛИТИКА, А НЕ КОД. Дыру нашёл куратор вопросом
+    # «это метаязык в коде?»: список решает ВСЕ вердикты, но в отпечаток не
+    # входил — расписки при разных словарях были байт в байт одинаковы, и
+    # молчаливая подмена определения сторожа была НЕВИДИМА.
+    guard_vocab_digest: str = ""
 
     @property
     def proposition_digest(self) -> str:
@@ -210,8 +219,17 @@ def admit(cert: GroundingCertificate, purpose: str, epoch: str,
     # надо прежде разговора о пригодности источника для цели.
     if conservation is None:
         return no(D_NOT_EVALUATED, "сохранение сторожей не проверялось: вердикт "
-                                   "guards.conserve_with_document не подан")
-    if not conservation.get("ok"):
+                                   "guards.conserve_socket не подан")
+    # РАЗЪЁМ. Единственная дорога к допуску — CLEAR: документ САМ объявил свой
+    # сторож указателем, и утверждение его донесло. Всё прочее — не допуск.
+    # Молчание словаря разрешением НЕ ЯВЛЯЕТСЯ: словарь вправе запрещать и НЕ
+    # вправе разрешать. Промерено на GUARD-SEALED-R1: ложных допусков 4 -> 0
+    # без единого нового слова в словаре.
+    verdict = conservation.get("verdict")
+    if verdict == "NO_VERDICT":
+        return no(D_ABSTAIN_NO_SOCKET,
+                  conservation.get("reason") or "разъём не сошёлся: судить не берёмся")
+    if verdict != "CLEAR":
         return no(conservation.get("disposition") or D_GUARD_LOSS,
                   conservation.get("reason") or "сторож источника не доехал")
     # пригодность источника ДЛЯ ЭТОЙ ЦЕЛИ (source ≠ authority — отдельная ось)
@@ -309,7 +327,7 @@ def _selftest() -> int:
     # 1) SUPPORTED + пригоден + та же эпоха → допущено
     c = build_certificate("Порог памяти 64 ГиБ.", "DOWNSTREAM", "ruleX", atoms,
                           "T", "retrieval", "multi@k=5", ep)
-    d = admit(c, "decision", ep, elig, conservation={"ok": True})
+    d = admit(c, "decision", ep, elig, conservation={"verdict": "CLEAR"})
     check("SUPPORTED+пригоден+эпоха+сторожа → admitted", d.admitted)
 
     # 1a) ЗАБЫТАЯ проверка сторожей НЕ ЕСТЬ ПРОХОД. Проверка, которую можно
@@ -319,17 +337,33 @@ def _selftest() -> int:
 
     # 1b) уронённый сторож бьёт ДАЖЕ при безупречном сертификате — тот самый S04
     d_g = admit(c, "decision", ep, elig,
-                conservation={"ok": False, "disposition": D_GUARD_LOSS,
+                conservation={"verdict": "BLOCK", "disposition": D_GUARD_LOSS,
                               "reason": "в источнике маркеров 2, в утверждении 0"})
     check("сторож уронен → отказ при безупречном сертификате",
           not d_g.admitted and d_g.disposition == D_GUARD_LOSS)
 
     # 1в) воздержание — ОТДЕЛЬНАЯ диспозиция, не проход и не отказ по существу
     d_a = admit(c, "decision", ep, elig,
-                conservation={"ok": False, "disposition": D_ABSTAIN_TERM,
+                conservation={"verdict": "BLOCK", "disposition": D_ABSTAIN_TERM,
                               "reason": "термин определён источником"})
     check("воздержание держится своей диспозицией",
           not d_a.admitted and d_a.disposition == D_ABSTAIN_TERM)
+
+    # 1г) РАЗЪЁМ НЕ СОШЁЛСЯ -> не допуск. Молчание словаря НЕ разрешение.
+    d_s = admit(c, "decision", ep, elig, conservation={"verdict": "NO_VERDICT"})
+    check("разъём не сошёлся → ABSTAINED_NO_SOCKET, а не допуск",
+          not d_s.admitted and d_s.disposition == D_ABSTAIN_NO_SOCKET)
+
+    # 1д) отпечаток словаря входит в расписку: подмена словаря ВИДНА
+    import guards as _g
+    c_v = build_certificate("Порог памяти 64 ГиБ.", "DOWNSTREAM", "ruleX", atoms,
+                            "T", "retrieval", "multi@k=5", ep,
+                            guard_vocab_digest=_g.VOCAB_DIGEST)
+    c_w = build_certificate("Порог памяти 64 ГиБ.", "DOWNSTREAM", "ruleX", atoms,
+                            "T", "retrieval", "multi@k=5", ep,
+                            guard_vocab_digest="другой-словарь")
+    check("смена словаря сторожей МЕНЯЕТ отпечаток расписки",
+          c_v.cert_digest != c_w.cert_digest)
 
     # 2) G4: retrieval-Z (NO_SUPPORT) → отказ, не посылка
     c2 = build_certificate("Порог 128 ГиБ.", "DOWNSTREAM", "ruleX", atoms,

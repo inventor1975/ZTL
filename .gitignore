@@ -45,3 +45,5 @@ IDEAS.md
 
 # черновики форка при прогонах атом-стора
 tool/introspect/*.tasks/
+lake-manifest.json
+lean/.lake/

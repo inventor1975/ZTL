@@ -1,7 +1,7 @@
 ZTL — the theorem inventory
 ============================================================
 
-405 theorems across 26 modules, all on the empty axiom list.
+491 theorems across 34 modules, all on the empty axiom list.
 
 Every theorem below is machine-checked by the Lean 4 kernel
 on the EMPTY axiom list (no Classical.choice, no Quot.sound,
@@ -490,4 +490,106 @@ inventory/axiom_audit.py, which re-checks every line in CI.
     narrows_trans
     reads_exists
     decorrelation_witness
+
+## ClassicalAgreement.lean  (5)
+    V.lift1_emb
+    V.lift2_emb
+    V.evalF_agrees
+    V.ztl_taut_is_classical
+    V.not_conversely
+
+## ZNumCoherent.lean  (11)
+    Coherent.creads_mono
+    Coherent.forcedLE_hereditary
+    Coherent.forcedNotLE_hereditary
+    Coherent.forcedLT_hereditary
+    Coherent.forcedNotLT_hereditary
+    Coherent.forcedEQ_hereditary
+    Coherent.forcedNE_hereditary
+    Coherent.coherent_refines
+    Coherent.forced_sample_implies_coherent
+    Coherent.int_sub_self
+    Coherent.coherent_strictly_finer
+
+## Layering.lean  (7)
+    V.Layering.fold_unmarked
+    V.Layering.eval_upd_not_occurs
+    V.Layering.fold_value_conj
+    V.Layering.fold_value_disj
+    V.Layering.fold_value_imp
+    V.Layering.fold_exact_and_unmarked
+    V.Layering.fold_never_marks
+
+## ContextClosure.lean  (12)
+    V.orF
+    V.andT
+    V.notT
+    V.setA_self
+    V.setA_other
+    V.eval_indep
+    V.mono
+    V.closure_coincides
+    V.outside_fragment_fails
+    V.no_syntactic_characterisation
+    V.normal_form_sound
+    V.normal_form_incomplete
+
+## Receipt.lean  (4)
+    V.label_empty_of_decided
+    V.receipt_complete
+    V.greedy_agrees_when_decided
+    V.receipt_complete_greedy
+
+## Linear.lean  (22)
+    V.occCount_zero_iff
+    V.and_absorb_r
+    V.and_absorb_l
+    V.or_absorb_r
+    V.or_absorb_l
+    V.imp_absorb_r
+    V.imp_absorb_l
+    V.xor_absorb_r
+    V.xor_absorb_l
+    V.xnor_absorb_r
+    V.xnor_absorb_l
+    V.znot_ne_Z
+    V.zand_ne_Z
+    V.zor_ne_Z
+    V.zimp_ne_Z
+    V.zxor_ne_Z
+    V.zxnor_ne_Z
+    V.z_pins
+    V.z_pins'
+    V.split_zero
+    V.split_succ
+    V.linear_no_loss
+
+## LabelExact.lean  (17)
+    V.evalK_congr
+    V.fills_refl
+    V.occCount_pos_of_occurs
+    V.sibling_fixed
+    V.merge_left
+    V.merge_right
+    V.merge_fills
+    V.fills_left
+    V.fills_right
+    V.drivable
+    V.pivotal_occurs
+    V.lift_left
+    V.lift_right
+    V.knot_inj
+    V.atomL_true
+    V.label_exact_linear
+    V.clash_names_an_idle_atom
+
+## NoGift.lean  (8)
+    V.evalF_congr
+    V.frozen
+    V.zand_T
+    V.zor_T
+    V.zimp_T
+    V.no_gift
+    V.F_is_not_protected
+    V.fragment_is_not_necessary
 

@@ -182,6 +182,21 @@ def _parse_arith(s, quantities):
         return _parse_arith(s[1:], quantities)
     if re.match(rf"^{_VAL}$", s):
         return _num(s)
+    # INTERVAL LITERAL. `to_book` writes `name == [3,4]` for an interval
+    # cell — the spec calls the interval a lawful value — and this reader
+    # refused its own generator's output (found 2026-08-27: a valid book
+    # chapter crashed `run`, breaking that function's stated invariant).
+    # A literal interval is DECLARED, not earned, so it enters as a fresh
+    # synthetic quantity on CREDIT and takes the ordinary interval path.
+    m = re.match(rf"^\[({_VAL}|-inf),({_VAL}|inf)\]$", s)
+    if m:
+        i = 1
+        while f"_lit{i}" in quantities:
+            i += 1
+        name = f"_lit{i}"
+        quantities[name] = qty(_num(m.group(1)), _num(m.group(2)),
+                               CREDIT, None)
+        return name
     if s in quantities:
         return s
     raise ValueError(f"unknown quantity or malformed arithmetic: {s!r}")
@@ -236,7 +251,12 @@ def extract_comparisons(formula, quantities):
     # (bug found by the curator's question "if 4 > 3 then 5 > 3?")
     atoms, out, i = {}, formula.replace("->", "→"), 0
     # a comparison = maximal operator-free chunk containing a _CMP sign
-    pattern = re.compile(r"[\w.+\-*/\s(),]+?(?:<=|>=|==|<|>)[\w.+\-*/\s(),]+")
+    # `[` `]` belong to the comparison too: `x == [3,4]` is lawful (the
+    # interval is a spec-blessed value and `to_book` emits it), but the
+    # old class cut the chunk at `[`, handing `_parse_arith` an empty
+    # right side — the '' crash of 2026-08-27.
+    pattern = re.compile(
+        r"[\w.+\-*/\s(),\[\]]+?(?:<=|>=|==|<|>)[\w.+\-*/\s(),\[\]]+")
     while True:
         m = pattern.search(out)
         if not m:

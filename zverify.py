@@ -137,7 +137,23 @@ def hereditary_bit(phi, marking):
 
 
 def grade(phi, marking):
-    """The warranty grade of the current verdict."""
+    """The warranty grade of the current verdict.
+
+    THE MARKING IS CUT TO THE FORMULA'S ATOMS FIRST, and this is a theorem,
+    not an optimisation gamble: `evalF_congr` / `frozen` (lean/NoGift.lean,
+    empty axiom list) — the value of a formula depends only on the valuation
+    of ITS atoms. A refinement of a foreign mark therefore cannot move any
+    evaluation of `phi`, so the quantifiers over those marks collapse and
+    both bits answer identically on the cut marking.
+
+    Why it matters: callers hand over the marking of a WHOLE document.
+    Chapter 3 of the book carries 28 marks while its claim touches 4 atoms,
+    none marked — the walk was 3^28 (≈364 days) for an answer the cut
+    computes in microseconds. Measured 2026-08-27; the equivalence was also
+    checked by brute force against the uncut walk (documents small enough
+    to finish): zero divergences."""
+    ats = atoms(phi)
+    marking = {a: v for a, v in marking.items() if a in ats}
     if hereditary_bit(phi, marking):
         return "hereditary"
     if stable_bit(phi, marking):

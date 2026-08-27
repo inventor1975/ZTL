@@ -224,6 +224,34 @@ def sec5_the_spec_can_build_the_form_and_the_page():
     print("   it appears in all three, or in none of them.")
 
 
+
+
+def sec7_the_ground_gate_demotes_phantom_words():
+    """Ворота оснований (2026-08-27). Три инварианта, каждый — прогон:
+    без реестра поведение прежнее; слово-фантом при реестре НЕ зарабатывает
+    и падает в кредит, поимённо; настоящее основание из реестра стоит."""
+    print("\n### 7. The ground gate: a phantom word must not earn")
+    doc = {"rows": [
+        {"name": "p", "means": "x", "status": "verified",
+         "ground": "СЛОВО-ФАНТОМ"},
+        {"name": "q", "means": "y", "status": "verified", "ground": "inv-17"}],
+        "claim": "p & q"}
+    a = zfl2.run(doc)
+    ja = a["report"]["judge"]
+    assert (ja["verdict"], ja["grade"]) == ("T", "hereditary")
+    assert "demoted_grounds" not in a["report"]          # без реестра — как раньше
+    b = zfl2.run(doc, ground_registry={"inv-17"})
+    jb = b["report"]["judge"]
+    assert jb["verdict"] == "F" and jb["disposition"] == "OPEN"
+    assert b["report"]["demoted_grounds"] == ["p"]       # поимённо
+    c = zfl2.run({"rows": [doc["rows"][1]], "claim": "q"},
+                 ground_registry={"inv-17"})
+    jc = c["report"]["judge"]
+    assert (jc["verdict"], jc["grade"]) == ("T", "hereditary")
+    print("   without a registry: byte-identical behaviour;")
+    print("   with one: the phantom is demoted BY NAME and the verdict")
+    print("   honestly falls OPEN; a registered ground still earns.")
+
 if __name__ == "__main__":
     print("=" * 72)
     print("ZFL v2 — the table, headless")
@@ -233,6 +261,7 @@ if __name__ == "__main__":
     sec3_the_ledger_appears_when_it_is_wanted()
     sec3b_what_the_ground_column_is_actually_for()
     sec4_an_unknown_is_a_question_not_a_gap()
+    sec7_the_ground_gate_demotes_phantom_words()
     sec4b_every_example_runs_and_json_types_are_taken_as_they_come()
     sec5_the_spec_can_build_the_form_and_the_page()
     print("=" * 72)

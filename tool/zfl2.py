@@ -824,7 +824,33 @@ def missing_facts(claim, sheet, unknowns, limit=4):
     return {"needs": None, "any_of": []}
 
 
-def run(doc):
+def demote_unregistered(rows, registry):
+    """Ворота оснований — слово куратора 2026-08-27 («почини»).
+
+    Дыра, промеренная в тот же день: у `verified` основание проверяется на
+    ФОРМУ (непустое, без пробелов) и никогда — на существование; строка с
+    основанием `ОСНОВАНИЕ-КОТОРОГО-НЕТ` зарабатывала `T EARNED hereditary`.
+    В книге `по-построению` стояло основанием заработанного 8 раз.
+
+    Лекарство НЕ сертификат и НЕ внешний потребитель (куратор насторожился — и прав):
+    просто необязательный СПИСОК допустимых оснований. Дал список — слово не
+    из списка НЕ зарабатывает: строка судится как `unverified`, то есть
+    падает в кредит, а не в ложь. Не дал — поведение прежнее, байт в байт.
+    Fail-closed в духе ядра: непредъявленное основание не покупает вердикт."""
+    out, demoted = [], []
+    for r in rows:
+        g = (r.get("ground") or "").strip()
+        if r.get("status") in ("verified", "refuted") and g not in registry:
+            r2 = dict(r)
+            r2["status"], r2["ground"] = "unverified", ""
+            out.append(r2)
+            demoted.append(r["name"])
+        else:
+            out.append(r)
+    return out, demoted
+
+
+def run(doc, ground_registry=None):
     """Validate, then ask whichever instruments apply.
 
     THE INVARIANT, learned the hard way over an evening of one-at-a-time
@@ -841,6 +867,9 @@ def run(doc):
     if any(i["level"] == "error" for i in issues):
         return {"ok": False, "issues": issues}
     rows = doc["rows"]
+    demoted = []
+    if ground_registry is not None:
+        rows, demoted = demote_unregistered(rows, set(ground_registry))
     claim = normalise((doc.get("claim") or "").strip(), rows)
     what, report = applies(doc), {}
 
@@ -913,4 +942,9 @@ def run(doc):
                              in zbook.trust_interval(book).items()},
                 "naming": zbook.naming_assumption(book)}
 
+    if demoted:
+        # ПОИМЁННО, не счётом: читатель должен видеть, ЧЬИ вердикты стояли
+        # на непредъявленных основаниях, — иначе понижение неотличимо от
+        # честного «не проверено», и ворота работают молча.
+        report["demoted_grounds"] = sorted(demoted)
     return {"ok": True, "issues": issues, "applies": what, "report": report}

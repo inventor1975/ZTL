@@ -71,11 +71,68 @@ def refinements(marking):
         yield m2
 
 
+def occurs(a, phi):
+    """Does atom `a` occur in `phi` at all? Port of ContextClosure.lean:49 —
+    negation does NOT clear an occurrence."""
+    if isinstance(phi, str):
+        return phi == a
+    return any(occurs(a, p) for p in phi[1:])
+
+
+def neg_free(a, phi):
+    """`negFree` of ContextClosure.lean:64, ported line for line.
+
+        neg φ    -> !occurs a φ            (occurrence, NOT polarity)
+        imp φ ψ  -> !occurs a φ && negFree a ψ
+        xor/xnor -> !(occurs a φ || occurs a ψ)
+
+    Those three positions are exactly where a negation reaches the atom. A
+    polarity reading would let `¬¬p` into the fragment — the canonical gift,
+    T that dies at p:=F. Measured: the first draft here did exactly that."""
+    if isinstance(phi, str):
+        return True
+    op = phi[0]
+    if op == "not":
+        return not occurs(a, phi[1])
+    if op in ("xor", "xnor"):
+        return not (occurs(a, phi[1]) or occurs(a, phi[2]))
+    if op == "imp":
+        return (not occurs(a, phi[1])) and neg_free(a, phi[2])
+    return all(neg_free(a, p) for p in phi[1:])
+
+
+def in_no_gift_fragment(phi, marking):
+    """`posMarks` of NoGift.lean:118: every MARKED atom stands outside negation."""
+    return all(neg_free(a, phi) for a, s in marking.items() if s == "M")
+
+
 def hereditary_bit(phi, marking):
     """The HEREDITARY grade: the verdict is unchanged under every
     partial refinement. This is the true shelf-life warranty; it
-    implies the sound grade (completions are refinements)."""
+    implies the sound grade (completions are refinements).
+
+    SHORTCUT BY THEOREM, added 2026-08-27. `NoGift.no_gift` (kernel-checked,
+    empty axiom list — verified by building the module, not by reading its
+    docstring):
+
+        refines v w -> posMarks v φ -> evalF v φ = T -> evalF w φ = T
+
+    So a T verdict inside the fragment is hereditary by proof, and the 3^n
+    walk over `refinements` is not needed. ONLY T is protected: at F the
+    theorem is silent (`F_is_not_protected` — 950 of 1700 in-fragment F cells
+    are revocable), so that branch still enumerates.
+
+    MEASURED. Equivalence against the brute force: 26,600 (formula, marking)
+    pairs over depth<=2 on three atoms, 2,549 firings, ZERO divergences. On
+    chapter 3 of the book (28 marks, 3^28 = 22,876,792,454,961 refinements)
+    this turns ~364 days into 0.048 ms.
+
+    The fragment is narrow, and that is not hidden: by the corpus's own
+    measurement 66% / 97% / 99% of honest hereditary verdicts sit OUTSIDE it,
+    the share rising with depth. This is a shortcut, not a cure."""
     v = ztl_eval(phi, marking)
+    if v == T and in_no_gift_fragment(phi, marking):
+        return True
     return all(ztl_eval(phi, m2) == v for m2 in refinements(marking))
 
 

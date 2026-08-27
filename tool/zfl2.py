@@ -931,9 +931,18 @@ def run(doc, ground_registry=None):
                            "unverified": sorted(r["unverified"])}
 
     if what["ledger"]:
+        # Тот же инвариант, что у numeric-ветки выше, и он здесь не был
+        # соблюдён: валидная глава книги роняла run интервальной строкой
+        # (2026-08-27). Отказ прибора — issue к утверждению, не трейсбек.
         book = to_book(rows)
-        if book:
-            judged = zbook.judge_book(book)
+        try:
+            judged = zbook.judge_book(book) if book else None
+        except Exception as exc:
+            issues.append(_issue("error", "E_UNREADABLE", "ledger",
+                                 f"the ledger could not read these rows: "
+                                 f"{exc}"))
+            return {"ok": False, "issues": issues}
+        if judged is not None:
             report["ledger"] = {
                 "claims": {k: {"disposition": v["disposition"],
                                "assurance": v["assurance"]}

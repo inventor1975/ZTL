@@ -668,7 +668,7 @@ def query(corpora: list[str], question: str, answer: str, store_root: pathlib.Pa
     # отсутствие как source-silence (Z = «не найдено поиском», не «источник молчит»).
     guard.prepare(source, question, answer, out_dir, mode="roll", coverage="retrieval")
     print(f"  -> guard-таск (ПОКРЫТИЕ: retrieval) в {out_dir}; форк судит, потом "
-          "`guard.py assemble --coverage retrieval`, петля — guard_loop.")
+          "`guard.py assemble --coverage retrieval`.")
     return out_dir
 
 

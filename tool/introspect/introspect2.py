@@ -141,6 +141,73 @@ def render(res: dict) -> str:
     return "\n".join(out)
 
 
+
+# ═══════════════════════════════════════════════════════════════════════
+# СЛОЙ ВТОРОЙ — ЧТО ИЗ СОБЛАЗНА ВЫЧИСЛЯЕТСЯ, А ЧТО НЕТ
+#
+# Куратор: соблазн — это два пути из лабиринта, оба истинных, но один
+# короткий, другой длинный. В логике это уже промерено: zderive (E26) даёт
+# ЗАСЛУЖЕНО / В КРЕДИТ / СНАРУЖИ, и «в кредит» значит «верно, но всякий путь
+# обязан занять».
+#
+# Здесь тот же вопрос над файлом, и он распадается надвое.
+#
+# ВЫЧИСЛИМОЕ: НАСКОЛЬКО ДАЛЕКО заявка стоит от непроверенного, на котором
+# держится. Глубина 1 — дыра прямо под ногами, её видно. Глубина 3 — надо
+# пройти три звена, чтобы её найти, и в точке употребления заявка выглядит
+# твёрдой. Считается по цепи виновников, которую выдало ЯДРО.
+#
+# Берётся МИНИМУМ по путям нарочно: если хоть один короткий путь обнажает
+# дыру, она видна, и заявка не прячет ничего. Нож — там, где КАЖДЫЙ путь длинный.
+#
+# НЕВЫЧИСЛИМОЕ: употребляется ли эта дистанция во вред. Ни ядро, ни этот файл
+# такого не решают. Поэтому здесь НЕТ метки S: есть число и есть основание для
+# суждения, а суждение выносит человек — и выносит отдельно, своей подписью.
+#
+# Так честнее, чем сегодняшняя метка S, где счёт и мнение слиты в один знак и
+# не видно, где кончается одно.
+
+def weigh(doc: dict, res: dict) -> dict:
+    """Глубина от каждой заявки до непроверенного основания.
+
+    -1 означает «непроверенного под этим нет вовсе» — заявка заземлена.
+    """
+    status = {r.get("name"): r.get("status") for r in doc.get("rows", [])}
+    cul = res.get("culprits", {})
+
+    def depth(name, seen=frozenset()):
+        if name in seen:
+            return -1                        # круг: дальше не идём
+        if status.get(name) == "unverified":
+            return 0
+        kids = cul.get(name) or []
+        if not kids:
+            return -1
+        below = [depth(k, seen | {name}) for k in kids]
+        below = [d for d in below if d >= 0]
+        return 1 + min(below) if below else -1
+
+    out = {n: depth(n) for n in cul}
+    return {"depth": out,
+            "deepest": sorted((d, n) for n, d in out.items() if d >= 0)[-1:] or None}
+
+
+def render_weigh(w: dict) -> str:
+    d = w["depth"]
+    if not d:
+        return "второй слой: цепей нет — нечего взвешивать"
+    out = ["ГЛУБИНА ДО НЕПРОВЕРЕННОГО (вычислено по цепи ядра):"]
+    for n, v in sorted(d.items(), key=lambda kv: -kv[1]):
+        note = "заземлено" if v < 0 else ("дыра прямо под заявкой" if v <= 1 else
+                                          f"дыра в {v} звеньях — в точке употребления не видна")
+        out.append(f"  {n:26s} {v:>2}  {note}")
+    out.append("")
+    out.append("ЭТО НЕ МЕТКА СОБЛАЗНА. Это одно его СЧИТАЕМОЕ слагаемое — "
+               "далеко ли заявка от своей дыры.")
+    out.append("Употребляется ли расстояние во вред — не считает ни ядро, ни этот "
+               "файл. Судит человек, отдельно и своей подписью.")
+    return "\n".join(out)
+
 def _selftest() -> int:
     """Инварианты ПРОГОНОМ, а не чтением. Заведены сразу, с первой строки:
     у guards.py самопроверки нет, и 2026-08-26 это стоило нам ложного
@@ -183,6 +250,26 @@ def _selftest() -> int:
     rc = judge(clean)
     check("при полном грунте виновных нет", rc.get("ok") and not rc.get("culprits"))
 
+    # ── второй слой ────────────────────────────────────────────────────
+    # Лестница: conc стоит на mid, mid на base, base непроверен. Глубина
+    # до дыры от conc должна быть 2, от mid — 1. Это и есть «дыру видно»
+    # против «дыра в двух звеньях».
+    lad = {"rows": [
+        {"name": "base", "means": "нижнее допущение", "status": "unverified"},
+        {"name": "mid",  "means": "среднее", "status": "defined", "ground": "base"},
+        {"name": "conc", "means": "вывод", "status": "defined", "ground": "mid"},
+    ]}
+    rl = judge(lad)
+    w = weigh(lad, rl)
+    check("лестница принята ядром", rl.get("ok") is True)
+    check("глубина от вывода = 2", w["depth"].get("conc") == 2)
+    check("глубина от среднего = 1", w["depth"].get("mid") == 1)
+
+    # Заземлённое не должно получать глубину: под ним нет непроверенного.
+    wc = weigh(clean, rc)
+    check("под заземлённым дыры нет", all(v < 0 for v in wc["depth"].values())
+          or not wc["depth"])
+
     print(f"\n  итог: {ok} OK, {fail} FAIL")
     return 1 if fail else 0
 
@@ -194,6 +281,8 @@ def main() -> int:
     pp.add_argument("target"); pp.add_argument("--out", default=None)
     pj = sub.add_parser("judge", help="ядро судит строки, вернувшиеся от форка")
     pj.add_argument("rows", help="файл JSON с {\"rows\": [...]}")
+    pj.add_argument("--weigh", action="store_true",
+                    help="второй слой: глубина до непроверенного основания")
     sub.add_parser("selftest", help="инварианты прогоном")
     a = ap.parse_args()
     if a.cmd == "selftest":
@@ -204,7 +293,11 @@ def main() -> int:
         print(f"задача -> {prepare(t, out)}", file=sys.stderr)
         return 0
     doc = json.loads(pathlib.Path(a.rows).read_text(encoding="utf-8"))
-    print(render(judge(doc)))
+    res = judge(doc)
+    print(render(res))
+    if a.weigh and res.get("ok"):
+        print()
+        print(render_weigh(weigh(doc, res)))
     return 0
 
 

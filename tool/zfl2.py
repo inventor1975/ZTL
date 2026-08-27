@@ -481,6 +481,7 @@ def validate(doc):
         if scale and scale not in ("int",):
             import re as _re
             m = _re.fullmatch(r"(decimal(\d+)|frac(\d+))", scale)
+            bad_scale = True
             if not m:
                 issues.append(_issue("error", "E_SCALE", f"{at} / scale",
                     "scale must be empty, int, decimalK or fracM"))
@@ -490,7 +491,15 @@ def validate(doc):
             elif m.group(3) is not None and (int(m.group(3)) < 1 or int(m.group(3)) > 10**9):
                 issues.append(_issue("error", "E_SCALE", f"{at} / scale",
                     "frac denominator must be between 1 and 1e9"))
-            continue
+            else:
+                bad_scale = False        # scale ЗАКОННЫЙ — проверять строку дальше
+            # ПРЫГАЕМ ТОЛЬКО ЧЕРЕЗ СЛОМАННЫЙ scale, а не через всякий.
+            # Дыра, промеренная 2026-08-27: `continue` стоял на уровне всей
+            # ветки, поэтому строка с ЗАКОННЫМ `decimal2` пропускала остаток
+            # проверок — и `verified` БЕЗ ОСНОВАНИЯ проходил чисто. То есть
+            # одна необязательная клетка отключала центральное правило языка.
+            if bad_scale:
+                continue
         ground = (r.get("ground") or "").strip()
         if status in ("verified", "refuted", "defined") and not ground:
             # NAMES THE EXIT, not just the rule. Reported live: two atoms

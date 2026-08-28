@@ -1,0 +1,275 @@
+{
+  "about": "Admission test vectors. Language-neutral: each case names FACTS about the input and the REQUIRED disposition, never our object layout. Any implementation in any language can be held to this file.",
+  "contract": "CONTRACT-G1-G12.md",
+  "tool_version_at_authoring": "admission-0.3",
+  "independent_review_claim": false,
+  "how_to_read": "given = what holds of the request. expect.admitted = may the proposition be taken as a premise. expect.disposition = the REQUIRED name of the outcome; collapsing two dispositions into one is a failure even when admitted matches.",
+  "cases": [
+    {
+      "id": "V01-admit",
+      "invariant": "G1+G2",
+      "why": "everything holds: source supports, epoch current, guards clear, source eligible for this purpose",
+      "given": {
+        "support": "SUPPORTED_BY_SOURCE",
+        "epoch_matches": true,
+        "guards": "CLEAR",
+        "eligible_for_purpose": true
+      },
+      "expect": {
+        "admitted": true,
+        "disposition": "ADMIT"
+      }
+    },
+    {
+      "id": "V02-no-support",
+      "invariant": "G4",
+      "why": "the search missed. A miss is not support and never becomes one",
+      "given": {
+        "support": "NO_SUPPORT_FOUND",
+        "epoch_matches": true,
+        "guards": "CLEAR",
+        "eligible_for_purpose": true
+      },
+      "expect": {
+        "admitted": false,
+        "disposition": "NO_SUPPORT_FOUND"
+      }
+    },
+    {
+      "id": "V03-source-silent",
+      "invariant": "G4",
+      "why": "checked exhaustively, the source says nothing. MUST NOT collapse into V02: a miss and a silence are different diseases",
+      "given": {
+        "support": "SOURCE_SILENT",
+        "epoch_matches": true,
+        "guards": "CLEAR",
+        "eligible_for_purpose": true
+      },
+      "expect": {
+        "admitted": false,
+        "disposition": "SOURCE_SILENT"
+      }
+    },
+    {
+      "id": "V04-contradicted",
+      "invariant": "G4",
+      "why": "the source says the opposite. Distinct from both above",
+      "given": {
+        "support": "CONTRADICTED_BY_SOURCE",
+        "epoch_matches": true,
+        "guards": "CLEAR",
+        "eligible_for_purpose": true
+      },
+      "expect": {
+        "admitted": false,
+        "disposition": "CONTRADICTED_BY_SOURCE"
+      }
+    },
+    {
+      "id": "V05-foreign-epoch",
+      "invariant": "G6",
+      "why": "a certificate minted for another epoch does not silently authorise use in this one",
+      "given": {
+        "support": "SUPPORTED_BY_SOURCE",
+        "epoch_matches": false,
+        "guards": "CLEAR",
+        "eligible_for_purpose": true
+      },
+      "expect": {
+        "admitted": false,
+        "disposition": "EPOCH_MISMATCH"
+      }
+    },
+    {
+      "id": "V06-guards-not-supplied",
+      "invariant": "G1",
+      "why": "guard conservation was never evaluated. A check that can be forgotten is a hole by default, so silence is refusal, not passage",
+      "given": {
+        "support": "SUPPORTED_BY_SOURCE",
+        "epoch_matches": true,
+        "guards": null,
+        "eligible_for_purpose": true
+      },
+      "expect": {
+        "admitted": false,
+        "disposition": "NOT_EVALUATED"
+      }
+    },
+    {
+      "id": "V07-guard-lost",
+      "invariant": "G1",
+      "why": "the source carried a guard and the claim dropped it: the support was said about a DIFFERENT proposition",
+      "given": {
+        "support": "SUPPORTED_BY_SOURCE",
+        "epoch_matches": true,
+        "guards": "GUARD_LOST",
+        "eligible_for_purpose": true
+      },
+      "expect": {
+        "admitted": false,
+        "disposition": "GUARD_NOT_PRESERVED"
+      }
+    },
+    {
+      "id": "V08-ineligible-source",
+      "invariant": "G3",
+      "why": "the source supports the claim but is not eligible for THIS purpose. Support is not eligibility",
+      "given": {
+        "support": "SUPPORTED_BY_SOURCE",
+        "epoch_matches": true,
+        "guards": "CLEAR",
+        "eligible_for_purpose": false
+      },
+      "expect": {
+        "admitted": false,
+        "disposition": "SOURCE_INELIGIBLE"
+      }
+    },
+    {
+      "id": "V09-attribution-mismatch",
+      "invariant": "G8",
+      "why": "evidence attributed to a different source than the certificate was issued for. Наш разряд — CERTIFICATE_INVALID: «поддержано где-то» не есть «поддержано ЭТИМ источником». Чужая реализация вправе назвать иначе, но обязана НЕ ДОПУСТИТЬ и назвать причину",
+      "given": {
+        "support": "SUPPORTED_BY_SOURCE",
+        "epoch_matches": true,
+        "guards": "CLEAR",
+        "eligible_for_purpose": true,
+        "attributed_to_other_source": true
+      },
+      "expect": {
+        "admitted": false,
+        "disposition": "CERTIFICATE_INVALID"
+      }
+    },
+    {
+      "id": "V10-tampered-certificate",
+      "invariant": "G7",
+      "why": "proposition bytes changed after minting: the recomputed digest no longer matches the claimed one",
+      "given": {
+        "verify_only": true,
+        "proposition_bytes_changed": true
+      },
+      "expect": {
+        "verifies": false
+      }
+    },
+    {
+      "id": "V11-intact-certificate",
+      "invariant": "G7",
+      "why": "CONTROL for V10. An untouched certificate must verify, otherwise V10 proves nothing",
+      "given": {
+        "verify_only": true,
+        "proposition_bytes_changed": false
+      },
+      "expect": {
+        "verifies": true
+      }
+    },
+    {
+      "id": "V12-conflict-survives",
+      "invariant": "G5",
+      "why": "two eligible sources disagree. Forbidden: majority vote, recency, confidence, asking a model to reconcile. The conflict must reach the caller AS a conflict",
+      "given": {
+        "conflict_of": [
+          "P",
+          "not P"
+        ],
+        "both_admitted": true
+      },
+      "expect": {
+        "admitted": false,
+        "disposition": "CONFLICT"
+      }
+    }
+  ],
+  "gate_cases": [
+    {
+      "id": "W01-internal-row-untouched",
+      "invariant": "control",
+      "why": "CONTROL. A row grounded on another ROW is internal and not the gate's business. A gate that demotes everything would pass the rest of this file while guarding nothing",
+      "given": {
+        "ground_kind": "row",
+        "status": "verified",
+        "receipt": null
+      },
+      "expect": {
+        "status_after": "verified",
+        "demoted": false
+      }
+    },
+    {
+      "id": "W02-external-without-receipt",
+      "invariant": "G1",
+      "why": "external ground, no admission receipt: demoted to zfl2's own zero-trust default rather than rejected loudly",
+      "given": {
+        "ground_kind": "document",
+        "status": "verified",
+        "receipt": null
+      },
+      "expect": {
+        "status_after": "unverified",
+        "demoted": true,
+        "reason_named": true
+      }
+    },
+    {
+      "id": "W03-authority-row-with-perfect-receipt",
+      "invariant": "G3",
+      "why": "a grounding certificate proves support, never the right to decide. The authority axis has its own gate and it is not this one",
+      "given": {
+        "ground_kind": "document",
+        "dimension": "authority",
+        "status": "verified",
+        "receipt": "valid"
+      },
+      "expect": {
+        "status_after": "unverified",
+        "demoted": true,
+        "reason_named": true
+      }
+    },
+    {
+      "id": "W04-receipt-digest-mismatch",
+      "invariant": "G7",
+      "why": "the receipt does not belong to this proposition",
+      "given": {
+        "ground_kind": "document",
+        "status": "verified",
+        "receipt": "wrong_digest"
+      },
+      "expect": {
+        "status_after": "unverified",
+        "demoted": true,
+        "reason_named": true
+      }
+    },
+    {
+      "id": "W05-source-document-untouched",
+      "invariant": "G12",
+      "why": "the gate returns a COPY. The caller must be able to show the original and the gated version side by side",
+      "given": {
+        "ground_kind": "document",
+        "status": "verified",
+        "receipt": null
+      },
+      "expect": {
+        "original_unchanged": true
+      }
+    },
+    {
+      "id": "W06-KNOWN-INERT-guards-socket",
+      "invariant": "finding-2026-08-28",
+      "why": "MEASURED, NOT DESIGNED: the bridge calls admit() WITHOUT the conservation verdict, which admit requires. So today the gate admits nothing, even on a flawless receipt. It fails CLOSED and names the reason. This vector pins the CURRENT TRUTH; when the socket is wired it MUST fail and be rewritten deliberately",
+      "given": {
+        "ground_kind": "document",
+        "status": "verified",
+        "receipt": "valid"
+      },
+      "expect": {
+        "status_after": "unverified",
+        "demoted": true,
+        "reason_mentions_guards": true
+      }
+    }
+  ]
+}

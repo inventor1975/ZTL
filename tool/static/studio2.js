@@ -13,6 +13,7 @@ const UI = {
         applies: "instruments that had something to say",
         passport: "passports", numeric: "the numeric floor",
         epoch: "the world's clock", unredeemable: "this credit will never be redeemed", event: "event", expires: "expires with it", before: "before", after: "after", survives: "the conclusion survived", fell: "the conclusion did NOT survive", 
+        demoted: "demoted to unverified — ground outside the document's list:", 
         judge: "the judge", ledger: "the ledger",
         component: "component", kind: "passport", detail: "details",
         disposition: "disposition", cures: "what would settle it",
@@ -48,6 +49,7 @@ const UI = {
         applies: "приборы, которым было что сказать",
         passport: "паспорта", numeric: "числовой пол",
         epoch: "часы мира", unredeemable: "этот кредит не погасят никогда", event: "событие", expires: "вместе с ним истекает", before: "до", after: "после", survives: "вывод пережил", fell: "вывод НЕ пережил", 
+        demoted: "разжаловано в непроверенное — основание вне списка документа:", 
         judge: "судья", ledger: "тетрадь",
         component: "компонент", kind: "паспорт", detail: "подробности",
         disposition: "диспозиция", cures: "что это решит",
@@ -82,6 +84,7 @@ const UI = {
         applies: "прилади, яким було що сказати",
         passport: "паспорти", numeric: "числова підлога",
         epoch: "годинник світу", unredeemable: "цей кредит не погасять ніколи", event: "подія", expires: "разом із нею спливає", before: "до", after: "після", survives: "висновок пережив", fell: "висновок НЕ пережив", 
+        demoted: "розжаловано в неперевірене — підстава поза списком документа:", 
         judge: "суддя", ledger: "зошит",
         component: "компонент", kind: "паспорт", detail: "подробиці",
         disposition: "диспозиція", cures: "що це вирішить",
@@ -116,6 +119,7 @@ const UI = {
         applies: "הכלים שהיה להם מה לומר",
         passport: "דרכונים", numeric: "הרצפה המספרית",
         epoch: "שעון העולם", unredeemable: "אשראי זה לעולם לא ייפרע", event: "אירוע", expires: "פג יחד איתו", before: "לפני", after: "אחרי", survives: "המסקנה שרדה", fell: "המסקנה לא שרדה", 
+        demoted: "הורד ללא־מאומת — אסמכתא מחוץ לרשימת המסמך:", 
         judge: "השופט", ledger: "הפנקס",
         component: "רכיב", kind: "דרכון", detail: "פרטים",
         disposition: "מצב", cures: "מה יכריע את זה",
@@ -148,6 +152,7 @@ const UI = {
         applies: "Instrumente, die etwas zu sagen hatten",
         passport: "Pässe", numeric: "die Zahlenebene",
         epoch: "die Uhr der Welt", unredeemable: "dieser Kredit wird nie eingelöst", event: "Ereignis", expires: "erlischt damit", before: "davor", after: "danach", survives: "der Schluss hat überlebt", fell: "der Schluss hat NICHT überlebt", 
+        demoted: "auf ungeprüft herabgestuft — Grundlage nicht in der Liste:", 
         judge: "der Richter", ledger: "das Buch",
         component: "Komponente", kind: "Pass", detail: "Einzelheiten",
         disposition: "Befund", cures: "was es entscheiden würde",
@@ -183,6 +188,7 @@ const UI = {
         applies: "les instruments qui avaient quelque chose à dire",
         passport: "passeports", numeric: "le socle numérique",
         epoch: "l'horloge du monde", unredeemable: "ce crédit ne sera jamais remboursé", event: "événement", expires: "expire avec lui", before: "avant", after: "après", survives: "la conclusion a survécu", fell: "la conclusion n'a PAS survécu", 
+        demoted: "rétrogradé en non vérifié — fondement hors de la liste :", 
         judge: "le juge", ledger: "le registre",
         component: "composant", kind: "passeport", detail: "détails",
         disposition: "disposition", cures: "ce qui trancherait",
@@ -218,6 +224,7 @@ const UI = {
         applies: "instrumentos que tuvieron algo que decir",
         passport: "pasaportes", numeric: "el suelo numérico",
         epoch: "el reloj del mundo", unredeemable: "este crédito no se saldará nunca", event: "evento", expires: "expira con él", before: "antes", after: "después", survives: "la conclusión sobrevivió", fell: "la conclusión NO sobrevivió", 
+        demoted: "degradado a no verificado — fundamento fuera de la lista:", 
         judge: "el juez", ledger: "el registro",
         component: "componente", kind: "pasaporte", detail: "detalles",
         disposition: "disposición", cures: "qué lo resolvería",
@@ -373,6 +380,7 @@ function collect() {
   const clean = r => Object.fromEntries(
     Object.entries(r).filter(([k]) => !k.startsWith("_")));
   return { rows: ROWS.filter(r => (r.name || "").trim()).map(clean),
+           grounds: ($("grounds") || {}).value || "",
            claim: $("claim").value };
 }
 
@@ -446,6 +454,11 @@ function showReport(r) {
       (rep.judge.unverified.length
         ? `<p class="muted">${t("weak")}: ` +
           esc(rep.judge.unverified.join(", ")) + "</p>" : "")));
+  }
+  if (r.report && r.report.demoted_grounds) {
+    out.unshift(`<p><b class="v-F">${esc(t("demoted"))}</b> ` +
+                `<span class="muted">${esc(r.report.demoted_grounds.join(", "))}` +
+                `</span></p>`);
   }
   if (rep.epoch) {
     out.push(panel(t("epoch"), table(
@@ -685,6 +698,15 @@ function chrome() {
   document.querySelectorAll("[data-ph]").forEach(e =>
     e.placeholder = t(e.dataset.ph));
   $("claimlabel").textContent = t("claim");
+  // Подпись поля берём ИЗ СПЕКИ, а не из словаря интерфейса: реестр —
+  // часть языка, и его имя должно приходить оттуда же, откуда приходит
+  // проверка. (Иначе подпись и правило разъедутся, как уже бывало.)
+  const gspec = (SPEC.document || []).find(c => c.key === "grounds");
+  if (gspec && $("groundslabel")) {
+    $("groundslabel").textContent = gspec.label;
+    $("groundslabel").title = gspec.help;
+    if ($("grounds")) $("grounds").placeholder = (gspec.eg || [""])[0];
+  }
   const sel = $("lang");
   sel.innerHTML = (SPEC.langs || [{ code: "en", label: "English" }]).map(l =>
     `<option value="${esc(l.code)}"${l.code === LANG ? " selected" : ""}>` +

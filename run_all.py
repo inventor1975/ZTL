@@ -143,6 +143,8 @@ STANDS = [
                         "FULL STRICT LADDER U → S → H: realized, rung by rung."]),
     ("tool/introspect/test_tcc2.py", ["TCC-2 GREEN",
                                       "деонтический тип и отрицание"]),
+    ("tool/test_ground_admission.py", ["GROUND ADMISSION GREEN",
+                                      "держится на слове"]),
     ("inventory/unwired.py", ["UNWIRED SCAN GREEN",
                               "боевой путь слеп"]),
     ("tool/test_warrant_receipt.py", ["WARRANT RECEIPT GREEN",

@@ -368,11 +368,15 @@ DOC_FIELDS = [
         "en": ("admissible grounds",
                "the grounds this document accepts, comma-separated. A row "
                "earning on a ground outside the list falls to unverified "
-               "rather than to false. Empty: the gate says nothing"),
+               "rather than to false. A tier may be given — "
+               "'master:story, perebor:act': story means 'so it was said', "
+               "and what earns on it is marked. Empty: the gate says nothing"),
         "ru": ("допустимые основания",
                "основания, которые этот документ признаёт, через запятую. "
                "Строка, заработавшая на основании вне списка, падает в "
-               "непроверенное, а не в ложь. Пусто — ворота молчат"),
+               "непроверенное, а не в ложь. Можно указать ярус — "
+               "«master:story, perebor:act»: story значит «так сказано», и "
+               "заработавшее на нём будет помечено. Пусто — ворота молчат"),
         "de": ("zulässige Grundlagen",
                "kommagetrennt; leer heißt: das Tor schweigt"),
         "fr": ("fondements admis",
@@ -381,7 +385,8 @@ DOC_FIELDS = [
                "separados por comas; vacio: la puerta calla"),
         "uk": ("допустимі підстави", "через кому; порожньо — ворота мовчать"),
         "he": ("אסמכתאות קבילות", "מופרדות בפסיק; ריק — השער שותק"),
-        "eg": ["registry_extract, vehicle_title", "перебор, промер, ch7"],
+        "eg": ["registry_extract:place, testimony:story",
+               "перебор:act, промер:act, мастер:story"],
     },
     {
         "key": "claim", "type": "formula", "required": False,
@@ -1042,8 +1047,19 @@ def run(doc, ground_registry=None):
     if ground_registry is None:
         declared = (doc.get("grounds") or "").strip()
         if declared:
-            ground_registry = {g.strip() for g in declared.split(",")
-                               if g.strip()}
+            # ЯРУС МОЖНО ОБЪЯВИТЬ ПРЯМО ЗДЕСЬ: «master:story, perebor:act».
+            # Без этого бирка «стоит на объявленном» была бы достижима только
+            # из питона — пятый за день случай «построено и не позвано», и
+            # закрыт он в тот же час, что замечен. Ярус не указан — значит
+            # НЕ УКАЗАН, и прибор про такое основание молчит, а не гадает.
+            пары = [g.strip() for g in declared.split(",") if g.strip()]
+            if any(":" in g for g in пары):
+                ground_registry = {}
+                for g in пары:
+                    имя, _, ярус = g.partition(":")
+                    ground_registry[имя.strip()] = (ярус.strip() or None)
+            else:
+                ground_registry = {g for g in пары}
     if ground_registry is not None:
         rows, demoted = demote_unregistered(rows, set(ground_registry))
     claim = normalise((doc.get("claim") or "").strip(), rows)

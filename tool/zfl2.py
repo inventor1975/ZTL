@@ -850,6 +850,30 @@ def demote_unregistered(rows, registry):
     return out, demoted
 
 
+def unredeemable(comp_kind):
+    """Names whose mark no act can ever lift.
+
+    THE SEAM THIS CLOSES (2026-08-28, found by marking up Protagoras v.
+    Euathlus). The judge and the passport read the same document and never
+    exchanged a word: `to_marking` drops `defined` rows on purpose — a
+    sentence is not a mark — so the judge saw an unmarked atom, said
+    `until-verification` and sent the reader off to check the liar, while
+    the passport in the SAME report said the refusal was permanent.
+
+    The grade was not miscomputed; it was computed over a marking that
+    could not say what the sentences forbid. `ZTime.Completable` names the
+    missing notion and `ZTime.flip_only_where_forbidden` proves the shape
+    of the lie: the flip `until` promises can only happen at an ending the
+    system itself rules out. Here that theorem's hypothesis is read off
+    the passport, which has always known it — a PARADOX component, and
+    whatever hangs off one."""
+    out = set()
+    for name, (kind, param) in comp_kind.items():
+        if kind == "PARADOX" or (kind == "DOWNSTREAM" and param == "permanent"):
+            out.add(name)
+    return out
+
+
 def run(doc, ground_registry=None):
     """Validate, then ask whichever instruments apply.
 
@@ -872,10 +896,12 @@ def run(doc, ground_registry=None):
         rows, demoted = demote_unregistered(rows, set(ground_registry))
     claim = normalise((doc.get("claim") or "").strip(), rows)
     what, report = applies(doc), {}
+    dead = set()
 
     if what["passport"]:
         system = to_system(rows)
-        lfp, reports, _ = zpassport.passports(system)
+        lfp, reports, comp_kind = zpassport.passports(system)
+        dead = unredeemable(comp_kind)
         report["passport"] = [
             {"component": comp, "kind": kind, "detail": why}
             for comp, kind, why in reports]
@@ -929,6 +955,12 @@ def run(doc, ground_registry=None):
                            "disposition": r["disposition"],
                            "grade": r["grade"],
                            "unverified": sorted(r["unverified"])}
+        # The grade stands as the core computed it; what the marking could
+        # not say is added beside it rather than folded into it.
+        touched = sorted(dead & names_in(claim))
+        if touched and r["grade"] == "until-verification":
+            report["judge"]["credit"] = "UNREDEEMABLE"
+            report["judge"]["unredeemable"] = touched
 
     if what["ledger"]:
         # Тот же инвариант, что у numeric-ветки выше, и он здесь не был

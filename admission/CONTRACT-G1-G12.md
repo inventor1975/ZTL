@@ -47,16 +47,31 @@ mid-evaluation, and nothing would detect it. We are not reporting this as a
 failing test, because there is no test — there is no boundary. Anyone relying on
 G11 today is relying on the absence of motive, not on a mechanism.
 
-## 3. The one that is currently inert
+## 3. The socket — found inert, then wired the same day
 
-The narrow bridge `zfl2_gate.py` calls `admit(...)` **without the conservation
-verdict**, which `admit` requires. Consequence, measured 2026-08-28 by
-`test_gate.py`: the gate admits **nothing** — even a flawless receipt ends in a
-demotion whose reason is "the guards socket is not plugged in".
+`zfl2_gate.py` used to call `admit(...)` **without** the conservation verdict,
+which `admit` requires. Consequence, measured on the first run of `test_gate.py`:
+the gate admitted **nothing** — a flawless receipt still ended in a demotion
+reading "the guards socket is not plugged in". It failed closed and said so,
+which is the safe direction, but the receipt path was dead code.
 
-This fails **closed** and says so, which is the safe direction. It is not,
-however, a working bridge: the receipt path is dead code until the socket is
-wired. Wiring it changes what passes, so it is a decision, not a repair.
+**Wired 2026-08-28 on the curator's word.** `gate_document` now takes an optional
+`conservations` map, `{row: guards.conserve_socket verdict}`, and passes it
+through. Three properties, each with a stand and a vector:
+
+- `CLEAR` + valid receipt → **admitted**. This is the only road in.
+- `BLOCK` → demoted, and the reason names the **guards**, not the receipt.
+- `NO_VERDICT` or **no verdict supplied at all** → refused, never a quiet pass.
+
+**The gate carries the verdict, it does not compute it.** Not laziness: the
+certificate binds the source by digest, not by text (`evidence_atom_ids` +
+`source_digest`), so the gate has no evidence text to judge on. Only the caller
+holding the texts can. Inventing a verdict here would be admitting by guess —
+the exact thing the boundary exists to stop.
+
+Vector `W06` used to pin the inert behaviour; it was rewritten deliberately when
+the socket was wired, which is what it was written to force. `W07` and `W08` now
+pin the live path.
 
 ## 4. How to check any implementation, including ours
 

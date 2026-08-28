@@ -52,11 +52,25 @@ def _is_authority_row(row: dict) -> bool:
 
 
 def gate_document(doc: dict, receipts: dict, purpose: str, epoch: str,
-                  eligible: dict) -> tuple[dict, list]:
+                  eligible: dict, conservations: dict | None = None) -> tuple[dict, list]:
     """Пропустить документ zfl2 через границу допуска.
 
     receipts: {имя_строки: (GroundingCertificate, заявленный_digest)} — расписки,
     добытые путём query→guard→build_certificate.
+
+    conservations: {имя_строки: вердикт `guards.conserve_socket`} — РАЗЪЁМ СТОРОЖЕЙ.
+    Подан 2026-08-28; до того ворота звали `admit` без него, а он для допуска
+    ОБЯЗАТЕЛЕН — и застава не пропускала НИЧЕГО, даже с безупречной распиской.
+    Падала закрыто и называла причину, но путь расписки был мёртвым кодом.
+
+    ВОРОТА ВЕРДИКТ НЕ ВЫЧИСЛЯЮТ, а НЕСУТ. Причина не лень: сертификат вяжет
+    источник ДАЙДЖЕСТОМ, а не текстом (`evidence_atom_ids` + `source_digest`),
+    и текстов опор у ворот НЕТ. Считать сохранение сторожей может только тот,
+    у кого тексты на руках. Выдумать вердикт здесь значило бы допустить по
+    догадке — ровно то, против чего вся застава.
+
+    Не подан вердикт — по-прежнему ОТКАЗ (NOT_EVALUATED), не проход: проверка,
+    которую можно забыть, есть дыра по умолчанию.
 
     Возвращает (документ_после_ворот, понижения). Документ — КОПИЯ: исходный не
     правим, чтобы вызывающий мог показать оба и сравнить."""
@@ -85,7 +99,8 @@ def gate_document(doc: dict, receipts: dict, purpose: str, epoch: str,
                     why = ("расписка не сходится: пересчитанный digest ≠ "
                            "заявленному (подмена байтов источника или посылки)")
                 else:
-                    d = admit(cert, purpose, epoch, eligible)
+                    d = admit(cert, purpose, epoch, eligible,
+                              conservation=(conservations or {}).get(name))
                     if not d.admitted:
                         why = d.reason
             if why:
@@ -98,7 +113,7 @@ def gate_document(doc: dict, receipts: dict, purpose: str, epoch: str,
 
 
 def run_gated(doc: dict, receipts: dict, purpose: str, epoch: str,
-              eligible: dict) -> dict:
+              eligible: dict, conservations: dict | None = None) -> dict:
     """gate → zfl2.run. Отчёт несёт понижения РЯДОМ с выводом логики.
 
     Ключевое: zfl2 вызывается как есть, немодифицированный. Граница живёт
@@ -107,7 +122,8 @@ def run_gated(doc: dict, receipts: dict, purpose: str, epoch: str,
     # tool/. Теперь он в ZTL/admission/, и до zfl2 путь идёт через tool.
     sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / "tool"))
     import zfl2                                     # noqa: E402  (ядро как есть)
-    gated, demotions = gate_document(doc, receipts, purpose, epoch, eligible)
+    gated, demotions = gate_document(doc, receipts, purpose, epoch, eligible,
+                                     conservations)
     report = zfl2.run(gated)
     report["admission"] = {
         "purpose": purpose, "epoch": epoch,

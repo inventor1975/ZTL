@@ -1155,6 +1155,17 @@ def run(doc, ground_registry=None):
                              in zbook.trust_interval(book).items()},
                 "naming": zbook.naming_assumption(book)}
 
+    # КВИТАНЦИЯ ВЫДАЁТСЯ ВСЕГДА, когда есть что квитировать. Иначе она
+    # остаётся доступной только тому, кто зовёт питон — а человек в тетради
+    # её получить не может (нашёл КУРАТОР вопросом 2026-08-28, четвёртый за
+    # день случай «построено и не позвано»). Чего не объявили — помечено
+    # null, а не подразумевается.
+    if claim and ("judge" in report or "numeric" in report):
+        import warrant_receipt
+        report["receipt"] = warrant_receipt.receipt(
+            {"report": report}, doc, (doc.get("epoch") or ""),
+            ground_registry=ground_registry)
+
     if demoted:
         # ПОИМЁННО, не счётом: читатель должен видеть, ЧЬИ вердикты стояли
         # на непредъявленных основаниях, — иначе понижение неотличимо от

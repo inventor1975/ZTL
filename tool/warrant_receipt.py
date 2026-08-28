@@ -116,6 +116,11 @@ def receipt(report: dict, doc: dict, epoch: str,
         anc = {имя: {"digest": r["digest"],
                      "disposition": r["verdict"]["disposition"]}
                for имя, r in sorted(derived_from.items())}
+    # ЭПОХА НЕОБЪЯВЛЕННАЯ — это НЕ пустая строка, а честный null, как и
+    # реестр. Пустая строка молчит; null говорит «этого мне не сказали».
+    # Слово куратора 2026-08-28: выдавать квитанцию ВСЕГДА, а нехватку
+    # ПОМЕЧАТЬ — предъявитель тогда видит, чего ей недостаёт, вместо того
+    # чтобы не иметь квитанции вовсе.
     core = {
         "version": RECEIPT_VERSION,
         "registry": reg,
@@ -128,7 +133,7 @@ def receipt(report: dict, doc: dict, epoch: str,
                     "grade": judge.get("grade"),
                     "credit": judge.get("credit", "REDEEMABLE"),
                     "unredeemable": sorted(judge.get("unredeemable") or [])},
-        "epoch": epoch,
+        "epoch": (epoch or None),
         "expiry": expiry,
     }
     return {**core, "digest": _sha(_canon(core))}

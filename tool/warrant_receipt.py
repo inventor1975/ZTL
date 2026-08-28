@@ -60,7 +60,7 @@ def _sha(text: str) -> str:
 
 
 def receipt(report: dict, doc: dict, epoch: str,
-            ground_registry=None) -> dict:
+            ground_registry=None, derived_from=None) -> dict:
     """Квитанция из отчёта `zfl2.run` и документа, что его породил.
 
     `epoch` задаёт вызывающий: это не свойство вердикта, а состояние мира, в
@@ -107,9 +107,19 @@ def receipt(report: dict, doc: dict, epoch: str,
     reg = (None if ground_registry is None
            else {"digest": _sha(_canon(sorted(ground_registry))),
                  "size": len(set(ground_registry))})
+    # ПРЕДКИ ВХОДЯТ В ОТПЕЧАТОК — иначе подмена предка не заметна, и вся
+    # цепь стоит на честном слове. Записывается отпечаток предка И его
+    # расположение на момент выдачи: без второго нельзя отличить «предка
+    # подменили» от «предок сам упал», а это разные болезни.
+    anc = None
+    if derived_from:
+        anc = {имя: {"digest": r["digest"],
+                     "disposition": r["verdict"]["disposition"]}
+               for имя, r in sorted(derived_from.items())}
     core = {
         "version": RECEIPT_VERSION,
         "registry": reg,
+        "derived_from": anc,
         "claim": (doc.get("claim") or "").strip(),
         "holding": holding,
         "grounds": grounds,
@@ -122,6 +132,67 @@ def receipt(report: dict, doc: dict, epoch: str,
         "expiry": expiry,
     }
     return {**core, "digest": _sha(_canon(core))}
+
+
+def verify_descent(rec: dict, ancestors_now: dict, _seen=None) -> dict:
+    """Стоит ли ещё ПОТОМОК, когда предков перевыписали.
+
+    ЧЕГО НЕТ НИ У КОГО (проверено D1 и D6, 2026-08-28): каскада отзыва по
+    потомкам. У MAM связи «эта память произошла из той» нет ВОВСЕ — ни поля,
+    ни свёртки; их собственная батарея D3 половиной векторов бьёт в пустоту.
+    У arXiv 2606.24322 привязка строго НА ЗАПИСИ и по происхождению, и их
+    текст прямо не рассматривает, годен ли вывод ПОСЛЕ отзыва основания.
+    MemLineage несёт граф происхождения, но отказывает по тому, ОТКУДА
+    пришло, а не по тому, СТОИТ ЛИ ЕЩЁ.
+
+    Здесь третье: потомок падает, если предок ПЕРЕСТАЛ СТОЯТЬ. Не «пришёл из
+    плохого места» — а «то, на чём он держался, больше не держит».
+
+    `ancestors_now` — текущие квитанции предков по их именам. Возвращает
+    verdict STANDS / FALLEN и ПРИЧИНУ по каждому павшему предку, потому что
+    «упал» без причины — это то же молчание, против которого всё строится."""
+    записано = rec.get("derived_from") or {}
+    if not записано:
+        return {"verdict": "STANDS", "why": "предков не объявлено"}
+    # ПЕТЛЯ В ЦЕПИ — не гипотеза: `derived_from` заполняет вызывающий, и
+    # квитанция, назвавшая предком себя, увела бы обход в бесконечность.
+    # Отказ, а не переполнение стека: неразрешимую цепь надо НАЗВАТЬ.
+    _seen = set(_seen or ())
+    if rec["digest"] in _seen:
+        return {"verdict": "FALLEN",
+                "broken": [{"ancestor": "(сам)", "reason": "ANCESTOR_CYCLE"}]}
+    _seen.add(rec["digest"])
+    беды = []
+    for имя, было in sorted(записано.items()):
+        сейчас = ancestors_now.get(имя)
+        if сейчас is None:
+            беды.append({"ancestor": имя, "reason": "ANCESTOR_MISSING"})
+            continue
+        if not verify(сейчас):
+            беды.append({"ancestor": имя, "reason": "ANCESTOR_TAMPERED"})
+            continue
+        if сейчас["digest"] != было["digest"]:
+            # ДВЕ РАЗНЫЕ БОЛЕЗНИ ПОД ОДНИМ СИМПТОМОМ, и путать их нельзя:
+            # предка ПОДМЕНИЛИ (расположение то же, отпечаток другой) — это
+            # атака; предок ПАЛ (расположение уехало) — это жизнь.
+            то_же = (сейчас["verdict"]["disposition"] == было["disposition"])
+            беды.append({"ancestor": имя,
+                         "reason": "ANCESTOR_SUBSTITUTED" if то_же
+                                   else "ANCESTOR_FELL",
+                         "was": было["disposition"],
+                         "now": сейчас["verdict"]["disposition"]})
+            continue
+        # ТРАНЗИТИВНО. Предок цел и не двигался — но мог пасть ПО СВОЕЙ цепи,
+        # и тогда потомок «выглядит чисто» при негодном прародителе. Это
+        # ровно вектор D3 №12 из наряда внешнего рецензента, и одноуровневая проверка
+        # его НЕ ЛОВИТ — промерено на деде-отце-внуке 2026-08-28.
+        глубже = verify_descent(сейчас, ancestors_now, _seen)
+        if глубже["verdict"] == "FALLEN":
+            беды.append({"ancestor": имя, "reason": "ANCESTOR_CHAIN_BROKEN",
+                         "under": глубже["broken"]})
+    if not беды:
+        return {"verdict": "STANDS", "ancestors": sorted(записано)}
+    return {"verdict": "FALLEN", "broken": беды}
 
 
 def verify(rec: dict) -> bool:

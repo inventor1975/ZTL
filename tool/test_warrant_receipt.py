@@ -115,6 +115,59 @@ if __name__ == "__main__":
           голая["registry"] is None and честная["registry"] is not None
           and голая["digest"] != честная["digest"])
 
+    print("\n### 6в. ПОТОМКИ: отзыв предка роняет потомка")
+    # Вектор D3 №12 из наряда внешнего рецензента — «чистый на вид потомок с негодным
+    # предком». D1 показал, что MAM его выразить не может: связи между
+    # объектами памяти там нет вовсе. Здесь она есть, и проверка ТРАНЗИТИВНА:
+    # одноуровневая внука не ловит (промерено 2026-08-28, первая редакция).
+    Р = {"vypiska", "pts", "akt"}
+
+    def кв(doc, anc=None, reg=Р):
+        return wr.receipt(zfl2.run(doc, ground_registry=reg), doc, "epoch-A",
+                          ground_registry=reg, derived_from=anc)
+
+    ДЕД = {"claim": "pf", "rows": [
+        {"name": "pf", "means": "не в залоге", "status": "verified",
+         "ground": "vypiska"}]}
+    дед = кв(ДЕД)
+    отец = кв({"claim": "deal_ok", "rows": [
+        {"name": "pf", "means": "не в залоге", "status": "verified",
+         "ground": "vypiska"},
+        {"name": "po", "means": "акт", "status": "verified", "ground": "akt"},
+        {"name": "deal_ok", "means": "сделку можно", "status": "defined",
+         "ground": "Tr(pf) & Tr(po)"}]}, {"дед": дед})
+    внук = кв({"claim": "pay", "rows": [
+        {"name": "deal_ok", "means": "сделка закрыта", "status": "verified",
+         "ground": "akt"},
+        {"name": "pay", "means": "платить можно", "status": "defined",
+         "ground": "Tr(deal_ok)"}]}, {"отец": отец})
+    все = {"дед": дед, "отец": отец, "внук": внук}
+    check("целая цепь стоит", wr.verify_descent(внук, все)["verdict"] == "STANDS")
+
+    дед2 = кв(ДЕД, reg={"pts", "akt"})       # у деда отняли основание
+    все2 = dict(все, дед=дед2)
+    r = wr.verify_descent(внук, все2)
+    check("отзыв у ДЕДА роняет ВНУКА через отца", r["verdict"] == "FALLEN")
+    check("и называет причину до корня",
+          r["broken"][0]["reason"] == "ANCESTOR_CHAIN_BROKEN"
+          and r["broken"][0]["under"][0]["reason"] == "ANCESTOR_FELL")
+
+    чужой = кв({"claim": "pf", "rows": [
+        {"name": "pf", "means": "другое", "status": "verified",
+         "ground": "akt"}]})
+    r2 = wr.verify_descent(отец, dict(все, дед=чужой))
+    check("ПОДМЕНА предка отличена от его ПАДЕНИЯ",
+          r2["broken"][0]["reason"] == "ANCESTOR_SUBSTITUTED")
+    check("пропавший предок — отдельная причина",
+          wr.verify_descent(отец, {})["broken"][0]["reason"] == "ANCESTOR_MISSING")
+
+    петля = dict(внук)
+    петля["derived_from"] = {"сам": {"digest": внук["digest"],
+                                     "disposition": "EARNED"}}
+    r3 = wr.verify_descent(петля, {"сам": петля})
+    check("петля в цепи даёт ОТКАЗ, а не переполнение стека",
+          r3["verdict"] == "FALLEN")
+
     print("\n### 7. ЧЕГО ЭТО НЕ УСТАНАВЛИВАЕТ")
     print("   Квитанция не подписывает (ключи — дело потребителя), не")
     print("   ловит ЛОЖЬ ПРИ ИЗГОТОВЛЕНИИ сама по себе — для этого нужен")

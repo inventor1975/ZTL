@@ -535,10 +535,15 @@ def validate(doc):
         # crossing that the event layer refuses to take.
         exp = (r.get("expires_on") or "").strip()
         if exp and status not in ("verified", "refuted"):
+            # The quoting here is deliberately dull: a nested same-quote
+            # f-string parses on 3.12 and is a SyntaxError on the 3.11 that
+            # CI runs, and a local `ast.parse` will not tell you (measured
+            # 2026-08-28 — the stand went red on push, not here).
+            shown = status or "empty"
             issues.append(_issue(
                 "error", "E_EXPIRY_NO_GROUND", f"{at} / expires_on",
                 "only earned ground can expire: this row is "
-                f"'{status or "empty"}', and there is nothing for the clock "
+                f"'{shown}', and there is nothing for the clock "
                 "to take back"))
         ground = (r.get("ground") or "").strip()
         if status in ("verified", "refuted", "defined") and not ground:

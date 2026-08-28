@@ -148,7 +148,7 @@ STANDS = [
                            "applies: {'numeric': True, 'passport': True, 'ledger': True, 'epoch': False, 'judge': True}",
                            "two lines on ONE document  : {'inv-17': [2, 2]}",
                            "cases the docket promises: 26, present: 26",
-                           "39 examples, all validating and running",
+                           "41 examples, all validating and running",
                            "assembled sheet    : line=1500 earned:inv-17 RUB, budget=5000 earned:order-4 RUB",
                            "always required: ['name', 'status']   required in context: ['ground']"]),
     ("usage/car.py",   ["settled at tick 1; checks saved: 3",

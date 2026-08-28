@@ -18,6 +18,7 @@ KINDS = {
     "paradox": {"en": "paradoxes and self-reference", "ru": "парадоксы и самоссылка", "uk": "парадокси й самопосилання", "he": "פרדוקסים והפניה עצמית", "de": "Paradoxien und Selbstbezug", "fr": "paradoxes et autoréférence", "es": "paradojas y autorreferencia"},
     "audit": {"en": "invoices and audit", "ru": "накладные и аудит", "uk": "накладні й аудит", "he": "חשבוניות וביקורת", "de": "Rechnungen und Prüfung", "fr": "factures et audit", "es": "facturas y auditoría"},
     "numbers": {"en": "asking for a number", "ru": "спросить число", "uk": "запитати число", "he": "לשאול מספר", "de": "nach einer Zahl fragen", "fr": "demander un nombre", "es": "pedir un número"},
+    "clock": {"en": "the world's clock", "ru": "часы мира", "uk": "годинник світу", "he": "שעון העולם", "de": "die Uhr der Welt", "fr": "l'horloge du monde", "es": "el reloj del mundo"},
     "everyday": {"en": "everyday reasoning", "ru": "обычные рассуждения", "uk": "звичайні міркування", "he": "חשיבה יומיומית", "de": "alltägliches Schließen", "fr": "raisonnement ordinaire", "es": "razonamiento cotidiano"},
 }
 
@@ -554,6 +555,65 @@ EXAMPLES = [
          {"name": "delivered", "means": "the goods arrived",
           "status": "unverified"}],
          "claim": "signed & delivered"}},
+    # ------------------------------------ the world's clock (expires_on)
+    # The column exists and the floor computes, but nothing in the
+    # catalogue reached them — a capability nobody can stumble upon is a
+    # capability nobody has. Both cases are the same shape as E25's own
+    # witnesses: a conclusion standing on ground that a dated event takes
+    # back.
+    {"kind": "clock",
+     "ask_en": "The pledge registry gets re-read. Does the deal still stand?",
+     "ask_ru": "Реестр залогов перечитывают. Сделка ещё стоит?",
+     "ask_uk": "Реєстр застав перечитують. Угода ще стоїть?",
+     "ask_he": "מרשם השעבודים נקרא מחדש. האם העסקה עדיין עומדת?",
+     "ask_de": "Das Pfandregister wird neu gelesen. Steht der Kauf noch?",
+     "ask_fr": "Le registre des gages est relu. L'affaire tient-elle encore ?",
+     "ask_es": "El registro de prendas se vuelve a leer. ¿Sigue en pie el trato?",
+     "en": "A purchase and a registry that is re-read",
+     "ru": "покупка и реестр, который перечитают",
+     "uk": "купівля і реєстр, який перечитають",
+     "he": "רכישה ומרשם שייקרא מחדש",
+     "de": "ein Kauf und ein Register, das neu gelesen wird",
+     "fr": "un achat et un registre que l'on relit",
+     "es": "una compra y un registro que se relee",
+     "doc": {"rows": [
+         {"name": "registry_recheck", "means": "реестр залогов перечитывают",
+          "status": "unverified", "ground": ""},
+         {"name": "pledge_free", "means": "машина не в залоге",
+          "status": "verified", "ground": "vypiska",
+          "expires_on": "registry_recheck"},
+         {"name": "papers_ok", "means": "документы в порядке",
+          "status": "verified", "ground": "pts"},
+         {"name": "deal_ok", "means": "сделку можно закрывать",
+          "status": "defined", "ground": "Tr(pledge_free) & Tr(papers_ok)"}],
+         "claim": "deal_ok"}},
+    {"kind": "clock",
+     "ask_en": "The certificate comes up for renewal. What happens to the conclusion resting on it?",
+     "ask_ru": "Сертификат выходит на продление. Что станет с выводом, который на нём стоит?",
+     "ask_uk": "Сертифікат виходить на продовження. Що буде з висновком, який на ньому стоїть?",
+     "ask_he": "התעודה עומדת לחידוש. מה יקרה למסקנה הנשענת עליה?",
+     "ask_de": "Das Zertifikat steht zur Verlängerung an. Was wird aus dem Schluss, der darauf ruht?",
+     "ask_fr": "Le certificat arrive à renouvellement. Qu'advient-il de la conclusion qui s'y appuie ?",
+     "ask_es": "El certificado llega a renovación. ¿Qué pasa con la conclusión que se apoya en él?",
+     "en": "A certificate up for renewal",
+     "ru": "сертификат на продлении",
+     "uk": "сертифікат на продовженні",
+     "he": "תעודה לקראת חידוש",
+     "de": "ein Zertifikat zur Verlängerung",
+     "fr": "un certificat à renouveler",
+     "es": "un certificado en renovación",
+     "doc": {"rows": [
+         {"name": "renewal_date", "means": "наступает срок продления",
+          "status": "unverified", "ground": ""},
+         {"name": "operator_certified", "means": "у оператора есть допуск",
+          "status": "verified", "ground": "sertifikat",
+          "ground_kind": "certificate", "expires_on": "renewal_date"},
+         {"name": "training_done", "means": "обучение пройдено",
+          "status": "verified", "ground": "zhurnal"},
+         {"name": "may_operate", "means": "оператору можно к работе",
+          "status": "defined",
+          "ground": "Tr(operator_certified) & Tr(training_done)"}],
+         "claim": "may_operate"}},
 ]
 
 

@@ -103,7 +103,9 @@ def run_gated(doc: dict, receipts: dict, purpose: str, epoch: str,
 
     Ключевое: zfl2 вызывается как есть, немодифицированный. Граница живёт
     снаружи и отдаёт ему уже типизированные посылки."""
-    sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
+    # ПЕРЕЕЗД 2026-08-28: файл жил в tool/introspect/, где parents[1] был
+    # tool/. Теперь он в ZTL/admission/, и до zfl2 путь идёт через tool.
+    sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / "tool"))
     import zfl2                                     # noqa: E402  (ядро как есть)
     gated, demotions = gate_document(doc, receipts, purpose, epoch, eligible)
     report = zfl2.run(gated)

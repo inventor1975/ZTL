@@ -39,7 +39,7 @@ def sec1_one_table_three_instruments():
     assert r["ok"], r["issues"]
     print(f"   applies: {r['applies']}")
     assert r["applies"] == {"numeric": True, "passport": True,
-                            "ledger": True, "judge": True}
+                            "ledger": True, "epoch": False, "judge": True}
     rep = r["report"]
     print(f"   assembled sheet    : {rep['numeric']['sheet']}")
     print(f"   the invoice claim  : {rep['numeric']['disposition']}")
@@ -293,6 +293,62 @@ def sec8_the_credit_that_cannot_be_redeemed():
     print("   a grounded definition is completable — no mark")
 
 
+def sec9_the_world_has_a_clock_too():
+    """The epoch floor: a conclusion resting on a clocked ground loses it.
+
+    Every other column speaks of what is KNOWN; `expires_on` speaks of what
+    stops being true. ZTL has carried the distinction since E25 and proves
+    it in `EpochBoundary.lean`, but the table could not say it, so a
+    temporal case had to be staged by hand in Python (Protagoras v.
+    Euathlus, 2026-08-28). Three invariants: the crossing is computed, it
+    is computed THROUGH the definitions, and a document with no clock is
+    left exactly as it was."""
+    print("\n### 9. the world has a clock, and the table can say so")
+
+    car = {"claim": "deal_ok", "rows": [
+        {"name": "registry_recheck", "means": "the pledge registry is re-read",
+         "status": "unverified", "ground": ""},
+        {"name": "pledge_free", "means": "not pledged", "status": "verified",
+         "ground": "registry_extract", "expires_on": "registry_recheck"},
+        {"name": "papers_ok", "means": "papers in order", "status": "verified",
+         "ground": "vehicle_title"},
+        {"name": "deal_ok", "means": "the deal may close", "status": "defined",
+         "ground": "Tr(pledge_free) & Tr(papers_ok)"}]}
+    e = zfl2.run(car)["report"]["epoch"][0]
+    assert e["event"] == "registry_recheck" and e["expires"] == ["pledge_free"]
+    assert e["before"] == {"verdict": "T", "grade": "hereditary"}, e
+    assert e["after"]["verdict"] == "Z", e
+    assert e["survives"] is False, e
+    print("   the purchased car: T/hereditary before, Z after — did NOT survive")
+
+    # THROUGH the definitions: `deal_ok` is a defined row, and reading the
+    # marking alone would have shown Z on both sides and called it survival.
+    assert e["before"]["verdict"] != e["after"]["verdict"]
+    print("   and it is read through the definition, not around it")
+
+    # An event nobody declared cannot be staged.
+    bad = {"claim": "a", "rows": [
+        {"name": "a", "means": "x", "status": "verified", "ground": "doc",
+         "expires_on": "nowhere"}]}
+    codes = {i["code"] for i in zfl2.run(bad)["issues"]}
+    assert "E_UNKNOWN_NAME" in codes, codes
+    # Only ground can expire — a mark has nothing for the clock to take.
+    bad2 = {"claim": "a", "rows": [
+        {"name": "ev", "means": "e", "status": "unverified", "ground": ""},
+        {"name": "a", "means": "x", "status": "unverified", "ground": "",
+         "expires_on": "ev"}]}
+    codes2 = {i["code"] for i in zfl2.run(bad2)["issues"]}
+    assert "E_EXPIRY_NO_GROUND" in codes2, codes2
+    print("   an undeclared event and an expiring mark are both refused")
+
+    # A document with no clock is untouched: no floor, no key.
+    plain = {"claim": "a", "rows": [
+        {"name": "a", "means": "x", "status": "verified", "ground": "doc"}]}
+    r = zfl2.run(plain)
+    assert r["applies"]["epoch"] is False and "epoch" not in r["report"]
+    print("   a document with no clock is left exactly as it was")
+
+
 if __name__ == "__main__":
     print("=" * 72)
     print("ZFL v2 — the table, headless")
@@ -304,6 +360,7 @@ if __name__ == "__main__":
     sec4_an_unknown_is_a_question_not_a_gap()
     sec7_the_ground_gate_demotes_phantom_words()
     sec8_the_credit_that_cannot_be_redeemed()
+    sec9_the_world_has_a_clock_too()
     sec4b_every_example_runs_and_json_types_are_taken_as_they_come()
     sec5_the_spec_can_build_the_form_and_the_page()
     print("=" * 72)

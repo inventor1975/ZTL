@@ -24,6 +24,7 @@
 <tr><td><b>ground</b></td><td>what backs it, or the formula defining it</td><td>in context</td><td>inv-17 · ~Tr(L)</td></tr>
 <tr class="adv"><td><b>dimension</b></td><td>does this SUPPORT the claim or PERMIT it</td><td>no</td><td>evidence (supports) · authority (permits)</td></tr>
 <tr><td><b>kind of ground</b></td><td>a document unless you say otherwise</td><td>no</td><td>document · act (nothing to withdraw) · certificate (expires) · another row</td></tr>
+<tr><td><b>expires at</b></td><td>the name of the event after which this ground no longer holds — another row</td><td>no</td><td>court_judgment · registry_recheck</td></tr>
 <tr><td><b>value</b></td><td>a number, an interval [0,10], or ? for unknown</td><td>no</td><td>1500 · [0,10] · ?</td></tr>
 <tr><td><b>unit</b></td><td>only with a value; metres never meet roubles</td><td>no</td><td>RUB · m · m2</td></tr>
 <tr><td><b>scale</b></td><td>what it rounds to</td><td>no</td><td>exact · whole · hundredths · thirds</td></tr>
@@ -75,6 +76,7 @@
 <tr><td><code>E_DIM_CLASH</code></td><td>a ground carries one mark, not two: &#x27;authority&#x27; cannot be combined with an act, a certificate or another row</td></tr>
 <tr><td><code>E_DUPNAME</code></td><td>the same name twice</td></tr>
 <tr><td><code>E_EMPTY</code></td><td>the table has no rows</td></tr>
+<tr><td><code>E_EXPIRY_NO_GROUND</code></td><td>a clock on a row that has no earned ground to lose</td></tr>
 <tr><td><code>E_FORMULA</code></td><td>the defining formula does not parse</td></tr>
 <tr><td><code>E_GROUND_SPACES</code></td><td>a ground with a space in it — a ground is one word, because it names a document</td></tr>
 <tr><td><code>E_KIND</code></td><td>a kind of ground outside the list</td></tr>
@@ -102,6 +104,7 @@
 <tr><td><b>основание</b></td><td>чем подтверждено или как определено</td><td>по условию</td><td>inv-17 · ~Tr(L)</td></tr>
 <tr class="adv"><td><b>измерение</b></td><td>оно ПОДПИРАЕТ утверждение или РАЗРЕШАЕТ его</td><td>нет</td><td>опора (подпирает) · разрешение (даёт право)</td></tr>
 <tr><td><b>вид основания</b></td><td>документ, если не сказано иное</td><td>нет</td><td>документ · акт (отзывать нечего) · сертификат (истекает) · другая строка</td></tr>
+<tr><td><b>истекает при</b></td><td>имя события, после которого это основание больше не держит — другая строка</td><td>нет</td><td>court_judgment · registry_recheck</td></tr>
 <tr><td><b>величина</b></td><td>число, интервал [0,10] или ? для неизвестного</td><td>нет</td><td>1500 · [0,10] · ?</td></tr>
 <tr><td><b>единица</b></td><td>только с величиной; метры не встречаются с рублями</td><td>нет</td><td>RUB · m · m2</td></tr>
 <tr><td><b>шкала</b></td><td>до чего округляем</td><td>нет</td><td>точно · целые · сотые · трети</td></tr>
@@ -153,6 +156,7 @@
 <tr><td><code>E_DIM_CLASH</code></td><td>основание несёт одну пометку, а не две: «разрешение» не сочетается с актом, сертификатом или другой строкой</td></tr>
 <tr><td><code>E_DUPNAME</code></td><td>имя повторяется</td></tr>
 <tr><td><code>E_EMPTY</code></td><td>в таблице нет строк</td></tr>
+<tr><td><code>E_EXPIRY_NO_GROUND</code></td><td>часы на строке, которой нечего терять: истекать может только заработанное</td></tr>
 <tr><td><code>E_FORMULA</code></td><td>определяющая формула не разбирается</td></tr>
 <tr><td><code>E_GROUND_SPACES</code></td><td>основание с пробелом — оно одно слово, потому что называет документ</td></tr>
 <tr><td><code>E_KIND</code></td><td>вид основания вне списка</td></tr>
@@ -180,6 +184,7 @@
 <tr><td><b>підстава</b></td><td>чим підтверджено або як визначено</td><td>за контекстом</td><td>inv-17 · ~Tr(L)</td></tr>
 <tr class="adv"><td><b>вимір</b></td><td>воно ПІДПИРАЄ твердження чи ДОЗВОЛЯЄ його</td><td>ні</td><td>опора (підпирає) · дозвіл (дає право)</td></tr>
 <tr><td><b>вид підстави</b></td><td>документ, якщо не сказано інакше</td><td>ні</td><td>документ · акт (відкликати нічого) · сертифікат (спливає) · інший рядок</td></tr>
+<tr><td><b>спливає при</b></td><td>ім&#x27;я події, після якої ця підстава більше не тримає — інший рядок</td><td>ні</td><td>court_judgment · registry_recheck</td></tr>
 <tr><td><b>величина</b></td><td>число, інтервал [0,10] або ? для невідомого</td><td>ні</td><td>1500 · [0,10] · ?</td></tr>
 <tr><td><b>одиниця</b></td><td>лише з величиною; метри не зустрічаються з гривнями</td><td>ні</td><td>RUB · m · m2</td></tr>
 <tr><td><b>шкала</b></td><td>до чого округлюємо</td><td>ні</td><td>цілі · соті · третини</td></tr>
@@ -231,6 +236,7 @@
 <tr><td><code>E_DIM_CLASH</code></td><td>a ground carries one mark, not two: &#x27;authority&#x27; cannot be combined with an act, a certificate or another row</td></tr>
 <tr><td><code>E_DUPNAME</code></td><td>the same name twice</td></tr>
 <tr><td><code>E_EMPTY</code></td><td>the table has no rows</td></tr>
+<tr><td><code>E_EXPIRY_NO_GROUND</code></td><td>a clock on a row that has no earned ground to lose</td></tr>
 <tr><td><code>E_FORMULA</code></td><td>the defining formula does not parse</td></tr>
 <tr><td><code>E_GROUND_SPACES</code></td><td>a ground with a space in it — a ground is one word, because it names a document</td></tr>
 <tr><td><code>E_KIND</code></td><td>a kind of ground outside the list</td></tr>
@@ -258,6 +264,7 @@
 <tr><td><b>אסמכתא</b></td><td>מה מאשש אותו, או הנוסחה שמגדירה אותו</td><td>לפי ההקשר</td><td>inv-17 · ~Tr(L)</td></tr>
 <tr class="adv"><td><b>ממד</b></td><td>האם זה תומך בטענה או מתיר אותה</td><td>לא</td><td>תמיכה (מבססת) · סמכות (מתירה)</td></tr>
 <tr><td><b>סוג האסמכתא</b></td><td>מסמך, אלא אם נאמר אחרת</td><td>לא</td><td>מסמך · מעשה (אין מה לבטל) · אישור (פג תוקף) · שורה אחרת</td></tr>
+<tr><td><b>פג בעת</b></td><td>שם האירוע שאחריו האסמכתא כבר אינה מחזיקה — שורה אחרת</td><td>לא</td><td>court_judgment · registry_recheck</td></tr>
 <tr><td><b>ערך</b></td><td>מספר, תחום [0,10] או ? ללא ידוע</td><td>לא</td><td>1500 · [0,10] · ?</td></tr>
 <tr><td><b>יחידה</b></td><td>רק עם ערך; מטרים לא נפגשים עם שקלים</td><td>לא</td><td>RUB · m · m2</td></tr>
 <tr><td><b>סולם</b></td><td>לאן מעגלים</td><td>לא</td><td>שלמים · מאיות · שלישים</td></tr>
@@ -309,6 +316,7 @@
 <tr><td><code>E_DIM_CLASH</code></td><td>a ground carries one mark, not two: &#x27;authority&#x27; cannot be combined with an act, a certificate or another row</td></tr>
 <tr><td><code>E_DUPNAME</code></td><td>the same name twice</td></tr>
 <tr><td><code>E_EMPTY</code></td><td>the table has no rows</td></tr>
+<tr><td><code>E_EXPIRY_NO_GROUND</code></td><td>a clock on a row that has no earned ground to lose</td></tr>
 <tr><td><code>E_FORMULA</code></td><td>the defining formula does not parse</td></tr>
 <tr><td><code>E_GROUND_SPACES</code></td><td>a ground with a space in it — a ground is one word, because it names a document</td></tr>
 <tr><td><code>E_KIND</code></td><td>a kind of ground outside the list</td></tr>
@@ -336,6 +344,7 @@
 <tr><td><b>Grundlage</b></td><td>was es belegt, oder die definierende Formel</td><td>je nach Kontext</td><td>inv-17 · ~Tr(L)</td></tr>
 <tr class="adv"><td><b>Dimension</b></td><td>STÜTZT es die Aussage oder ERLAUBT es sie</td><td>nein</td><td>Stütze (belegt) · Befugnis (erlaubt)</td></tr>
 <tr><td><b>Art der Grundlage</b></td><td>ein Dokument, sofern nicht anders gesagt</td><td>nein</td><td>Dokument · Handlung (nichts zurückzunehmen) · Zertifikat (läuft ab) · andere Zeile</td></tr>
+<tr><td><b>erlischt bei</b></td><td>Name des Ereignisses, nach dem diese Grundlage nicht mehr trägt — eine andere Zeile</td><td>nein</td><td>court_judgment · registry_recheck</td></tr>
 <tr><td><b>Wert</b></td><td>Zahl, Intervall [0,10] oder ? für unbekannt</td><td>nein</td><td>1500 · [0,10] · ?</td></tr>
 <tr><td><b>Einheit</b></td><td>nur mit einem Wert; Meter treffen nie auf Euro</td><td>nein</td><td>RUB · m · m2</td></tr>
 <tr><td><b>Skala</b></td><td>worauf gerundet wird</td><td>nein</td><td>ganze · Hundertstel · Drittel</td></tr>
@@ -387,6 +396,7 @@
 <tr><td><code>E_DIM_CLASH</code></td><td>a ground carries one mark, not two: &#x27;authority&#x27; cannot be combined with an act, a certificate or another row</td></tr>
 <tr><td><code>E_DUPNAME</code></td><td>the same name twice</td></tr>
 <tr><td><code>E_EMPTY</code></td><td>the table has no rows</td></tr>
+<tr><td><code>E_EXPIRY_NO_GROUND</code></td><td>a clock on a row that has no earned ground to lose</td></tr>
 <tr><td><code>E_FORMULA</code></td><td>the defining formula does not parse</td></tr>
 <tr><td><code>E_GROUND_SPACES</code></td><td>a ground with a space in it — a ground is one word, because it names a document</td></tr>
 <tr><td><code>E_KIND</code></td><td>a kind of ground outside the list</td></tr>
@@ -414,6 +424,7 @@
 <tr><td><b>fondement</b></td><td>ce qui l&#x27;atteste, ou la formule qui le définit</td><td>selon le contexte</td><td>inv-17 · ~Tr(L)</td></tr>
 <tr class="adv"><td><b>dimension</b></td><td>cela SOUTIENT l&#x27;affirmation ou l&#x27;AUTORISE</td><td>non</td><td>appui (soutient) · autorité (autorise)</td></tr>
 <tr><td><b>type de fondement</b></td><td>un document, sauf mention contraire</td><td>non</td><td>document · acte (rien à retirer) · certificat (expire) · autre ligne</td></tr>
+<tr><td><b>expire à</b></td><td>le nom de l&#x27;événement après lequel ce fondement ne tient plus — une autre ligne</td><td>non</td><td>court_judgment · registry_recheck</td></tr>
 <tr><td><b>valeur</b></td><td>nombre, intervalle [0,10] ou ? pour inconnu</td><td>non</td><td>1500 · [0,10] · ?</td></tr>
 <tr><td><b>unité</b></td><td>seulement avec une valeur ; les mètres ne rencontrent pas les euros</td><td>non</td><td>RUB · m · m2</td></tr>
 <tr><td><b>échelle</b></td><td>jusqu&#x27;où l&#x27;on arrondit</td><td>non</td><td>entiers · centièmes · tiers</td></tr>
@@ -465,6 +476,7 @@
 <tr><td><code>E_DIM_CLASH</code></td><td>a ground carries one mark, not two: &#x27;authority&#x27; cannot be combined with an act, a certificate or another row</td></tr>
 <tr><td><code>E_DUPNAME</code></td><td>the same name twice</td></tr>
 <tr><td><code>E_EMPTY</code></td><td>the table has no rows</td></tr>
+<tr><td><code>E_EXPIRY_NO_GROUND</code></td><td>a clock on a row that has no earned ground to lose</td></tr>
 <tr><td><code>E_FORMULA</code></td><td>the defining formula does not parse</td></tr>
 <tr><td><code>E_GROUND_SPACES</code></td><td>a ground with a space in it — a ground is one word, because it names a document</td></tr>
 <tr><td><code>E_KIND</code></td><td>a kind of ground outside the list</td></tr>
@@ -492,6 +504,7 @@
 <tr><td><b>fundamento</b></td><td>qué lo respalda, o la fórmula que lo define</td><td>según el contexto</td><td>inv-17 · ~Tr(L)</td></tr>
 <tr class="adv"><td><b>dimensión</b></td><td>¿SOSTIENE la afirmación o la PERMITE?</td><td>no</td><td>apoyo (sostiene) · autoridad (permite)</td></tr>
 <tr><td><b>tipo de fundamento</b></td><td>un documento, salvo que se diga otra cosa</td><td>no</td><td>documento · acto (nada que retirar) · certificado (caduca) · otra fila</td></tr>
+<tr><td><b>expira en</b></td><td>el nombre del evento tras el cual este fundamento ya no sostiene — otra fila</td><td>no</td><td>court_judgment · registry_recheck</td></tr>
 <tr><td><b>valor</b></td><td>número, intervalo [0,10] o ? para desconocido</td><td>no</td><td>1500 · [0,10] · ?</td></tr>
 <tr><td><b>unidad</b></td><td>solo con un valor; los metros no se cruzan con los euros</td><td>no</td><td>RUB · m · m2</td></tr>
 <tr><td><b>escala</b></td><td>hasta dónde redondeamos</td><td>no</td><td>enteros · centésimas · tercios</td></tr>
@@ -543,6 +556,7 @@
 <tr><td><code>E_DIM_CLASH</code></td><td>a ground carries one mark, not two: &#x27;authority&#x27; cannot be combined with an act, a certificate or another row</td></tr>
 <tr><td><code>E_DUPNAME</code></td><td>the same name twice</td></tr>
 <tr><td><code>E_EMPTY</code></td><td>the table has no rows</td></tr>
+<tr><td><code>E_EXPIRY_NO_GROUND</code></td><td>a clock on a row that has no earned ground to lose</td></tr>
 <tr><td><code>E_FORMULA</code></td><td>the defining formula does not parse</td></tr>
 <tr><td><code>E_GROUND_SPACES</code></td><td>a ground with a space in it — a ground is one word, because it names a document</td></tr>
 <tr><td><code>E_KIND</code></td><td>a kind of ground outside the list</td></tr>

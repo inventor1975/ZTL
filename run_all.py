@@ -145,7 +145,7 @@ STANDS = [
     ("tool/zfl2doc.py", ["ZFL DOC GREEN",
                          "every code the validator raises is documented"]),
     ("tool/test_zfl2.py", ["ZFL2 GREEN",
-                           "applies: {'numeric': True, 'passport': True, 'ledger': True, 'judge': True}",
+                           "applies: {'numeric': True, 'passport': True, 'ledger': True, 'epoch': False, 'judge': True}",
                            "two lines on ONE document  : {'inv-17': [2, 2]}",
                            "cases the docket promises: 26, present: 26",
                            "39 examples, all validating and running",

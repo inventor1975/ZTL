@@ -267,6 +267,35 @@ COLUMNS = [
         },
     },
     {
+        # THE WORLD'S CLOCK, not the inquiry's. Every other column speaks of
+        # what is known; this one speaks of what STOPS being true. ZTL has
+        # carried the distinction since E25 (`zexpire.py`) and proves it in
+        # `EpochBoundary.lean` — two event kinds, `verify` (a mark resolves,
+        # we learned) and `expire` (earned ground returns to the mark, the
+        # world became different) — but the table had no way to SAY it, so a
+        # dilemma whose whole difficulty is temporal (Protagoras v. Euathlus,
+        # 2026-08-28) had to be staged by hand in Python. Naming the event
+        # here is enough: `expire` sends the value back to the mark, and what
+        # it becomes afterwards is a separate act of verification, not
+        # something this cell may presume.
+        "key": "expires_on", "type": "text", "required": False,
+        "advanced": False,
+        "en": ("expires at", "the name of the event after which this ground "
+               "no longer holds — another row"),
+        "ru": ("истекает при", "имя события, после которого это основание "
+               "больше не держит — другая строка"),
+        "de": ("erlischt bei", "Name des Ereignisses, nach dem diese "
+               "Grundlage nicht mehr trägt — eine andere Zeile"),
+        "fr": ("expire à", "le nom de l'événement après lequel ce fondement "
+               "ne tient plus — une autre ligne"),
+        "es": ("expira en", "el nombre del evento tras el cual este "
+               "fundamento ya no sostiene — otra fila"),
+        "uk": ("спливає при", "ім'я події, після якої ця підстава більше не "
+               "тримає — інший рядок"),
+        "he": ("פג בעת", "שם האירוע שאחריו האסמכתא כבר אינה מחזיקה — שורה אחרת"),
+        "eg": ["court_judgment", "registry_recheck"],
+    },
+    {
         "key": "value", "type": "text", "required": False, "advanced": False,
         "en": ("value", "a number, an interval [0,10], or ? for unknown"),
         "ru": ("величина", "число, интервал [0,10] или ? для неизвестного"),
@@ -500,6 +529,17 @@ def validate(doc):
             # одна необязательная клетка отключала центральное правило языка.
             if bad_scale:
                 continue
+        # ONLY GROUND CAN EXPIRE — the same precondition `zexpire.expire`
+        # asserts. A mark has nothing to lose, and a sentence is not held by
+        # a clock; declaring either as expiring would let the report stage a
+        # crossing that the event layer refuses to take.
+        exp = (r.get("expires_on") or "").strip()
+        if exp and status not in ("verified", "refuted"):
+            issues.append(_issue(
+                "error", "E_EXPIRY_NO_GROUND", f"{at} / expires_on",
+                "only earned ground can expire: this row is "
+                f"'{status or "empty"}', and there is nothing for the clock "
+                "to take back"))
         ground = (r.get("ground") or "").strip()
         if status in ("verified", "refuted", "defined") and not ground:
             # NAMES THE EXIT, not just the rule. Reported live: two atoms
@@ -591,6 +631,16 @@ def validate(doc):
                                  "without a gloss nobody can check that the "
                                  "name means what it seems to"))
     declared = {(r.get("name") or "").strip() for r in rows}
+    for i, r in enumerate(rows, 1):
+        # The table is a closed world for events too: an event nobody
+        # declared cannot be staged, and a silent unknown here would print a
+        # crossing that never happens.
+        ev = (r.get("expires_on") or "").strip()
+        if ev and ev not in declared:
+            issues.append(_issue(
+                "error", "E_UNKNOWN_NAME", f"row {i} / expires_on",
+                f"no row is called ['{ev}'] — an event is a row like any "
+                f"other name"))
     for i, r in enumerate(rows, 1):
         if (r.get("status") or "") == "defined":
             unknown = names_in(r.get("ground")) - declared
@@ -782,6 +832,12 @@ def applies(doc):
         # that does nothing, whatever the code knows.
         "ledger": bool(to_book(rows)) and any(
             (r.get("ground") or "").strip() for r in numeric_rows(rows)),
+        # THE EPOCH FLOOR speaks whenever a row declares a clock. It needs a
+        # claim too: what it measures is whether the CONCLUSION survives the
+        # world changing, which is `EpochBoundary.epoch_boundary_iff` read
+        # over one document instead of over every formula at once.
+        "epoch": bool((doc.get("claim") or "").strip()) and any(
+            (r.get("expires_on") or "").strip() for r in rows),
         "judge": bool((doc.get("claim") or "").strip()),
     }
 
@@ -848,6 +904,25 @@ def demote_unregistered(rows, registry):
         else:
             out.append(r)
     return out, demoted
+
+
+def resolved_marking(rows):
+    """The marking the judge should have seen all along.
+
+    `to_marking` reports the marks and stops, because a `defined` row is a
+    sentence rather than a mark. True — and it leaves the judge blind to
+    every value the sentences DETERMINE: a claim over defined names came
+    back `Z` however well grounded its parts were. The passport already
+    computes those values (the least fixed point of the lazy jump), so here
+    they are simply added on top of the marks. The marks win where both
+    speak: a row that was checked is not overruled by a computation."""
+    m = dict(to_marking(rows))
+    system = to_system(rows)
+    if system:
+        lfp, _, _ = zpassport.passports(system)
+        for name, v in lfp.items():
+            m.setdefault(name, v)
+    return m
 
 
 def unredeemable(comp_kind):
@@ -961,6 +1036,47 @@ def run(doc, ground_registry=None):
         if touched and r["grade"] == "until-verification":
             report["judge"]["credit"] = "UNREDEEMABLE"
             report["judge"]["unredeemable"] = touched
+
+    if what["epoch"]:
+        # One crossing per declared event: everything held by that event's
+        # clock returns to the mark AT ONCE (an event is not a sequence of
+        # private misfortunes), and the claim is read on both sides of it.
+        events = {}
+        for r in rows:
+            ev = (r.get("expires_on") or "").strip()
+            if ev:
+                events.setdefault(ev, []).append(r["name"])
+        staged = []
+        for ev in sorted(events):
+            # The crossing is applied to the ROWS, not to the marking, so
+            # that whatever leans on the expiring ground is recomputed
+            # rather than left standing on a value that no longer has one.
+            # Reading the marking alone is how the first draft of this floor
+            # printed "survives" for every document with a definition in it:
+            # `to_marking` drops defined rows, so expiring their ground moved
+            # nothing the judge could see.
+            gone = set(events[ev])
+            rows_after = [dict(r, status="unverified", ground="")
+                          if r["name"] in gone else r for r in rows]
+            try:
+                b = judge(claim, resolved_marking(rows))
+                a = judge(claim, resolved_marking(rows_after))
+            except Exception as exc:
+                issues.append(_issue("error", "E_UNREADABLE", "claim",
+                                     f"the epoch floor could not read this "
+                                     f"claim: {exc}"))
+                return {"ok": False, "issues": issues}
+            staged.append({
+                "event": ev,
+                "expires": sorted(events[ev]),
+                "before": {"verdict": b["verdict"], "grade": b["grade"]},
+                "after": {"verdict": a["verdict"], "grade": a["grade"]},
+                # SURVIVES means the conclusion is the same on both sides.
+                # It is not praise: a verdict that survives every crossing
+                # reads none of its grounds (EpochBoundary), so a survivor
+                # here is either independently grounded or empty.
+                "survives": b["verdict"] == a["verdict"]})
+        report["epoch"] = staged
 
     if what["ledger"]:
         # Тот же инвариант, что у numeric-ветки выше, и он здесь не был

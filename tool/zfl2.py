@@ -356,6 +356,34 @@ COLUMNS = [
 
 DOC_FIELDS = [
     {
+        # РЕЕСТР ЖИВЁТ В ДОКУМЕНТЕ, а не в параметре вызова — и это разница
+        # не удобства, а работоспособности. Ворота оснований существовали с
+        # 27.08 и СПАЛИ ВЕЗДЕ: ни книга, ни студия, ни квитанция реестра не
+        # подавали (промерено 2026-08-28, `inventory/unwired.py`). Защита,
+        # которую надо передать параметром, не передаётся; объявленная В САМОМ
+        # ДОКУМЕНТЕ едет с ним через студию, через сохранение и в отпечаток
+        # квитанции — потому что она часть того, что документ ГОВОРИТ.
+        # Пусто — ворота молчат, и это ВИДНО, а не подразумевается.
+        "key": "grounds", "type": "text", "required": False, "advanced": True,
+        "en": ("admissible grounds",
+               "the grounds this document accepts, comma-separated. A row "
+               "earning on a ground outside the list falls to unverified "
+               "rather than to false. Empty: the gate says nothing"),
+        "ru": ("допустимые основания",
+               "основания, которые этот документ признаёт, через запятую. "
+               "Строка, заработавшая на основании вне списка, падает в "
+               "непроверенное, а не в ложь. Пусто — ворота молчат"),
+        "de": ("zulässige Grundlagen",
+               "kommagetrennt; leer heißt: das Tor schweigt"),
+        "fr": ("fondements admis",
+               "separes par des virgules ; vide : la porte se tait"),
+        "es": ("fundamentos admitidos",
+               "separados por comas; vacio: la puerta calla"),
+        "uk": ("допустимі підстави", "через кому; порожньо — ворота мовчать"),
+        "he": ("אסמכתאות קבילות", "מופרדות בפסיק; ריק — השער שותק"),
+        "eg": ["registry_extract, vehicle_title", "перебор, промер, ch7"],
+    },
+    {
         "key": "claim", "type": "formula", "required": False,
         "en": ("claim", "what you are actually asserting"),
         "ru": ("утверждение", "что мы, собственно, заявляем"),
@@ -452,7 +480,12 @@ def coerce(doc):
     try rather than only testing by hand."""
     if not isinstance(doc, dict):
         return {"rows": [], "claim": ""}
+    # `grounds` проходит ЗДЕСЬ, иначе поле уровня документа теряется в
+    # дверях: coerce строит новый словарь, и всё, что не перечислено, не
+    # доезжает. Ровно так первая редакция реестра-в-документе молча ничего
+    # не делала (промерено 2026-08-28).
     out = {"claim": str(doc.get("claim") or ""),
+           "grounds": str(doc.get("grounds") or ""),
            "ask": doc.get("ask") or [], "rows": []}
     for r in (doc.get("rows") or []):
         if not isinstance(r, dict):
@@ -972,6 +1005,14 @@ def run(doc, ground_registry=None):
         return {"ok": False, "issues": issues}
     rows = doc["rows"]
     demoted = []
+    # Документ вправе объявить свой реестр сам; параметр вызова остаётся и
+    # ПЕРЕВЕШИВАЕТ — на случай, когда допустимое решает не автор документа,
+    # а тот, кто его принимает.
+    if ground_registry is None:
+        declared = (doc.get("grounds") or "").strip()
+        if declared:
+            ground_registry = {g.strip() for g in declared.split(",")
+                               if g.strip()}
     if ground_registry is not None:
         rows, demoted = demote_unregistered(rows, set(ground_registry))
     claim = normalise((doc.get("claim") or "").strip(), rows)

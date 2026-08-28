@@ -43,6 +43,12 @@
  /* the cell that needs nothing in this mode says so by going quiet */
  .grid input.dim { background:#f6f6f6; }
  .adv { display:none; } body.showadv .adv { display:table-cell; }
+ /* Поле уровня документа — та же логика «дополнительно», но это не ячейка
+    таблицы, поэтому свой класс и свой display. */
+ /* СПЕЦИФИЧНОСТЬ, а не порядок: `.bar { display:flex }` живёт в отдельном
+    файле, и одноклассовое правило тут от него зависело — поле показывалось
+    ДО включения «дополнительно» (увидел в браузере, не в коде). */
+ body:not(.showadv) .advbar { display:none; }
  body.showadv th.adv { display:table-cell; }
  .rowbtn { border:none; background:none; color:#999; cursor:pointer; }
  .bar { margin:.9em 0; display:flex; gap:.6em; align-items:center;
@@ -120,6 +126,10 @@
   <div class="gridwrap"><table class="grid" id="grid"></table></div>
   <div class="bar">
     <button class="rowbtn" id="addrow">+ <span data-t="addrow"></span></button>
+  </div>
+  <div class="bar advbar" id="groundsbar">
+    <label id="groundslabel"></label>
+    <input type="text" id="grounds" placeholder="registry_extract, vehicle_title">
   </div>
   <div class="bar">
     <label id="claimlabel"></label>

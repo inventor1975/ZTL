@@ -51,6 +51,10 @@ CODE_HELP = {
     "E_NOGROUND": ("verified, refuted or defined, with nothing backing it",
                    "проверено, опровергнуто или определено — но без основания"),
     "E_KIND": ("a kind of ground outside the list", "вид основания вне списка"),
+    "E_EXPIRY_NO_GROUND": (
+        "a clock on a row that has no earned ground to lose",
+        "часы на строке, которой нечего терять: истекать может только "
+        "заработанное"),
     "E_DIM": ("a dimension outside the list — a ground either supports a "
               "claim or permits it",
               "измерение вне списка — основание либо подпирает утверждение, "

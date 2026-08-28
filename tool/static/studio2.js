@@ -14,6 +14,7 @@ const UI = {
         passport: "passports", numeric: "the numeric floor",
         epoch: "the world's clock", unredeemable: "this credit will never be redeemed", event: "event", expires: "expires with it", before: "before", after: "after", survives: "the conclusion survived", fell: "the conclusion did NOT survive", 
         demoted: "demoted to unverified — ground outside the document's list:", 
+        receipt: "receipt", epoch: "epoch", registryf: "registry (names)", ancestors: "ancestors", undeclared: "not declared", 
         judge: "the judge", ledger: "the ledger",
         component: "component", kind: "passport", detail: "details",
         disposition: "disposition", cures: "what would settle it",
@@ -50,6 +51,7 @@ const UI = {
         passport: "паспорта", numeric: "числовой пол",
         epoch: "часы мира", unredeemable: "этот кредит не погасят никогда", event: "событие", expires: "вместе с ним истекает", before: "до", after: "после", survives: "вывод пережил", fell: "вывод НЕ пережил", 
         demoted: "разжаловано в непроверенное — основание вне списка документа:", 
+        receipt: "квитанция", epoch: "эпоха", registryf: "реестр (имён)", ancestors: "предки", undeclared: "не объявлено", 
         judge: "судья", ledger: "тетрадь",
         component: "компонент", kind: "паспорт", detail: "подробности",
         disposition: "диспозиция", cures: "что это решит",
@@ -85,6 +87,7 @@ const UI = {
         passport: "паспорти", numeric: "числова підлога",
         epoch: "годинник світу", unredeemable: "цей кредит не погасять ніколи", event: "подія", expires: "разом із нею спливає", before: "до", after: "після", survives: "висновок пережив", fell: "висновок НЕ пережив", 
         demoted: "розжаловано в неперевірене — підстава поза списком документа:", 
+        receipt: "квитанція", epoch: "епоха", registryf: "реєстр (імен)", ancestors: "предки", undeclared: "не оголошено", 
         judge: "суддя", ledger: "зошит",
         component: "компонент", kind: "паспорт", detail: "подробиці",
         disposition: "диспозиція", cures: "що це вирішить",
@@ -120,6 +123,7 @@ const UI = {
         passport: "דרכונים", numeric: "הרצפה המספרית",
         epoch: "שעון העולם", unredeemable: "אשראי זה לעולם לא ייפרע", event: "אירוע", expires: "פג יחד איתו", before: "לפני", after: "אחרי", survives: "המסקנה שרדה", fell: "המסקנה לא שרדה", 
         demoted: "הורד ללא־מאומת — אסמכתא מחוץ לרשימת המסמך:", 
+        receipt: "קבלה", epoch: "תקופה", registryf: "מרשם (שמות)", ancestors: "אבות", undeclared: "לא הוצהר", 
         judge: "השופט", ledger: "הפנקס",
         component: "רכיב", kind: "דרכון", detail: "פרטים",
         disposition: "מצב", cures: "מה יכריע את זה",
@@ -153,6 +157,7 @@ const UI = {
         passport: "Pässe", numeric: "die Zahlenebene",
         epoch: "die Uhr der Welt", unredeemable: "dieser Kredit wird nie eingelöst", event: "Ereignis", expires: "erlischt damit", before: "davor", after: "danach", survives: "der Schluss hat überlebt", fell: "der Schluss hat NICHT überlebt", 
         demoted: "auf ungeprüft herabgestuft — Grundlage nicht in der Liste:", 
+        receipt: "Quittung", epoch: "Epoche", registryf: "Register (Namen)", ancestors: "Vorfahren", undeclared: "nicht angegeben", 
         judge: "der Richter", ledger: "das Buch",
         component: "Komponente", kind: "Pass", detail: "Einzelheiten",
         disposition: "Befund", cures: "was es entscheiden würde",
@@ -189,6 +194,7 @@ const UI = {
         passport: "passeports", numeric: "le socle numérique",
         epoch: "l'horloge du monde", unredeemable: "ce crédit ne sera jamais remboursé", event: "événement", expires: "expire avec lui", before: "avant", after: "après", survives: "la conclusion a survécu", fell: "la conclusion n'a PAS survécu", 
         demoted: "rétrogradé en non vérifié — fondement hors de la liste :", 
+        receipt: "reçu", epoch: "époque", registryf: "registre (noms)", ancestors: "ancêtres", undeclared: "non déclaré", 
         judge: "le juge", ledger: "le registre",
         component: "composant", kind: "passeport", detail: "détails",
         disposition: "disposition", cures: "ce qui trancherait",
@@ -225,6 +231,7 @@ const UI = {
         passport: "pasaportes", numeric: "el suelo numérico",
         epoch: "el reloj del mundo", unredeemable: "este crédito no se saldará nunca", event: "evento", expires: "expira con él", before: "antes", after: "después", survives: "la conclusión sobrevivió", fell: "la conclusión NO sobrevivió", 
         demoted: "degradado a no verificado — fundamento fuera de la lista:", 
+        receipt: "recibo", epoch: "época", registryf: "registro (nombres)", ancestors: "ancestros", undeclared: "no declarado", 
         judge: "el juez", ledger: "el registro",
         component: "componente", kind: "pasaporte", detail: "detalles",
         disposition: "disposición", cures: "qué lo resolvería",
@@ -459,6 +466,20 @@ function showReport(r) {
     out.unshift(`<p><b class="v-F">${esc(t("demoted"))}</b> ` +
                 `<span class="muted">${esc(r.report.demoted_grounds.join(", "))}` +
                 `</span></p>`);
+  }
+  if (rep.receipt) {
+    // Квитанция ВСЕГДА, и НЕОБЪЯВЛЕННОЕ показано словом, а не пропуском:
+    // читатель должен видеть, чего ей недостаёт, а не догадываться.
+    const q = rep.receipt, нет = `<span class="v-F">${esc(t("undeclared"))}</span>`;
+    out.push(panel(t("receipt"),
+      `<p><code>${esc(q.digest)}</code></p>` +
+      `<p class="muted">${esc(t("epoch"))}: ` +
+      (q.epoch ? esc(q.epoch) : нет) + " · " +
+      `${esc(t("registryf"))}: ` +
+      (q.registry ? esc(String(q.registry.size)) : нет) + " · " +
+      `${esc(t("ancestors"))}: ` +
+      (q.derived_from ? esc(Object.keys(q.derived_from).join(", ")) : нет) +
+      "</p>"));
   }
   if (rep.epoch) {
     out.push(panel(t("epoch"), table(

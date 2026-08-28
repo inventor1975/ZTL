@@ -29,7 +29,7 @@ if __name__ == "__main__":
         print(f"   {'FAIL' if not ок else 'OK  '} {имя}")
 
     print("\n### 1. АКТ, который проходит, поднимает основание сам")
-    r = ga.elevate("tool/introspect/test_tcc2.py", "act")
+    r = ga.elevate("admission/test_tcc2.py", "act")
     check("зелёный прогон -> допущено", r["admissible"] and r["reason"] == "ACT_PASSED")
 
     print("\n### 2. Отказ НАЗЫВАЕТ причину, а не молчит")

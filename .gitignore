@@ -47,3 +47,12 @@ IDEAS.md
 tool/introspect/*.tasks/
 lake-manifest.json
 lean/.lake/
+
+# ЧУЖИЕ ДЕРЕВЬЯ — не наш код, коммитить как свой нельзя, но и валяться
+# безымянно не должны (найдено 2026-08-28 при осмотре хвостов).
+#   prior-art/MAM  — downstream-memory-admissibility, разбор в ztl-private/MAM-D1..D6
+#   prior-art/RAED — github.com/downstream-protocol/RAED @ 471f81d, проба в
+#                    ztl-private/RAED-PROBE (собирается на Go 1.23)
+# Наши находки по ним живут в ztl-private, не здесь.
+prior-art/
+atomstore_query.tasks/

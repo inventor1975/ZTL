@@ -12,6 +12,7 @@ const UI = {
         nothing: "nothing to show yet — fill a row and press run",
         applies: "instruments that had something to say",
         passport: "passports", numeric: "the numeric floor",
+        epoch: "the world's clock", unredeemable: "this credit will never be redeemed", event: "event", expires: "expires with it", before: "before", after: "after", survives: "the conclusion survived", fell: "the conclusion did NOT survive", 
         judge: "the judge", ledger: "the ledger",
         component: "component", kind: "passport", detail: "details",
         disposition: "disposition", cures: "what would settle it",
@@ -46,6 +47,7 @@ const UI = {
         nothing: "пока нечего показывать — заполните строку и запустите",
         applies: "приборы, которым было что сказать",
         passport: "паспорта", numeric: "числовой пол",
+        epoch: "часы мира", unredeemable: "этот кредит не погасят никогда", event: "событие", expires: "вместе с ним истекает", before: "до", after: "после", survives: "вывод пережил", fell: "вывод НЕ пережил", 
         judge: "судья", ledger: "тетрадь",
         component: "компонент", kind: "паспорт", detail: "подробности",
         disposition: "диспозиция", cures: "что это решит",
@@ -79,6 +81,7 @@ const UI = {
         nothing: "поки нічого показувати — заповніть рядок і запустіть",
         applies: "прилади, яким було що сказати",
         passport: "паспорти", numeric: "числова підлога",
+        epoch: "годинник світу", unredeemable: "цей кредит не погасять ніколи", event: "подія", expires: "разом із нею спливає", before: "до", after: "після", survives: "висновок пережив", fell: "висновок НЕ пережив", 
         judge: "суддя", ledger: "зошит",
         component: "компонент", kind: "паспорт", detail: "подробиці",
         disposition: "диспозиція", cures: "що це вирішить",
@@ -112,6 +115,7 @@ const UI = {
         nothing: "עדיין אין מה להראות — מלאו שורה והריצו",
         applies: "הכלים שהיה להם מה לומר",
         passport: "דרכונים", numeric: "הרצפה המספרית",
+        epoch: "שעון העולם", unredeemable: "אשראי זה לעולם לא ייפרע", event: "אירוע", expires: "פג יחד איתו", before: "לפני", after: "אחרי", survives: "המסקנה שרדה", fell: "המסקנה לא שרדה", 
         judge: "השופט", ledger: "הפנקס",
         component: "רכיב", kind: "דרכון", detail: "פרטים",
         disposition: "מצב", cures: "מה יכריע את זה",
@@ -143,6 +147,7 @@ const UI = {
         nothing: "noch nichts zu zeigen — Zeile ausfüllen und ausführen",
         applies: "Instrumente, die etwas zu sagen hatten",
         passport: "Pässe", numeric: "die Zahlenebene",
+        epoch: "die Uhr der Welt", unredeemable: "dieser Kredit wird nie eingelöst", event: "Ereignis", expires: "erlischt damit", before: "davor", after: "danach", survives: "der Schluss hat überlebt", fell: "der Schluss hat NICHT überlebt", 
         judge: "der Richter", ledger: "das Buch",
         component: "Komponente", kind: "Pass", detail: "Einzelheiten",
         disposition: "Befund", cures: "was es entscheiden würde",
@@ -177,6 +182,7 @@ const UI = {
         nothing: "rien à montrer pour l'instant — remplissez une ligne et exécutez",
         applies: "les instruments qui avaient quelque chose à dire",
         passport: "passeports", numeric: "le socle numérique",
+        epoch: "l'horloge du monde", unredeemable: "ce crédit ne sera jamais remboursé", event: "événement", expires: "expire avec lui", before: "avant", after: "après", survives: "la conclusion a survécu", fell: "la conclusion n'a PAS survécu", 
         judge: "le juge", ledger: "le registre",
         component: "composant", kind: "passeport", detail: "détails",
         disposition: "disposition", cures: "ce qui trancherait",
@@ -211,6 +217,7 @@ const UI = {
         nothing: "todavía nada que mostrar — rellene una fila y ejecute",
         applies: "instrumentos que tuvieron algo que decir",
         passport: "pasaportes", numeric: "el suelo numérico",
+        epoch: "el reloj del mundo", unredeemable: "este crédito no se saldará nunca", event: "evento", expires: "expira con él", before: "antes", after: "después", survives: "la conclusión sobrevivió", fell: "la conclusión NO sobrevivió", 
         judge: "el juez", ledger: "el registro",
         component: "componente", kind: "pasaporte", detail: "detalles",
         disposition: "disposición", cures: "qué lo resolvería",
@@ -424,12 +431,33 @@ function showReport(r) {
       esc(rep.numeric.sheet) + "</code></p>"));
   }
   if (rep.judge) {
+    // A CREDIT THAT CANNOT BE REDEEMED must not read as an ordinary one.
+    // "until-verification" is a promise that checking is possible, and on a
+    // dead ring that promise is false — the passport knew, the judge did
+    // not, and the reader was sent to verify the liar (2026-08-28).
+    const dead = rep.judge.credit === "UNREDEEMABLE"
+      ? `<p><b class="v-F">${esc(t("unredeemable"))}</b> ` +
+        `<span class="muted">${esc((rep.judge.unredeemable || []).join(", "))}` +
+        `</span></p>`
+      : "";
     out.push(panel(t("judge"),
       `<p>${t("verdict")}: ${verdictSpan(rep.judge.verdict)} · ` +
-      `${t("grade")}: ${esc(rep.judge.grade)}</p>` +
+      `${t("grade")}: ${esc(rep.judge.grade)}</p>` + dead +
       (rep.judge.unverified.length
         ? `<p class="muted">${t("weak")}: ` +
           esc(rep.judge.unverified.join(", ")) + "</p>" : "")));
+  }
+  if (rep.epoch) {
+    out.push(panel(t("epoch"), table(
+      [t("event"), t("expires"), t("before"), t("after"), ""],
+      rep.epoch.map(e => [
+        esc(e.event), esc(e.expires.join(", ")),
+        verdictSpan(e.before.verdict) + ` <span class="muted">` +
+          esc(e.before.grade) + "</span>",
+        verdictSpan(e.after.verdict) + ` <span class="muted">` +
+          esc(e.after.grade) + "</span>",
+        e.survives ? esc(t("survives"))
+                   : `<b class="v-F">${esc(t("fell"))}</b>`]))));
   }
   if (rep.ledger) {
     const rows = Object.entries(rep.ledger.claims).map(([k, v]) =>

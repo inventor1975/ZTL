@@ -101,6 +101,11 @@ def receipt(report: dict, doc: dict, epoch: str,
         if r.get("status") in ("verified", "refuted"):
             grounds[name] = {"status": r["status"],
                              "ground": (r.get("ground") or "").strip()}
+    # НА ЧЁМ ЗАРАБОТАНО ПО ОБЪЯВЛЕНИЮ. Едет в квитанцию и в отпечаток:
+    # предъявитель обязан видеть, что часть заработанного стоит не на
+    # предъявимом, а на сказанном (гл. 13 книги — «догма с паспортом»).
+    стип = [x["name"] for x in ((report.get("report") or {})
+                                .get("on_stipulation") or [])]
     expiry = {name: (r.get("expires_on") or "").strip()
               for name, r in sorted(rows.items())
               if (r.get("expires_on") or "").strip()}
@@ -135,6 +140,7 @@ def receipt(report: dict, doc: dict, epoch: str,
                     "unredeemable": sorted(judge.get("unredeemable") or [])},
         "epoch": (epoch or None),
         "expiry": expiry,
+        "on_stipulation": (sorted(стип) or None),
     }
     return {**core, "digest": _sha(_canon(core))}
 

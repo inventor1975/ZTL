@@ -74,7 +74,16 @@ def run_gate_case(v):
         c = cert(); receipts = {"r": (c, c.cert_digest)}
     elif g.get("receipt") == "wrong_digest":
         c = cert(); receipts = {"r": (c, "sha256:подделка")}
-    gated, dem = gate_document(doc, receipts, PURPOSE, EP, ELIG)
+    gv = g.get("guard_verdict")
+    cons = None
+    if gv == "CLEAR":
+        cons = {"ext": None}  # заполним ниже под настоящее имя строки
+        cons = {"r": {"verdict": "CLEAR", "ok": True}}
+    elif gv == "BLOCK":
+        cons = {"r": {"verdict": "BLOCK", "ok": False,
+                      "disposition": "GUARD_NOT_PRESERVED",
+                      "reason": "сторож источника не доехал"}}
+    gated, dem = gate_document(doc, receipts, PURPOSE, EP, ELIG, cons)
     got = {"status_after": gated["rows"][0]["status"], "demoted": bool(dem),
            "original_unchanged": doc["rows"][0]["status"] == g["status"]}
     if dem:

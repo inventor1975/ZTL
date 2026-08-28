@@ -262,6 +262,17 @@ def main():
         "0.868": "superseded host figure, quoted as superseded",
         "2,444": "superseded host figure, quoted as superseded",
         "12,266": "superseded host figure, quoted as superseded",
+        # HOST FIGURE, and the exemption is the honest move rather than a
+        # patch over a hole. `9.9%` (note §3.2) is printed — by
+        # `db/probe_real.py`, as `100 * any_alt / n` over whatever
+        # `/var/lib/dpkg/status` the run finds. It was flagged as an orphan
+        # because the check compares against pinned run OUTPUT, and this
+        # probe's numbers are deliberately not pinned (see the entry above:
+        # "NO HOST-SPECIFIC FIGURES"), so no run text ever carries it.
+        # Diagnosed 2026-08-28; my first reading — "no program prints it" —
+        # was wrong, and wrong in a specific way worth recording: I grepped
+        # for the literal, and the figure is COMPUTED.
+        "9.9": "host figure from probe_real (per-node share), quoted as measured",
     }
     PROSE_OK = set(PROSE_EXEMPT) | {f"{a}.{b}" for a in range(1, 8)
                                     for b in range(0, 10)}

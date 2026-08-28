@@ -1,0 +1,108 @@
+# -*- coding: utf-8 -*-
+"""«Построено и не позвано» — прибор на СПЯЩИЕ ЗАЩИТЫ.
+
+ПОЧЕМУ ОН ЕСТЬ. За один день 2026-08-28 этот класс всплыл ПЯТЬ раз, трижды
+у нас и дважды у чужих:
+  - ворота оснований в zfl2 строились под книгу и книгой не звались;
+  - zredeem (штампы погашаемости) не звался таблицей вовсе;
+  - реестр оснований не спрашивался квитанцией — и лживая квитанция с
+    основаниями «ЧТО-УГОДНО» сверялась чисто, неся T EARNED hereditary;
+  - в наряде OIC PR#37 детектор запрещённой семантики был МЁРТВЫМ
+    ПАРАМЕТРОМ: боевой вызов ему списка путей не давал никогда;
+  - в MAM `RequiredLifecycle` и `SensitivityLimit` приходят с провода и не
+    читаются решателем, отчего память с НЕУСТАНОВЛЕННЫМ жизненным циклом
+    проходит как живая.
+
+Форма у всех одна: **защита написана, вызывающий про неё не знает**. Тесты
+её зовут, потому их и мало кто ловит: покрытие зелёное, боевой путь слеп.
+
+ЧТО МЕРИТ ЭТОТ ПРИБОР. Необязательные параметры (те, у кого есть значение по
+умолчанию) — и кто их передаёт ПО ИМЕНИ. Если параметр передают только
+тесты, или не передают вовсе, он спит.
+
+ЧЕГО ОН НЕ МЕРИТ, сказано здесь, а не после: позиционную передачу, вызовы
+через getattr и любую динамику. Значит «не найдено» тут слабее обычного —
+это НИЖНЯЯ оценка числа спящих, не полная.
+"""
+import ast
+import pathlib
+import sys
+
+ROOT = pathlib.Path(__file__).resolve().parent.parent
+СКАН = ["tool", "inventory", "db", "."]
+ПРОПУСК = {"prior-art", "_attic", "archive", "__pycache__", ".git", "lean"}
+ТЕСТ = ("test_", "_test", "probe_", "stand")
+
+# Имена, которые ЗВУЧАТ как защита: у спящего сторожа цена выше, чем у
+# спящего удобства, поэтому они печатаются отдельно.
+СТОРОЖ = ("registry", "guard", "check", "verify", "validate", "strict",
+          "gate", "policy", "allow", "deny", "limit", "require", "expect",
+          "audit", "sign", "expire", "epoch")
+
+
+def файлы():
+    for d in СКАН:
+        p = ROOT / d
+        if not p.exists():
+            continue
+        for f in (p.glob("*.py") if d == "." else p.rglob("*.py")):
+            if any(часть in ПРОПУСК for часть in f.parts):
+                continue
+            yield f
+
+
+def main():
+    объявлено = {}      # (файл, функция, параметр) -> строка
+    передано_бой = set()
+    передано_тест = set()
+    for f in файлы():
+        тест = any(t in f.name for t in ТЕСТ)
+        try:
+            tree = ast.parse(f.read_text(encoding="utf-8"))
+        except SyntaxError:
+            print(f"  [ПРОПУЩЕН] {f.relative_to(ROOT)} — не разбирается")
+            continue
+        for node in ast.walk(tree):
+            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                if node.name.startswith("_") or тест:
+                    continue
+                a = node.args
+                сдефолтом = a.args[len(a.args) - len(a.defaults):] + a.kwonlyargs
+                for arg in сдефолтом:
+                    объявлено[(str(f.relative_to(ROOT)), node.name,
+                               arg.arg)] = node.lineno
+            elif isinstance(node, ast.Call):
+                имя = (node.func.attr if isinstance(node.func, ast.Attribute)
+                       else getattr(node.func, "id", None))
+                for kw in node.keywords:
+                    if kw.arg:
+                        (передано_тест if тест else передано_бой).add((имя, kw.arg))
+
+    спящие = []
+    for (файл, func, param), строка in sorted(объявлено.items()):
+        if (func, param) in передано_бой:
+            continue
+        только_тест = (func, param) in передано_тест
+        спящие.append((файл, func, param, строка, только_тест))
+
+    сторожа = [s for s in спящие if any(k in s[2].lower() for k in СТОРОЖ)]
+    print("=" * 74)
+    print("СПЯЩИЕ ЗАЩИТЫ: необязательный ход, которого боевой путь не делает")
+    print("=" * 74)
+    print(f"\nразобрано функций с необязательными ходами: {len(объявлено)}")
+    print(f"из них не передаются боевым путём: {len(спящие)}")
+    print(f"из них ЗВУЧАТ как защита: {len(сторожа)}\n")
+    for файл, func, param, строка, тест in сторожа:
+        метка = "ТОЛЬКО ТЕСТ" if тест else "НИКТО"
+        print(f"  {метка:12} {файл}:{строка}  {func}({param}=…)")
+    print("\nЧИТАТЬ ТАК: «ТОЛЬКО ТЕСТ» опаснее «НИКТО» — покрытие зелёное,")
+    print("а боевой путь слеп. Ровно так выглядели все пять случаев дня.")
+    print("Это НИЖНЯЯ оценка: позиционную передачу прибор не видит.")
+    return сторожа
+
+
+if __name__ == "__main__":
+    с = main()
+    print("\nUNWIRED SCAN GREEN — список выше не приговор, а вопрос к каждому:")
+    print("этот ход не зовут потому, что он не нужен, или потому, что о нём")
+    print("забыли? Второй случай сегодня встретился пять раз.")

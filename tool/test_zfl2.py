@@ -252,6 +252,47 @@ def sec7_the_ground_gate_demotes_phantom_words():
     print("   with one: the phantom is demoted BY NAME and the verdict")
     print("   honestly falls OPEN; a registered ground still earns.")
 
+def sec8_the_credit_that_cannot_be_redeemed():
+    """The judge and the passport stop contradicting each other.
+
+    Found 2026-08-28 marking up Protagoras v. Euathlus: one report said
+    `until-verification` ("go and check") about the very name the passport
+    called a PERMANENT refusal ("there is nothing to check, ever"). Three
+    invariants here — the mark appears where the ring is dead, it does NOT
+    appear on an ordinary unverified atom, and the verdict itself is
+    untouched (the core computed it correctly; only what the marking could
+    not say is added beside it)."""
+    print("\n### 8. a credit that cannot be redeemed says so")
+
+    liar = {"claim": "L", "rows": [
+        {"name": "L", "means": "this sentence is false",
+         "status": "defined", "ground": "~Tr(L)"}]}
+    j = zfl2.run(liar)["report"]["judge"]
+    assert j["credit"] == "UNREDEEMABLE", j
+    assert j["unredeemable"] == ["L"], j
+    assert j["grade"] == "until-verification", j      # the grade is NOT rewritten
+    assert j["verdict"] == "Z", j                     # nor the verdict
+    print("   the liar: grade untouched, credit marked UNREDEEMABLE")
+
+    # An ordinary unverified atom is a real credit — it must NOT be marked.
+    plain = {"claim": "p", "rows": [
+        {"name": "p", "means": "the cat lives next door",
+         "status": "unverified", "ground": ""}]}
+    j2 = zfl2.run(plain)["report"]["judge"]
+    assert "credit" not in j2, j2
+    print("   an ordinary mark is left alone — no false positive")
+
+    # A grounded definition is completable: no mark either.
+    grounded = {"claim": "g", "rows": [
+        {"name": "seen", "means": "checked", "status": "verified",
+         "ground": "logbook"},
+        {"name": "g", "means": "g is what was seen",
+         "status": "defined", "ground": "Tr(seen)"}]}
+    j3 = zfl2.run(grounded)["report"].get("judge") or {}
+    assert "credit" not in j3, j3
+    print("   a grounded definition is completable — no mark")
+
+
 if __name__ == "__main__":
     print("=" * 72)
     print("ZFL v2 — the table, headless")
@@ -262,6 +303,7 @@ if __name__ == "__main__":
     sec3b_what_the_ground_column_is_actually_for()
     sec4_an_unknown_is_a_question_not_a_gap()
     sec7_the_ground_gate_demotes_phantom_words()
+    sec8_the_credit_that_cannot_be_redeemed()
     sec4b_every_example_runs_and_json_types_are_taken_as_they_come()
     sec5_the_spec_can_build_the_form_and_the_page()
     print("=" * 72)

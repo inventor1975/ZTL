@@ -141,6 +141,8 @@ STANDS = [
                         "ending hereditary: 130",
                         "GENUINE entries into sound-only (predecessor not S): 0",
                         "FULL STRICT LADDER U → S → H: realized, rung by rung."]),
+    ("tool/introspect/test_tcc2.py", ["TCC-2 GREEN",
+                                      "деонтический тип и отрицание"]),
     ("tool/test_zfl.py", ["ZFL FOUNDATION GREEN"]),
     ("tool/zfl2doc.py", ["ZFL DOC GREEN",
                          "every code the validator raises is documented"]),

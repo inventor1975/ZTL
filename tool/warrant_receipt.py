@@ -59,11 +59,35 @@ def _sha(text: str) -> str:
     return hashlib.sha256(text.encode("utf-8")).hexdigest()
 
 
-def receipt(report: dict, doc: dict, epoch: str) -> dict:
+def receipt(report: dict, doc: dict, epoch: str,
+            ground_registry=None) -> dict:
     """Квитанция из отчёта `zfl2.run` и документа, что его породил.
 
     `epoch` задаёт вызывающий: это не свойство вердикта, а состояние мира, в
-    котором он вынесен, и подделать его изнутри нельзя."""
+    котором он вынесен, и подделать его изнутри нельзя.
+
+    ПОЧЕМУ ПОЯВИЛСЯ `ground_registry` — дыра найдена ПРОГОНОМ в тот же день
+    (2026-08-28), после того как arXiv 2606.24322 доказал машинно, что
+    привязка происхождения нужна НА ЗАПИСИ, а защита по содержимому или по
+    происхождению при отмывании несостоятельна. Проверил не рассуждением, а
+    судьёй, по слову куратора («ZTL не интуитивен»):
+
+        изготовил документ, где то же утверждение стоит на выдуманных
+        основаниях «ЧТО-УГОДНО» и «ТОЖЕ-ЧТО-УГОДНО» — и квитанция с него
+        сверилась ЧИСТО, неся `T EARNED hereditary`.
+
+    Отпечаток связывает квитанцию САМУ С СОБОЙ и ничего не говорит о мире:
+    он ловит ПОДМЕНУ, но не ЛОЖЬ ПРИ ИЗГОТОВЛЕНИИ. Теорема `receipt_complete`
+    тут не помогает — она о ВЕРНОЙ квитанции и молчит о лживой.
+
+    Лекарство нашлось своё же и вчерашнее — ворота оснований. Промерено на
+    том же документе: с реестром вердикт падает с `T EARNED hereditary` до
+    `Z OPEN until-verification`, а оба выдуманных основания разжалованы
+    ПОИМЁННО; честный документ под тем же реестром зарабатывает как прежде.
+
+    Реестр входит в отпечаток отдельным полем, и квитанция, выписанная БЕЗ
+    реестра, теперь ОТЛИЧИМА от выписанной под реестром — это сигнал
+    предъявителю, а не молчание."""
     judge = (report.get("report") or {}).get("judge") or {}
     rows = {r.get("name"): r for r in (doc.get("rows") or [])}
     holding = {}
@@ -80,8 +104,12 @@ def receipt(report: dict, doc: dict, epoch: str) -> dict:
     expiry = {name: (r.get("expires_on") or "").strip()
               for name, r in sorted(rows.items())
               if (r.get("expires_on") or "").strip()}
+    reg = (None if ground_registry is None
+           else {"digest": _sha(_canon(sorted(ground_registry))),
+                 "size": len(set(ground_registry))})
     core = {
         "version": RECEIPT_VERSION,
+        "registry": reg,
         "claim": (doc.get("claim") or "").strip(),
         "holding": holding,
         "grounds": grounds,

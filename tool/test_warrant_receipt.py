@@ -79,8 +79,46 @@ if __name__ == "__main__":
     check("порядок строк не меняет отпечаток",
           _rec(переставлено)["digest"] == r0["digest"])
 
+    print("\n### 6б. ЛЖИВАЯ КВИТАНЦИЯ — и чем она ловится")
+    # Найдено 2026-08-28 прогоном, не рассуждением (слово куратора: ZTL не
+    # интуитивен, проверять судьёй). Отпечаток ловит ПОДМЕНУ и не ловит ЛОЖЬ
+    # ПРИ ИЗГОТОВЛЕНИИ: документ с выдуманными основаниями даёт квитанцию,
+    # которая сверяется чисто и несёт T EARNED hereditary.
+    ЛОЖЬ = {"claim": "deal_ok", "rows": [
+        {"name": "pf", "means": "не в залоге", "status": "verified",
+         "ground": "ЧТО-УГОДНО"},
+        {"name": "po", "means": "документы", "status": "verified",
+         "ground": "ТОЖЕ-ЧТО-УГОДНО"},
+        {"name": "deal_ok", "means": "можно закрывать", "status": "defined",
+         "ground": "Tr(pf) & Tr(po)"}]}
+    ЧЕСТЬ = {"claim": "deal_ok", "rows": [
+        {"name": "pf", "means": "не в залоге", "status": "verified",
+         "ground": "vypiska"},
+        {"name": "po", "means": "документы", "status": "verified",
+         "ground": "pts"},
+        {"name": "deal_ok", "means": "можно закрывать", "status": "defined",
+         "ground": "Tr(pf) & Tr(po)"}]}
+    РЕЕСТР = {"vypiska", "pts"}
+
+    голая = wr.receipt(zfl2.run(ЛОЖЬ), ЛОЖЬ, "epoch-A")
+    check("БЕЗ реестра лживая квитанция сверяется — дыра реальна",
+          wr.verify(голая) and голая["verdict"]["disposition"] == "EARNED")
+    подреестром = wr.receipt(zfl2.run(ЛОЖЬ, ground_registry=РЕЕСТР), ЛОЖЬ,
+                             "epoch-A", ground_registry=РЕЕСТР)
+    check("ПОД реестром та же ложь падает в OPEN",
+          подреестром["verdict"]["disposition"] == "OPEN")
+    честная = wr.receipt(zfl2.run(ЧЕСТЬ, ground_registry=РЕЕСТР), ЧЕСТЬ,
+                         "epoch-A", ground_registry=РЕЕСТР)
+    check("честный документ под тем же реестром зарабатывает как прежде",
+          честная["verdict"]["disposition"] == "EARNED")
+    check("квитанция БЕЗ реестра отличима от выписанной ПОД реестром",
+          голая["registry"] is None and честная["registry"] is not None
+          and голая["digest"] != честная["digest"])
+
     print("\n### 7. ЧЕГО ЭТО НЕ УСТАНАВЛИВАЕТ")
     print("   Квитанция не подписывает (ключи — дело потребителя), не")
+    print("   ловит ЛОЖЬ ПРИ ИЗГОТОВЛЕНИИ сама по себе — для этого нужен")
+    print("   реестр оснований, и без него она честно говорит registry=None;")
     print("   устанавливает истину источника (только что форсит разметка) и")
     print("   не переносит полномочие: предъявитель получает право ПРОВЕРИТЬ,")
     print("   а не право действовать.")

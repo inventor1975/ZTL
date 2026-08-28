@@ -196,6 +196,93 @@ theorem hereditary_sound {φ : Fm} {m : Marking}
     (hH : Hereditary φ m) : Sound φ m :=
   fun c hc => hH c hc.1
 
+/-! ## The system: sentences, not only marks
+
+THE GAP THIS CLOSES (found 2026-08-28 by marking up a legal antinomy,
+Protagoras v. Euathlus). Everything above speaks of MARKS, and `verify`
+may resolve any mark whatever — so `until-verification` reads "go and
+check". But a document also carries SENTENCES: rows whose ground is a
+formula over other rows. A ring of those can forbid every ending, and
+then no act of checking will ever arrive. The ladder had no rung for a
+credit that cannot be redeemed, and the studio duly told a reader to go
+verify the liar. What follows names the missing notion and proves the
+impossibility is absorbing, exactly as `hereditary_absorbing` proves it
+of the settled case. -/
+
+/-- A system of sentences. `S n = some φ` — the row named `n` IS `φ`;
+`S n = none` — a free atom carrying its own mark. -/
+def System := Nat → Option Fm
+
+/-- ADMISSIBLE: every defined name carries exactly the value of its own
+sentence. This is the constraint the marks above never had. -/
+def Admissible (S : System) (m : Marking) : Prop :=
+  ∀ n φ, S n = some φ → m n = evalF m φ
+
+/-- COMPLETABLE: some ending of time is admissible — there is a way to
+finish checking that the system itself permits. -/
+def Completable (S : System) (m : Marking) : Prop :=
+  ∃ c, Completion c m ∧ Admissible S c
+
+/-- **The unredeemable credit.** When no ending is admissible, no ending
+reached is admissible either — the promise inside `until-verification`
+("check it and the mark resolves") has nothing to be kept by. -/
+theorem credit_never_redeemed {S : System} {m : Marking}
+    (h : ¬ Completable S m) {c : Marking} (hc : Completion c m) :
+    ¬ Admissible S c :=
+  fun ha => h ⟨c, hc, ha⟩
+
+/-- **Law 4: unredeemability is absorbing** — the mirror of Law 1. A
+hereditary verdict survives every tick; so does an impossible ending.
+No amount of honest checking can turn the liar into a checkable row. -/
+theorem not_completable_persists {S : System} {m m' : Marking}
+    (hr : Refines m' m) (h : ¬ Completable S m) : ¬ Completable S m' := by
+  intro hc
+  apply h
+  match hc with
+  | ⟨c, hcomp, ha⟩ =>
+      exact ⟨c, ⟨refines_trans hcomp.1 hr, hcomp.2⟩, ha⟩
+
+/-- Negation has no fixed point among the values — proved here rather
+than imported, since this module is self-contained. -/
+theorem znot_no_fixed_point (v : V) : znot v ≠ v := by
+  cases v <;> decide
+
+/-! ### Two witnesses: the notion separates -/
+
+/-- The liar as a system: row 0 says "row 0 is false". -/
+def liarSys : System
+  | 0 => some (Fm.neg (Fm.atom 0))
+  | _ + 1 => none
+
+/-- **The liar admits no ending, from any marking.** An admissible
+completion would have to satisfy `c 0 = ¬(c 0)`, and negation has no
+fixed point. So its Z is not a credit awaiting payment — it is a credit
+that can never be redeemed, and Law 4 says no tick changes that. -/
+theorem liar_not_completable (m : Marking) : ¬ Completable liarSys m := by
+  intro hc
+  match hc with
+  | ⟨c, _, ha⟩ =>
+      exact znot_no_fixed_point (c 0) (ha 0 (Fm.neg (Fm.atom 0)) rfl).symm
+
+/-- A grounded system: row 0 says "true". -/
+def groundedSys : System
+  | 0 => some Fm.top
+  | _ + 1 => none
+
+/-- **A grounded system DOES admit an ending** — so the notion is not
+vacuous: it separates the ring that forbids completion from the sentence
+that merely states one. -/
+theorem grounded_completable (m : Marking) (hm : ∀ n, m n = V.Z) :
+    Completable groundedSys m := by
+  refine ⟨fun _ => V.T, ⟨?_, ?_⟩, ?_⟩
+  · intro n hn
+    exact absurd (hm n) hn
+  · intro n
+    exact V.noConfusion
+  · intro n φ hφ
+    match n, hφ with
+    | 0, h => exact congrArg (fun x => evalF (fun _ => V.T) x) (Option.some.inj h)
+
 /-! ## The witness: sound IS earned (the refutation, kernel-checked)
 
 The conjecture "sound-only is a birth grade" is FALSE. Refinements and
@@ -256,6 +343,11 @@ end Witness
 #print axioms evalF_congr
 #print axioms grounded_hereditary
 #print axioms hereditary_sound
+#print axioms credit_never_redeemed
+#print axioms not_completable_persists
+#print axioms znot_no_fixed_point
+#print axioms liar_not_completable
+#print axioms grounded_completable
 #print axioms Witness.strict_ladder
 
 end ZTime

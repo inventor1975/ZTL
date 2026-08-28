@@ -31,7 +31,7 @@
 <tr class="adv"><td><b>separate measurements</b></td><td>each occurrence is its own act of measuring</td><td>no</td><td></td></tr>
 </table>
 <h2>the document itself</h2><table><tr><th>column</th><th>what it is</th><th>required</th><th>options / examples</th></tr>
-<tr><td><b>admissible grounds</b></td><td>the grounds this document accepts, comma-separated. A row earning on a ground outside the list falls to unverified rather than to false. Empty: the gate says nothing</td><td>no</td><td>registry_extract, vehicle_title · перебор, промер, ch7</td></tr>
+<tr><td><b>admissible grounds</b></td><td>the grounds this document accepts, comma-separated. A row earning on a ground outside the list falls to unverified rather than to false. A tier may be given — &#x27;master:story, perebor:act&#x27;: story means &#x27;so it was said&#x27;, and what earns on it is marked. Empty: the gate says nothing</td><td>no</td><td>registry_extract:place, testimony:story · перебор:act, промер:act, мастер:story</td></tr>
 <tr><td><b>claim</b></td><td>what you are actually asserting</td><td>no</td><td>line &lt;= budget · rain -&gt; umbrella</td></tr>
 <tr><td><b>ask</b></td><td>narrow the report; empty shows everything that applies</td><td>no</td><td>verdict · warranty · passport · stipulations · blast · brackets</td></tr>
 </table>
@@ -112,7 +112,7 @@
 <tr class="adv"><td><b>отдельные измерения</b></td><td>каждое вхождение — свой акт измерения</td><td>нет</td><td></td></tr>
 </table>
 <h2>сам документ</h2><table><tr><th>колонка</th><th>что это</th><th>обязательна</th><th>варианты / примеры</th></tr>
-<tr><td><b>допустимые основания</b></td><td>основания, которые этот документ признаёт, через запятую. Строка, заработавшая на основании вне списка, падает в непроверенное, а не в ложь. Пусто — ворота молчат</td><td>нет</td><td>registry_extract, vehicle_title · перебор, промер, ch7</td></tr>
+<tr><td><b>допустимые основания</b></td><td>основания, которые этот документ признаёт, через запятую. Строка, заработавшая на основании вне списка, падает в непроверенное, а не в ложь. Можно указать ярус — «master:story, perebor:act»: story значит «так сказано», и заработавшее на нём будет помечено. Пусто — ворота молчат</td><td>нет</td><td>registry_extract:place, testimony:story · перебор:act, промер:act, мастер:story</td></tr>
 <tr><td><b>утверждение</b></td><td>что мы, собственно, заявляем</td><td>нет</td><td>line &lt;= budget · rain -&gt; umbrella</td></tr>
 <tr><td><b>спросить</b></td><td>сузить отчёт; пусто — показывается всё применимое</td><td>нет</td><td>verdict · warranty · passport · stipulations · blast · brackets</td></tr>
 </table>
@@ -193,7 +193,7 @@
 <tr class="adv"><td><b>окремі виміри</b></td><td>число з вибірки, а не одне вимірювання</td><td>ні</td><td></td></tr>
 </table>
 <h2>сам документ</h2><table><tr><th>стовпець</th><th>що це</th><th>обов&#x27;язково</th><th>варіанти / приклади</th></tr>
-<tr><td><b>допустимі підстави</b></td><td>через кому; порожньо — ворота мовчать</td><td>ні</td><td>registry_extract, vehicle_title · перебор, промер, ch7</td></tr>
+<tr><td><b>допустимі підстави</b></td><td>через кому; порожньо — ворота мовчать</td><td>ні</td><td>registry_extract:place, testimony:story · перебор:act, промер:act, мастер:story</td></tr>
 <tr><td><b>claim</b></td><td>what you are actually asserting</td><td>ні</td><td>line &lt;= budget · rain -&gt; umbrella</td></tr>
 <tr><td><b>ask</b></td><td>narrow the report; empty shows everything that applies</td><td>ні</td><td>verdict · warranty · passport · stipulations · blast · brackets</td></tr>
 </table>
@@ -274,7 +274,7 @@
 <tr class="adv"><td><b>מדידות נפרדות</b></td><td>מספר מתוך מדגם, לא מדידה אחת</td><td>לא</td><td></td></tr>
 </table>
 <h2>המסמך עצמו</h2><table><tr><th>עמודה</th><th>מה זה</th><th>חובה</th><th>אפשרויות / דוגמאות</th></tr>
-<tr><td><b>אסמכתאות קבילות</b></td><td>מופרדות בפסיק; ריק — השער שותק</td><td>לא</td><td>registry_extract, vehicle_title · перебор, промер, ch7</td></tr>
+<tr><td><b>אסמכתאות קבילות</b></td><td>מופרדות בפסיק; ריק — השער שותק</td><td>לא</td><td>registry_extract:place, testimony:story · перебор:act, промер:act, мастер:story</td></tr>
 <tr><td><b>claim</b></td><td>what you are actually asserting</td><td>לא</td><td>line &lt;= budget · rain -&gt; umbrella</td></tr>
 <tr><td><b>ask</b></td><td>narrow the report; empty shows everything that applies</td><td>לא</td><td>verdict · warranty · passport · stipulations · blast · brackets</td></tr>
 </table>
@@ -355,7 +355,7 @@
 <tr class="adv"><td><b>Einzelmessungen</b></td><td>eine Zahl aus einer Stichprobe, keine einzelne Messung</td><td>nein</td><td></td></tr>
 </table>
 <h2>das Dokument selbst</h2><table><tr><th>Spalte</th><th>was es ist</th><th>Pflicht</th><th>Optionen / Beispiele</th></tr>
-<tr><td><b>zulässige Grundlagen</b></td><td>kommagetrennt; leer heißt: das Tor schweigt</td><td>nein</td><td>registry_extract, vehicle_title · перебор, промер, ch7</td></tr>
+<tr><td><b>zulässige Grundlagen</b></td><td>kommagetrennt; leer heißt: das Tor schweigt</td><td>nein</td><td>registry_extract:place, testimony:story · перебор:act, промер:act, мастер:story</td></tr>
 <tr><td><b>claim</b></td><td>what you are actually asserting</td><td>nein</td><td>line &lt;= budget · rain -&gt; umbrella</td></tr>
 <tr><td><b>ask</b></td><td>narrow the report; empty shows everything that applies</td><td>nein</td><td>verdict · warranty · passport · stipulations · blast · brackets</td></tr>
 </table>
@@ -436,7 +436,7 @@
 <tr class="adv"><td><b>mesures séparées</b></td><td>un nombre issu d&#x27;un échantillon, pas d&#x27;une seule mesure</td><td>non</td><td></td></tr>
 </table>
 <h2>le document lui-même</h2><table><tr><th>colonne</th><th>ce que c&#x27;est</th><th>obligatoire</th><th>options / exemples</th></tr>
-<tr><td><b>fondements admis</b></td><td>separes par des virgules ; vide : la porte se tait</td><td>non</td><td>registry_extract, vehicle_title · перебор, промер, ch7</td></tr>
+<tr><td><b>fondements admis</b></td><td>separes par des virgules ; vide : la porte se tait</td><td>non</td><td>registry_extract:place, testimony:story · перебор:act, промер:act, мастер:story</td></tr>
 <tr><td><b>claim</b></td><td>what you are actually asserting</td><td>non</td><td>line &lt;= budget · rain -&gt; umbrella</td></tr>
 <tr><td><b>ask</b></td><td>narrow the report; empty shows everything that applies</td><td>non</td><td>verdict · warranty · passport · stipulations · blast · brackets</td></tr>
 </table>
@@ -517,7 +517,7 @@
 <tr class="adv"><td><b>mediciones separadas</b></td><td>un número de una muestra, no una sola medición</td><td>no</td><td></td></tr>
 </table>
 <h2>el documento mismo</h2><table><tr><th>columna</th><th>qué es</th><th>obligatorio</th><th>opciones / ejemplos</th></tr>
-<tr><td><b>fundamentos admitidos</b></td><td>separados por comas; vacio: la puerta calla</td><td>no</td><td>registry_extract, vehicle_title · перебор, промер, ch7</td></tr>
+<tr><td><b>fundamentos admitidos</b></td><td>separados por comas; vacio: la puerta calla</td><td>no</td><td>registry_extract:place, testimony:story · перебор:act, промер:act, мастер:story</td></tr>
 <tr><td><b>claim</b></td><td>what you are actually asserting</td><td>no</td><td>line &lt;= budget · rain -&gt; umbrella</td></tr>
 <tr><td><b>ask</b></td><td>narrow the report; empty shows everything that applies</td><td>no</td><td>verdict · warranty · passport · stipulations · blast · brackets</td></tr>
 </table>

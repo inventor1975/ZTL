@@ -1020,7 +1020,17 @@ def run(doc, ground_registry=None):
             return {"ok": False, "issues": issues}
     elif what["judge"]:
         try:
-            r = judge(claim, to_marking(rows))
+            # THROUGH the definitions, not around them. `to_marking` reports
+            # marks and stops — correct about what a mark IS, and blind to
+            # every value the sentences DETERMINE. Measured on the book
+            # (2026-08-28): chapter 3 claims `honest_unknown & ~evasion`,
+            # both defined from rows that are verified, and the judge called
+            # it F/until-verification — a FALSE NEGATIVE it had been
+            # reporting all along. Two chapters of eighteen move, both from
+            # not-earned to earned. This is the architecture the draft
+            # already states: quarantine is the Z-set of the lazy jump's
+            # least fixed point, and ZTL is the greedy reading ON TOP of it.
+            r = judge(claim, resolved_marking(rows))
         except Exception as exc:
             issues.append(_issue("error", "E_UNREADABLE", "claim",
                                  f"the instruments could not read this "

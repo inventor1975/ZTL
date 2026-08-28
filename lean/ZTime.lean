@@ -247,6 +247,23 @@ than imported, since this module is self-contained. -/
 theorem znot_no_fixed_point (v : V) : znot v ≠ v := by
   cases v <;> decide
 
+/-- Sound RELATIVE to a system: only endings the system permits get a
+vote. This is the obvious way to make the ladder system-aware — and the
+next theorem is why it is a trap. -/
+def SoundIn (S : System) (φ : Fm) (m : Marking) : Prop :=
+  ∀ c, Completion c m → Admissible S c → evalF c φ = evalF m φ
+
+/-- **THE TRAP, stated as a theorem.** If no ending is admissible, then
+EVERY formula is sound-in-the-system — vacuously, since there is no
+ending left to disagree. So relativising the ladder to admissible
+endings does not flag the liar; it PROMOTES it, handing the strongest
+grade to the one case that deserves none. The missing rung therefore
+cannot be carved out of `Sound`: unredeemability has to be its own
+notion, which is what `Completable` is. -/
+theorem vacuous_soundness {S : System} {m : Marking}
+    (h : ¬ Completable S m) (φ : Fm) : SoundIn S φ m :=
+  fun c hc ha => absurd ⟨c, hc, ha⟩ h
+
 /-! ### Two witnesses: the notion separates -/
 
 /-- The liar as a system: row 0 says "row 0 is false". -/
@@ -348,6 +365,7 @@ end Witness
 #print axioms znot_no_fixed_point
 #print axioms liar_not_completable
 #print axioms grounded_completable
+#print axioms vacuous_soundness
 #print axioms Witness.strict_ladder
 
 end ZTime

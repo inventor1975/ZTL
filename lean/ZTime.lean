@@ -264,6 +264,36 @@ theorem vacuous_soundness {S : System} {m : Marking}
     (h : ¬ Completable S m) (φ : Fm) : SoundIn S φ m :=
   fun c hc ha => absurd ⟨c, hc, ha⟩ h
 
+/-! ### The missing link: what `until-verification` actually promises -/
+
+/-- The U rung, stated POSITIVELY. Python computes it as the residue
+("neither hereditary nor sound"), but a residue cannot be reasoned with
+constructively: turning `¬ Sound` into a witness needs classical choice,
+and this corpus does not pay that. So name the witness itself — U is
+asserted exactly when some ending disagrees with the verdict, and THAT
+disagreement is the promise the word "until" makes to a reader. -/
+def Flippable (φ : Fm) (m : Marking) : Prop :=
+  ∃ c, Completion c m ∧ evalF c φ ≠ evalF m φ
+
+/-- A flip is precisely a failure of soundness (the direction that needs
+no classical step). -/
+theorem flippable_not_sound {φ : Fm} {m : Marking}
+    (hf : Flippable φ m) : ¬ Sound φ m := by
+  intro hs
+  match hf with
+  | ⟨c, hc, hne⟩ => exact hne (hs c hc)
+
+/-- **THE MISSING LINK.** When the system admits no ending, the flip that
+`until-verification` promises can only occur at an ending the system
+itself forbids. The reader is told "go and check, the answer may still
+turn" — and every turn available lies outside what the sentences allow.
+This is the false promise, named at the rung where it is made. -/
+theorem flip_only_where_forbidden {S : System} {φ : Fm} {m : Marking}
+    (h : ¬ Completable S m) (hf : Flippable φ m) :
+    ∃ c, Completion c m ∧ evalF c φ ≠ evalF m φ ∧ ¬ Admissible S c := by
+  match hf with
+  | ⟨c, hc, hne⟩ => exact ⟨c, hc, hne, credit_never_redeemed h hc⟩
+
 /-! ### Two witnesses: the notion separates -/
 
 /-- The liar as a system: row 0 says "row 0 is false". -/
@@ -365,6 +395,8 @@ end Witness
 #print axioms znot_no_fixed_point
 #print axioms liar_not_completable
 #print axioms grounded_completable
+#print axioms flippable_not_sound
+#print axioms flip_only_where_forbidden
 #print axioms vacuous_soundness
 #print axioms Witness.strict_ladder
 

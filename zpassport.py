@@ -161,21 +161,34 @@ def passports(system):
                                 "unverified input; refusal until verification"))
             else:
                 models = component_models(comp, system, env)
+                # THE PERIOD IS REPORTED FOR EVERY CYCLIC COMPONENT, not only
+                # for PARADOX. It used to be printed only where the model count
+                # was zero, and that hid a real distinction: the truth-teller
+                # τ ≡ τ and the even cycle A ≡ ¬B, B ≡ ¬A both report "2
+                # classical models; refusal until stipulation" — the SAME
+                # passport, byte for byte — while their greedy periods are 1
+                # and 2. `zparadox` had measured that difference since it was
+                # written; the passport simply did not carry it, so two
+                # components a reader must tell apart looked identical.
+                # Model count answers "how many ways could this be settled".
+                # Period answers "what does the machine do when it is not".
+                # They are different questions and neither implies the other.
+                p = oscillation_period(comp, system, env)
                 if len(models) == 1:
                     kind = ("INTRINSIC", 1)
                     forced = ", ".join(f"{k}={v}" for k, v
                                        in sorted(models[0].items()))
                     reports.append((comp, "INTRINSIC",
                                     f"exactly one classical model "
-                                    f"({forced}); the stipulation is "
-                                    f"FORCED, not chosen"))
+                                    f"({forced}); oscillation period {p}; "
+                                    f"the stipulation is FORCED, not chosen"))
                 elif models:
                     kind = ("UNDERDETERMINED", len(models))
                     reports.append((comp, "UNDERDETERMINED",
                                     f"{len(models)} classical models; "
+                                    f"oscillation period {p}; "
                                     f"refusal until stipulation"))
                 else:
-                    p = oscillation_period(comp, system, env)
                     kind = ("PARADOX", p)
                     reports.append((comp, "PARADOX",
                                     f"no classical models; oscillation "

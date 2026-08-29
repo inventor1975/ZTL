@@ -126,7 +126,17 @@ def run_statement(doc, parsed):
     # displays. Measured 2026-08-19 (`lab/width/`): for 91-93% of unsettled
     # claims some single ground moves the matter and an order is honest; for
     # the rest none does, and "check this one first" is empty work.
-    if z_atoms:
+    # НЕ НА РЕШЁННОМ. `_joint` отвечает «ни одно основание не двигает вердикт —
+    # значит нужны все вместе». На НАСЛЕДСТВЕННОМ вердикте ни одно и не двигает,
+    # потому что двигать нечего: тавтология `imp(and(a,b), a)` верна при любых
+    # a и b, а движок велел проверить оба. Это первый рог Менона — наряд на уже
+    # решённое, — тот самый, что 2026-08-19 починили в `judge` и `next_check`
+    # и не починили здесь: `judge` гасит joint при EARNED/REFUTED/E, а сюда
+    # охрана не дошла. Функция отвечала верно на свой вопрос; вопрос ей задавали
+    # не тот.
+    # `warranty == "hereditary"` и есть это условие на языке движка: вердикт
+    # держится при ЛЮБОМ доопределении марок, значит проверять нечего.
+    if z_atoms and report.get("warranty") != "hereditary":
         jg = joint_grounds(formula, declared)
         if jg:
             report["joint"] = (

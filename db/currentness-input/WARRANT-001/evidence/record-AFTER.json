@@ -1,0 +1,23 @@
+{
+  "record_class": "CURRENTNESS_EPISTEMIC_CLASSIFICATION",
+  "interval_opens_at": "effective_at",
+  "proposition_tested": "the act occurred inside an interval during which the recorded state satisfied the declared containment requirement and the actual state did not",
+  "evidence_universe": "the records supplied to this run, and nothing else",
+  "acted_certainly_inside": 50,
+  "acted_unresolved": 0,
+  "acted_certainly_outside": 1950,
+  "acted_upper_bound": 50,
+  "acts_total": 2000,
+  "conservation_holds": true,
+  "blind_steps_certain": 5,
+  "blind_steps_possible": 5,
+  "unresolved_witnesses": [],
+  "reduces_to_a_number": true,
+  "admissibility_determination": {
+    "state": "REFUSED_NO_WARRANT",
+    "question_arises": true,
+    "reason": "whether an unresolved act may be relied upon for a given use is an institutional rule; this layer classifies evidence and has no authority to invent one",
+    "completion_condition": "a separately identified institutional authority supplies a rule binding this epistemic classification to a reliance consequence, attributable to that authority and scoped to the use in question",
+    "warrant_ref": "ADMISSIBILITY-CONSEQUENCE-BOUNDED-WARRANT-001"
+  }
+}

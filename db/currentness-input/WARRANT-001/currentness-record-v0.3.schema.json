@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vitalyreznik.com/schemas/currentness-record-v0.3.json",
+  "title": "Currentness epistemic classification record",
+  "description": "Schema for the record emitted by measure.py. Created under ADMISSIBILITY-CONSEQUENCE BOUNDED IMPLEMENTATION WARRANT 001. Before this file the OUTPUT record had no schema at all: the two existing schemas describe the INPUT event dataset. The warrant permits omission only where a schema declares the field conditional, so the schema had to exist for the permission to be usable.",
+  "type": "object",
+  "required": [
+    "record_class", "interval_opens_at", "proposition_tested", "evidence_universe",
+    "acted_certainly_inside", "acted_unresolved", "acted_certainly_outside",
+    "acted_upper_bound", "acts_total", "conservation_holds",
+    "admissibility_determination"
+  ],
+  "properties": {
+    "record_class": { "const": "CURRENTNESS_EPISTEMIC_CLASSIFICATION" },
+    "interval_opens_at": { "type": "string" },
+    "proposition_tested": { "type": "string" },
+    "evidence_universe": { "type": "string" },
+    "acted_certainly_inside": { "type": "integer", "minimum": 0 },
+    "acted_unresolved": { "type": "integer", "minimum": 0 },
+    "acted_certainly_outside": { "type": "integer", "minimum": 0 },
+    "acted_upper_bound": { "type": "integer", "minimum": 0 },
+    "acts_total": { "type": "integer", "minimum": 0 },
+    "conservation_holds": { "type": "boolean" },
+    "blind_steps_certain": { "type": "integer", "minimum": 0 },
+    "blind_steps_possible": { "type": "integer", "minimum": 0 },
+    "unresolved_witnesses": { "type": "array", "items": { "type": "string" } },
+    "reduces_to_a_number": { "type": "boolean" },
+
+    "admissibility_consequence": {
+      "description": "CONDITIONAL. Present only when a separately identified institutional authority has bound this epistemic classification to a reliance consequence. This layer never emits it. Its ABSENCE is readable precisely because this schema declares it conditional; absence therefore does not mean loss in transit. null is FORBIDDEN: a field present with null is still carried by the record and is ambiguous four ways — not computed, not applicable, false, absent.",
+      "not": { "type": "null" }
+    },
+
+    "admissibility_determination": {
+      "description": "REQUIRED. The typed state of the admissibility question itself, carried OUTSIDE the target-plane result. It is not a consequence and must never be read as one.",
+      "type": "object",
+      "required": ["state", "question_arises", "reason", "completion_condition"],
+      "properties": {
+        "state": { "enum": ["REFUSED_NO_WARRANT"] },
+        "question_arises": { "type": "boolean" },
+        "reason": { "type": "string", "minLength": 1 },
+        "completion_condition": { "type": "string", "minLength": 1 },
+        "warrant_ref": { "type": "string" }
+      },
+      "additionalProperties": false
+    }
+  }
+}

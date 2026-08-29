@@ -1,0 +1,13 @@
+СОСТОЯНИЕ, РАСПОЗНАННОЕ ПОТРЕБИТЕЛЕМ:
+  OK   запись ПОСЛЕ правки (типизированный отказ) -> REFUSED_NO_WARRANT       HOLD_PENDING_WARRANT
+  OK   запись ДО правки (null)                    -> UNREADABLE               REJECT_RECORD
+  OK   пропуск при УСЛОВНОМ поле                  -> OMITTED_NOT_APPLICABLE   PROCEED_WITHOUT
+  OK   пропуск при ОБЯЗАТЕЛЬНОМ поле              -> UNREADABLE               REJECT_RECORD
+  OK   ложь                                       -> FALSE_NOT_ADMISSIBLE     DENY
+  OK   настоящее последствие                      -> CONSEQUENCE_PRESENT      APPLY
+
+  OK   схлопывания нет: все четыре института различены потребителем
+  OK   КОНТРОЛЬ: незатронутая часть записи пережила правку без единого изменения (14 полей)
+  OK   КОНТРОЛЬ: одинаковые записи получают одинаковое состояние (потребитель не сыплет различия из воздуха)
+
+CONSUMER GREEN: 9 OK, 0 FAIL

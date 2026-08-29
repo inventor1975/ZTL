@@ -142,7 +142,7 @@ STANDS = [
                         "GENUINE entries into sound-only (predecessor not S): 0",
                         "FULL STRICT LADDER U → S → H: realized, rung by rung."]),
     ("tool/introspect/test_frame_edge.py", ["FRAME EDGE GREEN", "7 OK, 0 FAIL"]),
-    ("tool/introspect/test_register.py", ["REGISTER GREEN", "34 OK, 0 FAIL"]),
+    ("tool/introspect/test_register.py", ["REGISTER GREEN", "38 OK, 0 FAIL"]),
     ("admission/admission.py", ["15 OK, 0 FAIL"]),
     ("admission/test_gate.py", ["GATE GREEN", "12 OK, 0 FAIL"]),
     ("admission/run_vectors.py", ["VECTORS GREEN", "20 OK, 0 FAIL"]),

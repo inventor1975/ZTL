@@ -46,6 +46,8 @@ STANDS = [
     ("zpassport.py",   ["✓ STIPULATION THEOREM: total",
                         "parity cross-check: 62 of 62 ✓"]),
     ("test_passport_period.py", ["PASSPORT-PERIOD GREEN", "9 OK, 0 FAIL"]),
+    ("tool/test_joint_not_on_settled.py",
+     ["JOINT-NOT-ON-SETTLED GREEN", "6 OK, 0 FAIL"]),
     ("ztljudge.py",     ["ZTLJUDGE GREEN", "over an unchanged core",
                         "a mark reached the join",
                         "label covered every load-bearing hole: 10806",

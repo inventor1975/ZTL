@@ -154,5 +154,37 @@ with tempfile.TemporaryDirectory() as td:
           "нет-правила" not in сводка and "б=1" in сводка,
           f"«правило:» из соседнего абзаца зачлось ходу; сводка: {сводка}")
 
+    # --- 9. ХОД НУМЕРОВАННЫМ ПУНКТОМ, не буллетом ---
+    vd7 = td / "v7"; vd7.mkdir()
+    (vd7/"verdict-01.md").write_text(
+        "1. «и» — [E] — судить не на чем\n"
+        "   правило: нет-правила\n"
+        "2) «к» — [S] — вред за краем; отрезано: третий\n"
+        "   правило: б\n", encoding="utf-8")
+    subprocess.run([sys.executable, str(ZC), "assemble", str(vd7), "--out", str(td/"l7.md")],
+                   check=True, capture_output=True)
+    led7 = (td/"l7.md").read_text(encoding="utf-8")
+    check("нумерованный ход сосчитан", "E=1" in led7 and "S=1" in led7,
+          "сборщик принимал только буллет и молча отдавал пустую сводку")
+    check("правило с нумерованного хода зачтено",
+          "ПРАВИЛО НЕ НАЗВАНО" not in led7 and "б=1" in led7)
+
+    # --- 10. ход в жирном оформлении; метка в ПРОДОЛЖЕНИИ нового хода не открывает ---
+    vd8 = td / "v8"; vd8.mkdir()
+    (vd8/"verdict-01.md").write_text(
+        "**Ход 1.** «л» — **[E]** — судить не на чем\n"
+        "   правило: нет-правила\n"
+        "**2.** «м» — [S] — вред за краем; отрезано: третий\n"
+        "   здесь в продолжении упомянута метка [T], и она НЕ должна открыть ход\n"
+        "   правило: б\n", encoding="utf-8")
+    subprocess.run([sys.executable, str(ZC), "assemble", str(vd8), "--out", str(td/"l8.md")],
+                   check=True, capture_output=True)
+    led8 = (td/"l8.md").read_text(encoding="utf-8")
+    сводка8 = next(l for l in led8.splitlines() if "Сводка меток" in l)
+    check("жирный/нумерованный ход сосчитан", "E=1" in сводка8 and "S=1" in сводка8,
+          f"сводка: {сводка8}")
+    check("КОНТРОЛЬ: метка в продолжении нового хода не открыла",
+          "T=1" not in сводка8, f"продолжение засчиталось как ход; сводка: {сводка8}")
+
 print(f"\nREGISTER {'GREEN' if not fail else 'RED'}: {ok} OK, {fail} FAIL")
 sys.exit(1 if fail else 0)

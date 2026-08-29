@@ -55,6 +55,50 @@ def версия(корень: pathlib.Path) -> str:
         return "НЕ ГИТ"
 
 
+def двойники(корень: pathlib.Path) -> dict[str, list[str]]:
+    """Модули с ОДНИМ именем в РАЗНЫХ каталогах, которые где-то импортируются
+    голым именем.
+
+    Ловушка, стоившая вечера 2026-08-29. На сервере лежала застава по старому
+    адресу `tool/introspect/admission.py`, в исходнике — по новому
+    `admission/admission.py`. Долить новое, не убрав старое, значит получить ДВЕ
+    заставы, и какая из них сработает, решит порядок путей, а не наш замысел.
+    Такое не ловится глазом и не держится в памяти — ни в моей, ни в чужой.
+
+    Ищем только те имена, которые ВПРАВДУ импортируются голыми (`import X`,
+    `from X import ...`): одинаковые `test_*.py` в разных углах ничем не грозят,
+    и ругаться на них значило бы приучить читателя не читать вывод."""
+    # АРХИВЫ НЕ СЧИТАЕМ. Первый прогон выдал 15 «двойников», и почти все —
+    # копии в OLD/ и _backup_pretab/, которые на путь импорта не попадают.
+    # Сторож, кричащий на шум, будет проигнорирован ровно тогда, когда закричит
+    # по делу; поэтому область сужена, и сужение названо вслух.
+    АРХИВ = ("OLD", "attic", "_attic", "archive")
+    def архивный(p: pathlib.Path) -> bool:
+        return any(ч in АРХИВ or ч.startswith("_backup") for ч in p.parts)
+
+    по_имени: dict[str, list[str]] = {}
+    for p in корень.rglob("*.py"):
+        if any(ч.startswith(".") or ч == "__pycache__" for ч in p.parts) or архивный(p):
+            continue
+        по_имени.setdefault(p.stem, []).append(str(p.relative_to(корень)))
+    голые = set()
+    for p in корень.rglob("*.py"):
+        if any(ч.startswith(".") or ч == "__pycache__" for ч in p.parts) or архивный(p):
+            continue
+        try:
+            src = p.read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            continue
+        for line in src.splitlines():
+            s = line.strip()
+            if s.startswith("import "):
+                голые.add(s[7:].split()[0].split(".")[0].split(",")[0])
+            elif s.startswith("from ") and " import " in s:
+                голые.add(s[5:].split()[0].split(".")[0])
+    return {имя: sorted(места) for имя, места in sorted(по_имени.items())
+            if len(места) > 1 and имя in голые}
+
+
 def записать(корень: pathlib.Path) -> int:
     ф = отпечатки(корень)
     (корень / ИМЯ).write_text(json.dumps({
@@ -84,9 +128,16 @@ def сверить(корень: pathlib.Path) -> int:
     пропали = [k for k in старое if k not in стало]
     print(f"объявлено: {len(старое)} файлов, коммит {было.get('commit')}, "
           f"снято {было.get('at')}")
+    дв = двойники(корень)
+    if дв:
+        print("ДВОЙНИКИ — один и тот же модуль в разных каталогах, "
+              "и он импортируется голым именем:")
+        for имя, места in дв.items():
+            print(f"  {имя}: {', '.join(места)}")
+        print("  Какой из них сработает, решит порядок путей, а не замысел.")
     if not (изменены or новые or пропали):
-        print(f"СХОДИТСЯ: {len(стало)} файлов")
-        return 0
+        print(f"СХОДИТСЯ: {len(стало)} файлов" + (f"; но ДВОЙНИКОВ {len(дв)}" if дв else ""))
+        return 1 if дв else 0
     for k in изменены:
         print(f"  ИЗМЕНЁН   {k}")
     for k in новые:

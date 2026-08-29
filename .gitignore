@@ -56,3 +56,4 @@ lean/.lake/
 # Наши находки по ним живут в ztl-private, не здесь.
 prior-art/
 atomstore_query.tasks/
+DEPLOYED.json

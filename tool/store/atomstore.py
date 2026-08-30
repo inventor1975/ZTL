@@ -28,6 +28,15 @@ import re
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+# ШОВ, НАЗВАННЫЙ ВСЛУХ (2026-08-30). Стор уехал из `introspect/` по слову
+# куратора: «стор — это не интроспект». Но `query` не чистый ретрив: он
+# заканчивается сверкой ответа guard'ом, и потому стор ЗАВИСИТ от анализатора,
+# оставшегося в `introspect/`. Зависимость реальна, и прятать её нельзя —
+# пусть путь стоит явно и с этой пометкой, пока не решено, разрезать ли
+# `query` на ретрив и сверку. Общая утилита `chunking` поднята в `tool/`,
+# чтобы её не тянуть через тот же шов.
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent))
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent / "introspect"))
 from chunking import chunk_prose  # noqa: E402
 
 TEXT_EXT = {".md", ".txt", ".tex", ".rst", ".org"}

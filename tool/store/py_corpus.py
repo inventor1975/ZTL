@@ -29,6 +29,7 @@ import sys
 MEASURED = re.compile(r"(МЕРЕНО|ИЗМЕРЕНО|ПРОМЕРЕНО|MEASURED|промерено|мерено)", re.I)
 SKIP = ("venv", ".venv", "site-packages", "__pycache__", ".lake", "node_modules")
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent))
 from atomstore import flag_injection  # noqa: E402
 
 

@@ -27,6 +27,7 @@ DECL = re.compile(r"^\s*(?:@\[[^\]]*\]\s*)?(theorem|lemma|def|instance|abbrev|st
 AXIOM_LINE = re.compile(r"#print\s+axioms\s+([A-Za-z_0-9'.]+)")
 SKIP_PARTS = (".lake", "_attic", "build")
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent))
 from atomstore import flag_injection  # noqa: E402
 
 

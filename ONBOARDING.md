@@ -484,7 +484,10 @@ it to VR upstream.
 
 Section 0 names the disease: a claim reached by reasoning where a measurement was
 available. Over 2026-08-24/25 the cure was built and turned on itself. It lives in
-`tool/introspect/` — read `КАК-ПОЛЬЗОВАТЬСЯ.md` there for the commands.
+`tool/introspect/` — the text analyser (marks taken from a SOURCE, judged by
+the core); `tool/store/` — the grounding store (retrieval only, judges nothing).
+Split 2026-08-30 on the curator's word. Read `КАК-ПОЛЬЗОВАТЬСЯ.md` in
+`introspect/` and `README.md` in `store/`.
 
 - **Atom-store.** Documents are broken into atomic claims and stored; a question
   retrieves the relevant atoms in milliseconds, and an answer is graded T/F/Z

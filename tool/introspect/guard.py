@@ -23,6 +23,7 @@ import sys
 # chunk_prose живёт в chunking — переиспользуем, не дублируем. Вынесена из
 # zchoose 2026-08-30 при закрытии яруса соблазна.
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent))
 from chunking import chunk_prose  # noqa: E402
 
 GROUNDING_RUBRIC = """Ты — ЗЕРО-ТРАСТ судья ОБОСНОВАННОСТИ. Тебе дают ИСТОЧНИК

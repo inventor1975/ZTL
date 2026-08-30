@@ -49,6 +49,8 @@ STANDS = [
     ("tool/test_joint_not_on_settled.py",
      ["JOINT-NOT-ON-SETTLED GREEN", "6 OK, 0 FAIL"]),
     ("tool/test_deploy_stamp.py", ["DEPLOY-STAMP GREEN", "12 OK, 0 FAIL"]),
+    ("inventory/test_backward.py", ["BACKWARD GREEN", "16 OK, 0 FAIL",
+                        "две дороги сошлись на всех 45 клетках"]),
     ("ztljudge.py",     ["ZTLJUDGE GREEN", "over an unchanged core",
                         "a mark reached the join",
                         "label covered every load-bearing hole: 10806",

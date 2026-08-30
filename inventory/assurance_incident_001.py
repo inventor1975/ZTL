@@ -34,6 +34,37 @@
 """
 import json, hashlib, sys
 
+# =====================================================================
+# КРИПТОГРАФИЧЕСКАЯ ПРИВЯЗКА К ИСТОРИИ — по требованию внешнего рецензента 2026-08-31
+# =====================================================================
+# Ручная копия может УПЛЫТЬ. Историческое утверждение не «эта копия функции
+# уязвима», а «реализация НА КОММИТЕ 6536d14 имела это свойство». Значит
+# копию надо привязать к оригиналу так, чтобы поздняя «уборка» её не
+# превратила молча в «представительную».
+#
+# Проверить оригинал руками:
+#   git show 6536d14:tool/warrant_receipt.py | sha256sum
+HIST_COMMIT   = "6536d1492000a3988815abf9ed175f5d417b7c19"
+HIST_PATH     = "tool/warrant_receipt.py"
+HIST_BLOB     = "73f8b42fc50aaffd480562881945c65b2d026133"
+HIST_FILE_SHA = "456d630f302442af8fddd1a35f9c51d03adb20a3811b69736e4038cbe3dabdbd"
+# ДВЕ РАЗНЫЕ ВЕЛИЧИНЫ, И ПУТАТЬ ИХ НЕЛЬЗЯ.
+#
+# HIST_FUNCS_SHA — отпечаток трёх функций, ВЫРЕЗАННЫХ ИЗ ИСТОРИЧЕСКОГО файла
+# процедурой ниже. Воспроизводится так:
+#   git show 6536d14:tool/warrant_receipt.py | python3 -c "import sys,hashlib,re; \
+#     s=sys.stdin.read(); print(hashlib.sha256('\\n'.join( \
+#     re.search(r'^def '+n+r'\(.*?(?=\n\ndef |\n\n#|\Z)',s,re.S|re.M).group(0) \
+#     for n in ['_canon','_sha','verify']).encode()).hexdigest())"
+HIST_FUNCS_SHA = "f69b9a3968283a4a27e5c18e5e410bcec336fdc960b0e9df9b6bdc08732eb2d6"
+#
+# COPY_SHA — отпечаток ЗДЕШНЕЙ копии, снятый её же процедурой. Он ДРУГОЙ и
+# обязан быть другим: копия переименована (_hist) и живёт в другом файле.
+# Подгонять одно под другое было бы ровно тем подлогом, который тут и
+# расследуется. Сходство копии с оригиналом установлено РУКАМИ один раз, на
+# этом коммите; здесь стенд стережёт лишь то, что КОПИЮ потом не правили.
+COPY_SHA = "3edc1e59a87c9e530dbdeff704ec4c519a97457838efc6686ebc06985949021b"
+
 # --------- ЗАМОРОЖЕНО ИЗ 6536d14, дословно. НЕ ПРАВИТЬ вместе с живым кодом.
 def _canon_hist(obj) -> str:
     return json.dumps(obj, ensure_ascii=False, sort_keys=True,
@@ -66,7 +97,31 @@ SPECIMEN_CORE = {
 }
 
 
+def _fixture_selfcheck():
+    """Копия обязана совпасть с историей ДО того, как что-то утверждать."""
+    import inspect
+    joined = "\n".join(
+        inspect.getsource(f).replace("_hist", "").rstrip()
+        for f in (_canon_hist, _sha_hist, _verify_hist))
+    return hashlib.sha256(joined.encode()).hexdigest()
+
+
 def main():
+    print(f"ПРИВЯЗКА: коммит {HIST_COMMIT[:7]}, blob {HIST_BLOB[:12]}")
+    print(f"  sha256 исторического файла : {HIST_FILE_SHA[:16]}…")
+    print(f"  sha256 замороженного образца: "
+          f"{hashlib.sha256(_canon_hist(SPECIMEN_CORE).encode()).hexdigest()[:16]}…")
+    now = _fixture_selfcheck()
+    print(f"  отпечаток здешней копии    : {now[:16]}…")
+    if now != COPY_SHA:
+        print()
+        print("СТЕНД КРАСНЫЙ: копию исторических функций ПРАВИЛИ.")
+        print(f"  пришпилено: {COPY_SHA}")
+        print(f"  сейчас    : {now}")
+        print("Историческое утверждение опирается на неизменность этой копии.")
+        return 1
+    print("  копия не тронута с момента заморозки.")
+    print()
     genuine = {**SPECIMEN_CORE,
                "digest": _sha_hist(_canon_hist(SPECIMEN_CORE))}
     fails = []

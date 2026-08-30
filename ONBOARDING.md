@@ -345,7 +345,7 @@ which settlement it removed — because a declaration that comes from outside th
 judge is otherwise a trapdoor.
 
 **`joint` — where step-by-step inquiry is impossible.** Measured 2026-08-19
-(`lab/width/`): for 91-93% of unsettled claims some single ground moves the
+(`inventory/width/`): for 91-93% of unsettled claims some single ground moves the
 matter. For the rest none does, and the width reaches the number of unverified
 grounds — 4 of 4, 5 of 5 in the hunt. "The two witnesses agree" is the everyday
 shape: check the first and you know nothing about agreement. `joint` names the

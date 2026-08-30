@@ -199,8 +199,14 @@ function renderStatement(rep, out) {
   if (rep.forgone) out.appendChild(el("div",
     `<p class="issue warning"><b>cost of the declaration:</b> ${esc(rep.forgone)}</p>`));
   // Grounds that must be filled together — where step-by-step is impossible.
+  // ЗАГОЛОВОК ЗАВИСИТ ОТ СОДЕРЖАНИЯ (2026-08-30). Ядро теперь умеет отвечать
+  // не только «нужны все», но и семейством МИНИМАЛЬНЫХ наборов; «together, or
+  // not at all» тогда описывает текст неверно — выбор есть, просто он между
+  // наборами, а не между грунтами. Подпись, противоречащая своему тексту, —
+  // тот же дефект наряда, только в вёрстке.
   if (rep.joint) out.appendChild(el("div",
-    `<p class="issue warning"><b>together, or not at all:</b> ${esc(rep.joint)}</p>`));
+    `<p class="issue warning"><b>${rep.joint.includes("smallest sets")
+        ? "a set at a time, not a ground" : "together, or not at all"}:</b> ${esc(rep.joint)}</p>`));
   // A verdict that reads none of its unverified atoms (the Girard cell).
   if (rep.frame) out.appendChild(el("div",
     `<p class="issue warning"><b>frame:</b> ${esc(rep.frame)}</p>`));

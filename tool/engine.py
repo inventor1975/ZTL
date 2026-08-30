@@ -17,7 +17,7 @@ from zpassport import passports, deps, component_models  # noqa: E402
 from zfl import to_statement, to_system                  # noqa: E402
 from znormal import normalise, on_credit                # noqa: E402
 import zboundary
-from ztljudge import joint_grounds, absence_report                                        # noqa: E402
+from ztljudge import joint_grounds, joint_sets, absence_report                                        # noqa: E402
 import zderive                                           # noqa: E402
 from entailment import entails                           # noqa: E402
 
@@ -123,7 +123,7 @@ def run_statement(doc, parsed):
             " two errors is yours, not the engine's.")
 
     # --- must these grounds be filled TOGETHER? The JUDGE answers; this
-    # displays. Measured 2026-08-19 (`lab/width/`): for 91-93% of unsettled
+    # displays. Measured 2026-08-19 (`inventory/width/`): for 91-93% of unsettled
     # claims some single ground moves the matter and an order is honest; for
     # the rest none does, and "check this one first" is empty work.
     # НЕ НА РЕШЁННОМ. `_joint` отвечает «ни одно основание не двигает вердикт —
@@ -139,12 +139,26 @@ def run_statement(doc, parsed):
     if z_atoms and report.get("warranty") != "hereditary":
         jg = joint_grounds(formula, declared)
         if jg:
-            report["joint"] = (
-                f"no single ground moves this: {', '.join(jg)} must be"
-                " verified TOGETHER. Checking one of them and stopping buys"
-                " nothing — the answer does not move until all of them are in."
-                " ('Do the two witnesses agree?' is the everyday shape: hear"
-                " the first and you know nothing about agreement.)")
+            # МИНИМАЛЬНЫЕ НАБОРЫ, А НЕ «ВСЕ СРАЗУ» (2026-08-30). Грубый ответ
+            # «нужны все» ЗАВЫШАЕТ наряд, когда хватает подмножества: на
+            # xor(not(and(or(d,a),c)), xnor(d, not(imp(not d, b)))) он требует
+            # четыре грунта, а довольно двух. Наряд на лишнюю работу — та же
+            # порода, что наряд на невыполнимое: вердикт верен, распоряжение нет.
+            sets = joint_sets(formula, declared)
+            if sets and not (len(sets) == 1 and sorted(sets[0]) == sorted(jg)):
+                shown = "; ".join(" + ".join(S) for S in sets)
+                report["joint"] = (
+                    "no single ground moves this. It takes a SET, and the"
+                    f" smallest sets that do are: {shown}. Any one of those,"
+                    " filled together, moves the matter; checking one ground"
+                    " and stopping buys nothing.")
+            else:
+                report["joint"] = (
+                    f"no single ground moves this: {', '.join(jg)} must be"
+                    " verified TOGETHER. Checking one of them and stopping buys"
+                    " nothing — the answer does not move until all of them are in."
+                    " ('Do the two witnesses agree?' is the everyday shape: hear"
+                    " the first and you know nothing about agreement.)")
 
     # --- a ground DECLARED to have no subject. The judge decides what that
     # means and bills the declaration; this displays both. The bill is what

@@ -26,6 +26,7 @@ on credit, so an unverified atom stays a mark.
 Run:  python3 ztljudge.py                 (a worked stepwise session)
       python3 ztljudge.py -i              (interactive: check / join / mark)
 """
+import itertools
 import os
 import sys
 
@@ -341,7 +342,7 @@ def _moves(phi, m, a):
 def _joint(phi, m, unv):
     """The grounds that must be filled TOGETHER, when no single one will do.
 
-    Measured 2026-08-19 (`lab/width/`): for 91-93% of unsettled claims some
+    Measured 2026-08-19 (`inventory/width/`): for 91-93% of unsettled claims some
     single ground moves the matter, and inquiry is incremental. For the rest it
     is not — and the width goes as high as the number of unverified grounds, 4
     of 4 and 5 of 5 in the hunt. There a one-ground order is worse than none:
@@ -354,7 +355,16 @@ def _joint(phi, m, unv):
 
     (The xor chain was my predicted witness and it was wrong: `p ⊕ q ⊕ r` has
     width 1, because the inner xor collapses to a definite value and the outer
-    one is sensitive to the last ground alone. The wide cases are irregular.)"""
+    one is sensitive to the last ground alone. The wide cases are irregular.)
+
+    ГРУНТ, КОТОРОГО В ЗАЯВКЕ НЕТ, В НАРЯД НЕ ИДЁТ (промерено 2026-08-30).
+    ZFL позволяет ОБЪЯВИТЬ атом и не употребить его в `assert`; валидатор на
+    это не ругается. Живой прогон движка на `xnor(a, c)` с объявленными
+    `a, b, c, d` выдавал наряд «a, b, c, d проверить ВМЕСТЕ» — две трети
+    работы по грунтам, которые в формуле не встречаются и вердикт сдвинуть
+    не могут. Та же семья, что первый рог Менона: функция отвечала верно на
+    свой вопрос, а спрашивали её не о том."""
+    unv = [a for a in unv if a in _atoms(phi)]
     if len(unv) < 2:
         return []
     return [] if any(_moves(phi, m, a) for a in unv) else list(unv)
@@ -368,10 +378,50 @@ def joint_grounds(phi, marking=None):
     caller that has already parsed should not serialise back and re-parse.
 
     Returns `[]` when some single ground moves the matter, which is the
-    ordinary case (91-93%, `lab/width/`)."""
+    ordinary case (91-93%, `inventory/width/`)."""
     m = _full(phi, marking)
     unv = sorted(a for a, v in m.items() if v == Z)
     return _joint(phi, m, unv)
+
+
+def joint_sets(phi, marking=None, cap=8):
+    """PUBLIC: МИНИМАЛЬНЫЕ наборы грунтов, а не «все сразу».
+
+    `joint_grounds` отвечает грубо: либо «двигает одиночный грунт», либо
+    «нужны все». Второй ответ ЗАВЫШАЕТ наряд, когда хватает собственного
+    подмножества. Свидетель, найденный перебором 2026-08-30:
+
+        xor(not(and(or(d,a),c)), xnor(d, not(imp(not d, b))))
+
+    ни один грунт в одиночку не двигает, `joint_grounds` велит проверить все
+    четыре — а хватает `a` и `c`.
+
+    Возвращает антицепь наборов (ни один не содержит другого) либо `[]`,
+    когда достаточно одиночного грунта.
+
+    ЦЕНА НАЗВАНА, А НЕ ЗАМОЛЧАНА. Поиск экспоненциален по числу марок —
+    это и есть довод, по которому `_joint` его не делает. Здесь он ограничен
+    дважды: считается ТОЛЬКО когда `_joint` уже сказал «нужны все» (6–7%
+    случаев, `inventory/width/`), и только при числе марок до `cap`. Свыше
+    `cap` возвращается `[]` — то есть «точнее сказать не берусь», а не
+    молчаливо неверный ответ."""
+    m = _full(phi, marking)
+    unv = sorted(a for a, v in m.items() if v == Z and a in _atoms(phi))
+    if not _joint(phi, m, unv) or len(unv) > cap:
+        return []
+    base_v, base_g = ev(phi, _kernel(m)), grade(phi, _grade_marking(m))
+    out = []
+    for k in range(2, len(unv) + 1):
+        for S in itertools.combinations(unv, k):
+            if any(set(prev) < set(S) for prev in out):
+                continue
+            for vals in itertools.product((T, F), repeat=k):
+                m2 = dict(m); m2.update(dict(zip(S, vals)))
+                if (ev(phi, _kernel(m2)) != base_v
+                        or grade(phi, _grade_marking(m2)) != base_g):
+                    out.append(S)
+                    break
+    return [list(S) for S in out]
 
 
 def _besides(unv, gone):
@@ -775,7 +825,7 @@ if __name__ == "__main__":
     assert next_check("p & q", {"p": F}) is None       # q is unverified and moot
     assert next_check("p | q", {"p": T}) is None       # earned; nothing to seek
     # ...and Meno's residue: claims where NO single ground moves anything, so a
-    # one-at-a-time order is empty work. Measured in lab/width/: 6-7% of
+    # one-at-a-time order is empty work. Measured in inventory/width/: 6-7% of
     # unsettled cells, and the width reaches the number of grounds.
     assert judge("p ^ q", {})["joint"] == ["p", "q"]
     assert judge("p = q", {})["joint"] == ["p", "q"]

@@ -50,7 +50,50 @@ def _outcome(phi, m, by_disposition):
     return _disposition(phi, m) if by_disposition else ev(phi, m)
 
 
-def backward(phi, marking, target, by_disposition=True):
+# ГДЕ НА САМОМ ДЕЛЕ УХОДИТ ВРЕМЯ — замерено 2026-08-30 на живом случае с
+# одиннадцатью основаниями, а не угадано:
+#
+#     ev    (значение)   0.004 мс
+#     grade (гарантия)  424     мс      —  в 97 000 раз дороже
+#
+# Дело НЕ в числе подмножеств: каждый отдельный расчёт гарантии сам по себе
+# перебирает все классические доопределения марок. Отсюда 48 минут там, где
+# по значению — доли секунды.
+#
+# И ЕЩЁ ОДНО, ЧТО ЗАКРЫВАЕТ ОЧЕВИДНЫЙ ОБХОД. Соблазн такой: «раз проверка
+# только добавляет знание, вердикт от неё не падает — значит половину можно
+# не считать». Для ЛЕНИВОГО регистра это верно и доказано (zarith: сужение
+# никогда не отнимает заслуженного). Для ЖАДНОГО, в котором работает судья,
+# это ЛОЖЬ, и она промерена: `fixedpoint.py` печатает пять свидетелей
+# немонотонности, например {λ=Z} ⊑ {λ=F}, но J(v)={λ=F} ⋢ J(w)={λ=T}.
+# Значит сокращать перебор монотонностью здесь НЕЛЬЗЯ.
+
+
+# ПОТОЛКИ ПРОМЕРЕНЫ, А НЕ НАЗНАЧЕНЫ (2026-08-30). Первый вариант ставил 14
+# на глаз; куратор спросил «а сколько НАДО», и вопрос оказался правильным:
+# у двух режимов пределы отличаются на порядок.
+#
+#   оснований   backward по ЗНАЧЕНИЮ   backward по ДИСПОЗИЦИИ
+#        8            0.00 с                  1.2 с
+#        9            0.01 с                  5.8 с
+#       10            0.02 с                 26.8 с
+#       12            0.04 с                 (не считается)
+#       20            0.57 с                        —
+#       24            1.47 с                        —
+#
+# Причина в `grade`: он сам перебирает доопределения марок и растёт втрое на
+# каждое основание (8→10 мс, 10→114 мс, 12→1.2 с, 13→4.1 с), тогда как `ev`
+# стоит 0.004 мс и от числа оснований почти не зависит.
+#
+# Отсюда потолки РАЗНЫЕ, и это честнее одного числа: по значению считать
+# можно широко, по диспозиции — только на малом.
+CAP_VALUE = 24       # по значению: 1.5 с, дальше просто дорого
+CAP_DISPOSITION = 9  # по диспозиции: 5.8 с; на 10 уже 27 с, это не работа
+MAX_K = 4            # дальше наборы не ищем, и говорим об этом вслух
+
+
+def backward(phi, marking, target, by_disposition=True,
+             cap_grounds=None, max_k=MAX_K):
     """От цели назад к минимальным наборам оснований.
 
     Возвращает dict:
@@ -67,8 +110,26 @@ def backward(phi, marking, target, by_disposition=True):
     grounds = tuple(a for a, v in sorted(marking.items()) if v == Z)
     already = _outcome(phi, marking, by_disposition) == target
 
+    # ПОТОЛОК НАЗВАН, А НЕ ОБНАРУЖЕН ТАЙМАУТОМ (2026-08-30).
+    # Первый живой случай — 16 находок ревью OIC, 11 непроверенных оснований —
+    # прибор НЕ ДОСЧИТАЛ и был убит по таймауту. Замерено потом: перебор идёт
+    # как 3^n вызовов, для 11 оснований это 177147, около минуты; для 15 — уже
+    # четверть часа. Молчаливое зависание хуже отказа: отказ виден.
+    if cap_grounds is None:
+        cap_grounds = CAP_DISPOSITION if by_disposition else CAP_VALUE
+    if len(grounds) > cap_grounds:
+        return {"grounds": grounds, "already": already,
+                "possible": [], "guaranteed": [],
+                "possible_none": True, "guaranteed_none": True,
+                "target": target,
+                "отказ": (f"оснований {len(grounds)}, потолок {cap_grounds} "
+                          f"({'по диспозиции' if by_disposition else 'по значению'}): "
+                          f"полный перебор здесь идёт как 3^n и не считается. "
+                          f"Сузь разметку или подними cap_grounds сознательно.")}
+
     possible, guaranteed = [], []
-    for k in range(1, len(grounds) + 1):
+    limit = min(len(grounds), max_k)
+    for k in range(1, limit + 1):
         for S in itertools.combinations(grounds, k):
             # минимальность: если собственное подмножество уже в семействе,
             # этот набор не минимален и в ответ не идёт
@@ -85,10 +146,18 @@ def backward(phi, marking, target, by_disposition=True):
             if not sub_g and all(hits):
                 guaranteed.append(S)
 
-    return {"grounds": grounds, "already": already,
-            "possible": possible, "guaranteed": guaranteed,
-            "possible_none": not possible, "guaranteed_none": not guaranteed,
-            "target": target}
+    out = {"grounds": grounds, "already": already,
+           "possible": possible, "guaranteed": guaranteed,
+           "possible_none": not possible, "guaranteed_none": not guaranteed,
+           "target": target}
+    # ОБРЕЗАННЫЙ ПОИСК ГОВОРИТ, ЧТО ОБРЕЗАН. Пустое семейство при limit < n
+    # неотличимо от «наборов нет», а это разные вещи: во втором случае мы
+    # знаем, в первом — не смотрели.
+    if limit < len(grounds):
+        out["не_искал_дальше"] = (
+            f"наборы искались до размера {limit} из {len(grounds)} возможных; "
+            f"о больших ничего не говорю")
+    return out
 
 
 def order(phi, marking, target, by_disposition=True):

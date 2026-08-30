@@ -221,4 +221,58 @@ theorem fragment_is_not_necessary :
 #print axioms zand_T
 #print axioms no_gift
 
+/-! ## The other half: where a greedy `F` cannot be revived
+
+`no_gift` protects `T` and says nothing at `F` — deliberately, and the file says
+so above: 950 of 1700 in-fragment `F` cells are revocable. That leaves the
+warranty grade enumerating `3^n` refinements on every unearned verdict, which is
+what makes it die at thirteen marks (measured 2026-08-30: 4.1 s for one call).
+
+TWO NATURAL GUESSES WERE TESTED FIRST AND BOTH FAILED, by exhaustive
+enumeration over depth 2 on two atoms:
+
+  * the mirror of `posMarks` — every mark UNDER a negation: 10662 of 18034
+    cells revived. False by a wide margin.
+  * any `F` conjunct at all: 14016 of 50728 revived — the conjunct itself may
+    hold marks, and refining them flips it to `T`.
+
+What survives is narrower and obvious once seen: a false conjunct that holds no
+mark cannot be touched by a refinement, so the conjunction stays false. 28460
+cells, zero revivals. The proof is short because `frozen` already carries the
+weight.
+
+THE HONEST LIMIT, stated where it will be read: this does NOT help a first pass
+over an untouched claim — there every conjunct is a bare unverified ground and
+none is mark-free. It pays from the second pass onward, once some checks are in.
+-/
+
+/-- **A false mark-free conjunct locks `F`.** No refinement can revive it. -/
+theorem f_locked (v w : Nat → V) (ψ χ : Fm)
+    (hr : refines v w)
+    (hno : ∀ n, v n = Z → occurs n ψ = false)
+    (hF : evalF v ψ = F) :
+    evalF w (.conj ψ χ) = F := by
+  have h1 : evalF w ψ = F := by
+    rw [frozen v w ψ hr hno]; exact hF
+  show zand (evalF w ψ) (evalF w χ) = F
+  rw [h1]
+  cases hx : evalF w χ <;> rfl
+
+/-- The same on the right-hand conjunct — conjunction is not symmetric in the
+proof, only in the value, so both sides are stated. -/
+theorem f_locked_right (v w : Nat → V) (ψ χ : Fm)
+    (hr : refines v w)
+    (hno : ∀ n, v n = Z → occurs n χ = false)
+    (hF : evalF v χ = F) :
+    evalF w (.conj ψ χ) = F := by
+  have h1 : evalF w χ = F := by
+    rw [frozen v w χ hr hno]; exact hF
+  show zand (evalF w ψ) (evalF w χ) = F
+  rw [h1]
+  cases hx : evalF w ψ <;> rfl
+
+#print axioms f_locked
+#print axioms f_locked_right
+
+
 end V

@@ -179,7 +179,33 @@ inconsistencies and cognitive biases; it does not measure translation into a
 formal representation, nor run-to-run stability. Read: abstract and the
 repository landing page, not the paper.
 
+**The defeasible / argumentation line — first paper read, 2026-08-30.**
+Yu & Lu, *Explaining Non-monotonic Normative Reasoning using Argumentation
+Theory with Deontic Logic* (arXiv 2409.11780), the LeSAC system for legally
+compliant design. The find worth quoting, verbatim:
+
+> "This should be ensured by the epistemic reasoning process before being
+> input into LeSAC."
+
+They **name our slot and assign it upstream**: the normative reasoner
+requires beliefs already justified and consistent, and whether they are is
+another system's job. A full-text scan of that paper finds no `undecided`,
+no `abstain`, no `refuse`, no `unverified` — the vocabulary of unsettledness
+is simply not in it.
+
+**But the slot is not vacant, and this is the live objection to us.** They
+say who does the upstream job: **ASPIC+**, structured argumentation, where a
+claim can come out *undecided*. So "a typed non-verdict" already exists in
+the field. The distinction that would have to be ours is narrower: their
+undecided arises from **conflict between arguments** (defeat); our `Z`
+arises from **absence of a check**, and we additionally bill the declaration
+of absence. **ASPIC+ itself has NOT been read or run** — until it is, this
+distinction is argued, not established.
+
 **What may still be ours, narrowly:** the verification status of a
-**premise** — not of an outcome and not of the agent's knowledge — together
-with a typed refusal and a bill for declaring absence. Unclaimed until the
-defeasible/argumentation line has been read.
+**premise** — not of an outcome, not of the agent's knowledge, not of a
+defeat relation — plus a typed refusal and a bill for declaring absence.
+
+**Access note:** the UNSW/AIES 2021 paper is definitively closed — Semantic
+Scholar reports open-access status CLOSED with no PDF. That entry rests on
+the poster and the abstract and cannot be improved without a library.

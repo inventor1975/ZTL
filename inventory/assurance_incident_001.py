@@ -32,7 +32,7 @@
 
 Один стенд на два вопроса — снова негодный оракул.
 """
-import json, hashlib, sys
+import json, hashlib, os, sys
 
 # =====================================================================
 # КРИПТОГРАФИЧЕСКАЯ ПРИВЯЗКА К ИСТОРИИ — по требованию внешнего рецензента 2026-08-31
@@ -48,37 +48,37 @@ HIST_COMMIT   = "6536d1492000a3988815abf9ed175f5d417b7c19"
 HIST_PATH     = "tool/warrant_receipt.py"
 HIST_BLOB     = "73f8b42fc50aaffd480562881945c65b2d026133"
 HIST_FILE_SHA = "456d630f302442af8fddd1a35f9c51d03adb20a3811b69736e4038cbe3dabdbd"
-# ДВЕ РАЗНЫЕ ВЕЛИЧИНЫ, И ПУТАТЬ ИХ НЕЛЬЗЯ.
+# ОДНА ВЕЛИЧИНА, потому что копии больше нет: исполняется сам исторический
+# файл. HIST_FILE_SHA сверяется машиной перед каждым прогоном.
 #
-# HIST_FUNCS_SHA — отпечаток трёх функций, ВЫРЕЗАННЫХ ИЗ ИСТОРИЧЕСКОГО файла
-# процедурой ниже. Воспроизводится так:
-#   git show 6536d14:tool/warrant_receipt.py | python3 -c "import sys,hashlib,re; \
-#     s=sys.stdin.read(); print(hashlib.sha256('\\n'.join( \
-#     re.search(r'^def '+n+r'\(.*?(?=\n\ndef |\n\n#|\Z)',s,re.S|re.M).group(0) \
-#     for n in ['_canon','_sha','verify']).encode()).hexdigest())"
-HIST_FUNCS_SHA = "f69b9a3968283a4a27e5c18e5e410bcec336fdc960b0e9df9b6bdc08732eb2d6"
+# Прежде здесь стояли ДВЕ, и я объяснил их расхождение тем, что «копия
+# переименована и лежит в другом файле». Объяснение ЛОЖНОЕ: sha256 считается
+# от СОДЕРЖИМОГО и от имени с расположением не зависит. Расходились они из-за
+# переименованных символов и обёрток — так и надо было сказать.
+
+# --------- ИСТОРИЧЕСКИЙ КОД ИСПОЛНЯЕТСЯ, А НЕ ПЕРЕСКАЗЫВАЕТСЯ
+# Третья правка, 2026-08-31. Прежде тут лежала РУЧНАЯ КОПИЯ трёх функций, а
+# соответствие оригиналу держалось на однократной сверке руками — внешний рецензент
+# верно назвал это швом: документация в шапке не есть принуждение.
 #
-# COPY_SHA — отпечаток ЗДЕШНЕЙ копии, снятый её же процедурой. Он ДРУГОЙ и
-# обязан быть другим: копия переименована (_hist) и живёт в другом файле.
-# Подгонять одно под другое было бы ровно тем подлогом, который тут и
-# расследуется. Сходство копии с оригиналом установлено РУКАМИ один раз, на
-# этом коммите; здесь стенд стережёт лишь то, что КОПИЮ потом не правили.
-COPY_SHA = "3edc1e59a87c9e530dbdeff704ec4c519a97457838efc6686ebc06985949021b"
-
-# --------- ЗАМОРОЖЕНО ИЗ 6536d14, дословно. НЕ ПРАВИТЬ вместе с живым кодом.
-def _canon_hist(obj) -> str:
-    return json.dumps(obj, ensure_ascii=False, sort_keys=True,
-                      separators=(",", ":"))
+# Теперь копии нет вовсе. Байты файла с 6536d14 заморожены в fixtures/,
+# их отпечаток сверяется МАШИНОЙ до всякого утверждения, и дальше исполняется
+# сам исторический модуль. Историческое утверждение перестало опираться на
+# аналог: оно опирается на тот самый объект.
+_FIX = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                    "fixtures", "warrant_receipt_6536d14.frozen.py")
 
 
-def _sha_hist(text: str) -> str:
-    return hashlib.sha256(text.encode("utf-8")).hexdigest()
-
-
-def _verify_hist(rec: dict) -> bool:
-    core = {k: v for k, v in rec.items() if k != "digest"}
-    return rec.get("digest") == _sha_hist(_canon_hist(core))
-# --------- конец замороженного
+def _load_historical():
+    """Сверить отпечаток замороженных байтов и исполнить их."""
+    raw = open(_FIX, "rb").read()
+    got = hashlib.sha256(raw).hexdigest()
+    if got != HIST_FILE_SHA:
+        return None, got
+    ns = {"__name__": "warrant_receipt_6536d14"}
+    exec(compile(raw, _FIX, "exec"), ns)
+    return ns, got
+# --------- конец загрузки
 
 # Образец тоже ЗАМОРОЖЕН: строить его живым receipt() значило бы снова
 # привязать историческое утверждение к сегодняшнему коду.
@@ -97,31 +97,20 @@ SPECIMEN_CORE = {
 }
 
 
-def _fixture_selfcheck():
-    """Копия обязана совпасть с историей ДО того, как что-то утверждать."""
-    import inspect
-    joined = "\n".join(
-        inspect.getsource(f).replace("_hist", "").rstrip()
-        for f in (_canon_hist, _sha_hist, _verify_hist))
-    return hashlib.sha256(joined.encode()).hexdigest()
-
-
 def main():
     print(f"ПРИВЯЗКА: коммит {HIST_COMMIT[:7]}, blob {HIST_BLOB[:12]}")
-    print(f"  sha256 исторического файла : {HIST_FILE_SHA[:16]}…")
-    print(f"  sha256 замороженного образца: "
-          f"{hashlib.sha256(_canon_hist(SPECIMEN_CORE).encode()).hexdigest()[:16]}…")
-    now = _fixture_selfcheck()
-    print(f"  отпечаток здешней копии    : {now[:16]}…")
-    if now != COPY_SHA:
-        print()
-        print("СТЕНД КРАСНЫЙ: копию исторических функций ПРАВИЛИ.")
-        print(f"  пришпилено: {COPY_SHA}")
-        print(f"  сейчас    : {now}")
-        print("Историческое утверждение опирается на неизменность этой копии.")
+    ns, got = _load_historical()
+    if ns is None:
+        print("\nСТЕНД КРАСНЫЙ: замороженные байты 6536d14 не те.")
+        print(f"  пришпилено: {HIST_FILE_SHA}")
+        print(f"  сейчас    : {got}")
         return 1
-    print("  копия не тронута с момента заморозки.")
+    print(f"  sha256 замороженных байт сошёлся: {got[:16]}…")
+    print("  исполняется САМ исторический модуль, не пересказ.")
+    _canon_hist, _sha_hist = ns["_canon"], ns["_sha"]
+    _verify_hist = ns["verify"]
     print()
+
     genuine = {**SPECIMEN_CORE,
                "digest": _sha_hist(_canon_hist(SPECIMEN_CORE))}
     fails = []

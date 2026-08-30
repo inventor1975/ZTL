@@ -27,7 +27,18 @@ go ONLY through Tr(name); bare atoms inside system formulas are
 forbidden. RESERVED — never use as atom/sentence names: T, F, Z, Tr,
 not, and, or, imp, xor, xnor (pick descriptive names like "eats",
 "child_truth"). status: T = verified-true, F = verified-false,
-Z = UNVERIFIED. statement = a verdict question about a claim over
+Z = UNVERIFIED.
+
+WHEN TO WRITE WHICH STATUS — the rule, not a preference. Default to "Z".
+Write "T" or "F" ONLY when the text itself reports that somebody CHECKED
+and what they found. A claim being obviously true, widely believed, stated
+confidently, or asserted by the speaker is NOT a check: "the sensor reports
+overheating" is Z (a report is not a verification), "the inspector confirmed
+the seal" is T. If the text does not say who established it, it is Z. When
+in doubt, Z — a refusal can be lifted by inquiry, an unearned verdict cannot
+be taken back.
+
+statement = a verdict question about a claim over
 (un)verified atoms. system = a self-referential system (paradoxes:
 sentences about the truth of each other and themselves)."""
 

@@ -40,6 +40,7 @@ N раз независимо, при рабочей температуре 0.2.
 
 import json
 import os
+import pathlib
 import sys
 import time
 import urllib.error
@@ -52,6 +53,21 @@ import translator            # noqa: E402  — живые промты студ�
 import zfl                   # noqa: E402  — живой разбор формул
 
 OLLAMA = "http://127.0.0.1:11434/v1/chat/completions"
+NVIDIA = "https://integrate.api.nvidia.com/v1/chat/completions"
+
+
+def _nvidia_key():
+    """Ключ ИЗ ФАЙЛА В ПЕРЕМЕННУЮ. На экран не попадает никогда — 2026-08-30
+    я дважды за день вывел чужой секрет, приняв обрезку показа за защиту."""
+    import re
+    f = pathlib.Path.home() / ".config/nvidia-nim.env"
+    if not f.exists():
+        return ""
+    for line in f.read_text(encoding="utf-8", errors="replace").splitlines():
+        m = re.match(r"\s*NVIDIA_API_KEY\s*=\s*(.+?)\s*$", line)
+        if m:
+            return m.group(1).strip("'\"")
+    return ""
 TEMPERATURE = 0.2            # рабочая температура студии (translator.llm)
 
 
@@ -62,12 +78,20 @@ class CallError(Exception):
 
 
 def call(messages, model, temperature=TEMPERATURE, timeout=300):
+    # Модель с косой чертой в имени — с сайта NVIDIA, локальная иначе.
+    remote = "/" in model
+    url = NVIDIA if remote else OLLAMA
+    key = _nvidia_key() if remote else "ollama"
+    if remote and not key:
+        raise CallError("нет ключа NVIDIA в ~/.config/nvidia-nim.env")
     body = {"model": model, "messages": messages,
             "temperature": temperature, "stream": False}
+    if remote:
+        body["max_tokens"] = 1200
     req = urllib.request.Request(
-        OLLAMA, data=json.dumps(body).encode(),
+        url, data=json.dumps(body).encode(),
         headers={"Content-Type": "application/json",
-                 "Authorization": "Bearer ollama"})
+                 "Authorization": f"Bearer {key}"})
     try:
         with urllib.request.urlopen(req, timeout=timeout) as r:
             data = json.loads(r.read().decode())

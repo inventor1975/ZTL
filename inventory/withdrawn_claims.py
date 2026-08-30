@@ -49,6 +49,13 @@ MARKERS = (
     "struck", "retract", "no program produces", "was invented",
     "corrected after review", "this was wrong", "this file claimed",
     "objection is correct", "declared impossible", "claimed the error",
+    # ПО-РУССКИ — добавлено 2026-08-31. Сторож считал корпус английским, а он
+    # двуязычен давно: русский отзыв рядом с русским вхождением НЕ опознавался,
+    # и файл кричал RED там, где отзыв был прямо в соседней строке. Список
+    # маркеров, слепой к языку половины корпуса, — тот же зелёный без лампы,
+    # только наоборот.
+    "отозван", "ОТОЗВАНО", "снято", "снят как", "прежняя строка",
+    "было неверно", "не было", "переклад", "устарел", "происшеств",
 )
 # `earlier` and `correct` were markers until 2026-08-17 and were removed: both
 # are near-ubiquitous in this corpus, so over a ±6-line window almost any
@@ -59,6 +66,20 @@ MARKERS = (
 # lowercased; keep them long enough to be distinctive and short enough to
 # survive rewrapping.
 WITHDRAWN = [
+    # ASSURANCE-INCIDENT-001, 2026-08-31. Утверждение стояло в докстринге
+    # verify(), в зелёном заголовке стенда И в моём разборе, поданном
+    # внешнему рецензенту как ДОВОД. Кода за ним не было: verify() сверяет объект сам с
+    # собой, подделка с пересчётом отпечатка проходит (промерено в
+    # inventory/assurance_incident_001.py, пункт 3). Отзыв ФОРМАЛЬНЫЙ:
+    # новый зелёный не «поправка» старого, он начинается с нуля свидетельств.
+    ("проверяется на той стороне",
+     "квитанция защищена от подделки (ASSURANCE-INCIDENT-001)"),
+    ("verified on the far side",
+     "квитанция защищена от подделки (ASSURANCE-INCIDENT-001)"),
+    ("защищено от подделки",
+     "квитанция защищена от подделки (ASSURANCE-INCIDENT-001)"),
+    ("меняет отпечаток и валит сверку",
+     "квитанция защищена от подделки (ASSURANCE-INCIDENT-001)"),
     ("understated and never overstated",
      "the error from incompleteness runs one way only (refuted pred. 12)"),
     ("error from incompleteness is one-directional",

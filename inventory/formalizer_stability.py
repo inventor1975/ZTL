@@ -230,7 +230,7 @@ CORPUS = [
 ]
 
 
-def one_pass(text, model, mode="par"):
+def one_pass(text, model, mode="par", repair=False):
     """Живой путь студии: understand -> emit. Возвращает (doc|None, сырьё)."""
     sys_u = (translator.UNDERSTAND_SYS_HYP if mode in ("hyp", "ast")
              else translator.UNDERSTAND_SYS)
@@ -248,6 +248,29 @@ def one_pass(text, model, mode="par"):
     raw = translator.strip_fences(
         call([{"role": "system", "content": sys_e},
               {"role": "user", "content": user}], model))
+    if repair:
+        # ЖИВОЙ ШАГ ПОЧИНКИ. Без него число брака — про мой укороченный путь,
+        # а не про студию: промерено 2026-08-30, repair чинит имена атомов с
+        # пробелами 5/5. Гоняем ОДИН круг, как студия.
+        try:
+            doc = json.loads(raw)
+        except Exception:
+            doc = None
+        need = doc is None or canon(doc)[0] == "BAD"
+        if need:
+            try:
+                _, _, issues = zfl.validate(raw)
+            except Exception:
+                issues = []
+            if issues:
+                errs = "\n".join(
+                    f"- [{i['level']}] {i['code']} @ {i['where']}: {i['hint']}"
+                    for i in issues)
+                raw = translator.strip_fences(call(
+                    [{"role": "system", "content": translator.REPAIR_SYS},
+                     {"role": "user", "content":
+                      f"ZFL:\n{raw}\n\nValidator errors:\n{errs}\n\n"
+                      "Fix it and emit the ZFL."}], model))
     try:
         return json.loads(raw), raw
     except Exception:
@@ -262,6 +285,8 @@ def main():
     ap.add_argument("--out", default=os.path.join(HERE,
                     "formalizer_stability_result.json"))
     ap.add_argument("--only", default="", help="прогнать один текст по имени")
+    ap.add_argument("--repair", action="store_true",
+                    help="включить живой шаг починки, как в студии")
     a = ap.parse_args()
 
     print("=== КОНТРОЛИ (без них число ничего не стоит) ===")
@@ -281,7 +306,7 @@ def main():
         strict, struct, bad = [], [], []
         for i in range(a.n):
             try:
-                doc, raw = one_pass(text, a.model)
+                doc, raw = one_pass(text, a.model, repair=a.repair)
             except CallError as e:
                 bad.append(f"вызов упал: {e}")
                 continue
@@ -323,7 +348,9 @@ def main():
     results["_прогон"] = {"model": a.model, "n": a.n,
                           "temperature": TEMPERATURE,
                           "секунд": round(time.time() - t0, 1),
-                          "путь": "understand -> emit, промты из translator.py"}
+                          "путь": ("understand -> emit" + (" -> repair" if a.repair else "")
+                                    + ", промты из translator.py"),
+                          "repair": a.repair}
     with open(a.out, "w", encoding="utf-8") as f:
         json.dump(results, f, ensure_ascii=False, indent=1)
     print(f"\nзаписано: {a.out}  ({results['_прогон']['секунд']} с)")

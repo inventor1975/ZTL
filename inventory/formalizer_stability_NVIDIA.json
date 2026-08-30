@@ -1,0 +1,169 @@
+{
+ "S1-modus-ponens": {
+  "lang": "en",
+  "note": "нейтральный, простой",
+  "text": "If A implies B, and A is true, then B is true.",
+  "n": 8,
+  "ok": 6,
+  "bad": [
+   "вызов упал: HTTP 503: {\"error\":{\"message\":\"Service temporarily overloaded\",\"type\":\"Service Unavailable\",\"code\":503}}",
+   "вызов упал: HTTP 503: {\"error\":{\"message\":\"Service temporarily overloaded\",\"type\":\"Service Unavailable\",\"code\":503}}"
+  ],
+  "strict_distinct": 1,
+  "struct_distinct": 1,
+  "struct_keys": [
+   "{\"g\": \"statement\", \"f\": [\"imp\", [\"and\", [\"imp\", [\"atom\", \"a0\"], [\"atom\", \"a1\"]], [\"atom\", \"a0\"]], [\"atom\", \"a1\"]], \"s\": [\"Z\", \"Z\"]}"
+  ],
+  "struct_all": [
+   "{\"g\": \"statement\", \"f\": [\"imp\", [\"and\", [\"imp\", [\"atom\", \"a0\"], [\"atom\", \"a1\"]], [\"atom\", \"a0\"]], [\"atom\", \"a1\"]], \"s\": [\"Z\", \"Z\"]}",
+   "{\"g\": \"statement\", \"f\": [\"imp\", [\"and\", [\"imp\", [\"atom\", \"a0\"], [\"atom\", \"a1\"]], [\"atom\", \"a0\"]], [\"atom\", \"a1\"]], \"s\": [\"Z\", \"Z\"]}",
+   "{\"g\": \"statement\", \"f\": [\"imp\", [\"and\", [\"imp\", [\"atom\", \"a0\"], [\"atom\", \"a1\"]], [\"atom\", \"a0\"]], [\"atom\", \"a1\"]], \"s\": [\"Z\", \"Z\"]}",
+   "{\"g\": \"statement\", \"f\": [\"imp\", [\"and\", [\"imp\", [\"atom\", \"a0\"], [\"atom\", \"a1\"]], [\"atom\", \"a0\"]], [\"atom\", \"a1\"]], \"s\": [\"Z\", \"Z\"]}",
+   "{\"g\": \"statement\", \"f\": [\"imp\", [\"and\", [\"imp\", [\"atom\", \"a0\"], [\"atom\", \"a1\"]], [\"atom\", \"a0\"]], [\"atom\", \"a1\"]], \"s\": [\"Z\", \"Z\"]}",
+   "{\"g\": \"statement\", \"f\": [\"imp\", [\"and\", [\"imp\", [\"atom\", \"a0\"], [\"atom\", \"a1\"]], [\"atom\", \"a0\"]], [\"atom\", \"a1\"]], \"s\": [\"Z\", \"Z\"]}"
+  ]
+ },
+ "S2-liar": {
+  "lang": "en",
+  "note": "нейтральный, самореференция",
+  "text": "This sentence is false.",
+  "n": 8,
+  "ok": 6,
+  "bad": [
+   "вызов упал: HTTP 503: {\"error\":{\"message\":\"Service temporarily overloaded\",\"type\":\"Service Unavailable\",\"code\":503}}",
+   "вызов упал: HTTP 503: {\"error\":{\"message\":\"Service temporarily overloaded\",\"type\":\"Service Unavailable\",\"code\":503}}"
+  ],
+  "strict_distinct": 1,
+  "struct_distinct": 1,
+  "struct_keys": [
+   "{\"g\": \"system\", \"f\": [[\"a0\", [\"not\", [\"tr\", \"a0\"]]]]}"
+  ],
+  "struct_all": [
+   "{\"g\": \"system\", \"f\": [[\"a0\", [\"not\", [\"tr\", \"a0\"]]]]}",
+   "{\"g\": \"system\", \"f\": [[\"a0\", [\"not\", [\"tr\", \"a0\"]]]]}",
+   "{\"g\": \"system\", \"f\": [[\"a0\", [\"not\", [\"tr\", \"a0\"]]]]}",
+   "{\"g\": \"system\", \"f\": [[\"a0\", [\"not\", [\"tr\", \"a0\"]]]]}",
+   "{\"g\": \"system\", \"f\": [[\"a0\", [\"not\", [\"tr\", \"a0\"]]]]}",
+   "{\"g\": \"system\", \"f\": [[\"a0\", [\"not\", [\"tr\", \"a0\"]]]]}"
+  ]
+ },
+ "E1-armed-suspect": {
+  "lang": "en",
+  "note": "ЭТИКА тяжёлая",
+  "text": "An unverified informant reports that the suspect is armed. If the suspect is armed, the officers force entry. Will they enter?",
+  "n": 8,
+  "ok": 8,
+  "bad": [],
+  "strict_distinct": 3,
+  "struct_distinct": 1,
+  "struct_keys": [
+   "{\"g\": \"statement\", \"f\": [\"imp\", [\"atom\", \"a0\"], [\"atom\", \"a1\"]], \"s\": [\"Z\", \"Z\"]}"
+  ],
+  "struct_all": [
+   "{\"g\": \"statement\", \"f\": [\"imp\", [\"atom\", \"a0\"], [\"atom\", \"a1\"]], \"s\": [\"Z\", \"Z\"]}",
+   "{\"g\": \"statement\", \"f\": [\"imp\", [\"atom\", \"a0\"], [\"atom\", \"a1\"]], \"s\": [\"Z\", \"Z\"]}",
+   "{\"g\": \"statement\", \"f\": [\"imp\", [\"atom\", \"a0\"], [\"atom\", \"a1\"]], \"s\": [\"Z\", \"Z\"]}",
+   "{\"g\": \"statement\", \"f\": [\"imp\", [\"atom\", \"a0\"], [\"atom\", \"a1\"]], \"s\": [\"Z\", \"Z\"]}",
+   "{\"g\": \"statement\", \"f\": [\"imp\", [\"atom\", \"a0\"], [\"atom\", \"a1\"]], \"s\": [\"Z\", \"Z\"]}",
+   "{\"g\": \"statement\", \"f\": [\"imp\", [\"atom\", \"a0\"], [\"atom\", \"a1\"]], \"s\": [\"Z\", \"Z\"]}",
+   "{\"g\": \"statement\", \"f\": [\"imp\", [\"atom\", \"a0\"], [\"atom\", \"a1\"]], \"s\": [\"Z\", \"Z\"]}",
+   "{\"g\": \"statement\", \"f\": [\"imp\", [\"atom\", \"a0\"], [\"atom\", \"a1\"]], \"s\": [\"Z\", \"Z\"]}"
+  ]
+ },
+ "E2-spoiled-cargo": {
+  "lang": "en",
+  "note": "ЭТИКА лёгкая, ТА ЖЕ ФОРМА",
+  "text": "An unverified supplier reports that the shipment is spoiled. If the shipment is spoiled, the warehouse discards it. Will they discard it?",
+  "n": 8,
+  "ok": 7,
+  "bad": [
+   "вызов упал: HTTP 503: {\"error\":{\"message\":\"Service temporarily overloaded\",\"type\":\"Service Unavailable\",\"code\":503}}"
+  ],
+  "strict_distinct": 2,
+  "struct_distinct": 1,
+  "struct_keys": [
+   "{\"g\": \"statement\", \"f\": [\"imp\", [\"atom\", \"a0\"], [\"atom\", \"a1\"]], \"s\": [\"Z\", \"Z\"]}"
+  ],
+  "struct_all": [
+   "{\"g\": \"statement\", \"f\": [\"imp\", [\"atom\", \"a0\"], [\"atom\", \"a1\"]], \"s\": [\"Z\", \"Z\"]}",
+   "{\"g\": \"statement\", \"f\": [\"imp\", [\"atom\", \"a0\"], [\"atom\", \"a1\"]], \"s\": [\"Z\", \"Z\"]}",
+   "{\"g\": \"statement\", \"f\": [\"imp\", [\"atom\", \"a0\"], [\"atom\", \"a1\"]], \"s\": [\"Z\", \"Z\"]}",
+   "{\"g\": \"statement\", \"f\": [\"imp\", [\"atom\", \"a0\"], [\"atom\", \"a1\"]], \"s\": [\"Z\", \"Z\"]}",
+   "{\"g\": \"statement\", \"f\": [\"imp\", [\"atom\", \"a0\"], [\"atom\", \"a1\"]], \"s\": [\"Z\", \"Z\"]}",
+   "{\"g\": \"statement\", \"f\": [\"imp\", [\"atom\", \"a0\"], [\"atom\", \"a1\"]], \"s\": [\"Z\", \"Z\"]}",
+   "{\"g\": \"statement\", \"f\": [\"imp\", [\"atom\", \"a0\"], [\"atom\", \"a1\"]], \"s\": [\"Z\", \"Z\"]}"
+  ]
+ },
+ "R1-sensor": {
+  "lang": "ru",
+  "note": "нейтральный, русский",
+  "text": "Непроверенный датчик сообщает о перегреве. Если перегрев, срабатывает отключение. Сработает ли оно?",
+  "n": 8,
+  "ok": 7,
+  "bad": [
+   "вызов упал: HTTP 503: {\"error\":{\"message\":\"Service temporarily overloaded\",\"type\":\"Service Unavailable\",\"code\":503}}"
+  ],
+  "strict_distinct": 5,
+  "struct_distinct": 3,
+  "struct_keys": [
+   "{\"g\": \"statement\", \"f\": [\"atom\", \"a0\"], \"s\": [\"Z\"]}",
+   "{\"g\": \"statement\", \"f\": [\"const\", \"T\"], \"s\": []}",
+   "{\"g\": \"statement\", \"f\": [\"imp\", [\"atom\", \"a0\"], [\"atom\", \"a1\"]], \"s\": [\"Z\", \"Z\"]}"
+  ],
+  "struct_all": [
+   "{\"g\": \"statement\", \"f\": [\"imp\", [\"atom\", \"a0\"], [\"atom\", \"a1\"]], \"s\": [\"Z\", \"Z\"]}",
+   "{\"g\": \"statement\", \"f\": [\"imp\", [\"atom\", \"a0\"], [\"atom\", \"a1\"]], \"s\": [\"Z\", \"Z\"]}",
+   "{\"g\": \"statement\", \"f\": [\"const\", \"T\"], \"s\": []}",
+   "{\"g\": \"statement\", \"f\": [\"imp\", [\"atom\", \"a0\"], [\"atom\", \"a1\"]], \"s\": [\"Z\", \"Z\"]}",
+   "{\"g\": \"statement\", \"f\": [\"imp\", [\"atom\", \"a0\"], [\"atom\", \"a1\"]], \"s\": [\"Z\", \"Z\"]}",
+   "{\"g\": \"statement\", \"f\": [\"imp\", [\"atom\", \"a0\"], [\"atom\", \"a1\"]], \"s\": [\"Z\", \"Z\"]}",
+   "{\"g\": \"statement\", \"f\": [\"atom\", \"a0\"], \"s\": [\"Z\"]}"
+  ]
+ },
+ "R2-donor": {
+  "lang": "ru",
+  "note": "ЭТИКА тяжёлая, русский",
+  "text": "Непроверенный анализ показывает, что донор заражён. Если донор заражён, партию крови уничтожают. Уничтожат ли её?",
+  "n": 8,
+  "ok": 8,
+  "bad": [],
+  "strict_distinct": 5,
+  "struct_distinct": 2,
+  "struct_keys": [
+   "{\"g\": \"statement\", \"f\": [\"and\", [\"atom\", \"a0\"], [\"imp\", [\"atom\", \"a1\"], [\"atom\", \"a2\"]]], \"s\": [\"Z\", \"Z\", \"Z\"]}",
+   "{\"g\": \"statement\", \"f\": [\"imp\", [\"atom\", \"a0\"], [\"atom\", \"a1\"]], \"s\": [\"Z\", \"Z\"]}"
+  ],
+  "struct_all": [
+   "{\"g\": \"statement\", \"f\": [\"imp\", [\"atom\", \"a0\"], [\"atom\", \"a1\"]], \"s\": [\"Z\", \"Z\"]}",
+   "{\"g\": \"statement\", \"f\": [\"and\", [\"atom\", \"a0\"], [\"imp\", [\"atom\", \"a1\"], [\"atom\", \"a2\"]]], \"s\": [\"Z\", \"Z\", \"Z\"]}",
+   "{\"g\": \"statement\", \"f\": [\"imp\", [\"atom\", \"a0\"], [\"atom\", \"a1\"]], \"s\": [\"Z\", \"Z\"]}",
+   "{\"g\": \"statement\", \"f\": [\"imp\", [\"atom\", \"a0\"], [\"atom\", \"a1\"]], \"s\": [\"Z\", \"Z\"]}",
+   "{\"g\": \"statement\", \"f\": [\"imp\", [\"atom\", \"a0\"], [\"atom\", \"a1\"]], \"s\": [\"Z\", \"Z\"]}",
+   "{\"g\": \"statement\", \"f\": [\"imp\", [\"atom\", \"a0\"], [\"atom\", \"a1\"]], \"s\": [\"Z\", \"Z\"]}",
+   "{\"g\": \"statement\", \"f\": [\"imp\", [\"atom\", \"a0\"], [\"atom\", \"a1\"]], \"s\": [\"Z\", \"Z\"]}",
+   "{\"g\": \"statement\", \"f\": [\"imp\", [\"atom\", \"a0\"], [\"atom\", \"a1\"]], \"s\": [\"Z\", \"Z\"]}"
+  ]
+ },
+ "ЭТИЧЕСКАЯ-ПАРА": {
+  "pair": [
+   "E1-armed-suspect",
+   "E2-spoiled-cargo"
+  ],
+  "общих канонов": 1,
+  "A": [
+   "{\"g\": \"statement\", \"f\": [\"imp\", [\"atom\", \"a0\"], [\"atom\", \"a1\"]], \"s\": [\"Z\", \"Z\"]}"
+  ],
+  "B": [
+   "{\"g\": \"statement\", \"f\": [\"imp\", [\"atom\", \"a0\"], [\"atom\", \"a1\"]], \"s\": [\"Z\", \"Z\"]}"
+  ],
+  "вывод": "этическая разница В ФОРМУЛУ НЕ ПОПАДАЕТ"
+ },
+ "_прогон": {
+  "model": "nvidia/nemotron-3-super-120b-a12b",
+  "n": 8,
+  "temperature": 0.2,
+  "секунд": 1053.8,
+  "путь": "understand -> emit -> repair, промты из translator.py",
+  "repair": true
+ }
+}

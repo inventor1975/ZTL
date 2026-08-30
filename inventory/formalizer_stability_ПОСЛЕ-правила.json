@@ -1,0 +1,174 @@
+{
+ "S1-modus-ponens": {
+  "lang": "en",
+  "note": "нейтральный, простой",
+  "text": "If A implies B, and A is true, then B is true.",
+  "n": 8,
+  "ok": 8,
+  "bad": [],
+  "strict_distinct": 2,
+  "struct_distinct": 2,
+  "struct_keys": [
+   "{\"g\": \"statement\", \"f\": [\"imp\", [\"and\", [\"imp\", [\"atom\", \"a0\"], [\"atom\", \"a1\"]], [\"atom\", \"a0\"]], [\"atom\", \"a1\"]], \"s\": [\"T\", \"Z\"]}",
+   "{\"g\": \"statement\", \"f\": [\"imp\", [\"atom\", \"a0\"], [\"atom\", \"a1\"]], \"s\": [\"T\", \"Z\"]}"
+  ],
+  "struct_all": [
+   "{\"g\": \"statement\", \"f\": [\"imp\", [\"atom\", \"a0\"], [\"atom\", \"a1\"]], \"s\": [\"T\", \"Z\"]}",
+   "{\"g\": \"statement\", \"f\": [\"imp\", [\"atom\", \"a0\"], [\"atom\", \"a1\"]], \"s\": [\"T\", \"Z\"]}",
+   "{\"g\": \"statement\", \"f\": [\"imp\", [\"atom\", \"a0\"], [\"atom\", \"a1\"]], \"s\": [\"T\", \"Z\"]}",
+   "{\"g\": \"statement\", \"f\": [\"imp\", [\"and\", [\"imp\", [\"atom\", \"a0\"], [\"atom\", \"a1\"]], [\"atom\", \"a0\"]], [\"atom\", \"a1\"]], \"s\": [\"T\", \"Z\"]}",
+   "{\"g\": \"statement\", \"f\": [\"imp\", [\"atom\", \"a0\"], [\"atom\", \"a1\"]], \"s\": [\"T\", \"Z\"]}",
+   "{\"g\": \"statement\", \"f\": [\"imp\", [\"atom\", \"a0\"], [\"atom\", \"a1\"]], \"s\": [\"T\", \"Z\"]}",
+   "{\"g\": \"statement\", \"f\": [\"imp\", [\"atom\", \"a0\"], [\"atom\", \"a1\"]], \"s\": [\"T\", \"Z\"]}",
+   "{\"g\": \"statement\", \"f\": [\"imp\", [\"atom\", \"a0\"], [\"atom\", \"a1\"]], \"s\": [\"T\", \"Z\"]}"
+  ]
+ },
+ "S2-liar": {
+  "lang": "en",
+  "note": "нейтральный, самореференция",
+  "text": "This sentence is false.",
+  "n": 8,
+  "ok": 8,
+  "bad": [],
+  "strict_distinct": 1,
+  "struct_distinct": 1,
+  "struct_keys": [
+   "{\"g\": \"system\", \"f\": [[\"a0\", [\"not\", [\"tr\", \"a0\"]]]]}"
+  ],
+  "struct_all": [
+   "{\"g\": \"system\", \"f\": [[\"a0\", [\"not\", [\"tr\", \"a0\"]]]]}",
+   "{\"g\": \"system\", \"f\": [[\"a0\", [\"not\", [\"tr\", \"a0\"]]]]}",
+   "{\"g\": \"system\", \"f\": [[\"a0\", [\"not\", [\"tr\", \"a0\"]]]]}",
+   "{\"g\": \"system\", \"f\": [[\"a0\", [\"not\", [\"tr\", \"a0\"]]]]}",
+   "{\"g\": \"system\", \"f\": [[\"a0\", [\"not\", [\"tr\", \"a0\"]]]]}",
+   "{\"g\": \"system\", \"f\": [[\"a0\", [\"not\", [\"tr\", \"a0\"]]]]}",
+   "{\"g\": \"system\", \"f\": [[\"a0\", [\"not\", [\"tr\", \"a0\"]]]]}",
+   "{\"g\": \"system\", \"f\": [[\"a0\", [\"not\", [\"tr\", \"a0\"]]]]}"
+  ]
+ },
+ "E1-armed-suspect": {
+  "lang": "en",
+  "note": "ЭТИКА тяжёлая",
+  "text": "An unverified informant reports that the suspect is armed. If the suspect is armed, the officers force entry. Will they enter?",
+  "n": 8,
+  "ok": 8,
+  "bad": [],
+  "strict_distinct": 2,
+  "struct_distinct": 2,
+  "struct_keys": [
+   "{\"g\": \"statement\", \"f\": [\"imp\", [\"atom\", \"a0\"], [\"atom\", \"a1\"]], \"s\": [\"Z\", \"T\"]}",
+   "{\"g\": \"statement\", \"f\": [\"imp\", [\"atom\", \"a0\"], [\"atom\", \"a1\"]], \"s\": [\"Z\", \"Z\"]}"
+  ],
+  "struct_all": [
+   "{\"g\": \"statement\", \"f\": [\"imp\", [\"atom\", \"a0\"], [\"atom\", \"a1\"]], \"s\": [\"Z\", \"Z\"]}",
+   "{\"g\": \"statement\", \"f\": [\"imp\", [\"atom\", \"a0\"], [\"atom\", \"a1\"]], \"s\": [\"Z\", \"Z\"]}",
+   "{\"g\": \"statement\", \"f\": [\"imp\", [\"atom\", \"a0\"], [\"atom\", \"a1\"]], \"s\": [\"Z\", \"Z\"]}",
+   "{\"g\": \"statement\", \"f\": [\"imp\", [\"atom\", \"a0\"], [\"atom\", \"a1\"]], \"s\": [\"Z\", \"Z\"]}",
+   "{\"g\": \"statement\", \"f\": [\"imp\", [\"atom\", \"a0\"], [\"atom\", \"a1\"]], \"s\": [\"Z\", \"Z\"]}",
+   "{\"g\": \"statement\", \"f\": [\"imp\", [\"atom\", \"a0\"], [\"atom\", \"a1\"]], \"s\": [\"Z\", \"Z\"]}",
+   "{\"g\": \"statement\", \"f\": [\"imp\", [\"atom\", \"a0\"], [\"atom\", \"a1\"]], \"s\": [\"Z\", \"Z\"]}",
+   "{\"g\": \"statement\", \"f\": [\"imp\", [\"atom\", \"a0\"], [\"atom\", \"a1\"]], \"s\": [\"Z\", \"T\"]}"
+  ]
+ },
+ "E2-spoiled-cargo": {
+  "lang": "en",
+  "note": "ЭТИКА лёгкая, ТА ЖЕ ФОРМА",
+  "text": "An unverified supplier reports that the shipment is spoiled. If the shipment is spoiled, the warehouse discards it. Will they discard it?",
+  "n": 8,
+  "ok": 8,
+  "bad": [],
+  "strict_distinct": 4,
+  "struct_distinct": 3,
+  "struct_keys": [
+   "{\"g\": \"statement\", \"f\": [\"imp\", [\"and\", [\"atom\", \"a0\"], [\"atom\", \"a1\"]], [\"atom\", \"a2\"]], \"s\": [\"Z\", \"Z\", \"Z\"]}",
+   "{\"g\": \"statement\", \"f\": [\"imp\", [\"and\", [\"atom\", \"a0\"], [\"imp\", [\"atom\", \"a0\"], [\"atom\", \"a1\"]]], [\"atom\", \"a2\"]], \"s\": [\"Z\", \"Z\", \"Z\"]}",
+   "{\"g\": \"statement\", \"f\": [\"imp\", [\"atom\", \"a0\"], [\"atom\", \"a1\"]], \"s\": [\"Z\", \"Z\"]}"
+  ],
+  "struct_all": [
+   "{\"g\": \"statement\", \"f\": [\"imp\", [\"atom\", \"a0\"], [\"atom\", \"a1\"]], \"s\": [\"Z\", \"Z\"]}",
+   "{\"g\": \"statement\", \"f\": [\"imp\", [\"atom\", \"a0\"], [\"atom\", \"a1\"]], \"s\": [\"Z\", \"Z\"]}",
+   "{\"g\": \"statement\", \"f\": [\"imp\", [\"and\", [\"atom\", \"a0\"], [\"atom\", \"a1\"]], [\"atom\", \"a2\"]], \"s\": [\"Z\", \"Z\", \"Z\"]}",
+   "{\"g\": \"statement\", \"f\": [\"imp\", [\"and\", [\"atom\", \"a0\"], [\"atom\", \"a1\"]], [\"atom\", \"a2\"]], \"s\": [\"Z\", \"Z\", \"Z\"]}",
+   "{\"g\": \"statement\", \"f\": [\"imp\", [\"and\", [\"atom\", \"a0\"], [\"imp\", [\"atom\", \"a0\"], [\"atom\", \"a1\"]]], [\"atom\", \"a2\"]], \"s\": [\"Z\", \"Z\", \"Z\"]}",
+   "{\"g\": \"statement\", \"f\": [\"imp\", [\"atom\", \"a0\"], [\"atom\", \"a1\"]], \"s\": [\"Z\", \"Z\"]}",
+   "{\"g\": \"statement\", \"f\": [\"imp\", [\"atom\", \"a0\"], [\"atom\", \"a1\"]], \"s\": [\"Z\", \"Z\"]}",
+   "{\"g\": \"statement\", \"f\": [\"imp\", [\"atom\", \"a0\"], [\"atom\", \"a1\"]], \"s\": [\"Z\", \"Z\"]}"
+  ]
+ },
+ "R1-sensor": {
+  "lang": "ru",
+  "note": "нейтральный, русский",
+  "text": "Непроверенный датчик сообщает о перегреве. Если перегрев, срабатывает отключение. Сработает ли оно?",
+  "n": 8,
+  "ok": 7,
+  "bad": [
+   "FormulaError: trailing garbage after the formula: {\"genre\": \"statement\", \"atoms\": {\"датчик_сообщает_о_перегреве\": {\"status\": \"Z\", \"note\": \"unverified report\"}, \"перегрев\""
+  ],
+  "strict_distinct": 4,
+  "struct_distinct": 3,
+  "struct_keys": [
+   "{\"g\": \"statement\", \"f\": [\"imp\", [\"atom\", \"a0\"], [\"atom\", \"a1\"]], \"s\": [\"Z\", \"?\"]}",
+   "{\"g\": \"statement\", \"f\": [\"imp\", [\"atom\", \"a0\"], [\"atom\", \"a1\"]], \"s\": [\"Z\", \"T\"]}",
+   "{\"g\": \"statement\", \"f\": [\"imp\", [\"atom\", \"a0\"], [\"atom\", \"a1\"]], \"s\": [\"Z\", \"Z\"]}"
+  ],
+  "struct_all": [
+   "{\"g\": \"statement\", \"f\": [\"imp\", [\"atom\", \"a0\"], [\"atom\", \"a1\"]], \"s\": [\"Z\", \"Z\"]}",
+   "{\"g\": \"statement\", \"f\": [\"imp\", [\"atom\", \"a0\"], [\"atom\", \"a1\"]], \"s\": [\"Z\", \"T\"]}",
+   "{\"g\": \"statement\", \"f\": [\"imp\", [\"atom\", \"a0\"], [\"atom\", \"a1\"]], \"s\": [\"Z\", \"?\"]}",
+   "{\"g\": \"statement\", \"f\": [\"imp\", [\"atom\", \"a0\"], [\"atom\", \"a1\"]], \"s\": [\"Z\", \"Z\"]}",
+   "{\"g\": \"statement\", \"f\": [\"imp\", [\"atom\", \"a0\"], [\"atom\", \"a1\"]], \"s\": [\"Z\", \"Z\"]}",
+   "{\"g\": \"statement\", \"f\": [\"imp\", [\"atom\", \"a0\"], [\"atom\", \"a1\"]], \"s\": [\"Z\", \"Z\"]}",
+   "{\"g\": \"statement\", \"f\": [\"imp\", [\"atom\", \"a0\"], [\"atom\", \"a1\"]], \"s\": [\"Z\", \"Z\"]}"
+  ]
+ },
+ "R2-donor": {
+  "lang": "ru",
+  "note": "ЭТИКА тяжёлая, русский",
+  "text": "Непроверенный анализ показывает, что донор заражён. Если донор заражён, партию крови уничтожают. Уничтожат ли её?",
+  "n": 8,
+  "ok": 8,
+  "bad": [],
+  "strict_distinct": 6,
+  "struct_distinct": 3,
+  "struct_keys": [
+   "{\"g\": \"statement\", \"f\": [\"imp\", [\"atom\", \"a0\"], [\"atom\", \"a1\"]], \"s\": [\"?\", \"T\"]}",
+   "{\"g\": \"statement\", \"f\": [\"imp\", [\"atom\", \"a0\"], [\"atom\", \"a1\"]], \"s\": [\"Z\", \"T\"]}",
+   "{\"g\": \"statement\", \"f\": [\"imp\", [\"atom\", \"a0\"], [\"atom\", \"a1\"]], \"s\": [\"Z\", \"Z\"]}"
+  ],
+  "struct_all": [
+   "{\"g\": \"statement\", \"f\": [\"imp\", [\"atom\", \"a0\"], [\"atom\", \"a1\"]], \"s\": [\"Z\", \"T\"]}",
+   "{\"g\": \"statement\", \"f\": [\"imp\", [\"atom\", \"a0\"], [\"atom\", \"a1\"]], \"s\": [\"Z\", \"T\"]}",
+   "{\"g\": \"statement\", \"f\": [\"imp\", [\"atom\", \"a0\"], [\"atom\", \"a1\"]], \"s\": [\"Z\", \"Z\"]}",
+   "{\"g\": \"statement\", \"f\": [\"imp\", [\"atom\", \"a0\"], [\"atom\", \"a1\"]], \"s\": [\"Z\", \"Z\"]}",
+   "{\"g\": \"statement\", \"f\": [\"imp\", [\"atom\", \"a0\"], [\"atom\", \"a1\"]], \"s\": [\"Z\", \"T\"]}",
+   "{\"g\": \"statement\", \"f\": [\"imp\", [\"atom\", \"a0\"], [\"atom\", \"a1\"]], \"s\": [\"Z\", \"T\"]}",
+   "{\"g\": \"statement\", \"f\": [\"imp\", [\"atom\", \"a0\"], [\"atom\", \"a1\"]], \"s\": [\"?\", \"T\"]}",
+   "{\"g\": \"statement\", \"f\": [\"imp\", [\"atom\", \"a0\"], [\"atom\", \"a1\"]], \"s\": [\"Z\", \"T\"]}"
+  ]
+ },
+ "ЭТИЧЕСКАЯ-ПАРА": {
+  "pair": [
+   "E1-armed-suspect",
+   "E2-spoiled-cargo"
+  ],
+  "общих канонов": 1,
+  "A": [
+   "{\"g\": \"statement\", \"f\": [\"imp\", [\"atom\", \"a0\"], [\"atom\", \"a1\"]], \"s\": [\"Z\", \"T\"]}",
+   "{\"g\": \"statement\", \"f\": [\"imp\", [\"atom\", \"a0\"], [\"atom\", \"a1\"]], \"s\": [\"Z\", \"Z\"]}"
+  ],
+  "B": [
+   "{\"g\": \"statement\", \"f\": [\"imp\", [\"and\", [\"atom\", \"a0\"], [\"atom\", \"a1\"]], [\"atom\", \"a2\"]], \"s\": [\"Z\", \"Z\", \"Z\"]}",
+   "{\"g\": \"statement\", \"f\": [\"imp\", [\"and\", [\"atom\", \"a0\"], [\"imp\", [\"atom\", \"a0\"], [\"atom\", \"a1\"]]], [\"atom\", \"a2\"]], \"s\": [\"Z\", \"Z\", \"Z\"]}",
+   "{\"g\": \"statement\", \"f\": [\"imp\", [\"atom\", \"a0\"], [\"atom\", \"a1\"]], \"s\": [\"Z\", \"Z\"]}"
+  ],
+  "вывод": "этическая разница В ФОРМУЛУ НЕ ПОПАДАЕТ"
+ },
+ "_прогон": {
+  "model": "qwen2.5:14b",
+  "n": 8,
+  "temperature": 0.2,
+  "секунд": 166.6,
+  "путь": "understand -> emit -> repair, промты из translator.py",
+  "repair": true
+ }
+}

@@ -127,3 +127,59 @@ a family trait, not an exile.
 * ~~"Lean proves our choices are right"~~ — Lean proves our theorems have
   no holes (405, empty axiom list). The adequacy of `¬Z = F` is not a
   theorem and cannot be one.
+
+## Ethics and deontic logic — what is theirs, measured 2026-08-30
+
+Asked whether the ethical question is ours at all. It is not, and the
+precedent is old. **Cite this, do not re-derive it.**
+
+**von Wright, 1951** — the founding move of deontic logic is exactly our
+observation: *not every act that is a performance-function of other acts is
+also a deontic function of them.* The moral value is not computed from the
+truth table; that is why the field went modal rather than truth-functional.
+So the impossibility half of "no truth-functional extension carries ethics"
+is **75 years old and not ours.** Never claim it.
+
+**Benzmüller, Parent, van der Torre — a deontic logic reasoning
+infrastructure.** Deontic logics are shallow-embedded into classical HOL and
+run on Isabelle/HOL with Leo-III and SMT; case study on GDPR. Their pitch is
+that there is no consensus on the best deontic formalism, so candidates can
+be swapped and compared — which is an open invitation for ZTL to be one more
+candidate. **The catch to state before anyone gets attached:** the workbench
+is classical HOL, and our whole discipline is the axiom tiers with `[]` and
+no `Classical.choice`. Embedding puts our logic *inside* the axioms we
+refuse. The verdicts would likely agree; the claim "proved on an empty axiom
+list" would not survive the move.
+
+**What their "uncertainty" and "epistemic" actually are** — checked, because
+both words sound like our `Z` and neither is:
+
+- *Uncertain Machine Ethics Planning* (Kolker, Dennis, Pereira, Xu, 2025):
+  probability over **outcomes** — a multi-moral MDP and stochastic shortest
+  path — plus moral uncertainty across conflicting theories. Full-text scan:
+  `unverified`, `not checked`, `unknown`, `refuse`, `abstain`,
+  `three-valued` — **zero occurrences**. Not our object.
+- *Epistemic Reasoning for Machine Ethics with Situation Calculus*
+  (Pagnucco, Rajaratnam, Limarga, Nayak, Song, AIES 2021): the knowledge
+  modality `K(s',s)` of Scherl & Levesque in the situation calculus,
+  implemented in ASP. "What the agent knows", not "was this input checked".
+
+**The honest boundary on this section.** The Manchester paper was read as
+full text. The UNSW one was **not**: ACM returns 403 and no preprint was
+reachable — that entry rests on the conference **poster**, which is a
+summary. Three searches, not a survey. The nearest neighbours **not read**
+are Governatori and the defeasible / argumentation-with-deontic line, where
+a typed refusal may well already exist.
+
+**Corrected in the same pass:** the LLM normative-reasoning benchmark
+(NeuBAROCO line, arXiv 2510.26606) was first called a neighbour of our
+formalizer-stability measurement. It is not — by its own abstract it tests
+how well LLMs *reason with* normative and epistemic modals and reports
+inconsistencies and cognitive biases; it does not measure translation into a
+formal representation, nor run-to-run stability. Read: abstract and the
+repository landing page, not the paper.
+
+**What may still be ours, narrowly:** the verification status of a
+**premise** — not of an outcome and not of the agent's knowledge — together
+with a typed refusal and a bill for declaring absence. Unclaimed until the
+defeasible/argumentation line has been read.

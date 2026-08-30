@@ -83,6 +83,37 @@ check("КОНТРОЛЬ: отпечаток САМ говорит, чего не
       "НЕ доказывает одобренность" in (d / "DEPLOYED.json").read_text(encoding="utf-8"),
       "граница не записана в самом артефакте, и её потеряют")
 
+# --- ФЛАГ --commit: заявленное и проверенное НЕ СМЕШИВАТЬ (2026-08-30).
+# На боевом сервере лежит копия без .git, и отпечаток писал «НЕ ГИТ» — то есть
+# говорил ЧТО крутится, но не ОТКУДА. Флаг это чинит, но обязан оставаться
+# слабее дерева: где git есть, он молчит.
+import json as _json
+d2 = pathlib.Path(tempfile.mkdtemp())
+(d2 / "a.py").write_text("x = 1\n", encoding="utf-8")
+subprocess.run([sys.executable, str(ПРИБОР), "--write", str(d2),
+                "--commit", "ЗАЯВЛЕННЫЙ_НОМЕР"], capture_output=True, text=True)
+c2 = _json.loads((d2 / "DEPLOYED.json").read_text(encoding="utf-8"))["commit"]
+check("не-гит дерево: заявленный номер записан",
+      "ЗАЯВЛЕННЫЙ_НОМЕР" in c2, c2)
+check("и ПОМЕЧЕН как непроверенный, а не выдан за факт",
+      "НЕ проверен" in c2, c2)
+shutil.rmtree(d2, ignore_errors=True)
+
+# КОНТРОЛЬ, без которого предыдущее ничего не стоит: в ГИТОВОМ дереве флаг
+# обязан быть проигнорирован — иначе им можно подписать что угодно.
+d3 = pathlib.Path(tempfile.mkdtemp())
+(d3 / "a.py").write_text("x = 1\n", encoding="utf-8")
+for cmd in (["git", "init", "-q"], ["git", "add", "-A"],
+            ["git", "-c", "user.email=t@t", "-c", "user.name=t",
+             "commit", "-qm", "t"]):
+    subprocess.run(cmd, cwd=d3, capture_output=True)
+subprocess.run([sys.executable, str(ПРИБОР), "--write", str(d3),
+                "--commit", "ЗАВЕДОМО_ЛОЖНЫЙ"], capture_output=True, text=True)
+c3 = _json.loads((d3 / "DEPLOYED.json").read_text(encoding="utf-8"))["commit"]
+check("ФАЛЬСИФИКАТОР: в гитовом дереве флаг НЕ подменяет коммит",
+      "ЗАВЕДОМО_ЛОЖНЫЙ" not in c3 and len(c3) == 40, c3)
+shutil.rmtree(d3, ignore_errors=True)
+
 shutil.rmtree(d, ignore_errors=True)
 print(f"\nDEPLOY-STAMP {'GREEN' if not fail else 'RED'}: {ok} OK, {fail} FAIL")
 sys.exit(1 if fail else 0)

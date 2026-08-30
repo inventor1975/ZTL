@@ -3,7 +3,8 @@
 # SPDX-License-Identifier: Apache-2.0
 """Отпечаток развёрнутого экземпляра: что ИМЕННО там крутится.
 
-    python3 tool/deploy_stamp.py --write [корень]   записать отпечаток
+    python3 tool/deploy_stamp.py --write [корень] [--commit SHA]
+                                                   записать отпечаток
     python3 tool/deploy_stamp.py --check [корень]   пересчитать и сверить
 
 ЗАЧЕМ. 2026-08-29 выяснилось: дерево студии на сервере — не гит. По живому
@@ -45,14 +46,27 @@ def отпечатки(корень: pathlib.Path) -> dict[str, str]:
     return out
 
 
-def версия(корень: pathlib.Path) -> str:
-    """Коммит, если дерево гитовое; иначе честное «не гит»."""
+def версия(корень: pathlib.Path, снаружи: str = "") -> str:
+    """Коммит, если дерево гитовое; иначе принятый снаружи; иначе «не гит».
+
+    ЗАЧЕМ ПРИНИМАТЬ СНАРУЖИ (2026-08-30). На боевом сервере лежит КОПИЯ
+    репозитория без `.git`, и отпечаток честно писал «НЕ ГИТ» — то есть
+    говорил, ЧТО крутится, но не говорил, ОТКУДА. Половина смысла отпечатка
+    была именно в этом. Кто выкатывает, тот номер знает — пусть передаст;
+    прибор пометит, что номер ПРИНЯТ НА ВЕРУ, а не проверен по дереву.
+    Заявленное и проверенное не смешивать — иначе отпечаток начнёт врать
+    ровно тем тоном, ради которого его и заводили."""
     try:
         r = subprocess.run(["git", "-C", str(корень), "rev-parse", "HEAD"],
                            capture_output=True, text=True, timeout=10)
-        return r.stdout.strip() if r.returncode == 0 else "НЕ ГИТ"
+        if r.returncode == 0 and r.stdout.strip():
+            return r.stdout.strip()
     except Exception:
-        return "НЕ ГИТ"
+        pass
+    снаружи = (снаружи or "").strip()
+    if снаружи:
+        return f"{снаружи} (ЗАЯВЛЕН при выкате, деревом НЕ проверен)"
+    return "НЕ ГИТ"
 
 
 def двойники(корень: pathlib.Path) -> dict[str, list[str]]:
@@ -99,17 +113,17 @@ def двойники(корень: pathlib.Path) -> dict[str, list[str]]:
             if len(места) > 1 and имя in голые}
 
 
-def записать(корень: pathlib.Path) -> int:
+def записать(корень: pathlib.Path, коммит: str = "") -> int:
     ф = отпечатки(корень)
     (корень / ИМЯ).write_text(json.dumps({
         "at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-        "commit": версия(корень),
+        "commit": версия(корень, коммит),
         "files": ф,
         "note": "Отпечаток НЕ доказывает одобренность: он на той же машине, "
                 "под тем же правом записи, что и код. Он отвечает только на "
                 "вопрос, совпадает ли лежащее с объявленным.",
     }, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
-    print(f"записано {len(ф)} файлов -> {ИМЯ}  (коммит {версия(корень)})")
+    print(f"записано {len(ф)} файлов -> {ИМЯ}  (коммит {версия(корень, коммит)})")
     return 0
 
 
@@ -149,13 +163,25 @@ def сверить(корень: pathlib.Path) -> int:
 
 
 def main(argv: list[str]) -> int:
-    корень = pathlib.Path(argv[1]).resolve() if len(argv) > 1 else pathlib.Path(".").resolve()
+    # РАЗБОР АРГУМЕНТОВ ДО вычисления корня, а не после. Первая редакция
+    # флага --commit считала корень из НЕразобранного argv, и путём становилась
+    # сама строка "--commit". Прибор для проверки выката, спотыкающийся о свой
+    # же флаг, — ровно та порода, что он призван ловить.
     if not argv:
         print(__doc__.strip().splitlines()[0])
         return 2
-    if argv[0] == "--write":
-        return записать(корень)
-    if argv[0] == "--check":
+    коммит, позиционные = "", []
+    i = 0
+    while i < len(argv):
+        if argv[i] == "--commit" and i + 1 < len(argv):
+            коммит = argv[i + 1]; i += 2; continue
+        позиционные.append(argv[i]); i += 1
+    режим = позиционные[0] if позиционные else ""
+    путь = позиционные[1] if len(позиционные) > 1 else "."
+    корень = pathlib.Path(путь).resolve()
+    if режим == "--write":
+        return записать(корень, коммит)
+    if режим == "--check":
         return сверить(корень)
     print("нужен --write или --check")
     return 2

@@ -28,7 +28,7 @@ import re
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
-from zchoose import chunk_prose  # noqa: E402
+from chunking import chunk_prose  # noqa: E402
 
 TEXT_EXT = {".md", ".txt", ".tex", ".rst", ".org"}
 MODEL_NAME = "all-MiniLM-L6-v2"   # малая (~80МБ), быстрая на CPU, dim=384

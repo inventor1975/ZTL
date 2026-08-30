@@ -20,9 +20,10 @@ import pathlib
 import re
 import sys
 
-# chunk_prose живёт в zchoose — переиспользуем, не дублируем.
+# chunk_prose живёт в chunking — переиспользуем, не дублируем. Вынесена из
+# zchoose 2026-08-30 при закрытии яруса соблазна.
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
-from zchoose import chunk_prose  # noqa: E402
+from chunking import chunk_prose  # noqa: E402
 
 GROUNDING_RUBRIC = """Ты — ЗЕРО-ТРАСТ судья ОБОСНОВАННОСТИ. Тебе дают ИСТОЧНИК
 (единственная истина), ВОПРОС и КАНДИДАТ-ОТВЕТ. Знание ВНЕ источника НЕ

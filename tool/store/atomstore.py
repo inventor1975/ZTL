@@ -568,8 +568,52 @@ def retrieve(corpora: list[str], question: str, store_root: pathlib.Path,
     out = [(float(sims[i]), atoms[i]) for i in order]
     if rerank:
         out = _rerank(question, out, k, prefer_gpu=prefer_gpu) or out[:k]
+    # БУКВАЛЬНОЕ СОВПАДЕНИЕ ИДЁТ ВПЕРЁД (заведено 2026-08-30 по слову куратора).
+    #
+    # ПОВОД, промеренный в тот же день. Куратор искал свой афоризм по куску
+    # «но разрешает их сей плут» — точной подстроке хранимого текста. Стор не
+    # выдал его даже в пятёрке. Проверено по шагам: текст в корпусе ЕСТЬ; на
+    # чистом APHOR тот же промах, значит дело не в служебном мусоре; а запрос
+    # ЦЕЛЫМ афоризмом даёт попадание первым с оценкой 10.58.
+    #
+    # Значит embedding отвечает на «похоже по мысли» и НЕ отвечает на «где
+    # встречается вот это». Человек же ищет вторым способом — по врезавшемуся
+    # куску. Буквальный проход по всем атомам занял 7 миллисекунд (замерено),
+    # то есть стоит ничего.
+    #
+    # Совпадения ставятся ПЕРЕД смысловыми и не вытесняют их: смысловые просто
+    # сдвигаются ниже. Оценка помечается как буквальная — смешивать её с
+    # косинусом нельзя, это разные величины, и выдать одну за другую значило бы
+    # повторить ошибку, от которой выше защищает проверка моделей.
+    out = _literal_first(question, atoms, out, k)
     _log_query(store_root, corpora, question, k, out, rerank=rerank)
     return out
+
+
+LITERAL_MIN = 8          # короче — не «цитата», а случайное совпадение слов
+LITERAL_SCORE = 99.0     # метка «найдено буквально», НЕ косинус
+
+
+def _literal_first(question: str, atoms: list, out: list, k: int) -> list:
+    """Точные вхождения запроса — вперёд, остальное следом.
+
+    Сравнение по СЖАТЫМ ПРОБЕЛАМ и без регистра: хранимый атом склеен из
+    абзацев, и перенос строки в источнике не должен мешать найти цитату."""
+    q = " ".join(question.split()).casefold()
+    if len(q) < LITERAL_MIN:
+        return out[:k]
+    hits = []
+    for a in atoms:
+        text = " ".join((a.get("atom") or "").split()).casefold()
+        if q in text:
+            hits.append((LITERAL_SCORE, a))
+            if len(hits) >= k:
+                break
+    if not hits:
+        return out[:k]
+    seen = {id(a) for _, a in hits}
+    rest = [(s, a) for s, a in out if id(a) not in seen]
+    return (hits + rest)[:k]
 
 
 def _rerank(question: str, cand: list, k: int, prefer_gpu: bool = False) -> list:

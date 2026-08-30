@@ -51,6 +51,7 @@ STANDS = [
     ("tool/test_deploy_stamp.py", ["DEPLOY-STAMP GREEN", "15 OK, 0 FAIL"]),
     ("tool/test_joint_minimal_sets.py",
      ["JOINT-MINIMAL GREEN", "11 OK, 0 FAIL"]),
+    ("tool/store/test_no_fork_default.py", ["NO-FORK GREEN", "9 OK, 0 FAIL"]),
     ("inventory/test_backward.py", ["BACKWARD GREEN", "16 OK, 0 FAIL",
                         "две дороги сошлись на всех 45 клетках"]),
     ("ztljudge.py",     ["ZTLJUDGE GREEN", "over an unchanged core",

@@ -106,6 +106,45 @@ def in_no_gift_fragment(phi, marking):
     return all(neg_free(a, phi) for a, s in marking.items() if s == "M")
 
 
+def _conjuncts(phi):
+    """Разложить конъюнкцию в список сомножителей, сколь угодно вложенную."""
+    if isinstance(phi, (list, tuple)) and phi and phi[0] == "and":
+        return _conjuncts(phi[1]) + _conjuncts(phi[2])
+    return [phi]
+
+
+def _atoms_of(phi):
+    if isinstance(phi, str):
+        return set() if phi in ("T", "F") else {phi}
+    if phi[0] == "not":
+        return _atoms_of(phi[1])
+    return _atoms_of(phi[1]) | _atoms_of(phi[2])
+
+
+def f_locked_by_markfree_conjunct(phi, marking):
+    """`NoGift.f_locked` (доказана 2026-08-30, ПУСТОЙ СПИСОК АКСИОМ): ложный
+    конъюнкт, не содержащий ни одной метки, запирает F — уточнение не может
+    его тронуть, а F поглощает конъюнкцию.
+
+    ЗАЧЕМ ЗДЕСЬ. Теорема для T (`no_gift`) закрывает только половину: при F
+    расчёт по-прежнему обходил 3^n. Промерено 2026-08-30: 11 оснований — 393 мс,
+    13 — 4.1 с, дальше не считается. Эта проверка стоит один проход по
+    конъюнктам.
+
+    ЧЕСТНАЯ УЗОСТЬ, и её надо читать вместе с выгодой: на ПЕРВОМ разборе
+    нетронутой заявки условие не выполняется никогда — там каждый конъюнкт
+    есть голое непроверенное основание, то есть с меткой. Платит со второго
+    прохода, когда часть проверок уже сделана."""
+    if ztl_eval(phi, marking) != F:
+        return False
+    for c in _conjuncts(phi):
+        if any(marking.get(a) == "M" for a in _atoms_of(c)):
+            continue                      # в конъюнкте есть метка — не наш случай
+        if ztl_eval(c, marking) == F:
+            return True
+    return False
+
+
 def hereditary_bit(phi, marking):
     """The HEREDITARY grade: the verdict is unchanged under every
     partial refinement. This is the true shelf-life warranty; it
@@ -132,6 +171,9 @@ def hereditary_bit(phi, marking):
     the share rising with depth. This is a shortcut, not a cure."""
     v = ztl_eval(phi, marking)
     if v == T and in_no_gift_fragment(phi, marking):
+        return True
+    # ВТОРАЯ ПОЛОВИНА, подключена 2026-08-30: `NoGift.f_locked`.
+    if v == F and f_locked_by_markfree_conjunct(phi, marking):
         return True
     return all(ztl_eval(phi, m2) == v for m2 in refinements(marking))
 

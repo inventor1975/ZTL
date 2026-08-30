@@ -53,6 +53,8 @@ STANDS = [
      ["JOINT-MINIMAL GREEN", "11 OK, 0 FAIL"]),
     ("tool/store/test_no_fork_default.py", ["NO-FORK GREEN", "9 OK, 0 FAIL"]),
     ("tool/store/test_literal_first.py", ["LITERAL-FIRST GREEN", "10 OK, 0 FAIL"]),
+    ("test_f_locked_shortcut.py",
+     ["F-LOCKED SHORTCUT GREEN", "4 OK, 0 FAIL", "расхождений с перебором          : 0"]),
     ("inventory/test_backward.py", ["BACKWARD GREEN", "16 OK, 0 FAIL",
                         "две дороги сошлись на всех 45 клетках"]),
     ("ztljudge.py",     ["ZTLJUDGE GREEN", "over an unchanged core",

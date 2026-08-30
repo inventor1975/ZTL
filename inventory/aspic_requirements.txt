@@ -1,0 +1,9 @@
+certifi==2026.7.22
+charset-normalizer==3.5.1
+idna==3.19
+parse==1.22.1
+pyaspic @ git+https://github.com/arg-tech/py-aspic.git@37c8a847d9e85a735d8902e32f3d0f2fbfc09dae
+python-argumentation @ git+https://github.com/DaphneOdekerken/PyArg.git@f907bac94cbdd663839300b3b7523d4d958ff36f
+requests==2.34.2
+setuptools==80.10.2
+urllib3==2.7.0

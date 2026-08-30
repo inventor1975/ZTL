@@ -171,7 +171,11 @@ def any_key():
 # `a <= b = c`; Claude got 4 of 5 on the same battery with the same prompt.
 # Defaulting to the weakest key that happens to exist is a measurement about
 # the studio disguised as a measurement about AI.
-_PREFERRED = ["anthropic", "openai", "gemini", "deepseek", "xai",
+# NVIDIA ПЕРВЫМ — слово куратора 2026-08-30: «ставь кими к3 сразу в студию».
+# Довод не только в цене (каталог не жжёт его ключ Anthropic), но и в замере:
+# на устойчивости формализатора большая модель дала 9 разных векторов разметки
+# против 12 у локальной 14B при поле в 6. Лучше — и всё ещё не однозначно.
+_PREFERRED = ["nvidia", "anthropic", "openai", "gemini", "deepseek", "xai",
               "openrouter", "groq"]
 
 
@@ -200,6 +204,26 @@ def llm(messages, cfg, temperature=0.2):
             model=cfg.get("model", ""), key=cfg.get("key", ""),
             temperature=temperature)
     except providers.ProviderError as e:
+        # ЗАПАСНОЙ ПРОВАЙДЕР — слово куратора: «если не доступна, то запрос на ту,
+        # что сейчас там». Промерено 2026-08-30: каталог NVIDIA отдавал 503
+        # «temporarily overloaded» на 6 вызовах из 96, а часть моделей — 404
+        # «not found for account». Падать студией из-за чужой загрузки нельзя.
+        #
+        # Пробуем СЛЕДУЮЩЕГО по силе, у которого есть ключ, и только если и он
+        # не смог — говорим вслух ОБА отказа, а не последний: иначе первопричина
+        # теряется, а искать её потом будут в запасном.
+        if cfg.get("provider"):      # провайдера выбрал человек — не подменяем
+            raise TranslatorError(str(e))
+        have = {p["provider"] for p in providers.available() if p["has_key"]}
+        for nxt in _PREFERRED:
+            if nxt == prov or nxt not in have:
+                continue
+            try:
+                return providers.chat(messages, provider=nxt,
+                                      temperature=temperature)
+            except providers.ProviderError as e2:
+                raise TranslatorError(
+                    f"{prov} не ответил ({e}); запасной {nxt} тоже ({e2})")
         raise TranslatorError(str(e))
 
 

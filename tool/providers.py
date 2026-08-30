@@ -53,6 +53,15 @@ PROVIDERS = {
     "xai": ("openai", "https://api.x.ai/v1/chat/completions",
             "grok-4", "XAI_API_KEY", ".xai_key", "xAI (Grok)",
             "https://console.x.ai"),
+    # NVIDIA — каталог на build.nvidia.com, вход OpenAI-совместимый.
+    # Заведено 2026-08-30 по слову куратора. Не все модели каталога доступны
+    # каждому ключу: nemotron-70b, 51b и kimi-k2.6 отвечали 404 «not found for
+    # account», deepseek-v4 не уложился в минуту. Проверять живым вызовом, а не
+    # присутствием в списке — список врёт про доступность.
+    "nvidia": ("openai", "https://integrate.api.nvidia.com/v1/chat/completions",
+               "moonshotai/kimi-k3", "NVIDIA_API_KEY", ".nvidia_key",
+               "NVIDIA (каталог build.nvidia.com)",
+               "https://build.nvidia.com"),
 }
 
 # FLAGSHIP models only (Sonnet-level or above) — weaker models mis-formalize.
@@ -75,6 +84,10 @@ MODELS = {
     # 2026-08-20 (HTTP 404, не 403 — 403 это отсутствующий User-Agent).
     # Живой список: GET https://api.groq.com/openai/v1/models
     "groq":       ["openai/gpt-oss-120b", "qwen/qwen3.6-27b", "openai/gpt-oss-20b"],
+    # Проверено живым вызовом 2026-08-30: kimi-k3 ответила за 1.9 с,
+    # nemotron-3-super-120b за ~10 с (и трижды отдал 503 под нагрузкой).
+    "nvidia":     ["moonshotai/kimi-k3", "nvidia/nemotron-3-super-120b-a12b",
+                   "nvidia/nemotron-3-nano-30b-a3b"],
 }
 
 
@@ -82,8 +95,16 @@ class ProviderError(Exception):
     pass
 
 
+# Файлы вида KEY=value, где ключ уже лежит у куратора. Читаем их, чтобы не
+# заводить второй экземпляр секрета: секрет, размноженный по файлам, потом
+# меняют в одном месте и забывают в другом.
+EXTRA_KEY_FILES = {
+    "nvidia": os.path.expanduser("~/.config/nvidia-nim.env"),
+}
+
+
 def get_key(provider):
-    """Env var first, then the local untracked key file."""
+    """Env var first, then the local untracked key file, then a known env-file."""
     if provider not in PROVIDERS:
         return None
     env, keyfile = PROVIDERS[provider][3], PROVIDERS[provider][4]
@@ -94,6 +115,14 @@ def get_key(provider):
     if os.path.exists(path):
         with open(path) as f:
             return f.read().strip()
+    extra = EXTRA_KEY_FILES.get(provider)
+    if extra and os.path.exists(extra):
+        import re
+        with open(extra, encoding="utf-8", errors="replace") as f:
+            for line in f:
+                m = re.match(rf"\s*{re.escape(env)}\s*=\s*(.+?)\s*$", line)
+                if m:
+                    return m.group(1).strip().strip("'\"")
     return None
 
 

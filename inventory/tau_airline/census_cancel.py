@@ -66,31 +66,23 @@ def allowed(v):
 
 
 def classify(check, known):
-    """Меняет ли исход `check` вердикт, когда прочие НЕ определены.
+    """ИСПРАВЛЕНО 2026-08-31 вместе с census_rest: SETTLES = при КАЖДОМ
+    допустимом наборе прочих смена предиката не меняет последствия.
 
-    known: словарь уже установленных проверок (для сокращения).
-    Возвращает 'SHORT-CIRCUIT' | 'SETTLES' | 'MOVES'.
+    Прежнее определение требовало ещё и глобальной постоянности вердикта и
+    потому не находило булеву избыточность. Ошибка смещала к MOVES, то есть
+    к NO-GO.
     """
     free = [c for c in CHECKS if c != check and c not in known]
-    verdicts = set()
-    per_branch = {}
-    for val in (True, False):
-        vs = set()
-        for combo in itertools.product([True, False], repeat=len(free)):
-            v = dict(known); v[check] = val
-            v.update(dict(zip(free, combo)))
-            if not admissible(v):      # невозможные миры не голосуют
-                continue
-            vs.add(allowed(v))
-        per_branch[val] = vs
-        verdicts |= vs
-    # если при ИЗВЕСТНЫХ прочих вердикт уже один — это сокращение
-    if known and len(verdicts) == 1:
-        return "SHORT-CIRCUIT"
-    # оба исхода дают одно и то же множество вердиктов, и оно одноэлементно
-    if per_branch[True] == per_branch[False] and len(verdicts) == 1:
-        return "SETTLES"
-    return "MOVES"
+    for combo in itertools.product([True, False], repeat=len(free)):
+        base = dict(known); base.update(dict(zip(free, combo)))
+        vt = dict(base); vt[check] = True
+        vf = dict(base); vf[check] = False
+        if not (admissible(vt) and admissible(vf)):
+            continue
+        if allowed(vt) != allowed(vf):
+            return "MOVES"
+    return "SETTLES"
 
 
 def main():

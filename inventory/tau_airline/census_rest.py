@@ -64,23 +64,34 @@ RULES = {
 
 
 def sensitivity(preds, rule, admissible=None):
+    """ИСПРАВЛЕНО 2026-08-31 — прежнее определение было НЕВЕРНЫМ.
+
+    Было: SETTLES, если множество вердиктов при T совпало с множеством при F
+    И оказалось ОДНОЭЛЕМЕНТНЫМ. Второе требование лишнее и губительное: оно
+    ловило только предикаты в ГЛОБАЛЬНО постоянных правилах. На контроле
+    (a И b) ИЛИ (a И НЕ b) = a предикат b объявлялся MOVES, хотя изменить
+    исход не может.
+
+    Стало: SETTLES, если ПРИ КАЖДОМ допустимом наборе прочих смена этого
+    предиката НЕ МЕНЯЕТ полного последствия. Это и есть «проверка бесполезна».
+
+    Ошибка смещала в сторону MOVES, то есть в сторону меньшего числа SETTLES,
+    то есть в сторону NO-GO — ровно туда, куда клонилась моя же рекомендация.
+    """
     out = {}
     for c in preds:
         free = [p for p in preds if p != c]
-        branch = {}
-        for val in (True, False):
-            vs = set()
-            for combo in itertools.product([True, False], repeat=len(free)):
-                v = {c: val}; v.update(dict(zip(free, combo)))
-                if admissible and not admissible(v):
-                    continue
-                vs.add(rule(v))
-            branch[val] = vs
-        allv = branch[True] | branch[False]
-        if branch[True] == branch[False] and len(allv) == 1:
-            out[c] = "SETTLES"
-        else:
-            out[c] = "MOVES"
+        moves = False
+        for combo in itertools.product([True, False], repeat=len(free)):
+            base = dict(zip(free, combo))
+            vt = dict(base); vt[c] = True
+            vf = dict(base); vf[c] = False
+            if admissible and not (admissible(vt) and admissible(vf)):
+                continue          # пара недопустима — не голосует
+            if rule(vt) != rule(vf):
+                moves = True
+                break
+        out[c] = "MOVES" if moves else "SETTLES"
     return out
 
 
@@ -100,13 +111,49 @@ def main():
     tot = sum(tally.values())
     print(f"ИТОГ по этим правилам: предикатов {tot}, "
           f"SETTLES {tally['SETTLES']}, MOVES {tally['MOVES']}")
-    print("\nКОНТРОЛЬ, что прибор ВООБЩЕ умеет находить SETTLES:")
-    ctl = sensitivity(["a", "b"], lambda v: True)   # вердикт не зависит ни от чего
-    print(f"  правило-константа: {ctl} — обе обязаны быть SETTLES")
-    if set(ctl.values()) != {"SETTLES"}:
-        print("  КОНТРОЛЬ ПРОВАЛЕН: прибор не находит заведомый SETTLES.")
+    # ТРИ КОНТРОЛЯ. Первый слишком лёгок сам по себе — внешний рецензент верно указал
+    # 2026-08-31: правило-константа проверяет лишь, что прибор видит предикат
+    # БЕЗ ВСЯКОГО влияния. Наша настоящая мишень труднее: предикат, который
+    # В ПРАВИЛО ВХОДИТ, но обессмыслен избыточностью или доминированием.
+    print("\nКОНТРОЛИ ПРИБОРА (три, от лёгкого к настоящему):")
+    fails = []
+
+    ctl1 = sensitivity(["a", "b"], lambda v: True)
+    print(f"  1. правило-константа        : {ctl1}")
+    if set(ctl1.values()) != {"SETTLES"}:
+        fails.append("константа не дала SETTLES")
+
+    # (a И b) ИЛИ (a И НЕ b) = a. Предикат b ВХОДИТ в правило и при этом
+    # изменить исход не может. Это булева ИЗБЫТОЧНОСТЬ.
+    ctl2 = sensitivity(["a", "b"],
+                       lambda v: (v["a"] and v["b"]) or (v["a"] and not v["b"]))
+    print(f"  2. булева избыточность      : {ctl2}")
+    if ctl2.get("b") != "SETTLES":
+        fails.append("избыточный b не опознан как SETTLES")
+    if ctl2.get("a") != "MOVES":
+        fails.append("несущий a ошибочно назван SETTLES")
+
+    # ЧИСЛОВОЕ ДОМИНИРОВАНИЕ: построенный свидетель из багажной таблицы.
+    # business, запрошено 2 места; нормы по уровням 2/3/3 — доплата ноль при
+    # ЛЮБОМ уровне, значит уровень бесполезен, хотя в правило входит.
+    ALLOWB = {"regular": 2, "silver": 3, "gold": 3}
+    def bag_rule(v):
+        tier = "gold" if v["tier_gold"] else ("silver" if v["tier_silver"] else "regular")
+        return 50 * max(0, 2 - ALLOWB[tier])
+    def bag_adm(v):
+        return not (v["tier_gold"] and v["tier_silver"])   # уровень один
+    ctl3 = sensitivity(["tier_gold", "tier_silver"], bag_rule, bag_adm)
+    print(f"  3. числовое доминирование   : {ctl3}")
+    if set(ctl3.values()) != {"SETTLES"}:
+        fails.append("построенный числовой свидетель не опознан как SETTLES")
+
+    if fails:
+        print("\n  КОНТРОЛЬ ПРОВАЛЕН — перепись НЕДЕЙСТВИТЕЛЬНА:")
+        for f in fails:
+            print("   -", f)
         return 1
-    print("  контроль пройден.")
+    print("  все три пройдены: прибор находит и отсутствие влияния, и")
+    print("  избыточность, и доминирование.")
     print("\nПОТОЛОК: это ЛОГИЧЕСКАЯ чувствительность. Действенная экономия")
     print("не измерена: один вызов открывает несколько полей сразу.")
     return 0

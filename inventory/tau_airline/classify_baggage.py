@@ -50,6 +50,22 @@ def kwargs_of(call):
     return {}
 
 
+def consequence(tier_idx, cabin, bags):
+    """ПОЛНОЕ последствие багажного правила: доплата в долларах."""
+    return 50 * max(0, bags - ALLOW[cabin][tier_idx])
+
+
+def generic_baseline_eliminates(cabin, bags):
+    """ОБЫЧНЫЙ вычислитель с конечной областью — без всякого ZTL.
+
+    Перебирает три значения уровня, считает полное последствие для каждого и
+    объявляет проверку ненужной, если все совпали. Три строки. Именно этот
+    базис внешний рецензент и требует вычесть, прежде чем что-то записывать нам.
+    """
+    outs = {consequence(i, cabin, bags) for i in range(3)}
+    return len(outs) == 1
+
+
 def main():
     path = os.path.join(HERE, "tasks_airline.py")
     elts = tasks_from(path)
@@ -62,7 +78,7 @@ def main():
         return 2
 
     kinds = Counter()
-    settles, matters, degenerate = [], [], []
+    settles, matters, short_circuit = [], [], []
     for i, t in enumerate(elts):
         touched = False
         for node in ast.walk(t):
@@ -81,12 +97,17 @@ def main():
             mn = min(ALLOW[cabin])
             rec = (i, cabin, bags, mn, kw.get("nonfree_baggages"))
             if bags == 0:
-                # ВЫРОЖДЕННЫЙ. Ноль мест не стоит ничего ни при каком уровне.
-                # Формально это settles, но заслуги в нём нет: так ответит и
-                # человек, и любой базовый агент. Считать его вместе с
-                # настоящими — ровно то раздувание свидетельства, против
-                # которого вся программа.
-                degenerate.append(rec)
+                # СОКРАЩЕНИЕ, а не «вырожденный settles». Поправка внешнего рецензента
+                # 2026-08-31: я завёл ПЯТУЮ корзину, чтобы сохранить первую
+                # классификацию. Решать надо по структуре решения.
+                #
+                # доплата = 50 * max(0, bags - allowance(уровень, класс))
+                # При bags = 0 внешний max обращается в ноль ПРИ ЛЮБОМ
+                # allowance. То есть НАБЛЮДЁННОЕ значение (запрошено ноль)
+                # уже определяет полное последствие, и уровень мёртв по той
+                # же причине, по какой мёртв правый операнд у `&&`.
+                # Это ровно определение СОКРАЩЕНИЯ в замороженном разбиении.
+                short_circuit.append(rec)
             elif bags <= mn:
                 settles.append(rec)
             else:
@@ -98,15 +119,15 @@ def main():
     if kinds.get("класс или число мест не назван"):
         print(f"  не хватило полей           : {kinds['класс или число мест не назван']}")
 
-    tot = len(settles) + len(matters) + len(degenerate)
+    tot = len(settles) + len(matters) + len(short_circuit)
     if not tot:
         print("\nНОЛЬ пригодных багажных действий — отказ разбора, не свойство данных.")
         return 2
 
     nd = len(settles) + len(matters)
     print(f"\nБАГАЖНЫХ ДЕЙСТВИЙ С КЛАССОМ И ЧИСЛОМ МЕСТ: {tot}")
-    print(f"  ВЫРОЖДЕННЫХ (запрошено 0 мест)   : {len(degenerate)}"
-          f" — заслуги нет, считаем отдельно")
+    print(f"  СОКРАЩЕНИЕ (запрошено 0 мест)    : {len(short_circuit)}"
+          f" — наблюдение уже решило, заявлять нечего")
     print(f"  НЕВЫРОЖДЕННЫХ (мест >= 1)        : {nd}")
     if nd:
         print(f"    проверка уровня не решает (settles): "
@@ -122,6 +143,23 @@ def main():
     print("\n  где решает:")
     for i, c, b, mn, nf in matters[:8]:
         print(f"    задача {i:>2}: {c:<13} мест {b}, минимум {mn}, nonfree={nf}")
+
+    # ТРИ ЧИСЛА, а не одно — требование внешнего рецензента 2026-08-31
+    print("\nВЫЧИТАЕМ ОБЫЧНЫЙ ВЫЧИСЛИТЕЛЬ (перебор области уровня):")
+    gen_short = sum(1 for _, c, b, _, _ in short_circuit
+                    if generic_baseline_eliminates(c, b))
+    gen_set = sum(1 for _, c, b, _, _ in settles
+                  if generic_baseline_eliminates(c, b))
+    residual = len(settles) - gen_set
+    print(f"  наших settles (невырожденных)        : {len(settles)}")
+    print(f"  из них берёт ОБЫЧНЫЙ вычислитель     : {gen_set}")
+    print(f"  ОСТАТОК, уникально наш               : {residual}")
+    print(f"  (для сведения: сокращений, которые он тоже берёт: "
+          f"{gen_short} из {len(short_circuit)})")
+    if residual == 0 and len(settles) == 0:
+        print("\n  ОСТАТОК НОЛЬ ПРИ НУЛЕ НАХОДОК — это НЕ «мы не хуже».")
+        print("  Находок нет вовсе, значит вычитать не из чего, и утверждать")
+        print("  об остатке на этих данных НЕЛЬЗЯ ни в ту, ни в другую сторону.")
 
     print("\nПОТОЛОК: посчитана ОДНА проверка — уровень членства в багажном")
     print("правиле. Это НЕ потолок задачи и не выдаётся за него.")

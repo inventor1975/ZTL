@@ -27,42 +27,15 @@ import ast, itertools, json, os, sys
 from collections import Counter
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-CHECKS = ["not_already_flown", "within_24h", "airline_cancelled",
-          "cabin_business", "insurance", "covered_reason"]
-
-# ДОПУСТИМОСТЬ КОМБИНАЦИЙ — иначе невозможный мир делает проверку «двигающей».
-# Промерено по базе 2026-08-31:
-#   все 6 пар cabin x insurance наблюдаются (336/313/334/341/325/351) —
-#   значит эти две свободны, и перебор их законен ПО ДАННЫМ.
-#   статусы рейсов: landed 3982, cancelled 373, available 4500, delayed 41,
-#   flying 47, on time 57 — все нужные состояния достижимы.
-# ОГРАНИЧЕНИЕ, найденное в источнике: рейс, отменённый ПЕРЕВОЗЧИКОМ, не мог
-# быть пролетён. Значит airline_cancelled -> not_already_flown, и миры, где
-# оба «да» вместе с already_flown, из перебора исключаются.
+CHECKS = ["within_24h", "airline_cancelled", "cabin_business", "insurance"]
 
 
-def admissible(v):
-    if v["airline_cancelled"] and not v["not_already_flown"]:
+def allowed(v, no_flown=True):
+    """Полное правило отмены при значениях проверок v (кроме no_segment_flown)."""
+    if not no_flown:
         return False
-    return True
-
-
-def allowed(v):
-    """ПОЛНОЕ правило отмены, дословно по источнику.
-
-    ИСПРАВЛЕНО 2026-08-31 после разбора внешнего рецензента. Версия 1 (сохранена как
-    УБИТЫЙ-ПУТЬ-002) выбрасывала `covered_reason` из формулы, хотя мой же
-    докстринг его записывал, и оправдывала это тем, что его сообщает
-    пользователь. К УСЛОВИЮ ДОПУСКА это отношения не имеет: страховка без
-    покрытой причины отмену не разрешает. Это ровно шов «источник → формула»,
-    случившийся в собственном приборе.
-
-    Версия 1 также не перебирала not_already_flown вовсе — он стоял
-    параметром со значением по умолчанию.
-    """
-    return v["not_already_flown"] and (
-        v["within_24h"] or v["airline_cancelled"] or v["cabin_business"]
-        or (v["insurance"] and v["covered_reason"]))
+    return (v["within_24h"] or v["airline_cancelled"] or v["cabin_business"]
+            or ((not v["cabin_business"]) and v["insurance"]))
 
 
 def classify(check, known):
@@ -79,8 +52,6 @@ def classify(check, known):
         for combo in itertools.product([True, False], repeat=len(free)):
             v = dict(known); v[check] = val
             v.update(dict(zip(free, combo)))
-            if not admissible(v):      # невозможные миры не голосуют
-                continue
             vs.add(allowed(v))
         per_branch[val] = vs
         verdicts |= vs

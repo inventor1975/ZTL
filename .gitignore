@@ -59,3 +59,4 @@ atomstore_query.tasks/
 DEPLOYED.json
 inventory/feverous_data/
 inventory/tau_airline/tasks/
+inventory/tau_airline/db_*.json

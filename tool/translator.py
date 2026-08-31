@@ -175,14 +175,34 @@ def any_key():
 # Довод не только в цене (каталог не жжёт его ключ Anthropic), но и в замере:
 # на устойчивости формализатора большая модель дала 9 разных векторов разметки
 # против 12 у локальной 14B при поле в 6. Лучше — и всё ещё не однозначно.
-_PREFERRED = ["nvidia", "anthropic", "openai", "gemini", "deepseek", "xai",
+# ПОРЯДОК ПРОВАЙДЕРОВ — переопределяется окружением, БЕЗ ВЫКАТА КОДА.
+# Промерено 2026-08-31: когда первый в списке провайдер упёрся в свой лимит,
+# КАЖДЫЙ запрос платит откат providers._post (15+30+45 с) прежде чем упасть на
+# запасного. Живой запрос к студии не ответил за 120 с. Значит «кто первый» —
+# это эксплуатационное решение, которое нужно менять на месте и мгновенно, а
+# не через правку исходника и rsync.
+#   ZTL_PREFERRED="groq,nvidia"  -> сперва Groq
+_PREFERRED_DEFAULT = ["nvidia", "anthropic", "openai", "gemini", "deepseek", "xai",
               "openrouter", "groq"]
+
+
+def _preferred():
+    """Порядок из окружения, если задан; иначе встроенный.
+
+    Неизвестные имена молча не глотаем — они дописываются в конец, чтобы
+    опечатка в ZTL_PREFERRED не выкидывала провайдера из списка целиком.
+    """
+    raw = os.environ.get("ZTL_PREFERRED", "").strip()
+    if not raw:
+        return _PREFERRED_DEFAULT
+    order = [n.strip() for n in raw.split(",") if n.strip()]
+    return order + [n for n in _PREFERRED_DEFAULT if n not in order]
 
 
 def best_provider():
     """The strongest provider that actually has a key, or None if none does."""
     have = {p["provider"] for p in providers.available() if p["has_key"]}
-    for name in _PREFERRED:
+    for name in _preferred():
         if name in have:
             return name
     # None, НЕ "groq". Раньше при пустом have возвращался groq БЕЗ ключа —
@@ -215,7 +235,7 @@ def llm(messages, cfg, temperature=0.2):
         if cfg.get("provider"):      # провайдера выбрал человек — не подменяем
             raise TranslatorError(str(e))
         have = {p["provider"] for p in providers.available() if p["has_key"]}
-        for nxt in _PREFERRED:
+        for nxt in _preferred():
             if nxt == prov or nxt not in have:
                 continue
             try:

@@ -30,6 +30,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        # ПОЛНАЯ история и теги. Мелкий клон (глубина 1, без тегов) ломает
+        # inventory/unexecuted_verification.py: его положительный контроль
+        # проверяет, что на пине downstream-ztl-input-v0.1.1-signed отсутствует
+        # ztljudge.py. Без истории пин не разрешается, прибор ЧЕСТНО объявляет
+        # прогон недействительным и валит regression — а локально всё зелено.
+        # Промерено 2026-08-31: локальный «ALL GREEN 144» и удалённый RED
+        # расходились именно здесь, и это НЕ инфраструктурный сбой.
+        with:
+          fetch-depth: 0
+          fetch-tags: true
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'

@@ -60,3 +60,6 @@ DEPLOYED.json
 inventory/feverous_data/
 inventory/tau_airline/tasks/
 inventory/tau_airline/db_*.json
+inventory/sgraph_corpus/*.xml
+inventory/sgraph_corpus/*.html
+inventory/sgraph_corpus/*.txt

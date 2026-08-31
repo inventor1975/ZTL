@@ -64,6 +64,8 @@ STANDS = [
       "материализовано       : 88", "НЕ ОХВАЧЕНО           : 0",
       "ЕДИНОГО X ПО ВСЕМ 88 НЕТ И БЫТЬ НЕ ДОЛЖНО",
       "ЕДИНОГО ПРОЦЕНТА ПО B НЕ ПРИВОДИТЬ"]),
+    ("inventory/sgraph_corpus/artifact/cohort_c_crosswalk.py",
+     ["УСТАНОВЛЕНО: 7/7 исходных разрядов выстояли материализацию"]),
     ("inventory/sgraph_corpus/artifact/freeze.py",
      ["Прибор СООТВЕТСТВУЕТ заморозке", "состав когорт тот же"]),
     ("inventory/sgraph_corpus/artifact/original_representation.py",

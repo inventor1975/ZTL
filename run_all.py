@@ -581,7 +581,13 @@ def main():
     # grant itself. Green on one machine is not a result; this check makes
     # the runner say so.
     import subprocess as _sp
-    _tracked = set(_sp.run(["git", "ls-files"], capture_output=True,
+    # -c core.quotePath=false — иначе git ЭКРАНИРУЕТ не-ASCII имена
+    # ("\320\241\320\242…") и сторож не видит кириллических стендов:
+    # 2026-08-31 он объявил СТАРШИНСТВО.py отсутствующим, хотя файл
+    # отслеживается. Сторож, слепой к половине имён корпуса, выдаёт ЛОЖНЫЙ
+    # красный так же легко, как ложный зелёный.
+    _tracked = set(_sp.run(["git", "-c", "core.quotePath=false", "ls-files"],
+                           capture_output=True,
                            text=True).stdout.split())
     if _tracked:                      # empty when run outside a git checkout
         _absent = [s for s, _m in STANDS if s not in _tracked]

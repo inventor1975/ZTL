@@ -55,6 +55,8 @@ STANDS = [
     ("tool/store/test_literal_first.py", ["LITERAL-FIRST GREEN", "10 OK, 0 FAIL"]),
     ("test_f_locked_shortcut.py",
      ["F-LOCKED SHORTCUT GREEN", "4 OK, 0 FAIL", "расхождений с перебором          : 0"]),
+    ("inventory/tau_airline/СТАРШИНСТВО.py",
+     ["СТАРШИНСТВО ЗЕЛЁНОЕ", "сокращение не поглощается settles"]),
     ("inventory/unexecuted_verification.py",
      ["ПОЛОЖИТЕЛЬНЫЙ КОНТРОЛЬ: ПРОЙДЕН",
       "ПИН ЕСТЬ, А ФАЙЛА НА НЁМ НЕТ           : 0"]),

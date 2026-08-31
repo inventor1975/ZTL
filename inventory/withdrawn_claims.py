@@ -125,7 +125,16 @@ SCAN_EXT = (".md", ".py", ".sql")
 SKIP = ("withdrawn_claims.py", "NOTE-REVIEW-FINDINGS.md",
         "PROVSQL-REVIEW-FINDINGS.md", "LEDGER-NOTE-REVIEW.md")
 # Directories with no claims of our own in them.
+# ЗАМОРОЖЕННЫЕ ИСТОРИЧЕСКИЕ ОБЪЕКТЫ — исключены НАЗВАННО, 2026-08-31.
+# `inventory/fixtures/` хранит байты чужих прошлых версий, пришпиленные
+# отпечатком sha256 (см. ASSURANCE-INCIDENT-001). Отозванная формулировка
+# ЛЕЖИТ ТАМ ПО ЗАМЫСЛУ: происшествие сохраняется как свидетельство, а не
+# прячется. Править эти файлы нельзя — правка рвёт привязку и уничтожает то
+# самое доказательство, ради которого они заведены. Это НЕ поблажка себе:
+# исключение узкое, по одному каталогу, и обосновано тем, что там утверждение
+# не СТОИТ, а ЦИТИРУЕТСЯ историей.
 SKIP_DIRS = (".git", "_attic", "archive", "OLD", ".lake", "node_modules",
+             "fixtures",
              "__pycache__", ".claude",
              # `lab/` holds copies of PRE-FIX text on purpose — it is the
              # experimental record of what the defects looked like. Scanning

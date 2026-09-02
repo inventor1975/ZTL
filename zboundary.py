@@ -35,7 +35,7 @@ studio, and it imports nothing from `tool/`. The same function is available to
 partial disclosure inside a declared boundary.
 
 The theorems behind the behaviour are in `lean/ContextClosure.lean`, and the
-measured trade-off in `experiments/context-closure-001/`.
+measured trade-off in the context-closure experiment.
 """
 
 from itertools import product

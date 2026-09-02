@@ -370,7 +370,7 @@ machine cannot discover for itself.
 
 ### 1.7 The live branch, 2026-08-19 — selective disclosure
 
-`experiments/context-closure-001/` (cite by tag `context-closure-001-v1.5`, never by
+the context-closure experiment (cite by tag `context-closure-001-v1.5`, never by
 `master`) plus `lean/ContextClosure.lean`. Cryptography proves a disclosed
 fragment came from a signed object; it does not prove the fragment SUFFICES for
 the conclusion drawn from it. Five theorems, empty axiom list:

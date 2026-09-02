@@ -23,7 +23,7 @@ both sides of the trade:
                              middle fails here by construction
 
 Measured on a census of formulas of depth <= 2 over two atoms
-(`experiments/context-closure-001/normalize.py`): all 983 credit-verdicts vanish,
+(the context-closure normaliser): all 983 credit-verdicts vanish,
 369 honest ones go with them — 2.66 lies discarded per honest verdict lost —
 and on fully verified data nothing changes at all (11,624 comparisons, zero
 disagreements), because where nothing carries the mark ZTL is classical logic

@@ -3,7 +3,7 @@ import ZTL
 /-!
 # Context closure on the positive fragment — the bench's regularity, proved
 
-`experiments/context-closure-001/` measured, over an enumeration, that the kernel's
+The context-closure experiment measured, over an enumeration, that the kernel's
 verdict under partial disclosure and completion-based context closure are NOT
 the same property — `¬¬b` with `b` withheld is the minimal counterexample — but
 that they coincide exactly where the withheld atom occurs under no negation.
@@ -365,7 +365,7 @@ theorem no_syntactic_characterisation :
 
 /-! ## Normal form: the kernel stops granting warrants on credit
 
-`experiments/context-closure-001/normalize.py` measured that rewriting a claim into
+The context-closure normaliser measured that rewriting a claim into
 a normal form — expanding `xor`/`xnor` by their proved definitions and pushing
 negations down to the atoms — removes EVERY credit-warrant in the census. Here
 is why, for the whole language rather than a census.

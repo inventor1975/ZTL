@@ -1134,9 +1134,8 @@ the NaN signature "not equal to itself". The anchors choose locality.
 Asked by a downstream consumer whether a *partial disclosure* suffices
 for the conclusion drawn from it, the global reading becomes an
 operational question: does the verdict survive every admissible
-completion of what was withheld? `experiments/context-closure-001/` and
-`lean/ContextClosure.lean` answer it for this calculus, on the empty
-axiom list. The local and global readings **coincide exactly** where
+completion of what was withheld? `lean/ContextClosure.lean` answers it
+for this calculus, on the empty axiom list. The local and global readings **coincide exactly** where
 the withheld atom occurs under no negation, no antecedent and no
 xor/xnor (`closure_coincides`), and provably part company outside it —
 the separating case being `¬¬Z`, the very cell named above

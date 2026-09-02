@@ -1,5 +1,0 @@
-.anthropic_key
-*.key
-__pycache__/
-*.pyc
-credit-ledger-*.md

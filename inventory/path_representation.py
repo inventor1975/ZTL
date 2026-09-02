@@ -41,7 +41,7 @@ def main():
     present = [
         ("ASCII", "run_all.py"),
         ("кириллица", "inventory/tau_airline/СТАРШИНСТВО.py"),
-        ("кириллица+дефисы", "downstream/oic_seam/ЖУРНАЛ-ПОПРАВОК.md"),
+        ("кириллица+дефисы", "book/КНИГА-полностью.md"),
         ("смешанное", "inventory/tau_airline/УБИТЫЙ-ПУТЬ-003_детектор.md"),
         ("вложенный ASCII", "tool/warrant_receipt.py"),
         ("расширение .lean", "lean/NoGift.lean"),

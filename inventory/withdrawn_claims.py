@@ -144,7 +144,7 @@ SKIP_DIRS = (".git", "_attic", "archive", "OLD", ".lake", "node_modules",
 
 def files():
     """RECURSIVE. The first version listed four directories non-recursively,
-    so `essays/`, `downstream/`, `tool/`, `conformance/`, `dilemmas/` and the
+    so `essays/`, `experiments/`, `tool/`, `conformance/`, `dilemmas/` and the
     blueprint were never scanned at all — and a re-read found live withdrawn
     claims in files it could not reach. A checker that reports GREEN over a
     fraction of the corpus reports nothing."""

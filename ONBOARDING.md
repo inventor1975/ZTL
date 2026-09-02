@@ -82,7 +82,7 @@ cheaper than a correction after it.
 
 **`lab/` is the laboratory — a store of our own mistakes, and it is in
 `.gitignore` on purpose.** One folder per idea inside it. Only what survives
-leaves, and it leaves as a self-contained artifact under `downstream/`. If a `git
+leaves, and it leaves as a self-contained artifact under `experiments/`. If a `git
 add` is refused there, that is the rule working, not an obstacle.
 
 ---
@@ -370,7 +370,7 @@ machine cannot discover for itself.
 
 ### 1.7 The live branch, 2026-08-19 — selective disclosure
 
-`downstream/context-closure-001/` (cite by tag `context-closure-001-v1.5`, never by
+`experiments/context-closure-001/` (cite by tag `context-closure-001-v1.5`, never by
 `master`) plus `lean/ContextClosure.lean`. Cryptography proves a disclosed
 fragment came from a signed object; it does not prove the fragment SUFFICES for
 the conclusion drawn from it. Five theorems, empty axiom list:

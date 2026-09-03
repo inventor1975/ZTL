@@ -16,8 +16,8 @@ name: regression
 on:
   push:
     # Branches only. A tag push re-runs the workflow against the commit the tag
-    # points at — and release tags point at FROZEN history (downstream-ztl-input-v0.1
-    # -> e819dec, pinned downstream). Old commits predate current fixes and fail
+    # points at — and release tags point at FROZEN history (a downstream input
+    # tag pinned by a consumer). Old commits predate current fixes and fail
     # honestly; that is not a regression, it is archaeology, and it cannot be
     # repaired without breaking the pin. Test the branch, not the museum.
     branches:
@@ -30,13 +30,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        # ПОЛНАЯ история и теги. Мелкий клон (глубина 1, без тегов) ломает
-        # inventory/unexecuted_verification.py: его положительный контроль
-        # проверяет, что на пине downstream-ztl-input-v0.1.1-signed отсутствует
-        # ztljudge.py. Без истории пин не разрешается, прибор ЧЕСТНО объявляет
-        # прогон недействительным и валит regression — а локально всё зелено.
-        # Промерено 2026-08-31: локальный «ALL GREEN 144» и удалённый RED
-        # расходились именно здесь, и это НЕ инфраструктурный сбой.
+        # ПОЛНАЯ история и теги. Мелкий клон (глубина 1, без тегов) прячет
+        # целый класс расхождений: стенд, опирающийся на пин, без истории
+        # объявляет прогон недействительным и валит regression — а локально
+        # всё зелено. Промерено 2026-08-31: «ALL GREEN 144» локально против
+        # RED на удалённом расходились ИМЕННО здесь, и это был не сбой
+        # инфраструктуры. Стенд, из-за которого правило появилось, изъят
+        # 2026-09-03 (его опора исчезла вместе с переписанной историей), но
+        # правило остаётся: оно про класс, а не про один прибор.
         with:
           fetch-depth: 0
           fetch-tags: true

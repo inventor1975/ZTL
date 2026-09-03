@@ -550,9 +550,23 @@ def _v2(name):
 
 def api_v2run(payload):
     """ZFL v2: one table in, whichever instruments apply out. The whole of
-    what used to be three tabs, with no genre to declare."""
+    what used to be three tabs, with no genre to declare.
+
+    К ответу ДОБАВЛЕНО поле back_reading — что ядро прочитало из таблицы,
+    словами. Именно ДОБАВЛЕНО: прежние поля не тронуты, и кто его не ждёт,
+    тот его не заметит. Причина — промерена: документ бывает безупречен и при
+    этом уводит связь к тому прибору, которого человек не звал; валидатор
+    молчит, потому что ошибки нет. Единственное, что тут помогает, — показать
+    разбор, а не рассказать про него.
+    """
     doc = payload.get("doc") or {}
-    return _v2("zfl2").run(doc)
+    r = _v2("zfl2").run(doc)
+    try:
+        r["back_reading"] = _v2("backread").прочитано(doc)
+    except Exception as e:                       # зеркало НЕ смеет ронять суд
+        r["back_reading"] = None
+        r["back_reading_error"] = f"{type(e).__name__}: {e}"
+    return r
 
 
 def api_v2fill(payload):

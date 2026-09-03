@@ -32,6 +32,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+import backread                                                  # noqa: E402
 import translator                                                # noqa: E402
 import zfl2                                                      # noqa: E402
 import zfl2doc                                                   # noqa: E402
@@ -227,6 +228,36 @@ def fill(history, lang="en", cfg=None):
     if doc is not None:
         issues = zfl2.validate(doc)
         if not any(i["level"] == "error" for i in issues):
+            # ЗЕРКАЛО. Документ валиден — и этого мало: связь можно записать
+            # безупречно и положить в поле, которого нужный прибор не читает.
+            # Промерено: одна и та же связь «ровно один из двух» в claim идёт
+            # к судье и оставляет паспорт пустым, а в ground — к паспорту.
+            # Валидатор об этом молчит, потому что ошибки и нет.
+            #
+            # Поэтому после валидации показываем ЧТО ЯДРО ПРОЧИТАЛО, и только
+            # если зеркало предупредило — даём ОДИН дополнительный заход.
+            # Не предупредило — лишнего вызова нет, платить не за что.
+            #
+            # Замер на 24 парадоксах: 20 из 21 с зеркалом против 15 из 21 без.
+            зеркало = backread.прочитано(doc)
+            if "ВНИМАНИЕ" in зеркало:
+                msgs2 = msgs + [
+                    {"role": "assistant", "content": raw},
+                    {"role": "user", "content":
+                     "Вот что ядро прочитало из вашего документа:\n\n"
+                     + зеркало
+                     + "\n\nЕсли ядро прочитало НЕ ТО, что вы имели в виду — "
+                       "верните исправленный JSON-объект, один, без пояснений. "
+                       "Если всё верно — верните тот же документ без изменений."}]
+                raw2 = translator.strip_fences(translator.llm(msgs2, cfg))
+                doc2, _ = _parse(raw2)
+                if doc2 is not None:
+                    issues2 = zfl2.validate(doc2)
+                    if not any(i["level"] == "error" for i in issues2):
+                        return {"ok": True, "doc": doc2, "repaired": False,
+                                "mirrored": True, "back_reading": зеркало,
+                                "issues": issues2 + _invented_grounds(doc2, history)}
+                # Второй заход не дал годного — остаёмся с первым, он валиден.
             return {"ok": True, "doc": doc, "repaired": False,
                     "issues": issues + _invented_grounds(doc, history)}
     msgs += [{"role": "assistant", "content": raw},

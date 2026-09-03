@@ -166,6 +166,48 @@ def _post(url, body, headers):
     raise ProviderError("провайдер не ответил за отведённые попытки")
 
 
+# ── СЧЁТ РАСХОДА ──────────────────────────────────────────────────────────
+# Заведено 2026-09-03 по слову куратора. Провайдер ВОЗВРАЩАЕТ usage в каждом
+# ответе — promt/completion/total, — а мы брали из ответа только текст и всё
+# остальное молча выбрасывали. Целый вечер замеров прошёл без единой цифры
+# расхода, и «дорого или нет» приходилось оценивать на глаз.
+#
+# Возвращаемый тип chat() НЕ МЕНЯЕТСЯ: он строка, и десяток вызывающих мест
+# на это опирается. Счёт копится СБОКУ. Кто хочет цифру — зовёт usage_report().
+#
+# Считается ФАКТ провайдера, а не наша оценка по длине текста: оценка по
+# знакам врёт на любой токенизации, а usage приходит от того, кто списывает.
+_USAGE = {}
+
+
+def usage_reset():
+    """Обнулить счёт. Зовётся ПЕРЕД замером, иначе в него попадёт прошлый."""
+    _USAGE.clear()
+
+
+def usage_report():
+    """{provider: {calls, prompt, completion, total}} — только то, что провайдер
+    прислал сам. Вызовы, где usage не пришёл, считаются в `без_счёта`: молчание
+    провайдера не есть ноль расхода."""
+    return {k: dict(v) for k, v in _USAGE.items()}
+
+
+def _usage_add(provider, model, data):
+    u = (data or {}).get("usage") or {}
+    d = _USAGE.setdefault(provider, {"calls": 0, "prompt": 0, "completion": 0,
+                                     "total": 0, "без_счёта": 0, "models": {}})
+    d["calls"] += 1
+    d["models"][model or "(default)"] = d["models"].get(model or "(default)", 0) + 1
+    if not u:
+        d["без_счёта"] += 1
+        return
+    d["prompt"] += int(u.get("prompt_tokens") or u.get("input_tokens") or 0)
+    d["completion"] += int(u.get("completion_tokens") or u.get("output_tokens") or 0)
+    d["total"] += int(u.get("total_tokens") or 0) or (
+        int(u.get("prompt_tokens") or u.get("input_tokens") or 0)
+        + int(u.get("completion_tokens") or u.get("output_tokens") or 0))
+
+
 def chat(messages, provider="groq", model="", key="", temperature=0.2):
     """messages: [{role: system|user|assistant, content}]. Returns text."""
     if provider not in PROVIDERS:
@@ -192,6 +234,7 @@ def chat(messages, provider="groq", model="", key="", temperature=0.2):
                    "content-type": "application/json",
                    "user-agent": "ZTLStudio/1.0"}
         data = _post(url, body, headers)
+        _usage_add(provider, model, data)
         parts = data.get("content", [])
         return "".join(p.get("text", "") for p in parts).strip()
 
@@ -204,6 +247,7 @@ def chat(messages, provider="groq", model="", key="", temperature=0.2):
         headers["HTTP-Referer"] = "https://github.com/inventor1975/ZTL"
         headers["X-Title"] = "ZTLStudio"
     data = _post(url, body, headers)
+    _usage_add(provider, model, data)
     # Безопасный разбор, как в anthropic-ветке. Пустой choices или content=null
     # (reasoning-only / отказ модели) раньше роняли жёсткую цепочку индексов.
     choices = data.get("choices") or []

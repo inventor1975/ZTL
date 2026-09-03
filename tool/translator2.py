@@ -65,6 +65,16 @@ def schema(lang="en"):
     lines.append("Arithmetic: " + " ".join(zfl2doc.arithmetic()))
     lines.append("A value is a number, an interval like [0,10], or ? when it "
                  "is the thing being asked for.")
+    # ЗАПРЕЩЁННЫЕ ИМЕНА — список берётся ИЗ ЯДРА, не переписывается здесь.
+    # Заведено 2026-09-03: форк назвал строку буквой T и получил ПУСТОЙ
+    # паспорт без единого замечания. В спеке первого поколения этот запрет
+    # стоял, при переходе на v2 потерялся, и промпт о нём молчал. Цитируем
+    # ядро, чтобы второе описание языка не завелось снова: изменится
+    # zfl2.RESERVED_NAMES — изменится и то, что читает модель.
+    lines.append("RESERVED — never use as a row name: "
+                 + ", ".join(zfl2.RESERVED_NAMES)
+                 + ". They are constants of the language; as a name each one "
+                   "silently changes the reading. Lower-case versions are free.")
     return "\n".join(lines)
 
 

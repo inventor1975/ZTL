@@ -462,6 +462,23 @@ import zbook                                                     # noqa: E402
 
 NAME_RE = re.compile(r"^[A-Za-zА-Яа-яЁё_][\w А-Яа-яЁё-]*$")
 
+# ИМЕНА, КОТОРЫЕ РАЗБОР ЛОМАЮТ МОЛЧА. Заведено 2026-09-03 после того, как форк
+# назвал правдоруба буквой T и получил ПУСТОЙ паспорт без единого замечания:
+# не ошибку, а тихо неверный ответ.
+#
+# Список ПРОМЕРЕН, а не перенесён из спеки первого поколения. Там запрещались
+# ещё Tr, imp, xor, xnor — в нынешнем ядре они безвредны и дают тот же разбор,
+# что обычное имя; запрещать их значило бы отнимать у человека слова без
+# причины. Словесные операторы (and, or, not, implies, и, или, не) валидатор
+# и так отвергает по другому правилу. Остаются ровно три:
+#
+#     T -> паспорт ПУСТ,  замечаний 0
+#     F -> паспорт ПУСТ,  замечаний 0
+#     Z -> паспорт INPUT вместо UNDERDETERMINED, замечаний 0
+#
+# Строчные t, f, z безопасны и НЕ запрещены: они разбираются как обычные имена.
+RESERVED_NAMES = ("T", "F", "Z")
+
 # status -> what the core's two floors each call it
 _MARK = {"verified": "T", "refuted": "F", "unverified": "Z"}
 _PROV = {"verified": "earned", "refuted": "earned", "unverified": "credit"}
@@ -529,6 +546,12 @@ def validate(doc):
         elif not NAME_RE.match(name):
             issues.append(_issue("error", "E_BADNAME", f"{at} / name",
                                  f"'{name}' is not usable in a formula"))
+        elif name in RESERVED_NAMES:
+            issues.append(_issue("error", "E_RESERVED", f"{at} / name",
+                                 f"'{name}' is a constant of the language, not a "
+                                 f"name: used as a row name it silently changes "
+                                 f"the reading. Pick a descriptive name "
+                                 f"(lower-case '{name.lower()}' is free)"))
         elif name in seen:
             issues.append(_issue("error", "E_DUPNAME", f"{at} / name",
                                  f"'{name}' is already used above"))

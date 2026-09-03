@@ -45,6 +45,9 @@ CODE_HELP = {
     "E_BADNAME": ("a name a formula could not use",
                   "имя, непригодное для формулы"),
     "E_DUPNAME": ("the same name twice", "имя повторяется"),
+    "E_RESERVED": ("a constant of the language used as a row name — it silently "
+                   "changes the reading",
+                   "константа языка в роли имени строки — молча меняет разбор"),
     "E_STATUS": ("a status outside the four", "статус вне четырёх"),
     "E_SCALE": ("a scale that is not empty/int/decimalK/fracM, or out of bounds",
                 "шкала не пустая/int/decimalK/fracM либо вне границ"),

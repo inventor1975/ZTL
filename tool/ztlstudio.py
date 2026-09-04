@@ -562,9 +562,15 @@ def api_v2run(payload):
     doc = payload.get("doc") or {}
     r = _v2("zfl2").run(doc)
     try:
-        r["back_reading"] = _v2("backread").прочитано(doc)
+        _br = _v2("backread")
+        r["back_reading"] = _br.прочитано(doc)
+        # ФАКТЫ отдельно от слов: экран говорит на семи языках и имена
+        # приборов там локализованы давно. Русский абзац в английском
+        # интерфейсе был бы восьмым, кривым описанием.
+        r["back_reading_facts"] = _br.факты(doc)
     except Exception as e:                       # зеркало НЕ смеет ронять суд
         r["back_reading"] = None
+        r["back_reading_facts"] = None
         r["back_reading_error"] = f"{type(e).__name__}: {e}"
     return r
 

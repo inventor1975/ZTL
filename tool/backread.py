@@ -52,6 +52,42 @@ import zfl2  # noqa: E402
 }
 
 
+def факты(doc: dict) -> dict:
+    """То же зеркало, но СТРУКТУРОЙ, а не словами.
+
+    ПОЧЕМУ ДВЕ ФОРМЫ. Текст нужен модели: она читает его как читал бы человек,
+    и на этом промерены 20 из 21. Экран же говорит на семи языках, и имена
+    приборов там ЛОКАЛИЗОВАНЫ ДАВНО. Отдавать в интерфейс русский абзац
+    значило бы завести восьмое, кривое описание — прямо тот случай, когда
+    подпись и правило разъезжаются.
+
+    Поэтому наружу идут ФАКТЫ, а слова к ним подбирает тот, кто знает язык
+    читателя. Ключи приборов те же, что в `applies`, — переводить их незачем,
+    перевод уже есть.
+    """
+    doc = zfl2.coerce(doc)
+    r = zfl2.run(doc)
+    применились = [k for k, v in (r.get("applies") or {}).items() if v]
+    claim = (doc.get("claim") or "").strip()
+    паспорт_молчит = not (r.get("applies") or {}).get("passport")
+    return {
+        "rows": [{"name": row.get("name", ""), "status": row.get("status", ""),
+                  "means": row.get("means", ""), "ground": row.get("ground", ""),
+                  "value": row.get("value", "")}
+                 for row in (doc.get("rows") or [])],
+        "claim": claim,
+        "applied": применились,
+        "silent": [k for k, v in (r.get("applies") or {}).items() if not v],
+        "nothing_applied": not применились,
+        # Единственное предупреждение, и оно узкое: связь ушла в claim, а
+        # паспорт промолчал. Широкое предупреждение перестают читать.
+        "claim_bypassed_passport": bool(claim) and паспорт_молчит,
+        "errors": [{"code": i.get("code"), "where": i.get("where"),
+                    "hint": i.get("hint")}
+                   for i in (r.get("issues") or []) if i.get("level") == "error"],
+    }
+
+
 def прочитано(doc: dict) -> str:
     doc = zfl2.coerce(doc)
     r = zfl2.run(doc)

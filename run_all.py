@@ -52,7 +52,7 @@ STANDS = [
     ("tool/test_joint_minimal_sets.py",
      ["JOINT-MINIMAL GREEN", "11 OK, 0 FAIL"]),
     ("tool/test_backread.py",
-     ["ЗЕРКАЛО: ЗЕЛЁНОЕ", "12 ок, 0 провал"]),
+     ["ЗЕРКАЛО: ЗЕЛЁНОЕ", "24 ок, 0 провал"]),
     ("tool/test_usage_counter.py",
      ["СЧЁТ РАСХОДА: ЗЕЛЁНЫЙ", "14 ок, 0 провал"]),
     ("tool/store/test_no_fork_default.py", ["NO-FORK GREEN", "9 OK, 0 FAIL"]),

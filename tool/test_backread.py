@@ -12,7 +12,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from backread import прочитано  # noqa: E402
+from backread import прочитано, факты  # noqa: E402
 
 ok = fail = 0
 
@@ -62,6 +62,36 @@ check("зарезервированное имя показано как оши�
 # Статусы переведены, а не выведены кодом: зеркало читает человек.
 t = прочитано({"rows": [{"name": "x", "status": "unverified"}], "claim": ""})
 check("статус по-человечески", True, "НЕ проверено" in t)
+
+# ФАКТЫ — та же правда СТРУКТУРОЙ. Экран рисует из них, а не из русского
+# абзаца: имена приборов локализованы на семь языков, и серверный текст стал бы
+# восьмым описанием. Значит структура обязана говорить ровно то же, что слова.
+print("\nФАКТЫ — структура для экрана")
+f = факты({"rows": ПАРА, "claim": "a ^ b"})
+check("связь в claim: обход паспорта отмечен", True, f["claim_bypassed_passport"])
+check("взялся судья", ["judge"], f["applied"])
+check("паспорт назван молчащим", True, "passport" in f["silent"])
+check("строки перенесены", ["a", "b"], [x["name"] for x in f["rows"]])
+check("ошибок нет", [], f["errors"])
+
+f = факты({"rows": ПЕТЛЯ, "claim": ""})
+check("связь в ground: обхода НЕТ", False, f["claim_bypassed_passport"])
+check("взялся паспорт", ["passport"], f["applied"])
+
+f = факты({"rows": ПАРА, "claim": ""})
+check("никто не взялся — сказано прямо", True, f["nothing_applied"])
+
+f = факты({"rows": [{"name": "T", "status": "defined", "ground": "Tr(T)"}]})
+check("зарезервированное имя в ошибках", ["E_RESERVED"],
+      [e["code"] for e in f["errors"]])
+
+# СЛОВА И СТРУКТУРА НЕ СМЕЮТ РАСХОДИТЬСЯ: где текст предупреждает, там и
+# структура обязана поднять флаг, иначе экран и модель увидят разное.
+for имя, d in [("claim", {"rows": ПАРА, "claim": "a ^ b"}),
+               ("ground", {"rows": ПЕТЛЯ, "claim": ""}),
+               ("пусто", {"rows": ПАРА, "claim": ""})]:
+    check(f"текст и структура согласны ({имя})",
+          "ВНИМАНИЕ" in прочитано(d), факты(d)["claim_bypassed_passport"])
 
 print(f"\nЗЕРКАЛО: {'ЗЕЛЁНОЕ' if fail == 0 else 'КРАСНОЕ'} — {ok} ок, {fail} провал(ов)")
 sys.exit(0 if fail == 0 else 1)

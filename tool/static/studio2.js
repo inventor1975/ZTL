@@ -8,6 +8,10 @@
 
 const UI = {
   en: { advanced: "advanced", reference: "what is ZFL? (the language)", addrow: "add a row",
+          mirror: "what the core read from your table",
+          mirrorsilent: "silent",
+          mirrornone: "No instrument took this up. The table was parsed; nothing answered.",
+          mirrorclaim: "The relation is written in the claim, and the judge reads it. The passport office reads only the grounds of rows. If you meant the passport to weigh this relation — loops, self-reference, decidability — its place is the ground, not the claim. The same relation in different fields goes to different instruments; that is a choice, not a typo.",
         run: "run", claim: "claim", remove: "remove this row",
         nothing: "nothing to show yet — fill a row and press run",
         applies: "instruments that had something to say",
@@ -45,6 +49,10 @@ const UI = {
                + "with your own key \u2014 or keep working without it: the "
                + "table and the verdict never needed the AI." },
   ru: { advanced: "дополнительно", reference: "что такое ZFL? (язык)",
+          mirror: "что ядро прочитало из вашей таблицы",
+          mirrorsilent: "промолчали",
+          mirrornone: "Ни один прибор не взялся. Таблица разобрана; отвечать некому.",
+          mirrorclaim: "Отношение записано в claim, и его читает судья. Паспортный прибор смотрит только основания строк. Если вы хотели, чтобы это отношение разбирал паспорт — петли, самоссылка, разрешимость — его место в ground, а не в claim. Одна и та же связь в разных полях уходит к разным приборам, и это выбор, а не опечатка.",
         addrow: "добавить строку", run: "запустить", claim: "утверждение",
         remove: "убрать строку",
         nothing: "пока нечего показывать — заполните строку и запустите",
@@ -82,6 +90,10 @@ const UI = {
                + "своим ключом — или работайте без него: таблица и вердикт "
                + "в ИИ никогда не нуждались." },
   uk: { advanced: "додатково", reference: "що таке ZFL? (мова)",
+          mirror: "що ядро прочитало з вашої таблиці",
+          mirrorsilent: "промовчали",
+          mirrornone: "Жоден прилад не взявся. Таблицю розібрано; відповідати нікому.",
+          mirrorclaim: "Відношення записане в claim, і його читає суддя. Паспортний прилад дивиться лише підстави рядків. Якщо ви хотіли, щоб це відношення розбирав паспорт — петлі, самопосилання, вирішуваність — його місце в ground, а не в claim.",
         addrow: "додати рядок", run: "запустити", claim: "твердження",
         remove: "прибрати рядок",
         nothing: "поки нічого показувати — заповніть рядок і запустіть",
@@ -119,6 +131,10 @@ const UI = {
                + "своїм ключем — або працюйте без нього: таблиця і вердикт "
                + "у ШІ ніколи не потребували." },
   he: { advanced: "מתקדם", reference: "מהי ZFL? (השפה)",
+          mirror: "מה שהליבה קראה מהטבלה שלך",
+          mirrorsilent: "שתקו",
+          mirrornone: "אף מכשיר לא נטל זאת. הטבלה נותחה; אין מי שיענה.",
+          mirrorclaim: "היחס נכתב ב-claim, והשופט הוא שקורא אותו. משרד הדרכונים קורא רק את הנימוקים של השורות. אם התכוונת שהדרכון ישקול את היחס הזה — לולאות, התייחסות עצמית, הכרעה — מקומו ב-ground ולא ב-claim.",
         addrow: "הוספת שורה", run: "הרצה", claim: "הטענה",
         remove: "הסרת השורה",
         nothing: "עדיין אין מה להראות — מלאו שורה והריצו",
@@ -154,6 +170,10 @@ const UI = {
                + "«ה־AI שלי» למעלה והמשיכו עם מפתח משלכם — או עבדו בלעדיו: "
                + "הטבלה והפסק מעולם לא נזקקו ל־AI." },
   de: { advanced: "erweitert", reference: "Was ist ZFL? (die Sprache)",
+          mirror: "was der Kern aus Ihrer Tabelle gelesen hat",
+          mirrorsilent: "schwiegen",
+          mirrornone: "Kein Instrument hat sich zuständig gefühlt. Die Tabelle wurde gelesen; niemand antwortet.",
+          mirrorclaim: "Die Beziehung steht im claim, und der Richter liest sie. Das Passamt liest nur die Gründe der Zeilen. Wenn der Pass diese Beziehung prüfen soll — Schleifen, Selbstbezug, Entscheidbarkeit — gehört sie in ground, nicht in claim.",
         addrow: "Zeile hinzufügen", run: "ausführen", claim: "Behauptung",
         remove: "diese Zeile entfernen",
         nothing: "noch nichts zu zeigen — Zeile ausfüllen und ausführen",
@@ -192,6 +212,10 @@ const UI = {
                + "mit Ihrem Schlüssel weiter — oder arbeiten Sie ohne: Tabelle "
                + "und Urteil haben die KI nie gebraucht." },
   fr: { advanced: "avancé", reference: "qu'est-ce que ZFL ? (le langage)",
+          mirror: "ce que le noyau a lu dans votre tableau",
+          mirrorsilent: "silencieux",
+          mirrornone: "Aucun instrument ne s'en est saisi. Le tableau a été analysé ; personne ne répond.",
+          mirrorclaim: "La relation est écrite dans le claim, et c'est le juge qui la lit. Le bureau des passeports ne lit que les fondements des lignes. Si vous vouliez que le passeport examine cette relation — boucles, autoréférence, décidabilité — sa place est dans ground, pas dans claim.",
         addrow: "ajouter une ligne", run: "exécuter", claim: "affirmation",
         remove: "retirer cette ligne",
         nothing: "rien à montrer pour l'instant — remplissez une ligne et exécutez",
@@ -230,6 +254,10 @@ const UI = {
                + "votre clé — ou travaillez sans : le tableau et le verdict "
                + "n'ont jamais eu besoin de l'IA." },
   es: { advanced: "avanzado", reference: "¿qué es ZFL? (el lenguaje)",
+          mirror: "lo que el núcleo leyó de su tabla",
+          mirrorsilent: "callaron",
+          mirrornone: "Ningún instrumento se hizo cargo. La tabla se analizó; nadie responde.",
+          mirrorclaim: "La relación está escrita en el claim, y quien la lee es el juez. La oficina de pasaportes lee sólo los fundamentos de las filas. Si quería que el pasaporte examinara esta relación — bucles, autorreferencia, decidibilidad — su lugar es ground, no claim.",
         addrow: "añadir fila", run: "ejecutar", claim: "afirmación",
         remove: "quitar esta fila",
         nothing: "todavía nada que mostrar — rellene una fila y ejecute",
@@ -468,6 +496,33 @@ function showReport(r) {
       (rep.judge.unverified.length
         ? `<p class="muted">${t("weak")}: ` +
           esc(rep.judge.unverified.join(", ")) + "</p>" : "")));
+  }
+  // ЗЕРКАЛО. Не вердикт и не совет, а отчёт о прочитанном: что ядро взяло из
+  // таблицы и какие приборы за это взялись. Строится из ФАКТОВ, а слова берутся
+  // из здешнего словаря — имена приборов локализованы на семь языков давно, и
+  // класть сюда серверный абзац значило бы завести восьмое описание.
+  //
+  // Промерено: слепой заполняющий, видевший это зеркало, дал 20 из 21 против
+  // 15 из 21 без него. Правило в наставлении говорило то же и не помогло.
+  const bf = r.back_reading_facts;
+  if (bf) {
+    // Предупреждение — НАВЕРХ и только два, узких. Прибор, предупреждающий
+    // всегда, перестают читать, и тогда он не защищает, а создаёт чувство
+    // защиты.
+    if (bf.nothing_applied) {
+      out.unshift(`<p><b class="v-F">${esc(t("mirrornone"))}</b></p>`);
+    } else if (bf.claim_bypassed_passport) {
+      out.unshift(`<p><b class="v-Z">${esc(t("mirrorclaim"))}</b></p>`);
+    }
+    const назвать = k => t(k) || k;
+    const взялись = (bf.applied || []).map(k => `<b>${esc(назвать(k))}</b>`).join(" · ");
+    const молчат = (bf.silent || []).map(k => esc(назвать(k))).join(" · ");
+    out.push(panel(t("mirror"),
+      table([t("component"), t("kind"), t("detail")],
+        (bf.rows || []).map(x => [esc(x.name), esc(x.status),
+          esc(x.ground || x.means || "")])) +
+      `<p>${взялись || "—"}</p>` +
+      (молчат ? `<p class="muted">${esc(t("mirrorsilent"))}: ${молчат}</p>` : "")));
   }
   if (r.report && r.report.on_stipulation) {
     // Бирка, которой требует глава 13: заработавшее на ОБЪЯВЛЕННОМ не

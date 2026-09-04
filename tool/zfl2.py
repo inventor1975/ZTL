@@ -479,6 +479,21 @@ NAME_RE = re.compile(r"^[A-Za-zА-Яа-яЁё_][\w А-Яа-яЁё-]*$")
 # Строчные t, f, z безопасны и НЕ запрещены: они разбираются как обычные имена.
 RESERVED_NAMES = ("T", "F", "Z")
 
+# СЛОВА СВЯЗОК — тоже заняты, и хуже того. Найдено проходом introspect
+# 2026-09-04: форк назвал строку `imp` (сокращение от implication), валидатор
+# НЕ СКАЗАЛ НИ СЛОВА, а `run()` упал с KeyError: 'imp'. Причина одна на два
+# места: `names_in` отбрасывает служебные слова, поэтому имя строки `imp` не
+# считается ссылкой — валидатору не на что жаловаться, а окружение оценщика
+# такой строки не заводит. В студии это HTTP 500 на годной с виду таблице.
+#
+# Отличие от T/F/Z по ТЯЖЕСТИ: там читалось не то, здесь ядро ПАДАЕТ.
+# Список ОДИН и живёт здесь; `names_in` берёт его отсюда же, иначе через
+# месяц появится второй, и разойдётся с первым — как уже было с запретом,
+# который стоял в спеке первого поколения и потерялся при переходе на v2.
+OPERATOR_WORDS = ("not", "and", "or", "imp", "xor", "xnor",
+                  "sum", "min", "max", "abs")
+_SERVICE_WORDS = set(RESERVED_NAMES) | set(OPERATOR_WORDS)
+
 # status -> what the core's two floors each call it
 _MARK = {"verified": "T", "refuted": "F", "unverified": "Z"}
 _PROV = {"verified": "earned", "refuted": "earned", "unverified": "credit"}
@@ -552,6 +567,13 @@ def validate(doc):
                                  f"name: used as a row name it silently changes "
                                  f"the reading. Pick a descriptive name "
                                  f"(lower-case '{name.lower()}' is free)"))
+        elif name in OPERATOR_WORDS:
+            issues.append(_issue("error", "E_RESERVED", f"{at} / name",
+                                 f"'{name}' is a connective of the language, "
+                                 f"not a name: a formula mentioning it reads "
+                                 f"as the operator, so the row is never bound "
+                                 f"and the core cannot evaluate it. Pick a "
+                                 f"descriptive name"))
         elif name in seen:
             issues.append(_issue("error", "E_DUPNAME", f"{at} / name",
                                  f"'{name}' is already used above"))
@@ -733,9 +755,7 @@ def names_in(text):
     way to ask a question about nothing at all."""
     t = re.sub(r"\bTr\s*\(\s*([^)]+?)\s*\)", r"\1", text or "")
     words = set(re.findall(r"[A-Za-zА-Яа-яЁё_][\wА-Яа-яЁё]*", t))
-    return {w for w in words
-            if w not in {"not", "and", "or", "imp", "xor", "xnor", "T", "F",
-                         "Z", "sum", "min", "max", "abs"}}
+    return {w for w in words if w not in _SERVICE_WORDS}
 
 
 _LONE_EQ = re.compile(r"(?<![<>=!])=(?!=)")

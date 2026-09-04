@@ -634,20 +634,28 @@ class Handler(BaseHTTPRequestHandler):
         # that needed it was written.
         self.path, _, query = self.path.partition("?")
         self.path = self.path or "/"
-        # v2 IS THE STUDIO from 2026-08-13; v1 stays reachable at /v1
-        # rather than being deleted, because §7 of the published paradox
-        # docket describes ITS flow — "press Validate … the studio shows a
-        # human back-reading … then Run on the core" — and v2 has neither a
-        # Validate button nor a back-reading yet. The collection itself did
-        # move across, entire, and a stand asserts it. Until the back-reading
-        # exists, an archived-but-live v1 is what keeps an issued sentence
-        # true.
+        # V1 СНЯТА С ПУБЛИКИ 2026-09-04 по слову куратора.
+        #
+        # Держали её вот зачем: §7 опубликованного докета описывает ЕЁ поток —
+        # "press Validate … the studio shows a human back-reading … then Run on
+        # the core", — а v2 обратного чтения не имела. Пока его не было, живая
+        # v1 была единственным, что удерживало уже выпущенное утверждение
+        # истинным; снять её тогда значило бы задним числом сделать
+        # опубликованный текст ложным.
+        #
+        # Условие снято и ПРОВЕРЕНО на живой студии, а не предположено:
+        # POST /api/v2run возвращает back_reading и back_reading_facts. Значит
+        # поток из §7 теперь описывает v2, и v1 больше ничего не удерживает.
+        #
+        # Отдаём 410 Gone, а не 404: адрес существовал и назван в публикации,
+        # и «его никогда не было» было бы неправдой.
         if self.path in ("/", "/index.html", "/v2", "/studio2"):
             with open(os.path.join(HERE, "static", "studio2.html"), "rb") as f:
                 self._send(200, f.read(), "text/html; charset=utf-8")
         elif self.path in ("/v1", "/v1.html", "/classic"):
-            with open(os.path.join(HERE, "static", "index.html"), "rb") as f:
-                self._send(200, f.read(), "text/html; charset=utf-8")
+            self._send(410, {"error": "v1 retired 2026-09-04; the studio is at /",
+                             "why": "v2 now carries the back-reading that §7 "
+                                    "of the paradox docket describes"})
         elif self.path in ("/zfl", "/zfl.html"):
             # The ZFL reference, generated from the language itself by
             # tool/zfl2doc.py — regenerated on request in development so it

@@ -617,6 +617,397 @@ EXAMPLES = [
 ]
 
 
+# ГЛОССЫ ПО ЯЗЫКАМ. Найдено куратором 2026-09-04: он выбрал Агриппу на
+# английском и получил в таблице РУССКИЕ пояснения. Промерено — не случай, а
+# класс: 58 строк в 26 примерах из 41 несли русский `means`, а документ у
+# примера ОДИН на все семь языков. Название и вопрос локализованы давно
+# (`label`, `ask_<язык>`), документ — нет; незаметно это было ровно потому,
+# что разработка шла по-русски и свой язык не бросается в глаза.
+#
+# Ключ — САМА РУССКАЯ ФРАЗА, а не выдуманный код: перевод стоит рядом с тем,
+# что переводится, и новая строка примера не может сослаться на ключ, которого
+# нет. Нет перевода — остаётся русский, то есть прежнее поведение: молчаливой
+# потери текста не бывает, бывает непереведённый текст, и он виден.
+ГЛОССЫ = {
+ "это предложение ложно": {
+  "en": "this sentence is false",
+  "de": "dieser Satz ist falsch",
+  "uk": "це речення хибне",
+  "he": "משפט זה שקרי",
+  "fr": "cette phrase est fausse",
+  "es": "esta oración es falsa"
+ },
+ "брадобрей бреет самого себя": {
+  "en": "the barber shaves himself",
+  "de": "der Barbier rasiert sich selbst",
+  "uk": "голяр голить сам себе",
+  "he": "הספר מגלח את עצמו",
+  "fr": "le barbier se rase lui-même",
+  "es": "el barbero se afeita a sí mismo"
+ },
+ "«гетерологичное» не описывает само себя": {
+  "en": "'heterological' does not describe itself",
+  "de": "„heterologisch“ beschreibt sich selbst nicht",
+  "uk": "«гетерологічне» не описує саме себе",
+  "he": "«הטרולוגי» אינו מתאר את עצמו",
+  "fr": "« hétérologique » ne se décrit pas lui-même",
+  "es": "«heterológico» no se describe a sí mismo"
+ },
+ "a принадлежит a": {
+  "en": "a belongs to a",
+  "de": "a gehört zu a",
+  "uk": "a належить a",
+  "he": "a שייך ל-a",
+  "fr": "a appartient à a",
+  "es": "a pertenece a a"
+ },
+ "a принадлежит b": {
+  "en": "a belongs to b",
+  "de": "a gehört zu b",
+  "uk": "a належить b",
+  "he": "a שייך ל-b",
+  "fr": "a appartient à b",
+  "es": "a pertenece a b"
+ },
+ "a принадлежит R": {
+  "en": "a belongs to R",
+  "de": "a gehört zu R",
+  "uk": "a належить R",
+  "he": "a שייך ל-R",
+  "fr": "a appartient à R",
+  "es": "a pertenece a R"
+ },
+ "b принадлежит a": {
+  "en": "b belongs to a",
+  "de": "b gehört zu a",
+  "uk": "b належить a",
+  "he": "b שייך ל-a",
+  "fr": "b appartient à a",
+  "es": "b pertenece a a"
+ },
+ "b принадлежит b": {
+  "en": "b belongs to b",
+  "de": "b gehört zu b",
+  "uk": "b належить b",
+  "he": "b שייך ל-b",
+  "fr": "b appartient à b",
+  "es": "b pertenece a b"
+ },
+ "b принадлежит R": {
+  "en": "b belongs to R",
+  "de": "b gehört zu R",
+  "uk": "b належить R",
+  "he": "b שייך ל-R",
+  "fr": "b appartient à R",
+  "es": "b pertenece a R"
+ },
+ "R принадлежит a": {
+  "en": "R belongs to a",
+  "de": "R gehört zu a",
+  "uk": "R належить a",
+  "he": "R שייך ל-a",
+  "fr": "R appartient à a",
+  "es": "R pertenece a a"
+ },
+ "R принадлежит b": {
+  "en": "R belongs to b",
+  "de": "R gehört zu b",
+  "uk": "R належить b",
+  "he": "R שייך ל-b",
+  "fr": "R appartient à b",
+  "es": "R pertenece a b"
+ },
+ "R принадлежит самому себе": {
+  "en": "R belongs to itself",
+  "de": "R gehört zu sich selbst",
+  "uk": "R належить сам собі",
+  "he": "R שייך לעצמו",
+  "fr": "R s'appartient à lui-même",
+  "es": "R se pertenece a sí mismo"
+ },
+ "написанное на обороте — правда": {
+  "en": "what is written on the back is true",
+  "de": "was auf der Rückseite steht, ist wahr",
+  "uk": "написане на звороті — правда",
+  "he": "מה שכתוב מאחור הוא אמת",
+  "fr": "ce qui est écrit au dos est vrai",
+  "es": "lo escrito al dorso es verdadero"
+ },
+ "написанное на лицевой стороне — ложь": {
+  "en": "what is written on the front is false",
+  "de": "was auf der Vorderseite steht, ist falsch",
+  "uk": "написане на лицьовому боці — брехня",
+  "he": "מה שכתוב מלפנים הוא שקר",
+  "fr": "ce qui est écrit au recto est faux",
+  "es": "lo escrito en el anverso es falso"
+ },
+ "крокодил возвращает ребёнка": {
+  "en": "the crocodile returns the child",
+  "de": "das Krokodil gibt das Kind zurück",
+  "uk": "крокодил повертає дитину",
+  "he": "התנין מחזיר את הילד",
+  "fr": "le crocodile rend l'enfant",
+  "es": "el cocodrilo devuelve al niño"
+ },
+ "мать угадала, что он сделает": {
+  "en": "the mother guessed what he would do",
+  "de": "die Mutter hat erraten, was er tun wird",
+  "uk": "мати вгадала, що він зробить",
+  "he": "האם ניחשה מה הוא יעשה",
+  "fr": "la mère a deviné ce qu'il ferait",
+  "es": "la madre adivinó lo que él haría"
+ },
+ "первое предложение цикла истинно": {
+  "en": "the first sentence of the cycle is true",
+  "de": "der erste Satz des Zyklus ist wahr",
+  "uk": "перше речення циклу істинне",
+  "he": "המשפט הראשון במחזור אמיתי",
+  "fr": "la première phrase du cycle est vraie",
+  "es": "la primera oración del ciclo es verdadera"
+ },
+ "второе предложение цикла истинно": {
+  "en": "the second sentence of the cycle is true",
+  "de": "der zweite Satz des Zyklus ist wahr",
+  "uk": "друге речення циклу істинне",
+  "he": "המשפט השני במחזור אמיתי",
+  "fr": "la deuxième phrase du cycle est vraie",
+  "es": "la segunda oración del ciclo es verdadera"
+ },
+ "третье предложение цикла истинно": {
+  "en": "the third sentence of the cycle is true",
+  "de": "der dritte Satz des Zyklus ist wahr",
+  "uk": "третє речення циклу істинне",
+  "he": "המשפט השלישי במחזור אמיתי",
+  "fr": "la troisième phrase du cycle est vraie",
+  "es": "la tercera oración del ciclo es verdadera"
+ },
+ "четвёртое предложение цикла истинно": {
+  "en": "the fourth sentence of the cycle is true",
+  "de": "der vierte Satz des Zyklus ist wahr",
+  "uk": "четверте речення циклу істинне",
+  "he": "המשפט הרביעי במחזור אמיתי",
+  "fr": "la quatrième phrase du cycle est vraie",
+  "es": "la cuarta oración del ciclo es verdadera"
+ },
+ "предложение Карри истинно": {
+  "en": "the Curry sentence is true",
+  "de": "der Curry-Satz ist wahr",
+  "uk": "речення Каррі істинне",
+  "he": "משפט קארי אמיתי",
+  "fr": "la phrase de Curry est vraie",
+  "es": "la oración de Curry es verdadera"
+ },
+ "невозможное имеет место": {
+  "en": "the impossible holds",
+  "de": "das Unmögliche gilt",
+  "uk": "неможливе має місце",
+  "he": "הבלתי אפשרי מתקיים",
+  "fr": "l'impossible vaut",
+  "es": "lo imposible se da"
+ },
+ "следствие Карри истинно": {
+  "en": "the consequent of Curry is true",
+  "de": "der Nachsatz von Curry ist wahr",
+  "uk": "наслідок Каррі істинний",
+  "he": "העוקב של קארי אמיתי",
+  "fr": "le conséquent de Curry est vrai",
+  "es": "el consecuente de Curry es verdadero"
+ },
+ "это предложение не истинно": {
+  "en": "this sentence is not true",
+  "de": "dieser Satz ist nicht wahr",
+  "uk": "це речення не істинне",
+  "he": "משפט זה אינו אמיתי",
+  "fr": "cette phrase n'est pas vraie",
+  "es": "esta oración no es verdadera"
+ },
+ "это предложение не является заработанной истиной": {
+  "en": "this sentence is not an earned truth",
+  "de": "dieser Satz ist keine verdiente Wahrheit",
+  "uk": "це речення не є заробленою істиною",
+  "he": "משפט זה אינו אמת שהורווחה",
+  "fr": "cette phrase n'est pas une vérité méritée",
+  "es": "esta oración no es una verdad ganada"
+ },
+ "это предложение доказуемо": {
+  "en": "this sentence is provable",
+  "de": "dieser Satz ist beweisbar",
+  "uk": "це речення доказовне",
+  "he": "משפט זה ניתן להוכחה",
+  "fr": "cette phrase est démontrable",
+  "es": "esta oración es demostrable"
+ },
+ "это предложение истинно": {
+  "en": "this sentence is true",
+  "de": "dieser Satz ist wahr",
+  "uk": "це речення істинне",
+  "he": "משפט זה אמיתי",
+  "fr": "cette phrase est vraie",
+  "es": "esta oración es verdadera"
+ },
+ "множество S принадлежит самому себе": {
+  "en": "the set S belongs to itself",
+  "de": "die Menge S gehört zu sich selbst",
+  "uk": "множина S належить сама собі",
+  "he": "הקבוצה S שייכת לעצמה",
+  "fr": "l'ensemble S s'appartient à lui-même",
+  "es": "el conjunto S se pertenece a sí mismo"
+ },
+ "A истинно": {
+  "en": "A is true",
+  "de": "A ist wahr",
+  "uk": "A істинне",
+  "he": "A אמיתי",
+  "fr": "A est vrai",
+  "es": "A es verdadero"
+ },
+ "B истинно": {
+  "en": "B is true",
+  "de": "B ist wahr",
+  "uk": "B істинне",
+  "he": "B אמיתי",
+  "fr": "B est vrai",
+  "es": "B es verdadero"
+ },
+ "ни одно из последующих не истинно": {
+  "en": "none of the later ones is true",
+  "de": "keiner der späteren ist wahr",
+  "uk": "жодне з подальших не істинне",
+  "he": "אף אחד מהבאים אינו אמיתי",
+  "fr": "aucune des suivantes n'est vraie",
+  "es": "ninguna de las siguientes es verdadera"
+ },
+ "сказанное Смитом истинно": {
+  "en": "what Smith said is true",
+  "de": "was Smith gesagt hat, ist wahr",
+  "uk": "сказане Смітом істинне",
+  "he": "מה שסמית אמר אמיתי",
+  "fr": "ce que Smith a dit est vrai",
+  "es": "lo que dijo Smith es verdadero"
+ },
+ "сказанное Джонсом истинно": {
+  "en": "what Jones said is true",
+  "de": "was Jones gesagt hat, ist wahr",
+  "uk": "сказане Джонсом істинне",
+  "he": "מה שג'ונס אמר אמיתי",
+  "fr": "ce que Jones a dit est vrai",
+  "es": "lo que dijo Jones es verdadero"
+ },
+ "титул принадлежит кораблю A": {
+  "en": "the title belongs to ship A",
+  "de": "der Titel gehört Schiff A",
+  "uk": "титул належить кораблю A",
+  "he": "התואר שייך לספינה A",
+  "fr": "le titre appartient au navire A",
+  "es": "el título pertenece al barco A"
+ },
+ "титул принадлежит кораблю B": {
+  "en": "the title belongs to ship B",
+  "de": "der Titel gehört Schiff B",
+  "uk": "титул належить кораблю B",
+  "he": "התואר שייך לספינה B",
+  "fr": "le titre appartient au navire B",
+  "es": "el título pertenece al barco B"
+ },
+ "утверждение, стоящее на фундаменте": {
+  "en": "a claim standing on the foundation",
+  "de": "eine Behauptung, die auf dem Fundament steht",
+  "uk": "твердження, що стоїть на фундаменті",
+  "he": "טענה העומדת על היסוד",
+  "fr": "une affirmation reposant sur le fondement",
+  "es": "una afirmación que se apoya en el fundamento"
+ },
+ "фундамент держится сам собой": {
+  "en": "the foundation holds itself up",
+  "de": "das Fundament trägt sich selbst",
+  "uk": "фундамент тримається сам собою",
+  "he": "היסוד נתמך בעצמו",
+  "fr": "le fondement se soutient lui-même",
+  "es": "el fundamento se sostiene a sí mismo"
+ },
+ "реестр залогов перечитывают": {
+  "en": "the lien registry is re-read",
+  "de": "das Pfandregister wird erneut gelesen",
+  "uk": "реєстр застав перечитують",
+  "he": "מרשם השעבודים נקרא מחדש",
+  "fr": "le registre des gages est relu",
+  "es": "el registro de gravámenes se vuelve a leer"
+ },
+ "машина не в залоге": {
+  "en": "the car is not pledged",
+  "de": "das Auto ist nicht verpfändet",
+  "uk": "автомобіль не в заставі",
+  "he": "הרכב אינו משועבד",
+  "fr": "la voiture n'est pas gagée",
+  "es": "el coche no está pignorado"
+ },
+ "документы в порядке": {
+  "en": "the papers are in order",
+  "de": "die Papiere sind in Ordnung",
+  "uk": "документи в порядку",
+  "he": "המסמכים תקינים",
+  "fr": "les papiers sont en règle",
+  "es": "los papeles están en regla"
+ },
+ "сделку можно закрывать": {
+  "en": "the deal may be closed",
+  "de": "das Geschäft darf abgeschlossen werden",
+  "uk": "угоду можна закривати",
+  "he": "אפשר לסגור את העסקה",
+  "fr": "l'affaire peut être conclue",
+  "es": "el trato puede cerrarse"
+ },
+ "наступает срок продления": {
+  "en": "the renewal date falls due",
+  "de": "der Verlängerungstermin wird fällig",
+  "uk": "настає термін продовження",
+  "he": "מועד החידוש מגיע",
+  "fr": "la date de renouvellement échoit",
+  "es": "vence el plazo de renovación"
+ },
+ "у оператора есть допуск": {
+  "en": "the operator holds a clearance",
+  "de": "der Bediener hat eine Zulassung",
+  "uk": "оператор має допуск",
+  "he": "למפעיל יש היתר",
+  "fr": "l'opérateur détient une habilitation",
+  "es": "el operador tiene autorización"
+ },
+ "обучение пройдено": {
+  "en": "the training is completed",
+  "de": "die Schulung ist absolviert",
+  "uk": "навчання пройдено",
+  "he": "ההכשרה הושלמה",
+  "fr": "la formation est suivie",
+  "es": "la formación está completada"
+ },
+ "оператору можно к работе": {
+  "en": "the operator may start work",
+  "de": "der Bediener darf an die Arbeit",
+  "uk": "оператора можна допускати до роботи",
+  "he": "המפעיל רשאי להתחיל לעבוד",
+  "fr": "l'opérateur peut se mettre au travail",
+  "es": "el operador puede ponerse a trabajar"
+ }
+}
+
+
+def _локализовать(doc, lang):
+    """Тот же документ, но с пояснениями на языке читателя.
+
+    Копия, а не правка на месте: EXAMPLES — модульная константа, и подмена в
+    ней означала бы, что первый же запрос на немецком навсегда испортит
+    примеры для всех остальных.
+    """
+    if lang == "ru":
+        return doc
+    строки = []
+    for r in doc.get("rows") or []:
+        пер = ГЛОССЫ.get(r.get("means", ""), {}).get(lang)
+        строки.append(dict(r, means=пер) if пер else dict(r))
+    return dict(doc, rows=строки)
+
+
 def catalogue(lang="en"):
     """Kinds and their cases, for the two drop-downs."""
     kinds = [{"key": k, "label": v.get(lang, v["en"])}
@@ -625,5 +1016,5 @@ def catalogue(lang="en"):
               # the question the example ANSWERS, so the chat shows what is
               # being asked rather than a verdict with no question above it
               "ask": e.get(f"ask_{lang}") or e.get("ask_en", ""),
-              "doc": e["doc"]} for e in EXAMPLES]
+              "doc": _локализовать(e["doc"], lang)} for e in EXAMPLES]
     return {"kinds": kinds, "items": items}

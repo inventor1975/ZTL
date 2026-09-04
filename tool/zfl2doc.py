@@ -344,12 +344,12 @@ def codes_in_source():
 OP_HELP = {
     "&": ("and", "и"), "|": ("or", "или"), "->": ("if … then", "если … то"),
     "^": ("exactly one of", "ровно одно из"),
-    "=": ("the same value as", "то же значение, что"),
+    "=": ("biconditional between rows: the same TRUTH value as", "равносильность между строками: то же ИСТИННОСТНОЕ значение"),
     "~": ("not", "не"),
     "Tr(x)": ("the value of the row x — this is how self-reference is "
               "written", "значение строки x — так пишется самоссылка"),
     "<=": ("at most", "не больше"), ">=": ("at least", "не меньше"),
-    "==": ("equal to", "равно"), "<": ("less than", "меньше"),
+    "==": ("numeric equality — for quantities only, not for rows", "числовое равенство — только для величин, не для строк"), "<": ("less than", "меньше"),
     ">": ("greater than", "больше"),
 }
 

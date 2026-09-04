@@ -63,6 +63,10 @@ def schema(lang="en"):
         lines.append(bit)
     lines.append('"claim" (optional) — one formula over the row names.')
     lines.append("Operators: " + " ".join(zfl2doc.operators()))
+    lines.append("What they mean: "
+                 + "; ".join(f"{o} — {zfl2doc.OP_HELP[o][0 if lang == 'en' else 1]}"
+                             for o in zfl2doc.operators()
+                             if o in zfl2doc.OP_HELP))
     lines.append("Arithmetic: " + " ".join(zfl2doc.arithmetic()))
     lines.append("A value is a number, an interval like [0,10], or ? when it "
                  "is the thing being asked for.")

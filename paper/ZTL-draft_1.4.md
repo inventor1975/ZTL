@@ -139,9 +139,9 @@ cannot mint it — from no premises nothing is derivable, even the guarded
 tautologies, even on credit). The entire development — the core, both
 engine certificates with cut admissibility, the algebraic witnesses, the
 general fixed-point theorem, the expedition twins, the temporal modules
-and the frame's own mini-theorems, fifty-two modules in all — is
+and the frame's own mini-theorems, fifty-three modules in all — is
 formalized in Lean 4 **with an empty axiom list, definitions
-included**: 695 theorems, each one audited individually rather than by
+included**: 698 theorems, each one audited individually rather than by
 sample (`inventory/axiom_audit.py`, re-run on every push). As of this
 revision no section rests on measurement alone: every one of the seventeen
 that carried the MEASURED tag now names kernel-checked theorems behind its
@@ -901,7 +901,7 @@ an axiom infects every theorem that uses it), but an argument, and one
 that an unused orphan theorem would escape. It is now a measurement:
 `inventory/axiom_audit.py` extracts every theorem name from every
 module, generates one `#print axioms` per name, and fails if a single
-line reads otherwise. **695 of 695 clean**, re-run by CI on every push.
+line reads otherwise. **698 of 698 clean**, re-run by CI on every push.
 The same stand refuses a module that carries theorems and is built by no
 target — the failure mode that let one module (`QuantumWitness.lean`) go
 unchecked by any automation until 2026-07-20.
@@ -2513,9 +2513,16 @@ PARTS, and now for the whole language rather than its quantifier fragment:
 every rule carries satisfiability forward, closure denies it. What is
 still absent is the SEARCH — the fuel-bounded procedure that applies the
 steps and reports closure — and hence the end-to-end theorem about a whole
-tableau run; that is engineering on top of these theorems rather than another
-argument, but it is not written. Nor are the two-place predicates the
-quantifier swap needs;
+tableau run. It is now the ONLY missing piece of the soundness half, and one
+obstacle to it is recorded rather than left to be discovered later
+(`ZParamSearch.lean`): a search must DECIDE closure, but a sign here is a
+FUNCTION `V → Bool` and functions cannot be compared, so the procedure needs
+a layer that does not yet exist — nodes tagged by a small inductive instead
+of by a function, and decidable equality on formulas. What that file does
+prove is the part such a search rests on: satisfaction of a branch depends on
+MEMBERSHIP and not on order, so rotating a node to the back — how a fair
+search avoids starving one — cannot change it. Nor are the two-place
+predicates the quantifier swap needs;
 **a fragment-embedding theorem for the remaining three traditions of
 §1** — three are now done, and the entry is rewritten rather than deleted,
 because what it asked for is larger than what has been delivered. The

@@ -139,9 +139,9 @@ cannot mint it — from no premises nothing is derivable, even the guarded
 tautologies, even on credit). The entire development — the core, both
 engine certificates with cut admissibility, the algebraic witnesses, the
 general fixed-point theorem, the expedition twins, the temporal modules
-and the frame's own mini-theorems, forty-eight modules in all — is
+and the frame's own mini-theorems, forty-nine modules in all — is
 formalized in Lean 4 **with an empty axiom list, definitions
-included**: 669 theorems, each one audited individually rather than by
+included**: 675 theorems, each one audited individually rather than by
 sample (`inventory/axiom_audit.py`, re-run on every push). As of this
 revision no section rests on measurement alone: every one of the seventeen
 that carried the MEASURED tag now names kernel-checked theorems behind its
@@ -901,7 +901,7 @@ an axiom infects every theorem that uses it), but an argument, and one
 that an unused orphan theorem would escape. It is now a measurement:
 `inventory/axiom_audit.py` extracts every theorem name from every
 module, generates one `#print axioms` per name, and fails if a single
-line reads otherwise. **669 of 669 clean**, re-run by CI on every push.
+line reads otherwise. **675 of 675 clean**, re-run by CI on every push.
 The same stand refuses a module that carries theorems and is built by no
 target — the failure mode that let one module (`QuantumWitness.lean`) go
 unchecked by any automation until 2026-07-20.
@@ -2449,8 +2449,7 @@ non-registrability of streams (§13), and the NaN signature x ≠ x.
 
 ## 27. Roadmap
 
-A Lean port of the parameter (arbitrary-domain) tableaux of §6; a
-syntactic cut-elimination procedure with complexity bounds
+a syntactic cut-elimination procedure with complexity bounds
 (admissibility is settled — §5); the mining of the equivalent
 quasivariety scouted in §3.7 (axiomatization, subquasivariety lattice,
 a representation theorem replacing Plonka sums — a separate work);
@@ -2463,6 +2462,18 @@ necessary by the guard family (b₁∧…∧b_{m−1}) → (a→a), checked at
 m = 2,3,4,5 (`zverify` §§5–6); hence NO constant-depth
 characterization exists and what remains open is a structural,
 non-enumerative criterion);
+A Lean port of the parameter (arbitrary-domain) tableaux of §6 — BEGUN,
+and the two pieces done are the ones that decide what the rest costs.
+`ZParamSound.lean` measures the tier of the four rules (see §6): three are
+sound on the empty axiom list and the fourth is not. `ZParamSyntax.lean`
+lays the ground the δ rule stands on — the monadic syntax with parameters,
+satisfaction as a RELATION rather than a computation (forced: the greedy ∀
+over an arbitrary domain is not decidable), and the freshness lemma:
+reassigning a parameter that occurs nowhere in a formula leaves every
+verdict of it unchanged, quantifiers included. Every soundness argument for
+a fresh-witness rule is that lemma plus bookkeeping. What is NOT begun is
+the tableau itself — branches, rule steps, closure, the soundness theorem —
+nor the two-place predicates the quantifier swap needs;
 **a fragment-embedding theorem for the remaining three traditions of
 §1** — three are now done, and the entry is rewritten rather than deleted,
 because what it asked for is larger than what has been delivered. The

@@ -26,6 +26,10 @@ import axiom_audit as aa                                          # noqa: E402
 DESC = {
     "ZTL": "the core: T/F/Z, the greedy zero-trust lift, the connectives, "
            "the anchor cells, and greediness (Z never values a compound)",
+    "RelianceBridge": "proof validity against eligibility for reliance: the "
+                      "four cases, and the measured reason the layer does not "
+                      "collapse into ordinary hypotheses (weakening and "
+                      "contraction both fail; permutation survives)",
     "TableauCert": "the signed-tableau proof engine on {¬,∧,∨}: closure ⟺ "
                    "unsatisfiability, ⊢ ⟺ ⊨",
     "TableauCertN": "the native engine with →/⊕/↔ and engines-agree",

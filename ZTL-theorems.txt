@@ -1,7 +1,7 @@
 ZTL — the theorem inventory
 ============================================================
 
-491 theorems across 34 modules, all on the empty axiom list.
+840 theorems across 58 modules, all on the empty axiom list.
 
 Every theorem below is machine-checked by the Lean 4 kernel
 on the EMPTY axiom list (no Classical.choice, no Quot.sound,
@@ -331,7 +331,7 @@ inventory/axiom_audit.py, which re-checks every line in CI.
     reach_and_in_cage
     and_cannot_not
 
-## ZTime.lean  (8)
+## ZTime.lean  (16)
      — logical time: the warranty ladder as temporal quantifiers (now / at every ending / always on every path)
     ZTime.refines_refl
     ZTime.refines_trans
@@ -340,6 +340,14 @@ inventory/axiom_audit.py, which re-checks every line in CI.
     ZTime.evalF_congr
     ZTime.grounded_hereditary
     ZTime.hereditary_sound
+    ZTime.credit_never_redeemed
+    ZTime.not_completable_persists
+    ZTime.znot_no_fixed_point
+    ZTime.vacuous_soundness
+    ZTime.flippable_not_sound
+    ZTime.flip_only_where_forbidden
+    ZTime.liar_not_completable
+    ZTime.grounded_completable
     ZTime.Witness.strict_ladder
 
 ## Contextuality.lean  (3)
@@ -438,6 +446,372 @@ inventory/axiom_audit.py, which re-checks every line in CI.
     ZDesc.iota_multiple_marked
     ZDesc.lem_fails_nondenoting
     ZDesc.mark_evaporates_in_compound
+
+## ZIndisc.lean  (6)
+    ZIndisc.marks_indiscernible
+    ZIndisc.marks_not_identical
+    ZIndisc.indiscernibles_not_identical
+    ZIndisc.holds_on_grounded
+    ZIndisc.witness_is_marked
+    ZIndisc.grounded_are_discernible
+
+## ZFreeUI.lean  (7)
+    ZFreeUI.universal_holds
+    ZFreeUI.king_is_marked
+    ZFreeUI.classical_ui_fails
+    ZFreeUI.classical_ui_holds_grounded
+    ZFreeUI.free_ui_premise_undesignated
+    ZFreeUI.free_ui_valid
+    ZFreeUI.free_ui_not_vacuous
+
+## ZEqGeneric.lean  (6)
+    ZEqGeneric.eq_forces_same
+    ZEqGeneric.leibniz_congr
+    ZEqGeneric.no_laundering
+    ZEqGeneric.refl_iff_grounded
+    ZEqGeneric.refl_marked
+    ZEqGeneric.indiscernible_grounded_identical
+
+## ZFreeUIGeneric.lean  (11)
+    ZFreeUIGeneric.isT_true
+    ZFreeUIGeneric.ebangG_iff
+    ZFreeUIGeneric.zand_T_left
+    ZFreeUIGeneric.zand_T_right
+    ZFreeUIGeneric.allG_mem
+    ZFreeUIGeneric.forallG_T
+    ZFreeUIGeneric.forallG_delivers
+    ZFreeUIGeneric.free_ui_valid_generic
+    ZFreeUIGeneric.premise_undesignated_generic
+    ZFreeUIGeneric.not_vacuous_generic
+    ZFreeUIGeneric.empty_range_still_refuses
+
+## ZFenceDepth.lean  (26)
+    ZFenceDepth.and_Z_left
+    ZFenceDepth.and_F_right
+    ZFenceDepth.imp_F_left
+    ZFenceDepth.imp_T_right
+    ZFenceDepth.and_T_T
+    ZFenceDepth.imp_Z_Z
+    ZFenceDepth.imp_T_F
+    ZFenceDepth.imp_self_of_grounded
+    ZFenceDepth.verifyTrue_refines
+    ZFenceDepth.guard_allZ
+    ZFenceDepth.gap_allZ
+    ZFenceDepth.cell_greedy
+    ZFenceDepth.cell_sound
+    ZFenceDepth.guard_F_of_missing
+    ZFenceDepth.survives_if_a_guard_is_missing
+    ZFenceDepth.guard_T_of_all
+    ZFenceDepth.dies_when_all_guards_verified
+    ZFenceDepth.fence_depth_necessary
+    ZFenceDepth.sound_not_hereditary
+    ZFenceDepth.natBeq_refl
+    ZFenceDepth.evalF_congr_dep
+    ZFenceDepth.close_grounded
+    ZFenceDepth.close_fixes
+    ZFenceDepth.close_completion
+    ZFenceDepth.resolved_all_marks_agrees
+    ZFenceDepth.fence_depth_exact
+
+## ZProv.lean  (35)
+    ZProv.kor_comm
+    ZProv.kor_assoc
+    ZProv.kor_zero
+    ZProv.kand_comm
+    ZProv.kand_assoc
+    ZProv.kand_one
+    ZProv.kand_zero
+    ZProv.kand_distrib
+    ZProv.greedy_no_additive_unit
+    ZProv.greedy_no_multiplicative_unit
+    ZProv.greedy_obstruction
+    ZProv.ev_add
+    ZProv.ev_mul
+    ZProv.ev_zero
+    ZProv.ev_one
+    ZProv.ev_add_comm
+    ZProv.ev_add_assoc
+    ZProv.ev_add_zero
+    ZProv.ev_mul_comm
+    ZProv.ev_mul_assoc
+    ZProv.ev_mul_one
+    ZProv.ev_mul_zero
+    ZProv.ev_distrib
+    ZProv.natBeq_refl
+    ZProv.trustLe_refl
+    ZProv.trustLe_F
+    ZProv.kor_mono
+    ZProv.kand_mono
+    ZProv.retract_le
+    ZProv.ev_retract_le
+    ZProv.requirement_dies
+    ZProv.alternative_survives
+    ZProv.classical_or
+    ZProv.classical_and
+    ZProv.registers_agree
+
+## ZDempster.lean  (9)
+    ZDempster.addRightCancel
+    ZDempster.addLeftCancel
+    ZDempster.bel_le_total
+    ZDempster.allOk_positive
+    ZDempster.subset_nonempty_meets
+    ZDempster.forced_not_excluded
+    ZDempster.bel_full_iff
+    ZDempster.pl_zero_iff
+    ZDempster.verdict_is_threshold
+
+## ZYablo.lean  (8)
+    ZYablo.no_true_sentence
+    ZYablo.yablo_greedy_homeless
+    ZYablo.yablo_lazy_home
+    ZYablo.natBeq_refl
+    ZYablo.truncModel_last
+    ZYablo.natBeq_false_of_ne
+    ZYablo.truncModel_earlier
+    ZYablo.trunc_unique
+
+## ZAbsInt.lean  (13)
+    ZAbsInt.le_of_ble
+    ZAbsInt.ble_of_le
+    ZAbsInt.ble_false_of_lt
+    ZAbsInt.lt_of_ble_false
+    ZAbsInt.galois
+    ZAbsInt.allLt_true
+    ZAbsInt.allLt_false
+    ZAbsInt.noneLt_true
+    ZAbsInt.noneLt_false
+    ZAbsInt.verdict_exact
+    ZAbsInt.concrete_self_sub
+    ZAbsInt.abstract_self_sub
+    ZAbsInt.not_exact_on_repeated_variable
+
+## ZParamSound.lean  (5)
+    ZParamSound.gamma_all
+    ZParamSound.gamma_ex
+    ZParamSound.delta_ex
+    ZParamSound.delta_all_constructive
+    ZParamSound.gamma_delta_sound_three
+
+## ZCombine.lean  (20)
+    ZCombine.le_of_ble
+    ZCombine.lt_of_ble_false
+    ZCombine.ble_false_of_lt
+    ZCombine.ble_true_of_le
+    ZCombine.mx_le
+    ZCombine.le_mx_left
+    ZCombine.le_mx_right
+    ZCombine.mn_le_left
+    ZCombine.mn_le_right
+    ZCombine.le_mn
+    ZCombine.meet_is_intersection
+    ZCombine.meet_none_is_earned
+    ZCombine.verify_is_meet
+    ZCombine.verify_can_conflict
+    ZCombine.zadeh_arithmetic
+    ZCombine.dempsterKept_proper
+    ZCombine.zadeh_dempster_says_certain
+    ZCombine.zadeh_belief_is_full
+    ZCombine.zadeh_retained_is_improper
+    ZCombine.zadeh_two_readings
+
+## ZTaint.lean  (8)
+    ZTaint.no_laundering
+    ZTaint.no_laundering_mark
+    ZTaint.sanitizer_is_substitution
+    ZTaint.cardLo_agrees
+    ZTaint.cardHi_agrees
+    ZTaint.self_add_eq
+    ZTaint.card_earned_iff
+    ZTaint.card_instances
+
+## ZNoAxiom.lean  (6)
+    ZNoAxiom.imp_self_of_not_Z
+    ZNoAxiom.not_xor_self
+    ZNoAxiom.guardedId_valid
+    ZNoAxiom.deniedSelfXor_valid
+    ZNoAxiom.no_creation
+    ZNoAxiom.transport_not_creation
+
+## ZIgnorance.lean  (8)
+    ZIgnorance.prior_on_w
+    ZIgnorance.prior_on_w_squared
+    ZIgnorance.bertrand_two_numbers
+    ZIgnorance.absLt_Z_of_strictly_inside
+    ZIgnorance.verdict_reparam_invariant
+    ZIgnorance.known_no_worse
+    ZIgnorance.unknown_not_earned
+    ZIgnorance.ellsberg
+
+## ZParamSyntax.lean  (12)
+    ZParamSyntax.stackVal_setAt_same
+    ZParamSyntax.stackVal_setAt_other
+    ZParamSyntax.trmVal_inst
+    ZParamSyntax.trmVals_inst
+    ZParamSyntax.natBeq_refl
+    ZParamSyntax.upd_at_other
+    ZParamSyntax.or_false_left
+    ZParamSyntax.or_false_right
+    ZParamSyntax.trmVal_fresh
+    ZParamSyntax.trmVals_fresh
+    ZParamSyntax.holds_fresh
+    ZParamSyntax.holds_inst
+
+## ZParamTableau.lean  (3)
+    ZParamTableau.gamma_all_step
+    ZParamTableau.delta_ex_step
+    ZParamTableau.gamma_ex_step
+
+## ZParamClosure.lean  (4)
+    ZParamClosure.holds_det
+    ZParamClosure.closed_unsat
+    ZParamClosure.clash_T_F
+    ZParamClosure.clash_T_N
+
+## ZParamProp.lean  (9)
+    ZParamProp.node_value
+    ZParamProp.step_not_T
+    ZParamProp.step_not_F
+    ZParamProp.step_and_T
+    ZParamProp.step_or_F
+    ZParamProp.step_imp_F
+    ZParamProp.step_or_T
+    ZParamProp.step_imp_T
+    ZParamProp.step_and_F
+
+## ZParamSearch.lean  (3)
+    ZParamSearch.sat_of_mem_sub
+    ZParamSearch.mem_rotate
+    ZParamSearch.sat_rotate
+
+## ZParamEngine.lean  (50)
+    ZParamEngine.orT
+    ZParamEngine.andT
+    ZParamEngine.orF
+    ZParamEngine.notT
+    ZParamEngine.clashTag_sound
+    ZParamEngine.mem_toBranch
+    ZParamEngine.mem_toBranch_inv
+    ZParamEngine.clashesWith_sound
+    ZParamEngine.closedB_sound
+    ZParamEngine.le_of_add_le_left
+    ZParamEngine.le_of_add_le_right
+    ZParamEngine.occursT_bound
+    ZParamEngine.occursL_bound
+    ZParamEngine.occurs_bound
+    ZParamEngine.parBound_mem
+    ZParamEngine.fresh_not_occurs
+    ZParamEngine.freshFor_fresh
+    ZParamEngine.freshFor_cons
+    ZParamEngine.znot_two
+    ZParamEngine.zand_two
+    ZParamEngine.zor_two
+    ZParamEngine.zimp_two
+    ZParamEngine.compound_two_valued
+    ZParamEngine.signN_T
+    ZParamEngine.signP_F
+    ZParamEngine.signF_F
+    ZParamEngine.signT_T'
+    ZParamEngine.promote_N
+    ZParamEngine.promote_P
+    ZParamEngine.one_sound
+    ZParamEngine.two_sound
+    ZParamEngine.deltaT_sound
+    ZParamEngine.gammaT_sound
+    ZParamEngine.gammaF_sound
+    ZParamEngine.expand_sound
+    ZParamEngine.pick_sound
+    ZParamEngine.mem_append_left
+    ZParamEngine.mem_append_right
+    ZParamEngine.search_sound
+    ZParamEngine.mem_tagAll_inv
+    ZParamEngine.signT_T
+    ZParamEngine.signN_false
+    ZParamEngine.entails_of_closed
+    ZParamEngine.run_all_inst
+    ZParamEngine.run_and_elim
+    ZParamEngine.run_fallen_bridge
+    ZParamEngine.run_or_intro
+    ZParamEngine.run_two_place
+    ZParamEngine.run_diag_to_pair
+    ZParamEngine.run_swap_needs_classical
+
+## ZNaN.lean  (25)
+    ZNaN.rel_nan_left
+    ZNaN.rel_nan_right
+    ZNaN.nan_not_self_equal
+    ZNaN.nan_self_unequal
+    ZNaN.pNE_compl
+    ZNaN.pGE_compl
+    ZNaN.both_polarities_false
+    ZNaN.emb_inj
+    ZNaN.emb_add
+    ZNaN.emb_sub
+    ZNaN.emb_mul_val
+    ZNaN.emb_mul_marks
+    ZNaN.emb_mul_nonzero
+    ZNaN.zero_times_mark
+    ZNaN.emb_mul_not_hom
+    ZNaN.pLT_signT
+    ZNaN.pEQ_signT
+    ZNaN.pGT_signT
+    ZNaN.pLE_signT
+    ZNaN.pGE_signT
+    ZNaN.pUN_isZ
+    ZNaN.pNE_signN
+    ZNaN.pNE_negation_off_mark
+    ZNaN.pNE_not_negation_on_mark
+    ZNaN.nan_signature
+
+## ZNull.lean  (28)
+    ZNull.toV_not
+    ZNull.toV_and
+    ZNull.toV_or
+    ZNull.not_the_greedy_register
+    ZNull.eq_atom
+    ZNull.lt_atom
+    ZNull.null_eq_null
+    ZNull.where_signT
+    ZNull.check_signP
+    ZNull.isTrue_signT
+    ZNull.isFalse_signF
+    ZNull.isNotTrue_signN
+    ZNull.isNotFalse_signP
+    ZNull.isUnknown_isZ
+    ZNull.isNotUnknown_isZ
+    ZNull.where_both_polarities
+    ZNull.check_both_polarities
+    ZNull.collapse_is_where
+    ZNull.signT_znot_knot
+    ZNull.signT_zand
+    ZNull.signT_kand
+    ZNull.signT_zor
+    ZNull.signT_kor
+    ZNull.where_agrees_nnf
+    ZNull.where_departs_double_negation
+    ZNull.check_departs_on_conjunction
+    ZNull.two_equalities
+    ZNull.equalities_agree_off_null
+
+## ZFlow.lean  (18)
+    ZFlow.join_comm
+    ZFlow.join_assoc
+    ZFlow.join_idem
+    ZFlow.join_lub
+    ZFlow.join_absorbs_H
+    ZFlow.lvl_perlOp
+    ZFlow.perlSink_flow
+    ZFlow.perl_launders
+    ZFlow.lvl_taint
+    ZFlow.lvl_zadd
+    ZFlow.lvl_zsub
+    ZFlow.sink_signT
+    ZFlow.ztl_no_laundering
+    ZFlow.ztl_clears_forced
+    ZFlow.zero_forced
+    ZFlow.denning_overtaints_forced
+    ZFlow.lvl_zmul_nonzero
+    ZFlow.lvl_zmul_vals
 
 ## ZEps.lean  (5)
      — Hilbert's ε (indefinite descriptions): denotes iff a witness is earned (the ε–∃ bridge)
@@ -583,7 +957,7 @@ inventory/axiom_audit.py, which re-checks every line in CI.
     V.label_exact_linear
     V.clash_names_an_idle_atom
 
-## NoGift.lean  (8)
+## NoGift.lean  (10)
     V.evalF_congr
     V.frozen
     V.zand_T
@@ -592,4 +966,28 @@ inventory/axiom_audit.py, which re-checks every line in CI.
     V.no_gift
     V.F_is_not_protected
     V.fragment_is_not_necessary
+    V.f_locked
+    V.f_locked_right
+
+## RelianceBridge.lean  (19)
+     — proof validity against eligibility for reliance: the four cases, and the measured reason the layer does not collapse into ordinary hypotheses (weakening and contraction both fail; permutation survives)
+    RelianceBridge.case1_authorized
+    RelianceBridge.case2_missing_warrant
+    RelianceBridge.case3_weak_authority
+    RelianceBridge.case4_epoch_change
+    RelianceBridge.proved_does_not_imply_eligible
+    RelianceBridge.and_contract_classical
+    RelianceBridge.contraction_proof_side
+    RelianceBridge.bundle_commutative
+    RelianceBridge.contraction_fails_reliance
+    RelianceBridge.same_grounds_two_verdicts
+    RelianceBridge.reliance_is_multiset_not_set
+    RelianceBridge.and_true_r
+    RelianceBridge.weakening_proof_side
+    RelianceBridge.weakening_fails_reliance
+    RelianceBridge.neither_weakening_nor_contraction
+    RelianceBridge.inert_when_all_verified
+    RelianceBridge.no_new_laws
+    RelianceBridge.no_chain_of_lemmas_launders
+    RelianceBridge.sanitiser_is_outside_the_graph
 

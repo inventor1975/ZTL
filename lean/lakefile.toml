@@ -1,5 +1,5 @@
 name = "ztl"
-defaultTargets = ["ZTL", "TableauCert", "TableauCertN", "ZSets", "Facts", "ZAlgebra", "ZSequent", "ZQuant", "ZGround", "ZExped", "ZClone", "ZTime", "Contextuality", "EpochBoundary", "JunctionWitness", "QuantumWitness", "Frame", "Signature", "ZEq", "ZDesc", "ZIndisc", "ZFreeUI", "ZEqGeneric", "ZFreeUIGeneric", "ZFenceDepth", "ZProv", "ZDempster", "ZYablo", "ZAbsInt", "ZParamSound", "ZCombine", "ZTaint", "ZNoAxiom", "ZIgnorance", "ZParamSyntax", "ZParamTableau", "ZParamClosure", "ZParamProp", "ZParamSearch", "ZParamEngine", "ZNaN", "ZNull", "ZFlow", "ZEps", "Plato_Equality", "Plato_Conservativity", "Hume_Guillotine", "Cogito_Conservativity", "ZNum", "ClassicalAgreement", "ZNumCoherent", "Layering", "ContextClosure", "Receipt", "Linear", "LabelExact", "NoGift"]
+defaultTargets = ["ZTL", "TableauCert", "TableauCertN", "ZSets", "Facts", "ZAlgebra", "ZSequent", "ZQuant", "ZGround", "ZExped", "ZClone", "ZTime", "Contextuality", "EpochBoundary", "JunctionWitness", "QuantumWitness", "Frame", "Signature", "ZEq", "ZDesc", "ZIndisc", "ZFreeUI", "ZEqGeneric", "ZFreeUIGeneric", "ZFenceDepth", "ZProv", "ZDempster", "ZYablo", "ZAbsInt", "ZParamSound", "ZCombine", "ZTaint", "ZNoAxiom", "ZIgnorance", "ZParamSyntax", "ZParamTableau", "ZParamClosure", "ZParamProp", "ZParamSearch", "ZParamEngine", "ZNaN", "ZNull", "ZFlow", "ZEps", "Plato_Equality", "Plato_Conservativity", "Hume_Guillotine", "Cogito_Conservativity", "ZNum", "ClassicalAgreement", "ZNumCoherent", "Layering", "ContextClosure", "Receipt", "Linear", "LabelExact", "NoGift", "RelianceBridge"]
 
 [[lean_lib]]
 name = "ZTL"
@@ -171,3 +171,6 @@ name = "LabelExact"
 
 [[lean_lib]]
 name = "NoGift"
+
+[[lean_lib]]
+name = "RelianceBridge"

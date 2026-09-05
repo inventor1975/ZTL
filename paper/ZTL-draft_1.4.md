@@ -139,9 +139,9 @@ cannot mint it — from no premises nothing is derivable, even the guarded
 tautologies, even on credit). The entire development — the core, both
 engine certificates with cut admissibility, the algebraic witnesses, the
 general fixed-point theorem, the expedition twins, the temporal modules
-and the frame's own mini-theorems, forty-five modules in all — is
+and the frame's own mini-theorems, forty-six modules in all — is
 formalized in Lean 4 **with an empty axiom list, definitions
-included**: 647 theorems, each one audited individually rather than by
+included**: 655 theorems, each one audited individually rather than by
 sample (`inventory/axiom_audit.py`, re-run on every push). As a
 test bench the logic is run over the classical paradoxes — the liar,
 Jourdain's carousel, Curry, Yablo, the crocodile, Russell — and in every
@@ -896,7 +896,7 @@ an axiom infects every theorem that uses it), but an argument, and one
 that an unused orphan theorem would escape. It is now a measurement:
 `inventory/axiom_audit.py` extracts every theorem name from every
 module, generates one `#print axioms` per name, and fails if a single
-line reads otherwise. **647 of 647 clean**, re-run by CI on every push.
+line reads otherwise. **655 of 655 clean**, re-run by CI on every push.
 The same stand refuses a module that carries theorems and is built by no
 target — the failure mode that let one module (`QuantumWitness.lean`) go
 unchecked by any automation until 2026-07-20.
@@ -1416,9 +1416,14 @@ theorems: a mark belongs to nothing, itself included (`memZ` — SQL's NULL IN
 (`sub_marked_false`, `seteq_self_marked`), so the identity laws fall exactly
 as they do in the tables; and on clean sets membership, inclusion and
 equality are classical (`memL_classical`, `subL_refl_clean`,
-`seteq_refl_clean`) — the C-extension, proved rather than sampled. The
-cardinality interval is defined and evaluated on instances (`cardLo`,
-`cardHi`) but carries no general theorem, so that claim stays measured.
+`seteq_refl_clean`) — the C-extension, proved rather than sampled. And the
+cardinality interval now has its general law (`ZTaint.card_earned_iff`): it
+collapses to a POINT precisely when there are no marks at all, or exactly one
+mark over an empty verified core. So |{Z}| = [1,1] is not a curiosity but the
+second of exactly two cases — one mark is exactly one thing, and two marks
+are not two things. The four instances above are consequences of it rather
+than samples. The restatement used is proved equal to the corpus's own
+`cardLo` rather than assumed so, which is the whole point of stating it.
 
 ## 13. The reals: two failures of enumeration (MEASURED + Lean)
 
@@ -1491,13 +1496,21 @@ taint mode, TaintDroid): the Z-mark is taint, lazy flow through
 computations is taint propagation, greedy verdicts are sanitizer
 checks, the laundering ban is no-declassification.
 
-**Kernel-checked, and only in part.** The pearl is a theorem:
+**Kernel-checked, and now in two places.** The pearl is a theorem:
 `ZExped.inj_cert_marked` shows that ONE marked pair collapses the
 injectivity certificate for EVERY function — the identity included —
-resting on `eqAtom_z_right` (an atom against a mark is Z). The rest of
-this section — images and multiplicity, transitivity of the pedigree,
-the preimage split, the laundering ban — is measured on worked cases
-and is **not** formalised. The tag stays MEASURED for that reason.
+resting on `eqAtom_z_right` (an atom against a mark is Z). And the
+laundering ban is a theorem too (`ZTaint.no_laundering`): applied to an
+unverified reference, a chain of verified functions OF ANY LENGTH returns an
+unverified reference. The pedigree grows; the mark never comes off. The
+sanitizer is not an application at all — a verified value is a different
+ELEMENT, put there by an act of checking, and that is stated beside it. In
+security terms: no declassification without proof, proved.
+
+The rest of this section — images and multiplicity, transitivity of the
+pedigree at representation level, the preimage split, the merge of verified
+collisions — is measured on worked cases and is **not** formalised. The tag
+stays MEASURED for that reason.
 
 ## 15. Arithmetic with marks (MEASURED + Lean)
 

@@ -54,10 +54,10 @@ abbrev QNode := Sign × QFm
 abbrev Branch := List QNode
 
 /-- One node is satisfied when the formula takes a value the sign admits. -/
-def satNode (I : Nat → α → V) (ρ : Nat → α) (d : α) (nd : QNode) : Prop :=
+def satNode (I : Nat → List α → V) (ρ : Nat → α) (d : α) (nd : QNode) : Prop :=
   ∃ v, Holds I ρ d [] nd.2 v ∧ nd.1 v = true
 
-def satBranch (I : Nat → α → V) (ρ : Nat → α) (d : α) (b : Branch) : Prop :=
+def satBranch (I : Nat → List α → V) (ρ : Nat → α) (d : α) (b : Branch) : Prop :=
   ∀ nd, nd ∈ b → satNode I ρ d nd
 
 /-- A parameter is fresh for a branch when it occurs in none of its
@@ -67,7 +67,7 @@ def freshFor (c : Nat) (b : Branch) : Prop :=
 
 /-! ### γ on T:∀ — the model does not move -/
 
-theorem gamma_all_step (I : Nat → α → V) (ρ : Nat → α) (d : α)
+theorem gamma_all_step (I : Nat → List α → V) (ρ : Nat → α) (d : α)
     (b : Branch) (φ : QFm) (c : Nat)
     (hb : satBranch I ρ d b) (hmem : (SignT, QFm.all φ) ∈ b) :
     satBranch I ρ d ((SignT, inst c 0 φ) :: b) := by
@@ -88,7 +88,7 @@ theorem gamma_all_step (I : Nat → α → V) (ρ : Nat → α) (d : α)
 
 /-! ### δ on T:∃ — the model moves, and freshness says it is safe -/
 
-theorem delta_ex_step (I : Nat → α → V) (ρ : Nat → α) (d : α)
+theorem delta_ex_step (I : Nat → List α → V) (ρ : Nat → α) (d : α)
     (b : Branch) (φ : QFm) (c : Nat)
     (hb : satBranch I ρ d b) (hmem : (SignT, QFm.ex φ) ∈ b)
     (hfresh : freshFor c ((SignT, QFm.ex φ) :: b)) :
@@ -125,10 +125,10 @@ theorem delta_ex_step (I : Nat → α → V) (ρ : Nat → α) (d : α)
 this is a CLASSICAL assumption — deciding whether every element gives T is
 the survey §6 refuses to call an act — so it is a hypothesis, visible, and
 not a clause in the definition of `Holds`. -/
-def Total (I : Nat → α → V) (ρ : Nat → α) (d : α) : Prop :=
+def Total (I : Nat → List α → V) (ρ : Nat → α) (d : α) : Prop :=
   ∀ (φ : QFm) (η : List α), ∃ v, Holds I ρ d η φ v
 
-theorem gamma_ex_step (I : Nat → α → V) (ρ : Nat → α) (d : α)
+theorem gamma_ex_step (I : Nat → List α → V) (ρ : Nat → α) (d : α)
     (htot : Total I ρ d) (b : Branch) (φ : QFm) (c : Nat)
     (hb : satBranch I ρ d b) (hmem : (SignF, QFm.ex φ) ∈ b) :
     satBranch I ρ d ((SignN, inst c 0 φ) :: b) := by

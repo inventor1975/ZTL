@@ -40,13 +40,13 @@ variable {α : Type}
 
 /-! ### One formula, one value -/
 
-theorem holds_det (I : Nat → α → V) (ρ : Nat → α) (d : α) :
+theorem holds_det (I : Nat → List α → V) (ρ : Nat → α) (d : α) :
     ∀ (φ : QFm) (η : List α) (v w : V),
       Holds I ρ d η φ v → Holds I ρ d η φ w → v = w
-  | QFm.atom P t, η, v, w, hv, hw => by
+  | QFm.atom P ts, η, v, w, hv, hw => by
       show v = w
-      have h1 : I P (trmVal ρ η d t) = v := hv
-      have h2 : I P (trmVal ρ η d t) = w := hw
+      have h1 : I P (trmVals ρ η d ts) = v := hv
+      have h2 : I P (trmVals ρ η d ts) = w := hw
       rw [← h1, ← h2]
   | QFm.neg φ, η, v, w, hv, hw => by
       have ⟨u1, h1, e1⟩ := hv
@@ -104,7 +104,7 @@ def Closed (b : Branch) : Prop :=
 /-- **A CLOSED BRANCH HAS NO MODEL.** With the steps of `ZParamTableau` this
 is the whole soundness argument: satisfiability is carried forward by every
 rule and denied at closure. -/
-theorem closed_unsat (I : Nat → α → V) (ρ : Nat → α) (d : α) (b : Branch)
+theorem closed_unsat (I : Nat → List α → V) (ρ : Nat → α) (d : α) (b : Branch)
     (hc : Closed b) : ¬ satBranch I ρ d b := by
   intro hb
   have ⟨s, t, φ, hs, ht, hcl⟩ := hc

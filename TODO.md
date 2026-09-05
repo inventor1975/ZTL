@@ -50,7 +50,8 @@
    (every rule step + closure), `ZParamEngine` (tagged nodes, decidable
    closure, fuel-bounded search, `search_sound`, `entails_of_closed`;
    F:∀ deliberately absent — the fallen bridge stays `stuck`).
-   REMAINS there: two-place predicates; completeness (Hintikka, argued).
+   E51: n-ary atoms + weak-sign promotion on compounds (`compound_two_valued`).
+   REMAINS there: completeness (Hintikka, argued); F:∀ is classical by measurement.
 
 ## Seams
 

@@ -51,7 +51,7 @@ inductive Trm where
   | par  : Nat → Trm
 
 inductive QFm where
-  | atom : Nat → Trm → QFm
+  | atom : Nat → List Trm → QFm
   | neg  : QFm → QFm
   | conj : QFm → QFm → QFm
   | disj : QFm → QFm → QFm
@@ -65,8 +65,13 @@ def occursT (c : Nat) : Trm → Bool
   | Trm.bvar _ => false
   | Trm.par p  => Nat.beq p c
 
+/-- Over the argument list — own recursion, no `List.any`. -/
+def occursL (c : Nat) : List Trm → Bool
+  | []     => false
+  | t :: r => occursT c t || occursL c r
+
 def occurs (c : Nat) : QFm → Bool
-  | QFm.atom _ t => occursT c t
+  | QFm.atom _ ts => occursL c ts
   | QFm.neg φ    => occurs c φ
   | QFm.conj φ ψ => occurs c φ || occurs c ψ
   | QFm.disj φ ψ => occurs c φ || occurs c ψ
@@ -91,6 +96,11 @@ def trmVal (ρ : Nat → α) (η : List α) (d : α) : Trm → α
   | Trm.par p  => ρ p
   | Trm.bvar k => stackVal d η k
 
+/-- The values of an argument list — own map. -/
+def trmVals (ρ : Nat → α) (η : List α) (d : α) : List Trm → List α
+  | []     => []
+  | t :: r => trmVal ρ η d t :: trmVals ρ η d r
+
 /-- Reassign one parameter. -/
 def upd (ρ : Nat → α) (c : Nat) (a : α) : Nat → α :=
   fun n => match Nat.beq n c with
@@ -100,9 +110,9 @@ def upd (ρ : Nat → α) (c : Nat) (a : α) : Nat → α :=
 /-- Satisfaction, as a relation. The quantifier clauses are the greedy
 readings of §6 written as conditions the value must meet, not as something
 computed — see the header. -/
-def Holds (I : Nat → α → V) (ρ : Nat → α) (d : α) :
+def Holds (I : Nat → List α → V) (ρ : Nat → α) (d : α) :
     List α → QFm → V → Prop
-  | η, QFm.atom P t, v => I P (trmVal ρ η d t) = v
+  | η, QFm.atom P ts, v => I P (trmVals ρ η d ts) = v
   | η, QFm.neg φ,    v => ∃ u, Holds I ρ d η φ u ∧ znot u = v
   | η, QFm.conj φ ψ, v => ∃ u w, Holds I ρ d η φ u ∧ Holds I ρ d η ψ w ∧ zand u w = v
   | η, QFm.disj φ ψ, v => ∃ u w, Holds I ρ d η φ u ∧ Holds I ρ d η ψ w ∧ zor u w = v
@@ -131,8 +141,12 @@ def instT (c : Nat) (k : Nat) : Trm → Trm
                   | false => Trm.bvar j
   | Trm.par p  => Trm.par p
 
+def instL (c : Nat) (k : Nat) : List Trm → List Trm
+  | []     => []
+  | t :: r => instT c k t :: instL c k r
+
 def inst (c : Nat) : Nat → QFm → QFm
-  | k, QFm.atom P t => QFm.atom P (instT c k t)
+  | k, QFm.atom P ts => QFm.atom P (instL c k ts)
   | k, QFm.neg φ    => QFm.neg (inst c k φ)
   | k, QFm.conj φ ψ => QFm.conj (inst c k φ) (inst c k ψ)
   | k, QFm.disj φ ψ => QFm.disj (inst c k φ) (inst c k ψ)
@@ -183,6 +197,14 @@ theorem trmVal_inst (ρ : Nat → α) (d : α) (c : Nat) :
       | false =>
           exact (stackVal_setAt_other d (ρ c) η k j hj).symm
 
+theorem trmVals_inst (ρ : Nat → α) (d : α) (c : Nat) (η : List α) (k : Nat) :
+    ∀ ts : List Trm, trmVals ρ η d (instL c k ts) = trmVals ρ (setAt d η k (ρ c)) d ts
+  | []     => rfl
+  | t :: r => by
+      show trmVal ρ η d (instT c k t) :: trmVals ρ η d (instL c k r)
+         = trmVal ρ (setAt d η k (ρ c)) d t :: trmVals ρ (setAt d η k (ρ c)) d r
+      rw [trmVal_inst ρ d c t η k, trmVals_inst ρ d c η k r]
+
 /-! ### The freshness lemma -/
 
 theorem natBeq_refl : ∀ n : Nat, Nat.beq n n = true
@@ -209,16 +231,25 @@ theorem trmVal_fresh (ρ : Nat → α) (c : Nat) (a : α) (η : List α) (d : α
       show upd ρ c a p = ρ p
       exact upd_at_other ρ c a p h
 
+theorem trmVals_fresh (ρ : Nat → α) (c : Nat) (a : α) (η : List α) (d : α) :
+    ∀ ts : List Trm, occursL c ts = false → trmVals (upd ρ c a) η d ts = trmVals ρ η d ts
+  | [], _ => rfl
+  | t :: r, h => by
+      have hb : (occursT c t || occursL c r) = false := h
+      show trmVal (upd ρ c a) η d t :: trmVals (upd ρ c a) η d r
+         = trmVal ρ η d t :: trmVals ρ η d r
+      rw [trmVal_fresh ρ c a η d t (or_false_left hb), trmVals_fresh ρ c a η d r (or_false_right hb)]
+
 /-- **FIXING A FRESH PARAMETER DISTURBS NOTHING.** If `c` occurs nowhere in
 `φ`, then reassigning it — to any element of any domain — leaves every
 verdict of `φ` exactly as it was. This is what licenses the δ rule to name a
 witness, and it is proved for the whole language, quantifiers included. -/
-theorem holds_fresh (I : Nat → α → V) (ρ : Nat → α) (c : Nat) (a : α) (d : α) :
+theorem holds_fresh (I : Nat → List α → V) (ρ : Nat → α) (c : Nat) (a : α) (d : α) :
     ∀ (φ : QFm) (η : List α) (v : V), occurs c φ = false →
       (Holds I (upd ρ c a) d η φ v ↔ Holds I ρ d η φ v)
-  | QFm.atom P t, η, v, h => by
-      show I P (trmVal (upd ρ c a) η d t) = v ↔ I P (trmVal ρ η d t) = v
-      rw [trmVal_fresh ρ c a η d t h]
+  | QFm.atom P ts, η, v, h => by
+      show I P (trmVals (upd ρ c a) η d ts) = v ↔ I P (trmVals ρ η d ts) = v
+      rw [trmVals_fresh ρ c a η d ts h]
   | QFm.neg φ, η, v, h => by
       constructor
       · intro ⟨u, hu, he⟩
@@ -290,13 +321,13 @@ theorem holds_fresh (I : Nat → α → V) (ρ : Nat → α) (c : Nat) (a : α) 
 /-- **PUTTING A PARAMETER IN IS PUTTING ITS VALUE ON THE STACK.** The second
 lemma both quantifier rules stand on: γ instantiates with a parameter already
 in play, δ with a fresh one, and each is licensed by this. -/
-theorem holds_inst (I : Nat → α → V) (ρ : Nat → α) (d : α) (c : Nat) :
+theorem holds_inst (I : Nat → List α → V) (ρ : Nat → α) (d : α) (c : Nat) :
     ∀ (φ : QFm) (η : List α) (v : V) (k : Nat),
       Holds I ρ d η (inst c k φ) v ↔ Holds I ρ d (setAt d η k (ρ c)) φ v
-  | QFm.atom P t, η, v, k => by
-      show I P (trmVal ρ η d (instT c k t)) = v
-         ↔ I P (trmVal ρ (setAt d η k (ρ c)) d t) = v
-      rw [trmVal_inst ρ d c t η k]
+  | QFm.atom P ts, η, v, k => by
+      show I P (trmVals ρ η d (instL c k ts)) = v
+         ↔ I P (trmVals ρ (setAt d η k (ρ c)) d ts) = v
+      rw [trmVals_inst ρ d c η k ts]
   | QFm.neg φ, η, v, k => by
       constructor
       · intro ⟨u, hu, he⟩
@@ -364,3 +395,5 @@ end ZParamSyntax
 #print axioms ZParamSyntax.stackVal_setAt_other
 #print axioms ZParamSyntax.trmVal_inst
 #print axioms ZParamSyntax.holds_inst
+#print axioms ZParamSyntax.trmVals_fresh
+#print axioms ZParamSyntax.trmVals_inst

@@ -141,7 +141,7 @@ engine certificates with cut admissibility, the algebraic witnesses, the
 general fixed-point theorem, the expedition twins, the temporal modules
 and the frame's own mini-theorems, fifty-three modules in all — is
 formalized in Lean 4 **with an empty axiom list, definitions
-included**: 784 theorems, each one audited individually rather than by
+included**: 803 theorems, each one audited individually rather than by
 sample (`inventory/axiom_audit.py`, re-run on every push). As of this
 revision no section rests on measurement alone: every one of the seventeen
 that carried the MEASURED tag now names kernel-checked theorems behind its
@@ -901,7 +901,7 @@ an axiom infects every theorem that uses it), but an argument, and one
 that an unused orphan theorem would escape. It is now a measurement:
 `inventory/axiom_audit.py` extracts every theorem name from every
 module, generates one `#print axioms` per name, and fails if a single
-line reads otherwise. **784 of 784 clean**, re-run by CI on every push.
+line reads otherwise. **803 of 803 clean**, re-run by CI on every push.
 The same stand refuses a module that carries theorems and is built by no
 target — the failure mode that let one module (`QuantumWitness.lean`) go
 unchecked by any automation until 2026-07-20.
@@ -2534,10 +2534,24 @@ totality and shown to be T, not obtained by refuting its negation). Three
 runs are kernel-evaluated: ∀xP(x) ⊢ P(c) closes, P(c)∧Q(c) ⊢ Q(c) closes,
 and ¬∀xP(x) ⊢ ∃x¬P(x) — the fallen bridge — returns `stuck`, not `closed`.
 The fresh parameter is a theorem, not a side condition: it is a SUM of the
-indices on the branch, and `freshFor_fresh` proves it occurs nowhere. What
-remains of the port: the two-place predicates the quantifier swap needs, and
-completeness, which §6 argues by Hintikka saturation and this corpus does
-not measure;
+indices on the branch, and `freshFor_fresh` proves it occurs nowhere. E51,
+the same day, gave the atoms any number of places (`atom : Nat → List Trm`,
+with `trmVals_fresh` / `trmVals_inst` carrying the two load-bearing lemmas
+over argument lists) and the two rules the first search lacked: in the
+greedy register EVERY COMPOUND ANSWERS T OR F (`compound_two_valued` —
+`evalF_classical` for the parameter language), so N on a compound is F and
+P is T, and only atoms keep a weak sign; before that a compound conclusion
+had no rule and `P(c) ⊢ P(c) ∨ Q(c)` was `stuck`. Three more runs close by
+the kernel — `P(c) ⊢ P(c) ∨ Q(c)`, `∀x∀y R(x,y) ⊢ R(a,b)`, `∃x R(x,x) ⊢
+∃x∃y R(x,y)` — and the VALID swap `∃x∀y R(x,y) ⊢ ∀y∃x R(x,y)` returns
+`stuck` for the honest reason: its conclusion N:∀ promotes to F:∀, the one
+rule this search does not have, because it is the classical one — the split
+of `ZParamSound`, now visible in a whole run. Two repairs came from the
+kernel runs and not from reading: γ's candidates are the parameters in play
+(a bound growing with the branch made γ spawn instances forever), and δ
+fires once (it re-fired with a fresh parameter every round). What remains of
+the port: completeness, which §6 argues by Hintikka saturation and this
+corpus does not measure;
 **a fragment-embedding theorem for the remaining three traditions of
 §1** — five are now done, and the entry is rewritten rather than deleted,
 because what it asked for is larger than what has been delivered. The first

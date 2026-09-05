@@ -51,7 +51,7 @@ variable {α : Type}
 
 /-! ### Satisfaction cares about membership, not order -/
 
-theorem sat_of_mem_sub (I : Nat → α → V) (ρ : Nat → α) (d : α)
+theorem sat_of_mem_sub (I : Nat → List α → V) (ρ : Nat → α) (d : α)
     (b c : Branch) (h : ∀ nd, nd ∈ c → nd ∈ b) (hb : satBranch I ρ d b) :
     satBranch I ρ d c := fun nd hnd => hb nd (h nd hnd)
 
@@ -73,7 +73,7 @@ theorem mem_rotate (x : QNode) : ∀ (r : Branch) (nd : QNode),
 
 /-- **ROTATION CANNOT CHANGE SATISFACTION.** Proved, not assumed: this is
 where an order-dependent bug would live. -/
-theorem sat_rotate (I : Nat → α → V) (ρ : Nat → α) (d : α)
+theorem sat_rotate (I : Nat → List α → V) (ρ : Nat → α) (d : α)
     (x : QNode) (r : Branch) (h : satBranch I ρ d (x :: r)) :
     satBranch I ρ d (r ++ [x]) :=
   sat_of_mem_sub I ρ d (x :: r) (r ++ [x]) (mem_rotate x r) h

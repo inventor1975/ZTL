@@ -33,14 +33,14 @@ variable {α : Type}
 
 /-! ### Reading a node's value off the branch -/
 
-theorem node_value (I : Nat → α → V) (ρ : Nat → α) (d : α)
+theorem node_value (I : Nat → List α → V) (ρ : Nat → α) (d : α)
     (b : Branch) (hb : satBranch I ρ d b) (s : Sign) (φ : QFm)
     (hmem : (s, φ) ∈ b) : ∃ v, Holds I ρ d [] φ v ∧ s v = true := hb _ hmem
 
 /-! ### Non-branching steps -/
 
 /-- **T:¬φ ⟹ F:φ.** By `cover_not_T`: a denial is T exactly on F. -/
-theorem step_not_T (I : Nat → α → V) (ρ : Nat → α) (d : α)
+theorem step_not_T (I : Nat → List α → V) (ρ : Nat → α) (d : α)
     (b : Branch) (φ : QFm) (hb : satBranch I ρ d b)
     (hmem : (SignT, QFm.neg φ) ∈ b) :
     satBranch I ρ d ((SignF, φ) :: b) := by
@@ -56,7 +56,7 @@ theorem step_not_T (I : Nat → α → V) (ρ : Nat → α) (d : α)
 
 /-- **F:¬φ ⟹ P:φ**, the WEAK sign — because `¬v = F` holds at T and at Z
 alike, and claiming F there would exceed the table. -/
-theorem step_not_F (I : Nat → α → V) (ρ : Nat → α) (d : α)
+theorem step_not_F (I : Nat → List α → V) (ρ : Nat → α) (d : α)
     (b : Branch) (φ : QFm) (hb : satBranch I ρ d b)
     (hmem : (SignF, QFm.neg φ) ∈ b) :
     satBranch I ρ d ((SignP, φ) :: b) := by
@@ -71,7 +71,7 @@ theorem step_not_F (I : Nat → α → V) (ρ : Nat → α) (d : α)
   | tail _ ht => exact hb nd ht
 
 /-- **T:(φ∧ψ) ⟹ T:φ and T:ψ.** -/
-theorem step_and_T (I : Nat → α → V) (ρ : Nat → α) (d : α)
+theorem step_and_T (I : Nat → List α → V) (ρ : Nat → α) (d : α)
     (b : Branch) (φ ψ : QFm) (hb : satBranch I ρ d b)
     (hmem : (SignT, QFm.conj φ ψ) ∈ b) :
     satBranch I ρ d ((SignT, φ) :: (SignT, ψ) :: b) := by
@@ -89,7 +89,7 @@ theorem step_and_T (I : Nat → α → V) (ρ : Nat → α) (d : α)
       | tail _ ht2 => exact hb nd ht2
 
 /-- **F:(φ∨ψ) ⟹ N:φ and N:ψ**, both weak. -/
-theorem step_or_F (I : Nat → α → V) (ρ : Nat → α) (d : α)
+theorem step_or_F (I : Nat → List α → V) (ρ : Nat → α) (d : α)
     (b : Branch) (φ ψ : QFm) (hb : satBranch I ρ d b)
     (hmem : (SignF, QFm.disj φ ψ) ∈ b) :
     satBranch I ρ d ((SignN, φ) :: (SignN, ψ) :: b) := by
@@ -107,7 +107,7 @@ theorem step_or_F (I : Nat → α → V) (ρ : Nat → α) (d : α)
       | tail _ ht2 => exact hb nd ht2
 
 /-- **F:(φ→ψ) ⟹ P:φ and N:ψ.** -/
-theorem step_imp_F (I : Nat → α → V) (ρ : Nat → α) (d : α)
+theorem step_imp_F (I : Nat → List α → V) (ρ : Nat → α) (d : α)
     (b : Branch) (φ ψ : QFm) (hb : satBranch I ρ d b)
     (hmem : (SignF, QFm.imp φ ψ) ∈ b) :
     satBranch I ρ d ((SignP, φ) :: (SignN, ψ) :: b) := by
@@ -127,7 +127,7 @@ theorem step_imp_F (I : Nat → α → V) (ρ : Nat → α) (d : α)
 /-! ### Branching steps — AT LEAST ONE successor survives -/
 
 /-- **T:(φ∨ψ) ⟹ T:φ | T:ψ.** -/
-theorem step_or_T (I : Nat → α → V) (ρ : Nat → α) (d : α)
+theorem step_or_T (I : Nat → List α → V) (ρ : Nat → α) (d : α)
     (b : Branch) (φ ψ : QFm) (hb : satBranch I ρ d b)
     (hmem : (SignT, QFm.disj φ ψ) ∈ b) :
     satBranch I ρ d ((SignT, φ) :: b) ∨ satBranch I ρ d ((SignT, ψ) :: b) := by
@@ -151,7 +151,7 @@ theorem step_or_T (I : Nat → α → V) (ρ : Nat → α) (d : α)
 
 /-- **T:(φ→ψ) ⟹ F:φ | T:ψ**, the classical shape of the arrow, read off
 `cover_imp_T`. -/
-theorem step_imp_T (I : Nat → α → V) (ρ : Nat → α) (d : α)
+theorem step_imp_T (I : Nat → List α → V) (ρ : Nat → α) (d : α)
     (b : Branch) (φ ψ : QFm) (hb : satBranch I ρ d b)
     (hmem : (SignT, QFm.imp φ ψ) ∈ b) :
     satBranch I ρ d ((SignF, φ) :: b) ∨ satBranch I ρ d ((SignT, ψ) :: b) := by
@@ -174,7 +174,7 @@ theorem step_imp_T (I : Nat → α → V) (ρ : Nat → α) (d : α)
       | tail _ ht => exact hb nd ht
 
 /-- **F:(φ∧ψ) ⟹ N:φ | N:ψ**, both weak. -/
-theorem step_and_F (I : Nat → α → V) (ρ : Nat → α) (d : α)
+theorem step_and_F (I : Nat → List α → V) (ρ : Nat → α) (d : α)
     (b : Branch) (φ ψ : QFm) (hb : satBranch I ρ d b)
     (hmem : (SignF, QFm.conj φ ψ) ∈ b) :
     satBranch I ρ d ((SignN, φ) :: b) ∨ satBranch I ρ d ((SignN, ψ) :: b) := by

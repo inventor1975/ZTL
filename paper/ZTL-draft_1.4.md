@@ -141,7 +141,7 @@ engine certificates with cut admissibility, the algebraic witnesses, the
 general fixed-point theorem, the expedition twins, the temporal modules
 and the frame's own mini-theorems, fifty-three modules in all — is
 formalized in Lean 4 **with an empty axiom list, definitions
-included**: 731 theorems, each one audited individually rather than by
+included**: 756 theorems, each one audited individually rather than by
 sample (`inventory/axiom_audit.py`, re-run on every push). As of this
 revision no section rests on measurement alone: every one of the seventeen
 that carried the MEASURED tag now names kernel-checked theorems behind its
@@ -198,9 +198,9 @@ core reproduces that practice's central move (§§13–17), and argue from
 those six correspondences to a common denominator — a two-valued logic
 over marked inputs with a single generating principle. The claim
 ceiling, stated here rather than left to the reader: a reproduced case
-is not an embedding. For three of the six that ceiling still stands — we
+is not an embedding. For two of the six that ceiling still stands — we
 do not formalise their semantics and prove a fragment map into ZTL, and
-that remains open (§27). For three it no longer does. The algebra of
+that remains open (§27). For four it no longer does. IEEE 754's NaN is the fourth (`ZNaN.lean`, empty axiom list, §27): the four-way comparison and the §6.2.3 propagation rule are formalised as the standard states them; arithmetic infection is a homomorphism into the mark-carrying integers; every ordered predicate is proved to be the T-sign of a ZTL atom, the unordered predicate the mark test, and `!=` — alone — the N-sign, which is exactly where IEEE's `x != x` and ZTL's refusal of `¬(x = x)` part. The algebra of
 semiring provenance is formalised and mapped into the lazy register as a
 homomorphism, with the greedy operations proved to admit no such
 structure at all (`ZProv.lean`, empty axiom list, §27); and
@@ -901,7 +901,7 @@ an axiom infects every theorem that uses it), but an argument, and one
 that an unused orphan theorem would escape. It is now a measurement:
 `inventory/axiom_audit.py` extracts every theorem name from every
 module, generates one `#print axioms` per name, and fails if a single
-line reads otherwise. **731 of 731 clean**, re-run by CI on every push.
+line reads otherwise. **756 of 756 clean**, re-run by CI on every push.
 The same stand refuses a module that carries theorems and is built by no
 target — the failure mode that let one module (`QuantumWitness.lean`) go
 unchecked by any automation until 2026-07-20.
@@ -1527,7 +1527,7 @@ forced under all readings; F if falsehood is forced; else Z**. Measured:
 
 * **Forcedness earns even on marks:** 0·w = an earned 0 even for a wild
   mark (forced on ℤ by all readings) — a point of deliberate divergence
-  from IEEE (their 0·NaN = NaN: their domain contains inf/nan).
+  from IEEE (their 0·NaN = NaN: their domain contains inf/nan) — now a theorem, `ZNaN.zero_times_mark` / `emb_mul_not_hom`, §27.
   m−m ∈ [−9,9] ≠ 0 — decorrelation (like NaN−NaN, like {Z,Z}).
 * **Three fates of an atom:** [3,5]<[10,12] — T earned; [3,5]=[10,12] —
   **apartness earned by intervals** (the echo of §13: difference is
@@ -2539,8 +2539,27 @@ remains of the port: the two-place predicates the quantifier swap needs, and
 completeness, which §6 argues by Hintikka saturation and this corpus does
 not measure;
 **a fragment-embedding theorem for the remaining three traditions of
-§1** — three are now done, and the entry is rewritten rather than deleted,
-because what it asked for is larger than what has been delivered. The
+§1** — four are now done, and the entry is rewritten rather than deleted,
+because what it asked for is larger than what has been delivered. The sixth
+twin — IEEE 754's NaN, the first tradition of §1 — is embedded in `ZNaN.lean`
+(E49, empty axiom list): the fragment as the standard states it (data, the
+four mutually exclusive relations of §5.11, the predicates of Table 5.1, the
+§6.2.3 propagation rule); their Boolean layer proved classical (`!=` is the
+complement of `==` on every relation, the unordered one included); infection
+proved to be the lazy register (`emb` is a homomorphism for `+` and `−`);
+every ordered predicate proved to be `SignT` of a ZTL atom (`<=` and `>=` of
+the GREEDY disjunction — `zor Z Z = F`, and IEEE's `<=` is false on a NaN too);
+the unordered predicate proved to be `SignT (isZ …)` — quarantine detectable
+from inside, §1, under IEEE's name; and `!=` proved to be `SignN` of the
+equality atom and NOT the T-sign of the greedily negated one: off the mark
+the two coincide, on the mark IEEE affirms `x != y` while ZTL's `¬(x = y)` is
+`¬Z = F`. So the NaN signature "not equal to itself" is shared on `x == x` and
+splits on its complement — one refusal and an affirmation against two
+refusals (§18). The arithmetic boundary sits in the same file: `0 × NaN = NaN`
+against the earned `0 · mark = 0` of §15, two `rfl`s. Not modelled: rounding,
+signed zero, infinities, the signaling NaN — one algebraic core, not the
+standard. Every `Int` order lemma measured carries propext, so both sides read
+the order off one three-way comparison and no such lemma is used. The
 fifth twin went the same day: `ZDempster.lean` formalises Dempster–Shafer
 as they define it (focal elements, Bel, Pl) and proves our verdict to be
 their {0,1}-threshold in all three cells, for every finite frame and every

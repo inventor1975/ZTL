@@ -82,14 +82,14 @@ variable {α : Type}
 variable through the de Bruijn stack. Off the end of the stack the value is
 the default `d` — the stack is never consulted off its end in a closed
 formula, and giving it a total reading avoids an option type. -/
+def stackVal (d : α) : List α → Nat → α
+  | [],      _     => d
+  | a :: _,  0     => a
+  | _ :: r,  k + 1 => stackVal d r k
+
 def trmVal (ρ : Nat → α) (η : List α) (d : α) : Trm → α
   | Trm.par p  => ρ p
-  | Trm.bvar k => go η k
-where
-  go : List α → Nat → α
-    | [],      _     => d
-    | a :: _,  0     => a
-    | _ :: r,  k + 1 => go r k
+  | Trm.bvar k => stackVal d η k
 
 /-- Reassign one parameter. -/
 def upd (ρ : Nat → α) (c : Nat) (a : α) : Nat → α :=
@@ -109,6 +109,79 @@ def Holds (I : Nat → α → V) (ρ : Nat → α) (d : α) :
   | η, QFm.imp φ ψ,  v => ∃ u w, Holds I ρ d η φ u ∧ Holds I ρ d η ψ w ∧ zimp u w = v
   | η, QFm.all φ,    v => ((v = T) ↔ ∀ a, Holds I ρ d (a :: η) φ T) ∧ (v = T ∨ v = F)
   | η, QFm.ex φ,     v => ((v = T) ↔ ∃ a, Holds I ρ d (a :: η) φ T) ∧ (v = T ∨ v = F)
+
+
+/-! ### Instantiation, and the second load-bearing lemma
+
+    The γ rule replaces `∀xφ` by `φ(c)` for a parameter already in play; the
+    δ rule does the same with a fresh one. Both need the SAME fact: putting a
+    parameter into a formula is the same as putting its value into the stack.
+
+    THE DE BRUIJN DETAIL THAT DECIDES THE STATEMENT. `inst` replaces the
+    variable at depth `k` and leaves every other index alone — it does not
+    shift. So the semantic counterpart REPLACES position `k` of the stack; it
+    does not insert. Written with an insertion the two sides would disagree at
+    every index above `k`, and the error would have surfaced only in the
+    tableau, three files later. -/
+
+/-- Replace the variable at depth `k` by the parameter `c`. -/
+def instT (c : Nat) (k : Nat) : Trm → Trm
+  | Trm.bvar j => match Nat.beq j k with
+                  | true  => Trm.par c
+                  | false => Trm.bvar j
+  | Trm.par p  => Trm.par p
+
+def inst (c : Nat) : Nat → QFm → QFm
+  | k, QFm.atom P t => QFm.atom P (instT c k t)
+  | k, QFm.neg φ    => QFm.neg (inst c k φ)
+  | k, QFm.conj φ ψ => QFm.conj (inst c k φ) (inst c k ψ)
+  | k, QFm.disj φ ψ => QFm.disj (inst c k φ) (inst c k ψ)
+  | k, QFm.imp φ ψ  => QFm.imp (inst c k φ) (inst c k ψ)
+  | k, QFm.all φ    => QFm.all (inst c (k + 1) φ)
+  | k, QFm.ex φ     => QFm.ex (inst c (k + 1) φ)
+
+/-- Put `x` at position `k` of the stack, padding with the default. REPLACES
+rather than inserts — see the note above. -/
+def setAt (d : α) : List α → Nat → α → List α
+  | [],      0,     x => [x]
+  | _ :: r,  0,     x => x :: r
+  | [],      k + 1, x => d :: setAt d [] k x
+  | a :: r,  k + 1, x => a :: setAt d r k x
+
+theorem stackVal_setAt_same (d x : α) :
+    ∀ (η : List α) (k : Nat), stackVal d (setAt d η k x) k = x
+  | [],     0     => rfl
+  | _ :: _, 0     => rfl
+  | [],     k + 1 => stackVal_setAt_same d x [] k
+  | _ :: r, k + 1 => stackVal_setAt_same d x r k
+
+theorem stackVal_setAt_other (d x : α) :
+    ∀ (η : List α) (k j : Nat), Nat.beq j k = false →
+      stackVal d (setAt d η k x) j = stackVal d η j
+  | [],     0,     0,     h => Bool.noConfusion h
+  | [],     0,     _ + 1, _ => rfl
+  | _ :: _, 0,     0,     h => Bool.noConfusion h
+  | _ :: _, 0,     _ + 1, _ => rfl
+  | [],     _ + 1, 0,     _ => rfl
+  | _ :: _, _ + 1, 0,     _ => rfl
+  | [],     k + 1, j + 1, h => stackVal_setAt_other d x [] k j h
+  | _ :: r, k + 1, j + 1, h => stackVal_setAt_other d x r k j h
+
+theorem trmVal_inst (ρ : Nat → α) (d : α) (c : Nat) :
+    ∀ (t : Trm) (η : List α) (k : Nat),
+      trmVal ρ η d (instT c k t) = trmVal ρ (setAt d η k (ρ c)) d t
+  | Trm.par _,  _, _ => rfl
+  | Trm.bvar j, η, k => by
+      show trmVal ρ η d (match Nat.beq j k with
+                         | true => Trm.par c | false => Trm.bvar j)
+         = stackVal d (setAt d η k (ρ c)) j
+      cases hj : Nat.beq j k with
+      | true =>
+          have : j = k := Nat.eq_of_beq_eq_true hj
+          rw [this]
+          exact (stackVal_setAt_same d (ρ c) η k).symm
+      | false =>
+          exact (stackVal_setAt_other d (ρ c) η k j hj).symm
 
 /-! ### The freshness lemma -/
 
@@ -214,7 +287,80 @@ theorem holds_fresh (I : Nat → α → V) (ρ : Nat → α) (c : Nat) (a : α) 
           | ⟨b, hb⟩ =>
               exact hiff.mpr ⟨b, (holds_fresh I ρ c a d φ (b :: η) T h).mp hb⟩
 
+/-- **PUTTING A PARAMETER IN IS PUTTING ITS VALUE ON THE STACK.** The second
+lemma both quantifier rules stand on: γ instantiates with a parameter already
+in play, δ with a fresh one, and each is licensed by this. -/
+theorem holds_inst (I : Nat → α → V) (ρ : Nat → α) (d : α) (c : Nat) :
+    ∀ (φ : QFm) (η : List α) (v : V) (k : Nat),
+      Holds I ρ d η (inst c k φ) v ↔ Holds I ρ d (setAt d η k (ρ c)) φ v
+  | QFm.atom P t, η, v, k => by
+      show I P (trmVal ρ η d (instT c k t)) = v
+         ↔ I P (trmVal ρ (setAt d η k (ρ c)) d t) = v
+      rw [trmVal_inst ρ d c t η k]
+  | QFm.neg φ, η, v, k => by
+      constructor
+      · intro ⟨u, hu, he⟩
+        exact ⟨u, (holds_inst I ρ d c φ η u k).mp hu, he⟩
+      · intro ⟨u, hu, he⟩
+        exact ⟨u, (holds_inst I ρ d c φ η u k).mpr hu, he⟩
+  | QFm.conj φ ψ, η, v, k => by
+      constructor
+      · intro ⟨u, w, hu, hw, he⟩
+        exact ⟨u, w, (holds_inst I ρ d c φ η u k).mp hu,
+                     (holds_inst I ρ d c ψ η w k).mp hw, he⟩
+      · intro ⟨u, w, hu, hw, he⟩
+        exact ⟨u, w, (holds_inst I ρ d c φ η u k).mpr hu,
+                     (holds_inst I ρ d c ψ η w k).mpr hw, he⟩
+  | QFm.disj φ ψ, η, v, k => by
+      constructor
+      · intro ⟨u, w, hu, hw, he⟩
+        exact ⟨u, w, (holds_inst I ρ d c φ η u k).mp hu,
+                     (holds_inst I ρ d c ψ η w k).mp hw, he⟩
+      · intro ⟨u, w, hu, hw, he⟩
+        exact ⟨u, w, (holds_inst I ρ d c φ η u k).mpr hu,
+                     (holds_inst I ρ d c ψ η w k).mpr hw, he⟩
+  | QFm.imp φ ψ, η, v, k => by
+      constructor
+      · intro ⟨u, w, hu, hw, he⟩
+        exact ⟨u, w, (holds_inst I ρ d c φ η u k).mp hu,
+                     (holds_inst I ρ d c ψ η w k).mp hw, he⟩
+      · intro ⟨u, w, hu, hw, he⟩
+        exact ⟨u, w, (holds_inst I ρ d c φ η u k).mpr hu,
+                     (holds_inst I ρ d c ψ η w k).mpr hw, he⟩
+  | QFm.all φ, η, v, k => by
+      constructor
+      · intro ⟨hiff, hcl⟩
+        exact ⟨⟨fun hv b => (holds_inst I ρ d c φ (b :: η) T (k + 1)).mp (hiff.mp hv b),
+                fun hall => hiff.mpr (fun b =>
+                  (holds_inst I ρ d c φ (b :: η) T (k + 1)).mpr (hall b))⟩, hcl⟩
+      · intro ⟨hiff, hcl⟩
+        exact ⟨⟨fun hv b => (holds_inst I ρ d c φ (b :: η) T (k + 1)).mpr (hiff.mp hv b),
+                fun hall => hiff.mpr (fun b =>
+                  (holds_inst I ρ d c φ (b :: η) T (k + 1)).mp (hall b))⟩, hcl⟩
+  | QFm.ex φ, η, v, k => by
+      constructor
+      · intro ⟨hiff, hcl⟩
+        refine ⟨⟨fun hv => ?_, fun hex => ?_⟩, hcl⟩
+        · match hiff.mp hv with
+          | ⟨b, hb⟩ =>
+              exact ⟨b, (holds_inst I ρ d c φ (b :: η) T (k + 1)).mp hb⟩
+        · match hex with
+          | ⟨b, hb⟩ =>
+              exact hiff.mpr ⟨b, (holds_inst I ρ d c φ (b :: η) T (k + 1)).mpr hb⟩
+      · intro ⟨hiff, hcl⟩
+        refine ⟨⟨fun hv => ?_, fun hex => ?_⟩, hcl⟩
+        · match hiff.mp hv with
+          | ⟨b, hb⟩ =>
+              exact ⟨b, (holds_inst I ρ d c φ (b :: η) T (k + 1)).mpr hb⟩
+        · match hex with
+          | ⟨b, hb⟩ =>
+              exact hiff.mpr ⟨b, (holds_inst I ρ d c φ (b :: η) T (k + 1)).mp hb⟩
+
 end ZParamSyntax
 
 #print axioms ZParamSyntax.trmVal_fresh
 #print axioms ZParamSyntax.holds_fresh
+#print axioms ZParamSyntax.stackVal_setAt_same
+#print axioms ZParamSyntax.stackVal_setAt_other
+#print axioms ZParamSyntax.trmVal_inst
+#print axioms ZParamSyntax.holds_inst

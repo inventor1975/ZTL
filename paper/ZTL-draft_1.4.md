@@ -139,9 +139,9 @@ cannot mint it — from no premises nothing is derivable, even the guarded
 tautologies, even on credit). The entire development — the core, both
 engine certificates with cut admissibility, the algebraic witnesses, the
 general fixed-point theorem, the expedition twins, the temporal modules
-and the frame's own mini-theorems, fifty modules in all — is
+and the frame's own mini-theorems, fifty-one modules in all — is
 formalized in Lean 4 **with an empty axiom list, definitions
-included**: 682 theorems, each one audited individually rather than by
+included**: 686 theorems, each one audited individually rather than by
 sample (`inventory/axiom_audit.py`, re-run on every push). As of this
 revision no section rests on measurement alone: every one of the seventeen
 that carried the MEASURED tag now names kernel-checked theorems behind its
@@ -901,7 +901,7 @@ an axiom infects every theorem that uses it), but an argument, and one
 that an unused orphan theorem would escape. It is now a measurement:
 `inventory/axiom_audit.py` extracts every theorem name from every
 module, generates one `#print axioms` per name, and fails if a single
-line reads otherwise. **682 of 682 clean**, re-run by CI on every push.
+line reads otherwise. **686 of 686 clean**, re-run by CI on every push.
 The same stand refuses a module that carries theorems and is built by no
 target — the failure mode that let one module (`QuantumWitness.lean`) go
 unchecked by any automation until 2026-07-20.
@@ -2489,10 +2489,23 @@ value for the instance, and over an arbitrary domain the existence of a value
 for a quantified formula is itself classical. The hypothesis is visible in
 the statement instead of hidden in the definition of satisfaction, where
 every other theorem would have paid for it — the same split measured in
-`ZParamSound`, reappearing one level up. What is STILL not begun is closure,
-the fuel-bounded search and the soundness theorem for a whole tableau, which
-need the propositional steps ported to the quantified language as well;
-nor are the two-place predicates the quantifier swap needs;
+`ZParamSound`, reappearing one level up. CLOSURE is proved too
+(`ZParamClosure.lean`): a closed branch — two clashing signs on one formula —
+has no model. That needed a lemma which is not a definition once satisfaction
+is a relation: A FORMULA HAS ONE VALUE. Determinism is proved
+constructively, and the quantifier case is where it could have failed — two
+admissible values could differ only if one were T and the other F, and then
+the T one forces the universal, which forces the other to T as well. The two
+specifications are played against each other rather than deciding the
+undecidable universal.
+
+So the soundness argument for the quantified calculus is complete IN ITS
+PARTS: the steps carry satisfiability forward, closure denies it. What is
+still absent is the SEARCH — the fuel-bounded procedure that applies the
+steps and reports closure — and hence the end-to-end theorem about a whole
+tableau run; that is engineering on top of these theorems rather than another
+argument, but it is not written. Nor are the two-place predicates the
+quantifier swap needs;
 **a fragment-embedding theorem for the remaining three traditions of
 §1** — three are now done, and the entry is rewritten rather than deleted,
 because what it asked for is larger than what has been delivered. The

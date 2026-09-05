@@ -1,5 +1,5 @@
 name = "ztl"
-defaultTargets = ["ZTL", "TableauCert", "TableauCertN", "ZSets", "Facts", "ZAlgebra", "ZSequent", "ZQuant", "ZGround", "ZExped", "ZClone", "ZTime", "Contextuality", "EpochBoundary", "JunctionWitness", "QuantumWitness", "Frame", "Signature", "ZEq", "ZDesc", "ZIndisc", "ZFreeUI", "ZEqGeneric", "ZFreeUIGeneric", "ZFenceDepth", "ZProv", "ZDempster", "ZYablo", "ZAbsInt", "ZEps", "Plato_Equality", "Plato_Conservativity", "Hume_Guillotine", "Cogito_Conservativity", "ZNum", "ClassicalAgreement", "ZNumCoherent", "Layering", "ContextClosure", "Receipt", "Linear", "LabelExact", "NoGift"]
+defaultTargets = ["ZTL", "TableauCert", "TableauCertN", "ZSets", "Facts", "ZAlgebra", "ZSequent", "ZQuant", "ZGround", "ZExped", "ZClone", "ZTime", "Contextuality", "EpochBoundary", "JunctionWitness", "QuantumWitness", "Frame", "Signature", "ZEq", "ZDesc", "ZIndisc", "ZFreeUI", "ZEqGeneric", "ZFreeUIGeneric", "ZFenceDepth", "ZProv", "ZDempster", "ZYablo", "ZAbsInt", "ZParamSound", "ZEps", "Plato_Equality", "Plato_Conservativity", "Hume_Guillotine", "Cogito_Conservativity", "ZNum", "ClassicalAgreement", "ZNumCoherent", "Layering", "ContextClosure", "Receipt", "Linear", "LabelExact", "NoGift"]
 
 [[lean_lib]]
 name = "ZTL"
@@ -87,6 +87,9 @@ name = "ZYablo"
 
 [[lean_lib]]
 name = "ZAbsInt"
+
+[[lean_lib]]
+name = "ZParamSound"
 
 [[lean_lib]]
 name = "ZEps"

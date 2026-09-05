@@ -139,9 +139,9 @@ cannot mint it — from no premises nothing is derivable, even the guarded
 tautologies, even on credit). The entire development — the core, both
 engine certificates with cut admissibility, the algebraic witnesses, the
 general fixed-point theorem, the expedition twins, the temporal modules
-and the frame's own mini-theorems, forty-three modules in all — is
+and the frame's own mini-theorems, forty-four modules in all — is
 formalized in Lean 4 **with an empty axiom list, definitions
-included**: 622 theorems, each one audited individually rather than by
+included**: 627 theorems, each one audited individually rather than by
 sample (`inventory/axiom_audit.py`, re-run on every push). As a
 test bench the logic is run over the classical paradoxes — the liar,
 Jourdain's carousel, Curry, Yablo, the crocodile, Russell — and in every
@@ -822,7 +822,34 @@ proves is re-checked by total enumeration over finite domains, every
 saturated open branch yields a countermodel that is verified by
 evaluation (battery of 13: UI/EG, distribution, quantifier bridges,
 swap and its failing converse, the failing unguarded drinker and
-quantified LEM — all 13 verdicts confirmed). **Completeness is the
+quantified LEM — all 13 verdicts confirmed).
+
+**And the axiom tier of the four rules themselves is now measured, before
+the port rather than during it** (`ZParamSound.lean` for three of them,
+`inventory/ПАРАМЕТР-ЯРУС.py` for the fourth). Both γ rules and the δ rule
+for `T:∃` are sound on the EMPTY axiom list: a universal delivers every
+instance, `¬∃ → ∀¬` is constructive, and eliminating an existential to
+interpret a fresh parameter chooses nothing. The fourth, `F:∀xφ → N:φ(c*)`,
+is not: to interpret its fresh parameter one needs an instance that is not
+strictly T, and the premise gives only that not every instance is — which is
+`¬∀ → ∃¬`. Proved classically it carries `propext, Classical.choice,
+Quot.sound`. *Per-point decidability does not rescue it:* `V` has decidable
+equality, so each `φ(d) = T` is decidable, but the quantifier over an
+arbitrary domain is not — the obstruction is the survey of the domain, which
+is what this logic declines to call an act everywhere else. *And the split
+falls where §6 already said the logic breaks:* `¬∀yP ⊭ ∃y¬P` is listed above
+as the second fallen quantifier bridge, so the calculus's own metatheory
+needs, at exactly one rule, the step the object logic refuses. The classical
+proof is kept OUT of the corpus rather than exempted in the audit — the
+corpus carries one invariant this paper leads with, and an exemption added to
+silence one alarm is where the next one hides; it lives in
+`inventory/probes/` with a stand that fails in BOTH directions, red if that
+rule ever becomes constructive (a finding, not a nuisance) and red if any of
+the three stops being clean. What is NOT claimed is that no choice-free route
+exists: it is not found by the standard argument, and that is all the
+measurement says.
+
+**Completeness is the
 standard Hintikka-saturation argument** for finitely-valued signed
 tableaux [27] — argued, not measured. Two honest FO phenomena appear on
 cue: on invalid sequents whose branches spawn witnesses forever
@@ -869,7 +896,7 @@ an axiom infects every theorem that uses it), but an argument, and one
 that an unused orphan theorem would escape. It is now a measurement:
 `inventory/axiom_audit.py` extracts every theorem name from every
 module, generates one `#print axioms` per name, and fails if a single
-line reads otherwise. **622 of 622 clean**, re-run by CI on every push.
+line reads otherwise. **627 of 627 clean**, re-run by CI on every push.
 The same stand refuses a module that carries theorems and is built by no
 target — the failure mode that let one module (`QuantumWitness.lean`) go
 unchecked by any automation until 2026-07-20.

@@ -27,8 +27,8 @@ jobs:
           dirty=$(grep -c "depends on axioms" build.log || true)
           echo "zero-axiom checks: $clean; dirty: $dirty"
           test "$dirty" -eq 0
-          test "$clean" -ge 263
-      # The hand-placed prints cover 263 names of 501 theorems; the rest are
+          test "$clean" -ge 353
+      # The hand-placed prints cover 353 names of 669 theorems; the rest are
       # covered transitively, which is an ARGUMENT. This audits every
       # theorem individually, and fails on an orphan module that no
       # target builds.

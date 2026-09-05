@@ -139,9 +139,9 @@ cannot mint it — from no premises nothing is derivable, even the guarded
 tautologies, even on credit). The entire development — the core, both
 engine certificates with cut admissibility, the algebraic witnesses, the
 general fixed-point theorem, the expedition twins, the temporal modules
-and the frame's own mini-theorems, forty modules in all — is
+and the frame's own mini-theorems, forty-one modules in all — is
 formalized in Lean 4 **with an empty axiom list, definitions
-included**: 592 theorems, each one audited individually rather than by
+included**: 601 theorems, each one audited individually rather than by
 sample (`inventory/axiom_audit.py`, re-run on every push). As a
 test bench the logic is run over the classical paradoxes — the liar,
 Jourdain's carousel, Curry, Yablo, the crocodile, Russell — and in every
@@ -193,16 +193,20 @@ core reproduces that practice's central move (§§13–17), and argue from
 those six correspondences to a common denominator — a two-valued logic
 over marked inputs with a single generating principle. The claim
 ceiling, stated here rather than left to the reader: a reproduced case
-is not an embedding. For five of the six that ceiling still stands — we
+is not an embedding. For four of the six that ceiling still stands — we
 do not formalise their semantics and prove a fragment map into ZTL, and
-that remains open (§27). For the sixth it no longer does: the algebra of
+that remains open (§27). For two it no longer does. The algebra of
 semiring provenance is formalised and mapped into the lazy register as a
 homomorphism, with the greedy operations proved to admit no such
-structure at all (`ZProv.lean`, empty axiom list, §27). Their database
-semantics — K-relations and the annotated operators — is still not
-formalised, so what is closed is one tradition's algebraic core rather
-than the tradition. One demonstration became one theorem; five
-demonstrations remain demonstrations.
+structure at all (`ZProv.lean`, empty axiom list, §27); and
+Dempster–Shafer is formalised as its own theory states it, with our
+verdict proved to be its {0,1}-threshold for every finite frame and every
+proper mass assignment (`ZDempster.lean`, §16). Both are still
+partial in a way worth naming: provenance's database semantics —
+K-relations and the annotated operators — is not formalised, and of the
+Dempster–Shafer chapter only the threshold correspondence is, not the
+combination rule. So two algebraic cores are closed, not two traditions.
+Two demonstrations became theorems; four remain demonstrations.
 What is shown without qualification is that the denominator survives a
 full logical development: a calculus, quantifiers, modal and
 probabilistic semantics, machine verification. Along the way the classical paradoxes of self-reference,
@@ -862,7 +866,7 @@ an axiom infects every theorem that uses it), but an argument, and one
 that an unused orphan theorem would escape. It is now a measurement:
 `inventory/axiom_audit.py` extracts every theorem name from every
 module, generates one `#print axioms` per name, and fails if a single
-line reads otherwise. **592 of 592 clean**, re-run by CI on every push.
+line reads otherwise. **601 of 601 clean**, re-run by CI on every push.
 The same stand refuses a module that carries theorems and is built by no
 target — the failure mode that let one module (`QuantumWitness.lean`) go
 unchecked by any automation until 2026-07-20.
@@ -1472,7 +1476,7 @@ transitivity of narrowing and the endpoint case. Decorrelation has a named
 witness (`decorrelation_witness`). Forcedness on products (0·w) and the
 price-list inheritance for commutativity and the unit are measured only.
 
-## 16. The probabilistic bridge: Z ≠ p = 0.5 (MEASURED)
+## 16. The probabilistic bridge: Z ≠ p = 0.5 (MEASURED + Lean)
 
 Three measurements answer how a mark of ignorance differs from a
 uniform prior.
@@ -1509,10 +1513,29 @@ decisions are verdicts by forcedness (the greedy one). Bayes remains
 honest on verified probabilities — his C-extension; only minting
 numbers out of emptiness is forbidden.
 
-**Not formalised, and the tag says so.** `ZExped` carries the threshold
-map `dsV` (T ⟺ Bel = 1, F ⟺ Pl = 0, else Z) with four kernel-checked
-evaluations, but no general theorem about it. Four checked instances are
-a battery, not a proof, and the section is labelled accordingly.
+**The Dempster–Shafer bridge is now a theorem** (`ZDempster.lean`, empty
+axiom list). Their side is formalised as they define it — a mass assignment
+is a list of focal subsets of a finite frame with positive weights, Bel(A)
+sums the focals lying inside A, Pl(A) those meeting it. Our side is defined
+by the generating principle alone, with neither Bel nor Pl appearing in it:
+forced true when every reading of the ignorance lands in A, forced false
+when none can, marked otherwise. The two are then proved to agree in all
+three cells, for every finite frame, every proper mass assignment and every
+event — so what was measured on one assignment holds on all of them. With
+it the fifth twin (Walley's imprecise probabilities, whose lower/upper pair
+is exactly Bel/Pl) joins the sixth as an embedding rather than a
+correspondence.
+
+*The properness condition is not decoration, and finding that out is what
+the theorem was for.* The first draft required only positive weights and was
+FALSE: on the empty mass assignment the verdict comes out T vacuously while
+Pl = 0, and the F-cell fails; an empty focal breaks it the same way. That is
+Dempster–Shafer's own `m(∅) = 0`, which held silently on the one assignment
+that had been measured. A single checked instance cannot show you the
+condition it happens to satisfy.
+
+The other two claims of this section — the reparametrization argument and
+the Ellsberg reading — remain measured.
 
 ## 17. The modal layer: local □ versus global (MEASURED + Lean)
 
@@ -2273,10 +2296,14 @@ necessary by the guard family (b₁∧…∧b_{m−1}) → (a→a), checked at
 m = 2,3,4,5 (`zverify` §§5–6); hence NO constant-depth
 characterization exists and what remains open is a structural,
 non-enumerative criterion);
-**a fragment-embedding theorem for the remaining five traditions of
-§1** — the sixth is now done, and the entry is rewritten rather than
-deleted, because what it asked for was larger than what has been
-delivered. `ZProv.lean` (empty axiom list) formalises the ALGEBRA of
+**a fragment-embedding theorem for the remaining four traditions of
+§1** — two are now done, and the entry is rewritten rather than deleted,
+because what it asked for is larger than what has been delivered. The
+fifth twin went the same day: `ZDempster.lean` formalises Dempster–Shafer
+as they define it (focal elements, Bel, Pl) and proves our verdict to be
+their {0,1}-threshold in all three cells, for every finite frame and every
+proper mass assignment — see §16, including the properness condition the
+first draft got wrong. `ZProv.lean` (empty axiom list) formalises the ALGEBRA of
 semiring provenance — the free commutative semiring on sources, `+`
 for an alternative derivation, `·` for a joint requirement — and maps
 it into ZTL: evaluation is a homomorphism into the LAZY register, which

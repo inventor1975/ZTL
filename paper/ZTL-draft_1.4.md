@@ -141,7 +141,7 @@ engine certificates with cut admissibility, the algebraic witnesses, the
 general fixed-point theorem, the expedition twins, the temporal modules
 and the frame's own mini-theorems, fifty-three modules in all — is
 formalized in Lean 4 **with an empty axiom list, definitions
-included**: 756 theorems, each one audited individually rather than by
+included**: 784 theorems, each one audited individually rather than by
 sample (`inventory/axiom_audit.py`, re-run on every push). As of this
 revision no section rests on measurement alone: every one of the seventeen
 that carried the MEASURED tag now names kernel-checked theorems behind its
@@ -198,9 +198,9 @@ core reproduces that practice's central move (§§13–17), and argue from
 those six correspondences to a common denominator — a two-valued logic
 over marked inputs with a single generating principle. The claim
 ceiling, stated here rather than left to the reader: a reproduced case
-is not an embedding. For two of the six that ceiling still stands — we
+is not an embedding. For one of the six that ceiling still stands — we
 do not formalise their semantics and prove a fragment map into ZTL, and
-that remains open (§27). For four it no longer does. IEEE 754's NaN is the fourth (`ZNaN.lean`, empty axiom list, §27): the four-way comparison and the §6.2.3 propagation rule are formalised as the standard states them; arithmetic infection is a homomorphism into the mark-carrying integers; every ordered predicate is proved to be the T-sign of a ZTL atom, the unordered predicate the mark test, and `!=` — alone — the N-sign, which is exactly where IEEE's `x != x` and ZTL's refusal of `¬(x = x)` part. The algebra of
+that remains open (§27). For five it no longer does. SQL's NULL is the fifth (`ZNull.lean`, empty axiom list, §27): its three-valued expression layer is a homomorphism onto the lazy register, its comparison with NULL lands on the very atom IEEE's `==` did, and its boundaries are the four signs — WHERE is `SignT`, CHECK is `SignP`, the <boolean test> the rest — with WHERE agreeing with ZTL's verdict on every negation-normal search condition and parting exactly on `¬¬Z`. IEEE 754's NaN is the fourth (`ZNaN.lean`, empty axiom list, §27): the four-way comparison and the §6.2.3 propagation rule are formalised as the standard states them; arithmetic infection is a homomorphism into the mark-carrying integers; every ordered predicate is proved to be the T-sign of a ZTL atom, the unordered predicate the mark test, and `!=` — alone — the N-sign, which is exactly where IEEE's `x != x` and ZTL's refusal of `¬(x = x)` part. The algebra of
 semiring provenance is formalised and mapped into the lazy register as a
 homomorphism, with the greedy operations proved to admit no such
 structure at all (`ZProv.lean`, empty axiom list, §27); and
@@ -901,7 +901,7 @@ an axiom infects every theorem that uses it), but an argument, and one
 that an unused orphan theorem would escape. It is now a measurement:
 `inventory/axiom_audit.py` extracts every theorem name from every
 module, generates one `#print axioms` per name, and fails if a single
-line reads otherwise. **756 of 756 clean**, re-run by CI on every push.
+line reads otherwise. **784 of 784 clean**, re-run by CI on every push.
 The same stand refuses a module that carries theorems and is built by no
 target — the failure mode that let one module (`QuantumWitness.lean`) go
 unchecked by any automation until 2026-07-20.
@@ -1409,7 +1409,7 @@ not earned (verdict F); but |{Z}| ∈ [1,1] — **cardinality is earned
 even where identity is not**: one mark is exactly one thing.
 Cardinality and identity have split into different currencies of trust.
 
-**SQL's inconsistency is not inherited:** SQL holds NULL≠NULL in
+**SQL's inconsistency is not inherited** (a theorem now: `ZNull.two_equalities`, §27)**:** SQL holds NULL≠NULL in
 comparisons yet merges NULLs in DISTINCT/GROUP BY — swapping equality
 of values for equality of marks inside one syntax. Here the core
 deduplicates classically and the marks live with multiplicity — each
@@ -2539,8 +2539,8 @@ remains of the port: the two-place predicates the quantifier swap needs, and
 completeness, which §6 argues by Hintikka saturation and this corpus does
 not measure;
 **a fragment-embedding theorem for the remaining three traditions of
-§1** — four are now done, and the entry is rewritten rather than deleted,
-because what it asked for is larger than what has been delivered. The sixth
+§1** — five are now done, and the entry is rewritten rather than deleted,
+because what it asked for is larger than what has been delivered. The first
 twin — IEEE 754's NaN, the first tradition of §1 — is embedded in `ZNaN.lean`
 (E49, empty axiom list): the fragment as the standard states it (data, the
 four mutually exclusive relations of §5.11, the predicates of Table 5.1, the
@@ -2559,7 +2559,30 @@ refusals (§18). The arithmetic boundary sits in the same file: `0 × NaN = NaN`
 against the earned `0 · mark = 0` of §15, two `rfl`s. Not modelled: rounding,
 signed zero, infinities, the signaling NaN — one algebraic core, not the
 standard. Every `Int` order lemma measured carries propext, so both sides read
-the order off one three-way comparison and no such lemma is used. The
+the order off one three-way comparison and no such lemma is used. The second
+twin — SQL's NULL — is embedded in `ZNull.lean` (E50, empty axiom list): the
+truth values TRUE/FALSE/UNKNOWN with the standard's three tables, the
+comparison predicates, WHERE, CHECK and the <boolean test>. Proved: the
+expression layer is a HOMOMORPHISM onto the lazy register `knot/kand/kor`,
+cell for cell — and not onto the greedy one (`NOT NOT UNKNOWN` is UNKNOWN,
+`¬¬Z` is T); the comparison with NULL is the SAME mark atom IEEE's `==`
+landed on — two traditions, one ZTL atom; the boundaries are the four
+signs — WHERE keeps iff `SignT`, CHECK passes iff `SignP` ("satisfied iff
+not False": UNKNOWN passes), IS TRUE / IS FALSE / IS NOT TRUE / IS NOT FALSE
+are `SignT / SignF / SignN / SignP`, IS UNKNOWN is the mark test `isZ`. So
+SQL runs TWO boundaries with opposite defaults — `x < NULL` and `x >= NULL`
+are both dropped by WHERE (§4's "false in both polarities") and both PASS a
+CHECK — while ZTL's collapse is WHERE's alone: the mark falls to F, never to
+T (`collapse_is_where`). At the WHERE boundary SQL and ZTL's greedy verdict
+AGREE on every negation-normal search condition (`where_agrees_nnf`: the two
+registers share their T-cells at every connective) and part exactly where a
+negation stands over a compound — `¬¬Z`, the signature cell; at CHECK they
+part already on `TRUE AND NULL`. And SQL's two equalities: `NULL = NULL` is
+UNKNOWN while `NULL IS NOT DISTINCT FROM NULL` is TRUE (the rule DISTINCT
+and GROUP BY run on) — ZTL has one equality and it withholds (§17's
+"inconsistency not inherited", as `two_equalities`). Not modelled: tables,
+joins, aggregates — the truth-value layer and its boundaries, not the
+language. Fifth core; taint is the one worked case left. The
 fifth twin went the same day: `ZDempster.lean` formalises Dempster–Shafer
 as they define it (focal elements, Bel, Pl) and proves our verdict to be
 their {0,1}-threshold in all three cells, for every finite frame and every

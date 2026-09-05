@@ -139,9 +139,9 @@ cannot mint it — from no premises nothing is derivable, even the guarded
 tautologies, even on credit). The entire development — the core, both
 engine certificates with cut admissibility, the algebraic witnesses, the
 general fixed-point theorem, the expedition twins, the temporal modules
-and the frame's own mini-theorems, thirty-nine modules in all — is
+and the frame's own mini-theorems, forty modules in all — is
 formalized in Lean 4 **with an empty axiom list, definitions
-included**: 557 theorems, each one audited individually rather than by
+included**: 592 theorems, each one audited individually rather than by
 sample (`inventory/axiom_audit.py`, re-run on every push). As a
 test bench the logic is run over the classical paradoxes — the liar,
 Jourdain's carousel, Curry, Yablo, the crocodile, Russell — and in every
@@ -193,9 +193,16 @@ core reproduces that practice's central move (§§13–17), and argue from
 those six correspondences to a common denominator — a two-valued logic
 over marked inputs with a single generating principle. The claim
 ceiling, stated here rather than left to the reader: a reproduced case
-is not an embedding. We do not formalise any tradition's own semantics
-and prove a fragment map into ZTL; that remains open (§27), and one such
-theorem would carry this section far better than six demonstrations do.
+is not an embedding. For five of the six that ceiling still stands — we
+do not formalise their semantics and prove a fragment map into ZTL, and
+that remains open (§27). For the sixth it no longer does: the algebra of
+semiring provenance is formalised and mapped into the lazy register as a
+homomorphism, with the greedy operations proved to admit no such
+structure at all (`ZProv.lean`, empty axiom list, §27). Their database
+semantics — K-relations and the annotated operators — is still not
+formalised, so what is closed is one tradition's algebraic core rather
+than the tradition. One demonstration became one theorem; five
+demonstrations remain demonstrations.
 What is shown without qualification is that the denominator survives a
 full logical development: a calculus, quantifiers, modal and
 probabilistic semantics, machine verification. Along the way the classical paradoxes of self-reference,
@@ -855,7 +862,7 @@ an axiom infects every theorem that uses it), but an argument, and one
 that an unused orphan theorem would escape. It is now a measurement:
 `inventory/axiom_audit.py` extracts every theorem name from every
 module, generates one `#print axioms` per name, and fails if a single
-line reads otherwise. **557 of 557 clean**, re-run by CI on every push.
+line reads otherwise. **592 of 592 clean**, re-run by CI on every push.
 The same stand refuses a module that carries theorems and is built by no
 target — the failure mode that let one module (`QuantumWitness.lean`) go
 unchecked by any automation until 2026-07-20.
@@ -1851,6 +1858,21 @@ intersection**. Measured:
 The twin count: **six** — NaN, NULL, taint/IFC, abstract
 interpretation, imprecise probabilities, semiring provenance.
 
+**The sixth twin is now an embedding, and the tag still says MEASURED.**
+`ZProv.lean` (empty axiom list) formalises the provenance algebra and maps
+it into ZTL — see §27 for what that theorem says and, more to the point,
+what it does not. It settles the twin, not this section: combination as
+intersection, the earned contradiction of an empty intersection, and the
+Zadeh case remain measured on worked scenarios with `zcombine`, and the tag
+is left alone for that reason. One further thing belongs here and is not
+comfortable: our own probe against the installed package
+(`db/probe_provenance.py`, PostgreSQL 16.14 / ProvSQL 1.13.0-dev) found that
+semirings already do the cascade, the alternatives and the exposed set, and
+that ProvSQL also carries magnitudes through aggregation — which an earlier
+version of this corpus denied in print. That denial is withdrawn. Anyone
+needing those four things should use ProvSQL; what this paper adds is where
+their algebra sits inside the two registers, and where it provably cannot.
+
 ## 21. Logical time: verification is the only clock (MEASURED + Lean)
 
 ZTL owns no physical clock, and §7 keeps it honest: duration, tense and
@@ -2251,13 +2273,26 @@ necessary by the guard family (b₁∧…∧b_{m−1}) → (a→a), checked at
 m = 2,3,4,5 (`zverify` §§5–6); hence NO constant-depth
 characterization exists and what remains open is a structural,
 non-enumerative criterion);
-**a fragment-embedding theorem for one of the six traditions of §1** —
-the open problem this paper most wants closed. §§13–17 exhibit six
-worked correspondences, but a reproduced case is not an embedding: no
-tradition's own semantics is formalised here and mapped into ZTL.
-Provenance semirings look the most tractable (an algebra of trust in
-derivations against our combination layer, `zcombine`). One such
-theorem would carry §1 further than six demonstrations do;
+**a fragment-embedding theorem for the remaining five traditions of
+§1** — the sixth is now done, and the entry is rewritten rather than
+deleted, because what it asked for was larger than what has been
+delivered. `ZProv.lean` (empty axiom list) formalises the ALGEBRA of
+semiring provenance — the free commutative semiring on sources, `+`
+for an alternative derivation, `·` for a joint requirement — and maps
+it into ZTL: evaluation is a homomorphism into the LAZY register, which
+satisfies every semiring law; withdrawal of a source never raises trust
+along any derivation; a joint requirement dies with any one source
+while an alternative survives; and on mark-free trust the two registers
+coincide, so the Boolean case the 2007 paper starts from is recovered
+exactly. The sharp half is negative and belongs to us: the GREEDY
+operations carry no semiring structure at all — no constant whatever is
+neutral for `zor`, none for `zand`, the obstruction being the mark
+(`zor F Z = F`, `zand T Z = F`). So an algebra of trust in derivations
+lives in the lazy register, and the verdict register is where it is
+CASHED — cashing being provably not a homomorphism. That is why the two
+registers had to be two. What is NOT formalised is their database
+semantics: K-relations and the annotated relational operators. So one
+tradition's algebraic core is mapped, not the tradition;
 a practical zero-trust validation library (verdicts with warranties +
 evidence combination + provenance); temporal operators over the
 verification tree (□/◇/until against the grade semantics of §21) once

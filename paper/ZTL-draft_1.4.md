@@ -139,9 +139,9 @@ cannot mint it — from no premises nothing is derivable, even the guarded
 tautologies, even on credit). The entire development — the core, both
 engine certificates with cut admissibility, the algebraic witnesses, the
 general fixed-point theorem, the expedition twins, the temporal modules
-and the frame's own mini-theorems, forty-one modules in all — is
+and the frame's own mini-theorems, forty-two modules in all — is
 formalized in Lean 4 **with an empty axiom list, definitions
-included**: 601 theorems, each one audited individually rather than by
+included**: 609 theorems, each one audited individually rather than by
 sample (`inventory/axiom_audit.py`, re-run on every push). As a
 test bench the logic is run over the classical paradoxes — the liar,
 Jourdain's carousel, Curry, Yablo, the crocodile, Russell — and in every
@@ -866,7 +866,7 @@ an axiom infects every theorem that uses it), but an argument, and one
 that an unused orphan theorem would escape. It is now a measurement:
 `inventory/axiom_audit.py` extracts every theorem name from every
 module, generates one `#print axioms` per name, and fails if a single
-line reads otherwise. **601 of 601 clean**, re-run by CI on every push.
+line reads otherwise. **609 of 609 clean**, re-run by CI on every push.
 The same stand refuses a module that carries theorems and is built by no
 target — the failure mode that let one module (`QuantumWitness.lean`) go
 unchecked by any automation until 2026-07-20.
@@ -1062,9 +1062,15 @@ Russell (§18) reads: R∈R — PARADOX, permanent; the twin S∈S —
 UNDERDETERMINED, awaiting an external decision; eight facts grounded.
 This is Kripke's taxonomy plus revision-theoretic signatures
 [5, 7], packaged as a computable instrument; the refusal classes now
-mirror §19, and quarantine = (Z, passport). Honest caveat: Yablo stays
-invisible — every finite truncation is grounded (§11), so the passport
-of infinite regress needs an infinite instrument.
+mirror §19, and quarantine = (Z, passport). The caveat that stood here — "Yablo
+stays invisible: every finite truncation is grounded, so the passport of
+infinite regress needs an infinite instrument" — is now discharged, and
+by a theorem rather than by a passport (`ZYablo.lean`, empty axiom list,
+§11). The instrument for the limit is not a procedure at all; the
+infinite system simply admits no verdict assignment, and that is proved
+in one step. What the caveat got right is that no finite stage could
+show it: every truncation is grounded, at every n, and that too is now a
+theorem rather than a check at n = 3.
 
 **The architecture, kernel-checked in general form.** The two-register
 theorem no longer rests on per-instance measurements: the Lean module
@@ -1314,9 +1320,37 @@ register without any negation (`curry_homeless`) and finds a home in the lazy
 one (`curry_kleene_home`); the liar oscillates with period two
 (`liar_period2`) and Jourdain's carousel has no fixed point and period four
 (`carousel_no_fp`); the Yablo truncation at n = 3 has the unique grounded
-model F, F, T (`yablo3_unique`) — which is exactly why the honest caveat
-above stands, since the paradox lives only at actual infinity; and the
-crocodile's deal is void at the grounded point (`crocodile_deal_void`).
+model F, F, T (`yablo3_unique`); and the crocodile's deal is void at the
+grounded point (`crocodile_deal_void`).
+
+**Yablo at the limit** (`ZYablo.lean`, empty axiom list). Three theorems
+replace the single truncation check. EVERY finite truncation is grounded,
+for every n, with exactly one model — the last sentence true and all
+earlier ones false — so the finite instrument is not too weak to see a
+paradox; there is nothing at any finite stage to see. The INFINITE system
+admits no verdict assignment whatever (`yablo_greedy_homeless`). And it is
+satisfiable in the lazy register, where everything unverified is admissible
+(`yablo_lazy_home`) — the diagnosis the liar and Curry receive, reached here
+for a system no finite stage could diagnose.
+
+*The classical step is avoided, and that is the point of doing it here.* The
+textbook argument moves from "not every later sentence is false" to "some
+later one is true", which is `¬∀ → ∃¬` and would have taken the file to the
+classical tier. It is unnecessary: from "every j > i is false" it already
+follows that every j > i+1 is false, so the fixpoint condition makes
+`s_{i+1}` true outright, contradicting its falsity. No witness is extracted.
+A paradox of infinite regress, refuted without a single classical step.
+
+*Two things are assumed rather than derived, and the module says so:*
+bivalence of the sentences is written into the admissibility condition as a
+clause — it is §6's greediness, but posited here rather than re-derived from
+an evaluation of an infinite quantifier, which would need the parameter
+tableaux §27 still lists as open; and the rendering of `sᵢ` as "T exactly
+when every later sentence is F" is the strict universal of §6 with the greedy
+denial inside it. The truncation theorem is the positive control: an
+impossibility result is worthless if its definition is unsatisfiable by
+construction, and the same shape restricted to any finite n has exactly one
+model.
 
 ## 12. Sets with unverified elements (MEASURED + Lean)
 

@@ -139,9 +139,9 @@ cannot mint it — from no premises nothing is derivable, even the guarded
 tautologies, even on credit). The entire development — the core, both
 engine certificates with cut admissibility, the algebraic witnesses, the
 general fixed-point theorem, the expedition twins, the temporal modules
-and the frame's own mini-theorems, forty-four modules in all — is
+and the frame's own mini-theorems, forty-five modules in all — is
 formalized in Lean 4 **with an empty axiom list, definitions
-included**: 627 theorems, each one audited individually rather than by
+included**: 647 theorems, each one audited individually rather than by
 sample (`inventory/axiom_audit.py`, re-run on every push). As a
 test bench the logic is run over the classical paradoxes — the liar,
 Jourdain's carousel, Curry, Yablo, the crocodile, Russell — and in every
@@ -896,7 +896,7 @@ an axiom infects every theorem that uses it), but an argument, and one
 that an unused orphan theorem would escape. It is now a measurement:
 `inventory/axiom_audit.py` extracts every theorem name from every
 module, generates one `#print axioms` per name, and fails if a single
-line reads otherwise. **627 of 627 clean**, re-run by CI on every push.
+line reads otherwise. **647 of 647 clean**, re-run by CI on every push.
 The same stand refuses a module that carries theorems and is built by no
 target — the failure mode that let one module (`QuantumWitness.lean`) go
 unchecked by any automation until 2026-07-20.
@@ -1935,7 +1935,7 @@ exponential in the number of marks, and what a reader needs is the
 difference between "go check this" and "no single check will move
 this", not the cardinality.
 
-## 20. Evidence combination: conflict is not laundered (MEASURED)
+## 20. Evidence combination: conflict is not laundered (MEASURED + Lean)
 
 Pieces of evidence about one value are constraints; **combination =
 intersection**. Measured:
@@ -1980,6 +1980,34 @@ that ProvSQL also carries magnitudes through aggregation — which an earlier
 version of this corpus denied in print. That denial is withdrawn. Anyone
 needing those four things should use ProvSQL; what this paper adds is where
 their algebra sits inside the two registers, and where it provably cannot.
+
+**Kernel-checked** (`ZCombine.lean`, empty axiom list). Combination is the
+meet of constraints and its members are exactly the values both sources
+allow; an empty meet is an EARNED contradiction in the sense that makes the
+word mean something — no value whatever satisfies both, so the refutation
+holds under every reading; and verification is that same operation against a
+singleton, which is why the act of checking can itself earn a conflict when
+the checked value lies outside what was already known. One operation, proved,
+not two.
+
+**And Zadeh's paradox is now a theorem rather than an anecdote.** Two doctors,
+three diagnoses, each giving the tumour one part in a hundred and disagreeing
+about the rest. Dempster's rule intersects the focal elements, discards what
+intersects to nothing — 9999 parts of 10000 — and what survives sits on the
+tumour alone. By the threshold theorem proved for their own theory in §16,
+the verdict is then T and belief is full: an unshakable diagnosis
+manufactured from two one-percent opinions. *The certainty is derived inside
+our machinery, from their rule, using our theorem about their theory* — not
+criticised from outside. Retaining the conflict instead puts the mass on the
+empty focal, and the assignment is then improper: no verdict is issued and
+the conflict stays visible. That is the refusal this section describes, and
+it is a theorem about the precondition rather than a further verdict.
+
+*Still measured, not proved:* the unification of verify with combination is
+proved above for interval constraints only, and the provenance-polynomial
+bullet is covered separately by `ZProv.lean` (§27). The Smets/TBM reading of
+`m(∅)` as a modelling decision rather than an error is a position, not a
+theorem, and is not claimed as one.
 
 ## 21. Logical time: verification is the only clock (MEASURED + Lean)
 

@@ -24,17 +24,33 @@ The answer measured below has three parts:
 2. WHERE THE LAYER IS INERT — every ground used ONCE. `Linear.linear_no_loss`
    already proves that at multiplicity one no answer both readings agree on is
    lost. Nothing is added.
-3. WHERE IT CANNOT BE REPLACED — the same unverified ground used TWICE. Here the
-   verdict changes, and no reformulation as ordinary hypotheses can follow,
-   because ordinary hypotheses admit contraction and this does not.
+3. WHERE IT CANNOT BE IDENTIFIED WITH THE PROOF CONTEXT — the same unverified
+   ground used TWICE. The verdict changes, and an ordinary hypothesis context
+   cannot follow it while keeping contraction, which such contexts admit.
 
 Point 3 is the load-bearing one, and it is small enough to state exactly:
 
     the bundle connective is COMMUTATIVE but NOT IDEMPOTENT
 
-A set needs both. A multiset needs only the first. So a bundle of grounds is a
-MULTISET, and a hypothesis context in an ordinary proof system is a SET. That is
-a structural difference, not a stylistic one.
+A set needs both. A multiset needs only the first. So the bundle cannot be
+IDENTIFIED with an ordinary structural hypothesis context in which weakening and
+contraction are admissible.
+
+**The claim stops there, and the stopping point matters.** It does NOT follow
+that a second context is mathematically necessary. What follows is weaker and
+defensible: a system that wants ordinary proof composition together with
+reliance semantics of this kind must preserve additional resource-sensitive
+state obeying different structural rules. A separate context is one candidate
+architecture for that state. The exact architecture is an open design question,
+and this file does not settle it.
+
+**PRIOR ART, stated rather than skirted.** That weakening and contraction can
+fail is old and not ours: linear logic (Girard 1987), relevance logics, ordered
+and resource-sensitive type systems, and substructural logics generally. Nothing
+here discovers substructurality. What is put forward for testing is narrower —
+that INSTITUTIONAL reliance conditions (warrant, admission, authority, epoch)
+land in that resource-sensitive territory rather than in the ordinary hypothesis
+context, and that the distinction is machine-checkable.
 
 **What this file does NOT establish**, and the omission is deliberate: nothing
 here says a formal statement faithfully renders its source. That is a separate
@@ -166,11 +182,12 @@ theorem same_grounds_two_verdicts :
     verdict (fun _ => Z) [proofValid] = Z
       ∧ verdict (fun _ => Z) [proofValid, proofValid] = F := by decide
 
-/-- **THE NON-COLLAPSE RESULT.** The bundle connective is commutative and not
-idempotent. A set of hypotheses requires both; a multiset requires only the
-first. So a reliance bundle is a multiset of grounds, and cannot be represented
-as an ordinary hypothesis context without adding the very structure that is
-supposed to be unnecessary. -/
+/-- **THE NON-IDENTITY RESULT.** The bundle connective is commutative and not
+idempotent. A hypothesis context needs both; a multiset needs only the first.
+So the reliance bundle is not identical to an ordinary structural hypothesis
+context retaining weakening and contraction. It does NOT follow that a second
+context is the only possible representation — only that whatever represents this
+must carry resource-sensitive state the ordinary context does not. -/
 theorem reliance_is_multiset_not_set :
     (∀ x y : V, zand x y = zand y x) ∧ (∃ x : V, zand x x ≠ x) :=
   ⟨bundle_commutative, contraction_fails_reliance⟩
@@ -226,12 +243,15 @@ and it is about IDENTITY, not expressive power:
 
 > the reliance bundle is not the proof system's own hypothesis context.
 
-A proof assistant that wants both must carry a SECOND context beside its own,
-obeying different structural rules. That second context is precisely the
-"separate compositional layer" whose necessity was the question. If someone
-shows a faithful encoding into ONE ordinary hypothesis context — one that keeps
-weakening and contraction and still refuses reliance in cases 2, 3 and 4 — this
-file is refuted, and that would be the useful outcome.
+A proof assistant that wants both must preserve additional resource-sensitive
+state obeying different structural rules. A second context beside its own is a
+strong candidate for holding that state — it is NOT established here as the only
+one, and calling it necessary would overreach the theorems above.
+
+**The refutation criterion, unchanged and deliberately cheap to attempt:** show
+a faithful encoding into ONE ordinary hypothesis context that keeps weakening and
+contraction and still refuses reliance in cases 2, 3 and 4. Then this file falls,
+and that would be the useful outcome.
 
 ## 5. Where the layer is honestly inert
 

@@ -139,9 +139,9 @@ cannot mint it — from no premises nothing is derivable, even the guarded
 tautologies, even on credit). The entire development — the core, both
 engine certificates with cut admissibility, the algebraic witnesses, the
 general fixed-point theorem, the expedition twins, the temporal modules
-and the frame's own mini-theorems, forty-six modules in all — is
+and the frame's own mini-theorems, forty-seven modules in all — is
 formalized in Lean 4 **with an empty axiom list, definitions
-included**: 655 theorems, each one audited individually rather than by
+included**: 661 theorems, each one audited individually rather than by
 sample (`inventory/axiom_audit.py`, re-run on every push). As a
 test bench the logic is run over the classical paradoxes — the liar,
 Jourdain's carousel, Curry, Yablo, the crocodile, Russell — and in every
@@ -896,7 +896,7 @@ an axiom infects every theorem that uses it), but an argument, and one
 that an unused orphan theorem would escape. It is now a measurement:
 `inventory/axiom_audit.py` extracts every theorem name from every
 module, generates one `#print axioms` per name, and fails if a single
-line reads otherwise. **655 of 655 clean**, re-run by CI on every push.
+line reads otherwise. **661 of 661 clean**, re-run by CI on every push.
 The same stand refuses a module that carries theorems and is built by no
 target — the failure mode that let one module (`QuantumWitness.lean`) go
 unchecked by any automation until 2026-07-20.
@@ -2142,7 +2142,7 @@ event*. A worked, frozen artifact (admission condition; expiry branch;
 revocation branch; the rejected ungrounded tick) ships in the
 repository (`vrg/epoch_artifact.py`, deterministic JSON ledger).
 
-## 23. The price of derivations: transport, not creation (MEASURED)
+## 23. The price of derivations: transport, not creation (MEASURED + Lean)
 
 The price list of §3.1 concerns laws; it extends to *paths*. Take the
 12 alive entailment rules of §3.2 as the only links, the 2 fallen ones
@@ -2172,6 +2172,28 @@ here a priced borrowing with a named creditor.
 entailment even on the small pool ({p}: 24 entailed, 15 derivable) —
 part pool-boundedness, part missing law-rewrite links, part genuine;
 the split needs a bigger pool, not a claim.
+
+**Kernel-checked** (`ZNoAxiom.lean`, empty axiom list), and in the general
+form the 153-formula closure could only sample. Two halves that say something
+only together.
+
+*The tautologies exist under EVERY valuation, marks included.* `¬q → ¬q` and
+`¬(p ⊕ p)` are T for every assignment, not merely across a pool — this is
+where the greedy denial earns its keep, since `¬Z = F` is classical and no
+mark can drag a formula built on denials down.
+
+*And nothing is derivable from nothing — for ANY calculus whose every rule
+demands a premise.* Not "these twelve rules happen not to derive it": no such
+system can, whatever its rules are. Together: **there is a formula true under
+every valuation that no premise-requiring calculus derives from the empty
+set.** Truth of that shape has to be brought in, not minted — which is what
+"transport, not creation" says.
+
+*What is hypothesis and what is conclusion.* That the twelve alive rules of
+§3.2 all have non-empty premise sets is a fact about the battery, recorded
+and measured there; it is the HYPOTHESIS of the theorem, not its conclusion.
+What is proved is that the hypothesis suffices, for every rule set at once.
+The one-way street and the incompleteness gap in this section remain measured.
 
 ## 24. Identity: a `=` predicate on credit (MEASURED + Lean)
 

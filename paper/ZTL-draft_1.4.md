@@ -139,9 +139,9 @@ cannot mint it — from no premises nothing is derivable, even the guarded
 tautologies, even on credit). The entire development — the core, both
 engine certificates with cut admissibility, the algebraic witnesses, the
 general fixed-point theorem, the expedition twins, the temporal modules
-and the frame's own mini-theorems, fifty-one modules in all — is
+and the frame's own mini-theorems, fifty-two modules in all — is
 formalized in Lean 4 **with an empty axiom list, definitions
-included**: 686 theorems, each one audited individually rather than by
+included**: 695 theorems, each one audited individually rather than by
 sample (`inventory/axiom_audit.py`, re-run on every push). As of this
 revision no section rests on measurement alone: every one of the seventeen
 that carried the MEASURED tag now names kernel-checked theorems behind its
@@ -901,7 +901,7 @@ an axiom infects every theorem that uses it), but an argument, and one
 that an unused orphan theorem would escape. It is now a measurement:
 `inventory/axiom_audit.py` extracts every theorem name from every
 module, generates one `#print axioms` per name, and fails if a single
-line reads otherwise. **686 of 686 clean**, re-run by CI on every push.
+line reads otherwise. **695 of 695 clean**, re-run by CI on every push.
 The same stand refuses a module that carries theorems and is built by no
 target — the failure mode that let one module (`QuantumWitness.lean`) go
 unchecked by any automation until 2026-07-20.
@@ -2499,8 +2499,18 @@ the T one forces the universal, which forces the other to T as well. The two
 specifications are played against each other rather than deciding the
 undecidable universal.
 
+The PROPOSITIONAL steps are carried over to the quantified language too
+(`ZParamProp.lean`), each read off a cover lemma of §5 rather than invented,
+which is why the weak signs appear exactly where the tables put them:
+`F:¬φ` yields P and not F, because `¬v = F` holds at T AND at Z, and writing
+F there would claim more than the table allows. Branching and non-branching
+steps are different theorems — a non-branching step says the extended branch
+is satisfied, a branching one says AT LEAST ONE successor is, which is what
+makes closure of every branch a proof.
+
 So the soundness argument for the quantified calculus is complete IN ITS
-PARTS: the steps carry satisfiability forward, closure denies it. What is
+PARTS, and now for the whole language rather than its quantifier fragment:
+every rule carries satisfiability forward, closure denies it. What is
 still absent is the SEARCH — the fuel-bounded procedure that applies the
 steps and reports closure — and hence the end-to-end theorem about a whole
 tableau run; that is engineering on top of these theorems rather than another

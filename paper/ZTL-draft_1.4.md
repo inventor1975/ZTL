@@ -141,7 +141,7 @@ engine certificates with cut admissibility, the algebraic witnesses, the
 general fixed-point theorem, the expedition twins, the temporal modules
 and the frame's own mini-theorems, fifty-three modules in all — is
 formalized in Lean 4 **with an empty axiom list, definitions
-included**: 803 theorems, each one audited individually rather than by
+included**: 821 theorems, each one audited individually rather than by
 sample (`inventory/axiom_audit.py`, re-run on every push). As of this
 revision no section rests on measurement alone: every one of the seventeen
 that carried the MEASURED tag now names kernel-checked theorems behind its
@@ -198,9 +198,16 @@ core reproduces that practice's central move (§§13–17), and argue from
 those six correspondences to a common denominator — a two-valued logic
 over marked inputs with a single generating principle. The claim
 ceiling, stated here rather than left to the reader: a reproduced case
-is not an embedding. For one of the six that ceiling still stands — we
-do not formalise their semantics and prove a fragment map into ZTL, and
-that remains open (§27). For five it no longer does. SQL's NULL is the fifth (`ZNull.lean`, empty axiom list, §27): its three-valued expression layer is a homomorphism onto the lazy register, its comparison with NULL lands on the very atom IEEE's `==` did, and its boundaries are the four signs — WHERE is `SignT`, CHECK is `SignP`, the <boolean test> the rest — with WHERE agreeing with ZTL's verdict on every negation-normal search condition and parting exactly on `¬¬Z`. IEEE 754's NaN is the fourth (`ZNaN.lean`, empty axiom list, §27): the four-way comparison and the §6.2.3 propagation rule are formalised as the standard states them; arithmetic infection is a homomorphism into the mark-carrying integers; every ordered predicate is proved to be the T-sign of a ZTL atom, the unordered predicate the mark test, and `!=` — alone — the N-sign, which is exactly where IEEE's `x != x` and ZTL's refusal of `¬(x = x)` part. The algebra of
+is not an embedding. That ceiling no longer stands for any of the six: each has its
+semantics formalised and a theorem placing ZTL's verdict inside it
+(§27). Taint tracking is the sixth (`ZFlow.lean`, empty axiom list): Denning's
+lattice in its two-point fragment is the common target, Perl's propagation
+and ZTL's are both proved to be its join, the sink is again a sign — and the
+three part on declassification: Denning never lowers a class, Perl lowers it
+by convention (the regex capture clears a bit whose payload still depends on
+the tainted input), ZTL by proof or not at all (`0 · mark = 0` is earned
+because the value is forced for every reading; no pointwise function clears a
+mark). SQL's NULL is the fifth (`ZNull.lean`, empty axiom list, §27): its three-valued expression layer is a homomorphism onto the lazy register, its comparison with NULL lands on the very atom IEEE's `==` did, and its boundaries are the four signs — WHERE is `SignT`, CHECK is `SignP`, the <boolean test> the rest — with WHERE agreeing with ZTL's verdict on every negation-normal search condition and parting exactly on `¬¬Z`. IEEE 754's NaN is the fourth (`ZNaN.lean`, empty axiom list, §27): the four-way comparison and the §6.2.3 propagation rule are formalised as the standard states them; arithmetic infection is a homomorphism into the mark-carrying integers; every ordered predicate is proved to be the T-sign of a ZTL atom, the unordered predicate the mark test, and `!=` — alone — the N-sign, which is exactly where IEEE's `x != x` and ZTL's refusal of `¬(x = x)` part. The algebra of
 semiring provenance is formalised and mapped into the lazy register as a
 homomorphism, with the greedy operations proved to admit no such
 structure at all (`ZProv.lean`, empty axiom list, §27); and
@@ -901,7 +908,7 @@ an axiom infects every theorem that uses it), but an argument, and one
 that an unused orphan theorem would escape. It is now a measurement:
 `inventory/axiom_audit.py` extracts every theorem name from every
 module, generates one `#print axioms` per name, and fails if a single
-line reads otherwise. **803 of 803 clean**, re-run by CI on every push.
+line reads otherwise. **821 of 821 clean**, re-run by CI on every push.
 The same stand refuses a module that carries theorems and is built by no
 target — the failure mode that let one module (`QuantumWitness.lean`) go
 unchecked by any automation until 2026-07-20.
@@ -1505,7 +1512,8 @@ checks, the laundering ban is no-declassification.
 `ZExped.inj_cert_marked` shows that ONE marked pair collapses the
 injectivity certificate for EVERY function — the identity included —
 resting on `eqAtom_z_right` (an atom against a mark is Z). And the
-laundering ban is a theorem too (`ZTaint.no_laundering`): applied to an
+laundering ban is a theorem too (`ZTaint.no_laundering`; and the tradition's
+own model is embedded in `ZFlow.lean`, §27): applied to an
 unverified reference, a chain of verified functions OF ANY LENGTH returns an
 unverified reference. The pedigree grows; the mark never comes off. The
 sanitizer is not an application at all — a verified value is a different
@@ -2553,8 +2561,8 @@ fires once (it re-fired with a fresh parameter every round). What remains of
 the port: completeness, which §6 argues by Hintikka saturation and this
 corpus does not measure;
 **a fragment-embedding theorem for the remaining three traditions of
-§1** — five are now done, and the entry is rewritten rather than deleted,
-because what it asked for is larger than what has been delivered. The first
+§1** — ALL SIX are now done, and the entry stays as the record of what it
+asked for and what was delivered against it. The first
 twin — IEEE 754's NaN, the first tradition of §1 — is embedded in `ZNaN.lean`
 (E49, empty axiom list): the fragment as the standard states it (data, the
 four mutually exclusive relations of §5.11, the predicates of Table 5.1, the
@@ -2596,7 +2604,27 @@ UNKNOWN while `NULL IS NOT DISTINCT FROM NULL` is TRUE (the rule DISTINCT
 and GROUP BY run on) — ZTL has one equality and it withholds (§17's
 "inconsistency not inherited", as `two_equalities`). Not modelled: tables,
 joins, aggregates — the truth-value layer and its boundaries, not the
-language. Fifth core; taint is the one worked case left. The
+language. Fifth core. The third
+twin — taint tracking / information flow — is embedded in `ZFlow.lean` (E52,
+empty axiom list), with Denning's lattice (1976) in its two-point fragment
+as the COMMON TARGET: its join proved a lattice join; Perl's taint
+propagation (perlsec) proved to be that join, and so are ZTL's pointwise
+functions on pedigreed elements (E7's `taint`) and `+ −` on marked
+integers; Denning's flow check into a low object is Perl's sink and is
+`SignT` of ZTL's "verified" atom. Where the three part is DECLASSIFICATION,
+and each position is a theorem: Denning's rule never lowers a class
+(`join_absorbs_H`); Perl lowers it BY CONVENTION — `regexCapture` clears the
+bit while its payload is the tainted input's, a flow the lattice forbids
+(`perl_launders`); ZTL lowers it BY PROOF or not at all — no chain of
+pointwise functions clears a mark (`ztl_no_laundering`, E40 restated in the
+lattice), and the one clean value `×` returns from a marked operand, `0 ·
+mark = 0`, is the value forced for every reading (`zero_forced`), where
+Denning's syntactic join still says H (`denning_overtaints_forced`):
+dependence in the syntax against independence in the value. Not modelled:
+multi-level lattices, implicit flows through control, TaintDroid's sources
+and sinks. Sixth core — and with it the §1 claim that six traditions
+implement fragments of one logic rests on six embedding theorems rather
+than six worked cases. The
 fifth twin went the same day: `ZDempster.lean` formalises Dempster–Shafer
 as they define it (focal elements, Bel, Pl) and proves our verdict to be
 their {0,1}-threshold in all three cells, for every finite frame and every

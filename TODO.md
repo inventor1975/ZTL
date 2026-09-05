@@ -43,8 +43,14 @@
    landscape. The recon confirms: paper-sized; the MINING (quasi-
    equational axiomatization, subquasivariety lattice, representation
    theorem) = the separate paper, curator's call.
-   REMAINS: a syntactic cut-elimination procedure with bounds; Lean
-   port of the PARAMETER (arbitrary-domain) tableaux.
+   REMAINS: a syntactic cut-elimination procedure with bounds.
+   ✅ Lean port of the PARAMETER (arbitrary-domain) tableaux — SOUNDNESS
+   half complete end to end (E38–E48, 2026-09-05): `ZParamSound` (three
+   of four rules on the empty list), `ZParamSyntax/Tableau/Closure/Prop`
+   (every rule step + closure), `ZParamEngine` (tagged nodes, decidable
+   closure, fuel-bounded search, `search_sound`, `entails_of_closed`;
+   F:∀ deliberately absent — the fallen bridge stays `stuck`).
+   REMAINS there: two-place predicates; completeness (Hintikka, argued).
 
 ## Seams
 

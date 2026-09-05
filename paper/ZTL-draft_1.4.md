@@ -141,7 +141,7 @@ engine certificates with cut admissibility, the algebraic witnesses, the
 general fixed-point theorem, the expedition twins, the temporal modules
 and the frame's own mini-theorems, fifty-three modules in all — is
 formalized in Lean 4 **with an empty axiom list, definitions
-included**: 698 theorems, each one audited individually rather than by
+included**: 731 theorems, each one audited individually rather than by
 sample (`inventory/axiom_audit.py`, re-run on every push). As of this
 revision no section rests on measurement alone: every one of the seventeen
 that carried the MEASURED tag now names kernel-checked theorems behind its
@@ -901,7 +901,7 @@ an axiom infects every theorem that uses it), but an argument, and one
 that an unused orphan theorem would escape. It is now a measurement:
 `inventory/axiom_audit.py` extracts every theorem name from every
 module, generates one `#print axioms` per name, and fails if a single
-line reads otherwise. **698 of 698 clean**, re-run by CI on every push.
+line reads otherwise. **731 of 731 clean**, re-run by CI on every push.
 The same stand refuses a module that carries theorems and is built by no
 target — the failure mode that let one module (`QuantumWitness.lean`) go
 unchecked by any automation until 2026-07-20.
@@ -2510,19 +2510,34 @@ makes closure of every branch a proof.
 
 So the soundness argument for the quantified calculus is complete IN ITS
 PARTS, and now for the whole language rather than its quantifier fragment:
-every rule carries satisfiability forward, closure denies it. What is
-still absent is the SEARCH — the fuel-bounded procedure that applies the
-steps and reports closure — and hence the end-to-end theorem about a whole
-tableau run. It is now the ONLY missing piece of the soundness half, and one
-obstacle to it is recorded rather than left to be discovered later
-(`ZParamSearch.lean`): a search must DECIDE closure, but a sign here is a
-FUNCTION `V → Bool` and functions cannot be compared, so the procedure needs
-a layer that does not yet exist — nodes tagged by a small inductive instead
-of by a function, and decidable equality on formulas. What that file does
-prove is the part such a search rests on: satisfaction of a branch depends on
-MEMBERSHIP and not on order, so rotating a node to the back — how a fair
-search avoids starving one — cannot change it. Nor are the two-place
-predicates the quantifier swap needs;
+every rule carries satisfiability forward, closure denies it. THE SEARCH IS NOW
+BUILT AND PROVED SOUND (`ZParamEngine.lean`, E48), on the layer E47 found
+missing: nodes carry a TAG from a four-element inductive (`t f p n`) instead
+of a function, a translation sends tags to signs, formulas have decidable
+equality, and `closedB` decides closure — with `closedB_sound` proving that
+what it calls closed is closed in the sense above, hence has no model. The
+four tags are not four values: ZTL is two-valued with a mark, and a tag says
+which VERDICTS a node admits (`n` = "not T": F, or the still unanswered Z);
+P and N do not clash precisely because both admit the mark. The search runs
+a fuel-bounded worklist: a closed branch is discharged, otherwise the first
+node with a rule that adds something new is expanded and its successors
+return to the list; running out of fuel claims nothing, as §6's
+undecidability requires. It applies EXACTLY the rules proved sound on the
+empty axiom list — the eight propositional steps, γ on T:∀ and F:∃, δ on
+T:∃ — and F:∀, the rule that needs `¬∀ → ∃¬`, is deliberately absent. The
+end-to-end theorems: `search_sound` (a run that closes every branch shows
+no initial branch has a model, under any assignment, for a total
+interpretation) and `entails_of_closed` (a closed run on Γ ⊢ φ, premises
+tagged t and the conclusion n, proves that every total model making each
+premise T makes φ T — constructively: the conclusion's value is PRODUCED by
+totality and shown to be T, not obtained by refuting its negation). Three
+runs are kernel-evaluated: ∀xP(x) ⊢ P(c) closes, P(c)∧Q(c) ⊢ Q(c) closes,
+and ¬∀xP(x) ⊢ ∃x¬P(x) — the fallen bridge — returns `stuck`, not `closed`.
+The fresh parameter is a theorem, not a side condition: it is a SUM of the
+indices on the branch, and `freshFor_fresh` proves it occurs nowhere. What
+remains of the port: the two-place predicates the quantifier swap needs, and
+completeness, which §6 argues by Hintikka saturation and this corpus does
+not measure;
 **a fragment-embedding theorem for the remaining three traditions of
 §1** — three are now done, and the entry is rewritten rather than deleted,
 because what it asked for is larger than what has been delivered. The

@@ -139,9 +139,9 @@ cannot mint it — from no premises nothing is derivable, even the guarded
 tautologies, even on credit). The entire development — the core, both
 engine certificates with cut admissibility, the algebraic witnesses, the
 general fixed-point theorem, the expedition twins, the temporal modules
-and the frame's own mini-theorems, forty-nine modules in all — is
+and the frame's own mini-theorems, fifty modules in all — is
 formalized in Lean 4 **with an empty axiom list, definitions
-included**: 679 theorems, each one audited individually rather than by
+included**: 682 theorems, each one audited individually rather than by
 sample (`inventory/axiom_audit.py`, re-run on every push). As of this
 revision no section rests on measurement alone: every one of the seventeen
 that carried the MEASURED tag now names kernel-checked theorems behind its
@@ -901,7 +901,7 @@ an axiom infects every theorem that uses it), but an argument, and one
 that an unused orphan theorem would escape. It is now a measurement:
 `inventory/axiom_audit.py` extracts every theorem name from every
 module, generates one `#print axioms` per name, and fails if a single
-line reads otherwise. **679 of 679 clean**, re-run by CI on every push.
+line reads otherwise. **682 of 682 clean**, re-run by CI on every push.
 The same stand refuses a module that carries theorems and is built by no
 target — the failure mode that let one module (`QuantumWitness.lean`) go
 unchecked by any automation until 2026-07-20.
@@ -2478,9 +2478,21 @@ soundness argument for these rules is those two plus bookkeeping. (The
 instantiation lemma REPLACES a stack position rather than inserting one,
 because `inst` does not shift the other indices; written the other way the
 two sides disagree above the substituted depth, and the error would surface
-only in the tableau, files later.) What is NOT begun is
-the tableau itself — branches, rule steps, closure, the soundness theorem —
-nor the two-place predicates the quantifier swap needs;
+only in the tableau, files later.) The RULE STEPS are then proved on branches
+(`ZParamTableau.lean`): γ on T:∀ instantiates with any parameter already in
+play and the model does not move at all; δ on T:∃ points a FRESH parameter at
+the witness, and that this disturbs nothing else on the branch is exactly the
+freshness lemma earning its place. Both preserve satisfiability, which is
+what a sound step has to do. The third, γ on F:∃, is stated with an explicit
+TOTALITY hypothesis about the model rather than proved outright: it needs a
+value for the instance, and over an arbitrary domain the existence of a value
+for a quantified formula is itself classical. The hypothesis is visible in
+the statement instead of hidden in the definition of satisfaction, where
+every other theorem would have paid for it — the same split measured in
+`ZParamSound`, reappearing one level up. What is STILL not begun is closure,
+the fuel-bounded search and the soundness theorem for a whole tableau, which
+need the propositional steps ported to the quantified language as well;
+nor are the two-place predicates the quantifier swap needs;
 **a fragment-embedding theorem for the remaining three traditions of
 §1** — three are now done, and the entry is rewritten rather than deleted,
 because what it asked for is larger than what has been delivered. The

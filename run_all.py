@@ -363,6 +363,14 @@ STANDS = [
     ("inventory/prose_warrant.py", ["PROSE WARRANT GREEN",
                                     "4 corrections that pay them off"]),
     ("inventory/prose_batch.py", ["PROSE BATCH GREEN", "none drifted"]),
+    # ВЖИВЛЕНО 2026-09-05. Всякое имя модуля и теоремы, названное в статье,
+    # обязано существовать в корпусе. Ловит расхождение в ОБЕ стороны: ссылку
+    # на несуществующее (завышение) и — через глаз читателя — модуль, о котором
+    # статья молчит (занижение; в этот день таких нашлось семь разделов).
+    # Умеет падать: испытан подложенными `ZNoSuch.lean` и опечаткой в имени,
+    # поймал оба. Ядровые имена, которые статья называет как ИЗБЕГАЕМЫЕ,
+    # проверяются у компилятора, а не по нашему списку.
+    ("inventory/СВЕРКА-ССЫЛОК.py", ["СВЕРКА ССЫЛОК ЗЕЛЕНО", "расхождений 0"]),
     ("inventory/paper_claims.py", ["PAPER CLAIMS GREEN"]),
     ("inventory/docket_claims.py", ["DOCKET TABLE GREEN",
                                     "rows printed in the paper: 21"]),

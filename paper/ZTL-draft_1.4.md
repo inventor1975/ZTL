@@ -139,9 +139,9 @@ cannot mint it — from no premises nothing is derivable, even the guarded
 tautologies, even on credit). The entire development — the core, both
 engine certificates with cut admissibility, the algebraic witnesses, the
 general fixed-point theorem, the expedition twins, the temporal modules
-and the frame's own mini-theorems, thirty-seven modules in all — is
+and the frame's own mini-theorems, thirty-eight modules in all — is
 formalized in Lean 4 **with an empty axiom list, definitions
-included**: 520 theorems, each one audited individually rather than by
+included**: 531 theorems, each one audited individually rather than by
 sample (`inventory/axiom_audit.py`, re-run on every push). As a
 test bench the logic is run over the classical paradoxes — the liar,
 Jourdain's carousel, Curry, Yablo, the crocodile, Russell — and in every
@@ -855,7 +855,7 @@ an axiom infects every theorem that uses it), but an argument, and one
 that an unused orphan theorem would escape. It is now a measurement:
 `inventory/axiom_audit.py` extracts every theorem name from every
 module, generates one `#print axioms` per name, and fails if a single
-line reads otherwise. **520 of 520 clean**, re-run by CI on every push.
+line reads otherwise. **531 of 531 clean**, re-run by CI on every push.
 The same stand refuses a module that carries theorems and is built by no
 target — the failure mode that let one module (`QuantumWitness.lean`) go
 unchecked by any automation until 2026-07-20.
@@ -2052,9 +2052,18 @@ type with decidable equality and an arbitrary choice of marked references:
 an earned equality is genuine identity, substitution through it is
 congruence, equality is never earned through a mark, reflexivity holds
 exactly on the verified, and indiscernibility forces identity among grounded
-references. What remains proved by exhaustion is the positive half of the
-instantiation schema, and the failures themselves — the latter necessarily
-so: over an arbitrary domain they are false, since a domain without marks is
+references. The positive half of the instantiation schema went the same
+way the next day — `ZFreeUIGeneric.lean` proves it for an arbitrary type
+with decidable equality, an arbitrary marking, an arbitrary V-valued
+predicate and an arbitrary range: wherever the premise `∀ᴳφ ∧ E!t` is earned
+so is `φ(t)`; on a marked term the premise is never designated, so the schema
+licenses nothing there; the repair is not vacuous; and an empty range is no
+loophole, since the refusal comes from the mark rather than from the range
+being inhabited. *What is still finite is the RANGE, not the domain*: a
+strict universal has to be computed, and computing one over an unsurveyable
+range would be exactly the survey this logic refuses to call an act. What
+remains proved by exhaustion is now only the failures, and necessarily so:
+over an arbitrary domain they are false, since a domain without marks is
 classical and there the laws hold. A countermodel belongs in a witness, not
 in a general theorem.
 

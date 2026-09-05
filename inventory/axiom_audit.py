@@ -77,8 +77,18 @@ def theorem_names(module):
     """Fully qualified theorem names of a module, in source order."""
     src = open(os.path.join(_LEAN, module + ".lean"), encoding="utf-8").read()
     stack, names = [], []
+    depth = 0                      # глубина блочного комментария /- ... -/
     for line in src.split("\n"):
         s = line.strip()
+        # КОММЕНТАРИИ НЕ ЕСТЬ ОБЪЯВЛЕНИЯ. Прежде прибор смотрел на strip'нутую
+        # строку и ловил ЛЮБУЮ прозу, начинающуюся словом theorem/lemma: строка
+        # «lemma is needed — see the header» в шапке модуля дала имя `...is`,
+        # а с ним ложный КРАСНЫЙ и завышенный счёт. Найдено 2026-09-05.
+        открыто, закрыто = s.count("/-"), s.count("-/")
+        внутри = depth > 0
+        depth = max(0, depth + открыто - закрыто)
+        if внутри or открыто or s.startswith("--"):
+            continue
         m = _NS.match(s)
         if m:
             stack.append(m.group(1))

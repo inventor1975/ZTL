@@ -1,5 +1,5 @@
 name = "ztl"
-defaultTargets = ["ZTL", "TableauCert", "TableauCertN", "ZSets", "Facts", "ZAlgebra", "ZSequent", "ZQuant", "ZGround", "ZExped", "ZClone", "ZTime", "Contextuality", "EpochBoundary", "JunctionWitness", "QuantumWitness", "Frame", "Signature", "ZEq", "ZDesc", "ZIndisc", "ZFreeUI", "ZEqGeneric", "ZEps", "Plato_Equality", "Plato_Conservativity", "Hume_Guillotine", "Cogito_Conservativity", "ZNum", "ClassicalAgreement", "ZNumCoherent", "Layering", "ContextClosure", "Receipt", "Linear", "LabelExact", "NoGift"]
+defaultTargets = ["ZTL", "TableauCert", "TableauCertN", "ZSets", "Facts", "ZAlgebra", "ZSequent", "ZQuant", "ZGround", "ZExped", "ZClone", "ZTime", "Contextuality", "EpochBoundary", "JunctionWitness", "QuantumWitness", "Frame", "Signature", "ZEq", "ZDesc", "ZIndisc", "ZFreeUI", "ZEqGeneric", "ZFreeUIGeneric", "ZEps", "Plato_Equality", "Plato_Conservativity", "Hume_Guillotine", "Cogito_Conservativity", "ZNum", "ClassicalAgreement", "ZNumCoherent", "Layering", "ContextClosure", "Receipt", "Linear", "LabelExact", "NoGift"]
 
 [[lean_lib]]
 name = "ZTL"
@@ -69,6 +69,9 @@ name = "ZFreeUI"
 
 [[lean_lib]]
 name = "ZEqGeneric"
+
+[[lean_lib]]
+name = "ZFreeUIGeneric"
 
 [[lean_lib]]
 name = "ZEps"

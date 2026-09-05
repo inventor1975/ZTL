@@ -139,9 +139,9 @@ cannot mint it — from no premises nothing is derivable, even the guarded
 tautologies, even on credit). The entire development — the core, both
 engine certificates with cut admissibility, the algebraic witnesses, the
 general fixed-point theorem, the expedition twins, the temporal modules
-and the frame's own mini-theorems, forty-two modules in all — is
+and the frame's own mini-theorems, forty-three modules in all — is
 formalized in Lean 4 **with an empty axiom list, definitions
-included**: 609 theorems, each one audited individually rather than by
+included**: 622 theorems, each one audited individually rather than by
 sample (`inventory/axiom_audit.py`, re-run on every push). As a
 test bench the logic is run over the classical paradoxes — the liar,
 Jourdain's carousel, Curry, Yablo, the crocodile, Russell — and in every
@@ -193,20 +193,23 @@ core reproduces that practice's central move (§§13–17), and argue from
 those six correspondences to a common denominator — a two-valued logic
 over marked inputs with a single generating principle. The claim
 ceiling, stated here rather than left to the reader: a reproduced case
-is not an embedding. For four of the six that ceiling still stands — we
+is not an embedding. For three of the six that ceiling still stands — we
 do not formalise their semantics and prove a fragment map into ZTL, and
-that remains open (§27). For two it no longer does. The algebra of
+that remains open (§27). For three it no longer does. The algebra of
 semiring provenance is formalised and mapped into the lazy register as a
 homomorphism, with the greedy operations proved to admit no such
 structure at all (`ZProv.lean`, empty axiom list, §27); and
 Dempster–Shafer is formalised as its own theory states it, with our
 verdict proved to be its {0,1}-threshold for every finite frame and every
-proper mass assignment (`ZDempster.lean`, §16). Both are still
-partial in a way worth naming: provenance's database semantics —
-K-relations and the annotated operators — is not formalised, and of the
-Dempster–Shafer chapter only the threshold correspondence is, not the
-combination rule. So two algebraic cores are closed, not two traditions.
-Two demonstrations became theorems; four remain demonstrations.
+proper mass assignment (`ZDempster.lean`, §16); and abstract
+interpretation's Galois connection is formalised, with our verdict proved
+EXACT rather than merely sound on the abstract value, and the point where
+exactness fails named in the same file (`ZAbsInt.lean`, §15). All three are
+partial in the same way, and it is worth naming: provenance's K-relations,
+Dempster–Shafer's combination rule and abstract interpretation's fixpoint
+framework are not formalised. So three algebraic cores are closed, not three
+traditions. Three demonstrations became theorems; three remain
+demonstrations.
 What is shown without qualification is that the denominator survives a
 full logical development: a calculus, quantifiers, modal and
 probabilistic semantics, machine verification. Along the way the classical paradoxes of self-reference,
@@ -866,7 +869,7 @@ an axiom infects every theorem that uses it), but an argument, and one
 that an unused orphan theorem would escape. It is now a measurement:
 `inventory/axiom_audit.py` extracts every theorem name from every
 module, generates one `#print axioms` per name, and fails if a single
-line reads otherwise. **609 of 609 clean**, re-run by CI on every push.
+line reads otherwise. **622 of 622 clean**, re-run by CI on every push.
 The same stand refuses a module that carries theorems and is built by no
 target — the failure mode that let one module (`QuantumWitness.lean`) go
 unchecked by any automation until 2026-07-20.
@@ -1495,10 +1498,31 @@ forced under all readings; F if falsehood is forced; else Z**. Measured:
 
 **The fourth twin: abstract interpretation** (Cousot & Cousot, 1977) —
 interval value analysis (lazy flow of abstract values through
-computations) + assertion checking (greedy verdicts). Four independent
-engineering traditions — NaN, NULL, taint tracking, abstract
-interpretation — whose central moves the core reproduces on worked
-cases (in the sense of §1, not as a proved embedding).
+computations) + assertion checking (greedy verdicts). Of the four
+engineering traditions named so far — NaN, NULL, taint tracking, abstract
+interpretation — three are reproduced on worked cases in the sense of §1,
+and this one is now an embedding.
+
+**Kernel-checked embedding** (`ZAbsInt.lean`, empty axiom list). Their Galois
+connection is formalised as they state it — α(S) = the least interval
+containing the value set, γ the concretization — and proved in both
+directions: α(S) ⊑ [a,b] ⟺ S ⊆ γ([a,b]). Against it our verdict is not
+merely *sound* on the abstract value, which is what abstract interpretation
+normally buys and pays precision for; it is **exact**. For a threshold atom,
+the verdict computed from the interval alone equals the verdict computed over
+the whole concrete value set, in all three cells. Nothing is paid.
+
+*And the price appears exactly where this section already said it does.* The
+moment one variable occurs twice the exactness is gone: over the value set
+[1,3] every concrete `v − v` is 0, so the concrete verdict of `v − v < 1` is
+T, while the decorrelated interval computation gives [0,2] and returns Z. The
+witness is mechanical, not narrated — the concrete image and the abstract
+interval are both computed in the file. So decorrelation is not an aside
+about intervals; it is the exact boundary of the exactness theorem.
+
+*What is not done:* the framework — widening, narrowing, fixpoint transfer —
+is not formalised. One atom over one abstract domain is mapped, not the
+method.
 
 **Kernel-checked (`ZExped.lean`, `ZNum.lean`, `ZNumCoherent.lean`, zero
 axioms).** Identity is earned by nothing short of full verification: a mark
@@ -2330,8 +2354,8 @@ necessary by the guard family (b₁∧…∧b_{m−1}) → (a→a), checked at
 m = 2,3,4,5 (`zverify` §§5–6); hence NO constant-depth
 characterization exists and what remains open is a structural,
 non-enumerative criterion);
-**a fragment-embedding theorem for the remaining four traditions of
-§1** — two are now done, and the entry is rewritten rather than deleted,
+**a fragment-embedding theorem for the remaining three traditions of
+§1** — three are now done, and the entry is rewritten rather than deleted,
 because what it asked for is larger than what has been delivered. The
 fifth twin went the same day: `ZDempster.lean` formalises Dempster–Shafer
 as they define it (focal elements, Bel, Pl) and proves our verdict to be

@@ -2,7 +2,13 @@ import ZSets
 import ZGround
 
 /-!
-# Lean twins of the expeditions E6–E10. Zero axioms.
+# Lean twins of the expeditions E6–E11. Zero axioms.
+
+The title said E6–E10 until 2026-09-05 while E11 sat in the file below —
+the module understated itself, and so did the paper, which tagged §§11–18
+MEASURED with no mention of any of this. A corpus that hides its own
+kernel checks costs a reader exactly what an overclaim costs: a wrong
+estimate of what is proved. Fixed in both places at once.
 
 E6 (reals): digit streams — the equality atom never earns T, apartness
 is earned by a finite witness and persists, Cantor's diagonal earns its

@@ -681,7 +681,7 @@ the price is the rewriting laws, which the atomic position preserves
 (McGee–McLaughlin, Varzi) is a distinction at the level of inferences,
 not of operators; our "locality" is a different notion.
 
-## 5. The calculus: signed tableaux (MEASURED)
+## 5. The calculus: signed tableaux (MEASURED + Lean)
 
 Hilbert style is closed off (axiom K fell, valid formulas are scarce),
 the deduction theorem is one-directional — the calculus is built as
@@ -1228,7 +1228,7 @@ logics but the two-valued assertability policies of the supervaluation
 family — from which it differs by locality, tabularity, and greedy
 collapse.
 
-## 11. Expeditions: Curry, parity, Yablo, the crocodile (MEASURED)
+## 11. Expeditions: Curry, parity, Yablo, the crocodile (MEASURED + Lean)
 
 **Paradox as an operator — the expeditions are one construction (MEASURED,
 `pengine.py`).** A self-referential net is a system Sᵢ = fᵢ(S₁…Sₙ); to read it
@@ -1297,7 +1297,17 @@ difference between paradox and underdetermination is the difference
 between "the contract is void" and "the contract is valid but requires
 the parties' will".
 
-## 12. Sets with unverified elements (MEASURED)
+**Kernel-checked (`Facts.lean`, zero axioms).** Every dynamic fact of this
+section is a theorem, not a battery entry: Curry is homeless in the greedy
+register without any negation (`curry_homeless`) and finds a home in the lazy
+one (`curry_kleene_home`); the liar oscillates with period two
+(`liar_period2`) and Jourdain's carousel has no fixed point and period four
+(`carousel_no_fp`); the Yablo truncation at n = 3 has the unique grounded
+model F, F, T (`yablo3_unique`) — which is exactly why the honest caveat
+above stands, since the paradox lives only at actual infinity; and the
+crocodile's deal is void at the grounded point (`crocodile_deal_void`).
+
+## 12. Sets with unverified elements (MEASURED + Lean)
 
 Sets are not postulated — they are derived: element equality is an atom
 (T/F for verified elements; Z whenever a mark is involved, including a
@@ -1325,7 +1335,17 @@ of values for equality of marks inside one syntax. Here the core
 deduplicates classically and the marks live with multiplicity — each
 operation honest about its own business.
 
-## 13. The reals: two failures of enumeration (MEASURED)
+**Kernel-checked (`ZSets.lean`, zero axioms).** The load-bearing claims are
+theorems: a mark belongs to nothing, itself included (`memZ` — SQL's NULL IN
+(NULL)); a marked set is not a subset of itself and not equal to itself
+(`sub_marked_false`, `seteq_self_marked`), so the identity laws fall exactly
+as they do in the tables; and on clean sets membership, inclusion and
+equality are classical (`memL_classical`, `subL_refl_clean`,
+`seteq_refl_clean`) — the C-extension, proved rather than sampled. The
+cardinality interval is defined and evaluated on instances (`cardLo`,
+`cardHi`) but carries no general theorem, so that claim stays measured.
+
+## 13. The reals: two failures of enumeration (MEASURED + Lean)
 
 A real-in-the-making is a stream of digits; at time t a prefix is
 verified. Stream equality is an atom with a pinned fate: prefixes
@@ -1356,6 +1376,17 @@ the diagonal renders *earned*. Resonance: the split "how many / which
 exactly" of §12 (cardinality earned without identity) is the same split
 seen sideways.
 
+**Kernel-checked (`ZExped.lean`, zero axioms).** Both failures are theorems.
+The stream atom never earns T at any time (`eqStream_never_T`), not even a
+stream against itself (`eqStream_self`); one finite witness earns apartness
+(`eqStream_apart`) and earned apartness is never revoked
+(`eqStream_F_persist`). Failure #1: no registry certifies membership of
+anything, its own rows included (`mem_never_T`). Failure #2: the diagonal
+earns its non-membership against every entry (`diag_not_member`). What is
+*not* formalised is the contrast case — that registries of fractions certify
+every element — so the countability of ℚ as earnable presentation identity
+remains measured.
+
 ## 14. Functions: taint mode (MEASURED)
 
 A function is a computation, not a verdict ⇒ by the two-register
@@ -1385,7 +1416,15 @@ taint mode, TaintDroid): the Z-mark is taint, lazy flow through
 computations is taint propagation, greedy verdicts are sanitizer
 checks, the laundering ban is no-declassification.
 
-## 15. Arithmetic with marks (MEASURED)
+**Kernel-checked, and only in part.** The pearl is a theorem:
+`ZExped.inj_cert_marked` shows that ONE marked pair collapses the
+injectivity certificate for EVERY function — the identity included —
+resting on `eqAtom_z_right` (an atom against a mark is Z). The rest of
+this section — images and multiplicity, transitivity of the pedigree,
+the preimage split, the laundering ban — is measured on worked cases
+and is **not** formalised. The tag stays MEASURED for that reason.
+
+## 15. Arithmetic with marks (MEASURED + Lean)
 
 Numbers: verified values and marks with an interval of partial
 knowledge [lo,hi] (ignorance = (−∞,∞)). Operations are computations ⇒
@@ -1415,6 +1454,16 @@ computations) + assertion checking (greedy verdicts). Four independent
 engineering traditions — NaN, NULL, taint tracking, abstract
 interpretation — whose central moves the core reproduces on worked
 cases (in the sense of §1, not as a proved embedding).
+
+**Kernel-checked (`ZExped.lean`, `ZNum.lean`, `ZNumCoherent.lean`, zero
+axioms).** Identity is earned by nothing short of full verification: a mark
+against itself is Z even when the bounds coincide (`mark_self_not_earned`).
+Narrowing-heredity — what is earned is never revoked as intervals shrink — is
+a theorem for every comparison atom under both readings
+(`forcedLE/NotLE/LT/NotLT/EQ/NE_hereditary`, twice over), together with the
+transitivity of narrowing and the endpoint case. Decorrelation has a named
+witness (`decorrelation_witness`). Forcedness on products (0·w) and the
+price-list inheritance for commutativity and the unit are measured only.
 
 ## 16. The probabilistic bridge: Z ≠ p = 0.5 (MEASURED)
 
@@ -1453,7 +1502,12 @@ decisions are verdicts by forcedness (the greedy one). Bayes remains
 honest on verified probabilities — his C-extension; only minting
 numbers out of emptiness is forbidden.
 
-## 17. The modal layer: local □ versus global (MEASURED)
+**Not formalised, and the tag says so.** `ZExped` carries the threshold
+map `dsV` (T ⟺ Bel = 1, F ⟺ Pl = 0, else Z) with four kernel-checked
+evaluations, but no general theorem about it. Four checked instances are
+a battery, not a proof, and the section is labelled accordingly.
+
+## 17. The modal layer: local □ versus global (MEASURED + Lean)
 
 Worlds are the classical completions of the unverified atoms; □φ = in
 all, ◇φ = in at least one. Measured:
@@ -1479,7 +1533,15 @@ supervaluation/ZTL split turns out to be the global/local modality
 split. The theoretical relative is Hintikka's epistemic S5 (□ =
 "known"): ZTL asserts only the known, but its modality is per-operator.
 
-## 18. Russell: containment instead of explosion (MEASURED)
+**Kernel-checked (`ZExped.lean`, zero axioms).** The threshold reading is a
+theorem in all three directions at once — T ⟺ □, F ⟺ ¬◇, Z ⟺ contingency
+(`atom_thresholds`) — with the duality ◇ = ¬□¬ over completions
+(`box_dia_duality`). And the separating cell is machine-checked
+(`ladder_vs_global`): the local ladder earns ¬¬Z = T exactly where the global
+□ goes mute, so the two layers are incomparable rather than one refining the
+other.
+
+## 18. Russell: containment instead of explosion (MEASURED + Lean)
 
 Russell is the liar dressed in membership: R = {x : x∉x} ⇒ R∈R ⟺
 ¬(R∈R). The test universe: a = ∅, b = {b} (a lawful eccentric), R; a

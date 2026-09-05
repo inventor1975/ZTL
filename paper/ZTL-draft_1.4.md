@@ -139,10 +139,15 @@ cannot mint it — from no premises nothing is derivable, even the guarded
 tautologies, even on credit). The entire development — the core, both
 engine certificates with cut admissibility, the algebraic witnesses, the
 general fixed-point theorem, the expedition twins, the temporal modules
-and the frame's own mini-theorems, forty-seven modules in all — is
+and the frame's own mini-theorems, forty-eight modules in all — is
 formalized in Lean 4 **with an empty axiom list, definitions
-included**: 661 theorems, each one audited individually rather than by
-sample (`inventory/axiom_audit.py`, re-run on every push). As a
+included**: 669 theorems, each one audited individually rather than by
+sample (`inventory/axiom_audit.py`, re-run on every push). As of this
+revision no section rests on measurement alone: every one of the seventeen
+that carried the MEASURED tag now names kernel-checked theorems behind its
+load-bearing claims. *The tag says what is backed, not that everything in the
+section is* — several sections still list claims that are measured and not
+formalised, and each says which ones. As a
 test bench the logic is run over the classical paradoxes — the liar,
 Jourdain's carousel, Curry, Yablo, the crocodile, Russell — and in every
 case explosion is replaced by pointwise quarantine (for Russell, 8 of 9
@@ -765,7 +770,7 @@ violations). What remains proof-theoretic future work is a *syntactic*
 cut-elimination procedure with complexity bounds — the admissibility
 itself is settled.
 
-## 6. Quantifiers: finite domains and beyond (MEASURED)
+## 6. Quantifiers: finite domains and beyond (MEASURED + Lean)
 
 By the generating principle: **∀xφ = T if every instance is strictly T,
 else F** (one Z-witness poisons the universal); **∃xφ = T if some
@@ -896,7 +901,7 @@ an axiom infects every theorem that uses it), but an argument, and one
 that an unused orphan theorem would escape. It is now a measurement:
 `inventory/axiom_audit.py` extracts every theorem name from every
 module, generates one `#print axioms` per name, and fails if a single
-line reads otherwise. **661 of 661 clean**, re-run by CI on every push.
+line reads otherwise. **669 of 669 clean**, re-run by CI on every push.
 The same stand refuses a module that carries theorems and is built by no
 target — the failure mode that let one module (`QuantumWitness.lean`) go
 unchecked by any automation until 2026-07-20.
@@ -1467,7 +1472,7 @@ earns its non-membership against every entry (`diag_not_member`). What is
 every element — so the countability of ℚ as earnable presentation identity
 remains measured.
 
-## 14. Functions: taint mode (MEASURED)
+## 14. Functions: taint mode (MEASURED + Lean)
 
 A function is a computation, not a verdict ⇒ by the two-register
 theorem it behaves lazily: **the mark flows through the function** with
@@ -1632,8 +1637,22 @@ Dempster–Shafer's own `m(∅) = 0`, which held silently on the one assignment
 that had been measured. A single checked instance cannot show you the
 condition it happens to satisfy.
 
-The other two claims of this section — the reparametrization argument and
-the Ellsberg reading — remain measured.
+**And the other two claims are now theorems as well** (`ZIgnorance.lean`,
+empty axiom list).
+
+*Reparametrization.* The two Bayesian numbers are computed and shown
+different — by cross-multiplication, so that no division enters a file about
+not importing what one was not given. Our verdict is Z in both, and not by
+luck: it is proved invariant under EVERY strictly monotone relabelling, not
+only under the squaring the example uses. A monotone map carries the gap to a
+gap; the number moves and the verdict does not.
+
+*Ellsberg.* The verified urn earns the claim "no worse than fifty-fifty" and
+the unknown urn does not — and the module proves WHY it does not, which is
+the whole content: the atom itself is Z, neither forced nor excluded, and the
+denial of an unforced claim is classical (`¬Z = F`, §3.1). Default deny, with
+no judgement passed on the unknown urn's merits. What Ellsberg's subjects
+were reading is a mark, and a point prior has no place to put one.
 
 ## 17. The modal layer: local □ versus global (MEASURED + Lean)
 

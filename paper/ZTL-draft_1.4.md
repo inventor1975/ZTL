@@ -141,7 +141,7 @@ engine certificates with cut admissibility, the algebraic witnesses, the
 general fixed-point theorem, the expedition twins, the temporal modules
 and the frame's own mini-theorems, thirty-nine modules in all — is
 formalized in Lean 4 **with an empty axiom list, definitions
-included**: 550 theorems, each one audited individually rather than by
+included**: 557 theorems, each one audited individually rather than by
 sample (`inventory/axiom_audit.py`, re-run on every push). As a
 test bench the logic is run over the classical paradoxes — the liar,
 Jourdain's carousel, Curry, Yablo, the crocodile, Russell — and in every
@@ -855,7 +855,7 @@ an axiom infects every theorem that uses it), but an argument, and one
 that an unused orphan theorem would escape. It is now a measurement:
 `inventory/axiom_audit.py` extracts every theorem name from every
 module, generates one `#print axioms` per name, and fails if a single
-line reads otherwise. **550 of 550 clean**, re-run by CI on every push.
+line reads otherwise. **557 of 557 clean**, re-run by CI on every push.
 The same stand refuses a module that carries theorems and is built by no
 target — the failure mode that let one module (`QuantumWitness.lean`) go
 unchecked by any automation until 2026-07-20.
@@ -1567,7 +1567,16 @@ verification-invariance check look before the hereditary grade is
 certain? For a *sound* verdict all full completions agree with it by
 definition, so heredity violations can live only at partial
 refinements of size at most m−1 (m the number of marks): depth m−1
-always suffices. It is also necessary: the guard family
+always suffices. This half is now a theorem too
+(`ZFenceDepth.resolved_all_marks_agrees`, empty axiom list): a
+refinement that has resolved every mark the formula *depends on* has
+become an ending, and endings agree by soundness. It is stated
+positively — "resolved everything relevant ⟹ agrees" — rather than as
+the existential "a violation leaves a mark unresolved", because the
+latter is an ∃ drawn from a negation and would have to come through
+`Classical.byContradiction`, taking the whole file to the classical
+tier for a cosmetic gain. The content is the same, read by
+contraposition. It is also necessary: the guard family
 
     (b₁ ∧ … ∧ b_{m−1}) → (a → a)
 

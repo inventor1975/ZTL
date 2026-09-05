@@ -226,6 +226,177 @@ theorem sound_not_hereditary (n : Nat) :
     (fun k hk hkn => hall k hk hkn)
     (hH (verifyTrue (fun j => decide (1 ≤ j))) (verifyTrue_refines _))
 
+/-! ## The other half: depth m−1 SUFFICES
+
+  §19 argues this one: "for a sound verdict all full completions agree with
+  it by definition, so heredity violations can live only at partial
+  refinements of size at most m−1". Argued, not proved — until here.
+
+  ФОРМУЛИРОВКА ВЫБРАНА КОНСТРУКТИВНОЙ, И ЭТО НЕ УКРАШЕНИЕ. Прямая запись
+  «нарушившее уточнение ОСТАВЛЯЕТ пометку неразрешённой» есть ∃ из
+  отрицания, а такой шаг берётся только через `by_contra`, то есть через
+  `Classical.byContradiction` — и весь файл ушёл бы с Tier-3 аксиомами.
+  Поэтому доказана положительная форма: РАЗРЕШИВШЕЕ ВСЁ — согласно.
+  Содержание то же, читается контрапозицией, а список аксиом остаётся пуст.
+-/
+
+/-- Which atoms the formula actually looks at. A Bool predicate rather than
+a list: no core list lemma, and the induction below stays `rfl`-driven. -/
+def dependsOn : Fm → Nat → Bool
+  | Fm.atom n,   a => Nat.beq n a
+  | Fm.top,      _ => false
+  | Fm.bot,      _ => false
+  | Fm.neg φ,    a => dependsOn φ a
+  | Fm.conj φ ψ, a => dependsOn φ a || dependsOn ψ a
+  | Fm.disj φ ψ, a => dependsOn φ a || dependsOn ψ a
+  | Fm.imp φ ψ,  a => dependsOn φ a || dependsOn ψ a
+  | Fm.xor φ ψ,  a => dependsOn φ a || dependsOn ψ a
+  | Fm.xnor φ ψ, a => dependsOn φ a || dependsOn ψ a
+
+/-- Reflexivity of Nat equality, proved here rather than taken from core.
+
+    ЦЕНА ЖИВЁТ В ИНСТАНСЕ, А НЕ В ЛЕММЕ. Первая редакция брала `beq_self_eq_true`.
+    Сама лемма на пустом списке — `#print axioms beq_self_eq_true` это и говорит.
+    Но ПРИМЕНЁННАЯ К `Nat` она тащит propext, Classical.choice и Quot.sound: цена
+    сидит в разрешённом на месте инстансе `LawfulBEq Nat`, а не в тексте леммы.
+    Отсюда правило: чистота общей леммы НЕ ЕСТЬ чистота её применения — мерить
+    надо применение. Найдено бисекцией 2026-09-05, после шести зондов мимо. -/
+theorem natBeq_refl : ∀ n : Nat, Nat.beq n n = true
+  | 0     => rfl
+  | n + 1 => natBeq_refl n
+
+/-- Agreement on what the formula looks at is agreement on the verdict.
+
+    ПОЧЕМУ ТАКТИКОЙ, А НЕ УРАВНЕНИЯМИ. Первая редакция была написана как
+    определение с образцами по `φ` при зависимой второй гипотезе. Уравнительный
+    компилятор не увидел структурной рекурсии, ушёл в well-founded — и потянул
+    ВСЕ ТРИ аксиомы, включая `Classical.choice`. Тот же довод через `induction`
+    чист. Промерено, не угадано. -/
+theorem evalF_congr_dep {m' m : Marking} (φ : Fm) :
+    (∀ n, dependsOn φ n = true → m' n = m n) → evalF m' φ = evalF m φ := by
+  induction φ with
+  | atom n => intro h; exact h n (natBeq_refl n)
+  | top => intro _; rfl
+  | bot => intro _; rfl
+  | neg φ ih =>
+      intro h
+      show znot (evalF m' φ) = znot (evalF m φ)
+      rw [ih h]
+  | conj φ ψ ihφ ihψ =>
+      intro h
+      show zand (evalF m' φ) (evalF m' ψ) = zand (evalF m φ) (evalF m ψ)
+      rw [ihφ (fun n hn => h n (by
+            show (dependsOn φ n || dependsOn ψ n) = true; rw [hn]; rfl)),
+          ihψ (fun n hn => h n (by
+            show (dependsOn φ n || dependsOn ψ n) = true
+            rw [hn]; exact Bool.or_true _))]
+  | disj φ ψ ihφ ihψ =>
+      intro h
+      show zor (evalF m' φ) (evalF m' ψ) = zor (evalF m φ) (evalF m ψ)
+      rw [ihφ (fun n hn => h n (by
+            show (dependsOn φ n || dependsOn ψ n) = true; rw [hn]; rfl)),
+          ihψ (fun n hn => h n (by
+            show (dependsOn φ n || dependsOn ψ n) = true
+            rw [hn]; exact Bool.or_true _))]
+  | imp φ ψ ihφ ihψ =>
+      intro h
+      show zimp (evalF m' φ) (evalF m' ψ) = zimp (evalF m φ) (evalF m ψ)
+      rw [ihφ (fun n hn => h n (by
+            show (dependsOn φ n || dependsOn ψ n) = true; rw [hn]; rfl)),
+          ihψ (fun n hn => h n (by
+            show (dependsOn φ n || dependsOn ψ n) = true
+            rw [hn]; exact Bool.or_true _))]
+  | xor φ ψ ihφ ihψ =>
+      intro h
+      show zxor (evalF m' φ) (evalF m' ψ) = zxor (evalF m φ) (evalF m ψ)
+      rw [ihφ (fun n hn => h n (by
+            show (dependsOn φ n || dependsOn ψ n) = true; rw [hn]; rfl)),
+          ihψ (fun n hn => h n (by
+            show (dependsOn φ n || dependsOn ψ n) = true
+            rw [hn]; exact Bool.or_true _))]
+  | xnor φ ψ ihφ ihψ =>
+      intro h
+      show zxnor (evalF m' φ) (evalF m' ψ) = zxnor (evalF m φ) (evalF m ψ)
+      rw [ihφ (fun n hn => h n (by
+            show (dependsOn φ n || dependsOn ψ n) = true; rw [hn]; rfl)),
+          ihψ (fun n hn => h n (by
+            show (dependsOn φ n || dependsOn ψ n) = true
+            rw [hn]; exact Bool.or_true _))]
+
+/-- Close a refinement into an ending: every mark still standing is resolved
+to T. An arbitrary choice, and that is the point — the ending exists, its
+content does not matter. -/
+def close (m' : Marking) : Marking :=
+  fun n => match m' n with
+           | V.T => V.T
+           | V.F => V.F
+           | V.Z => V.T
+
+theorem close_grounded (m' : Marking) (n : Nat) : close m' n ≠ V.Z := by
+  show (match m' n with | V.T => V.T | V.F => V.F | V.Z => V.T) ≠ V.Z
+  cases m' n <;> intro h <;> cases h
+
+theorem close_fixes (m' : Marking) (n : Nat) (h : m' n ≠ V.Z) :
+    close m' n = m' n := by
+  show (match m' n with | V.T => V.T | V.F => V.F | V.Z => V.T) = m' n
+  cases hv : m' n with
+  | T => rfl
+  | F => rfl
+  | Z => exact absurd hv h
+
+theorem close_completion {m' m : Marking} (hr : Refines m' m) :
+    Completion (close m') m :=
+  ⟨fun n hn => by rw [close_fixes m' n (by rw [hr n hn]; exact hn), hr n hn],
+   close_grounded m'⟩
+
+/-- **DEPTH m−1 SUFFICES.** A refinement that has resolved every mark the
+formula depends on cannot revoke a SOUND verdict — it has become an ending,
+and an ending agrees by soundness. Read the other way round: a violation can
+only happen while some relevant mark is still unresolved, i.e. strictly
+before the last of the m marks is verified — at depth at most m−1. -/
+theorem resolved_all_marks_agrees {φ : Fm} {m m' : Marking}
+    (hs : Sound φ m) (hr : Refines m' m)
+    (hall : ∀ a, dependsOn φ a = true → m a = V.Z → m' a ≠ V.Z) :
+    evalF m' φ = evalF m φ := by
+  have hnz : ∀ a, dependsOn φ a = true → m' a ≠ V.Z := by
+    intro a ha
+    cases hm : m a with
+    | T => rw [hr a (by rw [hm]; intro h; cases h)]; rw [hm]; intro h; cases h
+    | F => rw [hr a (by rw [hm]; intro h; cases h)]; rw [hm]; intro h; cases h
+    | Z => exact hall a ha hm
+  have hagree : evalF m' φ = evalF (close m') φ :=
+    (evalF_congr_dep φ (fun n hn => (close_fixes m' n (hnz n hn)).symm))
+  rw [hagree]
+  exact hs (close m') (close_completion hr)
+
+/-- **THE WHOLE DEPTH CLAIM OF §19, BOTH HALVES, IN ONE STATEMENT.**
+
+    SUFFICIENT — the fence is never deeper than m−1: a sound verdict cannot be
+    revoked by any refinement that has resolved every mark the formula depends
+    on, because such a refinement has become an ending and endings agree.
+
+    NECESSARY — and never shallower: for every m there is a sound cell that
+    survives every refinement leaving even one guard unverified, and dies the
+    moment the full guard set is verified.
+
+    The same single step is left to prose in both halves, deliberately: the
+    finite counting that turns "some relevant mark is still unresolved" into
+    "fewer than m atoms were inspected". That is arithmetic, not logic, and
+    smuggling it in would make the file look more complete than it is. -/
+theorem fence_depth_exact :
+    (∀ (φ : Fm) (m m' : Marking), Sound φ m → Refines m' m →
+       (∀ a, dependsOn φ a = true → m a = V.Z → m' a ≠ V.Z) →
+       evalF m' φ = evalF m φ)
+  ∧ (∀ n : Nat,
+       Sound (cell (n + 1)) allZ
+     ∧ (∀ (S : Nat → Bool) (k : Nat), 1 ≤ k → k ≤ n + 1 → S k = false →
+          evalF (verifyTrue S) (cell (n + 1)) = evalF allZ (cell (n + 1)))
+     ∧ (∀ S : Nat → Bool, S 0 = false →
+          (∀ k, 1 ≤ k → k ≤ n + 1 → S k = true) →
+          evalF (verifyTrue S) (cell (n + 1)) ≠ evalF allZ (cell (n + 1)))) :=
+  ⟨fun _ _ _ hs hr hall => resolved_all_marks_agrees hs hr hall,
+   fence_depth_necessary⟩
+
 end ZFenceDepth
 
 #print axioms ZFenceDepth.imp_self_of_grounded
@@ -238,3 +409,11 @@ end ZFenceDepth
 #print axioms ZFenceDepth.dies_when_all_guards_verified
 #print axioms ZFenceDepth.fence_depth_necessary
 #print axioms ZFenceDepth.sound_not_hereditary
+#print axioms ZFenceDepth.evalF_congr_dep
+#print axioms ZFenceDepth.close_completion
+#print axioms ZFenceDepth.resolved_all_marks_agrees
+#print axioms ZFenceDepth.fence_depth_exact
+#print axioms ZFenceDepth.dependsOn
+#print axioms ZFenceDepth.close
+#print axioms ZFenceDepth.close_fixes
+#print axioms ZFenceDepth.close_grounded

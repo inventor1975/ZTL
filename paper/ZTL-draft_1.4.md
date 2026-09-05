@@ -139,9 +139,9 @@ cannot mint it — from no premises nothing is derivable, even the guarded
 tautologies, even on credit). The entire development — the core, both
 engine certificates with cut admissibility, the algebraic witnesses, the
 general fixed-point theorem, the expedition twins, the temporal modules
-and the frame's own mini-theorems, thirty-eight modules in all — is
+and the frame's own mini-theorems, thirty-nine modules in all — is
 formalized in Lean 4 **with an empty axiom list, definitions
-included**: 531 theorems, each one audited individually rather than by
+included**: 550 theorems, each one audited individually rather than by
 sample (`inventory/axiom_audit.py`, re-run on every push). As a
 test bench the logic is run over the classical paradoxes — the liar,
 Jourdain's carousel, Curry, Yablo, the crocodile, Russell — and in every
@@ -855,7 +855,7 @@ an axiom infects every theorem that uses it), but an argument, and one
 that an unused orphan theorem would escape. It is now a measurement:
 `inventory/axiom_audit.py` extracts every theorem name from every
 module, generates one `#print axioms` per name, and fails if a single
-line reads otherwise. **531 of 531 clean**, re-run by CI on every push.
+line reads otherwise. **550 of 550 clean**, re-run by CI on every push.
 The same stand refuses a module that carries theorems and is built by no
 target — the failure mode that let one module (`QuantumWitness.lean`) go
 unchecked by any automation until 2026-07-20.
@@ -1513,7 +1513,7 @@ earlier system of the author is instructive: in VR-Sets [Zenodo
 write), in ZTL he is admitted and defused pointwise. Two honest answers
 to one calamity: keep it out, or let it in under guard.
 
-## 19. The verification operation and verdict warranties (MEASURED)
+## 19. The verification operation and verdict warranties (MEASURED + Lean)
 
 The act of verification — removing a mark and writing in the earned
 value — exposes a narrow place: **greedy verdicts are non-monotone
@@ -1574,8 +1574,19 @@ always suffices. It is also necessary: the guard family
 — a conjunction guard of m−1 marks standing over the fallen law of
 identity — is sound, invariant under every verification of fewer than
 m−1 atoms, and dies the moment all guards are verified true, when the
-door opens onto the greedy-F gap a→a (checked deterministically for
-m = 3, 4, 5; the m = 2 witness is the cell (¬p)→(q→q) above). Hence
+door opens onto the greedy-F gap a→a. This was checked deterministically
+for m = 3, 4, 5, with the m = 2 witness (¬p)→(q→q) above; **it is now a
+theorem for every m at once** (`ZFenceDepth.lean`, empty axiom list),
+because the guard family is uniform in m and so generalises whole. Three
+clauses are proved: the cell is sound at every m; it is invariant under
+every refinement leaving any single guard unverified — and that clause came
+out *stronger* than the argument needed, since a sunk guard makes the arrow
+vacuously true whatever happened to the gap atom; and it dies exactly when
+the full guard set is verified. The violation is therefore not merely
+reachable at depth m−1, it is reachable nowhere else. One step is
+deliberately left as prose rather than smuggled into the formalisation:
+that a check inspecting fewer than m−1 atoms must leave some guard
+unverified is finite counting, not logic. Hence
 **no constant-depth characterization of the hereditary grade exists**;
 the cost of the full warranty grows with the number of unverified
 inputs, and what remains open is a structural, non-enumerative

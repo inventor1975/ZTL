@@ -43,7 +43,11 @@
    landscape. The recon confirms: paper-sized; the MINING (quasi-
    equational axiomatization, subquasivariety lattice, representation
    theorem) = the separate paper, curator's call.
-   REMAINS: a syntactic cut-elimination procedure with bounds.
+   ✅ DONE (E55, 2026-09-06, `ZCutElim.lean` + `zcutelim.py`): the
+   SYNTACTIC cut-elimination procedure with its bound `B0` as a function,
+   empty axiom list; classical shape; T/F cut refused on atoms, granted on
+   compounds. REMAINS there: the bound is measured loose (878 800 against 27)
+   — tightening needs hard instances the pools lack.
    ✅ Lean port of the PARAMETER (arbitrary-domain) tableaux — SOUNDNESS
    half complete end to end (E38–E48, 2026-09-05): `ZParamSound` (three
    of four rules on the empty list), `ZParamSyntax/Tableau/Closure/Prop`

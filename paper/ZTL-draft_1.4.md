@@ -139,9 +139,9 @@ cannot mint it — from no premises nothing is derivable, even the guarded
 tautologies, even on credit). The entire development — the core, both
 engine certificates with cut admissibility, the algebraic witnesses, the
 general fixed-point theorem, the expedition twins, the temporal modules
-and the frame's own mini-theorems, fifty-nine modules in all — is
+and the frame's own mini-theorems, sixty modules in all — is
 formalized in Lean 4 **with an empty axiom list, definitions
-included**: 933 theorems, each one audited individually rather than by
+included**: 1036 theorems, each one audited individually rather than by
 sample (`inventory/axiom_audit.py`, re-run on every push). As of this
 revision no section rests on measurement alone: every one of the seventeen
 that carried the MEASURED tag now names kernel-checked theorems behind its
@@ -773,9 +773,40 @@ certificate. Kernel-checked with zero axioms (Lean: `cut_admissible`,
 `weakening_admissible`, `identity_refutable` on top of `closes_iff`);
 MEASURED directly as well (identity 14/14; weakening 696 checks, 0
 violations; cut 406 fired instances on each covering pair, 0
-violations). What remains proof-theoretic future work is a *syntactic*
-cut-elimination procedure with complexity bounds — the admissibility
-itself is settled.
+violations). **And the syntactic procedure exists, with its bound as a
+function** (E55, `ZCutElim.lean`, empty axiom list): derivations are an
+inductive calculus over the engine's own rule table — a rule acts on ANY node,
+which makes exchange free and weakening size-preserving; the engine is the
+special case that always picks the head (`der_of_closes`). The index is
+SIZE, the number of closed branches: in a consuming calculus height cannot
+blow up, width is what a cut buys. `cutP`: a derivation of `S, T:φ` with `k₁`
+leaves and one of `S, N:φ` with `k₂` leaves yield one of `S` with at most
+`B0 true k₁ k₂ (basis φ)` leaves, where `B0` is the recursion of the
+procedure — an atom MULTIPLIES (`cut_env`: a cell split two ways, the two
+derivations merged leaf against leaf), `¬` flips the pair `T/N ↔ F/P` at no
+cost, `∧` and `∨` cut the two subformulas in turn with the second cut fed by
+the first — so a chain of `d` connectives multiplies by a leaf count per
+level (`bound_or_chain`, `bound_and_chain`: `2·2 → 32` at depth 4). Every step
+is an inversion (`inv1`, `inv2`, `inv_atom` — height-preserving, at any
+position), a weakening, a permutation or a smaller cut; nothing goes through
+a model. The bound has the classical shape: the greedy collapse changes which
+ATOMIC sequents are axioms, not the branching skeleton. Where ZTL shows is
+the PAIR: the classical cut, `T` against `F`, is refused on atoms
+(`tf_cut_fails_on_atoms`: `{N:p, P:p}` is open with `p = Z`, yet `T:p` and
+`F:p` both close it) and granted on compounds (`tf_cut_compound`), because on
+a compound `F` and `N` are the same two bits (`der_swap`) — the greediness
+theorem seen from inside the calculus. MEASURED (`zcutelim.py`: the same
+procedure as a program, every tree it builds re-verified against the rule
+table): on the 406 cut instances of the E16 pool and on 300 random instances
+to depth 3 over three atoms, zero bound violations, the bound met with
+equality in 84 and 76 cases — and the procedure's output NEVER exceeded the
+engine's direct cut-free derivation (equal in all 300 deep instances), while
+the proved bound reached 878 800 for an output of 27 leaves. So the bound is
+loose by five orders of magnitude on the instances that ran; 253 further
+instances whose bound exceeded 10⁶ were not run, and the pool holds none of
+the hard tautologies where cut-free tableaux are known to be exponentially
+larger, so no improvement of the bound in general is claimed — only that on
+these pools the classical recursion overshoots what the procedure does.
 
 ## 6. Quantifiers: finite domains and beyond (MEASURED + Lean)
 
@@ -2475,8 +2506,12 @@ non-registrability of streams (§13), and the NaN signature x ≠ x.
 
 ## 27. Roadmap
 
-a syntactic cut-elimination procedure with complexity bounds
-(admissibility is settled — §5); the mining of the equivalent
+~~a syntactic cut-elimination procedure with complexity bounds~~ — DONE,
+E55 (`ZCutElim.lean`, §5): the procedure, its bound `B0` as a function, the
+classical pair refused on atoms and granted on compounds; what remains open
+there is whether the bound can be tightened — measured loose by five orders
+on the pools, and a tightening would need the hard instances the pools lack;
+the mining of the equivalent
 quasivariety scouted in §3.7 (axiomatization, subquasivariety lattice,
 a representation theorem replacing Plonka sums — a separate work);
 a cheap characterization of the hereditary warranty grade of §19

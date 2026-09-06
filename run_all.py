@@ -37,6 +37,7 @@ STANDS = [
     ("zcutelim.py",    ["E55 GREEN"]),
     ("zheredtaut.py",  ["E57 GREEN"]),
     ("zwidthhard.py",  ["E58 GREEN"]),
+    ("zreceipthard.py", ["E59 GREEN"]),
     ("zfo.py",         ["ALL verdicts cross-checked ✓", "guarded drinker"]),
     ("zeq.py",         ["ZEQ GREEN", "grounded: T total; marked: Z total",
                         "0 violations of 24 licensed substitutions"]),

@@ -139,9 +139,9 @@ cannot mint it — from no premises nothing is derivable, even the guarded
 tautologies, even on credit). The entire development — the core, both
 engine certificates with cut admissibility, the algebraic witnesses, the
 general fixed-point theorem, the expedition twins, the temporal modules
-and the frame's own mini-theorems, sixty-two modules in all — is
+and the frame's own mini-theorems, sixty-three modules in all — is
 formalized in Lean 4 **with an empty axiom list, definitions
-included**: 1063 theorems, each one audited individually rather than by
+included**: 1075 theorems, each one audited individually rather than by
 sample (`inventory/axiom_audit.py`, re-run on every push). As of this
 revision no section rests on measurement alone: every one of the seventeen
 that carried the MEASURED tag now names kernel-checked theorems behind its
@@ -1923,9 +1923,13 @@ The prediction is recorded rather than dropped.
 
 *And nothing idle is named — on a linear claim* (`label_exact_linear`):
 if no unverified atom is read twice, every atom on the receipt is one
-the answer is genuinely waiting on — there is a definite reading of the
-other unverified atoms under which answering this one T and answering
-it F give different verdicts.
+the answer is genuinely waiting on — there is a reading of the other
+unverified atoms, one that may leave some of them unverified, under
+which answering this one T and answering it F give different verdicts.
+(That is what the kernel's `pivotal` quantifies over. The stronger form
+with a *definite* reading of the others agrees with it on every named
+atom of 48,759 pending linear cells, but that form is measured, not
+proved, and an earlier revision of this sentence claimed it.)
 
 Three things this pair does not say, each of them measured.
 
@@ -1948,6 +1952,34 @@ Three things this pair does not say, each of them measured.
   and matched the existing label cell for cell — the existing analysis
   already IS that analysis. Closing the gap needs relational tracking
   of shared occurrences across branches, which is not cheap.
+
+**And the residue cannot be closed cheaply at all — the exact receipt
+is NP-hard** (E59, `ZReceiptHard.lean`, empty axiom list). Put a formula
+ψ that does not read `a` beside the false that keeps the mark, `ψ ∧ ¬ψ`
+— F wherever ψ is settled, Z wherever it still waits — in the witness
+`(a ∨ (ψ ∧ ¬ψ)) ∧ ψ`. At the all-marked start the receipt names `a`
+(`named`), by its own rule, both branches pending; and `a` was worth
+naming exactly when ψ has a classical point (`pivotal_iff_sat`): with
+`a := T` the claim reads ψ, with `a := F` it reads `ψ ∧ ¬ψ`, the two
+differ precisely where ψ reads T, and a partial reading on which ψ
+reads T lies below a classical one by the monotonicity of the lazy
+register. So deciding whether a named atom is idle is deciding SAT(ψ):
+the exact receipt is NP-hard (membership in NP — a pair of readings as
+a certificate — is argued in prose and not formalised, so the claim
+stops at hardness and "NP-complete" is not claimed). The simpler
+`a ∧ ψ` is no reduction, and the kernel says so (`conj_always_pivotal`):
+under a reading that leaves ψ waiting, `a := T` gives Z and `a := F`
+gives F, so `a` is pivotal whatever ψ is — the false that keeps the
+mark is what makes both sides wait together. Hence `labF`, complete and
+exact on linear claims, is the forced cut, as `joint` is for the width:
+with E57 and E58, the three grades the judge does not compute are the
+three it cannot compute cheaply — hereditary (coNP-hard), exact width
+(NP-hard), exact receipt (NP-hard). MEASURED (`zreceipthard.py`, the
+judge's own lazy evaluator, and `pivotal` read literally, partial
+readings included): on all 2906 formulas ψ of depth ≤ 2 over two atoms and 600
+random formulas of depth ≤ 3 over three, `a` is named on every one,
+"pivotal ⟺ satisfiable" holds on every one, and `a ∧ ψ` is pivotal on
+every one — zero divergences.
 
 Two auxiliaries carry the result. `drivable`: a pending linear claim
 can be driven to T and to F (48,759 pending linear cells, every one
@@ -2575,7 +2607,10 @@ either, unless P = coNP, because heredity of the guarded witness
 `(∧ᵢ xᵢ∨¬xᵢ) → ψ` is exactly tautology-hood of ψ — and E58
 (`ZWidthHard.lean`) does the same for the width: n+1 iff ¬ψ is
 satisfiable, so the exact width is NP-hard and `joint`'s width-1 cut is
-the right one);
+the right one — and E59 (`ZReceiptHard.lean`, §19) does the same for the
+receipt: a named atom is idle exactly when its sibling is unsatisfiable,
+so the exact receipt is NP-hard and `labF`'s candidate list is the right
+cut);
 A Lean port of the parameter (arbitrary-domain) tableaux of §6 — BEGUN,
 and the two pieces done are the ones that decide what the rest costs.
 `ZParamSound.lean` measures the tier of the four rules (see §6): three are

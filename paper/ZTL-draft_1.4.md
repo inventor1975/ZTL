@@ -139,9 +139,9 @@ cannot mint it — from no premises nothing is derivable, even the guarded
 tautologies, even on credit). The entire development — the core, both
 engine certificates with cut admissibility, the algebraic witnesses, the
 general fixed-point theorem, the expedition twins, the temporal modules
-and the frame's own mini-theorems, sixty modules in all — is
+and the frame's own mini-theorems, sixty-one modules in all — is
 formalized in Lean 4 **with an empty axiom list, definitions
-included**: 1036 theorems, each one audited individually rather than by
+included**: 1053 theorems, each one audited individually rather than by
 sample (`inventory/axiom_audit.py`, re-run on every push). As of this
 revision no section rests on measurement alone: every one of the seventeen
 that carried the MEASURED tag now names kernel-checked theorems behind its
@@ -1864,8 +1864,31 @@ that a check inspecting fewer than m−1 atoms must leave some guard
 unverified is finite counting, not logic. Hence
 **no constant-depth characterization of the hereditary grade exists**;
 the cost of the full warranty grows with the number of unverified
-inputs, and what remains open is a structural, non-enumerative
-criterion.
+inputs.
+
+**And no structural, non-enumerative criterion exists either — the check
+IS a tautology check** (E57, `ZHeredTaut.lean`, empty axiom list). The
+fence family read the other way: put a classical formula ψ in the gap and
+make the guard the *meter of verification* — excluded middle, which is not
+a law here, reads `Z ∨ ¬Z = F` at a mark and T on any verified value, so
+`G = ∧ᵢ (xᵢ ∨ ¬xᵢ)` is F while any guarded atom is unverified and T once
+all are. The witness `G → ψ` reads T at the all-marked start (F → _ = T),
+stays T under every refinement that leaves a guard marked, and reads
+`T → ψ = ψ` at every full completion. So its T verdict is hereditary
+exactly when ψ is true at every classical point: `hereditary_iff_taut`
+— heredity of the witness ⟺ tautology-hood of ψ, for every ψ over the
+guarded atoms. The witness has the size of ψ plus the guard, so a
+procedure deciding the hereditary grade in time polynomial in the formula
+would decide TAUT: the grade is coNP-complete (membership: a revoking
+refinement is a certificate, one greedy pass), and a cheap exact criterion
+would put coNP in P. What exists are SUFFICIENT structural conditions —
+`NoGift.no_gift`, no mark under a negation — and the reduction says the
+gap between sufficient and exact is not one more theorem away but a
+complexity class. MEASURED (`zheredtaut.py`): on all 2928 formulas of
+depth ≤ 2 over two atoms (588 tautologies) and 2000 random formulas of
+depth ≤ 3 over three atoms (171 tautologies), the brute-force hereditary
+grade of `zverify.py` and classical tautology-hood agree on every one —
+zero divergences.
 
 **Result: a verdict is a pair (value, warranty grade).** The value is
 greedy (local, fast); the warranty grades are global. Six verdict
@@ -2521,8 +2544,10 @@ fence depth is exactly m−1 in the number of marks — sufficient for
 every sound verdict (violations cannot hide in full completions) and
 necessary by the guard family (b₁∧…∧b_{m−1}) → (a→a), checked at
 m = 2,3,4,5 (`zverify` §§5–6); hence NO constant-depth
-characterization exists and what remains open is a structural,
-non-enumerative criterion);
+characterization exists — and E57 (`ZHeredTaut.lean`, §19) closes the
+remaining question: no structural, non-enumerative criterion exists
+either, unless P = coNP, because heredity of the guarded witness
+`(∧ᵢ xᵢ∨¬xᵢ) → ψ` is exactly tautology-hood of ψ);
 A Lean port of the parameter (arbitrary-domain) tableaux of §6 — BEGUN,
 and the two pieces done are the ones that decide what the rest costs.
 `ZParamSound.lean` measures the tier of the four rules (see §6): three are

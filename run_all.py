@@ -35,6 +35,7 @@ STANDS = [
     ("zinterp.py",     ["✓ INTERPOLATION HOLDS, total on the pool"]),
     ("zsequent.py",    ["✓ CUT IS ADMISSIBLE (semantic cut elimination), total"]),
     ("zcutelim.py",    ["E55 GREEN"]),
+    ("zheredtaut.py",  ["E57 GREEN"]),
     ("zfo.py",         ["ALL verdicts cross-checked ✓", "guarded drinker"]),
     ("zeq.py",         ["ZEQ GREEN", "grounded: T total; marked: Z total",
                         "0 violations of 24 licensed substitutions"]),

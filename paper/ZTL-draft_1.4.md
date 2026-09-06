@@ -139,9 +139,9 @@ cannot mint it — from no premises nothing is derivable, even the guarded
 tautologies, even on credit). The entire development — the core, both
 engine certificates with cut admissibility, the algebraic witnesses, the
 general fixed-point theorem, the expedition twins, the temporal modules
-and the frame's own mini-theorems, sixty-three modules in all — is
+and the frame's own mini-theorems, sixty-four modules in all — is
 formalized in Lean 4 **with an empty axiom list, definitions
-included**: 1075 theorems, each one audited individually rather than by
+included**: 1094 theorems, each one audited individually rather than by
 sample (`inventory/axiom_audit.py`, re-run on every push). As of this
 revision no section rests on measurement alone: every one of the seventeen
 that carried the MEASURED tag now names kernel-checked theorems behind its
@@ -1923,13 +1923,22 @@ The prediction is recorded rather than dropped.
 
 *And nothing idle is named — on a linear claim* (`label_exact_linear`):
 if no unverified atom is read twice, every atom on the receipt is one
-the answer is genuinely waiting on — there is a reading of the other
-unverified atoms, one that may leave some of them unverified, under
-which answering this one T and answering it F give different verdicts.
-(That is what the kernel's `pivotal` quantifies over. The stronger form
-with a *definite* reading of the others agrees with it on every named
-atom of 48,759 pending linear cells, but that form is measured, not
-proved, and an earlier revision of this sentence claimed it.)
+the answer is genuinely waiting on — there is a definite reading of the
+other unverified atoms under which answering this one T and answering
+it F give different verdicts. Two theorems carry that sentence. The
+kernel's `pivotal` lets the reading of the others stay partial, and
+`label_exact_linear` is proved with it; the definite form is
+`label_exact_linear_definite` (`LabelExactDefinite.lean`, E60), proved
+over the partial one rather than by a second induction: a side that
+reads Z is a pending linear claim at a marking of its own, so `drivable`
+pushes it to the value the other side does not have, the definite side
+stays where it was by the monotonicity of the lazy register, and the
+remaining marks inside the claim are filled. (For a day this sentence
+said "definite" with only the partial theorem behind it; E59 found the
+gap, softened the sentence, measured the strong form — 57,969 named
+atoms on 48,759 pending linear cells, no failure — and E60 proved it.
+Outside the linear class the same census finds 56,370 named atoms of
+153,522 that no definite reading moves, `p ∧ ¬p` first among them.)
 
 Three things this pair does not say, each of them measured.
 

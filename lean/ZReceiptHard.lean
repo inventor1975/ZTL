@@ -68,7 +68,8 @@ forced on §19's prose: `pivotal` quantifies over readings that may leave
 other grounds marked, while the paper said "a definite reading". On 48,759
 pending linear cells the two notions agree on every named atom (57,969 of
 them), but the theorem proves the weaker one, and the paper now says what
-the theorem says.
+the theorem says. (E60, `LabelExactDefinite.lean`, then proved the definite
+form over the partial one.)
 -/
 
 namespace V

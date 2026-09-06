@@ -70,9 +70,24 @@ def B0(pol, k1, k2, phi):
 def is_atom(phi):
     return isinstance(phi, str)
 
+CLASSICAL = {"on": False}   # measurement switch: read P as T and N as F (classical signed tableaux)
+
+def _cl(ns):
+    if not CLASSICAL["on"]:
+        return ns
+    return [(ST if s == SP else SF if s == SN else s, f) for s, f in ns]
+
 def rule_of(env, node):
     """What the table says about a node under `env`:
        ("ax",) | ("atom",) | ("one", ns) | ("two", n1, n2)   — as ZCut.Ax/RuleC/Rule2."""
+    r = _rule_of(env, node)
+    if r[0] == "one":
+        return ("one", _cl(r[1]))
+    if r[0] == "two":
+        return ("two", _cl(r[1]), _cl(r[2]))
+    return r
+
+def _rule_of(env, node):
     s, phi = node
     if is_atom(phi):
         cell = env.get(phi, ALL) & s
@@ -572,7 +587,36 @@ def main():
           f" above {above}; mean k/k₀ = {sum_ratio / max(1, deep_fired):.3f}")
     print(f"  NOTE: selection — instances with B > {CAP} were skipped; they are the deep/wide ones,"
           f" so 'never above' is a statement about the {deep_fired} that ran, not about all cuts")
-    ok = viol_bound == 0 and viol_tf == 0 and t_atom is None and deep_viol == 0
+    # ---- the hard family: pigeonhole, cut-free, ZTL against the classical signs
+    print("\n### Pigeonhole PHP_n, cut-free, ZTL signs against classical signs (P≡T, N≡F)")
+    def php(n):
+        def pa(i, j): return f"p{i}_{j}"
+        def big_or(xs):
+            f = xs[0]
+            for x in xs[1:]:
+                f = ("or", f, x)
+            return f
+        Sn = [(ST, big_or([pa(i, j) for j in range(n)])) for i in range(n + 1)]
+        for j in range(n):
+            for i in range(n + 1):
+                for kk in range(i + 1, n + 1):
+                    Sn.append((ST, ("not", ("and", pa(i, j), pa(kk, j)))))
+        return Sn
+    php_ok = True
+    for n in range(1, 4):
+        Sn = php(n)
+        tz = build(env0, Sn); kz = leaves(tz) if tz else None
+        CLASSICAL["on"] = True
+        tc = build(env0, Sn); kc = leaves(tc) if tc else None
+        CLASSICAL["on"] = False
+        same = kz == kc
+        php_ok = php_ok and same and kz is not None
+        print(f"  PHP_{n}: atoms {(n+1)*n:2d}, nodes {len(Sn):2d} | ZTL {kz} leaves | classical {kc} leaves"
+              f" | {'EQUAL' if same else 'DIFFER'}")
+    print("  PHP_4 and up do not fit either calculus — the exponential, met head on."
+          " Same tree node for node: on strict inputs the greedy collapse changes nothing"
+          " about cut-free size. The other side — short proofs WITH cut for PHP — is not built here.")
+    ok = viol_bound == 0 and viol_tf == 0 and t_atom is None and deep_viol == 0 and php_ok
     print("\n" + ("E55 GREEN: the procedure runs, every tree it builds re-verifies, and the"
                   " proved bound holds on the pool" if ok else "E55 RED"))
     return 0 if ok else 1

@@ -2138,10 +2138,13 @@ interpretation, imprecise probabilities, semiring provenance.
 **The sixth twin is now an embedding, and the tag still says MEASURED.**
 `ZProv.lean` (empty axiom list) formalises the provenance algebra and maps
 it into ZTL — see §27 for what that theorem says and, more to the point,
-what it does not. It settles the twin, not this section: combination as
-intersection, the earned contradiction of an empty intersection, and the
-Zadeh case remain measured on worked scenarios with `zcombine`, and the tag
-is left alone for that reason. One further thing belongs here and is not
+what it does not. It settles the twin, not this section. The section's own
+three claims — combination as intersection, the earned contradiction of an
+empty intersection, and the Zadeh case — were measured on worked scenarios
+with `zcombine` first and are kernel-checked below (`ZCombine.lean`, E39);
+an earlier revision of this sentence still called them measured after the
+proofs had landed, and the tag stays MEASURED + Lean for what the closing
+paragraph names as measured only. One further thing belongs here and is not
 comfortable: our own probe against the installed package
 (`db/probe_provenance.py`, PostgreSQL 16.14 / ProvSQL 1.13.0-dev) found that
 semirings already do the cascade, the alternatives and the exposed set, and

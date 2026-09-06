@@ -13,6 +13,13 @@
 сломало бы инвариант «всё на пустом списке», а исключение в аудите — это место,
 где спрячется настоящая тревога. Оно лежит в `probes/` и меряется здесь.
 
+E54 (06.09.2026): δ₂ вошло в движок ЗА ФЛАГОМ (`ZParamEngine.search true`), а
+его надёжность — в корпус ГИПОТЕЗОЙ `Delta2Step`. Второй зонд
+`probes/delta2_step_classical.lean` снимает гипотезу классически, и стенд
+сверяет, что ярус у него ИМЕННО классический. Обратная сторона того же
+правила — клауза насыщения в `ZParamHintikka` — на пустом списке; это
+проверяет общий аудит аксиом, здесь достаточно, что зонд остался классическим.
+
 СТЕНД ОБЯЗАН ПАДАТЬ В ОБЕ СТОРОНЫ. Если четвёртое вдруг соберётся на пустом
 списке — значит нашёлся бесвыборный путь, и это НАХОДКА, а не повод молчать.
 Если первые три перестанут быть чистыми — тем более.
@@ -25,6 +32,7 @@ import os, re, subprocess, sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 LEAN = os.path.join(os.path.dirname(HERE), "lean")
 ЗОНД = os.path.join(HERE, "probes", "delta_all_classical.lean")
+ЗОНД2 = os.path.join(HERE, "probes", "delta2_step_classical.lean")
 
 def аксиомы(файл, имена):
     r = subprocess.run(["lake", "env", "lean", файл], cwd=LEAN,
@@ -44,6 +52,7 @@ def аксиомы(файл, имена):
 чистые = аксиомы(модуль, ["gamma_all", "gamma_ex", "delta_ex",
                           "delta_all_constructive", "gamma_delta_sound_three"])
 классика = аксиомы(ЗОНД, ["delta_all_classical"])
+классика2 = аксиомы(ЗОНД2, ["delta2_step_classical"])
 
 ЖДЁМ_КЛАССИКУ = {"propext", "Classical.choice", "Quot.sound"}
 беды = []
@@ -60,16 +69,25 @@ elif ax4 == set():
                 "это НАХОДКА: правило δ₂ конструктивно, перенести в корпус")
 elif ax4 != ЖДЁМ_КЛАССИКУ:
     беды.append(f"delta_all_classical: ярус сменился, получено {sorted(ax4)}")
+ax5 = классика2["delta2_step_classical"]
+if ax5 is None:
+    беды.append("delta2_step_classical: не найдено в выводе")
+elif ax5 == set():
+    беды.append("delta2_step_classical: список ПУСТ — найден бесвыборный путь для "
+                "шага δ₂ на ветви, это НАХОДКА: снять гипотезу Delta2Step в корпусе")
+elif ax5 != ЖДЁМ_КЛАССИКУ:
+    беды.append(f"delta2_step_classical: ярус сменился, получено {sorted(ax5)}")
 
 print("ЯРУС ПРАВИЛ γ/δ — промер, не предсказание")
 for и, ax in чистые.items():
     print(f"  {и:28} {'пусто' if ax == set() else sorted(ax)}")
 print(f"  {'delta_all_classical':28} {sorted(ax4) if ax4 else 'пусто'}   (вне корпуса)")
+print(f"  {'delta2_step_classical':28} {sorted(ax5) if ax5 else 'пусто'}   (вне корпуса, шаг на ветви)")
 print()
 if беды:
     print("ЯРУС γ/δ КРАСНО:")
     for б in беды: print("   ", б)
 else:
-    print("ЯРУС γ/δ ЗЕЛЕНО: три правила на пустом списке, четвёртое классическое, "
-          "расхождений 0")
+    print("ЯРУС γ/δ ЗЕЛЕНО: три правила на пустом списке, четвёртое классическое "
+          "(правило и шаг на ветви), расхождений 0")
 sys.exit(1 if беды else 0)

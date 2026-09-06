@@ -55,7 +55,10 @@ WORDS = {"twelve": 12, "thirteen": 13, "fourteen": 14, "fifteen": 15,
 # exists to catch (found 2026-08-11, the module count had drifted 25 -> 26)
 _ONES = ["", "-one", "-two", "-three", "-four", "-five",
          "-six", "-seven", "-eight", "-nine"]
-for _tens, _base in (("twenty", 20), ("thirty", 30)):
+# "fifty-three modules in all" sat unchecked until 2026-09-06 because the
+# table stopped at thirty-nine — the same hole one decade up. Go to ninety.
+for _tens, _base in (("twenty", 20), ("thirty", 30), ("forty", 40), ("fifty", 50),
+                     ("sixty", 60), ("seventy", 70), ("eighty", 80), ("ninety", 90)):
     for _i, _suf in enumerate(_ONES):
         WORDS[_tens + _suf] = _base + _i
 

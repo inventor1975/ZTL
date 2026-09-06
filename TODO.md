@@ -51,7 +51,15 @@
    closure, fuel-bounded search, `search_sound`, `entails_of_closed`;
    F:∀ deliberately absent — the fallen bridge stays `stuck`).
    E51: n-ary atoms + weak-sign promotion on compounds (`compound_two_valued`).
-   REMAINS there: completeness (Hintikka, argued); F:∀ is classical by measurement.
+   E54 (2026-09-06): two completeness defects of the search found by the
+   kernel and fixed (branching rule re-fired on the open successor;
+   head-first scan starved older nodes); δ₂ behind a flag, its soundness
+   the hypothesis `Delta2Step` discharged OUTSIDE the corpus;
+   `ZParamHintikka` = the FINITE half of completeness on the empty list
+   (`stuck_refutes`: a stuck run yields a finite non-classical
+   countermodel, atoms with only weak signs get Z), δ₂ FREE in that
+   direction. REMAINS there: the infinite half — fair strategy now in
+   place; König + infinite-domain totality are classical by nature.
 
 ## Seams
 

@@ -54,8 +54,31 @@
   T makes φ T. Constructive: the conclusion's value is PRODUCED by totality
   and shown to be T, not obtained by refuting its negation.
 
-  WHAT IS NOT PROVED. Completeness — that a valid sequent's search closes for
-  some fuel. §6 argues it by Hintikka saturation and the paper says so.
+  E54 (2026-09-06): TWO DEFECTS OF COMPLETENESS, FOUND BY THE KERNEL, AND THE
+  FOURTH RULE BEHIND A FLAG. Probing the search on INVALID sequents — which
+  none of the runs below did — showed (a) `P∨Q ⊢ P` returned `noFuel` at fuel
+  10, 40 and 200, never `stuck`: a branching rule fired whenever ONE successor
+  was absent, so on the open successor it re-fired forever; and (b) the valid
+  `∀x∃y R(x,y), P∧Q ⊢ Q` returned `noFuel` with the generator first among the
+  premises and `closed` with it last: new nodes went to the head and `pick`
+  scanned from the head, so a generator starved the rest — `sat_rotate` of E47
+  was proved for exactly this and never wired. Neither touched soundness
+  (`search_sound` speaks only of `closed`); both made the Hintikka half of
+  completeness unreachable, since the search never reported an open saturated
+  branch after a split. Fixes: `two` fires only when NEITHER successor is
+  present, and `pick` scans the branch from its tail (oldest first).
+
+  And δ₂ — `F:∀xφ → N:φ(c*)` — enters behind a flag `d2`: `search false` is
+  the engine above, `search true` adds the rule. Its soundness is classical
+  (`ZParamSound`, `inventory/probes/delta_all_classical.lean`), so it enters
+  the corpus as a HYPOTHESIS `Delta2Step`, discharged outside the corpus by
+  `inventory/probes/delta2_step_classical.lean`. Every soundness theorem below
+  takes `hδ₂ : d2 = true → Delta2Step I d`; with `d2 = false` the hypothesis is
+  vacuous and `entails_of_closed_core` needs none.
+
+  WHAT IS NOT PROVED HERE. Completeness — that a valid sequent's search closes
+  for some fuel. Its finite half is `ZParamHintikka`; the infinite half stays
+  argued (§6).
 
   FORM. Bool splits are `decide`d lemmas; `Bool.or_eq_true`, `List.mem_cons`,
   `Nat.le_max_left` carry propext (measured 2026-09-05) and are not used. The
@@ -321,9 +344,12 @@ def one (ns : List TNode) (b : TBranch) : Option (List TBranch) :=
   | true  => some [ns ++ b]
   | false => none
 
-/-- A branching step: two successors, provided at least one node is new. -/
+/-- A branching step: two successors, provided NEITHER node is on the branch.
+E54: with "at least one new" the rule re-fired forever on the open successor
+(kernel: `P∨Q ⊢ P` gave `noFuel` at every fuel, never `stuck`). A branching
+node is spent once one of its successors is present. -/
 def two (n1 n2 : TNode) (b : TBranch) : Option (List TBranch) :=
-  match (!memB n1 b || !memB n2 b) with
+  match (!memB n1 b && !memB n2 b) with
   | true  => some [n1 :: b, n2 :: b]
   | false => none
 
@@ -362,6 +388,14 @@ def gammaF (φ : QFm) (b : TBranch) : Option (List TBranch) :=
   | some c => some [(Tag.n, inst c 0 φ) :: b]
   | none   => none
 
+/-- δ₂ on F:∀ — the classical rule, behind the flag: a FRESH parameter, ONCE,
+with the weak sign N on the instance. Sound only classically; its soundness
+enters the corpus as the hypothesis `Delta2Step` below. -/
+def delta2 (φ : QFm) (b : TBranch) : Option (List TBranch) :=
+  match anyInstance Tag.n φ (candidates b) b with
+  | true  => none
+  | false => one [(Tag.n, inst (fresh b) 0 φ)] b
+
 def expandT : QFm → TBranch → Option (List TBranch)
   | QFm.atom _ _, _ => none
   | QFm.neg φ,    b => one [(Tag.f, φ)] b
@@ -371,13 +405,15 @@ def expandT : QFm → TBranch → Option (List TBranch)
   | QFm.all φ,    b => gammaT φ b
   | QFm.ex φ,     b => deltaT φ b
 
-def expandF : QFm → TBranch → Option (List TBranch)
+def expandF (d2 : Bool) : QFm → TBranch → Option (List TBranch)
   | QFm.atom _ _, _ => none
   | QFm.neg φ,    b => one [(Tag.p, φ)] b
   | QFm.conj φ ψ, b => two (Tag.n, φ) (Tag.n, ψ) b
   | QFm.disj φ ψ, b => one [(Tag.n, φ), (Tag.n, ψ)] b
   | QFm.imp φ ψ,  b => one [(Tag.p, φ), (Tag.n, ψ)] b
-  | QFm.all _,    _ => none        -- δ₂, the classical rule: deliberately absent
+  | QFm.all φ,    b => match d2 with   -- δ₂, the classical rule: only behind the flag
+                       | true  => delta2 φ b
+                       | false => none
   | QFm.ex φ,     b => gammaF φ b
 
 /-- Weak signs on a COMPOUND are promoted: in the greedy register every
@@ -402,10 +438,10 @@ def expandP : QFm → TBranch → Option (List TBranch)
   | QFm.all φ,    b => one [(Tag.t, QFm.all φ)] b
   | QFm.ex φ,     b => one [(Tag.t, QFm.ex φ)] b
 
-def expand (nd : TNode) (b : TBranch) : Option (List TBranch) :=
+def expand (d2 : Bool) (nd : TNode) (b : TBranch) : Option (List TBranch) :=
   match nd.1 with
   | Tag.t => expandT nd.2 b
-  | Tag.f => expandF nd.2 b
+  | Tag.f => expandF d2 nd.2 b
   | Tag.p => expandP nd.2 b
   | Tag.n => expandN nd.2 b
 
@@ -488,7 +524,7 @@ theorem one_sound {ns : List TNode} {b : TBranch} {succs : List TBranch} :
 theorem two_sound {n1 n2 : TNode} {b : TBranch} {succs : List TBranch} :
     two n1 n2 b = some succs → succs = [n1 :: b, n2 :: b] := by
   unfold two
-  cases (!memB n1 b || !memB n2 b) with
+  cases (!memB n1 b && !memB n2 b) with
   | true  => intro h; exact (Option.some.inj h).symm
   | false => intro h; cases h
 
@@ -513,13 +549,32 @@ theorem gammaF_sound {φ : QFm} {b : TBranch} {succs : List TBranch} :
   | some c => intro h; exact ⟨c, (Option.some.inj h).symm⟩
   | none   => intro h; cases h
 
+theorem delta2_sound {φ : QFm} {b : TBranch} {succs : List TBranch} :
+    delta2 φ b = some succs → succs = [(Tag.n, inst (fresh b) 0 φ) :: b] := by
+  unfold delta2
+  cases anyInstance Tag.n φ (candidates b) b with
+  | true  => intro h; cases h
+  | false => intro h; exact one_sound h
+
+/-- **THE ONE CLASSICAL STEP, AS A HYPOTHESIS.** δ₂ preserves satisfiability:
+from `F:∀xφ` on a satisfied branch, a fresh parameter can be pointed at an
+instance that is not strictly T. Over an arbitrary domain that is `¬∀ → ∃¬`,
+which the corpus does not prove; `inventory/probes/delta2_step_classical.lean`
+proves it classically, outside. Here it is what the flag costs. -/
+def Delta2Step (I : Nat → List α → V) (d : α) : Prop :=
+  (∀ ρ, Total I ρ d) → ∀ (ρ : Nat → α) (b : Branch) (φ : QFm) (c : Nat),
+    satBranch I ρ d b → (SignF, QFm.all φ) ∈ b →
+    freshFor c ((SignF, QFm.all φ) :: b) →
+    ∃ a : α, satBranch I (upd ρ c a) d ((SignN, inst c 0 φ) :: b)
+
 /-- **EVERY EXPANSION IS A SOUND STEP.** If the node is on a satisfied branch
 and the rule fires, some successor is satisfied — under the same assignment
 for every rule but δ, which moves the fresh parameter onto the witness.
 One case per rule, each read off its lemma in `ZParamProp` / `ZParamTableau`. -/
 theorem expand_sound (I : Nat → List α → V) (d : α) (htot : ∀ ρ, Total I ρ d)
+    (d2 : Bool) (hδ₂ : d2 = true → Delta2Step I d)
     (ρ : Nat → α) (nd : TNode) (b : TBranch) (succs : List TBranch)
-    (hmem : nd ∈ b) (hexp : expand nd b = some succs)
+    (hmem : nd ∈ b) (hexp : expand d2 nd b = some succs)
     (hb : satBranch I ρ d (toBranch b)) :
     ∃ s, s ∈ succs ∧ ∃ ρ', satBranch I ρ' d (toBranch s) := by
   match nd, hmem, hexp with
@@ -579,9 +634,20 @@ theorem expand_sound (I : Nat → List α → V) (d : α) (htot : ∀ ρ, Total 
       have h' : one [(Tag.p, φ), (Tag.n, ψ)] b = some succs := h
       rw [one_sound h']
       exact ⟨_, List.Mem.head _, ρ, step_imp_F I ρ d (toBranch b) φ ψ hb (mem_toBranch hm)⟩
-  | (Tag.f, QFm.all _), _, h =>
-      have h' : (none : Option (List TBranch)) = some succs := h
-      nomatch h'
+  | (Tag.f, QFm.all φ), hm, h =>
+      cases hd : d2 with
+      | false =>
+          rw [hd] at h
+          have h' : (none : Option (List TBranch)) = some succs := h
+          nomatch h'
+      | true =>
+          rw [hd] at h
+          have h' : delta2 φ b = some succs := h
+          rw [delta2_sound h']
+          have hfresh : freshFor (fresh b) ((SignF, QFm.all φ) :: toBranch b) :=
+            freshFor_cons (mem_toBranch hm) (freshFor_fresh b)
+          have ⟨a, ha⟩ := hδ₂ hd htot ρ (toBranch b) φ (fresh b) hb (mem_toBranch hm) hfresh
+          exact ⟨_, List.Mem.head _, upd ρ (fresh b) a, ha⟩
   | (Tag.f, QFm.ex φ), hm, h =>
       have h' : gammaF φ b = some succs := h
       have ⟨c, e⟩ := gammaF_sound h'
@@ -645,16 +711,17 @@ theorem expand_sound (I : Nat → List α → V) (d : α) (htot : ∀ ρ, Total 
 /-! ### Picking a node, and the search -/
 
 /-- The first node of `scan` whose rule fires on the branch `b`. -/
-def pick : TBranch → TBranch → Option (List TBranch)
+def pick (d2 : Bool) : TBranch → TBranch → Option (List TBranch)
   | [], _ => none
   | nd :: r, b =>
-      match expand nd b with
+      match expand d2 nd b with
       | some succs => some succs
-      | none       => pick r b
+      | none       => pick d2 r b
 
-theorem pick_sound (I : Nat → List α → V) (d : α) (htot : ∀ ρ, Total I ρ d) (ρ : Nat → α) :
+theorem pick_sound (I : Nat → List α → V) (d : α) (htot : ∀ ρ, Total I ρ d)
+    (d2 : Bool) (hδ₂ : d2 = true → Delta2Step I d) (ρ : Nat → α) :
     ∀ (scan b : TBranch) (succs : List TBranch),
-    (∀ nd, nd ∈ scan → nd ∈ b) → pick scan b = some succs →
+    (∀ nd, nd ∈ scan → nd ∈ b) → pick d2 scan b = some succs →
     satBranch I ρ d (toBranch b) →
     ∃ s, s ∈ succs ∧ ∃ ρ', satBranch I ρ' d (toBranch s)
   | [], _, succs, _, h, _ =>
@@ -662,15 +729,15 @@ theorem pick_sound (I : Nat → List α → V) (d : α) (htot : ∀ ρ, Total I 
       nomatch h'
   | nd :: r, b, succs, hsub, h, hb => by
       unfold pick at h
-      cases hexp : expand nd b with
+      cases hexp : expand d2 nd b with
       | some s =>
           rw [hexp] at h
           have e : s = succs := Option.some.inj h
           rw [← e]
-          exact expand_sound I d htot ρ nd b s (hsub nd (List.Mem.head r)) hexp hb
+          exact expand_sound I d htot d2 hδ₂ ρ nd b s (hsub nd (List.Mem.head r)) hexp hb
       | none =>
           rw [hexp] at h
-          exact pick_sound I d htot ρ r b succs (fun x hx => hsub x (List.Mem.tail nd hx)) h hb
+          exact pick_sound I d htot d2 hδ₂ ρ r b succs (fun x hx => hsub x (List.Mem.tail nd hx)) h hb
 
 inductive Verdict where
   | closed   -- every branch closed
@@ -678,16 +745,54 @@ inductive Verdict where
   | noFuel
   deriving DecidableEq, Repr
 
-/-- The search over a worklist of branches. Structural on fuel. -/
-def search : Nat → List TBranch → Verdict
+/-- The branch reversed — own accumulator recursion, no `List.reverse` lemmas. -/
+def revAcc : TBranch → TBranch → TBranch
+  | [],     acc => acc
+  | x :: r, acc => revAcc r (x :: acc)
+
+def revB (b : TBranch) : TBranch := revAcc b []
+
+theorem mem_revAcc : ∀ (b acc : TBranch) (nd : TNode), nd ∈ revAcc b acc → nd ∈ b ∨ nd ∈ acc
+  | [],     _,   _,  h => Or.inr h
+  | x :: r, acc, nd, h => by
+      cases mem_revAcc r (x :: acc) nd h with
+      | inl hr => exact Or.inl (List.Mem.tail x hr)
+      | inr ha =>
+          cases ha with
+          | head => exact Or.inl (List.Mem.head r)
+          | tail _ ha' => exact Or.inr ha'
+
+theorem mem_revB {b : TBranch} {nd : TNode} (h : nd ∈ revB b) : nd ∈ b := by
+  cases mem_revAcc b [] nd h with
+  | inl hb => exact hb
+  | inr ha => nomatch ha
+
+theorem mem_revAcc_of_acc : ∀ (b acc : TBranch) (nd : TNode), nd ∈ acc → nd ∈ revAcc b acc
+  | [],     _,   _,  h => h
+  | x :: r, acc, nd, h => mem_revAcc_of_acc r (x :: acc) nd (List.Mem.tail x h)
+
+theorem mem_revAcc_of_mem : ∀ (b acc : TBranch) (nd : TNode), nd ∈ b → nd ∈ revAcc b acc
+  | x :: r, acc, nd, h => by
+      cases h with
+      | head => exact mem_revAcc_of_acc r (x :: acc) x (List.Mem.head acc)
+      | tail _ h' => exact mem_revAcc_of_mem r (x :: acc) nd h'
+
+theorem mem_revB_of_mem {b : TBranch} {nd : TNode} (h : nd ∈ b) : nd ∈ revB b :=
+  mem_revAcc_of_mem b [] nd h
+
+/-- The search over a worklist of branches. Structural on fuel. The branch is
+scanned from its TAIL — oldest node first — so that a node which keeps
+producing new nodes cannot starve the ones behind it (E54: with a head-first
+scan a generator premise made a valid sequent return `noFuel`). -/
+def search (d2 : Bool) : Nat → List TBranch → Verdict
   | _, [] => Verdict.closed
   | 0, _ :: _ => Verdict.noFuel
   | fuel + 1, b :: rest =>
       match closedB b with
-      | true  => search fuel rest
+      | true  => search d2 fuel rest
       | false =>
-          match pick b b with
-          | some succs => search fuel (succs ++ rest)
+          match pick d2 (revB b) b with
+          | some succs => search d2 fuel (succs ++ rest)
           | none       => Verdict.stuck
 
 theorem mem_append_left {x : TBranch} : ∀ {l r : List TBranch}, x ∈ l → x ∈ l ++ r
@@ -704,8 +809,9 @@ theorem mem_append_right {x : TBranch} : ∀ {l r : List TBranch}, x ∈ r → x
 branch on the initial list has a model — under any assignment, for a total
 interpretation. Induction on fuel; closure by `closedB_sound` + `closed_unsat`,
 expansion by `pick_sound`. -/
-theorem search_sound (I : Nat → List α → V) (d : α) (htot : ∀ ρ, Total I ρ d) :
-    ∀ (fuel : Nat) (bs : List TBranch), search fuel bs = Verdict.closed →
+theorem search_sound (I : Nat → List α → V) (d : α) (htot : ∀ ρ, Total I ρ d)
+    (d2 : Bool) (hδ₂ : d2 = true → Delta2Step I d) :
+    ∀ (fuel : Nat) (bs : List TBranch), search d2 fuel bs = Verdict.closed →
     ∀ b, b ∈ bs → ∀ ρ, ¬ satBranch I ρ d (toBranch b)
   | _, [], _, _, hb, _, _ => nomatch hb
   | 0, _ :: _, h, _, _, _, _ =>
@@ -718,19 +824,19 @@ theorem search_sound (I : Nat → List α → V) (d : α) (htot : ∀ ρ, Total 
           rw [hc] at h
           cases hb with
           | head => exact closed_unsat I ρ d (toBranch b0) (closedB_sound b0 hc) hsat
-          | tail _ hb' => exact search_sound I d htot fuel rest h b hb' ρ hsat
+          | tail _ hb' => exact search_sound I d htot d2 hδ₂ fuel rest h b hb' ρ hsat
       | false =>
           rw [hc] at h
-          cases hp : pick b0 b0 with
+          cases hp : pick d2 (revB b0) b0 with
           | some succs =>
               rw [hp] at h
               cases hb with
               | head =>
                   have ⟨s, hs, ρ', hs'⟩ :=
-                    pick_sound I d htot ρ b0 b0 succs (fun _ hx => hx) hp hsat
-                  exact search_sound I d htot fuel (succs ++ rest) h s (mem_append_left hs) ρ' hs'
+                    pick_sound I d htot d2 hδ₂ ρ (revB b0) b0 succs (fun _ hx => mem_revB hx) hp hsat
+                  exact search_sound I d htot d2 hδ₂ fuel (succs ++ rest) h s (mem_append_left hs) ρ' hs'
               | tail _ hb' =>
-                  exact search_sound I d htot fuel (succs ++ rest) h b (mem_append_right hb') ρ hsat
+                  exact search_sound I d htot d2 hδ₂ fuel (succs ++ rest) h b (mem_append_right hb') ρ hsat
           | none =>
               rw [hp] at h
               cases h
@@ -761,12 +867,13 @@ theorem signN_false : ∀ v : V, SignN v = false → v = T := by decide
 /-- **A CLOSED RUN ON Γ ⊢ φ IS A PROOF OF ENTAILMENT.** Every total model that
 makes each premise T makes φ T. The value of φ is produced by totality and
 shown to be T; nothing is refuted twice. -/
-theorem entails_of_closed (Γ : List QFm) (φ : QFm) (fuel : Nat)
-    (h : search fuel [initBranch Γ φ] = Verdict.closed)
-    (I : Nat → List α → V) (d : α) (htot : ∀ ρ, Total I ρ d) (ρ : Nat → α)
+theorem entails_of_closed (Γ : List QFm) (φ : QFm) (d2 : Bool) (fuel : Nat)
+    (h : search d2 fuel [initBranch Γ φ] = Verdict.closed)
+    (I : Nat → List α → V) (d : α) (htot : ∀ ρ, Total I ρ d)
+    (hδ₂ : d2 = true → Delta2Step I d) (ρ : Nat → α)
     (hΓ : ∀ γ, γ ∈ Γ → Holds I ρ d [] γ T) : Holds I ρ d [] φ T := by
   have ⟨v, hv⟩ := htot ρ φ []
-  have hunsat := search_sound I d htot fuel [initBranch Γ φ] h (initBranch Γ φ) (List.Mem.head _) ρ
+  have hunsat := search_sound I d htot d2 hδ₂ fuel [initBranch Γ φ] h (initBranch Γ φ) (List.Mem.head _) ρ
   have hn : SignN v = false := by
     apply notT
     intro hN
@@ -782,18 +889,26 @@ theorem entails_of_closed (Γ : List QFm) (φ : QFm) (fuel : Nat)
   rw [hvT] at hv
   exact hv
 
+/-- The same, for the engine WITHOUT δ₂: no hypothesis about the classical
+step, because the flag is off and the rule never fires. -/
+theorem entails_of_closed_core (Γ : List QFm) (φ : QFm) (fuel : Nat)
+    (h : search false fuel [initBranch Γ φ] = Verdict.closed)
+    (I : Nat → List α → V) (d : α) (htot : ∀ ρ, Total I ρ d) (ρ : Nat → α)
+    (hΓ : ∀ γ, γ ∈ Γ → Holds I ρ d [] γ T) : Holds I ρ d [] φ T :=
+  entails_of_closed Γ φ false fuel h I d htot (fun hd => Bool.noConfusion hd) ρ hΓ
+
 /-! ### Three runs, evaluated by the kernel
 
   P is predicate 0; `par 3` is a parameter. -/
 
 /-- ∀x P(x) ⊢ P(c): γ instantiates at c and the branch closes. -/
 theorem run_all_inst :
-    search 8 [initBranch [QFm.all (QFm.atom 0 [Trm.bvar 0])] (QFm.atom 0 [Trm.par 3])]
+    search false 8 [initBranch [QFm.all (QFm.atom 0 [Trm.bvar 0])] (QFm.atom 0 [Trm.par 3])]
       = Verdict.closed := by decide
 
 /-- P(c) ∧ Q(c) ⊢ Q(c): one propositional step, then closure. -/
 theorem run_and_elim :
-    search 8 [initBranch [QFm.conj (QFm.atom 0 [Trm.par 1]) (QFm.atom 1 [Trm.par 1])]
+    search false 8 [initBranch [QFm.conj (QFm.atom 0 [Trm.par 1]) (QFm.atom 1 [Trm.par 1])]
                          (QFm.atom 1 [Trm.par 1])]
       = Verdict.closed := by decide
 
@@ -801,7 +916,7 @@ theorem run_and_elim :
 for which there is no rule, and N:∃ has none either. The search reports
 `stuck`, not `closed` — exactly what §6 says of `¬∀ ⊭ ∃¬`. -/
 theorem run_fallen_bridge :
-    search 8 [initBranch [QFm.neg (QFm.all (QFm.atom 0 [Trm.bvar 0]))]
+    search false 8 [initBranch [QFm.neg (QFm.all (QFm.atom 0 [Trm.bvar 0]))]
                          (QFm.ex (QFm.neg (QFm.atom 0 [Trm.bvar 0])))]
       = Verdict.stuck := by decide
 
@@ -813,20 +928,20 @@ theorem run_fallen_bridge :
 splits into N:P(c), N:Q(c), and N:P(c) clashes with T:P(c). Before E51 the
 N-node had no rule and this was `stuck`. -/
 theorem run_or_intro :
-    search 8 [initBranch [QFm.atom 0 [Trm.par 1]]
+    search false 8 [initBranch [QFm.atom 0 [Trm.par 1]]
                          (QFm.disj (QFm.atom 0 [Trm.par 1]) (QFm.atom 1 [Trm.par 1]))]
       = Verdict.closed := by decide
 
 /-- ∀x∀y R(x,y) ⊢ R(a,b): two γ steps on a two-place atom. -/
 theorem run_two_place :
-    search 12 [initBranch [QFm.all (QFm.all (QFm.atom 0 [Trm.bvar 1, Trm.bvar 0]))]
+    search false 12 [initBranch [QFm.all (QFm.all (QFm.atom 0 [Trm.bvar 1, Trm.bvar 0]))]
                           (QFm.atom 0 [Trm.par 1, Trm.par 2])]
       = Verdict.closed := by decide
 
 /-- ∃x R(x,x) ⊢ ∃x∃y R(x,y): δ names the witness c; the conclusion's N is
 promoted to F twice with a γ on F:∃ between, down to N:R(c,c). -/
 theorem run_diag_to_pair :
-    search 16 [initBranch [QFm.ex (QFm.atom 0 [Trm.bvar 0, Trm.bvar 0])]
+    search false 16 [initBranch [QFm.ex (QFm.atom 0 [Trm.bvar 0, Trm.bvar 0])]
                           (QFm.ex (QFm.ex (QFm.atom 0 [Trm.bvar 1, Trm.bvar 0])))]
       = Verdict.closed := by decide
 
@@ -835,8 +950,60 @@ theorem run_diag_to_pair :
 one rule this search does not have, because it is the classical one. `stuck`,
 and the reason is the same axiom split as in `ZParamSound`. -/
 theorem run_swap_needs_classical :
-    search 16 [initBranch [QFm.ex (QFm.all (QFm.atom 0 [Trm.bvar 1, Trm.bvar 0]))]
+    search false 16 [initBranch [QFm.ex (QFm.all (QFm.atom 0 [Trm.bvar 1, Trm.bvar 0]))]
                           (QFm.all (QFm.ex (QFm.atom 0 [Trm.bvar 0, Trm.bvar 1])))]
+      = Verdict.stuck := by decide
+
+/-! ### E54: the two defects, refuted by the kernel, and the flag at work -/
+
+/-- **AN OPEN BRANCH IS REPORTED OPEN.** P(c) ∨ Q(c) ⊢ P(c) is invalid; before
+E54 the search returned `noFuel` at fuel 10, 40 and 200 because the branching
+rule re-fired on the open successor. Now the open successor saturates. -/
+theorem run_or_elim_open :
+    search false 8 [initBranch [QFm.disj (QFm.atom 0 [Trm.par 1]) (QFm.atom 1 [Trm.par 1])]
+                               (QFm.atom 0 [Trm.par 1])]
+      = Verdict.stuck := by decide
+
+/-- **A GENERATOR CANNOT STARVE THE REST.** ∀x∃y R(x,y), P(c)∧Q(c) ⊢ Q(c) with
+the generator FIRST: before E54 `noFuel` at 20, 80 and 300; last, `closed`.
+Oldest-first scanning closes it in either order. -/
+theorem run_generator_first :
+    search false 12 [initBranch [QFm.all (QFm.ex (QFm.atom 2 [Trm.bvar 1, Trm.bvar 0])),
+                                 QFm.conj (QFm.atom 0 [Trm.par 1]) (QFm.atom 1 [Trm.par 1])]
+                                (QFm.atom 1 [Trm.par 1])]
+      = Verdict.closed := by decide
+
+theorem run_generator_last :
+    search false 12 [initBranch [QFm.conj (QFm.atom 0 [Trm.par 1]) (QFm.atom 1 [Trm.par 1]),
+                                 QFm.all (QFm.ex (QFm.atom 2 [Trm.bvar 1, Trm.bvar 0]))]
+                                (QFm.atom 1 [Trm.par 1])]
+      = Verdict.closed := by decide
+
+/-- **WITH δ₂ THE SWAP CLOSES** — the same sequent that is `stuck` without the
+flag (`run_swap_needs_classical`). -/
+theorem run_swap_with_delta2 :
+    search true 16 [initBranch [QFm.ex (QFm.all (QFm.atom 0 [Trm.bvar 1, Trm.bvar 0]))]
+                               (QFm.all (QFm.ex (QFm.atom 0 [Trm.bvar 0, Trm.bvar 1])))]
+      = Verdict.closed := by decide
+
+/-- ∀x(P(x)∧Q(x)) ⊢ ∀xP(x): valid, `stuck` without δ₂, `closed` with it. -/
+theorem run_all_conj_without_delta2 :
+    search false 16 [initBranch [QFm.all (QFm.conj (QFm.atom 0 [Trm.bvar 0]) (QFm.atom 1 [Trm.bvar 0]))]
+                                (QFm.all (QFm.atom 0 [Trm.bvar 0]))]
+      = Verdict.stuck := by decide
+
+theorem run_all_conj_with_delta2 :
+    search true 16 [initBranch [QFm.all (QFm.conj (QFm.atom 0 [Trm.bvar 0]) (QFm.atom 1 [Trm.bvar 0]))]
+                               (QFm.all (QFm.atom 0 [Trm.bvar 0]))]
+      = Verdict.closed := by decide
+
+/-- **THE FALLEN BRIDGE STAYS FALLEN EVEN WITH δ₂.** ¬∀xP(x) ⊢ ∃x¬P(x): δ₂ gives
+N:P(c*), the conclusion side gives P:P(c*), and P against N is not a clash —
+both admit the mark. The countermodel is P(c*) = Z, and `ZParamHintikka`
+builds it. -/
+theorem run_fallen_bridge_with_delta2 :
+    search true 12 [initBranch [QFm.neg (QFm.all (QFm.atom 0 [Trm.bvar 0]))]
+                               (QFm.ex (QFm.neg (QFm.atom 0 [Trm.bvar 0])))]
       = Verdict.stuck := by decide
 
 end ZParamEngine
@@ -858,3 +1025,14 @@ end ZParamEngine
 #print axioms ZParamEngine.run_two_place
 #print axioms ZParamEngine.run_diag_to_pair
 #print axioms ZParamEngine.run_swap_needs_classical
+#print axioms ZParamEngine.delta2_sound
+#print axioms ZParamEngine.mem_revB
+#print axioms ZParamEngine.mem_revB_of_mem
+#print axioms ZParamEngine.entails_of_closed_core
+#print axioms ZParamEngine.run_or_elim_open
+#print axioms ZParamEngine.run_generator_first
+#print axioms ZParamEngine.run_generator_last
+#print axioms ZParamEngine.run_swap_with_delta2
+#print axioms ZParamEngine.run_all_conj_without_delta2
+#print axioms ZParamEngine.run_all_conj_with_delta2
+#print axioms ZParamEngine.run_fallen_bridge_with_delta2

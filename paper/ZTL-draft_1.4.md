@@ -139,9 +139,9 @@ cannot mint it — from no premises nothing is derivable, even the guarded
 tautologies, even on credit). The entire development — the core, both
 engine certificates with cut admissibility, the algebraic witnesses, the
 general fixed-point theorem, the expedition twins, the temporal modules
-and the frame's own mini-theorems, fifty-three modules in all — is
+and the frame's own mini-theorems, fifty-nine modules in all — is
 formalized in Lean 4 **with an empty axiom list, definitions
-included**: 840 theorems, each one audited individually rather than by
+included**: 933 theorems, each one audited individually rather than by
 sample (`inventory/axiom_audit.py`, re-run on every push). As of this
 revision no section rests on measurement alone: every one of the seventeen
 that carried the MEASURED tag now names kernel-checked theorems behind its
@@ -861,10 +861,28 @@ the three stops being clean. What is NOT claimed is that no choice-free route
 exists: it is not found by the standard argument, and that is all the
 measurement says.
 
-**Completeness is the
-standard Hintikka-saturation argument** for finitely-valued signed
-tableaux [27] — argued, not measured. Two honest FO phenomena appear on
-cue: on invalid sequents whose branches spawn witnesses forever
+**Completeness splits in two, and its finite half is now a theorem on
+the empty axiom list** (E54, `ZParamHintikka.lean`). The standard
+Hintikka-saturation argument for finitely-valued signed tableaux [27]
+has two halves: a run that STOPS OPEN yields a countermodel read off the
+open branch, and a run that NEVER STOPS yields one on an infinite
+domain. The first is measured: `stuck_refutes` — for closed Γ and φ, a
+`stuck` run of the engine with δ₂ exhibits a total model over `Nat`
+making every premise T and φ not T. The model is finite (its values are
+the parameters on the branch, every natural normalised onto them, so the
+universal quantifier is a fold and totality is COMPUTED), and it is not
+classical: an atom carrying only a weak sign, or none, takes the mark Z
+— the fallen bridge `¬∀xP ⊢ ∃x¬P` is refuted with `P(c*) = Z`. Each rule
+is read backwards through the tables, and the cell the proof stands on
+is `Z ∨ Z = F`: under a Kleene lift the weak-sign rule `F:(φ∨ψ) ⟹ N:φ,
+N:ψ` would not be complete. And δ₂ — classical in soundness, above — is
+FREE in this direction: one instance under N refutes the universal by
+determinism (`holds_det`), with no `¬∀ → ∃¬`. One rule, classical one
+way and constructive the other; that asymmetry is the measurement. The
+second half stays argued, with its parts named: a fair strategy (the
+engine has one since E54, §27), König's lemma, and a total model over
+an infinite domain — the survey ZTL declines to call an act, the same
+step δ₂'s soundness costs. Two honest FO phenomena appear on cue: on invalid sequents whose branches spawn witnesses forever
 (the unguarded drinker; the converse quantifier swap) the tableau does
 not terminate and invalidity is certified by a finite countermodel
 instead; and FO-ZTL is **undecidable** — the J-guard translation
@@ -2557,9 +2575,27 @@ rule this search does not have, because it is the classical one — the split
 of `ZParamSound`, now visible in a whole run. Two repairs came from the
 kernel runs and not from reading: γ's candidates are the parameters in play
 (a bound growing with the branch made γ spawn instances forever), and δ
-fires once (it re-fired with a fresh parameter every round). What remains of
-the port: completeness, which §6 argues by Hintikka saturation and this
-corpus does not measure;
+fires once (it re-fired with a fresh parameter every round). E54
+(2026-09-06) turned to completeness and found, before proving anything,
+that the search as shipped could not REPORT an open branch: probed on
+invalid sequents — which none of the runs above did — `P∨Q ⊢ P` returned
+`noFuel` at fuel 10, 40 and 200 (a branching rule fired whenever ONE
+successor was absent, so on the open successor it re-fired forever),
+and the valid `∀x∃y R(x,y), P∧Q ⊢ Q` returned `noFuel` with the
+generator first among the premises and `closed` with it last (new nodes
+went to the head and `pick` scanned from the head; `sat_rotate` of E47
+was proved for exactly this and never wired). Neither touched
+soundness, which speaks only of `closed`; both made the Hintikka half
+unreachable. Both are fixed and kernel-checked (`run_or_elim_open`,
+`run_generator_first`). δ₂ then entered BEHIND A FLAG: `search false`
+is the engine above, `search true` adds `F:∀xφ → N:φ(c*)`; its
+soundness enters the corpus as the hypothesis `Delta2Step`, discharged
+classically OUTSIDE it (`inventory/probes/delta2_step_classical.lean`,
+measured by `ПАРАМЕТР-ЯРУС.py`) — the corpus keeps its invariant, the
+swap closes (`run_swap_with_delta2`), and the fallen bridge stays
+`stuck` even with δ₂, since N against P is not a clash. What remains of
+the port is the INFINITE half of completeness, stated in §6 with its
+parts named; the finite half is `ZParamHintikka.lean`;
 **a fragment-embedding theorem for the remaining three traditions of
 §1** — ALL SIX are now done, and the entry stays as the record of what it
 asked for and what was delivered against it. The first

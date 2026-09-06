@@ -139,9 +139,9 @@ cannot mint it — from no premises nothing is derivable, even the guarded
 tautologies, even on credit). The entire development — the core, both
 engine certificates with cut admissibility, the algebraic witnesses, the
 general fixed-point theorem, the expedition twins, the temporal modules
-and the frame's own mini-theorems, sixty-one modules in all — is
+and the frame's own mini-theorems, sixty-two modules in all — is
 formalized in Lean 4 **with an empty axiom list, definitions
-included**: 1053 theorems, each one audited individually rather than by
+included**: 1063 theorems, each one audited individually rather than by
 sample (`inventory/axiom_audit.py`, re-run on every push). As of this
 revision no section rests on measurement alone: every one of the seventeen
 that carried the MEASURED tag now names kernel-checked theorems behind its
@@ -2047,6 +2047,27 @@ exponential in the number of marks, and what a reader needs is the
 difference between "go check this" and "no single check will move
 this", not the cardinality.
 
+**And the restraint is forced, not chosen** (E58, `ZWidthHard.lean`,
+empty axiom list). On E57's witness `(∧ᵢ xᵢ∨¬xᵢ) → ψ` at the all-marked
+start, nothing short of the whole guard moves the verdict — a refinement
+that leaves any guarded atom marked keeps the guard F and the verdict T,
+so every moving set contains all n+1 guarded atoms (`no_move_below`,
+with the counting step E33 left as prose now proved:
+`length_ge_of_all_below`) — and the whole guard moves it exactly when ψ
+has a falsifying classical point (`width_iff_refutable`). The width of
+the witness is therefore n+1 or nothing, split precisely by whether ¬ψ
+is satisfiable: "is the width ≤ k?" is NP-complete (a moving set with
+its values is a certificate, one greedy pass; the witness carries SAT).
+Width 1 is cheap — 2m evaluations, which is what `joint` does — and the
+exact width cannot be, unless P = NP. Together with E57 (no width at all
+⟺ hereditary ⟺ a tautology check) the two grades the judge does not
+compute are the two it cannot: one coNP, one NP. MEASURED
+(`zwidthhard.py`, the instrument's own `width`): on all 2928 formulas of
+depth ≤ 2 over two atoms the witness's width is 2 on the 2340
+non-tautologies and undefined on the 588 tautologies; on 600 random
+formulas of depth ≤ 3 over three atoms, 3 on 544 and undefined on 56 —
+zero divergences from the theorem.
+
 ## 20. Evidence combination: conflict is not laundered (MEASURED + Lean)
 
 Pieces of evidence about one value are constraints; **combination =
@@ -2547,7 +2568,10 @@ m = 2,3,4,5 (`zverify` §§5–6); hence NO constant-depth
 characterization exists — and E57 (`ZHeredTaut.lean`, §19) closes the
 remaining question: no structural, non-enumerative criterion exists
 either, unless P = coNP, because heredity of the guarded witness
-`(∧ᵢ xᵢ∨¬xᵢ) → ψ` is exactly tautology-hood of ψ);
+`(∧ᵢ xᵢ∨¬xᵢ) → ψ` is exactly tautology-hood of ψ — and E58
+(`ZWidthHard.lean`) does the same for the width: n+1 iff ¬ψ is
+satisfiable, so the exact width is NP-hard and `joint`'s width-1 cut is
+the right one);
 A Lean port of the parameter (arbitrary-domain) tableaux of §6 — BEGUN,
 and the two pieces done are the ones that decide what the rest costs.
 `ZParamSound.lean` measures the tier of the four rules (see §6): three are

@@ -12,8 +12,9 @@ The judge reports width 1 (`joint`) and does not compute the exact width.
     the whole guard moves it  ⟺  ψ has a falsifying point (width_iff_refutable)
 
 so the width is n+1 exactly when ¬ψ is satisfiable and undefined otherwise:
-"width ≤ k" is NP-complete, and the judge's cut — width 1 cheap, exact width
-not — is forced. Measured here with the instrument's own `width` (copied
+"width ≤ k" is NP-hard (membership in NP is argued in prose, not proved, so
+"NP-complete" is not claimed), and the judge's cut — width 1 cheap, exact
+width not — is forced. Measured here with the instrument's own `width` (copied
 verbatim from inventory/width/bench.py, which has no import guard).
 """
 import itertools

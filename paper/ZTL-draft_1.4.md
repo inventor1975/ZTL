@@ -1879,9 +1879,11 @@ exactly when ψ is true at every classical point: `hereditary_iff_taut`
 — heredity of the witness ⟺ tautology-hood of ψ, for every ψ over the
 guarded atoms. The witness has the size of ψ plus the guard, so a
 procedure deciding the hereditary grade in time polynomial in the formula
-would decide TAUT: the grade is coNP-complete (membership: a revoking
-refinement is a certificate, one greedy pass), and a cheap exact criterion
-would put coNP in P. What exists are SUFFICIENT structural conditions —
+would decide TAUT: the grade is coNP-hard, and a cheap exact criterion
+would put coNP in P. (Membership in coNP — a revoking refinement as a
+certificate, one greedy pass — is argued in prose and not formalised, so
+the claim stops at hardness; "coNP-complete" is not claimed.)
+What exists are SUFFICIENT structural conditions —
 `NoGift.no_gift`, no mark under a negation — and the reduction says the
 gap between sufficient and exact is not one more theorem away but a
 complexity class. MEASURED (`zheredtaut.py`): on all 2928 formulas of
@@ -2056,12 +2058,14 @@ with the counting step E33 left as prose now proved:
 `length_ge_of_all_below`) — and the whole guard moves it exactly when ψ
 has a falsifying classical point (`width_iff_refutable`). The width of
 the witness is therefore n+1 or nothing, split precisely by whether ¬ψ
-is satisfiable: "is the width ≤ k?" is NP-complete (a moving set with
-its values is a certificate, one greedy pass; the witness carries SAT).
-Width 1 is cheap — 2m evaluations, which is what `joint` does — and the
-exact width cannot be, unless P = NP. Together with E57 (no width at all
-⟺ hereditary ⟺ a tautology check) the two grades the judge does not
-compute are the two it cannot: one coNP, one NP. MEASURED
+is satisfiable: "is the width ≤ k?" is NP-hard (the witness carries
+SAT(¬ψ); that a moving set with its values is a certificate, one greedy
+pass, would give membership in NP — argued in prose, not formalised, so
+the claim stops at hardness and "NP-complete" is not claimed). Width 1 is
+cheap — 2m evaluations, which is what `joint` does — and the exact width
+cannot be, unless P = NP. Together with E57 (no width at all ⟺ hereditary
+⟺ a tautology check) the two grades the judge does not compute are the
+two it cannot: one coNP-hard, one NP-hard. MEASURED
 (`zwidthhard.py`, the instrument's own `width`): on all 2928 formulas of
 depth ≤ 2 over two atoms the witness's width is 2 on the 2340
 non-tautologies and undefined on the 588 tautologies; on 600 random

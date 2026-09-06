@@ -25,10 +25,14 @@
   the witness has the size of ψ plus N, so any procedure deciding the
   hereditary grade in time polynomial in the formula decides TAUT; a
   structural, non-enumerative criterion would put coNP in P. The grade is
-  coNP-complete (membership: a refinement that revokes the verdict is a
-  certificate, checked in one greedy pass). What exists are SUFFICIENT
-  structural conditions — `NoGift.no_gift`, no mark under a negation — and
-  the reduction says no exact one can be cheap.
+  coNP-HARD — that is the claim, and the reduction `hereditary_iff_taut`
+  is its whole content. Membership in coNP — a refinement that revokes the
+  verdict would be a certificate, checked in one greedy pass — is an
+  argument in prose that nothing here formalises; it is not claimed, so
+  "coNP-complete" is not said (the first version of this header said it;
+  one grade above the evidence). What exists are SUFFICIENT structural
+  conditions — `NoGift.no_gift`, no mark under a negation — and the
+  reduction says no exact one can be cheap.
 
   This is E33's fence family read the other way: the guard family
   `(b₁ ∧ … ∧ b_{m−1}) → (a → a)` showed the depth; the same shape with `ψ` in

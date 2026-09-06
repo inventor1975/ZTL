@@ -22,10 +22,17 @@
 
   So the width of `Φ_ψ` is n+1 if ψ has a falsifying point and undefined if
   ψ is a tautology — never anything else. "Is the width ≤ k?" is therefore
-  NP-complete: a moving set with its values is a certificate checked in one
-  greedy pass, and the witness turns SAT(¬ψ) into "width ≤ n+1". The exact
-  width cannot be had cheaply unless P = NP; width 1 can (`joint`: 2m
-  evaluations), and that is the cut the judge already makes.
+  NP-HARD: the witness turns SAT(¬ψ) into "width ≤ n+1", and that reduction
+  is the whole content of the two theorems above (the one prose step over
+  them: the witness has the size of ψ plus n+1). The exact width cannot be
+  had cheaply unless P = NP; width 1 can (`joint`: 2m evaluations), and
+  that is the cut the judge already makes.
+
+  CLAIM GRADE. NP-hard is the claim. Membership in NP — a moving set with
+  its values would be a certificate, checked in one greedy pass — is an
+  argument in prose that nothing in this file formalises; it is not
+  claimed, so "NP-complete" is not said. (The first version of this header
+  said it; the claim was one grade above the evidence.)
 
   FORM. A moving set is a `List Nat` of atoms allowed to change; "at least
   n+1 members" is the counting lemma `length_ge_of_all_below`, proved by

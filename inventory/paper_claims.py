@@ -128,6 +128,11 @@ if __name__ == "__main__":
     d = text("paper/ZTL-draft_1.4.md")
     for claimed in set(re.findall(r"(\d+) theorems", d)):
         check("theorems in the corpus", claimed, str(thms), "ZTL-draft_1.4.md")
+    # §8's audit line "**N of N clean**" is a corpus count too; it sat at 840
+    # while the abstract said 1112 (2026-09-07) because nothing measured it.
+    for a, b in set(re.findall(r"\*\*(\d+) of (\d+) clean\*\*", d)):
+        check("audit line 'N of N clean' (N)", a, str(thms), "ZTL-draft_1.4.md")
+        check("audit line 'N of N clean' (of N)", b, str(thms), "ZTL-draft_1.4.md")
     words = set(re.findall(r"([\w-]+) modules in all|([\w-]+) modules", d))
     for w in {a or b for a, b in words}:
         if w.lower() in WORDS:

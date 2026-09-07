@@ -1,24 +1,40 @@
-# ZTL — Zero-Trust Logic — v1.4 (IN PREPARATION, not published)
+# ZTL — Zero-Trust Logic — v1.4 (draft)
 
-**V. Reznik. Preprint, v1.4 — IN PREPARATION. No DOI yet: this file is
-the working text of the next version, not the published one. The
-published version is v1.3 (2026-07-21), version DOI
-[10.5281/zenodo.21472971](https://doi.org/10.5281/zenodo.21472971) — a
-frozen PDF on Zenodo; nothing edited here changes it. Zenodo publication
-is the curator's manual step.**
-
-**v1.4 will add** (accumulated since v1.3, not yet written into this
-text): the numeric floor ZNUM — quantities with provenance, exact
-rational lattices including `frac(m)`, units as exponents, the two
-credit axes and their cures, and the kernel-checked narrowing-heredity
-theorem (`lean/ZNum.lean`); the carrier discipline — a cure must be able
-to cure, probed by widening, with the fourth cure `contest type` and the
-polarity of a refutation bought on credit; and the four-column ledger
-against classical logic, whose "shared" and "no new laws" columns are
-now theorems rather than samples (`lean/ClassicalAgreement.lean`, empty
-axiom list). Present in this text already: corrected corpus figures and
-the precise position against Tomova's natural-implication criterion
-(§28).**
+**V. Reznik. Preprint, v1.4 (draft) — 2026-09. Concept DOI:
+[10.5281/zenodo.21318981](https://doi.org/10.5281/zenodo.21318981)
+(v1.3: [10.5281/zenodo.21472971](https://doi.org/10.5281/zenodo.21472971);
+v1.2: [10.5281/zenodo.21440066](https://doi.org/10.5281/zenodo.21440066);
+v1.1: [10.5281/zenodo.21323552](https://doi.org/10.5281/zenodo.21323552);
+v1.0: [10.5281/zenodo.21318982](https://doi.org/10.5281/zenodo.21318982)).
+v1.4 adds: **no section rests on measurement alone** — every one of the
+seventeen sections that carried the MEASURED tag now names kernel-checked
+theorems behind its load-bearing claims, the corpus growing threefold to
+sixty-six modules and 1112 theorems, all on the empty axiom list (§8);
+**the six traditions of §1 as six embedding theorems** — IEEE 754 NaN, SQL
+NULL, taint tracking, abstract interpretation, Dempster–Shafer and
+provenance semirings, each formalised as its own tradition states it,
+ZTL's verdict placed inside it and the unformalised remainder named
+(`ZNaN.lean`, `ZNull.lean`, `ZFlow.lean`, `ZAbsInt.lean`, `ZDempster.lean`,
+`ZProv.lean`; §§1, 15, 16, 20, 27); **three hardness results on the
+warranties of §19** — the hereditary grade is a tautology check
+(coNP-hard, `ZHeredTaut.lean`), the exact width of an inquiry is NP-hard
+(`ZWidthHard.lean`), the exact receipt is NP-hard (`ZReceiptHard.lean`),
+so the three grades the judge does not compute are the three it cannot
+compute cheaply — every complexity claim held at hardness, membership
+argued and not claimed — with the receipt's exactness on linear claims
+proved under a definite reading (`LabelExactDefinite.lean`); **a syntactic
+cut-elimination procedure with its bound as a function** (§5,
+`ZCutElim.lean`); **the Lean port of the parameter tableaux of §6** — the
+axiom tier of the four quantifier rules measured, every rule proved
+sound, a fuel-bounded search built and proved sound, and the finite half
+of completeness a theorem, the infinite half stated with its parts and
+left argued (`ZParamEngine.lean`, `ZParamHintikka.lean`; §§6, 27); the
+price list on the numeric floor (§15, `ZNumPrice.lean`); the global
+reading with theorems of its own (§10, `ContextClosure.lean`); the
+identity and free-instantiation results of §25 for an arbitrary domain
+(`ZEqGeneric.lean`, `ZFreeUIGeneric.lean`); and the precise position
+against Tomova's natural-implication criterion (§4). Zenodo publication
+is the curator's manual step; the version DOI is embedded on release.**
 
 **Carried over from the published v1.3 — version DOI
 [10.5281/zenodo.21472971](https://doi.org/10.5281/zenodo.21472971).
@@ -91,12 +107,13 @@ asserted. Six independent engineering traditions — IEEE 754 arithmetic (NaN), 
 three-valued logic (NULL), taint tracking in security, abstract
 interpretation in static analysis, imprecise probabilities in decision
 theory, and provenance semirings in database theory — have each, over
-decades, reinvented a fragment of this same discipline; for each we
-exhibit a worked case in which the core reproduces its central move
-(MEASURED). We argue, and do not claim to have proved, that each
-therefore implements a fragment of one logic — the evidence that its
-generating principle is a denominator and not a construction of
-convenience.
+decades, reinvented a fragment of this same discipline. For each, its
+own semantics is formalised as the tradition states it, and a theorem on
+the empty axiom list places ZTL's verdict inside it — an embedding of the
+algebraic core, not of the whole tradition, with the unformalised
+remainder named in each case. Six traditions implementing fragments of
+one logic is the evidence that its generating principle is a denominator
+and not a construction of convenience.
 
 For this logic we build: a complete semantic
 account with a measured price list (12 surviving laws, including modus
@@ -216,12 +233,14 @@ verdict proved to be its {0,1}-threshold for every finite frame and every
 proper mass assignment (`ZDempster.lean`, §16); and abstract
 interpretation's Galois connection is formalised, with our verdict proved
 EXACT rather than merely sound on the abstract value, and the point where
-exactness fails named in the same file (`ZAbsInt.lean`, §15). All three are
+exactness fails named in the same file (`ZAbsInt.lean`, §15). All six are
 partial in the same way, and it is worth naming: provenance's K-relations,
-Dempster–Shafer's combination rule and abstract interpretation's fixpoint
-framework are not formalised. So three algebraic cores are closed, not three
-traditions. Three demonstrations became theorems; three remain
-demonstrations.
+Dempster–Shafer's combination rule, abstract interpretation's fixpoint
+framework, IEEE's rounding, signed zero, infinities and signaling NaN,
+SQL's tables, joins and aggregates, and the multi-level lattices and
+implicit flows of information-flow control are not formalised. So six
+algebraic cores are closed, not six traditions. Six demonstrations became
+theorems, each with its unformalised remainder named.
 What is shown without qualification is that the denominator survives a
 full logical development: a calculus, quantifiers, modal and
 probabilistic semantics, machine verification. Along the way the classical paradoxes of self-reference,
@@ -957,10 +976,14 @@ an axiom infects every theorem that uses it), but an argument, and one
 that an unused orphan theorem would escape. It is now a measurement:
 `inventory/axiom_audit.py` extracts every theorem name from every
 module, generates one `#print axioms` per name, and fails if a single
-line reads otherwise. **840 of 840 clean**, re-run by CI on every push.
+line reads otherwise. **1112 of 1112 clean**, re-run by CI on every push.
 The same stand refuses a module that carries theorems and is built by no
 target — the failure mode that let one module (`QuantumWitness.lean`) go
-unchecked by any automation until 2026-07-20.
+unchecked by any automation until 2026-07-20. Three modules of the corpus
+— `Layering`, `RelianceBridge` and `ZReconverge` — serve a downstream
+consumer's reliance layer (whether a proof, and a fan-in of proofs, is
+eligible for reliance); they are counted and audited here, and not
+discussed in this paper.
 
 **The temporal modules** (v1.2): `ZTime.lean` — the verification tree,
 with absorption, arrow and ladder-inclusion proven structurally for
@@ -1310,7 +1333,8 @@ E is hardware, not logic.
 That last sentence is about the alphabet of the LOGIC, and it does not
 change. What it leaves open is whether the seam itself has letters, and
 a candidate register is recorded outside this system rather than inside
-it (repository `IDEAS.md` 12.6, staked and deliberately unimplemented):
+it (in a design note outside the public repository — §12.6 of the private
+companion's `IDEAS.md`, staked and deliberately unimplemented):
 two marks — `M`, no ground was ever offered, and `O`, the world's own
 indeterminacy — beside two states, `E` for the world's silence and `σ`
 for the world's answer. The register reads ONE WAY, from the physical
@@ -1435,8 +1459,8 @@ A paradox of infinite regress, refuted without a single classical step.
 *Two things are assumed rather than derived, and the module says so:*
 bivalence of the sentences is written into the admissibility condition as a
 clause — it is §6's greediness, but posited here rather than re-derived from
-an evaluation of an infinite quantifier, which would need the parameter
-tableaux §27 still lists as open; and the rendering of `sᵢ` as "T exactly
+an evaluation of an infinite quantifier, which would need the infinite half of completeness for the
+parameter tableaux, the one part of that port §27 still lists as open; and the rendering of `sᵢ` as "T exactly
 when every later sentence is F" is the strict universal of §6 with the greedy
 denial inside it. The truncation theorem is the positive control: an
 impossibility result is worthless if its definition is unsatisfiable by
@@ -1607,8 +1631,8 @@ forced under all readings; F if falsehood is forced; else Z**. Measured:
 interval value analysis (lazy flow of abstract values through
 computations) + assertion checking (greedy verdicts). Of the four
 engineering traditions named so far — NaN, NULL, taint tracking, abstract
-interpretation — three are reproduced on worked cases in the sense of §1,
-and this one is now an embedding.
+interpretation — all four are now embeddings (`ZNaN.lean`, `ZNull.lean`,
+`ZFlow.lean`, §27; and this one, below).
 
 **Kernel-checked embedding** (`ZAbsInt.lean`, empty axiom list). Their Galois
 connection is formalised as they state it — α(S) = the least interval
@@ -2955,18 +2979,40 @@ already ships in the repository (`tool/`); a possible essay,
 This work was carried out with the substantial participation of the AI
 system Claude (Anthropic) in a dialogue setting: the system generated
 the text, the test-bench code, and the Lean proofs. Across versions the
-dialogue ran on two Claude models, and the attribution is kept honest:
-Claude Opus 4.8 — the original corpus (v1.0) and the 2026-07-14/15
-additions (the three-laws capstone §3.1, the Finn attribution and
-reconciliation in §3.8, the paradox-engine synthesis opening §11, the
-Łukasiewicz pedigree and the genetic order in §4); Claude Fable 5 —
-the v1.1 same-day correction and the v1.2 assembly (the census of
-sixteen and its Lean clone equalities, the fence-depth theorem, the
-warranty ladder at scale, the naming of the lift, the temporal layer
+dialogue ran on four Claude models, and the attribution is kept honest,
+read from the commit trailers: Claude Opus 4.8 — the original corpus
+(v1.0), the 2026-07-14/15 additions (the three-laws capstone §3.1, the
+Finn attribution and reconciliation in §3.8, the paradox-engine synthesis
+opening §11, the Łukasiewicz pedigree and the genetic order in §4), the
+kernel-checked theorems of §§13, 14 and 17 in `ZExped.lean`, and the v1.3
+assembly and PDF build, applying a fresh-eyes review by Claude Fable 5;
+Claude Fable 5 — the v1.1 same-day correction and the v1.2 assembly (the
+census of sixteen and its Lean clone equalities, the fence-depth theorem,
+the warranty ladder at scale, the naming of the lift, the temporal layer
 §§21–23 with `ZTime.lean` and `EpochBoundary.lean`, the expiry and
-derivation stands, and this PDF build); Claude Opus 5 — the receipt
-results of §19 with `Receipt.lean`, `Linear.lean` and `LabelExact.lean`,
-and the accompanying benches. All design
+derivation stands, and the v1.2 PDF build), the kernel-checked facts of
+§§11 and 12 (`Facts.lean`, `ZSets.lean`), `ZNum.lean`, and the
+warrant-grade case studies of the corpus (`Plato_Equality.lean`,
+`Plato_Conservativity.lean`, `Hume_Guillotine.lean`); Claude Opus 5 — the
+first wave of v1.4, from the fence-depth theorem for every m to the
+foundation of the parameter-tableau port: `ZFenceDepth.lean`; the
+embeddings `ZProv.lean`, `ZDempster.lean`, `ZYablo.lean` and
+`ZAbsInt.lean`; `ZTaint.lean`, `ZCombine.lean`, `ZIgnorance.lean` and
+`ZNoAxiom.lean`; `ZParamSound.lean`, `ZParamSyntax.lean`,
+`ZParamTableau.lean`, `ZParamClosure.lean` and `ZParamProp.lean`; the
+receipt results of §19 with `Receipt.lean`, `Linear.lean` and
+`LabelExact.lean`; `NoGift.lean`, `ContextClosure.lean`,
+`ClassicalAgreement.lean`, `ZIndisc.lean`, `ZFreeUI.lean`,
+`ZEqGeneric.lean`, `ZFreeUIGeneric.lean` and `ZNumCoherent.lean`; the
+reliance bridge (`RelianceBridge.lean`, `Layering.lean`); the position
+against Tomova's criterion in §4; and the accompanying benches; Claude
+Fable 5.1 — the search and the last three embeddings (`ZParamEngine.lean`,
+`ZNaN.lean`, `ZNull.lean`, `ZFlow.lean`), the finite half of completeness
+(`ZParamHintikka.lean`), cut elimination (`ZCutElim.lean`), the three
+hardness results (`ZHeredTaut.lean`, `ZWidthHard.lean`,
+`ZReceiptHard.lean`), `LabelExactDefinite.lean`, `ZReconverge.lean`,
+`ZNumPrice.lean`, the claim-grade correction of the complexity
+statements, and the v1.4 assembly. All design
 decisions, fork choices, hypotheses, and the final responsibility for
 the content rest with the human author. In accordance with COPE/ICMJE
 recommendations, the AI system is not listed as an author. The

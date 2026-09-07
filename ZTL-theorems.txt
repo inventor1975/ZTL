@@ -1,7 +1,7 @@
 ZTL — the theorem inventory
 ============================================================
 
-840 theorems across 58 modules, all on the empty axiom list.
+1112 theorems across 66 modules, all on the empty axiom list.
 
 Every theorem below is machine-checked by the Lean 4 kernel
 on the EMPTY axiom list (no Classical.choice, no Quot.sound,
@@ -684,7 +684,7 @@ inventory/axiom_audit.py, which re-checks every line in CI.
     ZParamSearch.mem_rotate
     ZParamSearch.sat_rotate
 
-## ZParamEngine.lean  (50)
+## ZParamEngine.lean  (64)
     ZParamEngine.orT
     ZParamEngine.andT
     ZParamEngine.orF
@@ -719,8 +719,14 @@ inventory/axiom_audit.py, which re-checks every line in CI.
     ZParamEngine.deltaT_sound
     ZParamEngine.gammaT_sound
     ZParamEngine.gammaF_sound
+    ZParamEngine.delta2_sound
     ZParamEngine.expand_sound
     ZParamEngine.pick_sound
+    ZParamEngine.mem_revAcc
+    ZParamEngine.mem_revB
+    ZParamEngine.mem_revAcc_of_acc
+    ZParamEngine.mem_revAcc_of_mem
+    ZParamEngine.mem_revB_of_mem
     ZParamEngine.mem_append_left
     ZParamEngine.mem_append_right
     ZParamEngine.search_sound
@@ -728,6 +734,7 @@ inventory/axiom_audit.py, which re-checks every line in CI.
     ZParamEngine.signT_T
     ZParamEngine.signN_false
     ZParamEngine.entails_of_closed
+    ZParamEngine.entails_of_closed_core
     ZParamEngine.run_all_inst
     ZParamEngine.run_and_elim
     ZParamEngine.run_fallen_bridge
@@ -735,6 +742,94 @@ inventory/axiom_audit.py, which re-checks every line in CI.
     ZParamEngine.run_two_place
     ZParamEngine.run_diag_to_pair
     ZParamEngine.run_swap_needs_classical
+    ZParamEngine.run_or_elim_open
+    ZParamEngine.run_generator_first
+    ZParamEngine.run_generator_last
+    ZParamEngine.run_swap_with_delta2
+    ZParamEngine.run_all_conj_without_delta2
+    ZParamEngine.run_all_conj_with_delta2
+    ZParamEngine.run_fallen_bridge_with_delta2
+
+## ZParamHintikka.lean  (79)
+    ZParamHintikka.andI
+    ZParamHintikka.orFF
+    ZParamHintikka.notF
+    ZParamHintikka.andFF
+    ZParamHintikka.andTrueF
+    ZParamHintikka.size_inst
+    ZParamHintikka.ltB_zero
+    ZParamHintikka.ltB_succ_of_ne
+    ZParamHintikka.closedT_inst
+    ZParamHintikka.closedL_inst
+    ZParamHintikka.closed_inst
+    ZParamHintikka.mem_of_memB
+    ZParamHintikka.memB_of_mem
+    ZParamHintikka.memN_append_left
+    ZParamHintikka.memN_append_right
+    ZParamHintikka.memN_head
+    ZParamHintikka.memN_parsL
+    ZParamHintikka.memN_parsB
+    ZParamHintikka.memN_cands
+    ZParamHintikka.atom_par_cand
+    ZParamHintikka.base_mem
+    ZParamHintikka.norm_mem
+    ZParamHintikka.norm_id
+    ZParamHintikka.norm_norm
+    ZParamHintikka.norm_base
+    ZParamHintikka.mapNorm_norm
+    ZParamHintikka.termρ_norm
+    ZParamHintikka.termd_norm
+    ZParamHintikka.stackVal_mapNorm
+    ZParamHintikka.trmVal_norm
+    ZParamHintikka.trmVals_norm
+    ZParamHintikka.termI_mapNorm
+    ZParamHintikka.holds_norm
+    ZParamHintikka.allG_mem
+    ZParamHintikka.allG_of_all
+    ZParamHintikka.anyG_mem
+    ZParamHintikka.anyG_of_mem
+    ZParamHintikka.holds_evalQ
+    ZParamHintikka.total_term
+    ZParamHintikka.clashTag_symm
+    ZParamHintikka.clashTag_refl
+    ZParamHintikka.clashesWith_false
+    ZParamHintikka.open_no_clash
+    ZParamHintikka.anyNew_false
+    ZParamHintikka.one_none
+    ZParamHintikka.two_none
+    ZParamHintikka.firstNew_none
+    ZParamHintikka.anyInstance_true
+    ZParamHintikka.gammaT_none
+    ZParamHintikka.gammaF_none
+    ZParamHintikka.deltaT_none
+    ZParamHintikka.delta2_none
+    ZParamHintikka.delta2Sat_of_sat
+    ZParamHintikka.znot_F
+    ZParamHintikka.znot_weak
+    ZParamHintikka.zand_TT
+    ZParamHintikka.zand_weak_l
+    ZParamHintikka.zand_weak_r
+    ZParamHintikka.zor_T_l
+    ZParamHintikka.zor_T_r
+    ZParamHintikka.zor_weak
+    ZParamHintikka.zimp_F_l
+    ZParamHintikka.zimp_T_r
+    ZParamHintikka.zimp_weak
+    ZParamHintikka.atom_terms
+    ZParamHintikka.sat_atom
+    ZParamHintikka.le_succ_pred
+    ZParamHintikka.sat_saturated
+    ZParamHintikka.memT_append_left
+    ZParamHintikka.memT_append_right
+    ZParamHintikka.memBr_append_split
+    ZParamHintikka.expand_extends
+    ZParamHintikka.pick_extends
+    ZParamHintikka.pick_none
+    ZParamHintikka.stuck_branch
+    ZParamHintikka.mem_tagAll
+    ZParamHintikka.countermodel_of_saturated
+    ZParamHintikka.stuck_refutes
+    ZParamHintikka.closed_or_stuck_decides
 
 ## ZNaN.lean  (25)
     ZNaN.rel_nan_left
@@ -990,4 +1085,197 @@ inventory/axiom_audit.py, which re-checks every line in CI.
     RelianceBridge.no_new_laws
     RelianceBridge.no_chain_of_lemmas_launders
     RelianceBridge.sanitiser_is_outside_the_graph
+
+## ZCutElim.lean  (103)
+    ZCut.orT
+    ZCut.andT
+    ZCut.andI
+    ZCut.notT
+    ZCut.bandComm
+    ZCut.bandAssoc
+    ZCut.le_dest
+    ZCut.addMul
+    ZCut.appAssoc
+    ZCut.appNil
+    ZCut.pick_pick
+    ZCut.pick_ins
+    ZCut.ins_append
+    ZCut.pick_append
+    ZCut.perm_refl
+    ZCut.perm_symm
+    ZCut.perm_append_left
+    ZCut.perm_append_right
+    ZCut.perm_middle
+    ZCut.perm_append_comm
+    ZCut.perm_pick
+    ZCut.envEq_refl
+    ZCut.envEq_symm
+    ZCut.envEq_trans
+    ZCut.sub_refl
+    ZCut.sub_of_envEq
+    ZCut.sIsEmpty_congr
+    ZCut.notOr3
+    ZCut.notOr3F
+    ZCut.empty_none
+    ZCut.none_empty
+    ZCut.nonempty_some
+    ZCut.empty_sub
+    ZCut.inter_mem
+    ZCut.upd_same
+    ZCut.upd_other
+    ZCut.upd_comm
+    ZCut.upd_twice
+    ZCut.upd_absorb
+    ZCut.upd_congr
+    ZCut.upd_sub
+    ZCut.ax_ruleC
+    ZCut.ax_rule2
+    ZCut.ruleC_rule2
+    ZCut.ruleC_not_atom
+    ZCut.ruleC_det
+    ZCut.rule2_det
+    ZCut.der_add
+    ZCut.der_mono
+    ZCut.der_pos
+    ZCut.ax_sub
+    ZCut.ax_congr
+    ZCut.upd_inter_sub
+    ZCut.inter_congr_left
+    ZCut.der_congr
+    ZCut.der_refine
+    ZCut.der_weak
+    ZCut.der_perm
+    ZCut.der_swap_front
+    ZCut.inv1
+    ZCut.inv2
+    ZCut.upd_twice_inter
+    ZCut.inv_atom
+    ZCut.upd_upd_same_inter
+    ZCut.inter_absorb_mid
+    ZCut.inter_swap
+    ZCut.cut_env
+    ZCut.tT
+    ZCut.tF
+    ZCut.fT
+    ZCut.fF
+    ZCut.pT
+    ZCut.pF
+    ZCut.nT
+    ZCut.nF
+    ZCut.covTN
+    ZCut.covFP
+    ZCut.cut_atom
+    ZCut.le_pred_succ
+    ZCut.le_of_add2
+    ZCut.le_of_add3
+    ZCut.cutP
+    ZCut.cut_TN
+    ZCut.cut_FP
+    ZCut.der_of_closes
+    ZCut.satL_pick
+    ZCut.SAT_pick
+    ZCut.sound
+    ZCut.closes_of_der
+    ZCut.cut_closes_with_bound
+    ZCut.swap_pick
+    ZCut.swap_append
+    ZCut.ax_swap
+    ZCut.ruleC_swap
+    ZCut.rule2_swap
+    ZCut.der_swap
+    ZCut.bits_F_N
+    ZCut.tf_cut_compound
+    ZCut.tf_cut_fails_on_atoms
+    ZCut.bound_or_chain
+    ZCut.bound_and_chain
+    ZCut.bound_neg
+    ZCut.bound_imp
+
+## ZHeredTaut.lean  (17)
+    ZHeredTaut.lem_Z
+    ZHeredTaut.lem_grounded
+    ZHeredTaut.and_F_left
+    ZHeredTaut.imp_T_left
+    ZHeredTaut.lift1_ne_Z
+    ZHeredTaut.lift2_ne_Z
+    ZHeredTaut.evalF_ne_Z
+    ZHeredTaut.lemAt_Z
+    ZHeredTaut.lemAt_T
+    ZHeredTaut.guard_F
+    ZHeredTaut.guard_T
+    ZHeredTaut.witness_allZ
+    ZHeredTaut.dependsOn_guard
+    ZHeredTaut.hasMark_true
+    ZHeredTaut.hasMark_false
+    ZHeredTaut.hereditary_iff_taut
+    ZHeredTaut.not_taut_revocable
+
+## ZWidthHard.lean  (10)
+    ZWidthHard.length_erase1_of_mem
+    ZWidthHard.mem_erase1_of_ne
+    ZWidthHard.lt_or_eq_of_lt_succ
+    ZWidthHard.length_ge_of_all_below
+    ZWidthHard.stays_if_a_guard_is_marked
+    ZWidthHard.no_move_below
+    ZWidthHard.mem_range
+    ZWidthHard.length_range
+    ZWidthHard.width_iff_refutable
+    ZWidthHard.width_is_all_or_nothing
+
+## ZReceiptHard.lean  (12)
+    V.and_true_left
+    V.and_true_right
+    V.evalK_allZ
+    V.sides_ne
+    V.named
+    V.restrict_occ
+    V.restrict_nocc
+    V.fillT_ne_Z
+    V.leqb_fillT
+    V.leqb_T_eq
+    V.pivotal_iff_sat
+    V.conj_always_pivotal
+
+## LabelExactDefinite.lean  (19)
+    V.pivotalD_pivotal
+    V.fills_trans
+    V.linMarks_of_fills
+    V.leqb_Z_left
+    V.leqb_F_eq
+    V.def_of_leqb
+    V.leqb_of_fills
+    V.fills_setA
+    V.leqb_setA_of
+    V.fillV_ne_Z
+    V.fillV_of_ne_Z
+    V.fillOn_occ
+    V.fillOn_nocc
+    V.fills_fillOn
+    V.definiteOn_fillOn
+    V.fillOn_agree
+    V.fillOn_at
+    V.pivotalD_of_pair
+    V.label_exact_linear_definite
+
+## ZReconverge.lean  (11)
+    ZReconverge.zand_assoc
+    ZReconverge.append_nil'
+    ZReconverge.eligible_nil
+    ZReconverge.zand_eq_T
+    ZReconverge.T_of_beq
+    ZReconverge.beq_of_T
+    ZReconverge.verdict_append
+    ZReconverge.eligible_append_iff
+    ZReconverge.no_reconvergence_witness
+    ZReconverge.reconvergence_moves_the_verdict_not_eligibility
+    ZReconverge.overgrant_recombines_neutrally
+
+## ZNumPrice.lean  (7)
+    ZNumPrice.int_add_comm
+    ZNumPrice.nat_add_right_cancel
+    ZNumPrice.add_comm_readings
+    ZNumPrice.add_zero_readings
+    ZNumPrice.comm_not_earned
+    ZNumPrice.unit_not_earned
+    ZNumPrice.zarith_instance
 

@@ -1,13 +1,19 @@
-# Zenodo upload sheet — ZTL v1.4 (IN PREPARATION, not yet uploaded)
+# Zenodo upload sheet — ZTL v1.4 (PUBLISHED 2026-09-07)
 
-**v1.4 — to be uploaded as a NEW VERSION of the existing record** (concept DOI
-10.5281/zenodo.21318981; the concept DOI resolves to the latest version).
+**v1.4 PUBLISHED 2026-09-07: version DOI 10.5281/zenodo.22643843**
+(https://zenodo.org/records/22643843), uploaded as a new version of the
+existing record (concept DOI 10.5281/zenodo.21318981, which resolves to the
+latest version). Verified against the API after publication: title, version
+1.4, CC BY 4.0, file `ZTL-preprint-v1.4.pdf` with md5 equal to the
+repository copy. One metadata wart on the record: its related identifier
+`isNewVersionOf` carries v1.2's DOI (21440066), inherited from the previous
+version's form, where this sheet said v1.3 (21472971); fixable on Zenodo via
+Edit → related works, without a new version.
 Prior versions: v1.3 10.5281/zenodo.21472971 (2026-07-21); v1.2
 10.5281/zenodo.21440066 (2026-07-19); v1.1 10.5281/zenodo.21323552; v1.0
 10.5281/zenodo.21318982. The public sequence stays clean: 1.0 → 1.1 → 1.2 →
-1.3 → 1.4. After publication: embed the version DOI into the draft header,
-CITATION.cff and README (as e606682 did for v1.3), then mark this sheet
-PUBLISHED with the date.
+1.3 → 1.4. The version DOI is embedded into the draft header, CITATION.cff
+and README (as e606682 did for v1.3).
 
 The numbers below are measured by `inventory/paper_claims.py` (pages of the
 PDF, theorems, modules, stands) — the part of this sheet above the version

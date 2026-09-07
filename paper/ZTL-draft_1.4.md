@@ -1,6 +1,7 @@
 # ZTL — Zero-Trust Logic — v1.4.1
 
-**V. Reznik. Preprint, v1.4.1 — 2026-09-07. Concept DOI:
+**V. Reznik. Preprint, v1.4.1 — 2026-09-07. Version DOI:
+[10.5281/zenodo.22644261](https://doi.org/10.5281/zenodo.22644261). Concept DOI:
 [10.5281/zenodo.21318981](https://doi.org/10.5281/zenodo.21318981)
 (v1.4: [10.5281/zenodo.22643843](https://doi.org/10.5281/zenodo.22643843);
 v1.3: [10.5281/zenodo.21472971](https://doi.org/10.5281/zenodo.21472971);

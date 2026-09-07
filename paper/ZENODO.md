@@ -1,7 +1,11 @@
-# Zenodo upload sheet — ZTL v1.4.1 (IN PREPARATION, same-day correction of v1.4)
+# Zenodo upload sheet — ZTL v1.4.1 (PUBLISHED 2026-09-07)
 
-**v1.4.1 — to be uploaded as a NEW VERSION of the record** (concept DOI
-10.5281/zenodo.21318981). It corrects §2 of v1.4: all ten ZTL tables are
+**v1.4.1 PUBLISHED 2026-09-07: version DOI 10.5281/zenodo.22644261**
+(https://zenodo.org/records/22644261), a new version of the record (concept DOI
+10.5281/zenodo.21318981). Verified against the API after publication: version
+1.4.1, CC BY 4.0, file md5 equal to the repository copy; the record's
+isNewVersionOf field again carries v1.2's DOI (21440066), inherited from the
+form (fixable via Edit, no new version). It corrects §2 of v1.4: all ten ZTL tables are
 shown with the measured failure of the classical routes to the second five;
 the v1.4 PDF showed six. **v1.4 PUBLISHED 2026-09-07: version DOI
 10.5281/zenodo.22643843** (https://zenodo.org/records/22643843), uploaded as a
@@ -15,8 +19,8 @@ Edit → related works, without a new version.
 Prior versions: v1.3 10.5281/zenodo.21472971 (2026-07-21); v1.2
 10.5281/zenodo.21440066 (2026-07-19); v1.1 10.5281/zenodo.21323552; v1.0
 10.5281/zenodo.21318982. The public sequence stays clean: 1.0 → 1.1 → 1.2 →
-1.3 → 1.4 → 1.4.1. After publication: embed the v1.4.1 version DOI into the
-draft header, CITATION.cff and README, and mark this sheet PUBLISHED.
+1.3 → 1.4 → 1.4.1. The v1.4.1 version DOI is embedded into the draft header,
+CITATION.cff and README.
 
 The numbers below are measured by `inventory/paper_claims.py` (pages of the
 PDF, theorems, modules, stands) — the part of this sheet above the version

@@ -43,7 +43,7 @@ _PAPER = os.path.join(_ROOT, "paper")
 # the live PSSL source; v1_0_0 is the published record and is frozen
 PSSL_TEX = "paper/PSSL_EN_v1_1_0.tex"
 
-FROZEN = {"paper/ZENODO.md": "the published v1.2 record (DOI 21440066)",
+FROZEN = {
           "paper/PSSL_EN_v1_0_0.tex": "the published PSSL v1.0.0 (DOI 21452736)"}
 
 WORDS = {"twelve": 12, "thirteen": 13, "fourteen": 14, "fifteen": 15,
@@ -105,8 +105,13 @@ def corpus_totals():
 
 def stand_count():
     src = text("run_all.py")
-    block = src[src.index("STANDS = ["):src.index("]\n\n\ndef main")]
-    return len(re.findall(r'^\s{4}\("', block, re.M))
+    # the block runs from "STANDS = [" to the first line that is just "]";
+    # the old marker ("]\n\n\ndef main") stopped matching when run_all.py was
+    # reshaped, and nothing noticed because no claim called this function.
+    m = re.search(r"^STANDS = \[(.*?)^\]", src, re.S | re.M)
+    if not m:
+        raise SystemExit("stand_count: STANDS block not found in run_all.py")
+    return len(re.findall(r'^\s{4}\("', m.group(1), re.M))
 
 
 def pdf_pages(rel):
@@ -206,6 +211,26 @@ if __name__ == "__main__":
     print("\n### Frozen records — deliberately NOT checked")
     for rel, why in FROZEN.items():
         print(f"  [skip] {rel:42s} {why}")
+
+    print("\n### Zenodo sheet (paper/ZENODO.md) vs the artefact it ships")
+    # Only the CURRENT part of the sheet is checked — everything above the
+    # "What was new in v1.3" history; the history paragraphs carry their own
+    # versions' numbers (371 theorems, 62 stands …) and are the record.
+    zsheet = text("paper/ZENODO.md")
+    cut = zsheet.find("What was new in v1.3")
+    zcur = zsheet if cut < 0 else zsheet[:cut]
+    zpdf = re.search(r"\*\*File to upload:\*\* `(paper/[^`]+\.pdf)`", zcur)
+    if zpdf:
+        zpages = pdf_pages(zpdf.group(1))
+        for claimed in set(re.findall(r"\((\d+) pages\)", zcur)):
+            check("ZTL sheet: pages of the uploaded PDF", claimed, str(zpages), "ZENODO.md")
+    for claimed in set(re.findall(r"(\d+) theorems", zcur)):
+        check("ZTL sheet: theorems", claimed, str(thms), "ZENODO.md")
+    for w in {a or b for a, b in re.findall(r"([\w-]+) modules in all|([\w-]+) (?:Lean 4 )?modules", zcur)}:
+        if w.lower() in WORDS:
+            check(f"ZTL sheet: modules ('{w}')", str(WORDS[w.lower()]), str(mods), "ZENODO.md")
+    for claimed in set(re.findall(r"(\d+) (?:test )?stands", zcur)):
+        check("ZTL sheet: stands", claimed, str(stand_count()), "ZENODO.md")
 
     print("\n### Zenodo sheet (paper/PSSL-ZENODO.md) vs the PDF it ships")
     sheet = text("paper/PSSL-ZENODO.md")

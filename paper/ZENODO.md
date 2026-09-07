@@ -1,16 +1,20 @@
-# Zenodo upload sheet — ZTL v1.3 (PUBLISHED 2026-07-21)
+# Zenodo upload sheet — ZTL v1.4 (IN PREPARATION, not yet uploaded)
 
-**v1.3 PUBLISHED 2026-07-21: version DOI 10.5281/zenodo.21472971**
-(https://zenodo.org/records/21472971). Prior: v1.2 10.5281/zenodo.21440066
-(2026-07-19); v1.1 10.5281/zenodo.21323552; v1.0 10.5281/zenodo.21318982;
-concept DOI 10.5281/zenodo.21318981 resolves to the latest version (now
-v1.3). The public sequence stayed clean: 1.0 → 1.1 → 1.2 → 1.3. DOI
-embedded into the draft header, CITATION.cff, and README.
+**v1.4 — to be uploaded as a NEW VERSION of the existing record** (concept DOI
+10.5281/zenodo.21318981; the concept DOI resolves to the latest version).
+Prior versions: v1.3 10.5281/zenodo.21472971 (2026-07-21); v1.2
+10.5281/zenodo.21440066 (2026-07-19); v1.1 10.5281/zenodo.21323552; v1.0
+10.5281/zenodo.21318982. The public sequence stays clean: 1.0 → 1.1 → 1.2 →
+1.3 → 1.4. After publication: embed the version DOI into the draft header,
+CITATION.cff and README (as e606682 did for v1.3), then mark this sheet
+PUBLISHED with the date.
 
-The block below is retained as the record of what was uploaded (copy-paste
-material for the manual Zenodo upload; the curator publishes).
+The numbers below are measured by `inventory/paper_claims.py` (pages of the
+PDF, theorems, modules, stands) — the part of this sheet above the version
+history is checked on every run; the history paragraphs carry their own
+versions' numbers and are not.
 
-**File to upload:** `paper/ZTL-preprint-v1.3.pdf` (24 pages)
+**File to upload:** `paper/ZTL-preprint-v1.4.pdf` (36 pages)
 
 ---
 
@@ -20,7 +24,7 @@ material for the manual Zenodo upload; the curator publishes).
 
 **Authors:** Reznik, Vitaly
 
-**Version:** 1.3
+**Version:** 1.4
 
 **License:** Creative Commons Attribution 4.0 International (CC BY 4.0)
 
@@ -45,45 +49,55 @@ That the logic is not arbitrary is evidenced case by case: six
 independent engineering traditions — IEEE 754 NaN, SQL NULL, taint
 tracking, abstract interpretation, imprecise probabilities, and
 provenance semirings — have each reinvented a fragment of the same
-discipline, and for each the core reproduces its central move on a
-worked case (we argue, and do not claim to have proved, that each
-implements a fragment of one logic).
+discipline, and for each its own semantics is formalised as the
+tradition states it, with a theorem on the empty axiom list placing
+ZTL's verdict inside it — an embedding of the algebraic core, not of the
+whole tradition; the unformalised remainder is named in each case.
 
 For this logic the preprint builds: the measured price list of classical
 laws (12 survive, including modus ponens; 14 fall — all "truth from
 form"); the split between rules and laws with a one-directional deduction
 theorem for the primitive arrow; a signed tableau calculus with
-machine-proven soundness, completeness and cut admissibility; an
+machine-proven soundness, completeness and cut admissibility, and a
+syntactic cut-elimination procedure with its bound as a function; an
 algebraic passport — expressive completeness of the external layer, a
 definable implication with the full deduction theorem, Craig
 interpolation, and the Blok–Pigozzi conditions verified on the matrix
 (ZTL is algebraizable, yet not self-extensional); quantifiers over finite
-and arbitrary domains; first-order identity (a = predicate whose
-reflexivity is an earned verdict — self-identity falls to Z on an
-unverified reference — while Leibniz's law licenses substitution only
-through an earned equality) and free logic with definite and indefinite
-descriptions (a non-denoting term takes the mark, not F and not a gap;
-existence is earned self-identity; excluded middle on a non-denoting atom
-is F — the greedy collapse setting ZTL apart from the neutral free-logic
-school; Hilbert's ε earns denotation exactly when a witness exists);
-modal and probabilistic identifications, including the necessity of
-identity for earned equalities and rigid designation as the modal face of
-existence; a theory of verification (a verdict is a pair "value +
-warranty": sound — never lies; hereditary — never revoked) and of
-evidence combination (conflict is never renormalized); and a quarantine
-passport typing every refusal by its genesis — paradox, intrinsic,
-underdetermined, unverified input, inherited — with a measured stipulation
-theorem. The classical paradoxes (the liar, Jourdain's carousel, Curry,
-Yablo, the crocodile, Russell) receive a uniform diagnosis: pointwise
+and arbitrary domains, with the parameter tableaux ported to Lean — every
+rule proved sound, a search built and proved sound, the finite half of
+completeness a theorem and the infinite half stated and left argued;
+first-order identity (a = predicate whose reflexivity is an earned
+verdict — self-identity falls to Z on an unverified reference — while
+Leibniz's law licenses substitution only through an earned equality) and
+free logic with definite and indefinite descriptions (a non-denoting
+term takes the mark, not F and not a gap; existence is earned
+self-identity; excluded middle on a non-denoting atom is F — the greedy
+collapse setting ZTL apart from the neutral free-logic school; Hilbert's
+ε earns denotation exactly when a witness exists), both now proved for
+an arbitrary domain; modal and probabilistic identifications, the latter
+a theorem for every finite frame and every proper mass assignment; a
+theory of verification (a verdict is a pair "value + warranty": sound —
+never lies; hereditary — never revoked) whose receipt is bounded from
+both sides and whose three uncomputed grades are proved hard — the
+hereditary grade is a tautology check (coNP-hard), the exact width of an
+inquiry and the exact receipt are NP-hard — so the judge's cheap cuts
+are forced rather than chosen; evidence combination (conflict is never
+renormalized; Zadeh's paradox is a theorem); and a quarantine passport
+typing every refusal by its genesis — paradox, intrinsic,
+underdetermined, unverified input, inherited — with a measured
+stipulation theorem. The classical paradoxes (the liar, Jourdain's
+carousel, Curry, Yablo — now at the limit, without a classical step —
+the crocodile, Russell) receive a uniform diagnosis: pointwise
 quarantine instead of explosion.
 
-The entire development — twenty-one Lean 4 modules — is machine-checked
+The entire development — sixty-six Lean 4 modules — is machine-checked
 with an EMPTY axiom list (no classical choice, no quotients, not even
-propositional extensionality; definitions included): 371 theorems, each
-audited individually. Every numerical claim is reproducible by the
-repository's regression (62 test stands); an interactive studio (natural
-language → the ZFL formal language → the measured core) ships with the
-repository.
+propositional extensionality; definitions included): 1112 theorems, each
+audited individually; no section of the paper rests on measurement
+alone. Every numerical claim is reproducible by the repository's
+regression (153 test stands); an interactive studio (natural language →
+the ZFL formal language → the measured core) ships with the repository.
 
 Functionally the {not, and, or} fragment coincides, cell by cell, with
 the external layer of Bochvar's logic (1938) — a kinship found in the
@@ -92,7 +106,58 @@ contribution is the generating principle, an implicational floor outside
 the Rosser–Turquette standardness conditions, the calculus, the machine
 verification, and the bridges to the engineering traditions.
 
-What is new in v1.3 — the preprint is reframed to lead with the logic
+What is new in v1.4 — first, NO SECTION RESTS ON MEASUREMENT ALONE: every
+one of the seventeen sections that carried the MEASURED tag now names
+kernel-checked theorems behind its load-bearing claims, the corpus
+growing threefold to sixty-six modules and 1112 theorems, all on the
+empty axiom list. Second, THE SIX TRADITIONS AS SIX EMBEDDING THEOREMS:
+IEEE 754 NaN (ZNaN.lean — every ordered predicate is the T-sign of a ZTL
+atom, the unordered predicate the mark test, and != alone the N-sign,
+which is exactly where IEEE's x != x and ZTL's refusal of ¬(x = x)
+part), SQL NULL (ZNull.lean — the expression layer is a homomorphism
+onto the lazy register, WHERE is SignT, CHECK is SignP, and the two part
+exactly on ¬¬Z), taint tracking (ZFlow.lean — Denning's lattice as the
+common target; Denning never declassifies, Perl declassifies by
+convention, ZTL by proof or not at all), abstract interpretation
+(ZAbsInt.lean — the Galois connection formalised and the verdict proved
+EXACT, not merely sound, with the point where exactness fails named),
+Dempster–Shafer (ZDempster.lean — the verdict is the {0,1}-threshold of
+belief for every finite frame and every proper mass assignment; the
+properness condition the first draft got wrong is recorded) and
+provenance semirings (ZProv.lean — the algebra embeds into the lazy
+register as a homomorphism, and the greedy operations provably admit no
+semiring structure at all); each an embedding of the algebraic core,
+with the unformalised remainder named. Third, THREE HARDNESS RESULTS on
+the warranties of §19: the hereditary grade is a tautology check
+(coNP-hard, ZHeredTaut.lean), the exact width of an inquiry is NP-hard
+(ZWidthHard.lean), the exact receipt is NP-hard (ZReceiptHard.lean) —
+the three grades the judge does not compute are the three it cannot
+compute cheaply; every complexity claim is held at hardness, membership
+argued and not claimed; the receipt's exactness on linear claims is
+proved under a definite reading (LabelExactDefinite.lean), and the
+gift-free fragment has its own fence (NoGift.lean). Fourth, a SYNTACTIC
+CUT-ELIMINATION PROCEDURE with its bound as a function (ZCutElim.lean),
+the classical cut refused on atoms and granted on compounds — the
+greediness theorem seen from inside the calculus. Fifth, THE LEAN PORT
+OF THE PARAMETER TABLEAUX: the axiom tier of the four quantifier rules
+measured before the port (three sound on the empty axiom list; the
+fourth, F:∀, needs ¬∀ → ∃¬ and is kept outside the corpus), every rule
+proved sound, a fuel-bounded search built and proved sound with the
+classical rule behind a flag, the finite half of completeness a theorem
+(ZParamHintikka.lean — a stuck run exhibits a countermodel that is
+finite and not classical), the infinite half stated with its parts and
+left argued; two defects of the search found by the kernel before any
+proof are recorded. Also: the price list on the numeric floor
+(ZNumPrice.lean); the global reading with theorems of its own
+(ContextClosure.lean, with the attribute-hiding prior art of PTaCL
+named); identity and free instantiation for an arbitrary domain
+(ZEqGeneric.lean, ZFreeUIGeneric.lean); Yablo at the limit refuted
+without a classical step (ZYablo.lean); and the precise position against
+Tomova's natural-implication criterion — ZTL violates its order
+condition in exactly one cell, (Z, Z), because Z is not a degree of
+truth.
+
+What was new in v1.3 — the preprint is reframed to lead with the logic
 and its precise identity, presenting the six engineering traditions as
 evidence that it is not arbitrary rather than as the opening motivation.
 Two positioning results settle the "is it really its own bivalent logic"
@@ -207,19 +272,26 @@ code and the Lean 4 kernel.
 
 **Keywords:**
 three-valued logic; Bochvar logic; paracomplete logic; zero trust;
-unverified data; SQL NULL; IEEE NaN; taint tracking; abstract
-interpretation; imprecise probabilities; provenance semirings;
-supervaluation; Kripke fixed points; theory of truth; paradoxes;
-Russell's paradox; algebraizable logics; Blok–Pigozzi; signed tableaux;
-cut admissibility; Craig interpolation; functional completeness; Sheffer stroke; clones; Suszko's thesis; double negation; first-order identity; Leibniz's law; free logic; definite descriptions; Hilbert epsilon; rigid designation; necessity of identity; temporal logic; runtime verification; warranty; epoch boundary; institutional computation; Lean 4; machine-checked proofs
+unverified data; SQL NULL; IEEE NaN; taint tracking; information flow;
+abstract interpretation; Galois connection; imprecise probabilities;
+Dempster–Shafer theory; provenance semirings; supervaluation; Kripke
+fixed points; theory of truth; paradoxes; Yablo's paradox; Russell's
+paradox; algebraizable logics; Blok–Pigozzi; signed tableaux; cut
+admissibility; cut elimination; Hintikka completeness; Craig
+interpolation; functional completeness; Sheffer stroke; clones; Suszko's
+thesis; natural implication; double negation; first-order identity;
+Leibniz's law; free logic; definite descriptions; Hilbert epsilon; rigid
+designation; necessity of identity; temporal logic; runtime
+verification; warranty; NP-hardness; coNP-hardness; epoch boundary;
+institutional computation; Lean 4; machine-checked proofs
 
 **Related/alternate identifiers:**
-- 10.5281/zenodo.21440066 — isNewVersionOf (v1.2, the prior version)
+- 10.5281/zenodo.21472971 — isNewVersionOf (v1.3, the prior version)
 - https://github.com/inventor1975/ZTL — isSupplementedBy (the code,
   the Lean corpus, the regression, the studio)
 
 **Additional notes (paste into "Additional notes"):**
 The preprint text is CC BY 4.0; the accompanying repository code is
-MIT-licensed. The ZTL Lean corpus (twenty-one modules, 371 theorems)
-verifies with an empty axiom list; run `python3 run_all.py` for the full
-repository regression (62 stands + Lean build).
+dual-licensed Apache-2.0 OR MIT. The ZTL Lean corpus (sixty-six modules,
+1112 theorems) verifies with an empty axiom list; run `python3 run_all.py`
+for the full repository regression (153 stands + Lean build).

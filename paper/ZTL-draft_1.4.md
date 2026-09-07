@@ -1,30 +1,30 @@
-# ZTL — Zero-Trust Logic — v1.4 (draft)
+# ZTL — Zero-Trust Logic — v1.4
 
-**V. Reznik. Preprint, v1.4 (draft) — 2026-09. Concept DOI:
+**V. Reznik. Preprint, v1.4 — 2026-09-07. Concept DOI:
 [10.5281/zenodo.21318981](https://doi.org/10.5281/zenodo.21318981)
 (v1.3: [10.5281/zenodo.21472971](https://doi.org/10.5281/zenodo.21472971);
 v1.2: [10.5281/zenodo.21440066](https://doi.org/10.5281/zenodo.21440066);
 v1.1: [10.5281/zenodo.21323552](https://doi.org/10.5281/zenodo.21323552);
 v1.0: [10.5281/zenodo.21318982](https://doi.org/10.5281/zenodo.21318982)).
-v1.4 adds: **no section rests on measurement alone** — every one of the
+v1.4 adds: *no section rests on measurement alone* — every one of the
 seventeen sections that carried the MEASURED tag now names kernel-checked
 theorems behind its load-bearing claims, the corpus growing threefold to
 sixty-six modules and 1112 theorems, all on the empty axiom list (§8);
-**the six traditions of §1 as six embedding theorems** — IEEE 754 NaN, SQL
+*the six traditions of §1 as six embedding theorems* — IEEE 754 NaN, SQL
 NULL, taint tracking, abstract interpretation, Dempster–Shafer and
 provenance semirings, each formalised as its own tradition states it,
 ZTL's verdict placed inside it and the unformalised remainder named
 (`ZNaN.lean`, `ZNull.lean`, `ZFlow.lean`, `ZAbsInt.lean`, `ZDempster.lean`,
-`ZProv.lean`; §§1, 15, 16, 20, 27); **three hardness results on the
-warranties of §19** — the hereditary grade is a tautology check
+`ZProv.lean`; §§1, 15, 16, 20, 27); *three hardness results on the
+warranties of §19* — the hereditary grade is a tautology check
 (coNP-hard, `ZHeredTaut.lean`), the exact width of an inquiry is NP-hard
 (`ZWidthHard.lean`), the exact receipt is NP-hard (`ZReceiptHard.lean`),
 so the three grades the judge does not compute are the three it cannot
 compute cheaply — every complexity claim held at hardness, membership
 argued and not claimed — with the receipt's exactness on linear claims
-proved under a definite reading (`LabelExactDefinite.lean`); **a syntactic
-cut-elimination procedure with its bound as a function** (§5,
-`ZCutElim.lean`); **the Lean port of the parameter tableaux of §6** — the
+proved under a definite reading (`LabelExactDefinite.lean`); *a syntactic
+cut-elimination procedure with its bound as a function* (§5,
+`ZCutElim.lean`); *the Lean port of the parameter tableaux of §6* — the
 axiom tier of the four quantifier rules measured, every rule proved
 sound, a fuel-bounded search built and proved sound, and the finite half
 of completeness a theorem, the infinite half stated with its parts and
@@ -33,8 +33,7 @@ price list on the numeric floor (§15, `ZNumPrice.lean`); the global
 reading with theorems of its own (§10, `ContextClosure.lean`); the
 identity and free-instantiation results of §25 for an arbitrary domain
 (`ZEqGeneric.lean`, `ZFreeUIGeneric.lean`); and the precise position
-against Tomova's natural-implication criterion (§4). Zenodo publication
-is the curator's manual step; the version DOI is embedded on release.**
+against Tomova's natural-implication criterion (§4).**
 
 **Carried over from the published v1.3 — version DOI
 [10.5281/zenodo.21472971](https://doi.org/10.5281/zenodo.21472971).
@@ -49,11 +48,11 @@ recovered by reduction, with the discriminator measured; the signature
 result (§4) — the single rule ¬¬p ⊨ p separates ZTL from each of its four
 involutive-negation neighbours (K3, LP, weak Kleene, Ł₃) and, by one
 lemma, from any three-valued matrix with involutive negation, its cause
-proved in `lean/Signature.lean` on the empty axiom list; **first-order
-identity** (§24, `ZEq.lean`) — a `=` predicate whose reflexivity is an
+proved in `lean/Signature.lean` on the empty axiom list; *first-order
+identity* (§24, `ZEq.lean`) — a `=` predicate whose reflexivity is an
 earned verdict, falling to Z on an unverified reference, while Leibniz's
-law licenses substitution only through an earned equality; and **free
-logic with definite descriptions** (§25, `ZDesc.lean`) — a non-denoting
+law licenses substitution only through an earned equality; and *free
+logic with definite descriptions* (§25, `ZDesc.lean`) — a non-denoting
 term takes the mark (existence = earned self-identity), and the greedy
 collapse (excluded middle on it is F, not a gap and not super-true)
 sets ZTL apart from the neutral free-logic school. v1.2 added: the central construction named — the zero-trust lift (§2);
@@ -224,7 +223,7 @@ three part on declassification: Denning never lowers a class, Perl lowers it
 by convention (the regex capture clears a bit whose payload still depends on
 the tainted input), ZTL by proof or not at all (`0 · mark = 0` is earned
 because the value is forced for every reading; no pointwise function clears a
-mark). SQL's NULL is the fifth (`ZNull.lean`, empty axiom list, §27): its three-valued expression layer is a homomorphism onto the lazy register, its comparison with NULL lands on the very atom IEEE's `==` did, and its boundaries are the four signs — WHERE is `SignT`, CHECK is `SignP`, the <boolean test> the rest — with WHERE agreeing with ZTL's verdict on every negation-normal search condition and parting exactly on `¬¬Z`. IEEE 754's NaN is the fourth (`ZNaN.lean`, empty axiom list, §27): the four-way comparison and the §6.2.3 propagation rule are formalised as the standard states them; arithmetic infection is a homomorphism into the mark-carrying integers; every ordered predicate is proved to be the T-sign of a ZTL atom, the unordered predicate the mark test, and `!=` — alone — the N-sign, which is exactly where IEEE's `x != x` and ZTL's refusal of `¬(x = x)` part. The algebra of
+mark). SQL's NULL is the fifth (`ZNull.lean`, empty axiom list, §27): its three-valued expression layer is a homomorphism onto the lazy register, its comparison with NULL lands on the very atom IEEE's `==` did, and its boundaries are the four signs — WHERE is `SignT`, CHECK is `SignP`, the `<boolean test>` the rest — with WHERE agreeing with ZTL's verdict on every negation-normal search condition and parting exactly on `¬¬Z`. IEEE 754's NaN is the fourth (`ZNaN.lean`, empty axiom list, §27): the four-way comparison and the §6.2.3 propagation rule are formalised as the standard states them; arithmetic infection is a homomorphism into the mark-carrying integers; every ordered predicate is proved to be the T-sign of a ZTL atom, the unordered predicate the mark test, and `!=` — alone — the N-sign, which is exactly where IEEE's `x != x` and ZTL's refusal of `¬(x = x)` part. The algebra of
 semiring provenance is formalised and mapped into the lazy register as a
 homomorphism, with the greedy operations proved to admit no such
 structure at all (`ZProv.lean`, empty axiom list, §27); and
@@ -874,8 +873,8 @@ domains the finite unfolding is unavailable; the standard cure —
 parameter (free-variable) tableaux with γ/δ rules — carries the
 zero-trust sign discipline over exactly:
 
-    γ (reusable, every parameter):   T:∀xφ → T:φ(c)     F:∃xφ → N:φ(c)
-    δ (fresh parameter, once):       F:∀xφ → N:φ(c*)    T:∃xφ → T:φ(c*)
+    γ (reusable, every parameter):  T:∀xφ → T:φ(c)    F:∃xφ → N:φ(c)
+    δ (fresh parameter, once):      F:∀xφ → N:φ(c*)   T:∃xφ → T:φ(c*)
 
 Fresh witnesses appear exactly where the propositional calculus allows
 weak signs (F-polarity) or demands a strict witness (T:∃). Status,
@@ -1211,14 +1210,14 @@ parts are worth; it is not a further theorem.
 The final and most precise formulation of what has been built:
 
 ```
-Truth values:      T, F                    (verdicts are always two-valued)
-Input mark:        Z "unverified"           (a property of data, not truth)
-Solver state:      N "not yet computed"     (a computation phase, present
-                                             only under self-reference;
-                                             provably finite — §9 — and
-                                             never escapes outward)
-Reading policy:    local, default deny      (the three-symbol tables are
-                                             the policy's calculator)
+Truth values:    T, F                   (verdicts are always two-valued)
+Input mark:      Z "unverified"          (a property of data, not truth)
+Solver state:    N "not yet computed"    (a computation phase, present
+                                          only under self-reference;
+                                          provably finite — §9 — and
+                                          never escapes outward)
+Reading policy:  local, default deny     (the three-symbol tables are
+                                          the policy's calculator)
 ```
 
 **ZTL is a two-valued logic that refuses to lie about the unverified.**
@@ -2043,7 +2042,8 @@ each mark — which also bars it from an implication's antecedent and from
 `⊕`/`↔` entirely), then a greedy T survives every refinement of the
 marks:
 
-    no_gift : posMarks v φ → refines v w → evalF v φ = T → evalF w φ = T
+    no_gift : posMarks v φ → refines v w →
+              evalF v φ = T → evalF w φ = T
 
 `closure_coincides` was the one-atom case; what is added is all marks at
 once and all PARTIAL refinements, which is what the hereditary grade
@@ -2786,7 +2786,7 @@ standard. Every `Int` order lemma measured carries propext, so both sides read
 the order off one three-way comparison and no such lemma is used. The second
 twin — SQL's NULL — is embedded in `ZNull.lean` (E50, empty axiom list): the
 truth values TRUE/FALSE/UNKNOWN with the standard's three tables, the
-comparison predicates, WHERE, CHECK and the <boolean test>. Proved: the
+comparison predicates, WHERE, CHECK and the `<boolean test>`. Proved: the
 expression layer is a HOMOMORPHISM onto the lazy register `knot/kand/kor`,
 cell for cell — and not onto the greedy one (`NOT NOT UNKNOWN` is UNKNOWN,
 `¬¬Z` is T); the comparison with NULL is the SAME mark atom IEEE's `==`

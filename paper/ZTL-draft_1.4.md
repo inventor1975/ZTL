@@ -139,9 +139,9 @@ cannot mint it — from no premises nothing is derivable, even the guarded
 tautologies, even on credit). The entire development — the core, both
 engine certificates with cut admissibility, the algebraic witnesses, the
 general fixed-point theorem, the expedition twins, the temporal modules
-and the frame's own mini-theorems, sixty-four modules in all — is
+and the frame's own mini-theorems, sixty-six modules in all — is
 formalized in Lean 4 **with an empty axiom list, definitions
-included**: 1094 theorems, each one audited individually rather than by
+included**: 1112 theorems, each one audited individually rather than by
 sample (`inventory/axiom_audit.py`, re-run on every push). As of this
 revision no section rests on measurement alone: every one of the seventeen
 that carried the MEASURED tag now names kernel-checked theorems behind its
@@ -1596,7 +1596,12 @@ forced under all readings; F if falsehood is forced; else Z**. Measured:
   the monotonicity of the lazy register, now in numbers.
 * **Price-list inheritance:** commutativity of addition survives at the
   interval level, verdict-equality is Z→F; the unit x+0=x falls
-  verdict-wise with coinciding intervals (regularity R1, §26).
+  verdict-wise with coinciding intervals (regularity R1, §26) — now a
+  theorem in both halves (`ZNumPrice.lean`, E62): the reading sets of
+  x+y and y+x, and of x+0 and x, coincide (`add_comm_readings`,
+  `add_zero_readings`), and on a mark with two readings neither equation
+  is forced true or forced false (`comm_not_earned`, `unit_not_earned`;
+  the cell above, x∈[1,3], y∈[2,4], is `zarith_instance`).
 
 **The fourth twin: abstract interpretation** (Cousot & Cousot, 1977) —
 interval value analysis (lazy flow of abstract values through
@@ -1633,8 +1638,10 @@ Narrowing-heredity — what is earned is never revoked as intervals shrink — i
 a theorem for every comparison atom under both readings
 (`forcedLE/NotLE/LT/NotLT/EQ/NE_hereditary`, twice over), together with the
 transitivity of narrowing and the endpoint case. Decorrelation has a named
-witness (`decorrelation_witness`). Forcedness on products (0·w) and the
-price-list inheritance for commutativity and the unit are measured only.
+witness (`decorrelation_witness`). Forcedness on products (0·w) is
+`ZNaN.zero_times_mark` (§27), and the price-list inheritance for
+commutativity and the unit is `ZNumPrice.lean` — an earlier revision of
+this sentence still called both measured only after each had landed.
 
 ## 16. The probabilistic bridge: Z ≠ p = 0.5 (MEASURED + Lean)
 

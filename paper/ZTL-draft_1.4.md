@@ -1,13 +1,16 @@
-# ZTL — Zero-Trust Logic — v1.4
+# ZTL — Zero-Trust Logic — v1.4.1
 
-**V. Reznik. Preprint, v1.4 — 2026-09-07. Version DOI:
-[10.5281/zenodo.22643843](https://doi.org/10.5281/zenodo.22643843). Concept DOI:
+**V. Reznik. Preprint, v1.4.1 — 2026-09-07. Concept DOI:
 [10.5281/zenodo.21318981](https://doi.org/10.5281/zenodo.21318981)
-(v1.3: [10.5281/zenodo.21472971](https://doi.org/10.5281/zenodo.21472971);
+(v1.4: [10.5281/zenodo.22643843](https://doi.org/10.5281/zenodo.22643843);
+v1.3: [10.5281/zenodo.21472971](https://doi.org/10.5281/zenodo.21472971);
 v1.2: [10.5281/zenodo.21440066](https://doi.org/10.5281/zenodo.21440066);
 v1.1: [10.5281/zenodo.21323552](https://doi.org/10.5281/zenodo.21323552);
 v1.0: [10.5281/zenodo.21318982](https://doi.org/10.5281/zenodo.21318982)).
-v1.4 adds: *no numbered section rests on measurement alone* — every one of the
+v1.4.1, the same day, corrects §2: all ten ZTL tables are shown — the
+five primitives, ↔ and the four negated compounds — with the measured
+failure of every classical route to the second five; the v1.4 PDF showed
+six. v1.4 adds: *no numbered section rests on measurement alone* — every one of the
 eighteen sections that carried the MEASURED tag now names kernel-checked
 theorems behind its load-bearing claims, the corpus growing threefold to
 sixty-six modules and 1112 theorems, all on the empty axiom list (§8);
@@ -36,12 +39,6 @@ reading with theorems of its own (§10, `ContextClosure.lean`); the
 identity and free-instantiation results of §25 for an arbitrary domain
 (`ZEqGeneric.lean`, `ZFreeUIGeneric.lean`); and the precise position
 against Tomova's natural-implication criterion (§4).**
-
-**Working text after the v1.4 PDF (published 2026-09-07, version DOI
-10.5281/zenodo.22643843). Changes since the frozen PDF, kept here until
-the next version is cut: §2 shows all ten ZTL tables and the four
-classical routes that fail at the mark (the PDF shows the six primitives
-and the six lazy tables).**
 
 **Carried over from the published v1.3 — version DOI
 [10.5281/zenodo.21472971](https://doi.org/10.5281/zenodo.21472971).

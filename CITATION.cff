@@ -6,7 +6,7 @@ authors:
     given-names: "Vitaly"
 type: software
 year: 2026
-version: "1.4"
+version: "1.4.1"
 date-released: 2026-09-07
 repository-code: "https://github.com/inventor1975/ZTL"
 license:

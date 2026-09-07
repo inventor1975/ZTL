@@ -1,9 +1,12 @@
-# Zenodo upload sheet — ZTL v1.4 (PUBLISHED 2026-09-07)
+# Zenodo upload sheet — ZTL v1.4.1 (IN PREPARATION, same-day correction of v1.4)
 
-**v1.4 PUBLISHED 2026-09-07: version DOI 10.5281/zenodo.22643843**
-(https://zenodo.org/records/22643843), uploaded as a new version of the
-existing record (concept DOI 10.5281/zenodo.21318981, which resolves to the
-latest version). Verified against the API after publication: title, version
+**v1.4.1 — to be uploaded as a NEW VERSION of the record** (concept DOI
+10.5281/zenodo.21318981). It corrects §2 of v1.4: all ten ZTL tables are
+shown with the measured failure of the classical routes to the second five;
+the v1.4 PDF showed six. **v1.4 PUBLISHED 2026-09-07: version DOI
+10.5281/zenodo.22643843** (https://zenodo.org/records/22643843), uploaded as a
+new version of the existing record (the concept DOI resolves to the latest
+version). Verified against the API after publication: title, version
 1.4, CC BY 4.0, file `ZTL-preprint-v1.4.pdf` with md5 equal to the
 repository copy. One metadata wart on the record: its related identifier
 `isNewVersionOf` carries v1.2's DOI (21440066), inherited from the previous
@@ -12,15 +15,15 @@ Edit → related works, without a new version.
 Prior versions: v1.3 10.5281/zenodo.21472971 (2026-07-21); v1.2
 10.5281/zenodo.21440066 (2026-07-19); v1.1 10.5281/zenodo.21323552; v1.0
 10.5281/zenodo.21318982. The public sequence stays clean: 1.0 → 1.1 → 1.2 →
-1.3 → 1.4. The version DOI is embedded into the draft header, CITATION.cff
-and README (as e606682 did for v1.3).
+1.3 → 1.4 → 1.4.1. After publication: embed the v1.4.1 version DOI into the
+draft header, CITATION.cff and README, and mark this sheet PUBLISHED.
 
 The numbers below are measured by `inventory/paper_claims.py` (pages of the
 PDF, theorems, modules, stands) — the part of this sheet above the version
 history is checked on every run; the history paragraphs carry their own
 versions' numbers and are not.
 
-**File to upload:** `paper/ZTL-preprint-v1.4.pdf` (37 pages)
+**File to upload:** `paper/ZTL-preprint-v1.4.1.pdf` (37 pages)
 
 ---
 
@@ -30,7 +33,7 @@ versions' numbers and are not.
 
 **Authors:** Reznik, Vitaly
 
-**Version:** 1.4
+**Version:** 1.4.1
 
 **License:** Creative Commons Attribution 4.0 International (CC BY 4.0)
 
@@ -112,7 +115,20 @@ contribution is the generating principle, an implicational floor outside
 the Rosser–Turquette standardness conditions, the calculus, the machine
 verification, and the bridges to the engineering traditions.
 
-What is new in v1.4 — first, NO SECTION RESTS ON MEASUREMENT ALONE: every
+What is new in v1.4.1 (same day) — §2 now prints ALL TEN TABLES OF ZTL:
+the five primitives ¬ ∧ ∨ → ⊕, ↔, and the four negated compounds
+¬(a∧b), ¬(a∨b), ¬(a⊕b), ¬(a→b), every cell read off ztl.py. Classically
+the second five are redundant — ↔ is ¬⊕, De Morgan gives the negated
+conjunction and disjunction, ¬(a→b) is a∧¬b — and a reader reconstructs
+them; in ZTL every one of those routes fails at the mark (measured: a↔b
+differs from ¬(a⊕b) in 5 of 9 cells, ¬(a∧b) from ¬a∨¬b in 3, ¬(a∨b)
+from ¬a∧¬b in 3, ¬(a→b) from a∧¬b in 3), while the T/F swap of a verdict
+holds trivially — which is exactly why De Morgan fails: the negation of a
+compound never sees the mark its inputs carried. The v1.4 PDF showed the
+six primitives and the six lazy-register tables; the lazy tables stay as
+the second block. No other change.
+
+What was new in v1.4 — first, NO SECTION RESTS ON MEASUREMENT ALONE: every
 one of the seventeen sections that carried the MEASURED tag now names
 kernel-checked theorems behind its load-bearing claims, the corpus
 growing threefold to sixty-six modules and 1112 theorems, all on the
@@ -292,7 +308,9 @@ verification; warranty; NP-hardness; coNP-hardness; epoch boundary;
 institutional computation; Lean 4; machine-checked proofs
 
 **Related/alternate identifiers:**
-- 10.5281/zenodo.21472971 — isNewVersionOf (v1.3, the prior version)
+- 10.5281/zenodo.22643843 — isNewVersionOf (v1.4, the prior version;
+  Zenodo pre-fills the field from the previous form — check it says
+  22643843, not 21440066)
 - https://github.com/inventor1975/ZTL — isSupplementedBy (the code,
   the Lean corpus, the regression, the studio)
 

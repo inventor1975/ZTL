@@ -44,6 +44,9 @@ EXPECT = {
     "f16_like_pattern.php": ["EARNED"],
     "f17_unknown_part.php": ["EARNED", "OPEN"],
     "f18_explode_implode.php": ["EARNED"],
+    "f19_raw_part_beside_unknown.php": ["REFUTED"],
+    "f20_header_redirect.php": ["REFUTED"],
+    "f21_dynamic_class.php": ["REFUTED"],
 }
 
 
@@ -57,7 +60,7 @@ def dispositions(out):
 
 def main():
     failures = []
-    out = code2zfl.run([FIX], [OVERLAY], "sql", AUTOLOAD)
+    out = code2zfl.run([FIX], [OVERLAY], "all", AUTOLOAD)
     got = dispositions(out)
     for name, exp in EXPECT.items():
         if got.get(name) != exp:

@@ -93,6 +93,7 @@ def sink_document(fact, ctx):
     t, src, san, z, q = fact["t"], fact["src"], fact["san"], fact["z"], fact["q"]
     san = dict(san) if isinstance(san, dict) else {}       # PHP encodes an empty map as []
     zu = fact.get("zu") or []
+    nu = bool(fact.get("nu"))
     # --- tainted
     if t == "T":
         k, name, l = src[0]
@@ -121,6 +122,11 @@ def sink_document(fact, ctx):
             sanitized = {"status": "unverified", "means": f"escaped by {fn} at L{l}; whether it sits inside quotes could not be read"}
     elif t == "F":
         sanitized = {"status": "unverified", "means": "not needed: nothing attacker-controlled arrives"}
+    elif nu:
+        # an attacker-controlled part reaches the sink with NO substitution and its own path read in full;
+        # whatever else sits beside it (a property, a DB row) cannot make that part safer
+        sanitized = {"status": "refuted", "ground": _g(f"ast-path-L{line}"),
+                     "means": "an attacker-controlled part reaches the sink unsubstituted, path read in full" + ("; other parts cross " + ", ".join(f"{w}@L{l}" for w, l in z) if z else "")}
     elif z:
         sanitized = {"status": "unverified", "means": "no substitution seen; the path crosses " + ", ".join(f"{w}@L{l}" for w, l in z)}
     else:

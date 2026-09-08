@@ -113,6 +113,27 @@
       "methods": [],
       "echo": true,
       "measured": false
+    },
+    "header": {
+      "functions": [
+        "header",
+        "setcookie",
+        "setrawcookie"
+      ],
+      "methods": [],
+      "measured": true
+    },
+    "callable": {
+      "functions": [
+        "call_user_func",
+        "call_user_func_array",
+        "usort",
+        "array_map",
+        "register_shutdown_function"
+      ],
+      "methods": [],
+      "callable": true,
+      "measured": true
     }
   },
   "sanitizers": {
@@ -301,7 +322,8 @@
     "preserving": "taint passes through and earned sanitization is KEPT: case changes, whitespace trimming and padding cannot create a quote or strand a backslash — after mysqli_real_escape_string no raw whitespace-escape remains to strip. ARGUED from the escaper's contract, not measured against MySQL; a counterexample moves the entry to `transparent`.",
     "_SERVER": "attacker-written entries only: HTTP_* (every request header, HTTP_HOST and HTTP_X_FORWARDED_FOR included), the request line and path. REMOTE_ADDR, SERVER_*, DOCUMENT_ROOT are set by the server and read as constants. A computed key is assumed hot.",
     "narrowing": "taint passes; only a NUMERIC substitution survives (digits stay digits under any cut), a context escape does not (substr can strand a backslash).",
-    "explode/implode": "preserving when the delimiter is a literal without quote, backslash or NUL (it cannot strand an escape); otherwise narrowing."
+    "explode/implode": "preserving when the delimiter is a literal without quote, backslash or NUL (it cannot strand an escape); otherwise narrowing.",
+    "header/callable": "added 2026-09-08 after Psalm reported a TaintedHeader (header('Location: '.$url)) and a TaintedCallable (new $classname) our catalog had no sink for. `callable` fires on new $x(), $x(), $obj->$m() and call_user_func*; the judged value is the NAME, not the arguments."
   },
   "narrowing": [
     "substr",

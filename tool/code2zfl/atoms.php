@@ -81,7 +81,7 @@ foreach ($CAT['sinks'] as $ctx => $spec) {
     foreach ($spec['functions'] ?? [] as $f) $SINKFN[strtolower($f)] = $ctx;
     foreach ($spec['methods'] ?? [] as $m) $SINKMETH[strtolower($m)] = $ctx;
     foreach ($spec['arg'] ?? [] as $f => $ix) $SINKARG[strtolower($f)] = $ix;
-    foreach (['echo', 'include', 'eval'] as $fl) if (!empty($spec[$fl])) $SINKFLAGS[$fl] = $ctx;
+    foreach (['echo', 'include', 'eval', 'callable'] as $fl) if (!empty($spec[$fl])) $SINKFLAGS[$fl] = $ctx;
 }
 
 // ------------------------------------------------------------------- state
@@ -89,9 +89,9 @@ foreach ($CAT['sinks'] as $ctx => $spec) {
 // src: [[kind, name, line]]     san: ctx => [fn, line] (held on EVERY path)
 // z:   [[why, line]] opaque passes      q: true|false|null  (inside SQL quotes?)
 const RANK = ['F' => 0, 'Z' => 1, 'T' => 2];
-function stF(): array { return ['t' => 'F', 'src' => [], 'san' => [], 'z' => [], 'q' => null, 'zu' => []]; }
-function stZ(string $why, int $line): array { return ['t' => 'Z', 'src' => [], 'san' => [], 'z' => [[$why, $line]], 'q' => null, 'zu' => []]; }
-function stT(string $kind, string $name, int $line): array { return ['t' => 'T', 'src' => [[$kind, $name, $line]], 'san' => [], 'z' => [], 'q' => null, 'zu' => []]; }
+function stF(): array { return ['t' => 'F', 'src' => [], 'san' => [], 'z' => [], 'q' => null, 'zu' => [], 'nu' => false]; }
+function stZ(string $why, int $line): array { return ['t' => 'Z', 'src' => [], 'san' => [], 'z' => [[$why, $line]], 'q' => null, 'zu' => [], 'nu' => false]; }
+function stT(string $kind, string $name, int $line): array { return ['t' => 'T', 'src' => [[$kind, $name, $line]], 'san' => [], 'z' => [], 'q' => null, 'zu' => [], 'nu' => true]; }
 
 function uniq(array $rows): array {
     $seen = []; $out = [];
@@ -107,7 +107,7 @@ function join2(array $a, array $b): array {
     $q = ($a['q'] === $b['q']) ? $a['q'] : (($a['q'] === false || $b['q'] === false) ? false : null);
     return ['t' => $t, 'src' => uniq(array_merge($a['src'], $b['src'])), 'san' => $san,
             'z' => uniq(array_merge($a['z'], $b['z'])), 'q' => $q,
-            'zu' => uniq(array_merge($a['zu'] ?? [], $b['zu'] ?? []))];
+            'zu' => uniq(array_merge($a['zu'] ?? [], $b['zu'] ?? [])), 'nu' => ($a['nu'] ?? false) || ($b['nu'] ?? false)];
 }
 /** MEET of two sanitization maps: '*' (a numeric substitution) covers every context, so it is the identity. */
 function sanMeet(array $a, array $b): array {
@@ -127,15 +127,16 @@ function joinAll(array $states): array {
  *  transformation; an escape does not survive substr), 'none' drops them all. */
 function through(array $s, ?string $why, int $line, bool $unknown, string $keep = 'none'): array {
     $san = $keep === 'all' ? $s['san'] : ($keep === 'numeric' && isset($s['san']['*']) ? ['*' => $s['san']['*']] : []);
-    $out = ['t' => $s['t'], 'src' => $s['src'], 'san' => $san, 'z' => $s['z'], 'q' => null, 'zu' => $s['zu'] ?? []];
-    if ($unknown && $s['t'] !== 'F') { $out['t'] = 'Z'; $out['z'][] = [$why, $line]; }
+    $out = ['t' => $s['t'], 'src' => $s['src'], 'san' => $san, 'z' => $s['z'], 'q' => null, 'zu' => $s['zu'] ?? [],
+            'nu' => ($s['nu'] ?? false) || ($keep !== 'all' && $s['t'] === 'T' && !$san)];
+    if ($unknown && $s['t'] !== 'F') { $out['t'] = 'Z'; $out['z'][] = [$why, $line]; $out['nu'] = false; }
     return $out;
 }
 function sanitize(array $s, array $ctxs, string $fn, int $line): array {
     // a NUMERIC substitution of the whole value settles every part inside it; a context escape of a
     // built string does not settle a part of unknown origin that may sit outside the quotes
     $zu = in_array('*', $ctxs, true) ? [] : ($s['zu'] ?? []);
-    $out = ['t' => $s['t'], 'src' => $s['src'], 'san' => $s['san'], 'z' => $s['z'], 'q' => null, 'zu' => $zu];
+    $out = ['t' => $s['t'], 'src' => $s['src'], 'san' => $s['san'], 'z' => $s['z'], 'q' => null, 'zu' => $zu, 'nu' => false];
     foreach ($ctxs as $c) $out['san'][$c] = [$fn, $line];
     return $out;
 }
@@ -174,13 +175,13 @@ final class Analyzer {
 
     private function concat(Node $e, array &$env): array {
         $parts = $this->parts($e, $env);
-        $states = []; $qs = []; $sq = 0; $dq = 0; $opaque = false; $zu = []; $sanT = null;
+        $states = []; $qs = []; $sq = 0; $dq = 0; $opaque = false; $zu = []; $sanT = null; $nu = false;
         foreach ($parts as $p) {
             if ($p[0] === 'lit') { $sq += $p[1][0]; $dq += $p[1][1]; continue; }
             $s = $p[1]; $states[] = $s;
             if ($s['t'] === 'F') continue;
             if ($s['t'] === 'Z' && !$s['san']) { $zu = array_merge($zu, $s['z']); }
-            if ($s['t'] === 'T') { $sanT = $sanT === null ? $s['san'] : sanMeet($sanT, $s['san']); }
+            if ($s['t'] === 'T') { $sanT = $sanT === null ? $s['san'] : sanMeet($sanT, $s['san']); if (!$s['san'] && !$s['z']) $nu = true; }
             if (isset($s['san']['*'])) { $opaque = $opaque || ($s['q'] === null && $s['t'] !== 'F' && false); continue; }   // a number needs no quotes
             // inside quotes iff an odd number of unescaped quotes precede this part in THIS string
             $qs[] = $opaque ? null : (($sq % 2 === 1) || ($dq % 2 === 1));
@@ -190,6 +191,7 @@ final class Analyzer {
         if ($states) {
             if ($sanT !== null) $r['san'] = $sanT;                      // substitution is judged on the attacker-controlled parts
             $r['zu'] = uniq(array_merge($r['zu'] ?? [], $zu));           // parts of unknown origin without a substitution
+            $r['nu'] = ($r['nu'] ?? false) || $nu;                       // an attacker part with no substitution, read in full
             $r['q'] = !$qs ? null : (in_array(false, $qs, true) ? false : (in_array(null, $qs, true) ? null : true));
         }
         return $r;
@@ -201,7 +203,7 @@ final class Analyzer {
 
     private function sinkFact(string $ctx, string $fn, int $line, array $s): void {
         $this->facts[] = ['ctx' => $ctx, 'fn' => $fn, 'line' => $line, 'scope' => $this->scope,
-                          't' => $s['t'], 'src' => $s['src'], 'san' => $s['san'], 'z' => $s['z'], 'q' => $s['q'], 'zu' => $s['zu'] ?? []];
+                          't' => $s['t'], 'src' => $s['src'], 'san' => $s['san'], 'z' => $s['z'], 'q' => $s['q'], 'zu' => $s['zu'] ?? [], 'nu' => $s['nu'] ?? false];
     }
 
     private function callName(Node $c): ?string {
@@ -328,6 +330,10 @@ final class Analyzer {
             return stF();
         }
         if ($e instanceof Expr\New_) {
+            if ($e->class instanceof Expr) {                                   // new $classname(...)
+                $cls = $this->ex($e->class, $env);
+                if (isset($SINKFLAGS['callable'])) $this->sinkFact($SINKFLAGS['callable'], 'new-$class', $line, $cls);
+            }
             $st = $this->args($e, $env);
             return joinAll($st) ['t'] === 'F' ? stF() : stZ('new', $line);
         }
@@ -342,7 +348,10 @@ final class Analyzer {
             $name = $this->callName($e);
             $args = $this->args($e, $env);
             if ($name === null) {                                             // $fn(...) / $obj->$m(...)
-                if (!$isMethod && $e instanceof Expr\FuncCall) $this->ex($e->name, $env);
+                $callee = null;
+                if (!$isMethod && $e instanceof Expr\FuncCall) $callee = $this->ex($e->name, $env);
+                elseif ($isMethod && $e->name instanceof Expr) $callee = $this->ex($e->name, $env);
+                if ($callee !== null && isset($SINKFLAGS['callable'])) $this->sinkFact($SINKFLAGS['callable'], '$callable()', $line, $callee);
                 return through(joinAll($args ?: [stF()]), 'dynamic-call', $line, true);
             }
             // sinks first: the argument as it ARRIVES
@@ -544,7 +553,7 @@ foreach ($files as $f) {
         $k = $f['ctx'] . '|' . $f['fn'] . '|' . $f['line'] . '|' . $f['scope'];
         if (!isset($byKey[$k])) { $byKey[$k] = $f; continue; }
         $j = join2($byKey[$k], $f);
-        foreach (['t', 'src', 'san', 'z', 'q', 'zu'] as $c) $byKey[$k][$c] = $j[$c];
+        foreach (['t', 'src', 'san', 'z', 'q', 'zu', 'nu'] as $c) $byKey[$k][$c] = $j[$c];
     }
     $rec['sinks'] = array_values($byKey); $rec['includes'] = array_values(array_unique($an->includes)); $rec['functions'] = $an->functions;
     $out['files'][] = $rec;

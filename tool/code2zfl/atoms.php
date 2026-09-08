@@ -69,7 +69,7 @@ $SUPER = array_flip($CAT['sources']['superglobals'] ?? []);
 $SERVER_KEYS = $CAT['sources']['server_keys'] ?? [];   // which $_SERVER entries an attacker can write
 $SERVER_PREFIXES = $CAT['sources']['server_prefixes'] ?? [];
 $SRCFN = array_flip(array_map('strtolower', $CAT['sources']['functions'] ?? []));
-$SRCMETH = array_flip(array_map('strtolower', $CAT['sources']['methods'] ?? []));
+$SRCMETH = array_flip(array_map('strtolower', $CAT['sources']['methods'] ?? []));   // "$obj->name" keys allowed: receiver-qualified
 $SANFN = array_change_key_case($CAT['sanitizers']['functions'] ?? [], CASE_LOWER);
 $SANMETH = array_change_key_case($CAT['sanitizers']['methods'] ?? [], CASE_LOWER);
 $SANCAST = $CAT['sanitizers']['casts'] ?? [];
@@ -372,6 +372,8 @@ final class Analyzer {
             if ($isMethod) $this->ex($e->var, $env);
             $name = $this->callName($e);
             $args = $this->args($e, $env);
+            $recv = ($isMethod && $e->var instanceof Expr\Variable && is_string($e->var->name)) ? '$' . $e->var->name . '->' . $name : null;
+            $qual = fn(array $table) => ($recv !== null && isset($table[$recv])) ? $table[$recv] : ($table[$name] ?? null);
             if ($name === null) {                                             // $fn(...) / $obj->$m(...)
                 $callee = null;
                 if (!$isMethod && $e instanceof Expr\FuncCall) $callee = $this->ex($e->name, $env);
@@ -380,19 +382,19 @@ final class Analyzer {
                 return through(joinAll($args ?: [stF()]), 'dynamic-call', $line, true);
             }
             // sinks first: the argument as it ARRIVES
-            $sinkCtx = $isMethod ? ($SINKMETH[$name] ?? null) : ($SINKFN[$name] ?? null);
+            $sinkCtx = $isMethod ? $qual($SINKMETH) : ($SINKFN[$name] ?? null);
             if ($sinkCtx !== null) {
                 $ix = $SINKARG[$name] ?? 0;
                 if (isset($args[$ix])) $this->sinkFact($sinkCtx, ($isMethod ? '->' : '') . $name, $line, $args[$ix]);
             }
             // sources
-            if ($isMethod ? isset($SRCMETH[$name]) : isset($SRCFN[$name])) return stT('fn', ($isMethod ? '->' : '') . $name, $line);
+            if ($isMethod ? ($qual($SRCMETH) !== null) : isset($SRCFN[$name])) return stT('fn', ($isMethod ? ($recv ?? '->' . $name) : $name), $line);
             // sanitizers: substitution of the value for the listed contexts
-            $san = $isMethod ? ($SANMETH[$name] ?? null) : ($SANFN[$name] ?? null);
+            $san = $isMethod ? $qual($SANMETH) : ($SANFN[$name] ?? null);
             if ($san !== null) {
                 $ix = $san['arg'] ?? 0; if ($ix < 0) $ix = count($args) - 1;
                 $s = $args[$ix] ?? stF();
-                return sanitize($s, $san['contexts'], ($isMethod ? '->' : '') . $name, $line);
+                return sanitize($s, $san['contexts'], ($isMethod ? ($recv ?? '->' . $name) : $name), $line);
             }
             // defined in THIS file: inline with the caller's argument states
             if (!$isMethod && $e instanceof Expr\FuncCall && isset($this->defs['fn'][$name]))

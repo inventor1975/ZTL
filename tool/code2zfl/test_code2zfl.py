@@ -52,6 +52,7 @@ EXPECT = {
     "f24_callee_sanitizes.php": ["EARNED"],
     "f25_return_carries_taint.php": ["REFUTED"],
     "f26_query_built_in_pieces.php": ["EARNED", "EARNED", "EARNED"],
+    "f27_same_method_name_two_objects.php": ["EARNED", "REFUTED"],
 }
 
 

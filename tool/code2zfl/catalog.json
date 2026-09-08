@@ -1,0 +1,322 @@
+{
+  "_about": "code2zfl base catalog for PHP. DATA, not code: what counts as an attacker-controlled SOURCE, what is a SINK (and in which context), and which functions SUBSTITUTE a value by a verified one for a context (E40: no function launders a mark; the only sanitizer is substitution). A row here is a claim about PHP, and `measured` says whether the fixtures exercise it.",
+  "sources": {
+    "superglobals": [
+      "_GET",
+      "_POST",
+      "_REQUEST",
+      "_COOKIE",
+      "_FILES",
+      "_SERVER"
+    ],
+    "functions": [
+      "filter_input",
+      "getallheaders",
+      "apache_request_headers"
+    ],
+    "server_keys": [
+      "REQUEST_URI",
+      "QUERY_STRING",
+      "PATH_INFO",
+      "ORIG_PATH_INFO",
+      "PHP_SELF",
+      "PATH_TRANSLATED",
+      "SCRIPT_NAME",
+      "REQUEST_METHOD",
+      "PHP_AUTH_USER",
+      "PHP_AUTH_PW",
+      "AUTH_TYPE",
+      "CONTENT_TYPE",
+      "CONTENT_LENGTH"
+    ],
+    "server_prefixes": [
+      "HTTP_"
+    ]
+  },
+  "sinks": {
+    "sql": {
+      "functions": [
+        "mysql_query",
+        "mysqli_query",
+        "mysqli_multi_query",
+        "mysqli_real_query",
+        "mysqli_prepare",
+        "pg_query",
+        "pg_send_query",
+        "sqlite_query"
+      ],
+      "methods": [
+        "query",
+        "multi_query",
+        "real_query",
+        "prepare",
+        "exec",
+        "execute"
+      ],
+      "arg": {
+        "mysqli_query": 1,
+        "mysqli_multi_query": 1,
+        "mysqli_real_query": 1,
+        "mysqli_prepare": 1,
+        "pg_query": 1,
+        "pg_send_query": 1
+      },
+      "measured": true
+    },
+    "shell": {
+      "functions": [
+        "exec",
+        "system",
+        "shell_exec",
+        "passthru",
+        "popen",
+        "proc_open",
+        "pcntl_exec"
+      ],
+      "methods": [],
+      "measured": false
+    },
+    "code": {
+      "functions": [
+        "create_function",
+        "assert"
+      ],
+      "methods": [],
+      "eval": true,
+      "measured": false
+    },
+    "file": {
+      "functions": [
+        "file_get_contents",
+        "fopen",
+        "readfile",
+        "file",
+        "unlink",
+        "file_put_contents"
+      ],
+      "methods": [],
+      "include": true,
+      "measured": false
+    },
+    "deser": {
+      "functions": [
+        "unserialize"
+      ],
+      "methods": [],
+      "measured": false
+    },
+    "html": {
+      "functions": [
+        "print",
+        "printf"
+      ],
+      "methods": [],
+      "echo": true,
+      "measured": false
+    }
+  },
+  "sanitizers": {
+    "functions": {
+      "intval": {
+        "contexts": [
+          "*"
+        ]
+      },
+      "floatval": {
+        "contexts": [
+          "*"
+        ]
+      },
+      "boolval": {
+        "contexts": [
+          "*"
+        ]
+      },
+      "abs": {
+        "contexts": [
+          "*"
+        ]
+      },
+      "count": {
+        "contexts": [
+          "*"
+        ]
+      },
+      "strlen": {
+        "contexts": [
+          "*"
+        ]
+      },
+      "md5": {
+        "contexts": [
+          "*"
+        ]
+      },
+      "sha1": {
+        "contexts": [
+          "*"
+        ]
+      },
+      "crc32": {
+        "contexts": [
+          "*"
+        ]
+      },
+      "mysqli_real_escape_string": {
+        "contexts": [
+          "sql-quoted"
+        ],
+        "arg": 1
+      },
+      "mysqli_escape_string": {
+        "contexts": [
+          "sql-quoted"
+        ],
+        "arg": 1
+      },
+      "mysql_real_escape_string": {
+        "contexts": [
+          "sql-quoted"
+        ],
+        "arg": 0
+      },
+      "pg_escape_string": {
+        "contexts": [
+          "sql-quoted"
+        ],
+        "arg": -1
+      },
+      "pg_escape_literal": {
+        "contexts": [
+          "sql"
+        ],
+        "arg": -1
+      },
+      "htmlspecialchars": {
+        "contexts": [
+          "html"
+        ]
+      },
+      "htmlentities": {
+        "contexts": [
+          "html"
+        ]
+      },
+      "escapeshellarg": {
+        "contexts": [
+          "shell"
+        ]
+      },
+      "escapeshellcmd": {
+        "contexts": [
+          "shell"
+        ]
+      },
+      "basename": {
+        "contexts": [
+          "file"
+        ]
+      }
+    },
+    "methods": {
+      "real_escape_string": {
+        "contexts": [
+          "sql-quoted"
+        ]
+      },
+      "escape_string": {
+        "contexts": [
+          "sql-quoted"
+        ]
+      },
+      "quote": {
+        "contexts": [
+          "sql"
+        ]
+      }
+    },
+    "casts": {
+      "int": [
+        "*"
+      ],
+      "double": [
+        "*"
+      ],
+      "bool": [
+        "*"
+      ]
+    }
+  },
+  "preserving": [
+    "trim",
+    "ltrim",
+    "rtrim",
+    "strtolower",
+    "strtoupper",
+    "ucfirst",
+    "ucwords",
+    "lcfirst",
+    "mb_strtolower",
+    "mb_strtoupper",
+    "nl2br",
+    "str_pad"
+  ],
+  "transparent": [
+    "str_replace",
+    "str_ireplace",
+    "preg_replace",
+    "strstr",
+    "strrchr",
+    "stristr",
+    "sprintf",
+    "vsprintf",
+    "nl2br",
+    "strip_tags",
+    "stripslashes",
+    "addslashes",
+    "urldecode",
+    "rawurldecode",
+    "urlencode",
+    "rawurlencode",
+    "base64_decode",
+    "base64_encode",
+    "json_decode",
+    "json_encode",
+    "serialize",
+    "array_map",
+    "str_pad",
+    "strtr",
+    "number_format",
+    "date",
+    "iconv",
+    "mb_strtolower",
+    "mb_strtoupper",
+    "utf8_encode",
+    "utf8_decode"
+  ],
+  "_notes": {
+    "addslashes": "listed as TRANSPARENT on purpose: a string transformation, not a substitution by a verified element; bypassable (multibyte). Taint passes, sanitization is NOT credited.",
+    "strip_tags": "transparent for the same reason: it is not an HTML escaper.",
+    "transparent": "taint passes through; any sanitization already earned is DROPPED (substr of an escaped string can end in a lone backslash; stripslashes undoes escaping outright). Too strict is a verdict that can be redeemed; too lax is one that lies.",
+    "preserving": "taint passes through and earned sanitization is KEPT: case changes, whitespace trimming and padding cannot create a quote or strand a backslash — after mysqli_real_escape_string no raw whitespace-escape remains to strip. ARGUED from the escaper's contract, not measured against MySQL; a counterexample moves the entry to `transparent`.",
+    "_SERVER": "attacker-written entries only: HTTP_* (every request header, HTTP_HOST and HTTP_X_FORWARDED_FOR included), the request line and path. REMOTE_ADDR, SERVER_*, DOCUMENT_ROOT are set by the server and read as constants. A computed key is assumed hot.",
+    "narrowing": "taint passes; only a NUMERIC substitution survives (digits stay digits under any cut), a context escape does not (substr can strand a backslash).",
+    "explode/implode": "preserving when the delimiter is a literal without quote, backslash or NUL (it cannot strand an escape); otherwise narrowing."
+  },
+  "narrowing": [
+    "substr",
+    "substr_replace",
+    "mb_substr",
+    "strrev",
+    "wordwrap",
+    "array_slice",
+    "array_values",
+    "array_keys",
+    "array_unique",
+    "array_merge",
+    "array_reverse",
+    "array_filter",
+    "str_word_count",
+    "chunk_split"
+  ]
+}

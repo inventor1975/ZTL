@@ -1,0 +1,9 @@
+{
+    "name": "ztl/code2zfl",
+    "description": "code → atoms → ZFL2 → the ZTL judge. Deterministic PHP atomizer (nikic/php-parser); the only judge is the ZTL core.",
+    "license": "MIT",
+    "require": {
+        "php": ">=8.1",
+        "nikic/php-parser": "^5.7"
+    }
+}

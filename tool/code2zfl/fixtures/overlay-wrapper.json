@@ -1,0 +1,5 @@
+{
+  "_about": "overlay for a typical hand-written DB wrapper: `$db->query(...)` is the sink, `$db->escape(...)` substitutes for the quoted SQL context.",
+  "sinks": {"sql": {"methods": ["query", "query_row", "query_all"]}},
+  "sanitizers": {"methods": {"escape": {"contexts": ["sql-quoted"]}}}
+}

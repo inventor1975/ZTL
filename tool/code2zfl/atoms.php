@@ -104,7 +104,9 @@ function join2(array $a, array $b): array {
     if ($a['t'] === 'F') $san = $b['san'];
     elseif ($b['t'] === 'F') $san = $a['san'];
     else $san = sanMeet($a['san'], $b['san']);
-    $q = ($a['q'] === $b['q']) ? $a['q'] : (($a['q'] === false || $b['q'] === false) ? false : null);
+    $qa = $a['t'] === 'F' ? null : $a['q']; $qb = $b['t'] === 'F' ? null : $b['q'];   // constants have no quoting question
+    if ($qa === false || $qb === false) $q = false;
+    elseif ($qa === null) $q = $qb; elseif ($qb === null) $q = $qa; else $q = true;
     return ['t' => $t, 'src' => uniq(array_merge($a['src'], $b['src'])), 'san' => $san,
             'z' => uniq(array_merge($a['z'], $b['z'])), 'q' => $q,
             'zu' => uniq(array_merge($a['zu'] ?? [], $b['zu'] ?? [])), 'nu' => ($a['nu'] ?? false) || ($b['nu'] ?? false)];
@@ -127,7 +129,7 @@ function joinAll(array $states): array {
  *  transformation; an escape does not survive substr), 'none' drops them all. */
 function through(array $s, ?string $why, int $line, bool $unknown, string $keep = 'none'): array {
     $san = $keep === 'all' ? $s['san'] : ($keep === 'numeric' && isset($s['san']['*']) ? ['*' => $s['san']['*']] : []);
-    $out = ['t' => $s['t'], 'src' => $s['src'], 'san' => $san, 'z' => $s['z'], 'q' => null, 'zu' => $s['zu'] ?? [],
+    $out = ['t' => $s['t'], 'src' => $s['src'], 'san' => $san, 'z' => $s['z'], 'q' => $keep === 'all' ? $s['q'] : null, 'zu' => $s['zu'] ?? [],
             'nu' => ($s['nu'] ?? false) || ($keep !== 'all' && $s['t'] === 'T' && !$san)];
     if ($unknown && $s['t'] !== 'F') { $out['t'] = 'Z'; $out['z'][] = [$why, $line]; $out['nu'] = false; }
     return $out;
@@ -148,6 +150,18 @@ final class Analyzer {
     public array $functions = [];
     public string $scope = '(main)';
     private int $loopCap = 4;
+    // SIGHT THROUGH CALLS, within one file: a call to a function or `$this->method()` defined here is
+    // INLINED with the caller's argument states (depth <= 3, recursion cut), sinks inside are emitted in
+    // the caller's context, the joined `return` state comes back. `$this->prop` is a may-join over every
+    // assignment in the class, collected on pass 1 and read on pass 2.
+    public array $defs = ['fn' => [], 'm' => []];   // name -> Function_ ; class -> name -> ClassMethod
+    public array $callers = [];                       // 'fn:name' | 'm:Class::name' -> in-file call sites
+    public array $props = [];                         // class -> prop -> state
+    public int $pass = 1;
+    private array $callStack = [];
+    private array $returns = [];
+    private ?string $currentClass = null;
+    private int $callDepth = 3;
 
     public function __construct(private array $cat) {}
 
@@ -182,9 +196,11 @@ final class Analyzer {
             if ($s['t'] === 'F') continue;
             if ($s['t'] === 'Z' && !$s['san']) { $zu = array_merge($zu, $s['z']); }
             if ($s['t'] === 'T') { $sanT = $sanT === null ? $s['san'] : sanMeet($sanT, $s['san']); if (!$s['san'] && !$s['z']) $nu = true; }
-            if (isset($s['san']['*'])) { $opaque = $opaque || ($s['q'] === null && $s['t'] !== 'F' && false); continue; }   // a number needs no quotes
-            // inside quotes iff an odd number of unescaped quotes precede this part in THIS string
-            $qs[] = $opaque ? null : (($sq % 2 === 1) || ($dq % 2 === 1));
+            if (isset($s['san']['*'])) continue;                                          // a number needs no quotes
+            if (!isset($s['san']['sql-quoted'])) continue;                                // nothing escaped: quoting is moot
+            // a fragment that already embedded its escaped part carries the decision; a bare escaped value
+            // is decided HERE: inside quotes iff an odd number of unescaped quotes precede it in this string
+            $qs[] = $s['q'] !== null ? $s['q'] : (($sq % 2 === 1) || ($dq % 2 === 1));
             if ($s['t'] !== 'F' && $s['san'] === [] && $s['t'] === 'T') { /* unsubstituted attacker part: quoting is moot */ }
         }
         $r = joinAll($states ?: [stF()]);
@@ -254,6 +270,15 @@ final class Analyzer {
             return $base;
         }
         if ($e instanceof Expr\PropertyFetch || $e instanceof Expr\NullsafePropertyFetch || $e instanceof Expr\StaticPropertyFetch) {
+            if ($e instanceof Expr\PropertyFetch && $e->var instanceof Expr\Variable && $e->var->name === 'this'
+                && $e->name instanceof Node\Identifier && $this->currentClass !== null) {
+                $pn = $e->name->toString();
+                if (isset($this->props[$this->currentClass][$pn])) return $this->props[$this->currentClass][$pn];
+                return stZ('property:$this->' . $pn, $line);
+            }
+            // another object's property: name the object, so the ledger says WHICH boundary this is
+            if ($e instanceof Expr\PropertyFetch && $e->var instanceof Expr\Variable && is_string($e->var->name) && $e->name instanceof Node\Identifier)
+                return stZ('property:$' . $e->var->name . '->' . $e->name->toString(), $line);
             return stZ('property', $line);
         }
         if ($e instanceof Expr\Array_) {
@@ -270,7 +295,7 @@ final class Analyzer {
             $rhs = $this->ex($e->expr, $env);
             $cur = $this->ex($e->var, $env);
             if ($e instanceof Expr\AssignOp\Concat) {
-                $r = join2($cur, $rhs); $r['q'] = null;
+                $r = join2($cur, $rhs);
             } else { $r = join2($cur, $rhs); $r['san']['*'] = ['arith', $line]; }
             $this->assignTo($e->var, $r, $env, $line);
             return $r;
@@ -369,6 +394,16 @@ final class Analyzer {
                 $s = $args[$ix] ?? stF();
                 return sanitize($s, $san['contexts'], ($isMethod ? '->' : '') . $name, $line);
             }
+            // defined in THIS file: inline with the caller's argument states
+            if (!$isMethod && $e instanceof Expr\FuncCall && isset($this->defs['fn'][$name]))
+                return $this->inline($this->defs['fn'][$name], $args, $line, 'fn:' . $name);
+            if ($isMethod && $e->var instanceof Expr\Variable && $e->var->name === 'this' && $this->currentClass !== null
+                && isset($this->defs['m'][$this->currentClass][$name]))
+                return $this->inline($this->defs['m'][$this->currentClass][$name], $args, $line, 'm:' . $this->currentClass . '::' . $name);
+            if ($e instanceof Expr\StaticCall && $e->class instanceof Node\Name && $this->currentClass !== null
+                && in_array(strtolower($e->class->toString()), ['self', 'static', strtolower($this->currentClass)], true)
+                && isset($this->defs['m'][$this->currentClass][$name]))
+                return $this->inline($this->defs['m'][$this->currentClass][$name], $args, $line, 'm:' . $this->currentClass . '::' . $name);
             if (!$isMethod && ($name === 'explode' || $name === 'implode' || $name === 'join')) {
                 // splitting/joining on a literal delimiter that carries no quote, backslash or NUL cannot
                 // strand an escape: preserving. Any other delimiter: numeric substitutions only.
@@ -421,7 +456,34 @@ final class Analyzer {
             foreach ($target->items as $it) { if ($it && $it->value instanceof Expr) $this->assignTo($it->value, through($rhs, null, $line, false, 'all'), $env, $line); }
             return;
         }
-        // property / static property: not tracked
+        if ($target instanceof Expr\PropertyFetch && $target->var instanceof Expr\Variable && $target->var->name === 'this'
+            && $target->name instanceof Node\Identifier && $this->currentClass !== null) {
+            $pn = $target->name->toString();
+            $cur = $this->props[$this->currentClass][$pn] ?? null;
+            $this->props[$this->currentClass][$pn] = $cur === null ? $rhs : join2($cur, $rhs);
+            return;
+        }
+        // other objects' properties, static properties: not tracked
+    }
+
+    /** Analyse a callee body with the caller's argument states; sinks inside are emitted in the caller's
+     *  context, the joined `return` state comes back. Depth-capped and recursion-cut: past the cap the call
+     *  is what it was before — unknown. */
+    private function inline(Node $def, array $args, int $line, string $key): array {
+        if (count($this->callStack) >= $this->callDepth || in_array($key, $this->callStack, true))
+            return through(joinAll($args ?: [stF()]), 'call-depth:' . $key, $line, true);
+        $env = [];
+        foreach ($def->params as $i => $p) {
+            $n = $this->varName($p->var); if ($n === null) continue;
+            if ($p->variadic) { $env[$n] = joinAll(array_slice($args, $i) ?: [stF()]); break; }
+            $env[$n] = $args[$i] ?? ($p->default !== null ? $this->ex($p->default, $env) : stF());
+        }
+        $saveScope = $this->scope; $this->scope = $saveScope . '→' . $key . '@L' . $line;
+        $this->callStack[] = $key; $this->returns[] = [];
+        if ($def->stmts !== null) $this->walk($def->stmts, $env);
+        $rets = array_pop($this->returns); array_pop($this->callStack);
+        $this->scope = $saveScope;
+        return $rets ? joinAll($rets) : stF();
     }
 
     private static function joinEnv(array $envs, array $pre): array {
@@ -449,7 +511,7 @@ final class Analyzer {
             foreach ($s->exprs as $x) { $st = $this->ex($x, $env); if (isset($SINKFLAGS['echo'])) $this->sinkFact($SINKFLAGS['echo'], 'echo', $line, $st); }
             return;
         }
-        if ($s instanceof Stmt\Return_) { if ($s->expr) $this->ex($s->expr, $env); return; }
+        if ($s instanceof Stmt\Return_) { $st = $s->expr ? $this->ex($s->expr, $env) : stF(); if ($this->returns) $this->returns[count($this->returns) - 1][] = $st; return; }
         if ($s instanceof Stmt\If_) {
             $this->ex($s->cond, $env);
             $paths = [];
@@ -506,14 +568,19 @@ final class Analyzer {
             $inner = [];
             foreach ($s->params as $p) { $n = $this->varName($p->var); if ($n !== null) $inner[$n] = stZ('param:$' . $n, $line); }
             $save = $this->scope; $this->scope = ($s instanceof Stmt\ClassMethod ? $save . '::' : '') . $s->name->toString() . '()';
-            $this->functions[] = $this->scope;
+            $key = $s instanceof Stmt\ClassMethod ? 'm:' . ($this->currentClass ?? '?') . '::' . strtolower($s->name->toString()) : 'fn:' . strtolower($s->name->toString());
+            $this->functions[] = ['scope' => $this->scope, 'callers' => $this->callers[$key] ?? 0];
+            $this->returns[] = [];
             if ($s->stmts !== null) $this->walk($s->stmts, $inner);
+            array_pop($this->returns);
             $this->scope = $save;
             return;
         }
         if ($s instanceof Stmt\Class_ || $s instanceof Stmt\Trait_ || $s instanceof Stmt\Interface_ || $s instanceof Stmt\Enum_) {
             $save = $this->scope; $this->scope = ($s->name ? $s->name->toString() : 'anon-class');
+            $saveClass = $this->currentClass; $this->currentClass = $this->scope;
             foreach ($s->stmts as $m) { if ($m instanceof Stmt\ClassMethod) $this->stmt($m, $env); }
+            $this->currentClass = $saveClass;
             $this->scope = $save;
             return;
         }
@@ -545,8 +612,30 @@ foreach ($files as $f) {
         $out['files'][] = $rec; continue;
     }
     $an = new Analyzer($CAT);
+    $finder = new \PhpParser\NodeFinder;
+    foreach ($finder->findInstanceOf($ast ?? [], Stmt\Function_::class) as $fn) $an->defs['fn'][strtolower($fn->name->toString())] = $fn;
+    foreach ($finder->findInstanceOf($ast ?? [], Stmt\Class_::class) as $cls) {
+        $cn = $cls->name ? $cls->name->toString() : 'anon-class';
+        foreach ($cls->stmts as $m) if ($m instanceof Stmt\ClassMethod) $an->defs['m'][$cn][strtolower($m->name->toString())] = $m;
+        foreach ($finder->findInstanceOf($cls, Expr\MethodCall::class) as $mc)
+            if ($mc->var instanceof Expr\Variable && $mc->var->name === 'this' && $mc->name instanceof Node\Identifier) {
+                $k = 'm:' . $cn . '::' . strtolower($mc->name->toString()); $an->callers[$k] = ($an->callers[$k] ?? 0) + 1;
+            }
+        foreach ($finder->findInstanceOf($cls, Expr\StaticCall::class) as $sc)
+            if ($sc->class instanceof Node\Name && in_array(strtolower($sc->class->toString()), ['self', 'static', strtolower($cn)], true) && $sc->name instanceof Node\Identifier) {
+                $k = 'm:' . $cn . '::' . strtolower($sc->name->toString()); $an->callers[$k] = ($an->callers[$k] ?? 0) + 1;
+            }
+    }
+    foreach ($finder->findInstanceOf($ast ?? [], Expr\FuncCall::class) as $fc)
+        if ($fc->name instanceof Node\Name && isset($an->defs['fn'][strtolower($fc->name->toString())])) {
+            $k = 'fn:' . strtolower($fc->name->toString()); $an->callers[$k] = ($an->callers[$k] ?? 0) + 1;
+        }
+    // pass 1 collects property assignments (reads see Z); pass 2 reads them and is the one reported
     $env = [];
-    $an->walk($ast ?? [], $env);
+    $an->pass = 1; $an->walk($ast ?? [], $env);
+    $an->facts = []; $an->includes = []; $an->functions = [];
+    $env = [];
+    $an->pass = 2; $an->walk($ast ?? [], $env);
     // a loop body is walked more than once (fixed point): one sink call site, one fact — states JOINED
     $byKey = [];
     foreach ($an->facts as $f) {

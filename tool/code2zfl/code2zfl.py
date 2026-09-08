@@ -176,9 +176,16 @@ def run(paths, overlays=(), ctx="sql", autoload=None, catalog=None, php=None):
             rec["disposition"] = "E"
             out["files"].append(rec)
             continue
+        # a method that IS called in this file is judged at its call sites (its parameters have values
+        # there); its standalone reading, where the parameters are Z, is kept only when nothing calls it
+        called = {fn["scope"] for fn in f.get("functions", []) if isinstance(fn, dict) and fn.get("callers", 0) > 0}
         for s in f["sinks"]:
             if ctx != "all" and s["ctx"] != ctx:
                 continue
+            if s["scope"] in called and "→" not in s["scope"] and s["t"] != "T":
+                zk = {w.split(":")[0] for w, _ in (s.get("z") or [])}
+                if zk and zk <= {"param"}:
+                    continue
             doc = sink_document(s, s["ctx"])
             v = judge(doc)
             rec["sinks"].append({"line": s["line"], "fn": s["fn"], "ctx": s["ctx"], "scope": s["scope"],
@@ -186,6 +193,50 @@ def run(paths, overlays=(), ctx="sql", autoload=None, catalog=None, php=None):
                                  "tainted": doc["rows"][0], "sanitized": doc["rows"][1], "doc": doc})
         out["files"].append(rec)
     return out
+
+
+SECRET_FILES = ("config.php", "settings.php", "admin_settings.php", ".env")
+
+
+def _source_line(path, line):
+    """The sink's own line, for the human table. Never from a config file."""
+    if os.path.basename(path).lower() in SECRET_FILES:
+        return "(config file — line not shown)"
+    try:
+        with open(path, encoding="utf-8", errors="replace") as fh:
+            return fh.read().split("\n")[line - 1].strip()[:140]
+    except (OSError, IndexError):
+        return ""
+
+
+def summary_md(out):
+    """FOR A HUMAN: one table per run — file / sinks / REFUTED / OPEN / EARNED — then only the REFUTED
+    sinks, each with a one-line reason and its own line of code. Everything else lives in the JSON."""
+    L = [f"# code2zfl — summary (`{out['ctx']}`, PHP {out.get('php') or 'newest'})", ""]
+    rows, tot = [], Counter()
+    refuted = []
+    for f in out["files"]:
+        if f["parse_error"]:
+            rows.append((f["file"], "E", 0, 0, 0)); tot["E"] += 1; continue
+        if not f["sinks"]:
+            continue
+        c = Counter(s["disposition"] for s in f["sinks"])
+        rows.append((f["file"], len(f["sinks"]), c["REFUTED"], c["OPEN"] + c["ON CREDIT"], c["EARNED"]))
+        tot.update(c)
+        for s in f["sinks"]:
+            if s["disposition"] == "REFUTED":
+                refuted.append((f["file"], s))
+    L += ["| file | sinks | REFUTED | OPEN | EARNED |", "|---|---:|---:|---:|---:|"]
+    for fl, n, r, o, e in sorted(rows, key=lambda r: (-(r[2] if isinstance(r[2], int) else 0), str(r[0]))):
+        mark = "**" if isinstance(r, int) and r else ""
+        L.append(f"| {fl} | {n} | {mark}{r}{mark} | {o} | {e} |")
+    L.append(f"| **total** | {sum(r[1] for r in rows if isinstance(r[1], int))} | **{tot['REFUTED']}** | {tot['OPEN'] + tot['ON CREDIT']} | {tot['EARNED']} |")
+    L += ["", f"## REFUTED — {len(refuted)}", ""]
+    for fl, s in refuted:
+        why = s["sanitized"]["means"] if s["sanitized"]["status"] == "refuted" else s["tainted"]["means"]
+        L.append(f"- **{fl}:{s['line']}** `{s['fn']}` in `{s['scope']}` — {why}")
+        L.append(f"  `{_source_line(fl, s['line'])}`")
+    return "\n".join(L) + "\n"
 
 
 def ledger_md(out):
@@ -233,9 +284,13 @@ def main():
     ap.add_argument("--php", default=None, help="grammar version for legacy code, e.g. 7.4 (default: newest)")
     ap.add_argument("--json", default=None)
     ap.add_argument("--md", default=None)
+    ap.add_argument("--summary", default=None, help="human summary: totals per file + REFUTED with code lines")
     a = ap.parse_args()
     out = run(a.paths, a.overlay, a.ctx, a.autoload, a.catalog, a.php)
     md = ledger_md(out)
+    if a.summary:
+        with open(a.summary, "w", encoding="utf-8") as fh:
+            fh.write(summary_md(out))
     if a.json:
         with open(a.json, "w", encoding="utf-8") as fh:
             json.dump(out, fh, ensure_ascii=False, indent=1)

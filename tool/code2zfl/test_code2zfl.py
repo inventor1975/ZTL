@@ -47,6 +47,11 @@ EXPECT = {
     "f19_raw_part_beside_unknown.php": ["REFUTED"],
     "f20_header_redirect.php": ["REFUTED"],
     "f21_dynamic_class.php": ["REFUTED"],
+    "f22_param_from_caller.php": ["REFUTED"],
+    "f23_property_across_methods.php": ["REFUTED"],
+    "f24_callee_sanitizes.php": ["EARNED"],
+    "f25_return_carries_taint.php": ["REFUTED"],
+    "f26_query_built_in_pieces.php": ["EARNED", "EARNED", "EARNED"],
 }
 
 

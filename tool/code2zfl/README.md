@@ -27,6 +27,43 @@ and the judge answers with a **disposition and a weak link**, not a score:
 | **OPEN** | the path crosses something this file cannot see; the weak link is **named** (`clean_input()@L4`, `param:$id`) |
 | **E** | the file does not parse — *not judged*, never "clean" |
 
+## Sight through calls (within a file)
+
+A call to a function or `$this->method()` defined in the same file is
+**inlined** with the caller's argument states (depth 3, recursion cut):
+sinks inside are judged in the caller's context, the joined `return` state
+comes back. `$this->prop` is a may-join over every assignment in the class.
+A method that is called in the file is judged at its call sites; its
+standalone reading — parameters Z — stands only when nothing calls it
+(an entry point the framework calls). Other objects' properties, DB rows,
+session data remain Z and the ledger names the object: `property $tpl`,
+`->fetch()`.
+
+Quoting is decided **once**, where an escaped part is first embedded; a
+fragment then carries that decision, so `$q .= …`, `implode(",", $set)` and
+a WHERE built in a helper are not re-judged as "outside quotes" by the
+outer string (measured: 12 false REFUTED of one shape on the test engine
+before this, 0 after — fixture `f26`).
+
+## For a human: `--summary`
+
+    python3 code2zfl.py path --summary summary.md
+
+One table — file / sinks / REFUTED / OPEN / EARNED — then only the REFUTED
+sinks, each with a one-line reason and its own line of code (never from a
+config file). Everything else is in `--json`.
+
+## The external denominator: `compare_psalm.py`
+
+    CODE2ZFL_PSALM=/path/to/vendor/bin/psalm python3 compare_psalm.py --root /site modules libraries [--overlay proj.json] [--php 7.4]
+
+Runs Psalm's taint analysis and code2zfl on the same tree and prints:
+found / same lines / only Psalm (with what we said there) / only ours (by
+context, with reasons). Every line Psalm has that we do not is either a
+hole in the catalog or a defect in the judgement — the fixtures I write
+can only test the questions I thought of. Psalm 5.x is needed on
+PHP < 8.3.16.
+
 ## Why per-sink documents lose nothing
 
 Evaluation reads the marking only at the atoms of the formula:
@@ -43,13 +80,13 @@ the passport office never enters: these documents have three names.
   that: `intval` substitutes for every context, `mysqli_real_escape_string`
   only for the quoted SQL context, `htmlspecialchars` only for HTML;
   `addslashes`, `substr`, `str_replace` substitute nothing.
-- **Measured** (`test_code2zfl.py`): 14 fixture sinks — planted injections
+- **Measured** (`test_code2zfl.py`): 31 fixture sink verdicts across 26 fixtures — planted injections
   REFUTED, clean code EARNED, opaque code OPEN with the weak link named — and
   two **vacuity controls**: with the sanitizer catalog emptied `f02` flips to
   REFUTED, with the source catalog emptied `f01` flips to OPEN. The catalog is
   load-bearing; the verdicts are not the frame talking.
 - **Boundaries** (named in the ledger, not hidden):
-  - *intra-procedural*: a parameter, a global, an include, a DB row are Z;
+  - *one file at a time*: calls within the file are followed; a global, an include, another object's property, a DB row are Z;
   - escaping **without quotes** is refuted, not credited (`ast-unquoted`);
   - a transformation after escaping **drops** it (`substr` can end in a lone backslash);
   - a sanitizer of the **wrong context** is refuted (HTML escaper before SQL);

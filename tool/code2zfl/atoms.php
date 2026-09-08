@@ -74,6 +74,7 @@ $SANFN = array_change_key_case($CAT['sanitizers']['functions'] ?? [], CASE_LOWER
 $SANMETH = array_change_key_case($CAT['sanitizers']['methods'] ?? [], CASE_LOWER);
 $SANCAST = $CAT['sanitizers']['casts'] ?? [];
 $TRANSP = array_flip(array_map('strtolower', $CAT['transparent'] ?? []));
+$GUARDS = array_change_key_case($CAT['guards'] ?? [], CASE_LOWER);   // a condition that VERIFIES a value
 $PRESERV = array_flip(array_map('strtolower', $CAT['preserving'] ?? []));
 $NARROW = array_flip(array_map('strtolower', $CAT['narrowing'] ?? []));
 $SINKFN = []; $SINKMETH = []; $SINKARG = []; $SINKFLAGS = [];
@@ -239,7 +240,7 @@ final class Analyzer {
 
     /** Evaluate an expression to a taint state; records sinks and assignments on the way. */
     public function ex(?Node $e, array &$env): array {
-        global $SUPER, $SERVER_KEYS, $SERVER_PREFIXES, $SRCFN, $SRCMETH, $SANFN, $SANMETH, $SANCAST, $TRANSP, $PRESERV, $NARROW, $SINKFN, $SINKMETH, $SINKARG, $SINKFLAGS;
+        global $SUPER, $SERVER_KEYS, $SERVER_PREFIXES, $GUARDS, $SRCFN, $SRCMETH, $SANFN, $SANMETH, $SANCAST, $TRANSP, $PRESERV, $NARROW, $SINKFN, $SINKMETH, $SINKARG, $SINKFLAGS;
         if ($e === null) return stF();
         $line = $e->getStartLine();
 
@@ -406,6 +407,13 @@ final class Analyzer {
                 && in_array(strtolower($e->class->toString()), ['self', 'static', strtolower($this->currentClass)], true)
                 && isset($this->defs['m'][$this->currentClass][$name]))
                 return $this->inline($this->defs['m'][$this->currentClass][$name], $args, $line, 'm:' . $this->currentClass . '::' . $name);
+            if (!$isMethod && $name === 'filter_var') {
+                $flt = $e->args[1]->value ?? null;
+                $fname = $flt instanceof Expr\ConstFetch ? strtoupper($flt->name->toString()) : '';
+                if (in_array($fname, ['FILTER_VALIDATE_INT', 'FILTER_VALIDATE_FLOAT', 'FILTER_VALIDATE_BOOL', 'FILTER_VALIDATE_BOOLEAN'], true))
+                    return sanitize($args[0] ?? stF(), ['*'], 'filter_var:' . $fname, $line);
+                return through(joinAll($args ?: [stF()]), null, $line, false, 'none');
+            }
             if (!$isMethod && ($name === 'explode' || $name === 'implode' || $name === 'join')) {
                 // splitting/joining on a literal delimiter that carries no quote, backslash or NUL cannot
                 // strand an escape: preserving. Any other delimiter: numeric substitutions only.
@@ -439,6 +447,92 @@ final class Analyzer {
             elseif (is_array($c)) foreach ($c as $cc) if ($cc instanceof Expr) $st[] = $this->ex($cc, $env);
         }
         return through(joinAll($st ?: [stF()]), 'node:' . $e->getType(), $line, true);
+    }
+
+    /** Is this a literal the machine may trust as a fixed set/value? (scalars, constants, arrays of them) */
+    private static function isLiteral(?Node $n): bool {
+        if ($n === null) return false;
+        if ($n instanceof Scalar\String_ || $n instanceof Scalar\Int_ || $n instanceof Scalar\Float_ || $n instanceof Expr\ConstFetch || $n instanceof Expr\ClassConstFetch) return true;
+        if ($n instanceof Expr\Array_) { foreach ($n->items as $it) { if ($it === null || !self::isLiteral($it->value)) return false; } return true; }
+        return false;
+    }
+
+    /** An anchored pattern over a plain character class — the only regex we credit as a verification. */
+    private static function patternIsTight(?Node $n): bool {
+        if (!($n instanceof Scalar\String_)) return false;
+        $p = $n->value;
+        if (strlen($p) < 3) return false;
+        $d = $p[0]; $end = strrpos($p, $d);
+        if ($end === false || $end === 0) return false;
+        $flags = substr($p, $end + 1); $body = substr($p, 1, $end - 1);
+        if (str_contains($flags, 'm')) return false;
+        $atom = '(?:\[[A-Za-z0-9_\\\\\-]+\]|\\\\[dw]|[A-Za-z0-9_\-])(?:[+*?]|\{\d+(?:,\d*)?\})?';
+        $re = '/^(?:\^|\\\\A)(?:' . $atom . ')+(?:\$|\\\\[zZ])$/';
+        return (bool)preg_match($re, $body);
+    }
+
+    /** What a condition VERIFIES: ['true' => [[var, contexts, fn, line]...], 'false' => [...]].
+     *  A guard is an act of checking, and inside the branch it protects the value is substituted (E40:
+     *  the sanitizer is a substitution, and a verified membership in a fixed set is one). */
+    private function guards(Expr $c): array {
+        global $GUARDS;
+        $line = $c->getStartLine();
+        $none = ['true' => [], 'false' => []];
+        if ($c instanceof Expr\BooleanNot) { $g = $this->guards($c->expr); return ['true' => $g['false'], 'false' => $g['true']]; }
+        if ($c instanceof Expr\BinaryOp\BooleanAnd || $c instanceof Expr\BinaryOp\LogicalAnd) {
+            $l = $this->guards($c->left); $r = $this->guards($c->right);
+            return ['true' => array_merge($l['true'], $r['true']), 'false' => []];
+        }
+        if ($c instanceof Expr\BinaryOp\BooleanOr || $c instanceof Expr\BinaryOp\LogicalOr) {
+            $l = $this->guards($c->left); $r = $this->guards($c->right);
+            $both = [];                                                     // true only for a var BOTH sides verify
+            foreach ($l['true'] as $a) foreach ($r['true'] as $b) if ($a[0] === $b[0]) $both[] = [$a[0], array_values(array_intersect($a[1], $b[1])) ?: (in_array('*', $a[1], true) ? $b[1] : (in_array('*', $b[1], true) ? $a[1] : [])), $a[2] . '|' . $b[2], $line];
+            return ['true' => array_values(array_filter($both, fn($g) => $g[1] !== [])), 'false' => array_merge($l['false'], $r['false'])];
+        }
+        if ($c instanceof Expr\BinaryOp\Identical || $c instanceof Expr\BinaryOp\Equal) {
+            $v = $this->varName($c->left) !== null && self::isLiteral($c->right) ? $this->varName($c->left)
+               : ($this->varName($c->right) !== null && self::isLiteral($c->left) ? $this->varName($c->right) : null);
+            return $v === null ? $none : ['true' => [[$v, ['*'], 'equals-literal', $line]], 'false' => []];
+        }
+        if ($c instanceof Expr\BinaryOp\NotIdentical || $c instanceof Expr\BinaryOp\NotEqual) {
+            $v = $this->varName($c->left) !== null && self::isLiteral($c->right) ? $this->varName($c->left)
+               : ($this->varName($c->right) !== null && self::isLiteral($c->left) ? $this->varName($c->right) : null);
+            return $v === null ? $none : ['true' => [], 'false' => [[$v, ['*'], 'equals-literal', $line]]];
+        }
+        if ($c instanceof Expr\Isset_ && count($c->vars) === 1 && $c->vars[0] instanceof Expr\ArrayDimFetch) {
+            $adf = $c->vars[0];                                             // isset($FIXED[$x]) — membership in a fixed map
+            $v = $this->varName($adf->dim ?? null);
+            if ($v !== null && ($adf->var instanceof Expr\ConstFetch || $adf->var instanceof Expr\ClassConstFetch)) return ['true' => [[$v, ['*'], 'isset-fixed-map', $line]], 'false' => []];
+            return $none;
+        }
+        if ($c instanceof Expr\FuncCall && $c->name instanceof Node\Name) {
+            $fn = strtolower($c->name->toString());
+            $g = $GUARDS[$fn] ?? null;
+            if ($g === null) return $none;
+            $args = $c->args;
+            $vix = $g['value'] ?? 0;
+            $v = isset($args[$vix]) ? $this->varName($args[$vix]->value) : null;
+            if ($v === null) return $none;
+            if (isset($g['haystack']) && !self::isLiteral($args[$g['haystack']]->value ?? null)) return $none;   // in_array($x, $unknown): no
+            if (!empty($g['pattern_tight']) && !self::patternIsTight($args[$g['pattern']]->value ?? null)) return $none;
+            return ['true' => [[$v, $g['contexts'], 'guard:' . $fn, $line]], 'false' => []];
+        }
+        if ($c instanceof Expr\Assign) return $this->guards($c->expr);   // if ($m = preg_match(...)) — rare; keep simple
+        return $none;
+    }
+
+    private function applyGuards(array $gs, array &$env): void {
+        foreach ($gs as [$v, $ctxs, $fn, $line]) if (isset($env[$v])) $env[$v] = sanitize($env[$v], $ctxs, $fn, $line);
+    }
+
+    /** Does a block always leave (return / exit / throw / break / continue)? Then what follows the `if`
+     *  runs only when its condition FAILED, and the failed side's guards hold there. */
+    private static function terminates(array $stmts): bool {
+        if (!$stmts) return false;
+        $last = $stmts[count($stmts) - 1];
+        if ($last instanceof Stmt\Return_ || $last instanceof Stmt\Break_ || $last instanceof Stmt\Continue_) return true;
+        if ($last instanceof Stmt\Expression && ($last->expr instanceof Expr\Exit_ || $last->expr instanceof Expr\Throw_)) return true;
+        return false;
     }
 
     private function assignTo(Expr $target, array $rhs, array &$env, int $line): void {
@@ -516,11 +610,15 @@ final class Analyzer {
         if ($s instanceof Stmt\Return_) { $st = $s->expr ? $this->ex($s->expr, $env) : stF(); if ($this->returns) $this->returns[count($this->returns) - 1][] = $st; return; }
         if ($s instanceof Stmt\If_) {
             $this->ex($s->cond, $env);
+            $g = $this->guards($s->cond);
             $paths = [];
-            $e1 = $env; $this->walk($s->stmts, $e1); $paths[] = $e1;
-            foreach ($s->elseifs as $ei) { $e2 = $env; $this->ex($ei->cond, $e2); $this->walk($ei->stmts, $e2); $paths[] = $e2; }
-            if ($s->else) { $e3 = $env; $this->walk($s->else->stmts, $e3); $paths[] = $e3; } else $paths[] = $env;
-            $env = self::joinEnv($paths, $env);
+            $e1 = $env; $this->applyGuards($g['true'], $e1); $this->walk($s->stmts, $e1);
+            $leaves = self::terminates($s->stmts);
+            if (!$leaves) $paths[] = $e1;
+            foreach ($s->elseifs as $ei) { $e2 = $env; $this->applyGuards($g['false'], $e2); $this->ex($ei->cond, $e2); $this->applyGuards($this->guards($ei->cond)['true'], $e2); $this->walk($ei->stmts, $e2); if (!self::terminates($ei->stmts)) $paths[] = $e2; }
+            if ($s->else) { $e3 = $env; $this->applyGuards($g['false'], $e3); $this->walk($s->else->stmts, $e3); if (!self::terminates($s->else->stmts)) $paths[] = $e3; }
+            else { $e0 = $env; $this->applyGuards($g['false'], $e0); $paths[] = $e0; }   // the fall-through path: the condition failed
+            $env = $paths ? self::joinEnv($paths, $env) : $env;
             return;
         }
         if ($s instanceof Stmt\While_ || $s instanceof Stmt\Do_ || $s instanceof Stmt\For_ || $s instanceof Stmt\Foreach_) {
@@ -548,9 +646,11 @@ final class Analyzer {
         if ($s instanceof Stmt\Switch_) {
             $this->ex($s->cond, $env);
             $paths = []; $prev = null; $hasDefault = false;
+            $subj = $this->varName($s->cond);
             foreach ($s->cases as $c) {
                 if ($c->cond === null) $hasDefault = true; else $this->ex($c->cond, $env);
                 $e1 = $prev === null ? $env : self::joinEnv([$env, $prev], $env);
+                if ($subj !== null && $c->cond !== null && self::isLiteral($c->cond) && isset($e1[$subj])) $e1[$subj] = sanitize($e1[$subj], ['*'], 'case-literal', $c->getStartLine());
                 $this->walk($c->stmts, $e1);
                 $paths[] = $e1; $prev = $e1;
             }

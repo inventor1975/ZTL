@@ -53,6 +53,13 @@ EXPECT = {
     "f25_return_carries_taint.php": ["REFUTED"],
     "f26_query_built_in_pieces.php": ["EARNED", "EARNED", "EARNED"],
     "f27_same_method_name_two_objects.php": ["EARNED", "REFUTED"],
+    "f28_guard_in_array.php": ["EARNED", "REFUTED"],
+    "f29_guard_early_exit.php": ["EARNED"],
+    "f30_guard_preg_match.php": ["EARNED", "REFUTED"],
+    "f31_html.php": ["REFUTED", "EARNED", "REFUTED"],
+    "f32_header.php": ["REFUTED", "EARNED"],
+    "f33_callable_whitelist.php": ["EARNED", "EARNED", "REFUTED"],
+    "f34_filter_var.php": ["EARNED"],
 }
 
 

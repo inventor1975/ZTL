@@ -96,7 +96,7 @@
       ],
       "methods": [],
       "include": true,
-      "measured": false
+      "measured": true
     },
     "deser": {
       "functions": [
@@ -112,7 +112,7 @@
       ],
       "methods": [],
       "echo": true,
-      "measured": false
+      "measured": true
     },
     "header": {
       "functions": [
@@ -237,6 +237,21 @@
         "contexts": [
           "file"
         ]
+      },
+      "urlencode": {
+        "contexts": [
+          "header"
+        ]
+      },
+      "rawurlencode": {
+        "contexts": [
+          "header"
+        ]
+      },
+      "http_build_query": {
+        "contexts": [
+          "header"
+        ]
       }
     },
     "methods": {
@@ -297,8 +312,6 @@
     "addslashes",
     "urldecode",
     "rawurldecode",
-    "urlencode",
-    "rawurlencode",
     "base64_decode",
     "base64_encode",
     "json_decode",
@@ -323,7 +336,8 @@
     "_SERVER": "attacker-written entries only: HTTP_* (every request header, HTTP_HOST and HTTP_X_FORWARDED_FOR included), the request line and path. REMOTE_ADDR, SERVER_*, DOCUMENT_ROOT are set by the server and read as constants. A computed key is assumed hot.",
     "narrowing": "taint passes; only a NUMERIC substitution survives (digits stay digits under any cut), a context escape does not (substr can strand a backslash).",
     "explode/implode": "preserving when the delimiter is a literal without quote, backslash or NUL (it cannot strand an escape); otherwise narrowing.",
-    "header/callable": "added 2026-09-08 after Psalm reported a TaintedHeader (header('Location: '.$url)) and a TaintedCallable (new $classname) our catalog had no sink for. `callable` fires on new $x(), $x(), $obj->$m() and call_user_func*; the judged value is the NAME, not the arguments."
+    "header/callable": "added 2026-09-08 after Psalm reported a TaintedHeader (header('Location: '.$url)) and a TaintedCallable (new $classname) our catalog had no sink for. `callable` fires on new $x(), $x(), $obj->$m() and call_user_func*; the judged value is the NAME, not the arguments.",
+    "guards": "a condition is an ACT OF CHECKING: inside the branch it protects, the checked value is substituted (E40 — membership in a fixed set is a substitution). Credited only when the set/pattern is fixed: in_array against a literal array, ctype_*/is_numeric, an anchored regex over a plain character class, $x === 'literal', a literal switch case. After `if (!guard) exit/return;` the guard holds for what follows. `file_exists` is NOT a guard (traversal passes it)."
   },
   "narrowing": [
     "substr",
@@ -340,5 +354,77 @@
     "array_filter",
     "str_word_count",
     "chunk_split"
-  ]
+  ],
+  "guards": {
+    "in_array": {
+      "value": 0,
+      "haystack": 1,
+      "contexts": [
+        "*"
+      ]
+    },
+    "array_key_exists": {
+      "value": 0,
+      "haystack": 1,
+      "contexts": [
+        "*"
+      ]
+    },
+    "ctype_digit": {
+      "value": 0,
+      "contexts": [
+        "*"
+      ]
+    },
+    "ctype_alnum": {
+      "value": 0,
+      "contexts": [
+        "*"
+      ]
+    },
+    "ctype_alpha": {
+      "value": 0,
+      "contexts": [
+        "*"
+      ]
+    },
+    "is_numeric": {
+      "value": 0,
+      "contexts": [
+        "*"
+      ]
+    },
+    "is_int": {
+      "value": 0,
+      "contexts": [
+        "*"
+      ]
+    },
+    "is_integer": {
+      "value": 0,
+      "contexts": [
+        "*"
+      ]
+    },
+    "is_float": {
+      "value": 0,
+      "contexts": [
+        "*"
+      ]
+    },
+    "is_bool": {
+      "value": 0,
+      "contexts": [
+        "*"
+      ]
+    },
+    "preg_match": {
+      "pattern": 0,
+      "value": 1,
+      "contexts": [
+        "*"
+      ],
+      "pattern_tight": true
+    }
+  }
 }

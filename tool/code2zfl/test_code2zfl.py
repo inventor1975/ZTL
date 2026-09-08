@@ -23,6 +23,7 @@ import code2zfl  # noqa: E402
 
 FIX = os.path.join(HERE, "fixtures")
 OVERLAY = os.path.join(FIX, "overlay-wrapper.json")
+LARAVEL = os.path.join(HERE, "overlays", "laravel.json")
 AUTOLOAD = os.environ.get("CODE2ZFL_AUTOLOAD")
 
 EXPECT = {
@@ -60,6 +61,8 @@ EXPECT = {
     "f32_header.php": ["REFUTED", "EARNED"],
     "f33_callable_whitelist.php": ["EARNED", "EARNED", "REFUTED"],
     "f34_filter_var.php": ["EARNED"],
+    "f35_laravel_raw.php": ["REFUTED", "EARNED", "REFUTED"],
+    "f36_laravel_identifier.php": ["REFUTED", "EARNED", "EARNED"],
 }
 
 
@@ -73,7 +76,7 @@ def dispositions(out):
 
 def main():
     failures = []
-    out = code2zfl.run([FIX], [OVERLAY], "all", AUTOLOAD)
+    out = code2zfl.run([FIX], [OVERLAY, LARAVEL], "all", AUTOLOAD)
     got = dispositions(out)
     for name, exp in EXPECT.items():
         if got.get(name) != exp:

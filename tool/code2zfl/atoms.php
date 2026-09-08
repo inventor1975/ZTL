@@ -65,13 +65,14 @@ function mergeCatalog(array $base, array $over): array {
 $CAT = loadJson($catalogPath);
 foreach ($overlays as $o) $CAT = mergeCatalog($CAT, loadJson($o));
 
+$lowerKey = fn(string $k) => (str_contains($k, '->') || str_contains($k, '::')) ? preg_replace_callback('/(->|::)([^>:]+)$/', fn($m) => $m[1] . strtolower($m[2]), $k) : strtolower($k);
 $SUPER = array_flip($CAT['sources']['superglobals'] ?? []);
 $SERVER_KEYS = $CAT['sources']['server_keys'] ?? [];   // which $_SERVER entries an attacker can write
 $SERVER_PREFIXES = $CAT['sources']['server_prefixes'] ?? [];
 $SRCFN = array_flip(array_map('strtolower', $CAT['sources']['functions'] ?? []));
-$SRCMETH = array_flip(array_map('strtolower', $CAT['sources']['methods'] ?? []));   // "$obj->name" keys allowed: receiver-qualified
+$SRCMETH = array_flip(array_map($lowerKey, $CAT['sources']['methods'] ?? []));   // "$obj->name", "Class::name", "fn()->name" keys allowed
 $SANFN = array_change_key_case($CAT['sanitizers']['functions'] ?? [], CASE_LOWER);
-$SANMETH = array_change_key_case($CAT['sanitizers']['methods'] ?? [], CASE_LOWER);
+$SANMETH = []; foreach ($CAT['sanitizers']['methods'] ?? [] as $k => $v) $SANMETH[$lowerKey($k)] = $v;
 $SANCAST = $CAT['sanitizers']['casts'] ?? [];
 $TRANSP = array_flip(array_map('strtolower', $CAT['transparent'] ?? []));
 $GUARDS = array_change_key_case($CAT['guards'] ?? [], CASE_LOWER);   // a condition that VERIFIES a value
@@ -80,7 +81,7 @@ $NARROW = array_flip(array_map('strtolower', $CAT['narrowing'] ?? []));
 $SINKFN = []; $SINKMETH = []; $SINKARG = []; $SINKFLAGS = [];
 foreach ($CAT['sinks'] as $ctx => $spec) {
     foreach ($spec['functions'] ?? [] as $f) $SINKFN[strtolower($f)] = $ctx;
-    foreach ($spec['methods'] ?? [] as $m) $SINKMETH[strtolower($m)] = $ctx;
+    foreach ($spec['methods'] ?? [] as $m) $SINKMETH[$lowerKey($m)] = $ctx;
     foreach ($spec['arg'] ?? [] as $f => $ix) $SINKARG[strtolower($f)] = $ix;
     foreach (['echo', 'include', 'eval', 'callable'] as $fl) if (!empty($spec[$fl])) $SINKFLAGS[$fl] = $ctx;
 }
@@ -224,7 +225,10 @@ final class Analyzer {
     }
 
     private function callName(Node $c): ?string {
-        if (($c instanceof Expr\FuncCall || $c instanceof Expr\StaticCall) && $c->name instanceof Node\Name) return strtolower($c->name->toString());
+        if ($c instanceof Expr\FuncCall && $c->name instanceof Node\Name) return strtolower($c->name->toString());
+        // a static call's method is an Identifier, not a Name — before 2026-09-08 every Class::method() fell
+        // through as a dynamic call, so DB::select() was never a sink
+        if ($c instanceof Expr\StaticCall && $c->name instanceof Node\Identifier) return strtolower($c->name->toString());
         if (($c instanceof Expr\MethodCall || $c instanceof Expr\NullsafeMethodCall) && $c->name instanceof Node\Identifier) return strtolower($c->name->toString());
         return null;
     }
@@ -373,7 +377,10 @@ final class Analyzer {
             if ($isMethod) $this->ex($e->var, $env);
             $name = $this->callName($e);
             $args = $this->args($e, $env);
-            $recv = ($isMethod && $e->var instanceof Expr\Variable && is_string($e->var->name)) ? '$' . $e->var->name . '->' . $name : null;
+            $recv = null;
+            if ($isMethod && $e->var instanceof Expr\Variable && is_string($e->var->name)) $recv = '$' . $e->var->name . '->' . $name;
+            elseif ($isMethod && $e->var instanceof Expr\FuncCall && $e->var->name instanceof Node\Name) $recv = strtolower($e->var->name->toString()) . '()->' . $name;
+            elseif ($e instanceof Expr\StaticCall && $e->class instanceof Node\Name) $recv = $e->class->getLast() . '::' . $name;
             $qual = fn(array $table) => ($recv !== null && isset($table[$recv])) ? $table[$recv] : ($table[$name] ?? null);
             if ($name === null) {                                             // $fn(...) / $obj->$m(...)
                 $callee = null;
@@ -383,15 +390,15 @@ final class Analyzer {
                 return through(joinAll($args ?: [stF()]), 'dynamic-call', $line, true);
             }
             // sinks first: the argument as it ARRIVES
-            $sinkCtx = $isMethod ? $qual($SINKMETH) : ($SINKFN[$name] ?? null);
+            $sinkCtx = $isMethod ? $qual($SINKMETH) : ($e instanceof Expr\StaticCall ? ($qual($SINKMETH) ?? ($SINKFN[$name] ?? null)) : ($SINKFN[$name] ?? null));
             if ($sinkCtx !== null) {
                 $ix = $SINKARG[$name] ?? 0;
                 if (isset($args[$ix])) $this->sinkFact($sinkCtx, ($isMethod ? '->' : '') . $name, $line, $args[$ix]);
             }
             // sources
-            if ($isMethod ? ($qual($SRCMETH) !== null) : isset($SRCFN[$name])) return stT('fn', ($isMethod ? ($recv ?? '->' . $name) : $name), $line);
+            if ($isMethod ? ($qual($SRCMETH) !== null) : ($e instanceof Expr\StaticCall ? ($qual($SRCMETH) !== null || isset($SRCFN[$name])) : isset($SRCFN[$name]))) return stT('fn', $recv ?? (($isMethod ? '->' : '') . $name), $line);
             // sanitizers: substitution of the value for the listed contexts
-            $san = $isMethod ? $qual($SANMETH) : ($SANFN[$name] ?? null);
+            $san = $isMethod ? $qual($SANMETH) : ($e instanceof Expr\StaticCall ? ($qual($SANMETH) ?? ($SANFN[$name] ?? null)) : ($SANFN[$name] ?? null));
             if ($san !== null) {
                 $ix = $san['arg'] ?? 0; if ($ix < 0) $ix = count($args) - 1;
                 $s = $args[$ix] ?? stF();

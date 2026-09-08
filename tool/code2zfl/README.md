@@ -106,6 +106,20 @@ substitutions by context, transparent functions. A project **overlay** adds
 its own wrapper (`$db->query`, `$db->escape`, `get_var`): see
 `fixtures/overlay-wrapper.json`. Overlays for live sites stay private.
 
+## Overlays: a framework is data
+
+`overlays/laravel.json` — the Request object and `request()` helper as
+sources; `DB::raw/select/statement` and the `*Raw` builder methods as
+sinks; and the **identifier positions** — `orderBy($col)`, `where($col, …)`,
+`select($cols)`, `groupBy($col)` — because the builder binds values and
+never column names. Catalog keys may be receiver-qualified three ways:
+`$db->safe`, `DB::raw`, `request()->input`. Blade templates are not parsed
+as PHP sinks — a boundary, named in the overlay.
+
+Second corpus (2026-09-08): a 41-file Laravel app — 72 sinks, 70 EARNED on
+constants, 2 OPEN (a middleware's `$next` closure), 0 REFUTED; Psalm 0.
+The tool does not cry wolf where the builder binds.
+
 ## Prior art, named once
 
 Taint analysis exists — Psalm, PHPStan, Semgrep, Phan. What they do not give

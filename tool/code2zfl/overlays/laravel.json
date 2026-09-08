@@ -1,0 +1,163 @@
+{
+  "_about": "Laravel overlay (generic, public). Sources: the Request object and the request() helper. Sinks: raw SQL entry points — DB::raw/select/statement and the *Raw query-builder methods; bound parameters are not sinks (the builder quotes them). Sanitizers: e() = htmlspecialchars. Blade templates ({{ }} escapes, {!! !!} does not) are NOT parsed by php-parser as PHP sinks — a boundary, named here. IDENTIFIER positions are sinks too: the query builder binds VALUES, never column names — orderBy($col), where($col, ...), select($cols), groupBy($col) with request data are injections; only the first argument (the identifier) is judged, bound values are not.",
+  "sources": {
+    "methods": [
+      "$request->input",
+      "$request->get",
+      "$request->query",
+      "$request->post",
+      "$request->all",
+      "$request->cookie",
+      "$request->header",
+      "$request->route",
+      "$request->json",
+      "$request->only",
+      "$request->except",
+      "$request->string",
+      "$request->integer",
+      "request()->input",
+      "request()->get",
+      "request()->query",
+      "request()->post",
+      "request()->all",
+      "request()->cookie",
+      "request()->header",
+      "request()->route",
+      "Request::input",
+      "Request::get",
+      "Request::query",
+      "Request::all",
+      "Input::get",
+      "Input::all"
+    ]
+  },
+  "sinks": {
+    "sql": {
+      "methods": [
+        "DB::raw",
+        "DB::select",
+        "DB::selectOne",
+        "DB::statement",
+        "DB::unprepared",
+        "DB::insert",
+        "DB::update",
+        "DB::delete",
+        "DB::affectingStatement",
+        "whereRaw",
+        "orWhereRaw",
+        "selectRaw",
+        "orderByRaw",
+        "havingRaw",
+        "orHavingRaw",
+        "groupByRaw",
+        "fromRaw",
+        "whereBetweenRaw",
+        "raw",
+        "orderBy",
+        "orderByDesc",
+        "latest",
+        "oldest",
+        "groupBy",
+        "select",
+        "addSelect",
+        "having",
+        "pluck",
+        "join",
+        "leftJoin",
+        "rightJoin",
+        "where",
+        "orWhere",
+        "whereIn",
+        "whereNotIn",
+        "whereBetween",
+        "whereNull",
+        "whereNotNull",
+        "value",
+        "sum",
+        "avg",
+        "min",
+        "max",
+        "increment",
+        "decrement"
+      ],
+      "arg": {
+        "orderBy": 0,
+        "orderByDesc": 0,
+        "latest": 0,
+        "oldest": 0,
+        "groupBy": 0,
+        "select": 0,
+        "addSelect": 0,
+        "having": 0,
+        "pluck": 0,
+        "join": 0,
+        "leftJoin": 0,
+        "rightJoin": 0,
+        "where": 0,
+        "orWhere": 0,
+        "whereIn": 0,
+        "whereNotIn": 0,
+        "whereBetween": 0,
+        "whereNull": 0,
+        "whereNotNull": 0,
+        "value": 0,
+        "sum": 0,
+        "avg": 0,
+        "min": 0,
+        "max": 0,
+        "increment": 0,
+        "decrement": 0
+      }
+    },
+    "file": {
+      "methods": [
+        "Storage::get",
+        "Storage::put",
+        "Storage::delete",
+        "Storage::download",
+        "Storage::path",
+        "File::get",
+        "File::put",
+        "File::delete"
+      ]
+    },
+    "shell": {
+      "methods": [
+        "Process::run",
+        "Process::start"
+      ]
+    },
+    "html": {
+      "methods": [
+        "Response::make",
+        "response()->make"
+      ]
+    }
+  },
+  "sanitizers": {
+    "functions": {
+      "e": {
+        "contexts": [
+          "html"
+        ]
+      }
+    },
+    "methods": {
+      "$request->integer": {
+        "contexts": [
+          "*"
+        ]
+      },
+      "$request->float": {
+        "contexts": [
+          "*"
+        ]
+      },
+      "$request->boolean": {
+        "contexts": [
+          "*"
+        ]
+      }
+    }
+  }
+}

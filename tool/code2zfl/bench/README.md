@@ -193,6 +193,18 @@ assumes for its remaining nine shapes (`$_SESSION`, `fopen`/`fgets`/`file_get_co
 `proc_open`/`shell_exec` output, backticks, `unserialize`). It does **not** touch GET/POST (measured: 0 of those
 verdicts move when the overlay is added). DB rows stay Z even here; a project overlay can add them.
 
+**Decided 2026-09-09 (curator: "реши сам"): it stays an overlay.** Measured on the blog engine, the overlay adds
+42 REFUTED; eight were read in the source and every one is state the application wrote itself — the page cache
+(`echo file_get_contents($cachefile)`), the installer's language from the session, a backup tool's own config
+through `unserialize`. Z with the link named ("origin not visible here: file_get_contents@L85") is the honest
+tier for those; T would assert a fact the file cannot establish. The overlay is for benchmarks and for a project
+that declares "nothing stored is trusted" on purpose.
+
+**Review of the pass (Fable over Opus's commit 8b14e22):** one defect found and fixed — the in-file object
+dispatch stood *ahead* of the sink check, so an in-file wrapper `class DB { function query($q) {…} }` with an
+opaque body would have been inlined instead of judged: a sink lost in silence. Now the call site is judged as the
+sink first and the body is followed after (fixture `f56`). No verdict on SARD, the engine or MindReef moved.
+
 Unsafe files found, **all 16 sources**, base catalog + `stored-input.json`:
 
 | CWE | unsafe n | REFUTED | OPEN | miss (→EARNED) | vs 3-source REFUTED before |

@@ -695,23 +695,6 @@ final class Analyzer {
             $recvState = $isMethod ? $this->ex($e->var, $env) : null;
             $name = $this->callName($e);
             $args = $this->args($e, $env);
-            // an object of a class defined in THIS file: the method runs on that object's own property states, in call order
-            if ($isMethod && $name !== null && ($recvState['obj'] ?? null) !== null && isset($this->defs['m'][$recvState['obj']['class']][$name])) {
-                $inst = $recvState['obj'];
-                $r = $this->instanceCall($inst, $name, $args, $line);
-                $vn = $e->var instanceof Expr\Variable ? $this->varName($e->var) : null;
-                if ($vn !== null && isset($env[$vn])) $env[$vn]['obj'] = $inst;          // the object was changed by the call
-                return $r;
-            }
-            if ($e instanceof Expr\StaticCall && $name !== null && $e->class instanceof Node\Name
-                && !in_array(strtolower($e->class->toString()), ['self', 'static', 'parent'], true)
-                && isset($this->defs['m'][$e->class->getLast()][$name])) {           // Foo::bar() of a class defined here: class-wide property states
-                $cn = $e->class->getLast();
-                $saveClass = $this->currentClass; $this->currentClass = $cn;
-                $r = $this->inline($this->defs['m'][$cn][$name], $args, $line, 'm:' . $cn . '::' . $name);
-                $this->currentClass = $saveClass;
-                return $r;
-            }
             $recv = null;
             if ($isMethod && $e->var instanceof Expr\Variable && is_string($e->var->name)) $recv = '$' . $e->var->name . '->' . $name;
             elseif ($isMethod && $e->var instanceof Expr\FuncCall && $e->var->name instanceof Node\Name) $recv = strtolower($e->var->name->toString()) . '()->' . $name;
@@ -745,6 +728,27 @@ final class Analyzer {
                 if ($fmt !== null && $name === 'printf') $this->output('printf', $line, $fmt);   // what is printed is the FORMATTED string
                 elseif ($name === 'printf' && isset($args[0])) $this->output('printf', $line, $args[0]);
                 elseif (isset($args[$ix])) $this->sinkFact($sinkCtx, ($isMethod ? '->' : '') . $name, $line, $args[$ix]);
+            }
+            // SINKS ARE JUDGED FIRST, then a call into a class of this file is followed inside. Before 2026-09-09 12:30 the
+            // dispatch below stood ahead of the sink check: an in-file wrapper `class DB { function query($q) {…} }` with a
+            // body this file cannot read would have been inlined INSTEAD of judged — a sink lost in silence (Fable's review
+            // of the Opus pass; fixture f56).
+            // an object of a class defined in THIS file: the method runs on that object's own property states, in call order
+            if ($isMethod && $name !== null && ($recvState['obj'] ?? null) !== null && isset($this->defs['m'][$recvState['obj']['class']][$name])) {
+                $inst = $recvState['obj'];
+                $r = $this->instanceCall($inst, $name, $args, $line);
+                $vn = $e->var instanceof Expr\Variable ? $this->varName($e->var) : null;
+                if ($vn !== null && isset($env[$vn])) $env[$vn]['obj'] = $inst;          // the object was changed by the call
+                return $r;
+            }
+            if ($e instanceof Expr\StaticCall && $name !== null && $e->class instanceof Node\Name
+                && !in_array(strtolower($e->class->toString()), ['self', 'static', 'parent'], true)
+                && isset($this->defs['m'][$e->class->getLast()][$name])) {           // Foo::bar() of a class defined here: class-wide property states
+                $cn = $e->class->getLast();
+                $saveClass = $this->currentClass; $this->currentClass = $cn;
+                $r = $this->inline($this->defs['m'][$cn][$name], $args, $line, 'm:' . $cn . '::' . $name);
+                $this->currentClass = $saveClass;
+                return $r;
             }
             // a call that WRITES an attacker-controlled value into an argument: exec($cmd, $output)
             if (!$isMethod && isset($SRCBYREF[$name])) {

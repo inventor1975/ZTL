@@ -332,6 +332,11 @@ final class Analyzer {
     // an unknown call, hence Z with the reason named. Slower is acceptable; silent is not.
     private int $inlineBudget = 3000;
     public int $inlineSpent = 0;
+    // Names this file checks with something we cannot read. Collected in a PRE-PASS, because the
+    // check may sit anywhere — nested one level (the WordPress REST shape) or after the sink.
+    // The claim is not "checked here" but "this file reads and decides on this value, and what it
+    // accepts is not visible from here". Always toward OPEN, never toward EARNED.
+    public array $unknownChecked = [];
 
     /** filter flags whose PASS leaves a value in a fixed alphabet: int, float, bool, IP (digits, dots, colons, a-f). EMAIL and URL let a quote through. */
     private const VALIDATE_FIXED = ['FILTER_VALIDATE_INT', 'FILTER_VALIDATE_FLOAT', 'FILTER_VALIDATE_BOOL', 'FILTER_VALIDATE_BOOLEAN', 'FILTER_VALIDATE_IP'];
@@ -561,6 +566,10 @@ final class Analyzer {
 
         if ($e instanceof Expr\Variable) {
             if (!is_string($e->name)) { return stZ('variable-variable', $line); }
+            if (isset($this->unknownChecked[$e->name]) && !isset($SUPER[$e->name])) {
+                $st = $env[$e->name] ?? stZ('unassigned:$' . $e->name, $line);
+                if ($st['t'] !== 'F') return through($st, 'guarded-by:' . $this->unknownChecked[$e->name], $line, true, 'all');
+            }
             if (isset($SUPER[$e->name])) return stT('superglobal', '$' . $e->name, $line);
             if ($e->name === 'this') return stF();
             if (!isset($env[$e->name])) return stZ('unassigned:$' . $e->name, $line);
@@ -884,10 +893,11 @@ final class Analyzer {
         global $GUARDS;
         $line = $c->getStartLine();
         $none = ['true' => [], 'false' => []];
-        if ($c instanceof Expr\BooleanNot) { $g = $this->guards($c->expr); return ['true' => $g['false'], 'false' => $g['true']]; }
+        if ($c instanceof Expr\BooleanNot) { $g = $this->guards($c->expr); return ['true' => $g['false'], 'false' => $g['true'], 'unknown' => $g['unknown'] ?? []]; }
         if ($c instanceof Expr\BinaryOp\BooleanAnd || $c instanceof Expr\BinaryOp\LogicalAnd) {
             $l = $this->guards($c->left); $r = $this->guards($c->right);
-            return ['true' => array_merge($l['true'], $r['true']), 'false' => []];
+            return ['true' => array_merge($l['true'], $r['true']), 'false' => [],
+                    'unknown' => array_merge($l['unknown'] ?? [], $r['unknown'] ?? [])];
         }
         if ($c instanceof Expr\BinaryOp\BooleanOr || $c instanceof Expr\BinaryOp\LogicalOr) {
             $l = $this->guards($c->left); $r = $this->guards($c->right);
@@ -940,7 +950,19 @@ final class Analyzer {
                 return ($v !== null && in_array($fname, self::VALIDATE_FIXED, true)) ? ['true' => [[$v, ['*'], 'guard:filter_var:' . $fname, $line]], 'false' => []] : $none;
             }
             $g = $GUARDS[$fn] ?? null;
-            if ($g === null) return $none;
+            if ($g === null) {
+                // AN UNKNOWN CHECK IS NOT THE ABSENCE OF A CHECK. `if (!wp_check_jsonp_callback($cb)) return;`
+                // reads the value and decides on it; we cannot see what it accepts. Calling that REFUTED accuses
+                // someone else's code of a hole we never read — the move ZTL exists to refuse. The value becomes
+                // Z with the checker named, so the verdict is OPEN and says whose check to go and read.
+                // MEASURED 2026-09-09: 20 REFUTED on WordPress and phpMyAdmin, every one of this shape.
+                foreach ($args as $arg) {
+                    if (!($arg instanceof Node\Arg)) continue;
+                    $v = $this->guardName($arg->value);
+                    if ($v !== null) return ['true' => [], 'false' => [], 'unknown' => [[$v, $fn . '()', $line]]];
+                }
+                return $none;
+            }
             $vix = $g['value'] ?? 0;
             $v = isset($args[$vix]) ? $this->guardName($args[$vix]->value) : null;
             if ($v === null) return $none;
@@ -948,8 +970,26 @@ final class Analyzer {
             if (!empty($g['pattern_tight']) && !self::patternIsTight($this->litOf($args[$g['pattern']]->value ?? null))) return $none;
             return ['true' => [[$v, $g['contexts'], 'guard:' . $fn, $line]], 'false' => []];
         }
+        if (($c instanceof Expr\MethodCall || $c instanceof Expr\StaticCall || $c instanceof Expr\NullsafeMethodCall)
+            && $c->name instanceof Node\Identifier) {                       // $this->isValid($x), $db->check($x): same rule
+            $mname = strtolower($c->name->toString());
+            foreach ($c->args as $arg) {
+                if (!($arg instanceof Node\Arg)) continue;
+                $v = $this->guardName($arg->value);
+                if ($v !== null) return ['true' => [], 'false' => [], 'unknown' => [[$v, '->' . $mname . '()', $line]]];
+            }
+            return $none;
+        }
         if ($c instanceof Expr\Assign) return $this->guards($c->expr);   // if ($m = preg_match(...)) — rare; keep simple
         return $none;
+    }
+
+    /** A value read by a check this file cannot see is UNVERIFIED — not clean, not refuted. */
+    private function applyUnknownGuards(array $gs, array &$env): void {
+        foreach ($gs as [$v, $fn, $line]) {
+            if (!isset($env[$v]) || $env[$v]['t'] === 'F') continue;
+            $env[$v] = through($env[$v], 'guarded-by:' . $fn, $line, true, 'all');
+        }
     }
 
     private function applyGuards(array $gs, array &$env): void {
@@ -1129,6 +1169,13 @@ final class Analyzer {
         if ($s instanceof Stmt\If_) {
             $this->ex($s->cond, $env);
             $g = $this->guards($s->cond);
+            // An unknown check is applied to the env BEFORE the split, so the mark survives the join.
+            // Its meaning is not "checked on this path" but "this file contains code that reads this
+            // value and decides on it, and I cannot read what it accepts" — which is true on every
+            // path, including the one where the condition was false. Measured 2026-09-09: without
+            // this, a guard nested one level (`if ($cb) { if (!check($cb)) return; }`, the WordPress
+            // REST shape) was lost at the join and the verdict went back to REFUTED.
+            $this->applyUnknownGuards($g['unknown'] ?? [], $env);
             $paths = []; $hs0 = $this->hs; $hss = [];
             $e1 = $env; $this->applyGuards($g['true'], $e1); $this->walk($s->stmts, $e1);
             $leaves = self::terminates($s->stmts);
@@ -1276,6 +1323,34 @@ foreach ($files as $f) {
     foreach ($finder->findInstanceOf($ast ?? [], Stmt\Unset_::class) as $u) foreach ($u->vars as $v) $w($v);
     foreach ($writes as $vn => $rhs) if (count($rhs) === 1 && $rhs[0] !== null && Analyzer::isLiteral($rhs[0])) $an->lits[$vn] = $rhs[0];
     // pass 1 collects property assignments (reads see Z); pass 2 reads them and is the one reported
+    // PRE-PASS for unknown checks: any condition that hands a plain variable to a call we do not
+    // know. Conditions only — an unknown call in ordinary code is already handled as an opaque value.
+    foreach (['If_', 'ElseIf_', 'While_', 'Do_'] as $kind) {
+        $cls = 'PhpParser\\Node\\Stmt\\' . $kind;
+        foreach ($finder->findInstanceOf($ast ?? [], $cls) as $node) {
+            $cond = $node->cond ?? null; if ($cond === null) continue;
+            foreach ($finder->findInstanceOf($cond, Expr\FuncCall::class) as $call) {
+                $nm = $call->name instanceof Node\Name ? strtolower($call->name->toString()) : null;
+                // "unknown" means absent from EVERY table we have — a name we know as preserving,
+                // narrowing, transparent, a sanitizer or a sink is not a mystery checker. Without this
+                // `if (strtolower($ext) == 'jpg')` counted as an unreadable check (fixtures f46/f47).
+                if ($nm === null || isset($GUARDS[$nm]) || $nm === 'filter_var' || isset($SANFN[$nm])
+                    || isset($PRESERV[$nm]) || isset($NARROW[$nm]) || isset($TRANSP[$nm]) || isset($SINKFN[$nm])
+                    || function_exists($nm)) continue;
+                foreach ($call->args as $arg)
+                    if ($arg instanceof Node\Arg && $arg->value instanceof Expr\Variable && is_string($arg->value->name))
+                        $an->unknownChecked[$arg->value->name] = $nm . '()';
+            }
+            foreach ($finder->findInstanceOf($cond, Expr\MethodCall::class) as $call) {
+                if (!($call->name instanceof Node\Identifier)) continue;
+                $nm = strtolower($call->name->toString());
+                if (isset($SANMETH[$nm]) || isset($SINKMETH[$nm])) continue;
+                foreach ($call->args as $arg)
+                    if ($arg instanceof Node\Arg && $arg->value instanceof Expr\Variable && is_string($arg->value->name))
+                        $an->unknownChecked[$arg->value->name] = '->' . $nm . '()';
+            }
+        }
+    }
     $env = [];
     $an->pass = 1; $an->walk($ast ?? [], $env);
     $an->facts = []; $an->includes = []; $an->functions = []; $an->hs = Html::init('text');

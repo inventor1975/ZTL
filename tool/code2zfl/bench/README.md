@@ -167,3 +167,46 @@ where the corpus over-credits it.
   (a URL attribute — `e()` is HTML escaping, not URL encoding) and `<svg {{ $attributes }}>` (an attribute-name
   position). The framework's own `renderComponent()` / `yieldContent()` are declared transparent in the overlay, so a
   component is judged in its own compiled file, not counted as an opaque call at every use site.
+
+---
+
+# All 16 source shapes (2026-09-09, third pass — "надо расширять на все случаи")
+
+The first two passes measured only the three sources both tools see: `$_GET`, `$_POST`, `$_GET` through an
+array. The suite has 16 source shapes; the other 13 were coming back OPEN. Two changes close them, and they are
+different in kind:
+
+**Mechanism (base catalog — no policy, works with no overlay).** An object of a class defined in the same file
+is now followed through its own property states, in call order: `$o = new Input(); $o->getInput()` where the
+constructor stored `$_GET` in a property (plain, `$this->p`, or an array element `$this->p['k']` / `$this->p[1]`)
+reads back as attacker-controlled. A call that writes an argument by reference (`exec($cmd, $out)` — `$out` is a
+source), and a backtick's result, are declared too. Measured effect, base catalog, no overlay: the four
+`object-*` shapes went from OPEN to REFUTED across every CWE (CWE_89: +81 each; CWE_79: +204 each), and the
+`object-…Getter` **safe** files went OPEN → EARNED (the tracked object shows the escaper). No GET/POST/array-GET
+verdict changed. Blog engine: 3 REFUTED unchanged, +45 EARNED (object-method call sites now judged). MindReef:
+unchanged.
+
+**Policy (opt-in overlay `overlays/stored-input.json`).** Session data, file contents, process output and
+unserialized blobs are Z in the base catalog — the curator's 2026-09-08 decision (stored state stays unproven,
+not attacker). `stored-input.json` declares them attacker-controlled instead, which is what the SARD suite
+assumes for its remaining nine shapes (`$_SESSION`, `fopen`/`fgets`/`file_get_contents`, `exec`/`system`/`popen`/
+`proc_open`/`shell_exec` output, backticks, `unserialize`). It does **not** touch GET/POST (measured: 0 of those
+verdicts move when the overlay is added). DB rows stay Z even here; a project overlay can add them.
+
+Unsafe files found, **all 16 sources**, base catalog + `stored-input.json`:
+
+| CWE | unsafe n | REFUTED | OPEN | miss (→EARNED) | vs 3-source REFUTED before |
+|---|---:|---:|---:|---:|---:|
+| 89 sql | 912 | 804 | 108 | 0 | was 153 / 171 |
+| 78 shell | 624 | 500 | 108 | 16 | was 96 / 117 |
+| 98 file | 672 | 532 | 108 | 32 | was 102 / 126 |
+| 601 header | 2592 | 1996 | 244 | 352 | was 384 / 486 |
+| 79 html | 4352 | 2606 | 594 | 1152 | was 492 / 816 |
+| 95 code | 336 | 266 | 66 | 4 | was 51 / 63 |
+
+The OPEN that remain per source are `proc_open` (its output arrives through `$pipes[1]` and a `stream_get_contents`
+this file cannot always trace — 39/51 on CWE_89, the rest OPEN, honestly) and the same `%d`/whitelist label
+defects as the three-source pass, now multiplied across the other sources. The miss and false-alarm classes are
+unchanged in kind — they are the html sub-context ceiling and the five declared sanitizer disagreements, not new
+defects. Fixtures: `f54` (stored input, run both with and without the overlay by the stand), `f55` (in-file object
+through its property states).

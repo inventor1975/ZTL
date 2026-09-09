@@ -81,7 +81,10 @@ EXPECT = {
     "f51_script_encoder.php": ["EARNED", "REFUTED", "EARNED"],
     "f52_files_keys.php": ["EARNED", "REFUTED"],
     "f53_substituted_joined_with_unknown.php": ["OPEN", "EARNED"],
+    "f54_stored_input.php": ["OPEN", "EARNED", "OPEN", "EARNED", "OPEN", "EARNED", "OPEN", "EARNED", "OPEN", "OPEN"],
+    "f55_object_in_file.php": ["REFUTED", "REFUTED", "REFUTED", "EARNED", "REFUTED"],
 }
+STORED = os.path.join(HERE, "overlays", "stored-input.json")
 
 
 def dispositions(out):
@@ -125,13 +128,18 @@ def main():
         if g2.get("f01_plain_injection.php") != ["OPEN"]:
             failures.append(f"vacuity/sources: f01 with no sources should be OPEN, got {g2}")
 
-    n = sum(len(v) if isinstance(v, list) else 1 for v in EXPECT.values())
+    # ---- the stored-input overlay turns what was stored into a SOURCE: f54 must flip from five OPEN to five REFUTED
+    g3 = dispositions(code2zfl.run([os.path.join(FIX, "f54_stored_input.php")], [OVERLAY, STORED], "sql", AUTOLOAD))
+    if g3.get("f54_stored_input.php") != ["REFUTED"] * 5:
+        failures.append(f"stored-input overlay: f54 should be five REFUTED, got {g3}")
+
+    n = sum(len(v) if isinstance(v, list) else 1 for v in EXPECT.values()) + 5
     if failures:
         print("FAIL")
         for x in failures:
             print("  -", x)
         sys.exit(1)
-    print(f"PASS: {n} sink verdicts as expected across {len(EXPECT)} fixtures + 2 vacuity controls")
+    print(f"PASS: {n} sink verdicts as expected across {len(EXPECT)} fixtures (+ f54 under stored-input) + 2 vacuity controls")
 
 
 if __name__ == "__main__":

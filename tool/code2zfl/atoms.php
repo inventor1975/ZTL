@@ -71,6 +71,8 @@ $SERVER_KEYS = $CAT['sources']['server_keys'] ?? [];   // which $_SERVER entries
 $SERVER_PREFIXES = $CAT['sources']['server_prefixes'] ?? [];
 $SRCFN = array_flip(array_map('strtolower', $CAT['sources']['functions'] ?? []));
 $SRCMETH = array_flip(array_map($lowerKey, $CAT['sources']['methods'] ?? []));   // "$obj->name", "Class::name", "fn()->name" keys allowed
+$SRCBYREF = array_change_key_case($CAT['sources']['byref'] ?? [], CASE_LOWER);   // exec($cmd, $output): argument N is WRITTEN by the call
+$SRCSHELL = !empty($CAT['sources']['shell_output']);                              // `backticks` read as an attacker-controlled value
 $SANFN = array_change_key_case($CAT['sanitizers']['functions'] ?? [], CASE_LOWER);
 $SANMETH = []; foreach ($CAT['sanitizers']['methods'] ?? [] as $k => $v) $SANMETH[$lowerKey($k)] = $v;
 $SANCAST = $CAT['sanitizers']['casts'] ?? [];
@@ -98,9 +100,18 @@ const RANK = ['F' => 0, 'Z' => 1, 'T' => 2];
 // hc:  html sub-context of the attacker-controlled parts of this string, per possible starting state (worst one);
 //      empty for a bare value (its context is wherever it lands).   hf: the lexer state this string leaves behind, per
 //      starting state (null = leaves it unchanged; 'unknown' where paths disagree).
-function stF(): array { return ['t' => 'F', 'src' => [], 'san' => [], 'z' => [], 'q' => null, 'zu' => [], 'nu' => false, 'dv' => [], 'hc' => [], 'hf' => null]; }
+// obj: ['class' => name, 'props' => [prop => state]] when the value is an object of a class DEFINED IN THIS FILE, made
+//      with `new` here: its methods are inlined on ITS OWN property states, in call order (a strong update per call).
+//      Copies of the variable carry copies of the state (value semantics — a named boundary; PHP objects are references).
+function stF(): array { return ['t' => 'F', 'src' => [], 'san' => [], 'z' => [], 'q' => null, 'zu' => [], 'nu' => false, 'dv' => [], 'hc' => [], 'hf' => null, 'obj' => null]; }
 function stZ(string $why, int $line): array { return ['t' => 'Z', 'src' => [], 'san' => [], 'z' => [[$why, $line]], 'q' => null, 'zu' => [], 'nu' => false, 'dv' => [], 'hc' => [], 'hf' => null]; }
 function stT(string $kind, string $name, int $line): array { return ['t' => 'T', 'src' => [[$kind, $name, $line]], 'san' => [], 'z' => [], 'q' => null, 'zu' => [], 'nu' => true, 'dv' => ['#src'], 'hc' => [], 'hf' => null]; }
+function objJoin(?array $a, ?array $b): ?array {
+    if ($a === null || $b === null || $a['class'] !== $b['class']) return null;
+    $props = $a['props'];
+    foreach ($b['props'] as $k => $st) $props[$k] = isset($props[$k]) ? join2($props[$k], $st) : $st;
+    return ['class' => $a['class'], 'props' => $props];
+}
 function hcJoin(array $a, array $b): array { $o = $a['hc'] ?? []; foreach ($b['hc'] ?? [] as $k => $c) $o[$k] = Html::worse($o[$k] ?? null, $c); return $o; }
 function hfJoin(array $a, array $b): ?array {
     $x = $a['hf'] ?? null; $y = $b['hf'] ?? null;
@@ -135,7 +146,7 @@ function join2(array $a, array $b): array {
     return ['t' => $t, 'src' => uniq(array_merge($a['src'], $b['src'])), 'san' => $san,
             'z' => uniq(array_merge($a['z'], $b['z'])), 'q' => $q,
             'zu' => uniq(array_merge($a['zu'] ?? [], $b['zu'] ?? [], $zuX)), 'nu' => ($a['nu'] ?? false) || ($b['nu'] ?? false), 'dv' => dvUnion($a, $b),
-            'hc' => hcJoin($a, $b), 'hf' => hfJoin($a, $b)];
+            'hc' => hcJoin($a, $b), 'hf' => hfJoin($a, $b), 'obj' => objJoin($a['obj'] ?? null, $b['obj'] ?? null)];
 }
 /** MEET of two sanitization maps: '*' (a numeric substitution) covers every context, so it is the identity. */
 function sanMeet(array $a, array $b): array {
@@ -303,6 +314,7 @@ final class Analyzer {
     public array $callers = [];                       // 'fn:name' | 'm:Class::name' -> in-file call sites
     public array $props = [];                         // class -> prop -> state
     public int $pass = 1;
+    private bool $instanceMode = false;               // inlining a method on a concrete in-file object: its props are updated in place
     private array $callStack = [];
     private array $returns = [];
     private ?string $currentClass = null;
@@ -469,6 +481,16 @@ final class Analyzer {
      *  state `row` (which stays the may-join of every element, for `$row[$k]`, foreach, implode). Before 2026-09-09 a
      *  value written under one key was read back under every other key: `$row['value'] = get_var(); unserialize($row['options'])`
      *  came back REFUTED with "path read in full". The slot name is internal and never emitted (see joinEnv). */
+    /** `$this->prop['key']` (literal key) as a property slot name `prop[key]`; null otherwise. */
+    private static function propArraySlot(Expr $n): ?string {
+        if (!($n instanceof Expr\ArrayDimFetch) || !($n->var instanceof Expr\PropertyFetch)) return null;
+        $pf = $n->var; $d = $n->dim;
+        if (!($pf->var instanceof Expr\Variable) || $pf->var->name !== 'this' || !($pf->name instanceof Node\Identifier)) return null;
+        if ($d instanceof Scalar\String_) return $pf->name->toString() . '[' . $d->value . ']';
+        if ($d instanceof Scalar\Int_) return $pf->name->toString() . '[' . $d->value . ']';
+        return null;
+    }
+
     private static function slot(Expr $target): ?string {
         if (!($target instanceof Expr\ArrayDimFetch) || !($target->var instanceof Expr\Variable) || !is_string($target->var->name)) return null;
         $d = $target->dim;
@@ -515,7 +537,7 @@ final class Analyzer {
 
     /** Evaluate an expression to a taint state; records sinks and assignments on the way. */
     public function ex(?Node $e, array &$env): array {
-        global $SUPER, $SERVER_KEYS, $SERVER_PREFIXES, $GUARDS, $SRCFN, $SRCMETH, $SANFN, $SANMETH, $SANCAST, $TRANSP, $TRANSPMETH, $PRESERV, $NARROW, $SINKFN, $SINKMETH, $SINKARG, $SINKFLAGS;
+        global $SUPER, $SERVER_KEYS, $SERVER_PREFIXES, $GUARDS, $SRCFN, $SRCMETH, $SRCBYREF, $SRCSHELL, $SANFN, $SANMETH, $SANCAST, $TRANSP, $TRANSPMETH, $PRESERV, $NARROW, $SINKFN, $SINKMETH, $SINKARG, $SINKFLAGS;
         if ($e === null) return stF();
         $line = $e->getStartLine();
 
@@ -547,6 +569,13 @@ final class Analyzer {
             // $_FILES['f']['tmp_name'|'size'|'error'] are written by PHP itself; 'name' and 'type' come from the client
             if ($e->var instanceof Expr\ArrayDimFetch && $e->var->var instanceof Expr\Variable && $e->var->var->name === '_FILES' && isset($SUPER['_FILES'])
                 && $e->dim instanceof Scalar\String_ && in_array($e->dim->value, ['tmp_name', 'size', 'error', 'full_path'], true) && $e->dim->value !== 'full_path') return stF();
+            // $this->prop['key']: read the element's own slot, else the whole property
+            if ($this->currentClass !== null && ($ps = self::propArraySlot($e)) !== null && $e->var instanceof Expr\PropertyFetch) {
+                $pn = $e->var->name->toString();
+                if (isset($this->props[$this->currentClass][$ps])) return $this->props[$this->currentClass][$ps];
+                if (isset($this->props[$this->currentClass][$pn])) return $this->props[$this->currentClass][$pn];
+                return stZ('property:$this->' . $pn, $line);
+            }
             $sl = self::slot($e);
             if ($sl !== null && isset($env[$sl])) { $st = $env[$sl]; $st['dv'] = [$sl]; return $st; }   // this key was written here: read that, not the whole array
             if ($sl !== null && isset($env[$e->var->name])) { $st = $this->ex($e->var, $env); $st['dv'] = [$sl]; return $st; }   // an element never written here: the whole array's state, under the element's name
@@ -646,6 +675,14 @@ final class Analyzer {
                 if (isset($SINKFLAGS['callable'])) $this->sinkFact($SINKFLAGS['callable'], 'new-$class', $line, $cls);
             }
             $st = $this->args($e, $env);
+            if ($e->class instanceof Node\Name) {
+                $cn = $e->class->getLast();
+                if (isset($this->defs['m'][$cn])) {                              // a class of THIS file: an object with its own property states
+                    $inst = ['class' => $cn, 'props' => []];
+                    if (isset($this->defs['m'][$cn]['__construct'])) $this->instanceCall($inst, '__construct', $st, $line);
+                    $o = stF(); $o['obj'] = $inst; return $o;
+                }
+            }
             return joinAll($st) ['t'] === 'F' ? stF() : stZ('new', $line);
         }
         if ($e instanceof Expr\Match_) {
@@ -655,9 +692,26 @@ final class Analyzer {
         }
         if ($e instanceof Expr\FuncCall || $e instanceof Expr\StaticCall || $e instanceof Expr\MethodCall || $e instanceof Expr\NullsafeMethodCall) {
             $isMethod = $e instanceof Expr\MethodCall || $e instanceof Expr\NullsafeMethodCall;
-            if ($isMethod) $this->ex($e->var, $env);
+            $recvState = $isMethod ? $this->ex($e->var, $env) : null;
             $name = $this->callName($e);
             $args = $this->args($e, $env);
+            // an object of a class defined in THIS file: the method runs on that object's own property states, in call order
+            if ($isMethod && $name !== null && ($recvState['obj'] ?? null) !== null && isset($this->defs['m'][$recvState['obj']['class']][$name])) {
+                $inst = $recvState['obj'];
+                $r = $this->instanceCall($inst, $name, $args, $line);
+                $vn = $e->var instanceof Expr\Variable ? $this->varName($e->var) : null;
+                if ($vn !== null && isset($env[$vn])) $env[$vn]['obj'] = $inst;          // the object was changed by the call
+                return $r;
+            }
+            if ($e instanceof Expr\StaticCall && $name !== null && $e->class instanceof Node\Name
+                && !in_array(strtolower($e->class->toString()), ['self', 'static', 'parent'], true)
+                && isset($this->defs['m'][$e->class->getLast()][$name])) {           // Foo::bar() of a class defined here: class-wide property states
+                $cn = $e->class->getLast();
+                $saveClass = $this->currentClass; $this->currentClass = $cn;
+                $r = $this->inline($this->defs['m'][$cn][$name], $args, $line, 'm:' . $cn . '::' . $name);
+                $this->currentClass = $saveClass;
+                return $r;
+            }
             $recv = null;
             if ($isMethod && $e->var instanceof Expr\Variable && is_string($e->var->name)) $recv = '$' . $e->var->name . '->' . $name;
             elseif ($isMethod && $e->var instanceof Expr\FuncCall && $e->var->name instanceof Node\Name) $recv = strtolower($e->var->name->toString()) . '()->' . $name;
@@ -691,6 +745,11 @@ final class Analyzer {
                 if ($fmt !== null && $name === 'printf') $this->output('printf', $line, $fmt);   // what is printed is the FORMATTED string
                 elseif ($name === 'printf' && isset($args[0])) $this->output('printf', $line, $args[0]);
                 elseif (isset($args[$ix])) $this->sinkFact($sinkCtx, ($isMethod ? '->' : '') . $name, $line, $args[$ix]);
+            }
+            // a call that WRITES an attacker-controlled value into an argument: exec($cmd, $output)
+            if (!$isMethod && isset($SRCBYREF[$name])) {
+                $ix = (int)$SRCBYREF[$name];
+                if (isset($e->args[$ix]) && $e->args[$ix] instanceof Node\Arg) $this->assignTo($e->args[$ix]->value, stT('fn', $name . '#' . $ix, $line), $env, $line);
             }
             // sources
             if ($isMethod ? ($qual($SRCMETH) !== null) : ($e instanceof Expr\StaticCall ? ($qual($SRCMETH) !== null || isset($SRCFN[$name])) : isset($SRCFN[$name]))) {
@@ -767,7 +826,7 @@ final class Analyzer {
         if ($e instanceof Expr\ShellExec) {
             $st = []; foreach ($e->parts as $p) if ($p instanceof Expr) $st[] = $this->ex($p, $env);
             if (isset($SINKFN['shell_exec'])) $this->sinkFact($SINKFN['shell_exec'], '`backtick`', $line, joinAll($st ?: [stF()]));
-            return stZ('shell-result', $line);
+            return $SRCSHELL ? stT('fn', '`backtick`', $line) : stZ('shell-result', $line);
         }
         // anything else: walk children conservatively
         $st = [];
@@ -938,6 +997,15 @@ final class Analyzer {
             else $this->ex($target, $env);
             return;
         }
+        if ($target instanceof Expr\ArrayDimFetch && ($ps0 = self::propArraySlot($target)) !== null
+            && $target->var instanceof Expr\PropertyFetch && $this->currentClass !== null) {
+            $this->ex($target->dim, $env);
+            $pn = $target->var->name->toString();
+            $cur = $this->props[$this->currentClass][$pn] ?? stF();
+            $this->props[$this->currentClass][$pn] = join2($cur, $rhs);
+            $this->props[$this->currentClass][$ps0] = $rhs;
+            return;
+        }
         if ($target instanceof Expr\ArrayDimFetch) {
             $this->ex($target->dim, $env);
             $root = $target; while ($root instanceof Expr\ArrayDimFetch) $root = $root->var;
@@ -958,7 +1026,8 @@ final class Analyzer {
             && $target->name instanceof Node\Identifier && $this->currentClass !== null) {
             $pn = $target->name->toString();
             $cur = $this->props[$this->currentClass][$pn] ?? null;
-            $this->props[$this->currentClass][$pn] = $cur === null ? $rhs : join2($cur, $rhs);
+            $this->props[$this->currentClass][$pn] = ($cur === null || $this->instanceMode) ? $rhs : join2($cur, $rhs);   // a concrete instance: strong update
+            foreach (array_keys($this->props[$this->currentClass]) as $k) if (str_starts_with($k, $pn . '[')) unset($this->props[$this->currentClass][$k]);   // a fresh array clears its old element slots
             return;
         }
         // other objects' properties, static properties: not tracked
@@ -967,6 +1036,21 @@ final class Analyzer {
     /** Analyse a callee body with the caller's argument states; sinks inside are emitted in the caller's
      *  context, the joined `return` state comes back. Depth-capped and recursion-cut: past the cap the call
      *  is what it was before — unknown. */
+    /** Run a method of an in-file class on ONE object's property states: the class-wide map is swapped for the
+     *  instance's for the duration of the call and the instance keeps what the method left behind. */
+    private function instanceCall(array &$inst, string $method, array $args, int $line): array {
+        $cn = $inst['class']; $def = $this->defs['m'][$cn][$method];
+        $key = 'm:' . $cn . '::' . $method;
+        if ($this->pass === 1) $this->callers[$key] = ($this->callers[$key] ?? 0) + 1;   // seen in pass 1, read when the class is walked in pass 2
+        $saveClass = $this->currentClass; $saveProps = $this->props[$cn] ?? null; $saveMode = $this->instanceMode;
+        $this->currentClass = $cn; $this->props[$cn] = $inst['props']; $this->instanceMode = true;
+        $r = $this->inline($def, $args, $line, $key);
+        $inst['props'] = $this->props[$cn];
+        if ($saveProps === null) unset($this->props[$cn]); else $this->props[$cn] = $saveProps;
+        $this->currentClass = $saveClass; $this->instanceMode = $saveMode;
+        return $r;
+    }
+
     private function inline(Node $def, array $args, int $line, string $key): array {
         if (count($this->callStack) >= $this->callDepth || in_array($key, $this->callStack, true))
             return through(joinAll($args ?: [stF()]), 'call-depth:' . $key, $line, true);

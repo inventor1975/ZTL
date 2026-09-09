@@ -1,0 +1,10 @@
+{
+  "_about": "stored-input overlay: TRUST NOTHING THAT WAS STORED. The base catalog treats session data, file contents, process output and unserialized blobs as Z (origin not visible here — the curator's 2026-09-08 decision). This overlay declares them attacker-controlled instead: the session was filled from a request somewhere, the file may have been uploaded, the process may have printed what it was fed. It is what the SARD/Stivalet suite assumes for its 13 non-superglobal source shapes. `byref` names the argument a call WRITES (exec's $output); `shell_output` makes backticks a source. DB rows stay Z here too: declare them in a project overlay if that is the policy.",
+  "sources": {
+    "superglobals": ["_SESSION"],
+    "functions": ["fgets", "fgetc", "fread", "fgetcsv", "fscanf", "file_get_contents", "file", "stream_get_contents", "stream_get_line", "readline",
+                  "shell_exec", "system", "passthru", "exec", "unserialize"],
+    "byref": {"exec": 1},
+    "shell_output": true
+  }
+}

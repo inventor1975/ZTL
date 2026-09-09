@@ -1,0 +1,33 @@
+{
+  "_about": "SMF (Simple Machines Forum) overlay. Read from SMF source 2026-09-09: Db::$db->query($db_string, $db_values) substitutes {int:x}/{string:x}/{array_int:x}/{db_prefix} placeholders through replacement__callback, which escapes each value by type (Sources/Db/APIs/MySQL.php:151,281,293). The query TEMPLATE is the first argument and the values are the second — so the template is the sink and the value array is bound, exactly like $wpdb->prepare.",
+  "sinks": {
+    "sql": {
+      "methods": [
+        "Db::$db->query",
+        "$smcFunc['db_query']"
+      ],
+      "arg": {
+        "query": 0
+      }
+    }
+  },
+  "sanitizers": {
+    "methods": {
+      "$db->escape_string": {
+        "contexts": [
+          "sql-quoted"
+        ]
+      }
+    }
+  },
+  "not_sinks": [
+    "insert",
+    "update",
+    "delete",
+    "replace"
+  ],
+  "_notes": {
+    "placeholders": "A value never reaches the SQL text: it is passed in $db_values and substituted by type. Judging argument 1 (the array) as if it were SQL produced 17 of SMF's 37 verdicts.",
+    "arg": "the sink is argument 0, the template. If a project builds that template from a request value, the verdict still stands — which is the case we want to keep visible."
+  }
+}

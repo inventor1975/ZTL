@@ -360,6 +360,10 @@ final class Analyzer {
     // the caller's context, the joined `return` state comes back. `$this->prop` is a may-join over every
     // assignment in the class, collected on pass 1 and read on pass 2.
     public array $defs = ['fn' => [], 'm' => []];   // name -> Function_ ; class -> name -> ClassMethod
+    // class -> parent class, so a method call can find the definition it actually runs. SMF's
+    // UnreadReplies extends Unread, and the validation that makes its queries safe lives in the
+    // parent: without this the child looked like a textbook injection (measured 2026-09-09).
+    public array $parents = [];
     public array $callers = [];                       // 'fn:name' | 'm:Class::name' -> in-file call sites
     public array $props = [];                         // class -> prop -> state
     public int $pass = 1;
@@ -651,6 +655,11 @@ final class Analyzer {
             // $_SERVER is attacker-written only in part: HTTP_* headers, the request line and path — not
             // REMOTE_ADDR or SERVER_*. A literal key is CLASSIFIED here and never emitted.
             $slotKey = self::slot($e);
+            // A SUPERGLOBAL SLOT CAN BE OVERWRITTEN, and then it is no longer the request. SMF's
+            // Unread.php does exactly that: `$_REQUEST['sort'] = $this->sort_methods[$_REQUEST['sort']]`
+            // replaces the value with one from a fixed map before any query sees it. Reading the
+            // source unconditionally made every later use look attacker-controlled.
+            if ($slotKey !== null && array_key_exists($slotKey, $env)) return $env[$slotKey];
             if ($slotKey !== null && isset($this->guardedSlots[$slotKey])) {
                 [$ctxs, $fn, $ln] = $this->guardedSlots[$slotKey];
                 $base = $this->ex($e->var, $env);
@@ -890,13 +899,18 @@ final class Analyzer {
             // defined in THIS file: inline with the caller's argument states
             if (!$isMethod && $e instanceof Expr\FuncCall && isset($this->defs['fn'][$name]))
                 return $this->inline($this->defs['fn'][$name], $args, $line, 'fn:' . $name);
-            if ($isMethod && $e->var instanceof Expr\Variable && $e->var->name === 'this' && $this->currentClass !== null
-                && isset($this->defs['m'][$this->currentClass][$name]))
-                return $this->inline($this->defs['m'][$this->currentClass][$name], $args, $line, 'm:' . $this->currentClass . '::' . $name);
+            if ($isMethod && $e->var instanceof Expr\Variable && $e->var->name === 'this' && $this->currentClass !== null) {
+                [$owner, $def] = $this->findMethod($this->currentClass, $name);
+                if ($def !== null) return $this->inline($def, $args, $line, 'm:' . $owner . '::' . $name);
+            }
             if ($e instanceof Expr\StaticCall && $e->class instanceof Node\Name && $this->currentClass !== null
-                && in_array(strtolower($e->class->toString()), ['self', 'static', strtolower($this->currentClass)], true)
-                && isset($this->defs['m'][$this->currentClass][$name]))
-                return $this->inline($this->defs['m'][$this->currentClass][$name], $args, $line, 'm:' . $this->currentClass . '::' . $name);
+                && in_array(strtolower($e->class->toString()), ['self', 'static', 'parent', strtolower($this->currentClass)], true)) {
+                $start = strtolower($e->class->toString()) === 'parent' ? ($this->parents[$this->currentClass] ?? null) : $this->currentClass;
+                if ($start !== null) {
+                    [$owner, $def] = $this->findMethod($start, $name);
+                    if ($def !== null) return $this->inline($def, $args, $line, 'm:' . $owner . '::' . $name);
+                }
+            }
             if ($fmt !== null) return $name === 'printf' ? stF() : $fmt;
             if (!$isMethod && $name === 'filter_var') {
                 $flt = $e->args[1]->value ?? null;
@@ -932,8 +946,16 @@ final class Analyzer {
             // Opus pass, 2026-09-09: the lookup went by the CALLER's class for any receiver)
             $recvIsSelf = ($isMethod && $e->var instanceof Expr\Variable && $e->var->name === 'this')
                 || ($e instanceof Expr\StaticCall && $e->class instanceof Node\Name && in_array(strtolower($e->class->toString()), ['self', 'static'], true));
-            if ($sumKey === null && $recvIsSelf && $this->currentClass !== null)
-                $sumKey = $SUMMARIES['methods'][strtolower($this->currentClass) . '::' . $name] ?? null;
+            if ($sumKey === null && $recvIsSelf && $this->currentClass !== null) {
+                // up the parent chain, as PHP resolves it: the definition that runs may live in a
+                // class this file never mentions (SMF: UnreadReplies extends Unread, another file)
+                $cls = strtolower($this->currentClass); $seenC = [];
+                while ($cls !== null && !isset($seenC[$cls])) {
+                    $seenC[$cls] = true;
+                    if (isset($SUMMARIES['methods'][$cls . '::' . $name])) { $sumKey = $SUMMARIES['methods'][$cls . '::' . $name]; break; }
+                    $cls = $SUMMARIES['parents'][$cls] ?? null;
+                }
+            }
             if ($sumKey !== null && !empty($sumKey['conflict'])) $sumKey = null;          // two different definitions: unknown
             if ($sumKey !== null && !isset($this->defs['fn'][$name])) {
                 $tainted = [];
@@ -1215,6 +1237,11 @@ final class Analyzer {
         }
         if ($target instanceof Expr\ArrayDimFetch) {
             $this->ex($target->dim, $env);
+            $sk = self::slot($target);
+            if ($sk !== null && $target->var instanceof Expr\Variable && isset($GLOBALS['SUPER'][$target->var->name])) {
+                $env[$sk] = $rhs;                       // the slot now holds what was written into it
+                return;
+            }
             $root = $target; while ($root instanceof Expr\ArrayDimFetch) $root = $root->var;
             $n = $this->varName($root);
             if ($n !== null) {
@@ -1272,6 +1299,17 @@ final class Analyzer {
         $rets = array_pop($this->returns);
         foreach ($rets as $r) if (($r['t'] ?? 'F') === 'F') { $this->returnedBool = true; break; }
         return $rets ? joinAll($rets) : stF();
+    }
+
+    /** The definition a `$this->m()` call actually runs: this class, else up the parent chain. */
+    private function findMethod(?string $cls, string $name): array {
+        $seen = [];
+        while ($cls !== null && !isset($seen[$cls])) {
+            $seen[$cls] = true;
+            if (isset($this->defs['m'][$cls][$name])) return [$cls, $this->defs['m'][$cls][$name]];
+            $cls = $this->parents[$cls] ?? null;
+        }
+        return [null, null];
     }
 
     private function inline(Node $def, array $args, int $line, string $key): array {
@@ -1466,6 +1504,7 @@ foreach ($files as $f) {
     foreach ($finder->findInstanceOf($ast ?? [], Stmt\Function_::class) as $fn) $an->defs['fn'][strtolower($fn->name->toString())] = $fn;
     foreach ($finder->findInstanceOf($ast ?? [], Stmt\Class_::class) as $cls) {
         $cn = $cls->name ? $cls->name->toString() : 'anon-class';
+        if ($cls->extends instanceof Node\Name) $an->parents[$cn] = $cls->extends->getLast();
         foreach ($cls->stmts as $m) if ($m instanceof Stmt\ClassMethod) $an->defs['m'][$cn][strtolower($m->name->toString())] = $m;
         foreach ($finder->findInstanceOf($cls, Expr\MethodCall::class) as $mc)
             if ($mc->var instanceof Expr\Variable && $mc->var->name === 'this' && $mc->name instanceof Node\Identifier) {
@@ -1571,6 +1610,7 @@ if ($emitSummaries) {
             $defs[] = ['fn', strtolower($fn->name->toString()), $fn, null];
         foreach ($finder->findInstanceOf($ast ?? [], Stmt\Class_::class) as $cls) {
             $cn = $cls->name ? $cls->name->toString() : 'anon-class';
+            if ($cls->extends instanceof Node\Name) $sum['parents'][strtolower($cn)] = strtolower($cls->extends->getLast());   // the chain PHP will follow
             foreach ($cls->stmts as $m) if ($m instanceof Stmt\ClassMethod)
                 $defs[] = ['m', strtolower($m->name->toString()), $m, $cn];
         }

@@ -89,7 +89,7 @@ def summarise(files, overlays, autoload, catalog=None, php=None, jobs=None):
     files = list(files)
     n = jobs if jobs and jobs > 0 else min(8, (os.cpu_count() or 1))
     batches = [files[i::n] for i in range(n)] if (n > 1 and len(files) >= 40) else [files]
-    merged = {"functions": {}, "methods": {}}
+    merged = {"functions": {}, "methods": {}, "parents": {}}
     with ThreadPool(max(1, len(batches))) as pool:
         for part in pool.map(_atomize_batch, [(cmd, b, env) for b in batches if b]):
             if part.get("_error"):
@@ -100,6 +100,9 @@ def summarise(files, overlays, autoload, catalog=None, php=None, jobs=None):
                     recs = {}
                 for k, rec in recs.items():
                     merged[slot][k] = _summary_merge(merged[slot].get(k), rec)
+            par = part.get("parents") or {}                              # a class has ONE parent: no meet, plain carry
+            if isinstance(par, dict):
+                merged["parents"].update(par)
     return merged
 
 

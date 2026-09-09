@@ -129,6 +129,13 @@
           "html",
           "html-sq"
         ]
+      },
+      "wp_json_encode": {
+        "contexts": [
+          "js",
+          "html",
+          "html-sq"
+        ]
       }
     },
     "methods": {
@@ -161,7 +168,8 @@
     "__/_e": "listed as PRESERVING, not as sanitizers: they return a dictionary string. A tainted argument to __() is a developer error the corpus does not exhibit; treating them as opaque produced 1662 false OPEN on WordPress.",
     "not_sinks": "$wpdb->delete/insert/update/replace take column=>value arrays and bind them (wpdb::process_fields → prepare); the base catalog's generic `delete`/`update` sink names would otherwise report them raw. Measured 2026-09-09: this alone accounted for the sql sinks summarised inside wpmu_validate_user_signup, where every actual query goes through $wpdb->prepare.",
     "prepare": "$wpdb->prepare BUILDS a query with %s/%d placeholders and binds the arguments — it is a sanitizer here, not a sink. The base catalog lists `prepare` as an sql sink for the PDO shape, where the caller composes the SQL; keeping both made every prepared WordPress query summarise as a raw sink (measured: it was the source of the wpmu_validate_* accusations).",
-    "esc_*_x family": "esc_attr_x/esc_html_x/esc_attr__/… are the translation-plus-escape variants of esc_attr/esc_html; leaving them out made every string built with them read as unescaped (10 of WordPress's 52 REFUTED were wp_dropdown_languages, whose optgroup label goes through esc_attr_x)."
+    "esc_*_x family": "esc_attr_x/esc_html_x/esc_attr__/… are the translation-plus-escape variants of esc_attr/esc_html; leaving them out made every string built with them read as unescaped (10 of WordPress's 52 REFUTED were wp_dropdown_languages, whose optgroup label goes through esc_attr_x).",
+    "wp_json_encode": "wp_json_encode($x, JSON_HEX_TAG|…) is WordPress's JSON encoder for output; with the HEX flags it is the correct substitution inside <script>. Credited for the js and html contexts (class-wp-themes-list-table.php:360 prints theme_list_args through it)."
   },
   "not_sinks": [
     "$wpdb->delete",

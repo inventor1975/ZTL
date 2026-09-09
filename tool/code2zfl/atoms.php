@@ -1027,7 +1027,13 @@ final class Analyzer {
         if ($c instanceof Expr\Isset_ && count($c->vars) === 1 && $c->vars[0] instanceof Expr\ArrayDimFetch) {
             $adf = $c->vars[0];                                             // isset($FIXED[$x]) — membership in a fixed map
             $v = $this->varName($adf->dim ?? null);
-            if ($v !== null && ($adf->var instanceof Expr\ConstFetch || $adf->var instanceof Expr\ClassConstFetch)) return ['true' => [[$v, ['*'], 'isset-fixed-map', $line]], 'false' => []];
+            // `isset($map[$x])` where the map is FIXED: a constant, or a variable assigned a literal
+            // array exactly once in the file. WordPress's _get_list_table gates `new $class_name` on
+            // exactly this shape (`$core_classes` is a literal map, `isset($core_classes[$class_name])`),
+            // and without the second case the whitelist read as no check at all. Measured 2026-09-09.
+            if ($v !== null && ($adf->var instanceof Expr\ConstFetch || $adf->var instanceof Expr\ClassConstFetch
+                                || ($adf->var instanceof Expr\Variable && $this->litOf($adf->var) instanceof Expr\Array_)))
+                return ['true' => [[$v, ['*'], 'isset-fixed-map', $line]], 'false' => []];
             return $none;
         }
         if ($c instanceof Expr\FuncCall && $c->name instanceof Node\Name) {
@@ -1202,6 +1208,8 @@ final class Analyzer {
 
     /** Set the class context for a summary probe (methods read $this->prop). */
     public function currentClassPublic(?string $cls): void { $this->currentClass = $cls; }
+
+    public static function isLiteralPublic(?Node $n): bool { return self::isLiteral($n); }
 
     /** Walk a definition's body with the given parameter states and return the joined `return`. */
     public function probeBody(array $stmts, array $env): array {
@@ -1512,6 +1520,19 @@ if ($emitSummaries) {
             foreach ($cls->stmts as $m) if ($m instanceof Stmt\ClassMethod)
                 $defs[] = ['m', strtolower($m->name->toString()), $m, $cn];
         }
+        // The once-assigned literals of THIS file, collected the same way pass 2 collects them.
+        // Without this the summary pass could not read a whitelist held in a variable, and
+        // WordPress's _get_list_table (a literal $core_classes map) summarised as an open callable.
+        $litWrites = [];
+        $wf = function ($v, $rhs = null) use (&$litWrites) {
+            if ($v instanceof Expr\Variable && is_string($v->name)) $litWrites[$v->name][] = $rhs;
+        };
+        foreach ($finder->findInstanceOf($ast ?? [], Expr\Assign::class) as $as) $wf($as->var, $as->expr);
+        foreach ($finder->find($ast ?? [], fn($n) => $n instanceof Expr\AssignOp || $n instanceof Expr\AssignRef) as $as) $wf($as->var ?? null, null);
+        foreach ($finder->findInstanceOf($ast ?? [], Node\Param::class) as $p) $wf($p->var, null);
+        foreach ($finder->findInstanceOf($ast ?? [], Stmt\Foreach_::class) as $fe) { $wf($fe->keyVar, null); $wf($fe->valueVar, null); }
+        foreach ($finder->findInstanceOf($ast ?? [], Stmt\Global_::class) as $g) foreach ($g->vars as $v) $wf($v, null);
+
         foreach ($defs as [$kind, $name, $def, $cls]) {
             if ($def->stmts === null) continue;                       // abstract / interface
             $params = [];
@@ -1522,6 +1543,8 @@ if ($emitSummaries) {
             $probes = ($np === 0) ? [] : (($np <= 4) ? range(0, $np - 1) : [-1]);   // -1: all at once
             foreach ($probes as $ix) {
                 $an = new Analyzer($CAT);
+                foreach ($litWrites as $vn => $rhs)
+                    if (count($rhs) === 1 && $rhs[0] !== null && Analyzer::isLiteralPublic($rhs[0])) $an->lits[$vn] = $rhs[0];
                 $an->currentClassPublic($cls);
                 $env = [];
                 foreach ($params as $j => $pn) {
@@ -1548,7 +1571,13 @@ if ($emitSummaries) {
                 // %s. Recording that as "argument 0 reaches an sql sink" produced 73 accusations
                 // against WordPress in one run, every one wrong. Measured 2026-09-09.
                 foreach ($an->facts as $fact) {
-                    if (($fact['t'] ?? 'F') === 'F') continue;
+                    // ONLY WHAT THE ARGUMENT ITSELF REACHES. A `Z` at the sink means the trail was lost
+                    // inside the callee — an unknown call, another file's helper — not that this
+                    // parameter arrived there. Recording Z as "reaches a sink" made the caller answer
+                    // for a path we had already admitted we could not follow: 10 of WordPress's 52 were
+                    // wp_dropdown_languages, whose echo receives a string built through selected() and
+                    // wp_parse_args, both opaque to a single-file walk. Measured 2026-09-09.
+                    if (($fact['t'] ?? 'F') !== 'T') continue;
                     $fs = is_array($fact['san'] ?? null) ? $fact['san'] : [];
                     $ctx = $fact['ctx'];
                     if (isset($fs['*'])) continue;                                  // substituted for every context

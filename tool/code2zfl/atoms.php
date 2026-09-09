@@ -57,6 +57,15 @@ use PhpParser\Node\Scalar;
 use PhpParser\ParserFactory;
 use PhpParser\Error as ParseError;
 
+/** SILENCE IS THE WORST OUTCOME. json_encode returns false on a byte that is not UTF-8 — Symfony's
+ *  Cache/Traits/ValueWrapper.php names its class with one — and we used to print nothing and exit 0,
+ *  which the driver read as "no facts". Substitute the bad byte; if it still fails, SAY SO and die. */
+function emit(array $d, int $extra): void {
+    $j = json_encode($d, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE | $extra);
+    if ($j === false) { fwrite(STDERR, "json_encode failed: " . json_last_error_msg() . "\n"); exit(3); }
+    echo $j, "\n";
+}
+
 // ----------------------------------------------------------------- catalog
 function loadJson(string $p): array {
     $d = json_decode((string)file_get_contents($p), true);
@@ -1723,8 +1732,8 @@ if ($emitSummaries) {
             $sum[$slot][$k] = summaryMerge($sum[$slot][$k] ?? null, $rec);
         }
     }
-    echo json_encode($sum, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), "\n";
+    emit($sum, 0);
     exit(0);
 }
 
-echo json_encode($out, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT), "\n";
+emit($out, JSON_PRETTY_PRINT);

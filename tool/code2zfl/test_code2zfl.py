@@ -107,6 +107,7 @@ EXPECT = {
     "f77_ternary_condition_guards_its_branches.php": ["EARNED", "EARNED", "OPEN", "REFUTED"],
     "f78_array_key_slots.php": ["REFUTED", "EARNED", "REFUTED", "REFUTED"],
     "f79_implode_delimiter_quote_parity.php": ["EARNED", "EARNED", "REFUTED", "REFUTED"],
+    "f80_reject_if_outside_a_class.php": ["EARNED", "REFUTED", "REFUTED"],
 }
 STORED = os.path.join(HERE, "overlays", "stored-input.json")
 

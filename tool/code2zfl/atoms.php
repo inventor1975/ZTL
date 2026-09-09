@@ -1320,6 +1320,14 @@ final class Analyzer {
             // Wordfence 9.0.1 (wordfenceClass.php:1732), the single REFUTED across six live plugins.
             if (isset($g['haystack']) && $this->litOf($args[$g['haystack']]->value ?? null) === null)
                 return ['true' => [], 'false' => [], 'unknown' => [[$v, $fn . '()', $line]]];
+            // REJECT-IF-CONTAINS. `if (preg_match('/[^a-z0-9]/', $x)) { die(); }` is hand-rolled validation
+            // written the other way round: the pattern matches everything OUTSIDE a readable class, so on the
+            // path where it did NOT match, the value is confined to that class. The credit therefore belongs to
+            // the FALSE branch — the mirror of pattern_tight, which credits the true one. A pattern that is not
+            // a negated class (`/bad/`) confines nothing and gets nothing. Measured 2026-09-10.
+            if (!empty($g['pattern_tight']) && ($pt = $this->litOf($args[$g['pattern']]->value ?? null)) instanceof Scalar\String_
+                && self::patternStripsToClass($pt->value))
+                return ['true' => [], 'false' => [[$v, ['*'], 'preg_match:rejects-outside-class', $line]]];
             if (!empty($g['pattern_tight'])) {
                 $pat = $this->litOf($args[$g['pattern']]->value ?? null);
                 // READ AND FOUND WANTING is not the same as UNREADABLE. `/[a-z]+/` is a pattern we

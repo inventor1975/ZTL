@@ -931,6 +931,20 @@ final class Analyzer {
                 $this->currentClass = $saveClass;
                 return $r;
             }
+            // preg_match($pat, $subject, $matches) WRITES the subject's own substrings into $matches. We
+            // used to read $matches as `unassigned` — Z, OPEN — which is a MISS when the pattern confines
+            // nothing: `preg_match('/x(.*)/', $_SERVER['REQUEST_URI'], $m)` puts the request in $m[1].
+            // A capture is a narrowing of the subject, so only `*` survives it; a pattern we read AND find
+            // tight is itself the substitution, by the same rule patternIsTight already applies to guards.
+            // MEASURED 2026-09-09: `$matches` was the 5th most common unassigned name across 50 projects.
+            if (!$isMethod && ($name === 'preg_match' || $name === 'preg_match_all') && isset($e->args[2])
+                && $e->args[2] instanceof Node\Arg && isset($e->args[1])) {
+                $subj = $this->ex($e->args[1]->value, $env);
+                $got = self::patternConfines($e->args[0]->value ?? null)
+                     ? sanitize($subj, ['*'], 'preg_match:confined', $line)
+                     : through($subj, null, $line, false, 'numeric');   // a substring: only `*` survives, as with substr
+                $this->assignTo($e->args[2]->value, $got, $env, $line);
+            }
             // a call that WRITES an attacker-controlled value into an argument: exec($cmd, $output)
             if (!$isMethod && isset($SRCBYREF[$name])) {
                 $ix = (int)$SRCBYREF[$name];
@@ -1093,16 +1107,44 @@ final class Analyzer {
 
     /** An anchored pattern over a plain character class — the only regex we credit as a verification. */
     private static function patternIsTight(?Node $n): bool {
-        if (!($n instanceof Scalar\String_)) return false;
+        $b = self::patternBody($n);
+        return $b !== null && (bool)preg_match('/^(?:\^|\\\\A)' . self::ATOMS . '(?:\$|\\\\[zZ])$/', $b);
+    }
+
+    /** ANCHORS ARE A GUARD'S QUESTION, NOT A CAPTURE'S. `preg_match('~([A-Za-z0-9_-]+)~', $x, $m)` does not
+     *  say the subject is confined — but $m holds only what the pattern matched, and that text is drawn
+     *  from the pattern's own language. So for the matched text the question is just whether the body is
+     *  characters we read: no `.`, no alternation, no backreference. Measured on SMF 2026-09-09
+     *  (Languages.php:669), where the anchored test called a confined capture attacker-controlled. */
+    private static function patternConfines(?Node $n): bool {
+        $b = self::patternBody($n);
+        if ($b === null) return false;
+        $b = preg_replace('/^(?:\\^|\\\\A)/', '', $b);          // anchors are harmless here: they do not widen
+        $b = preg_replace('/(?:\\$|\\\\[zZ])$/', '', $b);
+        return $b !== '' && (bool)preg_match('/^' . self::ATOMS . '$/', $b);
+    }
+
+    private const ATOMS = '(?:(?:\[[A-Za-z0-9_\\\\\-]+\]|\\\\[dw]|[A-Za-z0-9_\-])(?:[+*?]|\{\d+(?:,\d*)?\})?)+';
+
+    /** The body of a literal pattern, delimiters and flags removed, groups WITHOUT alternation flattened
+     *  (a group adds nothing to the language). Null when the pattern is not a literal we can read, or
+     *  carries the `m` flag, which makes `$` mean end-of-line rather than end-of-subject. */
+    private static function patternBody(?Node $n): ?string {
+        if (!($n instanceof Scalar\String_)) return null;
         $p = $n->value;
-        if (strlen($p) < 3) return false;
+        if (strlen($p) < 3) return null;
         $d = $p[0]; $end = strrpos($p, $d);
-        if ($end === false || $end === 0) return false;
+        if ($end === false || $end === 0) return null;
         $flags = substr($p, $end + 1); $body = substr($p, 1, $end - 1);
-        if (str_contains($flags, 'm')) return false;
-        $atom = '(?:\[[A-Za-z0-9_\\\\\-]+\]|\\\\[dw]|[A-Za-z0-9_\-])(?:[+*?]|\{\d+(?:,\d*)?\})?';
-        $re = '/^(?:\^|\\\\A)(?:' . $atom . ')+(?:\$|\\\\[zZ])$/';
-        return (bool)preg_match($re, $body);
+        if (str_contains($flags, 'm')) return null;
+        if (!str_contains($body, '|')) {
+            for ($i = 0; $i < 8; $i++) {
+                $next = preg_replace('/\((?:\?:)?([^()|]*)\)/', '$1', $body);
+                if ($next === null || $next === $body) break;
+                $body = $next;
+            }
+        }
+        return $body;
     }
 
     /** What a condition VERIFIES: ['true' => [[var, contexts, fn, line]...], 'false' => [...]].

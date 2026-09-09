@@ -100,6 +100,7 @@ EXPECT = {
     "f70_property_element_slots.php": ["EARNED", "REFUTED", "REFUTED", "REFUTED"],
     "f71_not_sink_by_receiver.php": ["REFUTED"],
     "f72_self_assignment_adds_nothing.php": ["EARNED", "REFUTED"],
+    "f73_preg_match_captures.php": ["REFUTED", "EARNED", "REFUTED", "EARNED"],
 }
 STORED = os.path.join(HERE, "overlays", "stored-input.json")
 

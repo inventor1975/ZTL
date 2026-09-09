@@ -960,6 +960,26 @@ final class Analyzer {
                 $fname = $flt instanceof Expr\ConstFetch ? strtoupper($flt->name->toString()) : '';
                 return in_array($fname, self::VALIDATE_FIXED, true) ? sanitize($src, ['*'], 'filter_input:' . $fname, $line) : $src;
             }
+            // `array_map('intval', $ids)` APPLIES intval TO EVERY ELEMENT. With a LITERAL callback naming
+            // a function we already know, the whole array gets that function's treatment — the commonest
+            // shape of it, `array_map('intval', (array) $_POST['id'])` before `IN ('".implode("','",$ids)."')`,
+            // is how chamilo builds a safe list and we called it an injection 15 times. Measured 2026-09-09.
+            // A callback we cannot read stays what it was: an opaque call, and a callable sink besides.
+            if (!$isMethod && $name === 'array_map' && isset($args[1])
+                && ($e->args[0]->value ?? null) instanceof Scalar\String_) {
+                $cb = strtolower($e->args[0]->value->value);
+                $src = $args[1];
+                if (isset($SANFN[$cb])) {
+                    // the callback receives the element as its FIRST argument, so a sanitizer whose value
+                    // sits elsewhere (mysqli_real_escape_string takes the connection first) is not being
+                    // used the way the catalog describes: that is an unknown call, not a substitution
+                    if (($SANFN[$cb]['arg'] ?? 0) !== 0) return through($src, $cb . '()', $line, true);
+                    return sanitize($src, $SANFN[$cb]['contexts'], 'array_map:' . $cb, $line);
+                }
+                if (isset($PRESERV[$cb])) return through($src, null, $line, false, 'all');
+                if (isset($NARROW[$cb]))  return through($src, null, $line, false, 'numeric');
+                if (isset($TRANSP[$cb]))  return through($src, null, $line, false, 'none');
+            }
             // sanitizers: substitution of the value for the listed contexts
             $san = $isMethod ? $qual($SANMETH) : ($e instanceof Expr\StaticCall ? ($qual($SANMETH) ?? ($SANFN[$name] ?? null)) : ($SANFN[$name] ?? null));
             if ($san !== null) {

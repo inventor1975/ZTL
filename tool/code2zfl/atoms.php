@@ -700,8 +700,9 @@ final class Analyzer {
             }
             if (isset($SUPER[$e->name])) return stT('superglobal', '$' . $e->name, $line);
             if ($e->name === 'this') return stF();
-            if (!isset($env[$e->name])) return stZ('unassigned:$' . $e->name, $line);
-            $st = $env[$e->name]; $st['dv'] = [$e->name]; return $st;           // the DIRECT parent of what is read is this variable
+            $whole = self::envWhole($env, $e->name);
+            if ($whole === null) return stZ('unassigned:$' . $e->name, $line);
+            $st = $whole; $st['dv'] = [$e->name]; return $st;                   // the DIRECT parent of what is read is this variable
         }
         if ($e instanceof Expr\ArrayDimFetch) {
             $this->ex($e->dim, $env);
@@ -756,7 +757,17 @@ final class Analyzer {
             }
             $sl = self::slot($e);
             if ($sl !== null && isset($env[$sl])) { $st = $env[$sl]; $st['dv'] = [$sl]; return $st; }   // this key was written here: read that, not the whole array
-            if ($sl !== null && isset($env[$e->var->name])) { $st = $this->ex($e->var, $env); $st['dv'] = [$sl]; return $st; }   // an element never written here: the whole array's state, under the element's name
+            // AN ELEMENT NEVER WRITTEN HERE reads the array's BULK state — what was assigned to the name
+            // itself — and NOT the join with its sibling slots: `$row['options']` after
+            // `$row['value'] = $_GET['v']` is still the database row, not the request (f43).
+            if ($sl !== null && $e->var instanceof Expr\Variable && is_string($e->var->name) && isset($env[$e->var->name])) {
+                $st = $env[$e->var->name]; $st['dv'] = [$sl]; return $st;
+            }
+            // A LITERAL KEY WITH NEITHER ITS OWN SLOT NOR A BULK STATE is not the join of its siblings:
+            // an array built only element-wise says nothing about a key nobody wrote. Reading `$GLOBALS['b']`
+            // after `$GLOBALS['a'] = $_GET['x']` is unknown, not attacker-controlled.
+            if ($sl !== null && $e->var instanceof Expr\Variable && is_string($e->var->name) && !isset($SUPER[$e->var->name]))
+                return stZ('unassigned:$' . $e->var->name . '[]', $line);
             $base = $this->ex($e->var, $env);
             return $base;
         }
@@ -803,6 +814,7 @@ final class Analyzer {
             $this->applyGuards($g['true'], $envT);
             $this->applyGuards($g['false'], $envF);
             $this->applyUnknownGuards($g['unknown'] ?? [], $envT);
+            $this->applyUnknownGuards($g['unknown_true'] ?? [], $envT);
             $a = $e->if ? $this->ex($e->if, $envT) : $c;
             $b = $this->ex($e->else, $envF);
             return join2($a, $b);
@@ -1202,7 +1214,7 @@ final class Analyzer {
         global $GUARDS, $INERT;
         $line = $c->getStartLine();
         $none = ['true' => [], 'false' => []];
-        if ($c instanceof Expr\BooleanNot) { $g = $this->guards($c->expr); return ['true' => $g['false'], 'false' => $g['true'], 'unknown' => $g['unknown'] ?? []]; }
+        if ($c instanceof Expr\BooleanNot) { $g = $this->guards($c->expr); return ['true' => $g['false'], 'false' => $g['true'], 'unknown' => $g['unknown'] ?? [], 'unknown_false' => $g['unknown_true'] ?? [], 'unknown_true' => $g['unknown_false'] ?? []]; }
         if ($c instanceof Expr\BinaryOp\BooleanAnd || $c instanceof Expr\BinaryOp\LogicalAnd) {
             $l = $this->guards($c->left); $r = $this->guards($c->right);
             return ['true' => array_merge($l['true'], $r['true']), 'false' => [],
@@ -1258,7 +1270,12 @@ final class Analyzer {
             // a whitelist whose contents are invisible here, which is Z, not the absence of a check.
             // Its twin `array_key_exists($x, $map)` has answered exactly that since the guard work;
             // the two spellings of one act disagreed. Measured 2026-09-09 on SuiteCRM.
-            if ($v !== null) return ['true' => [], 'false' => [], 'unknown' => [[$v, 'isset(map)', $line]]];
+            // ON THE TRUE BRANCH ONLY. `isset($map[$x])` is the same act as array_key_exists, but it is
+            // also PHP's universal "do I have this cached", and the NEGATIVE branch establishes nothing:
+            // `if (!isset($cache[$id])) { $wpdb->get_var("... user_id=$id ..."); }` is not a checked value.
+            // Applying it before the split cost four real catches on user-role-editor's own
+            // "SQL-injection vulnerability fix" commits. Measured 2026-09-09.
+            if ($v !== null) return ['true' => [], 'false' => [], 'unknown_true' => [[$v, 'isset(map)', $line]]];
             return $none;
         }
         if ($c instanceof Expr\FuncCall && $c->name instanceof Node\Name) {
@@ -1422,10 +1439,14 @@ final class Analyzer {
             $root = $target; while ($root instanceof Expr\ArrayDimFetch) $root = $root->var;
             $n = $this->varName($root);
             if ($n !== null) {
-                $cur = $env[$n] ?? stF(); $j = join2($cur, $rhs);
                 $sl = self::slot($target);
-                if ($sl !== null) { $env[$sl] = $rhs; if ($cur['t'] !== 'F') $j['nu'] = false; }   // the element is read from its slot; the whole array is a may-join, not "read in full"
-                $env[$n] = $j;
+                // WRITING ONE KEY DOES NOT TAINT THE OTHERS — the same rule properties got today.
+                // `$GLOBALS['a'] = $_GET['x']` used to be joined into the whole array, so `$GLOBALS['b']`,
+                // written nowhere near it, read as attacker-controlled. A COMPUTED key still taints the
+                // whole array, because which element it was is exactly what we do not know, and reading
+                // the array AS A WHOLE joins the slots back in (envWhole). Measured 2026-09-09.
+                if ($sl !== null) { $env[$sl] = $rhs; return; }
+                $env[$n] = join2($env[$n] ?? stF(), $rhs);
             }
             return;
         }
@@ -1536,6 +1557,17 @@ final class Analyzer {
         return $ok;
     }
 
+    /** THE WHOLE ARRAY: what was written to the name in bulk, joined with every element slot written
+     *  under it. Reading `$arr` must still see `$arr['k']`; only reading a DIFFERENT literal key must
+     *  not. Null when nothing at all is known about the name. */
+    private static function envWhole(array $env, string $n): ?array {
+        $parts = [];
+        if (isset($env[$n])) $parts[] = $env[$n];
+        $pfx = $n . '[';
+        foreach ($env as $k => $st) if (is_string($k) && str_starts_with($k, $pfx)) $parts[] = $st;
+        return $parts ? joinAll($parts) : null;
+    }
+
     /** THE WHOLE PROPERTY: what was written to it in bulk, joined with every element slot. Reading
      *  `$this->config` must still see `$this->config['base_url']`; only reading a DIFFERENT literal
      *  key must not. Null when nothing at all is known about the name. */
@@ -1634,12 +1666,14 @@ final class Analyzer {
             // REST shape) was lost at the join and the verdict went back to REFUTED.
             $this->applyUnknownGuards($g['unknown'] ?? [], $env);
             $paths = []; $hs0 = $this->hs; $hss = [];
-            $e1 = $env; $this->applyGuards($g['true'], $e1); $this->walk($s->stmts, $e1);
+            $e1 = $env; $this->applyGuards($g['true'], $e1);
+            $this->applyUnknownGuards($g['unknown_true'] ?? [], $e1);   // membership: only the branch where it HOLDS
+            $this->walk($s->stmts, $e1);
             $leaves = self::terminates($s->stmts);
             if (!$leaves) { $paths[] = $e1; $hss[] = $this->hs; }
             foreach ($s->elseifs as $ei) { $this->hs = $hs0; $e2 = $env; $this->applyGuards($g['false'], $e2); $this->ex($ei->cond, $e2); $this->applyGuards($this->guards($ei->cond)['true'], $e2); $this->walk($ei->stmts, $e2); if (!self::terminates($ei->stmts)) { $paths[] = $e2; $hss[] = $this->hs; } }
-            if ($s->else) { $this->hs = $hs0; $e3 = $env; $this->applyGuards($g['false'], $e3); $this->walk($s->else->stmts, $e3); if (!self::terminates($s->else->stmts)) { $paths[] = $e3; $hss[] = $this->hs; } }
-            else { $e0 = $env; $this->applyGuards($g['false'], $e0); $paths[] = $e0; $hss[] = $hs0; }   // the fall-through path: the condition failed
+            if ($s->else) { $this->hs = $hs0; $e3 = $env; $this->applyGuards($g['false'], $e3); $this->applyUnknownGuards($g['unknown_false'] ?? [], $e3); $this->walk($s->else->stmts, $e3); if (!self::terminates($s->else->stmts)) { $paths[] = $e3; $hss[] = $this->hs; } }
+            else { $e0 = $env; $this->applyGuards($g['false'], $e0); $this->applyUnknownGuards($g['unknown_false'] ?? [], $e0); $paths[] = $e0; $hss[] = $hs0; }   // the fall-through path: the condition failed
             $env = $paths ? self::joinFold($paths, $env) : $env;
             $this->hs = self::hsJoin($hss ?: [$hs0]);
             return;

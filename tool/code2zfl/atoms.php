@@ -1073,10 +1073,17 @@ final class Analyzer {
                 return $res;
             }
             if (!$isMethod && ($name === 'str_replace' || $name === 'str_ireplace' || $name === 'strtr') && self::replacementIsPlain($e, $name)) {
-                // literal search/replace drawn from [A-Za-z0-9_-,] cannot put a quote, a dot or a bracket into a value
-                // that had none: a NUMERIC/alphabet substitution survives (strtr(base64_encode($x), '+/=', '-_,'))
+                // A LITERAL SEARCH/REPLACE DRAWN FROM [A-Za-z0-9_-,] CANNOT BREAK ANY SUBSTITUTION WE HOLD.
+                // replacementIsPlain has already checked that every replacement lives in that alphabet, and no
+                // context of ours treats a letter, digit, `_`, `-` or `,` as dangerous — so a value escaped for
+                // html, for a quoted SQL string, for a header or for a path is still escaped afterwards. Removal
+                // cannot create a dangerous character either: if the substitution holds, none is there to juxtapose.
+                // Before this only `*` survived, and two real cases died on it: SMF's
+                // `strtr(basename($x), ':/', '-_')` (Smileys.php:1530) and SuiteCRM's
+                // `str_replace('+', '_', urlencode($name))` before a Content-Disposition header
+                // (download.php:264 -> 295), 41 verdicts behind the second. Measured 2026-09-09.
                 $data = $name === 'strtr' ? ($args[0] ?? stF()) : ($args[2] ?? stF());
-                return through($data, null, $line, false, 'numeric');
+                return through($data, null, $line, false, 'all');
             }
             if (!$isMethod && isset($PRESERV[$name])) return through(joinAll($args ?: [stF()]), null, $line, false, 'all');
             if (!$isMethod && isset($NARROW[$name]))  return through(joinAll($args ?: [stF()]), null, $line, false, 'numeric');

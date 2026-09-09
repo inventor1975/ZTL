@@ -328,3 +328,27 @@ That trade belongs to whoever will act on the findings, so the default does not 
 none at all. The four projects that still carry most of them — SuiteCRM 449, dolibarr 218,
 chamilo-lms 171, SMF 37 — are the next reading, not the next patch.
 
+## The developers' own fixes, after this pass (`fixbench.py`, 2026-09-09 late)
+
+The ground truth here is written by nobody on our side: a commit whose message says it fixes a
+security problem, run before and after over the files it touched.
+
+    33 plugins, 238 security-fix commits
+    CAUGHT 37 · STILL 115 · OPENED 79 · NOISE 3 · NO-SINK 2 · MISSED 2
+
+**Not one line-for-line comparison with the earlier figure.** The pass before this evening measured
+31 plugins and 159 commits and gave CAUGHT 14; this one measures 33 and 238. As a share of commits,
+15.5 % against 8.8 % — a real move, but the corpora differ and the honest statement is the pair, not
+the ratio alone.
+
+**MISSED is still 2, and both were read.** `wp-fastest-cache`, commits `ff806559a` and `ac304ca1e`,
+both `inc/wp-polls.php`, both the same shape: the file calls `check_voted($id)`, and `check_voted`
+is defined in the *wp-polls* plugin, which is not in this tree. The SQL sink is in another package;
+there is nothing here for this instrument to judge. Across 238 commits of ground truth there is
+still no case of "we said clean about code that is in the tree".
+
+**NOISE 3 is unread and stays named**: `google-analytics-for-wordpress` `c3ee119c4` and `aa34822e7`
+(0 → 1 REFUTED across a footer-check fix), `user-role-editor` `0927510db` (0 → 1 across an interface
+rewrite). A fix that produces a shape we dislike is the one class that could hide a defect of ours,
+so it is listed rather than summarised away.
+

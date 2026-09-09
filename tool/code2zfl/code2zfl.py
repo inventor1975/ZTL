@@ -111,12 +111,25 @@ def _summary_merge(a, b):
     Mirrors summaryMerge() in atoms.php; needed here because batches run in separate processes."""
     if a is None:
         return b
+    if a.get("conflict") and b.get("conflict"):
+        return {"conflict": True, "files": _files(a) + _files(b)}
     if a.get("conflict"):
         return a
+    if b.get("conflict"):
+        return {"conflict": True, "files": _files(a) + _files(b)}
     strip = lambda r: {k: v for k, v in r.items() if k not in ("file", "line")}
     if strip(a) == strip(b):
         return a
-    return {"conflict": True, "files": sorted(set(a.get("files", [a.get("file")]) + [b.get("file")]))}
+    return {"conflict": True, "files": _files(a) + _files(b)}
+
+
+def _files(r):
+    """The files a summary came from. A CONFLICT record carries `files` and no `file` — merging one of
+    those into a plain record used to put a None in the list and kill the whole run (CodeIgniter 4)."""
+    out = list(r.get("files") or [])
+    if r.get("file"):
+        out.append(r["file"])
+    return sorted(set(out))
 
 
 def atomize(files, overlays, autoload, catalog=None, php=None, jobs=None, summaries=None):

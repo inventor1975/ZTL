@@ -794,8 +794,17 @@ final class Analyzer {
         }
         if ($e instanceof Expr\Ternary) {
             $c = $this->ex($e->cond, $env);
-            $a = $e->if ? $this->ex($e->if, $env) : $c;
-            $b = $this->ex($e->else, $env);
+            // A TERNARY IS AN `if`, AND ITS CONDITION GUARDS ITS BRANCHES. `$show = in_array(trim($_REQUEST['show']),
+            // ['all','none']) ? $_REQUEST['show'] : 'all';` is the ordinary PHP way to validate-or-default, and we read
+            // the guard only from If_/ElseIf_/While_/Do_ — so the same check written as a statement earned and written
+            // as a ternary refuted. chamilo's link.php:79, 14 verdicts behind it. Measured 2026-09-09.
+            $g = $this->guards($e->cond);
+            $envT = $env; $envF = $env;
+            $this->applyGuards($g['true'], $envT);
+            $this->applyGuards($g['false'], $envF);
+            $this->applyUnknownGuards($g['unknown'] ?? [], $envT);
+            $a = $e->if ? $this->ex($e->if, $envT) : $c;
+            $b = $this->ex($e->else, $envF);
             return join2($a, $b);
         }
         if ($e instanceof Expr\BinaryOp\Coalesce) return join2($this->ex($e->left, $env), $this->ex($e->right, $env));
@@ -1818,10 +1827,15 @@ foreach ($files as $f) {
  *  Conditions only — an unknown call in ordinary code is already handled as an opaque value. */
 function prePassUnknownChecks(Analyzer $an, $ast, \PhpParser\NodeFinder $finder): void {
     global $GUARDS, $SANFN, $SANMETH, $PRESERV, $NARROW, $TRANSP, $SINKFN, $SINKMETH;
+    // a TERNARY's condition checks its value exactly as an `if` does, and PHP writes validate-or-default
+    // that way more often than not — so it belongs in this pre-pass with the statement forms.
+    $conds = [];
     foreach (['If_', 'ElseIf_', 'While_', 'Do_'] as $kind) {
-        $cls = 'PhpParser\\Node\\Stmt\\' . $kind;
-        foreach ($finder->findInstanceOf($ast, $cls) as $node) {
-            $cond = $node->cond ?? null; if ($cond === null) continue;
+        foreach ($finder->findInstanceOf($ast, 'PhpParser\\Node\\Stmt\\' . $kind) as $node)
+            if (($node->cond ?? null) !== null) $conds[] = $node->cond;
+    }
+    foreach ($finder->findInstanceOf($ast, Expr\Ternary::class) as $node) $conds[] = $node->cond;
+    foreach ($conds as $cond) {
             foreach ($finder->findInstanceOf($cond, Expr\FuncCall::class) as $call) {
                 $nm = $call->name instanceof Node\Name ? strtolower($call->name->toString()) : null;
                 // "unknown" means absent from EVERY table we have — a name we know as preserving,
@@ -1838,7 +1852,6 @@ function prePassUnknownChecks(Analyzer $an, $ast, \PhpParser\NodeFinder $finder)
                 if (isset($SANMETH[$nm]) || isset($SINKMETH[$nm])) continue;
                 foreach ($call->args as $arg) $an->noteUnknownCheck($arg, '->' . $nm . '()');
             }
-        }
     }
 }
 

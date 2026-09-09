@@ -104,6 +104,7 @@ EXPECT = {
     "f74_preg_replace_keeps_an_alphabet.php": ["EARNED", "EARNED", "REFUTED", "REFUTED", "REFUTED"],
     "f75_isset_on_a_map_we_cannot_read.php": ["OPEN", "EARNED", "REFUTED"],
     "f76_array_map_with_a_literal_callback.php": ["EARNED", "EARNED", "EARNED", "OPEN", "EARNED", "REFUTED", "REFUTED"],
+    "f77_ternary_condition_guards_its_branches.php": ["EARNED", "EARNED", "OPEN", "REFUTED"],
 }
 STORED = os.path.join(HERE, "overlays", "stored-input.json")
 

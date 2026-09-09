@@ -772,7 +772,7 @@ final class Analyzer {
         }
         if ($e instanceof Expr\Assign || $e instanceof Expr\AssignRef) {
             $rhs = $this->ex($e->expr, $env);
-            $this->assignTo($e->var, $rhs, $env, $line);
+            $this->assignTo($e->var, $rhs, $env, $line, $e->expr);
             return $rhs;
         }
         if ($e instanceof Expr\AssignOp) {
@@ -1282,7 +1282,7 @@ final class Analyzer {
         return false;
     }
 
-    private function assignTo(Expr $target, array $rhs, array &$env, int $line): void {
+    private function assignTo(Expr $target, array $rhs, array &$env, int $line, ?Node $rhsExpr = null): void {
         if ($target instanceof Expr\Variable) {
             $n = $this->varName($target);
             if ($n !== null) { $env[$n] = $rhs; foreach (array_keys($env) as $k) if (str_starts_with($k, $n . '[')) unset($env[$k]); }   // a fresh array: its old slots are gone
@@ -1332,6 +1332,12 @@ final class Analyzer {
         if ($target instanceof Expr\PropertyFetch && $target->var instanceof Expr\Variable && $target->var->name === 'this'
             && $target->name instanceof Node\Identifier && $this->currentClass !== null) {
             $pn = $target->name->toString();
+            // `$this->p = <expr built only from $this->p and literals>` ADDS NOTHING. Pico writes
+            // `$this->config = is_array($this->config) ? $this->config : array();` — with properties held as
+            // a class-wide join with no order between methods, that read-back carried a tainted element
+            // written in another method back into the bulk, and every other key inherited it. All 9 of
+            // Pico's refutations, measured 2026-09-09.
+            if ($this->selfOnly($rhsExpr ?? null, $pn)) return;
             $cur = $this->props[$this->currentClass][$pn] ?? null;
             $this->props[$this->currentClass][$pn] = ($cur === null || $this->instanceMode) ? $rhs : join2($cur, $rhs);   // a concrete instance: strong update
             foreach (array_keys($this->props[$this->currentClass]) as $k) if (str_starts_with($k, $pn . '[')) unset($this->props[$this->currentClass][$k]);   // a fresh array clears its old element slots
@@ -1398,6 +1404,32 @@ final class Analyzer {
         }
         $sl = self::slot($v);
         if ($sl !== null) $this->unknownCheckedSlots[$sl] = $who;
+    }
+
+    /** Is every leaf of this expression either `$this-><pn>` itself or a literal? Then assigning it back
+     *  to `$this-><pn>` cannot introduce anything the property did not already carry. */
+    private function selfOnly(?Node $e, string $pn): bool {
+        if ($e === null) return false;
+        $ok = true;
+        $walk = function (?Node $n) use (&$walk, &$ok, $pn) {
+            if ($n === null || !$ok) return;
+            if ($n instanceof Expr\PropertyFetch && $n->var instanceof Expr\Variable && $n->var->name === 'this'
+                && $n->name instanceof Node\Identifier && $n->name->toString() === $pn) return;
+            if ($n instanceof Scalar\String_ || $n instanceof Scalar\Int_ || $n instanceof Scalar\Float_
+                || $n instanceof Expr\ConstFetch || $n instanceof Expr\ClassConstFetch || $n instanceof Scalar\MagicConst) return;
+            if ($n instanceof Expr\Array_) { foreach ($n->items as $it) { if ($it) { $walk($it->key); $walk($it->value); } } return; }
+            if ($n instanceof Expr\Ternary) { $walk($n->cond); $walk($n->if); $walk($n->else); return; }
+            if ($n instanceof Expr\BinaryOp) { $walk($n->left); $walk($n->right); return; }
+            if ($n instanceof Expr\BooleanNot || $n instanceof Expr\Empty_) { $walk($n->expr); return; }
+            if ($n instanceof Expr\FuncCall && $n->name instanceof Node\Name
+                && in_array(strtolower($n->name->toString()), ['is_array', 'is_string', 'isset', 'empty', 'count'], true)) {
+                foreach ($n->args as $a) if ($a instanceof Node\Arg) $walk($a->value);
+                return;
+            }
+            $ok = false;
+        };
+        $walk($e);
+        return $ok;
     }
 
     /** THE WHOLE PROPERTY: what was written to it in bulk, joined with every element slot. Reading

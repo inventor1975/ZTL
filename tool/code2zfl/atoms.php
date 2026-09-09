@@ -1370,7 +1370,7 @@ final class Analyzer {
      *  Only through a name written exactly once, and only one hop deep. */
     public function noteUnknownCheck(?Node $arg, string $who, array $once = [], int $depth = 0): void {
         $v = $arg instanceof Node\Arg ? $arg->value : $arg;
-        if ($v === null) return;
+        if (!($v instanceof Expr)) return;                        // `foo(...)` hands us a VariadicPlaceholder, not an expression
         if ($v instanceof Expr\Variable && is_string($v->name)) {
             $this->unknownChecked[$v->name] = $who;
             if ($depth < 1 && isset($once[$v->name])) $this->noteUnknownCheck($once[$v->name], $who, $once, $depth + 1);

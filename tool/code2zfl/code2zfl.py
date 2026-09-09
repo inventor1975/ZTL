@@ -94,9 +94,26 @@ def summarise(files, overlays, autoload, catalog=None, php=None, jobs=None):
         for part in pool.map(_atomize_batch, [(cmd, b, env) for b in batches if b]):
             if part.get("_error"):
                 sys.exit(part["_error"])
-            merged["functions"].update(part.get("functions", {}))
-            merged["methods"].update(part.get("methods", {}))
+            for slot in ("functions", "methods"):                       # a name seen in two batches: same rule as inside one
+                recs = part.get(slot) or {}
+                if isinstance(recs, list):                                  # PHP writes an empty map as []
+                    recs = {}
+                for k, rec in recs.items():
+                    merged[slot][k] = _summary_merge(merged[slot].get(k), rec)
     return merged
+
+
+def _summary_merge(a, b):
+    """Two summaries for one name: identical in substance -> keep; otherwise a CONFLICT that pass 2 reads as unknown.
+    Mirrors summaryMerge() in atoms.php; needed here because batches run in separate processes."""
+    if a is None:
+        return b
+    if a.get("conflict"):
+        return a
+    strip = lambda r: {k: v for k, v in r.items() if k not in ("file", "line")}
+    if strip(a) == strip(b):
+        return a
+    return {"conflict": True, "files": sorted(set(a.get("files", [a.get("file")]) + [b.get("file")]))}
 
 
 def atomize(files, overlays, autoload, catalog=None, php=None, jobs=None, summaries=None):

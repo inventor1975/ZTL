@@ -386,6 +386,19 @@ final class Analyzer {
         return false;
     }
 
+    /** str_replace(search, replace, $x) / strtr($x, from, to): are search and replace literals (or arrays of literals)
+     *  whose REPLACEMENT characters all lie in [A-Za-z0-9_\-,]? Then the call cannot introduce a quote, dot or bracket. */
+    private static function replacementIsPlain(Node $call, string $name): bool {
+        $ix = $name === 'strtr' ? [1, 2] : [0, 1];
+        foreach ($ix as $i) if (!isset($call->args[$i]) || !($call->args[$i] instanceof Node\Arg)) return false;
+        $lits = fn(Node $n) => $n instanceof Scalar\String_ ? [$n->value]
+              : ($n instanceof Expr\Array_ ? array_map(fn($it) => $it && $it->value instanceof Scalar\String_ ? $it->value->value : null, $n->items) : null);
+        $from = $lits($call->args[$ix[0]]->value); $to = $lits($call->args[$ix[1]]->value);
+        if ($from === null || $to === null || in_array(null, $from, true) || in_array(null, $to, true)) return false;
+        foreach ($to as $t) if (!preg_match('/^[A-Za-z0-9_\-,]*$/', $t)) return false;
+        return true;
+    }
+
     /** A literal, or a once-assigned variable standing for one; null otherwise. */
     private function litOf(?Node $n): ?Node {
         if ($n instanceof Expr\Variable && is_string($n->name) && isset($this->lits[$n->name])) return $this->lits[$n->name];
@@ -874,8 +887,14 @@ final class Analyzer {
             // us thousands of false OPEN); and — the one that finds flaws — the argument reaches a SINK
             // inside, which is emitted here, in the caller's context, with the callee named.
             $sumKey = $isMethod ? null : ($SUMMARIES['functions'][$name] ?? null);
-            if ($sumKey === null && $isMethod && $this->currentClass !== null)
+            // a method summary is read ONLY when the receiver's class is known to be the current one ($this->m(),
+            // self::m(), static::m()) — `$db->safe()` inside class CUsers is not CUsers::safe (Fable's review of the
+            // Opus pass, 2026-09-09: the lookup went by the CALLER's class for any receiver)
+            $recvIsSelf = ($isMethod && $e->var instanceof Expr\Variable && $e->var->name === 'this')
+                || ($e instanceof Expr\StaticCall && $e->class instanceof Node\Name && in_array(strtolower($e->class->toString()), ['self', 'static'], true));
+            if ($sumKey === null && $recvIsSelf && $this->currentClass !== null)
                 $sumKey = $SUMMARIES['methods'][strtolower($this->currentClass) . '::' . $name] ?? null;
+            if ($sumKey !== null && !empty($sumKey['conflict'])) $sumKey = null;          // two different definitions: unknown
             if ($sumKey !== null && !isset($this->defs['fn'][$name])) {
                 $tainted = [];
                 foreach ($args as $ix => $st) if (($st['t'] ?? 'F') !== 'F') $tainted[] = (string)$ix;
@@ -897,6 +916,12 @@ final class Analyzer {
                     // neither: the callee does not carry this argument into its result — nothing to add
                 }
                 return $carried ? joinAll($carried) : stF();
+            }
+            if (!$isMethod && ($name === 'str_replace' || $name === 'str_ireplace' || $name === 'strtr') && self::replacementIsPlain($e, $name)) {
+                // literal search/replace drawn from [A-Za-z0-9_-,] cannot put a quote, a dot or a bracket into a value
+                // that had none: a NUMERIC/alphabet substitution survives (strtr(base64_encode($x), '+/=', '-_,'))
+                $data = $name === 'strtr' ? ($args[0] ?? stF()) : ($args[2] ?? stF());
+                return through($data, null, $line, false, 'numeric');
             }
             if (!$isMethod && isset($PRESERV[$name])) return through(joinAll($args ?: [stF()]), null, $line, false, 'all');
             if (!$isMethod && isset($NARROW[$name]))  return through(joinAll($args ?: [stF()]), null, $line, false, 'numeric');
@@ -1461,6 +1486,15 @@ foreach ($files as $f) {
     if ($an->nodeSpent > 120000) $rec['node_budget_exhausted'] = true;      // the walk was cut short
     $out['files'][] = $rec;
 }
+/** Two summaries for one name: identical in substance → keep; otherwise a conflict. */
+function summaryMerge(?array $a, array $b): array {
+    if ($a === null) return $b;
+    if (!empty($a['conflict'])) return $a;
+    $strip = fn(array $r) => array_diff_key($r, ['file' => 1, 'line' => 1]);
+    if ($strip($a) == $strip($b)) return $a;
+    return ['conflict' => true, 'files' => array_values(array_unique(array_merge($a['files'] ?? [$a['file']], [$b['file']])))];
+}
+
 if ($emitSummaries) {
     // PASS 1. What does each definition DO with an attacker-controlled parameter? Walk its body once
     // per parameter (up to 4; beyond that mark them together and say so), and read the result off the
@@ -1525,8 +1559,12 @@ if ($emitSummaries) {
                 if ($ret['t'] === 'F' && $an->returnedBool) $rec['guard'][] = $key;
             }
             $rec['sinks'] = uniq($rec['sinks']);
-            if ($kind === 'fn') $sum['functions'][$name] = $rec;
-            else $sum['methods'][strtolower($cls) . '::' . $name] = $rec;
+            // TWO DEFINITIONS UNDER ONE NAME (the blog engine defines __() three times, safe() twice): a summary that
+            // silently kept the last one would credit a call with what a DIFFERENT function does. If they disagree on
+            // anything but file/line, the name is a CONFLICT and reads as unknown in pass 2.
+            $slot = $kind === 'fn' ? 'functions' : 'methods';
+            $k = $kind === 'fn' ? $name : strtolower($cls) . '::' . $name;
+            $sum[$slot][$k] = summaryMerge($sum[$slot][$k] ?? null, $rec);
         }
     }
     echo json_encode($sum, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), "\n";

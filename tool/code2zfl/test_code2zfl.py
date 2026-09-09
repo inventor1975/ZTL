@@ -86,6 +86,7 @@ EXPECT = {
     "f56_in_file_wrapper_is_still_a_sink.php": ["REFUTED", "REFUTED"],
     "f57_setcookie_value.php": ["REFUTED", "EARNED"],
     "f58_unknown_guard.php": ["OPEN", "OPEN", "REFUTED"],
+    "f59_fixed_alphabet_encoder.php": ["EARNED", "EARNED", "REFUTED"],
 }
 STORED = os.path.join(HERE, "overlays", "stored-input.json")
 
@@ -121,8 +122,9 @@ def main():
         if got.get(name) != exp:
             failures.append(f"{name}: expected {exp}, got {got.get(name)}")
     # every fixture in the folder is in the table — an unlisted fixture is an untested claim
+    probed = {os.path.basename(f["file"]) for f in out["files"] if os.sep + "xfile" + os.sep in f["file"] or os.sep + "xconflict" + os.sep in f["file"]}
     for name in got:
-        if name not in EXPECT and not name.startswith(("app", "lib")):
+        if name not in EXPECT and name not in probed:                  # the cross-file pairs are asserted by their own probes
             failures.append(f"{name}: fixture without an expectation")
     # weak links are NAMED on OPEN
     for f in out["files"]:
@@ -152,13 +154,21 @@ def main():
         failures.append(f"stored-input overlay: f54 should be five REFUTED, got {g3}")
 
     cross_file_probe(failures)
+    # ---- a NAME defined differently in two files is a conflict (unknown), not "the last one wins"; and a method
+    # summary is never read for a receiver that is not $this (b.php: $db->safe() inside XcA must not be XcA::safe)
+    xc = code2zfl.run([os.path.join(FIX, "xconflict")], [], "all", AUTOLOAD)
+    got = {os.path.basename(f["file"]): [s["disposition"] for s in f["sinks"]] for f in xc["files"]}
+    if got.get("app.php") != ["OPEN"]:
+        failures.append(f"xconflict/app.php: conflicting xc_clean() must read as unknown -> OPEN, got {got.get('app.php')}")
+    if "EARNED" in got.get("b.php", []):
+        failures.append(f"xconflict/b.php: $db->safe() credited with XcA::safe -> {got.get('b.php')}")
     n = sum(len(v) if isinstance(v, list) else 1 for v in EXPECT.values()) + 5
     if failures:
         print("FAIL")
         for x in failures:
             print("  -", x)
         sys.exit(1)
-    print(f"PASS: {n} sink verdicts as expected across {len(EXPECT)} fixtures + the cross-file pair (+ f54 under stored-input) + 2 vacuity controls")
+    print(f"PASS: {n} sink verdicts as expected across {len(EXPECT)} fixtures + the cross-file pair + the conflict pair (+ f54 under stored-input) + 2 vacuity controls")
 
 
 if __name__ == "__main__":

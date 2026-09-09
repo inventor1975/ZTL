@@ -238,6 +238,14 @@ def sink_document(fact, ctx):
             sanitized = {"status": "unverified", "means": f"escaped by {fn} at L{l}; whether it sits inside quotes could not be read"}
     elif t == "F":
         sanitized = {"status": "unverified", "means": "not needed: nothing attacker-controlled arrives"}
+    elif ctx == "file" and "header" in san:
+        # URL-ENCODED, AND THE SINK IS A FILE CALL. `file_get_contents("http://host/api?x=" . urlencode($v))`
+        # is not path traversal — the scheme and host are literal, the value only reaches the query —
+        # but neither is it proof of safety, since we do not read where the literal came from. Z, with
+        # the encoder named. Measured 2026-09-09 on wp-slimstat.php:1567.
+        fn, l = san["header"]
+        sanitized = {"status": "unverified",
+                     "means": f"URL-encoded by {fn} at L{l}; for a file/URL sink that is not a substitution, only a narrowing — read the literal around it"}
     elif nu:
         # an attacker-controlled part reaches the sink with NO substitution and its own path read in full;
         # whatever else sits beside it (a property, a DB row) cannot make that part safer

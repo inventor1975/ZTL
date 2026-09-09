@@ -119,3 +119,51 @@ On the blog engine (whole tree, `all` contexts): 36 REFUTED before and after, th
 79 sinks EARNED→OPEN (former false "constants": `func_get_args()`, `scandir()`, `->getParam()`),
 8 OPEN→EARNED (`round`, `ceil`). On MindReef: 106 EARNED→OPEN, 87 of them
 `$component->renderComponent()` inside compiled Blade views — honest, and noisy; open question.
+
+---
+
+# HTML sub-contexts (2026-09-09, second pass — curator "все да")
+
+The `html` sink now has sub-contexts, read by a small lexer over the **output stream** — inline HTML plus the
+literal parts of everything echoed, in order (`atoms.php` class `Html`). Where an attacker-controlled value lands
+decides what substitutes it, exactly as quotes decide it for SQL:
+
+| lands in | needs | why plain HTML escaping is not enough |
+|---|---|---|
+| body text, double-quoted attribute, double-quoted JS string | `html` (encodes `"` `<` `>` `&`) | — this is the base case |
+| single-quoted attribute or JS string | `html-sq` (ENT_QUOTES) | `'` ends the value and plain escaping leaves it |
+| URL attribute (`href`, `src`, `action`…) | `header` (URL-encoding) | `javascript:` needs no quote or bracket at all |
+| unquoted attribute, tag name, attribute name, event handler, `<style>`, `<script>` outside a string, a JS string that is then RUN (`setTimeout('…')`) | `*` only | a space / letter / the script parser defeats every escaper |
+
+`html-sq` is earned by `htmlspecialchars`/`htmlentities` with `ENT_QUOTES` — **the default only since PHP 8.1**, so
+`--php 7.4` changes the verdict — and by `FILTER_SANITIZE_*SPECIAL_CHARS`. A JavaScript encoder (`json_encode` with
+the `JSON_HEX_*` flags, Laravel `Js::from`) earns `js` inside `<script>`. An output whose position cannot be read
+(a standalone function body, or paths that leave the lexer in different states) is judged as body text and **says so**
+in the ledger — the status quo, named, not a stricter guess.
+
+## Measured on SARD CWE_79 (html), before → after the sub-context layer
+
+| | unsafe n=4352 (R / O / E) | miss (unsafe→EARNED) | safe n=5728 (R / O / E) | false alarm (safe→REFUTED) |
+|---|---|---|---|---|
+| flat `html` (first pass) | 432 / 2448 / 1472 | 1472 | 228 / 1372 / 4128 | 228 |
+| with sub-contexts | 492 / 2708 / **1152** | **1152** | 120 / 904 / **4704** | **120** |
+
+The remaining 1152 unsafe→EARNED are **all** whitelist/numeric-filter constructions (`ternary_white_list`,
+`whitelist_using_array`, `FILTER_SANITIZE_NUMBER_*`) landing in a position the corpus marks unsafe — a value confined
+to a fixed set or to digits cannot break out of a tag name or an unquoted attribute either, so our EARNED stands and
+the label is the generator's. (One SARD family, `CSS-span_Style_Property_Value`, echoes the literal `checked_data`,
+not the tainted variable at all — no sink of ours, correctly.) The 120 remaining false alarms are the same declared
+disagreements as elsewhere (`addslashes` and friends are not substitutions) plus `urlencode` inside a *body* position,
+where the corpus over-credits it.
+
+## The engine and MindReef with the html layer
+
+* **Blog engine** (`--php 7.4`): REFUTED 36 → 34 — the two that left were `file_get_contents($_FILES[...]['tmp_name'])`,
+  and `tmp_name` is written by PHP, not the client (now `F`). The 34 that stand were read in the source: real
+  `str_replace("..","")` path filters (bypassable by `....//`), `$_REQUEST`-driven `include`/`$obj->$m()`, and two
+  installers that are gated on the live server (`config.php` sets `INSTALLED`, the `.ready` copy 404s). html sinks by
+  sub-context: 274 double-quoted attr, 243 text, 117 URL attr, 40 event handler, 25 `<script>`, 23 style, 13 script-code.
+* **MindReef** (Laravel, compiled Blade views scanned): 545/3 → 478/70. The 70 OPEN are honest: `href="{{ route(...) }}"`
+  (a URL attribute — `e()` is HTML escaping, not URL encoding) and `<svg {{ $attributes }}>` (an attribute-name
+  position). The framework's own `renderComponent()` / `yieldContent()` are declared transparent in the overlay, so a
+  component is judged in its own compiled file, not counted as an opaque call at every use site.

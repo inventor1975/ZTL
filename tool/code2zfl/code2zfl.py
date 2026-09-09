@@ -88,12 +88,55 @@ def _g(s):
     return "".join(ch if (ch.isalnum() or ch in "-_.") else "-" for ch in s)
 
 
+# html sub-contexts (atoms.php Html lexer): what substitutes a value depends on where in the markup it lands.
+# level 0: body text / double-quoted attribute — HTML escaping (" is encoded) is the substitution;
+# level 1: single-quoted attribute — only an escaper that encodes ' (ENT_QUOTES);
+# level 2: a URL attribute — URL-encoding (javascript: needs no quote at all);
+# level 3: unquoted attribute, tag/attribute name, event handler, style, <script>, <style>, comment — only a
+#          numeric/whitelist substitution ('*'). 'unknown' (an output whose position cannot be read): level 0, said so.
+HLEVEL = {"text": 0, "attr-dq": 0, "script-dq": 0, "attr-sq": 1, "script-sq": 1, "attr-url": 2}
+HNEED = {0: ("html", "html-sq", "header"), 1: ("html-sq", "header"), 2: ("header",), 3: ()}   # URL-encoding leaves no quote, bracket or ampersand
+HJS = ("script", "script-sq", "script-dq")                                                     # a JavaScript encoder (`js`) substitutes inside <script>
+HWHY = {"attr-sq": "a single quote ends a single-quoted attribute and this escaper does not encode it (ENT_QUOTES would)",
+        "attr-url": "a URL attribute: `javascript:` needs neither quote nor angle bracket — URL-encoding substitutes, HTML escaping does not",
+        "attr-unquoted": "an unquoted attribute value: a space ends it and starts a new attribute — HTML escaping encodes no space",
+        "tag-name": "a tag-name position: HTML escaping is moot there", "attr-name": "an attribute-name position: HTML escaping is moot there",
+        "attr-event": "an event-handler attribute: the browser decodes entities BEFORE running the script",
+        "attr-style": "a style attribute: CSS syntax, not HTML", "style": "inside <style>: CSS syntax, not HTML",
+        "script": "inside <script>, outside any string: HTML escaping does not reach the script parser",
+        "script-sq": "inside a single-quoted script string and this escaper does not encode the quote (ENT_QUOTES would)",
+        "script-code": "a script string that is RUN as code (setTimeout, eval, innerHTML, location…): its content executes, no quoting escape helps",
+        "comment": "inside a comment: `-->` ends it"}
+
+
+def html_row(fact, ctx, san, t, line):
+    """The `sanitized` row for an html sink whose sub-context is known and demands more than plain HTML escaping;
+    None when the generic reading applies."""
+    hctx = fact.get("hctx")
+    if ctx != "html" or hctx in (None, "unknown") or t == "F":
+        return None
+    if hctx in ("text", "attr-dq", "script-dq") and "html" in san:
+        return None                                              # plain HTML escaping is the substitution here: the generic reading
+    level = HLEVEL.get(hctx, 3)
+    for k in HNEED[level] + (("js",) if hctx in HJS else ()):
+        if k in san:
+            fn, l = san[k]
+            return {"status": "verified", "ground": _g(f"san-{fn}-L{l}"), "means": f"substituted by {fn} at L{l} for html, value lands in {hctx}"}
+    have = [(k, san[k]) for k in ("html", "html-sq", "header", "js") if k in san]
+    if have:
+        k, (fn, l) = have[0]
+        return {"status": "refuted", "ground": _g(f"ast-html-{hctx}-L{line}"),
+                "means": f"escaped by {fn} at L{l} ({k}), but the value lands in {hctx}: {HWHY.get(hctx, hctx)}"}
+    return None
+
+
 def sink_document(fact, ctx):
     line = fact["line"]
     t, src, san, z, q = fact["t"], fact["src"], fact["san"], fact["z"], fact["q"]
     san = dict(san) if isinstance(san, dict) else {}       # PHP encodes an empty map as []
     zu = fact.get("zu") or []
     nu = bool(fact.get("nu"))
+    hrow = html_row(fact, ctx, san, t, line)
     # --- tainted
     if t == "T":
         k, name, l = src[0]
@@ -109,6 +152,8 @@ def sink_document(fact, ctx):
     if "*" in san:
         fn, l = san["*"]
         sanitized = {"status": "verified", "ground": _g(f"san-{fn}-L{l}"), "means": f"substituted by {fn} at L{l} (every context)"}
+    elif hrow is not None:
+        sanitized = hrow
     elif ctx in san:
         fn, l = san[ctx]
         sanitized = {"status": "verified", "ground": _g(f"san-{fn}-L{l}"), "means": f"substituted by {fn} at L{l} for {ctx}"}
@@ -133,6 +178,8 @@ def sink_document(fact, ctx):
         wrong = ", ".join(f"{fn}@L{l} ({c})" for c, (fn, l) in san.items())
         sanitized = {"status": "refuted", "ground": _g(f"ast-path-L{line}"),
                      "means": "path read in full, no substitution for " + ctx + (f"; wrong-context only: {wrong}" if wrong else "")}
+    if ctx == "html" and fact.get("hctx") == "unknown" and sanitized["status"] == "verified":
+        sanitized["means"] += " (html sub-context not determined — read as body text)"
     # a part of UNKNOWN origin reaches the sink without a substitution: even when the attacker-controlled
     # parts are settled, safety is not established — the weak link is that part
     if sanitized["status"] == "verified" and zu:
@@ -188,7 +235,7 @@ def run(paths, overlays=(), ctx="sql", autoload=None, catalog=None, php=None):
                     continue
             doc = sink_document(s, s["ctx"])
             v = judge(doc)
-            rec["sinks"].append({"line": s["line"], "fn": s["fn"], "ctx": s["ctx"], "scope": s["scope"],
+            rec["sinks"].append({"line": s["line"], "fn": s["fn"], "ctx": s["ctx"], "scope": s["scope"], "hctx": s.get("hctx"),
                                  "disposition": v["disposition"], "grade": v["grade"], "weak": v["weak"],
                                  "tainted": doc["rows"][0], "sanitized": doc["rows"][1], "doc": doc})
         out["files"].append(rec)
@@ -259,6 +306,8 @@ def ledger_md(out):
             for r in (s["tainted"], s["sanitized"]):
                 if r["status"] in ("verified", "refuted"):
                     g.append(f"{r['name']}={r['status']}:{r['ground']}")
+            if s.get("hctx"):
+                g.append("lands in " + s["hctx"])
             if s["weak"]:
                 g.append("weak: " + ", ".join(s["weak"]))
                 for r in (s["tainted"], s["sanitized"]):

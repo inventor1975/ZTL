@@ -1,5 +1,5 @@
 {
-  "_about": "Laravel overlay (generic, public). Sources: the Request object and the request() helper. Sinks: raw SQL entry points — DB::raw/select/statement and the *Raw query-builder methods; bound parameters are not sinks (the builder quotes them). Sanitizers: e() = htmlspecialchars. Blade templates ({{ }} escapes, {!! !!} does not) are NOT parsed by php-parser as PHP sinks — a boundary, named here. IDENTIFIER positions are sinks too: the query builder binds VALUES, never column names — orderBy($col), where($col, ...), select($cols), groupBy($col) with request data are injections; only the first argument (the identifier) is judged, bound values are not. Helpers that return configuration, translations, paths or CSRF tokens are TRANSPARENT (taint passes through their arguments; over constants they are constants). old() replays previous REQUEST input: a source.",
+  "_about": "Laravel overlay (generic, public). Sources: the Request object and the request() helper. Sinks: raw SQL entry points — DB::raw/select/statement and the *Raw query-builder methods; bound parameters are not sinks (the builder quotes them). Sanitizers: e() = htmlspecialchars. Blade templates ({{ }} escapes, {!! !!} does not) are NOT parsed by php-parser as PHP sinks — a boundary, named here. IDENTIFIER positions are sinks too: the query builder binds VALUES, never column names — orderBy($col), where($col, ...), select($cols), groupBy($col) with request data are injections; only the first argument (the identifier) is judged, bound values are not. Helpers that return configuration, translations, paths or CSRF tokens are TRANSPARENT (taint passes through their arguments; over constants they are constants). old() replays previous REQUEST input: a source. Compiled Blade views (storage/framework/views) ARE scanned — they are where the html layer is visible; the framework's own render calls ($component->renderComponent(), $__env->yieldContent()) are transparent: what they render is judged in its own compiled file. Js::from() is a JavaScript encoder: a substitution inside <script>.",
   "sources": {
     "methods": [
       "$request->input",
@@ -141,7 +141,8 @@
     "functions": {
       "e": {
         "contexts": [
-          "html"
+          "html",
+          "html-sq"
         ]
       }
     },
@@ -159,6 +160,16 @@
       "$request->boolean": {
         "contexts": [
           "*"
+        ]
+      },
+      "Js::from": {
+        "contexts": [
+          "js"
+        ]
+      },
+      "Js::encode": {
+        "contexts": [
+          "js"
         ]
       }
     }
@@ -204,6 +215,12 @@
     "auth",
     "cache",
     "event",
-    "dispatch"
+    "dispatch",
+    "$component->renderComponent",
+    "$__env->yieldContent",
+    "$__env->yieldPushContent",
+    "$__env->renderComponent",
+    "$__env->renderEach",
+    "$__env->renderWhen"
   ]
 }

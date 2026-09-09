@@ -75,6 +75,11 @@ EXPECT = {
     "f45_guard_on_array_element.php": ["EARNED", "REFUTED"],
     "f46_equals_literal_through_preserving.php": ["EARNED", "REFUTED"],
     "f47_guard_credits_derived_value.php": ["EARNED", "REFUTED", "REFUTED"],
+    "f48_html_subcontexts.php": ["EARNED", "EARNED", "REFUTED", "EARNED", "REFUTED", "EARNED", "REFUTED", "EARNED", "EARNED", "REFUTED", "EARNED", "REFUTED", "REFUTED", "EARNED"],
+    "f49_html_stream_and_fragments.php": ["EARNED", "REFUTED", "REFUTED", "EARNED"],
+    "f50_html_unknown_position.php": ["EARNED", "EARNED", "EARNED", "EARNED"],
+    "f51_script_encoder.php": ["EARNED", "REFUTED", "EARNED"],
+    "f52_files_keys.php": ["EARNED", "REFUTED"],
 }
 
 

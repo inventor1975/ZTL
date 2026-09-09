@@ -74,7 +74,8 @@ $SRCMETH = array_flip(array_map($lowerKey, $CAT['sources']['methods'] ?? []));  
 $SANFN = array_change_key_case($CAT['sanitizers']['functions'] ?? [], CASE_LOWER);
 $SANMETH = []; foreach ($CAT['sanitizers']['methods'] ?? [] as $k => $v) $SANMETH[$lowerKey($k)] = $v;
 $SANCAST = $CAT['sanitizers']['casts'] ?? [];
-$TRANSP = array_flip(array_map('strtolower', $CAT['transparent'] ?? []));
+$TRANSP = []; $TRANSPMETH = [];
+foreach ($CAT['transparent'] ?? [] as $f) { if (str_contains($f, '->') || str_contains($f, '::')) $TRANSPMETH[$lowerKey($f)] = 1; else $TRANSP[strtolower($f)] = 1; }
 $GUARDS = array_change_key_case($CAT['guards'] ?? [], CASE_LOWER);   // a condition that VERIFIES a value
 $PRESERV = array_flip(array_map('strtolower', $CAT['preserving'] ?? []));
 $NARROW = array_flip(array_map('strtolower', $CAT['narrowing'] ?? []));
@@ -94,9 +95,20 @@ const RANK = ['F' => 0, 'Z' => 1, 'T' => 2];
 // dv:  names of the variables this value was DIRECTLY read through — its parents. A guard on $x is credited to a
 //      derived $y only when every tainted parent of $y leads back to $x (see derivesOnlyFrom); DVWA upload/impossible
 //      builds the temp path from the extension BEFORE checking the extension.
-function stF(): array { return ['t' => 'F', 'src' => [], 'san' => [], 'z' => [], 'q' => null, 'zu' => [], 'nu' => false, 'dv' => []]; }
-function stZ(string $why, int $line): array { return ['t' => 'Z', 'src' => [], 'san' => [], 'z' => [[$why, $line]], 'q' => null, 'zu' => [], 'nu' => false, 'dv' => []]; }
-function stT(string $kind, string $name, int $line): array { return ['t' => 'T', 'src' => [[$kind, $name, $line]], 'san' => [], 'z' => [], 'q' => null, 'zu' => [], 'nu' => true, 'dv' => ['#src']]; }
+// hc:  html sub-context of the attacker-controlled parts of this string, per possible starting state (worst one);
+//      empty for a bare value (its context is wherever it lands).   hf: the lexer state this string leaves behind, per
+//      starting state (null = leaves it unchanged; 'unknown' where paths disagree).
+function stF(): array { return ['t' => 'F', 'src' => [], 'san' => [], 'z' => [], 'q' => null, 'zu' => [], 'nu' => false, 'dv' => [], 'hc' => [], 'hf' => null]; }
+function stZ(string $why, int $line): array { return ['t' => 'Z', 'src' => [], 'san' => [], 'z' => [[$why, $line]], 'q' => null, 'zu' => [], 'nu' => false, 'dv' => [], 'hc' => [], 'hf' => null]; }
+function stT(string $kind, string $name, int $line): array { return ['t' => 'T', 'src' => [[$kind, $name, $line]], 'san' => [], 'z' => [], 'q' => null, 'zu' => [], 'nu' => true, 'dv' => ['#src'], 'hc' => [], 'hf' => null]; }
+function hcJoin(array $a, array $b): array { $o = $a['hc'] ?? []; foreach ($b['hc'] ?? [] as $k => $c) $o[$k] = Html::worse($o[$k] ?? null, $c); return $o; }
+function hfJoin(array $a, array $b): ?array {
+    $x = $a['hf'] ?? null; $y = $b['hf'] ?? null;
+    if ($x === null && $y === null) return null;
+    $o = [];
+    foreach (Html::INITS as $k) { $p = $x[$k] ?? $k; $q = $y[$k] ?? $k; $o[$k] = $p === $q ? $p : 'unknown'; }
+    return $o;
+}
 function dvUnion(array $a, array $b): array { return array_values(array_unique(array_merge($a['dv'] ?? [], $b['dv'] ?? []))); }
 
 function uniq(array $rows): array {
@@ -115,7 +127,8 @@ function join2(array $a, array $b): array {
     elseif ($qa === null) $q = $qb; elseif ($qb === null) $q = $qa; else $q = true;
     return ['t' => $t, 'src' => uniq(array_merge($a['src'], $b['src'])), 'san' => $san,
             'z' => uniq(array_merge($a['z'], $b['z'])), 'q' => $q,
-            'zu' => uniq(array_merge($a['zu'] ?? [], $b['zu'] ?? [])), 'nu' => ($a['nu'] ?? false) || ($b['nu'] ?? false), 'dv' => dvUnion($a, $b)];
+            'zu' => uniq(array_merge($a['zu'] ?? [], $b['zu'] ?? [])), 'nu' => ($a['nu'] ?? false) || ($b['nu'] ?? false), 'dv' => dvUnion($a, $b),
+            'hc' => hcJoin($a, $b), 'hf' => hfJoin($a, $b)];
 }
 /** MEET of two sanitization maps: '*' (a numeric substitution) covers every context, so it is the identity. */
 function sanMeet(array $a, array $b): array {
@@ -136,7 +149,8 @@ function joinAll(array $states): array {
 function through(array $s, ?string $why, int $line, bool $unknown, string $keep = 'none'): array {
     $san = $keep === 'all' ? $s['san'] : ($keep === 'numeric' && isset($s['san']['*']) ? ['*' => $s['san']['*']] : []);
     $out = ['t' => $s['t'], 'src' => $s['src'], 'san' => $san, 'z' => $s['z'], 'q' => $keep === 'all' ? $s['q'] : null, 'zu' => $s['zu'] ?? [],
-            'nu' => ($s['nu'] ?? false) || ($keep !== 'all' && $s['t'] === 'T' && !$san), 'dv' => $s['dv'] ?? []];
+            'nu' => ($s['nu'] ?? false) || ($keep !== 'all' && $s['t'] === 'T' && !$san), 'dv' => $s['dv'] ?? [],
+            'hc' => $s['hc'] ?? [], 'hf' => $keep === 'all' ? ($s['hf'] ?? null) : (($s['hf'] ?? null) === null && ($s['hc'] ?? []) === [] ? null : array_fill_keys(Html::INITS, 'unknown'))];
     // an UNKNOWN call's result is not visible here even when every argument is a constant: `$obj->get()` reads
     // the object's state, `time()` reads the clock — before 2026-09-09 such a call over constants stayed F and
     // four in-file getter shapes of the SARD suite came back EARNED ("nothing arrives") instead of OPEN
@@ -147,9 +161,124 @@ function sanitize(array $s, array $ctxs, string $fn, int $line): array {
     // a NUMERIC substitution of the whole value settles every part inside it; a context escape of a
     // built string does not settle a part of unknown origin that may sit outside the quotes
     $zu = in_array('*', $ctxs, true) ? [] : ($s['zu'] ?? []);
-    $out = ['t' => $s['t'], 'src' => $s['src'], 'san' => $s['san'], 'z' => $s['z'], 'q' => null, 'zu' => $zu, 'nu' => false, 'dv' => $s['dv'] ?? []];
+    $out = ['t' => $s['t'], 'src' => $s['src'], 'san' => $s['san'], 'z' => $s['z'], 'q' => null, 'zu' => $zu, 'nu' => false, 'dv' => $s['dv'] ?? [],
+            'hc' => [], 'hf' => null];                                        // escaped as a whole: its own markup is text now, its parts land wherever the whole lands
     foreach ($ctxs as $c) $out['san'][$c] = [$fn, $line];
     return $out;
+}
+
+// -------------------------------------------------------------- html lexer
+/** Where in the HTML output a value lands decides what substitutes it — the way quotes decide it for SQL. A small
+ *  state machine over the output stream (InlineHTML + the literal parts of what is echoed) tells, for every
+ *  attacker-controlled part, whether it sits in body text, a quoted/unquoted attribute value (and of which kind:
+ *  URL, event handler, style), a tag or attribute name, <script>, <style> or a comment. A fragment built before it
+ *  is echoed cannot know where it will land, so it carries its answer for EVERY possible starting state (a small
+ *  vector) and the answer is read off when the fragment is embedded. Literal text is read here and never emitted. */
+final class Html {
+    const INITS = ['text', 'tagname', 'intag', 'attr-dq-plain', 'attr-sq-plain', 'attr-unq-plain', 'attr-dq-url', 'attr-sq-url',
+                   'attr-dq-js', 'attr-sq-js', 'attr-dq-css', 'attr-sq-css', 'script', 'script-sq-plain', 'script-dq-plain',
+                   'script-sq-code', 'script-dq-code', 'style', 'comment'];
+    /** inside <script>, a quoted string whose text is then RUN as code: no escaping of quotes helps there */
+    const JS_CODE_SINK = '/(?:setTimeout|setInterval|eval|Function|execScript|write|writeln|innerHTML|outerHTML|insertAdjacentHTML|href|location|src|action)\s*[(=]\s*$/i';
+    const URL_ATTRS = ['href', 'src', 'action', 'formaction', 'data', 'poster', 'background', 'cite', 'longdesc', 'manifest', 'srcset', 'codebase', 'xlink:href'];
+    const LEVEL = ['text' => 0, 'attr-dq' => 0, 'script-dq' => 0, 'attr-sq' => 1, 'script-sq' => 1, 'attr-url' => 2];   // anything else: 3 — only a numeric/whitelist substitution
+    /** state = [s, flavor, tag, attr, tail] */
+    public static function init(string $k): array {
+        if (preg_match('/^(attr|script)-(dq|sq|unq)-(\w+)$/', $k, $m)) return [$m[1] . '-' . $m[2], $m[3], '', '', ''];
+        return [$k, 'plain', '', '', ''];
+    }
+    public static function unknown(): array { return ['unknown', 'plain', '', '', '']; }
+    public static function key(array $st): string {
+        return in_array($st[0], ['attr-dq', 'attr-sq', 'attr-unq', 'script-sq', 'script-dq'], true) ? $st[0] . '-' . $st[1] : $st[0];
+    }
+    public static function needsLex(string $t): bool { return (bool)preg_match('/[<>"\'=\/\s-]/', $t); }
+    private static function flavorOf(string $attr): string {
+        $n = strtolower($attr);
+        if (str_starts_with($n, 'on')) return 'js';
+        if ($n === 'style') return 'css';
+        return in_array($n, self::URL_ATTRS, true) ? 'url' : 'plain';
+    }
+    private static function afterTag(string $tag): string { $t = strtolower($tag); return $t === 'script' ? 'script' : ($t === 'style' ? 'style' : 'text'); }
+    public static function advance(array $st, string $t): array {
+        [$s, $fl, $tag, $attr, $tail] = $st;
+        if ($s === 'unknown') return $st;
+        $n = strlen($t);
+        for ($i = 0; $i < $n; $i++) {
+            $c = $t[$i]; $tail = substr($tail . $c, -40); $ws = ctype_space($c);   // enough tail for `</script`, `-->` and a code-sink name
+            switch ($s) {
+                case 'text':
+                    if ($c === '<') { if (substr($t, $i, 4) === '<!--') { $s = 'comment'; $i += 3; $tail = ''; } else $s = 'lt'; }
+                    break;
+                case 'lt':
+                    if (ctype_alpha($c) || $c === '!' || $c === '?') { $s = 'tagname'; $tag = $c; }
+                    elseif ($c === '/') { $s = 'tagname'; $tag = ''; }
+                    else $s = 'text';
+                    break;
+                case 'tagname':
+                    if (ctype_alnum($c) || $c === '-' || $c === ':' || $c === '_') $tag .= $c;
+                    elseif ($c === '>') { $s = self::afterTag($tag); $tag = ''; $tail = ''; }
+                    else $s = 'intag';
+                    break;
+                case 'intag':
+                    if ($c === '>') { $s = self::afterTag($tag); $tag = ''; $tail = ''; }
+                    elseif (!$ws && $c !== '/') { $s = 'attrname'; $attr = $c; }
+                    break;
+                case 'attrname':
+                    if ($c === '=') $s = 'attr-eq';
+                    elseif ($ws) $s = 'attr-after';
+                    elseif ($c === '>') { $s = self::afterTag($tag); $tag = ''; $tail = ''; }
+                    elseif ($c === '/') $s = 'intag';
+                    else $attr .= $c;
+                    break;
+                case 'attr-after':
+                    if ($c === '=') $s = 'attr-eq';
+                    elseif ($c === '>') { $s = self::afterTag($tag); $tag = ''; $tail = ''; }
+                    elseif (!$ws) { $s = 'attrname'; $attr = $c; }
+                    break;
+                case 'attr-eq':
+                    if ($ws) break;
+                    $fl = self::flavorOf($attr);
+                    if ($c === '"') $s = 'attr-dq'; elseif ($c === "'") $s = 'attr-sq';
+                    elseif ($c === '>') { $s = self::afterTag($tag); $tag = ''; $tail = ''; }
+                    else $s = 'attr-unq';
+                    break;
+                case 'attr-dq': if ($c === '"') $s = 'intag'; break;
+                case 'attr-sq': if ($c === "'") $s = 'intag'; break;
+                case 'attr-unq':
+                    if ($ws) $s = 'intag'; elseif ($c === '>') { $s = self::afterTag($tag); $tag = ''; $tail = ''; }
+                    break;
+                case 'script':
+                    if (strcasecmp(substr($tail, -8), '</script') === 0) { $s = 'tagname'; $tag = ''; }
+                    elseif ($c === "'" || $c === '"') { $fl = preg_match(self::JS_CODE_SINK, substr($tail, 0, -1)) ? 'code' : 'plain'; $s = $c === "'" ? 'script-sq' : 'script-dq'; }
+                    break;
+                case 'script-sq': case 'script-dq':
+                    if (strcasecmp(substr($tail, -8), '</script') === 0) { $s = 'tagname'; $tag = ''; }
+                    elseif ($c === '\\') { $i++; $tail .= ($t[$i] ?? ''); }
+                    elseif ($c === ($s === 'script-sq' ? "'" : '"') || $c === "\n") { $s = 'script'; $fl = 'plain'; }
+                    break;
+                case 'style':  if (strcasecmp(substr($tail, -7), '</style') === 0) { $s = 'tagname'; $tag = ''; } break;
+                case 'comment': if (substr($tail, -3) === '-->') $s = 'text'; break;
+            }
+        }
+        return [$s, $fl, $tag, $attr, $tail];
+    }
+    /** The sub-context a value landing HERE is in. */
+    public static function ctx(array $st): string {
+        [$s, $fl] = $st;
+        switch ($s) {
+            case 'text': return 'text';
+            case 'attr-dq': case 'attr-sq':
+                return $fl === 'plain' ? $s : ($fl === 'url' ? 'attr-url' : ($fl === 'js' ? 'attr-event' : 'attr-style'));
+            case 'attr-unq': case 'attr-eq': return 'attr-unquoted';
+            case 'lt': case 'tagname': return 'tag-name';
+            case 'intag': case 'attrname': case 'attr-after': return 'attr-name';
+            case 'script-sq': case 'script-dq': return $fl === 'code' ? 'script-code' : $s;
+            case 'unknown': return 'unknown';
+            default: return $s;                                             // script, style, comment
+        }
+    }
+    public static function level(string $ctx): int { return $ctx === 'unknown' ? -1 : (self::LEVEL[$ctx] ?? 3); }
+    public static function worse(?string $a, string $b): string { return $a === null ? $b : (self::level($b) > self::level($a) ? $b : $a); }
 }
 
 // ---------------------------------------------------------------- analyzer
@@ -179,6 +308,12 @@ final class Analyzer {
     public array $lits = [];
 
     public function __construct(private array $cat) {}
+
+    private static function mentionsConst(Node $n, string $c): bool {
+        if ($n instanceof Expr\ConstFetch) return strtoupper($n->name->toString()) === $c;
+        if ($n instanceof Expr\BinaryOp) return self::mentionsConst($n->left, $c) || self::mentionsConst($n->right, $c);
+        return false;
+    }
 
     /** A literal, or a once-assigned variable standing for one; null otherwise. */
     private function litOf(?Node $n): ?Node {
@@ -214,11 +349,11 @@ final class Analyzer {
     /** Flatten concat / interpolation into parts: ['lit', firstIsQuote, lastIsQuote] or ['expr', state]. */
     private function parts(Node $e, array &$env): array {
         if ($e instanceof Expr\BinaryOp\Concat) return array_merge($this->parts($e->left, $env), $this->parts($e->right, $env));
-        if ($e instanceof Scalar\String_) return [['lit', self::quoteCounts($e->value)]];
+        if ($e instanceof Scalar\String_) return [['lit', self::quoteCounts($e->value), $e->value]];
         if ($e instanceof Scalar\InterpolatedString) {
             $out = [];
             foreach ($e->parts as $p) {
-                if ($p instanceof Node\InterpolatedStringPart) $out[] = ['lit', self::quoteCounts($p->value)];
+                if ($p instanceof Node\InterpolatedStringPart) $out[] = ['lit', self::quoteCounts($p->value), $p->value];
                 else $out[] = ['expr', $this->ex($p, $env)];
             }
             return $out;
@@ -243,7 +378,7 @@ final class Analyzer {
             $pos = 0;
             if (preg_match_all($re, $val, $m, PREG_OFFSET_CAPTURE | PREG_SET_ORDER)) {
                 foreach ($m as $mm) {
-                    $parts[] = ['lit', self::quoteCounts(substr($val, $pos, $mm[0][1] - $pos))];
+                    $parts[] = ['lit', self::quoteCounts(substr($val, $pos, $mm[0][1] - $pos)), substr($val, $pos, $mm[0][1] - $pos)];
                     $pos = $mm[0][1] + strlen($mm[0][0]);
                     $conv = $mm[2][0];
                     if ($conv === '%') continue;
@@ -252,12 +387,48 @@ final class Analyzer {
                     $parts[] = ['expr', ($conv === 's' || $conv === 'c') ? $a : sanitize($a, ['*'], 'sprintf-%' . $conv, $line)];
                 }
             }
-            $parts[] = ['lit', self::quoteCounts(substr($val, $pos))];
+            $parts[] = ['lit', self::quoteCounts(substr($val, $pos)), substr($val, $pos)];
         }
         return $this->concatParts($parts);
     }
 
+    /** A literal alone: a constant that may move the html lexer (`echo "<div>"`). */
+    private static function litState(string $text): array {
+        $st = stF();
+        if (!Html::needsLex($text)) return $st;
+        $hf = [];
+        foreach (Html::INITS as $k) $hf[$k] = Html::key(Html::advance(Html::init($k), $text));
+        $st['hf'] = $hf;
+        return $st;
+    }
+
+    /** Read the html sub-context of a part landing at $cur (a lexer state), then move $cur past it. */
+    private static function htmlEmbed(array &$cur, array $part, ?string &$ctx): void {
+        $k = Html::key($cur);
+        if ($cur[0] === 'unknown') { if ($part['t'] !== 'F') $ctx = Html::worse($ctx, 'unknown'); return; }
+        if ($part['hc']) { if (isset($part['hc'][$k])) $ctx = Html::worse($ctx, $part['hc'][$k]); }
+        elseif ($part['t'] !== 'F') $ctx = Html::worse($ctx, Html::ctx($cur));
+        if ($part['hf'] !== null) { $to = $part['hf'][$k] ?? $k; $cur = $to === 'unknown' ? Html::unknown() : Html::init($to); }
+    }
+
     private function concatParts(array $parts): array {
+        $r = $this->concatCore($parts);
+        // html: for every possible starting state, where do the attacker-controlled parts land, and what state is left
+        $cur = []; foreach (Html::INITS as $k) $cur[$k] = Html::init($k);
+        $hc = []; $moved = false;
+        foreach ($parts as $p) {
+            if ($p[0] === 'lit') { if (Html::needsLex($p[2])) { $moved = true; foreach (Html::INITS as $k) $cur[$k] = Html::advance($cur[$k], $p[2]); } continue; }
+            $s = $p[1];
+            if ($s['t'] === 'F' && $s['hf'] === null) continue;
+            if ($s['hf'] !== null) $moved = true;
+            foreach (Html::INITS as $k) { $c = $hc[$k] ?? null; self::htmlEmbed($cur[$k], $s, $c); if ($c !== null) $hc[$k] = $c; }
+        }
+        $r['hc'] = $hc;
+        $r['hf'] = $moved ? array_map(fn($k) => Html::key($cur[$k]), array_combine(Html::INITS, Html::INITS)) : null;
+        return $r;
+    }
+
+    private function concatCore(array $parts): array {
         $states = []; $qs = []; $sq = 0; $dq = 0; $opaque = false; $zu = []; $sanT = null; $nu = false;
         foreach ($parts as $p) {
             if ($p[0] === 'lit') { $sq += $p[1][0]; $dq += $p[1][1]; continue; }
@@ -299,9 +470,22 @@ final class Analyzer {
         return null;
     }
 
-    private function sinkFact(string $ctx, string $fn, int $line, array $s): void {
+    /** The html output stream's lexer state at this point of the file (InlineHTML and echoed literals move it). */
+    public array $hs = ['text', 'plain', '', '', ''];
+
+    private function sinkFact(string $ctx, string $fn, int $line, array $s, ?string $hctx = null): void {
         $this->facts[] = ['ctx' => $ctx, 'fn' => $fn, 'line' => $line, 'scope' => $this->scope,
-                          't' => $s['t'], 'src' => $s['src'], 'san' => $s['san'], 'z' => $s['z'], 'q' => $s['q'], 'zu' => $s['zu'] ?? [], 'nu' => $s['nu'] ?? false];
+                          't' => $s['t'], 'src' => $s['src'], 'san' => $s['san'], 'z' => $s['z'], 'q' => $s['q'], 'zu' => $s['zu'] ?? [], 'nu' => $s['nu'] ?? false,
+                          'hctx' => $hctx];
+    }
+
+    /** Something is written to the html output: read where its attacker-controlled parts land, move the stream on. */
+    private function output(string $fn, int $line, array $s): void {
+        global $SINKFLAGS, $SINKFN;
+        $ctx = null;
+        self::htmlEmbed($this->hs, $s, $ctx);
+        $sink = $SINKFLAGS['echo'] ?? ($SINKFN['print'] ?? null);
+        if ($sink !== null) $this->sinkFact($sink, $fn, $line, $s, $s['t'] !== 'F' ? ($ctx ?? 'unknown') : null);
     }
 
     private function callName(Node $c): ?string {
@@ -324,11 +508,12 @@ final class Analyzer {
 
     /** Evaluate an expression to a taint state; records sinks and assignments on the way. */
     public function ex(?Node $e, array &$env): array {
-        global $SUPER, $SERVER_KEYS, $SERVER_PREFIXES, $GUARDS, $SRCFN, $SRCMETH, $SANFN, $SANMETH, $SANCAST, $TRANSP, $PRESERV, $NARROW, $SINKFN, $SINKMETH, $SINKARG, $SINKFLAGS;
+        global $SUPER, $SERVER_KEYS, $SERVER_PREFIXES, $GUARDS, $SRCFN, $SRCMETH, $SANFN, $SANMETH, $SANCAST, $TRANSP, $TRANSPMETH, $PRESERV, $NARROW, $SINKFN, $SINKMETH, $SINKARG, $SINKFLAGS;
         if ($e === null) return stF();
         $line = $e->getStartLine();
 
-        if ($e instanceof Scalar\String_ || $e instanceof Scalar\Int_ || $e instanceof Scalar\Float_
+        if ($e instanceof Scalar\String_) return self::litState($e->value);
+        if ($e instanceof Scalar\Int_ || $e instanceof Scalar\Float_
             || $e instanceof Scalar\MagicConst || $e instanceof Expr\ConstFetch || $e instanceof Expr\ClassConstFetch) return stF();
         if ($e instanceof Scalar\InterpolatedString || $e instanceof Expr\BinaryOp\Concat) return $this->concat($e, $env);
 
@@ -352,6 +537,9 @@ final class Analyzer {
                 }
                 return stT('superglobal', '$_SERVER', $line);                       // a computed key: assume the worst
             }
+            // $_FILES['f']['tmp_name'|'size'|'error'] are written by PHP itself; 'name' and 'type' come from the client
+            if ($e->var instanceof Expr\ArrayDimFetch && $e->var->var instanceof Expr\Variable && $e->var->var->name === '_FILES' && isset($SUPER['_FILES'])
+                && $e->dim instanceof Scalar\String_ && in_array($e->dim->value, ['tmp_name', 'size', 'error', 'full_path'], true) && $e->dim->value !== 'full_path') return stF();
             $sl = self::slot($e);
             if ($sl !== null && isset($env[$sl])) { $st = $env[$sl]; $st['dv'] = [$sl]; return $st; }   // this key was written here: read that, not the whole array
             if ($sl !== null && isset($env[$e->var->name])) { $st = $this->ex($e->var, $env); $st['dv'] = [$sl]; return $st; }   // an element never written here: the whole array's state, under the element's name
@@ -433,7 +621,7 @@ final class Analyzer {
         }
         if ($e instanceof Expr\Print_) {
             $s = $this->ex($e->expr, $env);
-            if (isset($SINKFN['print'])) $this->sinkFact($SINKFN['print'], 'print', $line, $s);
+            if (isset($SINKFN['print'])) $this->output('print', $line, $s);
             return stF();
         }
         if ($e instanceof Expr\Closure || $e instanceof Expr\ArrowFunction) {
@@ -493,7 +681,8 @@ final class Analyzer {
             $sinkCtx = $isMethod ? $qual($SINKMETH) : ($e instanceof Expr\StaticCall ? ($qual($SINKMETH) ?? ($SINKFN[$name] ?? null)) : ($SINKFN[$name] ?? null));
             if ($sinkCtx !== null) {
                 $ix = $SINKARG[$name] ?? 0;
-                if ($fmt !== null && $name === 'printf') $this->sinkFact($sinkCtx, 'printf', $line, $fmt);   // what is printed is the FORMATTED string
+                if ($fmt !== null && $name === 'printf') $this->output('printf', $line, $fmt);   // what is printed is the FORMATTED string
+                elseif ($name === 'printf' && isset($args[0])) $this->output('printf', $line, $args[0]);
                 elseif (isset($args[$ix])) $this->sinkFact($sinkCtx, ($isMethod ? '->' : '') . $name, $line, $args[$ix]);
             }
             // sources
@@ -508,7 +697,15 @@ final class Analyzer {
             if ($san !== null) {
                 $ix = $san['arg'] ?? 0; if ($ix < 0) $ix = count($args) - 1;
                 $s = $args[$ix] ?? stF();
-                return sanitize($s, $san['contexts'], ($isMethod ? ($recv ?? '->' . $name) : $name), $line);
+                $ctxs = $san['contexts'];
+                if (!$isMethod && ($name === 'htmlspecialchars' || $name === 'htmlentities')) {
+                    // the single quote is encoded only with ENT_QUOTES — the default since PHP 8.1; a flag argument is read
+                    // for the constant names it names (classification only)
+                    $flags = $e->args[1]->value ?? null;
+                    $quotes = $flags === null ? ($GLOBALS['phpVersion'] === null || version_compare($GLOBALS['phpVersion'], '8.1', '>=')) : self::mentionsConst($flags, 'ENT_QUOTES');
+                    if ($quotes) $ctxs = array_values(array_unique(array_merge($ctxs, ['html-sq'])));
+                }
+                return sanitize($s, $ctxs, ($isMethod ? ($recv ?? '->' . $name) : $name), $line);
             }
             // defined in THIS file: inline with the caller's argument states
             if (!$isMethod && $e instanceof Expr\FuncCall && isset($this->defs['fn'][$name]))
@@ -526,8 +723,8 @@ final class Analyzer {
                 $fname = $flt instanceof Expr\ConstFetch ? strtoupper($flt->name->toString()) : '';
                 if (in_array($fname, self::VALIDATE_FIXED, true))
                     return sanitize($args[0] ?? stF(), ['*'], 'filter_var:' . $fname, $line);
-                if ($fname === 'FILTER_SANITIZE_SPECIAL_CHARS' || $fname === 'FILTER_SANITIZE_FULL_SPECIAL_CHARS')   // = htmlspecialchars
-                    return sanitize($args[0] ?? stF(), ['html'], 'filter_var:' . $fname, $line);
+                if ($fname === 'FILTER_SANITIZE_SPECIAL_CHARS' || $fname === 'FILTER_SANITIZE_FULL_SPECIAL_CHARS')   // = htmlspecialchars, both quotes
+                    return sanitize($args[0] ?? stF(), ['html', 'html-sq'], 'filter_var:' . $fname, $line);
                 return through(joinAll($args ?: [stF()]), null, $line, false, 'none');
             }
             // preg_replace('/[^a-z0-9]/', '', $x): everything outside a plain class is REMOVED, so the result lives in
@@ -546,7 +743,11 @@ final class Analyzer {
             }
             if (!$isMethod && isset($PRESERV[$name])) return through(joinAll($args ?: [stF()]), null, $line, false, 'all');
             if (!$isMethod && isset($NARROW[$name]))  return through(joinAll($args ?: [stF()]), null, $line, false, 'numeric');
+            // json_encode with the JSON_HEX_* flags is a JavaScript-string encoder: no quote, bracket or ampersand survives
+            if (!$isMethod && $name === 'json_encode' && isset($e->args[1]) && self::mentionsConst($e->args[1]->value, 'JSON_HEX_TAG'))
+                return sanitize($args[0] ?? stF(), ['js'], 'json_encode:JSON_HEX', $line);
             if (!$isMethod && isset($TRANSP[$name]))  return through(joinAll($args ?: [stF()]), null, $line, false, 'none');
+            if (($isMethod || $e instanceof Expr\StaticCall) && $qual($TRANSPMETH) !== null) return through(joinAll($args ?: [stF()]), null, $line, false, 'none');   // a framework call declared transparent by an overlay
             if ($sinkCtx !== null) return stZ('db-or-sink-result', $line);   // a query's result is stored data: not visible here
             return through(joinAll($args ?: [stF()]), ($isMethod ? '->' : '') . $name . '()', $line, true);
         }
@@ -776,6 +977,13 @@ final class Analyzer {
         return $rets ? joinAll($rets) : stF();
     }
 
+    /** The html stream state after paths rejoin: the same on every path, or unknown. */
+    private static function hsJoin(array $hss): array {
+        $k = Html::key($hss[0]);
+        foreach ($hss as $h) if (Html::key($h) !== $k) return Html::unknown();
+        return $hss[0];
+    }
+
     private static function joinEnv(array $envs, array $pre): array {
         $names = [];
         foreach ($envs as $e) foreach ($e as $k => $_) $names[$k] = 1;
@@ -798,21 +1006,23 @@ final class Analyzer {
         $line = $s->getStartLine();
         if ($s instanceof Stmt\Expression) { $this->ex($s->expr, $env); return; }
         if ($s instanceof Stmt\Echo_) {
-            foreach ($s->exprs as $x) { $st = $this->ex($x, $env); if (isset($SINKFLAGS['echo'])) $this->sinkFact($SINKFLAGS['echo'], 'echo', $line, $st); }
+            foreach ($s->exprs as $x) { $st = $this->ex($x, $env); if (isset($SINKFLAGS['echo'])) $this->output('echo', $line, $st); else self::htmlEmbed($this->hs, $st, $_n); }
             return;
         }
+        if ($s instanceof Stmt\InlineHTML) { $this->hs = Html::advance($this->hs, $s->value); return; }
         if ($s instanceof Stmt\Return_) { $st = $s->expr ? $this->ex($s->expr, $env) : stF(); if ($this->returns) $this->returns[count($this->returns) - 1][] = $st; return; }
         if ($s instanceof Stmt\If_) {
             $this->ex($s->cond, $env);
             $g = $this->guards($s->cond);
-            $paths = [];
+            $paths = []; $hs0 = $this->hs; $hss = [];
             $e1 = $env; $this->applyGuards($g['true'], $e1); $this->walk($s->stmts, $e1);
             $leaves = self::terminates($s->stmts);
-            if (!$leaves) $paths[] = $e1;
-            foreach ($s->elseifs as $ei) { $e2 = $env; $this->applyGuards($g['false'], $e2); $this->ex($ei->cond, $e2); $this->applyGuards($this->guards($ei->cond)['true'], $e2); $this->walk($ei->stmts, $e2); if (!self::terminates($ei->stmts)) $paths[] = $e2; }
-            if ($s->else) { $e3 = $env; $this->applyGuards($g['false'], $e3); $this->walk($s->else->stmts, $e3); if (!self::terminates($s->else->stmts)) $paths[] = $e3; }
-            else { $e0 = $env; $this->applyGuards($g['false'], $e0); $paths[] = $e0; }   // the fall-through path: the condition failed
+            if (!$leaves) { $paths[] = $e1; $hss[] = $this->hs; }
+            foreach ($s->elseifs as $ei) { $this->hs = $hs0; $e2 = $env; $this->applyGuards($g['false'], $e2); $this->ex($ei->cond, $e2); $this->applyGuards($this->guards($ei->cond)['true'], $e2); $this->walk($ei->stmts, $e2); if (!self::terminates($ei->stmts)) { $paths[] = $e2; $hss[] = $this->hs; } }
+            if ($s->else) { $this->hs = $hs0; $e3 = $env; $this->applyGuards($g['false'], $e3); $this->walk($s->else->stmts, $e3); if (!self::terminates($s->else->stmts)) { $paths[] = $e3; $hss[] = $this->hs; } }
+            else { $e0 = $env; $this->applyGuards($g['false'], $e0); $paths[] = $e0; $hss[] = $hs0; }   // the fall-through path: the condition failed
             $env = $paths ? self::joinEnv($paths, $env) : $env;
+            $this->hs = self::hsJoin($hss ?: [$hs0]);
             return;
         }
         if ($s instanceof Stmt\While_ || $s instanceof Stmt\Do_ || $s instanceof Stmt\For_ || $s instanceof Stmt\Foreach_) {
@@ -841,15 +1051,17 @@ final class Analyzer {
             $this->ex($s->cond, $env);
             $paths = []; $prev = null; $hasDefault = false;
             $subj = $this->guardName($s->cond);
+            $hs0 = $this->hs; $hss = [];
             foreach ($s->cases as $c) {
                 if ($c->cond === null) $hasDefault = true; else $this->ex($c->cond, $env);
                 $e1 = $prev === null ? $env : self::joinEnv([$env, $prev], $env);
                 if ($subj !== null && $c->cond !== null && self::isLiteral($c->cond) && isset($e1[$subj])) $e1[$subj] = sanitize($e1[$subj], ['*'], 'case-literal', $c->getStartLine());
-                $this->walk($c->stmts, $e1);
+                $this->hs = $hs0; $this->walk($c->stmts, $e1); $hss[] = $this->hs;
                 $paths[] = $e1; $prev = $e1;
             }
-            if (!$hasDefault) $paths[] = $env;
+            if (!$hasDefault) { $paths[] = $env; $hss[] = $hs0; }
             $env = self::joinEnv($paths ?: [$env], $env);
+            $this->hs = self::hsJoin($hss ?: [$hs0]);
             return;
         }
         if ($s instanceof Stmt\TryCatch) {
@@ -867,7 +1079,9 @@ final class Analyzer {
             $key = $s instanceof Stmt\ClassMethod ? 'm:' . ($this->currentClass ?? '?') . '::' . strtolower($s->name->toString()) : 'fn:' . strtolower($s->name->toString());
             $this->functions[] = ['scope' => $this->scope, 'callers' => $this->callers[$key] ?? 0];
             $this->returns[] = [];
+            $hs0 = $this->hs; $this->hs = Html::unknown();                     // a standalone body: its output lands who knows where
             if ($s->stmts !== null) $this->walk($s->stmts, $inner);
+            $this->hs = $hs0;
             array_pop($this->returns);
             $this->scope = $save;
             return;
@@ -884,7 +1098,7 @@ final class Analyzer {
         if ($s instanceof Stmt\Static_) { foreach ($s->vars as $v) { $n = $this->varName($v->var); if ($n !== null) $env[$n] = stZ('static:$' . $n, $line); } return; }
         if ($s instanceof Stmt\Unset_) { foreach ($s->vars as $v) { $n = $this->varName($v); if ($n !== null) unset($env[$n]); $sl = self::slot($v); if ($sl !== null) unset($env[$sl]); } return; }
         if ($s instanceof Stmt\Block || $s instanceof Stmt\Namespace_ || $s instanceof Stmt\Declare_) { if (!empty($s->stmts)) $this->walk($s->stmts, $env); return; }
-        if ($s instanceof Stmt\InlineHTML || $s instanceof Stmt\Nop || $s instanceof Stmt\Use_ || $s instanceof Stmt\Const_
+        if ($s instanceof Stmt\Nop || $s instanceof Stmt\Use_ || $s instanceof Stmt\Const_
             || $s instanceof Stmt\Break_ || $s instanceof Stmt\Continue_ || $s instanceof Stmt\Goto_ || $s instanceof Stmt\Label
             || $s instanceof Stmt\HaltCompiler || $s instanceof Stmt\GroupUse) return;
         // unknown statement kind: evaluate any expressions it holds
@@ -949,7 +1163,7 @@ foreach ($files as $f) {
     // pass 1 collects property assignments (reads see Z); pass 2 reads them and is the one reported
     $env = [];
     $an->pass = 1; $an->walk($ast ?? [], $env);
-    $an->facts = []; $an->includes = []; $an->functions = [];
+    $an->facts = []; $an->includes = []; $an->functions = []; $an->hs = Html::init('text');
     $env = [];
     $an->pass = 2; $an->walk($ast ?? [], $env);
     // a loop body is walked more than once (fixed point): one sink call site, one fact — states JOINED
@@ -959,6 +1173,7 @@ foreach ($files as $f) {
         if (!isset($byKey[$k])) { $byKey[$k] = $f; continue; }
         $j = join2($byKey[$k], $f);
         foreach (['t', 'src', 'san', 'z', 'q', 'zu', 'nu'] as $c) $byKey[$k][$c] = $j[$c];
+        if (($f['hctx'] ?? null) !== null) $byKey[$k]['hctx'] = Html::worse($byKey[$k]['hctx'] ?? null, $f['hctx']);
     }
     $rec['sinks'] = array_values($byKey); $rec['includes'] = array_values(array_unique($an->includes)); $rec['functions'] = $an->functions;
     $out['files'][] = $rec;

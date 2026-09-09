@@ -53,8 +53,11 @@ three defects found in the corpus itself are in [bench/README.md](bench/README.m
 catalog: on CWE_89 the planted injections the instrument called "clean" went 204 → 0 and alarms on
 fixed files 1053 → 90 (the 90 are five declared disagreements — `addslashes`, `htmlspecialchars`
 and friends are not SQL substitutions); Psalm's 18 misses there are `mysqli_real_escape_string`
-outside quotes. Named boundary: `html` has no sub-contexts yet (unquoted attribute, tag name,
-`<script>`, URL attribute) — the way `sql` has quoted/unquoted.
+outside quotes. `html` now has sub-contexts, read by a lexer over the output stream (body text / quoted attribute / URL attribute /
+`<script>` / unquoted): the substitution demanded depends on where a value lands, the way it depends on quotes for
+SQL. On CWE_79 that moved the planted flaws called "clean" 1616 → 1152 (the rest are whitelist/numeric constructions
+that survive any position) and false alarms 480 → 120. `html-sq` needs ENT_QUOTES, the default only since PHP 8.1 —
+so `--php 7.4` changes the verdict.
 
 ## For a human: `--summary`
 

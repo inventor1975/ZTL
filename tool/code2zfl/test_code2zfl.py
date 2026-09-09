@@ -102,6 +102,7 @@ EXPECT = {
     "f72_self_assignment_adds_nothing.php": ["EARNED", "REFUTED"],
     "f73_preg_match_captures.php": ["REFUTED", "EARNED", "REFUTED", "EARNED"],
     "f74_preg_replace_keeps_an_alphabet.php": ["EARNED", "EARNED", "REFUTED", "REFUTED", "REFUTED"],
+    "f75_isset_on_a_map_we_cannot_read.php": ["OPEN", "EARNED", "REFUTED"],
 }
 STORED = os.path.join(HERE, "overlays", "stored-input.json")
 

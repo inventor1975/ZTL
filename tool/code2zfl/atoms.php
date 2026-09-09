@@ -1217,6 +1217,12 @@ final class Analyzer {
             if ($v !== null && ($adf->var instanceof Expr\ConstFetch || $adf->var instanceof Expr\ClassConstFetch
                                 || ($adf->var instanceof Expr\Variable && $this->litOf($adf->var) instanceof Expr\Array_)))
                 return ['true' => [[$v, ['*'], 'isset-fixed-map', $line]], 'false' => []];
+            // A MAP WE CANNOT READ IS STILL A MAP. `isset($beanList[$module])` gates SuiteCRM's
+            // `require_once('modules/'.$module.'/TreeData.php')` on a list built by an include —
+            // a whitelist whose contents are invisible here, which is Z, not the absence of a check.
+            // Its twin `array_key_exists($x, $map)` has answered exactly that since the guard work;
+            // the two spellings of one act disagreed. Measured 2026-09-09 on SuiteCRM.
+            if ($v !== null) return ['true' => [], 'false' => [], 'unknown' => [[$v, 'isset(map)', $line]]];
             return $none;
         }
         if ($c instanceof Expr\FuncCall && $c->name instanceof Node\Name) {

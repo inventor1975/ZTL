@@ -389,6 +389,11 @@ final class Analyzer {
     // The claim is not "checked here" but "this file reads and decides on this value, and what it
     // accepts is not visible from here". Always toward OPEN, never toward EARNED.
     public array $unknownChecked = [];
+    /** Slots (`_REQUEST[option_name]`) a guard has vouched for. A superglobal element never lives in
+     *  the environment — it is read straight from the source each time — so a guard on it had no
+     *  place to leave its mark, and `preg_match('/^[a-zA-Z_0-9]+$/', $_REQUEST['x'])` counted for
+     *  nothing. Measured 2026-09-09 on events-manager 7.4.3, admin/em-options.php:462. */
+    private array $guardedSlots = [];
 
     /** filter flags whose PASS leaves a value in a fixed alphabet: int, float, bool, IP (digits, dots, colons, a-f). EMAIL and URL let a quote through. */
     private const VALIDATE_FIXED = ['FILTER_VALIDATE_INT', 'FILTER_VALIDATE_FLOAT', 'FILTER_VALIDATE_BOOL', 'FILTER_VALIDATE_BOOLEAN', 'FILTER_VALIDATE_IP'];
@@ -645,6 +650,23 @@ final class Analyzer {
             $this->ex($e->dim, $env);
             // $_SERVER is attacker-written only in part: HTTP_* headers, the request line and path — not
             // REMOTE_ADDR or SERVER_*. A literal key is CLASSIFIED here and never emitted.
+            $slotKey = self::slot($e);
+            if ($slotKey !== null && isset($this->guardedSlots[$slotKey])) {
+                [$ctxs, $fn, $ln] = $this->guardedSlots[$slotKey];
+                $base = $this->ex($e->var, $env);
+                if (($base['t'] ?? 'F') !== 'F') return sanitize($base, $ctxs, $fn, $ln);
+            }
+            // $_FILES: the browser chooses `name` and `type`; PHP itself writes `tmp_name`, `size` and
+            // `error`. Treating the temporary path as attacker-controlled made every upload validator
+            // read as a file-inclusion hole (events-manager 7.4.3, three of nine verdicts).
+            if ($e->var instanceof Expr\Variable && $e->var->name === '_FILES' && $e->dim instanceof Scalar\String_) {
+                // $_FILES['f']['tmp_name'] parses as ($_FILES['f'])['tmp_name'] — the inner fetch is here
+            }
+            if ($e->var instanceof Expr\ArrayDimFetch && $e->var->var instanceof Expr\Variable
+                && $e->var->var->name === '_FILES' && $e->dim instanceof Scalar\String_
+                && in_array($e->dim->value, ['tmp_name', 'size', 'error'], true)) {
+                return stF();
+            }
             if ($e->var instanceof Expr\Variable && $e->var->name === '_SERVER' && isset($SUPER['_SERVER'])) {
                 if ($e->dim instanceof Scalar\String_) {
                     $k = $e->dim->value;
@@ -1107,6 +1129,8 @@ final class Analyzer {
     }
 
     private function applyGuards(array $gs, array &$env): void {
+        foreach ($gs as [$v, $ctxs, $fn, $line])
+            if (!isset($env[$v]) && str_contains($v, '[')) $this->guardedSlots[$v] = [$ctxs, $fn, $line];
         foreach ($gs as [$v, $ctxs, $fn, $line]) {
             if (!isset($env[$v]) && ($p = strpos($v, '[')) !== false && isset($env[substr($v, 0, $p)]))
                 $env[$v] = $env[substr($v, 0, $p)];                 // an element slot not written here yet ($octet[0] after explode): the whole array's state

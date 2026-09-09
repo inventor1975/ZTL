@@ -112,8 +112,30 @@ def summarise(files, overlays, autoload, catalog=None, php=None, jobs=None):
                 else:
                     sys.exit(f"summarise: atoms.php emitted an unknown summary slot {slot!r} — "
                              f"say how it crosses a batch boundary in MEET or CARRY")
+    _resolve_tails(merged["files"], files)
     merged["inherit"] = _inherit(merged["files"])
     return merged
+
+
+def _resolve_tails(facts, scanned):
+    """A path built on a constant we cannot see still ends in a literal we can. The atomizer hands the
+    tail over ('/core/tpl/x.tpl.php'); here we know every file that was scanned, so a tail matching
+    exactly ONE of them names it. More than one match resolves nothing — a guess is worse than a gap,
+    and the count of what stayed unresolved is what the ledger reports."""
+    by_tail = {}
+    for p in scanned:
+        rp = os.path.realpath(p)
+        parts = rp.split(os.sep)
+        for i in range(1, min(len(parts), 8)):                    # suffixes of up to 7 segments
+            by_tail.setdefault(os.sep + os.sep.join(parts[-i:]), []).append(rp)
+    for rec in facts.values():
+        for t in rec.pop("tail", []) or []:
+            hit = by_tail.get(t.replace("/", os.sep))
+            if hit and len(set(hit)) == 1:
+                rec["inc"].append(hit[0])
+            else:
+                rec["unresolved"] = rec.get("unresolved", 0) + 1
+        rec["inc"] = sorted(set(rec["inc"]))
 
 
 def _inherit(facts):
@@ -136,6 +158,51 @@ def _inherit(facts):
             stack += f.get("inc") or []
         if unk or grd or st:
             out[path] = {"unk": unk, "grd": grd, "set": sorted(set(st))}
+
+    # AND UPWARD, FOR A FILE THAT CANNOT BE REQUESTED ON ITS OWN. A template names a constant it never
+    # defines before it requires anything, so a direct request stops before its first line of work — and
+    # then whatever ALL of its includers guarantee, it runs under. All, not any: it does not choose who
+    # pulls it in. A file with no such marker may be reachable by itself and inherits nothing, which is
+    # what keeps this from hiding a direct-access hole. Measured 2026-09-10: dolibarr's 154 .tpl.php
+    # carry about half its remaining refutations and had nothing to inherit before this.
+    includers = {}
+    for y, f in facts.items():
+        for x in f.get("inc") or []:
+            includers.setdefault(x, set()).add(y)
+    for _round in range(6):
+        changed = False
+        for x, f in facts.items():
+            if not f.get("entry_blocked") or x not in includers:
+                continue
+            sets = []
+            for y in includers[x]:
+                if y == x:
+                    continue
+                own, inh = facts.get(y) or {}, out.get(y) or {}
+                unk_y = dict(own.get("unk") or {}); unk_y.update(inh.get("unk") or {})
+                grd_y = {g[0]: g for g in (own.get("grd") or []) + (inh.get("grd") or [])}
+                set_y = set(own.get("set") or []) | set(inh.get("set") or [])
+                sets.append((unk_y, grd_y, set_y))
+            if not sets:
+                continue
+            unk_i = dict(sets[0][0]); grd_i = dict(sets[0][1]); set_i = set(sets[0][2])
+            for u, g, t in sets[1:]:
+                unk_i = {k: v for k, v in unk_i.items() if k in u}
+                grd_i = {k: v for k, v in grd_i.items() if k in g}
+                set_i &= t
+            if not (unk_i or grd_i or set_i):
+                continue
+            cur = out.setdefault(x, {"unk": {}, "grd": [], "set": []})
+            before = (len(cur["unk"]), len(cur["grd"]), len(cur["set"]))
+            for k, v in unk_i.items():
+                cur["unk"].setdefault(k, v)
+            have = {g[0] for g in cur["grd"]}
+            cur["grd"] += [g for k, g in grd_i.items() if k not in have]
+            cur["set"] = sorted(set(cur["set"]) | set_i)
+            if (len(cur["unk"]), len(cur["grd"]), len(cur["set"])) != before:
+                changed = True
+        if not changed:
+            break
     return out
 
 

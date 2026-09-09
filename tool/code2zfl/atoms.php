@@ -1953,6 +1953,18 @@ function topLevelStmts(array $stmts, array &$out): void {
     }
 }
 
+/** The LITERAL TAIL of an include path we could not resolve: `SOMECONST . '/a/b.php'` gives '/a/b.php'.
+ *  Only a tail that starts with a separator and names a php file is worth handing on — anything shorter
+ *  matches too much, and a tail is only ever accepted by the driver when exactly one scanned file ends
+ *  with it. Null when the last part is not a literal. */
+function includeTail(?Node $e): ?string {
+    while ($e instanceof Expr\BinaryOp\Concat) $e = $e->right;
+    if (!($e instanceof Scalar\String_)) return null;
+    $v = $e->value;
+    if (!str_starts_with($v, '/') || strlen($v) < 8 || !str_ends_with(strtolower($v), '.php')) return null;
+    return $v;
+}
+
 /** The file an `include`/`require` names, when we can read it. A literal path, `__DIR__ . '/x.php'`,
  *  `dirname(__FILE__) . '/x.php'`. Anything built from a constant we cannot see (DOL_DOCUMENT_ROOT)
  *  comes back null — and that is a NAMED boundary in the ledger, not a silence. */
@@ -2019,12 +2031,45 @@ if ($emitSummaries) {
         // size of the whole architecture: measured 2026-09-09, dolibarr's WAF (htdocs/waf.inc.php,
         // reached through main.inc.php from every page) was invisible and produced 3258 accusations.
         $top = []; topLevelStmts($ast ?? [], $top);
-        $frec = ['inc' => [], 'unresolved' => 0, 'unk' => [], 'grd' => [], 'set' => []];
+        $frec = ['inc' => [], 'tail' => [], 'unresolved' => 0, 'unk' => [], 'grd' => [], 'set' => [], 'entry_blocked' => false];
+        // CAN THIS FILE BE REQUESTED DIRECTLY? A template that names a constant it never defines —
+        // dolibarr's tpl files open with `require_once DOL_DOCUMENT_ROOT.'/...'` — cannot run standalone:
+        // on a direct request the constant is undefined and PHP stops before anything below. That is what
+        // makes it safe to give the file what its includers guarantee. A file with no such marker may be
+        // reachable on its own, and inherits nothing. `defined()` in OUR process answers exactly the
+        // question "is this a PHP built-in", which is the half we must not mistake for a project constant.
+        $ownConst = [];
+        foreach ($finder->findInstanceOf($ast ?? [], Expr\FuncCall::class) as $dc)
+            if ($dc->name instanceof Node\Name && strtolower($dc->name->toString()) === 'define'
+                && ($dc->args[0]->value ?? null) instanceof Scalar\String_) $ownConst[$dc->args[0]->value->value] = 1;
+        foreach ($finder->findInstanceOf($ast ?? [], Stmt\Const_::class) as $cs)
+            foreach ($cs->consts as $cc) $ownConst[$cc->name->toString()] = 1;
+        // ORDER DECIDES. A page defines the constants by requiring the front controller FIRST, and only
+        // then uses them; a template uses one before it has required anything — often inside the require
+        // itself. So walk the top level in order and stop at whichever comes first.
+        foreach ($top as $st0) {
+            $undef = false;
+            foreach ($finder->findInstanceOf([$st0], Expr\ConstFetch::class) as $cf) {
+                $cn = $cf->name->toString();
+                if (isset($ownConst[$cn]) || defined($cn) || in_array(strtolower($cn), ['true', 'false', 'null'], true)) continue;
+                $undef = true; break;
+            }
+            if ($undef) { $frec['entry_blocked'] = true; break; }
+            if ($finder->findInstanceOf([$st0], Expr\Include_::class)) break;   // the front controller ran: constants exist now
+        }
         foreach ($finder->findInstanceOf($top, Expr\Include_::class) as $incNode) {
             $t = resolveInclude($incNode->expr, $f);
-            if ($t === null) $frec['unresolved']++; else $frec['inc'][] = $t;
+            if ($t !== null) { $frec['inc'][] = $t; continue; }
+            // A PATH BUILT ON A CONSTANT WE CANNOT SEE still ends in a literal we CAN:
+            // `DOL_DOCUMENT_ROOT.'/core/tpl/objectline_view.tpl.php'`. The tail alone does not name a
+            // file — but the driver knows every file it was asked to scan, and a tail matching exactly
+            // ONE of them is that one. Measured 2026-09-10: dolibarr resolves 3 includes per file and
+            // leaves 17074 unresolved, so its templates had no includers at all and nothing to inherit.
+            $tail = includeTail($incNode->expr);
+            if ($tail !== null) $frec['tail'][] = $tail; else $frec['unresolved']++;
         }
         $frec['inc'] = array_values(array_unique($frec['inc']));
+        if (!empty($frec['tail'])) $frec['tail'] = array_values(array_unique($frec['tail']));
         $endsLocal = [];                                              // definitions in THIS file that can refuse
         foreach ($finder->findInstanceOf($ast ?? [], Stmt\Function_::class) as $fnDef)
             if (bodyEnds($fnDef->stmts)) $endsLocal[strtolower($fnDef->name->toString())] = 1;
@@ -2041,7 +2086,8 @@ if ($emitSummaries) {
         foreach ($ta->guardedSlotsPublic() as $slot => [$ctxs, $gn, $gl]) $frec['grd'][] = [$slot, $ctxs, $gn, $gl];
         foreach ($tenv as $k => $v) if (str_contains($k, '[') && isset($SUPER[explode('[', $k)[0]])) $frec['set'][] = $k;
         $fkey = @realpath($f) ?: $f;                                  // the graph and the lookup must agree on one spelling
-        if ($frec['inc'] || $frec['unresolved'] || $frec['unk'] || $frec['grd'] || $frec['set']) $sum['files'][$fkey] = $frec;
+        if ($frec['inc'] || $frec['tail'] || $frec['unresolved'] || $frec['unk'] || $frec['grd'] || $frec['set'] || $frec['entry_blocked'])
+            $sum['files'][$fkey] = $frec;
 
         foreach ($defs as [$kind, $name, $def, $cls]) {
             if ($def->stmts === null) continue;                       // abstract / interface

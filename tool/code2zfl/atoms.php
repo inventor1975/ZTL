@@ -88,6 +88,11 @@ $SUMMARIES = ['functions' => [], 'methods' => []];
 $CAT = loadJson($catalogPath);
 foreach ($overlays as $o) $CAT = mergeCatalog($CAT, loadJson($o));
 if ($summaryPath !== null && is_file($summaryPath)) $SUMMARIES = loadJson($summaryPath);
+// Definitions that can REFUSE THE REQUEST (exit / die / throw), by bare name — a statement call to one
+// of these is an act of checking. Built once from the summaries; a file's own definitions are added to it.
+$ENDS = [];
+foreach (($SUMMARIES['functions'] ?? []) as $n => $r) if (!empty($r['ends'])) $ENDS[$n] = 1;
+foreach (($SUMMARIES['methods'] ?? []) as $n => $r) if (!empty($r['ends'])) $ENDS[substr($n, strrpos($n, ':') + 1)] = 1;
 // An overlay can only ADD to a merged catalog, and sometimes a project needs the opposite: WordPress's
 // $wpdb->delete/insert/update bind their values, so the base catalog's generic `delete` sink is wrong
 // there. `not_sinks` / `not_sanitizers` subtract, by exact key (receiver-qualified names allowed).
@@ -700,6 +705,12 @@ final class Analyzer {
             // replaces the value with one from a fixed map before any query sees it. Reading the
             // source unconditionally made every later use look attacker-controlled.
             if ($slotKey !== null && array_key_exists($slotKey, $env)) return $env[$slotKey];
+            // A CHECK WE CANNOT READ, on the slot itself — from this file, or from a file it includes.
+            // It must be consulted BEFORE the per-superglobal branches below, which return early.
+            if ($slotKey !== null && isset($this->unknownCheckedSlots[$slotKey])) {
+                $base = $this->ex($e->var, $env);
+                if (($base['t'] ?? 'F') !== 'F') return through($base, 'guarded-by:' . $this->unknownCheckedSlots[$slotKey], $line, true, 'all');
+            }
             if ($slotKey !== null && isset($this->guardedSlots[$slotKey])) {
                 [$ctxs, $fn, $ln] = $this->guardedSlots[$slotKey];
                 $base = $this->ex($e->var, $env);
@@ -737,10 +748,6 @@ final class Analyzer {
             }
             $sl = self::slot($e);
             if ($sl !== null && isset($env[$sl])) { $st = $env[$sl]; $st['dv'] = [$sl]; return $st; }   // this key was written here: read that, not the whole array
-            if ($sl !== null && isset($this->unknownCheckedSlots[$sl])) {
-                $st = $this->ex($e->var, $env); $st['dv'] = [$sl];
-                if ($st['t'] !== 'F') return through($st, 'guarded-by:' . $this->unknownCheckedSlots[$sl], $line, true, 'all');
-            }
             if ($sl !== null && isset($env[$e->var->name])) { $st = $this->ex($e->var, $env); $st['dv'] = [$sl]; return $st; }   // an element never written here: the whole array's state, under the element's name
             $base = $this->ex($e->var, $env);
             return $base;
@@ -1339,6 +1346,12 @@ final class Analyzer {
 
     /** Set the class context for a summary probe (methods read $this->prop). */
     public function currentClassPublic(?string $cls): void { $this->currentClass = $cls; }
+    /** The superglobal slots this walk vouched for, for the file-level summary of a front controller. */
+    public function guardedSlotsPublic(): array { return $this->guardedSlots; }
+    /** A guard an INCLUDED file put on this slot, carried in before the walk. */
+    public function seedGuardedSlot(string $slot, array $ctxs, string $fn, int $line): void {
+        $this->guardedSlots[$slot] = [$ctxs, $fn, $line];
+    }
 
     public static function isLiteralPublic(?Node $n): bool { return self::isLiteral($n); }
 
@@ -1351,11 +1364,22 @@ final class Analyzer {
         return $rets ? joinAll($rets) : stF();
     }
 
-    /** Record one unknown check: on a plain variable, or on a superglobal element with a literal key. */
-    public function noteUnknownCheck(?Node $arg, string $who): void {
-        if (!($arg instanceof Node\Arg)) return;
-        $v = $arg->value;
-        if ($v instanceof Expr\Variable && is_string($v->name)) { $this->unknownChecked[$v->name] = $who; return; }
+    /** Record one unknown check: on a plain variable, on a superglobal element with a literal key, or
+     *  on what a value was BUILT FROM when that is readable — `$m = array($_SERVER['PHP_SELF']);
+     *  their_gate($m);` checks the slot, and a copy of a PHP string or array carries the same value.
+     *  Only through a name written exactly once, and only one hop deep. */
+    public function noteUnknownCheck(?Node $arg, string $who, array $once = [], int $depth = 0): void {
+        $v = $arg instanceof Node\Arg ? $arg->value : $arg;
+        if ($v === null) return;
+        if ($v instanceof Expr\Variable && is_string($v->name)) {
+            $this->unknownChecked[$v->name] = $who;
+            if ($depth < 1 && isset($once[$v->name])) $this->noteUnknownCheck($once[$v->name], $who, $once, $depth + 1);
+            return;
+        }
+        if ($v instanceof Expr\Array_) {
+            foreach ($v->items as $it) if ($it !== null) $this->noteUnknownCheck($it->value, $who, $once, $depth);
+            return;
+        }
         $sl = self::slot($v);
         if ($sl !== null) $this->unknownCheckedSlots[$sl] = $who;
     }
@@ -1601,27 +1625,22 @@ foreach ($files as $f) {
     // pass 1 collects property assignments (reads see Z); pass 2 reads them and is the one reported
     // PRE-PASS for unknown checks: any condition that hands a plain variable to a call we do not
     // know. Conditions only — an unknown call in ordinary code is already handled as an opaque value.
-    foreach (['If_', 'ElseIf_', 'While_', 'Do_'] as $kind) {
-        $cls = 'PhpParser\\Node\\Stmt\\' . $kind;
-        foreach ($finder->findInstanceOf($ast ?? [], $cls) as $node) {
-            $cond = $node->cond ?? null; if ($cond === null) continue;
-            foreach ($finder->findInstanceOf($cond, Expr\FuncCall::class) as $call) {
-                $nm = $call->name instanceof Node\Name ? strtolower($call->name->toString()) : null;
-                // "unknown" means absent from EVERY table we have — a name we know as preserving,
-                // narrowing, transparent, a sanitizer or a sink is not a mystery checker. Without this
-                // `if (strtolower($ext) == 'jpg')` counted as an unreadable check (fixtures f46/f47).
-                if ($nm === null || isset($GUARDS[$nm]) || $nm === 'filter_var' || isset($SANFN[$nm])
-                    || isset($PRESERV[$nm]) || isset($NARROW[$nm]) || isset($TRANSP[$nm]) || isset($SINKFN[$nm])
-                    || function_exists($nm)) continue;
-                foreach ($call->args as $arg) $an->noteUnknownCheck($arg, $nm . '()');
-            }
-            foreach ($finder->findInstanceOf($cond, Expr\MethodCall::class) as $call) {
-                if (!($call->name instanceof Node\Identifier)) continue;
-                $nm = strtolower($call->name->toString());
-                if (isset($SANMETH[$nm]) || isset($SINKMETH[$nm])) continue;
-                foreach ($call->args as $arg) $an->noteUnknownCheck($arg, '->' . $nm . '()');
-            }
-        }
+    prePassUnknownChecks($an, $ast ?? [], $finder);
+    $endsHere = $ENDS;                                            // plus what THIS file defines
+    foreach ($finder->findInstanceOf($ast ?? [], Stmt\Function_::class) as $fnDef)
+        if (bodyEnds($fnDef->stmts)) $endsHere[strtolower($fnDef->name->toString())] = 1;
+    foreach ($finder->findInstanceOf($ast ?? [], Stmt\ClassMethod::class) as $mDef)
+        if (bodyEnds($mDef->stmts)) $endsHere[strtolower($mDef->name->toString())] = 1;
+    $onceHere = [];
+    foreach ($writes as $vn => $rhs) if (count($rhs) === 1 && $rhs[0] !== null) $onceHere[$vn] = $rhs[0];
+    prePassTerminatingCalls($an, $ast ?? [], $finder, $endsHere, $onceHere);
+    // WHAT THIS FILE INHERITS FROM WHAT IT INCLUDES (pass 1 built the graph, the driver closed it).
+    // A page that requires a front controller is judged under the front controller's guards.
+    $inh = $SUMMARIES['inherit'][@realpath($f) ?: $f] ?? $SUMMARIES['inherit'][$f] ?? null;
+    if ($inh !== null) {
+        foreach ($inh['unk'] ?? [] as $slot => $who) $an->unknownCheckedSlots[$slot] = $who;
+        foreach ($inh['grd'] ?? [] as [$slot, $ctxs, $gn, $gl]) $an->seedGuardedSlot($slot, $ctxs, $gn . '@include', $gl);
+        foreach ($inh['set'] ?? [] as $slot) $an->unknownCheckedSlots[$slot] = 'written-by-an-include';
     }
     $env = [];
     $an->pass = 1; $an->walk($ast ?? [], $env);
@@ -1642,6 +1661,105 @@ foreach ($files as $f) {
     if ($an->nodeSpent > 120000) $rec['node_budget_exhausted'] = true;      // the walk was cut short
     $out['files'][] = $rec;
 }
+/** PRE-PASS for unknown checks: any CONDITION that hands a value to a call we do not know.
+ *  Conditions only — an unknown call in ordinary code is already handled as an opaque value. */
+function prePassUnknownChecks(Analyzer $an, $ast, \PhpParser\NodeFinder $finder): void {
+    global $GUARDS, $SANFN, $SANMETH, $PRESERV, $NARROW, $TRANSP, $SINKFN, $SINKMETH;
+    foreach (['If_', 'ElseIf_', 'While_', 'Do_'] as $kind) {
+        $cls = 'PhpParser\\Node\\Stmt\\' . $kind;
+        foreach ($finder->findInstanceOf($ast, $cls) as $node) {
+            $cond = $node->cond ?? null; if ($cond === null) continue;
+            foreach ($finder->findInstanceOf($cond, Expr\FuncCall::class) as $call) {
+                $nm = $call->name instanceof Node\Name ? strtolower($call->name->toString()) : null;
+                // "unknown" means absent from EVERY table we have — a name we know as preserving,
+                // narrowing, transparent, a sanitizer or a sink is not a mystery checker. Without this
+                // `if (strtolower($ext) == 'jpg')` counted as an unreadable check (fixtures f46/f47).
+                if ($nm === null || isset($GUARDS[$nm]) || $nm === 'filter_var' || isset($SANFN[$nm])
+                    || isset($PRESERV[$nm]) || isset($NARROW[$nm]) || isset($TRANSP[$nm]) || isset($SINKFN[$nm])
+                    || function_exists($nm)) continue;
+                foreach ($call->args as $arg) $an->noteUnknownCheck($arg, $nm . '()');
+            }
+            foreach ($finder->findInstanceOf($cond, Expr\MethodCall::class) as $call) {
+                if (!($call->name instanceof Node\Identifier)) continue;
+                $nm = strtolower($call->name->toString());
+                if (isset($SANMETH[$nm]) || isset($SINKMETH[$nm])) continue;
+                foreach ($call->args as $arg) $an->noteUnknownCheck($arg, '->' . $nm . '()');
+            }
+        }
+    }
+}
+
+/** Can this definition REFUSE THE REQUEST? A body that can `exit`, `die` or `throw` is a body that may
+ *  end the run — and a call to it, standing as a statement, is an act of checking whatever it was given.
+ *  Nested closures and definitions do not count: their exit belongs to a call that may never happen. */
+function bodyEnds(?array $stmts): bool {
+    if ($stmts === null) return false;
+    foreach ($stmts as $st) {
+        if ($st instanceof Stmt\Function_ || $st instanceof Stmt\ClassLike) continue;
+        $f = new \PhpParser\NodeFinder;
+        foreach ($f->find([$st], fn($n) => $n instanceof Expr\Exit_ || $n instanceof Stmt\Throw_ || $n instanceof Expr\Throw_) as $hit) {
+            return true;
+        }
+    }
+    return false;
+}
+
+/** A STATEMENT CALL TO SOMETHING THAT CAN REFUSE is a check. `analyseVarsForSqlAndScriptsInjection($v, 2);`
+ *  stands alone on its line and dies on bad input — dolibarr's whole WAF is shaped this way. Reading it as
+ *  an ordinary call left every page after it looking unprotected: 3258 accusations, measured 2026-09-09. */
+function prePassTerminatingCalls(Analyzer $an, $ast, \PhpParser\NodeFinder $finder, array $ends, array $once): void {
+    foreach ($finder->findInstanceOf($ast, Stmt\Expression::class) as $stmt) {
+        $c = $stmt->expr;
+        $nm = null;
+        if ($c instanceof Expr\FuncCall && $c->name instanceof Node\Name) $nm = strtolower($c->name->toString());
+        elseif (($c instanceof Expr\MethodCall || $c instanceof Expr\StaticCall) && $c->name instanceof Node\Identifier) $nm = strtolower($c->name->toString());
+        if ($nm === null || !isset($ends[$nm])) continue;
+        $who = ($c instanceof Expr\FuncCall ? $nm : '->' . $nm) . '()';
+        foreach ($c->args as $arg) $an->noteUnknownCheck($arg, $who, $once);
+    }
+}
+
+/** THE STATEMENTS THAT RUN WHEN THE FILE IS INCLUDED — everything except the bodies of definitions.
+ *  A front controller's work sits here: the guards it puts on the request, and the files it pulls in. */
+function topLevelStmts(array $stmts, array &$out): void {
+    foreach ($stmts as $st) {
+        if ($st instanceof Stmt\Function_ || $st instanceof Stmt\ClassLike) continue;
+        $out[] = $st;
+        foreach (['stmts', 'else', 'elseifs', 'catches', 'finally', 'cases'] as $slot) {
+            $sub = $st->$slot ?? null;
+            if (is_array($sub)) {
+                $onlyStmts = array_values(array_filter($sub, fn($x) => $x instanceof Node\Stmt));
+                $nested = array_values(array_filter($sub, fn($x) => !($x instanceof Node\Stmt)));
+                if ($onlyStmts) topLevelStmts($onlyStmts, $out);
+                foreach ($nested as $n) if (isset($n->stmts) && is_array($n->stmts)) topLevelStmts($n->stmts, $out);
+            } elseif ($sub instanceof Node\Stmt) {
+                topLevelStmts([$sub], $out);
+            }
+        }
+    }
+}
+
+/** The file an `include`/`require` names, when we can read it. A literal path, `__DIR__ . '/x.php'`,
+ *  `dirname(__FILE__) . '/x.php'`. Anything built from a constant we cannot see (DOL_DOCUMENT_ROOT)
+ *  comes back null — and that is a NAMED boundary in the ledger, not a silence. */
+function resolveInclude(?Node $e, string $fromFile): ?string {
+    $dir = dirname($fromFile);
+    $cand = null;
+    if ($e instanceof Scalar\String_) {
+        $cand = str_starts_with($e->value, '/') ? $e->value : $dir . '/' . $e->value;
+    } elseif ($e instanceof Expr\BinaryOp\Concat) {
+        $l = $e->left; $r = $e->right;
+        $isDir = ($l instanceof Scalar\MagicConst\Dir)
+              || ($l instanceof Expr\FuncCall && $l->name instanceof Node\Name
+                  && strtolower($l->name->toString()) === 'dirname'
+                  && (($l->args[0]->value ?? null) instanceof Scalar\MagicConst\File));
+        if ($isDir && $r instanceof Scalar\String_) $cand = $dir . '/' . ltrim($r->value, '/');
+    }
+    if ($cand === null) return null;
+    $rp = @realpath($cand);
+    return ($rp !== false && is_file($rp)) ? $rp : null;
+}
+
 /** Two summaries for one name: identical in substance → keep; otherwise a conflict. */
 function summaryMerge(?array $a, array $b): array {
     if ($a === null) return $b;
@@ -1655,7 +1773,7 @@ if ($emitSummaries) {
     // PASS 1. What does each definition DO with an attacker-controlled parameter? Walk its body once
     // per parameter (up to 4; beyond that mark them together and say so), and read the result off the
     // machinery that already exists: the returned state, and the sinks the walk emitted.
-    $sum = ['tool' => 'code2zfl/atoms.php --emit-summaries', 'functions' => [], 'methods' => []];
+    $sum = ['tool' => 'code2zfl/atoms.php --emit-summaries', 'functions' => [], 'methods' => [], 'files' => []];
     foreach ($files as $f) {
         $code = @file_get_contents($f); if ($code === false) continue;
         try { $ast = $parser->parse($code); } catch (ParseError $e) { continue; }
@@ -1682,13 +1800,43 @@ if ($emitSummaries) {
         foreach ($finder->findInstanceOf($ast ?? [], Stmt\Foreach_::class) as $fe) { $wf($fe->keyVar, null); $wf($fe->valueVar, null); }
         foreach ($finder->findInstanceOf($ast ?? [], Stmt\Global_::class) as $g) foreach ($g->vars as $v) $wf($v, null);
 
+        // WHAT THE FILE DOES WHEN IT IS INCLUDED. A front controller guards the request and pulls in
+        // more files; every page then inherits both. Without this an `include` was a blind spot the
+        // size of the whole architecture: measured 2026-09-09, dolibarr's WAF (htdocs/waf.inc.php,
+        // reached through main.inc.php from every page) was invisible and produced 3258 accusations.
+        $top = []; topLevelStmts($ast ?? [], $top);
+        $frec = ['inc' => [], 'unresolved' => 0, 'unk' => [], 'grd' => [], 'set' => []];
+        foreach ($finder->findInstanceOf($top, Expr\Include_::class) as $incNode) {
+            $t = resolveInclude($incNode->expr, $f);
+            if ($t === null) $frec['unresolved']++; else $frec['inc'][] = $t;
+        }
+        $frec['inc'] = array_values(array_unique($frec['inc']));
+        $endsLocal = [];                                              // definitions in THIS file that can refuse
+        foreach ($finder->findInstanceOf($ast ?? [], Stmt\Function_::class) as $fnDef)
+            if (bodyEnds($fnDef->stmts)) $endsLocal[strtolower($fnDef->name->toString())] = 1;
+        foreach ($finder->findInstanceOf($ast ?? [], Stmt\ClassMethod::class) as $mDef)
+            if (bodyEnds($mDef->stmts)) $endsLocal[strtolower($mDef->name->toString())] = 1;
+        $onceTop = [];
+        foreach ($litWrites as $vn => $rhs) if (count($rhs) === 1 && $rhs[0] !== null) $onceTop[$vn] = $rhs[0];
+        $ta = new Analyzer($CAT);
+        prePassUnknownChecks($ta, $top, $finder);
+        prePassTerminatingCalls($ta, $top, $finder, $endsLocal, $onceTop);
+        $tenv = [];
+        try { $ta->probeBody($top, $tenv); } catch (\Throwable $e) { /* a file-level walk is best effort */ }
+        $frec['unk'] = $ta->unknownCheckedSlots;
+        foreach ($ta->guardedSlotsPublic() as $slot => [$ctxs, $gn, $gl]) $frec['grd'][] = [$slot, $ctxs, $gn, $gl];
+        foreach ($tenv as $k => $v) if (str_contains($k, '[') && isset($SUPER[explode('[', $k)[0]])) $frec['set'][] = $k;
+        $fkey = @realpath($f) ?: $f;                                  // the graph and the lookup must agree on one spelling
+        if ($frec['inc'] || $frec['unresolved'] || $frec['unk'] || $frec['grd'] || $frec['set']) $sum['files'][$fkey] = $frec;
+
         foreach ($defs as [$kind, $name, $def, $cls]) {
             if ($def->stmts === null) continue;                       // abstract / interface
             $params = [];
             foreach ($def->params as $p) { $n = ($p->var instanceof Expr\Variable && is_string($p->var->name)) ? $p->var->name : null; $params[] = $n; }
             $np = count($params);
             $rec = ['file' => $f, 'line' => $def->getStartLine(), 'params' => $np,
-                    'passes' => [], 'opaque' => [], 'substitutes' => [], 'sinks' => [], 'guard' => [], 'cut' => false];
+                    'passes' => [], 'opaque' => [], 'substitutes' => [], 'sinks' => [], 'guard' => [], 'cut' => false,
+                    'ends' => bodyEnds($def->stmts)];
             $probes = ($np === 0) ? [] : (($np <= 4) ? range(0, $np - 1) : [-1]);   // -1: all at once
             foreach ($probes as $ix) {
                 $an = new Analyzer($CAT);

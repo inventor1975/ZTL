@@ -117,6 +117,15 @@ def inheritance_probe(failures):
         failures.append(f"xinherit/child.php: expected ['EARNED', 'REFUTED'], got {got}")
 
 
+def include_probe(failures):
+    """A front controller guards the request once; every page that requires it is judged under that
+    guard. Without the include graph all three read as plain refutations."""
+    out = code2zfl.run([os.path.join(FIX, "xinclude")], [], "all", AUTOLOAD)
+    got = [s["disposition"] for f in out["files"] if os.path.basename(f["file"]) == "page.php" for s in f["sinks"]]
+    if got != ["OPEN", "EARNED", "REFUTED"]:
+        failures.append(f"xinclude/page.php: expected ['OPEN', 'EARNED', 'REFUTED'], got {got}")
+
+
 def cross_file_probe(failures):
     """Cross-file sight: pass 1 learns the callees in lib.php, pass 2 judges app.php with them.
     Without it, all four are OPEN (the calls are opaque) and the sink inside lib.php is invisible
@@ -140,7 +149,7 @@ def main():
         if got.get(name) != exp:
             failures.append(f"{name}: expected {exp}, got {got.get(name)}")
     # every fixture in the folder is in the table — an unlisted fixture is an untested claim
-    probed = {os.path.basename(f["file"]) for f in out["files"] if os.sep + "xfile" + os.sep in f["file"] or os.sep + "xinherit" + os.sep in f["file"] or os.sep + "xconflict" + os.sep in f["file"]}
+    probed = {os.path.basename(f["file"]) for f in out["files"] if os.sep + "xfile" + os.sep in f["file"] or os.sep + "xinherit" + os.sep in f["file"] or os.sep + "xinclude" + os.sep in f["file"] or os.sep + "xconflict" + os.sep in f["file"]}
     for name in got:
         if name not in EXPECT and name not in probed:                  # the cross-file pairs are asserted by their own probes
             failures.append(f"{name}: fixture without an expectation")
@@ -173,6 +182,7 @@ def main():
 
     cross_file_probe(failures)
     inheritance_probe(failures)
+    include_probe(failures)
     # ---- a NAME defined differently in two files is a conflict (unknown), not "the last one wins"; and a method
     # summary is never read for a receiver that is not $this (b.php: $db->safe() inside XcA must not be XcA::safe)
     xc = code2zfl.run([os.path.join(FIX, "xconflict")], [], "all", AUTOLOAD)
@@ -187,7 +197,7 @@ def main():
         for x in failures:
             print("  -", x)
         sys.exit(1)
-    print(f"PASS: {n} sink verdicts as expected across {len(EXPECT)} fixtures + the cross-file, conflict and inheritance pairs (+ f54 under stored-input) + 2 vacuity controls")
+    print(f"PASS: {n} sink verdicts as expected across {len(EXPECT)} fixtures + the cross-file, conflict, inheritance and include pairs (+ f54 under stored-input) + 2 vacuity controls")
 
 
 if __name__ == "__main__":

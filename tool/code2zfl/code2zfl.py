@@ -89,7 +89,7 @@ def summarise(files, overlays, autoload, catalog=None, php=None, jobs=None):
     files = list(files)
     n = jobs if jobs and jobs > 0 else min(8, (os.cpu_count() or 1))
     batches = [files[i::n] for i in range(n)] if (n > 1 and len(files) >= 40) else [files]
-    merged = {"functions": {}, "methods": {}, "parents": {}}
+    merged = {"functions": {}, "methods": {}, "parents": {}, "files": {}}
     with ThreadPool(max(1, len(batches))) as pool:
         for part in pool.map(_atomize_batch, [(cmd, b, env) for b in batches if b]):
             if part.get("_error"):
@@ -103,7 +103,34 @@ def summarise(files, overlays, autoload, catalog=None, php=None, jobs=None):
             par = part.get("parents") or {}                              # a class has ONE parent: no meet, plain carry
             if isinstance(par, dict):
                 merged["parents"].update(par)
+            ff = part.get("files") or {}                                  # a file is summarised in exactly one batch
+            if isinstance(ff, dict):
+                merged["files"].update(ff)
+    merged["inherit"] = _inherit(merged["files"])
     return merged
+
+
+def _inherit(facts):
+    """WHAT A FILE INHERITS FROM WHAT IT INCLUDES. A front controller guards the request once and every
+    page that requires it is judged under that guard; without the closure the guard is invisible and the
+    page reads as unprotected. Own facts are not folded in — pass 2 recomputes those from the file itself."""
+    out = {}
+    for path in facts:
+        seen, stack, unk, grd, st = set(), list(facts[path].get("inc") or []), {}, [], []
+        while stack:                                                      # transitive, cycles cut by `seen`
+            q = stack.pop()
+            if q in seen or q not in facts:
+                continue
+            seen.add(q)
+            f = facts[q]
+            for k, v in (f.get("unk") or {}).items():
+                unk.setdefault(k, v)
+            grd += f.get("grd") or []
+            st += f.get("set") or []
+            stack += f.get("inc") or []
+        if unk or grd or st:
+            out[path] = {"unk": unk, "grd": grd, "set": sorted(set(st))}
+    return out
 
 
 def _summary_merge(a, b):

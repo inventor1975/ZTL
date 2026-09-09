@@ -219,6 +219,10 @@ def run(paths, overlays=(), ctx="sql", autoload=None, catalog=None, php=None):
     for f in facts["files"]:
         rec = {"file": f["file"], "lines": f["lines"], "parse_error": f["parse_error"],
                "includes": f["includes"], "sinks": []}
+        # a boundary the atomizer hit must reach the reader: past the inlining budget a call is
+        # judged as unknown (Z), so this file's OPENs may be wider than they would otherwise be
+        if f.get("inline_budget_exhausted"):
+            rec["inline_budget_exhausted"] = True
         if f["parse_error"]:
             rec["disposition"] = "E"
             out["files"].append(rec)
@@ -278,6 +282,14 @@ def summary_md(out):
         mark = "**" if isinstance(r, int) and r else ""
         L.append(f"| {fl} | {n} | {mark}{r}{mark} | {o} | {e} |")
     L.append(f"| **total** | {sum(r[1] for r in rows if isinstance(r[1], int))} | **{tot['REFUTED']}** | {tot['OPEN'] + tot['ON CREDIT']} | {tot['EARNED']} |")
+    capped = [f["file"] for f in out["files"] if f.get("inline_budget_exhausted")]
+    if capped:
+        L += ["", f"## inlining budget reached — {len(capped)} file(s)", "",
+              "Past the budget a call inside the file is judged as unknown (Z), so these files' OPEN",
+              "verdicts are wider than a full walk would give. Named, not hidden:", ""]
+        L += [f"- `{c}`" for c in capped[:20]]
+        if len(capped) > 20:
+            L.append(f"- … and {len(capped) - 20} more")
     L += ["", f"## REFUTED — {len(refuted)}", ""]
     for fl, s in refuted:
         why = s["sanitized"]["means"] if s["sanitized"]["status"] == "refuted" else s["tainted"]["means"]

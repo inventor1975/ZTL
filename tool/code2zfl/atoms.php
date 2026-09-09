@@ -123,8 +123,14 @@ function hfJoin(array $a, array $b): ?array {
 function dvUnion(array $a, array $b): array { return array_values(array_unique(array_merge($a['dv'] ?? [], $b['dv'] ?? []))); }
 
 function uniq(array $rows): array {
+    // The key is built by hand, not by json_encode: these are flat tuples ([kind, name, line] /
+    // [why, line]) and this function runs on every path join. MEASURED 2026-09-09 on WordPress
+    // `class-wp-html-processor.php` (a switch with 173 cases): json_encode here was the cost.
     $seen = []; $out = [];
-    foreach ($rows as $r) { $k = json_encode($r); if (!isset($seen[$k])) { $seen[$k] = 1; $out[] = $r; } }
+    foreach ($rows as $r) {
+        $k = is_array($r) ? implode("\x1f", array_map('strval', $r)) : (string)$r;
+        if (!isset($seen[$k])) { $seen[$k] = 1; $out[] = $r; }
+    }
     return $out;
 }
 /** JOIN of two paths: may-taint, must-sanitize. */
@@ -319,6 +325,13 @@ final class Analyzer {
     private array $returns = [];
     private ?string $currentClass = null;
     private int $callDepth = 3;
+    // A BUDGET, not just a depth. MEASURED 2026-09-09 on WordPress `class-wp-html-processor.php`
+    // (79 methods calling each other): depth 0 → 0.12 s, 1 → 0.62 s, 2 → 6.2 s, 3 → 56 s — each level
+    // multiplies the work by the number of in-file calls in a body. Size is not the driver: post.php
+    // is larger and takes 1.5 s. Past the budget a call is what it was before any inlining existed —
+    // an unknown call, hence Z with the reason named. Slower is acceptable; silent is not.
+    private int $inlineBudget = 3000;
+    public int $inlineSpent = 0;
 
     /** filter flags whose PASS leaves a value in a fixed alphabet: int, float, bool, IP (digits, dots, colons, a-f). EMAIL and URL let a quote through. */
     private const VALIDATE_FIXED = ['FILTER_VALIDATE_INT', 'FILTER_VALIDATE_FLOAT', 'FILTER_VALIDATE_BOOL', 'FILTER_VALIDATE_BOOLEAN', 'FILTER_VALIDATE_IP'];
@@ -1058,6 +1071,9 @@ final class Analyzer {
     private function inline(Node $def, array $args, int $line, string $key): array {
         if (count($this->callStack) >= $this->callDepth || in_array($key, $this->callStack, true))
             return through(joinAll($args ?: [stF()]), 'call-depth:' . $key, $line, true);
+        if ($this->inlineSpent >= $this->inlineBudget)
+            return through(joinAll($args ?: [stF()]), 'call-budget:' . $key, $line, true);
+        $this->inlineSpent++;
         $env = [];
         foreach ($def->params as $i => $p) {
             $n = $this->varName($p->var); if ($n === null) continue;
@@ -1090,7 +1106,11 @@ final class Analyzer {
         }
         return $out;
     }
-    private static function envEq(array $a, array $b): bool { return json_encode($a) === json_encode($b); }
+    private static function envEq(array $a, array $b): bool {
+        if (count($a) !== count($b)) return false;                 // cheap gate before the expensive test
+        foreach ($a as $k => $v) { if (!array_key_exists($k, $b) || $v !== $b[$k]) return false; }
+        return true;                                                // PHP compares arrays structurally
+    }
 
     public function walk(array $stmts, array &$env): void {
         foreach ($stmts as $s) $this->stmt($s, $env);
@@ -1271,6 +1291,7 @@ foreach ($files as $f) {
         if (($f['hctx'] ?? null) !== null) $byKey[$k]['hctx'] = Html::worse($byKey[$k]['hctx'] ?? null, $f['hctx']);
     }
     $rec['sinks'] = array_values($byKey); $rec['includes'] = array_values(array_unique($an->includes)); $rec['functions'] = $an->functions;
+    if ($an->inlineSpent >= 3000) $rec['inline_budget_exhausted'] = true;   // named, not hidden
     $out['files'][] = $rec;
 }
 echo json_encode($out, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT), "\n";

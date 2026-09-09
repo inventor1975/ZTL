@@ -10,6 +10,19 @@ someone else tests the ones I did not. Two were used, both public, neither commi
 context) against the directory label. `psalm_sard.py` runs Psalm 5 `--taint-analysis` over the
 same directory and joins the three: label, Psalm, ours. Whole suite: ~10 s for us, ~15 s for Psalm.
 
+## How to read the tables below
+
+**This file is layered by pass, not rewritten.** Each section reports the state at the time of that
+pass and is kept, so an earlier number is history, not a current claim: the first table measures
+**three** sources (the base catalog of the day), the closing table measures **all sixteen**, and a
+row may therefore appear with two different figures. The current numbers are always the last table.
+
+Verified on a second reading (main tab, 2026-09-09 12:5x, independent run): the closing table
+reproduces exactly — CWE_89 with `stored-input.json`, `unsafe n=912 → REFUTED 804, OPEN 108,
+miss 0`; without the overlay the same run gives 357 / 555 / 0 and 210 false alarms against the
+first table's 90, which is the three-source figure, not a drift. Reading the first table as
+current is the one mistake this file invites, and it nearly caught its own reviewer.
+
 ## What the corpus is, and what it is not
 
 Sources in the suite: `$_GET`, `$_POST`, `$_GET` through an array — these are in the base catalog.

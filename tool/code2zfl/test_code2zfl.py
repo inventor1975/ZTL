@@ -88,6 +88,7 @@ EXPECT = {
     "f58_unknown_guard.php": ["OPEN", "OPEN", "REFUTED"],
     "f59_fixed_alphabet_encoder.php": ["EARNED", "EARNED", "REFUTED"],
     "f60_isset_literal_map.php": ["EARNED", "REFUTED"],
+    "f61_url_attr_after_query.php": ["EARNED", "REFUTED", "EARNED"],
 }
 STORED = os.path.join(HERE, "overlays", "stored-input.json")
 

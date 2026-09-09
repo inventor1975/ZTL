@@ -231,12 +231,18 @@ final class Html {
     const JS_CODE_SINK = '/(?:setTimeout|setInterval|eval|Function|execScript|write|writeln|innerHTML|outerHTML|insertAdjacentHTML|href|location|src|action)\s*[(=]\s*$/i';
     const URL_ATTRS = ['href', 'src', 'action', 'formaction', 'data', 'poster', 'background', 'cite', 'longdesc', 'manifest', 'srcset', 'codebase', 'xlink:href'];
     const LEVEL = ['text' => 0, 'attr-dq' => 0, 'script-dq' => 0, 'attr-sq' => 1, 'script-sq' => 1, 'attr-url' => 2];   // anything else: 3 — only a numeric/whitelist substitution
-    /** state = [s, flavor, tag, attr, tail] */
+    /** state = [s, flavor, tag, attr, tail, valueSoFar]
+     *  `valueSoFar` is the literal text already written INSIDE the current attribute value. It decides
+     *  one thing and it matters: a value at the START of a URL attribute can set the scheme
+     *  (`javascript:`), and only URL-encoding saves it; a value after `sites.php?action=` cannot —
+     *  the scheme is already fixed by the literal, and ordinary HTML escaping is the right substitution.
+     *  Measured 2026-09-09 on WordPress `network/sites.php:115`, where esc_attr is correct and we
+     *  demanded a URL encoder. */
     public static function init(string $k): array {
-        if (preg_match('/^(attr|script)-(dq|sq|unq)-(\w+)$/', $k, $m)) return [$m[1] . '-' . $m[2], $m[3], '', '', ''];
-        return [$k, 'plain', '', '', ''];
+        if (preg_match('/^(attr|script)-(dq|sq|unq)-(\w+)$/', $k, $m)) return [$m[1] . '-' . $m[2], $m[3], '', '', '', ''];
+        return [$k, 'plain', '', '', '', ''];
     }
-    public static function unknown(): array { return ['unknown', 'plain', '', '', '']; }
+    public static function unknown(): array { return ['unknown', 'plain', '', '', '', '']; }
     public static function key(array $st): string {
         return in_array($st[0], ['attr-dq', 'attr-sq', 'attr-unq', 'script-sq', 'script-dq'], true) ? $st[0] . '-' . $st[1] : $st[0];
     }
@@ -247,13 +253,23 @@ final class Html {
         if ($n === 'style') return 'css';
         return in_array($n, self::URL_ATTRS, true) ? 'url' : 'plain';
     }
+    /** Has the literal before this point already fixed the URL's scheme? A `?`, `#`, `/` or an
+     *  explicit scheme means the value can no longer choose one. A bare prefix like "foo" cannot be
+     *  trusted: `foo` + `javascript:...` is still one token to the browser only if no separator ran,
+     *  so we require a separator, not merely non-emptiness. */
+    private static function schemeFixed(string $written): bool {
+        return (bool)preg_match('~[?#/]|^[a-zA-Z][a-zA-Z0-9+.\-]*:~', $written);
+    }
+
     private static function afterTag(string $tag): string { $t = strtolower($tag); return $t === 'script' ? 'script' : ($t === 'style' ? 'style' : 'text'); }
     public static function advance(array $st, string $t): array {
         [$s, $fl, $tag, $attr, $tail] = $st;
+        $val = $st[5] ?? '';                                    // literal already written inside the attribute value
         if ($s === 'unknown') return $st;
         $n = strlen($t);
         for ($i = 0; $i < $n; $i++) {
             $c = $t[$i]; $tail = substr($tail . $c, -40); $ws = ctype_space($c);   // enough tail for `</script`, `-->` and a code-sink name
+            if ($s === 'attr-dq' || $s === 'attr-sq' || $s === 'attr-unq') $val = substr($val . $c, -60);
             switch ($s) {
                 case 'text':
                     if ($c === '<') { if (substr($t, $i, 4) === '<!--') { $s = 'comment'; $i += 3; $tail = ''; } else $s = 'lt'; }
@@ -287,12 +303,12 @@ final class Html {
                 case 'attr-eq':
                     if ($ws) break;
                     $fl = self::flavorOf($attr);
-                    if ($c === '"') $s = 'attr-dq'; elseif ($c === "'") $s = 'attr-sq';
+                    if ($c === '"') { $s = 'attr-dq'; $val = ''; } elseif ($c === "'") { $s = 'attr-sq'; $val = ''; }
                     elseif ($c === '>') { $s = self::afterTag($tag); $tag = ''; $tail = ''; }
                     else $s = 'attr-unq';
                     break;
-                case 'attr-dq': if ($c === '"') $s = 'intag'; break;
-                case 'attr-sq': if ($c === "'") $s = 'intag'; break;
+                case 'attr-dq': if ($c === '"') { $s = 'intag'; $val = ''; } break;
+                case 'attr-sq': if ($c === "'") { $s = 'intag'; $val = ''; } break;
                 case 'attr-unq':
                     if ($ws) $s = 'intag'; elseif ($c === '>') { $s = self::afterTag($tag); $tag = ''; $tail = ''; }
                     break;
@@ -309,14 +325,16 @@ final class Html {
                 case 'comment': if (substr($tail, -3) === '-->') $s = 'text'; break;
             }
         }
-        return [$s, $fl, $tag, $attr, $tail];
+        return [$s, $fl, $tag, $attr, $tail, $val];
     }
     /** The sub-context a value landing HERE is in. */
     public static function ctx(array $st): string {
         [$s, $fl] = $st;
+        $written = $st[5] ?? '';
         switch ($s) {
             case 'text': return 'text';
             case 'attr-dq': case 'attr-sq':
+                if ($fl === 'url' && self::schemeFixed($written)) return $s;   // scheme already decided by the literal
                 return $fl === 'plain' ? $s : ($fl === 'url' ? 'attr-url' : ($fl === 'js' ? 'attr-event' : 'attr-style'));
             case 'attr-unq': case 'attr-eq': return 'attr-unquoted';
             case 'lt': case 'tagname': return 'tag-name';

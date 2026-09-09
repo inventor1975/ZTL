@@ -80,6 +80,7 @@ EXPECT = {
     "f50_html_unknown_position.php": ["EARNED", "EARNED", "EARNED", "EARNED"],
     "f51_script_encoder.php": ["EARNED", "REFUTED", "EARNED"],
     "f52_files_keys.php": ["EARNED", "REFUTED"],
+    "f53_substituted_joined_with_unknown.php": ["OPEN", "EARNED"],
 }
 
 

@@ -119,15 +119,22 @@ function uniq(array $rows): array {
 /** JOIN of two paths: may-taint, must-sanitize. */
 function join2(array $a, array $b): array {
     $t = RANK[$a['t']] >= RANK[$b['t']] ? $a['t'] : $b['t'];
+    $zuX = [];
     if ($a['t'] === 'F') $san = $b['san'];
     elseif ($b['t'] === 'F') $san = $a['san'];
+    // a substituted attacker value joined with a value of UNKNOWN origin (a DB row, a directory listing, a call past
+    // the depth cap): the substitution stands, the unknown part is the weak link (zu) — not "no substitution seen".
+    // Before 2026-09-09 the meet dropped the substitution and a later array_merge read the result as an attacker
+    // value "read in full": a false REFUTED on Translation.php:179 after its inputs had been confined to [A-Za-z0-9_-].
+    elseif ($a['t'] === 'Z' && !$a['san'] && $b['t'] === 'T' && $b['san']) { $san = $b['san']; $zuX = $a['z']; }
+    elseif ($b['t'] === 'Z' && !$b['san'] && $a['t'] === 'T' && $a['san']) { $san = $a['san']; $zuX = $b['z']; }
     else $san = sanMeet($a['san'], $b['san']);
     $qa = $a['t'] === 'F' ? null : $a['q']; $qb = $b['t'] === 'F' ? null : $b['q'];   // constants have no quoting question
     if ($qa === false || $qb === false) $q = false;
     elseif ($qa === null) $q = $qb; elseif ($qb === null) $q = $qa; else $q = true;
     return ['t' => $t, 'src' => uniq(array_merge($a['src'], $b['src'])), 'san' => $san,
             'z' => uniq(array_merge($a['z'], $b['z'])), 'q' => $q,
-            'zu' => uniq(array_merge($a['zu'] ?? [], $b['zu'] ?? [])), 'nu' => ($a['nu'] ?? false) || ($b['nu'] ?? false), 'dv' => dvUnion($a, $b),
+            'zu' => uniq(array_merge($a['zu'] ?? [], $b['zu'] ?? [], $zuX)), 'nu' => ($a['nu'] ?? false) || ($b['nu'] ?? false), 'dv' => dvUnion($a, $b),
             'hc' => hcJoin($a, $b), 'hf' => hfJoin($a, $b)];
 }
 /** MEET of two sanitization maps: '*' (a numeric substitution) covers every context, so it is the identity. */

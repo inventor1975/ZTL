@@ -97,6 +97,8 @@ EXPECT = {
     "f67_singleton_through_a_property.php": ["EARNED", "EARNED", "REFUTED"],
     "f68_unknown_check_on_a_slot.php": ["OPEN", "OPEN", "EARNED", "REFUTED"],
     "f69_first_class_callable.php": ["REFUTED"],
+    "f70_property_element_slots.php": ["EARNED", "REFUTED", "REFUTED", "REFUTED"],
+    "f71_not_sink_by_receiver.php": ["REFUTED"],
 }
 STORED = os.path.join(HERE, "overlays", "stored-input.json")
 

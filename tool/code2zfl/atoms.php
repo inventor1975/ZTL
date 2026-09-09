@@ -96,7 +96,9 @@ foreach (($SUMMARIES['methods'] ?? []) as $n => $r) if (!empty($r['ends'])) $END
 // An overlay can only ADD to a merged catalog, and sometimes a project needs the opposite: WordPress's
 // $wpdb->delete/insert/update bind their values, so the base catalog's generic `delete` sink is wrong
 // there. `not_sinks` / `not_sanitizers` subtract, by exact key (receiver-qualified names allowed).
-foreach ($CAT['not_sinks'] ?? [] as $key) {
+$NOTSINK = [];                                   // a VETO by receiver: `$wp_the_query->query` is not the base
+foreach ($CAT['not_sinks'] ?? [] as $key) {      // catalog's generic `query` sink, though its bare name matches
+    $NOTSINK[strtolower($key)] = 1;
     foreach ($CAT['sinks'] as $ctx => &$spec) {
         foreach (['functions', 'methods'] as $slot)
             if (isset($spec[$slot])) $spec[$slot] = array_values(array_filter($spec[$slot], fn($x) => strtolower($x) !== strtolower($key)));
@@ -675,7 +677,7 @@ final class Analyzer {
     /** Evaluate an expression to a taint state; records sinks and assignments on the way. */
     public function ex(?Node $e, array &$env): array {
         if (++$this->nodeSpent > $this->nodeBudget) return stZ('node-budget', $e ? $e->getStartLine() : 0);
-        global $SUMMARIES, $SUPER, $SERVER_KEYS, $SERVER_PREFIXES, $GUARDS, $SRCFN, $SRCMETH, $SRCBYREF, $SRCSHELL, $SANFN, $SANMETH, $SANCAST, $TRANSP, $TRANSPMETH, $PRESERV, $NARROW, $SINKFN, $SINKMETH, $SINKARG, $SINKFLAGS;
+        global $SUMMARIES, $SUPER, $SERVER_KEYS, $SERVER_PREFIXES, $GUARDS, $SRCFN, $SRCMETH, $SRCBYREF, $SRCSHELL, $SANFN, $SANMETH, $SANCAST, $TRANSP, $TRANSPMETH, $PRESERV, $NARROW, $SINKFN, $SINKMETH, $SINKARG, $SINKFLAGS, $NOTSINK;
         if ($e === null) return stF();
         $line = $e->getStartLine();
 
@@ -756,7 +758,8 @@ final class Analyzer {
             if ($e instanceof Expr\PropertyFetch && $e->var instanceof Expr\Variable && $e->var->name === 'this'
                 && $e->name instanceof Node\Identifier && $this->currentClass !== null) {
                 $pn = $e->name->toString();
-                if (isset($this->props[$this->currentClass][$pn])) return $this->props[$this->currentClass][$pn];
+                $whole = $this->propWhole($this->currentClass, $pn);
+                if ($whole !== null) return $whole;
                 return stZ('property:$this->' . $pn, $line);
             }
             // another object's property: name the object, so the ledger says WHICH boundary this is
@@ -895,6 +898,9 @@ final class Analyzer {
             }
             // sinks first: the argument as it ARRIVES
             $sinkCtx = $isMethod ? $qual($SINKMETH) : ($e instanceof Expr\StaticCall ? ($qual($SINKMETH) ?? ($SINKFN[$name] ?? null)) : ($SINKFN[$name] ?? null));
+            // `not_sinks` names an ACT, and the receiver is part of the act. Subtracting only by bare name
+            // could not say "this project's $wp_the_query->query is not SQL" without also unsaying $db->query.
+            if ($sinkCtx !== null && $recv !== null && isset($NOTSINK[strtolower($recv)])) $sinkCtx = null;
             if ($sinkCtx !== null) {
                 $ix = $SINKARG[$name] ?? 0;
                 if ($fmt !== null && $name === 'printf') $this->output('printf', $line, $fmt);   // what is printed is the FORMATTED string
@@ -1286,10 +1292,20 @@ final class Analyzer {
         if ($target instanceof Expr\ArrayDimFetch && ($ps0 = self::propArraySlot($target)) !== null
             && $target->var instanceof Expr\PropertyFetch && $this->currentClass !== null) {
             $this->ex($target->dim, $env);
-            $pn = $target->var->name->toString();
+            // WRITING ONE KEY DOES NOT TAINT THE OTHERS. `$this->config['base_url'] = <from $_SERVER>`
+            // used to be joined into the whole property, so `$this->config['theme']` — written nowhere
+            // near it — read as attacker-controlled. Pico: all 9 of its refutations, measured 2026-09-09.
+            // The element goes to its own slot; the whole-property read collects the slots (see ex()).
+            $this->props[$this->currentClass][$ps0] = $rhs;
+            return;
+        }
+        if ($target instanceof Expr\ArrayDimFetch && $target->var instanceof Expr\PropertyFetch
+            && $target->var->var instanceof Expr\Variable && $target->var->var->name === 'this'
+            && $target->var->name instanceof Node\Identifier && $this->currentClass !== null) {
+            $this->ex($target->dim, $env);                        // a COMPUTED key: which element it is, we do not know,
+            $pn = $target->var->name->toString();                 // so the whole property carries it. Previously dropped.
             $cur = $this->props[$this->currentClass][$pn] ?? stF();
             $this->props[$this->currentClass][$pn] = join2($cur, $rhs);
-            $this->props[$this->currentClass][$ps0] = $rhs;
             return;
         }
         if ($target instanceof Expr\ArrayDimFetch) {
@@ -1382,6 +1398,16 @@ final class Analyzer {
         }
         $sl = self::slot($v);
         if ($sl !== null) $this->unknownCheckedSlots[$sl] = $who;
+    }
+
+    /** THE WHOLE PROPERTY: what was written to it in bulk, joined with every element slot. Reading
+     *  `$this->config` must still see `$this->config['base_url']`; only reading a DIFFERENT literal
+     *  key must not. Null when nothing at all is known about the name. */
+    private function propWhole(string $cls, string $pn): ?array {
+        $parts = [];
+        if (isset($this->props[$cls][$pn])) $parts[] = $this->props[$cls][$pn];
+        foreach ($this->props[$cls] ?? [] as $k => $st) if (str_starts_with($k, $pn . '[')) $parts[] = $st;
+        return $parts ? joinAll($parts) : null;
     }
 
     /** The definition a `$this->m()` call actually runs: this class, else up the parent chain. */

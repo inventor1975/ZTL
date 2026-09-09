@@ -104,6 +104,7 @@ $SANCAST = $CAT['sanitizers']['casts'] ?? [];
 $TRANSP = []; $TRANSPMETH = [];
 foreach ($CAT['transparent'] ?? [] as $f) { if (str_contains($f, '->') || str_contains($f, '::')) $TRANSPMETH[$lowerKey($f)] = 1; else $TRANSP[strtolower($f)] = 1; }
 $GUARDS = array_change_key_case($CAT['guards'] ?? [], CASE_LOWER);   // a condition that VERIFIES a value
+$INERT = array_flip(array_map('strtolower', $CAT['inert_guards'] ?? []));   // a condition we READ, and it confines nothing
 $PRESERV = array_flip(array_map('strtolower', $CAT['preserving'] ?? []));
 $NARROW = array_flip(array_map('strtolower', $CAT['narrowing'] ?? []));
 $SINKFN = []; $SINKMETH = []; $SINKARG = []; $SINKFLAGS = [];
@@ -1042,7 +1043,7 @@ final class Analyzer {
      *  A guard is an act of checking, and inside the branch it protects the value is substituted (E40:
      *  the sanitizer is a substitution, and a verified membership in a fixed set is one). */
     private function guards(Expr $c): array {
-        global $GUARDS;
+        global $GUARDS, $INERT;
         $line = $c->getStartLine();
         $none = ['true' => [], 'false' => []];
         if ($c instanceof Expr\BooleanNot) { $g = $this->guards($c->expr); return ['true' => $g['false'], 'false' => $g['true'], 'unknown' => $g['unknown'] ?? []]; }
@@ -1108,6 +1109,10 @@ final class Analyzer {
                 return ($v !== null && in_array($fname, self::VALIDATE_FIXED, true)) ? ['true' => [[$v, ['*'], 'guard:filter_var:' . $fname, $line]], 'false' => []] : $none;
             }
             $g = $GUARDS[$fn] ?? null;
+            // READ, AND FOUND WANTING. file_exists() answers whether a path is on disk — not whether it is
+            // one the developer named here; is_string() forbids no quote. These are not unknown checks: we
+            // read them, they confine nothing, so they are no guard at all and the verdict stands.
+            if ($g === null && isset($INERT[$fn])) return $none;
             if ($g === null) {
                 // AN UNKNOWN CHECK IS NOT THE ABSENCE OF A CHECK. `if (!wp_check_jsonp_callback($cb)) return;`
                 // reads the value and decides on it; we cannot see what it accepts. Calling that REFUTED accuses

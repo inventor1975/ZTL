@@ -438,6 +438,7 @@
     "date_default_timezone_get"
   ],
   "_notes": {
+    "inert_guards": "READ, AND FOUND WANTING. A guard we cannot read makes the value Z (the checker is named, verdict OPEN). These we CAN read, and what they answer confines nothing about the value: file_exists() says a path is on disk — an attacker's upload, a log, /etc/passwd are all on disk, and it is not the set the developer named at this site; is_string()/is_array() fix the type and forbid no quote; count()/strlen() measure. So they are treated as no guard at all, and a verdict on the value stands. NOT here, deliberately: class_exists / function_exists / method_exists / is_callable / str_starts_with / str_contains — each of those CAN confine (a prefix check is a real path confinement), and they stay unknown-Z until read case by case. MEASURED on SMF 2026-09-09: file_exists 252, is_array 112, is_file 67, is_dir 36, is_string 29 OPEN verdicts carried one of these as a named cause.",
     "addslashes": "listed as TRANSPARENT on purpose: a string transformation, not a substitution by a verified element; bypassable (multibyte). Taint passes, sanitization is NOT credited.",
     "strip_tags": "transparent for the same reason: it is not an HTML escaper.",
     "transparent": "taint passes through; any sanitization already earned is DROPPED (substr of an escaped string can end in a lone backslash; stripslashes undoes escaping outright). Too strict is a verdict that can be redeemed; too lax is one that lies.",
@@ -481,6 +482,12 @@
     "array_rand",
     "min",
     "max"
+  ],
+  "inert_guards": [
+    "file_exists", "is_file", "is_dir", "is_readable", "is_writable", "is_writeable",
+    "is_link", "is_executable", "filesize", "filemtime", "rename", "touch", "mkdir", "copy",
+    "is_array", "is_string", "is_object", "is_scalar", "is_iterable", "is_resource", "is_null",
+    "count", "sizeof", "strlen", "mb_strlen", "trim", "isset"
   ],
   "guards": {
     "in_array": {

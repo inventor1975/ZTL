@@ -93,6 +93,7 @@ EXPECT = {
     "f63_guard_on_superglobal_slot.php": ["EARNED", "REFUTED"],
     "f64_files_fields.php": ["EARNED", "REFUTED"],
     "f65_whitelist_from_a_call.php": ["OPEN", "EARNED", "REFUTED"],
+    "f66_existence_is_not_a_constraint.php": ["REFUTED", "REFUTED", "REFUTED", "EARNED", "OPEN"],
 }
 STORED = os.path.join(HERE, "overlays", "stored-input.json")
 

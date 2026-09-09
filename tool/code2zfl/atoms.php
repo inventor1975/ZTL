@@ -403,6 +403,10 @@ final class Analyzer {
     // The claim is not "checked here" but "this file reads and decides on this value, and what it
     // accepts is not visible from here". Always toward OPEN, never toward EARNED.
     public array $unknownChecked = [];
+    /** The same, for a SUPERGLOBAL ELEMENT: `if (their_check($_GET['a'])) { sink($_GET['a']); }`. A slot
+     *  never lives in the environment, so the unknown check on it had nowhere to leave its mark and was
+     *  dropped in silence — the sink then read as a plain refutation. Measured 2026-09-09. */
+    public array $unknownCheckedSlots = [];
     /** Slots (`_REQUEST[option_name]`) a guard has vouched for. A superglobal element never lives in
      *  the environment — it is read straight from the source each time — so a guard on it had no
      *  place to leave its mark, and `preg_match('/^[a-zA-Z_0-9]+$/', $_REQUEST['x'])` counted for
@@ -733,6 +737,10 @@ final class Analyzer {
             }
             $sl = self::slot($e);
             if ($sl !== null && isset($env[$sl])) { $st = $env[$sl]; $st['dv'] = [$sl]; return $st; }   // this key was written here: read that, not the whole array
+            if ($sl !== null && isset($this->unknownCheckedSlots[$sl])) {
+                $st = $this->ex($e->var, $env); $st['dv'] = [$sl];
+                if ($st['t'] !== 'F') return through($st, 'guarded-by:' . $this->unknownCheckedSlots[$sl], $line, true, 'all');
+            }
             if ($sl !== null && isset($env[$e->var->name])) { $st = $this->ex($e->var, $env); $st['dv'] = [$sl]; return $st; }   // an element never written here: the whole array's state, under the element's name
             $base = $this->ex($e->var, $env);
             return $base;
@@ -1343,6 +1351,15 @@ final class Analyzer {
         return $rets ? joinAll($rets) : stF();
     }
 
+    /** Record one unknown check: on a plain variable, or on a superglobal element with a literal key. */
+    public function noteUnknownCheck(?Node $arg, string $who): void {
+        if (!($arg instanceof Node\Arg)) return;
+        $v = $arg->value;
+        if ($v instanceof Expr\Variable && is_string($v->name)) { $this->unknownChecked[$v->name] = $who; return; }
+        $sl = self::slot($v);
+        if ($sl !== null) $this->unknownCheckedSlots[$sl] = $who;
+    }
+
     /** The definition a `$this->m()` call actually runs: this class, else up the parent chain. */
     private function findMethod(?string $cls, string $name): array {
         $seen = [];
@@ -1596,17 +1613,13 @@ foreach ($files as $f) {
                 if ($nm === null || isset($GUARDS[$nm]) || $nm === 'filter_var' || isset($SANFN[$nm])
                     || isset($PRESERV[$nm]) || isset($NARROW[$nm]) || isset($TRANSP[$nm]) || isset($SINKFN[$nm])
                     || function_exists($nm)) continue;
-                foreach ($call->args as $arg)
-                    if ($arg instanceof Node\Arg && $arg->value instanceof Expr\Variable && is_string($arg->value->name))
-                        $an->unknownChecked[$arg->value->name] = $nm . '()';
+                foreach ($call->args as $arg) $an->noteUnknownCheck($arg, $nm . '()');
             }
             foreach ($finder->findInstanceOf($cond, Expr\MethodCall::class) as $call) {
                 if (!($call->name instanceof Node\Identifier)) continue;
                 $nm = strtolower($call->name->toString());
                 if (isset($SANMETH[$nm]) || isset($SINKMETH[$nm])) continue;
-                foreach ($call->args as $arg)
-                    if ($arg instanceof Node\Arg && $arg->value instanceof Expr\Variable && is_string($arg->value->name))
-                        $an->unknownChecked[$arg->value->name] = '->' . $nm . '()';
+                foreach ($call->args as $arg) $an->noteUnknownCheck($arg, '->' . $nm . '()');
             }
         }
     }

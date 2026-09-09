@@ -235,3 +235,70 @@ defects as the three-source pass, now multiplied across the other sources. The m
 unchanged in kind — they are the html sub-context ceiling and the five declared sanitizer disagreements, not new
 defects. Fixtures: `f54` (stored input, run both with and without the overlay by the stand), `f55` (in-file object
 through its property states).
+
+---
+
+# Real projects, not synthetic (2026-09-09, fourth pass — "качай прямо полсотни сразу")
+
+The SARD suite is 42 212 files that one generator wrote. It has no front controller, no class
+hierarchy, no framework — so it cannot fail us in the ways a real project does. This pass measures
+**50 CMS and framework trees** (`Corpora/php/cms/`, public clones, none committed here), base
+catalog, no overlays, `--ctx all`.
+
+    python3 bench/census.py <corpora>/cms out.json      # per project: verdicts, and the NAMED boundaries
+
+## What the corpus found that fixtures could not
+
+Four of the eight defects fixed in this pass were **crashes and silences**, not wrong verdicts —
+and a labelled corpus cannot find those, because it only scores the files that came back.
+
+| defect | what it cost | commit |
+|---|---|---|
+| a conflict summary carries `files` and no `file`; merging it with a plain one put `None` in a sort | CodeIgniter 4, bolt, cakephp: the whole run died | `44e1917` |
+| `json_encode` returns `false` on a byte that is not UTF-8 (Symfony names a class with one) — we printed an empty line and exited **0** | symfony, 11 485 files, read as "no facts" | `979516a` |
+| PHP 8.1 `gate(...)` puts a `VariadicPlaceholder` where an argument goes | contao, magento2, symfony: fatal, 39 000 files unjudged | `2a4cac5` |
+| an unreadable check on a superglobal **element** had nowhere to leave its mark | silent false refutations | `3365f65` |
+
+The third was caught only by running the census twice and diffing: three projects that had judged,
+no longer did. A tool that dies loudly is cheap to fix; the one that worries me is the second,
+which was silent, and is the reason the encoder now exits non-zero and says why.
+
+## The front controller (`b417a39`)
+
+The largest single source of false accusations in the whole corpus was one project and one shape.
+Dolibarr requires `htdocs/main.inc.php` from every page; that requires `htdocs/waf.inc.php`, which
+hands `$_SERVER['PHP_SELF']`, `QUERY_STRING` and `$_POST` to a function that dies on bad input.
+We could see calls into another file and could not see this, so every page read as unprotected.
+
+| | REFUTED before | after |
+|---|---|---|
+| dolibarr (4305 files) | 3258 | **218** |
+| SuiteCRM (4652) | 493 | 449 |
+| chamilo-lms (7351) | 177 | 171 |
+| glpi (3084) | 33 | 31 |
+| roundcubemail (548) | 19 | 17 |
+| moodle (49 719) | 23 | 21 |
+| PrestaShop (7747) | 18 | 16 |
+| osTicket (717) | 6 | 5 |
+| contao (2018) | 1 | 0 |
+
+The credit is always **Z with the checker named** — OPEN, never EARNED. We did not read what that
+WAF accepts; we read that something reads the value and may refuse. To turn these into EARNED we
+would have to read a NEGATIVE pattern (`preg_match('/[<>"\']/', $v)` → reject), and we read only
+positive anchored ones. That is a named boundary, not a silence.
+
+SARD is untouched by all of it — CWE_78, CWE_89, CWE_98 and CWE_79, 25 392 files, every number
+identical before and after. The synthetic corpus has no front controller, no `file_exists` guard
+and no inheritance, so it could not have told us any of this.
+
+## The 218 that stand in dolibarr, read in the source
+
+Two shapes, both honest:
+
+* `$_SERVER['HTTP_REFERER']` printed into `value="…"` (`htdocs/adherents/card.php:1386` and ~50 more).
+  Read in `waf.inc.php`: the gate is called on `PHP_SELF` (line 326), `QUERY_STRING` (334) and
+  `$_POST` (338). `HTTP_REFERER` is never handed to it. Recorded as a candidate, not claimed —
+  a Referer is chosen by the victim's browser, and no working example has been built.
+* `.tpl.php` files with no front controller of their own: they are included BY a page that has one.
+  Our graph runs downward (what I include), not upward (who includes me). Fixing it means a reverse
+  closure with a universal quantifier — every includer must carry the fact — and is not done.

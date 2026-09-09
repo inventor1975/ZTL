@@ -575,6 +575,32 @@ final class Analyzer {
      *  value written under one key was read back under every other key: `$row['value'] = get_var(); unserialize($row['options'])`
      *  came back REFUTED with "path read in full". The slot name is internal and never emitted (see joinEnv). */
     /** `$this->prop['key']` (literal key) as a property slot name `prop[key]`; null otherwise. */
+    /** THE WEAK LINK MUST BE NAMED. Built from identifiers only — never from a literal, so a config value
+     *  cannot ride out in a cause. An array key is dropped to `[]`, a computed part is `{expr}`.
+     *  MEASURED 2026-09-09: before this, 4357 of SMF's OPEN verdicts named their boundary `property` and
+     *  nothing else — almost all of them static fetches (`Config::$packagesdir`, `Utils::$context`). */
+    private static function exprName(?Node $e): string {
+        if ($e instanceof Expr\Variable) return is_string($e->name) ? '$' . $e->name : '${expr}';
+        if ($e instanceof Expr\PropertyFetch || $e instanceof Expr\NullsafePropertyFetch) {
+            $op = $e instanceof Expr\NullsafePropertyFetch ? '?->' : '->';
+            return self::exprName($e->var) . $op . ($e->name instanceof Node\Identifier ? $e->name->toString() : '{expr}');
+        }
+        if ($e instanceof Expr\StaticPropertyFetch)
+            return ($e->class instanceof Node\Name ? $e->class->toString() : '{expr}') . '::$'
+                 . ($e->name instanceof Node\VarLikeIdentifier ? $e->name->toString() : '{expr}');
+        if ($e instanceof Expr\ClassConstFetch)
+            return ($e->class instanceof Node\Name ? $e->class->toString() : '{expr}') . '::'
+                 . ($e->name instanceof Node\Identifier ? $e->name->toString() : '{expr}');
+        if ($e instanceof Expr\ArrayDimFetch) return self::exprName($e->var) . '[]';
+        if ($e instanceof Expr\MethodCall || $e instanceof Expr\NullsafeMethodCall)
+            return self::exprName($e->var) . '->' . ($e->name instanceof Node\Identifier ? $e->name->toString() : '{expr}') . '()';
+        if ($e instanceof Expr\StaticCall)
+            return ($e->class instanceof Node\Name ? $e->class->toString() : '{expr}') . '::'
+                 . ($e->name instanceof Node\Identifier ? $e->name->toString() : '{expr}') . '()';
+        if ($e instanceof Expr\FuncCall) return ($e->name instanceof Node\Name ? $e->name->toString() : '{expr}') . '()';
+        return '{expr}';
+    }
+
     private static function propArraySlot(Expr $n): ?string {
         if (!($n instanceof Expr\ArrayDimFetch) || !($n->var instanceof Expr\PropertyFetch)) return null;
         $pf = $n->var; $d = $n->dim;
@@ -710,9 +736,7 @@ final class Analyzer {
                 return stZ('property:$this->' . $pn, $line);
             }
             // another object's property: name the object, so the ledger says WHICH boundary this is
-            if ($e instanceof Expr\PropertyFetch && $e->var instanceof Expr\Variable && is_string($e->var->name) && $e->name instanceof Node\Identifier)
-                return stZ('property:$' . $e->var->name . '->' . $e->name->toString(), $line);
-            return stZ('property', $line);
+            return stZ('property:' . self::exprName($e), $line);
         }
         if ($e instanceof Expr\Array_) {
             $st = [];

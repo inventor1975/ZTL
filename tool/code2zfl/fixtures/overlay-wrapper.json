@@ -1,5 +1,5 @@
 {
-  "_about": "overlay for a typical hand-written DB wrapper: `$db->query(...)` is the sink, `$db->escape(...)` substitutes for the quoted SQL context. Method keys may be receiver-qualified: `$db->escape` and `$out->escape` are different acts. A singleton reached THROUGH A PROPERTY is its own key too: `Reg::$db->escape` and `$app->db->escape`. `not_sinks` may name a RECEIVER: `$bound->query` is not the generic `query` sink.",
+  "_about": "overlay for a typical hand-written DB wrapper: `$db->query(...)` is the sink, `$db->escape(...)` substitutes for the quoted SQL context. Method keys may be receiver-qualified: `$db->escape` and `$out->escape` are different acts. A singleton reached THROUGH A PROPERTY is its own key too: `Reg::$db->escape` and `$app->db->escape`. `not_sinks` may name a RECEIVER: `$bound->query` is not the generic `query` sink. `wrap_escape()` is a plain function sanitizer for the quoted SQL context, so a fixture can test what survives a transformation.",
   "sinks": {
     "sql": {
       "methods": [
@@ -27,6 +27,13 @@
         ]
       },
       "$app->db->escape": {
+        "contexts": [
+          "sql-quoted"
+        ]
+      }
+    },
+    "functions": {
+      "wrap_escape": {
         "contexts": [
           "sql-quoted"
         ]

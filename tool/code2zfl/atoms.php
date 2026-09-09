@@ -1048,10 +1048,16 @@ final class Analyzer {
                 && self::patternStripsToClass($e->args[0]->value->value))
                 return sanitize($args[2] ?? stF(), ['*'], 'preg_replace-strip', $line);
             if (!$isMethod && ($name === 'explode' || $name === 'implode' || $name === 'join')) {
-                // splitting/joining on a literal delimiter that carries no quote, backslash or NUL cannot
-                // strand an escape: preserving. Any other delimiter: numeric substitutions only.
+                // Splitting/joining on a literal delimiter that carries no quote, backslash or NUL cannot
+                // strand an escape: preserving. A delimiter WITH quotes is safe too when it has an EVEN
+                // number of each — it closes one literal and opens the next, leaving the quoting state as
+                // it found it. `implode("','", $escaped)` inside `'...'` is the canonical SQL IN-list, and
+                // WordPress core builds get_page_by_path() that way (post.php: esc_sql($parts) then
+                // implode("','", ...)); an ODD count stands a quote in the middle of one element and does
+                // strand the escape. Measured 2026-09-10.
                 $delim = $e->args[0]->value ?? null;
-                $safe = $delim instanceof Scalar\String_ && !preg_match('/[\\\\\'"\x00]/', $delim->value);
+                $safe = $delim instanceof Scalar\String_ && !preg_match('/[\\\\\x00]/', $delim->value)
+                    && substr_count($delim->value, "'") % 2 === 0 && substr_count($delim->value, '"') % 2 === 0;
                 $data = $args[1] ?? $args[0] ?? stF();
                 return through($data, null, $line, false, $safe ? 'all' : 'numeric');
             }

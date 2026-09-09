@@ -106,6 +106,7 @@ EXPECT = {
     "f76_array_map_with_a_literal_callback.php": ["EARNED", "EARNED", "EARNED", "OPEN", "EARNED", "REFUTED", "REFUTED"],
     "f77_ternary_condition_guards_its_branches.php": ["EARNED", "EARNED", "OPEN", "REFUTED"],
     "f78_array_key_slots.php": ["REFUTED", "EARNED", "REFUTED", "REFUTED"],
+    "f79_implode_delimiter_quote_parity.php": ["EARNED", "EARNED", "REFUTED", "REFUTED"],
 }
 STORED = os.path.join(HERE, "overlays", "stored-input.json")
 

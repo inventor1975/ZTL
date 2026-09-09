@@ -91,9 +91,13 @@ foreach ($CAT['sinks'] as $ctx => $spec) {
 // src: [[kind, name, line]]     san: ctx => [fn, line] (held on EVERY path)
 // z:   [[why, line]] opaque passes      q: true|false|null  (inside SQL quotes?)
 const RANK = ['F' => 0, 'Z' => 1, 'T' => 2];
-function stF(): array { return ['t' => 'F', 'src' => [], 'san' => [], 'z' => [], 'q' => null, 'zu' => [], 'nu' => false]; }
-function stZ(string $why, int $line): array { return ['t' => 'Z', 'src' => [], 'san' => [], 'z' => [[$why, $line]], 'q' => null, 'zu' => [], 'nu' => false]; }
-function stT(string $kind, string $name, int $line): array { return ['t' => 'T', 'src' => [[$kind, $name, $line]], 'san' => [], 'z' => [], 'q' => null, 'zu' => [], 'nu' => true]; }
+// dv:  names of the variables this value was DIRECTLY read through — its parents. A guard on $x is credited to a
+//      derived $y only when every tainted parent of $y leads back to $x (see derivesOnlyFrom); DVWA upload/impossible
+//      builds the temp path from the extension BEFORE checking the extension.
+function stF(): array { return ['t' => 'F', 'src' => [], 'san' => [], 'z' => [], 'q' => null, 'zu' => [], 'nu' => false, 'dv' => []]; }
+function stZ(string $why, int $line): array { return ['t' => 'Z', 'src' => [], 'san' => [], 'z' => [[$why, $line]], 'q' => null, 'zu' => [], 'nu' => false, 'dv' => []]; }
+function stT(string $kind, string $name, int $line): array { return ['t' => 'T', 'src' => [[$kind, $name, $line]], 'san' => [], 'z' => [], 'q' => null, 'zu' => [], 'nu' => true, 'dv' => ['#src']]; }
+function dvUnion(array $a, array $b): array { return array_values(array_unique(array_merge($a['dv'] ?? [], $b['dv'] ?? []))); }
 
 function uniq(array $rows): array {
     $seen = []; $out = [];
@@ -111,7 +115,7 @@ function join2(array $a, array $b): array {
     elseif ($qa === null) $q = $qb; elseif ($qb === null) $q = $qa; else $q = true;
     return ['t' => $t, 'src' => uniq(array_merge($a['src'], $b['src'])), 'san' => $san,
             'z' => uniq(array_merge($a['z'], $b['z'])), 'q' => $q,
-            'zu' => uniq(array_merge($a['zu'] ?? [], $b['zu'] ?? [])), 'nu' => ($a['nu'] ?? false) || ($b['nu'] ?? false)];
+            'zu' => uniq(array_merge($a['zu'] ?? [], $b['zu'] ?? [])), 'nu' => ($a['nu'] ?? false) || ($b['nu'] ?? false), 'dv' => dvUnion($a, $b)];
 }
 /** MEET of two sanitization maps: '*' (a numeric substitution) covers every context, so it is the identity. */
 function sanMeet(array $a, array $b): array {
@@ -132,15 +136,18 @@ function joinAll(array $states): array {
 function through(array $s, ?string $why, int $line, bool $unknown, string $keep = 'none'): array {
     $san = $keep === 'all' ? $s['san'] : ($keep === 'numeric' && isset($s['san']['*']) ? ['*' => $s['san']['*']] : []);
     $out = ['t' => $s['t'], 'src' => $s['src'], 'san' => $san, 'z' => $s['z'], 'q' => $keep === 'all' ? $s['q'] : null, 'zu' => $s['zu'] ?? [],
-            'nu' => ($s['nu'] ?? false) || ($keep !== 'all' && $s['t'] === 'T' && !$san)];
-    if ($unknown && $s['t'] !== 'F') { $out['t'] = 'Z'; $out['z'][] = [$why, $line]; $out['nu'] = false; }
+            'nu' => ($s['nu'] ?? false) || ($keep !== 'all' && $s['t'] === 'T' && !$san), 'dv' => $s['dv'] ?? []];
+    // an UNKNOWN call's result is not visible here even when every argument is a constant: `$obj->get()` reads
+    // the object's state, `time()` reads the clock — before 2026-09-09 such a call over constants stayed F and
+    // four in-file getter shapes of the SARD suite came back EARNED ("nothing arrives") instead of OPEN
+    if ($unknown) { $out['t'] = 'Z'; $out['z'][] = [$why, $line]; $out['nu'] = false; }
     return $out;
 }
 function sanitize(array $s, array $ctxs, string $fn, int $line): array {
     // a NUMERIC substitution of the whole value settles every part inside it; a context escape of a
     // built string does not settle a part of unknown origin that may sit outside the quotes
     $zu = in_array('*', $ctxs, true) ? [] : ($s['zu'] ?? []);
-    $out = ['t' => $s['t'], 'src' => $s['src'], 'san' => $s['san'], 'z' => $s['z'], 'q' => null, 'zu' => $zu, 'nu' => false];
+    $out = ['t' => $s['t'], 'src' => $s['src'], 'san' => $s['san'], 'z' => $s['z'], 'q' => null, 'zu' => $zu, 'nu' => false, 'dv' => $s['dv'] ?? []];
     foreach ($ctxs as $c) $out['san'][$c] = [$fn, $line];
     return $out;
 }
@@ -165,7 +172,37 @@ final class Analyzer {
     private ?string $currentClass = null;
     private int $callDepth = 3;
 
+    /** filter flags whose PASS leaves a value in a fixed alphabet: int, float, bool, IP (digits, dots, colons, a-f). EMAIL and URL let a quote through. */
+    private const VALIDATE_FIXED = ['FILTER_VALIDATE_INT', 'FILTER_VALIDATE_FLOAT', 'FILTER_VALIDATE_BOOL', 'FILTER_VALIDATE_BOOLEAN', 'FILTER_VALIDATE_IP'];
+    /** name -> literal node, for variables assigned EXACTLY ONCE in the file from a literal (`$re = "/^[0-9]+$/"`,
+     *  `$allowed = array(...)`): a guard may read them as the fixed set/pattern they are. Filled before the walk. */
+    public array $lits = [];
+
     public function __construct(private array $cat) {}
+
+    /** A literal, or a once-assigned variable standing for one; null otherwise. */
+    private function litOf(?Node $n): ?Node {
+        if ($n instanceof Expr\Variable && is_string($n->name) && isset($this->lits[$n->name])) return $this->lits[$n->name];
+        return self::isLiteral($n) ? $n : null;
+    }
+
+    /** `/[^a-zA-Z0-9_]/`, `/\W/`, `/\D/` — a single negated plain class (or its shorthand): with an empty replacement the
+     *  output is confined to that class. The `e` flag is refused outright. */
+    private static function patternStripsToClass(string $p): bool {
+        if (strlen($p) < 3) return false;
+        $d = $p[0]; $end = strrpos($p, $d);
+        if ($end === false || $end === 0) return false;
+        $flags = substr($p, $end + 1); $body = substr($p, 1, $end - 1);
+        if (str_contains($flags, 'e')) return false;
+        return (bool)preg_match('/^(?:\[\^[A-Za-z0-9_\\\\\-]+\]|\\\\[WD])[+*]?$/', $body);
+    }
+
+    /** 0/1 and true/false read as a truth value; anything else is not a truth we credit. */
+    private static function truthOf(Node $n): ?bool {
+        if ($n instanceof Scalar\Int_) return $n->value === 0 ? false : ($n->value === 1 ? true : null);
+        if ($n instanceof Expr\ConstFetch) { $c = strtolower($n->name->toString()); return $c === 'true' ? true : (($c === 'false' || $c === 'null') ? false : null); }
+        return null;
+    }
 
     /** Unescaped quote counts of a literal — read for CLASSIFICATION only, never emitted. */
     private static function quoteCounts(?string $s): array {
@@ -189,8 +226,38 @@ final class Analyzer {
         return [['expr', $this->ex($e, $env)]];
     }
 
-    private function concat(Node $e, array &$env): array {
-        $parts = $this->parts($e, $env);
+    private function concat(Node $e, array &$env): array { return $this->concatParts($this->parts($e, $env)); }
+
+    /** sprintf/printf with a LITERAL format: a numeric conversion (%d %u %f %x %b %e %g %o) SUBSTITUTES its
+     *  argument — the output is a number whatever came in; %s carries the argument through unchanged and the
+     *  literal text around it decides quoting, the same reading as for concatenation. %c is NOT numeric: it
+     *  turns an int into a character (39 → a quote). The format literal is never emitted. */
+    private function formatParts(Node $fmtNode, array $args, int $line, array &$env): array {
+        $segs = [];                                                   // ['txt', string] | ['expr', state]
+        if ($fmtNode instanceof Scalar\String_) $segs[] = ['txt', $fmtNode->value];
+        else foreach ($fmtNode->parts as $p) $segs[] = $p instanceof Node\InterpolatedStringPart ? ['txt', $p->value] : ['expr', $this->ex($p, $env)];
+        $re = '/%(?:(\d+)\$)?[-+ 0]*(?:\'.)?\d*(?:\.\d+)?([bcdeEfFgGosuxX%])/';
+        $parts = []; $next = 0;
+        foreach ($segs as [$kind, $val]) {
+            if ($kind === 'expr') { $parts[] = ['expr', $val]; continue; }
+            $pos = 0;
+            if (preg_match_all($re, $val, $m, PREG_OFFSET_CAPTURE | PREG_SET_ORDER)) {
+                foreach ($m as $mm) {
+                    $parts[] = ['lit', self::quoteCounts(substr($val, $pos, $mm[0][1] - $pos))];
+                    $pos = $mm[0][1] + strlen($mm[0][0]);
+                    $conv = $mm[2][0];
+                    if ($conv === '%') continue;
+                    $ix = ($mm[1][0] !== '' && $mm[1][1] >= 0) ? (int)$mm[1][0] - 1 : $next++;
+                    $a = $args[$ix] ?? stZ('sprintf-arg-missing', $line);
+                    $parts[] = ['expr', ($conv === 's' || $conv === 'c') ? $a : sanitize($a, ['*'], 'sprintf-%' . $conv, $line)];
+                }
+            }
+            $parts[] = ['lit', self::quoteCounts(substr($val, $pos))];
+        }
+        return $this->concatParts($parts);
+    }
+
+    private function concatParts(array $parts): array {
         $states = []; $qs = []; $sq = 0; $dq = 0; $opaque = false; $zu = []; $sanT = null; $nu = false;
         foreach ($parts as $p) {
             if ($p[0] === 'lit') { $sq += $p[1][0]; $dq += $p[1][1]; continue; }
@@ -202,8 +269,9 @@ final class Analyzer {
             if (!isset($s['san']['sql-quoted'])) continue;                                // nothing escaped: quoting is moot
             // a fragment that already embedded its escaped part carries the decision; a bare escaped value
             // is decided HERE: inside quotes iff an odd number of unescaped quotes precede it in this string
-            $qs[] = $s['q'] !== null ? $s['q'] : (($sq % 2 === 1) || ($dq % 2 === 1));
-            if ($s['t'] !== 'F' && $s['san'] === [] && $s['t'] === 'T') { /* unsubstituted attacker part: quoting is moot */ }
+            $qHere = $s['q'] !== null ? $s['q'] : (($sq % 2 === 1) || ($dq % 2 === 1));
+            if ($s['t'] === 'T' || $qHere) $qs[] = $qHere;
+            else $zu = array_merge($zu, $s['z']);   // escaped but OUTSIDE quotes and of unknown origin: not settled either way — that part is the weak link, not a refutation
         }
         $r = joinAll($states ?: [stF()]);
         if ($states) {
@@ -217,6 +285,18 @@ final class Analyzer {
 
     private function varName(Expr $v): ?string {
         return ($v instanceof Expr\Variable && is_string($v->name)) ? $v->name : null;
+    }
+
+    /** `$row['options']` with a literal key is tracked as its OWN slot `row[options]` in the env, beside the whole-array
+     *  state `row` (which stays the may-join of every element, for `$row[$k]`, foreach, implode). Before 2026-09-09 a
+     *  value written under one key was read back under every other key: `$row['value'] = get_var(); unserialize($row['options'])`
+     *  came back REFUTED with "path read in full". The slot name is internal and never emitted (see joinEnv). */
+    private static function slot(Expr $target): ?string {
+        if (!($target instanceof Expr\ArrayDimFetch) || !($target->var instanceof Expr\Variable) || !is_string($target->var->name)) return null;
+        $d = $target->dim;
+        if ($d instanceof Scalar\String_) return $target->var->name . '[' . $d->value . ']';
+        if ($d instanceof Scalar\Int_) return $target->var->name . '[' . $d->value . ']';
+        return null;
     }
 
     private function sinkFact(string $ctx, string $fn, int $line, array $s): void {
@@ -256,7 +336,8 @@ final class Analyzer {
             if (!is_string($e->name)) { return stZ('variable-variable', $line); }
             if (isset($SUPER[$e->name])) return stT('superglobal', '$' . $e->name, $line);
             if ($e->name === 'this') return stF();
-            return $env[$e->name] ?? stZ('unassigned:$' . $e->name, $line);
+            if (!isset($env[$e->name])) return stZ('unassigned:$' . $e->name, $line);
+            $st = $env[$e->name]; $st['dv'] = [$e->name]; return $st;           // the DIRECT parent of what is read is this variable
         }
         if ($e instanceof Expr\ArrayDimFetch) {
             $this->ex($e->dim, $env);
@@ -271,6 +352,9 @@ final class Analyzer {
                 }
                 return stT('superglobal', '$_SERVER', $line);                       // a computed key: assume the worst
             }
+            $sl = self::slot($e);
+            if ($sl !== null && isset($env[$sl])) { $st = $env[$sl]; $st['dv'] = [$sl]; return $st; }   // this key was written here: read that, not the whole array
+            if ($sl !== null && isset($env[$e->var->name])) { $st = $this->ex($e->var, $env); $st['dv'] = [$sl]; return $st; }   // an element never written here: the whole array's state, under the element's name
             $base = $this->ex($e->var, $env);
             return $base;
         }
@@ -302,6 +386,8 @@ final class Analyzer {
             if ($e instanceof Expr\AssignOp\Concat) {
                 $r = join2($cur, $rhs);
             } else { $r = join2($cur, $rhs); $r['san']['*'] = ['arith', $line]; }
+            $self = $this->varName($e->var) ?? self::slot($e->var);
+            if ($self !== null) $r['dv'] = array_values(array_diff($r['dv'] ?? [], [$self]));   // `$t .= x`: the old $t is not a parent of itself
             $this->assignTo($e->var, $r, $env, $line);
             return $r;
         }
@@ -382,6 +468,20 @@ final class Analyzer {
             elseif ($isMethod && $e->var instanceof Expr\FuncCall && $e->var->name instanceof Node\Name) $recv = strtolower($e->var->name->toString()) . '()->' . $name;
             elseif ($e instanceof Expr\StaticCall && $e->class instanceof Node\Name) $recv = $e->class->getLast() . '::' . $name;
             $qual = fn(array $table) => ($recv !== null && isset($table[$recv])) ? $table[$recv] : ($table[$name] ?? null);
+            // sprintf/printf with a literal format: the format decides substitution (%d) and quoting (%s)
+            $fmt = null;
+            if (!$isMethod && ($name === 'sprintf' || $name === 'printf')
+                && (($e->args[0]->value ?? null) instanceof Scalar\String_ || ($e->args[0]->value ?? null) instanceof Scalar\InterpolatedString))
+                $fmt = $this->formatParts($e->args[0]->value, array_slice($args, 1), $line, $env);
+            // settype($x, "integer"): by reference, the variable itself is a number from here on (a literal type name is
+            // read for classification only)
+            if (!$isMethod && $name === 'settype' && ($e->args[0]->value ?? null) instanceof Expr\Variable && is_string($e->args[0]->value->name)
+                && ($e->args[1]->value ?? null) instanceof Scalar\String_
+                && in_array(strtolower($e->args[1]->value->value), ['int', 'integer', 'float', 'double', 'bool', 'boolean'], true)) {
+                $vn = $e->args[0]->value->name;
+                $env[$vn] = sanitize($env[$vn] ?? stF(), ['*'], 'settype', $line);
+                return stF();
+            }
             if ($name === null) {                                             // $fn(...) / $obj->$m(...)
                 $callee = null;
                 if (!$isMethod && $e instanceof Expr\FuncCall) $callee = $this->ex($e->name, $env);
@@ -393,10 +493,16 @@ final class Analyzer {
             $sinkCtx = $isMethod ? $qual($SINKMETH) : ($e instanceof Expr\StaticCall ? ($qual($SINKMETH) ?? ($SINKFN[$name] ?? null)) : ($SINKFN[$name] ?? null));
             if ($sinkCtx !== null) {
                 $ix = $SINKARG[$name] ?? 0;
-                if (isset($args[$ix])) $this->sinkFact($sinkCtx, ($isMethod ? '->' : '') . $name, $line, $args[$ix]);
+                if ($fmt !== null && $name === 'printf') $this->sinkFact($sinkCtx, 'printf', $line, $fmt);   // what is printed is the FORMATTED string
+                elseif (isset($args[$ix])) $this->sinkFact($sinkCtx, ($isMethod ? '->' : '') . $name, $line, $args[$ix]);
             }
             // sources
-            if ($isMethod ? ($qual($SRCMETH) !== null) : ($e instanceof Expr\StaticCall ? ($qual($SRCMETH) !== null || isset($SRCFN[$name])) : isset($SRCFN[$name]))) return stT('fn', $recv ?? (($isMethod ? '->' : '') . $name), $line);
+            if ($isMethod ? ($qual($SRCMETH) !== null) : ($e instanceof Expr\StaticCall ? ($qual($SRCMETH) !== null || isset($SRCFN[$name])) : isset($SRCFN[$name]))) {
+                $src = stT('fn', $recv ?? (($isMethod ? '->' : '') . $name), $line);
+                $flt = (!$isMethod && $name === 'filter_input') ? ($e->args[2]->value ?? null) : null;   // filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT)
+                $fname = $flt instanceof Expr\ConstFetch ? strtoupper($flt->name->toString()) : '';
+                return in_array($fname, self::VALIDATE_FIXED, true) ? sanitize($src, ['*'], 'filter_input:' . $fname, $line) : $src;
+            }
             // sanitizers: substitution of the value for the listed contexts
             $san = $isMethod ? $qual($SANMETH) : ($e instanceof Expr\StaticCall ? ($qual($SANMETH) ?? ($SANFN[$name] ?? null)) : ($SANFN[$name] ?? null));
             if ($san !== null) {
@@ -414,13 +520,22 @@ final class Analyzer {
                 && in_array(strtolower($e->class->toString()), ['self', 'static', strtolower($this->currentClass)], true)
                 && isset($this->defs['m'][$this->currentClass][$name]))
                 return $this->inline($this->defs['m'][$this->currentClass][$name], $args, $line, 'm:' . $this->currentClass . '::' . $name);
+            if ($fmt !== null) return $name === 'printf' ? stF() : $fmt;
             if (!$isMethod && $name === 'filter_var') {
                 $flt = $e->args[1]->value ?? null;
                 $fname = $flt instanceof Expr\ConstFetch ? strtoupper($flt->name->toString()) : '';
-                if (in_array($fname, ['FILTER_VALIDATE_INT', 'FILTER_VALIDATE_FLOAT', 'FILTER_VALIDATE_BOOL', 'FILTER_VALIDATE_BOOLEAN'], true))
+                if (in_array($fname, self::VALIDATE_FIXED, true))
                     return sanitize($args[0] ?? stF(), ['*'], 'filter_var:' . $fname, $line);
+                if ($fname === 'FILTER_SANITIZE_SPECIAL_CHARS' || $fname === 'FILTER_SANITIZE_FULL_SPECIAL_CHARS')   // = htmlspecialchars
+                    return sanitize($args[0] ?? stF(), ['html'], 'filter_var:' . $fname, $line);
                 return through(joinAll($args ?: [stF()]), null, $line, false, 'none');
             }
+            // preg_replace('/[^a-z0-9]/', '', $x): everything outside a plain class is REMOVED, so the result lives in
+            // that class — a substitution by construction, the same credit as an anchored preg_match guard
+            if (!$isMethod && $name === 'preg_replace' && ($e->args[0]->value ?? null) instanceof Scalar\String_
+                && ($e->args[1]->value ?? null) instanceof Scalar\String_ && $e->args[1]->value->value === ''
+                && self::patternStripsToClass($e->args[0]->value->value))
+                return sanitize($args[2] ?? stF(), ['*'], 'preg_replace-strip', $line);
             if (!$isMethod && ($name === 'explode' || $name === 'implode' || $name === 'join')) {
                 // splitting/joining on a literal delimiter that carries no quote, backslash or NUL cannot
                 // strand an escape: preserving. Any other delimiter: numeric substitutions only.
@@ -457,7 +572,7 @@ final class Analyzer {
     }
 
     /** Is this a literal the machine may trust as a fixed set/value? (scalars, constants, arrays of them) */
-    private static function isLiteral(?Node $n): bool {
+    public static function isLiteral(?Node $n): bool {
         if ($n === null) return false;
         if ($n instanceof Scalar\String_ || $n instanceof Scalar\Int_ || $n instanceof Scalar\Float_ || $n instanceof Expr\ConstFetch || $n instanceof Expr\ClassConstFetch) return true;
         if ($n instanceof Expr\Array_) { foreach ($n->items as $it) { if ($it === null || !self::isLiteral($it->value)) return false; } return true; }
@@ -496,14 +611,33 @@ final class Analyzer {
             foreach ($l['true'] as $a) foreach ($r['true'] as $b) if ($a[0] === $b[0]) $both[] = [$a[0], array_values(array_intersect($a[1], $b[1])) ?: (in_array('*', $a[1], true) ? $b[1] : (in_array('*', $b[1], true) ? $a[1] : [])), $a[2] . '|' . $b[2], $line];
             return ['true' => array_values(array_filter($both, fn($g) => $g[1] !== [])), 'false' => array_merge($l['false'], $r['false'])];
         }
+        if ($c instanceof Expr\Cast\Bool_) return $this->guards($c->expr);
+        if ($c instanceof Expr\BinaryOp\Identical || $c instanceof Expr\BinaryOp\Equal || $c instanceof Expr\BinaryOp\NotIdentical || $c instanceof Expr\BinaryOp\NotEqual
+            || $c instanceof Expr\BinaryOp\Greater || $c instanceof Expr\BinaryOp\GreaterOrEqual || $c instanceof Expr\BinaryOp\Smaller || $c instanceof Expr\BinaryOp\SmallerOrEqual) {
+            // `preg_match(...) == 1`, `=== true`, `!== false`, `> 0`: the comparison only reads the guard's own answer
+            [$gx, $lit, $flip] = self::isLiteral($c->right) ? [$c->left, $c->right, false] : (self::isLiteral($c->left) ? [$c->right, $c->left, true] : [null, null, false]);
+            if ($gx !== null && $this->guardName($gx) === null) {
+                $truth = self::truthOf($lit); $sense = null;
+                if ($c instanceof Expr\BinaryOp\Identical || $c instanceof Expr\BinaryOp\Equal) $sense = $truth;
+                elseif ($c instanceof Expr\BinaryOp\NotIdentical || $c instanceof Expr\BinaryOp\NotEqual) $sense = $truth === null ? null : !$truth;
+                elseif ($lit instanceof Scalar\Int_) {
+                    $op = $c instanceof Expr\BinaryOp\Greater ? '>' : ($c instanceof Expr\BinaryOp\GreaterOrEqual ? '>=' : ($c instanceof Expr\BinaryOp\Smaller ? '<' : '<='));
+                    if ($flip) $op = ['>' => '<', '>=' => '<=', '<' => '>', '<=' => '>='][$op];       // literal on the left: mirror
+                    $n = $lit->value;
+                    $sense = (($op === '>' && $n === 0) || ($op === '>=' && $n === 1)) ? true : (((($op === '<' && $n === 1) || ($op === '<=' && $n === 0))) ? false : null);
+                }
+                if ($sense !== null) { $g = $this->guards($gx); return $sense ? $g : ['true' => $g['false'], 'false' => $g['true']]; }
+                return $none;
+            }
+        }
         if ($c instanceof Expr\BinaryOp\Identical || $c instanceof Expr\BinaryOp\Equal) {
-            $v = $this->varName($c->left) !== null && self::isLiteral($c->right) ? $this->varName($c->left)
-               : ($this->varName($c->right) !== null && self::isLiteral($c->left) ? $this->varName($c->right) : null);
+            $v = $this->guardName($c->left) !== null && self::isLiteral($c->right) ? $this->guardName($c->left)
+               : ($this->guardName($c->right) !== null && self::isLiteral($c->left) ? $this->guardName($c->right) : null);
             return $v === null ? $none : ['true' => [[$v, ['*'], 'equals-literal', $line]], 'false' => []];
         }
         if ($c instanceof Expr\BinaryOp\NotIdentical || $c instanceof Expr\BinaryOp\NotEqual) {
-            $v = $this->varName($c->left) !== null && self::isLiteral($c->right) ? $this->varName($c->left)
-               : ($this->varName($c->right) !== null && self::isLiteral($c->left) ? $this->varName($c->right) : null);
+            $v = $this->guardName($c->left) !== null && self::isLiteral($c->right) ? $this->guardName($c->left)
+               : ($this->guardName($c->right) !== null && self::isLiteral($c->left) ? $this->guardName($c->right) : null);
             return $v === null ? $none : ['true' => [], 'false' => [[$v, ['*'], 'equals-literal', $line]]];
         }
         if ($c instanceof Expr\Isset_ && count($c->vars) === 1 && $c->vars[0] instanceof Expr\ArrayDimFetch) {
@@ -514,14 +648,20 @@ final class Analyzer {
         }
         if ($c instanceof Expr\FuncCall && $c->name instanceof Node\Name) {
             $fn = strtolower($c->name->toString());
+            $args = $c->args;
+            if ($fn === 'filter_var') {                                        // if (filter_var($x, FILTER_VALIDATE_INT)) — an act of checking
+                $flt = $args[1]->value ?? null;
+                $fname = $flt instanceof Expr\ConstFetch ? strtoupper($flt->name->toString()) : '';
+                $v = isset($args[0]) ? $this->guardName($args[0]->value) : null;
+                return ($v !== null && in_array($fname, self::VALIDATE_FIXED, true)) ? ['true' => [[$v, ['*'], 'guard:filter_var:' . $fname, $line]], 'false' => []] : $none;
+            }
             $g = $GUARDS[$fn] ?? null;
             if ($g === null) return $none;
-            $args = $c->args;
             $vix = $g['value'] ?? 0;
-            $v = isset($args[$vix]) ? $this->varName($args[$vix]->value) : null;
+            $v = isset($args[$vix]) ? $this->guardName($args[$vix]->value) : null;
             if ($v === null) return $none;
-            if (isset($g['haystack']) && !self::isLiteral($args[$g['haystack']]->value ?? null)) return $none;   // in_array($x, $unknown): no
-            if (!empty($g['pattern_tight']) && !self::patternIsTight($args[$g['pattern']]->value ?? null)) return $none;
+            if (isset($g['haystack']) && $this->litOf($args[$g['haystack']]->value ?? null) === null) return $none;   // in_array($x, $unknown): no
+            if (!empty($g['pattern_tight']) && !self::patternIsTight($this->litOf($args[$g['pattern']]->value ?? null))) return $none;
             return ['true' => [[$v, $g['contexts'], 'guard:' . $fn, $line]], 'false' => []];
         }
         if ($c instanceof Expr\Assign) return $this->guards($c->expr);   // if ($m = preg_match(...)) — rare; keep simple
@@ -529,7 +669,48 @@ final class Analyzer {
     }
 
     private function applyGuards(array $gs, array &$env): void {
-        foreach ($gs as [$v, $ctxs, $fn, $line]) if (isset($env[$v])) $env[$v] = sanitize($env[$v], $ctxs, $fn, $line);
+        foreach ($gs as [$v, $ctxs, $fn, $line]) {
+            if (!isset($env[$v]) && ($p = strpos($v, '[')) !== false && isset($env[substr($v, 0, $p)]))
+                $env[$v] = $env[substr($v, 0, $p)];                 // an element slot not written here yet ($octet[0] after explode): the whole array's state
+            if (!isset($env[$v])) continue;
+            $x = $env[$v];
+            $env[$v] = sanitize($x, $ctxs, $fn, $line);
+            // a value DERIVED from $v before the check ($path = $dir . $ext; if (ctype_alpha($ext)) unlink($path)) is checked
+            // too — but only when every tainted parent of it leads back to $v and nowhere else
+            foreach ($env as $k => $y) {
+                if ($k === $v || $y['t'] !== 'T') continue;
+                if (self::derivesOnlyFrom($y, $v, $x, $env, [$k])) $env[$k] = sanitize($y, $ctxs, $fn . '-derived', $line);
+            }
+        }
+    }
+
+    /** Does every tainted parent of $y lead back to $x (and to no other attacker-controlled origin)? The sources of $y
+     *  must be among $x's own, and each tainted parent must be $x or derive only from $x itself. A parent that is not
+     *  in the env any more, or a cycle, is NOT credited. */
+    private static function derivesOnlyFrom(array $y, string $xn, array $x, array $env, array $seen): bool {
+        foreach ($y['src'] as $srow) if (!in_array($srow, $x['src'], true)) return false;
+        $parents = $y['dv'] ?? [];
+        if (!$parents) return false;
+        foreach ($parents as $p) {
+            if ($p === $xn) continue;
+            if ($p === '#src') return false;                                  // read a source directly: its mark did not come through $x
+            if (!isset($env[$p]) || in_array($p, $seen, true)) return false;
+            $ps = $env[$p];
+            if ($ps['t'] !== 'T') continue;                                  // a constant or opaque parent carries no attacker mark
+            if (!self::derivesOnlyFrom($ps, $xn, $x, $env, array_merge($seen, [$p]))) return false;
+        }
+        return true;
+    }
+
+    /** The name a guard verifies: a plain variable, an element with a literal key (`$octet[0]`), or either of those seen
+     *  through a PRESERVING function (`strtolower($ext) == 'jpg'` checks $ext — case changes cannot hide a quote). */
+    private function guardName(?Node $n): ?string {
+        global $PRESERV;
+        if ($n instanceof Expr\Variable) return $this->varName($n);
+        if ($n instanceof Expr\ArrayDimFetch) return self::slot($n);
+        if ($n instanceof Expr\FuncCall && $n->name instanceof Node\Name && isset($PRESERV[strtolower($n->name->toString())]) && count($n->args) >= 1 && $n->args[0] instanceof Node\Arg)
+            return $this->guardName($n->args[0]->value);
+        return null;
     }
 
     /** Does a block always leave (return / exit / throw / break / continue)? Then what follows the `if`
@@ -545,14 +726,20 @@ final class Analyzer {
     private function assignTo(Expr $target, array $rhs, array &$env, int $line): void {
         if ($target instanceof Expr\Variable) {
             $n = $this->varName($target);
-            if ($n !== null) $env[$n] = $rhs; else $this->ex($target, $env);
+            if ($n !== null) { $env[$n] = $rhs; foreach (array_keys($env) as $k) if (str_starts_with($k, $n . '[')) unset($env[$k]); }   // a fresh array: its old slots are gone
+            else $this->ex($target, $env);
             return;
         }
         if ($target instanceof Expr\ArrayDimFetch) {
             $this->ex($target->dim, $env);
             $root = $target; while ($root instanceof Expr\ArrayDimFetch) $root = $root->var;
             $n = $this->varName($root);
-            if ($n !== null) { $cur = $env[$n] ?? stF(); $env[$n] = join2($cur, $rhs); }
+            if ($n !== null) {
+                $cur = $env[$n] ?? stF(); $j = join2($cur, $rhs);
+                $sl = self::slot($target);
+                if ($sl !== null) { $env[$sl] = $rhs; if ($cur['t'] !== 'F') $j['nu'] = false; }   // the element is read from its slot; the whole array is a may-join, not "read in full"
+                $env[$n] = $j;
+            }
             return;
         }
         if ($target instanceof Expr\List_ || $target instanceof Expr\Array_) {
@@ -594,8 +781,8 @@ final class Analyzer {
         foreach ($envs as $e) foreach ($e as $k => $_) $names[$k] = 1;
         $out = [];
         foreach (array_keys($names) as $k) {
-            $st = [];
-            foreach ($envs as $e) $st[] = $e[$k] ?? ($pre[$k] ?? stZ('maybe-unassigned:$' . $k, 0));
+            $st = []; $arr = ($p = strpos($k, '[')) !== false ? substr($k, 0, $p) : null;
+            foreach ($envs as $e) $st[] = $e[$k] ?? ($pre[$k] ?? ($arr !== null ? ($e[$arr] ?? $pre[$arr] ?? stZ('maybe-unassigned:$' . $arr . '[…]', 0)) : stZ('maybe-unassigned:$' . $k, 0)));
             $out[$k] = joinAll($st);
         }
         return $out;
@@ -653,7 +840,7 @@ final class Analyzer {
         if ($s instanceof Stmt\Switch_) {
             $this->ex($s->cond, $env);
             $paths = []; $prev = null; $hasDefault = false;
-            $subj = $this->varName($s->cond);
+            $subj = $this->guardName($s->cond);
             foreach ($s->cases as $c) {
                 if ($c->cond === null) $hasDefault = true; else $this->ex($c->cond, $env);
                 $e1 = $prev === null ? $env : self::joinEnv([$env, $prev], $env);
@@ -695,7 +882,7 @@ final class Analyzer {
         }
         if ($s instanceof Stmt\Global_) { foreach ($s->vars as $v) { $n = $this->varName($v); if ($n !== null) $env[$n] = stZ('global:$' . $n, $line); } return; }
         if ($s instanceof Stmt\Static_) { foreach ($s->vars as $v) { $n = $this->varName($v->var); if ($n !== null) $env[$n] = stZ('static:$' . $n, $line); } return; }
-        if ($s instanceof Stmt\Unset_) { foreach ($s->vars as $v) { $n = $this->varName($v); if ($n !== null) unset($env[$n]); } return; }
+        if ($s instanceof Stmt\Unset_) { foreach ($s->vars as $v) { $n = $this->varName($v); if ($n !== null) unset($env[$n]); $sl = self::slot($v); if ($sl !== null) unset($env[$sl]); } return; }
         if ($s instanceof Stmt\Block || $s instanceof Stmt\Namespace_ || $s instanceof Stmt\Declare_) { if (!empty($s->stmts)) $this->walk($s->stmts, $env); return; }
         if ($s instanceof Stmt\InlineHTML || $s instanceof Stmt\Nop || $s instanceof Stmt\Use_ || $s instanceof Stmt\Const_
             || $s instanceof Stmt\Break_ || $s instanceof Stmt\Continue_ || $s instanceof Stmt\Goto_ || $s instanceof Stmt\Label
@@ -739,6 +926,26 @@ foreach ($files as $f) {
         if ($fc->name instanceof Node\Name && isset($an->defs['fn'][strtolower($fc->name->toString())])) {
             $k = 'fn:' . strtolower($fc->name->toString()); $an->callers[$k] = ($an->callers[$k] ?? 0) + 1;
         }
+    // variables assigned EXACTLY ONCE in the whole file, from a literal: a guard may read them as that literal
+    // (`$re = "/^[0-9]+$/"; if (preg_match($re, $x))`). Any other write — a second assignment, a compound one, a
+    // parameter, a foreach, a global/static, a closure use, a list() — disqualifies the name. By-reference
+    // arguments are not tracked: a list handed to a function that fills it would still read as fixed (boundary).
+    $writes = [];
+    $w = function ($v) use (&$writes) { if ($v instanceof Expr\Variable && is_string($v->name)) $writes[$v->name][] = null; };
+    foreach ($finder->findInstanceOf($ast ?? [], Expr\Assign::class) as $as) {
+        if ($as->var instanceof Expr\Variable && is_string($as->var->name)) $writes[$as->var->name][] = $as->expr;
+        elseif ($as->var instanceof Expr\List_ || $as->var instanceof Expr\Array_) foreach ($as->var->items as $it) if ($it) $w($it->value);
+        else { $root = $as->var; while ($root instanceof Expr\ArrayDimFetch) $root = $root->var; $w($root); }
+    }
+    foreach ($finder->find($ast ?? [], fn($n) => $n instanceof Expr\AssignOp || $n instanceof Expr\AssignRef || $n instanceof Expr\PreInc || $n instanceof Expr\PreDec || $n instanceof Expr\PostInc || $n instanceof Expr\PostDec) as $n) $w($n->var);
+    foreach ($finder->findInstanceOf($ast ?? [], Node\Param::class) as $p) $w($p->var);
+    foreach ($finder->findInstanceOf($ast ?? [], Stmt\Foreach_::class) as $fe) { $w($fe->keyVar); $w($fe->valueVar); }
+    foreach ($finder->findInstanceOf($ast ?? [], Stmt\Global_::class) as $g) foreach ($g->vars as $v) $w($v);
+    foreach ($finder->findInstanceOf($ast ?? [], Stmt\Static_::class) as $g) foreach ($g->vars as $v) $w($v->var);
+    foreach ($finder->findInstanceOf($ast ?? [], Stmt\Catch_::class) as $c) $w($c->var);
+    foreach ($finder->findInstanceOf($ast ?? [], Node\ClosureUse::class) as $u) $w($u->var);
+    foreach ($finder->findInstanceOf($ast ?? [], Stmt\Unset_::class) as $u) foreach ($u->vars as $v) $w($v);
+    foreach ($writes as $vn => $rhs) if (count($rhs) === 1 && $rhs[0] !== null && Analyzer::isLiteral($rhs[0])) $an->lits[$vn] = $rhs[0];
     // pass 1 collects property assignments (reads see Z); pass 2 reads them and is the one reported
     $env = [];
     $an->pass = 1; $an->walk($ast ?? [], $env);

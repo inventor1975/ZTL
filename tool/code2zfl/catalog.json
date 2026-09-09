@@ -118,7 +118,8 @@
       "functions": [
         "header",
         "setcookie",
-        "setrawcookie"
+        "setrawcookie",
+        "http_redirect"
       ],
       "methods": [],
       "measured": true
@@ -252,6 +253,51 @@
         "contexts": [
           "header"
         ]
+      },
+      "round": {
+        "contexts": [
+          "*"
+        ]
+      },
+      "floor": {
+        "contexts": [
+          "*"
+        ]
+      },
+      "ceil": {
+        "contexts": [
+          "*"
+        ]
+      },
+      "ord": {
+        "contexts": [
+          "*"
+        ]
+      },
+      "hexdec": {
+        "contexts": [
+          "*"
+        ]
+      },
+      "octdec": {
+        "contexts": [
+          "*"
+        ]
+      },
+      "bindec": {
+        "contexts": [
+          "*"
+        ]
+      },
+      "array_sum": {
+        "contexts": [
+          "*"
+        ]
+      },
+      "array_product": {
+        "contexts": [
+          "*"
+        ]
       }
     },
     "methods": {
@@ -326,7 +372,58 @@
     "mb_strtolower",
     "mb_strtoupper",
     "utf8_encode",
-    "utf8_decode"
+    "utf8_decode",
+    "dirname",
+    "realpath",
+    "pathinfo",
+    "tempnam",
+    "getcwd",
+    "sys_get_temp_dir",
+    "time",
+    "microtime",
+    "mktime",
+    "strtotime",
+    "gmdate",
+    "rand",
+    "mt_rand",
+    "random_int",
+    "uniqid",
+    "phpversion",
+    "php_uname",
+    "php_sapi_name",
+    "curl_version",
+    "memory_get_usage",
+    "gettype",
+    "get_class",
+    "str_repeat",
+    "ucwords",
+    "array_fill",
+    "array_combine",
+    "array_flip",
+    "array_fill_keys",
+    "array_column",
+    "array_chunk",
+    "array_pad",
+    "array_splice",
+    "http_build_url",
+    "json_last_error_msg",
+    "ini_get",
+    "bin2hex",
+    "hex2bin",
+    "random_bytes",
+    "hash",
+    "hash_hmac",
+    "password_hash",
+    "getenv",
+    "extension_loaded",
+    "function_exists",
+    "class_exists",
+    "defined",
+    "constant",
+    "ini_set",
+    "error_reporting",
+    "set_time_limit",
+    "date_default_timezone_get"
   ],
   "_notes": {
     "addslashes": "listed as TRANSPARENT on purpose: a string transformation, not a substitution by a verified element; bypassable (multibyte). Taint passes, sanitization is NOT credited.",
@@ -337,7 +434,8 @@
     "narrowing": "taint passes; only a NUMERIC substitution survives (digits stay digits under any cut), a context escape does not (substr can strand a backslash).",
     "explode/implode": "preserving when the delimiter is a literal without quote, backslash or NUL (it cannot strand an escape); otherwise narrowing.",
     "header/callable": "added 2026-09-08 after Psalm reported a TaintedHeader (header('Location: '.$url)) and a TaintedCallable (new $classname) our catalog had no sink for. `callable` fires on new $x(), $x(), $obj->$m() and call_user_func*; the judged value is the NAME, not the arguments.",
-    "guards": "a condition is an ACT OF CHECKING: inside the branch it protects, the checked value is substituted (E40 — membership in a fixed set is a substitution). Credited only when the set/pattern is fixed: in_array against a literal array, ctype_*/is_numeric, an anchored regex over a plain character class, $x === 'literal', a literal switch case. After `if (!guard) exit/return;` the guard holds for what follows. `file_exists` is NOT a guard (traversal passes it)."
+    "guards": "a condition is an ACT OF CHECKING: inside the branch it protects, the checked value is substituted (E40 — membership in a fixed set is a substitution). Credited only when the set/pattern is fixed: in_array against a literal array, ctype_*/is_numeric, an anchored regex over a plain character class, $x === 'literal', a literal switch case. After `if (!guard) exit/return;` the guard holds for what follows. `file_exists` is NOT a guard (traversal passes it).",
+    "unknown-call": "an UNKNOWN call's result is Z even over constant arguments (2026-09-09): `$obj->get()` reads object state, `time()` reads the clock, file_get_contents('php://input') reads the request. What is NOT attacker-controlled is said here, as an ALLOW-LIST measured on real trees (transparent: path/time/random/version helpers; narrowing: array element extraction), never assumed."
   },
   "narrowing": [
     "substr",
@@ -353,7 +451,21 @@
     "array_reverse",
     "array_filter",
     "str_word_count",
-    "chunk_split"
+    "chunk_split",
+    "array_shift",
+    "array_pop",
+    "reset",
+    "end",
+    "current",
+    "next",
+    "prev",
+    "key",
+    "array_key_first",
+    "array_key_last",
+    "array_search",
+    "array_rand",
+    "min",
+    "max"
   ],
   "guards": {
     "in_array": {

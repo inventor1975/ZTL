@@ -63,6 +63,18 @@ EXPECT = {
     "f34_filter_var.php": ["EARNED"],
     "f35_laravel_raw.php": ["REFUTED", "EARNED", "REFUTED"],
     "f36_laravel_identifier.php": ["REFUTED", "EARNED", "EARNED"],
+    # 2026-09-09 — from the SARD/Stivalet suite (42k files) and DVWA
+    "f37_sprintf_format.php": ["EARNED", "EARNED", "REFUTED", "REFUTED"],
+    "f38_settype.php": ["EARNED"],
+    "f39_guard_wrapped_and_once_assigned.php": ["EARNED", "EARNED", "EARNED", "REFUTED"],
+    "f40_filter_var_guard.php": ["EARNED", "EARNED", "REFUTED", "EARNED", "REFUTED"],
+    "f41_preg_replace_strip.php": ["EARNED", "REFUTED"],
+    "f42_unknown_call_is_z.php": ["OPEN", "EARNED"],
+    "f43_array_literal_keys.php": ["OPEN", "REFUTED", "REFUTED"],
+    "f44_unknown_part_unquoted.php": ["OPEN", "EARNED"],
+    "f45_guard_on_array_element.php": ["EARNED", "REFUTED"],
+    "f46_equals_literal_through_preserving.php": ["EARNED", "REFUTED"],
+    "f47_guard_credits_derived_value.php": ["EARNED", "REFUTED", "REFUTED"],
 }
 
 

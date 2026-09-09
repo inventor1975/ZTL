@@ -1,5 +1,5 @@
 {
-  "_about": "Laravel overlay (generic, public). Sources: the Request object and the request() helper. Sinks: raw SQL entry points — DB::raw/select/statement and the *Raw query-builder methods; bound parameters are not sinks (the builder quotes them). Sanitizers: e() = htmlspecialchars. Blade templates ({{ }} escapes, {!! !!} does not) are NOT parsed by php-parser as PHP sinks — a boundary, named here. IDENTIFIER positions are sinks too: the query builder binds VALUES, never column names — orderBy($col), where($col, ...), select($cols), groupBy($col) with request data are injections; only the first argument (the identifier) is judged, bound values are not.",
+  "_about": "Laravel overlay (generic, public). Sources: the Request object and the request() helper. Sinks: raw SQL entry points — DB::raw/select/statement and the *Raw query-builder methods; bound parameters are not sinks (the builder quotes them). Sanitizers: e() = htmlspecialchars. Blade templates ({{ }} escapes, {!! !!} does not) are NOT parsed by php-parser as PHP sinks — a boundary, named here. IDENTIFIER positions are sinks too: the query builder binds VALUES, never column names — orderBy($col), where($col, ...), select($cols), groupBy($col) with request data are injections; only the first argument (the identifier) is judged, bound values are not. Helpers that return configuration, translations, paths or CSRF tokens are TRANSPARENT (taint passes through their arguments; over constants they are constants). old() replays previous REQUEST input: a source.",
   "sources": {
     "methods": [
       "$request->input",
@@ -29,6 +29,9 @@
       "Request::all",
       "Input::get",
       "Input::all"
+    ],
+    "functions": [
+      "old"
     ]
   },
   "sinks": {
@@ -159,5 +162,48 @@
         ]
       }
     }
-  }
+  },
+  "transparent": [
+    "__",
+    "trans",
+    "trans_choice",
+    "csrf_field",
+    "csrf_token",
+    "method_field",
+    "route",
+    "url",
+    "asset",
+    "secure_asset",
+    "mix",
+    "config",
+    "app",
+    "now",
+    "today",
+    "view",
+    "resolve",
+    "base_path",
+    "app_path",
+    "public_path",
+    "storage_path",
+    "resource_path",
+    "database_path",
+    "class_basename",
+    "str",
+    "collect",
+    "blank",
+    "filled",
+    "value",
+    "tap",
+    "optional",
+    "with",
+    "abort",
+    "abort_if",
+    "report",
+    "logger",
+    "info",
+    "auth",
+    "cache",
+    "event",
+    "dispatch"
+  ]
 }

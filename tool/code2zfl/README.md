@@ -45,6 +45,17 @@ a WHERE built in a helper are not re-judged as "outside quotes" by the
 outer string (measured: 12 false REFUTED of one shape on the test engine
 before this, 0 after — fixture `f26`).
 
+## Measured against labelled corpora (2026-09-09)
+
+`bench/` runs the instrument over the SARD / Stivalet suite (42 212 labelled files) and DVWA, and
+Psalm 5 over the same files; the numbers, every remaining disagreement read in the source, and the
+three defects found in the corpus itself are in [bench/README.md](bench/README.md). Headline, base
+catalog: on CWE_89 the planted injections the instrument called "clean" went 204 → 0 and alarms on
+fixed files 1053 → 90 (the 90 are five declared disagreements — `addslashes`, `htmlspecialchars`
+and friends are not SQL substitutions); Psalm's 18 misses there are `mysqli_real_escape_string`
+outside quotes. Named boundary: `html` has no sub-contexts yet (unquoted attribute, tag name,
+`<script>`, URL attribute) — the way `sql` has quoted/unquoted.
+
 ## For a human: `--summary`
 
     python3 code2zfl.py path --summary summary.md

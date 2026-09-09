@@ -843,6 +843,10 @@ final class Analyzer {
             if ($isMethod && $e->var instanceof Expr\Variable && is_string($e->var->name)) $recv = '$' . $e->var->name . '->' . $name;
             elseif ($isMethod && $e->var instanceof Expr\FuncCall && $e->var->name instanceof Node\Name) $recv = strtolower($e->var->name->toString()) . '()->' . $name;
             elseif ($e instanceof Expr\StaticCall && $e->class instanceof Node\Name) $recv = $e->class->getLast() . '::' . $name;
+            // Db::$db->query(), $this->db->query(): a singleton reached through a property. Without this the
+            // key falls back to the bare method name, and an overlay written as `Db::$db->escape_string`
+            // matched nothing at all — measured on SMF 2026-09-09, where the whole overlay was inert.
+            elseif ($isMethod && ($e->var instanceof Expr\StaticPropertyFetch || $e->var instanceof Expr\PropertyFetch)) $recv = self::exprName($e->var) . '->' . $name;
             $qual = fn(array $table) => ($recv !== null && isset($table[$recv])) ? $table[$recv] : ($table[$name] ?? null);
             // sprintf/printf with a literal format: the format decides substitution (%d) and quoting (%s)
             $fmt = null;

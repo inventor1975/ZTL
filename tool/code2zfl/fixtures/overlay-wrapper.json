@@ -1,5 +1,5 @@
 {
-  "_about": "overlay for a typical hand-written DB wrapper: `$db->query(...)` is the sink, `$db->escape(...)` substitutes for the quoted SQL context. Method keys may be receiver-qualified: `$db->escape` and `$out->escape` are different acts.",
+  "_about": "overlay for a typical hand-written DB wrapper: `$db->query(...)` is the sink, `$db->escape(...)` substitutes for the quoted SQL context. Method keys may be receiver-qualified: `$db->escape` and `$out->escape` are different acts. A singleton reached THROUGH A PROPERTY is its own key too: `Reg::$db->escape` and `$app->db->escape`.",
   "sinks": {
     "sql": {
       "methods": [
@@ -19,6 +19,16 @@
       "$out->escape": {
         "contexts": [
           "html"
+        ]
+      },
+      "Reg::$db->escape": {
+        "contexts": [
+          "sql-quoted"
+        ]
+      },
+      "$app->db->escape": {
+        "contexts": [
+          "sql-quoted"
         ]
       }
     }

@@ -94,6 +94,7 @@ EXPECT = {
     "f64_files_fields.php": ["EARNED", "REFUTED"],
     "f65_whitelist_from_a_call.php": ["OPEN", "EARNED", "REFUTED"],
     "f66_existence_is_not_a_constraint.php": ["REFUTED", "REFUTED", "REFUTED", "EARNED", "OPEN"],
+    "f67_singleton_through_a_property.php": ["EARNED", "EARNED", "REFUTED"],
 }
 STORED = os.path.join(HERE, "overlays", "stored-input.json")
 

@@ -100,6 +100,20 @@
     "esc_sql": "escaping only — the value still needs quotes around it, exactly like mysqli_real_escape_string.",
     "sanitize_text_field": "NOT listed as a sanitizer: it strips tags and invalid UTF-8 but is not an escaper for any of our contexts; WordPress's own docs say to escape at output.",
     "wp_kses": "NOT listed: it filters HTML by an allow-list of tags, which is a policy decision, not a substitution — its output is HTML by design.",
-    "__/_e": "listed as PRESERVING, not as sanitizers: they return a dictionary string. A tainted argument to __() is a developer error the corpus does not exhibit; treating them as opaque produced 1662 false OPEN on WordPress."
-  }
+    "__/_e": "listed as PRESERVING, not as sanitizers: they return a dictionary string. A tainted argument to __() is a developer error the corpus does not exhibit; treating them as opaque produced 1662 false OPEN on WordPress.",
+    "not_sinks": "$wpdb->delete/insert/update/replace take column=>value arrays and bind them (wpdb::process_fields → prepare); the base catalog's generic `delete`/`update` sink names would otherwise report them raw. Measured 2026-09-09: this alone accounted for the sql sinks summarised inside wpmu_validate_user_signup, where every actual query goes through $wpdb->prepare.",
+    "prepare": "$wpdb->prepare BUILDS a query with %s/%d placeholders and binds the arguments — it is a sanitizer here, not a sink. The base catalog lists `prepare` as an sql sink for the PDO shape, where the caller composes the SQL; keeping both made every prepared WordPress query summarise as a raw sink (measured: it was the source of the wpmu_validate_* accusations)."
+  },
+  "not_sinks": [
+    "$wpdb->delete",
+    "$wpdb->insert",
+    "$wpdb->update",
+    "$wpdb->replace",
+    "delete",
+    "insert",
+    "update",
+    "replace",
+    "$wpdb->prepare",
+    "prepare"
+  ]
 }

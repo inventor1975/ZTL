@@ -23,12 +23,25 @@ $catalogPath = __DIR__ . '/catalog.json';
 $overlays = [];
 $files = [];
 $phpVersion = null;                       // e.g. 7.4 — legacy syntax the newest grammar refuses
+// CROSS-FILE SIGHT, in two passes. A call to a function defined in ANOTHER file was opaque, which is
+// honest but blunt: on WordPress it made 1418 esc_attr() calls, 747 esc_url() and every
+// wp_check_*() read as unknown. Pass 1 (`--emit-summaries`) walks each definition with its
+// parameters marked attacker-controlled and records what the function DOES with them: passes the
+// taint on, substitutes it (a sanitizer), reaches a sink with it, or decides a boolean about it (a
+// guard). Pass 2 (`--summaries`) reads that and judges calls with it.
+//
+// The summary is a claim about the callee, so it carries its own grade: a function whose body we
+// could not walk in full (budget) is recorded as UNKNOWN, never as clean.
+$emitSummaries = false;
+$summaryPath = null;
 for ($i = 1; $i < $argc; $i++) {
     $a = $argv[$i];
     if ($a === '--autoload') { $autoload = $argv[++$i]; continue; }
     if ($a === '--catalog')  { $catalogPath = $argv[++$i]; continue; }
     if ($a === '--overlay')  { $overlays[] = $argv[++$i]; continue; }
     if ($a === '--php')      { $phpVersion = $argv[++$i]; continue; }
+    if ($a === '--emit-summaries') { $emitSummaries = true; continue; }   // pass 1 of cross-file sight
+    if ($a === '--summaries') { $summaryPath = $argv[++$i]; continue; }   // pass 2: use what pass 1 learned
     $files[] = $a;
 }
 if (!is_file($autoload)) {
@@ -62,8 +75,20 @@ function mergeCatalog(array $base, array $over): array {
     }
     return $base;
 }
+$SUMMARIES = ['functions' => [], 'methods' => []];
 $CAT = loadJson($catalogPath);
 foreach ($overlays as $o) $CAT = mergeCatalog($CAT, loadJson($o));
+if ($summaryPath !== null && is_file($summaryPath)) $SUMMARIES = loadJson($summaryPath);
+// An overlay can only ADD to a merged catalog, and sometimes a project needs the opposite: WordPress's
+// $wpdb->delete/insert/update bind their values, so the base catalog's generic `delete` sink is wrong
+// there. `not_sinks` / `not_sanitizers` subtract, by exact key (receiver-qualified names allowed).
+foreach ($CAT['not_sinks'] ?? [] as $key) {
+    foreach ($CAT['sinks'] as $ctx => &$spec) {
+        foreach (['functions', 'methods'] as $slot)
+            if (isset($spec[$slot])) $spec[$slot] = array_values(array_filter($spec[$slot], fn($x) => strtolower($x) !== strtolower($key)));
+    }
+    unset($spec);
+}
 
 $lowerKey = fn(string $k) => (str_contains($k, '->') || str_contains($k, '::')) ? preg_replace_callback('/(->|::)([^>:]+)$/', fn($m) => $m[1] . strtolower($m[2]), $k) : strtolower($k);
 $SUPER = array_flip($CAT['sources']['superglobals'] ?? []);
@@ -565,7 +590,7 @@ final class Analyzer {
     /** Evaluate an expression to a taint state; records sinks and assignments on the way. */
     public function ex(?Node $e, array &$env): array {
         if (++$this->nodeSpent > $this->nodeBudget) return stZ('node-budget', $e ? $e->getStartLine() : 0);
-        global $SUPER, $SERVER_KEYS, $SERVER_PREFIXES, $GUARDS, $SRCFN, $SRCMETH, $SRCBYREF, $SRCSHELL, $SANFN, $SANMETH, $SANCAST, $TRANSP, $TRANSPMETH, $PRESERV, $NARROW, $SINKFN, $SINKMETH, $SINKARG, $SINKFLAGS;
+        global $SUMMARIES, $SUPER, $SERVER_KEYS, $SERVER_PREFIXES, $GUARDS, $SRCFN, $SRCMETH, $SRCBYREF, $SRCSHELL, $SANFN, $SANMETH, $SANCAST, $TRANSP, $TRANSPMETH, $PRESERV, $NARROW, $SINKFN, $SINKMETH, $SINKARG, $SINKFLAGS;
         if ($e === null) return stF();
         $line = $e->getStartLine();
 
@@ -843,6 +868,36 @@ final class Analyzer {
                 $data = $args[1] ?? $args[0] ?? stF();
                 return through($data, null, $line, false, $safe ? 'all' : 'numeric');
             }
+            // A SUMMARY OF THE CALLEE, learned in pass 1 from another file. Four things it can say, and
+            // each is more precise than "unknown call": the result carries this argument's taint; the
+            // result is opaque; the result is CLEAN of it (a real sanitizer, the case that used to cost
+            // us thousands of false OPEN); and — the one that finds flaws — the argument reaches a SINK
+            // inside, which is emitted here, in the caller's context, with the callee named.
+            $sumKey = $isMethod ? null : ($SUMMARIES['functions'][$name] ?? null);
+            if ($sumKey === null && $isMethod && $this->currentClass !== null)
+                $sumKey = $SUMMARIES['methods'][strtolower($this->currentClass) . '::' . $name] ?? null;
+            if ($sumKey !== null && !isset($this->defs['fn'][$name])) {
+                $tainted = [];
+                foreach ($args as $ix => $st) if (($st['t'] ?? 'F') !== 'F') $tainted[] = (string)$ix;
+                foreach ($sumKey['sinks'] as [$k, $ctx]) {
+                    $ix = ($k === 'any') ? null : (int)$k;
+                    $st = $ix === null ? joinAll($args ?: [stF()]) : ($args[$ix] ?? null);
+                    if ($st !== null && ($st['t'] ?? 'F') !== 'F')
+                        $this->sinkFact($ctx, $name . '()→sink', $line, $st);
+                }
+                $carried = [];
+                foreach ($tainted as $k) {
+                    if (in_array($k, $sumKey['passes'], true)) {
+                        $st = $args[(int)$k];
+                        $ctxs = $sumKey['substitutes'][$k] ?? [];
+                        $carried[] = $ctxs ? sanitize($st, $ctxs, $name . '()', $line) : $st;
+                    } elseif (in_array($k, $sumKey['opaque'], true) || in_array('any', $sumKey['opaque'], true)) {
+                        $carried[] = through($args[(int)$k], $name . '()', $line, true);
+                    }
+                    // neither: the callee does not carry this argument into its result — nothing to add
+                }
+                return $carried ? joinAll($carried) : stF();
+            }
             if (!$isMethod && isset($PRESERV[$name])) return through(joinAll($args ?: [stF()]), null, $line, false, 'all');
             if (!$isMethod && isset($NARROW[$name]))  return through(joinAll($args ?: [stF()]), null, $line, false, 'numeric');
             // json_encode with the JSON_HEX_* flags is a JavaScript-string encoder: no quote, bracket or ampersand survives
@@ -1116,6 +1171,20 @@ final class Analyzer {
         if ($saveProps === null) unset($this->props[$cn]); else $this->props[$cn] = $saveProps;
         $this->currentClass = $saveClass; $this->instanceMode = $saveMode;
         return $r;
+    }
+
+    public bool $returnedBool = false;
+
+    /** Set the class context for a summary probe (methods read $this->prop). */
+    public function currentClassPublic(?string $cls): void { $this->currentClass = $cls; }
+
+    /** Walk a definition's body with the given parameter states and return the joined `return`. */
+    public function probeBody(array $stmts, array $env): array {
+        $this->returns[] = [];
+        $this->walk($stmts, $env);
+        $rets = array_pop($this->returns);
+        foreach ($rets as $r) if (($r['t'] ?? 'F') === 'F') { $this->returnedBool = true; break; }
+        return $rets ? joinAll($rets) : stF();
     }
 
     private function inline(Node $def, array $args, int $line, string $key): array {
@@ -1392,4 +1461,76 @@ foreach ($files as $f) {
     if ($an->nodeSpent > 120000) $rec['node_budget_exhausted'] = true;      // the walk was cut short
     $out['files'][] = $rec;
 }
+if ($emitSummaries) {
+    // PASS 1. What does each definition DO with an attacker-controlled parameter? Walk its body once
+    // per parameter (up to 4; beyond that mark them together and say so), and read the result off the
+    // machinery that already exists: the returned state, and the sinks the walk emitted.
+    $sum = ['tool' => 'code2zfl/atoms.php --emit-summaries', 'functions' => [], 'methods' => []];
+    foreach ($files as $f) {
+        $code = @file_get_contents($f); if ($code === false) continue;
+        try { $ast = $parser->parse($code); } catch (ParseError $e) { continue; }
+        $finder = new \PhpParser\NodeFinder;
+        $defs = [];
+        foreach ($finder->findInstanceOf($ast ?? [], Stmt\Function_::class) as $fn)
+            $defs[] = ['fn', strtolower($fn->name->toString()), $fn, null];
+        foreach ($finder->findInstanceOf($ast ?? [], Stmt\Class_::class) as $cls) {
+            $cn = $cls->name ? $cls->name->toString() : 'anon-class';
+            foreach ($cls->stmts as $m) if ($m instanceof Stmt\ClassMethod)
+                $defs[] = ['m', strtolower($m->name->toString()), $m, $cn];
+        }
+        foreach ($defs as [$kind, $name, $def, $cls]) {
+            if ($def->stmts === null) continue;                       // abstract / interface
+            $params = [];
+            foreach ($def->params as $p) { $n = ($p->var instanceof Expr\Variable && is_string($p->var->name)) ? $p->var->name : null; $params[] = $n; }
+            $np = count($params);
+            $rec = ['file' => $f, 'line' => $def->getStartLine(), 'params' => $np,
+                    'passes' => [], 'opaque' => [], 'substitutes' => [], 'sinks' => [], 'guard' => [], 'cut' => false];
+            $probes = ($np === 0) ? [] : (($np <= 4) ? range(0, $np - 1) : [-1]);   // -1: all at once
+            foreach ($probes as $ix) {
+                $an = new Analyzer($CAT);
+                $an->currentClassPublic($cls);
+                $env = [];
+                foreach ($params as $j => $pn) {
+                    if ($pn === null) continue;
+                    $env[$pn] = ($ix === -1 || $ix === $j) ? stT('param', '$' . $pn, $def->getStartLine()) : stF();
+                }
+                $ret = $an->probeBody($def->stmts, $env);
+                if ($an->nodeSpent > 120000 || $an->inlineSpent >= 3000) { $rec['cut'] = true; }
+                $key = $ix === -1 ? 'any' : (string)$ix;
+                // THREE OUTCOMES, kept apart because they mean different things to the caller:
+                //   passes  — the result carries this argument's taint, and what substitutes it is named
+                //   opaque  — the result is Z: something inside was unreadable, so the caller gets Z too
+                //   clean   — the result does not carry it at all (a real sanitizer, or an unrelated return)
+                if ($ret['t'] === 'T') {
+                    $rec['passes'][] = $key;
+                    $ctxs = array_keys($ret['san']);
+                    if ($ctxs) $rec['substitutes'][$key] = $ctxs;
+                } elseif ($ret['t'] === 'Z') {
+                    $rec['opaque'][] = $key;
+                }
+                // ONLY A SINK THAT WOULD BE REFUTED INSIDE. A callee that binds or escapes the value
+                // before its query is not a hole the caller inherits: WordPress's
+                // wpmu_validate_user_signup() reaches $wpdb->get_row, but through $wpdb->prepare with
+                // %s. Recording that as "argument 0 reaches an sql sink" produced 73 accusations
+                // against WordPress in one run, every one wrong. Measured 2026-09-09.
+                foreach ($an->facts as $fact) {
+                    if (($fact['t'] ?? 'F') === 'F') continue;
+                    $fs = is_array($fact['san'] ?? null) ? $fact['san'] : [];
+                    $ctx = $fact['ctx'];
+                    if (isset($fs['*'])) continue;                                  // substituted for every context
+                    if (isset($fs[$ctx])) continue;                                 // substituted for this one
+                    if ($ctx === 'sql' && isset($fs['sql-quoted']) && ($fact['q'] ?? null) === true) continue;
+                    $rec['sinks'][] = [$key, $ctx];
+                }
+                if ($ret['t'] === 'F' && $an->returnedBool) $rec['guard'][] = $key;
+            }
+            $rec['sinks'] = uniq($rec['sinks']);
+            if ($kind === 'fn') $sum['functions'][$name] = $rec;
+            else $sum['methods'][strtolower($cls) . '::' . $name] = $rec;
+        }
+    }
+    echo json_encode($sum, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), "\n";
+    exit(0);
+}
+
 echo json_encode($out, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT), "\n";

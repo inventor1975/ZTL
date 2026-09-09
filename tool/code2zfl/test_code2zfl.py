@@ -98,16 +98,31 @@ def dispositions(out):
     return got
 
 
+def cross_file_probe(failures):
+    """Cross-file sight: pass 1 learns the callees in lib.php, pass 2 judges app.php with them.
+    Without it, all four are OPEN (the calls are opaque) and the sink inside lib.php is invisible
+    from app.php entirely."""
+    out = code2zfl.run([os.path.join(FIX, "xfile")], [], "all", AUTOLOAD)
+    got = [s["disposition"] for f in out["files"] if os.path.basename(f["file"]) == "app.php" for s in f["sinks"]]
+    want = ["REFUTED", "EARNED", "OPEN", "REFUTED"]
+    if got != want:
+        failures.append(f"xfile/app.php: expected {want}, got {got}")
+    flat = code2zfl.run([os.path.join(FIX, "xfile")], [], "all", AUTOLOAD, cross=False)
+    got2 = [s["disposition"] for f in flat["files"] if os.path.basename(f["file"]) == "app.php" for s in f["sinks"]]
+    if got2 == want:
+        failures.append("xfile: --no-cross gives the same answer, so the probe does not test cross-file sight")
+
+
 def main():
     failures = []
-    out = code2zfl.run([FIX], [OVERLAY, LARAVEL], "all", AUTOLOAD)
+    out = code2zfl.run([FIX], [OVERLAY, LARAVEL], "all", AUTOLOAD, cross=False)
     got = dispositions(out)
     for name, exp in EXPECT.items():
         if got.get(name) != exp:
             failures.append(f"{name}: expected {exp}, got {got.get(name)}")
     # every fixture in the folder is in the table — an unlisted fixture is an untested claim
     for name in got:
-        if name not in EXPECT:
+        if name not in EXPECT and not name.startswith(("app", "lib")):
             failures.append(f"{name}: fixture without an expectation")
     # weak links are NAMED on OPEN
     for f in out["files"]:
@@ -136,13 +151,14 @@ def main():
     if g3.get("f54_stored_input.php") != ["REFUTED"] * 5:
         failures.append(f"stored-input overlay: f54 should be five REFUTED, got {g3}")
 
+    cross_file_probe(failures)
     n = sum(len(v) if isinstance(v, list) else 1 for v in EXPECT.values()) + 5
     if failures:
         print("FAIL")
         for x in failures:
             print("  -", x)
         sys.exit(1)
-    print(f"PASS: {n} sink verdicts as expected across {len(EXPECT)} fixtures (+ f54 under stored-input) + 2 vacuity controls")
+    print(f"PASS: {n} sink verdicts as expected across {len(EXPECT)} fixtures + the cross-file pair (+ f54 under stored-input) + 2 vacuity controls")
 
 
 if __name__ == "__main__":

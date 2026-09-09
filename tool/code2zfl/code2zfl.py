@@ -41,6 +41,7 @@ import json
 import os
 import subprocess
 import sys
+import tempfile
 from multiprocessing.pool import ThreadPool
 from collections import Counter
 
@@ -72,8 +73,36 @@ def _atomize_batch(args):
     return json.loads(r.stdout)
 
 
-def atomize(files, overlays, autoload, catalog=None, php=None, jobs=None):
+def summarise(files, overlays, autoload, catalog=None, php=None, jobs=None):
+    """PASS 1 of cross-file sight: what every definition in the tree does with a tainted parameter.
+    Written to a temp file and handed to pass 2, so a call into another file stops being opaque."""
+    cmd = ["php", os.path.join(HERE, "atoms.php"), "--emit-summaries"]
+    if php:
+        cmd += ["--php", php]
+    if catalog:
+        cmd += ["--catalog", catalog]
+    for o in overlays:
+        cmd += ["--overlay", o]
+    env = dict(os.environ)
+    if autoload:
+        env["CODE2ZFL_AUTOLOAD"] = autoload
+    files = list(files)
+    n = jobs if jobs and jobs > 0 else min(8, (os.cpu_count() or 1))
+    batches = [files[i::n] for i in range(n)] if (n > 1 and len(files) >= 40) else [files]
+    merged = {"functions": {}, "methods": {}}
+    with ThreadPool(max(1, len(batches))) as pool:
+        for part in pool.map(_atomize_batch, [(cmd, b, env) for b in batches if b]):
+            if part.get("_error"):
+                sys.exit(part["_error"])
+            merged["functions"].update(part.get("functions", {}))
+            merged["methods"].update(part.get("methods", {}))
+    return merged
+
+
+def atomize(files, overlays, autoload, catalog=None, php=None, jobs=None, summaries=None):
     cmd = ["php", os.path.join(HERE, "atoms.php")]
+    if summaries:
+        cmd += ["--summaries", summaries]
     if php:
         cmd += ["--php", php]
     if catalog:
@@ -235,11 +264,21 @@ def judge(doc):
     return {"disposition": j["disposition"], "grade": j["grade"], "verdict": j["verdict"], "weak": sorted(set(weak))}
 
 
-def run(paths, overlays=(), ctx="sql", autoload=None, catalog=None, php=None, jobs=None):
+def run(paths, overlays=(), ctx="sql", autoload=None, catalog=None, php=None, jobs=None, cross=True):
     files = list(php_files(paths))
     if not files:
         sys.exit("no .php files")
-    facts = atomize(files, overlays, autoload, catalog, php, jobs)
+    sumfile = None
+    if cross and len(files) > 1:
+        summaries = summarise(files, overlays, autoload, catalog, php, jobs)
+        fd, sumfile = tempfile.mkstemp(prefix="code2zfl_sum_", suffix=".json")
+        with os.fdopen(fd, "w", encoding="utf-8") as fh:
+            json.dump(summaries, fh, ensure_ascii=False)
+    try:
+        facts = atomize(files, overlays, autoload, catalog, php, jobs, sumfile)
+    finally:
+        if sumfile:
+            os.unlink(sumfile)
     out = {"tool": "code2zfl", "ctx": ctx, "php": facts.get("php"), "files": []}
     for f in facts["files"]:
         rec = {"file": f["file"], "lines": f["lines"], "parse_error": f["parse_error"],
@@ -371,11 +410,12 @@ def main():
     ap.add_argument("--autoload", default=os.environ.get("CODE2ZFL_AUTOLOAD"))
     ap.add_argument("--php", default=None, help="grammar version for legacy code, e.g. 7.4 (default: newest)")
     ap.add_argument("--jobs", type=int, default=None, help="parallel atomizer processes (default: min(8, cores))")
+    ap.add_argument("--no-cross", action="store_true", help="skip pass 1: judge each file alone, as before cross-file sight")
     ap.add_argument("--json", default=None)
     ap.add_argument("--md", default=None)
     ap.add_argument("--summary", default=None, help="human summary: totals per file + REFUTED with code lines")
     a = ap.parse_args()
-    out = run(a.paths, a.overlay, a.ctx, a.autoload, a.catalog, a.php, a.jobs)
+    out = run(a.paths, a.overlay, a.ctx, a.autoload, a.catalog, a.php, a.jobs, not a.no_cross)
     md = ledger_md(out)
     if a.summary:
         with open(a.summary, "w", encoding="utf-8") as fh:

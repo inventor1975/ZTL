@@ -1102,8 +1102,20 @@ final class Analyzer {
             $vix = $g['value'] ?? 0;
             $v = isset($args[$vix]) ? $this->guardName($args[$vix]->value) : null;
             if ($v === null) return $none;
-            if (isset($g['haystack']) && $this->litOf($args[$g['haystack']]->value ?? null) === null) return $none;   // in_array($x, $unknown): no
-            if (!empty($g['pattern_tight']) && !self::patternIsTight($this->litOf($args[$g['pattern']]->value ?? null))) return $none;
+            // A CHECK WE CANNOT READ IS STILL A CHECK. `array_key_exists($func, $actions)` where the
+            // map comes back from a call is not "no whitelist" — it is a whitelist whose contents we
+            // cannot see, and the honest answer is Z, not a refutation. Measured 2026-09-09 on
+            // Wordfence 9.0.1 (wordfenceClass.php:1732), the single REFUTED across six live plugins.
+            if (isset($g['haystack']) && $this->litOf($args[$g['haystack']]->value ?? null) === null)
+                return ['true' => [], 'false' => [], 'unknown' => [[$v, $fn . '()', $line]]];
+            if (!empty($g['pattern_tight'])) {
+                $pat = $this->litOf($args[$g['pattern']]->value ?? null);
+                // READ AND FOUND WANTING is not the same as UNREADABLE. `/[a-z]+/` is a pattern we
+                // read and refuse to credit — it confines nothing — and the verdict stands. A pattern
+                // we cannot read at all is an unknown check, and the honest answer there is Z.
+                if ($pat === null) return ['true' => [], 'false' => [], 'unknown' => [[$v, $fn . '()', $line]]];
+                if (!self::patternIsTight($pat)) return $none;
+            }
             return ['true' => [[$v, $g['contexts'], 'guard:' . $fn, $line]], 'false' => []];
         }
         if (($c instanceof Expr\MethodCall || $c instanceof Expr\StaticCall || $c instanceof Expr\NullsafeMethodCall)

@@ -54,7 +54,7 @@ EXPECT = {
     "f25_return_carries_taint.php": ["REFUTED"],
     "f26_query_built_in_pieces.php": ["EARNED", "EARNED", "EARNED"],
     "f27_same_method_name_two_objects.php": ["EARNED", "REFUTED"],
-    "f28_guard_in_array.php": ["EARNED", "REFUTED"],
+    "f28_guard_in_array.php": ["EARNED", "OPEN"],
     "f29_guard_early_exit.php": ["EARNED"],
     "f30_guard_preg_match.php": ["EARNED", "REFUTED"],
     "f31_html.php": ["REFUTED", "EARNED", "REFUTED"],
@@ -66,7 +66,7 @@ EXPECT = {
     # 2026-09-09 — from the SARD/Stivalet suite (42k files) and DVWA
     "f37_sprintf_format.php": ["EARNED", "EARNED", "REFUTED", "REFUTED"],
     "f38_settype.php": ["EARNED"],
-    "f39_guard_wrapped_and_once_assigned.php": ["EARNED", "EARNED", "EARNED", "REFUTED"],
+    "f39_guard_wrapped_and_once_assigned.php": ["EARNED", "EARNED", "EARNED", "OPEN"],
     "f40_filter_var_guard.php": ["EARNED", "EARNED", "REFUTED", "EARNED", "REFUTED"],
     "f41_preg_replace_strip.php": ["EARNED", "REFUTED"],
     "f42_unknown_call_is_z.php": ["OPEN", "EARNED"],
@@ -92,6 +92,7 @@ EXPECT = {
     "f62_url_encoded_into_url_sink.php": ["OPEN", "OPEN", "REFUTED", "OPEN"],
     "f63_guard_on_superglobal_slot.php": ["EARNED", "REFUTED"],
     "f64_files_fields.php": ["EARNED", "REFUTED"],
+    "f65_whitelist_from_a_call.php": ["OPEN", "EARNED", "REFUTED"],
 }
 STORED = os.path.join(HERE, "overlays", "stored-input.json")
 

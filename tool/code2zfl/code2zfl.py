@@ -41,6 +41,7 @@ import json
 import os
 import subprocess
 import sys
+from multiprocessing.pool import ThreadPool
 from collections import Counter
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -63,7 +64,15 @@ def php_files(paths):
                     yield os.path.join(root, f)
 
 
-def atomize(files, overlays, autoload, catalog=None, php=None):
+def _atomize_batch(args):
+    cmd, files, env = args
+    r = subprocess.run(cmd + list(files), capture_output=True, text=True, env=env)
+    if r.returncode != 0:
+        return {"files": [], "_error": f"atoms.php failed ({r.returncode}): {r.stderr.strip()[:400]}"}
+    return json.loads(r.stdout)
+
+
+def atomize(files, overlays, autoload, catalog=None, php=None, jobs=None):
     cmd = ["php", os.path.join(HERE, "atoms.php")]
     if php:
         cmd += ["--php", php]
@@ -71,14 +80,30 @@ def atomize(files, overlays, autoload, catalog=None, php=None):
         cmd += ["--catalog", catalog]
     for o in overlays:
         cmd += ["--overlay", o]
-    cmd += list(files)
     env = dict(os.environ)
     if autoload:
         env["CODE2ZFL_AUTOLOAD"] = autoload
-    r = subprocess.run(cmd, capture_output=True, text=True, env=env)
-    if r.returncode != 0:
-        sys.exit(f"atoms.php failed ({r.returncode}): {r.stderr.strip()}")
-    return json.loads(r.stdout)
+    files = list(files)
+
+    # ONE PROCESS PER BATCH, and the batches are interleaved rather than sliced. Measured 2026-09-09
+    # on WordPress: contiguous slices put all of wp-includes/ID3 in one batch and the whole run took
+    # as long as that batch (342 s of 334); interleaving spreads the expensive neighbours. Parallelism
+    # was worth nothing until the node budget removed the single 297-second file — a reminder that
+    # splitting work does not fix work that is quadratic in one place.
+    n = jobs if jobs and jobs > 0 else min(8, (os.cpu_count() or 1))
+    if n <= 1 or len(files) < 40:
+        return _atomize_batch((cmd, files, env))
+    batches = [files[i::n] for i in range(n)]
+    with ThreadPool(n) as pool:
+        parts = pool.map(_atomize_batch, [(cmd, b, env) for b in batches if b])
+    out = dict(parts[0]); out["files"] = []
+    for part in parts:
+        if part.get("_error"):
+            sys.exit(part["_error"])
+        out["files"].extend(part["files"])
+    order = {f: i for i, f in enumerate(files)}
+    out["files"].sort(key=lambda r: order.get(r["file"], 0))
+    return out
 
 
 # ------------------------------------------------------------ facts → ZFL2
@@ -210,11 +235,11 @@ def judge(doc):
     return {"disposition": j["disposition"], "grade": j["grade"], "verdict": j["verdict"], "weak": sorted(set(weak))}
 
 
-def run(paths, overlays=(), ctx="sql", autoload=None, catalog=None, php=None):
+def run(paths, overlays=(), ctx="sql", autoload=None, catalog=None, php=None, jobs=None):
     files = list(php_files(paths))
     if not files:
         sys.exit("no .php files")
-    facts = atomize(files, overlays, autoload, catalog, php)
+    facts = atomize(files, overlays, autoload, catalog, php, jobs)
     out = {"tool": "code2zfl", "ctx": ctx, "php": facts.get("php"), "files": []}
     for f in facts["files"]:
         rec = {"file": f["file"], "lines": f["lines"], "parse_error": f["parse_error"],
@@ -223,6 +248,8 @@ def run(paths, overlays=(), ctx="sql", autoload=None, catalog=None, php=None):
         # judged as unknown (Z), so this file's OPENs may be wider than they would otherwise be
         if f.get("inline_budget_exhausted"):
             rec["inline_budget_exhausted"] = True
+        if f.get("node_budget_exhausted"):
+            rec["node_budget_exhausted"] = True
         if f["parse_error"]:
             rec["disposition"] = "E"
             out["files"].append(rec)
@@ -282,7 +309,7 @@ def summary_md(out):
         mark = "**" if isinstance(r, int) and r else ""
         L.append(f"| {fl} | {n} | {mark}{r}{mark} | {o} | {e} |")
     L.append(f"| **total** | {sum(r[1] for r in rows if isinstance(r[1], int))} | **{tot['REFUTED']}** | {tot['OPEN'] + tot['ON CREDIT']} | {tot['EARNED']} |")
-    capped = [f["file"] for f in out["files"] if f.get("inline_budget_exhausted")]
+    capped = [f["file"] for f in out["files"] if f.get("inline_budget_exhausted") or f.get("node_budget_exhausted")]
     if capped:
         L += ["", f"## inlining budget reached — {len(capped)} file(s)", "",
               "Past the budget a call inside the file is judged as unknown (Z), so these files' OPEN",
@@ -343,11 +370,12 @@ def main():
     ap.add_argument("--ctx", default="sql")
     ap.add_argument("--autoload", default=os.environ.get("CODE2ZFL_AUTOLOAD"))
     ap.add_argument("--php", default=None, help="grammar version for legacy code, e.g. 7.4 (default: newest)")
+    ap.add_argument("--jobs", type=int, default=None, help="parallel atomizer processes (default: min(8, cores))")
     ap.add_argument("--json", default=None)
     ap.add_argument("--md", default=None)
     ap.add_argument("--summary", default=None, help="human summary: totals per file + REFUTED with code lines")
     a = ap.parse_args()
-    out = run(a.paths, a.overlay, a.ctx, a.autoload, a.catalog, a.php)
+    out = run(a.paths, a.overlay, a.ctx, a.autoload, a.catalog, a.php, a.jobs)
     md = ledger_md(out)
     if a.summary:
         with open(a.summary, "w", encoding="utf-8") as fh:

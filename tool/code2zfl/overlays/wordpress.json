@@ -1,0 +1,105 @@
+{
+  "_about": "WordPress overlay (public). Read from WordPress source 2026-09-09: esc_attr/esc_html call _wp_specialchars(..., ENT_QUOTES) — htmlspecialchars with quotes, so they earn html AND html-sq; esc_url is the URL escaper; esc_js escapes for a JS string; esc_sql is $wpdb->_real_escape (mysqli escaping, quotes still required); intval-family and absint substitute for every context. $wpdb->prepare binds, so its RESULT is safe; $wpdb->query executes. Translation functions __/_e/esc_html__ return a dictionary string, not the caller's value — they do not carry taint, but a translated string is not attacker-controlled either.",
+  "sinks": {
+    "sql": {
+      "methods": [
+        "$wpdb->query",
+        "$wpdb->get_results",
+        "$wpdb->get_row",
+        "$wpdb->get_var",
+        "$wpdb->get_col"
+      ]
+    }
+  },
+  "sanitizers": {
+    "functions": {
+      "esc_attr": {
+        "contexts": [
+          "html",
+          "html-sq"
+        ]
+      },
+      "esc_html": {
+        "contexts": [
+          "html",
+          "html-sq"
+        ]
+      },
+      "esc_textarea": {
+        "contexts": [
+          "html",
+          "html-sq"
+        ]
+      },
+      "esc_url": {
+        "contexts": [
+          "header",
+          "html",
+          "html-sq"
+        ]
+      },
+      "esc_url_raw": {
+        "contexts": [
+          "header"
+        ]
+      },
+      "esc_js": {
+        "contexts": [
+          "js",
+          "html",
+          "html-sq"
+        ]
+      },
+      "esc_sql": {
+        "contexts": [
+          "sql-quoted"
+        ]
+      },
+      "absint": {
+        "contexts": [
+          "*"
+        ]
+      },
+      "sanitize_key": {
+        "contexts": [
+          "*"
+        ]
+      },
+      "get_the_ID": {
+        "contexts": [
+          "*"
+        ]
+      }
+    },
+    "methods": {
+      "$wpdb->prepare": {
+        "contexts": [
+          "sql"
+        ]
+      },
+      "$wpdb->_real_escape": {
+        "contexts": [
+          "sql-quoted"
+        ]
+      },
+      "$wpdb->esc_like": {
+        "contexts": []
+      }
+    }
+  },
+  "preserving": [
+    "__",
+    "_e",
+    "_x",
+    "esc_html__",
+    "esc_attr__",
+    "_n",
+    "translate"
+  ],
+  "_notes": {
+    "esc_sql": "escaping only — the value still needs quotes around it, exactly like mysqli_real_escape_string.",
+    "sanitize_text_field": "NOT listed as a sanitizer: it strips tags and invalid UTF-8 but is not an escaper for any of our contexts; WordPress's own docs say to escape at output.",
+    "wp_kses": "NOT listed: it filters HTML by an allow-list of tags, which is a policy decision, not a substitution — its output is HTML by design.",
+    "__/_e": "listed as PRESERVING, not as sanitizers: they return a dictionary string. A tainted argument to __() is a developer error the corpus does not exhibit; treating them as opaque produced 1662 false OPEN on WordPress."
+  }
+}

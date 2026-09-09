@@ -332,6 +332,15 @@ final class Analyzer {
     // an unknown call, hence Z with the reason named. Slower is acceptable; silent is not.
     private int $inlineBudget = 3000;
     public int $inlineSpent = 0;
+    // A NODE BUDGET, for the same reason and with the same honesty. Path joining is quadratic in a
+    // `switch` with hundreds of cases over hundreds of variables: WordPress's
+    // `module.audio-video.quicktime.php` (350 cases, 191 variables) took 297 s alone, and folding the
+    // joins pairwise only brought it to 225. Past the budget the walk STOPS DESCENDING and every
+    // value it would have produced is Z — the same answer the tool gave before it could see anything,
+    // and the file is flagged so the reader knows the walk was cut. A slow instrument is a nuisance;
+    // one that silently looks less far is a liar.
+    private int $nodeBudget = 120000;
+    public int $nodeSpent = 0;
     // Names this file checks with something we cannot read. Collected in a PRE-PASS, because the
     // check may sit anywhere — nested one level (the WordPress REST shape) or after the sink.
     // The claim is not "checked here" but "this file reads and decides on this value, and what it
@@ -555,6 +564,7 @@ final class Analyzer {
 
     /** Evaluate an expression to a taint state; records sinks and assignments on the way. */
     public function ex(?Node $e, array &$env): array {
+        if (++$this->nodeSpent > $this->nodeBudget) return stZ('node-budget', $e ? $e->getStartLine() : 0);
         global $SUPER, $SERVER_KEYS, $SERVER_PREFIXES, $GUARDS, $SRCFN, $SRCMETH, $SRCBYREF, $SRCSHELL, $SANFN, $SANMETH, $SANCAST, $TRANSP, $TRANSPMETH, $PRESERV, $NARROW, $SINKFN, $SINKMETH, $SINKARG, $SINKFLAGS;
         if ($e === null) return stF();
         $line = $e->getStartLine();
@@ -1135,6 +1145,13 @@ final class Analyzer {
         return $hss[0];
     }
 
+    /** Pairwise fold of joinEnv — same result, no cross-product over many paths. */
+    private static function joinFold(array $envs, array $pre): array {
+        $acc = array_shift($envs);
+        foreach ($envs as $e) $acc = self::joinEnv([$acc, $e], $pre);
+        return $acc;
+    }
+
     private static function joinEnv(array $envs, array $pre): array {
         $names = [];
         foreach ($envs as $e) foreach ($e as $k => $_) $names[$k] = 1;
@@ -1157,6 +1174,7 @@ final class Analyzer {
     }
 
     private function stmt(Node $s, array &$env): void {
+        if (++$this->nodeSpent > $this->nodeBudget) return;
         global $SINKFLAGS;
         $line = $s->getStartLine();
         if ($s instanceof Stmt\Expression) { $this->ex($s->expr, $env); return; }
@@ -1183,7 +1201,7 @@ final class Analyzer {
             foreach ($s->elseifs as $ei) { $this->hs = $hs0; $e2 = $env; $this->applyGuards($g['false'], $e2); $this->ex($ei->cond, $e2); $this->applyGuards($this->guards($ei->cond)['true'], $e2); $this->walk($ei->stmts, $e2); if (!self::terminates($ei->stmts)) { $paths[] = $e2; $hss[] = $this->hs; } }
             if ($s->else) { $this->hs = $hs0; $e3 = $env; $this->applyGuards($g['false'], $e3); $this->walk($s->else->stmts, $e3); if (!self::terminates($s->else->stmts)) { $paths[] = $e3; $hss[] = $this->hs; } }
             else { $e0 = $env; $this->applyGuards($g['false'], $e0); $paths[] = $e0; $hss[] = $hs0; }   // the fall-through path: the condition failed
-            $env = $paths ? self::joinEnv($paths, $env) : $env;
+            $env = $paths ? self::joinFold($paths, $env) : $env;
             $this->hs = self::hsJoin($hss ?: [$hs0]);
             return;
         }
@@ -1222,7 +1240,11 @@ final class Analyzer {
                 $paths[] = $e1; $prev = $e1;
             }
             if (!$hasDefault) { $paths[] = $env; $hss[] = $hs0; }
-            $env = self::joinEnv($paths ?: [$env], $env);
+            // Accumulate instead of holding every path: a `switch` with 350 cases over 191 variables
+            // (WordPress `module.audio-video.quicktime.php`) made the final joinEnv walk the whole
+            // cross-product and the file took 297 s alone. Join is associative, so folding pairwise
+            // gives the same environment. MEASURED 2026-09-09.
+            $env = self::joinFold($paths ?: [$env], $env);
             $this->hs = self::hsJoin($hss ?: [$hs0]);
             return;
         }
@@ -1367,6 +1389,7 @@ foreach ($files as $f) {
     }
     $rec['sinks'] = array_values($byKey); $rec['includes'] = array_values(array_unique($an->includes)); $rec['functions'] = $an->functions;
     if ($an->inlineSpent >= 3000) $rec['inline_budget_exhausted'] = true;   // named, not hidden
+    if ($an->nodeSpent > 120000) $rec['node_budget_exhausted'] = true;      // the walk was cut short
     $out['files'][] = $rec;
 }
 echo json_encode($out, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT), "\n";

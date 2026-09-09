@@ -89,23 +89,29 @@ def summarise(files, overlays, autoload, catalog=None, php=None, jobs=None):
     files = list(files)
     n = jobs if jobs and jobs > 0 else min(8, (os.cpu_count() or 1))
     batches = [files[i::n] for i in range(n)] if (n > 1 and len(files) >= 40) else [files]
-    merged = {"functions": {}, "methods": {}, "parents": {}, "files": {}}
+    # HOW EACH SLOT CROSSES A BATCH BOUNDARY, declared in one place. Twice already a new slot was added
+    # to pass 1 and silently dropped here (`parents`, then `byname`), and the run stayed green because
+    # nothing MISSING can fail a test — so an unknown slot is now a loud error, not a shrug.
+    MEET = ("functions", "methods", "byname")     # a name seen in two batches: same rule as inside one
+    CARRY = ("parents", "files")                  # one owner per key: plain carry
+    merged = {k: {} for k in MEET + CARRY}
     with ThreadPool(max(1, len(batches))) as pool:
         for part in pool.map(_atomize_batch, [(cmd, b, env) for b in batches if b]):
             if part.get("_error"):
                 sys.exit(part["_error"])
-            for slot in ("functions", "methods"):                       # a name seen in two batches: same rule as inside one
-                recs = part.get(slot) or {}
+            for slot, recs in part.items():
+                if slot == "tool":
+                    continue
                 if isinstance(recs, list):                                  # PHP writes an empty map as []
                     recs = {}
-                for k, rec in recs.items():
-                    merged[slot][k] = _summary_merge(merged[slot].get(k), rec)
-            par = part.get("parents") or {}                              # a class has ONE parent: no meet, plain carry
-            if isinstance(par, dict):
-                merged["parents"].update(par)
-            ff = part.get("files") or {}                                  # a file is summarised in exactly one batch
-            if isinstance(ff, dict):
-                merged["files"].update(ff)
+                if slot in MEET:
+                    for k, rec in recs.items():
+                        merged[slot][k] = _summary_merge(merged[slot].get(k), rec)
+                elif slot in CARRY:
+                    merged[slot].update(recs)
+                else:
+                    sys.exit(f"summarise: atoms.php emitted an unknown summary slot {slot!r} — "
+                             f"say how it crosses a batch boundary in MEET or CARRY")
     merged["inherit"] = _inherit(merged["files"])
     return merged
 
@@ -159,10 +165,12 @@ def _files(r):
     return sorted(set(out))
 
 
-def atomize(files, overlays, autoload, catalog=None, php=None, jobs=None, summaries=None):
+def atomize(files, overlays, autoload, catalog=None, php=None, jobs=None, summaries=None, assume_tree=False):
     cmd = ["php", os.path.join(HERE, "atoms.php")]
     if summaries:
         cmd += ["--summaries", summaries]
+    if assume_tree:                      # answer a call on a foreign object from the tree's definitions of that name
+        cmd += ["--assume-tree-methods"]
     if php:
         cmd += ["--php", php]
     if catalog:
@@ -332,7 +340,7 @@ def judge(doc):
     return {"disposition": j["disposition"], "grade": j["grade"], "verdict": j["verdict"], "weak": sorted(set(weak))}
 
 
-def run(paths, overlays=(), ctx="sql", autoload=None, catalog=None, php=None, jobs=None, cross=True):
+def run(paths, overlays=(), ctx="sql", autoload=None, catalog=None, php=None, jobs=None, cross=True, assume_tree=False):
     files = list(php_files(paths))
     if not files:
         sys.exit("no .php files")
@@ -343,7 +351,7 @@ def run(paths, overlays=(), ctx="sql", autoload=None, catalog=None, php=None, jo
         with os.fdopen(fd, "w", encoding="utf-8") as fh:
             json.dump(summaries, fh, ensure_ascii=False)
     try:
-        facts = atomize(files, overlays, autoload, catalog, php, jobs, sumfile)
+        facts = atomize(files, overlays, autoload, catalog, php, jobs, sumfile, assume_tree)
     finally:
         if sumfile:
             os.unlink(sumfile)
@@ -478,12 +486,15 @@ def main():
     ap.add_argument("--autoload", default=os.environ.get("CODE2ZFL_AUTOLOAD"))
     ap.add_argument("--php", default=None, help="grammar version for legacy code, e.g. 7.4 (default: newest)")
     ap.add_argument("--jobs", type=int, default=None, help="parallel atomizer processes (default: min(8, cores))")
+    ap.add_argument("--assume-tree-methods", action="store_true",
+                    help="answer $obj->m() from the tree's definitions of `m` when they all AGREE in substance. "
+                         "Assumes the object's class is in the tree — false for a vendor or built-in object. Off by default.")
     ap.add_argument("--no-cross", action="store_true", help="skip pass 1: judge each file alone, as before cross-file sight")
     ap.add_argument("--json", default=None)
     ap.add_argument("--md", default=None)
     ap.add_argument("--summary", default=None, help="human summary: totals per file + REFUTED with code lines")
     a = ap.parse_args()
-    out = run(a.paths, a.overlay, a.ctx, a.autoload, a.catalog, a.php, a.jobs, not a.no_cross)
+    out = run(a.paths, a.overlay, a.ctx, a.autoload, a.catalog, a.php, a.jobs, not a.no_cross, a.assume_tree_methods)
     md = ledger_md(out)
     if a.summary:
         with open(a.summary, "w", encoding="utf-8") as fh:

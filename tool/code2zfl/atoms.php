@@ -21,6 +21,7 @@ declare(strict_types=1);
 $autoload = getenv('CODE2ZFL_AUTOLOAD') ?: (__DIR__ . '/vendor/autoload.php');
 $catalogPath = __DIR__ . '/catalog.json';
 $overlays = [];
+$assumeTree = false;    // may a method call on a FOREIGN object be answered by the tree's definitions of that name?
 $files = [];
 $phpVersion = null;                       // e.g. 7.4 — legacy syntax the newest grammar refuses
 // CROSS-FILE SIGHT, in two passes. A call to a function defined in ANOTHER file was opaque, which is
@@ -39,6 +40,7 @@ for ($i = 1; $i < $argc; $i++) {
     if ($a === '--autoload') { $autoload = $argv[++$i]; continue; }
     if ($a === '--catalog')  { $catalogPath = $argv[++$i]; continue; }
     if ($a === '--overlay')  { $overlays[] = $argv[++$i]; continue; }
+    if ($a === '--assume-tree-methods') { $assumeTree = true; continue; }
     if ($a === '--php')      { $phpVersion = $argv[++$i]; continue; }
     if ($a === '--emit-summaries') { $emitSummaries = true; continue; }   // pass 1 of cross-file sight
     if ($a === '--summaries') { $summaryPath = $argv[++$i]; continue; }   // pass 2: use what pass 1 learned
@@ -90,6 +92,7 @@ foreach ($overlays as $o) $CAT = mergeCatalog($CAT, loadJson($o));
 if ($summaryPath !== null && is_file($summaryPath)) $SUMMARIES = loadJson($summaryPath);
 // Definitions that can REFUSE THE REQUEST (exit / die / throw), by bare name — a statement call to one
 // of these is an act of checking. Built once from the summaries; a file's own definitions are added to it.
+$ASSUME_TREE = $assumeTree;
 $ENDS = [];
 foreach (($SUMMARIES['functions'] ?? []) as $n => $r) if (!empty($r['ends'])) $ENDS[$n] = 1;
 foreach (($SUMMARIES['methods'] ?? []) as $n => $r) if (!empty($r['ends'])) $ENDS[substr($n, strrpos($n, ':') + 1)] = 1;
@@ -677,7 +680,7 @@ final class Analyzer {
     /** Evaluate an expression to a taint state; records sinks and assignments on the way. */
     public function ex(?Node $e, array &$env): array {
         if (++$this->nodeSpent > $this->nodeBudget) return stZ('node-budget', $e ? $e->getStartLine() : 0);
-        global $SUMMARIES, $SUPER, $SERVER_KEYS, $SERVER_PREFIXES, $GUARDS, $SRCFN, $SRCMETH, $SRCBYREF, $SRCSHELL, $SANFN, $SANMETH, $SANCAST, $TRANSP, $TRANSPMETH, $PRESERV, $NARROW, $SINKFN, $SINKMETH, $SINKARG, $SINKFLAGS, $NOTSINK;
+        global $SUMMARIES, $SUPER, $SERVER_KEYS, $SERVER_PREFIXES, $GUARDS, $SRCFN, $SRCMETH, $SRCBYREF, $SRCSHELL, $SANFN, $SANMETH, $SANCAST, $TRANSP, $TRANSPMETH, $PRESERV, $NARROW, $SINKFN, $SINKMETH, $SINKARG, $SINKFLAGS, $NOTSINK, $ASSUME_TREE;
         if ($e === null) return stF();
         $line = $e->getStartLine();
 
@@ -1015,6 +1018,11 @@ final class Analyzer {
                     $cls = $SUMMARIES['parents'][$cls] ?? null;
                 }
             }
+            // A METHOD CALL ON A FOREIGN OBJECT. `$langs->trans($x)` — we do not know $langs's class, and a
+            // method NAME is not an act. But if EVERY definition of that name in the tree agrees in substance,
+            // which one runs cannot change the answer. The assumption this rests on, and the reason it is off
+            // by default: the object may be a vendor's or PHP's own, whose definition is not in the tree.
+            if ($sumKey === null && $ASSUME_TREE && $isMethod && !$recvIsSelf) $sumKey = $SUMMARIES['byname'][$name] ?? null;
             if ($sumKey !== null && !empty($sumKey['conflict'])) $sumKey = null;          // two different definitions: unknown
             if ($sumKey !== null && !isset($this->defs['fn'][$name])) {
                 $tainted = [];
@@ -1949,6 +1957,10 @@ if ($emitSummaries) {
             $slot = $kind === 'fn' ? 'functions' : 'methods';
             $k = $kind === 'fn' ? $name : strtolower($cls) . '::' . $name;
             $sum[$slot][$k] = summaryMerge($sum[$slot][$k] ?? null, $rec);
+            // ALSO by bare name, under the same merge rule: if every definition of `trans` in the tree does
+            // the same thing to a tainted argument, WHICH one runs does not matter. Read only when
+            // --assume-tree-methods says the callee is in the tree; the default does not assume it.
+            if ($kind === 'm') $sum['byname'][$name] = summaryMerge($sum['byname'][$name] ?? null, $rec);
         }
     }
     emit($sum, 0);

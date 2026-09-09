@@ -41,6 +41,7 @@ for ($i = 1; $i < $argc; $i++) {
     if ($a === '--catalog')  { $catalogPath = $argv[++$i]; continue; }
     if ($a === '--overlay')  { $overlays[] = $argv[++$i]; continue; }
     if ($a === '--assume-tree-methods') { $assumeTree = true; continue; }
+    if ($a === '--no-assume-tree-methods') { $assumeTree = false; continue; }
     if ($a === '--php')      { $phpVersion = $argv[++$i]; continue; }
     if ($a === '--emit-summaries') { $emitSummaries = true; continue; }   // pass 1 of cross-file sight
     if ($a === '--summaries') { $summaryPath = $argv[++$i]; continue; }   // pass 2: use what pass 1 learned
@@ -148,9 +149,9 @@ const RANK = ['F' => 0, 'Z' => 1, 'T' => 2];
 // obj: ['class' => name, 'props' => [prop => state]] when the value is an object of a class DEFINED IN THIS FILE, made
 //      with `new` here: its methods are inlined on ITS OWN property states, in call order (a strong update per call).
 //      Copies of the variable carry copies of the state (value semantics — a named boundary; PHP objects are references).
-function stF(): array { return ['t' => 'F', 'src' => [], 'san' => [], 'z' => [], 'q' => null, 'zu' => [], 'nu' => false, 'dv' => [], 'hc' => [], 'hf' => null, 'obj' => null]; }
-function stZ(string $why, int $line): array { return ['t' => 'Z', 'src' => [], 'san' => [], 'z' => [[$why, $line]], 'q' => null, 'zu' => [], 'nu' => false, 'dv' => [], 'hc' => [], 'hf' => null]; }
-function stT(string $kind, string $name, int $line): array { return ['t' => 'T', 'src' => [[$kind, $name, $line]], 'san' => [], 'z' => [], 'q' => null, 'zu' => [], 'nu' => true, 'dv' => ['#src'], 'hc' => [], 'hf' => null]; }
+function stF(): array { return ['t' => 'F', 'src' => [], 'san' => [], 'z' => [], 'q' => null, 'zu' => [], 'nu' => false, 'dv' => [], 'hc' => [], 'hf' => null, 'obj' => null, 'as' => []]; }
+function stZ(string $why, int $line): array { return ['t' => 'Z', 'src' => [], 'san' => [], 'z' => [[$why, $line]], 'q' => null, 'zu' => [], 'nu' => false, 'dv' => [], 'hc' => [], 'hf' => null, 'as' => []]; }
+function stT(string $kind, string $name, int $line): array { return ['t' => 'T', 'src' => [[$kind, $name, $line]], 'san' => [], 'z' => [], 'q' => null, 'zu' => [], 'nu' => true, 'dv' => ['#src'], 'hc' => [], 'hf' => null, 'as' => []]; }
 function objJoin(?array $a, ?array $b): ?array {
     if ($a === null || $b === null || $a['class'] !== $b['class']) return null;
     $props = $a['props'];
@@ -197,7 +198,8 @@ function join2(array $a, array $b): array {
     return ['t' => $t, 'src' => uniq(array_merge($a['src'], $b['src'])), 'san' => $san,
             'z' => uniq(array_merge($a['z'], $b['z'])), 'q' => $q,
             'zu' => uniq(array_merge($a['zu'] ?? [], $b['zu'] ?? [], $zuX)), 'nu' => ($a['nu'] ?? false) || ($b['nu'] ?? false), 'dv' => dvUnion($a, $b),
-            'hc' => hcJoin($a, $b), 'hf' => hfJoin($a, $b), 'obj' => objJoin($a['obj'] ?? null, $b['obj'] ?? null)];
+            'hc' => hcJoin($a, $b), 'hf' => hfJoin($a, $b), 'obj' => objJoin($a['obj'] ?? null, $b['obj'] ?? null),
+            'as' => uniq(array_merge($a['as'] ?? [], $b['as'] ?? []))];
 }
 /** MEET of two sanitization maps: '*' (a numeric substitution) covers every context, so it is the identity. */
 function sanMeet(array $a, array $b): array {
@@ -219,7 +221,8 @@ function through(array $s, ?string $why, int $line, bool $unknown, string $keep 
     $san = $keep === 'all' ? $s['san'] : ($keep === 'numeric' && isset($s['san']['*']) ? ['*' => $s['san']['*']] : []);
     $out = ['t' => $s['t'], 'src' => $s['src'], 'san' => $san, 'z' => $s['z'], 'q' => $keep === 'all' ? $s['q'] : null, 'zu' => $s['zu'] ?? [],
             'nu' => ($s['nu'] ?? false) || ($keep !== 'all' && $s['t'] === 'T' && !$san), 'dv' => $s['dv'] ?? [],
-            'hc' => $s['hc'] ?? [], 'hf' => $keep === 'all' ? ($s['hf'] ?? null) : (($s['hf'] ?? null) === null && ($s['hc'] ?? []) === [] ? null : array_fill_keys(Html::INITS, 'unknown'))];
+            'hc' => $s['hc'] ?? [], 'hf' => $keep === 'all' ? ($s['hf'] ?? null) : (($s['hf'] ?? null) === null && ($s['hc'] ?? []) === [] ? null : array_fill_keys(Html::INITS, 'unknown')),
+            'as' => $s['as'] ?? []];
     // an UNKNOWN call's result is not visible here even when every argument is a constant: `$obj->get()` reads
     // the object's state, `time()` reads the clock — before 2026-09-09 such a call over constants stayed F and
     // four in-file getter shapes of the SARD suite came back EARNED ("nothing arrives") instead of OPEN
@@ -231,7 +234,7 @@ function sanitize(array $s, array $ctxs, string $fn, int $line): array {
     // built string does not settle a part of unknown origin that may sit outside the quotes
     $zu = in_array('*', $ctxs, true) ? [] : ($s['zu'] ?? []);
     $out = ['t' => $s['t'], 'src' => $s['src'], 'san' => $s['san'], 'z' => $s['z'], 'q' => null, 'zu' => $zu, 'nu' => false, 'dv' => $s['dv'] ?? [],
-            'hc' => [], 'hf' => null];                                        // escaped as a whole: its own markup is text now, its parts land wherever the whole lands
+            'hc' => [], 'hf' => null, 'as' => $s['as'] ?? []];                 // escaped as a whole: its own markup is text now, its parts land wherever the whole lands
     foreach ($ctxs as $c) $out['san'][$c] = [$fn, $line];
     return $out;
 }
@@ -646,7 +649,7 @@ final class Analyzer {
 
     private function sinkFact(string $ctx, string $fn, int $line, array $s, ?string $hctx = null): void {
         $this->facts[] = ['ctx' => $ctx, 'fn' => $fn, 'line' => $line, 'scope' => $this->scope,
-                          't' => $s['t'], 'src' => $s['src'], 'san' => $s['san'], 'z' => $s['z'], 'q' => $s['q'], 'zu' => $s['zu'] ?? [], 'nu' => $s['nu'] ?? false,
+                          't' => $s['t'], 'src' => $s['src'], 'san' => $s['san'], 'z' => $s['z'], 'q' => $s['q'], 'zu' => $s['zu'] ?? [], 'nu' => $s['nu'] ?? false, 'as' => $s['as'] ?? [],
                           'hctx' => $hctx];
     }
 
@@ -1036,7 +1039,11 @@ final class Analyzer {
             // method NAME is not an act. But if EVERY definition of that name in the tree agrees in substance,
             // which one runs cannot change the answer. The assumption this rests on, and the reason it is off
             // by default: the object may be a vendor's or PHP's own, whose definition is not in the tree.
-            if ($sumKey === null && $ASSUME_TREE && $isMethod && !$recvIsSelf) $sumKey = $SUMMARIES['byname'][$name] ?? null;
+            $assumedName = null;
+            if ($sumKey === null && $ASSUME_TREE && $isMethod && !$recvIsSelf) {
+                $sumKey = $SUMMARIES['byname'][$name] ?? null;
+                if ($sumKey !== null && empty($sumKey['conflict'])) $assumedName = '->' . $name . '()';
+            }
             if ($sumKey !== null && !empty($sumKey['conflict'])) $sumKey = null;          // two different definitions: unknown
             if ($sumKey !== null && !isset($this->defs['fn'][$name])) {
                 $tainted = [];
@@ -1058,7 +1065,12 @@ final class Analyzer {
                     }
                     // neither: the callee does not carry this argument into its result — nothing to add
                 }
-                return $carried ? joinAll($carried) : stF();
+                $res = $carried ? joinAll($carried) : stF();
+                // THE ASSUMPTION TRAVELS WITH THE VALUE. When the answer came from the tree's definitions of
+                // a bare method name, the receiver's class was never checked — so every verdict downstream
+                // says so, in the ledger and in the summary, and nothing rests on it silently.
+                if ($assumedName !== null) $res['as'] = uniq(array_merge($res['as'] ?? [], [[$assumedName, $line]]));
+                return $res;
             }
             if (!$isMethod && ($name === 'str_replace' || $name === 'str_ireplace' || $name === 'strtr') && self::replacementIsPlain($e, $name)) {
                 // literal search/replace drawn from [A-Za-z0-9_-,] cannot put a quote, a dot or a bracket into a value

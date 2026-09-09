@@ -315,6 +315,25 @@ def sink_document(fact, ctx):
     if sanitized["status"] == "verified" and zu:
         sanitized = {"status": "unverified",
                      "means": sanitized["means"] + "; but a part of unknown origin is not substituted: " + ", ".join(f"{w}@L{l}" for w, l in zu)}
+    # THE ANSWER CAME FROM AN ASSUMPTION, SO IT IS NOT SETTLED. `--assume-tree-methods` answers a call on a
+    # foreign object from the tree's definitions of that bare name, which is right only if the receiver's
+    # class is in the tree — and for a vendor or built-in object it is not. A verdict that used it may not
+    # read as EARNED: the row goes unverified with the assumed call NAMED, so the judge returns ON CREDIT.
+    # Caught by the stand's own conflict probe on the day the assumption was turned on: xconflict/b.php's
+    # `$db->safe()` was credited with the tree's only `safe`, which is exactly the fixture's warning.
+    assumed = fact.get("as") or []
+    if assumed:
+        note = "; and this rests on an assumption: " + ", ".join(
+            f"{n}@L{l} answered from the tree's definitions of that name, the receiver's class unchecked"
+            for n, l in assumed)
+        sanitized = dict(sanitized, means=sanitized["means"] + note)     # every row SAYS it, whatever the verdict
+        # Only the two claims that make a sink look SAFE may be weakened by an assumption:
+        # "nothing attacker-controlled arrives" and "it was substituted". Weakening the OTHER
+        # direction — an attacker value verified as arriving — would let a bad assumption buy safety.
+        if tainted["status"] == "refuted":
+            tainted = {"status": "unverified", "means": tainted["means"] + note}
+        if sanitized["status"] == "verified":
+            sanitized = {"status": "unverified", "means": sanitized["means"]}
     rows = [dict(name="tainted", ground_kind="act", **tainted),
             dict(name="sanitized", ground_kind="act", **sanitized),
             {"name": "safe", "status": "defined", "ground": "~Tr(tainted) | Tr(sanitized)",

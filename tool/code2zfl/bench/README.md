@@ -302,3 +302,29 @@ Two shapes, both honest:
 * `.tpl.php` files with no front controller of their own: they are included BY a page that has one.
   Our graph runs downward (what I include), not upward (who includes me). Fixing it means a reverse
   closure with a universal quantifier — every includer must carry the fact — and is not done.
+
+## What the census ranked next, and what came of it
+
+The census does not only count verdicts; it ranks the NAMED boundary behind every OPEN, across
+projects rather than inside one. That ranking chose the rest of this pass, and two of its four
+answers were the opposite of what the count suggested.
+
+| boundary | OPEN resting on it alone | what it turned out to be |
+|---|---:|---|
+| `property` | 26 423 | TWO errors in opposite directions: a literal-key write tainted the whole property, and a computed-key write was dropped entirely (`0ba610d`) |
+| `->trans()` and kin | 11 977 | a method call on a foreign object. 8931 of dolibarr's 9991 method names agree across every definition in the tree — offered as `--assume-tree-methods`, measured, and left OFF (`ee2c196`) |
+| `param` | 11 938 | honest fog: a framework entry point nothing in the tree calls |
+| `unassigned` | 6 276 | `$matches` was the fifth most common name in it — and that was a MISS, not fog (`8140a37`) |
+
+`--assume-tree-methods` is the one place where measurement did not settle the question. Off → on,
+`--ctx all`, no overlays: dolibarr EARNED 69 003 → 88 353, OPEN 42 682 → 24 420, REFUTED 218 → 226;
+SuiteCRM 3598 → 3955, 7528 → 7372, 440 → 489. It clears 18 262 verdicts of fog and adds 57
+accusations that rest on an assumption we cannot check — that the receiver's class is in the tree.
+That trade belongs to whoever will act on the findings, so the default does not make it.
+
+## Where the 50 trees stand at the end of the pass
+
+227 924 files, 16 parse errors (0.007 %), **REFUTED 4123 → 1028**, and 26 of the 50 projects have
+none at all. The four projects that still carry most of them — SuiteCRM 449, dolibarr 218,
+chamilo-lms 171, SMF 37 — are the next reading, not the next patch.
+

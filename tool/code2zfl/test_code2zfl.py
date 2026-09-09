@@ -84,6 +84,7 @@ EXPECT = {
     "f54_stored_input.php": ["OPEN", "EARNED", "OPEN", "EARNED", "OPEN", "EARNED", "OPEN", "EARNED", "OPEN", "OPEN"],
     "f55_object_in_file.php": ["REFUTED", "REFUTED", "REFUTED", "EARNED", "REFUTED"],
     "f56_in_file_wrapper_is_still_a_sink.php": ["REFUTED", "REFUTED"],
+    "f57_setcookie_value.php": ["REFUTED", "EARNED"],
 }
 STORED = os.path.join(HERE, "overlays", "stored-input.json")
 

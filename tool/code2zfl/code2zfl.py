@@ -432,11 +432,27 @@ def summary_md(out):
         L += [f"- `{c}`" for c in capped[:20]]
         if len(capped) > 20:
             L.append(f"- … and {len(capped) - 20} more")
-    L += ["", f"## REFUTED — {len(refuted)}", ""]
+    # ONE PLACE TO FIX IS ONE FINDING. The same sink reached along six call paths is six verdicts in the
+    # JSON and rightly so — but in a report a human acts on, it is one line of code, and printing it six
+    # times with six near-identical paragraphs buries the other findings. Measured on Pico 2026-09-09:
+    # 6 refutations, all of them lib/Pico.php:1333.
+    sites = {}
     for fl, s in refuted:
-        why = s["sanitized"]["means"] if s["sanitized"]["status"] == "refuted" else s["tainted"]["means"]
-        L.append(f"- **{fl}:{s['line']}** `{s['fn']}` in `{s['scope']}` — {why}")
-        L.append(f"  `{_source_line(fl, s['line'])}`")
+        sites.setdefault((fl, s["line"], s["fn"]), []).append(s)
+    L += ["", f"## REFUTED — {len(sites)} place(s), {len(refuted)} path(s)", ""]
+    for (fl, line, fn), ss in sorted(sites.items(), key=lambda kv: (str(kv[0][0]), kv[0][1])):
+        s0 = ss[0]
+        why = s0["sanitized"]["means"] if s0["sanitized"]["status"] == "refuted" else s0["tainted"]["means"]
+        L.append(f"- **{fl}:{line}** `{fn}` — {why}")
+        L.append(f"  `{_source_line(fl, line)}`")
+        if len(ss) > 1:
+            L.append(f"  reached along {len(ss)} paths:")
+            for s in ss[:6]:
+                L.append(f"    - `{s['scope']}`")
+            if len(ss) > 6:
+                L.append(f"    - … and {len(ss) - 6} more")
+        else:
+            L.append(f"  in `{s0['scope']}`")
     return "\n".join(L) + "\n"
 
 

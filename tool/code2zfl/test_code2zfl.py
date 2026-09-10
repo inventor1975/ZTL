@@ -111,6 +111,7 @@ EXPECT = {
     "f81_unread_position_is_not_the_friendliest.php": ["OPEN", "EARNED", "EARNED"],
     "f82_ent_flags_decide_which_quote.php": ["REFUTED", "REFUTED", "EARNED", "EARNED", "EARNED", "REFUTED", "EARNED"],
     "f83_url_encoding_does_not_reach_a_script.php": ["EARNED", "REFUTED", "REFUTED", "REFUTED", "REFUTED"],
+    "f84_a_declared_property_settles_itself_only.php": ["EARNED", "REFUTED", "OPEN"],
 }
 STORED = os.path.join(HERE, "overlays", "stored-input.json")
 

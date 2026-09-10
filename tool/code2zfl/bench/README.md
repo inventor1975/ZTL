@@ -328,6 +328,36 @@ That trade belongs to whoever will act on the findings, so the default does not 
 none at all. The four projects that still carry most of them — SuiteCRM 449, dolibarr 218,
 chamilo-lms 171, SMF 37 — are the next reading, not the next patch.
 
+## A property the framework fixes (`constant_properties`, 2026-09-10)
+
+`ure_has_administrator_role($user_id)` builds its query out of three unknowns — the parameter, and
+`$wpdb->usermeta` and `$wpdb->prefix` — so the developer's own fix, adding `is_numeric($user_id)`,
+closed one of three and our verdict stayed OPEN on both sides of it. The other two are not unknown to
+anyone who reads WordPress: `wpdb::set_prefix()` refuses any prefix matching `|[^a-z0-9_]|i` and
+returns a `WP_Error`, and the table names are literal arrays (`$tables`, `$global_tables`) prefixed
+with it — `wp-includes/class-wpdb.php`, read 2026-09-10. The value is confined to `[A-Za-z0-9_]`: no
+quote, no space, no angle bracket, no dot, no slash.
+
+An overlay may now declare such a property in `constant_properties`, key = the name the ledger would
+print, value = the reading that justifies it. It is a claim about SOMEBODY ELSE'S source and it is
+quoted there, never asserted in our code; drop the overlay and the property is Z again.
+
+    WordPress, 22 336 files, the only difference being the declaration
+      without   REFUTED 12   OPEN 5113   EARNED 6495
+      with      REFUTED 12   OPEN 4168   EARNED 7439
+
+**The number that matters is the one that did not move.** REFUTED is 12 either way: the declaration
+settles Z and silences no alarm. If it had taken a REFUTED away, it would have been whitewashing a
+finding and the change would belong in the bin. 945 sinks moved OPEN -> EARNED, and the sink this
+started from now reads `sanitized=verified:san-guard-is_numeric` after the fix and OPEN before it —
+the instrument seeing exactly what the developer did.
+
+Ground truth unchanged at 4 / 11 / 8. SMF and SARD untouched (34/4515/4336 and 1152/280): without the
+slot the change is inert. `f84` holds the boundary — a declared property settles ITSELF and nothing
+standing beside it, so a request value concatenated with `$fixdb->prefix` is still REFUTED and an
+UNdeclared property is still a boundary; removing the declaration from the fixture overlay makes it
+fail, which is how we know the fixture is alive.
+
 ## A number does not travel without its conditions (2026-09-10)
 
 Three times in one morning a figure measured under one setup was compared with a figure measured

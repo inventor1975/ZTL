@@ -1,197 +1,219 @@
 {
-  "_about": "WordPress overlay (public). Read from WordPress source 2026-09-09: esc_attr/esc_html call _wp_specialchars(..., ENT_QUOTES) — htmlspecialchars with quotes, so they earn html AND html-sq; esc_url is the URL escaper; esc_js escapes for a JS string; esc_sql is $wpdb->_real_escape (mysqli escaping, quotes still required); intval-family and absint substitute for every context. $wpdb->prepare binds, so its RESULT is safe; $wpdb->query executes. Translation functions __/_e/esc_html__ return a dictionary string, not the caller's value — they do not carry taint, but a translated string is not attacker-controlled either. sanitize_user() is NOT listed: without $strict it strips tags and entities but lets a quote through (formatting.php:2149, read).",
-  "sinks": {
-    "sql": {
-      "methods": [
-        "$wpdb->query",
-        "$wpdb->get_results",
-        "$wpdb->get_row",
-        "$wpdb->get_var",
-        "$wpdb->get_col"
-      ]
-    }
+ "_about": "WordPress overlay (public). Read from WordPress source 2026-09-09: esc_attr/esc_html call _wp_specialchars(..., ENT_QUOTES) — htmlspecialchars with quotes, so they earn html AND html-sq; esc_url is the URL escaper; esc_js escapes for a JS string; esc_sql is $wpdb->_real_escape (mysqli escaping, quotes still required); intval-family and absint substitute for every context. $wpdb->prepare binds, so its RESULT is safe; $wpdb->query executes. Translation functions __/_e/esc_html__ return a dictionary string, not the caller's value — they do not carry taint, but a translated string is not attacker-controlled either. sanitize_user() is NOT listed: without $strict it strips tags and entities but lets a quote through (formatting.php:2149, read).",
+ "sinks": {
+  "sql": {
+   "methods": [
+    "$wpdb->query",
+    "$wpdb->get_results",
+    "$wpdb->get_row",
+    "$wpdb->get_var",
+    "$wpdb->get_col"
+   ]
+  }
+ },
+ "sanitizers": {
+  "functions": {
+   "esc_attr": {
+    "contexts": [
+     "html",
+     "html-sq"
+    ]
+   },
+   "esc_html": {
+    "contexts": [
+     "html",
+     "html-sq"
+    ]
+   },
+   "esc_textarea": {
+    "contexts": [
+     "html",
+     "html-sq"
+    ]
+   },
+   "esc_url": {
+    "contexts": [
+     "header",
+     "html",
+     "html-sq"
+    ]
+   },
+   "esc_url_raw": {
+    "contexts": [
+     "header"
+    ]
+   },
+   "esc_js": {
+    "contexts": [
+     "js",
+     "html",
+     "html-sq"
+    ]
+   },
+   "esc_sql": {
+    "contexts": [
+     "sql-quoted"
+    ]
+   },
+   "absint": {
+    "contexts": [
+     "*"
+    ]
+   },
+   "sanitize_key": {
+    "contexts": [
+     "*"
+    ]
+   },
+   "get_the_ID": {
+    "contexts": [
+     "*"
+    ]
+   },
+   "esc_attr_x": {
+    "contexts": [
+     "html",
+     "html-sq"
+    ]
+   },
+   "esc_html_x": {
+    "contexts": [
+     "html",
+     "html-sq"
+    ]
+   },
+   "esc_attr__": {
+    "contexts": [
+     "html",
+     "html-sq"
+    ]
+   },
+   "esc_html__": {
+    "contexts": [
+     "html",
+     "html-sq"
+    ]
+   },
+   "esc_attr_e": {
+    "contexts": [
+     "html",
+     "html-sq"
+    ]
+   },
+   "esc_html_e": {
+    "contexts": [
+     "html",
+     "html-sq"
+    ]
+   },
+   "sanitize_html_class": {
+    "contexts": [
+     "html",
+     "html-sq"
+    ]
+   },
+   "sanitize_title": {
+    "contexts": [
+     "html",
+     "html-sq"
+    ]
+   },
+   "sanitize_file_name": {
+    "contexts": [
+     "html",
+     "html-sq"
+    ]
+   },
+   "tag_escape": {
+    "contexts": [
+     "html",
+     "html-sq"
+    ]
+   },
+   "wp_json_encode": {
+    "contexts": [
+     "js",
+     "html",
+     "html-sq"
+    ]
+   }
   },
-  "sanitizers": {
-    "functions": {
-      "esc_attr": {
-        "contexts": [
-          "html",
-          "html-sq"
-        ]
-      },
-      "esc_html": {
-        "contexts": [
-          "html",
-          "html-sq"
-        ]
-      },
-      "esc_textarea": {
-        "contexts": [
-          "html",
-          "html-sq"
-        ]
-      },
-      "esc_url": {
-        "contexts": [
-          "header",
-          "html",
-          "html-sq"
-        ]
-      },
-      "esc_url_raw": {
-        "contexts": [
-          "header"
-        ]
-      },
-      "esc_js": {
-        "contexts": [
-          "js",
-          "html",
-          "html-sq"
-        ]
-      },
-      "esc_sql": {
-        "contexts": [
-          "sql-quoted"
-        ]
-      },
-      "absint": {
-        "contexts": [
-          "*"
-        ]
-      },
-      "sanitize_key": {
-        "contexts": [
-          "*"
-        ]
-      },
-      "get_the_ID": {
-        "contexts": [
-          "*"
-        ]
-      },
-      "esc_attr_x": {
-        "contexts": [
-          "html",
-          "html-sq"
-        ]
-      },
-      "esc_html_x": {
-        "contexts": [
-          "html",
-          "html-sq"
-        ]
-      },
-      "esc_attr__": {
-        "contexts": [
-          "html",
-          "html-sq"
-        ]
-      },
-      "esc_html__": {
-        "contexts": [
-          "html",
-          "html-sq"
-        ]
-      },
-      "esc_attr_e": {
-        "contexts": [
-          "html",
-          "html-sq"
-        ]
-      },
-      "esc_html_e": {
-        "contexts": [
-          "html",
-          "html-sq"
-        ]
-      },
-      "sanitize_html_class": {
-        "contexts": [
-          "html",
-          "html-sq"
-        ]
-      },
-      "sanitize_title": {
-        "contexts": [
-          "html",
-          "html-sq"
-        ]
-      },
-      "sanitize_file_name": {
-        "contexts": [
-          "html",
-          "html-sq"
-        ]
-      },
-      "tag_escape": {
-        "contexts": [
-          "html",
-          "html-sq"
-        ]
-      },
-      "wp_json_encode": {
-        "contexts": [
-          "js",
-          "html",
-          "html-sq"
-        ]
-      }
-    },
-    "methods": {
-      "$wpdb->prepare": {
-        "contexts": [
-          "sql"
-        ]
-      },
-      "$wpdb->_real_escape": {
-        "contexts": [
-          "sql-quoted"
-        ]
-      },
-      "$wpdb->esc_like": {
-        "contexts": []
-      }
-    }
-  },
-  "preserving": [
-    "__",
-    "_e",
-    "_x",
-    "_n",
-    "translate",
-    "trailingslashit",
-    "untrailingslashit"
-  ],
-  "_notes": {
-    "esc_sql": "escaping only — the value still needs quotes around it, exactly like mysqli_real_escape_string.",
-    "sanitize_text_field": "NOT listed as a sanitizer: it strips tags and invalid UTF-8 but is not an escaper for any of our contexts; WordPress's own docs say to escape at output.",
-    "wp_kses": "NOT listed: it filters HTML by an allow-list of tags, which is a policy decision, not a substitution — its output is HTML by design.",
-    "__/_e": "listed as PRESERVING, not as sanitizers: they return a dictionary string. A tainted argument to __() is a developer error the corpus does not exhibit; treating them as opaque produced 1662 false OPEN on WordPress.",
-    "not_sinks": "$wpdb->delete/insert/update/replace take column=>value arrays and bind them (wpdb::process_fields → prepare); the base catalog's generic `delete`/`update` sink names would otherwise report them raw. Measured 2026-09-09: this alone accounted for the sql sinks summarised inside wpmu_validate_user_signup, where every actual query goes through $wpdb->prepare.",
-    "prepare": "$wpdb->prepare BUILDS a query with %s/%d placeholders and binds the arguments — it is a sanitizer here, not a sink. The base catalog lists `prepare` as an sql sink for the PDO shape, where the caller composes the SQL; keeping both made every prepared WordPress query summarise as a raw sink (measured: it was the source of the wpmu_validate_* accusations).",
-    "esc_*_x family": "esc_attr_x/esc_html_x/esc_attr__/… are the translation-plus-escape variants of esc_attr/esc_html; leaving them out made every string built with them read as unescaped (10 of WordPress's 52 REFUTED were wp_dropdown_languages, whose optgroup label goes through esc_attr_x).",
-    "wp_json_encode": "wp_json_encode($x, JSON_HEX_TAG|…) is WordPress's JSON encoder for output; with the HEX flags it is the correct substitution inside <script>. Credited for the js and html contexts (class-wp-themes-list-table.php:360 prints theme_list_args through it).",
-    "wp_query": "WP_Query::query($query) takes an ARRAY OF QUERY VARS, not SQL: wp-includes/class-wp-query.php:3983 does wp_parse_args($query) and hands it to get_posts(), which builds the statement with $wpdb->prepare. The base catalog's generic `query` method sink read `$wp_the_query->query($this->query_vars)` (wp-includes/class-wp.php:704) as raw SQL. Measured 2026-09-09: two refutations, both wrong.",
-    "trailingslashit": "wp-includes/formatting.php: `return untrailingslashit($value) . '/';` — it adds or removes one trailing slash and touches nothing else, so whatever the value carried it still carries. Read as an opaque call it was the 9th most common boundary behind the OPEN verdicts on files a WordPress security fix touched: 204 of them. Measured 2026-09-10.",
-    "is_wp_error": "wp-includes/load.php: `$thing instanceof WP_Error` — a TYPE test. It says nothing about the content of a string, so it belongs with file_exists and is_string: read, and found to confine nothing. 288 of the OPEN verdicts on security-fix files rested on it. Measured 2026-09-10."
-  },
-  "not_sinks": [
-    "$wpdb->delete",
-    "$wpdb->insert",
-    "$wpdb->update",
-    "$wpdb->replace",
-    "delete",
-    "insert",
-    "update",
-    "replace",
-    "$wpdb->prepare",
-    "prepare",
-    "$wp_the_query->query",
-    "$wp_query->query",
-    "WP_Query::query"
-  ],
-  "inert_guards": [
-    "is_wp_error"
-  ]
+  "methods": {
+   "$wpdb->prepare": {
+    "contexts": [
+     "sql"
+    ]
+   },
+   "$wpdb->_real_escape": {
+    "contexts": [
+     "sql-quoted"
+    ]
+   },
+   "$wpdb->esc_like": {
+    "contexts": []
+   }
+  }
+ },
+ "preserving": [
+  "__",
+  "_e",
+  "_x",
+  "_n",
+  "translate",
+  "trailingslashit",
+  "untrailingslashit"
+ ],
+ "_notes": {
+  "esc_sql": "escaping only — the value still needs quotes around it, exactly like mysqli_real_escape_string.",
+  "sanitize_text_field": "NOT listed as a sanitizer: it strips tags and invalid UTF-8 but is not an escaper for any of our contexts; WordPress's own docs say to escape at output.",
+  "wp_kses": "NOT listed: it filters HTML by an allow-list of tags, which is a policy decision, not a substitution — its output is HTML by design.",
+  "__/_e": "listed as PRESERVING, not as sanitizers: they return a dictionary string. A tainted argument to __() is a developer error the corpus does not exhibit; treating them as opaque produced 1662 false OPEN on WordPress.",
+  "not_sinks": "$wpdb->delete/insert/update/replace take column=>value arrays and bind them (wpdb::process_fields → prepare); the base catalog's generic `delete`/`update` sink names would otherwise report them raw. Measured 2026-09-09: this alone accounted for the sql sinks summarised inside wpmu_validate_user_signup, where every actual query goes through $wpdb->prepare.",
+  "prepare": "$wpdb->prepare BUILDS a query with %s/%d placeholders and binds the arguments — it is a sanitizer here, not a sink. The base catalog lists `prepare` as an sql sink for the PDO shape, where the caller composes the SQL; keeping both made every prepared WordPress query summarise as a raw sink (measured: it was the source of the wpmu_validate_* accusations).",
+  "esc_*_x family": "esc_attr_x/esc_html_x/esc_attr__/… are the translation-plus-escape variants of esc_attr/esc_html; leaving them out made every string built with them read as unescaped (10 of WordPress's 52 REFUTED were wp_dropdown_languages, whose optgroup label goes through esc_attr_x).",
+  "wp_json_encode": "wp_json_encode($x, JSON_HEX_TAG|…) is WordPress's JSON encoder for output; with the HEX flags it is the correct substitution inside <script>. Credited for the js and html contexts (class-wp-themes-list-table.php:360 prints theme_list_args through it).",
+  "wp_query": "WP_Query::query($query) takes an ARRAY OF QUERY VARS, not SQL: wp-includes/class-wp-query.php:3983 does wp_parse_args($query) and hands it to get_posts(), which builds the statement with $wpdb->prepare. The base catalog's generic `query` method sink read `$wp_the_query->query($this->query_vars)` (wp-includes/class-wp.php:704) as raw SQL. Measured 2026-09-09: two refutations, both wrong.",
+  "trailingslashit": "wp-includes/formatting.php: `return untrailingslashit($value) . '/';` — it adds or removes one trailing slash and touches nothing else, so whatever the value carried it still carries. Read as an opaque call it was the 9th most common boundary behind the OPEN verdicts on files a WordPress security fix touched: 204 of them. Measured 2026-09-10.",
+  "is_wp_error": "wp-includes/load.php: `$thing instanceof WP_Error` — a TYPE test. It says nothing about the content of a string, so it belongs with file_exists and is_string: read, and found to confine nothing. 288 of the OPEN verdicts on security-fix files rested on it. Measured 2026-09-10."
+ },
+ "not_sinks": [
+  "$wpdb->delete",
+  "$wpdb->insert",
+  "$wpdb->update",
+  "$wpdb->replace",
+  "delete",
+  "insert",
+  "update",
+  "replace",
+  "$wpdb->prepare",
+  "prepare",
+  "$wp_the_query->query",
+  "$wp_query->query",
+  "WP_Query::query"
+ ],
+ "inert_guards": [
+  "is_wp_error"
+ ],
+ "constant_properties": {
+  "$wpdb->prefix": "wpdb::set_prefix() refuses any prefix matching |[^a-z0-9_]|i and returns a WP_Error (wp-includes/class-wpdb.php, read 2026-09-10); the table names are literal arrays ($tables and $global_tables) and each property is that prefix plus one of them, so the value is confined to [A-Za-z0-9_] — no quote, no space, no angle bracket, no dot, no slash",
+  "$wpdb->base_prefix": "prefix + the literal table name 'base_prefix'; see $wpdb->prefix",
+  "$wpdb->posts": "prefix + the literal table name 'posts'; see $wpdb->prefix",
+  "$wpdb->comments": "prefix + the literal table name 'comments'; see $wpdb->prefix",
+  "$wpdb->links": "prefix + the literal table name 'links'; see $wpdb->prefix",
+  "$wpdb->options": "prefix + the literal table name 'options'; see $wpdb->prefix",
+  "$wpdb->postmeta": "prefix + the literal table name 'postmeta'; see $wpdb->prefix",
+  "$wpdb->terms": "prefix + the literal table name 'terms'; see $wpdb->prefix",
+  "$wpdb->term_taxonomy": "prefix + the literal table name 'term_taxonomy'; see $wpdb->prefix",
+  "$wpdb->term_relationships": "prefix + the literal table name 'term_relationships'; see $wpdb->prefix",
+  "$wpdb->termmeta": "prefix + the literal table name 'termmeta'; see $wpdb->prefix",
+  "$wpdb->commentmeta": "prefix + the literal table name 'commentmeta'; see $wpdb->prefix",
+  "$wpdb->users": "prefix + the literal table name 'users'; see $wpdb->prefix",
+  "$wpdb->usermeta": "prefix + the literal table name 'usermeta'; see $wpdb->prefix",
+  "$wpdb->blogs": "prefix + the literal table name 'blogs'; see $wpdb->prefix",
+  "$wpdb->site": "prefix + the literal table name 'site'; see $wpdb->prefix",
+  "$wpdb->sitemeta": "prefix + the literal table name 'sitemeta'; see $wpdb->prefix",
+  "$wpdb->signups": "prefix + the literal table name 'signups'; see $wpdb->prefix",
+  "$wpdb->registration_log": "prefix + the literal table name 'registration_log'; see $wpdb->prefix",
+  "$wpdb->blogmeta": "prefix + the literal table name 'blogmeta'; see $wpdb->prefix"
+ }
 }

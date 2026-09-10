@@ -127,6 +127,11 @@ $GUARDS = array_change_key_case($CAT['guards'] ?? [], CASE_LOWER);   // a condit
 $INERT = array_flip(array_map('strtolower', $CAT['inert_guards'] ?? []));   // a condition we READ, and it confines nothing
 $PRESERV = array_flip(array_map('strtolower', $CAT['preserving'] ?? []));
 $NARROW = array_flip(array_map('strtolower', $CAT['narrowing'] ?? []));
+// A PROPERTY THE FRAMEWORK FIXES, NOT ONE THE REQUEST WRITES. Declared per project, key = the name the
+// ledger would print ($wpdb->prefix), value = the reading that justifies it. This is a claim about
+// SOMEBODY ELSE'S SOURCE and it must be quoted there, never asserted here; drop the overlay and the
+// property is Z again, as it is by default.
+$CONSTPROP = array_change_key_case($CAT['constant_properties'] ?? [], CASE_LOWER);
 $SINKFN = []; $SINKMETH = []; $SINKARG = []; $SINKFLAGS = [];
 foreach ($CAT['sinks'] as $ctx => $spec) {
     foreach ($spec['functions'] ?? [] as $f) $SINKFN[strtolower($f)] = $ctx;
@@ -704,7 +709,7 @@ final class Analyzer {
     /** Evaluate an expression to a taint state; records sinks and assignments on the way. */
     public function ex(?Node $e, array &$env): array {
         if (++$this->nodeSpent > $this->nodeBudget) return stZ('node-budget', $e ? $e->getStartLine() : 0);
-        global $SUMMARIES, $SUPER, $SERVER_KEYS, $SERVER_PREFIXES, $GUARDS, $SRCFN, $SRCMETH, $SRCBYREF, $SRCSHELL, $SANFN, $SANMETH, $SANCAST, $TRANSP, $TRANSPMETH, $PRESERV, $NARROW, $SINKFN, $SINKMETH, $SINKARG, $SINKFLAGS, $NOTSINK, $ASSUME_TREE;
+        global $SUMMARIES, $SUPER, $SERVER_KEYS, $SERVER_PREFIXES, $GUARDS, $SRCFN, $SRCMETH, $SRCBYREF, $SRCSHELL, $SANFN, $SANMETH, $SANCAST, $TRANSP, $TRANSPMETH, $PRESERV, $NARROW, $SINKFN, $SINKMETH, $SINKARG, $SINKFLAGS, $NOTSINK, $ASSUME_TREE, $CONSTPROP;
         if ($e === null) return stF();
         $line = $e->getStartLine();
 
@@ -801,7 +806,9 @@ final class Analyzer {
                 return stZ('property:$this->' . $pn, $line);
             }
             // another object's property: name the object, so the ledger says WHICH boundary this is
-            return stZ('property:' . self::exprName($e), $line);
+            $pn = self::exprName($e);
+            if (isset($CONSTPROP[strtolower($pn)])) return stF();   // declared, with its reading, in the project overlay
+            return stZ('property:' . $pn, $line);
         }
         if ($e instanceof Expr\Array_) {
             $st = [];

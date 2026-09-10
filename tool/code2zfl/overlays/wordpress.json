@@ -136,6 +136,18 @@
      "html",
      "html-sq"
     ]
+   },
+   "sanitize_text_field": {
+    "contexts": [
+     "html-text"
+    ],
+    "_why": "read in wp-includes/formatting.php 2026-09-10: _sanitize_text_fields() sends anything containing '<' through wp_pre_kses_less_than() — a '<' with no '>' after it is esc_html'd — and then wp_strip_all_tags(), which drops <script>/<style> bodies and calls strip_tags(). No raw '<' survives. QUOTES ARE NOT TOUCHED, so this is body text only: not an attribute of either kind, not SQL"
+   },
+   "sanitize_textarea_field": {
+    "contexts": [
+     "html-text"
+    ],
+    "_why": "the same core with keep_newlines=true; see sanitize_text_field"
    }
   },
   "methods": {

@@ -114,8 +114,10 @@ EXPECT = {
     "f84_a_declared_property_settles_itself_only.php": ["EARNED", "REFUTED", "OPEN"],
     "f85_the_email_filter_keeps_the_single_quote.php": ["EARNED", "EARNED", "REFUTED", "REFUTED", "REFUTED"],
     "f86_a_removal_closes_one_position.php": ["EARNED", "REFUTED", "EARNED", "REFUTED", "EARNED", "REFUTED"],
+    "f87_sanitize_text_field_is_body_text.php": ["OPEN", "OPEN", "OPEN", "OPEN"],
 }
 STORED = os.path.join(HERE, "overlays", "stored-input.json")
+WORDPRESS = os.path.join(HERE, "overlays", "wordpress.json")
 
 
 def dispositions(out):
@@ -229,6 +231,15 @@ def main():
         if g2.get("f01_plain_injection.php") != ["OPEN"]:
             failures.append(f"vacuity/sources: f01 with no sources should be OPEN, got {g2}")
 
+    # ---- a WordPress sanitizer guarantees exactly what its SOURCE says and no more: sanitize_text_field
+    # takes every raw '<' out and leaves the quotes alone, so it is body text and nothing else. The fixture
+    # runs under the WordPress overlay, where the function is declared, and its four sinks are the four
+    # positions: body text earns, both attribute kinds and a quoted SQL string do not.
+    g4 = dispositions(code2zfl.run([os.path.join(FIX, "f87_sanitize_text_field_is_body_text.php")],
+                                   [OVERLAY, WORDPRESS], "all", AUTOLOAD))
+    if g4.get("f87_sanitize_text_field_is_body_text.php") != ["EARNED", "REFUTED", "REFUTED", "REFUTED"]:
+        failures.append(f"wordpress overlay: f87 should be EARNED then three REFUTED, got {g4}")
+
     # ---- the stored-input overlay turns what was stored into a SOURCE: f54 must flip from five OPEN to five REFUTED
     g3 = dispositions(code2zfl.run([os.path.join(FIX, "f54_stored_input.php")], [OVERLAY, STORED], "sql", AUTOLOAD))
     if g3.get("f54_stored_input.php") != ["REFUTED"] * 5:
@@ -253,7 +264,7 @@ def main():
         for x in failures:
             print("  -", x)
         sys.exit(1)
-    print(f"PASS: {n} sink verdicts as expected across {len(EXPECT)} fixtures + the cross-file, conflict, inheritance, ambiguous-parent, duplicate-class and include pairs (+ f54 under stored-input) + 2 vacuity controls")
+    print(f"PASS: {n} sink verdicts as expected across {len(EXPECT)} fixtures + the cross-file, conflict, inheritance, ambiguous-parent, duplicate-class and include pairs (+ f54 under stored-input, f87 under wordpress) + 2 vacuity controls")
 
 
 if __name__ == "__main__":

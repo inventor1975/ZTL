@@ -161,11 +161,27 @@ def main():
             tally[verdict] += 1
             if verdict == "OPENED" and narrowed:
                 narrowed_n += 1
+            # WHY IT IS OPEN, not just that it is. An OPEN whose boundary cannot be named would be a bug
+            # in the ledger; here we collect the boundaries themselves, so the bucket can be READ instead of
+            # counted. The kind is the prefix the ledger prints — param:, property:, global:, unassigned:,
+            # or a call it could not see through.
+            why = collections.Counter()
+            for fe in ob["files"]:
+                for sk in fe["sinks"]:
+                    if sk["disposition"] != "OPEN":
+                        continue
+                    txt = (sk.get("tainted") or {}).get("means", "") + " " + (sk.get("sanitized") or {}).get("means", "")
+                    for part in txt.split("crosses", 1)[-1].split("in this file:", 1)[-1].split(","):
+                        part = part.strip().rsplit("@", 1)[0]
+                        if not part or " " in part.split(":")[0]:
+                            continue
+                        why[part.split(":")[0] if ":" in part else part[:40]] += 1
             rows.append({"commit": h[:9], "subject": subj[:90], "files": present[:4],
                          "before": len(rb), "after": len(ra), "sinks": sinks_before,
                          "open_before": open_before, "open_after": open_after,
                          "earned_before": earn_before, "earned_after": earn_after,
-                         "narrowed": narrowed, "verdict": verdict, "sample": rb[:3]})
+                         "narrowed": narrowed, "verdict": verdict, "sample": rb[:3],
+                         "open_why": why.most_common(8)})
             print(f"  {verdict:7} {h[:9]}  R{len(rb):3}→{len(ra):<3} O{open_before:<4}→{open_after:<4} "
                   f"E{earn_before:<4}→{earn_after:<4}{' NARROWED' if narrowed else ''} sinks={sinks_before:3}  {subj[:40]}")
         finally:

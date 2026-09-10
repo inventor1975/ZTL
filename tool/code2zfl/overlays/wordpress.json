@@ -139,9 +139,10 @@
    },
    "sanitize_text_field": {
     "contexts": [
-     "html-text"
+     "html-text",
+     "crlf-free"
     ],
-    "_why": "read in wp-includes/formatting.php 2026-09-10: _sanitize_text_fields() sends anything containing '<' through wp_pre_kses_less_than() — a '<' with no '>' after it is esc_html'd — and then wp_strip_all_tags(), which drops <script>/<style> bodies and calls strip_tags(). No raw '<' survives. QUOTES ARE NOT TOUCHED, so this is body text only: not an attribute of either kind, not SQL"
+    "_why": "read in wp-includes/formatting.php 2026-09-10: _sanitize_text_fields() sends anything containing '<' through wp_pre_kses_less_than() — a '<' with no '>' after it is esc_html'd — and then wp_strip_all_tags(), which drops <script>/<style> bodies and calls strip_tags(). No raw '<' survives. QUOTES ARE NOT TOUCHED, so this is body text only: not an attribute of either kind, not SQL; and it collapses [\\r\\n\\t ]+ into one space, so no CR or LF survives — enough for a header sink and NOT enough for a URL attribute, where `javascript:` passes through untouched"
    },
    "sanitize_textarea_field": {
     "contexts": [

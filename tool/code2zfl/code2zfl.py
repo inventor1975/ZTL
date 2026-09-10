@@ -384,6 +384,17 @@ def sink_document(fact, ctx):
         sanitized = {"status": "unverified",
                      "means": f"escaped by {fn} at L{l}, but with quote bits of zero — it encodes neither quote, "
                               "so it substitutes in body text only, and the html sub-context could not be read"}
+    elif ctx == "header" and "crlf-free" in san:
+        # A HEADER IS SPLIT BY A NEWLINE AND BY NOTHING ELSE. `header` in this catalog means URL-ENCODED —
+        # only urlencode, rawurlencode and http_build_query give it — and that key is ALSO what a URL
+        # attribute requires, where `javascript:` must not survive. A substitution that merely removes CR
+        # and LF is enough for a header and nowhere near enough for a URL attribute, so it gets a key of its
+        # own that ONLY the header sink accepts. Measured 2026-09-10: WordPress's sanitize_text_field
+        # collapses [\r\n\t ]+ to one space, and our two false alarms on setcookie (wp-activate.php:41,
+        # wp-login.php:532) were exactly this gap.
+        fn, l = san["crlf-free"]
+        sanitized = {"status": "verified", "ground": _g(f"san-{fn}-L{l}"),
+                     "means": f"substituted by {fn} at L{l}: no CR or LF can appear, and a header is split by nothing else"}
     elif ctx in san:
         fn, l = san[ctx]
         sanitized = {"status": "verified", "ground": _g(f"san-{fn}-L{l}"), "means": f"substituted by {fn} at L{l} for {ctx}"}

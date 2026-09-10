@@ -92,6 +92,18 @@ def main():
     commits = fix_commits(repo, a.max)
     print(f"{name}: {len(commits)} security-worded commits")
     tally = collections.Counter()
+    narrowed_n = 0
+    # A WORDPRESS PLUGIN WITHOUT THE WORDPRESS OVERLAY IS MEASURED WITH ITS OWN SINKS INVISIBLE.
+    # `$wpdb->get_var` is not in the base catalog, so `WHERE user_id=$user_id` is not a sink at all and
+    # the line the developer fixed does not exist for the instrument. MEASURED 2026-09-10:
+    # user-role-editor CAUGHT 4 with the overlay and 2 without, wp-e-commerce 11 and 10. A warning, not
+    # a default — the run must stay exactly what the caller asked for.
+    if not any("wordpress" in o for o in (a.overlay or [])):
+        probe = subprocess.run(["grep", "-rlq", "--include=*.php", r"\$wpdb->", repo],
+                               capture_output=True, text=True)
+        if probe.returncode == 0:
+            print("  ВНИМАНИЕ: дерево пользуется $wpdb, а overlays/wordpress.json не подан — "
+                  "$wpdb->get_var и родня НЕ считаются стоками, и числа будут занижены.")
     rows = []
     for h, subj in commits:
         files = touched_php(repo, h)
@@ -122,6 +134,18 @@ def main():
             sinks_before = sum(len(f["sinks"]) for f in ob["files"])
             open_before = sum(1 for f in ob["files"] for s in f["sinks"] if s["disposition"] == "OPEN")
             earned_only = sinks_before > 0 and open_before == 0
+            # DID OUR VERDICT MOVE THE WAY THE FIX MOVED? Counted only to READ the OPENED bucket, never
+            # folded into CAUGHT: a benchmark that renames its own misses into a nicer word is a
+            # benchmark measuring itself. `ure_has_administrator_role($user_id)` is the shape — the
+            # parameter's origin is outside the file, so we say OPEN both before and after, but the fix
+            # added `is_numeric($user_id)` and after it the same sink is EARNED. That is the instrument
+            # seeing the developer's change without ever having said REFUTED.
+            sinks_after = sum(len(f["sinks"]) for f in oa["files"])
+            open_after = sum(1 for f in oa["files"] for s in f["sinks"] if s["disposition"] == "OPEN")
+            earn_before = sum(1 for f in ob["files"] for s in f["sinks"] if s["disposition"] == "EARNED")
+            earn_after = sum(1 for f in oa["files"] for s in f["sinks"] if s["disposition"] == "EARNED")
+            narrowed = (sinks_before == sinks_after and open_after < open_before
+                        and earn_after > earn_before)
             if rb and len(ra) < len(rb):
                 verdict = "CAUGHT"
             elif rb:
@@ -135,13 +159,27 @@ def main():
             else:
                 verdict = "OPENED"          # we named the place and withheld the verdict, not silence
             tally[verdict] += 1
+            if verdict == "OPENED" and narrowed:
+                narrowed_n += 1
             rows.append({"commit": h[:9], "subject": subj[:90], "files": present[:4],
                          "before": len(rb), "after": len(ra), "sinks": sinks_before,
-                         "verdict": verdict, "sample": rb[:3]})
-            print(f"  {verdict:7} {h[:9]}  R{len(rb):3}→{len(ra):<3} O{open_before:<4} sinks={sinks_before:3}  {subj[:48]}")
+                         "open_before": open_before, "open_after": open_after,
+                         "earned_before": earn_before, "earned_after": earn_after,
+                         "narrowed": narrowed, "verdict": verdict, "sample": rb[:3]})
+            print(f"  {verdict:7} {h[:9]}  R{len(rb):3}→{len(ra):<3} O{open_before:<4}→{open_after:<4} "
+                  f"E{earn_before:<4}→{earn_after:<4}{' NARROWED' if narrowed else ''} sinks={sinks_before:3}  {subj[:40]}")
         finally:
             shutil.rmtree(work, ignore_errors=True)
     print("  " + " | ".join(f"{k}: {v}" for k, v in sorted(tally.items())))
+    if narrowed_n:
+        print(f"  of the OPENED, {narrowed_n} NARROWED: our verdict moved the way the fix moved "
+              f"(OPEN -> EARNED on the same sinks) without ever having said REFUTED")
+    # A NUMBER MUST NOT TRAVEL WITHOUT ITS CONDITIONS. Three times on 2026-09-10 a figure measured under
+    # one setup was compared with a figure measured under another and the difference read as a defect —
+    # once a different tree, once a different clone, once THIS: a WordPress plugin run without
+    # overlays/wordpress.json, where $wpdb->get_var is not a sink at all and the very line the developer
+    # fixed does not exist for the instrument (user-role-editor CAUGHT 4 with the overlay, 2 without).
+    print(f"  conditions: overlays={a.overlay or ['(none)']} jobs={a.jobs} repo={repo}")
     if a.out:
         json.dump({"repo": name, "tally": dict(tally), "rows": rows}, open(a.out, "w"), ensure_ascii=False, indent=1)
 

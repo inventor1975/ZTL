@@ -328,6 +328,42 @@ That trade belongs to whoever will act on the findings, so the default does not 
 none at all. The four projects that still carry most of them — SuiteCRM 449, dolibarr 218,
 chamilo-lms 171, SMF 37 — are the next reading, not the next patch.
 
+## A number does not travel without its conditions (2026-09-10)
+
+Three times in one morning a figure measured under one setup was compared with a figure measured
+under another, and the difference was read as a defect. Twice the defect was mine and imaginary; once
+it was real. They are worth listing together, because the shape is the same every time:
+
+  * a ground-truth figure was written into a commit message from a run whose TREE STATE was never
+    checked against what was being committed;
+  * `wordfence` was measured against `Corpora/php/live/wordfence`, which has no history at all, while
+    the ground truth lives in `Corpora/php/cve/wordfence` (349 commits) — the same name, the
+    neighbouring folder;
+  * and the one that mattered: a WordPress plugin run WITHOUT `overlays/wordpress.json`. Without it
+    `$wpdb->get_var` is not a sink, so the very line the developer fixed —
+    `WHERE user_id=$user_id` in `ure_has_administrator_role` — does not exist for the instrument.
+    MEASURED: `user-role-editor` gives **CAUGHT 4 with the overlay and CAUGHT 2 without**;
+    `wp-e-commerce` gives **11 with and 10 without**. The 4 and the 11 were right all along, and the
+    "correction" that replaced them was the error.
+
+**So: fixbench over a WordPress plugin is run with `--overlay overlays/wordpress.json`, and every
+figure quoted from it carries that.** `fixbench.py` now prints the overlays, the job count and the
+repository under every tally, so the conditions cannot be separated from the number by accident.
+
+### Reading the OPENED bucket: NARROWED
+
+`OPENED` means we named the place and withheld the verdict. Some of those commits still show the
+instrument seeing the developer's change: the same sinks go OPEN before -> EARNED after. That is now
+counted and printed as NARROWED, **separately, and never added to CAUGHT** — a benchmark that renames
+its own misses into a nicer word is a benchmark measuring itself.
+
+Where OPENED is honest, this is the shape: `ure_has_administrator_role($user_id)` builds its query out
+of THREE unknowns — the parameter and `$wpdb->usermeta` and `$wpdb->prefix` — and `is_numeric` closes
+only the first. WordPress itself confines the other two: `wpdb::set_prefix()` refuses any prefix
+matching `|[^a-z0-9_]|i` (read in `wp-includes/class-wpdb.php`), and the table names are built from it.
+Declaring that in the overlay is the next change, and it is a reading of the framework's source, not
+an assumption of ours.
+
 ## Every remaining SARD XSS miss is a defect of the benchmark (read 2026-09-10)
 
 `XSS/CWE_79`, 10 080 files: **1152 of the 4352 files labelled unsafe come back EARNED**. That is the

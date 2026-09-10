@@ -1103,10 +1103,13 @@ final class Analyzer {
                 // up the parent chain, as PHP resolves it: the definition that runs may live in a
                 // class this file never mentions (SMF: UnreadReplies extends Unread, another file)
                 $cls = strtolower($this->currentClass); $seenC = [];
+                $own = [];                                    // the `extends` written in THIS file, by lowercase name
+                foreach ($this->parents as $c => $pp) $own[strtolower($c)] = strtolower($pp);
                 while ($cls !== null && !isset($seenC[$cls])) {
                     $seenC[$cls] = true;
                     if (isset($SUMMARIES['methods'][$cls . '::' . $name])) { $sumKey = $SUMMARIES['methods'][$cls . '::' . $name]; break; }
-                    $cls = $SUMMARIES['parents'][$cls] ?? null;
+                    // a parent written here is not a guess about a name — it is this file's own text
+                    $cls = $own[$cls] ?? ($SUMMARIES['parents'][$cls] ?? null);
                 }
             }
             // A METHOD CALL ON A FOREIGN OBJECT. `$langs->trans($x)` — we do not know $langs's class, and a
@@ -2031,7 +2034,7 @@ if ($emitSummaries) {
     // PASS 1. What does each definition DO with an attacker-controlled parameter? Walk its body once
     // per parameter (up to 4; beyond that mark them together and say so), and read the result off the
     // machinery that already exists: the returned state, and the sinks the walk emitted.
-    $sum = ['tool' => 'code2zfl/atoms.php --emit-summaries', 'functions' => [], 'methods' => [], 'files' => []];
+    $sum = ['tool' => 'code2zfl/atoms.php --emit-summaries', 'functions' => [], 'methods' => [], 'files' => [], 'parents' => []];
     foreach ($files as $f) {
         $code = @file_get_contents($f); if ($code === false) continue;
         try { $ast = $parser->parse($code); } catch (ParseError $e) { continue; }
@@ -2041,7 +2044,15 @@ if ($emitSummaries) {
             $defs[] = ['fn', strtolower($fn->name->toString()), $fn, null];
         foreach ($finder->findInstanceOf($ast ?? [], Stmt\Class_::class) as $cls) {
             $cn = $cls->name ? $cls->name->toString() : 'anon-class';
-            if ($cls->extends instanceof Node\Name) $sum['parents'][strtolower($cn)] = strtolower($cls->extends->getLast());   // the chain PHP will follow
+            if ($cls->extends instanceof Node\Name) {
+                // THE CHAIN PHP WILL FOLLOW — but this map is keyed by the BARE class name, and one name can
+                // belong to two namespaces (phpspreadsheet: Reader\Csv extends BaseReader, Writer\Csv extends
+                // BaseWriter). Last-writer-wins made the answer depend on which BATCH a file landed in: measured
+                // 2026-09-10 on dolibarr, 13 of 1725 names got a different parent at --jobs 12 and --jobs 16.
+                // One name, two answers is a CONFLICT, and a guess is worse than a gap.
+                $k = strtolower($cn); $pn = strtolower($cls->extends->getLast());
+                $sum['parents'][$k] = (array_key_exists($k, $sum['parents']) && $sum['parents'][$k] !== $pn) ? null : $pn;
+            }
             foreach ($cls->stmts as $m) if ($m instanceof Stmt\ClassMethod)
                 $defs[] = ['m', strtolower($m->name->toString()), $m, $cn];
         }

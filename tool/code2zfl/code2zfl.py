@@ -93,8 +93,9 @@ def summarise(files, overlays, autoload, catalog=None, php=None, jobs=None):
     # to pass 1 and silently dropped here (`parents`, then `byname`), and the run stayed green because
     # nothing MISSING can fail a test — so an unknown slot is now a loud error, not a shrug.
     MEET = ("functions", "methods", "byname")     # a name seen in two batches: same rule as inside one
-    CARRY = ("parents", "files")                  # one owner per key: plain carry
-    merged = {k: {} for k in MEET + CARRY}
+    CARRY = ("files",)                            # one owner per key: plain carry
+    AMBIG = ("parents",)                          # one key, two answers: the chain is not readable
+    merged = {k: {} for k in MEET + CARRY + AMBIG}
     with ThreadPool(max(1, len(batches))) as pool:
         for part in pool.map(_atomize_batch, [(cmd, b, env) for b in batches if b]):
             if part.get("_error"):
@@ -109,6 +110,17 @@ def summarise(files, overlays, autoload, catalog=None, php=None, jobs=None):
                         merged[slot][k] = _summary_merge(merged[slot].get(k), rec)
                 elif slot in CARRY:
                     merged[slot].update(recs)
+                elif slot in AMBIG:
+                    # `parents` is keyed by the BARE class name and two namespaces may hold one name.
+                    # `dict.update` took the last batch's answer, so the inheritance chain depended on how
+                    # the files happened to be split: measured 2026-09-10, dolibarr gave 42 972 OPEN at
+                    # --jobs 12 and 42 965 at --jobs 16, the seven being sinks that Reader/Csv.php shows
+                    # only while `csv` still points at BaseReader and not at BaseWriter.
+                    for k, v in recs.items():
+                        if k in merged[slot] and merged[slot][k] != v:
+                            merged[slot][k] = None                     # two answers: no answer
+                        elif k not in merged[slot]:
+                            merged[slot][k] = v
                 else:
                     sys.exit(f"summarise: atoms.php emitted an unknown summary slot {slot!r} — "
                              f"say how it crosses a batch boundary in MEET or CARRY")

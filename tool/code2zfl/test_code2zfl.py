@@ -132,6 +132,19 @@ def inheritance_probe(failures):
         failures.append(f"xinherit/child.php: expected ['EARNED', 'REFUTED'], got {got}")
 
 
+def ambiguous_parent_probe(failures):
+    """ONE BARE CLASS NAME, TWO PARENTS. The tree-wide map cannot answer, and the answer must not depend on
+    how the files were split into batches: the `extends` written in the file being judged decides. Measured
+    2026-09-10 on dolibarr, where Reader\\Csv and Writer\\Csv collide and 7 sinks appeared or vanished with
+    --jobs. Run at three batch counts on purpose."""
+    for jobs in (1, 2, 4):
+        out = code2zfl.run([os.path.join(FIX, "xambig")], [], "all", AUTOLOAD, jobs=jobs)
+        for name, exp in (("reader.php", ["EARNED"]), ("writer.php", ["REFUTED"])):
+            got = [s["disposition"] for f in out["files"] if os.path.basename(f["file"]) == name for s in f["sinks"]]
+            if got != exp:
+                failures.append(f"xambig/{name} at --jobs {jobs}: expected {exp}, got {got}")
+
+
 def include_probe(failures):
     """A front controller guards the request once; every page that requires it is judged under that
     guard. Without the include graph all three read as plain refutations."""
@@ -164,7 +177,7 @@ def main():
         if got.get(name) != exp:
             failures.append(f"{name}: expected {exp}, got {got.get(name)}")
     # every fixture in the folder is in the table — an unlisted fixture is an untested claim
-    probed = {os.path.basename(f["file"]) for f in out["files"] if os.sep + "xfile" + os.sep in f["file"] or os.sep + "xinherit" + os.sep in f["file"] or os.sep + "xinclude" + os.sep in f["file"] or os.sep + "xconflict" + os.sep in f["file"]}
+    probed = {os.path.basename(f["file"]) for f in out["files"] if os.sep + "xfile" + os.sep in f["file"] or os.sep + "xinherit" + os.sep in f["file"] or os.sep + "xinclude" + os.sep in f["file"] or os.sep + "xconflict" + os.sep in f["file"] or os.sep + "xambig" + os.sep in f["file"]}
     for name in got:
         if name not in EXPECT and name not in probed:                  # the cross-file pairs are asserted by their own probes
             failures.append(f"{name}: fixture without an expectation")
@@ -197,6 +210,7 @@ def main():
 
     cross_file_probe(failures)
     inheritance_probe(failures)
+    ambiguous_parent_probe(failures)
     include_probe(failures)
     # ---- a NAME defined differently in two files is a conflict (unknown), not "the last one wins"; and a method
     # summary is never read for a receiver that is not $this (b.php: $db->safe() inside XcA must not be XcA::safe)
@@ -212,7 +226,7 @@ def main():
         for x in failures:
             print("  -", x)
         sys.exit(1)
-    print(f"PASS: {n} sink verdicts as expected across {len(EXPECT)} fixtures + the cross-file, conflict, inheritance and include pairs (+ f54 under stored-input) + 2 vacuity controls")
+    print(f"PASS: {n} sink verdicts as expected across {len(EXPECT)} fixtures + the cross-file, conflict, inheritance, ambiguous-parent and include pairs (+ f54 under stored-input) + 2 vacuity controls")
 
 
 if __name__ == "__main__":

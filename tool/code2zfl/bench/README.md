@@ -328,6 +328,34 @@ That trade belongs to whoever will act on the findings, so the default does not 
 none at all. The four projects that still carry most of them — SuiteCRM 449, dolibarr 218,
 chamilo-lms 171, SMF 37 — are the next reading, not the next patch.
 
+## The run used to depend on `--jobs` (found and fixed 2026-09-10)
+
+The same code over the same tree gave two different answers depending on how many atomizer processes
+were used:
+
+    dolibarr, --ctx all      --jobs 12   REFUTED 186  OPEN 42 972  EARNED 68 847
+                             --jobs 16   REFUTED 186  OPEN 42 965  EARNED 68 847
+
+Not one verdict flipped: seven SINKS were present in one run and absent in the other, all of them in
+`phpspreadsheet/src/PhpSpreadsheet/Reader/Csv.php`, all reached through `openFile()`.
+
+The cause is the pass-1 slot `parents`, a map from class name to parent name. It is keyed by the BARE
+name, and one bare name can belong to two namespaces — here `Reader\Csv extends BaseReader` and
+`Writer\Csv extends BaseWriter`. The merge was `dict.update`, so the last batch to be merged won, and
+which batch that is depends on the split. Measured over dolibarr's pass 1: of 1725 class names, **13
+got a different parent at `--jobs 12` and at `--jobs 16`**, among them `html: basereader` against
+`basewriter` — the same Reader/Writer pair. Across the corpora the names at risk are dolibarr 146 of
+1725, chamilo-lms 31 of 1925, SMF 13 of 710, SuiteCRM 9 of 1277; only dolibarr moved because only
+there did such a name sit on a path to a sink.
+
+Two things changed. The parent written in the file being judged now beats the tree-wide map — that is
+not a guess about a name, it is the file's own text. And a name the map answers twice, differently, is
+a CONFLICT and answers nothing, the rule the MEET slots and `_resolve_tails` already followed: a guess
+is worse than a gap. The stand runs `xambig` at three different batch counts on purpose.
+
+A benchmark whose numbers move with a command-line flag is not a benchmark; every figure on this page
+older than 2026-09-10 was taken at a fixed `--jobs` and is reproducible only at that value.
+
 ## The developers' own fixes, after this pass (`fixbench.py`, 2026-09-09 late)
 
 The ground truth here is written by nobody on our side: a commit whose message says it fixes a

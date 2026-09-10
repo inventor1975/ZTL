@@ -328,6 +328,39 @@ That trade belongs to whoever will act on the findings, so the default does not 
 none at all. The four projects that still carry most of them — SuiteCRM 449, dolibarr 218,
 chamilo-lms 171, SMF 37 — are the next reading, not the next patch.
 
+## Reading the OPEN bucket on real trees — and a claim of mine withdrawn (2026-09-10)
+
+`fixbench` now records WHY an OPEN is open, not only that it is. The first reading was on
+`user-role-editor` and gave `call-depth` 422 — our own inlining cap (`callDepth = 3`) — at the top,
+and I said so: the commonest reason we answer "unknown" is us, not the world.
+
+**That was wrong, and the correction is the point of this section.** 422 counted BOUNDARY MENTIONS in
+one small plugin, and one sink names several boundaries. Counted per SINK on the real trees:
+
+    SMF          8 885 sinks · call-depth 16   (0.2 %)
+    SuiteCRM    11 568        · call-depth 110  (1.0 %)
+    chamilo-lms 20 283        · call-depth 88   (0.4 %)
+    dolibarr   112 009        · call-depth 153  (0.1 %)
+
+Raising the cap would move about 350 sinks out of ~150 000 and cost runtime on every file. It is not
+the lever, and the earlier framing was a per-mention tally in one plugin quoted as a general fact.
+
+**What actually drives OPEN, counted once per sink per kind:**
+
+    SuiteCRM  7 547 OPEN   param 28 % · property 25 % · guarded-by 24 % · global 23 % · unassigned 17 %
+    dolibarr 42 976 OPEN   property 42 % · ->trans() 41 % · guarded-by 16 % · param 9 %
+
+`->trans()` alone stands behind 17 620 of dolibarr's OPEN sinks, and it is worth knowing whether that
+is honesty or blindness. Read in `htdocs/core/class/translate.class.php`: `trans()` answers from
+`$this->tab_translate`, and `loadFromDatabase()` fills it with
+
+    SELECT transkey, transvalue FROM llx_overwrite_trans WHERE lang = ...   (line 540)
+
+**So a translation can come out of a database table, and our Z is correct.** Settling those 17 620
+would not be a fix, it would be a POLICY — "a row an administrator wrote is not attacker-controlled" —
+and that belongs in a project overlay with its reading attached, the way `constant_properties` does,
+not in the instrument.
+
 ## A removing filter is read by what it LEAVES (2026-09-10)
 
 `FILTER_SANITIZE_EMAIL` had no entry, so a value it had cleaned still read as unsubstituted. MEASURED on

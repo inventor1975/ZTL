@@ -148,6 +148,29 @@ def ambiguous_parent_probe(failures):
                 failures.append(f"xambig/{name} at --jobs {jobs}: expected {exp}, got {got}")
 
 
+def duplicate_class_probe(failures):
+    """A CLASS DECLARED TWICE: only one copy is loaded, and neither file's text says which. The verdicts
+    stand for the code as written — and the ledger has to SAY that it did not establish whether this copy
+    runs. Measured 2026-09-10: 40 of 779 REFUTED across five corpora sit in such a file, zurmo's
+    `eval($_GET)` among them, in the second copy of a framework whose live core has no eval."""
+    out = code2zfl.run([os.path.join(FIX, "xdup")], [OVERLAY], "all", AUTOLOAD)
+    for name, exp in (("legacy/Thing.php", "REFUTED"), ("live/Thing.php", "EARNED")):
+        base = os.path.basename(name)
+        got = [(f.get("dup_classes"), [s["disposition"] for s in f["sinks"]])
+               for f in out["files"] if f["file"].endswith(name.replace("/", os.sep))]
+        if len(got) != 1:
+            failures.append(f"xdup/{name}: expected one file record, got {len(got)}"); continue
+        dup, disp = got[0]
+        if disp != [exp]:
+            failures.append(f"xdup/{name}: expected ['{exp}'], got {disp}")
+        if not dup or dup[0]["files"] != 2:
+            failures.append(f"xdup/{name}: the duplicate class was NOT named — dup_classes={dup}")
+    # and it must reach the human summary, not only the json
+    md = code2zfl.summary_md(out)
+    if "declared TWICE" not in md:
+        failures.append("xdup: the duplicate class is in the json and NOT in the human summary")
+
+
 def include_probe(failures):
     """A front controller guards the request once; every page that requires it is judged under that
     guard. Without the include graph all three read as plain refutations."""
@@ -180,7 +203,7 @@ def main():
         if got.get(name) != exp:
             failures.append(f"{name}: expected {exp}, got {got.get(name)}")
     # every fixture in the folder is in the table — an unlisted fixture is an untested claim
-    probed = {os.path.basename(f["file"]) for f in out["files"] if os.sep + "xfile" + os.sep in f["file"] or os.sep + "xinherit" + os.sep in f["file"] or os.sep + "xinclude" + os.sep in f["file"] or os.sep + "xconflict" + os.sep in f["file"] or os.sep + "xambig" + os.sep in f["file"]}
+    probed = {os.path.basename(f["file"]) for f in out["files"] if os.sep + "xfile" + os.sep in f["file"] or os.sep + "xinherit" + os.sep in f["file"] or os.sep + "xinclude" + os.sep in f["file"] or os.sep + "xconflict" + os.sep in f["file"] or os.sep + "xambig" + os.sep in f["file"] or os.sep + "xdup" + os.sep in f["file"]}
     for name in got:
         if name not in EXPECT and name not in probed:                  # the cross-file pairs are asserted by their own probes
             failures.append(f"{name}: fixture without an expectation")
@@ -214,6 +237,7 @@ def main():
     cross_file_probe(failures)
     inheritance_probe(failures)
     ambiguous_parent_probe(failures)
+    duplicate_class_probe(failures)
     include_probe(failures)
     # ---- a NAME defined differently in two files is a conflict (unknown), not "the last one wins"; and a method
     # summary is never read for a receiver that is not $this (b.php: $db->safe() inside XcA must not be XcA::safe)
@@ -229,7 +253,7 @@ def main():
         for x in failures:
             print("  -", x)
         sys.exit(1)
-    print(f"PASS: {n} sink verdicts as expected across {len(EXPECT)} fixtures + the cross-file, conflict, inheritance, ambiguous-parent and include pairs (+ f54 under stored-input) + 2 vacuity controls")
+    print(f"PASS: {n} sink verdicts as expected across {len(EXPECT)} fixtures + the cross-file, conflict, inheritance, ambiguous-parent, duplicate-class and include pairs (+ f54 under stored-input) + 2 vacuity controls")
 
 
 if __name__ == "__main__":

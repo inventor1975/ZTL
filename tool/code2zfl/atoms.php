@@ -2002,6 +2002,23 @@ foreach ($files as $f) {
         foreach (['t', 'src', 'san', 'z', 'q', 'zu', 'nu'] as $c) $byKey[$k][$c] = $j[$c];
         if (($f['hctx'] ?? null) !== null) $byKey[$k]['hctx'] = Html::worse($byKey[$k]['hctx'] ?? null, $f['hctx']);
     }
+    // A CLASS DEFINED TWICE IN THE TREE: ONLY ONE COPY RUNS, AND THIS FILE'S TEXT DOES NOT SAY WHICH.
+    // The verdicts here stand for the code as written; whether this code is the code that executes is a
+    // separate question, and the ledger must not be silent about it. Measured 2026-09-10: 40 of 779 REFUTED
+    // across five corpora sit in such a file, among them zurmo's `eval($_GET)` — whose live core holds no
+    // eval at all, the second copy of the framework does.
+    $dups = [];
+    $nss2 = $finder->findInstanceOf($ast ?? [], Stmt\Namespace_::class);
+    $ns2 = (count($nss2) === 1 && $nss2[0]->name !== null) ? strtolower($nss2[0]->name->toString()) : (count($nss2) === 0 ? '' : null);
+    if ($ns2 !== null && !empty($SUMMARIES['classfiles'])) {
+        foreach ($finder->findInstanceOf($ast ?? [], Stmt\Class_::class) as $cls2) {
+            if (!$cls2->name) continue;
+            $fq2 = $ns2 . '\\' . strtolower($cls2->name->toString());
+            $where = $SUMMARIES['classfiles'][$fq2] ?? [];
+            if (count($where) > 1) $dups[] = ['class' => $fq2, 'files' => count($where)];
+        }
+    }
+    if ($dups) $rec['dup_classes'] = $dups;
     $rec['sinks'] = array_values($byKey); $rec['includes'] = array_values(array_unique($an->includes)); $rec['functions'] = $an->functions;
     if ($an->inlineSpent >= 3000) $rec['inline_budget_exhausted'] = true;   // named, not hidden
     if ($an->nodeSpent > 120000) $rec['node_budget_exhausted'] = true;      // the walk was cut short
@@ -2135,7 +2152,7 @@ if ($emitSummaries) {
     // PASS 1. What does each definition DO with an attacker-controlled parameter? Walk its body once
     // per parameter (up to 4; beyond that mark them together and say so), and read the result off the
     // machinery that already exists: the returned state, and the sinks the walk emitted.
-    $sum = ['tool' => 'code2zfl/atoms.php --emit-summaries', 'functions' => [], 'methods' => [], 'files' => [], 'parents' => []];
+    $sum = ['tool' => 'code2zfl/atoms.php --emit-summaries', 'functions' => [], 'methods' => [], 'files' => [], 'parents' => [], 'classfiles' => []];
     foreach ($files as $f) {
         $code = @file_get_contents($f); if ($code === false) continue;
         try { $ast = $parser->parse($code); } catch (ParseError $e) { continue; }
@@ -2143,8 +2160,21 @@ if ($emitSummaries) {
         $defs = [];
         foreach ($finder->findInstanceOf($ast ?? [], Stmt\Function_::class) as $fn)
             $defs[] = ['fn', strtolower($fn->name->toString()), $fn, null];
+        // WHICH NAMESPACE THIS FILE IS IN — needed to say WHICH class a name means. Read from the AST, not
+        // guessed: a file may hold several namespace blocks, and then no single answer is right, so we take
+        // one only when there is exactly one.
+        $nss = $finder->findInstanceOf($ast ?? [], Stmt\Namespace_::class);
+        $fileNs = (count($nss) === 1 && $nss[0]->name !== null) ? strtolower($nss[0]->name->toString()) : (count($nss) === 0 ? '' : null);
         foreach ($finder->findInstanceOf($ast ?? [], Stmt\Class_::class) as $cls) {
             $cn = $cls->name ? $cls->name->toString() : 'anon-class';
+            // WHERE ELSE THIS CLASS IS DEFINED. One name in two files means only one of them runs, and which
+            // one is not in this file's text: an accusation inside the other copy points at code that may be
+            // dead. Measured 2026-09-10: zurmo keeps a whole second copy of its framework
+            // (extensions/zurmoinc, 483 files) whose Controller holds an `eval` the live core does not.
+            if ($cls->name && $fileNs !== null) {
+                $fq = $fileNs . '\\' . strtolower($cn);
+                $sum['classfiles'][$fq] = array_values(array_unique(array_merge($sum['classfiles'][$fq] ?? [], [$f])));
+            }
             if ($cls->extends instanceof Node\Name) {
                 // THE CHAIN PHP WILL FOLLOW — but this map is keyed by the BARE class name, and one name can
                 // belong to two namespaces (phpspreadsheet: Reader\Csv extends BaseReader, Writer\Csv extends

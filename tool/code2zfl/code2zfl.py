@@ -95,7 +95,8 @@ def summarise(files, overlays, autoload, catalog=None, php=None, jobs=None):
     MEET = ("functions", "methods", "byname")     # a name seen in two batches: same rule as inside one
     CARRY = ("files",)                            # one owner per key: plain carry
     AMBIG = ("parents",)                          # one key, two answers: the chain is not readable
-    merged = {k: {} for k in MEET + CARRY + AMBIG}
+    UNION = ("classfiles",)                       # where a fully qualified class name is defined: union
+    merged = {k: {} for k in MEET + CARRY + AMBIG + UNION}
     with ThreadPool(max(1, len(batches))) as pool:
         for part in pool.map(_atomize_batch, [(cmd, b, env) for b in batches if b]):
             if part.get("_error"):
@@ -110,6 +111,11 @@ def summarise(files, overlays, autoload, catalog=None, php=None, jobs=None):
                         merged[slot][k] = _summary_merge(merged[slot].get(k), rec)
                 elif slot in CARRY:
                     merged[slot].update(recs)
+                elif slot in UNION:
+                    # one class name may be defined in several files, and the batches see different ones —
+                    # the answer is the union, never the last batch's slice
+                    for k, v in recs.items():
+                        merged[slot][k] = sorted(set(merged[slot].get(k, [])) | set(v))
                 elif slot in AMBIG:
                     # `parents` is keyed by the BARE class name and two namespaces may hold one name.
                     # `dict.update` took the last batch's answer, so the inheritance chain depended on how
@@ -501,6 +507,11 @@ def run(paths, overlays=(), ctx="sql", autoload=None, catalog=None, php=None, jo
             rec["inline_budget_exhausted"] = True
         if f.get("node_budget_exhausted"):
             rec["node_budget_exhausted"] = True
+        # A CLASS THIS FILE DECLARES IS DECLARED SOMEWHERE ELSE TOO. Only one copy runs and this file's text
+        # does not say which, so every verdict here is about the code as WRITTEN, not necessarily the code
+        # that EXECUTES. The atomizer found it; the ledger must not drop it on the way to the reader.
+        if f.get("dup_classes"):
+            rec["dup_classes"] = f["dup_classes"]
         if f["parse_error"]:
             rec["disposition"] = "E"
             out["files"].append(rec)
@@ -554,12 +565,27 @@ def summary_md(out):
         tot.update(c)
         for s in f["sinks"]:
             if s["disposition"] == "REFUTED":
-                refuted.append((f["file"], s))
+                refuted.append((f["file"], s, f.get("dup_classes")))
     L += ["| file | sinks | REFUTED | OPEN | EARNED |", "|---|---:|---:|---:|---:|"]
     for fl, n, r, o, e in sorted(rows, key=lambda r: (-(r[2] if isinstance(r[2], int) else 0), str(r[0]))):
         mark = "**" if isinstance(r, int) and r else ""
         L.append(f"| {fl} | {n} | {mark}{r}{mark} | {o} | {e} |")
     L.append(f"| **total** | {sum(r[1] for r in rows if isinstance(r[1], int))} | **{tot['REFUTED']}** | {tot['OPEN'] + tot['ON CREDIT']} | {tot['EARNED']} |")
+    # WHICH OF THESE ACCUSATIONS MAY POINT AT CODE THAT DOES NOT RUN. A class declared in two files means
+    # one of the two copies is loaded and the other is not, and nothing in either file says which. The
+    # verdict is about the text; the reader is the one who has to find out whether that text executes.
+    dupped = sorted({fl for fl, _s, d in refuted if d})
+    if dupped:
+        L += ["", f"## a class declared TWICE in this tree — {len(dupped)} of the refuted files", "",
+              "Only one copy of a class can be loaded. These verdicts stand for the code as WRITTEN;",
+              "whether this file is the copy that RUNS was not established here, and must be before",
+              "anyone acts on them:", ""]
+        for fl in dupped[:20]:
+            d = next(x for f2, _s, x in refuted if f2 == fl for x in [x])
+            names = ", ".join(f"`{c['class']}` in {c['files']} files" for c in d[:3])
+            L.append(f"- `{fl}` — {names}")
+        if len(dupped) > 20:
+            L.append(f"- … and {len(dupped) - 20} more")
     capped = [f["file"] for f in out["files"] if f.get("inline_budget_exhausted") or f.get("node_budget_exhausted")]
     if capped:
         L += ["", f"## inlining budget reached — {len(capped)} file(s)", "",
@@ -573,7 +599,7 @@ def summary_md(out):
     # times with six near-identical paragraphs buries the other findings. Measured on Pico 2026-09-09:
     # 6 refutations, all of them lib/Pico.php:1333.
     sites = {}
-    for fl, s in refuted:
+    for fl, s, _dup in refuted:
         sites.setdefault((fl, s["line"], s["fn"]), []).append(s)
     L += ["", f"## REFUTED — {len(sites)} place(s), {len(refuted)} path(s)", ""]
     for (fl, line, fn), ss in sorted(sites.items(), key=lambda kv: (str(kv[0][0]), kv[0][1])):

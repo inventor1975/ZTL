@@ -10,11 +10,26 @@ found in this pass (bench/README.md, "Real projects, not synthetic").
 One line per project as it finishes, and out.json rewritten each time, so a run that dies halfway
 still leaves everything before it. Per project it keeps counters only — 200 000 files fit in memory.
 """
-import sys, os, json, time, collections
+import sys, os, json, time, collections, hashlib
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))   # tool/code2zfl
 import code2zfl
 
+HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+
+def tool_digest():
+    """WHAT THIS RUN WAS MEASURING. A census over 227 000 files takes long enough that the instrument can be
+    edited underneath it, and then the number is a MIXTURE of two versions and belongs nowhere. Three runs
+    were thrown away that way on 2026-09-10 before this was written. Cheap and therefore unconditional."""
+    h = hashlib.sha256()
+    for f in ("atoms.php", "code2zfl.py", "catalog.json"):
+        h.update(open(os.path.join(HERE, f), "rb").read())
+    return h.hexdigest()[:16]
+
+
 root, out = sys.argv[1], sys.argv[2]
+DIGEST0 = tool_digest()
+print(f"instrument {DIGEST0} · {len(sys.argv) > 2 and root}", flush=True)
 res = {}
 for p in sorted(q for q in os.listdir(root) if os.path.isdir(os.path.join(root, q))):
     t0 = time.time()
@@ -46,5 +61,10 @@ for p in sorted(q for q in os.listdir(root) if os.path.isdir(os.path.join(root, 
               "sec": round(time.time() - t0, 1), "causes": causes.most_common(60),
               "kinds": [[sorted(k), n] for k, n in kinds.most_common(25)]}
     print(f"{p:28} {len(o['files']):6} files {res[p]['sec']:7}s  {dict(disp)}", flush=True)
+    res["_run"] = {"instrument": DIGEST0, "jobs": 16, "overlays": [], "root": root}
     json.dump(res, open(out, "w"), indent=1)
-print("done")
+if tool_digest() != DIGEST0:
+    print(f"ОТКАЗ ОТ ЧИСЛА: инструмент менялся ПО ХОДУ прогона ({DIGEST0} -> {tool_digest()}). "
+          f"Итог — смесь двух версий, цитировать его нельзя. Гнать заново на неподвижном дереве.")
+    sys.exit(4)
+print(f"done · instrument {DIGEST0} · jobs=16 · overlays=[] — эти условия часть числа")

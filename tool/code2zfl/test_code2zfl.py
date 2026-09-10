@@ -112,6 +112,7 @@ EXPECT = {
     "f82_ent_flags_decide_which_quote.php": ["REFUTED", "REFUTED", "EARNED", "EARNED", "EARNED", "REFUTED", "EARNED"],
     "f83_url_encoding_does_not_reach_a_script.php": ["EARNED", "REFUTED", "REFUTED", "REFUTED", "REFUTED"],
     "f84_a_declared_property_settles_itself_only.php": ["EARNED", "REFUTED", "OPEN"],
+    "f85_the_email_filter_keeps_the_single_quote.php": ["EARNED", "EARNED", "REFUTED", "REFUTED", "REFUTED"],
 }
 STORED = os.path.join(HERE, "overlays", "stored-input.json")
 

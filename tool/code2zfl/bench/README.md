@@ -328,6 +328,35 @@ That trade belongs to whoever will act on the findings, so the default does not 
 none at all. The four projects that still carry most of them — SuiteCRM 449, dolibarr 218,
 chamilo-lms 171, SMF 37 — are the next reading, not the next patch.
 
+## A removing filter is read by what it LEAVES (2026-09-10)
+
+`FILTER_SANITIZE_EMAIL` had no entry, so a value it had cleaned still read as unsubstituted. MEASURED on
+PHP 8.3.6: a string carrying a double quote, a single quote, angle brackets, a slash, a backslash, a
+space and a newline comes back without any of them EXCEPT the single quote, and `"</script>"` comes back
+`"script"`. So it substitutes in body text and in a double-quoted attribute — and in NO position that a
+single quote closes: not a single-quoted attribute, not SQL inside quotes, not a single-quoted script
+string. `FILTER_SANITIZE_URL` is deliberately absent: measured, it removes the space and the newline and
+leaves the quote, the angle bracket, the slash and the backslash exactly where they were.
+
+    SARD XSS/CWE_79     false alarms 280 -> 259      misses 1152 -> 1184
+
+**The misses went UP by 32 and that was read, not waved away.** All 32 are the `email` member of the
+family already known to be mislabelled — `filter_var($sanitized, FILTER_VALIDATE_EMAIL) ? $sanitized : ""`,
+the value replaced in every branch. Re-running the whole classification over the new figure:
+448 FILTER_VALIDATE_* else "", 272 ternary whitelist, 272 in_array-strict, 192 the bare `checked_data`
+constant — **1184 of 1184, zero left over.** The misses are still, entirely, defects of the benchmark.
+
+Corpora untouched: SMF 34/4515/4336, SuiteCRM 400/7547/3621, chamilo-lms 139/8100/12044,
+dolibarr 186/42976/68847. Ground truth 4 / 11 / 8 with the WordPress overlay. Stand 237 across 85.
+
+### The census now refuses a mixed number
+
+Three long runs were thrown away on 2026-09-10 because the instrument was edited while they were still
+going: the result is a MIXTURE of two versions and belongs nowhere. `census.py` takes a digest of
+`atoms.php` + `code2zfl.py` + `catalog.json` at the start, writes it into `out.json` beside `jobs` and
+`overlays`, and at the end REFUSES the figure if the digest moved. Not a ban on a dirty tree — measuring
+an uncommitted change is the ordinary work — a ban on the mixture.
+
 ## A property the framework fixes (`constant_properties`, 2026-09-10)
 
 `ure_has_administrator_role($user_id)` builds its query out of three unknowns — the parameter, and

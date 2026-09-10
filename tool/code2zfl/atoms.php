@@ -1073,6 +1073,15 @@ final class Analyzer {
                     return sanitize($args[0] ?? stF(), ['*'], 'filter_var:' . $fname, $line);
                 if ($fname === 'FILTER_SANITIZE_SPECIAL_CHARS' || $fname === 'FILTER_SANITIZE_FULL_SPECIAL_CHARS')   // = htmlspecialchars, both quotes
                     return sanitize($args[0] ?? stF(), ['html', 'html-sq'], 'filter_var:' . $fname, $line);
+                // FILTER_SANITIZE_EMAIL REMOVES, AND WHAT IT LEAVES IS THE POINT. MEASURED on PHP 8.3.6: a string
+                // holding a double quote, a single quote, angle brackets, a slash, a backslash, a space and a
+                // newline comes back without any of them EXCEPT the single quote, and "</script>" comes back
+                // "script". So it substitutes in body text and in a double-quoted attribute, and nowhere that a
+                // single quote closes something: not html-sq, not sql-quoted, not a single-quoted script string.
+                if ($fname === 'FILTER_SANITIZE_EMAIL')
+                    return sanitize($args[0] ?? stF(), ['html'], 'filter_var:' . $fname, $line);
+                // FILTER_SANITIZE_URL is deliberately NOT here: measured, it strips the space and the newline and
+                // leaves the quote, the angle bracket, the slash and the backslash exactly where they were.
                 return through(joinAll($args ?: [stF()]), null, $line, false, 'none');
             }
             // preg_replace('/[^a-z0-9]/', '', $x): everything outside a plain class is REMOVED, so the result lives in

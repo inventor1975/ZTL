@@ -1178,9 +1178,13 @@ final class Analyzer {
                 }
                 $carried = [];
                 foreach ($tainted as $k) {
-                    if (in_array($k, $sumKey['passes'], true)) {
+                    // "any": a function with many parameters was probed with all of them at once, so every argument
+                    // stands under that one answer. Matching only the argument's own index dropped it, and request
+                    // data passed through img_picto() or dol_escape_htmltag() read as "constants only" (xany, 2026-09-11).
+                    $pk = in_array($k, $sumKey['passes'], true) ? $k : (in_array('any', $sumKey['passes'], true) ? 'any' : null);
+                    if ($pk !== null) {
                         $st = $args[(int)$k];
-                        $ctxs = $sumKey['substitutes'][$k] ?? [];
+                        $ctxs = $sumKey['substitutes'][$pk] ?? [];
                         $carried[] = $ctxs ? sanitize($st, $ctxs, $name . '()', $line) : $st;
                     } elseif (in_array($k, $sumKey['opaque'], true) || in_array('any', $sumKey['opaque'], true)) {
                         $carried[] = through($args[(int)$k], $name . '()', $line, true);

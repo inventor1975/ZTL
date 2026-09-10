@@ -201,6 +201,17 @@ def cross_file_probe(failures):
         failures.append("xfile: --no-cross gives the same answer, so the probe does not test cross-file sight")
 
 
+def any_probe(failures):
+    """Thirteen parameters, past the per-parameter limit (xany): the summary answers for all of them at once as
+    passes ["any"]. Request data carried through such a function must stay request data; before 2026-09-11 the judge
+    matched only the argument's own index and read it as "constants only" - a false EARNED on dolibarr's img_picto."""
+    out = code2zfl.run([os.path.join(FIX, "xany")], [], "all", AUTOLOAD)
+    got = [(s["line"], s["disposition"]) for f in out["files"] if os.path.basename(f["file"]) == "page.php" for s in f["sinks"]]
+    want = [(4, "REFUTED"), (5, "EARNED"), (6, "EARNED")]
+    if got != want:
+        failures.append(f"xany/page.php: expected {want} (carried / substituted / constant), got {got}")
+
+
 def main():
     failures = []
     out = code2zfl.run([FIX], [OVERLAY, LARAVEL], "all", AUTOLOAD, cross=False)
@@ -209,7 +220,7 @@ def main():
         if got.get(name) != exp:
             failures.append(f"{name}: expected {exp}, got {got.get(name)}")
     # every fixture in the folder is in the table — an unlisted fixture is an untested claim
-    probed = {os.path.basename(f["file"]) for f in out["files"] if os.sep + "xfile" + os.sep in f["file"] or os.sep + "xinherit" + os.sep in f["file"] or os.sep + "xinclude" + os.sep in f["file"] or os.sep + "xconflict" + os.sep in f["file"] or os.sep + "xambig" + os.sep in f["file"] or os.sep + "xdup" + os.sep in f["file"]}
+    probed = {os.path.basename(f["file"]) for f in out["files"] if os.sep + "xfile" + os.sep in f["file"] or os.sep + "xinherit" + os.sep in f["file"] or os.sep + "xany" + os.sep in f["file"] or os.sep + "xinclude" + os.sep in f["file"] or os.sep + "xconflict" + os.sep in f["file"] or os.sep + "xambig" + os.sep in f["file"] or os.sep + "xdup" + os.sep in f["file"]}
     for name in got:
         if name not in EXPECT and name not in probed:                  # the cross-file pairs are asserted by their own probes
             failures.append(f"{name}: fixture without an expectation")
@@ -263,6 +274,7 @@ def main():
     ambiguous_parent_probe(failures)
     duplicate_class_probe(failures)
     include_probe(failures)
+    any_probe(failures)
     # ---- a NAME defined differently in two files is a conflict (unknown), not "the last one wins"; and a method
     # summary is never read for a receiver that is not $this (b.php: $db->safe() inside XcA must not be XcA::safe)
     xc = code2zfl.run([os.path.join(FIX, "xconflict")], [], "all", AUTOLOAD)

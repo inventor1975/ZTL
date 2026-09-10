@@ -965,10 +965,15 @@ final class Analyzer {
             // could not say "this project's $wp_the_query->query is not SQL" without also unsaying $db->query.
             if ($sinkCtx !== null && $recv !== null && isset($NOTSINK[strtolower($recv)])) $sinkCtx = null;
             if ($sinkCtx !== null) {
-                $ix = $SINKARG[$name] ?? 0;
+                // ONE CALL CAN CARRY THE DANGER IN SEVERAL ARGUMENTS, and judging only the first hides the rest.
+                // `mail($to, $subject, $body, $headers)` folds THREE of its four into the message headers;
+                // `copy($from, $to)` and `rename($from, $to)` are two paths, not one. So `arg` in the catalog
+                // may be a single index or a LIST of them, and every listed argument is judged.
+                $ixs = $SINKARG[$name] ?? 0;
+                if (!is_array($ixs)) $ixs = [$ixs];
                 if ($fmt !== null && $name === 'printf') $this->output('printf', $line, $fmt);   // what is printed is the FORMATTED string
                 elseif ($name === 'printf' && isset($args[0])) $this->output('printf', $line, $args[0]);
-                elseif (isset($args[$ix])) $this->sinkFact($sinkCtx, ($isMethod ? '->' : '') . $name, $line, $args[$ix]);
+                else foreach ($ixs as $ix) if (isset($args[$ix])) $this->sinkFact($sinkCtx, ($isMethod ? '->' : '') . $name, $line, $args[$ix]);
             }
             // SINKS ARE JUDGED FIRST, then a call into a class of this file is followed inside. Before 2026-09-09 12:30 the
             // dispatch below stood ahead of the sink check: an in-file wrapper `class DB { function query($q) {…} }` with a

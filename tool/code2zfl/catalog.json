@@ -1,564 +1,672 @@
 {
-  "_about": "code2zfl base catalog for PHP. DATA, not code: what counts as an attacker-controlled SOURCE, what is a SINK (and in which context), and which functions SUBSTITUTE a value by a verified one for a context (E40: no function launders a mark; the only sanitizer is substitution). A row here is a claim about PHP, and `measured` says whether the fixtures exercise it.",
-  "sources": {
-    "superglobals": [
-      "_GET",
-      "_POST",
-      "_REQUEST",
-      "_COOKIE",
-      "_FILES",
-      "_SERVER"
+ "_about": "code2zfl base catalog for PHP. DATA, not code: what counts as an attacker-controlled SOURCE, what is a SINK (and in which context), and which functions SUBSTITUTE a value by a verified one for a context (E40: no function launders a mark; the only sanitizer is substitution). A row here is a claim about PHP, and `measured` says whether the fixtures exercise it.",
+ "sources": {
+  "superglobals": [
+   "_GET",
+   "_POST",
+   "_REQUEST",
+   "_COOKIE",
+   "_FILES",
+   "_SERVER"
+  ],
+  "functions": [
+   "filter_input",
+   "getallheaders",
+   "apache_request_headers"
+  ],
+  "server_keys": [
+   "REQUEST_URI",
+   "QUERY_STRING",
+   "PATH_INFO",
+   "ORIG_PATH_INFO",
+   "PHP_SELF",
+   "PATH_TRANSLATED",
+   "SCRIPT_NAME",
+   "REQUEST_METHOD",
+   "PHP_AUTH_USER",
+   "PHP_AUTH_PW",
+   "AUTH_TYPE",
+   "CONTENT_TYPE",
+   "CONTENT_LENGTH"
+  ],
+  "server_prefixes": [
+   "HTTP_"
+  ]
+ },
+ "sinks": {
+  "sql": {
+   "functions": [
+    "mysql_query",
+    "mysqli_query",
+    "mysqli_multi_query",
+    "mysqli_real_query",
+    "mysqli_prepare",
+    "pg_query",
+    "pg_send_query",
+    "sqlite_query"
+   ],
+   "methods": [
+    "query",
+    "multi_query",
+    "real_query",
+    "prepare",
+    "exec",
+    "execute"
+   ],
+   "arg": {
+    "mysqli_query": 1,
+    "mysqli_multi_query": 1,
+    "mysqli_real_query": 1,
+    "mysqli_prepare": 1,
+    "pg_query": 1,
+    "pg_send_query": 1
+   },
+   "measured": true
+  },
+  "shell": {
+   "functions": [
+    "exec",
+    "system",
+    "shell_exec",
+    "passthru",
+    "popen",
+    "proc_open",
+    "pcntl_exec"
+   ],
+   "methods": [],
+   "measured": false
+  },
+  "code": {
+   "functions": [
+    "create_function",
+    "assert"
+   ],
+   "methods": [],
+   "eval": true,
+   "measured": false
+  },
+  "file": {
+   "functions": [
+    "file_get_contents",
+    "fopen",
+    "readfile",
+    "file",
+    "unlink",
+    "file_put_contents",
+    "copy",
+    "rename",
+    "move_uploaded_file",
+    "mkdir",
+    "rmdir",
+    "touch",
+    "chmod",
+    "symlink",
+    "link",
+    "glob",
+    "scandir",
+    "opendir",
+    "parse_ini_file",
+    "simplexml_load_file",
+    "getimagesize",
+    "md5_file",
+    "hash_file",
+    "finfo_file"
+   ],
+   "methods": [],
+   "include": true,
+   "measured": true,
+   "arg": {
+    "copy": [
+     0,
+     1
     ],
-    "functions": [
-      "filter_input",
-      "getallheaders",
-      "apache_request_headers"
+    "rename": [
+     0,
+     1
     ],
-    "server_keys": [
-      "REQUEST_URI",
-      "QUERY_STRING",
-      "PATH_INFO",
-      "ORIG_PATH_INFO",
-      "PHP_SELF",
-      "PATH_TRANSLATED",
-      "SCRIPT_NAME",
-      "REQUEST_METHOD",
-      "PHP_AUTH_USER",
-      "PHP_AUTH_PW",
-      "AUTH_TYPE",
-      "CONTENT_TYPE",
-      "CONTENT_LENGTH"
+    "move_uploaded_file": [
+     1
     ],
-    "server_prefixes": [
-      "HTTP_"
+    "mkdir": [
+     0
+    ],
+    "rmdir": [
+     0
+    ],
+    "touch": [
+     0
+    ],
+    "chmod": [
+     0
+    ],
+    "symlink": [
+     0,
+     1
+    ],
+    "link": [
+     0,
+     1
+    ],
+    "glob": [
+     0
+    ],
+    "scandir": [
+     0
+    ],
+    "opendir": [
+     0
+    ],
+    "parse_ini_file": [
+     0
+    ],
+    "simplexml_load_file": [
+     0
+    ],
+    "getimagesize": [
+     0
+    ],
+    "md5_file": [
+     0
+    ],
+    "hash_file": [
+     1
+    ],
+    "finfo_file": [
+     1
     ]
+   }
   },
-  "sinks": {
-    "sql": {
-      "functions": [
-        "mysql_query",
-        "mysqli_query",
-        "mysqli_multi_query",
-        "mysqli_real_query",
-        "mysqli_prepare",
-        "pg_query",
-        "pg_send_query",
-        "sqlite_query"
-      ],
-      "methods": [
-        "query",
-        "multi_query",
-        "real_query",
-        "prepare",
-        "exec",
-        "execute"
-      ],
-      "arg": {
-        "mysqli_query": 1,
-        "mysqli_multi_query": 1,
-        "mysqli_real_query": 1,
-        "mysqli_prepare": 1,
-        "pg_query": 1,
-        "pg_send_query": 1
-      },
-      "measured": true
-    },
-    "shell": {
-      "functions": [
-        "exec",
-        "system",
-        "shell_exec",
-        "passthru",
-        "popen",
-        "proc_open",
-        "pcntl_exec"
-      ],
-      "methods": [],
-      "measured": false
-    },
-    "code": {
-      "functions": [
-        "create_function",
-        "assert"
-      ],
-      "methods": [],
-      "eval": true,
-      "measured": false
-    },
-    "file": {
-      "functions": [
-        "file_get_contents",
-        "fopen",
-        "readfile",
-        "file",
-        "unlink",
-        "file_put_contents"
-      ],
-      "methods": [],
-      "include": true,
-      "measured": true
-    },
-    "deser": {
-      "functions": [
-        "unserialize"
-      ],
-      "methods": [],
-      "measured": false
-    },
-    "html": {
-      "functions": [
-        "print",
-        "printf"
-      ],
-      "methods": [],
-      "echo": true,
-      "measured": true
-    },
-    "header": {
-      "functions": [
-        "header",
-        "setcookie",
-        "setrawcookie",
-        "http_redirect"
-      ],
-      "methods": [],
-      "measured": true,
-      "arg": {
-        "setcookie": 1,
-        "setrawcookie": 1
-      }
-    },
-    "callable": {
-      "functions": [
-        "call_user_func",
-        "call_user_func_array",
-        "usort",
-        "array_map",
-        "register_shutdown_function"
-      ],
-      "methods": [],
-      "callable": true,
-      "measured": true
-    }
+  "deser": {
+   "functions": [
+    "unserialize"
+   ],
+   "methods": [],
+   "measured": false
   },
-  "sanitizers": {
-    "functions": {
-      "intval": {
-        "contexts": [
-          "*"
-        ]
-      },
-      "floatval": {
-        "contexts": [
-          "*"
-        ]
-      },
-      "boolval": {
-        "contexts": [
-          "*"
-        ]
-      },
-      "abs": {
-        "contexts": [
-          "*"
-        ]
-      },
-      "count": {
-        "contexts": [
-          "*"
-        ]
-      },
-      "strlen": {
-        "contexts": [
-          "*"
-        ]
-      },
-      "md5": {
-        "contexts": [
-          "*"
-        ]
-      },
-      "sha1": {
-        "contexts": [
-          "*"
-        ]
-      },
-      "crc32": {
-        "contexts": [
-          "*"
-        ]
-      },
-      "mysqli_real_escape_string": {
-        "contexts": [
-          "sql-quoted"
-        ],
-        "arg": 1
-      },
-      "mysqli_escape_string": {
-        "contexts": [
-          "sql-quoted"
-        ],
-        "arg": 1
-      },
-      "mysql_real_escape_string": {
-        "contexts": [
-          "sql-quoted"
-        ],
-        "arg": 0
-      },
-      "pg_escape_string": {
-        "contexts": [
-          "sql-quoted"
-        ],
-        "arg": -1
-      },
-      "pg_escape_literal": {
-        "contexts": [
-          "sql"
-        ],
-        "arg": -1
-      },
-      "htmlspecialchars": {
-        "contexts": [
-          "html"
-        ]
-      },
-      "htmlentities": {
-        "contexts": [
-          "html"
-        ]
-      },
-      "escapeshellarg": {
-        "contexts": [
-          "shell"
-        ]
-      },
-      "escapeshellcmd": {
-        "contexts": [
-          "shell"
-        ]
-      },
-      "basename": {
-        "contexts": [
-          "file"
-        ]
-      },
-      "urlencode": {
-        "contexts": [
-          "header"
-        ]
-      },
-      "rawurlencode": {
-        "contexts": [
-          "header"
-        ]
-      },
-      "http_build_query": {
-        "contexts": [
-          "header"
-        ]
-      },
-      "round": {
-        "contexts": [
-          "*"
-        ]
-      },
-      "floor": {
-        "contexts": [
-          "*"
-        ]
-      },
-      "ceil": {
-        "contexts": [
-          "*"
-        ]
-      },
-      "ord": {
-        "contexts": [
-          "*"
-        ]
-      },
-      "hexdec": {
-        "contexts": [
-          "*"
-        ]
-      },
-      "octdec": {
-        "contexts": [
-          "*"
-        ]
-      },
-      "bindec": {
-        "contexts": [
-          "*"
-        ]
-      },
-      "array_sum": {
-        "contexts": [
-          "*"
-        ]
-      },
-      "array_product": {
-        "contexts": [
-          "*"
-        ]
-      },
-      "base64_encode": {
-        "contexts": [
-          "*"
-        ]
-      },
-      "bin2hex": {
-        "contexts": [
-          "*"
-        ]
-      }
-    },
-    "methods": {
-      "real_escape_string": {
-        "contexts": [
-          "sql-quoted"
-        ]
-      },
-      "escape_string": {
-        "contexts": [
-          "sql-quoted"
-        ]
-      },
-      "quote": {
-        "contexts": [
-          "sql"
-        ]
-      }
-    },
-    "casts": {
-      "int": [
-        "*"
-      ],
-      "double": [
-        "*"
-      ],
-      "bool": [
-        "*"
-      ]
-    }
+  "html": {
+   "functions": [
+    "print",
+    "printf"
+   ],
+   "methods": [],
+   "echo": true,
+   "measured": true
   },
-  "preserving": [
-    "trim",
-    "ltrim",
-    "rtrim",
-    "strtolower",
-    "strtoupper",
-    "ucfirst",
-    "ucwords",
-    "lcfirst",
-    "mb_strtolower",
-    "mb_strtoupper",
-    "nl2br",
-    "str_pad"
-  ],
-  "transparent": [
-    "str_replace",
-    "str_ireplace",
-    "preg_replace",
-    "strstr",
-    "strrchr",
-    "stristr",
-    "sprintf",
-    "vsprintf",
-    "nl2br",
-    "strip_tags",
-    "stripslashes",
-    "addslashes",
-    "urldecode",
-    "rawurldecode",
-    "base64_decode",
-    "json_decode",
-    "json_encode",
-    "serialize",
+  "header": {
+   "functions": [
+    "header",
+    "setcookie",
+    "setrawcookie",
+    "http_redirect",
+    "mail"
+   ],
+   "methods": [],
+   "measured": true,
+   "arg": {
+    "setcookie": 1,
+    "setrawcookie": 1,
+    "mail": [
+     0,
+     1,
+     3
+    ]
+   }
+  },
+  "callable": {
+   "functions": [
+    "call_user_func",
+    "call_user_func_array",
+    "usort",
     "array_map",
-    "str_pad",
-    "strtr",
-    "number_format",
-    "date",
-    "iconv",
-    "mb_strtolower",
-    "mb_strtoupper",
-    "utf8_encode",
-    "utf8_decode",
-    "dirname",
-    "realpath",
-    "pathinfo",
-    "tempnam",
-    "getcwd",
-    "sys_get_temp_dir",
-    "time",
-    "microtime",
-    "mktime",
-    "strtotime",
-    "gmdate",
-    "rand",
-    "mt_rand",
-    "random_int",
-    "uniqid",
-    "phpversion",
-    "php_uname",
-    "php_sapi_name",
-    "curl_version",
-    "memory_get_usage",
-    "gettype",
-    "get_class",
-    "str_repeat",
-    "ucwords",
-    "array_fill",
-    "array_combine",
-    "array_flip",
-    "array_fill_keys",
-    "array_column",
-    "array_chunk",
-    "array_pad",
-    "array_splice",
-    "http_build_url",
-    "json_last_error_msg",
-    "ini_get",
-    "hex2bin",
-    "random_bytes",
-    "hash",
-    "hash_hmac",
-    "password_hash",
-    "getenv",
-    "extension_loaded",
-    "function_exists",
-    "class_exists",
-    "defined",
-    "constant",
-    "ini_set",
-    "error_reporting",
-    "set_time_limit",
-    "date_default_timezone_get"
-  ],
-  "_notes": {
-    "inert_guards": "READ, AND FOUND WANTING. A guard we cannot read makes the value Z (the checker is named, verdict OPEN). These we CAN read, and what they answer confines nothing about the value: file_exists() says a path is on disk — an attacker's upload, a log, /etc/passwd are all on disk, and it is not the set the developer named at this site; is_string()/is_array() fix the type and forbid no quote; count()/strlen() measure. So they are treated as no guard at all, and a verdict on the value stands. NOT here, deliberately: class_exists / function_exists / method_exists / is_callable / str_starts_with / str_contains — each of those CAN confine (a prefix check is a real path confinement), and they stay unknown-Z until read case by case. MEASURED on SMF 2026-09-09: file_exists 252, is_array 112, is_file 67, is_dir 36, is_string 29 OPEN verdicts carried one of these as a named cause.",
-    "addslashes": "listed as TRANSPARENT on purpose: a string transformation, not a substitution by a verified element; bypassable (multibyte). Taint passes, sanitization is NOT credited.",
-    "strip_tags": "transparent for the same reason: it is not an HTML escaper.",
-    "transparent": "taint passes through; any sanitization already earned is DROPPED (substr of an escaped string can end in a lone backslash; stripslashes undoes escaping outright). Too strict is a verdict that can be redeemed; too lax is one that lies.",
-    "preserving": "taint passes through and earned sanitization is KEPT: case changes, whitespace trimming and padding cannot create a quote or strand a backslash — after mysqli_real_escape_string no raw whitespace-escape remains to strip. ARGUED from the escaper's contract, not measured against MySQL; a counterexample moves the entry to `transparent`.",
-    "_SERVER": "attacker-written entries only: HTTP_* (every request header, HTTP_HOST and HTTP_X_FORWARDED_FOR included), the request line and path. REMOTE_ADDR, SERVER_*, DOCUMENT_ROOT are set by the server and read as constants. A computed key is assumed hot.",
-    "narrowing": "taint passes; only a NUMERIC substitution survives (digits stay digits under any cut), a context escape does not (substr can strand a backslash).",
-    "explode/implode": "preserving when the delimiter is a literal without quote, backslash or NUL (it cannot strand an escape); otherwise narrowing.",
-    "header/callable": "added 2026-09-08 after Psalm reported a TaintedHeader (header('Location: '.$url)) and a TaintedCallable (new $classname) our catalog had no sink for. `callable` fires on new $x(), $x(), $obj->$m() and call_user_func*; the judged value is the NAME, not the arguments.",
-    "guards": "a condition is an ACT OF CHECKING: inside the branch it protects, the checked value is substituted (E40 — membership in a fixed set is a substitution). Credited only when the set/pattern is fixed: in_array against a literal array, ctype_*/is_numeric, an anchored regex over a plain character class, $x === 'literal', a literal switch case. After `if (!guard) exit/return;` the guard holds for what follows. `file_exists` is NOT a guard (traversal passes it).",
-    "unknown-call": "an UNKNOWN call's result is Z even over constant arguments (2026-09-09): `$obj->get()` reads object state, `time()` reads the clock, file_get_contents('php://input') reads the request. What is NOT attacker-controlled is said here, as an ALLOW-LIST measured on real trees (transparent: path/time/random/version helpers; narrowing: array element extraction), never assumed.",
-    "html-subcontexts": "2026-09-09: the html sink has SUB-CONTEXTS read by a lexer over the output stream (atoms.php Html): body text and double-quoted attributes take `html`; a single-quoted attribute needs `html-sq` (htmlspecialchars/htmlentities with ENT_QUOTES — the default since PHP 8.1, so `--php 7.4` matters; FILTER_SANITIZE_*SPECIAL_CHARS always); an escaper whose flags carry quote bits of ZERO (ENT_NOQUOTES, or a bare doctype flag such as ENT_XML1/ENT_HTML5/ENT_HTML401) encodes NEITHER quote and takes `html-text` — body text only, no attribute at all (measured on PHP 8.3.6, 2026-09-10); a URL attribute needs `header` (URL-encoding); an unquoted attribute, a tag or attribute name, an event handler, style, <script>, <style>, a comment take only `*`. An output whose position cannot be read no longer counts as body text (2026-09-10): a substitution that covers EVERY position (`*`, or html with html-sq) still earns, anything narrower goes OPEN with the unread position named \u2014 an unread position is not the friendliest position.",
-    "header/setcookie": "setcookie($name, $value, ...) carries the attacker-controlled part in the SECOND argument; judging the first (a constant name) returned EARNED on a live flaw. Found 2026-09-09 on bWAPP by Psalm's TaintedCookie, read in the source (xss_stored_2.php:29→36).",
-    "fixed-alphabet-encoders": "base64_encode ([A-Za-z0-9+/=]) and bin2hex ([0-9a-f]) confine their output to a fixed alphabet with no quote, space, dot or bracket: a substitution for every context, like md5. str_replace/strtr with literal arguments whose replacement characters lie in [A-Za-z0-9_-,] keep such a substitution (strtr(base64_encode($x), '+/=', '-_,') in the blog engine, 2026-09-09)."
-  },
-  "narrowing": [
-    "substr",
-    "substr_replace",
-    "mb_substr",
-    "strrev",
-    "wordwrap",
-    "array_slice",
-    "array_values",
-    "array_keys",
-    "array_unique",
-    "array_merge",
-    "array_reverse",
-    "array_filter",
-    "str_word_count",
-    "chunk_split",
-    "array_shift",
-    "array_pop",
-    "reset",
-    "end",
-    "current",
-    "next",
-    "prev",
-    "key",
-    "array_key_first",
-    "array_key_last",
-    "array_search",
-    "array_rand",
-    "min",
-    "max"
-  ],
-  "inert_guards": [
-    "file_exists", "is_file", "is_dir", "is_readable", "is_writable", "is_writeable",
-    "is_link", "is_executable", "filesize", "filemtime", "rename", "touch", "mkdir", "copy",
-    "is_array", "is_string", "is_object", "is_scalar", "is_iterable", "is_resource", "is_null",
-    "count", "sizeof", "strlen", "mb_strlen", "trim", "isset"
-  ],
-  "guards": {
-    "in_array": {
-      "value": 0,
-      "haystack": 1,
-      "contexts": [
-        "*"
-      ]
-    },
-    "array_key_exists": {
-      "value": 0,
-      "haystack": 1,
-      "contexts": [
-        "*"
-      ]
-    },
-    "ctype_digit": {
-      "value": 0,
-      "contexts": [
-        "*"
-      ]
-    },
-    "ctype_alnum": {
-      "value": 0,
-      "contexts": [
-        "*"
-      ]
-    },
-    "ctype_alpha": {
-      "value": 0,
-      "contexts": [
-        "*"
-      ]
-    },
-    "is_numeric": {
-      "value": 0,
-      "contexts": [
-        "*"
-      ]
-    },
-    "is_int": {
-      "value": 0,
-      "contexts": [
-        "*"
-      ]
-    },
-    "is_integer": {
-      "value": 0,
-      "contexts": [
-        "*"
-      ]
-    },
-    "is_float": {
-      "value": 0,
-      "contexts": [
-        "*"
-      ]
-    },
-    "is_bool": {
-      "value": 0,
-      "contexts": [
-        "*"
-      ]
-    },
-    "preg_match": {
-      "pattern": 0,
-      "value": 1,
-      "contexts": [
-        "*"
-      ],
-      "pattern_tight": true
-    }
+    "register_shutdown_function"
+   ],
+   "methods": [],
+   "callable": true,
+   "measured": true
   }
+ },
+ "sanitizers": {
+  "functions": {
+   "intval": {
+    "contexts": [
+     "*"
+    ]
+   },
+   "floatval": {
+    "contexts": [
+     "*"
+    ]
+   },
+   "boolval": {
+    "contexts": [
+     "*"
+    ]
+   },
+   "abs": {
+    "contexts": [
+     "*"
+    ]
+   },
+   "count": {
+    "contexts": [
+     "*"
+    ]
+   },
+   "strlen": {
+    "contexts": [
+     "*"
+    ]
+   },
+   "md5": {
+    "contexts": [
+     "*"
+    ]
+   },
+   "sha1": {
+    "contexts": [
+     "*"
+    ]
+   },
+   "crc32": {
+    "contexts": [
+     "*"
+    ]
+   },
+   "mysqli_real_escape_string": {
+    "contexts": [
+     "sql-quoted"
+    ],
+    "arg": 1
+   },
+   "mysqli_escape_string": {
+    "contexts": [
+     "sql-quoted"
+    ],
+    "arg": 1
+   },
+   "mysql_real_escape_string": {
+    "contexts": [
+     "sql-quoted"
+    ],
+    "arg": 0
+   },
+   "pg_escape_string": {
+    "contexts": [
+     "sql-quoted"
+    ],
+    "arg": -1
+   },
+   "pg_escape_literal": {
+    "contexts": [
+     "sql"
+    ],
+    "arg": -1
+   },
+   "htmlspecialchars": {
+    "contexts": [
+     "html"
+    ]
+   },
+   "htmlentities": {
+    "contexts": [
+     "html"
+    ]
+   },
+   "escapeshellarg": {
+    "contexts": [
+     "shell"
+    ]
+   },
+   "escapeshellcmd": {
+    "contexts": [
+     "shell"
+    ]
+   },
+   "basename": {
+    "contexts": [
+     "file"
+    ]
+   },
+   "urlencode": {
+    "contexts": [
+     "header"
+    ]
+   },
+   "rawurlencode": {
+    "contexts": [
+     "header"
+    ]
+   },
+   "http_build_query": {
+    "contexts": [
+     "header"
+    ]
+   },
+   "round": {
+    "contexts": [
+     "*"
+    ]
+   },
+   "floor": {
+    "contexts": [
+     "*"
+    ]
+   },
+   "ceil": {
+    "contexts": [
+     "*"
+    ]
+   },
+   "ord": {
+    "contexts": [
+     "*"
+    ]
+   },
+   "hexdec": {
+    "contexts": [
+     "*"
+    ]
+   },
+   "octdec": {
+    "contexts": [
+     "*"
+    ]
+   },
+   "bindec": {
+    "contexts": [
+     "*"
+    ]
+   },
+   "array_sum": {
+    "contexts": [
+     "*"
+    ]
+   },
+   "array_product": {
+    "contexts": [
+     "*"
+    ]
+   },
+   "base64_encode": {
+    "contexts": [
+     "*"
+    ]
+   },
+   "bin2hex": {
+    "contexts": [
+     "*"
+    ]
+   }
+  },
+  "methods": {
+   "real_escape_string": {
+    "contexts": [
+     "sql-quoted"
+    ]
+   },
+   "escape_string": {
+    "contexts": [
+     "sql-quoted"
+    ]
+   },
+   "quote": {
+    "contexts": [
+     "sql"
+    ]
+   }
+  },
+  "casts": {
+   "int": [
+    "*"
+   ],
+   "double": [
+    "*"
+   ],
+   "bool": [
+    "*"
+   ]
+  }
+ },
+ "preserving": [
+  "trim",
+  "ltrim",
+  "rtrim",
+  "strtolower",
+  "strtoupper",
+  "ucfirst",
+  "ucwords",
+  "lcfirst",
+  "mb_strtolower",
+  "mb_strtoupper",
+  "nl2br",
+  "str_pad"
+ ],
+ "transparent": [
+  "str_replace",
+  "str_ireplace",
+  "preg_replace",
+  "strstr",
+  "strrchr",
+  "stristr",
+  "sprintf",
+  "vsprintf",
+  "nl2br",
+  "strip_tags",
+  "stripslashes",
+  "addslashes",
+  "urldecode",
+  "rawurldecode",
+  "base64_decode",
+  "json_decode",
+  "json_encode",
+  "serialize",
+  "array_map",
+  "str_pad",
+  "strtr",
+  "number_format",
+  "date",
+  "iconv",
+  "mb_strtolower",
+  "mb_strtoupper",
+  "utf8_encode",
+  "utf8_decode",
+  "dirname",
+  "realpath",
+  "pathinfo",
+  "tempnam",
+  "getcwd",
+  "sys_get_temp_dir",
+  "time",
+  "microtime",
+  "mktime",
+  "strtotime",
+  "gmdate",
+  "rand",
+  "mt_rand",
+  "random_int",
+  "uniqid",
+  "phpversion",
+  "php_uname",
+  "php_sapi_name",
+  "curl_version",
+  "memory_get_usage",
+  "gettype",
+  "get_class",
+  "str_repeat",
+  "ucwords",
+  "array_fill",
+  "array_combine",
+  "array_flip",
+  "array_fill_keys",
+  "array_column",
+  "array_chunk",
+  "array_pad",
+  "array_splice",
+  "http_build_url",
+  "json_last_error_msg",
+  "ini_get",
+  "hex2bin",
+  "random_bytes",
+  "hash",
+  "hash_hmac",
+  "password_hash",
+  "getenv",
+  "extension_loaded",
+  "function_exists",
+  "class_exists",
+  "defined",
+  "constant",
+  "ini_set",
+  "error_reporting",
+  "set_time_limit",
+  "date_default_timezone_get"
+ ],
+ "_notes": {
+  "inert_guards": "READ, AND FOUND WANTING. A guard we cannot read makes the value Z (the checker is named, verdict OPEN). These we CAN read, and what they answer confines nothing about the value: file_exists() says a path is on disk — an attacker's upload, a log, /etc/passwd are all on disk, and it is not the set the developer named at this site; is_string()/is_array() fix the type and forbid no quote; count()/strlen() measure. So they are treated as no guard at all, and a verdict on the value stands. NOT here, deliberately: class_exists / function_exists / method_exists / is_callable / str_starts_with / str_contains — each of those CAN confine (a prefix check is a real path confinement), and they stay unknown-Z until read case by case. MEASURED on SMF 2026-09-09: file_exists 252, is_array 112, is_file 67, is_dir 36, is_string 29 OPEN verdicts carried one of these as a named cause.",
+  "addslashes": "listed as TRANSPARENT on purpose: a string transformation, not a substitution by a verified element; bypassable (multibyte). Taint passes, sanitization is NOT credited.",
+  "strip_tags": "transparent for the same reason: it is not an HTML escaper.",
+  "transparent": "taint passes through; any sanitization already earned is DROPPED (substr of an escaped string can end in a lone backslash; stripslashes undoes escaping outright). Too strict is a verdict that can be redeemed; too lax is one that lies.",
+  "preserving": "taint passes through and earned sanitization is KEPT: case changes, whitespace trimming and padding cannot create a quote or strand a backslash — after mysqli_real_escape_string no raw whitespace-escape remains to strip. ARGUED from the escaper's contract, not measured against MySQL; a counterexample moves the entry to `transparent`.",
+  "_SERVER": "attacker-written entries only: HTTP_* (every request header, HTTP_HOST and HTTP_X_FORWARDED_FOR included), the request line and path. REMOTE_ADDR, SERVER_*, DOCUMENT_ROOT are set by the server and read as constants. A computed key is assumed hot.",
+  "narrowing": "taint passes; only a NUMERIC substitution survives (digits stay digits under any cut), a context escape does not (substr can strand a backslash).",
+  "explode/implode": "preserving when the delimiter is a literal without quote, backslash or NUL (it cannot strand an escape); otherwise narrowing.",
+  "header/callable": "added 2026-09-08 after Psalm reported a TaintedHeader (header('Location: '.$url)) and a TaintedCallable (new $classname) our catalog had no sink for. `callable` fires on new $x(), $x(), $obj->$m() and call_user_func*; the judged value is the NAME, not the arguments.",
+  "guards": "a condition is an ACT OF CHECKING: inside the branch it protects, the checked value is substituted (E40 — membership in a fixed set is a substitution). Credited only when the set/pattern is fixed: in_array against a literal array, ctype_*/is_numeric, an anchored regex over a plain character class, $x === 'literal', a literal switch case. After `if (!guard) exit/return;` the guard holds for what follows. `file_exists` is NOT a guard (traversal passes it).",
+  "unknown-call": "an UNKNOWN call's result is Z even over constant arguments (2026-09-09): `$obj->get()` reads object state, `time()` reads the clock, file_get_contents('php://input') reads the request. What is NOT attacker-controlled is said here, as an ALLOW-LIST measured on real trees (transparent: path/time/random/version helpers; narrowing: array element extraction), never assumed.",
+  "html-subcontexts": "2026-09-09: the html sink has SUB-CONTEXTS read by a lexer over the output stream (atoms.php Html): body text and double-quoted attributes take `html`; a single-quoted attribute needs `html-sq` (htmlspecialchars/htmlentities with ENT_QUOTES — the default since PHP 8.1, so `--php 7.4` matters; FILTER_SANITIZE_*SPECIAL_CHARS always); an escaper whose flags carry quote bits of ZERO (ENT_NOQUOTES, or a bare doctype flag such as ENT_XML1/ENT_HTML5/ENT_HTML401) encodes NEITHER quote and takes `html-text` — body text only, no attribute at all (measured on PHP 8.3.6, 2026-09-10); a URL attribute needs `header` (URL-encoding); an unquoted attribute, a tag or attribute name, an event handler, style, <script>, <style>, a comment take only `*`. An output whose position cannot be read no longer counts as body text (2026-09-10): a substitution that covers EVERY position (`*`, or html with html-sq) still earns, anything narrower goes OPEN with the unread position named — an unread position is not the friendliest position.",
+  "header/setcookie": "setcookie($name, $value, ...) carries the attacker-controlled part in the SECOND argument; judging the first (a constant name) returned EARNED on a live flaw. Found 2026-09-09 on bWAPP by Psalm's TaintedCookie, read in the source (xss_stored_2.php:29→36).",
+  "fixed-alphabet-encoders": "base64_encode ([A-Za-z0-9+/=]) and bin2hex ([0-9a-f]) confine their output to a fixed alphabet with no quote, space, dot or bracket: a substitution for every context, like md5. str_replace/strtr with literal arguments whose replacement characters lie in [A-Za-z0-9_-,] keep such a substitution (strtr(base64_encode($x), '+/=', '-_,') in the blog engine, 2026-09-09).",
+  "sink-families-2026-09-10": "A sink that is not declared is invisible to EVERY benchmark we hold: SARD only plants the families its generator knows, fixbench only sees what a developer fixed in a file we can judge, and the census counts what we look for. Measured across SMF/SuiteCRM/chamilo-lms/dolibarr before adding these: curl_setopt 251 calls, mkdir 218, rename 205, copy 190, glob 71, scandir 62, getimagesize 57, fsockopen 39, move_uploaded_file 26, mail 26, ldap_search 13 — none of them a sink for us. ADDED here: mail() into `header` (args 0,1,3 — to, subject and additional_headers all reach the message headers) and the path-acting functions into `file`. DELIBERATELY NOT ADDED, because each needs a context we do not have and a decision of its own: SSRF (curl_setopt CURLOPT_URL, fsockopen, stream_socket_client), LDAP filter injection (ldap_search/ldap_list), XPath injection. Named so the gap is known, not silently left."
+ },
+ "narrowing": [
+  "substr",
+  "substr_replace",
+  "mb_substr",
+  "strrev",
+  "wordwrap",
+  "array_slice",
+  "array_values",
+  "array_keys",
+  "array_unique",
+  "array_merge",
+  "array_reverse",
+  "array_filter",
+  "str_word_count",
+  "chunk_split",
+  "array_shift",
+  "array_pop",
+  "reset",
+  "end",
+  "current",
+  "next",
+  "prev",
+  "key",
+  "array_key_first",
+  "array_key_last",
+  "array_search",
+  "array_rand",
+  "min",
+  "max"
+ ],
+ "inert_guards": [
+  "file_exists",
+  "is_file",
+  "is_dir",
+  "is_readable",
+  "is_writable",
+  "is_writeable",
+  "is_link",
+  "is_executable",
+  "filesize",
+  "filemtime",
+  "rename",
+  "touch",
+  "mkdir",
+  "copy",
+  "is_array",
+  "is_string",
+  "is_object",
+  "is_scalar",
+  "is_iterable",
+  "is_resource",
+  "is_null",
+  "count",
+  "sizeof",
+  "strlen",
+  "mb_strlen",
+  "trim",
+  "isset"
+ ],
+ "guards": {
+  "in_array": {
+   "value": 0,
+   "haystack": 1,
+   "contexts": [
+    "*"
+   ]
+  },
+  "array_key_exists": {
+   "value": 0,
+   "haystack": 1,
+   "contexts": [
+    "*"
+   ]
+  },
+  "ctype_digit": {
+   "value": 0,
+   "contexts": [
+    "*"
+   ]
+  },
+  "ctype_alnum": {
+   "value": 0,
+   "contexts": [
+    "*"
+   ]
+  },
+  "ctype_alpha": {
+   "value": 0,
+   "contexts": [
+    "*"
+   ]
+  },
+  "is_numeric": {
+   "value": 0,
+   "contexts": [
+    "*"
+   ]
+  },
+  "is_int": {
+   "value": 0,
+   "contexts": [
+    "*"
+   ]
+  },
+  "is_integer": {
+   "value": 0,
+   "contexts": [
+    "*"
+   ]
+  },
+  "is_float": {
+   "value": 0,
+   "contexts": [
+    "*"
+   ]
+  },
+  "is_bool": {
+   "value": 0,
+   "contexts": [
+    "*"
+   ]
+  },
+  "preg_match": {
+   "pattern": 0,
+   "value": 1,
+   "contexts": [
+    "*"
+   ],
+   "pattern_tight": true
+  }
+ }
 }

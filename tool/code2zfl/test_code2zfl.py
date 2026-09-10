@@ -80,7 +80,7 @@ EXPECT = {
     "f50_html_unknown_position.php": ["EARNED", "EARNED", "EARNED", "EARNED"],
     "f51_script_encoder.php": ["EARNED", "REFUTED", "EARNED"],
     "f52_files_keys.php": ["EARNED", "REFUTED"],
-    "f53_substituted_joined_with_unknown.php": ["OPEN", "EARNED"],
+    "f53_substituted_joined_with_unknown.php": ["EARNED", "OPEN", "EARNED"],
     "f54_stored_input.php": ["OPEN", "EARNED", "OPEN", "EARNED", "OPEN", "EARNED", "OPEN", "EARNED", "OPEN", "OPEN"],
     "f55_object_in_file.php": ["REFUTED", "REFUTED", "REFUTED", "EARNED", "REFUTED"],
     "f56_in_file_wrapper_is_still_a_sink.php": ["REFUTED", "REFUTED"],
@@ -116,6 +116,7 @@ EXPECT = {
     "f86_a_removal_closes_one_position.php": ["EARNED", "REFUTED", "EARNED", "REFUTED", "EARNED", "REFUTED"],
     "f87_sanitize_text_field_is_body_text.php": ["OPEN", "OPEN", "OPEN", "OPEN"],
     "f88_a_header_is_split_by_a_newline_only.php": ["OPEN"] * 6,
+    "f89_a_call_can_carry_danger_in_several_arguments.php": ["REFUTED", "REFUTED", "REFUTED", "REFUTED", "REFUTED", "EARNED", "OPEN", "EARNED"],
 }
 STORED = os.path.join(HERE, "overlays", "stored-input.json")
 WORDPRESS = os.path.join(HERE, "overlays", "wordpress.json")

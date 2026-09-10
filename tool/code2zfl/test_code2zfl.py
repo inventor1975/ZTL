@@ -207,9 +207,9 @@ def any_probe(failures):
     matched only the argument's own index and read it as "constants only" - a false EARNED on dolibarr's img_picto."""
     out = code2zfl.run([os.path.join(FIX, "xany")], [], "all", AUTOLOAD)
     got = [(s["line"], s["disposition"]) for f in out["files"] if os.path.basename(f["file"]) == "page.php" for s in f["sinks"]]
-    want = [(4, "REFUTED"), (5, "EARNED"), (6, "EARNED")]
+    want = [(4, "OPEN"), (5, "EARNED"), (6, "EARNED")]
     if got != want:
-        failures.append(f"xany/page.php: expected {want} (carried / substituted / constant), got {got}")
+        failures.append(f"xany/page.php: expected {want} (unknown / substituted / constant), got {got}")
 
 
 def main():

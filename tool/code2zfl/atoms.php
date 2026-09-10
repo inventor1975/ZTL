@@ -1178,13 +1178,20 @@ final class Analyzer {
                 }
                 $carried = [];
                 foreach ($tainted as $k) {
-                    // "any": a function with many parameters was probed with all of them at once, so every argument
-                    // stands under that one answer. Matching only the argument's own index dropped it, and request
-                    // data passed through img_picto() or dol_escape_htmltag() read as "constants only" (xany, 2026-09-11).
-                    $pk = in_array($k, $sumKey['passes'], true) ? $k : (in_array('any', $sumKey['passes'], true) ? 'any' : null);
-                    if ($pk !== null) {
+                    // "any": the parameters were probed all at once, so the answer is about ALL the arguments together,
+                    // not about this one. Matching only the argument's own index dropped it, and request data passed
+                    // through img_picto() or dol_escape_htmltag() read as "constants only" (xany, 2026-09-11). Carried
+                    // as UNKNOWN: "some argument arrives raw" does not say THIS one does (dol_escape_htmltag's raw one
+                    // is $noescapetags; accusing $_SERVER['PHP_SELF'] of it made 29 false alarms on dolibarr). The
+                    // substitutions are kept: escaped with every argument tainted is escaped with any one of them,
+                    // since the walk takes the same paths whatever is tainted.
+                    if (!in_array($k, $sumKey['passes'], true) && in_array('any', $sumKey['passes'], true)) {
                         $st = $args[(int)$k];
-                        $ctxs = $sumKey['substitutes'][$pk] ?? [];
+                        $ctxs = $sumKey['substitutes']['any'] ?? [];
+                        $carried[] = through($ctxs ? sanitize($st, $ctxs, $name . '()', $line) : $st, $name . '()', $line, true, 'all');
+                    } elseif (in_array($k, $sumKey['passes'], true)) {
+                        $st = $args[(int)$k];
+                        $ctxs = $sumKey['substitutes'][$k] ?? [];
                         $carried[] = $ctxs ? sanitize($st, $ctxs, $name . '()', $line) : $st;
                     } elseif (in_array($k, $sumKey['opaque'], true) || in_array('any', $sumKey['opaque'], true)) {
                         $carried[] = through($args[(int)$k], $name . '()', $line, true);

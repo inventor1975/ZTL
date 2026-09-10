@@ -328,6 +328,42 @@ That trade belongs to whoever will act on the findings, so the default does not 
 none at all. The four projects that still carry most of them — SuiteCRM 449, dolibarr 218,
 chamilo-lms 171, SMF 37 — are the next reading, not the next patch.
 
+## Every remaining SARD XSS miss is a defect of the benchmark (read 2026-09-10)
+
+`XSS/CWE_79`, 10 080 files: **1152 of the 4352 files labelled unsafe come back EARNED**. That is the
+worst number this instrument carries, and it is worth knowing what is inside it. All 1152 were
+classified MECHANICALLY — not a sample:
+
+    896   the tainted value is replaced in EVERY branch before the sink
+            272  $tainted = $tainted == 'safe1' ? 'safe1' : 'safe2';
+            272  if (in_array($tainted, $legal_table, true)) { $tainted = $tainted; }
+                 else { $tainted = $legal_table[0]; }
+            176  filter_var(..., FILTER_VALIDATE_FLOAT) ? $sanitized : ""
+            176  filter_var(..., FILTER_VALIDATE_INT)   ? $sanitized : ""
+    256   the sink prints a BARE UNDEFINED CONSTANT, not the variable:
+            echo "<span style=\"color :". checked_data ."\">Hey</span>";
+          — the tainted value never reaches the output at all
+    ----
+    1152  and zero files left over: every signature matched, 896/896 and 256/256.
+
+In the first group the whitelist really does whitelist: both branches assign a literal, or a value
+that passed `FILTER_VALIDATE_*`, or the empty string. The `unsafe/` directory and the `//flaw`
+comment are the generator's template, applied whether or not the sanitizer closes the hole. In the
+second the generator emitted the constant `checked_data` where the variable belonged — 480 files in
+CWE_79 carry that token, 320 under `unsafe/` and 160 under `safe/`. It is the same species as the
+`$tained = escapeshellarg($tained)` typo that accounted for 96 files of the Psalm comparison.
+
+**So the honest reading of CWE_79 is: no miss of ours survives inspection.** That is a statement about
+this synthetic corpus and nothing else — it says the instrument is not silent where this generator
+plants a flaw it actually plants. The corpora that can still embarrass us are the real ones and
+`fixbench`, where the ground truth is written by the projects' own developers.
+
+The 280 false alarms on the safe side are a different matter and are NOT all ours to dismiss: 112 are
+the declared disagreement over `addslashes` / magic quotes (an SQL escaper is not an HTML one), and
+140 sit in event handlers, where the browser decodes entities before the script parser runs and we
+refuse every HTML escaper by policy. Both are positions we hold on purpose; they are listed here so
+nobody counts them twice.
+
 ## The run used to depend on `--jobs` (found and fixed 2026-09-10)
 
 The same code over the same tree gave two different answers depending on how many atomizer processes

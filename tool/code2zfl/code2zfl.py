@@ -376,7 +376,22 @@ def sink_document(fact, ctx):
         sanitized = {"status": "refuted", "ground": _g(f"ast-path-L{line}"),
                      "means": "path read in full, no substitution for " + ctx + (f"; wrong-context only: {wrong}" if wrong else "")}
     if ctx == "html" and fact.get("hctx") == "unknown" and sanitized["status"] == "verified":
-        sanitized["means"] += " (html sub-context not determined — read as body text)"
+        # AN UNREAD POSITION IS NOT THE FRIENDLIEST POSITION. Reading it as body text credits an escaper
+        # that only covers body text — `htmlspecialchars($x, ENT_COMPAT)` leaves the single quote alone,
+        # and if the value in fact lands in value='…' it walks straight out. A substitution that covers
+        # EVERY html position (`*`, or html together with html-sq) still earns; one that covers only some
+        # goes unverified with the position named. MEASURED 2026-09-10 on SMF
+        # Themes/default/Xml.template.php:434,456,469 — the escaper there is `htmlspecialchars(..., ENT_XML1)`,
+        # whose quote bits are zero, and the value goes into an attribute; 8 sinks in that file stopped
+        # being EARNED.
+        covers_all = "*" in san or ("html" in san and "html-sq" in san)
+        if covers_all:
+            sanitized["means"] += " (html sub-context not determined; the substitution covers every position)"
+        else:
+            sanitized = {"status": "unverified",
+                         "means": sanitized["means"] + "; but the html sub-context could not be read, and this "
+                                  "substitution does not cover every position — a single-quoted attribute or a "
+                                  "script body would not be closed by it"}
     # a part of UNKNOWN origin reaches the sink without a substitution: even when the attacker-controlled
     # parts are settled, safety is not established — the weak link is that part
     if sanitized["status"] == "verified" and zu:

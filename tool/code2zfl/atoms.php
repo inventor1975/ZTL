@@ -846,13 +846,21 @@ final class Analyzer {
             // the guard only from If_/ElseIf_/While_/Do_ — so the same check written as a statement earned and written
             // as a ternary refuted. chamilo's link.php:79, 14 verdicts behind it. Measured 2026-09-09.
             $g = $this->guards($e->cond);
+            // A GUARD LIVES IN ITS BRANCH (f90, 2026-09-10). Guards on a superglobal slot are kept in
+            // $this->guardedSlots, not in the env, so they must be saved and restored around each branch:
+            // before this, the true branch's guard was also seen by the false branch AND by every later
+            // read in the file — SuiteCRM WizardMarketing.php:789 was EARNED on a check made in a ternary
+            // 480 lines earlier.
+            $gs0 = $this->guardedSlots;
             $envT = $env; $envF = $env;
             $this->applyGuards($g['true'], $envT);
-            $this->applyGuards($g['false'], $envF);
             $this->applyUnknownGuards($g['unknown'] ?? [], $envT);
             $this->applyUnknownGuards($g['unknown_true'] ?? [], $envT);
             $a = $e->if ? $this->ex($e->if, $envT) : $c;
+            $this->guardedSlots = $gs0;
+            $this->applyGuards($g['false'], $envF);
             $b = $this->ex($e->else, $envF);
+            $this->guardedSlots = $gs0;
             return join2($a, $b);
         }
         if ($e instanceof Expr\BinaryOp\Coalesce) return join2($this->ex($e->left, $env), $this->ex($e->right, $env));
@@ -1771,6 +1779,21 @@ final class Analyzer {
         return $hss[0];
     }
 
+    /** Guarded slots after a join: a slot survives only if EVERY path guarded it, and then only for the contexts
+     *  every path covered (`*` covers all). Different wording of the same guard keeps the first path's name. */
+    private static function gsMeet(array $gss): array {
+        $out = array_shift($gss);
+        foreach ($gss as $m) {
+            foreach ($out as $slot => [$ctxs, $fn, $ln]) {
+                if (!isset($m[$slot])) { unset($out[$slot]); continue; }
+                $o = $m[$slot][0];
+                $c = $ctxs === ['*'] ? $o : ($o === ['*'] ? $ctxs : array_values(array_intersect($ctxs, $o)));
+                if (!$c) unset($out[$slot]); else $out[$slot] = [$c, $fn, $ln];
+            }
+        }
+        return $out;
+    }
+
     /** Pairwise fold of joinEnv — same result, no cross-product over many paths. */
     private static function joinFold(array $envs, array $pre): array {
         $acc = array_shift($envs);
@@ -1821,16 +1844,21 @@ final class Analyzer {
             // REST shape) was lost at the join and the verdict went back to REFUTED.
             $this->applyUnknownGuards($g['unknown'] ?? [], $env);
             $paths = []; $hs0 = $this->hs; $hss = [];
+            // guarded slots, like the env, belong to a PATH (f90): each branch starts from $gs0 and the join
+            // keeps a slot only if every path that goes on guarded it — a path that exits drops out, so
+            // `if ($x != 'a') exit;` still guards what follows.
+            $gs0 = $this->guardedSlots; $gss = [];
             $e1 = $env; $this->applyGuards($g['true'], $e1);
             $this->applyUnknownGuards($g['unknown_true'] ?? [], $e1);   // membership: only the branch where it HOLDS
             $this->walk($s->stmts, $e1);
             $leaves = self::terminates($s->stmts);
-            if (!$leaves) { $paths[] = $e1; $hss[] = $this->hs; }
-            foreach ($s->elseifs as $ei) { $this->hs = $hs0; $e2 = $env; $this->applyGuards($g['false'], $e2); $this->ex($ei->cond, $e2); $this->applyGuards($this->guards($ei->cond)['true'], $e2); $this->walk($ei->stmts, $e2); if (!self::terminates($ei->stmts)) { $paths[] = $e2; $hss[] = $this->hs; } }
-            if ($s->else) { $this->hs = $hs0; $e3 = $env; $this->applyGuards($g['false'], $e3); $this->applyUnknownGuards($g['unknown_false'] ?? [], $e3); $this->walk($s->else->stmts, $e3); if (!self::terminates($s->else->stmts)) { $paths[] = $e3; $hss[] = $this->hs; } }
-            else { $e0 = $env; $this->applyGuards($g['false'], $e0); $this->applyUnknownGuards($g['unknown_false'] ?? [], $e0); $paths[] = $e0; $hss[] = $hs0; }   // the fall-through path: the condition failed
+            if (!$leaves) { $paths[] = $e1; $hss[] = $this->hs; $gss[] = $this->guardedSlots; }
+            foreach ($s->elseifs as $ei) { $this->hs = $hs0; $this->guardedSlots = $gs0; $e2 = $env; $this->applyGuards($g['false'], $e2); $this->ex($ei->cond, $e2); $this->applyGuards($this->guards($ei->cond)['true'], $e2); $this->walk($ei->stmts, $e2); if (!self::terminates($ei->stmts)) { $paths[] = $e2; $hss[] = $this->hs; $gss[] = $this->guardedSlots; } }
+            if ($s->else) { $this->hs = $hs0; $this->guardedSlots = $gs0; $e3 = $env; $this->applyGuards($g['false'], $e3); $this->applyUnknownGuards($g['unknown_false'] ?? [], $e3); $this->walk($s->else->stmts, $e3); if (!self::terminates($s->else->stmts)) { $paths[] = $e3; $hss[] = $this->hs; $gss[] = $this->guardedSlots; } }
+            else { $this->guardedSlots = $gs0; $e0 = $env; $this->applyGuards($g['false'], $e0); $this->applyUnknownGuards($g['unknown_false'] ?? [], $e0); $paths[] = $e0; $hss[] = $hs0; $gss[] = $this->guardedSlots; }   // the fall-through path: the condition failed
             $env = $paths ? self::joinFold($paths, $env) : $env;
             $this->hs = self::hsJoin($hss ?: [$hs0]);
+            $this->guardedSlots = $gss ? self::gsMeet($gss) : $gs0;
             return;
         }
         if ($s instanceof Stmt\While_ || $s instanceof Stmt\Do_ || $s instanceof Stmt\For_ || $s instanceof Stmt\Foreach_) {

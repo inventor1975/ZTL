@@ -113,6 +113,7 @@ EXPECT = {
     "f83_url_encoding_does_not_reach_a_script.php": ["EARNED", "REFUTED", "REFUTED", "REFUTED", "REFUTED"],
     "f84_a_declared_property_settles_itself_only.php": ["EARNED", "REFUTED", "OPEN"],
     "f85_the_email_filter_keeps_the_single_quote.php": ["EARNED", "EARNED", "REFUTED", "REFUTED", "REFUTED"],
+    "f90_a_check_does_not_outlive_its_branch.php": ["EARNED", "REFUTED", "EARNED", "EARNED", "REFUTED"],
     "f86_a_removal_closes_one_position.php": ["EARNED", "REFUTED", "EARNED", "REFUTED", "EARNED", "REFUTED"],
     "f87_sanitize_text_field_is_body_text.php": ["OPEN", "OPEN", "OPEN", "OPEN"],
     "f88_a_header_is_split_by_a_newline_only.php": ["OPEN"] * 6,
@@ -177,11 +178,12 @@ def duplicate_class_probe(failures):
 
 def include_probe(failures):
     """A front controller guards the request once; every page that requires it is judged under that
-    guard. Without the include graph all three read as plain refutations."""
+    guard — where it DOMINATES: a check inside a branch that does not leave guards nothing after it (f90).
+    Without the include graph p and q read as plain refutations; with the old file-wide guard map s read as clean."""
     out = code2zfl.run([os.path.join(FIX, "xinclude")], [], "all", AUTOLOAD)
     got = [s["disposition"] for f in out["files"] if os.path.basename(f["file"]) == "page.php" for s in f["sinks"]]
-    if got != ["OPEN", "EARNED", "REFUTED"]:
-        failures.append(f"xinclude/page.php: expected ['OPEN', 'EARNED', 'REFUTED'], got {got}")
+    if got != ["OPEN", "EARNED", "REFUTED", "REFUTED"]:
+        failures.append(f"xinclude/page.php: expected ['OPEN', 'EARNED', 'REFUTED', 'REFUTED'], got {got}")
 
 
 def cross_file_probe(failures):

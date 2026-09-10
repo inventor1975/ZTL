@@ -113,6 +113,7 @@ EXPECT = {
     "f83_url_encoding_does_not_reach_a_script.php": ["EARNED", "REFUTED", "REFUTED", "REFUTED", "REFUTED"],
     "f84_a_declared_property_settles_itself_only.php": ["EARNED", "REFUTED", "OPEN"],
     "f85_the_email_filter_keeps_the_single_quote.php": ["EARNED", "EARNED", "REFUTED", "REFUTED", "REFUTED"],
+    "f86_a_removal_closes_one_position.php": ["EARNED", "REFUTED", "EARNED", "REFUTED", "EARNED", "REFUTED"],
 }
 STORED = os.path.join(HERE, "overlays", "stored-input.json")
 

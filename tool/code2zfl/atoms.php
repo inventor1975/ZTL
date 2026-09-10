@@ -234,6 +234,14 @@ function through(array $s, ?string $why, int $line, bool $unknown, string $keep 
     if ($unknown) { $out['t'] = 'Z'; $out['z'][] = [$why, $line]; $out['nu'] = false; }
     return $out;
 }
+/** ДОБАВИТЬ подстановку, НЕ трогая остального. `sanitize()` заодно объявляет значение улаженным целиком —
+ *  гасит `nu`, чистит `hc`/`hf`. Для УДАЛЕНИЯ ОДНОГО ЗАКРЫВАЮЩЕГО символа это было бы неправдой: значение
+ *  по-прежнему может нести `<`, и его собственная разметка текстом не стала. */
+function addSan(array $s, array $ctxs, string $fn, int $line): array {
+    foreach ($ctxs as $c) $s['san'][$c] = [$fn, $line];
+    return $s;
+}
+
 function sanitize(array $s, array $ctxs, string $fn, int $line): array {
     // a NUMERIC substitution of the whole value settles every part inside it; a context escape of a
     // built string does not settle a part of unknown origin that may sit outside the quotes
@@ -1090,6 +1098,14 @@ final class Analyzer {
                 && ($e->args[1]->value ?? null) instanceof Scalar\String_ && $e->args[1]->value->value === ''
                 && self::patternStripsToClass($e->args[0]->value->value))
                 return sanitize($args[2] ?? stF(), ['*'], 'preg_replace-strip', $line);
+            // preg_replace('/"/', '', $x): the pattern's language is a SET OF SINGLE CHARACTERS and the
+            // replacement is empty, so the result CANNOT CONTAIN any of them. That closes exactly the html
+            // positions those characters close, and no other: `sq-closed` is not `html-sq`.
+            if (!$isMethod && $name === 'preg_replace'
+                && ($e->args[1]->value ?? null) instanceof Scalar\String_ && $e->args[1]->value->value === ''
+                && ($cs = self::patternCharSet($e->args[0]->value ?? null)) !== null
+                && ($cc = self::closedBy($cs)) !== [])
+                return addSan($args[2] ?? stF(), $cc, 'preg_replace-removes', $line);
             if (!$isMethod && ($name === 'explode' || $name === 'implode' || $name === 'join')) {
                 // Splitting/joining on a literal delimiter that carries no quote, backslash or NUL cannot
                 // strand an escape: preserving. A delimiter WITH quotes is safe too when it has an EVEN
@@ -1164,6 +1180,23 @@ final class Analyzer {
                 // says so, in the ledger and in the summary, and nothing rests on it silently.
                 if ($assumedName !== null) $res['as'] = uniq(array_merge($res['as'] ?? [], [[$assumedName, $line]]));
                 return $res;
+            }
+            // str_replace('"', '', $x): the same claim, written the plainer way. Only SINGLE characters count —
+            // removing a phrase (`str_replace('<!-- warning -->', '', $x)`) leaves every character of it behind.
+            if (!$isMethod && ($name === 'str_replace' || $name === 'str_ireplace')
+                && ($e->args[1]->value ?? null) instanceof Scalar\String_ && $e->args[1]->value->value === '') {
+                $srch = $e->args[0]->value ?? null;
+                $chars = null;
+                if ($srch instanceof Scalar\String_ && strlen($srch->value) === 1) $chars = [$srch->value];
+                elseif ($srch instanceof Expr\Array_) {
+                    $chars = [];
+                    foreach ($srch->items as $it) {
+                        if ($it === null || !($it->value instanceof Scalar\String_) || strlen($it->value->value) !== 1) { $chars = null; break; }
+                        $chars[] = $it->value->value;
+                    }
+                }
+                if ($chars !== null && ($cc = self::closedBy($chars)) !== [])
+                    return addSan($args[2] ?? stF(), $cc, 'str_replace-removes', $line);
             }
             if (!$isMethod && ($name === 'str_replace' || $name === 'str_ireplace' || $name === 'strtr') && self::replacementIsPlain($e, $name)) {
                 // A LITERAL SEARCH/REPLACE DRAWN FROM [A-Za-z0-9_-,] CANNOT BREAK ANY SUBSTITUTION WE HOLD.
@@ -1257,6 +1290,58 @@ final class Analyzer {
             }
         }
         return $body;
+    }
+
+    /** THE CHARACTERS A LITERAL PATTERN CAN MATCH, when its language is a SET OF SINGLE CHARACTERS and
+     *  nothing more: `/"/`, `/['"]/`, `/[<>]/`, with an optional `+` or `*`. Null for anything else — an
+     *  anchor, an alternation, a multi-character sequence, a NEGATED class (that one is patternStripsToClass's
+     *  business), a shorthand class like \\w whose membership we would have to enumerate. Removing such a set
+     *  with an empty replacement means the result CANNOT CONTAIN any of them, and that is the whole claim. */
+    private static function patternCharSet(?Node $n): ?array {
+        $body = self::patternBody($n);
+        if ($body === null || $body === '') return null;
+        if (preg_match('/[+*?{}]$/', $body)) $body = rtrim($body, '+*');       // one or more of the same set
+        if ($body === '' || str_contains($body, '|')) return null;
+        if ($body[0] === '[') {
+            if (substr($body, -1) !== ']' || strlen($body) < 3) return null;
+            $inner = substr($body, 1, -1);
+            if ($inner === '' || $inner[0] === '^' || str_contains($inner, '-')) return null;   // negated, or a range
+            return self::literalChars($inner);
+        }
+        $c = self::literalChars($body);
+        return ($c !== null && count($c) === 1) ? $c : null;
+    }
+
+    /** The characters of a class body, provided every one of them is a PLAIN character or a backslash
+     *  escape of a punctuation character. `\\w`, `\\d`, `\\s` and their kin are refused: their membership
+     *  is not on the page. */
+    private static function literalChars(string $s): ?array {
+        $out = [];
+        for ($i = 0; $i < strlen($s); $i++) {
+            $c = $s[$i];
+            if ($c === '\\') {
+                if ($i + 1 >= strlen($s)) return null;
+                $n = $s[++$i];
+                if (ctype_alnum($n)) return null;                              // \w \d \s \1 — not a character
+                $out[] = $n;
+                continue;
+            }
+            if (in_array($c, ['.', '(', ')', '[', ']', '{', '}', '*', '+', '?', '^', '$'], true)) return null;
+            $out[] = $c;
+        }
+        return $out ?: null;
+    }
+
+    /** Which html position a removal closes. One closer per position, and NOTHING else follows from it:
+     *  taking the single quote out settles a single-quoted attribute and says nothing about body text,
+     *  where `<` still opens a tag. Measured 2026-09-10 on SARD CWE_79, where 21 files removing exactly
+     *  one quote and landing in exactly that attribute came back REFUTED. */
+    private static function closedBy(array $chars): array {
+        $ctx = [];
+        if (in_array("'", $chars, true)) $ctx[] = 'sq-closed';
+        if (in_array('"', $chars, true)) $ctx[] = 'dq-closed';
+        if (in_array('<', $chars, true)) $ctx[] = 'lt-closed';
+        return $ctx;
     }
 
     /** What a condition VERIFIES: ['true' => [[var, contexts, fn, line]...], 'false' => [...]].

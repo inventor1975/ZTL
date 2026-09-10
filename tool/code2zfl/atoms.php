@@ -1223,8 +1223,13 @@ final class Analyzer {
         if ($c instanceof Expr\BooleanNot) { $g = $this->guards($c->expr); return ['true' => $g['false'], 'false' => $g['true'], 'unknown' => $g['unknown'] ?? [], 'unknown_false' => $g['unknown_true'] ?? [], 'unknown_true' => $g['unknown_false'] ?? []]; }
         if ($c instanceof Expr\BinaryOp\BooleanAnd || $c instanceof Expr\BinaryOp\LogicalAnd) {
             $l = $this->guards($c->left); $r = $this->guards($c->right);
+            // `unknown_true` travels through AND — on the true branch BOTH sides held. It must NOT travel
+            // through OR, where the true branch says only that one of them did. Without this,
+            // `!empty($m) && isset($beanList[$m])` lost the membership credit and SuiteCRM's
+            // TreeData.php:98 read as an unguarded include. Measured 2026-09-10.
             return ['true' => array_merge($l['true'], $r['true']), 'false' => [],
-                    'unknown' => array_merge($l['unknown'] ?? [], $r['unknown'] ?? [])];
+                    'unknown' => array_merge($l['unknown'] ?? [], $r['unknown'] ?? []),
+                    'unknown_true' => array_merge($l['unknown_true'] ?? [], $r['unknown_true'] ?? [])];
         }
         if ($c instanceof Expr\BinaryOp\BooleanOr || $c instanceof Expr\BinaryOp\LogicalOr) {
             $l = $this->guards($c->left); $r = $this->guards($c->right);

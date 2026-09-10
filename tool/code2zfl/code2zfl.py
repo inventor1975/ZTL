@@ -283,10 +283,15 @@ def _g(s):
 # level 2: a URL attribute — URL-encoding (javascript: needs no quote at all);
 # level 3: unquoted attribute, tag/attribute name, event handler, style, <script>, <style>, comment — only a
 #          numeric/whitelist substitution ('*'). 'unknown' (an output whose position cannot be read): level 0, said so.
-HLEVEL = {"text": 0, "attr-dq": 0, "script-dq": 0, "attr-sq": 1, "script-sq": 1, "attr-url": 2}
-HNEED = {0: ("html", "html-sq", "header"), 1: ("html-sq", "header"), 2: ("header",), 3: ()}   # URL-encoding leaves no quote, bracket or ampersand
+# `html-text` is an escaper whose quote bits are zero (ENT_NOQUOTES, or a bare doctype flag): it encodes
+# `<`, `>`, `&` and NEITHER quote, so it substitutes in body text and closes no attribute at all.
+HLEVEL = {"text": 0, "attr-dq": 1, "script-dq": 1, "attr-sq": 2, "script-sq": 2, "attr-url": 3}
+HNEED = {0: ("html-text", "html", "html-sq", "header"), 1: ("html", "html-sq", "header"),
+         2: ("html-sq", "header"), 3: ("header",), 4: ()}   # URL-encoding leaves no quote, bracket or ampersand
 HJS = ("script", "script-sq", "script-dq")                                                     # a JavaScript encoder (`js`) substitutes inside <script>
 HWHY = {"attr-sq": "a single quote ends a single-quoted attribute and this escaper does not encode it (ENT_QUOTES would)",
+        "attr-dq": "a double-quoted attribute, and this escaper has quote bits of zero — it encodes neither quote (ENT_QUOTES or ENT_COMPAT would)",
+        "script-dq": "a double-quoted script string, and this escaper has quote bits of zero — it encodes neither quote",
         "attr-url": "a URL attribute: `javascript:` needs neither quote nor angle bracket — URL-encoding substitutes, HTML escaping does not",
         "attr-unquoted": "an unquoted attribute value: a space ends it and starts a new attribute — HTML escaping encodes no space",
         "tag-name": "a tag-name position: HTML escaping is moot there", "attr-name": "an attribute-name position: HTML escaping is moot there",
@@ -306,12 +311,12 @@ def html_row(fact, ctx, san, t, line):
         return None
     if hctx in ("text", "attr-dq", "script-dq") and "html" in san:
         return None                                              # plain HTML escaping is the substitution here: the generic reading
-    level = HLEVEL.get(hctx, 3)
+    level = HLEVEL.get(hctx, 4)      # anything else: only a whitelist/numeric substitution (`*`)
     for k in HNEED[level] + (("js",) if hctx in HJS else ()):
         if k in san:
             fn, l = san[k]
             return {"status": "verified", "ground": _g(f"san-{fn}-L{l}"), "means": f"substituted by {fn} at L{l} for html, value lands in {hctx}"}
-    have = [(k, san[k]) for k in ("html", "html-sq", "header", "js") if k in san]
+    have = [(k, san[k]) for k in ("html-text", "html", "html-sq", "header", "js") if k in san]
     if have:
         k, (fn, l) = have[0]
         return {"status": "refuted", "ground": _g(f"ast-html-{hctx}-L{line}"),
@@ -343,6 +348,13 @@ def sink_document(fact, ctx):
         sanitized = {"status": "verified", "ground": _g(f"san-{fn}-L{l}"), "means": f"substituted by {fn} at L{l} (every context)"}
     elif hrow is not None:
         sanitized = hrow
+    elif ctx == "html" and "html-text" in san and fact.get("hctx") == "unknown":
+        # quote bits of zero AND an unread position: body text is the only place this substitutes,
+        # and body text is exactly what we could not establish
+        fn, l = san["html-text"]
+        sanitized = {"status": "unverified",
+                     "means": f"escaped by {fn} at L{l}, but with quote bits of zero — it encodes neither quote, "
+                              "so it substitutes in body text only, and the html sub-context could not be read"}
     elif ctx in san:
         fn, l = san[ctx]
         sanitized = {"status": "verified", "ground": _g(f"san-{fn}-L{l}"), "means": f"substituted by {fn} at L{l} for {ctx}"}

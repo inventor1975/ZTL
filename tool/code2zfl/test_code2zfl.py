@@ -109,6 +109,8 @@ EXPECT = {
     "f79_implode_delimiter_quote_parity.php": ["EARNED", "EARNED", "REFUTED", "REFUTED"],
     "f80_reject_if_outside_a_class.php": ["EARNED", "REFUTED", "REFUTED"],
     "f81_unread_position_is_not_the_friendliest.php": ["OPEN", "EARNED", "EARNED"],
+    "f82_ent_flags_decide_which_quote.php": ["REFUTED", "REFUTED", "EARNED", "EARNED", "EARNED", "REFUTED", "EARNED"],
+    "f83_url_encoding_does_not_reach_a_script.php": ["EARNED", "REFUTED", "REFUTED", "REFUTED", "REFUTED"],
 }
 STORED = os.path.join(HERE, "overlays", "stored-input.json")
 

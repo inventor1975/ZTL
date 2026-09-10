@@ -440,6 +440,27 @@ final class Analyzer {
         return false;
     }
 
+    /** THE FLAG ARGUMENT IS A NUMBER, NOT A NAME. htmlspecialchars/htmlentities encode a quote only where the
+     *  quote bits are set: ENT_QUOTES (3) both, ENT_COMPAT (2) the double one, ENT_NOQUOTES (0) neither — and a
+     *  bare doctype flag (ENT_XML1 = 16, ENT_HTML5 = 48, ENT_HTML401 = 0, ENT_XHTML = 32) also carries quote bits
+     *  of zero. Returns 'both' | 'double' | 'none', or null when the expression is not a readable combination of
+     *  ENT_* names — a variable or a computed value is not read into, and the catalog's contexts stand as they are.
+     *  Measured 2026-09-10: 15 call sites across SMF/SuiteCRM/chamilo/dolibarr pass quote bits of zero. */
+    private static function entQuotes(?Node $n): ?string {
+        if ($n === null) return null;
+        $names = [];
+        $walk = function (Node $x) use (&$walk, &$names): bool {
+            if ($x instanceof Expr\ConstFetch) { $names[] = strtoupper($x->name->toString()); return true; }
+            if ($x instanceof Expr\BinaryOp\BitwiseOr) return $walk($x->left) && $walk($x->right);
+            return false;
+        };
+        if (!$walk($n)) return null;
+        foreach ($names as $nm) if (!str_starts_with($nm, 'ENT_')) return null;
+        if (in_array('ENT_QUOTES', $names, true)) return 'both';
+        if (in_array('ENT_COMPAT', $names, true)) return 'double';
+        return 'none';
+    }
+
     /** str_replace(search, replace, $x) / strtr($x, from, to): are search and replace literals (or arrays of literals)
      *  whose REPLACEMENT characters all lie in [A-Za-z0-9_\-,]? Then the call cannot introduce a quote, dot or bracket. */
     private static function replacementIsPlain(Node $call, string $name): bool {
@@ -1011,8 +1032,14 @@ final class Analyzer {
                     // the single quote is encoded only with ENT_QUOTES — the default since PHP 8.1; a flag argument is read
                     // for the constant names it names (classification only)
                     $flags = $e->args[1]->value ?? null;
-                    $quotes = $flags === null ? ($GLOBALS['phpVersion'] === null || version_compare($GLOBALS['phpVersion'], '8.1', '>=')) : self::mentionsConst($flags, 'ENT_QUOTES');
-                    if ($quotes) $ctxs = array_values(array_unique(array_merge($ctxs, ['html-sq'])));
+                    $q = $flags === null
+                        ? (($GLOBALS['phpVersion'] === null || version_compare($GLOBALS['phpVersion'], '8.1', '>=')) ? 'both' : 'double')
+                        : self::entQuotes($flags);
+                    if ($q === 'both') $ctxs = array_values(array_unique(array_merge($ctxs, ['html-sq'])));
+                    // quote bits of zero: this encodes NEITHER quote, so it does not close a double-quoted
+                    // attribute either — body text only. `null` means the flags could not be read: nothing is
+                    // concluded from them and the catalog's contexts stand.
+                    elseif ($q === 'none') $ctxs = array_values(array_map(fn($c) => $c === 'html' ? 'html-text' : $c, $ctxs));
                 }
                 return sanitize($s, $ctxs, ($isMethod ? ($recv ?? '->' . $name) : $name), $line);
             }

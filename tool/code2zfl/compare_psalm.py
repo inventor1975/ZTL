@@ -48,17 +48,33 @@ def run_psalm(psalm, root, dirs):
         r = subprocess.run([psalm, f"--config={cfg}", f"--root={root}", "--taint-analysis", "--no-cache",
                             "--no-progress", "--threads=4", f"--report={rep}"], cwd=root, capture_output=True, text=True)
         if not os.path.exists(rep):
-            sys.exit("psalm produced no report:\n" + (r.stdout + r.stderr)[-1500:])
+            # HEAD AND TAIL. The exception message is at the top of Psalm's output and the
+            # stack at the bottom; keeping only the last 1500 characters (as before)
+            # dropped the one line that names the cause (2026-09-10, SMF: "Could not
+            # locate trait statement" was cut off).
+            out = r.stdout + r.stderr
+            sys.exit("psalm produced no report:\n" + (out if len(out) <= 3000 else out[:1500] + "\n…\n" + out[-1500:]))
         return json.load(open(rep))
 
 
-def compare(psalm_issues, ours, root):
+def _key(path, root, base):
+    """One file, one name on both sides. Psalm reports paths relative to --root and
+    resolves symlinks; code2zfl keeps the path it was given. Run from a root that links
+    the project in (needed when a composer.json without vendor/ makes Psalm refuse), the
+    two sides named the same file differently and the join found ZERO shared lines on
+    SuiteCRM (2026-09-10) — a false zero from the join, not a property of the tools."""
+    real = os.path.realpath(path if os.path.isabs(path) else os.path.join(root, path))
+    return os.path.relpath(real, base)
+
+
+def compare(psalm_issues, ours, root, base=None):
+    base = base or os.path.realpath(root)
     P = {}
     for p in psalm_issues:
-        P.setdefault((p["file_name"], p["line_from"]), set()).add(p["type"])
+        P.setdefault((_key(p["file_name"], root, base), p["line_from"]), set()).add(p["type"])
     O = collections.defaultdict(list)
     for f in ours["files"]:
-        rel = os.path.relpath(f["file"], root)
+        rel = _key(f["file"], root, base)
         for s in f["sinks"]:
             O[(rel, s["line"])].append(s)
     ours_refuted = {k for k, ss in O.items() if any(s["disposition"] == "REFUTED" for s in ss)}
@@ -107,13 +123,20 @@ def main():
     ap.add_argument("--php", default=None)
     ap.add_argument("--psalm", default=os.environ.get("CODE2ZFL_PSALM"))
     ap.add_argument("--md", default=None)
+    ap.add_argument("--raw", default=None, help="dump both sides as JSON, to re-join without re-running")
     a = ap.parse_args()
     if not a.psalm or not os.path.exists(a.psalm):
         sys.exit("set CODE2ZFL_PSALM to a psalm binary (5.x on PHP < 8.3.16)")
     root = os.path.abspath(a.root)
     psalm_issues = run_psalm(a.psalm, root, a.dirs)
     ours = code2zfl.run([os.path.join(root, d) for d in a.dirs], a.overlay, "all", None, None, a.php)
-    P, O, shared, only_p, only_o = compare(psalm_issues, ours, root)
+    base = os.path.realpath(os.path.join(root, a.dirs[0])) if len(a.dirs) == 1 else os.path.realpath(root)
+    P, O, shared, only_p, only_o = compare(psalm_issues, ours, root, base)
+    if a.raw:
+        with open(a.raw, "w", encoding="utf-8") as fh:
+            json.dump({"root": root, "base": base, "psalm": psalm_issues,
+                       "ours": [{"file": f["file"], "line": s["line"], "ctx": s["ctx"], "disposition": s["disposition"]}
+                                for f in ours["files"] for s in f["sinks"]]}, fh, ensure_ascii=False)
     md = table_md(P, O, shared, only_p, only_o, root)
     if a.md:
         with open(a.md, "w", encoding="utf-8") as fh:

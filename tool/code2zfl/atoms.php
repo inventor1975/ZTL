@@ -1853,7 +1853,11 @@ final class Analyzer {
         foreach (array_keys($names) as $k) {
             $st = []; $arr = ($p = strpos($k, '[')) !== false ? substr($k, 0, $p) : null;
             foreach ($envs as $e) $st[] = $e[$k] ?? ($pre[$k] ?? ($arr !== null ? ($e[$arr] ?? $pre[$arr] ?? stZ('maybe-unassigned:$' . $arr . '[…]', 0)) : stZ('maybe-unassigned:$' . $k, 0)));
-            $out[$k] = joinAll($st);
+            // THE SAME STATE ON EVERY SIDE IS ITS OWN JOIN. Most names are untouched by a branch, and their states are the very
+            // same array on both sides — PHP answers === for that by pointer. Joining them anyway allocated a fresh copy, broke the
+            // sharing, and every later join paid in full: tcpdf.php spent 25 of 27 s of one probe here (2026-09-11).
+            $same = true; foreach ($st as $i => $x) if ($i > 0 && $x !== $st[0]) { $same = false; break; }
+            $out[$k] = $same ? $st[0] : joinAll($st);
         }
         return $out;
     }

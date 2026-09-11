@@ -219,7 +219,7 @@ def own_probe(failures):
     described arguments only: echo f('c') and echo g() read EARNED, and h($_GET['z']) was accused of h's own flaw."""
     out = code2zfl.run([os.path.join(FIX, "xown")], [], "all", AUTOLOAD)
     got = [(s["line"], s["disposition"]) for f in out["files"] if os.path.basename(f["file"]) == "page.php" for s in f["sinks"]]
-    want = [(2, "REFUTED"), (3, "REFUTED"), (6, "EARNED"), (7, "EARNED"), (8, "REFUTED")]
+    want = [(2, "OPEN"), (3, "OPEN"), (6, "EARNED"), (7, "EARNED"), (8, "REFUTED")]  # own source = unknown, not accusation
     if got != want:
         failures.append(f"xown/page.php: expected {want}, got {got}")
 

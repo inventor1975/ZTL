@@ -1201,9 +1201,14 @@ final class Analyzer {
                     // neither: the callee does not carry this argument into its result — nothing to add
                 }
                 $res = $carried ? joinAll($carried) : stF();
-                // THE CALLEE'S OWN SOURCE (xown): request data the body produces by itself comes back whatever the arguments were
+                // THE CALLEE'S OWN SOURCE (xown): request data the body produces by itself comes back whatever the arguments were.
+                // ZERO-TRUST CHOICE (curator 2026-09-11): carry it as UNKNOWN, not an accusation. The summary is a single-path
+                // approximation — "the body returns request data on SOME path" does not prove THIS call is exploitable, because a
+                // helper like dolibarr's GETPOST($k, $filter) sanitizes or not depending on $filter, which the summary cannot read.
+                // So the caller reads OPEN with the callee named, never REFUTED on the summary alone (measured: the accusing form
+                // added 3205 false REFUTED across 48 CMS via getpost(); this form adds 0, and clears the same false "clean").
                 $own = $sumKey['own'] ?? 'F';
-                if ($own === 'T') { $o = stT('fn', $name . '()', $line); if (!empty($sumKey['own_san'])) $o = sanitize($o, $sumKey['own_san'], $name . '()', $line); $res = join2($res, $o); }
+                if ($own === 'T') { $o = stT('fn', $name . '()', $line); if (!empty($sumKey['own_san'])) $o = sanitize($o, $sumKey['own_san'], $name . '()', $line); $res = join2($res, through($o, 'own:' . $name . '()', $line, true, 'all')); }
                 elseif ($own === 'Z') $res = join2($res, stZ('inside ' . $name . '()', $line));
                 // THE ASSUMPTION TRAVELS WITH THE VALUE. When the answer came from the tree's definitions of
                 // a bare method name, the receiver's class was never checked — so every verdict downstream

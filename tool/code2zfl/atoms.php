@@ -1941,6 +1941,12 @@ final class Analyzer {
             return;
         }
         if ($s instanceof Stmt\Function_ || $s instanceof Stmt\ClassMethod) {
+            // EACH TOP-LEVEL UNIT ITS OWN BUDGET (curator's idea, 2026-09-11): a big file is many units glued together — the
+            // cross-file walk never starves because each file is its own unit with its own budget, joined by summaries. So a
+            // 400-method class is analysed like 400 includes: reset the node budget per top-level method/function, and the
+            // global inline cap (inlineSpent) still bounds total inlining, so later methods fall back to summaries, not a walk
+            // that never ends. Only at the true top level (never inside an inlined body, which enters via walk(), not here).
+            if (empty($this->callStack)) $this->nodeSpent = 0;
             $inner = [];
             foreach ($s->params as $p) { $n = $this->varName($p->var); if ($n !== null) $inner[$n] = stZ('param:$' . $n, $line); }
             $save = $this->scope; $this->scope = ($s instanceof Stmt\ClassMethod ? $save . '::' : '') . $s->name->toString() . '()';

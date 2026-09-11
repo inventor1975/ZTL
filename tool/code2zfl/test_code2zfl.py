@@ -213,6 +213,17 @@ def any_probe(failures):
         failures.append(f"xany/page.php: expected {want} (unknown / substituted / constant), got {got}")
 
 
+def own_probe(failures):
+    """What a function produces BY ITSELF (xown): f() and g() return request data whatever they are given, k() returns it
+    escaped; h()'s include takes its OWN $_GET, so neither call of h() is the argument's sink. Before 2026-09-11 the summary
+    described arguments only: echo f('c') and echo g() read EARNED, and h($_GET['z']) was accused of h's own flaw."""
+    out = code2zfl.run([os.path.join(FIX, "xown")], [], "all", AUTOLOAD)
+    got = [(s["line"], s["disposition"]) for f in out["files"] if os.path.basename(f["file"]) == "page.php" for s in f["sinks"]]
+    want = [(2, "REFUTED"), (3, "REFUTED"), (6, "EARNED"), (7, "EARNED"), (8, "REFUTED")]
+    if got != want:
+        failures.append(f"xown/page.php: expected {want}, got {got}")
+
+
 def main():
     failures = []
     out = code2zfl.run([FIX], [OVERLAY, LARAVEL], "all", AUTOLOAD, cross=False)
@@ -221,7 +232,7 @@ def main():
         if got.get(name) != exp:
             failures.append(f"{name}: expected {exp}, got {got.get(name)}")
     # every fixture in the folder is in the table — an unlisted fixture is an untested claim
-    probed = {os.path.basename(f["file"]) for f in out["files"] if os.sep + "xfile" + os.sep in f["file"] or os.sep + "xinherit" + os.sep in f["file"] or os.sep + "xany" + os.sep in f["file"] or os.sep + "xinclude" + os.sep in f["file"] or os.sep + "xconflict" + os.sep in f["file"] or os.sep + "xambig" + os.sep in f["file"] or os.sep + "xdup" + os.sep in f["file"]}
+    probed = {os.path.basename(f["file"]) for f in out["files"] if os.sep + "xfile" + os.sep in f["file"] or os.sep + "xinherit" + os.sep in f["file"] or os.sep + "xany" + os.sep in f["file"] or os.sep + "xown" + os.sep in f["file"] or os.sep + "xinclude" + os.sep in f["file"] or os.sep + "xconflict" + os.sep in f["file"] or os.sep + "xambig" + os.sep in f["file"] or os.sep + "xdup" + os.sep in f["file"]}
     for name in got:
         if name not in EXPECT and name not in probed:                  # the cross-file pairs are asserted by their own probes
             failures.append(f"{name}: fixture without an expectation")
@@ -276,6 +287,7 @@ def main():
     duplicate_class_probe(failures)
     include_probe(failures)
     any_probe(failures)
+    own_probe(failures)
     # ---- a NAME defined differently in two files is a conflict (unknown), not "the last one wins"; and a method
     # summary is never read for a receiver that is not $this (b.php: $db->safe() inside XcA must not be XcA::safe)
     xc = code2zfl.run([os.path.join(FIX, "xconflict")], [], "all", AUTOLOAD)

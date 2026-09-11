@@ -171,6 +171,8 @@ function hfJoin(array $a, array $b): ?array {
     foreach (Html::INITS as $k) { $p = $x[$k] ?? $k; $q = $y[$k] ?? $k; $o[$k] = $p === $q ? $p : 'unknown'; }
     return $o;
 }
+/** Does a state's origin include one of these source rows? (f98-own: a sink or a return is an ARGUMENT's only if it is.) */
+function srcMeets(array $src, array $want): bool { foreach ($src as $r) if (in_array($r, $want, true)) return true; return false; }
 function dvUnion(array $a, array $b): array { return array_values(array_unique(array_merge($a['dv'] ?? [], $b['dv'] ?? []))); }
 
 function uniq(array $rows): array {
@@ -1199,6 +1201,10 @@ final class Analyzer {
                     // neither: the callee does not carry this argument into its result — nothing to add
                 }
                 $res = $carried ? joinAll($carried) : stF();
+                // THE CALLEE'S OWN SOURCE (xown): request data the body produces by itself comes back whatever the arguments were
+                $own = $sumKey['own'] ?? 'F';
+                if ($own === 'T') { $o = stT('fn', $name . '()', $line); if (!empty($sumKey['own_san'])) $o = sanitize($o, $sumKey['own_san'], $name . '()', $line); $res = join2($res, $o); }
+                elseif ($own === 'Z') $res = join2($res, stZ('inside ' . $name . '()', $line));
                 // THE ASSUMPTION TRAVELS WITH THE VALUE. When the answer came from the tree's definitions of
                 // a bare method name, the receiver's class was never checked — so every verdict downstream
                 // says so, in the ledger and in the summary, and nothing rests on it silently.
@@ -2321,7 +2327,7 @@ if ($emitSummaries) {
             $rec = ['file' => $f, 'line' => $def->getStartLine(), 'params' => $np,
                     'passes' => [], 'opaque' => [], 'substitutes' => [], 'sinks' => [], 'guard' => [], 'cut' => false,
                     'ends' => bodyEnds($def->stmts)];
-            $probes = ($np === 0) ? [] : (($np <= 4) ? range(0, $np - 1) : [-1]);   // -1: all at once
+            $probes = array_merge([-2], ($np === 0) ? [] : (($np <= 4) ? range(0, $np - 1) : [-1]));   // -2: none tainted; -1: all at once
             foreach ($probes as $ix) {
                 $an = new Analyzer($CAT);
                 foreach ($litWrites as $vn => $rhs)
@@ -2334,12 +2340,25 @@ if ($emitSummaries) {
                 }
                 $ret = $an->probeBody($def->stmts, $env);
                 if ($an->nodeSpent > 120000 || $an->inlineSpent >= 3000) { $rec['cut'] = true; }
+                // THE BODY'S OWN SOURCES (xown, 2026-09-11). With no argument tainted, what comes back is what the function
+                // produces BY ITSELF: `function f($x){ return $_GET['a']; }` returns request data whatever it is given. The summary
+                // described arguments only, so `echo f('c')` — and dolibarr's `print GETPOST('x', 'none')` — read EARNED,
+                // "constants only", and every sink the body reached on its own was charged to whichever argument was probed.
+                // A walk cut short does not vouch for a clean result: Z.
+                if ($ix === -2) {
+                    $cutNow = $an->nodeSpent > 120000 || $an->inlineSpent >= 3000;
+                    $rec['own'] = $ret['t'] === 'T' ? 'T' : (($ret['t'] === 'Z' || $cutNow) ? 'Z' : 'F');
+                    if ($rec['own'] === 'T' && $ret['san']) $rec['own_san'] = array_keys($ret['san']);
+                    continue;
+                }
+                $probeSrc = [];
+                foreach ($params as $j => $pn) if ($pn !== null && ($ix === -1 || $ix === $j)) $probeSrc[] = ['param', '$' . $pn, $def->getStartLine()];
                 $key = $ix === -1 ? 'any' : (string)$ix;
                 // THREE OUTCOMES, kept apart because they mean different things to the caller:
                 //   passes  — the result carries this argument's taint, and what substitutes it is named
                 //   opaque  — the result is Z: something inside was unreadable, so the caller gets Z too
                 //   clean   — the result does not carry it at all (a real sanitizer, or an unrelated return)
-                if ($ret['t'] === 'T') {
+                if ($ret['t'] === 'T' && srcMeets($ret['src'] ?? [], $probeSrc)) {
                     $rec['passes'][] = $key;
                     $ctxs = array_keys($ret['san']);
                     if ($ctxs) $rec['substitutes'][$key] = $ctxs;
@@ -2359,6 +2378,7 @@ if ($emitSummaries) {
                     // wp_dropdown_languages, whose echo receives a string built through selected() and
                     // wp_parse_args, both opaque to a single-file walk. Measured 2026-09-09.
                     if (($fact['t'] ?? 'F') !== 'T') continue;
+                    if (!srcMeets($fact['src'] ?? [], $probeSrc)) continue;          // the body's own source reached it, not this argument
                     $fs = is_array($fact['san'] ?? null) ? $fact['san'] : [];
                     $ctx = $fact['ctx'];
                     if (isset($fs['*'])) continue;                                  // substituted for every context

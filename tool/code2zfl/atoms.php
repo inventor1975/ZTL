@@ -181,7 +181,7 @@ function uniq(array $rows): array {
     // `class-wp-html-processor.php` (a switch with 173 cases): json_encode here was the cost.
     $seen = []; $out = [];
     foreach ($rows as $r) {
-        $k = is_array($r) ? implode("\x1f", array_map('strval', $r)) : (string)$r;
+        $k = is_array($r) ? implode("\x1f", $r) : (string)$r;       // implode converts each scalar exactly as strval did
         if (!isset($seen[$k])) { $seen[$k] = 1; $out[] = $r; }
     }
     return $out;

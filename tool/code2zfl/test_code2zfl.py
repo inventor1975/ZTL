@@ -114,6 +114,7 @@ EXPECT = {
     "f84_a_declared_property_settles_itself_only.php": ["EARNED", "REFUTED", "OPEN"],
     "f85_the_email_filter_keeps_the_single_quote.php": ["EARNED", "EARNED", "REFUTED", "REFUTED", "REFUTED"],
     "f90_a_check_does_not_outlive_its_branch.php": ["EARNED", "REFUTED", "EARNED", "EARNED", "REFUTED"],
+    "f96_isset_of_several_is_several_issets.php": ["OPEN", "EARNED", "REFUTED", "REFUTED"],
     "f86_a_removal_closes_one_position.php": ["EARNED", "REFUTED", "EARNED", "REFUTED", "EARNED", "REFUTED"],
     "f87_sanitize_text_field_is_body_text.php": ["OPEN", "OPEN", "OPEN", "OPEN"],
     "f88_a_header_is_split_by_a_newline_only.php": ["OPEN"] * 6,

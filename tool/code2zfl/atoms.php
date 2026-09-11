@@ -759,7 +759,8 @@ final class Analyzer {
             if ($slotKey !== null && isset($this->guardedSlots[$slotKey])) {
                 [$ctxs, $fn, $ln] = $this->guardedSlots[$slotKey];
                 $base = $this->ex($e->var, $env);
-                if (($base['t'] ?? 'F') !== 'F') return sanitize($base, $ctxs, $fn, $ln);
+                if (($base['t'] ?? 'F') !== 'F')
+                    return $ctxs === ['?'] ? through($base, 'guarded-by:' . $fn, $ln, true, 'all') : sanitize($base, $ctxs, $fn, $ln);
             }
             // $_FILES: the browser chooses `name` and `type`; PHP itself writes `tmp_name`, `size` and
             // `error`. Treating the temporary path as attacker-controlled made every upload validator
@@ -1386,6 +1387,14 @@ final class Analyzer {
         global $GUARDS, $INERT;
         $line = $c->getStartLine();
         $none = ['true' => [], 'false' => []];
+        // isset($a, $b, $c) IS isset($a) && isset($b) && isset($c) — PHP's own definition. Only the one-argument form was read,
+        // so ErrorLog's `isset($_GET['value'], $_GET['filter'], $this->filters[$_GET['filter']])` was no check at all and the
+        // filter name read as raw request data (f96, 2026-09-11). Rebuilt as the conjunction, it gets AND's rules exactly.
+        if ($c instanceof Expr\Isset_ && count($c->vars) > 1) {
+            $and = new Expr\Isset_([$c->vars[0]], $c->getAttributes());
+            foreach (array_slice($c->vars, 1) as $iv) $and = new Expr\BinaryOp\BooleanAnd($and, new Expr\Isset_([$iv], $c->getAttributes()), $c->getAttributes());
+            return $this->guards($and);
+        }
         if ($c instanceof Expr\BooleanNot) { $g = $this->guards($c->expr); return ['true' => $g['false'], 'false' => $g['true'], 'unknown' => $g['unknown'] ?? [], 'unknown_false' => $g['unknown_true'] ?? [], 'unknown_true' => $g['unknown_false'] ?? []]; }
         if ($c instanceof Expr\BinaryOp\BooleanAnd || $c instanceof Expr\BinaryOp\LogicalAnd) {
             $l = $this->guards($c->left); $r = $this->guards($c->right);
@@ -1434,7 +1443,10 @@ final class Analyzer {
         }
         if ($c instanceof Expr\Isset_ && count($c->vars) === 1 && $c->vars[0] instanceof Expr\ArrayDimFetch) {
             $adf = $c->vars[0];                                             // isset($FIXED[$x]) — membership in a fixed map
-            $v = $this->varName($adf->dim ?? null);
+            // the KEY may be a request slot itself — `isset($map[$_GET['f']])` — named the way every other guard names it
+            // (guardName: a variable OR an array slot). varName took plain variables only, so the commonest spelling of the
+            // whitelist read as no check at all (f96, 2026-09-11).
+            $v = ($adf->dim ?? null) !== null ? $this->guardName($adf->dim) : null;
             // `isset($map[$x])` where the map is FIXED: a constant, or a variable assigned a literal
             // array exactly once in the file. WordPress's _get_list_table gates `new $class_name` on
             // exactly this shape (`$core_classes` is a literal map, `isset($core_classes[$class_name])`),
@@ -1526,6 +1538,11 @@ final class Analyzer {
     /** A value read by a check this file cannot see is UNVERIFIED — not clean, not refuted. */
     private function applyUnknownGuards(array $gs, array &$env): void {
         foreach ($gs as [$v, $fn, $line]) {
+            // A REQUEST SLOT NOT READ HERE YET — `$_GET['f']` under `isset($this->filters[$_GET['f']])`. It is carried the way a
+            // known guard's slot is (guardedSlots: scoped to this branch, met across branches), with the context '?': checked by
+            // something we cannot read, so a later read is Z, not "read in full". Skipping it left SMF ErrorLog's whitelisted
+            // filter name REFUTED (f96, 2026-09-11). A known guard already on the slot is stronger and stays.
+            if (!isset($env[$v]) && str_contains($v, '[') && !isset($this->guardedSlots[$v])) { $this->guardedSlots[$v] = [['?'], $fn, $line]; continue; }
             if (!isset($env[$v]) || $env[$v]['t'] === 'F') continue;
             $env[$v] = through($env[$v], 'guarded-by:' . $fn, $line, true, 'all');
         }

@@ -1601,6 +1601,9 @@ final class Analyzer {
             $pn = $target->var->name->toString();                 // so the whole property carries it. Previously dropped.
             $cur = $this->props[$this->currentClass][$pn] ?? stF();
             $this->props[$this->currentClass][$pn] = join2($cur, $rhs);
+            // ...and into every element slot of it: the computed key may BE that element (f97, 2026-09-11)
+            foreach (array_keys($this->props[$this->currentClass]) as $k)
+                if (str_starts_with($k, $pn . '[')) $this->props[$this->currentClass][$k] = join2($this->props[$this->currentClass][$k], $rhs);
             return;
         }
         if ($target instanceof Expr\ArrayDimFetch) {
@@ -1621,6 +1624,9 @@ final class Analyzer {
                 // the array AS A WHOLE joins the slots back in (envWhole). Measured 2026-09-09.
                 if ($sl !== null) { $env[$sl] = $rhs; return; }
                 $env[$n] = join2($env[$n] ?? stF(), $rhs);
+                // A COMPUTED KEY MAY BE ANY KEY — also one that has its own slot. `$row['a'] = 'c'; $row[$_GET['k']] = $_GET['v']`
+                // leaves $row['a'] attacker-controlled when k is 'a'; the slot kept 'c' and read EARNED, "constants only" (f97).
+                foreach (array_keys($env) as $k) if (str_starts_with($k, $n . '[')) $env[$k] = join2($env[$k], $rhs);
             }
             return;
         }

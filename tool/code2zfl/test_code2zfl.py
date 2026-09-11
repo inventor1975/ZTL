@@ -118,6 +118,7 @@ EXPECT = {
     "f87_sanitize_text_field_is_body_text.php": ["OPEN", "OPEN", "OPEN", "OPEN"],
     "f88_a_header_is_split_by_a_newline_only.php": ["OPEN"] * 6,
     "f89_a_call_can_carry_danger_in_several_arguments.php": ["REFUTED", "REFUTED", "REFUTED", "REFUTED", "REFUTED", "EARNED", "OPEN", "EARNED"],
+    "f97_a_computed_key_may_be_any_key.php": ["REFUTED", "EARNED", "EARNED", "REFUTED"],
 }
 STORED = os.path.join(HERE, "overlays", "stored-input.json")
 WORDPRESS = os.path.join(HERE, "overlays", "wordpress.json")

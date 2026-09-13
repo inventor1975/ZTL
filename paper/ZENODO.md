@@ -7,7 +7,7 @@ seven-language taint analyzer moved to github.com/inventor1975/introspect
 and the natural-language studio to github.com/inventor1975/ztlstudio; each
 vendors a copy of this core so it clones self-contained. The preprint text
 is unchanged from v1.4.1 — what changed is what ships beside it (the
-repository regression is now 143 stands here, the rest having moved with the
+repository regression is now 144 stands here, the rest having moved with the
 tools). As a new version of the concept record (DOI
 10.5281/zenodo.21318981) it isNewVersionOf v1.4.1 (10.5281/zenodo.22644261).
 
@@ -120,7 +120,7 @@ with an EMPTY axiom list (no classical choice, no quotients, not even
 propositional extensionality; definitions included): 1112 theorems, each
 audited individually; no section of the paper rests on measurement
 alone. Every numerical claim is reproducible by the repository's
-regression (143 test stands). As of v2.0.0 the repository is the logic
+regression (144 test stands). As of v2.0.0 the repository is the logic
 itself — the Lean corpus, the papers, and the ZFL formal language with its
 tooling; the seven-language taint analyzer and the natural-language studio
 that translates into ZFL (both of which vendor a copy of this core) have
@@ -341,4 +341,4 @@ institutional computation; Lean 4; machine-checked proofs
 The preprint text is CC BY 4.0; the accompanying repository code is
 dual-licensed Apache-2.0 OR MIT. The ZTL Lean corpus (sixty-six modules,
 1112 theorems) verifies with an empty axiom list; run `python3 run_all.py`
-for the full repository regression (143 stands + Lean build).
+for the full repository regression (144 stands + Lean build).

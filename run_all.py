@@ -179,6 +179,8 @@ STANDS = [
     ("admission/run_vectors.py", ["VECTORS GREEN", "20 OK, 0 FAIL"]),
     ("admission/test_tcc2.py", ["TCC-2 GREEN",
                                       "деонтический тип и отрицание"]),
+    ("admission/test_ground_admission.py", ["GROUND ADMISSION GREEN",
+                                      "держится на слове"]),
     ("inventory/unwired.py", ["UNWIRED SCAN GREEN",
                               "боевой путь слеп"]),
     # ground_admission split out with the tool (2026-09-13). The ZFL language

@@ -29,7 +29,7 @@ import pathlib
 import sys
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-СКАН = ["tool", "inventory", "db", "."]
+СКАН = ["inventory", "db", "."]
 ПРОПУСК = {"prior-art", "_attic", "archive", "__pycache__", ".git", "lean"}
 ТЕСТ = ("test_", "_test", "probe_", "stand")
 

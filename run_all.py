@@ -53,17 +53,11 @@ STANDS = [
     ("zpassport.py",   ["✓ STIPULATION THEOREM: total",
                         "parity cross-check: 62 of 62 ✓"]),
     ("test_passport_period.py", ["PASSPORT-PERIOD GREEN", "9 OK, 0 FAIL"]),
-    ("tool/test_joint_not_on_settled.py",
-     ["JOINT-NOT-ON-SETTLED GREEN", "6 OK, 0 FAIL"]),
-    ("tool/test_deploy_stamp.py", ["DEPLOY-STAMP GREEN", "15 OK, 0 FAIL"]),
-    ("tool/test_joint_minimal_sets.py",
-     ["JOINT-MINIMAL GREEN", "11 OK, 0 FAIL"]),
-    ("tool/test_backread.py",
+    # tool/ split out to the introspect + ztlstudio repos (2026-09-13). Only
+    # the ZFL language's own stands travel with zfl, now at the repo root; the
+    # studio/analyzer stands live in their own repos' gates.
+    ("test_backread.py",
      ["ЗЕРКАЛО: ЗЕЛЁНОЕ", "24 ок, 0 провал"]),
-    ("tool/test_usage_counter.py",
-     ["СЧЁТ РАСХОДА: ЗЕЛЁНЫЙ", "14 ок, 0 провал"]),
-    ("tool/store/test_no_fork_default.py", ["NO-FORK GREEN", "9 OK, 0 FAIL"]),
-    ("tool/store/test_literal_first.py", ["LITERAL-FIRST GREEN", "10 OK, 0 FAIL"]),
     ("test_f_locked_shortcut.py",
      ["F-LOCKED SHORTCUT GREEN", "4 OK, 0 FAIL", "расхождений с перебором          : 0"]),
     ("inventory/tau_airline/СТАРШИНСТВО.py",
@@ -80,9 +74,8 @@ STANDS = [
     # ztl-private/СТЕНДЫ-НА-ИЗЪЯТОЙ-ИСТОРИИ/ — там же ПОЧЕМУ-ЗДЕСЬ.md.
     # Эта батарея с тех пор НЕ покрывает ни ASSURANCE-INCIDENT-001, ни
     # перепись неисполненных путей проверки. Число стендов упало на два.
-    ("inventory/test_backoff_429.py",
-     ["СТЕНД ЗЕЛЁНЫЙ", "1 отбитие(й) 429",
-      "беда воспроизводится БЕЗ живого ключа"]),
+    # test_backoff_429 tests the studio's provider backoff — moved to the
+    # ztlstudio repo with providers.py (2026-09-13).
     ("inventory/test_backward.py", ["BACKWARD GREEN", "16 OK, 0 FAIL",
                         "две дороги сошлись на всех 45 клетках"]),
     ("ztljudge.py",     ["ZTLJUDGE GREEN", "over an unchanged core",
@@ -186,25 +179,19 @@ STANDS = [
     ("admission/run_vectors.py", ["VECTORS GREEN", "20 OK, 0 FAIL"]),
     ("admission/test_tcc2.py", ["TCC-2 GREEN",
                                       "деонтический тип и отрицание"]),
-    ("tool/test_ground_admission.py", ["GROUND ADMISSION GREEN",
-                                      "держится на слове"]),
     ("inventory/unwired.py", ["UNWIRED SCAN GREEN",
                               "боевой путь слеп"]),
-    ("tool/test_warrant_receipt.py", ["WARRANT RECEIPT GREEN",
-                                      "несёт канонические байты и отпечаток"]),
-    ("tool/test_zfl.py", ["ZFL FOUNDATION GREEN"]),
-    ("tool/zfl2doc.py", ["ZFL DOC GREEN",
-                         "every code the validator raises is documented"]),
-    ("tool/test_zfl2.py", ["ZFL2 GREEN",
-                           "applies: {'numeric': True, 'passport': True, 'ledger': True, 'epoch': False, 'judge': True}",
-                           "two lines on ONE document  : {'inv-17': [2, 2]}",
-                           "cases the docket promises: 26, present: 26",
-                           "41 examples, all validating and running",
-                           "assembled sheet    : line=1500 earned:inv-17 RUB, budget=5000 earned:order-4 RUB",
-                           "always required: ['name', 'status']   required in context: ['ground']"]),
-    ("usage/car.py",   ["settled at tick 1; checks saved: 3",
-                        "settled at tick 2; checks saved: 2",
-                        "Once HEREDITARY, every remaining check buys nothing"]),
+    # ground_admission split out with the tool (2026-09-13). The ZFL language
+    # stands travel with zfl, now at the repo root:
+    ("test_warrant_receipt.py", ["WARRANT RECEIPT GREEN",
+                                 "несёт канонические байты и отпечаток"]),
+    ("test_zfl.py", ["ZFL FOUNDATION GREEN"]),
+    ("zfldoc.py", ["ZFL DOC GREEN",
+                   "every code the validator raises is documented"]),
+    # DROPPED 2026-09-13: tool/test_zfl2.py (its docket cross-check moved to the
+    # ztlstudio repo) and usage/car.py + admission/zfl2_gate.py, which depend on
+    # v1 files (engine.py / refuter.py / zfl2) removed by migration A — flagged
+    # for retire-or-migrate, kept out of the gate until then.
     ("zexpire.py",     ["contentful formulas surviving unrestricted expiry: 0",
                         "the settled deal UNSETTLES",
                         "the verdict SURVIVES the expiry"]),

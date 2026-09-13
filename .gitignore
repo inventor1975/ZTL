@@ -60,3 +60,10 @@ DEPLOYED.json
 inventory/feverous_data/
 inventory/tau_airline/tasks/
 inventory/tau_airline/db_*.json
+# 2026-09-13: the taint tools + AI studio moved to their own repos
+# (github.com/inventor1975/introspect and .../ztlstudio); the ZFL language
+# and its tooling now live at this repo root. tool/ stays on disk locally
+# (untracked; holds runtime data and the moved sources) but is no longer part
+# of ZTL. Corpora/ is large calibration data that never belonged in the repo.
+tool/
+Corpora/

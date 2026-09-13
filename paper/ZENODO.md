@@ -1,4 +1,15 @@
-# Zenodo upload sheet — ZTL v1.4.1 (PUBLISHED 2026-09-07)
+# Zenodo upload sheet — ZTL v2.0.0 (DRAFT — the repository split)
+
+**v2.0.0 (this version, not yet published) — a structural release, not a
+change to the logic.** The ZTL repository is now the logic alone: the Lean
+corpus, the papers, and the ZFL formal language with its tooling. The
+seven-language taint analyzer moved to github.com/inventor1975/introspect
+and the natural-language studio to github.com/inventor1975/ztlstudio; each
+vendors a copy of this core so it clones self-contained. The preprint text
+is unchanged from v1.4.1 — what changed is what ships beside it (the
+repository regression is now 143 stands here, the rest having moved with the
+tools). As a new version of the concept record (DOI
+10.5281/zenodo.21318981) it isNewVersionOf v1.4.1 (10.5281/zenodo.22644261).
 
 **v1.4.1 PUBLISHED 2026-09-07: version DOI 10.5281/zenodo.22644261**
 (https://zenodo.org/records/22644261), a new version of the record (concept DOI
@@ -37,7 +48,7 @@ versions' numbers and are not.
 
 **Authors:** Reznik, Vitaly
 
-**Version:** 1.4.1
+**Version:** 2.0.0
 
 **License:** Creative Commons Attribution 4.0 International (CC BY 4.0)
 
@@ -109,8 +120,12 @@ with an EMPTY axiom list (no classical choice, no quotients, not even
 propositional extensionality; definitions included): 1112 theorems, each
 audited individually; no section of the paper rests on measurement
 alone. Every numerical claim is reproducible by the repository's
-regression (153 test stands); an interactive studio (natural language →
-the ZFL formal language → the measured core) ships with the repository.
+regression (143 test stands). As of v2.0.0 the repository is the logic
+itself — the Lean corpus, the papers, and the ZFL formal language with its
+tooling; the seven-language taint analyzer and the natural-language studio
+that translates into ZFL (both of which vendor a copy of this core) have
+moved to their own repositories, github.com/inventor1975/introspect and
+github.com/inventor1975/ztlstudio.
 
 Functionally the {not, and, or} fragment coincides, cell by cell, with
 the external layer of Bochvar's logic (1938) — a kinship found in the
@@ -316,10 +331,14 @@ institutional computation; Lean 4; machine-checked proofs
   Zenodo pre-fills the field from the previous form — check it says
   22643843, not 21440066)
 - https://github.com/inventor1975/ZTL — isSupplementedBy (the code,
-  the Lean corpus, the regression, the studio)
+  the Lean corpus, the regression, the ZFL language)
+- https://github.com/inventor1975/introspect — isSupplementedBy (the ZTL
+  core applied to code: a seven-language taint analyzer)
+- https://github.com/inventor1975/ztlstudio — isSupplementedBy (the
+  natural-language studio that translates into ZFL for the measured core)
 
 **Additional notes (paste into "Additional notes"):**
 The preprint text is CC BY 4.0; the accompanying repository code is
 dual-licensed Apache-2.0 OR MIT. The ZTL Lean corpus (sixty-six modules,
 1112 theorems) verifies with an empty axiom list; run `python3 run_all.py`
-for the full repository regression (153 stands + Lean build).
+for the full repository regression (143 stands + Lean build).

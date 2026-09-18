@@ -49,7 +49,7 @@ every theorem in every module, generated and checked.
 
 | module | thms | what it establishes |
 |---|---:|---|
-| `ZTL.lean` | 78 | the core: lift-generated connectives, anchor cells as theorems, 12 alive + 14 fallen laws, semantic MP, greediness, liar homelessness (∀v, ¬v ≠ v), `no_gluts`, the lazy Kleene register with monotonicity, the 12 tableau `cover_*` preimage theorems |
+| `ZTL.lean` | 78 | the core: lift-generated connectives, anchor cells as theorems, 12 laws usable on a marked atom + 14 refuted there with witnesses (`*_needs_ground`), semantic MP, greediness, liar homelessness (∀v, ¬v ≠ v), `no_gluts`, the lazy Kleene register with monotonicity, the 12 tableau `cover_*` preimage theorems |
 | `TableauCert.lean` | 35 | `closes_iff` — tableau soundness **and** completeness; `tproves_iff` — the entailment certificate |
 | `ZClone.lean` | 34 | single-operator completeness: the census of sixteen, clone equalities, reachability and non-reachability results |
 | `ZGround.lean` | 25 | Knaster–Tarski over the whole language: monotonicity, least fixed point by bounded iteration, absoluteness of the grounded part |

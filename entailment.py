@@ -70,7 +70,7 @@ def run_rules():
         else:
             print(f"  ✗ {name}   [counterexample: {fmt_env(cex)}]")
             dead += 1
-    print(f"  Rules total: alive {alive}, fallen {dead}.")
+    print(f"  Rules total: {alive} usable on a marked premise, {dead} refused there.")
 
 
 def run_deduction_theorem():

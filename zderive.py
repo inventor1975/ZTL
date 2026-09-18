@@ -6,10 +6,10 @@ smashed against the core.
 The curator's idea: proving is enumerating lemmas and linking them —
 so enumerate, "without thinking", and let the CORE judge every link.
 The honest niche (we do not race Vampire): ZTL is the one core where a
-derivation STEP has a price. The law price list (12 alive / 14 fallen)
-extends to a price list of PATHS:
+derivation STEP has a price. The law split (12 usable on a marked atom /
+14 refuted there) extends to a price list of PATHS:
 
-    EARNED     — reachable by chains of the 12 measured ALIVE rules
+    EARNED     — reachable by chains of the 12 measured USABLE rules
                  only (each alive rule transports earned truth: the
                  modus_ponens family of theorems);
     ON CREDIT  — classically derivable, but every chain must borrow a

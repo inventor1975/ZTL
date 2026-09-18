@@ -7,9 +7,9 @@ Two kinds of checks:
   * validity of a formula (value T on all assignments).
 Plus semantic modus ponens.
 
-Every fallen law is not a bug but a line of the manifesto: the price of
-the principle "truth is not granted on credit". The alive/fallen list
-prints as MEASURED.
+A law that is not available on a marked atom is neither a bug nor a loss:
+ZTL proves its refutation there, with the witness named, while classical
+logic states nothing about that input at all. The list prints as MEASURED.
 """
 
 from ztl import T, F, Z, VALUES, ev, atoms, all_envs, show

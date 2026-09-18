@@ -14,7 +14,9 @@ STANDS = [
     # "alive 12, fallen 14", а она читалась реестром потерь. Числа те же,
     # рамка другая — на непроверенном атоме ZTL даёт 12 законов, классика ноль.
     ("audit.py",       ["lets you use 12 of them", "use NONE"]),
-    ("entailment.py",  ["Rules total: alive 12, fallen 2"]),
+    # Маяк переписан 2026-09-19 вместе с прибором: прежний ждал "alive 12,
+    # fallen 2" — та же рамка потерь, что была у audit.py. Числа те же.
+    ("entailment.py",  ["Rules total: 12 usable on a marked premise, 2 refused"]),
     ("tableau.py",     ["ALL decisions coincided"]),
     ("quantifiers.py", ["UI rule", "✗ ¬∃ ⊨ ∀¬"]),
     ("tableau_fo.py",  ["ALL decisions coincided"]),

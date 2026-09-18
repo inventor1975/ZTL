@@ -175,5 +175,5 @@ if __name__ == "__main__":
     print("  On clean sets — classical set theory cell for cell")
     print("  (C-extension). A mark breaks exactly the identity laws")
     print("  (idempotence, reflexivity, self-subtraction) — the same families")
-    print("  that fell in the logic: the sets INHERITED the price list from")
+    print("  the logic refutes on a mark: the sets INHERITED this from")
     print("  the tables, not a single rule was postulated separately.")

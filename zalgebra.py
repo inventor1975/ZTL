@@ -3,7 +3,7 @@
 Expedition E14: the algebraic passport — completeness as a logic.
 
 The chain, measured totally:
-  1. J-OPERATORS from fallen laws: J_T(p) = p∧p (fallen idempotence IS
+  1. J-OPERATORS from the refuted laws: J_T(p) = p∧p (refuted idempotence IS
      the truth detector), J_F(p) = ¬p∧¬p, J_Z(p) = ¬(p↔p) = isZ.
   2. EXPRESSIVE COMPLETENESS of the external layer: every external
      function V^n → {T,F} is a DNF of J-indicators (n = 1, 2 totally).
@@ -48,7 +48,7 @@ def jZ(x):
 
 
 def measure_indicators():
-    print("### 1. J-operators grown from fallen laws")
+    print("### 1. J-operators grown from the refuted laws")
     print("  J_T(p) = p∧p (fallen idempotence!), J_F(p) = ¬p∧¬p, J_Z = ¬(p↔p)")
     print(f"  {'x':3s} {'J_T':4s} {'J_F':4s} {'J_Z':4s}")
     ok = True
@@ -281,6 +281,6 @@ if __name__ == "__main__":
     print("  E with a two-way deduction theorem → Δ + truth equation →")
     print("  Blok–Pigozzi conditions → ZTL is ALGEBRAIZABLE; yet not")
     print("  self-extensional, and the primitive → keeps its one-way DDT.")
-    print("  The fallen laws paid for the algebra.")
+    print("  The refuted laws are what generate the algebra.")
     if not all((r1, r2, r3, r4, r5, r6)):
         raise SystemExit("A MEASUREMENT FAILED — stop.")

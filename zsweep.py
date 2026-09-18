@@ -15,12 +15,12 @@ property checks is seconds.
 The question this sweep is for is NOT "find a new logic" — empty cells in
 a combinatorial space are usually junk, and we should expect junk. It is:
 
-    ARE OUR LOSSES CHOSEN, OR FORCED?
+    IS THE BOUNDARY CHOSEN, OR FORCED?
 
-The price list (12 laws alive, 14 fallen) reads as a series of decisions
-the curator made. If instead no arrow whatsoever can combine our defining
-principle with the lost law, then the loss was never a decision — it is
-the shape of the space, and the price list becomes a list of theorems.
+The split (12 laws usable on a marked atom, 14 refuted there) could read as
+a series of decisions the curator made. If instead no arrow whatsoever can
+combine our defining principle with a refuted law, then it was never a
+decision — it is the shape of the space, and the split is a list of theorems.
 
 CONTROL, so the instrument is not trusted for free: restricted to
 Tomova's three criteria the sweep must reproduce her published counts —
@@ -183,7 +183,7 @@ def sec3_forced_or_chosen():
     print("   not available to ANY arrow that refuses credit — the loss was")
     print("   never a decision. p -> p at an unverified p is literally a")
     print("   conditional designated with an unexamined consequent, which is")
-    print("   what 'no free truth' forbids. The price list is a list of")
+    print("   what 'no free truth' forbids. The split is a list of")
     print("   theorems about the space, not of preferences.")
     return kin
 

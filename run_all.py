@@ -169,9 +169,15 @@ STANDS = [
     ("bridge.py",      ["ALL ANSWERS COINCIDE"]),
     ("zquasi.py",      ["SUBDIRECTLY IRREDUCIBLE", "= 2 + 512, ALL externals",
                         "NOT a"]),
+    # Перепись добавлена в маяки 2026-09-19: paper/delta-intuitionism.md девять
+    # недель говорила «15 of 27 classical laws fall», хотя 15 — это сколько
+    # ДЕРЖИТ, а опровергнуты 12. Документ не сверял никто, и стенд смотрел
+    # мимо — на incomparable и 14 of 14. Теперь оба числа под маяком.
     ("zipc.py",        ["INCOMPARABLE sublogics of classical logic",
                         "Rule verdicts coincide: 14 of 14",
-                        "match the canon ✓", "mismatches: 0"]),
+                        "match the canon ✓", "mismatches: 0",
+                        "all 27 hold on verified valuations",
+                        "15 hold, 12 are refuted with a witness, 0 undecided"]),
     ("zopsets.py",     ["IDENTITY IS TOTALLY EARNABLE", "dedup EARNED",
                         "SOUND about the facts: 0",
                         "hereditary-warranted 0", "ORTHOGONALITY"]),

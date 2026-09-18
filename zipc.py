@@ -229,6 +229,26 @@ def run_laws():
     assert not non_cpc, "a law escaped CPC — impossible"
     print("  Both witness lists are non-empty and every law sits inside CPC:")
     print("  ZTL and IPC are INCOMPARABLE sublogics of classical logic.")
+
+    # Перепись батареи, поставлена 2026-09-19. paper/delta-intuitionism.md с
+    # 2026-07-12 печатала «15 of 27 classical laws fall» — это число тех, что
+    # ДЕРЖАТ, названное числом павших. Документ не сверялся ничем: paper_claims
+    # его не знает, батарея смотрела только на incomparable/14 of 14. Девять
+    # недель. Теперь числа печатает сам прибор, а run_all.py их сторожит.
+    # cpc_valid() здесь считает ТАБЛИЦАМИ ZTL по {T,F} — то есть буквально
+    # «держит на проверенных разметках».
+    hold_verified = sum(1 for _, _, c, _, _ in rows if c)
+    hold_marked = sum(1 for _, _, _, _, z in rows if z)
+    refuted = len(rows) - hold_marked
+    gaps = 0
+    for _nm, phi, *_ in rows:
+        names = sorted(atoms(phi, set()))
+        for combo in product((T, F, Z), repeat=len(names)):
+            if ev(phi, dict(zip(names, combo))) not in (T, F):
+                gaps += 1
+    print(f"  Battery census: {len(rows)} laws — all {hold_verified} hold on "
+          f"verified valuations; on a marked one {hold_marked} hold, {refuted} "
+          f"are refuted with a witness, {gaps} undecided.")
     return rows
 
 

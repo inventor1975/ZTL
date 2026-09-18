@@ -80,7 +80,7 @@ Three consequences worth stating plainly:
    validate identity.
 2. **Both directions of non-inclusion are witnessed**, so the
    incomparability is an existential fact, immune to battery choice.
-3. A nuance the preprint's price list makes easy to misread:
+3. A nuance the preprint's law table makes easy to misread:
    **contraposition survives as a law-formula** — ⊨ (p→q)→(¬q→¬p)
    (MEASURED) — while contraposition as a *table identity*
    (p→q ≡ ¬q→¬p pointwise) fell (preprint §3.5). These are different
@@ -90,9 +90,9 @@ Three consequences worth stating plainly:
 ## 4. Rules: exact agreement on the premised battery (MEASURED)
 
 The keel's 14 classical premised inferences, judged as Γ ⊢ φ by G4ip
-and Γ ⊨ φ by ZTL: **verdicts coincide 14 of 14** — including both
-casualties. The two rules that fall in ZTL are exactly the two that
-fall in IPC:
+and Γ ⊨ φ by ZTL: **verdicts coincide 14 of 14** — including the two
+that neither logic licenses. The two rules ZTL refuses are exactly the
+two IPC refuses:
 
 * **¬¬-elimination** ¬¬p ⊬ p. IPC: a proof of ¬¬p carries no
   construction of p. ZTL: the premise launders the mark — ¬¬Z = T, so
@@ -224,8 +224,11 @@ Brouwerian shore onto the ZTL deck, and which must not:
 ZTL is a third posture in the foundations landscape, not a variant of
 the second:
 
-* not classical — 15 of 27 classical laws fall (the price list was
-  paid knowingly);
+* not classical — on the 27-law battery all 27 hold on verified
+  valuations; on a marked one 15 still hold, 12 are refuted with the
+  witness named, and none is left undecided (`zipc.py`). Those twelve
+  are theorems about unverified data — statements classical logic does
+  not make at all, because it cannot take the input;
 * not intuitionistic — incomparable law-sets (both directions
   witnessed), tabular where IPC provably cannot be, no disjunction
   property, verdict-transparent ¬¬, bivalent verdicts, and refusal as
@@ -248,8 +251,15 @@ here says the second pair is not a photocopy of the first.
 * The 14/14 rule agreement is battery-relative (the keel's classical
   battery); the full consequence relations differ at empty Γ.
 * Law incomparability is existential (witnesses) and hence robust;
-  the *counts* (6 vs 1, 15 of 27) are battery-relative and carry no
-  weight beyond illustration.
+  the *counts* (6 vs 1; 15 holding and 12 refuted of 27) are
+  battery-relative and carry no weight beyond illustration. This is not
+  `audit.py`'s 26-law battery, and the two sets of counts must not be
+  read against one another.
+* **Correction, 2026-09-19.** The first bullet of §10 read "15 of 27
+  classical laws fall" from this note's first commit (2026-07-12) until
+  today — the count stated upside down. On this battery 15 laws HOLD in
+  ZTL and 12 are refuted; on verified valuations all 27 hold. Measured
+  by evaluating `zipc.LAWS` over {T,F} and over {T,F,Z}.
 * Structural claims cited, not re-proved here: Gödel 1932 (no finite
   matrix), Gödel/Kleene DP for IPC, Glivenko 1929 (verified on the
   battery as a prover workout, which is a check, not a proof).
@@ -278,7 +288,7 @@ here says the second pair is not a photocopy of the first.
 11. A. Gupta, N. Belnap, *The Revision Theory of Truth*, MIT Press,
     1993.
 12. *ZTL — Zero-Trust Logic*, Zenodo, DOI 10.5281/zenodo.21318982
-    (the system, the price list, the passport).
+    (the system, the law table, the passport).
 
 ## Acknowledgements and AI disclosure
 

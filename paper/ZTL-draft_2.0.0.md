@@ -525,8 +525,13 @@ a definable external implication satisfies the full deduction theorem —
 
 ZTL is paracomplete (excluded middle is refuted on the mark) but not paraconsistent in the ⊨ sense:
 v(p)=v(¬p)=T is unsatisfiable, there are no gluts, explosion is
-vacuously valid. Semantic MP is intact — ZTL is stronger in inference
-than Priest's LP.
+vacuously valid. Semantic MP is intact, where Priest's LP loses it: LP
+designates both 1 and u, and at v(p)=u, v(q)=0 both p and p→q are
+designated while q is not — the same point is what costs LP explosion
+(measured on the matrices of `family.py`). That is two inferences, not
+an ordering: LP's glut has no counterpart here, and we have not
+compared the two consequence relations in general, so what is claimed
+is the pair of facts and not a rank.
 
 ### 3.4 Paradoxes: quarantine, not tables
 

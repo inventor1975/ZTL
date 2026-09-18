@@ -9,11 +9,13 @@ repository history.
 [10.5281/zenodo.21440066](https://doi.org/10.5281/zenodo.21440066)).
 Reproduced on a clean build the same day.
 
+**Update 2026-09-15:** theorem count refreshed to **1112 across 66 modules** (re-ran `axiom_audit.py`, still empty axiom list). The per-module table below is the v1.2 (2026-07-20, 338-theorem) breakdown, retained pending a full regeneration.
+
 Reproduce the two mechanical tiers:
 
 ```
 cd lean && lake build              # 35 jobs, green
-python3 inventory/axiom_audit.py   # 338 theorems, empty axiom list
+python3 inventory/axiom_audit.py   # 1112 theorems, empty axiom list
 python3 run_all.py                 # 40 stands + Lean, ALL GREEN
 ```
 
@@ -38,10 +40,10 @@ tier: exhaustive *over what* is the whole question.
 
 ---
 
-## Tier A — machine-proved (338 theorems, empty axiom list)
+## Tier A — machine-proved (1112 theorems, empty axiom list)
 
 Lean 4.29.1, no mathlib, no imports outside the corpus. Measured
-2026-07-20 by `inventory/axiom_audit.py`: **338 of 338 theorems return
+2026-09-15 by `inventory/axiom_audit.py`: **1112 of 1112 theorems return
 "does not depend on any axioms"** — not the 125 hand-placed prints, but
 every theorem in every module, generated and checked.
 
@@ -243,7 +245,7 @@ theorems, empty axiom list:
   (`mt3_every_tautology_returns`). `mt3_the_fork` exhibits the same
   `p→p` at F in ZTL proper — the fork is one step wide.
 
-Corpus now 338 theorems in 17 modules, all clean.
+Corpus now 1112 theorems in 66 modules, all clean.
 
 ---
 

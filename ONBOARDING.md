@@ -160,7 +160,12 @@ curator).** Under the greedy lift, Sheffer's stroke and Peirce's arrow each
 *lose* functional completeness — `ZClone.lean`: `nand_cannot_and`,
 `nand_cannot_or`, `nor_cannot_and`, `nor_cannot_or`. Both stall in the same
 18-table cage; both still reach negation, and neither can rebuild its own De
-Morgan partner. The sole surviving solo basis is **nonimplication `↛`**. Say
+Morgan partner. Solo-completeness: a lifted binary connective is complete
+alone (with consts) **iff its kernel is essentially binary and
+non-commutative** — the **four directional** connectives survive (both
+implications, both abjunctions); every commutative kernel falls. The earlier
+"sole surviving solo basis is `↛`" wording was an overclaim, corrected by
+`zzhegalkin.py` §5. Say
 "identical to classical logic on verified data" (true, `evalF_agrees`); do not
 say "as expressive as classical logic" (false in this sense).
 

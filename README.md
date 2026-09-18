@@ -66,7 +66,9 @@ deterministic Russian back-reading as the non-hallucinating auditor and
 a validator-driven repair loop), and the measured ZTL core *judges*:
 verdicts with warranties, quarantine passports, stipulation options.
 A public instance runs at **https://ztl.vitalyreznik.com** — nothing to
-install. To run your own: `python3 tool/ztlstudio.py` →
+install. To run your own: the studio lives in its **own tree**
+(`ztlstudio/ztlstudio.py`), not in this repository — `python3 ztlstudio.py`
+from there →
 http://localhost:8190 (no dependencies; without GROQ_API_KEY it runs in
 pro mode — write ZFL by hand).
 

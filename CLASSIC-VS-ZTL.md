@@ -270,6 +270,24 @@ The wording that survives:
 > domain: strictly more expressive, strictly more applicable, and adding no
 > theorem about the old domain.**
 
+And the sharper claim, the one the exhibit below actually proves — say this when
+someone asks whether ZTL is *stronger*, because it is the strength without the
+word that invites the wrong reading:
+
+> **There are problems ZTL answers correctly that classical logic answers
+> correctly under NO choice of default. There are no problems the other way
+> round. As a decision procedure, ZTL strictly DOMINATES classical logic.**
+
+Both halves are measured, neither is argued: *no problems the other way round* —
+on grounded input the two are identical, 588 and 588, the same sets, zero laws
+lost; *problems ours only* — the `$_GET` exhibit, where both classical defaults
+grant a pass and no conservative default exists at all.
+
+Keep the two relations apart and nothing here can be attacked: **as a system of
+proofs the two are exactly equal on classical's own domain; as a solver ZTL
+dominates.** Saying "stronger" without naming which relation is what loses the
+argument, not the facts.
+
 Every word of that is measured: *extension* (the domain gains the unverified
 state), *conservative* (unique validities: exactly zero, machine-checked), and
 nothing lost (588 = 588, same sets).

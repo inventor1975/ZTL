@@ -23,11 +23,11 @@ theorem eg_law_dom2_fails : ¬ ∀ p₁ p₂ : V, zimp p₁ (zor p₁ p₂) = T 
 theorem allnot_notex_dom2 : ∀ p₁ p₂ : V,
     zand (znot p₁) (znot p₂) = T → znot (zor p₁ p₂) = T := by decide
 
-/-- A fallen rule: ¬∃ ⊭ ∀¬ (Z hides under negation). -/
+/-- Not available on a marked atom: ¬∃ ⊭ ∀¬ (Z hides under negation). -/
 theorem notex_allnot_dom2_fails : ¬ ∀ p₁ p₂ : V,
     (znot (zor p₁ p₂) = T → zand (znot p₁) (znot p₂) = T) := by decide
 
-/-- The mirror fallen rule: ¬∀ ⊭ ∃¬. -/
+/-- The mirror case, likewise not available on a marked atom: ¬∀ ⊭ ∃¬. -/
 theorem notall_exnot_dom2_fails : ¬ ∀ p₁ p₂ : V,
     (znot (zand p₁ p₂) = T → zor (znot p₁) (znot p₂) = T) := by decide
 

@@ -90,7 +90,14 @@ theorem lift2_classical (f : Bool → Bool → Bool) (x y : V) :
   · exact Or.inl rfl
   · exact Or.inr rfl
 
-/-! ## Alive laws (12) -/
+/-! ## The 12 laws you MAY USE on an unverified atom
+
+All twenty-six classical laws hold here on verified data, exactly as they do
+classically — none is given up. The split below answers a different question:
+which of them still work when an atom carries the mark. Classical logic permits
+NONE of the twenty-six there, because it cannot take a marked input at all, so
+these twelve are twelve more than the alternative offers, not twelve out of
+twenty-six left over. -/
 
 theorem imp_def   : ∀ p q, zimp p q = zor (znot p) q := by decide
 theorem xor_def   : ∀ p q, zxor p q = zor (zand p (znot q)) (zand (znot p) q) := by decide
@@ -109,7 +116,13 @@ theorem imp_trans_law : ∀ p q r,
 /-- Modus ponens, semantic: earned truth is transported. -/
 theorem modus_ponens : ∀ p q : V, p = T → zimp p q = T → q = T := by decide
 
-/-! ## Fallen laws (14) — the manifesto, machine-certified -/
+/-! ## The 14 laws NOT available on an unverified atom — machine-certified
+
+These do not extend to a marked atom, and that is a RESULT rather than a hole:
+each theorem below asserts a refutation with a counterexample, not a silence.
+On verified data every one of them holds here as it does classically.
+The identifiers keep the `_fails` spelling because the paper, the theorem
+inventory and the notes cite them by name. -/
 
 theorem double_neg_fails : ¬ ∀ p, znot (znot p) = p := by decide
 theorem deMorgan1_fails : ¬ ∀ p q, znot (zand p q) = zor (znot p) (znot q) := by decide
@@ -166,9 +179,9 @@ theorem rule_K : ∀ p q, q = T → zimp p q = T := by decide
 theorem rule_explosion : ∀ p q, p = T → znot p = T → q = T := by decide
 theorem rule_resolution : ∀ p q r, zor p q = T → zor (znot p) r = T → zor q r = T := by decide
 
-/-- A fallen rule: ¬¬-elimination (Z leaks through double negation). -/
+/-- Not available on a marked atom: ¬¬-elimination (Z leaks through double negation). -/
 theorem rule_dn_elim_fails : ¬ ∀ p, znot (znot p) = T → p = T := by decide
-/-- A fallen rule: tautology in the conclusion (a fresh atom earns no T). -/
+/-- Not available on a marked atom: tautology in the conclusion (a fresh atom earns no T). -/
 theorem rule_taut_concl_fails : ¬ ∀ p q, p = T → zor q (znot q) = T := by decide
 
 /-! The rules-versus-laws split: contraposition-as-a-RULE is alive

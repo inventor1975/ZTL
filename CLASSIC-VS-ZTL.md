@@ -273,3 +273,44 @@ The wording that survives:
 Every word of that is measured: *extension* (the domain gains the unverified
 state), *conservative* (unique validities: exactly zero, machine-checked), and
 nothing lost (588 = 588, same sets).
+
+### The operational exhibit: a `$_GET` parameter reaching a SQL sink
+
+The cell counts above say what differs. This says what it costs. The shape is the
+live one `php2zfl` builds for every sink — three rows, judged by `zfl.run`:
+
+    tainted    the parameter comes from $_GET and reaches the sink
+    sanitized  it passed through escaping on the way
+    safe  :=  ~Tr(tainted) | Tr(sanitized)
+
+**ZTL returns three outcomes, not two** (measured on `zfl.run`):
+
+| what is known | verdict | disposition |
+|---|---|---|
+| tainted verified, sanitized verified | `T` | EARNED, hereditary |
+| tainted verified, sanitized refuted | `F` | REFUTED, hereditary |
+| **neither established** | `Z` | **OPEN, until-verification, naming `safe` as unverified** |
+
+The third row is the whole point: a *decided* verdict that safety is not
+established, with the address of what is missing.
+
+**Classical has no third row, and both of its defaults grant a PASS:**
+
+    unverified := false   ->  safe = ¬F ∨ F = T    PASS
+    unverified := true    ->  safe = ¬T ∨ T = T    PASS
+
+Read that twice. The "cautious" default is the dangerous one here, because the
+atom is named `tainted`: assuming *not tainted* is assuming safety. Whether a
+substitution is cautious depends on the **polarity** of the atom, not on the
+intent of the person choosing it.
+
+**And choosing per polarity does not rescue it.** Take a formula where one atom
+occurs under a negation and without one — ordinary in real rules:
+
+    safe = (¬tainted ∨ sanitized) ∧ (tainted ∨ logged)
+           "clean, or escaped"     and  "dirty, or we logged it"
+
+For the first conjunct not to come out true for free, `tainted` must be T. For
+the second, it must be F. One atom, two incompatible demands: **no conservative
+substitution exists.** The choice classical is forced to make has no safe
+setting — which is precisely why ZTL does not make it.

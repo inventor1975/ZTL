@@ -660,9 +660,10 @@ reduction *after the fact*. ZTL's difference is not that it escapes the
 reduction — nothing does — but that it needs none: it is bivalent **by
 construction**. The discriminator is exact and machine-measurable: does
 the third symbol ever appear as the value of a *compound* assertion? In
-the neighbours it does — 602 to 784 of the 784 depth-2 compounds over
-two atoms take the middle value (MEASURED). In ZTL it never does — **0
-of 784**, the greediness theorem (`evalF_classical`, empty axiom list):
+the neighbours it does — on the reproducible depth-2 pool of 90 compounds
+(`paper/core_logic_checks.py` §3) K3, LP and weak Kleene take the middle value
+on 90 of 90, Łukasiewicz Ł3 on 80 of 90 (MEASURED). In ZTL it never does — **0
+of 90**, the greediness theorem (`evalF_classical`, empty axiom list):
 the mark evaporates at the first operator, so no *compound* assertion is
 ever anything but T or F. Where a genuinely three-valued logic is shown
 bivalent by Suszko's reduction, ZTL is bivalent before any reduction,

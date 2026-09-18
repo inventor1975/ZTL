@@ -152,8 +152,12 @@ not a source. The delta is 7 cells in `→, ↔, ⊕`. The mark's *meaning* is
 **Suszko's thesis** says every structural logic is logically two-valued.
 ZTL's difference is not that it escapes the reduction — nothing does — but that
 it needs none. The machine-measurable discriminator: does the third symbol ever
-appear as the value of a *compound*? Neighbours: 602–784 of 784 depth-2
-compounds. ZTL: **0 of 784** (the greediness theorem, `evalF_classical`).
+appear as the value of a *compound*? On the reproducible depth-2 pool
+(`paper/core_logic_checks.py` §3, 90 compounds): neighbours K3, LP and weak
+Kleene 90 of 90, Łukasiewicz Ł3 80 of 90; ZTL **0 of 90** (the greediness
+theorem, `evalF_classical`). The earlier figure "602–784 of 784" is withdrawn:
+no program in this tree produces that pool, and a number nothing reproduces
+cannot be checked — 2026-09-18.
 
 **Expressiveness is NOT classical, and this surprises people (it surprised the
 curator).** Under the greedy lift, Sheffer's stroke and Peirce's arrow each

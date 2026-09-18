@@ -379,6 +379,24 @@ absorption, the units (p∧T=p, p∨F=p), excluded middle, p→p, Peirce's
 law, q→(p→q). The common trait of the fallen: each fails only on Z, and
 each is a law of "free truth" (truth from form or from polarity flip).
 
+**Fallen is not missing: all fourteen are refuted with a witness
+(MEASURED).** A count of 12 against 14 reads as a ledger of loss, and that
+reading is wrong. On a marked atom every one of the twenty-six receives a
+verdict, and not one is left undecided. The four that are formulas take a
+value: `p∨¬p = F`, `p→p = F`, Peirce = F, `q→(p→q) = F` — refutations, not
+gaps. The ten that are identities have both sides defined and different, so
+each comes with an exhibited counterexample: `¬¬p = p` gives T against Z;
+both De Morgans T against F; contraposition-as-identity and `⊕=¬(↔)` F
+against T; idempotence, absorption and the two units F against Z.
+Undecided outcomes among the fourteen: **zero**.
+
+So the fourteen are not a hole in the logic but fourteen theorems *about
+unverified data* — each stating that a classical law does not hold there,
+and showing the value that proves it. Classical logic states none of them,
+not because it disagrees but because it cannot take the input: it has no
+marked atom to evaluate, and both of its available defaults (§10) decide
+the matter by fiat rather than by computation.
+
 **The three laws of thought (MEASURED).** Of the classical triad, exactly
 one survives the lift. Non-contradiction ¬(p∧¬p) is T under every marking
 and hereditary (§19); identity p→p and excluded middle p∨¬p both fall on Z.
@@ -790,6 +808,29 @@ the price is the rewriting laws, which the atomic position preserves
 "local/global validity" in the philosophy of supervaluationism
 (McGee–McLaughlin, Varzi) is a distinction at the level of inferences,
 not of operators; our "locality" is a different notion.
+
+**The engineering default is not naive — it is Bochvar, and the delta is the floor.** The default an engineer reaches for when a flag cannot be established is
+to substitute falsehood and proceed classically. It is worth stating
+precisely what that default *is*, because the literature already owns it.
+Measured cell by cell over the full tables: **"classical logic with
+unverified := false" agrees with the external layer of Bochvar's B3 on
+every binary connective — zero divergences of forty-five cells — and
+parts from it only at negation.** The engineering shortcut is not a
+shortcut; it is a three-valued logic published in 1938.
+
+This relocates the contribution claimed in §1. ZTL parts from external
+Bochvar in exactly seven cells — `→` at (Z,F) and (Z,Z), `↔` at (F,Z),
+(Z,F) and (Z,Z), `⊕` at (T,Z) and (Z,T) — and from the substitution in
+eight, those seven plus `¬Z`. Every one of the eight is a cell where the
+substitution **derives a verdict from the absence of information**:
+`¬Z = T`, `Z → F = T`, `Z ↔ Z = T`. The implicational floor is therefore
+not a stylistic difference from a neighbour in the three-valued family.
+It is the precise set of places where the standard default converts
+ignorance into a warrant, and the whole of the delta lives there.
+
+The same measurement answers the sceptic who proposes to keep classical
+logic and pick sensible defaults: §10 shows that for a formula in which
+one atom occurs in both polarities no conservative default exists at all.
 
 ## 5. The calculus: signed tableaux (MEASURED + Lean)
 
@@ -1303,10 +1344,19 @@ runs in three different directions at once, and collapsing them into
   agrees with classical logic formula for formula
   (`ClassicalAgreement.evalF_agrees`) — where nothing is unverified,
   nothing changes.
-* *Strict contraction by law.* Every ZTL validity is classically
-  valid, and not conversely: `p → p` is a classical tautology and
-  fails here on a marked atom (`ztl_taut_is_classical`,
-  `not_conversely`). Strictly fewer laws.
+* *Strict contraction by law — and only over the wider domain.* Every
+  ZTL validity is classically valid, and not conversely: `p → p` is a
+  classical tautology and fails here on a marked atom
+  (`ztl_taut_is_classical`, `not_conversely`). The contraction must be
+  read with its domain named. Over the depth-≤2 pool of §3, classical
+  logic has 588 tautologies on mark-free valuations and ZTL has 588 on
+  the same valuations — **the same set, element for element; not one
+  classical law fails here where the atoms are verified.** The 212 is a
+  count over the *wider* domain, where an atom may carry the mark, and
+  setting 212 beside 588 compares two different denominators. The lawful
+  comparison on that wider domain is against external Bochvar, which
+  validates 548 of the same pool: the 336 are what a logic grants when it
+  is willing to assert about the unverified.
 * *Strict expansion in expressive reach.* The clone is exactly the
   projections plus the external functions — 1 + 8 unary, 2 + 512
   binary, nothing else sneaking in (§3.6, §3.7). Those external
@@ -1318,6 +1368,32 @@ runs in three different directions at once, and collapsing them into
 
 So the honest one-liner is neither "stronger" nor "weaker": **wider in
 subject, narrower in law, identical on verified data.**
+
+**The relation that does hold, and its name.** Those three axes answer
+"which is the larger logic". They do not answer the question an engineer
+actually asks, which is whether the other logic could be used instead.
+That question has a sharper answer, and a standard name. Consider the
+shape the tool builds for every sink it finds (§19): `safe := ¬Tr(tainted)
+∨ Tr(sanitized)`, with a parameter arriving from the network. ZTL returns
+three outcomes — earned, refuted, and *open with the missing ground
+named*. Classical logic has no third outcome, so the unverified case must
+be mapped onto one of the other two by a default, and **both uniform
+defaults grant the pass**: `¬F ∨ F = T` and `¬T ∨ T = T`. The "cautious"
+default is the dangerous one here, because caution is a property of the
+atom's polarity rather than of the analyst's intent. Nor does choosing per
+polarity rescue it: in `(¬tainted ∨ sanitized) ∧ (tainted ∨ logged)` —
+an ordinary rule shape — the first conjunct needs `tainted` true to avoid
+a free pass and the second needs it false. **No conservative default
+exists.** Hence:
+
+> There are problems ZTL answers correctly that classical logic answers
+> correctly under no choice of default, and none the other way round —
+> identical on verified data, better on unverified. As a decision
+> procedure ZTL strictly **dominates** classical logic.
+
+Dominance and deductive strength are different relations, and only the
+first holds. Stating it as "stronger" invites the second reading, which
+this paper's own `ztl_taut_is_classical` refutes in one line.
 
 **Local versus global reading of the mark.** "Z is a mark on the atom"
 admits two readings of verdicts: the global one ("a formula is

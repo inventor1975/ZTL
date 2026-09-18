@@ -16,7 +16,7 @@ Reproduce the two mechanical tiers:
 ```
 cd lean && lake build              # 133 jobs, green
 python3 inventory/axiom_audit.py   # 1112 theorems across 66 modules, empty axiom list
-python3 run_all.py                 # 144 stands + Lean, ALL GREEN
+python3 run_all.py                 # 145 stands + Lean, ALL GREEN
 ```
 
 ---

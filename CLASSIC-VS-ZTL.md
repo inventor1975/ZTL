@@ -249,10 +249,25 @@ verdict out of ignorance**: `¬Z = T`, `Z→F = T`, `Z↔Z = T`.
 
 ### What the mark buys, in numbers
 
-* **1263 of 2924 compound formulas (43%) distinguish "unverified" from "false"**
-  while still returning a two-valued verdict. Under substitution: **0** — `Z` and
-  `F` become one input, so nothing can separate them. Shortest separators are
-  ordinary: `¬p`, `¬¬p`, `(p→p)`, `(p⊕q)`, `(q↔p)`.
+* **1840 of 2924 compound formulas (63%) distinguish "unverified" from "false"**
+  while still returning a two-valued verdict. Call a compound *mark-sensitive*
+  when, on **some** valuation, replacing **every** mark by false changes the
+  verdict — that is the definition behind the figure, and the figure means
+  nothing without it. Under substitution: **0** — `Z` and `F` become one input,
+  so nothing can separate them. Shortest separators are ordinary: `¬p`, `¬¬p`,
+  `(p→p)`, `(p⊕q)`, `(q↔p)`. Run: `python3 marksens.py`.
+
+  **Correction, 2026-09-19.** This line read "1263 of 2924 (43%)" from
+  2026-09-18 until today. That number is not wrong, but it answers a *narrower*
+  question: it counts the compounds that separate the two inputs when the mark
+  sits on **one designated atom** and the other atom is verified (1263 for `p`,
+  1263 for `q`, 1830 for the union). The remaining 10 need **both** atoms
+  unverified at once — e.g. `((p→p)∨(q→q))`, which is F when both carry the
+  mark and T as soon as either one is verified — so marking one atom at a time
+  cannot reach them. The sentence above claimed the general fact and quoted the
+  narrow count, which understated the result by twenty points; and no script in
+  the tree produced either number, which is why the error survived a day.
+  `marksens.py` now prints all three readings.
 * The mark is sayable inside the language: `isZ(x) = ¬(x↔x)` gives T on Z and F
   on both T and F.
 * **On unverified input ZTL decides all 26 classical laws: 12 hold, 14 are

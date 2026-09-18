@@ -369,11 +369,20 @@ the conclusion T. Tarskian by construction.
 
 ## 3. Results (all MEASURED)
 
-### 3.1 Laws: 12 alive, 14 fallen
+### 3.1 Laws: which ones you may use on an unverified atom
 
-Alive: MP, non-contradiction, transitivity of →, commutativity and
+**All twenty-six classical laws hold here on verified data, exactly as they hold
+classically — none is given up** (measured: on mark-free valuations ZTL and
+classical logic validate the same 588 formulas of the depth-≤2 pool, the same set
+element for element). The split below answers a different question: which of them
+still work when an atom carries the mark. Read the numbers in the right
+denominator — classical logic permits NONE of the twenty-six on a marked atom,
+because it cannot take that input at all, so the twelve are twelve **more** than
+the alternative offers, not twelve left over out of twenty-six.
+
+Usable on an unverified atom: MP, non-contradiction, transitivity of →, commutativity and
 associativity of ∧/∨, both distributivities, and the three canonical
-definitions of the derived connectives. Fallen: ¬¬p=p, both De Morgan
+definitions of the derived connectives. Not usable there: ¬¬p=p, both De Morgan
 laws, contraposition-as-identity, ⊕=¬(↔), idempotence of ∧/∨,
 absorption, the units (p∧T=p, p∨F=p), excluded middle, p→p, Peirce's
 law, q→(p→q). The common trait of the fallen: each fails only on Z, and

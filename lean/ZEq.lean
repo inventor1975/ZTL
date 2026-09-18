@@ -69,7 +69,7 @@ theorem refl_ground : eqI g0 g0 = T ∧ eqI g1 g1 = T ∧ eqI g2 g2 = T := by de
 theorem refl_marked : eqI m1 m1 = Z ∧ eqI m2 m2 = Z := by decide
 
 /-- Reflexivity is NOT a free law: some individual is not certified equal to
-itself (the marked ones). The identity analogue of `double_neg_fails`. -/
+itself (the marked ones). The identity analogue of `double_neg_needs_ground`. -/
 theorem refl_not_free : ¬ ∀ x : Indiv, eqI x x = T := by decide
 
 /-! ### Leibniz substitutivity — an earned equality is genuine identity -/

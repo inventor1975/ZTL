@@ -38,7 +38,7 @@ theorem cells : znot Z = F ∧ zimp T Z = F := by decide
 /-- MT1. Contraposition-as-identity is refuted by a substitution that
 uses ONLY those two cells: at p = T, q = Z the left side is `T→Z = F`
 while the right side is `¬Z→¬T = F→F = T`. The point is not that the
-law fails (that is `contraposition_fails`) but WHERE it fails: flipping
+law fails (that is `contraposition_needs_ground`) but WHERE it fails: flipping
 either cited cell is what a rescue would cost. -/
 theorem mt1_contraposition_impossible :
     zimp T Z ≠ zimp (znot Z) (znot T) := by decide

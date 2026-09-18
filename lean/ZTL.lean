@@ -124,20 +124,20 @@ On verified data every one of them holds here as it does classically.
 The identifiers keep the `_fails` spelling because the paper, the theorem
 inventory and the notes cite them by name. -/
 
-theorem double_neg_fails : ¬ ∀ p, znot (znot p) = p := by decide
-theorem deMorgan1_fails : ¬ ∀ p q, znot (zand p q) = zor (znot p) (znot q) := by decide
-theorem deMorgan2_fails : ¬ ∀ p q, znot (zor p q) = zand (znot p) (znot q) := by decide
-theorem contraposition_fails : ¬ ∀ p q, zimp p q = zimp (znot q) (znot p) := by decide
-theorem xor_as_not_xnor_fails : ¬ ∀ p q, zxor p q = znot (zxnor p q) := by decide
-theorem and_idem_fails : ¬ ∀ p, zand p p = p := by decide
-theorem or_idem_fails : ¬ ∀ p, zor p p = p := by decide
-theorem absorption_fails : ¬ ∀ p q, zand p (zor p q) = p := by decide
-theorem and_true_fails : ¬ ∀ p, zand p T = p := by decide
-theorem or_false_fails : ¬ ∀ p, zor p F = p := by decide
-theorem lem_fails : ¬ ∀ p, zor p (znot p) = T := by decide
-theorem imp_refl_fails : ¬ ∀ p, zimp p p = T := by decide
-theorem peirce_fails : ¬ ∀ p q, zimp (zimp (zimp p q) p) p = T := by decide
-theorem k_axiom_fails : ¬ ∀ p q, zimp q (zimp p q) = T := by decide
+theorem double_neg_needs_ground : ¬ ∀ p, znot (znot p) = p := by decide
+theorem deMorgan1_needs_ground : ¬ ∀ p q, znot (zand p q) = zor (znot p) (znot q) := by decide
+theorem deMorgan2_needs_ground : ¬ ∀ p q, znot (zor p q) = zand (znot p) (znot q) := by decide
+theorem contraposition_needs_ground : ¬ ∀ p q, zimp p q = zimp (znot q) (znot p) := by decide
+theorem xor_as_not_xnor_needs_ground : ¬ ∀ p q, zxor p q = znot (zxnor p q) := by decide
+theorem and_idem_needs_ground : ¬ ∀ p, zand p p = p := by decide
+theorem or_idem_needs_ground : ¬ ∀ p, zor p p = p := by decide
+theorem absorption_needs_ground : ¬ ∀ p q, zand p (zor p q) = p := by decide
+theorem and_true_needs_ground : ¬ ∀ p, zand p T = p := by decide
+theorem or_false_needs_ground : ¬ ∀ p, zor p F = p := by decide
+theorem lem_needs_ground : ¬ ∀ p, zor p (znot p) = T := by decide
+theorem imp_refl_needs_ground : ¬ ∀ p, zimp p p = T := by decide
+theorem peirce_needs_ground : ¬ ∀ p q, zimp (zimp (zimp p q) p) p = T := by decide
+theorem k_axiom_needs_ground : ¬ ∀ p q, zimp q (zimp p q) = T := by decide
 
 /-! ## Mini-theorems of the frame (preprint §3.5) -/
 
@@ -161,7 +161,7 @@ the universal is earned, spend it freely... -/
 theorem ui_law : ∀ v : V, zimp (allq v) v = T := by decide
 
 /-- ...while EG as a law fell (P(a)=Z yields no ∃): a strict witness is mandatory. -/
-theorem eg_law_fails : ¬ ∀ v : V, zimp v (exq v) = T := by decide
+theorem eg_law_needs_ground : ¬ ∀ v : V, zimp v (exq v) = T := by decide
 
 /-! ## Part II: entailment, two registers, the fixed point -/
 
@@ -180,13 +180,13 @@ theorem rule_explosion : ∀ p q, p = T → znot p = T → q = T := by decide
 theorem rule_resolution : ∀ p q r, zor p q = T → zor (znot p) r = T → zor q r = T := by decide
 
 /-- Not available on a marked atom: ¬¬-elimination (Z leaks through double negation). -/
-theorem rule_dn_elim_fails : ¬ ∀ p, znot (znot p) = T → p = T := by decide
+theorem rule_dn_elim_needs_ground : ¬ ∀ p, znot (znot p) = T → p = T := by decide
 /-- Not available on a marked atom: tautology in the conclusion (a fresh atom earns no T). -/
-theorem rule_taut_concl_fails : ¬ ∀ p q, p = T → zor q (znot q) = T := by decide
+theorem rule_taut_concl_needs_ground : ¬ ∀ p q, p = T → zor q (znot q) = T := by decide
 
 /-! The rules-versus-laws split: contraposition-as-a-RULE is alive
 (rule_contraposition), contraposition-as-a-LAW fell
-(contraposition_fails). Classical logic glues them by the deduction
+(contraposition_needs_ground). Classical logic glues them by the deduction
 theorem; in ZTL it is one-directional (dt_one_way: zimp Z Z = F while
 p⊨p is trivial). -/
 
@@ -345,7 +345,7 @@ theorem equiv_not_identical :
 #print axioms kand
 #print axioms kor
 #print axioms modus_ponens
-#print axioms lem_fails
+#print axioms lem_needs_ground
 #print axioms liar_homeless
 #print axioms lift2_classical
 #print axioms rule_contraposition

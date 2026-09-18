@@ -177,18 +177,18 @@ theorem tab_ui : tproves [allP] (.atom 0) = true := by rfl
 /-- EG rule: P(a₁) ⊢ ∃P. -/
 theorem tab_eg : tproves [.atom 0] exP = true := by rfl
 /-- EG law fails: ⊬ P(a₁) → ∃P. -/
-theorem tab_eg_law_fails : tproves [] (.imp (.atom 0) exP) = false := by rfl
+theorem tab_eg_law_needs_ground : tproves [] (.imp (.atom 0) exP) = false := by rfl
 /-- ∀¬ ⊢ ¬∃. -/
 theorem tab_allnot_notex : tproves [allNotP] (.neg exP) = true := by rfl
 /-- ¬∃ ⊬ ∀¬ (Z hides under negation). -/
-theorem tab_notex_allnot_fails :
+theorem tab_notex_allnot_needs_ground :
     tproves [.neg exP] allNotP = false := by rfl
 /-- Quantified LEM fails: ⊬ ∀y(P ∨ ¬P). -/
-theorem tab_qlem_fails :
+theorem tab_qlem_needs_ground :
     tproves [] (allF (.disj (.atom 0) (.neg (.atom 0)))
                      [.disj (.atom 1) (.neg (.atom 1))]) = false := by rfl
 /-- The drinker fails: ⊬ ∃y(P(y) → ∀zP(z)). -/
-theorem tab_drinker_fails :
+theorem tab_drinker_needs_ground :
     tproves [] (exF (.imp (.atom 0) allP) [.imp (.atom 1) allP]) = false :=
   by rfl
 /-- ∀-distribution: ∀(P∧Q) ⊢ ∀P. -/
@@ -200,6 +200,6 @@ theorem tab_distrib : tproves [allPQ] allP = true := by rfl
 #print axioms ui_mem
 #print axioms eg_mem
 #print axioms tab_ui
-#print axioms tab_drinker_fails
+#print axioms tab_drinker_needs_ground
 
 end V

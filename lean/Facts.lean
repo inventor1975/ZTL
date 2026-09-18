@@ -16,7 +16,7 @@ namespace V
 theorem ui_law_dom2 : ∀ p₁ p₂ : V, zimp (zand p₁ p₂) p₁ = T := by decide
 
 /-- The EG law fell: ⊭ P(a) → ∃P (a Z-witness does not count). -/
-theorem eg_law_dom2_fails : ¬ ∀ p₁ p₂ : V, zimp p₁ (zor p₁ p₂) = T := by
+theorem eg_law_dom2_needs_ground : ¬ ∀ p₁ p₂ : V, zimp p₁ (zor p₁ p₂) = T := by
   decide
 
 /-- An alive rule: ∀¬ ⊨ ¬∃. -/
@@ -24,19 +24,19 @@ theorem allnot_notex_dom2 : ∀ p₁ p₂ : V,
     zand (znot p₁) (znot p₂) = T → znot (zor p₁ p₂) = T := by decide
 
 /-- Not available on a marked atom: ¬∃ ⊭ ∀¬ (Z hides under negation). -/
-theorem notex_allnot_dom2_fails : ¬ ∀ p₁ p₂ : V,
+theorem notex_allnot_dom2_needs_ground : ¬ ∀ p₁ p₂ : V,
     (znot (zor p₁ p₂) = T → zand (znot p₁) (znot p₂) = T) := by decide
 
 /-- The mirror case, likewise not available on a marked atom: ¬∀ ⊭ ∃¬. -/
-theorem notall_exnot_dom2_fails : ¬ ∀ p₁ p₂ : V,
+theorem notall_exnot_dom2_needs_ground : ¬ ∀ p₁ p₂ : V,
     (znot (zand p₁ p₂) = T → zor (znot p₁) (znot p₂) = T) := by decide
 
 /-- Quantified LEM fell: ⊭ ∀x (P(x) ∨ ¬P(x)). -/
-theorem qlem_dom2_fails : ¬ ∀ p₁ p₂ : V,
+theorem qlem_dom2_needs_ground : ¬ ∀ p₁ p₂ : V,
     zand (zor p₁ (znot p₁)) (zor p₂ (znot p₂)) = T := by decide
 
 /-- The "drinker" fell: ⊭ ∃x (P(x) → ∀y P(y)). -/
-theorem drinker_dom2_fails : ¬ ∀ p₁ p₂ : V,
+theorem drinker_dom2_needs_ground : ¬ ∀ p₁ p₂ : V,
     zor (zimp p₁ (zand p₁ p₂)) (zimp p₂ (zand p₁ p₂)) = T := by decide
 
 /-! ## Dynamics: oscillations and fixed points -/
@@ -84,7 +84,7 @@ theorem passport_even2 : ∀ a b : V, (a = T ∨ a = F) → (b = T ∨ b = F) �
      ((a = T ∧ b = F) ∨ (a = F ∧ b = T))) := by decide
 
 #print axioms ui_law_dom2
-#print axioms notex_allnot_dom2_fails
+#print axioms notex_allnot_dom2_needs_ground
 #print axioms liar_period2
 #print axioms carousel_period4
 #print axioms curry_homeless

@@ -12,7 +12,7 @@ such a verdict `until-verification`. This module says what to DO about it.
                         once normalised — i.e. it was resting on the mark
 
 NORMALISATION IS NOT AN EQUIVALENCE HERE, and that is the point. De Morgan
-fails in this calculus (`deMorgan1_fails`), so the normalised formula is a
+fails in this calculus (`deMorgan1_needs_ground`), so the normalised formula is a
 DIFFERENT, strictly weaker one. Two theorems in `lean/ContextClosure.lean` fix
 both sides of the trade:
 

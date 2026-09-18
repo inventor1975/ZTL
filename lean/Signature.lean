@@ -57,7 +57,7 @@ theorem ztl_dne_witness : znot (znot Z) = T ∧ Z ≠ T := by decide
 /-- **ZTL breaks double-negation elimination as a consequence.** There is
 a value — the mark — at which `¬¬p` is designated (`= T`) while `p` is
 not. This is the signature rule `¬¬p ⊨ p`, failing, and it is exactly
-`rule_dn_elim_fails` of `ZTL.lean` re-stated as an existential witness. -/
+`rule_dn_elim_needs_ground` of `ZTL.lean` re-stated as an existential witness. -/
 theorem ztl_breaks_dne : ∃ x : V, znot (znot x) = T ∧ x ≠ T :=
   ⟨Z, by decide⟩
 

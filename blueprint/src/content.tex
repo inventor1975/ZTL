@@ -42,13 +42,13 @@
 \end{theorem}
 
 \begin{theorem}[Fallen laws]\label{thm:fallen}
-  \uses{def:ops}\lean{V.lem_fails, V.deMorgan1_fails, V.contraposition_fails, V.imp_refl_fails}\leanok
+  \uses{def:ops}\lean{V.lem_needs_ground, V.deMorgan1_needs_ground, V.contraposition_needs_ground, V.imp_refl_needs_ground}\leanok
   Excluded middle, De Morgan, contraposition-as-identity and $p\to p$
   fail --- all only on $Z$, all are ``truth from form''.
 \end{theorem}
 
 \begin{theorem}[Rules vs laws split]\label{thm:split}
-  \uses{thm:mp, thm:fallen}\lean{V.rule_contraposition, V.rule_dn_elim_fails}\leanok
+  \uses{thm:mp, thm:fallen}\lean{V.rule_contraposition, V.rule_dn_elim_needs_ground}\leanok
   Contraposition survives as an inference rule while failing as an
   identity; double-negation elimination fails even as a rule. The
   deduction theorem holds only left-to-right.
@@ -220,7 +220,7 @@
 \end{theorem}
 
 \begin{theorem}[Quantifier tableaux, finite domains]\label{thm:quant}
-  \uses{thm:closesiff, def:jops}\lean{V.cover_allF_T, V.cover_allF_F, V.cover_exF_T, V.cover_exF_F, V.ui_mem, V.eg_mem, V.tab_ui, V.tab_drinker_fails}\leanok
+  \uses{thm:closesiff, def:jops}\lean{V.cover_allF_T, V.cover_allF_F, V.cover_exF_T, V.cover_exF_F, V.ui_mem, V.eg_mem, V.tab_ui, V.tab_drinker_needs_ground}\leanok
   Finite-domain quantifiers are strict folds in the certified language
   (a singleton domain collapses both to the $J_T$ guard); the $n$-ary
   signed rules are preimage-coverage theorems; UI/EG hold in membership

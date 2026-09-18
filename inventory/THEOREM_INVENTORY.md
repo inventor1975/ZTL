@@ -168,7 +168,7 @@ failed — there is nothing in it to audit.
 finding of this pass, and it was not about a theorem. Two workflows
 existed: `blueprint.yml` and `lean.yml`, the latter triggered only on
 `paths: lean/**`. **`run_all.py` was invoked by neither.** Every tier-B
-and tier-C claim above — the 12/14 price list, the algebraic passport,
+and tier-C claim above — the 12/14 extension split (all 26 hold on verified data; 12 extend to the mark), the algebraic passport,
 interpolation, cut admissibility, the temporal layer, the quantum stands
 — was green on the curator's machine and nowhere else.
 

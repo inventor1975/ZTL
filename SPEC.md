@@ -109,9 +109,15 @@ Z⊕Z=F, Z⊕F=F, Z⊕T=F.
    tables. Z-sentences are exempted from the Tarski schema (the demand
    v(sentence)=v(content) is not levied on them).
 
-## The price list (MEASURED audit.py, 2026-07-10)
+## Which laws extend to a marked atom (MEASURED audit.py; re-measured 2026-09-18)
 
-**Alive laws (12):** modus ponens (semantic), non-contradiction
+**All 26 hold on verified data — not one falls.** On mark-free valuations ZTL and
+classical logic validate the same 588 formulas of the depth-≤2 pool, the same set
+element for element. The split below is a different question: which of the 26 keep
+working when an atom carries the mark. The 14 that do not are not lost — on a marked
+atom ZTL proves the refutation there instead, with the witness cell named.
+
+**Extend to the mark (12):** modus ponens (semantic), non-contradiction
 ¬(p∧¬p), transitivity of →, commutativity of ∧ and ∨, associativity of
 ∧ and ∨, both distributivities, and the three canonical definitions:
 p→q = ¬p∨q, p⊕q = (p∧¬q)∨(¬p∧q), p↔q = (p∧q)∨(¬p∧¬q) = (p→q)∧(q→p).

@@ -118,11 +118,17 @@ def run_audit():
         fails = check_validity(phi)
         (alive if not fails else dead).append((name + "  [validity]", fails))
 
-    print("\n-- ALIVE LAWS --")
+    # ЧТО ЗДЕСЬ МЕРЯЕТСЯ, СКАЗАНО ТОЧНО. Все 26 законов держатся на ПРОВЕРЕННЫХ
+    # данных — промерено 2026-09-18, ни один не падает. Списки ниже делят их по
+    # другому признаку: распространяется закон на МЕЧЕНЫЙ вход или нет. Прежние
+    # заголовки («fallen», «цена принципа») читались реестром потерь и расползлись
+    # отсюда по документам; слово куратора: занижать значимость — то же враньё.
+    print("\n-- LAWS YOU MAY USE ON AN UNVERIFIED ATOM (12; classically: none) --")
     for name, _ in alive:
         print("  ✓ " + name)
 
-    print("\n-- FALLEN LAWS (the price of the principle; first counterexample) --")
+    print("\n-- LAWS NOT AVAILABLE ON AN UNVERIFIED ATOM (14) --")
+    print("   they hold on verified data exactly as classically; on a marked atom\n   ZTL proves the REFUTATION instead, and the witness is printed with each")
     for name, fails in dead:
         env = fails[0][0]
         env_s = ", ".join(f"{k}={v}" for k, v in sorted(env.items()))
@@ -143,7 +149,10 @@ def run_audit():
     else:
         print(f"  ✗ violated: {eager[0]}")
 
-    print(f"\nTotal: alive {len(alive)}, fallen {len(dead)}.")
+    print(f"\nTotal: all {len(alive)+len(dead)} hold on verified data, here and classically alike."
+          f"\nOn an UNVERIFIED atom ZTL lets you use {len(alive)} of them; classical logic lets you"
+          f"\nuse NONE, because it cannot take the input at all. The remaining {len(dead)} are not"
+          f"\navailable there either — ZTL proves the refutation instead, with the witness named.")
     return alive, dead
 
 

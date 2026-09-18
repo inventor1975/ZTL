@@ -10,7 +10,10 @@ import sys
 
 STANDS = [
     ("ztl.py",         ["axiom NOT(Z) = F"]),
-    ("audit.py",       ["Total: alive 12, fallen 14"]),
+    # МАЯК ПЕРЕПИСАН ВМЕСТЕ С ПРИБОРОМ 2026-09-18: прежний ждал строку
+    # "alive 12, fallen 14", а она читалась реестром потерь. Числа те же,
+    # рамка другая — на непроверенном атоме ZTL даёт 12 законов, классика ноль.
+    ("audit.py",       ["lets you use 12 of them", "use NONE"]),
     ("entailment.py",  ["Rules total: alive 12, fallen 2"]),
     ("tableau.py",     ["ALL decisions coincided"]),
     ("quantifiers.py", ["UI rule", "✗ ¬∃ ⊨ ∀¬"]),

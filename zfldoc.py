@@ -41,6 +41,16 @@ OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)),
 # here, and a deleted one cannot linger.
 CODE_HELP = {
     "E_EMPTY": ("the table has no rows", "в таблице нет строк"),
+    "E_TOOBIG": ("more ATOMS in the formulas than the cost allows — a reading "
+                 "costs 3**atoms (2.9 s at twelve, 29.6 s at fourteen, measured "
+                 "2026-09-18). Rows are not capped: a hundred-row table whose "
+                 "formulas each speak of six atoms reads in 0.003 s. Split the "
+                 "question, not the table",
+                 "атомов В ФОРМУЛАХ больше, чем позволяет стоимость: разбор стоит "
+                 "3**атомов — двенадцать 2,9 с, четырнадцать 29,6 с (промерено "
+                 "18.09.2026). Строки НЕ ограничены: таблица в сто строк, где "
+                 "каждая формула о шести атомах, читается за 0,003 с. Делить надо "
+                 "вопрос, а не таблицу"),
     "E_NONAME": ("a row without a name", "строка без имени"),
     "E_BADNAME": ("a name a formula could not use",
                   "имя, непригодное для формулы"),

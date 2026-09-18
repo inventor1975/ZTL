@@ -37,10 +37,20 @@ passport office enumerates classical solutions, and the cost is exactly what
 the docket says it is — measured on cycles: 18 sentences 0.36 s, 20 sentences
 1.46 s, 22 sentences 6.45 s, 24 sentences 26.88 s. Doubling per sentence, so
 30 sentences would be about half an hour of a worker. It is not reachable:
-`zfl.validate` refuses more than ten names with `E_TOOBIG` and states the
-reason in the message ("cost is 3**names"), and every core route —
-`/api/run`, `/api/validate`, `/api/assert`, and `/api/refute` through
-`refuter` — passes through that cap. A 256 KB body limit sits in front of it,
+`zfl.validate` refuses more than ten ATOMS IN THE FORMULAS with `E_TOOBIG` and
+states the reason in the message ("cost is 3**atoms"), and `zfl.run` — which
+every studio route reaches — stops on that error before the expensive reading.
+Rows are NOT capped: cost follows the atoms a formula mentions, not the size of
+the table (`lean/LabelExact.lean`, `merge_left`), and a hundred-row table whose
+formulas each speak of six atoms reads in 0.003 s.
+
+**This paragraph was false until 2026-09-18.** It claimed the cap as an existing
+guard; the word `E_TOOBIG` occurred nowhere in the tree and forty names passed
+clean. Measured that day on `zfl.run`: eight atoms 0.03 s, ten 0.27 s, twelve
+2.87 s, fourteen 29.6 s, sixteen over a minute — so the cost WAS reachable
+through a 256 KB body. The cap now exists and is measured in both directions;
+the stale route names (`/api/run`) are corrected to what the studio serves
+(`/api/v2run`). A 256 KB body limit sits in front of it,
 with the proxied body correctly drained before the 413 so Apache does not see
 a desync.
 

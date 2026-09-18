@@ -541,6 +541,9 @@ def coerce(doc):
     return out
 
 
+MAX_ATOMS = 10          # см. комментарий в validate(): стоимость 3**atoms
+
+
 def validate(doc):
     """Machine-readable issues, addressed to a CELL. The repair loop and the
     form's inline errors read the same list — `where` is `row 2 / ground`
@@ -551,6 +554,31 @@ def validate(doc):
     if not rows:
         issues.append(_issue("error", "E_EMPTY", "table",
                              "the table has no rows"))
+    # КАП НА ЧИСЛЕ АТОМОВ В ФОРМУЛАХ — НЕ на числе строк.
+    #
+    # Стоимость разбора растёт как 3**atoms: ПРОМЕРЕНО 2026-09-18 на `zfl.run` —
+    # 8 атомов 0.03 с, 10 атомов 0.27 с, 12 атомов 2.87 с, 14 атомов 29.6 с,
+    # 16 атомов больше минуты. В тело запроса 256 КБ влезают десятки имён, так
+    # что без предела публичная студия отдаёт работника на минуты одним запросом.
+    #
+    # ПОЧЕМУ ПО АТОМАМ, А НЕ ПО СТРОКАМ. Первая версия капа считала строки — и
+    # была бы неверна по существу: значение формулы зависит ТОЛЬКО от атомов,
+    # которые в ней встречаются (`lean/LabelExact.lean`, `merge_left`). Промерено
+    # в тот же час: 60 строк с формулой на 6 имён — 0.002 с, а 12 строк с
+    # формулой на 12 имён — 2.87 с. То есть таблица на сто тысяч строк дешева,
+    # пока каждая формула говорит о немногом; кап по строкам отказал бы ей зря.
+    #
+    # SECURITY-AUDIT.md §40 УТВЕРЖДАЛ, что кап здесь стоит и зовётся E_TOOBIG.
+    # Его не было: слово не встречалось в файле ни разу, 40 имён проходили чисто.
+    # Заявленная защита, которой нет, хуже честно названного отсутствия.
+    _used = names_in(doc.get("claim") or "")
+    for _r in rows:
+        _used |= names_in(_r.get("ground") or "")
+    if len(_used) > MAX_ATOMS:
+        issues.append(_issue("error", "E_TOOBIG", "table",
+                             f"{len(_used)} atoms in the formulas: a reading "
+                             f"costs 3**atoms, so it is capped at {MAX_ATOMS} "
+                             f"(rows are NOT capped — split the question instead)"))
     seen = set()
     for i, r in enumerate(rows, 1):
         at = f"row {i}"

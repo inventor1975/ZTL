@@ -1,15 +1,27 @@
-# Zenodo upload sheet — ZTL v2.0.0 (DRAFT — the repository split)
+# Zenodo upload sheet — ZTL v2.0.0 (DRAFT — the relation to classical logic, and the repository split)
 
-**v2.0.0 (this version, not yet published) — a structural release, not a
-change to the logic.** The ZTL repository is now the logic alone: the Lean
-corpus, the papers, and the ZFL formal language with its tooling. The
-seven-language taint analyzer moved to github.com/inventor1975/introspect
-and the natural-language studio to github.com/inventor1975/ztlstudio; each
-vendors a copy of this core so it clones self-contained. The preprint text
-is unchanged from v1.4.1 — what changed is what ships beside it (the
-repository regression is now 145 stands here, the rest having moved with the
-tools). As a new version of the concept record (DOI
-10.5281/zenodo.21318981) it isNewVersionOf v1.4.1 (10.5281/zenodo.22644261).
+**v2.0.0 (this version, not yet published) — the relation to classical
+logic stated and measured, and the structural release.** The logic is
+unchanged; what changed is what the paper says about it against classical
+logic, in the header, abstract, §1, §3.1, §4, §7 and §10: on verified data
+the two are the same logic (588 = 588 validities of the pool, the same set;
+`evalF_agrees` for the whole language); on unverified data ZTL decides —
+twelve classical laws hold on a marked atom, fourteen are refuted with a
+witness, none undecided, where classical logic decides none; the engineering
+default "unverified := false" is external Bochvar (0 of 45 binary cells
+differ) and ZTL parts from it in eight cells; 1840 of 2924 compounds are
+mark-sensitive; the taint-sink exhibit and the dominance statement. The
+twenty-six Lean theorems about the mark are renamed `*_needs_ground`. Every
+number of the frame is produced by `paper/core_logic_checks.py` and
+`marksens.py`, both stands of the regression. The ZTL repository is now the
+logic alone: the Lean corpus, the papers, and the ZFL formal language with
+its tooling. The seven-language taint analyzer moved to
+github.com/inventor1975/introspect and the natural-language studio to
+github.com/inventor1975/ztlstudio; each vendors a copy of this core so it
+clones self-contained (the repository regression is 146 stands here, the
+rest having moved with the tools). As a new version of the concept record
+(DOI 10.5281/zenodo.21318981) it isNewVersionOf v1.4.1
+(10.5281/zenodo.22644261).
 
 **v1.4.1 PUBLISHED 2026-09-07: version DOI 10.5281/zenodo.22644261**
 (https://zenodo.org/records/22644261), a new version of the record (concept DOI
@@ -38,7 +50,7 @@ PDF, theorems, modules, stands) — the part of this sheet above the version
 history is checked on every run; the history paragraphs carry their own
 versions' numbers and are not.
 
-**File to upload:** `paper/ZTL-preprint-v1.4.1.pdf` (37 pages)
+**File to upload:** `paper/ZTL-preprint-v2.0.0.pdf` (40 pages)
 
 ---
 
@@ -69,6 +81,31 @@ separates its consequence relation from each of its four
 involutive-negation neighbours (K3, LP, weak Kleene, Łukasiewicz Ł₃),
 and by one lemma from any three-valued matrix with involutive negation.
 
+Its relation to classical logic has two halves, both machine-checked,
+and a name. On verified data the two logics are the same: every formula
+takes the same value under every mark-free valuation (evalF_agrees,
+empty axiom list), and on the regression pool of 2926 formulas over two
+atoms the two validate the same 588 formulas, element for element — not
+one classical law is given up. On unverified data ZTL decides where
+classical logic cannot take the input: of twenty-six classical laws,
+twelve continue to hold on a marked atom and fourteen are refuted with
+an exhibited witness, none left open — fourteen theorems about
+unverified data (*_needs_ground in Lean), where classical logic decides
+none of the twenty-six. The mark is expressible inside the language
+(isZ(x) = ¬(x↔x)), and on 1840 of 2924 compounds of the pool the verdict
+depends on whether an atom is unverified or false — a distinction the
+usual substitution "unverified := false" cannot draw at all. That
+substitution is shown to be Bochvar's external logic of 1938, cell for
+cell on every binary connective; ZTL parts from it in eight cells, each
+a place where a verdict is derived from the absence of information. No
+default replaces the mark: in the taint-sink case both classical defaults
+grant a pass to an unverified sink, and a rule with one atom in both
+polarities has no conservative default at all. Hence, as a decision
+procedure, ZTL strictly dominates classical logic; as a system of proofs
+on classical logic's own domain the two are exactly equal
+(ztl_taut_is_classical) — "stronger", which in logic means "proves more",
+is a word the paper does not use of itself.
+
 That the logic is not arbitrary is evidenced case by case: six
 independent engineering traditions — IEEE 754 NaN, SQL NULL, taint
 tracking, abstract interpretation, imprecise probabilities, and
@@ -78,9 +115,10 @@ tradition states it, with a theorem on the empty axiom list placing
 ZTL's verdict inside it — an embedding of the algebraic core, not of the
 whole tradition; the unformalised remainder is named in each case.
 
-For this logic the preprint builds: the measured price list of classical
-laws (12 survive, including modus ponens; 14 fall — all "truth from
-form"); the split between rules and laws with a one-directional deduction
+For this logic the preprint builds: the census of the twenty-six
+classical laws on a marked atom (twelve hold there, modus ponens among
+them; fourteen are refuted with a witness, every one a law of "truth from
+form"; none is left undecided); the split between rules and laws with a one-directional deduction
 theorem for the primitive arrow; a signed tableau calculus with
 machine-proven soundness, completeness and cut admissibility, and a
 syntactic cut-elimination procedure with its bound as a function; an
@@ -120,7 +158,7 @@ with an EMPTY axiom list (no classical choice, no quotients, not even
 propositional extensionality; definitions included): 1112 theorems, each
 audited individually; no section of the paper rests on measurement
 alone. Every numerical claim is reproducible by the repository's
-regression (145 test stands). As of v2.0.0 the repository is the logic
+regression (146 test stands). As of v2.0.0 the repository is the logic
 itself — the Lean corpus, the papers, and the ZFL formal language with its
 tooling; the seven-language taint analyzer and the natural-language studio
 that translates into ZFL (both of which vendor a copy of this core) have
@@ -133,6 +171,44 @@ literature search after the tables had been generated, not a source; the
 contribution is the generating principle, an implicational floor outside
 the Rosser–Turquette standardness conditions, the calculus, the machine
 verification, and the bridges to the engineering traditions.
+
+What is new in v2.0.0 — THE RELATION TO CLASSICAL LOGIC, stated and
+measured, in the header, abstract, §1, §3.1, §4, §7 and §10. First, ON
+VERIFIED DATA THE TWO ARE THE SAME LOGIC: evalF_agrees for every formula,
+and on the depth-≤2 pool of 2926 formulas the two validate the same 588,
+element for element — zero classical laws lost. Second, ON UNVERIFIED
+DATA ZTL DECIDES: the twenty-six classical laws on a marked atom — twelve
+hold (modus ponens, non-contradiction, transitivity, commutativity,
+associativity, both distributivities, the three positive definitions),
+fourteen are refuted with an exhibited witness (the four that are
+formulas take the value F: excluded middle, p→p, Peirce, q→(p→q); the ten
+identities have both sides defined and different), undecided outcomes
+zero; classical logic decides none, having no input for the mark; in Lean
+the fourteen are the theorems *_needs_ground, renamed from *_fails
+(twenty-six names in all). Third, THE ENGINEERING DEFAULT IS BOCHVAR:
+"classical with unverified := false" agrees with the external layer of
+B3 on every binary connective (0 of 45 cells differ) and parts only at
+negation; ZTL parts from Bochvar in seven cells (→ at (Z,F),(Z,Z); ↔ at
+(F,Z),(Z,F),(Z,Z); ⊕ at (T,Z),(Z,T)) and from the default in eight —
+each a verdict derived from no information (¬Z=T, Z→F=T, Z↔Z=T). Fourth,
+WHAT THE MARK BUYS, measured (marksens.py): isZ(x) = ¬(x↔x) names the
+mark from inside; 1840 of 2924 compounds are mark-sensitive (some
+valuation on which replacing every mark by F changes the verdict), 1263
+with the mark on one atom only, 10 reachable only with both atoms
+unverified, 0 under the substitution — the definition kept beside the
+number. Fifth, THE SINK EXHIBIT: safe := ¬tainted ∨ sanitized; ZTL
+returns earned, refuted, or open with the missing ground named; both
+classical defaults grant a pass (¬F∨F = T, ¬T∨T = T), and for
+(¬tainted ∨ sanitized) ∧ (tainted ∨ logged) no conservative default
+exists. Whence the relation, named with both halves measured: as a
+DECISION PROCEDURE ZTL strictly DOMINATES classical logic; as a SYSTEM OF
+PROOFS on classical logic's own domain the two are exactly equal
+(ztl_taut_is_classical). The count 212 (validities over marked
+valuations) is never set beside the 588 (verified valuations): on the
+extended domain the comparison is with external Bochvar's 548, and the
+336 are what that logic grants on ignorance. Every number is produced by
+paper/core_logic_checks.py and marksens.py, both stands of the
+regression. Also in v2.0.0: the repository split (see above).
 
 What is new in v1.4.1 (same day) — §2 now prints ALL TEN TABLES OF ZTL:
 the five primitives ¬ ∧ ∨ → ⊕, ↔, and the four negated compounds
@@ -252,10 +328,10 @@ expiry-insurance (a shortcut's savings are a loan against its
 expirable ground), the ungrounded verification event (the closed-world
 loan "no proof of revocation, hence not revoked" cannot enter the
 logic — an argument from absence never yields T — and is exposed in
-the event ledger). And a price list of DERIVATIONS: forward chaining
-over the 12 alive rules shows they are transport, not creation — from
-the empty premise set nothing is derivable even with the fallen rules
-as loans, ZTL's own guarded tautologies included; the classical
+the event ledger). and the price of DERIVATIONS: forward chaining
+over the 12 rules that hold on marked data shows they are transport, not
+creation — from the empty premise set nothing is derivable even with the
+two rules that need ground as loans, ZTL's own guarded tautologies included; the classical
 step invisible from inside (double-negation elimination) becomes a
 priced borrowing with a named creditor. New sections 21-23; the
 ZFL language gains a verification timeline played into chronicles;
@@ -267,13 +343,13 @@ lift; §3.8, an explicit Lean-verified census of the sixteen lifted binary
 connectives that re-derives Finn's completeness landscape for the
 external-Bochvar class (Studia Logica 1974): solo-completeness tracks
 non-commutative directionality — Sheffer's stroke and Peirce's arrow
-fall (both stall in one shared 18-table cage), both implications and
-both abjunctions survive — with the kernel clone equalities
-machine-checked on the empty axiom list (lean/ZClone.lean), the
-surviving basis read as the credit detector; the
+are not complete alone (both stall in one shared 18-table cage), both
+implications and both abjunctions are — with the kernel clone equalities
+machine-checked on the empty axiom list (lean/ZClone.lean), the basis ↛
+read as the credit detector; the
 fence-depth theorem (§19): the hereditary warranty is checkable at
 depth exactly m−1 and no constant-depth fence exists (the guard
-family over the fallen law of identity); the warranty ladder
+family over the law of identity, refuted on the mark); the warranty ladder
 stress-tested at scale (151.8M pairs, 0 violations); the three-laws
 capstone (§3.1): of the classical triad only non-contradiction
 survives the lift — a denial is free, an affirmation is on credit;
@@ -312,7 +388,8 @@ depend on trusting the AI: every claim is checkable by the repository
 code and the Lean 4 kernel.
 
 **Keywords:**
-three-valued logic; Bochvar logic; paracomplete logic; zero trust;
+two-valued logic with a mark; classical logic; conservative extension;
+decision procedure; Bochvar logic; paracomplete logic; zero trust;
 unverified data; SQL NULL; IEEE NaN; taint tracking; information flow;
 abstract interpretation; Galois connection; imprecise probabilities;
 Dempster–Shafer theory; provenance semirings; supervaluation; Kripke
@@ -327,9 +404,9 @@ verification; warranty; NP-hardness; coNP-hardness; epoch boundary;
 institutional computation; Lean 4; machine-checked proofs
 
 **Related/alternate identifiers:**
-- 10.5281/zenodo.22643843 — isNewVersionOf (v1.4, the prior version;
+- 10.5281/zenodo.22644261 — isNewVersionOf (v1.4.1, the prior version;
   Zenodo pre-fills the field from the previous form — check it says
-  22643843, not 21440066)
+  22644261, not 21440066)
 - https://github.com/inventor1975/ZTL — isSupplementedBy (the code,
   the Lean corpus, the regression, the ZFL language)
 - https://github.com/inventor1975/introspect — isSupplementedBy (the ZTL
@@ -341,4 +418,4 @@ institutional computation; Lean 4; machine-checked proofs
 The preprint text is CC BY 4.0; the accompanying repository code is
 dual-licensed Apache-2.0 OR MIT. The ZTL Lean corpus (sixty-six modules,
 1112 theorems) verifies with an empty axiom list; run `python3 run_all.py`
-for the full repository regression (145 stands + Lean build).
+for the full repository regression (146 stands + Lean build).

@@ -36,7 +36,7 @@ Run (Python 3, no dependencies):
 
 ```
 python3 ztl.py         # tables + verification of the anchor axioms
-python3 audit.py       # identity audit: alive/fallen laws, MP, greediness
+python3 audit.py       # identity audit: which laws hold on the mark, which need ground; MP; greediness
 python3 entailment.py  # entailment ⊨: rules vs laws, deduction theorem
 python3 tableau.py     # calculus: signed tableaux + check against ⊨ (2462 pairs)
 python3 quantifiers.py # quantifiers: strict witnesses, UI/EG asymmetry
@@ -53,7 +53,7 @@ python3 zquasi.py      # quasivariety recon: SI generator, clone theorem, Plonka
 python3 zipc.py        # the delta against intuitionism: G4ip vs the keel, incomparability
 python3 zopsets.py     # operational sets (VR Part II): witnessed identity as ZTL atoms
 python3 zchoice.py     # choice sequences (VR Part II): the stage court = lawless supervaluation
-python3 zzhegalkin.py  # Zhegalkin: the {∧,⊕} basis survives entirely, the GF(2) ring falls
+python3 zzhegalkin.py  # Zhegalkin: the {∧,⊕} basis holds entirely, the GF(2) ring needs ground
 cd lean && lake build  # machine check of the core: zero axioms
 ```
 

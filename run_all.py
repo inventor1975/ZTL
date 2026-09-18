@@ -49,6 +49,20 @@ STANDS = [
     # пунктов. Сторожим ОБА чтения, чтобы подмена узкого широким не повторилась.
     ("marksens.py",    ["MARK SENSITIVITY GREEN", "1840 of 2924", "1263 of 2924",
                         "10 compounds need BOTH marks"]),
+    # Поставлен 2026-09-19 вместе с рамкой 2.0.0 «классика на проверенном,
+    # решение на непроверенном»: каждое число этой рамки — 588 = 588 и одно
+    # множество, 26 законов = 12 + 14 опровергнуты и 0 нерешённых, умолчание
+    # «:= ложь» = внешний Бочвар на 45 из 45, 7 и 8 клеток, сток с двумя
+    # пропусками и отсутствие консервативного умолчания — сторожится ЗДЕСЬ,
+    # а не в приватной копии рядом со статьёй: прибор, не позванный из батареи,
+    # назавтра молча расходится с текстом.
+    ("paper/core_logic_checks.py",
+     ["CORE CHECKS GREEN", "classical 588 validities, ZTL 588",
+      "the two sets are EQUAL", "ALL 26 hold on verified data",
+      "12 hold on a marked atom", "undecided outcomes: 0",
+      "0 of 45 cells differ", "ZTL vs external Bochvar: 7 cells",
+      "ZTL vs the substitution: 8 cells", "ZTL 212 validities, Bochvar 548",
+      "both PASS", "no conservative default", "1840 of 2924"]),
     ("zfo.py",         ["ALL verdicts cross-checked ✓", "guarded drinker"]),
     ("zeq.py",         ["ZEQ GREEN", "grounded: T total; marked: Z total",
                         "0 violations of 24 licensed substitutions"]),

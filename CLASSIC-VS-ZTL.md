@@ -209,3 +209,67 @@ defeat relation — plus a typed refusal and a bill for declaring absence.
 **Access note:** the UNSW/AIES 2021 paper is definitively closed — Semantic
 Scholar reports open-access status CLOSED with no PDF. That entry rests on
 the poster and the abstract and cannot be improved without a library.
+
+---
+
+## Can classical logic replace ZTL? — measured 2026-09-18
+
+Asked by the curator, answered by running rather than arguing. Pool throughout:
+the depth-≤2 pool of `paper/core_logic_checks.py` §5, 2926 formulas over `p, q`.
+
+**On grounded input, classical and ZTL are THE SAME — not close, identical.**
+
+| | validities on grounded inputs only |
+|---|---|
+| classical | 588 |
+| ZTL | 588 — *and the sets are equal, element for element* |
+
+**Laws that work classically and fail in ZTL: zero.** Every one of the 588 holds
+here whenever the atoms are verified.
+
+### The 212 is a different denominator — never put it beside the 588
+
+212 is ZTL's validity count over the *extended* input domain, where an atom may
+be unverified. Extending the input domain can only shrink a validity set — that
+is arithmetic, true of any logic, and it is not weakness. Setting 212 against 588
+is the same category error as setting 548 against 584 (see the 2026-09-18 note
+above). The lawful comparison on the extended domain is **ZTL 212 against
+external Bochvar 548**: both are defined on three values, and those 336 are what
+Bochvar grants on ignorance.
+
+### "Classical with unverified := false" is external Bochvar
+
+Measured cell by cell: they agree on **every** binary connective (0 divergences
+of 45) and part only at `¬`. So the substitution approach is not a naive
+shortcut — it is Bochvar's external layer, available since 1938. ZTL parts from
+it in exactly **7 cells**: `→` at (Z,F),(Z,Z); `↔` at (F,Z),(Z,F),(Z,Z); `⊕` at
+(T,Z),(Z,T). Against the substitution itself the count is 8 — those seven plus
+`¬Z`. Every one of the eight is a place where the substitution **manufactures a
+verdict out of ignorance**: `¬Z = T`, `Z→F = T`, `Z↔Z = T`.
+
+### What the mark buys, in numbers
+
+* **1263 of 2924 compound formulas (43%) distinguish "unverified" from "false"**
+  while still returning a two-valued verdict. Under substitution: **0** — `Z` and
+  `F` become one input, so nothing can separate them. Shortest separators are
+  ordinary: `¬p`, `¬¬p`, `(p→p)`, `(p⊕q)`, `(q↔p)`.
+* The mark is sayable inside the language: `isZ(x) = ¬(x↔x)` gives T on Z and F
+  on both T and F.
+* **On unverified input ZTL decides all 26 classical laws: 12 hold, 14 are
+  REFUTED with a witness value, 0 undecided.** The fourteen are not a hole; they
+  are fourteen theorems about unverified data. Classical decides 0 of 26, because
+  it cannot accept the input at all.
+
+### How to say this without being refuted in one line
+
+"ZTL is stronger than classical logic" invites the standard reading — *proves
+more* — and our own machine-checked `ztl_taut_is_classical` refutes it instantly.
+The wording that survives:
+
+> **ZTL is a conservative extension of classical logic over a wider input
+> domain: strictly more expressive, strictly more applicable, and adding no
+> theorem about the old domain.**
+
+Every word of that is measured: *extension* (the domain gains the unverified
+state), *conservative* (unique validities: exactly zero, machine-checked), and
+nothing lost (588 = 588, same sets).

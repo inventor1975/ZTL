@@ -504,6 +504,14 @@ STANDS = [
                              "FAILS, counterexample",
                              "acts that settle it -> NONE",
                              "vat stipulated away: hands EARNED"]),
+    # Поставлен 2026-09-19 под пост №7 («параметр, который не твой»).
+    # Сторожим ОБА чтения: при ОДНОМ чужом параметре держатся 14 законов,
+    # при ЛЮБОМ чужом — 12. Первое чуть не ушло в пост как второе: та же
+    # подмена узкого счёта широким, что была с 1263 против 1840.
+    ("dilemmas/dirty_param.py", ["DIRTY-PARAM GREEN",
+                        "14 usable, 12 refuted", "12 usable, 14 refuted",
+                        "laws that hold if X is merely UNKNOWN but fixed: 26",
+                        "X ∨ ¬X with X from System 2:  F"]),
     ("dilemmas/surprise.py", ["SURPRISE GREEN",
                               "days left for a surprise: 0",
                               "days left for a surprise: 5",

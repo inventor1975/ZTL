@@ -43,7 +43,14 @@ _PAPER = os.path.join(_ROOT, "paper")
 # the live PSSL source; v1_0_0 is the published record and is frozen
 PSSL_TEX = "paper/PSSL_EN_v1_1_0.tex"
 
+# The live ZTL preprint. Moved from ZTL-draft_1.4.md to 2.0.0 on 2026-09-19,
+# the day 2.0.0 was published (DOI 10.5281/zenodo.22842725) — until then this
+# stand was guarding the numbers of a document nobody was shipping any more,
+# which is the same blind spot as guarding nothing.
+ZTL_DRAFT = "paper/ZTL-draft_2.0.0.md"
+
 FROZEN = {
+          "paper/ZTL-draft_1.4.md": "the source of the published v1.4.1 record (DOI 22644261)",
           "paper/PSSL_EN_v1_0_0.tex": "the published PSSL v1.0.0 (DOI 21452736)"}
 
 WORDS = {"twelve": 12, "thirteen": 13, "fourteen": 14, "fifteen": 15,
@@ -77,6 +84,37 @@ def check(label, claimed, actual, where):
     if not ok:
         failures.append(f"{where}: says {claimed}, measured {actual}")
     return ok
+
+
+def family(label, doc, pattern, where, required=True):
+    """Run one claim family and SAY OUT LOUD whether it checked anything.
+
+    A pattern that matches nothing prints no FAIL — it prints nothing at
+    all, and a stand with nothing to say looks exactly like a stand with
+    good news. This file's own history is three counts of it: the
+    hyphenated number words (found 2026-08-11), "fifty-three modules in
+    all" (2026-09-06), and stand_count() whose marker had stopped matching
+    while "nothing noticed because no claim called this function".
+
+    So: zero matches is now VISIBLE, and where the document is supposed to
+    make the claim it is a FAILURE — the wording changed under the guard,
+    or the guard was pointed at the wrong file. Both are defects; silence
+    is not evidence of agreement. Measured 2026-09-19: pointing this stand
+    at 2.0.0 left the 'stands' and 'hand-placed prints' families matching
+    nothing, and without this they would have passed as green.
+    """
+    hits = re.findall(pattern, doc)
+    if not hits:
+        print(f"  [{'FAIL' if required else 'none'}] {label:46s} "
+              f"matched NOTHING in {where}")
+        if required:
+            failures.append(
+                f"{where}: the claim family '{label}' matched nothing — either "
+                "the wording changed or this guard no longer looks where the "
+                "claim lives")
+        return []
+    print(f"  [ .. ] {label:46s} {len(hits)} claim(s) found, each checked below")
+    return hits
 
 
 # ---------------------------------------------------------------------------
@@ -128,29 +166,48 @@ if __name__ == "__main__":
     print("=" * 78)
 
     # --- 1. the ZTL preprint's corpus figures ---------------------------
-    print("\n### ZTL preprint (paper/ZTL-draft_1.4.md)")
+    doc = os.path.basename(ZTL_DRAFT)
+    print(f"\n### ZTL preprint ({ZTL_DRAFT})")
     thms, mods = corpus_totals()
-    d = text("paper/ZTL-draft_1.4.md")
-    for claimed in set(re.findall(r"(\d+) theorems", d)):
-        check("theorems in the corpus", claimed, str(thms), "ZTL-draft_1.4.md")
+    d = text(ZTL_DRAFT)
+    for claimed in set(family("theorems in the corpus", d,
+                              r"(\d+) theorems", doc)):
+        check("theorems in the corpus", claimed, str(thms), doc)
     # §8's audit line "**N of N clean**" is a corpus count too; it sat at 840
     # while the abstract said 1112 (2026-09-07) because nothing measured it.
-    for a, b in set(re.findall(r"\*\*(\d+) of (\d+) clean\*\*", d)):
-        check("audit line 'N of N clean' (N)", a, str(thms), "ZTL-draft_1.4.md")
-        check("audit line 'N of N clean' (of N)", b, str(thms), "ZTL-draft_1.4.md")
-    words = set(re.findall(r"([\w-]+) modules in all|([\w-]+) modules", d))
-    for w in {a or b for a, b in words}:
-        if w.lower() in WORDS:
-            check(f"modules ('{w}')", str(WORDS[w.lower()]), str(mods),
-                  "ZTL-draft_1.4.md")
-    for claimed in set(re.findall(r"(\d+) (?:test )?stands", d)):
-        check("test stands", claimed, str(stand_count()), "ZTL-draft_1.4.md")
+    for a, b in set(family("audit line 'N of N clean'", d,
+                           r"\*\*(\d+) of (\d+) clean\*\*", doc)):
+        check("audit line 'N of N clean' (N)", a, str(thms), doc)
+        check("audit line 'N of N clean' (of N)", b, str(thms), doc)
+    # The module count is spelled in words. The raw pattern also catches
+    # ordinary prose ("algebra modules"), so the family is judged on the
+    # RECOGNISED number-words, not on the raw hit count — otherwise a
+    # document with prose and no count would look checked.
+    words = {a or b for a, b in
+             re.findall(r"([\w-]+) modules in all|([\w-]+) modules", d)}
+    numeric = sorted(w for w in words if w.lower() in WORDS)
+    if not numeric:
+        print(f"  [FAIL] {'modules (number word)':46s} matched NOTHING in {doc}")
+        failures.append(f"{doc}: no module count in words — the guard is blind "
+                        "or the paper stopped stating it")
+    else:
+        print(f"  [ .. ] {'modules (number word)':46s} {len(numeric)} claim(s): "
+              f"{', '.join(numeric)}")
+        for w in numeric:
+            check(f"modules ('{w}')", str(WORDS[w.lower()]), str(mods), doc)
+    # 2.0.0 states neither a stand count nor a hand-placed-print count, so
+    # these two are not required of it — but a silent skip is what this
+    # stand exists to prevent, so they are announced either way.
+    for claimed in set(family("test stands", d, r"(\d+) (?:test )?stands",
+                              doc, required=False)):
+        check("test stands", claimed, str(stand_count()), doc)
     lake = subprocess.run(["lake", "build"], cwd=_LEAN, capture_output=True,
                           text=True, timeout=1800)
     prints = (lake.stdout + lake.stderr).count("does not depend on any axioms")
-    for claimed in set(re.findall(r"(\d+) hand-placed prints", d)):
-        check("hand-placed #print axioms", claimed, str(prints),
-              "ZTL-draft_1.4.md")
+    for claimed in set(family("hand-placed #print axioms", d,
+                              r"(\d+) hand-placed prints", doc,
+                              required=False)):
+        check("hand-placed #print axioms", claimed, str(prints), doc)
     ci = text(".github/workflows/lean.yml")
     m = re.search(r'test "\$clean" -ge (\d+)', ci)
     if m:
@@ -203,9 +260,40 @@ if __name__ == "__main__":
     print("\n### Reproduction instructions (REPRODUCE.md) — a stranger")
     print("    follows these; a wrong number reads as a failed reproduction")
     rep = text("REPRODUCE.md")
-    for mod, claimed in re.findall(r"\| (\w+)\.lean \| (\d+) \|", rep):
+    # The per-module table was removed from REPRODUCE.md deliberately: it now
+    # tells the reader that the counts GROW and that a different number is not
+    # a failure. So this family is not required — but for a while this section
+    # printed its header and then nothing at all, which looks exactly like
+    # agreement. Announce the absence (found 2026-09-19).
+    for mod, claimed in family("REPRODUCE per-module object table", rep,
+                               r"\| (\w+)\.lean \| (\d+) \|", "REPRODUCE.md",
+                               required=False):
         check(f"REPRODUCE says {mod}.lean prints", claimed,
               str(lean_objects(mod)), "REPRODUCE.md")
+
+    # THE CHECKOUT A STRANGER ACTUALLY RUNS. Measured 2026-09-19: REPRODUCE.md
+    # pinned 9d9a07af…, which the 2026-09-18 history rewrite had orphaned —
+    # the object was still in this working copy and was NOT in origin/master,
+    # so `git clone && git checkout <pin>` failed for everyone but us. Nothing
+    # noticed, because the only thing watching this file was a table that had
+    # been deleted. A pin is a claim like any other: it must resolve where the
+    # reader will look, which is the PUBLIC history, not our local objects.
+    pins = re.findall(r"git checkout ([0-9a-f]{7,40}|[\w.\-/]+)", rep)
+    if not pins:
+        print(f"  [FAIL] {'REPRODUCE pins a checkout':46s} no `git checkout` "
+              "line at all — a stranger has nothing to stand on")
+        failures.append("REPRODUCE.md: no checkout target")
+    for ref in pins:
+        r = subprocess.run(["git", "merge-base", "--is-ancestor", ref,
+                            "origin/master"], cwd=_ROOT,
+                           capture_output=True, text=True, timeout=120)
+        ok = r.returncode == 0
+        print(f"  [{'OK ' if ok else 'FAIL'}] REPRODUCE checkout target "
+              f"{ref[:20]:20s} {'reachable in origin/master' if ok else 'NOT in the public history'}")
+        if not ok:
+            failures.append(
+                f"REPRODUCE.md: `git checkout {ref}` cannot be done by a "
+                "reader — the ref is not reachable from origin/master")
 
     # --- 4. the Zenodo sheet vs the actual artefact ----------------------
     print("\n### Frozen records — deliberately NOT checked")

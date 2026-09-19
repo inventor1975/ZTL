@@ -5,7 +5,7 @@ Paste this whole block into a terminal (Mac/Linux; on Windows use WSL). It runs 
 ```bash
 git clone https://github.com/inventor1975/ZTL &&
 cd ZTL &&
-git checkout 9d9a07afd435cea896edfedeff2b93324ccc19a5 &&
+git checkout v2.0.0 &&
 curl https://elan.lean-lang.org/elan-init.sh -sSf | sh -s -- -y &&
 source "$HOME/.elan/env" &&
 (cd lean && lake build) &&

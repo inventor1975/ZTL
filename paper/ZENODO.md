@@ -1,6 +1,22 @@
-# Zenodo upload sheet — ZTL v2.0.0 (DRAFT — the relation to classical logic, and the repository split)
+# Zenodo upload sheet — ZTL v2.0.0 (PUBLISHED — the relation to classical logic, and the repository split)
 
-**v2.0.0 (this version, not yet published) — the relation to classical
+**v2.0.0 PUBLISHED 2026-09-19: version DOI 10.5281/zenodo.22842725**
+(https://zenodo.org/records/22842725), a new version of the concept record
+10.5281/zenodo.21318981. Verified against the API WITHOUT a token after
+publication: version 2.0.0, CC BY 4.0, 52 keywords, 4 related identifiers,
+and exactly ONE file — ZTL-preprint-v2.0.0.pdf, 413261 bytes, equal to the
+repository copy byte for byte.
+
+TWO THINGS THIS RELEASE CAUGHT THAT THE PREVIOUS ONE DID NOT. (1) Zenodo's
+`newversion` action INHERITS the previous version's files: the draft held
+ZTL-preprint-v1.4.1.pdf beside the new PDF, and the deposit tool called it
+ready because it only checked for MISSING files. The inherited file was
+deleted before publication and the tool now refuses to report ready when a
+draft holds files nobody asked for. (2) The inherited `isNewVersionOf` —
+which on v1.4.1 silently carried v1.2's DOI — was set explicitly this time
+to 10.5281/zenodo.22644261, and the published record shows it correctly.
+
+**v2.0.0 — the relation to classical
 logic stated and measured, and the structural release.** The logic is
 unchanged; what changed is what the paper says about it against classical
 logic, in the header, abstract, §1, §3.1, §4, §7 and §10: on verified data

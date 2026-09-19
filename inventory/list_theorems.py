@@ -51,7 +51,7 @@ DESC = {
                      "unrestricted epoch crossing is constant)",
     "JunctionWitness": "the PSSL junction witness",
     "QuantumWitness": "the MO2 quantum pole (load-bearing for PSSL)",
-    "Frame": "the incompatibility mini-theorems (the fallen laws as a frame)",
+    "Frame": "the incompatibility mini-theorems (the refuted laws as a frame)",
     "Signature": "the signature: ¬¬p ⊨ p separates ZTL from any "
                  "involutive-negation matrix; the broken involution ¬¬Z = T",
     "ZEq": "first-order identity: reflexivity earned (Z on an unverified "

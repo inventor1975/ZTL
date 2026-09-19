@@ -97,7 +97,7 @@ def classify(module, sig):
 
 # ---- MEASURED_WITH_CEILING: the Python stands (proof_scope POOL_BOUNDED) ---
 MEASURED = [
-    ("entailment.py / audit.py", "the 12 alive / 14 fallen laws and rules, "
+    ("entailment.py / audit.py", "the 12 laws usable on a marked atom / 14 refuted there and rules, "
      "measured on the connective tables and the entailment pool"),
     ("zverify.py", "the runtime grade classifier (until / sound / hereditary) "
      "and its separation; the depth-1-checkability hypothesis FELL (2-move "

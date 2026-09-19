@@ -15,7 +15,7 @@ makes ⊨ structural.
 
 namespace V
 
-/-! ## J-operators from fallen laws -/
+/-! ## J-operators from the refuted laws -/
 
 def jT (x : V) : V := zand x x
 def jF (x : V) : V := zand (znot x) (znot x)

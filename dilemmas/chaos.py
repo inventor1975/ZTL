@@ -271,7 +271,7 @@ def drifting_world():
 
 def interface():
     """EXP 4 — the interface between ZTL systems, built on the stones.
-    Three border prohibitions from the three fallen laws: a foreign
+    Three border prohibitions from the three refuted laws: a foreign
     verdict does not teleport (p→p fell — everything incoming is Z);
     silence is not consent (¬¬p fell); the fork cannot be forced — Z is
     a legal reply (p∨¬p fell). What crosses: the WITNESS — verification

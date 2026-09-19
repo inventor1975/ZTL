@@ -38,7 +38,7 @@ reverse. Their slogan's counter-cell is the grounding g:=F — Job's
 innocence.
 
 **5. The resolution (the curator's): everything collapses into g→g.**
-Identity — the fallen law — earns exactly at the owner's grounding, and
+Identity — the law refuted on the mark — earns exactly at the owner's grounding, and
 the guilt atom is grounded only in its bearer:
 
 ```

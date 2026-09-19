@@ -10,7 +10,7 @@
   THE GUARD. Excluded middle, `x ∨ ¬x`, is not a law in ZTL: at a mark it
   reads `Z ∨ ¬Z = Z ∨ F = F`, and on any verified value it reads T. So the
   conjunction `G_N = ∧_{i<N} (xᵢ ∨ ¬xᵢ)` is a METER: F while any of the first
-  N atoms is unverified, T once all are. The fallen law becomes the
+  N atoms is unverified, T once all are. The refuted law becomes the
   instrument that says "everything has been checked".
 
   THE WITNESS. For a classical formula ψ over atoms below N, put

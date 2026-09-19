@@ -107,7 +107,7 @@ def the_flip():
 
 def resolution():
     """The curator's reduction: the whole book is ONE formula — g→g, the
-    fallen law of identity, on the guilt atom. Identity earns exactly at
+    law of identity refuted on the mark, on the guilt atom. Identity earns exactly at
     the owner's grounding, and g is grounded only in its bearer: only the
     person can rightly assess his own guilt (the F→F version — the
     innocent knowing his innocence — IS Job)."""
@@ -127,7 +127,7 @@ def resolution():
         v, grade, _, _ = judge(phi, marks)
         print(f"  {name} → {v}, {grade}")
         assert (v, grade) == want
-    print("\n  identity — the fallen law — earns exactly at the owner's")
+    print("\n  identity — the law refuted on the mark — earns exactly at the owner's")
     print("  grounding, and the guilt atom is grounded only in its bearer:")
     print("  only the person can rightly assess his own guilt. The friends")
     print("  ran g→g on someone else's atom — their whole sin in one line.")

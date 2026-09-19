@@ -8,7 +8,8 @@
 
       (b₁ ∧ … ∧ b_{m−1}) → (a → a)
 
-  a conjunction of m−1 marks standing over the fallen law of identity — and
+  a conjunction of m−1 marks standing over the law of identity, refuted on
+  the mark — and
   checks it "deterministically for m = 3, 4, 5, with the m = 2 witness
   (¬p)→(q→q)". Four values is exhaustion, not a law.
 

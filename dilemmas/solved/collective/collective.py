@@ -27,7 +27,7 @@ from zhunt import judge
 
 
 def wrapper():
-    print("THE WRAPPER — the fallen law laundered by self-application\n")
+    print("THE WRAPPER — the refuted law laundered by self-application\n")
     pp = ("imp", "p", "p")
     w = ("imp", pp, pp)
     row_pp = [ev(pp, {"p": v}) for v in VALUES]

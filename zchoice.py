@@ -21,7 +21,7 @@ MEASURED here:
      WARRANTED (sound-grade, E12) greedy T ⟹ stage-forced T ⟹ true
      on every admitted continuation — 0 violations, both inclusions
      strict. Zero trust speaks Brouwer exactly when it carries its
-     warranty. And the stage court redeems the fallen law of identity
+     warranty. And the stage court redeems the law of identity, refuted on the mark
      p→p (every continuation satisfies it): a law of logic, not of
      data — the greedy court abstains there, the stage court asserts.
   2. LAWLESS = GLOBAL SUPERVALUATION: for a lawless sequence (all

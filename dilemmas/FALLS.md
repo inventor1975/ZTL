@@ -1,7 +1,7 @@
 # The map of falls — through p
 
 *Every logical system pays Tarski; the fall of a system is its honest
-price, and each price is one of the fallen laws in its own dress. All
+price, and each price is one of the refuted laws in its own dress. All
 cells measured (pengine sweep, zhunt.judge, the E22 stage court).*
 
 ```

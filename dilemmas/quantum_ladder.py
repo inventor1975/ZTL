@@ -27,7 +27,7 @@ THE LADDER, measured (every claim below is computed in this file):
     (XXX = +1, XYY = YXY = YYX = −1 on the GHZ state, verified here on
     the 8-dim vector), then all 64 classical assignments enumerated:
     0 satisfy — a one-shot contradiction, no inequalities needed.
-    The ladder SATURATES: after two quanta the list of fallen laws is
+    The ladder SATURATES: after two quanta the list of refuted laws is
     complete; more quanta only sharpen the witnesses.
 
   WHAT NEVER FALLS (measured across 1, 2, 3 quanta):

@@ -322,7 +322,7 @@ if __name__ == "__main__":
     # violations can live only at partial refinements of size ≤ m−1:
     # depth m−1 always SUFFICES. It is also NECESSARY: the guard
     # family  (b₁∧…∧b_{m−1}) → (a→a)  — a conjunction guard of m−1
-    # marks over the fallen law of identity — is sound, invariant
+    # marks over the law of identity, refuted on the mark — is sound, invariant
     # under every verification of fewer than m−1 atoms, and dies when
     # all guards are verified true (the door opens onto the greedy-F
     # gap a→a). Checked deterministically here for m = 3, 4, 5; the

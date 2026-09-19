@@ -11,7 +11,7 @@ file renders it.*
 
 ## The measured path
 
-**1. The wrapper: the fallen law laundered by self-application.** p→p
+**1. The wrapper: the refuted law laundered by self-application.** p→p
 falls honestly on the unverified (F at Z — identity must be earned). But
 (p→p)→(p→p) is T on T, F and Z: a **hereditary CONSTANT**. Worse than
 credit — the court catches credit, while the wrapper passes every court

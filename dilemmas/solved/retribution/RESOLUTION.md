@@ -1,12 +1,12 @@
 # "Everyone will be repaid by their deserts" — RESOLVED (2026-07-16)
 
 *The stand is `retribution.py` in this folder. The curator's method: a
-doctrine needs checking only where it rides the fallen laws — ¬¬p, p∨¬p,
+doctrine needs checking only where it rides the refuted laws — ¬¬p, p∨¬p,
 p→p. Atoms: d = deserved (another's soul — hidden), r = repaid
 (observable; future instances open). The native Russian version is
 `RESOLUTION-RU.md`; this file renders it.*
 
-## The doctrine's three organs — three fallen laws
+## The doctrine's three organs — three refuted laws
 
 **p→p — whose desert?** d→d from outside → F, until-verification; on
 one's own ground (T→T and F→F) → hereditary. Desert, like guilt
@@ -46,7 +46,7 @@ is earned.
 
 ## The statement (the refutation)
 
-**"Repaid by deserts" rides all three fallen laws at once: another's
+**"Repaid by deserts" rides all three refuted laws at once: another's
 desert is not earnable (p→p); the fork over a soul stamps karma on the
 sick and righteousness on the rich by one and the same stipulation
 (p∨¬p); and "it will yet be repaid" is a mint from ignorance over an open
@@ -60,7 +60,7 @@ one of its cells is earned.**
 > *(Everyone will be repaid by their deserts — and only good — but only
 > what other people give them.)*
 
-Measured (`steer()` in the stand) — the correction rides no fallen law:
+Measured (`steer()` in the stand) — the correction rides no refuted law:
 
 ```
 punitive 'by deserts' (d hidden)   →  Z, until-verification   never earnable
@@ -85,6 +85,6 @@ the gift (own grounded act)        →  T, hereditary            the one earned 
 
 *AI participation: measured and written in a dialogue between the curator
 (Vitaly Reznik) and Claude (Anthropic; Claude Fable 5). The
-three-fallen-laws method and the capstone are the curator's; the
+three-refuted-laws method and the capstone are the curator's; the
 convergence of his pre-prepared answer with the independent run is a
 documented instance of the emergent property of mind.*

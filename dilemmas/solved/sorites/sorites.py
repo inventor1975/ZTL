@@ -16,7 +16,7 @@ cannot be "the logic broke". It has to be the price of the premise.
 MEASURED HERE, and the last one is the finding:
 
   1. every tolerance instance touching the unwitnessed middle is F —
-     Z -> Z is F, the fallen law of free truth in its everyday costume;
+     Z -> Z is F, the refuted law of free truth in its everyday costume;
   2. the tolerance premise as a whole is F HEREDITARILY, and refuted by
      the two witnessed ends ALONE: however the middle is filled in, a
      strip that starts F and ends T must jump somewhere;

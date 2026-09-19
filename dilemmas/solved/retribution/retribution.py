@@ -2,13 +2,13 @@
 """retribution — "everyone will be repaid by their deserts" (karma).
 
 The curator's scanning method: a doctrine needs checking ONLY where it
-rides the fallen laws — ¬¬p, p∨¬p, p→p. This stand runs the doctrine
+rides the refuted laws — ¬¬p, p∨¬p, p→p. This stand runs the doctrine
 through exactly those three.
 
 Atoms:  d = he deserved it   (another's soul — hidden)
         r = it was repaid    (observable; future instances open)
 
-The doctrine's three organs, one fallen law each:
+The doctrine's three organs, one refuted law each:
   p→p   — "desert is desert": judging ANOTHER's desert (Job's cell);
   p∨¬p  — "deserved or not": the fork stamped over an unverified soul;
   ¬¬p   — "it WILL be repaid": the future comfort minted by double
@@ -80,7 +80,7 @@ def law_dne():
 
 def steer():
     """The curator's corrected aphorism — how the doctrine must be said
-    so it rides no fallen law: «Всем воздастся по заслугам — и только
+    so it rides no refuted law: «Всем воздастся по заслугам — и только
     хорошее, но только то, что им дадут другие.»"""
     print("THE STEER — the corrected doctrine, cell by cell\n")
     pun = judge("d", {"d": "M"})              # punitive: verdict on hidden desert
@@ -101,7 +101,7 @@ def steer():
 
 if __name__ == "__main__":
     print("RETRIBUTION — 'everyone will be repaid' through the three "
-          "fallen laws\n")
+          "refuted laws\n")
     law_identity()
     print()
     law_lem()
@@ -110,7 +110,7 @@ if __name__ == "__main__":
     print()
     steer()
     print()
-    print("The doctrine rides all three fallen laws: another's desert (p→p),")
+    print("The doctrine rides all three refuted laws: another's desert (p→p),")
     print("the stamped fork over a soul (p∨¬p), and a future repayment minted")
     print("by double negation (¬¬p). Each organ is credit; none is earned —")
     print("and the steer-out is the curator's corrected aphorism (see steer).")

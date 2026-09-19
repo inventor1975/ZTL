@@ -23,9 +23,22 @@ snapshot-relative, and nothing else.
 
 ## 2. Frozen ZTL commit SHA
 
-`bfd903731f138809427ce126fe3bfee6ad70e71c`
+`1714e42102d8375874715ed4c609446a595d25df`
 (repository `github.com/inventor1975/ZTL`; the ZTL core it exercises —
 `zhunt/zhunt.py`, `zverify.py`, `ztl.py` — is fixed at this SHA.)
+
+**Corrected 2026-09-19 — the frozen core is unchanged.** This section
+named `bfd90373…` until today. That object is no longer reachable from the
+public history: it predates the 2026-09-03 extraction, and a reader cloning
+the repository could not check it out — measured by cloning. The SHA above
+is the post-extraction commit of the same work, and the substitution costs
+this proposal nothing, because what it freezes is the ZTL core rather than
+the whole tree: the three files named above are the SAME BLOBS in both
+commits — `zhunt/zhunt.py` d05032c1…, `zverify.py` 9fad3008…, `ztl.py`
+41141c69…, verified with `git rev-parse <commit>:<path>`. The one file that
+does differ is the test artifact itself, and it differs only by the
+extraction; what was extracted is deliberately not restated here, since
+naming it would undo the extraction in the very text explaining it.
 
 ## 3. Artifact path
 

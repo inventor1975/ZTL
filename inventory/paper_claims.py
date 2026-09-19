@@ -295,6 +295,31 @@ if __name__ == "__main__":
                 f"REPRODUCE.md: `git checkout {ref}` cannot be done by a "
                 "reader — the ref is not reachable from origin/master")
 
+    # --- 3c. every commit a live document pins ---------------------------
+    # Same defect as REPRODUCE.md's checkout, one document over: a document
+    # that freezes a commit is making a claim a reader can run, and after the
+    # 2026-09-18 rewrite and the 2026-09-03 extraction several such pins named
+    # objects that exist only in our working copies. Short hashes written with
+    # an ellipsis (d05032c1…) are evidence inside prose, not pins, and are not
+    # matched here on purpose — only a full 40-hex object is a pin.
+    print("\n### Commits pinned by live documents — a frozen SHA is a claim")
+    print("    a reader can run, so it must resolve in the PUBLIC history")
+    for rel in ("vrg/PROPOSAL_001.md",):
+        doc_pins = re.findall(r"\b([0-9a-f]{40})\b", text(rel))
+        if not doc_pins:
+            print(f"  [none] {rel:46s} pins no commit")
+            continue
+        for h in sorted(set(doc_pins)):
+            r = subprocess.run(["git", "merge-base", "--is-ancestor", h,
+                                "origin/master"], cwd=_ROOT,
+                               capture_output=True, text=True, timeout=120)
+            ok = r.returncode == 0
+            print(f"  [{'OK ' if ok else 'FAIL'}] {rel:30s} {h[:12]}… "
+                  f"{'in origin/master' if ok else 'NOT in the public history'}")
+            if not ok:
+                failures.append(f"{rel}: pinned commit {h[:12]}… is not "
+                                "reachable from origin/master")
+
     # --- 4. the Zenodo sheet vs the actual artefact ----------------------
     print("\n### Frozen records — deliberately NOT checked")
     for rel, why in FROZEN.items():

@@ -288,11 +288,19 @@ def _lazy(phi, m):
     raise ValueError(op)
 
 
-def _happened(phi, m):
-    """What the kernel did with one claim, as a dict."""
+def _happened(phi, m, budget=None):
+    """What the kernel did with one claim, as a dict.
+
+    `budget` идёт СЮДА, а не в `zverify.grade` через голову судьи, и это не
+    вкусовщина. `grade` говорит на диалекте меток, где метка — это 'M', а
+    здесь она 'Z'; перевод делает `_grade_marking`. Зовущий напрямую его
+    пропускает, меток не остаётся, множество уточнений вырождается в точку
+    и ВСЯКИЙ разряд читается `hereditary`. Промерено 21.09 на живом обзоре:
+    разметка из 13 меток дала `hereditary` вместо `until-verification`.
+    Поэтому бюджет добавлен во ВХОД, чтобы обходить вход не приходилось."""
     k = _kernel(m)
     v = ev(phi, k)
-    g = grade(phi, _grade_marking(m))
+    g = grade(phi, _grade_marking(m), budget)
     unver = sorted(a for a in _atoms(phi) if m.get(a, Z) == Z)
     gone = sorted(a for a in _atoms(phi) if m.get(a) == E)
     lv, lab = _lazy(phi, k)
@@ -310,11 +318,15 @@ def _happened(phi, m):
             "pending": sorted(lab) if lv == Z else []}
 
 
-def check(text, marking=None):
+def check(text, marking=None, budget=None):
     """Formalize one formula, pass it through the kernel, report what
-    happened."""
+    happened.
+
+    `budget` — потолок на перебор в ГАРАНТИИ; None оставляет прежнее
+    поведение слово в слово. Вердикт линеен и отдаётся всегда, см.
+    `zverify.grade`."""
     phi = formalize(text)
-    return _happened(phi, _full(phi, marking))
+    return _happened(phi, _full(phi, marking), budget)
 
 
 def join(text_a, text_b, operator, marking=None):
@@ -487,7 +499,7 @@ def _no_subject(gone):
             "answer in either direction")
 
 
-def judge(text, marking=None):
+def judge(text, marking=None, budget=None):
     """Triage a claim by its WARRANT, not merely its truth. The verdict alone
     cannot tell 'earned' from 'true-on-credit', nor 'refuted' from 'not yet
     established' — the warranty GRADE does, and it names the weak link.
@@ -512,7 +524,7 @@ def judge(text, marking=None):
 
     This is the sort a plain truth-check and a proof kernel do NOT give: which
     conclusions ride on something unchecked, and exactly which link that is."""
-    r = check(text, marking)
+    r = check(text, marking, budget)
     v, g, unv, gone = (r["verdict"], r["grade"],
                        r["unverified"], r["absent"])
     if g == "hereditary":

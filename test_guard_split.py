@@ -129,6 +129,42 @@ def test_the_two_bits_decline_separately():
     assert st is not None, "2**8=256 обязано влезть в бюджет 1000"
 
 
+def test_budget_goes_through_the_front_door():
+    """БЮДЖЕТ ЖИВЁТ ВО ВХОДЕ, и обходить вход нельзя.
+
+    `zverify.grade` говорит на диалекте меток, где метка это 'M'.
+    `ztljudge` метит непроверенный атом значением 'Z' и переводит его в
+    `_grade_marking`. Зовущий `grade` НАПРЯМУЮ перевод пропускает, меток
+    не остаётся, множество уточнений вырождается в точку — и ВСЯКИЙ разряд
+    читается `hereditary`.
+
+    Промерено 21.09 на живом систематическом обзоре: 13 меток дали
+    `hereditary` вместо `until-verification`. Ошибка тихая и лестная —
+    прибор говорит «гарантировано» там, где не гарантировано ничего.
+
+    Поэтому: бюджет добавлен в `judge`/`check`, а эта проверка сторожит,
+    что через вход он диалект НЕ ЛОМАЕТ."""
+    import ztljudge
+    случаи = [("~~p", {"p": "Z"}, "until-verification"),
+              ("b", {"b": "Z"}, "until-verification"),
+              ("p & q", {"p": T, "q": T}, "hereditary")]
+    for текст, mk, ждём in случаи:
+        for b in (None, 59049, 3):
+            g = ztljudge.judge(текст, dict(mk), budget=b)["grade"]
+            assert g == ждём, \
+                f"{текст} при бюджете {b}: {g}, ждали {ждём}"
+
+    # И прямо про ловушку: диалект 'Z' в zverify БЕЗ перевода лжёт.
+    import zverify
+    phi = ("and", ("and", "a", "b"), "c")
+    сырой = {"a": "Z", "b": "Z", "c": "Z"}
+    переведённый = ztljudge._grade_marking(сырой)
+    assert zverify.grade(phi, сырой) == "hereditary", \
+        "ловушка исчезла — проверка ниже потеряла смысл, перечитай её"
+    assert zverify.grade(phi, переведённый) == "until-verification", \
+        "перевод Z->M перестал влиять на разряд"
+
+
 if __name__ == "__main__":
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
     for t in tests:

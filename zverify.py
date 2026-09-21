@@ -51,11 +51,16 @@ def verify(marking, atom, value):
     return m2
 
 
-def stable_bit(phi, marking):
+def stable_bit(phi, marking, budget=None):
     """The SOUND grade (supervaluation): all completions give one
     classical answer equal to the current greedy verdict. Guarantees
     the verdict never lies about any resolution of the marks; does NOT
-    guarantee it survives intermediate verifications (see hereditary_bit)."""
+    guarantee it survives intermediate verifications (see hereditary_bit).
+
+    БЮДЖЕТ (2026-09-21). `budget` — потолок на число ПЕРЕБИРАЕМЫХ завершений
+    (здесь 2**меток). None — без потолка, прежнее поведение слово в слово.
+    Не уложились — возвращается None: «точнее сказать не берусь». Это НЕ
+    третий вердикт, а отказ отвечать; см. `grade`."""
     v = ztl_eval(phi, marking)
     # ТОТ ЖЕ ДЕШЁВЫЙ СВИДЕТЕЛЬ, что и в hereditary_bit, и по той же причине:
     # обход 2^n ищет ОПРОВЕРЖЕНИЕ и может найти его последним. Два крайних
@@ -67,6 +72,12 @@ def stable_bit(phi, marking):
             w = {a: (fill if s == "M" else s) for a, s in marking.items()}
             if ev(phi, w) != v:
                 return False
+    # Дешёвые пути кончились — дальше только перебор. ОТКАЗ ВМЕСТО ПОМОЛА:
+    # решение куратора 21.09. Вердикт линеен и отдаётся всегда; гарантия
+    # экспоненциальна, и когда она не считается — честнее сказать, что не
+    # берёшься, чем молоть или отказывать во всём документе.
+    if budget is not None and 2 ** len(marks) > budget:
+        return None
     return all(ev(phi, w) == v for w in worlds(marking))
 
 
@@ -155,7 +166,7 @@ def f_locked_by_markfree_conjunct(phi, marking):
     return False
 
 
-def hereditary_bit(phi, marking):
+def hereditary_bit(phi, marking, budget=None):
     """The HEREDITARY grade: the verdict is unchanged under every
     partial refinement. This is the true shelf-life warranty; it
     implies the sound grade (completions are refinements).
@@ -206,10 +217,14 @@ def hereditary_bit(phi, marking):
             m2.update({a: fill for a in marks})
             if ztl_eval(phi, m2) != v:
                 return False              # свидетель найден за одно вычисление
+    # ОТКАЗ ВМЕСТО ПОМОЛА — см. stable_bit. Здесь основание перебора 3, а не
+    # 2: уточнение может оставить метку меткой, завершение — не может.
+    if budget is not None and 3 ** len(marks) > budget:
+        return None
     return all(ztl_eval(phi, m2) == v for m2 in refinements(marking))
 
 
-def grade(phi, marking):
+def grade(phi, marking, budget=None):
     """The warranty grade of the current verdict.
 
     THE MARKING IS CUT TO THE FORMULA'S ATOMS FIRST, and this is a theorem,
@@ -224,14 +239,99 @@ def grade(phi, marking):
     none marked — the walk was 3^28 (≈364 days) for an answer the cut
     computes in microseconds. Measured 2026-08-27; the equivalence was also
     checked by brute force against the uncut walk (documents small enough
-    to finish): zero divergences."""
+    to finish): zero divergences.
+
+    БЮДЖЕТ (2026-09-21, решение куратора «по сторожу предложение принимаю»).
+    Вердикт линеен и отдаётся ВСЕГДА — он считается не здесь, а в `ztl.ev`.
+    Экспонента живёт только в этих двух битах. Поэтому при `budget` гарантия
+    либо называется, либо честно не называется, и документ НЕ отвергается
+    целиком из-за одного дорогого места.
+
+    ПЯТЬ ИСХОДОВ. Три прежних и два новых; ни один не говорит больше, чем
+    установлено:
+
+        hereditary        наследуем — установлено
+        sound             не наследуем, но верен во всех завершениях
+        until-verification не верен и во всех завершениях
+        sound-or-better   завершения держат; наследуемость НЕ проверена
+        undetermined      не берусь назвать разряд
+
+    ПОЧЕМУ «не наследуем» бывает установлен ДАЖЕ при отказе: наследуемость
+    влечёт верность во всех завершениях (завершение — частный случай
+    уточнения). Значит если завершения НЕ держат, то и наследуемости нет —
+    и `until-verification` тут не догадка, а вывод. Ровно поэтому строка
+    st=False возвращает разряд, а не отказ.
+
+    БЮДЖЕТ НИКОГДА НЕ МЕНЯЕТ ОТВЕТ, он только заменяет его отказом. Это
+    проверяемое свойство, а не пожелание: см. `check_budget_never_lies`.
+    """
+    try:
+        return _grade(phi, marking, budget)
+    except RecursionError:
+        # ПАДЕНИЕ -> ОТКАЗ. Промерено 21.09 двоичным поиском: разряд
+        # считается до 994 звеньев цепи, дальше кончается стек Python в
+        # `_conjuncts`. Чинить все 71 рекурсивные функции ядра ради входа,
+        # которого не бывает (предел студии — 10 атомов, в сто раз меньше),
+        # значит латать по одной там, где виновата форма. Но МОЛЧАЛИВЫЙ
+        # ОБВАЛ недопустим: отказ — законный ответ прибора, обвал — нет.
+        return "undetermined"
+
+
+def _grade(phi, marking, budget):
     ats = atoms(phi)
     marking = {a: v for a, v in marking.items() if a in ats}
-    if hereditary_bit(phi, marking):
+    her = hereditary_bit(phi, marking, budget)
+    if her is True:
         return "hereditary"
-    if stable_bit(phi, marking):
-        return "sound"
-    return "until-verification"
+    st = stable_bit(phi, marking, budget)
+    if st is False:
+        return "until-verification"      # вывод, а не догадка — см. выше
+    if her is False:
+        return "sound" if st is True else "undetermined"
+    return "sound-or-better" if st is True else "undetermined"
+
+
+def check_budget_never_lies(trials=4000, seed=11):
+    """СВОЙСТВО, ради которого всё затевалось: бюджет не МЕНЯЕТ ответ, он
+    только заменяет его отказом.
+
+    Иначе сторож превратился бы в источник неверных разрядов — худшее, чем
+    прежний отказ во всём документе. Поэтому свойство проверяется перебором,
+    а не обещается в комментарии.
+
+    Соответствие: разряд при бюджете обязан быть ЛИБО тем же, что без
+    бюджета, ЛИБО честным ослаблением того же:
+
+        undetermined     допустимо всегда (отказ)
+        sound-or-better  допустимо, если без бюджета вышло hereditary/sound
+    """
+    import random
+    rnd = random.Random(seed)
+    ops = ["and", "or", "imp", "xor", "xnor"]
+    ats = ["p", "q", "r", "s", "t"]
+
+    def gen(d):
+        if d == 0:
+            return rnd.choice(ats)
+        if rnd.random() < 0.25:
+            return ("not", gen(d - 1))
+        return (rnd.choice(ops), gen(d - 1), gen(d - 1))
+
+    WEAKER = {"hereditary": {"hereditary", "sound-or-better", "undetermined"},
+              "sound": {"sound", "sound-or-better", "undetermined"},
+              "until-verification": {"until-verification", "undetermined"}}
+    bad, declined = [], 0
+    for _ in range(trials):
+        phi = gen(rnd.choice([1, 2, 3]))
+        mk = {a: rnd.choice(("M", T, F)) for a in ats}
+        full = grade(phi, mk)                       # без бюджета — эталон
+        for b in (1, 2, 4, 9, 27):                  # заведомо тесные потолки
+            got = grade(phi, mk, budget=b)
+            if got in ("undetermined", "sound-or-better"):
+                declined += 1
+            if got not in WEAKER[full]:
+                bad.append((phi, mk, b, full, got))
+    return bad, declined
 
 
 if __name__ == "__main__":

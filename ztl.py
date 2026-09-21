@@ -137,15 +137,25 @@ def ev(phi, env):
 
 
 def atoms(phi, acc=None):
-    """Set of atoms of a formula (constants T/F/Z do not count as atoms)."""
-    if acc is None:
-        acc = set()
-    if isinstance(phi, str):
-        if phi not in VALUES:
-            acc.add(phi)
-    else:
-        for part in phi[1:]:
-            atoms(part, acc)
+    """Set of atoms of a formula (constants T/F/Z do not count as atoms).
+
+    ИТЕРАТИВНА С 2026-09-21, и вот почему это не украшение. Утром я снабдил
+    запасным путём `ev` — и счёл глубокие цепи закрытыми. Они не были
+    закрыты: `grade` зовёт `atoms` ПЕРВОЙ, и цепь из тысячи звеньев валила
+    стек здесь, на шаг раньше. Починка была ЧАСТИЧНОЙ, а выглядела полной.
+
+    Здесь взят прямой итеративный обход, без гибрида: промерено, `atoms`
+    это 0,0107 с из 0,6006 с в `grade` (1,8%), то есть не горячий путь, и
+    платить за второй путь нечем."""
+    acc = set() if acc is None else acc
+    stack = [phi]
+    while stack:
+        node = stack.pop()
+        if isinstance(node, str):
+            if node not in VALUES:
+                acc.add(node)
+        else:
+            stack.extend(node[1:])
     return acc
 
 

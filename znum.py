@@ -201,6 +201,69 @@ def _iv_div(a, b):
     return _iv_mul(a, inv)
 
 
+# SQRT_DIGITS — ОБЪЯВЛЕННАЯ точность зажима, а не молчаливая. Потолок стоит
+# по той же причине, что и у decimal(k) в zfl: `decimal5000000` однажды дошёл
+# до 10**k и повесил службу. Точность, которую никто не объявил и никто не
+# ограничил, — это решение, спрятанное внутри прибора.
+SQRT_DIGITS = 12
+SQRT_DIGITS_CAP = 30
+
+
+def _rat_sqrt(x, k=None):
+    """Рациональный ЗАЖИМ корня: (lo, hi), lo <= sqrt(x) <= hi.
+
+    Не приближение, а доказанная вилка. Корень из рационального почти всегда
+    иррационален и точкой на этой решётке не представим — но представим
+    зажатым, и зажим честнее округления: он ГОВОРИТ, чего не знает.
+
+    Когда корень точен (4, 9/4), возвращается точка: вилка шириной ноль —
+    это не особый случай, а тот же зажим, сошедшийся.
+    """
+    k = SQRT_DIGITS if k is None else min(int(k), SQRT_DIGITS_CAP)
+    if x < 0:
+        return None
+    if x == 0:
+        return (Fraction(0), Fraction(0))
+    p, q = x.numerator, x.denominator
+    rp, rq = math.isqrt(p), math.isqrt(q)
+    if rp * rp == p and rq * rq == q:          # корень точен — вилка сходится
+        e = Fraction(rp, rq)
+        return (e, e)
+    s = 10 ** k
+    n2 = p * s * s
+    lo = Fraction(math.isqrt(n2 // q), s)      # isqrt(floor(x s^2)) <= s*sqrt(x)
+    hi = Fraction(math.isqrt((n2 + q - 1) // q) + 1, s)   # > s*sqrt(x)
+    return (lo, hi)
+
+
+def _iv_sqrt(a, k=None):
+    """Корень над интервалом. Три исхода, и они разные:
+
+        весь интервал < 0   -> НЕТ ЧТЕНИЙ вовсе (четвёртый угол, E)
+        интервал задевает 0 -> None: часть чтений не определена, это МЕТКА,
+                               а не вердикт — ровно как деление на возможный ноль
+        интервал >= 0       -> зажим [sqrt(lo), sqrt(hi)]
+    """
+    if a[1] < 0:
+        raise _NoReadings("sqrt of a strictly negative quantity")
+    if a[0] < 0:
+        return None
+    lo, hi = _rat_sqrt(a[0], k), _rat_sqrt(a[1], k)
+    return (lo[0], hi[1])
+
+
+def _unit_sqrt(u):
+    """Единица под корнем: степени делятся пополам. Нечётная степень —
+    ОТКАЗ, а не приближение: sqrt(m3) в целых степенях не выражается, и
+    сказать об этом честнее, чем выдать m1.5."""
+    m = _unit_map(u)
+    if not m:
+        return None
+    if any(e % 2 for e in m.values()):
+        raise _NoReadings(f"cannot take the root of '{u}': odd exponent")
+    return _unit_str({k: e // 2 for k, e in m.items() if e})
+
+
 def _unit_map(u):
     """A unit read as EXPONENTS: 'm2' -> {m: 2}, 'RUB/m2' -> {RUB: 1, m: -2},
     None -> {} (dimensionless). '·' (or '*') makes the next factor positive,
@@ -403,6 +466,14 @@ def _ev(expr, quantities):
                 st if st == step else None)
             iv, ped, used = _iv_add(iv, r), ped | p, used | u
         return iv, ped, used, step, unit
+    if op == "sqrt":                       # УНАРНАЯ — до распаковки двух
+        ra, pa, ua, sa, una = _ev(args[0], quantities)
+        unit = _unit_sqrt(una)             # бросит _NoReadings на нечётной
+        if ra is None:
+            return None, pa, ua, None, unit
+        # Решётка НЕ наследуется: корень из целого целым не бывает вообще.
+        # Это то же консервативное огрубление, что и на делении.
+        return _iv_sqrt(ra), pa, ua, None, unit
     ra, pa, ua, sa, una = _ev(args[0], quantities)
     rb, pb, ub, sb, unb = _ev(args[1], quantities)
     ped, used = pa | pb, ua | ub

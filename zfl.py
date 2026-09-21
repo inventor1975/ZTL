@@ -799,6 +799,27 @@ _WORDS = [(r"\band\b", "&"), (r"\bи\b", "&"),
           (r"\bimplies\b", "->")]
 
 
+def _spell(text):
+    """НАПИСАНИЯ одного оператора — в ОДНОМ месте, а не в каждом разборщике.
+
+    `<->` это третье написание эквиваленции (`↔`, `=`), и ему нужен отдельный
+    ход по нежданной причине: `normalise` ниже превращает одинокий `=` в `==`
+    там, где в таблице есть числа. То есть в числовом документе `=` уже занят
+    равенством, и `<->` остаётся ЕДИНСТВЕННЫМ способом написать эквиваленцию.
+    Пока он не читался, логическая эквиваленция была недоступна всякому, кто
+    положил в таблицу хоть одно число.
+
+    Почему одной функцией на все входы. Формульный текст приходит ТРЕМЯ
+    дорогами: `normalise` (claim), `_formula` (ground), `_formula_prop`
+    (ground у defined-строки). Правило, записанное трижды, разойдётся —
+    это у нас уже случилось между `zfl` и судьёй и стоило дня. Здесь оно
+    написано один раз и зовётся оттуда, откуда нужно.
+
+    Промерено 2026-09-21: до правки claim `a <-> b` в документе С ЧИСЛАМИ
+    умирал с «stray character '<'», а такой же БЕЗ чисел проходил."""
+    return (text or "").replace("<->", "↔")
+
+
 def normalise(claim, rows):
     """`x - 10 = 20` is what a person writes, and it is not wrong.
 
@@ -807,7 +828,7 @@ def normalise(claim, rows):
     know that. Where the document has quantities, a lone `=` is read as
     equality — the reading anyone typing an equation intends. Elsewhere it
     keeps its propositional sense."""
-    out = claim or ""
+    out = _spell(claim)
     for pat, sym in _WORDS:
         out = re.sub(pat, sym, out)
     if numeric_rows(rows) and _LONE_EQ.search(out):
@@ -820,7 +841,7 @@ def _formula_prop(text):
     biconditional and never a numeric comparison. Reading it as a comparison
     is how converting the docket's own examples first crashed the fixed
     point with KeyError('comparison')."""
-    t = re.sub(r"\bTr\s*\(\s*([^)]+?)\s*\)", r"\1", text or "")
+    t = re.sub(r"\bTr\s*\(\s*([^)]+?)\s*\)", r"\1", _spell(text))
     for pat, sym in _WORDS:
         t = re.sub(pat, sym, t)
     return formalize(t)
@@ -832,7 +853,10 @@ def _formula(text, _names):
     to a bare reference here — self-reference is a property of the GROUND
     being a formula over names, not a separate operator the reader has to
     know."""
-    t = re.sub(r"\bTr\s*\(\s*([^)]+?)\s*\)", r"\1", text)
+    # `_spell` ПЕРВЫМ: иначе регулярка ниже видит `<` внутри `<->` и уводит
+    # ЛОГИЧЕСКУЮ эквиваленцию в ЧИСЛОВОЙ путь — не отказ, а молчаливая
+    # подмена маршрута, худший вид ошибки.
+    t = re.sub(r"\bTr\s*\(\s*([^)]+?)\s*\)", r"\1", _spell(text))
     for pat, sym in _WORDS:
         t = re.sub(pat, sym, t)
     if re.search(r"(<=|>=|==|<|>)", t):

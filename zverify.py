@@ -57,6 +57,16 @@ def stable_bit(phi, marking):
     the verdict never lies about any resolution of the marks; does NOT
     guarantee it survives intermediate verifications (see hereditary_bit)."""
     v = ztl_eval(phi, marking)
+    # ТОТ ЖЕ ДЕШЁВЫЙ СВИДЕТЕЛЬ, что и в hereditary_bit, и по той же причине:
+    # обход 2^n ищет ОПРОВЕРЖЕНИЕ и может найти его последним. Два крайних
+    # завершения — все метки в T и все в F — законные миры из того же
+    # `worlds`, взятые первыми. Предикат не меняется, меняется порядок.
+    marks = [a for a, s in marking.items() if s == "M"]
+    if marks:
+        for fill in (T, F):
+            w = {a: (fill if s == "M" else s) for a, s in marking.items()}
+            if ev(phi, w) != v:
+                return False
     return all(ev(phi, w) == v for w in worlds(marking))
 
 
@@ -175,6 +185,27 @@ def hereditary_bit(phi, marking):
     # ВТОРАЯ ПОЛОВИНА, подключена 2026-08-30: `NoGift.f_locked`.
     if v == F and f_locked_by_markfree_conjunct(phi, marking):
         return True
+    # ДЕШЁВЫЙ СВИДЕТЕЛЬ ПРОТИВ, добавлен 2026-09-21. Обе теоремы выше
+    # ДОКАЗЫВАЮТ наследуемость и молчат, когда её нет; тогда остаётся обход
+    # 3^n, который ищет ОПРОВЕРЖЕНИЕ — и может найти его последним шагом.
+    #
+    # Промерено на конъюнкции голых непроверенных оснований (первый разбор
+    # нетронутой заявки — самый частый случай, и ровно тот, где обе теоремы
+    # по построению не срабатывают): 10 атомов 0,26 с, 12 атомов 2,8 с.
+    # А свидетель там находится с первой попытки: доверить всем меткам T
+    # превращает F в T.
+    #
+    # ЭТО НЕ НОВЫЙ ПРЕДИКАТ, А ДРУГОЙ ПОРЯДОК ОСМОТРА. Обе пробы —
+    # законные уточнения из того же `refinements`, просто взятые первыми.
+    # Ответ не меняется ни на одном входе; меняется, на каком шаге он
+    # находится. Проверено перебором против прежнего поведения.
+    marks = [a for a, s in marking.items() if s == "M"]
+    if marks:
+        for fill in (T, F):
+            m2 = dict(marking)
+            m2.update({a: fill for a in marks})
+            if ztl_eval(phi, m2) != v:
+                return False              # свидетель найден за одно вычисление
     return all(ztl_eval(phi, m2) == v for m2 in refinements(marking))
 
 

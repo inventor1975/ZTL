@@ -124,6 +124,50 @@ def test_provenance_survives_the_root():
     assert ped == set(), f"заработанное помечено кредитом: {ped}"
 
 
+# ---------------------------------------------------------------------------
+# Глубокая цепь. Добавлено 2026-09-21 по третьей работе: до неё цепь из двух
+# тысяч «и» клала стек Python, и это был МОЛЧАЛИВЫЙ ОТКАЗ ПРИБОРА, а не ответ.
+# ---------------------------------------------------------------------------
+def test_deep_chain_does_not_blow_the_stack():
+    from ztl import ev
+    for n, want in ((500, "T"), (3000, "T"), (10000, "T")):
+        phi = "a0"
+        for i in range(1, n):
+            phi = ("and", phi, f"a{i}")
+        env = {f"a{i}": "T" for i in range(n)}
+        assert ev(phi, env) == want, f"цепь из {n} звеньев не посчиталась"
+    # и F тоже, чтобы не выйти зелёным на одном значении
+    phi = "a0"
+    for i in range(1, 3000):
+        phi = ("and", phi, f"a{i}")
+    env = {f"a{i}": "T" for i in range(3000)}
+    env["a1500"] = "F"
+    assert ev(phi, env) == "F", "одно F внутри длинной цепи потерялось"
+
+
+def test_iterative_agrees_with_recursive():
+    """Запасной путь обязан давать ТО ЖЕ, а не просто не падать."""
+    import random
+    from ztl import _ev_rec, _ev_iter
+    rnd = random.Random(3)
+    ops = ["and", "or", "imp", "xor", "xnor"]
+    ats = ["p", "q", "r", "s"]
+
+    def gen(d):
+        if d == 0:
+            return rnd.choice(ats)
+        if rnd.random() < 0.2:
+            return ("not", gen(d - 1))
+        return (rnd.choice(ops), gen(d - 1), gen(d - 1))
+
+    for vals in ({a: "Z" for a in ats}, {a: "T" for a in ats},
+                 {"p": "T", "q": "F", "r": "Z", "s": "T"}):
+        for _ in range(500):
+            phi = gen(rnd.choice([1, 2, 3, 4]))
+            assert _ev_rec(phi, vals) == _ev_iter(phi, vals), \
+                f"пути разошлись на {phi}"
+
+
 if __name__ == "__main__":
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
     for t in tests:

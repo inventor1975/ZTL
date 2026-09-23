@@ -109,9 +109,18 @@ def receipt(report: dict, doc: dict, epoch: str,
     expiry = {name: (r.get("expires_on") or "").strip()
               for name, r in sorted(rows.items())
               if (r.get("expires_on") or "").strip()}
-    reg = (None if ground_registry is None
-           else {"digest": _sha(_canon(sorted(ground_registry))),
-                 "size": len(set(ground_registry))})
+    # A TIERED REGISTRY IS HASHED WITH ITS TIERS. `sorted()` of a dict yields
+    # its keys alone, so a registry saying "trace:story" and one saying
+    # "trace:act" gave the same digest (MEASURED 2026-09-24), and the tier —
+    # the one thing that separates "so it was said" from "so it was done" —
+    # entered the receipt nowhere. A plain set carries no tiers and hashes
+    # exactly as before.
+    if ground_registry is None:
+        reg = None
+    else:
+        body = (sorted([name, tier] for name, tier in ground_registry.items())
+                if isinstance(ground_registry, dict) else sorted(ground_registry))
+        reg = {"digest": _sha(_canon(body)), "size": len(set(ground_registry))}
     # ПРЕДКИ ВХОДЯТ В ОТПЕЧАТОК — иначе подмена предка не заметна, и вся
     # цепь стоит на честном слове. Записывается отпечаток предка И его
     # расположение на момент выдачи: без второго нельзя отличить «предка

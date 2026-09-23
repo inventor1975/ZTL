@@ -168,6 +168,28 @@ if __name__ == "__main__":
     check("петля в цепи даёт ОТКАЗ, а не переполнение стека",
           r3["verdict"] == "FALLEN")
 
+    print("\n### 6d. The tier travels into the receipt")
+    # MEASURED 2026-09-24: the same table under a story tier and under an act
+    # tier gave receipts equal to the byte. run() issued its receipt before it
+    # computed the stipulation tag, and a tiered registry was hashed by its
+    # names alone — so "so it was said" and "so it was done" were one receipt.
+    said_reg = {"vypiska": "story", "pts": "place"}
+    acted_reg = {"vypiska": "act", "pts": "place"}
+    said = zfl.run(ЧЕСТЬ, ground_registry=said_reg)
+    acted = zfl.run(ЧЕСТЬ, ground_registry=acted_reg)
+    rs, ra = said["report"]["receipt"], acted["report"]["receipt"]
+    check("the receipt run() issues carries the tag", rs["on_stipulation"] == ["pf"])
+    check("under an act tier there is nothing to tag", ra["on_stipulation"] is None)
+    check("story and act give different registry digests",
+          rs["registry"]["digest"] != ra["registry"]["digest"])
+    check("and different receipts", rs["digest"] != ra["digest"])
+    check("run()'s receipt equals one issued from its report outside",
+          rs == wr.receipt(said, ЧЕСТЬ, "", ground_registry=said_reg))
+    tampered = json.loads(json.dumps(rs)); tampered["on_stipulation"] = None
+    check("erasing the tag breaks verification", not wr.verify(tampered))
+    check("a registry without tiers hashes exactly as before",
+          честная["registry"]["digest"] == wr._sha(wr._canon(sorted(РЕЕСТР))))
+
     print("\n### 7. ЧЕГО ЭТО НЕ УСТАНАВЛИВАЕТ")
     print("   Квитанция не подписывает (ключи — дело потребителя), не")
     print("   ловит ЛОЖЬ ПРИ ИЗГОТОВЛЕНИИ сама по себе — для этого нужен")

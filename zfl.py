@@ -1297,6 +1297,18 @@ def run(doc, ground_registry=None):
                              in zbook.trust_interval(book).items()},
                 "naming": zbook.naming_assumption(book)}
 
+    # БИРКА НА ЗАВИСЯЩИХ. Заработавшее на объявленном не прячется среди
+    # заработавшего на предъявимом.
+    # COMPUTED BEFORE THE RECEIPT, which reads the tag from this report. While
+    # this block stood below the receipt, the receipt issued by run() carried
+    # `on_stipulation: null` ALWAYS, and could not tell a verdict standing on
+    # what was said from one standing on an act (MEASURED 2026-09-24: the same
+    # document under a story tier and an act tier gave receipts equal to the
+    # byte). Found by the Authority Lab prototype.
+    стип = on_stipulation(rows, ground_registry) if ground_registry else []
+    if стип:
+        report["on_stipulation"] = стип
+
     # КВИТАНЦИЯ ВЫДАЁТСЯ ВСЕГДА, когда есть что квитировать. Иначе она
     # остаётся доступной только тому, кто зовёт питон — а человек в тетради
     # её получить не может (нашёл КУРАТОР вопросом 2026-08-28, четвёртый за
@@ -1307,12 +1319,6 @@ def run(doc, ground_registry=None):
         report["receipt"] = warrant_receipt.receipt(
             {"report": report}, doc, (doc.get("epoch") or ""),
             ground_registry=ground_registry)
-
-    # БИРКА НА ЗАВИСЯЩИХ. Заработавшее на объявленном не прячется среди
-    # заработавшего на предъявимом.
-    стип = on_stipulation(rows, ground_registry) if ground_registry else []
-    if стип:
-        report["on_stipulation"] = стип
 
     if demoted:
         # ПОИМЁННО, не счётом: читатель должен видеть, ЧЬИ вердикты стояли

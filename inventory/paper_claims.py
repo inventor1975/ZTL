@@ -47,7 +47,9 @@ PSSL_TEX = "paper/PSSL_EN_v1_1_0.tex"
 # the day 2.0.0 was published (DOI 10.5281/zenodo.22842725) — until then this
 # stand was guarding the numbers of a document nobody was shipping any more,
 # which is the same blind spot as guarding nothing.
-ZTL_DRAFT = "paper/ZTL-draft_2.0.0.md"
+# Moved to 2.1.0 on 2026-09-24: the corpus grew past the published 2.0.0
+# (ZNumNames, 17 theorems), and 2.0.0 stays frozen as published.
+ZTL_DRAFT = "paper/ZTL-draft_2.1.0.md"
 
 FROZEN = {
           "paper/ZTL-draft_1.4.md": "the source of the published v1.4.1 record (DOI 22644261)",

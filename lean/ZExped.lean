@@ -208,8 +208,11 @@ def eqAtomN (x y : IvN) : V :=
   if x.hi < y.lo ∨ y.hi < x.lo then F
   else if x.lo = x.hi ∧ x.lo = y.lo ∧ y.lo = y.hi then T else Z
 
-/-- Identity is earned by nothing short of full verification: a
-nondegenerate mark does not equal even itself. -/
+/-- Under the SEPARATE reading of two sides — two acts of measurement, a
+`sample` — identity is earned by nothing short of full verification: a
+nondegenerate mark does not equal even itself. For a NUMBER named twice the
+two sides are one value and `m == m` is forced (the curator, 2026-09-24;
+`ZNumNames.self_eq_joint`). -/
 theorem mark_self_not_earned (lo hi : Nat) (h : lo < hi) :
     eqAtomN ⟨lo, hi⟩ ⟨lo, hi⟩ = Z := by
   show (if hi < lo ∨ hi < lo then F

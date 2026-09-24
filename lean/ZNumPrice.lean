@@ -20,8 +20,11 @@ occurrence chooses independently.
 
 The reading sets coincide, so the interval arithmetic inherits both laws; the
 atoms are neither forced true nor forced false, so the verdict keeps the mark.
-That is regularity R1 (§26) on the numeric floor: coincidence of bounds is not
-identity, and identity is earned by nothing short of full verification. The
+That is regularity R1 (§26) for SAMPLES — each occurrence its own act of
+measurement: coincidence of bounds is not identity between two acts. For
+NUMBERS a name is one value across the claim (the curator, 2026-09-24), and
+both equations are forced: `ZNumNames.comm_forced_numbers`,
+`ZNumNames.unit_forced_numbers`. The
 mechanism is the decorrelation `decorrelation_witness` already exhibits for
 m − m: the two occurrences of x in `x + 0 = x` read independently.
 

@@ -1,85 +1,63 @@
 # RESULT — the numeric floor's algorithm against its semantics (2026-09-24)
 
 Forecast frozen first: `FORECAST-NUMERIC-ALGORITHM-2026-09-24.md` (commit
-`3e3a532`). Measured with a lab probe (`lab/numexact/`, not in git): integer
-quantities `x`, `y` on the intervals [0,1], [1,3], [-2,2], [2,2]; both sides
-drawn from the 52 expressions of depth ≤ 2 over `x, y, 1, 2` with `+ − ×`;
-kinds `le`, `lt`, `eq`; the coherent semantics enumerated exactly (one value
-per name). 120,384 claims.
+`3e3a532`). This file records what was measured, the mistake made on the way,
+and the corrected result. Nothing in it is argued without the run beside it.
 
-## Before the fix
+## The mistake, first
 
-| fragment | claims | exact | missed (forced, left Z) | false |
+The forecast took as its reference "the coherent semantics: one value per
+name" and the lab enumerated ONE assignment for BOTH sides of a comparison.
+That is the classical reading, not ZTL's. ZTL does not grant identity on
+credit (`V.ax_xnor_ZZ : zxnor Z Z = F` — self-identity is not certified): a
+name co-refers WITHIN a term (2026-08-11: `m - m` is 0), but the two sides of
+a comparison are two readings. `lean/ZNumCoherent.lean` says exactly that:
+`ForcedEQ m a b := ∀ x y, CReads m a x → CReads m b y → x = y`.
+
+Against the classical reference the floor looked incomplete — 12,834 of
+120,384 claims "missed", 10,122 of them `m == m`-like — and a "fix" reading
+the sides together was built, measured, pushed (ZTL `ff8a852`, ztlstudio
+`7d53c67`) and deployed on 2026-09-24 at 15:04. The curator caught it within
+the hour: «Ну да m==m — это False ... если m не проверен». Reverted at 15:14:
+the server from its 15:04 backups, the repositories by revert commits. The
+9,506 verdicts the fix added were, by ZTL's own standard, truths granted on
+credit.
+
+The lesson is ONBOARDING §1.1 and §3 verbatim, read by the assistant the same
+hour: "the logic refuses to identify two occurrences of the same unverified
+atom"; "identity is not granted, it is exhibited".
+
+## The corrected measurement
+
+Same pool (integer `x`, `y` on [0,1], [1,3], [-2,2], [2,2]; both sides from the
+52 expressions of depth ≤ 2 over `x, y, 1, 2` with `+ − ×`; `le`, `lt`, `eq`),
+now against ZTL's semantics: each side read coherently, the sides
+independently. The floor as it stands (the reverted, original algorithm):
+
+| fragment | claims | exact | missed (forced, left Z) | unforced verdicts |
 |---|---|---|---|---|
-| linear, no name on both sides | 69,870 | 69,170 | 700 | 0 |
-| linear, a name on both sides | 37,860 | 27,738 | **10,122** | 0 |
+| linear | 69,870 | 69,170 | 700 | 0 |
+| linear, a name on both sides | 37,860 | 37,804 | 56 | 0 |
 | nonlinear | 5,778 | 5,370 | 408 | 0 |
-| nonlinear, a name on both sides | 6,876 | 5,272 | 1,604 | 0 |
-| **total** | **120,384** | 107,550 | **12,834** | **0** |
+| nonlinear, a name on both sides | 6,876 | 6,840 | 36 | 0 |
+| **total** | **120,384** | 119,184 | **1,200 (1.0%)** | **0** |
 
-Live on the studio's own path (`znumjudge.judge_sheet_claim`):
-`m - m == 0` → ON CREDIT, `m == m` → OPEN; `x - x <= 1` → ON CREDIT,
-`x <= x + 1` → OPEN. The same fact, two spellings, two dispositions.
+* **Sound: 0 verdicts the semantics does not force.** The floor never lied.
+* The misses are integer-lattice gaps inside a side (`1 == x + x`: `2x` is
+  never odd; `2 == y * y`) and the interval dependency problem inside a side
+  (`y - y <= y * y`). They are honest Z, and they are the open work.
 
-## The fix (`znum.compare`, `znum._ev_linear`)
+## Scorecard of the forecast, corrected
 
-On the linear fragment the difference of the two sides is read in ONE pass,
-each name counted once; outside it the old separate-bounds path runs
-unchanged. And a name that cancels (`m - m`) contributes exactly 0 even when
-unbounded (it was `0 * inf = nan`).
-
-## After the fix
-
-| fragment | missed before | missed after |
+| | predicted | measured against ZTL's semantics |
 |---|---|---|
-| linear, no name on both sides | 700 | 700 |
-| linear, a name on both sides | 10,122 | **616** |
-| nonlinear (both kinds) | 2,012 | 2,012 |
-| **total** | **12,834** | **3,328** |
+| P1 sound | 0 false | 0 unforced (÷ and √ NOT yet measured) |
+| P2 linear exact (continuous) | exact | measured only under the classical reference — to redo |
+| P3 incomplete across sides | the largest miss | **WRONG PREMISE**: across sides ZTL refuses by design |
+| P4 nonlinear coherent incomplete | misses | 36 within a side (`y - y <= y * y`) |
+| P5 integer lattice, coefficient ≠ 1 | misses | the bulk of the 1,200 |
+| P6 samples, continuous | complete | NOT measured |
 
-* Old against new on all 120,384 claims: 110,878 unchanged, 9,506 raised
-  from Z to a verdict, **0 overturned**.
-* False verdicts: **0** before, **0** after.
-* Continuous quantities, linear claims, the exact semantics taken at the
-  box's vertices (a linear form peaks at a vertex): 101,184 claims, **all
-  exact** after the fix.
-* Unbounded `m`: `m == m` and `m - m == 0` both T; `m == m` no longer
-  reported as riding on `m`'s bounds.
-
-## The first version of the fix was wrong — the full regression caught it
-
-The first version passed every measurement above and every quick check, and
-the full `run_all.py` came back RED on `dilemmas/omnipotence.py`: the stone
-against an unlimited capacity (`capacity=inf`, a quantity pinned AT +inf,
-against an unbounded `stone`) went from REFUTED to OPEN. The joint lower
-bound summed `+inf + (-inf) = nan`. I had argued that a lower bound can only
-collect `-inf` or finite ends — true of every interval except one pinned at
-+inf, which none of my pools contained. A claim reached by reasoning where a
-measurement was available (ONBOARDING §0).
-
-Cured twice over: a nan joint difference falls back to the separate bounds,
-which still decide there; and the zero-coefficient skip applies only to
-quantities with finite readings (`inf - inf` stays undefined). The stand now
-carries a pool with infinities and the stone itself, and it fails on the
-version without the cure.
-
-## Scorecard of the forecast
-
-| | predicted | measured |
-|---|---|---|
-| P1 sound everywhere | 0 false | 0 false on this pool (÷ and √ NOT yet measured) |
-| P2 linear, one side per name, continuous: exact | exact | exact (after the fix, also across sides) |
-| P3 a name on both sides loses co-reference | the largest miss | 10,122 of 12,834 — confirmed, now fixed |
-| P4 nonlinear coherent: incomplete | misses | 1,604 — confirmed, NOT fixed (dependency problem) |
-| P5 integer lattice, coefficient ≠ 1: incomplete | misses | the 700 + 616 left, e.g. `1 == x + x` — confirmed, NOT fixed |
-| P6 samples, continuous, + − ×: complete for le/lt | complete | NOT measured |
-
-## What is still open
-
-Division and the root; samples on continuous quantities (P6); the lattice
-gaps (P5) and the nonlinear dependency problem (P4), which stay honest Z.
-Next: the kernel-checked counterpart in Lean — the joint linear reading is
-exact against `ZNumCoherent`'s coherent semantics, on the empty axiom list.
-
-Guarded by `test_joint_sides.py` (in `run_all.py`): it fails on the old
-floor at its first check, `m == m is forced true`.
+Guarded by `test_identity_not_granted.py` (in `run_all.py`): `m == m` is not
+granted while `m` is unverified, `m - m == 0` is; it fails on the reverted
+fix at its first check.

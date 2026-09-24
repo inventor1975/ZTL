@@ -1131,7 +1131,8 @@ BACKWARD_CAP = 6
 
 
 def what_to_check(claim, marking, unverified):
-    """Minimal sets of the claim's own unverified inputs, for EARNED and REFUTED."""
+    """Minimal sets of the claim's own unverified inputs: for EARNED, for REFUTED,
+    and to SETTLE the matter either way."""
     phi = formalize(claim)
     atoms = _formula_atoms(phi)
     own = sorted(a for a in unverified if a in atoms)
@@ -1140,19 +1141,22 @@ def what_to_check(claim, marking, unverified):
                            f"up to {BACKWARD_CAP} (it grows as 3**n: 6 take 0.12 s, 9 take 5.4 s)"}
     m = {a: v for a, v in marking.items() if a in atoms}
     out = {}
-    for target in ("EARNED", "REFUTED"):
+    # SETTLED is the order a person can act on first: check these, and the
+    # verdict becomes final (EARNED or REFUTED) whatever they turn out to be.
+    for target, key in (("EARNED", "EARNED"), ("REFUTED", "REFUTED"),
+                        (zbackward.TERMINAL, "SETTLED")):
         b = zbackward.backward(phi, m, target, by_disposition=True,
                                cap_grounds=BACKWARD_CAP)
         # AN EMPTY FAMILY IS SAID, NOT LEFT EMPTY: a bare [] reads as
         # "nothing to check", the opposite of "no set will do" (zbackward's
         # own rule, kept at the door).
-        out[target] = {"already": b["already"],
+        out[key] = {"already": b["already"],
                        "guaranteed": [list(x) for x in b["guaranteed"]],
                        "possible": [list(x) for x in b["possible"]],
                        "no_guaranteed_set": bool(b["guaranteed_none"]) and not b["already"],
                        "no_possible_set": bool(b["possible_none"]) and not b["already"]}
         if "не_искал_дальше" in b:
-            out[target]["searched_up_to"] = zbackward.MAX_K
+            out[key]["searched_up_to"] = zbackward.MAX_K
     return out
 
 

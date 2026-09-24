@@ -42,7 +42,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from ztl import T, F, Z, ev            # noqa: E402
 from ztljudge import judge, _show      # noqa: E402
 
-TERMINAL = {"EARNED", "REFUTED"}
+TERMINAL = frozenset({"EARNED", "REFUTED"})
 
 
 def _disposition(phi, m):
@@ -51,6 +51,13 @@ def _disposition(phi, m):
 
 def _outcome(phi, m, by_disposition):
     return _disposition(phi, m) if by_disposition else ev(phi, m)
+
+
+def _hits(outcome, target):
+    """A target is one outcome, or a set of them: TERMINAL asks whether the
+    matter is SETTLED either way (added 2026-09-24 for the studio's "what to
+    check" — the order that closes the question, whatever the check shows)."""
+    return outcome in target if isinstance(target, (set, frozenset)) else outcome == target
 
 
 # ГДЕ НА САМОМ ДЕЛЕ УХОДИТ ВРЕМЯ — замерено 2026-08-30 на живом случае с
@@ -111,7 +118,7 @@ def backward(phi, marking, target, by_disposition=True,
     читается как «ничего не надо», что противоположно правде.
     """
     grounds = tuple(a for a, v in sorted(marking.items()) if v == Z)
-    already = _outcome(phi, marking, by_disposition) == target
+    already = _hits(_outcome(phi, marking, by_disposition), target)
 
     # ПОТОЛОК НАЗВАН, А НЕ ОБНАРУЖЕН ТАЙМАУТОМ (2026-08-30).
     # Первый живой случай — 16 находок ревью OIC, 11 непроверенных оснований —
@@ -143,7 +150,7 @@ def backward(phi, marking, target, by_disposition=True,
             hits = []
             for vals in itertools.product((T, F), repeat=k):
                 m2 = dict(marking); m2.update(dict(zip(S, vals)))
-                hits.append(_outcome(phi, m2, by_disposition) == target)
+                hits.append(_hits(_outcome(phi, m2, by_disposition), target))
             if not sub_p and any(hits):
                 possible.append(S)
             if not sub_g and all(hits):

@@ -368,6 +368,12 @@ def sec10_what_the_ground_holds_and_what_to_check():
     assert w["EARNED"]["possible"] == [["p", "q"], ["p", "r"]] and w["EARNED"]["no_guaranteed_set"], w
     w = zfl.run(unverified("a & b & c & d & e & f & g", *"abcdefg"))["report"]["what_to_check"]
     assert "refused" in w and "up to 6" in w["refused"], w
+    settle = {"claim": "signed & delivered", "rows": [
+        {"name": "signed", "means": "signed", "status": "verified", "ground": "scan-12"},
+        {"name": "delivered", "means": "arrived", "status": "unverified"}]}
+    w = zfl.run(settle)["report"]["what_to_check"]
+    assert w["SETTLED"]["guaranteed"] == [["delivered"]], w      # one check closes it, either way
+    assert w["EARNED"]["no_guaranteed_set"] and w["EARNED"]["possible"] == [["delivered"]], w
     done = {"claim": "p", "rows": [{"name": "p", "means": "p", "status": "verified", "ground": "doc"}]}
     assert "what_to_check" not in zfl.run(done)["report"]
     print("   every defined row reports its kind, value and what it reads;")

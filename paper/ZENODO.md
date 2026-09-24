@@ -4,8 +4,8 @@
 
 **Числа ниже — репозиторий СЕЙЧАС, а не снимок выпуска.**
 Опубликованное описание v2.0.0 называет **146 стендов** — столько их было
-19.09 в момент публикации. С тех пор стенд `dilemmas/dirty_param.py`
-добавлен, и в дереве их 147. Запись на Zenodo неизменна и верна о себе;
+19.09 в момент публикации. С тех пор добавлены стенды `dilemmas/dirty_param.py`
+и `test_joint_sides.py` (24.09), и в дереве их 148. Запись на Zenodo неизменна и верна о себе;
 лист же готовит СЛЕДУЮЩИЙ выпуск, поэтому живое число тут растёт.
 (https://zenodo.org/records/22842725), a new version of the concept record
 10.5281/zenodo.21318981. Verified against the API WITHOUT a token after
@@ -40,7 +40,7 @@ logic alone: the Lean corpus, the papers, and the ZFL formal language with
 its tooling. The seven-language taint analyzer moved to
 github.com/inventor1975/introspect and the natural-language studio to
 github.com/inventor1975/ztlstudio; each vendors a copy of this core so it
-clones self-contained (the repository regression is 147 stands here, the
+clones self-contained (the repository regression is 148 stands here, the
 rest having moved with the tools). As a new version of the concept record
 (DOI 10.5281/zenodo.21318981) it isNewVersionOf v1.4.1
 (10.5281/zenodo.22644261).
@@ -180,7 +180,7 @@ with an EMPTY axiom list (no classical choice, no quotients, not even
 propositional extensionality; definitions included): 1112 theorems, each
 audited individually; no section of the paper rests on measurement
 alone. Every numerical claim is reproducible by the repository's
-regression (147 test stands). As of v2.0.0 the repository is the logic
+regression (148 test stands). As of v2.0.0 the repository is the logic
 itself — the Lean corpus, the papers, and the ZFL formal language with its
 tooling; the seven-language taint analyzer and the natural-language studio
 that translates into ZFL (both of which vendor a copy of this core) have
@@ -440,4 +440,4 @@ institutional computation; Lean 4; machine-checked proofs
 The preprint text is CC BY 4.0; the accompanying repository code is
 dual-licensed Apache-2.0 OR MIT. The ZTL Lean corpus (sixty-six modules,
 1112 theorems) verifies with an empty axiom list; run `python3 run_all.py`
-for the full repository regression (147 stands + Lean build).
+for the full repository regression (148 stands + Lean build).

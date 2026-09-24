@@ -46,6 +46,8 @@ STANDS = [
     ("zlabelexactdef.py", ["E60 GREEN"]),
     ("zreconverge.py",  ["E61 GREEN"]),
     ("znumprice.py",    ["E62 GREEN"]),
+    # the two sides of a numeric comparison read together (2026-09-24)
+    ("test_joint_sides.py", ["JOINT SIDES GREEN"]),
     # Поставлен 2026-09-19: CLASSIC-VS-ZTL.md год носила число «1263 из 2924»
     # без определения и без прогона, и оно занижало результат на двадцать
     # пунктов. Сторожим ОБА чтения, чтобы подмена узкого широким не повторилась.

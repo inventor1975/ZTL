@@ -427,6 +427,12 @@ def _ev_linear(expr, quantities):
     for _, (coef, name) in terms.items():
         q = quantities[name]
         a, b = q["lo"], q["hi"]
+        if coef == 0 and not (a == b and isinstance(a, float)):
+            # A name that cancelled (m - m) contributes exactly 0 for every
+            # FINITE reading, however wide the bounds; 0 * inf would be nan
+            # (2026-09-24). A quantity pinned AT an infinity has no finite
+            # reading, inf - inf is undefined, and it keeps the old path.
+            continue
         ends = sorted((coef * a, coef * b), key=lambda x: (x == -INF and -1)
                       or (x == INF and 1) or 0) if isinstance(a, float) \
             or isinstance(b, float) else sorted((coef * a, coef * b))
@@ -532,20 +538,48 @@ def compare(kind, e1, e2, quantities):
     ped, used = p1 | p2, u1 | u2
     if r1 is None or r2 is None:
         return "Z", ped, used, None       # undefined subterm: mark, not verdict
-    if kind == "le":
+    if kind not in ("le", "lt", "eq"):
+        raise ValueError(kind)
+    # THE TWO SIDES READ TOGETHER (2026-09-24). Each side was read coherently
+    # on its own, but bounding the sides SEPARATELY forgot that a name on both
+    # sides is one value: `m == m` came back Z while `m - m == 0` came back T.
+    # Measured before this (lab, 120,384 integer claims): 10,122 of the 37,860
+    # linear claims with a name on both sides were left Z although the
+    # coherent semantics forces them, and not one verdict was false.
+    # On the linear fragment the difference is read in ONE pass, each name
+    # counted once: exact, hence sound. It can only narrow the separate
+    # difference r1 - r2, so a verdict the old path gave is never overturned;
+    # outside the fragment the old path runs unchanged.
+    try:
+        joint = _ev_linear(("sub", e1, e2), quantities)
+    except _NoReadings:
+        joint = None
+    if joint is not None and (joint[0][0] != joint[0][0] or joint[0][1] != joint[0][1]):
+        # nan: a quantity pinned AT +inf met an unbounded one (inf + -inf).
+        # Found by the full regression, dilemmas/omnipotence.py: the stone
+        # against an unlimited capacity came back OPEN instead of REFUTED.
+        # The difference is undefined there; the separate bounds still decide.
+        joint = None
+    if joint is not None:
+        d = joint[0]
+        if kind == "le":
+            v = "T" if d[1] <= 0 else ("F" if d[0] > 0 else "Z")
+        elif kind == "lt":
+            v = "T" if d[1] < 0 else ("F" if d[0] >= 0 else "Z")
+        else:
+            v = "T" if d == (0, 0) else ("F" if d[0] > 0 or d[1] < 0 else "Z")
+    elif kind == "le":
         v = "T" if r1[1] <= r2[0] else ("F" if r1[0] > r2[1] else "Z")
     elif kind == "lt":
         v = "T" if r1[1] < r2[0] else ("F" if r1[0] >= r2[1] else "Z")
-    elif kind == "eq":                     # equality within exactness (§13:
+    else:                                  # equality within exactness (§13:
         d = _iv_sub(r1, r2)                # only forced equality is earned)
         v = "T" if d == (0, 0) else ("F" if d[0] > 0 or d[1] < 0 else "Z")
-        if v == "Z":                       # lattice miss: an int-typed side
-            for sa, rb in ((s1, r2), (s2, r1)):   # can never equal a point
-                if sa is not None and rb[0] == rb[1] \
-                        and not _on_lattice(rb[0], sa):
-                    v = "F"                # off the lattice: forced false
-    else:
-        raise ValueError(kind)
+    if kind == "eq" and v == "Z":          # lattice miss: an int-typed side
+        for sa, rb in ((s1, r2), (s2, r1)):   # can never equal a point
+            if sa is not None and rb[0] == rb[1] \
+                    and not _on_lattice(rb[0], sa):
+                v = "F"                    # off the lattice: forced false
     return v, ped, used, None
 
 

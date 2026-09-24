@@ -591,6 +591,261 @@ def _ev_poly(expr, quantities):
     return (lo, hi), ped, set(seen), None, unit
 
 
+# ------------------------------------------- exact quadratic irrationals
+class QSqrt:
+    """p + q·√d EXACTLY: p, q rational, d a positive integer that is not a
+    square. The roots of a parabola with a non-square discriminant live here,
+    (−b ± √D)/2a, and so does everything the claim computes from them and from
+    rational constants: + − × ÷ stay inside, and the SIGN is decided without
+    approximation (compare p² with q²d). MEASURED 2026-09-24: x*x == 2 with x
+    solved came back OPEN, the root held only as a 12-digit clamp."""
+    __slots__ = ("p", "q", "d")
+
+    def __init__(self, p, q, d):
+        self.p, self.q, self.d = Fraction(p), Fraction(q), int(d)
+
+    def _pair(self, o):
+        if isinstance(o, QSqrt):
+            if o.q != 0 and self.q != 0 and o.d != self.d:
+                raise _NotLinear()          # two different radicands: give up
+            return o if o.q != 0 else QSqrt(o.p, 0, self.d)
+        return QSqrt(o, 0, self.d)
+
+    def __add__(self, o):
+        o = self._pair(o)
+        d = self.d if self.q != 0 else o.d
+        return QSqrt(self.p + o.p, self.q + o.q, d)
+
+    __radd__ = __add__
+
+    def __neg__(self):
+        return QSqrt(-self.p, -self.q, self.d)
+
+    def __sub__(self, o):
+        return self + (-self._pair(o))
+
+    def __rsub__(self, o):
+        return self._pair(o) - self
+
+    def __mul__(self, o):
+        o = self._pair(o)
+        d = self.d if self.q != 0 else o.d
+        return QSqrt(self.p * o.p + self.q * o.q * d, self.p * o.q + self.q * o.p, d)
+
+    __rmul__ = __mul__
+
+    def inverse(self):
+        n = self.p * self.p - self.q * self.q * self.d    # never 0: d is not a square
+        if n == 0:
+            raise _NotLinear()
+        return QSqrt(self.p / n, -self.q / n, self.d)
+
+    def __truediv__(self, o):
+        o = self._pair(o)
+        return self * o.inverse()
+
+    def __rtruediv__(self, o):
+        return self._pair(o) * self.inverse()
+
+    def sign(self):
+        p, q, d = self.p, self.q, self.d
+        if q == 0:
+            return (p > 0) - (p < 0)
+        if p == 0 or (p > 0) == (q > 0):
+            return 1 if (q > 0 if p == 0 else p > 0) else -1
+        # opposite signs: the larger of |p| and |q|√d wins
+        big = p * p - q * q * d
+        return ((p > 0) if big > 0 else (q > 0)) * 2 - 1
+
+    def approx(self):
+        return float(self.p) + float(self.q) * math.sqrt(self.d)
+
+    def __str__(self):
+        def f(x):
+            x = abs(x)
+            return str(x.numerator) if x.denominator == 1 else f"{x.numerator}/{x.denominator}"
+        if self.q == 0:
+            return ("-" if self.p < 0 else "") + f(self.p)
+        root = f"√{self.d}" if abs(self.q) == 1 else f"{f(self.q)}·√{self.d}"
+        if self.p == 0:
+            return ("-" if self.q < 0 else "") + root
+        return f"{'-' if self.p < 0 else ''}{f(self.p)}{'-' if self.q < 0 else '+'}{root}"
+
+    def enclose(self):
+        """Rational bounds lo <= value <= hi, from the square root's clamp."""
+        s_lo, s_hi = _rat_sqrt(Fraction(self.d))
+        a, b = self.p + self.q * s_lo, self.p + self.q * s_hi
+        return (min(a, b), max(a, b))
+
+
+def qsqrt_of(r):
+    """√r for a positive rational r as an exact value: a Fraction when r is a
+    rational square, else a QSqrt with small square factors taken out."""
+    r = Fraction(r)
+    n = r.numerator * r.denominator          # √(a/b) = √(a·b)/b
+    rn, sq = math.isqrt(n), Fraction(1, r.denominator)
+    if rn * rn == n:
+        return Fraction(rn) * sq
+    k = 2
+    while k * k <= n and k <= 1000:
+        while n % (k * k) == 0:
+            n //= k * k
+            sq *= k
+        k += 1
+    return QSqrt(0, sq, n)
+
+
+def _ev_exact(expr, quantities):
+    """The expression's exact value where every name it reads is pinned or
+    carries an `exact` value (a solved root): a Fraction or a QSqrt; raises
+    `_NotLinear` otherwise."""
+    if isinstance(expr, (int, float, Fraction)):
+        return num(expr)
+    if isinstance(expr, str):
+        q = quantities[expr]
+        if q.get("exact") is not None:
+            return q["exact"]
+        if q["lo"] == q["hi"] and not isinstance(q["lo"], float):
+            return q["lo"]
+        raise _NotLinear()
+    op, *args = expr
+    if op == "sqrt":
+        v = _ev_exact(args[0], quantities)
+        if isinstance(v, QSqrt) or v < 0:
+            raise _NotLinear()
+        return qsqrt_of(v) if v > 0 else Fraction(0)
+    if op == "sum":
+        out = Fraction(0)
+        for a in args[0]:
+            out = _ev_exact(a, quantities) + out
+        return out
+    a, b = _ev_exact(args[0], quantities), _ev_exact(args[1], quantities)
+    if op == "add":
+        return a + b
+    if op == "sub":
+        return a - b
+    if op == "mul":
+        return a * b
+    if op == "div":
+        if (b.sign() if isinstance(b, QSqrt) else (b > 0) - (b < 0)) == 0:
+            raise _NotLinear()
+        return a / b
+    raise _NotLinear()
+
+
+# ------------------------------ the multilinear fragment, read at the corners
+MLIN_MAX_KEYS = 10       # 2**10 corners; the studio caps a formula at 10 atoms anyway
+
+
+def _mlin(expr, quantities, counter, keys, seen=None):
+    """Read the expression as  Σ k·(a product of distinct keys) — MULTILINEAR,
+    every key at most to the first power — or give up (`_NotLinear`).
+
+    Where names multiply each other (x*y - x), neither the linear nor the
+    parabola reading applies, and the separate interval arithmetic reads x
+    twice: x*y - x over x in [0,1], y in [0,2] came out [-1, 2], where it is
+    x·(y - 1), in [-1, 1]. A multilinear polynomial is linear in each key with
+    the others fixed, so over a box its extremes sit at the CORNERS, and the
+    range is exact from them. A `sample` gets a key per occurrence, so s*s is
+    two keys — exactly its old decorrelated reading. `keys` maps each key to
+    its name, for the bounds."""
+    if isinstance(expr, (int, float, Fraction)):
+        return {frozenset(): num(expr)}, None
+    if isinstance(expr, str):
+        q = quantities[expr]
+        if q.get("no_readings"):
+            raise _NoReadings(f"{expr}: {q['no_readings']}")
+        if seen is not None:
+            seen.add(expr)
+        counter[0] += 1
+        if q["lo"] == q["hi"] and not isinstance(q["lo"], float):
+            return {frozenset(): q["lo"]}, q.get("unit")
+        key = (expr, counter[0]) if q.get("sample") else expr
+        keys[key] = expr
+        return {frozenset([key]): Fraction(1)}, q.get("unit")
+    op, *args = expr
+    if op == "sqrt":
+        t1, u1 = _mlin(args[0], quantities, counter, keys, seen)
+        c1 = t1.get(frozenset(), Fraction(0))
+        r = _rat_sqrt(c1) if set(t1) <= {frozenset()} and c1 >= 0 else None
+        if r is None or r[0] != r[1]:
+            raise _NotLinear()
+        return {frozenset(): r[0]}, _unit_sqrt(u1)
+    if op == "sum":
+        out, unit = {}, None
+        for a in args[0]:
+            t, u = _mlin(a, quantities, counter, keys, seen)
+            unit = _unify_units(unit, u, "add")
+            for m, k in t.items():
+                out[m] = out.get(m, Fraction(0)) + k
+        return out, unit
+    if op in ("add", "sub"):
+        t1, u1 = _mlin(args[0], quantities, counter, keys, seen)
+        t2, u2 = _mlin(args[1], quantities, counter, keys, seen)
+        unit = _unify_units(u1, u2, "add")
+        sign = 1 if op == "add" else -1
+        out = dict(t1)
+        for m, k in t2.items():
+            out[m] = out.get(m, Fraction(0)) + sign * k
+        return out, unit
+    if op in ("mul", "div"):
+        t1, u1 = _mlin(args[0], quantities, counter, keys, seen)
+        t2, u2 = _mlin(args[1], quantities, counter, keys, seen)
+        if op == "div":
+            c2 = t2.get(frozenset(), Fraction(0))
+            if set(t2) != {frozenset()} or c2 == 0:
+                raise _NotLinear()
+            return ({m: k / c2 for m, k in t1.items()},
+                    _unit_combine(u1, u2, -1))
+        out = {}
+        for m1, k1 in t1.items():
+            for m2, k2 in t2.items():
+                if m1 & m2:
+                    raise _NotLinear()      # a key squared: not multilinear
+                m = m1 | m2
+                out[m] = out.get(m, Fraction(0)) + k1 * k2
+        return out, _unit_combine(u1, u2, +1)
+    raise _NotLinear()
+
+
+def _ev_mlin(expr, quantities):
+    """(interval, pedigree, used, step, unit) from the corners, or None: when
+    the expression is not multilinear, has more than MLIN_MAX_KEYS keys, or a
+    key with an infinite end (a corner at infinity makes ∞ - ∞; that box keeps
+    the separate reading, wide and sound)."""
+    seen, keys = set(), {}
+    try:
+        terms, unit = _mlin(expr, quantities, [0], keys, seen)
+    except (_NotLinear, KeyError):
+        return None
+    live = sorted({k for m, c in terms.items() if c != 0 for k in m}, key=repr)
+    if len(live) > MLIN_MAX_KEYS:
+        return None
+    bounds = []
+    for k in live:
+        q = quantities[keys[k]]
+        if isinstance(q["lo"], float) or isinstance(q["hi"], float):
+            return None
+        bounds.append((q["lo"], q["hi"]))
+    lo = hi = None
+    for corner in itertools.product(*bounds):
+        at = dict(zip(live, corner))
+        v = Fraction(0)
+        for m, c in terms.items():
+            if c == 0:
+                continue
+            t = c
+            for k in m:
+                t *= at[k]
+            v += t
+        lo = v if lo is None or v < lo else lo
+        hi = v if hi is None or v > hi else hi
+    if lo is None:
+        lo = hi = Fraction(0)
+    ped = {n for n in seen if quantities[n]["prov"] == CREDIT}
+    return (lo, hi), ped, set(seen), None, unit
+
+
 def _ev(expr, quantities):
     """Rich evaluator: (interval|None, pedigree, used, lattice_step, unit).
     Discreteness is tracked exactly through +, -, *, sum (integer lattices
@@ -687,10 +942,24 @@ def compare(kind, e1, e2, quantities):
         # nothing else.
         return E, set(), touched, str(why)
     ped, used = p1 | p2, u1 | u2
-    if r1 is None or r2 is None:
-        return "Z", ped, used, None       # undefined subterm: mark, not verdict
     if kind not in ("le", "lt", "eq"):
         raise ValueError(kind)
+    if any(quantities[n].get("exact") is not None for n in used if n in quantities):
+        # AN EXACT ROOT IS READ EXACTLY: where every name the atom reads is
+        # pinned or a solved root p + q√d, the difference of the sides is an
+        # exact number and its sign decides the atom (see QSqrt).
+        try:
+            dv = _ev_exact(("sub", e1, e2), quantities)
+            sg = dv.sign() if isinstance(dv, QSqrt) else (dv > 0) - (dv < 0)
+            if kind == "le":
+                return ("T" if sg <= 0 else "F"), ped, used, None
+            if kind == "lt":
+                return ("T" if sg < 0 else "F"), ped, used, None
+            return ("T" if sg == 0 else "F"), ped, used, None
+        except (_NotLinear, ZeroDivisionError, KeyError):
+            pass                            # something is still a box: as before
+    if r1 is None or r2 is None:
+        return "Z", ped, used, None       # undefined subterm: mark, not verdict
     # A NAME IS ONE NUMBER ACROSS THE WHOLE CLAIM (the curator's word,
     # 2026-09-24, in two steps): (1) for numbers m - m = 0, and m - m != 0
     # only for a `sample`, where each occurrence is a separate act of
@@ -716,6 +985,12 @@ def compare(kind, e1, e2, quantities):
         # as two independent numbers; the truth is REFUTED, (x-1)² + 4 >= 4.
         try:
             joint = _ev_poly(("sub", e1, e2), quantities)
+        except _NoReadings:
+            joint = None
+    if joint is None:
+        # ... and where names multiply each other, at the corners (`_mlin`)
+        try:
+            joint = _ev_mlin(("sub", e1, e2), quantities)
         except _NoReadings:
             joint = None
     if joint is not None and (joint[0][0] != joint[0][0] or joint[0][1] != joint[0][1]):

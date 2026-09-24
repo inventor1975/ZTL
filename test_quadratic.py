@@ -84,7 +84,7 @@ for claim, kw, want, roots in [
         ("(x-1)*(x-1) + 4 == 0", {}, "REFUTED", None),
         ("x*x == 4", {}, "EARNED", ["-2", "2"]),
         ("x*x - 5*x + 6 = 0", {}, "EARNED", ["2", "3"]),
-        ("x*x == 2", {}, "OPEN", ["≈-1.41421356237", "≈1.41421356237"]),
+        ("x*x == 2", {}, "EARNED", ["-√2", "√2"]),        # exact since the QSqrt reading
         ("x*x == 2", {"scale": "int"}, "REFUTED", None),
 ]:
     n = numeric(run([unknown(**kw)], claim))
@@ -164,10 +164,19 @@ for a, b, c in itertools.product([1, -1, 2, -3], [-5, -2, 0, 3], [-6, -1, 0, 4, 
     sx = n["solved"].get("x") or {}
     got = sx.get("roots") or ([sx["lo"]] if sx.get("pinned") else [])
     check(len(got) == (1 if d == 0 else 2), f"{claim}: D = {d}, roots {got}")
+    check(n["disposition"] == "EARNED", f"{claim}: every root found is an answer ({n['disposition']})")
     for t in got:
-        if not t.startswith("≈"):
+        if "√" not in t:
             r = Fraction(t)
             check(a * r * r + b * r + c == 0, f"{claim}: {t} is not a root")
+    # an irrational root: f changes sign inside the solver's clamp (exact, in Fractions)
+    import znumsolve
+    from znumjudge import parse_quantities
+    qq, mm = parse_quantities("x=? credit")
+    for lo, hi in (znumsolve.solve_claim(claim, qq, mm)["solved"].get("x", {}).get("roots") or []):
+        if lo != hi:
+            f = lambda v: a * v * v + b * v + c
+            check(f(lo) * f(hi) <= 0, f"{claim}: no sign change of f in [{lo}, {hi}]")
     ni = numeric(run([unknown(scale="int")], claim))
     ints = [r for r in range(-50, 51) if a * r * r + b * r + c == 0]
     si = ni["solved"].get("x") or {}
@@ -202,9 +211,16 @@ for a, b, c, d, e in itertools.product([1, 2], [-3, 0, 1], [-4, 0, 5], [-2, 1], 
     got = sx.get("roots") or ([sx["lo"]] if sx.get("pinned") else [])
     check(len(got) == (1 if D == 0 else 2), f"{claim}: D = {D}, s = {got}")
     for t in got:
-        if not t.startswith("≈"):
+        if "√" not in t:
             r = Fraction(t)
             check(A * r * r + B * r + C == 0, f"{claim}: s = {t} does not solve the system")
+    import znumsolve
+    from znumjudge import parse_quantities
+    qq, mm = parse_quantities("s=? credit, u=? credit")
+    for lo, hi in (znumsolve.solve_claim(claim, qq, mm)["solved"].get("s", {}).get("roots") or []):
+        if lo != hi:
+            f = lambda v: A * v * v + B * v + C
+            check(f(lo) * f(hi) <= 0, f"{claim}: no sign change of the substituted form in [{lo}, {hi}]")
 
 # 6. the root of a known number is a constant when it is exact (MEASURED
 #    2026-09-24: a live model's table computing the discriminant stopped at
@@ -219,7 +235,8 @@ check(n["disposition"] == "EARNED" and sv.get("sqrtD") == "1" and sv.get("x") ==
 n = numeric(run([unknown("r")], "r == sqrt(9) + 1"))
 check(n["disposition"] == "EARNED" and n["solved"]["r"]["lo"] == "4", f"sqrt(9) + 1 is 4: {n}")
 n = numeric(run([unknown("r")], "r == sqrt(2)"))
-check(n["disposition"] == "OPEN", f"sqrt(2) is not a constant of the rational floor: {n['disposition']}")
+check(n["disposition"] == "EARNED" and n["solved"]["r"]["roots"] == ["√2"],
+      f"r == sqrt(2) is r = √2, exactly (QSqrt): {n['disposition']} {n['solved'].get('r')}")
 
 # 7. one of several equalities of one unknown is a set of roots (the curator's
 #    word, 2026-09-24: "read x == 2 | x == 3 as its roots"); anything else in
@@ -236,6 +253,34 @@ check(n["disposition"] == "EARNED" and n["solved"]["x"]["lo"] == "3", f"(x == 2 
 n = numeric(run([unknown(nm) for nm in names], table.replace("& x == x1", "& (x == x1 | x == x2)")))
 check(n["disposition"] == "EARNED" and n["solved"]["x"].get("roots") == ["2", "3"],
       f"the model's table with (x == x1 | x == x2) reaches x = 2 or 3: {n['disposition']} {n['solved'].get('x')}")
+
+# 8. exact quadratic irrationals: p + q·√d, sign decided without approximation
+#    (MEASURED 2026-09-24: x*x == 2 with x solved was OPEN, the root only a clamp)
+from decimal import Decimal, getcontext
+import znum as _zn
+getcontext().prec = 60
+for pp, qq_, dd in itertools.product([-7, -3, -1, 0, 1, 2, 5], [-3, -1, 1, 2], [2, 3, 5, 7, 8, 12]):
+    for den in (1, 3):
+        v = _zn.QSqrt(Fraction(pp, den), Fraction(qq_, den), dd)
+        exact = Decimal(pp) / den + Decimal(qq_) / den * Decimal(dd).sqrt()
+        want = (exact > 0) - (exact < 0)
+        check(v.sign() == want, f"sign of {v}: {v.sign()}, want {want}")
+for claim, want, roots in [("x*x - 2*x - 1 == 0", "EARNED", ["1-√2", "1+√2"]),
+                           ("2*x*x - 3 == 0", "EARNED", ["-1/2·√6", "1/2·√6"]),
+                           ("x*x == 2 & x > 0", "EARNED", ["√2"]),
+                           ("x*x == 8", "EARNED", ["-2·√2", "2·√2"])]:
+    n = numeric(run([unknown()], claim))
+    check(n["disposition"] == want and n["solved"]["x"]["roots"] == roots, f"{claim}: {n['disposition']} {n['solved'].get('x')}")
+n = numeric(run([unknown("r")], "r == sqrt(2) & r > 2"))
+check(n["disposition"] == "REFUTED", f"r == sqrt(2) & r > 2: √2 < 2, {n['disposition']}")
+table8 = table.replace("b == -5 & c == 6", "b == -2 & c == -1").replace("& x == x1", "& (x == x1 | x == x2)")
+n = numeric(run([unknown(nm) for nm in names], table8))
+check(n["disposition"] == "EARNED" and n["solved"]["x"]["roots"] == ["1-√2", "1+√2"],
+      f"the model's table with D = 8 reaches x = 1 ± √2: {n['disposition']} {n['solved'].get('x')}")
+r = run([unknown(nm) for nm in names], table.replace("b == -5 & c == 6", "b == -2 & c == 5"))
+check(r["ok"] and r["report"]["numeric"]["disposition"] == "E"
+      and "negative" in " ".join(r["report"]["numeric"]["next_check"]),
+      f"the table with D = -16 stops: sqrt of a negative has no reading ({r['report']['numeric']})")
 
 print(f"QUADRATIC GREEN — {CHECKS} checks; pool of {pool} claims, {decided} decided, "
       f"{refined} decided that the separate bounds left open, 0 unsound, 0 overturned")

@@ -48,7 +48,8 @@ _HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, _HERE)
 
 from znum import (INF, EARNED, CREDIT, qty, num, fmt, _linear,   # noqa: E402
-                  _NotLinear, _step, typename, _poly, _rat_sqrt, _NoReadings)
+                  _NotLinear, _step, typename, _poly, _rat_sqrt, _NoReadings,
+                  QSqrt, qsqrt_of, _ev_exact, names_in as _names_in)
 from znumjudge import (parse_quantities, extract_comparisons,     # noqa: E402
                        judge_sheet_claim, _closes_last)
 
@@ -87,6 +88,19 @@ def _hull(kind, form_c, terms, name, quantities):
     lo = lo if lo == -INF else lo / k
     hi = hi if hi == INF else hi / k
     return lo, hi, strict_lo, strict_hi
+
+
+def _exact_roots(p, q, c):
+    """The exact roots of q·x² + p·x + c = 0 (a line when q = 0): Fractions,
+    or QSqrt (p0 + q0·√d) when the discriminant is not a rational square."""
+    if q == 0:
+        return [-c / p] if p != 0 else []
+    d = p * p - 4 * q * c
+    if d < 0:
+        return []
+    r = qsqrt_of(d) if d > 0 else Fraction(0)
+    return [(-p - r) / (2 * q) if not isinstance(r, QSqrt) else (-r - p) / (2 * q),
+            (-p + r) / (2 * q) if not isinstance(r, QSqrt) else (r - p) / (2 * q)]
 
 
 def _parabola_pieces(kind, p, q, c, box):
@@ -146,7 +160,41 @@ def _quadratic(kind, e1, e2, qs):
     key, (p, q, name) = live[0]
     if q == 0 or key != name:
         return None                  # linear (the linear rule's), or a sample
-    return name, _parabola_pieces(kind, p, q, c, qs[name]), seen
+    return (name, _parabola_pieces(kind, p, q, c, qs[name]), seen,
+            _exact_roots(p, q, c) if kind == "eq" else [])
+
+
+def _exact_eq(kind, e1, e2, qs):
+    """`name == E` where E computes EXACTLY from pinned quantities and solved
+    roots (a Fraction, or p + q·√d): the name is that value. MEASURED
+    2026-09-24: r == sqrt(2) stayed OPEN, and so did a model's table once its
+    discriminant was not a square (sqrtD == sqrt(disc) unread, x1 a box).
+    Returns (name, pieces, seen, exact) or None."""
+    if kind != "eq":
+        return None
+    for side, other in ((e1, e2), (e2, e1)):
+        if not isinstance(side, str) or side not in qs:
+            continue
+        q = qs[side]
+        if q.get("sample") or q.get("exact") is not None or \
+                (q["lo"] == q["hi"] and not isinstance(q["lo"], float)):
+            continue
+        try:
+            v = _ev_exact(other, qs)
+        except (_NotLinear, KeyError, ZeroDivisionError):
+            continue
+        seen = {n for n in _names_in(other) if n in qs}
+        if side in seen:
+            continue
+        if isinstance(v, QSqrt):
+            inside = ((q["lo"] == -INF or (v - q["lo"]).sign() >= 0) and
+                      (q["hi"] == INF or (q["hi"] - v).sign() >= 0))
+            lo, hi = v.enclose()
+            pieces = [(max(lo, q["lo"]), min(hi, q["hi"]))] if inside else []
+        else:
+            pieces = [(v, v)] if q["lo"] <= v <= q["hi"] else []
+        return side, pieces, seen, [v]
+    return None
 
 
 def _solve_monomial_system(qs, atoms):
@@ -323,11 +371,11 @@ def _narrow_quadratic(kind, e1, e2, chunk, qs, log, orig=None):
     got = _quadratic(kind, e1, e2, qs)
     if got is None:
         return None
-    name, pieces, seen = got
-    return _apply_pieces(kind, name, pieces, seen, chunk, qs, log, orig or qs)
+    name, pieces, seen, exact = got
+    return _apply_pieces(kind, name, pieces, seen, chunk, qs, log, orig or qs, exact)
 
 
-def _apply_pieces(kind, name, pieces, seen, chunk, qs, log, orig=None):
+def _apply_pieces(kind, name, pieces, seen, chunk, qs, log, orig=None, exact=()):
     """Narrow `name` to `pieces` (from `_parabola_pieces`): 'empty', 'moved'
     or None. An exact root is a DERIVED value: its grounds are the grounds of
     the equation's other quantities. A piece that is still a box is also
@@ -349,6 +397,13 @@ def _apply_pieces(kind, name, pieces, seen, chunk, qs, log, orig=None):
             continue
         pq["root"] = kind == "eq"    # an answer to show, not a box to narrow
         pq["grounds"] = pq["derived_from"] = sorted(g)
+        if not point:
+            # the clamp of an irrational root carries the root itself, so the
+            # judge can read the claim at it exactly (znum.QSqrt)
+            for e in exact:
+                if isinstance(e, QSqrt) and (e - lo).sign() >= 0 and (hi - e).sign() >= 0:
+                    pq["exact"] = e
+                    break
         kept.append(pq)
     if not kept:
         log.append(f"{name}: no {typename(q['discrete'])} value in its box "
@@ -366,8 +421,9 @@ def _apply_pieces(kind, name, pieces, seen, chunk, qs, log, orig=None):
         if kind == "eq":
             new["roots"] = kept
     if (new["lo"], new["hi"]) == (q["lo"], q["hi"]) and \
-            len(new.get("roots") or []) == len(q.get("roots") or []):
-        return None
+            len(new.get("roots") or []) == len(q.get("roots") or []) and \
+            (new.get("exact") is None or q.get("exact") is not None):
+        return None                  # nothing new: same box, same roots, no new exact value
     qs[name] = new
     shown = (" or ".join(f"{fmt(k['lo'])}" if k["lo"] == k["hi"]
                          else f"[{fmt(k['lo'])}, {fmt(k['hi'])}]" for k in kept))
@@ -457,11 +513,18 @@ def _disjunction_pieces(group, atoms, qs):
     points — a line to one, a parabola to its roots — and the unknown lies in
     the union. Returns (name, pieces, seen), or None when any alternative is
     something else: then the disjunction narrows nothing, as before."""
-    name, pieces, seen = None, [], set()
+    name, pieces, seen, exact = None, [], set(), []
     for atom in group:
         kind, e1, e2, _chunk = atoms[atom]
         if kind != "eq":
             return None
+        got = _exact_eq(kind, e1, e2, qs)     # x == E, E exact (a solved root)
+        if got is not None and (name is None or got[0] == name):
+            name = got[0]
+            pieces.extend(got[1])
+            seen |= got[2]
+            exact.extend(got[3])
+            continue
         try:
             c, terms, _, _ = _poly(("sub", e1, e2), qs, [0], seen)
         except (_NotLinear, KeyError, _NoReadings):
@@ -477,8 +540,9 @@ def _disjunction_pieces(group, atoms, qs):
         if got is None:
             return None
         pieces.extend(got)
+        exact.extend(_exact_roots(p, q, c))
     pieces = sorted(set(pieces))
-    return name, pieces, seen
+    return name, pieces, seen, exact
 
 
 def narrow(quantities, formula, rounds=MAX_ROUNDS, orig=None):
@@ -553,11 +617,21 @@ def narrow(quantities, formula, rounds=MAX_ROUNDS, orig=None):
         if pieces is None:
             continue
         if _apply_pieces("eq", name, pieces, contributors, "the system",
-                         qs, log, orig) == "empty":
+                         qs, log, orig, _exact_roots(p, q2, c)) == "empty":
             return qs, log
     for _ in range(rounds):
         moved = False
         for atom, (kind, e1, e2, chunk) in atoms.items():
+            got = _exact_eq(kind, e1, e2, qs)
+            if got is not None:
+                name_x, pieces_x, seen_x, exact_x = got
+                step = _apply_pieces("eq", name_x, pieces_x, seen_x, chunk, qs, log,
+                                     orig, exact_x)
+                if step == "empty":
+                    return qs, log
+                if step == "moved":
+                    moved = True
+                    continue
             seen = set()   # every name READ, pinned ones too: a pinned t is a
             try:           # constant to the arithmetic but still a ground
                 c, terms, _, _ = _linear(("sub", e1, e2), qs, [0], seen)
@@ -623,9 +697,9 @@ def narrow(quantities, formula, rounds=MAX_ROUNDS, orig=None):
             got = _disjunction_pieces(group, all_atoms, qs)
             if got is None or qs[got[0]].get("sample"):
                 continue
-            name, pieces, seen = got
+            name, pieces, seen, exact = got
             chunk = " | ".join(all_atoms[a][3] for a in group)
-            step = _apply_pieces("eq", name, pieces, seen, chunk, qs, log, orig)
+            step = _apply_pieces("eq", name, pieces, seen, chunk, qs, log, orig, exact)
             if step == "empty":
                 return qs, log
             moved = moved or step == "moved"
@@ -756,6 +830,8 @@ def solve_claim(formula, quantities, marks):
         roots = kept_roots.get(name) or ([q] if q.get("root") else [])
         if roots:
             solved[name]["roots"] = [(k["lo"], k["hi"]) for k in roots]
+            solved[name]["roots_exact"] = [str(k["exact"]) if k.get("exact") is not None
+                                           else None for k in roots]
         for c in weak:
             if f"document {c}" not in cures:
                 cures.append(f"document {c}")

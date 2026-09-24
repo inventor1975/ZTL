@@ -1361,8 +1361,11 @@ def run(doc, ground_registry=None):
                               "pinned": v["pinned"], "prov": v["prov"],
                               "from": v.get("from", []),
                               "weak": v.get("weak", []),
-                              **({"roots": [_root_text(lo, hi)
-                                            for lo, hi in v["roots"]]}
+                              **({"roots": [ex or _root_text(lo, hi)
+                                            for (lo, hi), ex in zip(
+                                                v["roots"],
+                                                v.get("roots_exact")
+                                                or [None] * len(v["roots"]))]}
                                  if v.get("roots") else {})}
                           for n, v in (r.get("solved") or {}).items()}
             else:

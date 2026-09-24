@@ -54,6 +54,7 @@ STANDS = [
     ("test_solver_provenance.py", ["SOLVER PROVENANCE GREEN"]),
     ("test_bound_products.py", ["BOUND PRODUCTS GREEN"]),
     ("test_unknown_marks.py", ["UNKNOWN MARKS GREEN"]),
+    ("test_multilinear.py", ["MULTILINEAR GREEN"]),
     # Поставлен 2026-09-19: CLASSIC-VS-ZTL.md год носила число «1263 из 2924»
     # без определения и без прогона, и оно занижало результат на двадцать
     # пунктов. Сторожим ОБА чтения, чтобы подмена узкого широким не повторилась.

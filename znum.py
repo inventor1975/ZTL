@@ -195,7 +195,14 @@ def _iv_sub(a, b): return (a[0] - b[1], a[1] - b[0])
 
 
 def _iv_mul(a, b):
-    ps = [x * y for x in a for y in b]
+    # 0 TIMES AN INFINITE END IS 0: the ends are limits, never attained, and 0
+    # times any real is 0 (IEEE 1788 takes the same convention for bounds).
+    # Python's 0 * inf is nan, and min/max over a list holding nan depend on
+    # its order: MEASURED 2026-09-24, [-inf,0]·[0,1] came out (nan, nan), so
+    # a*b <= 0 was Z where it is T, and [0,0]·[-inf,inf] was (nan, nan). No
+    # verdict was ever false (nan made every comparison Z), but forced ones
+    # were lost.
+    ps = [Fraction(0) if (x == 0 or y == 0) else x * y for x in a for y in b]
     return (min(ps), max(ps))
 
 

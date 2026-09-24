@@ -153,11 +153,29 @@ def _show(phi):
     return f"({_show(phi[1])} {sign} {_show(phi[2])})"
 
 
+MARKS = VALUES + (E,)
+
+
+def _read_mark(atom, v):
+    """One mark, read or refused. Case does not matter (the file loader has
+    always read `t` as T); anything that is not T, F, Z or E is refused, not
+    read. MEASURED 2026-09-24: `{"q": "maybe"}` and `{"q": "t"}` reached the
+    connectives as they were and made `p & q` REFUTED; `M`, zverify's mark,
+    happened to act as Z."""
+    v2 = v.strip().upper() if isinstance(v, str) else v
+    if v2 not in MARKS:
+        hint = (" — 'M' is zverify's mark; here the unverified mark is Z"
+                if v2 == "M" else "")
+        raise ValueError(f"unknown mark {v!r} for {atom!r}: a mark is T, F, "
+                         f"Z or E{hint}")
+    return v2
+
+
 def _full(phi, marking):
     """Every atom gets a value; anything unspecified is Z (default deny of
-    trust — never on credit)."""
+    trust — never on credit). A mark given is checked (`_read_mark`)."""
     m = {a: Z for a in _atoms(phi)}
-    m.update({k: v for k, v in (marking or {}).items()})
+    m.update({k: _read_mark(k, v) for k, v in (marking or {}).items()})
     return m
 
 
@@ -605,8 +623,9 @@ def load_claims(path):
         for tok in (parts[2].split() if len(parts) >= 3 else []):
             if "=" in tok:
                 k, v = tok.split("=", 1)
-                if v.upper() in VALUES:
-                    marking[k] = v.upper()
+                # an unknown mark was dropped here in silence, and the atom
+                # went on as Z; now the line says what it cannot read
+                marking[k] = _read_mark(k, v)
         claims.append((parts[0], parts[1], marking))
     return claims
 

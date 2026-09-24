@@ -46,8 +46,10 @@ EARNED, CREDIT = "earned", "credit"
 #     Z   readings exist and they disagree
 #     E   THERE ARE NO READINGS AT ALL — the set is empty
 # E was raised as a Python exception until 2026-08-12, which put it OUTSIDE
-# the logic: a breakage of the implementation rather than a value of the
-# system. It is not. It is the fourth corner, and the corpus had already
+# the logic: a breakage of the implementation. It is not a breakage — and it
+# is not a value either (settled 2026-08-19; the curator, 2026-09-24:
+# «внутренняя метка, стоп-машина»): E enters no connective, it is the judge's
+# STOP, nothing to judge here. It is the fourth corner, and the corpus had already
 # stumbled over it twice — as the two ValueErrors below, and as the vacuity
 # trap measured in zprove.py, where "all readings are true" comes for free
 # when there are no readings to check. Emptiness must be SEPARATED, not
@@ -539,8 +541,8 @@ def compare(kind, e1, e2, quantities):
     except _NoReadings as why:
         touched = {n for n in names_in(e1) | names_in(e2) if n in quantities}
         # THE FOURTH CORNER: no admissible reading, so there is nothing to
-        # quantify over and no verdict to give. E is returned as a value,
-        # with the reason attached — the judge stops on this atom and on
+        # quantify over and no verdict to give. E is returned with the reason
+        # attached — not a value but the judge's STOP on this atom, and on
         # nothing else.
         return E, set(), touched, str(why)
     ped, used = p1 | p2, u1 | u2
@@ -884,7 +886,7 @@ def sec6_the_fourth_corner():
           f"cure {r['next_check']}")
     print("   Two things this fixes. First, E was a Python exception until")
     print("   2026-08-12 — an accident of the implementation sitting")
-    print("   OUTSIDE the logic; now it is a value the floor computes, so")
+    print("   OUTSIDE the logic; now the floor computes it as a STOP, so")
     print("   one broken claim halts itself and not the sheet. Second, the")
     print("   empty set is exactly where 'all readings are true' comes for")
     print("   free — the vacuity trap measured in zprove.py. Separating E")

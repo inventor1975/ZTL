@@ -11,7 +11,7 @@ core (ztljudge) judge the formula. Diagnostics merge both floors:
                 fourth corner of the reading-set construction: no admissible
                 reading exists, so there is nothing to quantify over and no
                 verdict to give (a type with no lattice point, units that do
-                not unify). It is a VALUE of the floor, not an exception:
+                not unify). It is the judge's STOP — not a value, not an exception:
                 the atom halts, the rest of the sheet is judged. Otherwise:
                 core disposition,
                 then capped by the numeric provenance axis: NO forced
@@ -317,7 +317,7 @@ def judge_sheet_claim(formula, quantities, marks):
             # unjudgeable atom is not OPEN, not REFUTED, it is UNJUDGEABLE.
             # The judge stops here and says what to repair; every other
             # claim on the sheet is untouched, which is the whole point of
-            # keeping E a value rather than an exception.
+            # keeping E a stop the judge reports rather than an exception.
             return {"formula": formula, "core_formula": core_formula.strip(),
                     "numeric_atoms": {name: {"comparison": chunk,
                                              "verdict": "E", "why": why,

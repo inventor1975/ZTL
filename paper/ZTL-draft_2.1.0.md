@@ -65,8 +65,9 @@ empty axiom list, the fourth only classically and kept outside the
 corpus — a fuel-bounded search built and proved sound, and the finite half
 of completeness a theorem, the infinite half stated with its parts and
 left argued (`ZParamEngine.lean`, `ZParamHintikka.lean`; §§6, 27); the
-census of the numeric floor — which laws hold on marked intervals — (§15,
-`ZNumPrice.lean`); the global
+census of the numeric floor — which laws hold on marked intervals: for
+numbers commutativity and the unit, for samples neither — (§15,
+`ZNumPrice.lean`, `ZNumNames.lean`); the global
 reading with theorems of its own (§10, `ContextClosure.lean`); the
 identity and free-instantiation results of §25 for an arbitrary domain
 (`ZEqGeneric.lean`, `ZFreeUIGeneric.lean`); and the precise position
@@ -1301,8 +1302,9 @@ zero axioms):** streams — the equality atom never earns T, one finite
 witness earns apartness and it persists, Cantor's diagonal earns strict
 non-membership against every registry entry (§13); one marked pair
 collapses the injectivity certificate for every function including the
-identity (§14); interval decorrelation and unearned self-identity of a
-nondegenerate mark (§15); Dempster–Shafer thresholds (§16); atom
+identity (§14); for a sample, interval decorrelation and unearned
+self-identity of a nondegenerate mark, and for a number, one assignment per
+name with `m == m` and `m − m == 0` forced (§15); Dempster–Shafer thresholds (§16); atom
 verdicts as □/◇ thresholds with the ¬¬-cell separating the local
 ladder from global supervaluation (§17). The certified language now carries the
 constants ⊤/⊥ (the engines and both certificates extended, the
@@ -1874,30 +1876,43 @@ stays MEASURED for that reason.
 
 Numbers: verified values and marks with an interval of partial
 knowledge [lo,hi] (ignorance = (−∞,∞)). Operations are computations ⇒
-lazy: intervals flow (interval arithmetic, decorrelated). Comparison
-atoms follow the generating principle extended to intervals: **T if
-forced under all readings; F if falsehood is forced; else Z**. Measured:
+lazy: intervals flow. **A name is one number across the whole claim**
+(decided 2026-09-24): its occurrences co-refer, so the floor reads the
+difference of the two sides in one pass — exactly on the linear fragment
+and on sums of parabolas, one per name — and falls back to decorrelated
+interval arithmetic only outside them. Decorrelation is kept by
+declaration for a `sample`, where each occurrence is a separate act of
+measurement. `==` over numbers is arithmetic; the logical biconditional
+keeps its own table (Z ↔ Z = F): in logic a mark is not compared with
+itself, it is XNOR-ed. Comparison atoms follow the generating principle
+extended to intervals: **T if forced under all readings; F if falsehood is
+forced; else Z**. Measured:
 
 * **Forcedness earns even on marks:** 0·w = an earned 0 even for a wild
   mark (forced on ℤ by all readings) — a point of deliberate divergence
   from IEEE (their 0·NaN = NaN: their domain contains inf/nan) — now a theorem, `ZNaN.zero_times_mark` / `emb_mul_not_hom`, §27.
-  m−m ∈ [−9,9] ≠ 0 — decorrelation (like NaN−NaN, like {Z,Z}).
+  For a number m ∈ [0,9], m−m = 0 is earned (one number); for a
+  `sample` s ∈ [0,9], s−s ∈ [−9,9] is not forced to 0 — decorrelation, like
+  NaN−NaN, like {Z,Z}.
 * **Three fates of an atom:** [3,5]<[10,12] — T earned; [3,5]=[10,12] —
   **apartness earned by intervals** (the echo of §13: difference is
-  finitely witnessable); overlap — Z; the same mark against itself — Z
-  (coincidence of bounds ≠ coincidence: identity is earned by nothing
-  short of full verification [x,x]).
+  finitely witnessable); overlap — Z. A number against itself is T
+  (`m == m`: one number), while two samples whose bounds coincide are
+  still Z — coincidence of bounds ≠ coincidence, and identity of two acts
+  is earned by nothing short of full verification [x,x].
 * **Verification = interval narrowing:** the atom "4 < m" travels
   Z → Z → T along [0,9]→[3,7]→[5,7]; what is earned is never revoked —
   the monotonicity of the lazy register, now in numbers.
-* **Census inheritance:** commutativity of addition holds at the
-  interval level, verdict-equality is Z→F; the unit x+0=x is not earned
-  verdict-wise with coinciding intervals (regularity R1, §26) — now a
-  theorem in both halves (`ZNumPrice.lean`, E62): the reading sets of
-  x+y and y+x, and of x+0 and x, coincide (`add_comm_readings`,
-  `add_zero_readings`), and on a mark with two readings neither equation
-  is forced true or forced false (`comm_not_earned`, `unit_not_earned`;
-  the cell above, x∈[1,3], y∈[2,4], is `zarith_instance`).
+* **Census inheritance, split by what a name denotes.** For numbers
+  commutativity and the unit are earned: x+y == y+x and x+0 == x are
+  forced true, and so is m−m == 0 (`ZNumNames.comm_forced_numbers`,
+  `unit_forced_numbers`, `sub_self_forced_numbers`). For samples the E62
+  census holds (regularity R1, §26), a theorem in both halves
+  (`ZNumPrice.lean`): the reading sets of x+y and y+x, and of x+0 and x,
+  coincide (`add_comm_readings`, `add_zero_readings`), yet on a sample
+  with two readings neither equation is forced true or forced false
+  (`comm_not_earned`, `unit_not_earned`; the cell x∈[1,3], y∈[2,4] is
+  `zarith_instance`).
 
 **The fourth twin: abstract interpretation** (Cousot & Cousot, 1977) —
 interval value analysis (lazy flow of abstract values through
@@ -1921,18 +1936,29 @@ moment one variable occurs twice the exactness is gone: over the value set
 T, while the decorrelated interval computation gives [0,2] and returns Z. The
 witness is mechanical, not narrated — the concrete image and the abstract
 interval are both computed in the file. So decorrelation is not an aside
-about intervals; it is the exact boundary of the exactness theorem.
+about intervals; it is the exact boundary of the exactness theorem. It is
+also where the floor stopped paying it: a name occurring twice is read as
+one number, so on the linear fragment and on sums of parabolas `v − v < 1`
+is T, as over the concrete set (`ZNumNames.lean` states the joint reading;
+the exact range of a parabola — ends and vertex — is measured,
+`test_quadratic.py`, not yet a theorem). The decorrelated computation, the
+classical one this embedding maps, remains for samples and outside the two
+fragments.
 
 *What is not done:* the framework — widening, narrowing, fixpoint transfer —
 is not formalised. One atom over one abstract domain is mapped, not the
 method.
 
-**Kernel-checked (`ZExped.lean`, `ZNum.lean`, `ZNumCoherent.lean`, zero
-axioms).** Identity is earned by nothing short of full verification: a mark
-against itself is Z even when the bounds coincide (`mark_self_not_earned`).
-Narrowing-heredity — what is earned is never revoked as intervals shrink — is
-a theorem for every comparison atom under both readings
-(`forcedLE/NotLE/LT/NotLT/EQ/NE_hereditary`, twice over), together with the
+**Kernel-checked (`ZExped.lean`, `ZNum.lean`, `ZNumCoherent.lean`,
+`ZNumNames.lean`, zero axioms).** Under the separate reading — a sample's —
+identity is earned by nothing short of full verification: a mark against
+itself is Z even when the bounds coincide (`mark_self_not_earned`). A number
+named twice is one assignment for the whole claim, and `m == m` is forced
+true (`ZNumNames.self_eq_joint`), which the separate reading does not give
+(`self_eq_not_separate`). Narrowing-heredity — what is earned is never
+revoked as intervals shrink — is a theorem for every comparison atom under
+both separate readings (`forcedLE/NotLE/LT/NotLT/EQ/NE_hereditary`, twice
+over) and under the joint one (`jforcedLE/…/NE_hereditary`), together with the
 transitivity of narrowing and the endpoint case. Decorrelation has a named
 witness (`decorrelation_witness`). Forcedness on products (0·w) is
 `ZNaN.zero_times_mark` (§27), and the census inheritance for
@@ -2904,8 +2930,11 @@ registers.
 **R3. Apartness is earned, identity is not.** The difference of two
 unverified objects is earned by a finite witness (diverged intervals,
 diverged prefixes); identity is earned by nothing short of full
-verification. Hence in one stroke: {Z,Z} ≠ {Z}, m−m ≠ 0, the
-non-registrability of streams (§13), and the NaN signature x ≠ x.
+verification. Hence in one stroke: {Z,Z} ≠ {Z}, s−s ≠ 0 for a sample s (two
+acts of measurement are two numbers), the non-registrability of streams
+(§13), and the NaN signature x ≠ x. A name is not two objects: for a number
+m, m−m = 0 and m == m hold (§15, `ZNumNames.lean`) — R3 speaks of what is
+unverified, not of what is named twice.
 
 ## 27. Roadmap
 

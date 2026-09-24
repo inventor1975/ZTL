@@ -20,7 +20,9 @@ import sys
 import zfl
 
 ATOMS = ["x == 2", "x == 3", "x > 0", "x <= -1", "x*x == 4", "x*x - 2*x + 5 == 0",
-         "x + 1 == 3", "x*x - 5*x + 6 == 0"]
+         "x + 1 == 3", "x*x - 5*x + 6 == 0",
+         # the higher-degree path (2026-09-24) is guarded by the same brute force
+         "x*x*x == 8", "x*x*x - x == 0"]
 SHAPES = ["{a}", "~({a})", "({a}) | ({b})", "({a}) & ({b})", "({a}) -> ({b})",
           "({a}) ^ ({b})", "~(({a}) & ({b}))"]
 DOMAIN = range(-6, 7)

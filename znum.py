@@ -733,6 +733,263 @@ def _ev_exact(expr, quantities):
     raise _NotLinear()
 
 
+# ---------------------------------- one name to any degree: Sturm and Horner
+UPOLY_MAX_DEGREE = 8
+ROOT_WIDTH = Fraction(1, 10 ** 12)      # the clamp width of an isolated root
+
+
+def _ptrim(a):
+    a = list(a)
+    while len(a) > 1 and a[-1] == 0:
+        a.pop()
+    return a
+
+
+def _padd(a, b, sign=1):
+    n = max(len(a), len(b))
+    return _ptrim([(a[i] if i < len(a) else 0) + sign * (b[i] if i < len(b) else 0)
+                   for i in range(n)])
+
+
+def _pmul(a, b):
+    out = [Fraction(0)] * (len(a) + len(b) - 1)
+    for i, x in enumerate(a):
+        for j, y in enumerate(b):
+            out[i + j] += x * y
+    return _ptrim(out)
+
+
+def _peval(a, x):
+    v = Fraction(0)
+    for c in reversed(a):
+        v = v * x + c
+    return v
+
+
+def _pderiv(a):
+    return _ptrim([i * a[i] for i in range(1, len(a))]) or [Fraction(0)]
+
+
+def _pdivmod(a, b):
+    a, b = _ptrim(a), _ptrim(b)
+    q = [Fraction(0)] * max(1, len(a) - len(b) + 1)
+    r = list(a)
+    while len(r) >= len(b) and any(r):
+        k = len(r) - len(b)
+        f = r[-1] / b[-1]
+        q[k] = f
+        for i, c in enumerate(b):
+            r[i + k] -= f * c
+        r = _ptrim(r[:-1]) if len(r) > 1 else [Fraction(0)]
+        if len(r) < len(b):
+            break
+    return _ptrim(q), _ptrim(r)
+
+
+def _pgcd(a, b):
+    while any(_ptrim(b)):
+        a, b = b, _pdivmod(a, b)[1]
+    a = _ptrim(a)
+    return [c / a[-1] for c in a]
+
+
+def _sturm(a):
+    """The Sturm sequence of the square-free part of `a`."""
+    g = _pgcd(a, _pderiv(a))
+    sq = _pdivmod(a, g)[0] if len(g) > 1 else _ptrim(a)
+    seq = [sq, _pderiv(sq)]
+    while len(seq[-1]) > 1 or seq[-1][0] != 0:
+        r = _pdivmod(seq[-2], seq[-1])[1]
+        if not any(r):
+            break
+        seq.append([-c for c in r])
+    return seq
+
+
+def _changes(seq, x):
+    signs = [(v > 0) - (v < 0) for v in (_peval(p, x) for p in seq)]
+    signs = [t for t in signs if t != 0]
+    return sum(1 for u, v in zip(signs, signs[1:]) if u != v)
+
+
+def _cauchy(a):
+    a = _ptrim(a)
+    return 1 + max((abs(c / a[-1]) for c in a[:-1]), default=Fraction(0))
+
+
+def _simplest_between(l, h):
+    """The fraction with the smallest denominator in [l, h] (Stern–Brocot).
+    A rational root of a polynomial with a small leading coefficient has a
+    small denominator, so in its clamp it is this one — and it is TESTED, not
+    assumed: the polynomial must vanish on it exactly."""
+    if l <= 0 <= h:
+        return Fraction(0)
+    if h < 0:
+        return -_simplest_between(-h, -l)
+    fl = math.floor(l)
+    if fl == l or math.ceil(l) <= h:
+        return Fraction(math.ceil(l))
+    # l and h share an integer part: recurse on the reciprocals of the fractional parts
+    return fl + 1 / _simplest_between(1 / (h - fl), 1 / (l - fl))
+
+
+def _real_roots(a, lo=None, hi=None):
+    """The distinct real roots of `a` in [lo, hi] (the Cauchy bound if not
+    given), each as (l, h) with l <= root <= h: an exact rational root as
+    (r, r), an irrational one clamped to ROOT_WIDTH. Exact rational arithmetic
+    throughout; nothing is guessed."""
+    a = _ptrim(a)
+    if len(a) < 2:
+        return []
+    b = _cauchy(a)
+    lo = -b if lo is None or lo == -INF else max(Fraction(lo), -b)
+    hi = b if hi is None or hi == INF else min(Fraction(hi), b)
+    if lo > hi:
+        return []
+    seq = _sturm(a)
+    sq = seq[0]
+    out = []
+
+    def count(l, h):                     # roots in (l, h]
+        return _changes(seq, l) - _changes(seq, h)
+
+    def solve(l, h):                      # roots in (l, h], l not a root
+        n = count(l, h)
+        if n == 0:
+            return
+        if n == 1 and h - l <= ROOT_WIDTH:
+            if _peval(sq, h) == 0:
+                out.append((h, h))
+                return
+            r = _simplest_between(l, h)
+            out.append((r, r) if l < r <= h and _peval(sq, r) == 0 else (l, h))
+            return
+        m = (l + h) / 2
+        if _peval(sq, m) == 0:
+            solve(l, m - ROOT_WIDTH / 4) if count(l, m - ROOT_WIDTH / 4) else None
+            out.append((m, m))
+            solve(m, h)
+            return
+        solve(l, m)
+        solve(m, h)
+
+    if _peval(sq, lo) == 0:
+        out.append((lo, lo))
+    solve(lo, hi)
+    return sorted(set(out))
+
+
+def _peval_iv(a, box):
+    """Bounds of the polynomial over [l, h] by interval Horner — sound, and
+    tight on the narrow clamps it is used on."""
+    lo = hi = Fraction(0)
+    for c in reversed(a):
+        lo, hi = _iv_mul((lo, hi), box)
+        lo, hi = lo + c, hi + c
+    return lo, hi
+
+
+def _one_name(n1, n2):
+    if n1 is not None and n2 is not None and n1 != n2:
+        raise _NotLinear()
+    return n1 if n1 is not None else n2
+
+
+def _upoly(expr, quantities, seen=None):
+    """(coefficients from degree 0 up, name): the expression as a polynomial in
+    ONE non-sample name, every other name pinned, unit-free; or `_NotLinear`.
+    The parabola reading stops at degree 2; this one goes to UPOLY_MAX_DEGREE."""
+    if isinstance(expr, (int, float, Fraction)):
+        return [num(expr)], None
+    if isinstance(expr, str):
+        q = quantities[expr]
+        if q.get("no_readings"):
+            raise _NoReadings(f"{expr}: {q['no_readings']}")
+        if seen is not None:
+            seen.add(expr)
+        if q.get("unit"):
+            raise _NotLinear()
+        if q["lo"] == q["hi"] and not isinstance(q["lo"], float):
+            return [q["lo"]], None
+        if q.get("sample"):
+            raise _NotLinear()
+        return [Fraction(0), Fraction(1)], expr
+    op, *args = expr
+    if op == "sqrt":
+        a, n = _upoly(args[0], quantities, seen)
+        r = _rat_sqrt(a[0]) if n is None and len(_ptrim(a)) == 1 and a[0] >= 0 else None
+        if r is None or r[0] != r[1]:
+            raise _NotLinear()
+        return [r[0]], None
+    if op == "sum":
+        acc, name = [Fraction(0)], None
+        for x in args[0]:
+            a, n = _upoly(x, quantities, seen)
+            name = _one_name(name, n)
+            acc = _padd(acc, a)
+        return acc, name
+    a, n1 = _upoly(args[0], quantities, seen)
+    b, n2 = _upoly(args[1], quantities, seen)
+    name = _one_name(n1, n2)
+    if op == "add":
+        return _padd(a, b), name
+    if op == "sub":
+        return _padd(a, b, -1), name
+    if op == "mul":
+        out = _pmul(a, b)
+        if len(out) - 1 > UPOLY_MAX_DEGREE:
+            raise _NotLinear()
+        return out, name
+    if op == "div":
+        b = _ptrim(b)
+        if len(b) != 1 or b[0] == 0:
+            raise _NotLinear()
+        return [c / b[0] for c in a], name
+    raise _NotLinear()
+
+
+def _ev_upoly(expr, quantities):
+    """(interval, pedigree, used, step, unit): the range of a polynomial of
+    degree >= 3 in one name over its box — the ends (or the leading term's
+    limit at an infinite end) and every critical point, a root of the
+    derivative isolated by Sturm; an irrational one is bounded by interval
+    Horner over its clamp. Sound, and tight to the clamp. None outside."""
+    seen = set()
+    try:
+        coeffs, name = _upoly(expr, quantities, seen)
+    except (_NotLinear, KeyError):
+        return None
+    coeffs = _ptrim(coeffs)
+    if name is None or len(coeffs) <= 3:
+        return None
+    q = quantities[name]
+    lo, hi = q["lo"], q["hi"]
+    if lo == hi and isinstance(lo, float):
+        return None
+    deg, lead = len(coeffs) - 1, coeffs[-1]
+
+    def at(x):
+        if x == INF:
+            return INF if lead > 0 else -INF
+        if x == -INF:
+            up = (lead > 0) == (deg % 2 == 0)
+            return INF if up else -INF
+        return _peval(coeffs, x)
+
+    lows, highs = [at(lo), at(hi)], [at(lo), at(hi)]
+    for l, h in _real_roots(_pderiv(coeffs), lo, hi):
+        if l == h:
+            v = _peval(coeffs, l)
+            lows.append(v)
+            highs.append(v)
+        else:
+            a, b = _peval_iv(coeffs, (l, h))
+            lows.append(a)
+            highs.append(b)
+    ped = {n for n in seen if quantities[n]["prov"] == CREDIT}
+    return (min(lows), max(highs)), ped, set(seen), None, None
+
+
 # ------------------------------ the multilinear fragment, read at the corners
 MLIN_MAX_KEYS = 10       # 2**10 corners; the studio caps a formula at 10 atoms anyway
 
@@ -991,6 +1248,12 @@ def compare(kind, e1, e2, quantities):
         # ... and where names multiply each other, at the corners (`_mlin`)
         try:
             joint = _ev_mlin(("sub", e1, e2), quantities)
+        except _NoReadings:
+            joint = None
+    if joint is None:
+        # ... and one name to a higher degree, by its critical points (`_upoly`)
+        try:
+            joint = _ev_upoly(("sub", e1, e2), quantities)
         except _NoReadings:
             joint = None
     if joint is not None and (joint[0][0] != joint[0][0] or joint[0][1] != joint[0][1]):

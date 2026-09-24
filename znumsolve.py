@@ -49,7 +49,8 @@ sys.path.insert(0, _HERE)
 
 from znum import (INF, EARNED, CREDIT, qty, num, fmt, _linear,   # noqa: E402
                   _NotLinear, _step, typename, _poly, _rat_sqrt, _NoReadings,
-                  QSqrt, qsqrt_of, _ev_exact, names_in as _names_in)
+                  QSqrt, qsqrt_of, _ev_exact, names_in as _names_in,
+                  _upoly, _ptrim, _pdivmod, _real_roots)
 from znumjudge import (parse_quantities, extract_comparisons,     # noqa: E402
                        judge_sheet_claim, _closes_last)
 
@@ -195,6 +196,36 @@ def _exact_eq(kind, e1, e2, qs):
             pieces = [(v, v)] if q["lo"] <= v <= q["hi"] else []
         return side, pieces, seen, [v]
     return None
+
+
+def _upoly_roots(kind, e1, e2, qs):
+    """ONE unknown under an equation of degree >= 3: its real roots in its box,
+    isolated by Sturm (znum._real_roots) — a rational root exact, an irrational
+    one clamped. Rational roots are divided out; when a quadratic factor is left,
+    its roots are held exactly (p + q·√d). No root in the box is a refutation.
+    Returns (name, pieces, seen, exact) or None."""
+    if kind != "eq":
+        return None
+    seen = set()
+    try:
+        coeffs, name = _upoly(("sub", e1, e2), qs, seen)
+    except (_NotLinear, KeyError, _NoReadings):
+        return None
+    coeffs = _ptrim(coeffs)
+    if name is None or len(coeffs) <= 3 or qs[name].get("sample"):
+        return None
+    box = qs[name]
+    pieces = _real_roots(coeffs, box["lo"], box["hi"])
+    rest = coeffs
+    for l, h in pieces:
+        if l == h:
+            rest = _pdivmod(rest, [-l, Fraction(1)])[0]
+    exact = []
+    rest = _ptrim(rest)
+    if len(rest) == 3:
+        c, p, q = rest
+        exact = _exact_roots(p, q, c)
+    return name, pieces, seen, exact
 
 
 def _solve_monomial_system(qs, atoms):
@@ -528,7 +559,14 @@ def _disjunction_pieces(group, atoms, qs):
         try:
             c, terms, _, _ = _poly(("sub", e1, e2), qs, [0], seen)
         except (_NotLinear, KeyError, _NoReadings):
-            return None
+            got_u = _upoly_roots(kind, e1, e2, qs)     # a higher degree alternative
+            if got_u is None or (name is not None and got_u[0] != name):
+                return None
+            name = got_u[0]
+            pieces.extend(got_u[1])
+            seen |= got_u[2]
+            exact.extend(got_u[3])
+            continue
         live = [(k, t) for k, t in terms.items() if t[0] != 0 or t[1] != 0]
         if len(live) != 1:
             return None
@@ -637,6 +675,11 @@ def narrow(quantities, formula, rounds=MAX_ROUNDS, orig=None):
                 c, terms, _, _ = _linear(("sub", e1, e2), qs, [0], seen)
             except (_NotLinear, KeyError):
                 step = _narrow_quadratic(kind, e1, e2, chunk, qs, log, orig)
+                if step is None:
+                    got_u = _upoly_roots(kind, e1, e2, qs)
+                    if got_u is not None:
+                        step = _apply_pieces("eq", got_u[0], got_u[1], got_u[2], chunk,
+                                             qs, log, orig, got_u[3])
                 if step == "empty":
                     return qs, log
                 moved = moved or step == "moved"

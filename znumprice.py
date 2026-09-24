@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Expedition E62: THE PRICE LIST ON THE NUMERIC FLOOR — commutativity and the unit
+Expedition E62: THE PRICE LIST FOR SAMPLES — commutativity and the unit
 survive at the interval level and fall at the verdict.
 
 `zarith.py` measured one cell (x ∈ [1,3], y ∈ [2,4]); `lean/ZNumPrice.lean` proves
@@ -55,8 +55,10 @@ def main():
     print(f"  the zarith cell x∈[1,3], y∈[2,4]: eq(x+y, y+x) = {verdict_eq(readings_add(I, J), readings_add(J, I))},"
           f" eq(x+0, x) = {verdict_eq(readings_add(I, (0, 0)), readings(I))}")
     ok = set_div == 0 and comm_forced == 0 and unit_forced == 0 and marks > 0
-    print("\n  Reading: the interval arithmetic inherits both laws; the verdict does not")
-    print("  earn either equation on a mark — coincidence of bounds is not identity (R1).")
+    print("\n  Reading (samples — each occurrence its own act of measurement): the interval")
+    print("  arithmetic inherits both laws; the verdict earns neither equation between two")
+    print("  acts. For NUMBERS — one value per name across the claim — both equations are")
+    print("  true (the curator, 2026-09-24; test_numeric_names.py).")
     print("\n" + ("E62 GREEN: reading sets coincide everywhere; no equation is forced on a mark"
                   if ok else "E62 RED"))
     return 0 if ok else 1

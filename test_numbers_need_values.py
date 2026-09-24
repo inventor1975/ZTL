@@ -22,7 +22,9 @@ for a system of two relations, and when only some rows have values; the run
 stops on it instead of E_UNREADABLE. Untouched: purely logical claims (->,
 =, <->), mixed claims whose logical atoms have no value, a genuine syntax
 error (still E_CLAIM), and every catalogue example in seven languages.
-Fails on the validator before the change.
+And a refusal says what it refused: a comparison nested in a comparison is
+a ValueError in words, not "'NoneType' object has no attribute 'group'".
+Fails on the validator and on the splitter before the change.
 Run: python3 test_numbers_need_values.py  ->  NUMBERS NEED VALUES GREEN
 """
 import sys
@@ -101,6 +103,26 @@ for rows, claim in QUIET:
     check(zfl.run(doc)["ok"], f"{claim!r}: the run stopped on a claim that was fine")
 doc = {"rows": [unverified("p"), verified("q")], "claim": "p & & q"}
 check(errors(doc) == [("E_CLAIM", "claim")], f"a real syntax error stays E_CLAIM: {errors(doc)}")
+
+# 5. a refusal says what it refused: a side that is not arithmetic
+#    (MEASURED 2026-09-24: a live model wrote `eq0 == (x*x - 2*x + 5 == 0)`;
+#    the splitter died as AttributeError, "'NoneType' object has no attribute
+#    'group'", and that sentence was all the person and the repair loop got)
+import znumjudge
+for claim in ("eq0 == (x*x - 2*x + 5 == 0) & exists == eq0", "(p & x) == 3"):
+    try:
+        znumjudge.extract_comparisons(claim, dict.fromkeys(["x", "eq0", "exists", "p"]))
+        said = "no refusal"
+    except ValueError as exc:
+        said = str(exc)
+    except Exception as exc:
+        said = f"{type(exc).__name__}: {exc}"
+    check("not arithmetic" in said, f"{claim!r}: the splitter refuses in words, got {said!r}")
+doc = {"rows": [unverified("x", value="?"), unverified("eq0"), unverified("exists")],
+       "claim": "eq0 == (x*x - 2*x + 5 == 0) & exists == eq0"}
+hints = [i["hint"] for i in zfl.run(doc)["issues"] if i["level"] == "error"]
+check(hints and "not arithmetic" in hints[0] and "NoneType" not in hints[0],
+      f"the run's refusal is in words: {hints}")
 
 # 4. no catalogue example is touched, in any language
 langs = ("en", "ru", "uk", "he", "de", "fr", "es")

@@ -290,7 +290,22 @@ def extract_comparisons(formula, quantities):
         # invented claims against predicted verdicts)
         lo, hi = _trim_parens(out, m.start(), m.end())
         chunk = out[lo:hi].strip()
-        sign = _CMP.search(chunk).group(0)
+        found = _CMP.search(chunk)
+        if found is None:
+            # A PARENTHESIS ACROSS A SIDE: `eq0 == (x*x - 2*x + 5 == 0)` nests
+            # a comparison in a comparison, `(p & x) == 3` puts a logical part
+            # inside a side; the trim above then cuts the sign away. Until
+            # 2026-09-24 this died as AttributeError, and "'NoneType' object
+            # has no attribute 'group'" is what the person, and the
+            # translator's repair turn, were told (MEASURED on a live model's
+            # document that day). The refusal is the same; now it says what.
+            raise ValueError(
+                f"cannot read the comparison in {m.group(0).strip()!r}: a side "
+                f"of it is not arithmetic (a comparison inside a comparison, or "
+                f"a logical part inside a side). `==` compares numbers; relate "
+                f"statements with <->, and let each comparison stand on its "
+                f"own: `(x*x - 2*x + 5 == 0) & p`")
+        sign = found.group(0)
         left, right = chunk.split(sign, 1)
         kind, swap = _KINDMAP[sign]
         e1, e2 = _parse_arith(left, quantities), _parse_arith(right, quantities)

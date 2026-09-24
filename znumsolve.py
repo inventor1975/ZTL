@@ -281,7 +281,38 @@ def _solve_linear_system(qs, atoms):
     return pinned, None, contributors
 
 
-def _narrow_quadratic(kind, e1, e2, chunk, qs, log):
+def _is_ground(q):
+    """A quantity CARRIES A GROUND when it bounds something: a pinned value or
+    a finite end. An unknown asked for with `?` spans the whole line and
+    grounds nothing: its `credit` is the absence of a ground, not a bad one.
+    The curator's word, 2026-09-24: an unknown is the question, not a source."""
+    return not (q["lo"] == -INF and q["hi"] == INF)
+
+
+def _grounds_of(names, qs, orig):
+    """The ORIGINAL grounds these quantities rest on, through every derivation
+    that produced them (a derived quantity records its own `grounds`)."""
+    out = set()
+    for n in names:
+        if qs[n].get("grounds") is not None:
+            out |= set(qs[n]["grounds"])
+        elif _is_ground(orig[n]):
+            out.add(n)
+    return out
+
+
+def _prov_of(grounds, orig):
+    """Earned exactly when every ground is: the provenance invariant, now
+    over grounds rather than over every name a derivation touched."""
+    return EARNED if all(orig[g]["prov"] == EARNED for g in grounds) else CREDIT
+
+
+def _own(name, qs, orig):
+    """The grounds of `name`'s own current box (its bounds enter a narrowing)."""
+    return _grounds_of([name], qs, orig)
+
+
+def _narrow_quadratic(kind, e1, e2, chunk, qs, log, orig=None):
     """Apply `_quadratic` to the ledger: 'empty', 'moved' or None.
 
     A piece that is one exact point is a DERIVED value and takes the
@@ -293,44 +324,45 @@ def _narrow_quadratic(kind, e1, e2, chunk, qs, log):
     if got is None:
         return None
     name, pieces, seen = got
-    return _apply_pieces(kind, name, pieces, seen, chunk, qs, log)
+    return _apply_pieces(kind, name, pieces, seen, chunk, qs, log, orig or qs)
 
 
-def _apply_pieces(kind, name, pieces, seen, chunk, qs, log):
+def _apply_pieces(kind, name, pieces, seen, chunk, qs, log, orig=None):
     """Narrow `name` to `pieces` (from `_parabola_pieces`): 'empty', 'moved'
-    or None. See `_narrow_quadratic` for what a piece's provenance is."""
+    or None. An exact root is a DERIVED value: its grounds are the grounds of
+    the equation's other quantities. A piece that is still a box is also
+    bounded by `name`'s own box, so those grounds join. Pieces off the
+    lattice are dropped (an integer x with x*x == 2 has no reading); two root
+    points are kept as `roots` on the hull, for the judge to try each."""
+    orig = orig or qs
     q = qs[name]
-    others = sorted(seen - {name})
-    derived = EARNED if all(qs[o]["prov"] == EARNED for o in others) else CREDIT
+    grounds = _grounds_of(sorted(seen - {name}), qs, orig)
+    own = _own(name, qs, orig)
     kept = []
     for lo, hi in pieces:
         point = lo == hi
-        pq = qty(lo, hi, derived if point else q["prov"],
-                 ("derived:" + ",".join(others) if others else None) if point
-                 else q["witness"], discrete=q["discrete"], unit=q["unit"],
-                 sample=False)
+        g = grounds if point else grounds | own
+        pq = qty(lo, hi, _prov_of(g, orig),
+                 ("derived:" + ",".join(sorted(g))) if g else None,
+                 discrete=q["discrete"], unit=q["unit"], sample=False)
         if pq.get("no_readings"):
             continue
-        if not point and derived == CREDIT:
-            pq["prov"], pq["witness"] = CREDIT, None
         pq["root"] = kind == "eq"    # an answer to show, not a box to narrow
-        pq["derived_from"] = sorted(set(q.get("derived_from") or []) | set(others))
+        pq["grounds"] = pq["derived_from"] = sorted(g)
         kept.append(pq)
     if not kept:
         log.append(f"{name}: no {typename(q['discrete'])} value in its box "
                    f"makes [{chunk}] true (from the discriminant)")
-        qs[name] = dict(q, empty=True)
+        qs[name] = dict(q, empty=True, empty_grounds=sorted(grounds | own))
         return "empty"
     if len(kept) == 1:
         new = kept[0]
     else:
-        points = all(k["lo"] == k["hi"] for k in kept)
-        new = qty(kept[0]["lo"], kept[-1]["hi"],
-                  derived if points else q["prov"],
-                  ("derived:" + ",".join(others) if others else None) if points
-                  else q["witness"],
+        g = set().union(*(k["grounds"] for k in kept))
+        new = qty(kept[0]["lo"], kept[-1]["hi"], _prov_of(g, orig),
+                  ("derived:" + ",".join(sorted(g))) if g else None,
                   discrete=q["discrete"], unit=q["unit"], sample=False)
-        new["derived_from"] = sorted(set().union(*(k["derived_from"] for k in kept)))
+        new["grounds"] = new["derived_from"] = sorted(g)
         if kind == "eq":
             new["roots"] = kept
     if (new["lo"], new["hi"]) == (q["lo"], q["hi"]) and \
@@ -379,12 +411,15 @@ def _committed_atoms(core):
     return out
 
 
-def narrow(quantities, formula, rounds=MAX_ROUNDS):
+def narrow(quantities, formula, rounds=MAX_ROUNDS, orig=None):
     """Push every comparison of the formula back onto its quantities until
     nothing moves. Returns (quantities, log) — the log names each step, so
     a narrowed value can always say who narrowed it."""
     qs = {n: dict(q) for n, q in quantities.items()}
+    orig = dict(orig or quantities)    # the sheet as given: where grounds live
     core, atoms = extract_comparisons(formula, qs)
+    for k, v in qs.items():            # a literal interval in the claim is a
+        orig.setdefault(k, v)          # declared quantity too (`_lit`, credit)
     committed = _committed_atoms(core)
     atoms = {k: v for k, v in atoms.items() if k in committed}
     log = []
@@ -392,25 +427,31 @@ def narrow(quantities, formula, rounds=MAX_ROUNDS):
     if bad == "inconsistent":
         first = sorted(qs)[0]
         log.append("the equalities are inconsistent as a system")
-        qs[first] = dict(qs[first], empty=True)
+        qs[first] = dict(qs[first], empty=True,
+                         empty_grounds=sorted(_grounds_of(contributors, qs, orig)))
         return qs, log
     for name, value in sorted(pinned.items()):
         q = qs[name]
+        grounds = _grounds_of(sorted(contributors - {name}), qs, orig)
         if not (q["lo"] <= value <= q["hi"]):
             log.append(f"{name}: forced to {fmt(value)}, outside its box")
-            qs[name] = dict(q, empty=True)
+            qs[name] = dict(q, empty=True, empty_grounds=sorted(
+                grounds | _own(name, qs, orig)))
             return qs, log
         # a DERIVED value takes its provenance from the derivation, not
         # from whatever the unknown was declared to be. An unknown is
         # `credit` because its bounds were unwitnessed; once the equations
         # force it out of earned quantities, the value IS earned — and if
         # any contributor rides credit, so does the answer.
-        others = sorted(contributors - {name})
-        derived_prov = (EARNED if all(qs[o]["prov"] == EARNED for o in others)
-                        else CREDIT)
+        # ... and its grounds are the grounds of the equations' other
+        # quantities; another UNKNOWN is the question, not a source, so a
+        # value derived from constants and earned rows is earned (the
+        # curator's word, 2026-09-24: x + y = 10, x - y = 2 came out credit)
+        derived_prov = _prov_of(grounds, orig)
         pinned_q = qty(value, value, derived_prov,
-                       "derived:" + ",".join(others) if others else None,
+                       "derived:" + ",".join(sorted(grounds)) if grounds else None,
                        discrete=q["discrete"], unit=q["unit"], sample=False)
+        pinned_q["grounds"] = pinned_q["derived_from"] = sorted(grounds)
         # KEEP THE TWO EMPTINESSES APART (2026-08-12). A quantity DECLARED
         # with no reading is E: the sheet cannot be judged at all. A value
         # DERIVED onto a point the lattice does not contain is something
@@ -420,7 +461,7 @@ def narrow(quantities, formula, rounds=MAX_ROUNDS):
         if pinned_q.get("no_readings"):
             log.append(f"{name}: {fmt(value)} is off the "
                        f"{typename(q['discrete'])} lattice — no solution")
-            qs[name] = dict(q, empty=True)
+            qs[name] = dict(q, empty=True, empty_grounds=sorted(grounds))
             return qs, log
         qs[name] = pinned_q
         log.append(f"{name} = {fmt(value)} by exact elimination"
@@ -430,7 +471,8 @@ def narrow(quantities, formula, rounds=MAX_ROUNDS):
         first = sorted(qs)[0]
         log.append("the equalities are inconsistent as a system "
                    "(each power of a name its own column)")
-        qs[first] = dict(qs[first], empty=True)
+        qs[first] = dict(qs[first], empty=True,
+                         empty_grounds=sorted(_grounds_of(contributors, qs, orig)))
         return qs, log
     for name, p, q2, c in single:
         if qs[name].get("sample") or qs[name]["lo"] == qs[name]["hi"]:
@@ -439,15 +481,16 @@ def narrow(quantities, formula, rounds=MAX_ROUNDS):
         if pieces is None:
             continue
         if _apply_pieces("eq", name, pieces, contributors, "the system",
-                         qs, log) == "empty":
+                         qs, log, orig) == "empty":
             return qs, log
     for _ in range(rounds):
         moved = False
         for atom, (kind, e1, e2, chunk) in atoms.items():
-            try:
-                c, terms, _, _ = _linear(("sub", e1, e2), qs, [0])
+            seen = set()   # every name READ, pinned ones too: a pinned t is a
+            try:           # constant to the arithmetic but still a ground
+                c, terms, _, _ = _linear(("sub", e1, e2), qs, [0], seen)
             except (_NotLinear, KeyError):
-                step = _narrow_quadratic(kind, e1, e2, chunk, qs, log)
+                step = _narrow_quadratic(kind, e1, e2, chunk, qs, log, orig)
                 if step == "empty":
                     return qs, log
                 moved = moved or step == "moved"
@@ -474,12 +517,20 @@ def narrow(quantities, formula, rounds=MAX_ROUNDS):
                 lo, hi = max(q["lo"], glo), min(q["hi"], ghi)
                 if lo == q["lo"] and hi == q["hi"]:
                     continue
+                # its grounds: the other quantities' and its own box's (an
+                # unknown's `?` box grounds nothing; see `_is_ground`)
+                # (MEASURED 2026-09-24: reading only `names`, the varying ones,
+                # x <= t with t on credit gave x an EARNED bound from nothing)
+                g = (_grounds_of(sorted((names | seen) - {name}), qs, orig)
+                     | _own(name, qs, orig))
                 if lo > hi:
                     log.append(f"{name}: emptied by [{chunk}]")
-                    qs[name] = dict(q, lo=lo, hi=hi, empty=True)
+                    qs[name] = dict(q, lo=lo, hi=hi, empty=True,
+                                    empty_grounds=sorted(g))
                     return qs, log
                 # the type has the last word: round to the lattice
-                narrowed = qty(lo, hi, q["prov"], q["witness"],
+                narrowed = qty(lo, hi, _prov_of(g, orig),
+                               ("derived:" + ",".join(sorted(g))) if g else None,
                                discrete=q["discrete"], unit=q["unit"],
                                sample=q.get("sample", False))
                 # WHO PAID FOR THIS BOUND — recorded here, where it is
@@ -491,13 +542,7 @@ def narrow(quantities, formula, rounds=MAX_ROUNDS):
                 # crashed on lookup — and would silently have attributed
                 # the value to the wrong source had a document ever been
                 # named like a quantity.
-                narrowed["derived_from"] = sorted(
-                    set(q.get("derived_from") or [])
-                    | {o for o in names if o != name})
-                # a narrowed bound inherits the credit that produced it
-                if any(qs[o]["prov"] == CREDIT for o in names if o != name):
-                    narrowed["prov"] = CREDIT
-                    narrowed["witness"] = None
+                narrowed["grounds"] = narrowed["derived_from"] = sorted(g)
                 qs[name] = narrowed
                 log.append(f"{name} -> [{fmt(narrowed['lo'])}, "
                            f"{fmt(narrowed['hi'])}] by [{chunk}]")
@@ -505,6 +550,23 @@ def narrow(quantities, formula, rounds=MAX_ROUNDS):
         if not moved:
             break
     return qs, log
+
+
+def _no_solution(qs, log, empty, sheet):
+    """No value makes the claim true. Resting only on earned grounds (and
+    constants, and types) that is a refutation; resting on a ground that is
+    still on credit it is not one yet: ON CREDIT, toward F, with the cure
+    named. The curator's word, 2026-09-24: `x == k & x == j` with k on
+    credit came back REFUTED, which the judge itself would never say."""
+    grounds = sorted({g for n in empty for g in (qs[n].get("empty_grounds") or [])})
+    weak = [g for g in grounds if sheet[g]["prov"] == CREDIT]
+    if weak:
+        return {"disposition": "ON CREDIT", "polarity": "toward F",
+                "narrowed": qs, "log": log, "empty": empty,
+                "next_check": [f"document {g}" for g in weak
+                               if not g.startswith("_lit")], "solved": {}}
+    return {"disposition": "REFUTED", "narrowed": qs, "log": log,
+            "empty": empty, "next_check": [], "solved": {}}
 
 
 def solve_claim(formula, quantities, marks):
@@ -516,10 +578,12 @@ def solve_claim(formula, quantities, marks):
     `x = 5 EARNED`, and the difference is the only thing an auditor is
     paid to look at."""
     qs, log = narrow(quantities, formula)
+    sheet = dict(quantities)
+    for k, v in qs.items():            # with the claim's literal intervals
+        sheet.setdefault(k, v)
     empty = [n for n, q in qs.items() if q.get("empty")]
     if empty:
-        return {"disposition": "REFUTED", "narrowed": qs, "log": log,
-                "empty": empty, "next_check": [], "solved": {}}
+        return _no_solution(qs, log, empty, sheet)
     # TWO ROOTS ARE TWO ANSWERS («корня-то два», 2026-09-24). Judge the claim
     # once per root: a root that makes it false is not an answer and goes;
     # if none is left the claim is refuted; the disposition of the rest is
@@ -534,9 +598,10 @@ def solve_claim(formula, quantities, marks):
             qs1[name] = rq
             # a name that DEPENDS on the root (area = s*s) follows it: narrow
             # again inside the world, or it stays a box and the claim OPEN
-            qs1, _ = narrow(qs1, formula)
-            if any(q1.get("empty") for q1 in qs1.values()):
-                worlds.append((rq, {"disposition": "REFUTED"}, qs1))
+            qs1, _ = narrow(qs1, formula, orig=sheet)
+            e1 = [n for n, q1 in qs1.items() if q1.get("empty")]
+            if e1:
+                worlds.append((rq, _no_solution(qs1, [], e1, sheet), qs1))
                 continue
             worlds.append((rq, judge_sheet_claim(formula, qs1, marks), qs1))
         alive_w = [w3 for w3 in worlds if w3[1]["disposition"] != "REFUTED"]
@@ -562,11 +627,14 @@ def solve_claim(formula, quantities, marks):
                         qs[other] = vals[0]
                     else:
                         kept_roots[other] = vals
+                        g = set().union(*(set(v.get("grounds") or []) for v in vals))
                         qs[other] = qty(min(v["lo"] for v in vals),
                                         max(v["hi"] for v in vals),
-                                        qs[other]["prov"], qs[other]["witness"],
+                                        _prov_of(g, sheet),
+                                        ("derived:" + ",".join(sorted(g))) if g else None,
                                         discrete=qs[other]["discrete"],
                                         unit=qs[other]["unit"], sample=False)
+                        qs[other]["grounds"] = sorted(g)
             rank = {"EARNED": 3, "ON CREDIT": 2, "OPEN": 1}
             odd = [w for _, w in alive if w["disposition"] not in rank]
             r = odd[0] if odd else min(
@@ -576,24 +644,31 @@ def solve_claim(formula, quantities, marks):
         r = judge_sheet_claim(formula, qs, marks)
     r["narrowed"], r["log"] = qs, log
     solved, cures = {}, list(r["next_check"])
-    derived = {n for n, q in qs.items()
-               if (quantities[n]["lo"], quantities[n]["hi"])
-               != (q["lo"], q["hi"])}
+    # a literal of the claim (`_lit`, which the judge's own reading may add
+    # again as `_lit2`) is not an answer: until 2026-09-24 looking it up here
+    # crashed every claim with an interval literal and x = ?, E_UNREADABLE
+    derived = {n for n, q in qs.items() if n in quantities
+               and (quantities[n]["lo"], quantities[n]["hi"]) != (q["lo"], q["hi"])}
     # a cure must be addressed to someone who can act on it. Nobody can
     # document or measure the ANSWER: line3 is what the sheet is asking
     # for, not a source. Cures naming a derived quantity are dropped, and
     # the one thing worth saying about it — that it is still a box — is
     # said once, below.
     cures = [c for c in cures
-             if c.split(" ", 1)[-1] not in derived]
+             if c.split(" ", 1)[-1] not in derived
+             and not c.split(" ", 1)[-1].startswith("_lit")]
     for name, q in sorted(qs.items()):
+        if name not in quantities:
+            continue                          # a literal of the claim, not asked for
         before = quantities[name]
         if (before["lo"], before["hi"]) == (q["lo"], q["hi"]):
             continue                          # this one was not narrowed
         pinned = q["lo"] == q["hi"]
-        # who paid for it: the narrowing recorded its own sources
-        sources = [c for c in (q.get("derived_from") or []) if c in quantities]
-        weak = [c for c in sources if quantities[c]["prov"] == CREDIT]
+        # who paid for it: the grounds the derivation recorded, transitively
+        sources = sorted(q.get("grounds") or [])
+        # a literal is declared, so it rides credit, but nobody can document
+        # it: the cure is addressed only to rows of the sheet
+        weak = [c for c in sources if c in quantities and sheet[c]["prov"] == CREDIT]
         solved[name] = {"lo": q["lo"], "hi": q["hi"], "pinned": pinned,
                         "prov": q["prov"], "from": sources, "weak": weak}
         roots = kept_roots.get(name) or ([q] if q.get("root") else [])

@@ -1966,6 +1966,77 @@ witness (`decorrelation_witness`). Forcedness on products (0·w) is
 `ZNaN.zero_times_mark` (§27), and the census inheritance for
 commutativity and the unit is `ZNumPrice.lean`.
 
+**The judge reads a name as one number, four ways (MEASURED 2026-09-24).**
+The joint reading of the difference of the two sides runs, in order: on the
+linear fragment; on sums of parabolas, one per name (ends and vertex); on
+multilinear polynomials — every name at most to the first power, x·y − x —
+from the corners of a finite box, where their extremes sit; and on a
+polynomial of degree up to eight in one name, from its ends and its critical
+points, the roots of the derivative isolated by Sturm in exact rationals, an
+irrational one bounded by interval Horner over its clamp. Outside all four the
+separate interval arithmetic runs, wide and sound. Each reading is exact or
+outwardly bounded, so it never overturns a verdict the separate bounds gave;
+on exhaustive integer pools it decided 1563, 944 and 230 claims the separate
+bounds left open, with none unsound (`test_quadratic.py`,
+`test_multilinear.py`, `test_higher_degree.py`). A `sample` keeps a key per
+occurrence in every reading: s·s stays decorrelated.
+
+**The solver: what a claim commits to, and nothing else (MEASURED
+2026-09-24).** The numeric solver narrows the unknowns of a claim (`x = ?`)
+backwards to a fixed point and judges the claim on what is left
+(`znumsolve.py`). It may use only the comparisons the claim commits to:
+those joined by `&` at the top level. Until this date it took every
+equality of the claim as a constraint wherever it stood, and `x == 2 | x ==
+3`, `~(x == 2)` and `x == 2 -> x == 3` came back REFUTED: on 336 claims built
+from atoms with every connective, 71 were refuted though an integer made them
+true, and 126 after the same day's quadratic path inherited the flaw; its own
+docstring had always said "conjunctions only". With the rule enforced the
+count is 0 of 336, and 0 of 520 with cubic atoms (`test_solver_logic.py`,
+brute force over −6..6). A top-level disjunction of equalities of one
+unknown is a set of alternatives it commits to — `x == 2 | x == 3` is x = 2 or
+3 — and is read as such; any other disjunction constrains nothing.
+
+Within that: exact elimination treats each power of each name as its own
+column (x and x² separately), so `area == s·s & area − 2s + 5 == 0` reduces to
+s² − 2s + 5 = 0; a parabola in one unknown is solved from its discriminant —
+D < 0 refutes, D = 0 pins, D > 0 keeps both roots and judges the claim at
+each; an irrational root is held exactly as p + q·√d, closed under + − × ÷
+with its sign decided without approximation, so `x·x == 2` is EARNED at
+x = ±√2; a polynomial of higher degree gives its real roots by Sturm —
+rational ones exact, a quadratic factor left over exactly, a cubic irrational
+only clamped (`x³ == 2` stays OPEN, ≈1.25992104989). The refusal at D < 0 is a
+theorem: the form a p² + b p q + c q² is positive definite when b² < 4ac
+(`ZParabola.form_pos`, over `Nat`, the sign cases argued).
+
+**Provenance over grounds.** A solved value is earned exactly when every
+ground it rests on is earned; the unknown asked for with `?` spans the line and
+grounds nothing — it is the question, not a source — so x + y = 10,
+x − y = 2 gives 6 and 4 EARNED where it gave them on credit. "No solution"
+resting on a ground still on credit is not a refutation yet: `x == k & x == j`
+with k on credit is ON CREDIT, toward F, with "document k". Building this
+exposed a leak: a pinned row read as a constant dropped out of the provenance
+of the bound it produced (`x <= t` with t on credit gave x an EARNED bound from
+nothing), and 28 cases of the solver's own sweep carried an earned bound from
+a credit total, invisible to its invariant (`conformance/solver_table.py`, re-
+blessed after the diff was read; `test_solver_provenance.py` checks the claim
+independently of the solver's record).
+
+**The validator speaks before the run.** A name the claim reads as a number
+without a value is `E_NO_VALUE`, with the cure (`?` if it is what the question
+asks for); a name with a value standing where a statement goes — `x^2`, where
+`^` is XOR — is `E_NUMBER_AS_STATEMENT`. Both were measured on a live model's
+translations of one question in prose, where they had reached the person as
+"stray character '*'" or a silent OPEN; the translator's repair loop, which
+runs on the validator's issues and now also on the run's own refusal, corrects
+them itself.
+
+*What is not done:* a product of different names with a square in it (x²·y)
+and polynomials of several names beyond the multilinear corners are read
+separately; a cubic irrational is not held exactly; the parabola's range is
+measured, not a theorem, and the passage of `form_pos` to signed coefficients
+is argued, not checked, because the core's `Int` multiplication laws carry
+`propext` in this toolchain.
+
 ## 16. The probabilistic bridge: Z ≠ p = 0.5 (MEASURED + Lean)
 
 Three measurements answer how a mark of ignorance differs from a

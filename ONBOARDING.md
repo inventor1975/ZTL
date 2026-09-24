@@ -18,6 +18,15 @@ from memory: read the file, do not reconstruct them from a classical prior
 "false" once, when the code says they legitimately fail at `Z`). Regenerate any
 time with `python3 -c "import ztl; ztl.print_tables()"` from the repo root.
 
+**MANDATORY too — before comparing ZTL with classical logic in any way**
+("stronger", "weaker", "the same", "De Morgan is gone"), **open
+`CLASSIC-VS-ZTL.md`** (this repo root; every number in it comes from
+`zledger.py`, which runs inside `run_all.py`). It is the card: quote from it,
+do not improvise the comparison. On 2026-08-28 the assistant improvised it by
+hand while the card already existed and said more; the card also carries the
+list of what NOT to say outward and the two traps in our own numbers.
+Added 2026-09-24 on the curator's word.
+
 **And read the preprint's own positioning before saying anything about what ZTL
 is** — `paper/ZTL-draft_1.4.md`, three sections, twenty minutes:
 

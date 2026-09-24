@@ -1149,6 +1149,14 @@ def demote_unregistered(rows, registry):
     return out, demoted
 
 
+def _root_text(lo, hi):
+    """A root as a person reads it: exact when it is (`-2`, `1/3`), else the
+    square root's clamp shown as ≈ and twelve significant digits."""
+    if lo == hi:
+        return str(lo)
+    return "≈" + format(float((lo + hi) / 2), ".12g")
+
+
 def resolved_marking(rows):
     """The marking the judge should have seen all along.
 
@@ -1319,7 +1327,10 @@ def run(doc, ground_registry=None):
                 solved = {n: {"lo": str(v["lo"]), "hi": str(v["hi"]),
                               "pinned": v["pinned"], "prov": v["prov"],
                               "from": v.get("from", []),
-                              "weak": v.get("weak", [])}
+                              "weak": v.get("weak", []),
+                              **({"roots": [_root_text(lo, hi)
+                                            for lo, hi in v["roots"]]}
+                                 if v.get("roots") else {})}
                           for n, v in (r.get("solved") or {}).items()}
             else:
                 r = judge_sheet_claim(claim, q, m)
@@ -1343,7 +1354,9 @@ def run(doc, ground_registry=None):
             report["numeric"]["unverified"] = list(core.get("unverified") or [])
             if r.get("polarity"):
                 report["numeric"]["polarity"] = r["polarity"]
-            if unknown and not solved:
+            # a REFUTED question needs no more facts: nothing makes it true
+            # (it said "needs 1 fact: x" beside REFUTED until 2026-09-24)
+            if unknown and not solved and r["disposition"] != "REFUTED":
                 names = [x["name"] for x in numeric_rows(rows)
                          if (x.get("value") or "").strip() == "?"]
                 report["numeric"]["missing"] = missing_facts(claim, sheet,

@@ -49,6 +49,7 @@ STANDS = [
     # a name is one number across the whole claim (the curator's word, 2026-09-24)
     ("test_numeric_names.py", ["NUMERIC NAMES GREEN"]),
     ("test_numbers_need_values.py", ["NUMBERS NEED VALUES GREEN"]),
+    ("test_quadratic.py", ["QUADRATIC GREEN"]),
     # Поставлен 2026-09-19: CLASSIC-VS-ZTL.md год носила число «1263 из 2924»
     # без определения и без прогона, и оно занижало результат на двадцать
     # пунктов. Сторожим ОБА чтения, чтобы подмена узкого широким не повторилась.

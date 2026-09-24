@@ -450,6 +450,124 @@ def _ev_linear(expr, quantities):
     return (lo, hi), ped, used, step, unit
 
 
+# ---------------------------------- the quadratic fragment, read coherently
+def _poly_add(t1, t2, sign):
+    terms = dict(t1)
+    for k, (p, q, nm) in t2.items():
+        op_, oq, _ = terms.get(k, (Fraction(0), Fraction(0), nm))
+        terms[k] = (op_ + sign * p, oq + sign * q, nm)
+    return terms
+
+
+def _poly_scale(t, k):
+    return {kk: (p * k, q * k, nm) for kk, (p, q, nm) in t.items()}
+
+
+def _poly(expr, quantities, counter, seen=None):
+    """Read the expression as  c + Σ (p·x + q·x²)  over KEYS, or give up.
+
+    The linear reading one degree up (the curator's X*X-2X+5=0, 2026-09-24).
+    A name that multiplies ITSELF is still one number, so x*x - 2*x + 5 is one
+    parabola in x, and its range over x's box is exact: the two ends and, when
+    it lies inside, the vertex. Different names never multiply here: x*y is
+    not separable, while a SUM of separate parabolas ranges over exactly the
+    sum of their ranges, each name varying alone. A `sample` gets a key per
+    occurrence, so s*s is two keys and gives up, as it must: two acts of
+    measurement are two numbers. Anything else raises, and the caller keeps
+    the separate interval arithmetic. No lattice step is carried: the
+    lattice-miss rule reads the sides separately, as before."""
+    if isinstance(expr, (int, float, Fraction)):
+        return num(expr), {}, None, None
+    if isinstance(expr, str):
+        q = quantities[expr]
+        if q.get("no_readings"):
+            raise _NoReadings(f"{expr}: {q['no_readings']}")
+        if seen is not None:
+            seen.add(expr)
+        counter[0] += 1
+        if q["lo"] == q["hi"] and not isinstance(q["lo"], float):
+            return q["lo"], {}, q.get("unit"), None
+        key = (expr, counter[0]) if q.get("sample") else expr
+        return (Fraction(0), {key: (Fraction(1), Fraction(0), expr)},
+                q.get("unit"), None)
+    op, *args = expr
+    if op == "sum":
+        c, terms, unit = Fraction(0), {}, None
+        for a in args[0]:
+            c2, t2, u2, _ = _poly(a, quantities, counter, seen)
+            unit = _unify_units(unit, u2, "add")
+            c, terms = c + c2, _poly_add(terms, t2, 1)
+        return c, terms, unit, None
+    if op in ("add", "sub"):
+        c1, t1, u1, _ = _poly(args[0], quantities, counter, seen)
+        c2, t2, u2, _ = _poly(args[1], quantities, counter, seen)
+        unit = _unify_units(u1, u2, "add")
+        sign = 1 if op == "add" else -1
+        return c1 + sign * c2, _poly_add(t1, t2, sign), unit, None
+    if op in ("mul", "div"):
+        c1, t1, u1, _ = _poly(args[0], quantities, counter, seen)
+        c2, t2, u2, _ = _poly(args[1], quantities, counter, seen)
+        if op == "div":
+            if t2 or c2 == 0:
+                raise _NotLinear()
+            return (c1 / c2, _poly_scale(t1, 1 / c2),
+                    _unit_combine(u1, u2, -1), None)
+        unit = _unit_combine(u1, u2, +1)
+        if not t2:
+            return c1 * c2, _poly_scale(t1, c2), unit, None
+        if not t1:
+            return c1 * c2, _poly_scale(t2, c1), unit, None
+        if len(t1) == 1 and len(t2) == 1 and t1.keys() == t2.keys():
+            (k, (p1, q1, nm)), = t1.items()
+            (_, (p2, q2, _)), = t2.items()
+            if q1 == 0 and q2 == 0:          # (c1 + p1·x)(c2 + p2·x)
+                return (c1 * c2, {k: (c1 * p2 + c2 * p1, p1 * p2, nm)},
+                        unit, None)
+        raise _NotLinear()
+    raise _NotLinear()
+
+
+def _at(p, q, x):
+    """p·x + q·x² at a point; at an infinite end, the leading term decides."""
+    if x == INF or x == -INF:
+        if q != 0:
+            return INF if q > 0 else -INF
+        return INF if (p > 0) == (x > 0) else -INF
+    return p * x + q * x * x
+
+
+def _parabola_range(p, q, a, b):
+    """The exact range of p·x + q·x² over x in [a, b], ends possibly infinite:
+    the two ends and, if it lies strictly inside, the vertex -p/2q."""
+    cands = [_at(p, q, a), _at(p, q, b)]
+    if q != 0:
+        v = -p / (2 * q)
+        if a < v < b:
+            cands.append(_at(p, q, v))
+    return min(cands), max(cands)
+
+
+def _ev_poly(expr, quantities):
+    """(interval, pedigree, used, step, unit) via the quadratic reading, or
+    None outside it. Asked only where the linear reading gave up."""
+    seen = set()
+    try:
+        c, terms, unit, _ = _poly(expr, quantities, [0], seen)
+    except (_NotLinear, KeyError):
+        return None
+    lo = hi = c
+    for _, (p, q, name) in terms.items():
+        a, b = quantities[name]["lo"], quantities[name]["hi"]
+        if a == b and isinstance(a, float):
+            return None          # pinned AT an infinity: no finite reading
+        if p == 0 and q == 0:
+            continue             # cancelled: 0 for every finite reading
+        r = _parabola_range(p, q, a, b)
+        lo, hi = lo + r[0], hi + r[1]
+    ped = {n for n in seen if quantities[n]["prov"] == CREDIT}
+    return (lo, hi), ped, set(seen), None, unit
+
+
 def _ev(expr, quantities):
     """Rich evaluator: (interval|None, pedigree, used, lattice_step, unit).
     Discreteness is tracked exactly through +, -, *, sum (integer lattices
@@ -567,6 +685,16 @@ def compare(kind, e1, e2, quantities):
         joint = _ev_linear(("sub", e1, e2), quantities)
     except _NoReadings:
         joint = None
+    if joint is None:
+        # ONE DEGREE UP (2026-09-24, the curator's X*X-2X+5=0): where the
+        # difference is a sum of parabolas, one per name, its range is read
+        # exactly. MEASURED before this: x*x - 2*x + 5 == 0 over the reals,
+        # and even (x-1)*(x-1) + 4 == 0, came back OPEN, x in x*x being read
+        # as two independent numbers; the truth is REFUTED, (x-1)² + 4 >= 4.
+        try:
+            joint = _ev_poly(("sub", e1, e2), quantities)
+        except _NoReadings:
+            joint = None
     if joint is not None and (joint[0][0] != joint[0][0] or joint[0][1] != joint[0][1]):
         # nan: a quantity pinned AT +inf met an unbounded one (inf + -inf).
         # Found by the full regression, dilemmas/omnipotence.py: the stone

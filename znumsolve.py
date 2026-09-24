@@ -40,6 +40,7 @@ non-degenerate answer is the normal case, not a bug.
 Run:  python3 znumsolve.py
 """
 import os
+import re
 import sys
 from fractions import Fraction
 
@@ -49,7 +50,7 @@ sys.path.insert(0, _HERE)
 from znum import (INF, EARNED, CREDIT, qty, num, fmt, _linear,   # noqa: E402
                   _NotLinear, _step, typename, _poly, _rat_sqrt, _NoReadings)
 from znumjudge import (parse_quantities, extract_comparisons,     # noqa: E402
-                       judge_sheet_claim)
+                       judge_sheet_claim, _closes_last)
 
 MAX_ROUNDS = 32
 
@@ -342,12 +343,50 @@ def _apply_pieces(kind, name, pieces, seen, chunk, qs, log):
     return "moved"
 
 
+def _committed_atoms(core):
+    """The comparisons the claim COMMITS to: those joined by `&` at the top
+    level, through parentheses that only wrap. Under | ~ -> ^ <-> a
+    comparison is one possibility, not a constraint.
+
+    MEASURED 2026-09-24: every equality was taken as a constraint wherever
+    it stood, so with x = ? `x == 2 | x == 3`, `~(x == 2)` and
+    `x == 2 -> x == 3` came back REFUTED, and 71 of 336 claims built from
+    atoms with every connective were refuted though an integer made them
+    true (126 after the same day's quadratic path, which inherited it).
+    The docstring above always said "conjunctions only"; the code did not."""
+    out = set()
+
+    def walk(t):
+        t = t.strip()
+        while t.startswith("(") and _closes_last(t, 0):
+            t = t[1:-1].strip()
+        parts, depth, cur = [], 0, []
+        for ch in t:
+            depth += (ch == "(") - (ch == ")")
+            if ch == "&" and depth == 0:
+                parts.append("".join(cur))
+                cur = []
+            else:
+                cur.append(ch)
+        parts.append("".join(cur))
+        if len(parts) > 1:
+            for part in parts:
+                walk(part)
+        elif re.fullmatch(r"nc\d+", t):
+            out.add(t)
+
+    walk(core)
+    return out
+
+
 def narrow(quantities, formula, rounds=MAX_ROUNDS):
     """Push every comparison of the formula back onto its quantities until
     nothing moves. Returns (quantities, log) — the log names each step, so
     a narrowed value can always say who narrowed it."""
     qs = {n: dict(q) for n, q in quantities.items()}
-    _, atoms = extract_comparisons(formula, qs)
+    core, atoms = extract_comparisons(formula, qs)
+    committed = _committed_atoms(core)
+    atoms = {k: v for k, v in atoms.items() if k in committed}
     log = []
     pinned, bad, contributors = _solve_linear_system(qs, atoms)
     if bad == "inconsistent":

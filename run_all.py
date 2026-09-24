@@ -46,8 +46,8 @@ STANDS = [
     ("zlabelexactdef.py", ["E60 GREEN"]),
     ("zreconverge.py",  ["E61 GREEN"]),
     ("znumprice.py",    ["E62 GREEN"]),
-    # identity is not granted on credit across a comparison (2026-09-24)
-    ("test_identity_not_granted.py", ["IDENTITY NOT GRANTED GREEN"]),
+    # a name is one number across the whole claim (the curator's word, 2026-09-24)
+    ("test_numeric_names.py", ["NUMERIC NAMES GREEN"]),
     # Поставлен 2026-09-19: CLASSIC-VS-ZTL.md год носила число «1263 из 2924»
     # без определения и без прогона, и оно занижало результат на двадцать
     # пунктов. Сторожим ОБА чтения, чтобы подмена узкого широким не повторилась.

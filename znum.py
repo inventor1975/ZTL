@@ -2,8 +2,11 @@
 """
 Expedition E37: znum — the numeric floor of ZTL (probe).
 
-Design: ZNUM-DESIGN-draft.md (stage 1, curator-accepted forks F1-F3):
-  F1  occurrences read DECORRELATED, as in the propositional lift (m-m != 0);
+Design: ZNUM-DESIGN-draft.md (stage 1, curator-accepted forks F1-F3), with F1
+superseded by the curator's word in two steps:
+  F1  a NAME is ONE NUMBER across the whole claim: m - m = 0 and m == m
+      (2026-08-11 within a term; 2026-09-24 across a comparison). Occurrences
+      read independently only for a `sample` — separate acts of measurement;
   F2  a bare number is a number ON CREDIT: [x,x] with unearned bounds;
   F3  the two credit axes stay SEPARATE and both are reported:
         interval axis   — is the verdict forced by the current intervals?
@@ -197,7 +200,12 @@ def _iv_mul(a, b):
 def _iv_div(a, b):
     if b[0] <= 0 <= b[1]:
         return None                       # divisor may be 0: undefined (§25 echo)
-    inv = (1 / b[1], 1 / b[0])
+    # 1/±inf is an EXACT zero, not the float 0.0. A finite float passed for
+    # an infinity downstream — `fmt` printed it as -∞ and `_on_lattice` put
+    # it off every lattice — and the live service refuted `k == 0/d` for an
+    # int k that can be 0: a false verdict, found 2026-09-24 in the audit.
+    inv = (Fraction(0) if b[1] in (INF, -INF) else 1 / b[1],
+           Fraction(0) if b[0] in (INF, -INF) else 1 / b[0])
     return _iv_mul(a, inv)
 
 
@@ -427,6 +435,12 @@ def _ev_linear(expr, quantities):
     for _, (coef, name) in terms.items():
         q = quantities[name]
         a, b = q["lo"], q["hi"]
+        if coef == 0 and not (a == b and isinstance(a, float)):
+            # A name that cancelled (m - m) contributes exactly 0 for every
+            # FINITE reading, however wide the bounds; 0 * inf would be nan
+            # (2026-09-24). A quantity pinned AT an infinity has no finite
+            # reading, inf - inf is undefined, and it keeps the old path.
+            continue
         ends = sorted((coef * a, coef * b), key=lambda x: (x == -INF and -1)
                       or (x == INF and 1) or 0) if isinstance(a, float) \
             or isinstance(b, float) else sorted((coef * a, coef * b))
@@ -532,20 +546,51 @@ def compare(kind, e1, e2, quantities):
     ped, used = p1 | p2, u1 | u2
     if r1 is None or r2 is None:
         return "Z", ped, used, None       # undefined subterm: mark, not verdict
-    if kind == "le":
+    if kind not in ("le", "lt", "eq"):
+        raise ValueError(kind)
+    # A NAME IS ONE NUMBER ACROSS THE WHOLE CLAIM (the curator's word,
+    # 2026-09-24, in two steps): (1) for numbers m - m = 0, and m - m != 0
+    # only for a `sample`, where each occurrence is a separate act of
+    # measurement; (2) `==` over numbers is arithmetic, so `m == m` is true.
+    # The ZTL table (Z <-> Z = F) belongs to the logical connective, not to
+    # numbers: «в логике не бывает m==m, а бывает m nxor m». The judge used
+    # to bound each side SEPARATELY, so a name on both sides lost its
+    # identity (`m == m` Z while `m - m == 0` T), and the solver, which reads
+    # the difference of the sides, disagreed with the judge. On the linear
+    # fragment the difference is now read in ONE pass, each name counted
+    # once (a `sample` still gets a key per occurrence): exact, hence sound,
+    # and it never overturns a verdict the separate bounds gave. Outside the
+    # fragment the separate bounds run unchanged — wider, and honest.
+    try:
+        joint = _ev_linear(("sub", e1, e2), quantities)
+    except _NoReadings:
+        joint = None
+    if joint is not None and (joint[0][0] != joint[0][0] or joint[0][1] != joint[0][1]):
+        # nan: a quantity pinned AT +inf met an unbounded one (inf + -inf).
+        # Found by the full regression, dilemmas/omnipotence.py: the stone
+        # against an unlimited capacity came back OPEN instead of REFUTED.
+        # The difference is undefined there; the separate bounds still decide.
+        joint = None
+    if joint is not None:
+        d = joint[0]
+        if kind == "le":
+            v = "T" if d[1] <= 0 else ("F" if d[0] > 0 else "Z")
+        elif kind == "lt":
+            v = "T" if d[1] < 0 else ("F" if d[0] >= 0 else "Z")
+        else:
+            v = "T" if d == (0, 0) else ("F" if d[0] > 0 or d[1] < 0 else "Z")
+    elif kind == "le":
         v = "T" if r1[1] <= r2[0] else ("F" if r1[0] > r2[1] else "Z")
     elif kind == "lt":
         v = "T" if r1[1] < r2[0] else ("F" if r1[0] >= r2[1] else "Z")
-    elif kind == "eq":                     # equality within exactness (§13:
+    else:                                  # equality within exactness (§13:
         d = _iv_sub(r1, r2)                # only forced equality is earned)
         v = "T" if d == (0, 0) else ("F" if d[0] > 0 or d[1] < 0 else "Z")
-        if v == "Z":                       # lattice miss: an int-typed side
-            for sa, rb in ((s1, r2), (s2, r1)):   # can never equal a point
-                if sa is not None and rb[0] == rb[1] \
-                        and not _on_lattice(rb[0], sa):
-                    v = "F"                # off the lattice: forced false
-    else:
-        raise ValueError(kind)
+    if kind == "eq" and v == "Z":          # lattice miss: an int-typed side
+        for sa, rb in ((s1, r2), (s2, r1)):   # can never equal a point
+            if sa is not None and rb[0] == rb[1] \
+                    and not _on_lattice(rb[0], sa):
+                v = "F"                    # off the lattice: forced false
     return v, ped, used, None
 
 

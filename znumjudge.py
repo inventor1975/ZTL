@@ -171,9 +171,13 @@ def _parse_arith(s, quantities):
         depth = 0
         for i in range(len(s) - 1, 0, -1):      # rightmost, outside parens
             c = s[i]
-            if c == ")":
+            # brackets group too: `[-1,1]` is ONE interval literal and its
+            # minus is a sign, not a subtraction. Counting only `(` `)` split
+            # it at that minus, so ZFL refused every interval with a negative
+            # bound (E_UNREADABLE on "[-1,1]"; found 2026-09-24 in the audit).
+            if c in ")]":
                 depth += 1
-            elif c == "(":
+            elif c in "([":
                 depth -= 1
             elif c in level and depth == 0:
                 return (_TAG[c], _parse_arith(s[:i], quantities),

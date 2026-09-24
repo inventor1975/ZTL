@@ -791,8 +791,10 @@ def validate(doc):
             issues.extend(_numbers_without_value(_LONE_EQ.sub("==", claim), rows)
                           or [_issue("error", "E_CLAIM", "claim", str(exc))])
         else:
-            if isinstance(phi, tuple) and phi[:1] == ("comparison",):
+            numeric = isinstance(phi, tuple) and phi[:1] == ("comparison",)
+            if numeric:
                 issues.extend(_numbers_without_value(phi[1], rows))
+            issues.extend(_numbers_as_statements(phi[1] if numeric else claim, rows))
         unknown = names_in(claim) - declared
         if unknown:
             issues.append(_issue("error", "E_UNKNOWN_NAME", "claim",
@@ -823,17 +825,17 @@ def _numbers_without_value(text, rows):
         name = (r.get("name") or "").strip()
         if name:
             by_name.setdefault(name, (i, r))
-    # NOTHING TO FIND, NOTHING TO PAY. The splitter parses both sides, which
-    # is recursive: MEASURED 2026-09-24 on the 2040-factor claim of the
-    # public-service stand, validate went from 0.00 s to 0.5 s and doubled
-    # the run. When every name the claim mentions has a value, no parse is
-    # needed to know that none lacks one.
+    # NOTHING TO FIND, NOTHING TO PAY. MEASURED 2026-09-24 on the
+    # 2040-factor claim of the public-service stand: reading the sides made
+    # validate 0.00 s -> 0.5 s. The splitter now runs with `parse=False`,
+    # which only finds the comparisons, and not at all when every name the
+    # claim mentions has a value.
     valueless = {n for n, (_i, r) in by_name.items()
                  if not (r.get("value") or "").strip()}
     if not (names_in(text) & valueless):
         return []
     try:
-        _core, atoms = extract_comparisons(text, dict.fromkeys(by_name))
+        _core, atoms = extract_comparisons(text, {}, parse=False)
     except Exception:
         return []                # malformed arithmetic: the run says it in its own words
     used = set()
@@ -849,6 +851,37 @@ def _numbers_without_value(text, rows):
                 f"value: give it a number, an interval [0,10], or ? if "
                 f"'{name}' is what the question asks for"))
     return out
+
+
+def _numbers_as_statements(text, rows):
+    """A NUMBER IS NOT A STATEMENT. A row with a value is a quantity; it
+    enters a claim through a comparison, and a name of one that stands where
+    a statement goes (beside ^ & | ~ -> <->, or alone) is a type error, not a
+    proposition with an unknown mark.
+
+    MEASURED 2026-09-24 with a live model: a question in prose came back as
+    `x^2 - 2*x + 5 == 0`. `^` is XOR here, so the claim was read as
+    "x XOR (2 - 2*x + 5 == 0)" and answered OPEN, silently; with x = 2
+    measured, `x^2 == 4` and `x^2 == 5` both came back OPEN. The issue names
+    the name and the cure, and the repair loop can apply it."""
+    numbers = {}
+    for r in rows:
+        name = (r.get("name") or "").strip()
+        if name and (r.get("value") or "").strip():
+            numbers[name] = True
+    if not (names_in(text) & set(numbers)):
+        return []
+    try:
+        core, _atoms = extract_comparisons(text, {}, parse=False)
+    except Exception:
+        return []                # the splitter's own refusal: the run says it
+    return [_issue(
+        "error", "E_NUMBER_AS_STATEMENT", "claim",
+        f"'{name}' has a value, so it is a number, and here it stands where a "
+        f"statement goes. A number enters a claim through a comparison "
+        f"(`{name} > 0`); a square is `{name}*{name}`, because `^` is XOR, a "
+        f"connective of statements")
+        for name in sorted(names_in(core) & set(numbers))]
 
 
 def names_in(text):

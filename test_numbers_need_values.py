@@ -24,6 +24,8 @@ stops on it instead of E_UNREADABLE. Untouched: purely logical claims (->,
 error (still E_CLAIM), and every catalogue example in seven languages.
 And a refusal says what it refused: a comparison nested in a comparison is
 a ValueError in words, not "'NoneType' object has no attribute 'group'".
+And a number is not a statement: `x^2` (XOR) or `m & p` over a number is
+E_NUMBER_AS_STATEMENT, where it used to be read silently and answered OPEN.
 Fails on the validator and on the splitter before the change.
 Run: python3 test_numbers_need_values.py  ->  NUMBERS NEED VALUES GREEN
 """
@@ -124,6 +126,25 @@ hints = [i["hint"] for i in zfl.run(doc)["issues"] if i["level"] == "error"]
 check(hints and "not arithmetic" in hints[0] and "NoneType" not in hints[0],
       f"the run's refusal is in words: {hints}")
 
+# 6. a number is not a statement (MEASURED 2026-09-24: a live model wrote
+#    `x^2 - 2*x + 5 == 0`, `^` being XOR, read silently as "x XOR (...)", OPEN)
+for rows, claim in [([unverified("x", value="?"), unverified("eq")], "x^2 - 2*x + 5 == 0"),
+                    ([verified("x", value="2")], "x^2 == 4"),
+                    ([verified("m", value="5"), unverified("p")], "m & p"),
+                    ([unverified("rain"), verified("budget", value="5000")], "rain -> budget")]:
+    doc = {"rows": rows, "claim": claim}
+    check(errors(doc) == [("E_NUMBER_AS_STATEMENT", "claim")], f"{claim!r}: {errors(doc)}")
+    check(set(run_errors(doc)) == {"E_NUMBER_AS_STATEMENT"}, f"{claim!r}: the run stops on it")
+hint = [i["hint"] for i in zfl.validate({"rows": [verified("x", value="2")], "claim": "x^2 == 4"})
+        if i["code"] == "E_NUMBER_AS_STATEMENT"][0]
+check("x*x" in hint and "XOR" in hint, f"the hint names the cure: {hint!r}")
+for rows, claim in [([verified("x", value="2")], "x*x == 4"),
+                    ([verified("m", value="[0,9]"), unverified("p")], "(m == m) & p"),
+                    ([unverified("p"), verified("q")], "p ^ q"),
+                    ([verified("m", value="[0,9]"), unverified("p")], "(m > 3) -> p")]:
+    doc = {"rows": rows, "claim": claim}
+    check(errors(doc) == [], f"{claim!r}: validate {errors(doc)} on a claim that was fine")
+
 # 4. no catalogue example is touched, in any language
 langs = ("en", "ru", "uk", "he", "de", "fr", "es")
 n = 0
@@ -131,7 +152,8 @@ for lang in langs:
     for item in zflexamples.catalogue(lang)["items"]:
         n += 1
         codes = [i["code"] for i in zfl.validate(item["doc"])]
-        check("E_NO_VALUE" not in codes, f"catalogue [{lang}] {item.get('label')!r}: {codes}")
+        check("E_NO_VALUE" not in codes and "E_NUMBER_AS_STATEMENT" not in codes,
+              f"catalogue [{lang}] {item.get('label')!r}: {codes}")
 check(n == 41 * len(langs), f"the catalogue was read: {n} documents")
 
 print(f"NUMBERS NEED VALUES GREEN — {CHECKS} checks; {n} catalogue documents untouched")

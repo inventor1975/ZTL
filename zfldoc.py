@@ -86,6 +86,12 @@ CODE_HELP = {
     "E_CLAIM": ("the claim does not parse", "утверждение не разбирается"),
     "E_UNKNOWN_NAME": ("a formula names a row that does not exist",
                        "формула называет несуществующую строку"),
+    "E_NUMBER_AS_STATEMENT": ("a name with a value is a number, and it stands "
+                              "where a statement goes — compare it (x > 0); a "
+                              "square is x*x, since ^ is XOR",
+                              "имя со значением — число, а стоит на месте "
+                              "утверждения — сравните его (x > 0); квадрат — "
+                              "x*x, потому что ^ это XOR"),
     "E_NO_VALUE": ("a name the claim reads as a number has no value — "
                    "give it a number, an interval, or ? if it is what "
                    "the question asks for",

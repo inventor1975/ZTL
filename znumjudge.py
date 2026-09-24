@@ -266,9 +266,14 @@ def _trim_parens(s, lo, hi):
     return lo, hi
 
 
-def extract_comparisons(formula, quantities):
+def extract_comparisons(formula, quantities, parse=True):
     """Replace each comparison in the formula with a fresh atom nc<i>;
-    return (core_formula, {atom: (kind, e1, e2)})."""
+    return (core_formula, {atom: (kind, e1, e2, chunk)}).
+
+    `parse=False` finds the comparisons and leaves their sides unread
+    (e1 = e2 = None): the validator asks only WHERE they are, and reading
+    the sides is the recursive part (0.5 s on a 2040-factor claim,
+    measured 2026-09-24), which the run does anyway."""
     # the implication arrow contains '>', which is NOT a comparison:
     # normalize '->' to the core's unicode arrow before extraction
     # (bug found by the curator's question "if 4 > 3 then 5 > 3?")
@@ -308,7 +313,8 @@ def extract_comparisons(formula, quantities):
         sign = found.group(0)
         left, right = chunk.split(sign, 1)
         kind, swap = _KINDMAP[sign]
-        e1, e2 = _parse_arith(left, quantities), _parse_arith(right, quantities)
+        e1, e2 = ((_parse_arith(left, quantities), _parse_arith(right, quantities))
+                  if parse else (None, None))
         if swap:
             e1, e2 = e2, e1
         i += 1

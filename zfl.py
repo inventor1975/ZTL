@@ -543,6 +543,12 @@ def coerce(doc):
 
 
 MAX_ATOMS = 10          # см. комментарий в validate(): стоимость 3**atoms
+# THE LENGTH OF A FORMULA IS CAPPED TOO — the atom cap bounds the reading, not
+# the READERS, which are quadratic in the length of the text. MEASURED
+# 2026-09-24: a product chain of one name, 39 KB, took 4.6 s; at 4 KB the
+# worst of seven adversarial shapes (products, differences, quotients,
+# nested roots and brackets) takes 0.21 s. A public service pays per request.
+MAX_FORMULA_CHARS = 4096
 
 
 def validate(doc):
@@ -580,6 +586,13 @@ def validate(doc):
                              f"{len(_used)} atoms in the formulas: a reading "
                              f"costs 3**atoms, so it is capped at {MAX_ATOMS} "
                              f"(rows are NOT capped — split the question instead)"))
+    for _where, _text in [("claim", doc.get("claim") or "")] + [
+            (f"row {i}", (r.get("ground") or "")) for i, r in enumerate(rows, 1)]:
+        if len(_text) > MAX_FORMULA_CHARS:
+            issues.append(_issue("error", "E_TOOLONG", _where,
+                                 f"{len(_text)} characters: a formula is capped at "
+                                 f"{MAX_FORMULA_CHARS} (reading it costs the square of "
+                                 f"its length) — split the question"))
     seen = set()
     for i, r in enumerate(rows, 1):
         at = f"row {i}"
@@ -1366,14 +1379,24 @@ def run(doc, ground_registry=None):
                                  f"the ledger could not read these rows: "
                                  f"{exc}"))
             return {"ok": False, "issues": issues}
-        if judged is not None:
-            report["ledger"] = {
-                "claims": {k: {"disposition": v["disposition"],
-                               "assurance": v["assurance"]}
-                           for k, v in judged.items()},
-                "brackets": {g: list(iv) for g, iv
-                             in zbook.trust_interval(book).items()},
-                "naming": zbook.naming_assumption(book)}
+        # THE SAME GUARD OVER THE WHOLE BRANCH, not only its first call: the
+        # brackets and the naming read the book again, and an OverflowError
+        # from a value past float range escaped run() from here (MEASURED
+        # 2026-09-24: 200 factors of 10**1000 — the public API answered 500).
+        try:
+            if judged is not None:
+                report["ledger"] = {
+                    "claims": {k: {"disposition": v["disposition"],
+                                   "assurance": v["assurance"]}
+                               for k, v in judged.items()},
+                    "brackets": {g: list(iv) for g, iv
+                                 in zbook.trust_interval(book).items()},
+                    "naming": zbook.naming_assumption(book)}
+        except Exception as exc:
+            issues.append(_issue("error", "E_UNREADABLE", "ledger",
+                                 f"the ledger could not read these rows: "
+                                 f"{exc}"))
+            return {"ok": False, "issues": issues}
 
     # БИРКА НА ЗАВИСЯЩИХ. Заработавшее на объявленном не прячется среди
     # заработавшего на предъявимом.

@@ -382,6 +382,33 @@ def sec10_what_the_ground_holds_and_what_to_check():
     print("   above six inputs rather than spending seconds per request.")
 
 
+def sec11_a_public_service_cannot_be_made_to_raise_or_to_stall():
+    """Found by probing the public API (2026-09-24): a value past float range
+    made run() raise from the ledger branch (the service answered 500), and a
+    long product chain took seconds, the readers being quadratic in length."""
+    import time
+    print("\n### 11. A public service cannot be made to raise or to stall")
+    big = {"claim": "*".join(["a"] * 200) + " > b", "rows": [
+        {"name": "a", "means": "a", "status": "verified", "ground": "doc", "value": "1" + "0" * 1000},
+        {"name": "b", "means": "b", "status": "verified", "ground": "doc", "value": "1"}]}
+    r = zfl.run(big)                       # raised OverflowError until this date
+    assert r["ok"] is False and any(i["code"] == "E_UNREADABLE" for i in r["issues"]), r
+    rows = [{"name": "a", "means": "a", "status": "verified", "ground": "doc", "value": "2"},
+            {"name": "b", "means": "b", "status": "verified", "ground": "doc", "value": "1"}]
+    long_claim = "*".join(["a"] * 2500) + " > b"
+    codes = [(i["code"], i["where"]) for i in zfl.run({"claim": long_claim, "rows": rows})["issues"]]
+    assert ("E_TOOLONG", "claim") in codes, codes
+    long_ground = [{"name": "s", "means": "s", "status": "defined", "ground": " & ".join(["~Tr(s)"] * 800)}]
+    codes = [(i["code"], i["where"]) for i in zfl.run({"rows": long_ground})["issues"]]
+    assert ("E_TOOLONG", "row 1") in codes, codes
+    near = "*".join(["a"] * 2040) + " > b"            # just under the cap
+    t0 = time.time()
+    r = zfl.run({"claim": near, "rows": rows})
+    assert "E_TOOLONG" not in [i["code"] for i in r.get("issues", [])] and time.time() - t0 < 2.0, r
+    print("   a value past float range is an issue, not a traceback; a formula")
+    print("   over 4096 characters is refused by name; one under it reads fast.")
+
+
 if __name__ == "__main__":
     print("=" * 72)
     print("ZFL v2 — the table, headless")
@@ -395,6 +422,7 @@ if __name__ == "__main__":
     sec8_the_credit_that_cannot_be_redeemed()
     sec9_the_world_has_a_clock_too()
     sec10_what_the_ground_holds_and_what_to_check()
+    sec11_a_public_service_cannot_be_made_to_raise_or_to_stall()
     sec4b_every_example_runs_and_json_types_are_taken_as_they_come()
     sec5_the_spec_can_build_the_form_and_the_page()
     print("=" * 72)

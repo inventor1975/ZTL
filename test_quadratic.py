@@ -15,6 +15,9 @@ Two readings, one degree above the linear ones:
     discriminant: D < 0 refutes, D = 0 pins, D > 0 keeps BOTH roots
     (the curator: «корня-то два») and judges the claim at each.
 
+Systems too: with each power of a name its own column, elimination is exact
+linear algebra and a row left in one name is solved (the curator's plot,
+"area == s*s & area - 2*s + 5 == 0", is REFUTED).
 Guards: the instances; SOUND on an exhaustive integer pool (T holds at
 every point of the box, F at none); REFINES (where the separate bounds
 decided, the new reading agrees); the solver's roots satisfy their equation
@@ -173,6 +176,35 @@ for a, b, c in itertools.product([1, -1, 2, -3], [-5, -2, 0, 3], [-6, -1, 0, 4, 
         check(got_i == ints, f"{claim} over the integers: {got_i}, want {ints}")
     else:
         check(ni["disposition"] == "REFUTED", f"{claim} over the integers: no root, got {ni['disposition']}")
+
+# 5. systems: each power of a name its own column (the curator's plot, 2026-09-24:
+#    "the area minus twice the side plus 5 is zero" came back as two rows)
+for rows, claim in [([unknown("s"), unknown("area")], "(area == s*s) & (area - 2*s + 5 == 0)"),
+                    ([unknown("side"), unknown("A")], "A == side*side & A - 2*side + 5 == 0")]:
+    n = numeric(run(rows, claim))
+    check(n["disposition"] == "REFUTED" and not n.get("missing"), f"the plot {claim!r} -> {n['disposition']}")
+n = numeric(run([unknown("s"), unknown("area")], "area == s*s & area - 5*s + 6 == 0"))
+check(n["solved"]["s"].get("roots") == ["2", "3"] and n["solved"]["area"].get("roots") == ["4", "9"],
+      f"a system with two roots pairs them: {n['solved']}")
+# unknowns derived from unknowns ride credit, exactly as the linear system's do
+lin = numeric(run([unknown("x"), unknown("y")], "x + y == 10 & x - y == 2"))["disposition"]
+check(n["disposition"] == lin, f"the system's disposition {n['disposition']} is the linear system's {lin}")
+for a, b, c, d, e in itertools.product([1, 2], [-3, 0, 1], [-4, 0, 5], [-2, 1], [-6, 0, 3]):
+    claim = f"u == {a}*s*s + {b}*s + {c} & u + {d}*s + {e} == 0"
+    # substitute: a s² + (b + d) s + (c + e) = 0
+    A, B, C = a, b + d, c + e
+    D = B * B - 4 * A * C
+    n = numeric(run([unknown("s"), unknown("u")], claim))
+    if D < 0:
+        check(n["disposition"] == "REFUTED", f"{claim}: no real s (D = {D}), got {n['disposition']}")
+        continue
+    sx = n["solved"].get("s") or {}
+    got = sx.get("roots") or ([sx["lo"]] if sx.get("pinned") else [])
+    check(len(got) == (1 if D == 0 else 2), f"{claim}: D = {D}, s = {got}")
+    for t in got:
+        if not t.startswith("≈"):
+            r = Fraction(t)
+            check(A * r * r + B * r + C == 0, f"{claim}: s = {t} does not solve the system")
 
 print(f"QUADRATIC GREEN — {CHECKS} checks; pool of {pool} claims, {decided} decided, "
       f"{refined} decided that the separate bounds left open, 0 unsound, 0 overturned")

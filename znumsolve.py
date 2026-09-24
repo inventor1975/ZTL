@@ -88,18 +88,52 @@ def _hull(kind, form_c, terms, name, quantities):
     return lo, hi, strict_lo, strict_hi
 
 
+def _parabola_pieces(kind, p, q, c, box):
+    """The parts of `box` where  q·x² + p·x + c ⋈ 0  can hold, from the
+    discriminant (a line, q = 0, is taken for `eq` too). Roots are enclosed by
+    the square root's rational clamp, exact when D is a rational square; each
+    piece is a SUPERSET of the true solutions in it (strictness is not used to
+    tighten), so narrowing to the pieces is sound, and none is a refutation."""
+    if q == 0:
+        if kind != "eq" or p == 0:
+            return None
+        r = -c / p
+        sets = [(r, r)]
+    else:
+        d = p * p - 4 * q * c
+        roots = []
+        if d >= 0:
+            s_lo, s_hi = _rat_sqrt(d)
+            for sg in (-1, 1):
+                ends = ((-p + sg * s_lo) / (2 * q), (-p + sg * s_hi) / (2 * q))
+                roots.append((min(ends), max(ends)))
+            roots.sort()
+            if d == 0:
+                roots = roots[:1]
+        if kind == "eq":
+            sets = roots
+        elif q > 0:                  # q·x² + p·x + c <= 0 between the roots
+            sets = [(roots[0][0], roots[-1][1])] if roots else []
+        else:                        # ... and outside them when q < 0
+            sets = ([(-INF, roots[0][1]), (roots[1][0], INF)] if len(roots) == 2
+                    else [(-INF, INF)])
+    pieces = []
+    for lo, hi in sets:
+        lo, hi = max(lo, box["lo"]), min(hi, box["hi"])
+        if lo <= hi:
+            pieces.append((lo, hi))
+    return pieces
+
+
 def _quadratic(kind, e1, e2, qs):
     """ONE unknown under a quadratic constraint: the parts of its box that
     can satisfy  q·x² + p·x + c ⋈ 0, found from the discriminant.
 
     The curator's X*X-2X+5=0 (2026-09-24): D = p² - 4qc < 0 means no real x
     makes the equation true, which is a refutation, not a stall; D = 0 gives
-    one root, D > 0 two, and both are kept («корня-то два»). Roots are
-    enclosed by the square root's rational clamp, exact when D is a rational
-    square. Each piece is a SUPERSET of the true solutions in it (strictness
-    is not used to tighten), so narrowing to the pieces is sound, and an
-    empty list is a refutation. Returns (name, pieces, seen) or None when
-    the constraint is not one parabola in one non-sample unknown."""
+    one root, D > 0 two, and both are kept («корня-то два»). Returns
+    (name, pieces, seen) or None when the constraint is not one parabola in
+    one non-sample unknown."""
     seen = set()
     try:
         c, terms, _, _ = _poly(("sub", e1, e2), qs, [0], seen)
@@ -111,30 +145,84 @@ def _quadratic(kind, e1, e2, qs):
     key, (p, q, name) = live[0]
     if q == 0 or key != name:
         return None                  # linear (the linear rule's), or a sample
-    box = qs[name]
-    d = p * p - 4 * q * c
-    roots = []
-    if d >= 0:
-        s_lo, s_hi = _rat_sqrt(d)
-        for sg in (-1, 1):
-            ends = ((-p + sg * s_lo) / (2 * q), (-p + sg * s_hi) / (2 * q))
-            roots.append((min(ends), max(ends)))
-        roots.sort()
-        if d == 0:
-            roots = roots[:1]
-    if kind == "eq":
-        sets = roots
-    elif q > 0:                      # q·x² + p·x + c <= 0 between the roots
-        sets = [(roots[0][0], roots[-1][1])] if roots else []
-    else:                            # ... and outside them when q < 0
-        sets = ([(-INF, roots[0][1]), (roots[1][0], INF)] if len(roots) == 2
-                else [(-INF, INF)])
-    pieces = []
-    for lo, hi in sets:
-        lo, hi = max(lo, box["lo"]), min(hi, box["hi"])
-        if lo <= hi:
-            pieces.append((lo, hi))
-    return name, pieces, seen
+    return name, _parabola_pieces(kind, p, q, c, qs[name]), seen
+
+
+def _solve_monomial_system(qs, atoms):
+    """Exact elimination over the equalities, x and x² as SEPARATE columns.
+
+    The curator's plot (2026-09-24): `area == s*s & area - 2*s + 5 == 0`. No
+    equality alone is one parabola in one unknown, and the linear system has
+    one usable row in two unknowns. With each power of each name its own
+    column, elimination is still exact linear algebra over Fractions, and
+    every row it derives is a CONSEQUENCE of the equalities: a row left in
+    ONE name is solved outright (a line pins it, a parabola goes to the
+    discriminant), and 0 = c != 0 refutes. Names that never appear squared
+    are eliminated first, so what is left speaks of the rest.
+    Returns (rows in one name as (name, p, q, c), inconsistent, contributors)."""
+    eqs, contributors = [], set()
+    for kind, e1, e2, chunk in atoms.values():
+        if kind != "eq":
+            continue
+        seen = set()
+        try:
+            c, terms, _, _ = _poly(("sub", e1, e2), qs, [0], seen)
+        except (_NotLinear, KeyError, _NoReadings):
+            continue
+        row = {}
+        for key, (p, q, nm) in terms.items():
+            if key != nm:                    # a sample's occurrence
+                row = None
+                break
+            for deg, coef in ((1, p), (2, q)):
+                if coef:
+                    row[(nm, deg)] = row.get((nm, deg), Fraction(0)) + coef
+        if row is None:
+            continue
+        row = {k: v for k, v in row.items() if v != 0}
+        if not row:
+            # A ROW OF CONSTANTS is the judge's, not the system's: 4 + 4 == 10
+            # with 10 on credit is ON CREDIT (false, on a ground not yet
+            # earned), and deciding it here as "inconsistent" laundered that
+            # into REFUTED. Caught by conformance/solver_table.py, 2026-09-24:
+            # 24 of 336 cases moved; the linear system has always skipped them.
+            continue
+        contributors |= seen
+        eqs.append((row, -c))
+    if not eqs:
+        return [], False, set()
+    squared = {nm for row, _ in eqs for (nm, deg) in row if deg == 2}
+    cols = sorted({k for row, _ in eqs for k in row},
+                  key=lambda k: (k[0] in squared, k[0], k[1]))
+    mat = [[Fraction(row.get(k, 0)) for k in cols] + [Fraction(rhs)]
+           for row, rhs in eqs]
+    r = 0
+    for col in range(len(cols)):
+        piv = next((i for i in range(r, len(mat)) if mat[i][col] != 0), None)
+        if piv is None:
+            continue
+        mat[r], mat[piv] = mat[piv], mat[r]
+        f = mat[r][col]
+        mat[r] = [x / f for x in mat[r]]
+        for i in range(len(mat)):
+            if i != r and mat[i][col] != 0:
+                k = mat[i][col]
+                mat[i] = [a - k * b for a, b in zip(mat[i], mat[r])]
+        r += 1
+    single = []
+    for row in mat:
+        nz = [cols[i] for i, x in enumerate(row[:-1]) if x != 0]
+        if not nz:
+            if row[-1] != 0:
+                return [], True, contributors
+            continue
+        names = {nm for nm, _ in nz}
+        if len(names) == 1:
+            nm = names.pop()
+            coef = {deg: row[i] for i, (n2, deg) in enumerate(cols) if n2 == nm}
+            single.append((nm, coef.get(1, Fraction(0)), coef.get(2, Fraction(0)),
+                           -row[-1]))
+    return single, False, contributors
 
 
 def _solve_linear_system(qs, atoms):
@@ -204,6 +292,12 @@ def _narrow_quadratic(kind, e1, e2, chunk, qs, log):
     if got is None:
         return None
     name, pieces, seen = got
+    return _apply_pieces(kind, name, pieces, seen, chunk, qs, log)
+
+
+def _apply_pieces(kind, name, pieces, seen, chunk, qs, log):
+    """Narrow `name` to `pieces` (from `_parabola_pieces`): 'empty', 'moved'
+    or None. See `_narrow_quadratic` for what a piece's provenance is."""
     q = qs[name]
     others = sorted(seen - {name})
     derived = EARNED if all(qs[o]["prov"] == EARNED for o in others) else CREDIT
@@ -292,6 +386,22 @@ def narrow(quantities, formula, rounds=MAX_ROUNDS):
         qs[name] = pinned_q
         log.append(f"{name} = {fmt(value)} by exact elimination"
                    f" ({derived_prov})")
+    single, bad, contributors = _solve_monomial_system(qs, atoms)
+    if bad:
+        first = sorted(qs)[0]
+        log.append("the equalities are inconsistent as a system "
+                   "(each power of a name its own column)")
+        qs[first] = dict(qs[first], empty=True)
+        return qs, log
+    for name, p, q2, c in single:
+        if qs[name].get("sample") or qs[name]["lo"] == qs[name]["hi"]:
+            continue
+        pieces = _parabola_pieces("eq", p, q2, c, qs[name])
+        if pieces is None:
+            continue
+        if _apply_pieces("eq", name, pieces, contributors, "the system",
+                         qs, log) == "empty":
+            return qs, log
     for _ in range(rounds):
         moved = False
         for atom, (kind, e1, e2, chunk) in atoms.items():
@@ -383,15 +493,41 @@ def solve_claim(formula, quantities, marks):
         for rq in qs[name]["roots"]:
             qs1 = dict(qs)
             qs1[name] = rq
-            worlds.append((rq, judge_sheet_claim(formula, qs1, marks)))
-        alive = [(rq, w) for rq, w in worlds if w["disposition"] != "REFUTED"]
+            # a name that DEPENDS on the root (area = s*s) follows it: narrow
+            # again inside the world, or it stays a box and the claim OPEN
+            qs1, _ = narrow(qs1, formula)
+            if any(q1.get("empty") for q1 in qs1.values()):
+                worlds.append((rq, {"disposition": "REFUTED"}, qs1))
+                continue
+            worlds.append((rq, judge_sheet_claim(formula, qs1, marks), qs1))
+        alive_w = [w3 for w3 in worlds if w3[1]["disposition"] != "REFUTED"]
+        alive = [(rq, w) for rq, w, _ in alive_w]
         if not alive:
             log.append(f"{name}: no root makes the whole claim true")
             return {"disposition": "REFUTED", "narrowed": qs, "log": log,
                     "empty": [name], "next_check": [], "solved": {}}
         if len(alive) == 1:
             qs[name] = alive[0][0]
+            for other, q1 in alive_w[0][2].items():
+                if other != name and q1["lo"] == q1["hi"] != qs[other]["lo"]:
+                    qs[other] = q1           # it followed the one root left
         else:
+            # a name pinned in every world follows its root: area = 4 or 9,
+            # never the box [4, 9] that would say 6 is possible
+            for other in qs:
+                if other == name:
+                    continue
+                vals = [w3[2][other] for w3 in alive_w]
+                if all(v["lo"] == v["hi"] for v in vals):
+                    if len({v["lo"] for v in vals}) == 1:
+                        qs[other] = vals[0]
+                    else:
+                        kept_roots[other] = vals
+                        qs[other] = qty(min(v["lo"] for v in vals),
+                                        max(v["hi"] for v in vals),
+                                        qs[other]["prov"], qs[other]["witness"],
+                                        discrete=qs[other]["discrete"],
+                                        unit=qs[other]["unit"], sample=False)
             rank = {"EARNED": 3, "ON CREDIT": 2, "OPEN": 1}
             odd = [w for _, w in alive if w["disposition"] not in rank]
             r = odd[0] if odd else min(
@@ -433,8 +569,12 @@ def solve_claim(formula, quantities, marks):
             cures.append(f"narrow {name} further (still a box)")
     seen = set()
     r["solved"] = solved
+    # nobody can document a value the equations derived, nor an unknown the
+    # question asks for: a cure must name a source someone can act on
     r["next_check"] = [c for c in cures
-                       if not (c in seen or seen.add(c))]
+                       if not (c.startswith("document ")
+                               and c.split(" ", 1)[1] in derived)
+                       and not (c in seen or seen.add(c))]
     return r
 
 

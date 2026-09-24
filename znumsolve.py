@@ -411,6 +411,76 @@ def _committed_atoms(core):
     return out
 
 
+def _committed_disjunctions(core):
+    """The top-level conjuncts that are a disjunction of comparisons alone:
+    `nc1 | nc2 | nc3`, through parentheses that only wrap. Each is a set of
+    alternatives the claim commits to: one of them holds."""
+    groups = []
+
+    def split(t, sep):
+        parts, depth, cur = [], 0, []
+        for ch in t:
+            depth += (ch == "(") - (ch == ")")
+            if ch == sep and depth == 0:
+                parts.append("".join(cur))
+                cur = []
+            else:
+                cur.append(ch)
+        parts.append("".join(cur))
+        return parts
+
+    def unwrap(t):
+        t = t.strip()
+        while t.startswith("(") and _closes_last(t, 0):
+            t = t[1:-1].strip()
+        return t
+
+    def walk(t):
+        t = unwrap(t)
+        conj = split(t, "&")
+        if len(conj) > 1:
+            for part in conj:
+                walk(part)
+            return
+        alts = [unwrap(a) for a in split(t, "|")]
+        if len(alts) > 1 and all(re.fullmatch(r"nc\d+", a) for a in alts):
+            groups.append(alts)
+
+    walk(core)
+    return groups
+
+
+def _disjunction_pieces(group, atoms, qs):
+    """ONE OF SEVERAL EQUALITIES OF ONE UNKNOWN (the curator's word,
+    2026-09-24: read "x == 2 | x == 3" as the set of its roots). Each
+    alternative must be an equality that pins the same non-sample unknown to
+    points — a line to one, a parabola to its roots — and the unknown lies in
+    the union. Returns (name, pieces, seen), or None when any alternative is
+    something else: then the disjunction narrows nothing, as before."""
+    name, pieces, seen = None, [], set()
+    for atom in group:
+        kind, e1, e2, _chunk = atoms[atom]
+        if kind != "eq":
+            return None
+        try:
+            c, terms, _, _ = _poly(("sub", e1, e2), qs, [0], seen)
+        except (_NotLinear, KeyError, _NoReadings):
+            return None
+        live = [(k, t) for k, t in terms.items() if t[0] != 0 or t[1] != 0]
+        if len(live) != 1:
+            return None
+        key, (p, q, nm) = live[0]
+        if key != nm or (name is not None and nm != name):
+            return None
+        name = nm
+        got = _parabola_pieces("eq", p, q, c, qs[nm])
+        if got is None:
+            return None
+        pieces.extend(got)
+    pieces = sorted(set(pieces))
+    return name, pieces, seen
+
+
 def narrow(quantities, formula, rounds=MAX_ROUNDS, orig=None):
     """Push every comparison of the formula back onto its quantities until
     nothing moves. Returns (quantities, log) — the log names each step, so
@@ -421,6 +491,8 @@ def narrow(quantities, formula, rounds=MAX_ROUNDS, orig=None):
     for k, v in qs.items():            # a literal interval in the claim is a
         orig.setdefault(k, v)          # declared quantity too (`_lit`, credit)
     committed = _committed_atoms(core)
+    alternatives = _committed_disjunctions(core)
+    all_atoms = atoms
     atoms = {k: v for k, v in atoms.items() if k in committed}
     log = []
     pinned, bad, contributors = _solve_linear_system(qs, atoms)
@@ -547,6 +619,16 @@ def narrow(quantities, formula, rounds=MAX_ROUNDS, orig=None):
                 log.append(f"{name} -> [{fmt(narrowed['lo'])}, "
                            f"{fmt(narrowed['hi'])}] by [{chunk}]")
                 moved = True
+        for group in alternatives:
+            got = _disjunction_pieces(group, all_atoms, qs)
+            if got is None or qs[got[0]].get("sample"):
+                continue
+            name, pieces, seen = got
+            chunk = " | ".join(all_atoms[a][3] for a in group)
+            step = _apply_pieces("eq", name, pieces, seen, chunk, qs, log, orig)
+            if step == "empty":
+                return qs, log
+            moved = moved or step == "moved"
         if not moved:
             break
     return qs, log

@@ -221,5 +221,21 @@ check(n["disposition"] == "EARNED" and n["solved"]["r"]["lo"] == "4", f"sqrt(9) 
 n = numeric(run([unknown("r")], "r == sqrt(2)"))
 check(n["disposition"] == "OPEN", f"sqrt(2) is not a constant of the rational floor: {n['disposition']}")
 
+# 7. one of several equalities of one unknown is a set of roots (the curator's
+#    word, 2026-09-24: "read x == 2 | x == 3 as its roots"); anything else in
+#    the disjunction and it narrows nothing, as before
+for claim, want, roots in [("x == 2 | x == 3", "EARNED", ["2", "3"]),
+                           ("x*x == 4 | x == 5", "EARNED", ["-2", "2", "5"]),
+                           ("(x == 2 | x == 3) & x > 7", "REFUTED", None),
+                           ("x == 2 | x > 5", "OPEN", None)]:
+    n = numeric(run([unknown()], claim))
+    got = (n["solved"].get("x") or {}).get("roots")
+    check(n["disposition"] == want and got == roots, f"{claim}: {n['disposition']} {got}, want {want} {roots}")
+n = numeric(run([unknown()], "(x == 2 | x == 3) & x > 2"))
+check(n["disposition"] == "EARNED" and n["solved"]["x"]["lo"] == "3", f"(x == 2 | x == 3) & x > 2 is x = 3: {n}")
+n = numeric(run([unknown(nm) for nm in names], table.replace("& x == x1", "& (x == x1 | x == x2)")))
+check(n["disposition"] == "EARNED" and n["solved"]["x"].get("roots") == ["2", "3"],
+      f"the model's table with (x == x1 | x == x2) reaches x = 2 or 3: {n['disposition']} {n['solved'].get('x')}")
+
 print(f"QUADRATIC GREEN — {CHECKS} checks; pool of {pool} claims, {decided} decided, "
       f"{refined} decided that the separate bounds left open, 0 unsound, 0 overturned")

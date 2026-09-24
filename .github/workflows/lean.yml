@@ -28,7 +28,7 @@ jobs:
           echo "zero-axiom checks: $clean; dirty: $dirty"
           test "$dirty" -eq 0
           test "$clean" -ge 575
-      # The hand-placed prints cover 575 names of 1129 theorems; the rest are
+      # The hand-placed prints cover 575 names of 1143 theorems; the rest are
       # covered transitively, which is an ARGUMENT. This audits every
       # theorem individually, and fails on an orphan module that no
       # target builds.

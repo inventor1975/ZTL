@@ -7,7 +7,7 @@
 19.09 в момент публикации. С тех пор добавлены стенды `dilemmas/dirty_param.py`,
 `test_numeric_names.py`, `test_numbers_need_values.py`, `test_quadratic.py`, `test_solver_logic.py`, `test_solver_provenance.py`, `test_bound_products.py` и `test_unknown_marks.py` (24.09), и в дереве их 154. Запись на Zenodo неизменна и верна о себе;
 лист же готовит СЛЕДУЮЩИЙ выпуск, поэтому живое число тут растёт.
-С 24.09 в корпусе 67 модулей и 1129 теорем (модуль `ZNumNames`, 17 теорем); выпуск 2.0.0
+С 24.09 в корпусе 68 модулей и 1143 теоремы (модули `ZNumNames`, 17 теорем, и `ZParabola`, 14); выпуск 2.0.0
 называет 66 и 1112 — тоже верно о себе.
 (https://zenodo.org/records/22842725), a new version of the concept record
 10.5281/zenodo.21318981. Verified against the API WITHOUT a token after
@@ -177,9 +177,9 @@ carousel, Curry, Yablo — now at the limit, without a classical step —
 the crocodile, Russell) receive a uniform diagnosis: pointwise
 quarantine instead of explosion.
 
-The entire development — sixty-seven Lean 4 modules — is machine-checked
+The entire development — sixty-eight Lean 4 modules — is machine-checked
 with an EMPTY axiom list (no classical choice, no quotients, not even
-propositional extensionality; definitions included): 1129 theorems, each
+propositional extensionality; definitions included): 1143 theorems, each
 audited individually; no section of the paper rests on measurement
 alone. Every numerical claim is reproducible by the repository's
 regression (154 test stands). As of v2.0.0 the repository is the logic
@@ -250,7 +250,7 @@ the second block. No other change.
 What was new in v1.4 — first, NO SECTION RESTS ON MEASUREMENT ALONE: every
 one of the seventeen sections that carried the MEASURED tag now names
 kernel-checked theorems behind its load-bearing claims, the corpus
-growing threefold to sixty-seven modules and 1129 theorems, all on the
+growing threefold to sixty-eight modules and 1143 theorems, all on the
 empty axiom list. Second, THE SIX TRADITIONS AS SIX EMBEDDING THEOREMS:
 IEEE 754 NaN (ZNaN.lean — every ordered predicate is the T-sign of a ZTL
 atom, the unordered predicate the mark test, and != alone the N-sign,
@@ -440,6 +440,6 @@ institutional computation; Lean 4; machine-checked proofs
 
 **Additional notes (paste into "Additional notes"):**
 The preprint text is CC BY 4.0; the accompanying repository code is
-dual-licensed Apache-2.0 OR MIT. The ZTL Lean corpus (sixty-seven modules,
-1129 theorems) verifies with an empty axiom list; run `python3 run_all.py`
+dual-licensed Apache-2.0 OR MIT. The ZTL Lean corpus (sixty-eight modules,
+1143 theorems) verifies with an empty axiom list; run `python3 run_all.py`
 for the full repository regression (154 stands + Lean build).

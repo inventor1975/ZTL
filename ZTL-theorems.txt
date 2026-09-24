@@ -1,7 +1,7 @@
 ZTL — the theorem inventory
 ============================================================
 
-1129 theorems across 67 modules, all on the empty axiom list.
+1143 theorems across 68 modules, all on the empty axiom list.
 
 Every theorem below is machine-checked by the Lean 4 kernel
 on the EMPTY axiom list (no Classical.choice, no Quot.sound,
@@ -1297,4 +1297,20 @@ inventory/axiom_audit.py, which re-checks every line in CI.
     ZNumNames.comm_forced_numbers
     ZNumNames.unit_forced_numbers
     ZNumNames.sub_self_forced_numbers
+
+## ZParabola.lean  (14)
+    ZParabola.nat_mul_assoc
+    ZParabola.nat_add_mul
+    ZParabola.nat_mul_left_comm
+    ZParabola.lt_of_mul_lt_mul_left'
+    ZParabola.sq_add
+    ZParabola.am_gm_le
+    ZParabola.am_gm
+    ZParabola.sq_prod
+    ZParabola.two_two
+    ZParabola.id_left
+    ZParabola.id_right
+    ZParabola.a_pos
+    ZParabola.form_pos
+    ZParabola.no_root_line
 

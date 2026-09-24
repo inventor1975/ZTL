@@ -341,6 +341,41 @@ def sec9_the_world_has_a_clock_too():
     print("   a document with no clock is left exactly as it was")
 
 
+def sec10_what_the_ground_holds_and_what_to_check():
+    """After the verdict, the report says what each ground holds and how it
+    came out, and — for a claim still resting on unverified inputs — which
+    of them to check, by GUARANTEE and by POSSIBILITY (2026-09-24)."""
+    print("\n### 10. What the ground holds, and what to check")
+    yablo = {"rows": [
+        {"name": "s0", "means": "none after is true", "status": "defined", "ground": "~Tr(s1) & ~Tr(s2)"},
+        {"name": "s1", "means": "none after is true", "status": "defined", "ground": "~Tr(s2)"},
+        {"name": "s2", "means": "none after is true", "status": "verified", "ground": "story"}]}
+    rows = zfl.run(yablo)["report"]["passport_rows"]
+    assert {n: (v["kind"], v["value"]) for n, v in rows.items()} == {
+        "s0": ("GROUNDED", "F"), "s1": ("GROUNDED", "F"), "s2": ("GROUNDED", "T")}, rows
+    assert rows["s0"]["reads"] == ["s1", "s2"] and rows["s2"]["reads"] == [], rows
+    liar = {"rows": [{"name": "L", "means": "this is false", "status": "defined", "ground": "~Tr(L)"}]}
+    assert zfl.run(liar)["report"]["passport_rows"]["L"] == {"kind": "PARADOX", "value": "Z", "reads": ["L"]}
+
+    def unverified(claim, *names):
+        return {"claim": claim, "rows": [{"name": n, "means": n, "status": "unverified"} for n in names]}
+    rep = zfl.run(unverified("p | ~p", "p"))["report"]
+    w = rep["what_to_check"]
+    assert w["EARNED"]["guaranteed"] == [["p"]], w
+    assert w["REFUTED"]["no_possible_set"] is True, w
+    assert rep["judge"]["why"], rep["judge"]
+    w = zfl.run(unverified("p & (q | r)", "p", "q", "r"))["report"]["what_to_check"]
+    assert w["EARNED"]["possible"] == [["p", "q"], ["p", "r"]] and w["EARNED"]["no_guaranteed_set"], w
+    w = zfl.run(unverified("a & b & c & d & e & f & g", *"abcdefg"))["report"]["what_to_check"]
+    assert "refused" in w and "up to 6" in w["refused"], w
+    done = {"claim": "p", "rows": [{"name": "p", "means": "p", "status": "verified", "ground": "doc"}]}
+    assert "what_to_check" not in zfl.run(done)["report"]
+    print("   every defined row reports its kind, value and what it reads;")
+    print("   a claim on unverified inputs reports what to check, by guarantee")
+    print("   and by possibility, says so when no set will do, and refuses")
+    print("   above six inputs rather than spending seconds per request.")
+
+
 if __name__ == "__main__":
     print("=" * 72)
     print("ZFL v2 — the table, headless")
@@ -353,6 +388,7 @@ if __name__ == "__main__":
     sec7_the_ground_gate_demotes_phantom_words()
     sec8_the_credit_that_cannot_be_redeemed()
     sec9_the_world_has_a_clock_too()
+    sec10_what_the_ground_holds_and_what_to_check()
     sec4b_every_example_runs_and_json_types_are_taken_as_they_come()
     sec5_the_spec_can_build_the_form_and_the_page()
     print("=" * 72)

@@ -459,6 +459,7 @@ from znumjudge import parse_quantities, judge_sheet_claim        # noqa: E402
 from znumsolve import solve_claim                                # noqa: E402
 import zpassport                                                 # noqa: E402
 import zbook                                                     # noqa: E402
+import zbackward                                                 # noqa: E402
 
 NAME_RE = re.compile(r"^[A-Za-zА-Яа-яЁё_][\w А-Яа-яЁё-]*$")
 
@@ -1118,6 +1119,49 @@ def unredeemable(comp_kind):
     return out
 
 
+# THE REVERSE PASS, after the verdict: which unverified inputs to check, and
+# how. `zbackward` (moved from inventory/ on 2026-09-24) gives the minimal
+# sets by GUARANTEE — check them together and the target comes whatever they
+# turn out to be; a work order is written only from these — and by
+# POSSIBILITY — the target becomes reachable if the check goes the right way.
+# THE CAP IS FOR A PUBLIC SERVICE, MEASURED 2026-09-24 on this machine, both
+# targets together: 6 unverified inputs 0.12 s, 7 1.0 s, 8 1.5 s, 9 5.4 s.
+# zbackward's own ceiling of 9 is a notebook's; each request here pays its own.
+BACKWARD_CAP = 6
+
+
+def what_to_check(claim, marking, unverified):
+    """Minimal sets of the claim's own unverified inputs, for EARNED and REFUTED."""
+    phi = formalize(claim)
+    atoms = _formula_atoms(phi)
+    own = sorted(a for a in unverified if a in atoms)
+    if len(own) > BACKWARD_CAP:
+        return {"refused": f"{len(own)} unverified inputs; the reverse pass is computed "
+                           f"up to {BACKWARD_CAP} (it grows as 3**n: 6 take 0.12 s, 9 take 5.4 s)"}
+    m = {a: v for a, v in marking.items() if a in atoms}
+    out = {}
+    for target in ("EARNED", "REFUTED"):
+        b = zbackward.backward(phi, m, target, by_disposition=True,
+                               cap_grounds=BACKWARD_CAP)
+        # AN EMPTY FAMILY IS SAID, NOT LEFT EMPTY: a bare [] reads as
+        # "nothing to check", the opposite of "no set will do" (zbackward's
+        # own rule, kept at the door).
+        out[target] = {"already": b["already"],
+                       "guaranteed": [list(x) for x in b["guaranteed"]],
+                       "possible": [list(x) for x in b["possible"]],
+                       "no_guaranteed_set": bool(b["guaranteed_none"]) and not b["already"],
+                       "no_possible_set": bool(b["possible_none"]) and not b["already"]}
+        if "не_искал_дальше" in b:
+            out[target]["searched_up_to"] = zbackward.MAX_K
+    return out
+
+
+def _formula_atoms(phi):
+    if isinstance(phi, str):
+        return {phi}
+    return set().union(*(_formula_atoms(x) for x in phi[1:])) if phi else set()
+
+
 def run(doc, ground_registry=None):
     """Validate, then ask whichever instruments apply.
 
@@ -1168,6 +1212,18 @@ def run(doc, ground_registry=None):
         report["passport"] = [
             {"component": comp, "kind": kind, "detail": why}
             for comp, kind, why in reports]
+        # EVERY ROW THE PASSPORT READ, not only the troubled ones. `reports`
+        # names problem components alone, so a table the passport grounded
+        # whole came back as `passport: []` — true, and it hid the answer the
+        # passport had computed: truncated Yablo is s2 = T, s1 = F, s0 = F,
+        # all GROUNDED (MEASURED 2026-09-24; the page said "nothing to judge").
+        # What each ground holds, and how it came out.
+        by_name = {x["name"]: x for x in rows}
+        report["passport_rows"] = {
+            name: {"kind": kind, "value": lfp.get(name),
+                   "reads": (sorted(names_in(by_name[name].get("ground")) & set(by_name))
+                             if by_name.get(name, {}).get("status") == "defined" else [])}
+            for name, (kind, _n) in sorted(comp_kind.items())}
 
     if what["numeric"] and claim:
         try:
@@ -1241,7 +1297,11 @@ def run(doc, ground_registry=None):
         report["judge"] = {"verdict": r["verdict"],
                            "disposition": r["disposition"],
                            "grade": r["grade"],
-                           "unverified": sorted(r["unverified"])}
+                           "unverified": sorted(r["unverified"]),
+                           "why": r.get("why")}
+        if r["unverified"]:
+            report["what_to_check"] = what_to_check(claim, resolved_marking(rows),
+                                                    sorted(r["unverified"]))
         # The grade stands as the core computed it; what the marking could
         # not say is added beside it rather than folded into it.
         touched = sorted(dead & names_in(claim))

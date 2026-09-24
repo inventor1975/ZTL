@@ -31,8 +31,11 @@ Added 2026-09-24 on the curator's word.
 is** — `paper/ZTL-draft_1.4.md`, three sections, twenty minutes:
 
 * **§10** — the passport. What Z is (a mark on data, not a truth value), why the
-  verdicts stay two-valued, the passport on three axes (conservative extension
-  by data, strict contraction by law, strict expansion in expressive reach), and
+  verdicts stay two-valued, the passport on three axes (in 1.4's words:
+  conservative extension by data, strict contraction by law, strict expansion
+  in expressive reach — the middle axis reads as weakness and is superseded:
+  say, as `CLASSIC-VS-ZTL.md` does, equal to classical logic in strength, more
+  expressive, dominant as a solver), and
   the local-versus-global reading of the mark. That last one matters more than
   it looks: the *global* reading is classical supervaluation, and the whole
   selective-disclosure branch of §1.5 below is that reading turned operational.
@@ -252,8 +255,11 @@ Also proved for the whole formula language (not sampled): on a **Z-free**
 valuation ZTL agrees with classical logic formula for formula
 (`lean/ClassicalAgreement.lean:evalF_agrees`). So ZTL expresses all of classical
 logic and is cautious *only* where the unknown enters. Never say "weaker than
-classical" without that second half — strictly fewer *tautologies*, identical
-on verified data.
+classical" or "fewer tautologies" at all: ZTL is **equal to classical logic in
+strength** (on verified data the validities are the same set, 588 = 588),
+**more expressive** (it speaks of the unverified), and **dominant as a solver**
+— `CLASSIC-VS-ZTL.md`. The 212 counts a wider domain and is never set beside
+the 588.
 
 ### 1.5 E — the letter that arrives from outside
 

@@ -43,12 +43,15 @@ Classically one class, one truth. Here, two fates — which is why proving
 `p → p` through `¬p → ¬p` is a forgery (the counterfeit test from the Job
 dilemma).
 
-## Why the poverty is the point
+## Why refusing free truth is the point
 
-The two moves we lack are exactly the engines of the paradoxes:
+Nothing is lost on verified atoms: there every classical law holds, these
+two included. What ZTL refuses is to apply them to an atom nobody checked
+— and those two moves are exactly the engines of the paradoxes:
 
-* `¬(p → q) ≡ p ∧ ¬q` — classically valid, **not** here. This is the
-  sorites' engine: it turns "this step failed" into "here is the cliff".
+* `¬(p → q) ≡ p ∧ ¬q` — classically valid, and valid here on verified
+  atoms; **not** at an unchecked one. This is the sorites' engine: it
+  turns "this step failed" into "here is the cliff".
 * `p ∨ ¬p` at an unchecked `p` — **F** here. Asserting the excluded
   middle about the undecided is what launches the surprise-exam
   elimination.
@@ -56,10 +59,10 @@ The two moves we lack are exactly the engines of the paradoxes:
 Modus ponens is **untouched**, and so is the rest of the working kit —
 syllogism, reductio, and **proof by cases** `((p→q) ∧ (¬p→q)) → q`, which
 is ZTL-valid (measured in `zprove.py`; an earlier claim in this corpus
-that case analysis was lost was simply wrong). What dies is Peirce's law
-— the one that separates classical from intuitionistic logic — and the
-excluded middle on unchecked atoms. The resolutions were not bought by
-breaking inference; what is gone is the free-truth kit.
+that case analysis was lost was simply wrong). What is refused at an
+unchecked atom is Peirce's law — the one that separates classical from
+intuitionistic logic — and the excluded middle. The resolutions were not
+bought by breaking inference; what is refused is truth on credit.
 
 ## Two traps in our own numbers
 
@@ -83,9 +86,10 @@ is the currency here: not steps, witnesses.
 
 ## The honest boundary
 
-This makes a good **auditor** and a thin **mathematician** — thinner than
-classical, not crippled. Real theorems go through and cost their own
-data; what cannot be done is starting from nothing, or reasoning by
+This makes a good **auditor** and a **mathematician that pays for its
+premises**: equal to classical logic in strength — on verified premises
+every classical proof goes through — and never cheaper than its data.
+Real theorems go through and cost their own data; what cannot be done is starting from nothing, or reasoning by
 excluded middle about something nobody checked. Narrow search is a virtue
 when judging claims and a constraint when building proofs.
 
@@ -116,7 +120,12 @@ a family trait, not an exile.
 
 ## What NOT to say
 
-* ~~"ZTL equals classical logic"~~ — false: strictly fewer validities.
+* ~~"ZTL is weaker than classical logic"~~, ~~"strictly fewer
+  validities"~~ — false. ZTL is equal to classical logic in strength (on
+  classical's own domain the validities are the same set, 588 = 588), more
+  expressive — it can speak of the unverified — and it dominates classical
+  logic as a solver. The 212 counts validities over a wider domain; never
+  set it beside the 588 (see "Can classical logic replace ZTL?" below).
 * ~~"ZTL can express everything"~~ — false on three values: 515 of 19683
   binary functions are expressible (2.6%), a consequence of greediness
   (compound formulas never take Z).

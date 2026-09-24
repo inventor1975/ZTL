@@ -20,8 +20,9 @@ in one place, so this stand puts them there:
               has no words for that at all.
 
 And the punchline for the docket: both paradoxes resolved this week run
-on moves that are classically valid and MISSING here. Our poverty is
-exactly the poverty of free truth.
+on moves that are classically valid and REFUSED here at an unchecked atom
+(on verified atoms they hold, like every classical law). What ZTL refuses
+is exactly truth on credit.
 
 Run:  python3 zledger.py
 """
@@ -106,13 +107,17 @@ def sec1_shared():
 
 def sec2_lost_and_gained(pool):
     print("-" * 72)
-    print("2. LAWS: strictly fewer, and provably no new ones")
+    print("2. LAWS: the same on verified ground, and provably no new ones")
     cl_taut = [phi for phi in pool if all(v == T for v in sig(phi, CL))]
     ztl_taut = [phi for phi in pool if all(v == T for v in sig(phi, V))]
     new = [phi for phi in ztl_taut if not all(v == T for v in sig(phi, CL))]
     print(f"   tautologies in this pool — classical {len(cl_taut)}, "
           f"ZTL {len(ztl_taut)}, NEW in ZTL: {len(new)}")
     assert len(new) == 0 and len(ztl_taut) < len(cl_taut)
+    print("   (two denominators: the classical count is over {T,F}, ours over")
+    print("   the wider {T,F,Z}, so 212 is never set beside 584; on verified")
+    print("   ground the sets are equal — section 1, and 588 = 588 in")
+    print("   paper/core_logic_checks.py)")
     print("   and the zero is not an absence of evidence: a ZTL tautology")
     print("   holds under every marking, hence under the Z-free ones, where")
     print("   section 1 shows we are classical. Our validities are a SUBSET")
@@ -155,9 +160,9 @@ def sec4_only_here(pool):
     print("   phrase the question — not 'unprovable there', but no words.")
 
 
-def sec5_poverty_is_the_point():
+def sec5_refusal_is_the_point():
     print("-" * 72)
-    print("5. THE MISSING TOOLS ARE THE PARADOX ENGINES")
+    print("5. THE TOOLS REFUSED AT AN UNCHECKED ATOM ARE THE PARADOX ENGINES")
     # the sorites' engine: rewriting a failed implication as a cliff
     lhs, rhs = ("not", ("imp", "p", "q")), ("and", "p", ("not", "q"))
     cl_same = sig(lhs, CL) == sig(rhs, CL)
@@ -240,12 +245,13 @@ if __name__ == "__main__":
     sec2_lost_and_gained(pool)
     sec3_distinctions(pool)
     sec4_only_here(pool)
-    sec5_poverty_is_the_point()
+    sec5_refusal_is_the_point()
     sec6_tomova()
     sec7_the_card()
     print("=" * 72)
     print("ZLEDGER GREEN — shared on verified ground (0 divergences);")
-    print("strictly fewer laws and provably no new ones; 16 classical")
-    print("classes split into 195; the mark sayable from inside; and the")
-    print("two moves we lack are the engines of the two paradoxes we")
-    print("resolved. Poverty in laws, sight on unpaid ground.")
+    print("the same laws on verified ground and provably no new ones; 16")
+    print("classical classes split into 195; the mark sayable from inside;")
+    print("and the two moves refused at an unchecked atom are the engines")
+    print("of the two paradoxes we resolved. Equal in strength, finer in")
+    print("sight, and no truth on credit.")

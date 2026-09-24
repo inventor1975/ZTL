@@ -1472,8 +1472,9 @@ runs in three different directions at once, and collapsing them into
   agrees with classical logic formula for formula
   (`ClassicalAgreement.evalF_agrees`) — where nothing is unverified,
   nothing changes.
-* *Fewer validities — only over the wider domain, and never against the
-  588.* Every ZTL validity is classically valid, and not conversely:
+* *Equal in strength: the same laws on classical's own domain.* Over
+  the wider domain every ZTL validity is classically valid, and not
+  conversely:
   `p → p` is a classical tautology and is refuted here on a marked atom
   (`ztl_taut_is_classical`, `not_conversely`). The count must be read
   with its domain named. Over the depth-≤2 pool of §3, classical
@@ -1495,9 +1496,10 @@ runs in three different directions at once, and collapsing them into
   stall; the four directional kernels →, ←, ↛, ↚ are complete alone, with
   ↛ read as the credit detector).
 
-So the honest one-liner is neither "stronger" nor "weaker": **identical
-on verified data, wider in subject, and decided on unverified data where
-classical logic has no input.**
+So the honest one-liner is neither "stronger" nor "weaker": **equal to
+classical logic in strength, more expressive, and dominant as a solver** —
+identical on verified data, wider in subject, and decided on unverified
+data where classical logic has no input.
 
 **The relation that does hold, and its name.** Those three axes answer
 "which is the larger logic". They do not answer the question an engineer

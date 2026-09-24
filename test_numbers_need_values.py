@@ -154,6 +154,6 @@ for lang in langs:
         codes = [i["code"] for i in zfl.validate(item["doc"])]
         check("E_NO_VALUE" not in codes and "E_NUMBER_AS_STATEMENT" not in codes,
               f"catalogue [{lang}] {item.get('label')!r}: {codes}")
-check(n == 41 * len(langs), f"the catalogue was read: {n} documents")
+check(n == 46 * len(langs), f"the catalogue was read: {n} documents")
 
 print(f"NUMBERS NEED VALUES GREEN — {CHECKS} checks; {n} catalogue documents untouched")

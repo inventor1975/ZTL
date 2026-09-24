@@ -456,6 +456,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))  # ZTL kernel liv
 
 from ztljudge import judge, formalize                            # noqa: E402
 from znumjudge import parse_quantities, judge_sheet_claim        # noqa: E402
+from znumjudge import extract_comparisons                       # noqa: E402
 from znumsolve import solve_claim                                # noqa: E402
 import zpassport                                                 # noqa: E402
 import zbook                                                     # noqa: E402
@@ -781,14 +782,73 @@ def validate(doc):
     claim = normalise((doc.get("claim") or "").strip(), rows)
     if claim:
         try:
-            _formula(claim, {r.get("name"): r for r in rows})
+            phi = _formula(claim, {r.get("name"): r for r in rows})
         except Exception as exc:
-            issues.append(_issue("error", "E_CLAIM", "claim", str(exc)))
+            # A LONE `=` STAYS LOGICAL where no row has a value (`normalise`),
+            # so `x*x - 2*x + 5 = 0` over value-less rows dies in the
+            # propositional parser as "stray character '*'". When the equation
+            # reading explains the failure, say THAT: which row needs a value.
+            issues.extend(_numbers_without_value(_LONE_EQ.sub("==", claim), rows)
+                          or [_issue("error", "E_CLAIM", "claim", str(exc))])
+        else:
+            if isinstance(phi, tuple) and phi[:1] == ("comparison",):
+                issues.extend(_numbers_without_value(phi[1], rows))
         unknown = names_in(claim) - declared
         if unknown:
             issues.append(_issue("error", "E_UNKNOWN_NAME", "claim",
                                  f"no row is called {sorted(unknown)}"))
     return issues
+
+
+def _numbers_without_value(text, rows):
+    """A NAME READ AS A NUMBER NEEDS A NUMBER. Inside a comparison every name
+    is a quantity; a row with no value is not one, and no instrument can read
+    the claim. Until 2026-09-24 the validator waved every comparison through
+    (`_formula` hands it to the sheet judge) and the run refused it later.
+
+    MEASURED 2026-09-24 on the live studio: three questions in prose (two
+    Russian, one English), all translated correctly to `x*x - 2*x + 5 == 0`,
+    and in all three the model left the sought x without a value instead of
+    `?`. `validate` returned nothing, so the translator's repair loop, which
+    runs on these issues, never ran; the person saw E_UNREADABLE "stray
+    character '*'". The issue now names the cell and the cure, and the repair
+    loop can apply it.
+
+    The comparisons are found by `extract_comparisons`, the sheet judge's own
+    splitter, not by a copy of its pattern: a rule written twice drifts, and
+    between `zfl` and the judge that has already cost a day. A name used
+    only as a propositional atom beside a comparison is not touched."""
+    by_name = {}
+    for i, r in enumerate(rows, 1):
+        name = (r.get("name") or "").strip()
+        if name:
+            by_name.setdefault(name, (i, r))
+    # NOTHING TO FIND, NOTHING TO PAY. The splitter parses both sides, which
+    # is recursive: MEASURED 2026-09-24 on the 2040-factor claim of the
+    # public-service stand, validate went from 0.00 s to 0.5 s and doubled
+    # the run. When every name the claim mentions has a value, no parse is
+    # needed to know that none lacks one.
+    valueless = {n for n, (_i, r) in by_name.items()
+                 if not (r.get("value") or "").strip()}
+    if not (names_in(text) & valueless):
+        return []
+    try:
+        _core, atoms = extract_comparisons(text, dict.fromkeys(by_name))
+    except Exception:
+        return []                # malformed arithmetic: the run says it in its own words
+    used = set()
+    for _kind, _e1, _e2, chunk in atoms.values():
+        used |= names_in(chunk)
+    out = []
+    for name in sorted(used & set(by_name)):
+        i, r = by_name[name]
+        if not (r.get("value") or "").strip():
+            out.append(_issue(
+                "error", "E_NO_VALUE", f"row {i} / value",
+                f"'{name}' is read as a number in the claim, and it has no "
+                f"value: give it a number, an interval [0,10], or ? if "
+                f"'{name}' is what the question asks for"))
+    return out
 
 
 def names_in(text):

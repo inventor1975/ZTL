@@ -86,6 +86,12 @@ CODE_HELP = {
     "E_CLAIM": ("the claim does not parse", "утверждение не разбирается"),
     "E_UNKNOWN_NAME": ("a formula names a row that does not exist",
                        "формула называет несуществующую строку"),
+    "E_NO_VALUE": ("a name the claim reads as a number has no value — "
+                   "give it a number, an interval, or ? if it is what "
+                   "the question asks for",
+                   "имя, которое утверждение читает как число, без "
+                   "величины — дайте число, интервал или ?, если его "
+                   "и ищут"),
     "E_OPEN_INTERVAL": ("an open bound like (0,10) — put the strictness in "
                         "the claim instead",
                         "открытая граница вроде (0,10) — строгость пишется "

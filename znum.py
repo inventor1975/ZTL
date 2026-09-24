@@ -384,6 +384,16 @@ def _linear(expr, quantities, counter, seen=None):
         return Fraction(0), {key: (Fraction(1), expr)}, q.get("unit"), \
             _step(q.get("discrete"))
     op, *args = expr
+    if op == "sqrt":
+        # THE ROOT OF A KNOWN NUMBER is a constant when it is exact: sqrt(disc)
+        # with disc pinned at 1 is 1 (MEASURED 2026-09-24: a model's table
+        # computing the discriminant stopped at OPEN, sqrtD unread). A root
+        # the rational floor cannot hold exactly is not a constant of it.
+        c1, t1, u1, _ = _linear(args[0], quantities, counter, seen)
+        r = _rat_sqrt(c1) if not t1 and c1 >= 0 else None
+        if r is None or r[0] != r[1]:
+            raise _NotLinear()
+        return r[0], {}, _unit_sqrt(u1), None
     if op == "sum":
         c, terms, unit, step = Fraction(0), {}, None, Fraction(1)
         for a in args[0]:
@@ -498,6 +508,12 @@ def _poly(expr, quantities, counter, seen=None):
         return (Fraction(0), {key: (Fraction(1), Fraction(0), expr)},
                 q.get("unit"), None)
     op, *args = expr
+    if op == "sqrt":                     # as in `_linear`: exact roots of constants only
+        c1, t1, u1, _ = _poly(args[0], quantities, counter, seen)
+        r = _rat_sqrt(c1) if not t1 and c1 >= 0 else None
+        if r is None or r[0] != r[1]:
+            raise _NotLinear()
+        return r[0], {}, _unit_sqrt(u1), None
     if op == "sum":
         c, terms, unit = Fraction(0), {}, None
         for a in args[0]:

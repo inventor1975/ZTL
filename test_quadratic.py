@@ -206,5 +206,20 @@ for a, b, c, d, e in itertools.product([1, 2], [-3, 0, 1], [-4, 0, 5], [-2, 1], 
             r = Fraction(t)
             check(A * r * r + B * r + C == 0, f"{claim}: s = {t} does not solve the system")
 
+# 6. the root of a known number is a constant when it is exact (MEASURED
+#    2026-09-24: a live model's table computing the discriminant stopped at
+#    OPEN, sqrtD == sqrt(disc) unread though disc was known)
+names = ["a", "b", "c", "disc", "sqrtD", "x1", "x2", "x"]
+table = ("a == 1 & b == -5 & c == 6 & disc == b*b - 4*a*c & sqrtD == sqrt(disc) & "
+         "x1 == (-b + sqrtD) / (2*a) & x2 == (-b - sqrtD) / (2*a) & x == x1")
+n = numeric(run([unknown(nm) for nm in names], table))
+sv = {k: v["lo"] for k, v in n["solved"].items() if v["pinned"]}
+check(n["disposition"] == "EARNED" and sv.get("sqrtD") == "1" and sv.get("x") == "3"
+      and sv.get("x2") == "2", f"the discriminant table is followed to the root: {n['disposition']} {sv}")
+n = numeric(run([unknown("r")], "r == sqrt(9) + 1"))
+check(n["disposition"] == "EARNED" and n["solved"]["r"]["lo"] == "4", f"sqrt(9) + 1 is 4: {n}")
+n = numeric(run([unknown("r")], "r == sqrt(2)"))
+check(n["disposition"] == "OPEN", f"sqrt(2) is not a constant of the rational floor: {n['disposition']}")
+
 print(f"QUADRATIC GREEN — {CHECKS} checks; pool of {pool} claims, {decided} decided, "
       f"{refined} decided that the separate bounds left open, 0 unsound, 0 overturned")

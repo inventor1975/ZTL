@@ -190,6 +190,29 @@ if __name__ == "__main__":
     check("a registry without tiers hashes exactly as before",
           честная["registry"]["digest"] == wr._sha(wr._canon(sorted(РЕЕСТР))))
 
+    print("\n### 6e. A number claim's receipt carries its verdict")
+    # MEASURED 2026-09-24: every receipt of a numeric verdict had value,
+    # disposition and grade null — the receipt read `judge` only, and a
+    # number claim has no `judge` entry; ON CREDIT also lost its side.
+    SHEET = {"claim": "paid <= fee", "rows": [
+        {"name": "fee", "means": "the fee", "status": "verified", "ground": "inv-1", "value": "100"},
+        {"name": "paid", "means": "what was paid", "status": "verified", "ground": "bank-2", "value": "80"}]}
+    rn = zfl.run(SHEET)["report"]["receipt"]["verdict"]
+    check("an earned number claim: T, EARNED, hereditary",
+          (rn["value"], rn["disposition"], rn["grade"]) == ("T", "EARNED", "hereditary"))
+    OVER = {"claim": "paid <= fee", "rows": [
+        {"name": "fee", "means": "the fee", "status": "verified", "ground": "inv-1", "value": "100"},
+        {"name": "paid", "means": "what was paid", "status": "verified", "ground": "bank-2", "value": "120"}]}
+    ro = zfl.run(OVER)["report"]["receipt"]["verdict"]
+    check("a refuted number claim: F, REFUTED", (ro["value"], ro["disposition"]) == ("F", "REFUTED"))
+    CREDIT = {"claim": "paid <= fee", "rows": [
+        {"name": "fee", "means": "the fee", "status": "verified", "ground": "inv-1", "value": "100"},
+        {"name": "paid", "means": "what was paid, not documented", "status": "unverified", "value": "120"}]}
+    rc = zfl.run(CREDIT)["report"]["receipt"]["verdict"]
+    check("a verdict on credit keeps its side", (rc["value"], rc["disposition"], rc.get("polarity")) ==
+          ("F", "ON CREDIT", "toward F"))
+    check("and only it carries the side: the earned one has no polarity field", "polarity" not in rn)
+
     print("\n### 7. ЧЕГО ЭТО НЕ УСТАНАВЛИВАЕТ")
     print("   Квитанция не подписывает (ключи — дело потребителя), не")
     print("   ловит ЛОЖЬ ПРИ ИЗГОТОВЛЕНИИ сама по себе — для этого нужен")

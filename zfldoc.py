@@ -403,6 +403,12 @@ ARITH_HELP = {
     "*": ("times", "умножить"), "/": ("divided by", "разделить"),
     "sum(a,b,…)": ("the sum of several — the same as a + b + …",
                    "сумма нескольких — то же, что a + b + …"),
+    "sqrt(x)": ("the square root — a proved enclosure, exact where the root is "
+                "rational; a negative quantity has no reading; the solver does not "
+                "solve for a quantity under a root",
+                "квадратный корень — доказанная вилка, точная там, где корень "
+                "рационален; у отрицательной величины прочтения нет; неизвестное "
+                "под корнем решатель не ищет"),
     "( )": ("brackets, to say what goes first",
             "скобки — чтобы сказать, что раньше"),
     "-x": ("a leading minus: the sign of a term, not the operation between "
@@ -420,7 +426,12 @@ def arithmetic():
     src = open(znumjudge.__file__, encoding="utf-8").read()
     m = re.search(r'_TAG = \{([^}]*)\}', src)
     ops = re.findall(r'"([^"]+)":', m.group(1)) if m else []
-    return sorted(ops) + ["sum(a,b,…)", "( )", "-x"]
+    # THE CALLS, like the symbols, come from the reader: a function is listed
+    # only if the reader has its branch (sqrt was in the core five days before
+    # any reader produced it, 2026-09-24).
+    calls = [c for c, probe in (("sum(a,b,…)", "^sum\\("), ("sqrt(x)", 'startswith("sqrt(")'))
+             if probe in src]
+    return sorted(ops) + calls + ["( )", "-x"]
 
 
 def operators():

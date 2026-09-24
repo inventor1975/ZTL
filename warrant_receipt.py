@@ -88,7 +88,16 @@ def receipt(report: dict, doc: dict, epoch: str,
     Реестр входит в отпечаток отдельным полем, и квитанция, выписанная БЕЗ
     реестра, теперь ОТЛИЧИМА от выписанной под реестром — это сигнал
     предъявителю, а не молчание."""
-    judge = (report.get("report") or {}).get("judge") or {}
+    rep = report.get("report") or {}
+    judge = rep.get("judge") or {}
+    # A NUMBER CLAIM HAS NO `judge` ENTRY: its verdict lives on the numeric
+    # floor. Reading `judge` alone left every numeric receipt with value,
+    # disposition and grade null (MEASURED 2026-09-24).
+    if not judge and rep.get("numeric"):
+        n = rep["numeric"]
+        judge = {"verdict": n.get("verdict"), "disposition": n.get("disposition"),
+                 "grade": n.get("grade"), "unverified": n.get("unverified") or [],
+                 "polarity": n.get("polarity")}
     rows = {r.get("name"): r for r in (doc.get("rows") or [])}
     holding = {}
     for name in sorted(judge.get("unverified") or []):
@@ -146,7 +155,10 @@ def receipt(report: dict, doc: dict, epoch: str,
                     "disposition": judge.get("disposition"),
                     "grade": judge.get("grade"),
                     "credit": judge.get("credit", "REDEEMABLE"),
-                    "unredeemable": sorted(judge.get("unredeemable") or [])},
+                    "unredeemable": sorted(judge.get("unredeemable") or []),
+                    # the side a verdict ON CREDIT leans to; present only
+                    # then, so every other receipt keeps its digest
+                    **({"polarity": judge["polarity"]} if judge.get("polarity") else {})},
         "epoch": (epoch or None),
         "expiry": expiry,
         "on_stipulation": (sorted(стип) or None),

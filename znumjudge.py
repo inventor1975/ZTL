@@ -148,9 +148,19 @@ def parse_quantities(text):
     return quantities, marks
 
 
+def _closes_last(s, i):
+    """Does the parenthesis at s[i] close at the very end of s?"""
+    depth = 0
+    for j in range(i, len(s)):
+        depth += {"(": 1, ")": -1}.get(s[j], 0)
+        if depth == 0:
+            return j == len(s) - 1
+    return False
+
+
 def _parse_arith(s, quantities):
     """A tiny arithmetic reader for one comparison side: numbers,
-    quantities, + - *, and sum(...). Returns a znum expression."""
+    quantities, + - * /, sum(...) and sqrt(...). Returns a znum expression."""
     s = s.strip()
     m = re.match(r"^sum\((?P<args>[^)]*)\)$", s)
     if m:
@@ -168,6 +178,15 @@ def _parse_arith(s, quantities):
             elif c in level and depth == 0:
                 return (_TAG[c], _parse_arith(s[:i], quantities),
                         _parse_arith(s[i + 1:], quantities))
+    # SQUARE ROOT, AS A CALL: `sqrt(expr)`. znum has evaluated ("sqrt", e)
+    # since e4cab4e (2026-09-21), but no reader produced that node, so the
+    # root was reachable from Python only: `sqrt(a) > 1.41` died here as
+    # "malformed arithmetic" and in ZFL as a row nobody declared (found
+    # 2026-09-24, on the curator's "we added the square root to ZTL").
+    # Checked AFTER the binary split, so `sqrt(a) + sqrt(b)` is two calls,
+    # and only when the parenthesis opened by `sqrt(` is the one that ends.
+    if s.startswith("sqrt(") and s.endswith(")") and _closes_last(s, 4):
+        return ("sqrt", _parse_arith(s[5:-1], quantities))
     if s.startswith("(") and s.endswith(")"):
         return _parse_arith(s[1:-1], quantities)
     # UNARY SIGN. The binary split above starts at index 1, so a leading

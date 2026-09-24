@@ -491,7 +491,7 @@ RESERVED_NAMES = ("T", "F", "Z")
 # месяц появится второй, и разойдётся с первым — как уже было с запретом,
 # который стоял в спеке первого поколения и потерялся при переходе на v2.
 OPERATOR_WORDS = ("not", "and", "or", "imp", "xor", "xnor",
-                  "sum", "min", "max", "abs")
+                  "sum", "min", "max", "abs", "sqrt")
 _SERVICE_WORDS = set(RESERVED_NAMES) | set(OPERATOR_WORDS)
 
 # status -> what the core's two floors each call it
@@ -1196,6 +1196,20 @@ def run(doc, ground_registry=None):
                                  "next_check": r.get("next_check", []),
                                  "solved": solved, "claim": claim,
                                  "sheet": sheet}
+            # THE ANSWER TRAVELS WITH ITS DISPOSITION. The numeric floor has
+            # always known the two-valued answer (the core's verdict under
+            # it) and, on credit, the side it leans to; this report kept
+            # neither, so the receipt of a number claim carried value,
+            # disposition and grade all null (MEASURED 2026-09-24 on every
+            # numeric example), and ON CREDIT could not say toward T or F.
+            core = r.get("core") or {}
+            report["numeric"]["verdict"] = core.get("verdict")
+            report["numeric"]["grade"] = (
+                "hereditary" if r["disposition"] in ("EARNED", "REFUTED") else
+                "until-verification" if r["disposition"] in ("OPEN", "ON CREDIT") else None)
+            report["numeric"]["unverified"] = list(core.get("unverified") or [])
+            if r.get("polarity"):
+                report["numeric"]["polarity"] = r["polarity"]
             if unknown and not solved:
                 names = [x["name"] for x in numeric_rows(rows)
                          if (x.get("value") or "").strip() == "?"]

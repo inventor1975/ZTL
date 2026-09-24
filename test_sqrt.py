@@ -188,6 +188,30 @@ def test_iterative_agrees_with_recursive():
                 f"пути разошлись на {phi}"
 
 
+def test_reached_from_text():
+    """The root is reachable from WRITTEN claims, not only from Python.
+
+    Until 2026-09-24 every check above called the root directly, and the
+    readers never produced its node: `sqrt(a) > 1.41` was "malformed
+    arithmetic" to znumjudge and an undeclared row to ZFL. A tested organ
+    no path reached."""
+    from znumjudge import parse_quantities, judge_sheet_claim
+    import zfl
+    q, m = parse_quantities("a=2 earned:m1, b=9 earned:m2, n=-4 earned:m3")
+    for claim, want in (("sqrt(a) > 1.41", ("EARNED", "T")), ("sqrt(a) > 1.42", ("REFUTED", "F")),
+                        ("sqrt(b) == 3", ("EARNED", "T")), ("sqrt(a) + sqrt(b) > 4.41", ("EARNED", "T")),
+                        ("(sqrt(a))*(sqrt(a)) >= 1.99", ("EARNED", "T"))):
+        r = judge_sheet_claim(claim, q, m)
+        got = (r["disposition"], (r.get("core") or {}).get("verdict"))
+        assert got == want, f"{claim}: {got}, wanted {want}"
+    assert judge_sheet_claim("sqrt(n) > 0", q, m)["disposition"] == "E", \
+        "the root of a negative quantity must have no admissible reading"
+    doc = {"rows": [{"name": "a", "means": "the side", "status": "verified",
+                     "ground": "m1", "value": "2"}], "claim": "sqrt(a) > 1.41"}
+    r = zfl.run(doc)
+    assert r["ok"] and r["report"]["numeric"]["disposition"] == "EARNED", r
+
+
 if __name__ == "__main__":
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
     for t in tests:

@@ -15,8 +15,9 @@ The refinement (znum._int_refine) runs only where compare says Z and decides
 only by exact integer arithmetic over the whole box — never by listing it, so
 a box of ±10^9 is pinned here and must be as fast as ±1. Pinned too:
   - the three shapes it decides (one name; one name linear; bilinear ==),
+  - the coupled tail through the edges of the box (x*x < x*y),
   - what it must leave OPEN (x*x == x on [0, 1000]: two integer roots in a
-    box of 1001 integers; x*x < x*y coupled),
+    box of 1001 integers; x*y <= x*x + y*y, a jointly concave max),
   - a continuous quantity is NOT touched (x == 1 - x stays OPEN there),
   - soundness against brute force on random small boxes: no wrong T/F.
 Fails before the change: the first check is OPEN on the old judge.
@@ -67,9 +68,17 @@ check(v("eq", 1, ("mul", "x", "y"), {"x": I(0, 1000), "y": I(2, 1000)}) == "F", 
 check(v("eq", ("add", "y", 1), ("mul", "x", "y"), {"x": I(0, 1000), "y": I(2, 1000)}) == "F",
       "y + 1 == x*y: y(x-1) = 1 impossible with y >= 2")
 check(v("eq", 6, ("mul", "x", "y"), {"x": I(-10, 10), "y": I(-10, 10)}) == "Z", "x*y == 6: 2*3")
-# left OPEN on purpose
-check(v("lt", ("mul", "x", "x"), ("mul", "x", "y"), {"x": I(-2, 2), "y": I(0, 1)}) == "Z",
-      "x*x < x*y: coupled, out of scope, stays OPEN")
+# (4) coupled at degree 2, through the edges of the box
+check(v("lt", ("mul", "x", "x"), ("mul", "x", "y"), {"x": I(-2, 2), "y": I(0, 1)}) == "F",
+      "x*x < x*y means 0 < x < y: no integer x between 0 and 1")
+check(v("lt", ("mul", "x", "x"), ("mul", "y", "x"), {"x": I(1, 10 ** 9), "y": I(0, 1)}) == "F",
+      "x*x < y*x with x >= 1 >= y: false even over the reals, on a ±10^9 box")
+check(v("le", ("mul", "x", "x"), ("mul", "x", "y"), {"x": I(0, 1), "y": I(1, 3)}) == "T",
+      "x*x <= x*y with x in {0,1} <= y")
+# left OPEN on purpose: jointly concave max (a < 0, b < 0, e != 0) — out of scope
+check(v("le", ("mul", "x", "y"), ("add", ("mul", "x", "x"), ("mul", "y", "y")),
+        {"x": I(-50, 50), "y": I(-50, 50)}) == "Z",
+      "x*y <= x*x + y*y is true, but its max is jointly concave: stays OPEN")
 # a continuous quantity is untouched
 check(v("eq", "x", ("sub", 1, "x"), {"x": znum.qty(0, 1000)}) == "Z", "rational x = 1/2 solves it: OPEN")
 # no listing: a box of ±10^9 decides at once

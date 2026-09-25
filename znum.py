@@ -1117,7 +1117,8 @@ def _ev_mlin(expr, quantities):
 # what ±1 does. Three shapes; anything else keeps Z:
 #   (1) one free name, degree <= 2;
 #   (2) two free names, one of them only linear with a constant coefficient;
-#   (3) two free names, bilinear, under ==.
+#   (3) two free names, bilinear, under ==;
+#   (4) two free names coupled at degree 2 — through the edges of the box.
 
 def _ipoly(expr, quantities):
     """Exact polynomial {((name, power), ...): Fraction} of an expression over
@@ -1283,6 +1284,48 @@ def _int_refine(kind, e1, e2, quantities):
             return "T" if mx <= 0 else ("F" if mn > 0 else None)
         return "T" if mx < 0 else ("F" if mn >= 0 else None)
     x, y = free
+    if any(sum(k for _, k in m) > 2 for m in p):
+        # TOTAL degree, not each name's: x*x*y is degree 3. MEASURED 2026-09-25:
+        # the first version of (4) checked powers per name only, read x*x*y as
+        # absent, and returned F where the truth was open — a WRONG verdict,
+        # caught by this stand's brute-force check before anything shipped.
+        return None
+    # (4) the COUPLED tail (2026-09-25, «не люблю хвосты»): f = a x^2 + e xy +
+    # b y^2 + d x + g y + c. Where f is convex or linear in y (b >= 0) its max
+    # over the box lies on the edges y = ylo, y = yhi; else where convex in x
+    # (a >= 0) on x = xlo, x = xhi; where e = 0 it splits into two one-name
+    # maxima. The min mirrors it. Each edge is a one-name quadratic, exact.
+    a2, e2, b2 = cf((x, 2)), cf((x, 1), (y, 1)), cf((y, 2))
+    d1, g1, c0 = cf((x, 1)), cf((y, 1)), cf()
+    (xlo, xhi), (ylo, yhi) = box[x], box[y]
+    on_y = lambda y0: (a2, e2 * y0 + d1, b2 * y0 * y0 + g1 * y0 + c0, xlo, xhi)
+    on_x = lambda x0: (b2, e2 * x0 + g1, a2 * x0 * x0 + d1 * x0 + c0, ylo, yhi)
+
+    def _edge(want, pick):                   # want 1 = max, 0 = min
+        sgn = 1 if want else -1
+        if sgn * b2 >= 0:
+            return pick(_q_extremes(*on_y(y0))[want] for y0 in (ylo, yhi))
+        if sgn * a2 >= 0:
+            return pick(_q_extremes(*on_x(x0))[want] for x0 in (xlo, xhi))
+        if e2 == 0:
+            return (_q_extremes(a2, d1, 0, xlo, xhi)[want]
+                    + _q_extremes(b2, g1, 0, ylo, yhi)[want] + c0)
+        return None
+    mx, mn = _edge(1, max), _edge(0, min)
+    if kind == "le":
+        if mx is not None and mx <= 0:
+            return "T"
+        if mn is not None and mn > 0:
+            return "F"
+    elif kind == "lt":
+        if mx is not None and mx < 0:
+            return "T"
+        if mn is not None and mn >= 0:
+            return "F"
+    elif (mn is not None and mn > 0) or (mx is not None and mx < 0):
+        return "F"
+    elif mn == 0 and mx == 0:
+        return "T"
     for u, v in ((x, y), (y, x)):                        # (2): v only linear
         if any(n == v and (k != 1 or len(m) > 1) for m in p for n, k in m):
             continue

@@ -1299,8 +1299,8 @@ def _int_refine(kind, e1, e2, quantities):
                 return "T" if mx <= 0 else ("F" if mn > 0 else None)
             return "T" if mx < 0 else ("F" if mn >= 0 else None)
         K = abs(k)
-        if K > 10 ** 4:
-            return None
+        if K > 10 ** 4:                                  # the same load ceiling:
+            return None                                  # at most 10^4 residues
         L, U = sorted((-k * vlo, -k * vhi))              # h(u) = -k*v in [L, U]
         for r in range(K):
             if _q_at(a, b, c, r) % K:
@@ -1321,7 +1321,11 @@ def _int_refine(kind, e1, e2, quantities):
         hit = ((-c) % a == 0 and xlo <= -c // a <= xhi) or \
               ((-b) % a == 0 and ylo <= -b // a <= yhi)
         return None if hit else "F"
-    if abs(N) > 10 ** 12:
+    if abs(N) > 10 ** 10:
+        # LOAD CEILING (the curator, 2026-09-25: «перебор не приемлем, так как
+        # нагрузка»). The divisors of N are found by trial division up to
+        # sqrt|N|; MEASURED: |N| ~ 10^12 (a prime) cost 40 ms on one request —
+        # too much for a public judge. 10^10 caps it near 4 ms; beyond, Z.
         return None
     for dv in _divisors(N):
         for u in (dv, -dv):

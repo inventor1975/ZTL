@@ -41,3 +41,19 @@ Anything else keeps Z. A decided verdict is never touched (the refinement runs o
 
 Out of scope, stated: two free names coupled nonlinearly (`x*x < x*y`), degree > 2,
 more than two free names, non-integer lattices (`decimal`, `frac`), division, roots.
+
+## ADDENDUM — the coupled tail (frozen before the second change, same day)
+
+Curator: «Доделай. Не люблю хвосты.» The 32 v1 rows left OPEN are two free names
+coupled at degree 2 under `<=` / `<` (`x * x < x * y`). Rule to add, exact, no listing:
+for f = a x² + e xy + b y² + d x + g y + c on an integer box, the MAX lies on
+y ∈ {ylo, yhi} when b ≥ 0 (f convex or linear in y), else on x ∈ {xlo, xhi} when a ≥ 0,
+else, when e = 0, it is the sum of two one-name maxima; the MIN mirrors it (b ≤ 0,
+a ≤ 0, e = 0). Each edge is a one-name quadratic, decided exactly as before.
+Left Z: max with a < 0, b < 0, e ≠ 0; min with a > 0, b > 0, e ≠ 0.
+
+- **P7:** v1 abstentions on decided rows **32 → 0**; v2 stays 0.
+- **P8:** wrong verdicts stay **0** everywhere; `numexact` misses **32 → 0**.
+- **P9:** blind fuzz (same seeds) falls below 786; what remains is three names,
+  depth > 2 outside degree 2, or the two jointly-convex/concave coupled shapes.
+- **P10:** run_all ALL GREEN; the stand grows with the coupled cases.

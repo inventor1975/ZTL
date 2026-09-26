@@ -544,6 +544,7 @@ def coerce(doc):
 
 
 MAX_ATOMS = 10          # см. комментарий в validate(): стоимость 3**atoms
+MAX_ATOMS_WITH_COMPARISONS = 9   # a comparison costs more than a plain atom: see validate()
 # THE LENGTH OF A FORMULA IS CAPPED TOO — the atom cap bounds the reading, not
 # the READERS, which are quadratic in the length of the text. MEASURED
 # 2026-09-24: a product chain of one name, 39 KB, took 4.6 s; at 4 KB the
@@ -579,13 +580,25 @@ def validate(doc):
     # SECURITY-AUDIT.md §40 УТВЕРЖДАЛ, что кап здесь стоит и зовётся E_TOOBIG.
     # Его не было: слово не встречалось в файле ни разу, 40 имён проходили чисто.
     # Заявленная защита, которой нет, хуже честно названного отсутствия.
-    _used = names_in(doc.get("claim") or "")
-    for _r in rows:
-        _used |= names_in(_r.get("ground") or "")
-    if len(_used) > MAX_ATOMS:
+    #
+    # A COMPARISON IS A READING ATOM TOO (2026-09-26, the cloud red team, F4).
+    # `x <= 1` is one NAME to `names_in` and one ATOM to the completion table,
+    # so `(x <= 1) ^ (x <= 2) ^ ... ^ (x <= 14)` — one name, 150 bytes —
+    # passed this cap and cost seconds. MEASURED, worst over hash seeds:
+    # 10 plain atoms 0.01 s; 9 atoms with comparisons 0.53 s; 10 comparisons
+    # 2.83 s; 8 comparisons + 2 atoms 8.33 s. So atoms are counted as the core
+    # reads them, and with any comparison present the cap is one lower.
+    _used, _cmps = set(), set()
+    for _text in [doc.get("claim") or ""] + [(_r.get("ground") or "") for _r in rows]:
+        _a, _c = _reading_atoms(_text)
+        _used |= _a
+        _cmps |= _c
+    _cap = MAX_ATOMS_WITH_COMPARISONS if _cmps else MAX_ATOMS
+    if len(_used) + len(_cmps) > _cap:
         issues.append(_issue("error", "E_TOOBIG", "table",
-                             f"{len(_used)} atoms in the formulas: a reading "
-                             f"costs 3**atoms, so it is capped at {MAX_ATOMS} "
+                             f"{len(_used) + len(_cmps)} atoms in the formulas "
+                             f"({len(_cmps)} of them comparisons): a reading "
+                             f"costs 3**atoms, so it is capped at {_cap} "
                              f"(rows are NOT capped — split the question instead)"))
     for _where, _text in [("claim", doc.get("claim") or "")] + [
             (f"row {i}", (r.get("ground") or "")) for i, r in enumerate(rows, 1)]:
@@ -884,6 +897,22 @@ def _numbers_as_statements(text, rows):
         for name in sorted(names_in(core) & set(numbers))]
 
 
+def _reading_atoms(text):
+    """(plain names, comparisons) as the completion table reads a formula: a
+    comparison is ONE atom however many names it mentions, and a name used
+    only inside comparisons is not an atom of its own. Found by the judge's
+    own splitter (a rule written twice drifts); only when the text could hold
+    a comparison, so a table of plain grounds pays nothing."""
+    if not re.search(r"[<>]|==|!=|(?<![<>=!])=(?!=)", text or ""):
+        return names_in(text), set()
+    try:
+        core, atoms = extract_comparisons(text, {}, parse=False)
+    except Exception:
+        return names_in(text), set()
+    return ({n for n in names_in(core) if n not in atoms},
+            {" ".join(v[3].split()) for v in atoms.values()})
+
+
 def names_in(text):
     """Every name a formula mentions. A table is a closed world: a formula
     may only speak of rows that exist, and a typo in a name is the commonest
@@ -1030,11 +1059,16 @@ def to_system(rows):
     system = {}
     for name, r in defined.items():
         system[name] = _formula_prop(r.get("ground") or "")
+    # ONCE, not per row (2026-09-26, the cloud red team, F5): asking names_in
+    # of every defined ground for every row was O(rows^2) — 800 defined and
+    # 800 plain rows, a 99 KB body under every cap, cost 16 s of CPU.
+    mentioned = set()
+    for d in defined.values():
+        mentioned |= names_in(d.get("ground") or "")
     for r in rows:
         if r["name"] in defined:
             continue
-        if any(r["name"] in names_in(d.get("ground") or "")
-               for d in defined.values()):
+        if r["name"] in mentioned:
             system[r["name"]] = _MARK.get(r.get("status"), "Z")
     return system
 

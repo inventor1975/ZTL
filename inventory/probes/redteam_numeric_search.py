@@ -1373,21 +1373,28 @@ def _spec_back(sp):
             "sample": sp.get("sample", False), "unit": sp.get("unit")}
 
 
-def retime(path):
+def _retime_one(s):
     import statistics
     import znum
+    specs = {n: _spec_back(sp) for n, sp in s["specs"].items()}
+    e1, e2 = _parse_e(s["e1"], specs), _parse_e(s["e2"], specs)
+    qs = build(specs)
+    ts = []
+    for _ in range(5):
+        t0 = time.perf_counter()
+        znum.compare(s["kind"], e1, e2, qs)
+        ts.append((time.perf_counter() - t0) * 1000)
+    return statistics.median(ts), s
+
+
+def retime(path, workers=1):
     d = json.load(open(path))
-    rows = []
-    for s in d["slow"]:
-        specs = {n: _spec_back(sp) for n, sp in s["specs"].items()}
-        e1, e2 = _parse_e(s["e1"], specs), _parse_e(s["e2"], specs)
-        qs = build(specs)
-        ts = []
-        for _ in range(5):
-            t0 = time.perf_counter()
-            znum.compare(s["kind"], e1, e2, qs)
-            ts.append((time.perf_counter() - t0) * 1000)
-        rows.append((statistics.median(ts), s))
+    if workers > 1:
+        import multiprocessing as mp
+        with mp.Pool(workers) as pool:
+            rows = pool.map(_retime_one, d["slow"], chunksize=20)
+    else:
+        rows = [_retime_one(s) for s in d["slow"]]
     rows.sort(key=lambda r: -r[0])
     over = [r for r in rows if r[0] > SLOW_MS]
     print(f"{len(rows)} first-timing slow claims; {len(over)} stay > {SLOW_MS:g} ms "
@@ -1396,8 +1403,51 @@ def retime(path):
     for ms, s in over:
         by[s["frag"]] = by.get(s["frag"], 0) + 1
     print("by fragment:", by)
+    ms_all = sorted(r[0] for r in over)
+    if ms_all:
+        print(f"re-timed ms: median {ms_all[len(ms_all) // 2]:.1f}, max {ms_all[-1]:.1f}; "
+              f"> 100 ms: {sum(1 for m in ms_all if m > 100)}, > 200 ms: "
+              f"{sum(1 for m in ms_all if m > 200)}")
     for ms, s in over[:10]:
         print(f"  {ms:7.1f} ms  [{s['frag']}] {s['kind']} {s['e1']} ~ {s['e2']}  {s['specs']}")
+
+
+def _desum(e):
+    if isinstance(e, tuple):
+        if e[0] == "sum":
+            args = [_desum(a) for a in e[1]] or [Q(0)]
+            out = args[0]
+            for a in args[1:]:
+                out = ("add", out, a)
+            return out
+        if e[0] == "sqrt":
+            return ("sqrt", _desum(e[1]))
+        return (e[0], _desum(e[1]), _desum(e[2]))
+    return e
+
+
+def attribute(path):
+    """Every recorded lie: re-verify the refuting reading from the semantics,
+    then spell each sum(...) as nested + (same claim, same readings) and
+    re-judge. A lie that disappears is the sum's lattice step (LIE-1)."""
+    d = json.load(open(path))
+    tally = {}
+    for frag, recs in d["lies"].items():
+        for r in recs:
+            specs = {n: _spec_back(sp) for n, sp in r["specs"].items()}
+            e1, e2 = _parse_e(r["e1"], specs), _parse_e(r["e2"], specs)
+            x1, x2, _ = expand(e1, e2, specs)
+            env = {k: Q(v) for k, v in r["reading"].items()}
+            ok = gtruth(r["kind"], x1, x2, env) is (r["verdict"] == "F")
+            v, _ = judge(r["kind"], e1, e2, specs)       # direct compare()
+            v2, _ = judge(r["kind"], _desum(e1), _desum(e2), specs)
+            key = ("LIE-1 (sum)" if "sum" in r["e1"] + r["e2"] and v2 != r["verdict"]
+                   else "UNATTRIBUTED")
+            if not ok:
+                key = "WITNESS DID NOT VERIFY"
+            tally[(frag, key, v == r["verdict"])] = tally.get((frag, key, v == r["verdict"]), 0) + 1
+    for (frag, key, same), n in sorted(tally.items()):
+        print(f"  {frag:10s} {key:24s} compare() gives the same verdict: {same}  x{n}")
 
 
 def main():
@@ -1411,11 +1461,15 @@ def main():
     ap.add_argument("--out", default=None)
     ap.add_argument("--planted", action="store_true",
                     help="run the planted-reading fragments (p-*)")
+    ap.add_argument("--attribute", default=None,
+                    help="attribute every recorded lie of a result file")
     ap.add_argument("--retime", default=None,
                     help="re-time the slow claims of a result file (median of 5)")
     a = ap.parse_args()
     if a.retime:
-        return retime(a.retime)
+        return retime(a.retime, a.workers)
+    if a.attribute:
+        return attribute(a.attribute)
     ap_planted = a.planted
     frags = (a.only.split(",") if a.only else
              list(PLANTED) if ap_planted else list(FRAGMENTS) + ["doc", "docmin"])

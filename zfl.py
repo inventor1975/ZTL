@@ -589,7 +589,12 @@ def validate(doc):
     # 2.83 s; 8 comparisons + 2 atoms 8.33 s. So atoms are counted as the core
     # reads them, and with any comparison present the cap is one lower.
     _used, _cmps = set(), set()
-    for _text in [doc.get("claim") or ""] + [(_r.get("ground") or "") for _r in rows]:
+    # ONLY FORMULAS (2026-09-26): a ground is a formula only on a `defined` row;
+    # elsewhere it names a witness (`san-guard-filter_var-FILTER_VALIDATE_FLOAT-L48`)
+    # and the core never reads it. Counting its words as atoms refused 1 080 of
+    # introspect's 31 824 SARD documents (11 "atoms", none of them read).
+    for _text in [doc.get("claim") or ""] + [(_r.get("ground") or "") for _r in rows
+                                             if (_r.get("status") or "") == "defined"]:
         _a, _c = _reading_atoms(_text)
         _used |= _a
         _cmps |= _c

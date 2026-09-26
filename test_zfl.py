@@ -388,6 +388,20 @@ def sec11_a_public_service_cannot_be_made_to_raise_or_to_stall():
     long product chain took seconds, the readers being quadratic in length."""
     import time
     print("\n### 11. A public service cannot be made to raise or to stall")
+    # The atom cap counts what the core READS (2026-09-26). A comparison is an
+    # atom (one name, fourteen comparisons cost seconds); a witness label on a
+    # non-defined row is not (introspect's `san-guard-filter_var-...-L48` read
+    # as five atoms refused 1 080 SARD documents).
+    chain = {"claim": " ^ ".join(f"(x <= {j})" for j in range(1, 15)),
+             "rows": [{"name": "x", "means": "x", "status": "unverified", "value": "[0,50]"}]}
+    assert any(i["code"] == "E_TOOBIG" for i in zfl.validate(chain)), "14 comparisons must be capped"
+    labels = {"claim": "safe", "rows": [
+        {"name": "tainted", "ground_kind": "act", "status": "verified", "ground": "src-_GET-L45", "means": "t"},
+        {"name": "sanitized", "ground_kind": "act", "status": "verified",
+         "ground": "san-guard-filter_var-FILTER_VALIDATE_FLOAT-L48", "means": "s"},
+        {"name": "safe", "status": "defined", "ground": "~Tr(tainted) | Tr(sanitized)", "means": "c"}]}
+    assert not any(i["code"] == "E_TOOBIG" for i in zfl.validate(labels)), "witness labels are not atoms"
+    print("   the cap counts comparisons, not witness labels: ok")
     big = {"claim": "*".join(["a"] * 200) + " > b", "rows": [
         {"name": "a", "means": "a", "status": "verified", "ground": "doc", "value": "1" + "0" * 1000},
         {"name": "b", "means": "b", "status": "verified", "ground": "doc", "value": "1"}]}

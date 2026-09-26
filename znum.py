@@ -399,8 +399,11 @@ def _linear(expr, quantities, counter, seen=None):
         for a in args[0]:
             c2, t2, u2, s2 = _linear(a, quantities, counter, seen)
             unit = _unify_units(unit, u2, "add")
-            step = s2 if step is None or s2 is None else (
-                s2 if s2 == step else None)
+            # A SUM IS ON A LATTICE ONLY IF EVERY TERM IS ON IT (2026-09-26, the cloud
+            # red team, PR #1). This line used to take the NEXT term's step once one
+            # term had none: sum(x, y) with x continuous, y int read as 'an integer',
+            # and sum(x, y) == 1/2 was REFUTED though x = 1/2, y = 0 makes it true.
+            step = step if (step is not None and s2 == step) else None
             c += c2
             for k, (coef, nm) in t2.items():
                 old = terms.get(k, (Fraction(0), nm))
@@ -866,7 +869,17 @@ def _real_roots(a, lo=None, hi=None):
             return
         m = (l + h) / 2
         if _peval(sq, m) == 0:
-            solve(l, m - ROOT_WIDTH / 4) if count(l, m - ROOT_WIDTH / 4) else None
+            # THE ROOTS JUST LEFT OF A ROOT MIDPOINT (2026-09-26, the cloud red team,
+            # PR #1). This used to search (l, m - ROOT_WIDTH/4] and so never looked in
+            # (m - ROOT_WIDTH/4, m): a critical point 2e-13 left of m was lost, the
+            # maximum under-read, and a quartic claim judged T that is false there.
+            # Now step left from m by halving until (m - d, m] holds m alone; roots
+            # are isolated, so this ends, and no fixed gap is skipped.
+            if count(l, m) > 1:
+                d = (m - l) / 2
+                while count(m - d, m) > 1:
+                    d /= 2
+                solve(l, m - d)
             out.append((m, m))
             solve(m, h)
             return
@@ -1407,8 +1420,11 @@ def _ev(expr, quantities):
             unit = _unify_units(unit, un, "add")
             if r is None:
                 return None, ped | p, used | u, None, unit
-            step = st if step is None or st is None else (
-                st if st == step else None)
+            # A SUM IS ON A LATTICE ONLY IF EVERY TERM IS ON IT (2026-09-26, the cloud
+            # red team, PR #1). This line used to take the NEXT term's step once one
+            # term had none: sum(x, y) with x continuous, y int read as 'an integer',
+            # and sum(x, y) == 1/2 was REFUTED though x = 1/2, y = 0 makes it true.
+            step = step if (step is not None and st == step) else None
             iv, ped, used = _iv_add(iv, r), ped | p, used | u
         return iv, ped, used, step, unit
     if op == "sqrt":                       # УНАРНАЯ — до распаковки двух

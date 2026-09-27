@@ -367,7 +367,7 @@ def sec10_what_the_ground_holds_and_what_to_check():
     w = zfl.run(unverified("p & (q | r)", "p", "q", "r"))["report"]["what_to_check"]
     assert w["EARNED"]["possible"] == [["p", "q"], ["p", "r"]] and w["EARNED"]["no_guaranteed_set"], w
     w = zfl.run(unverified("a & b & c & d & e & f & g", *"abcdefg"))["report"]["what_to_check"]
-    assert "refused" in w and "up to 6" in w["refused"], w
+    assert "refused" in w and "up to 3" in w["refused"], w
     settle = {"claim": "signed & delivered", "rows": [
         {"name": "signed", "means": "signed", "status": "verified", "ground": "scan-12"},
         {"name": "delivered", "means": "arrived", "status": "unverified"}]}
@@ -392,9 +392,12 @@ def sec11_a_public_service_cannot_be_made_to_raise_or_to_stall():
     # atom (one name, fourteen comparisons cost seconds); a witness label on a
     # non-defined row is not (introspect's `san-guard-filter_var-...-L48` read
     # as five atoms refused 1 080 SARD documents).
-    chain = {"claim": " ^ ".join(f"(x <= {j})" for j in range(1, 15)),
-             "rows": [{"name": "x", "means": "x", "status": "unverified", "value": "[0,50]"}]}
-    assert any(i["code"] == "E_TOOBIG" for i in zfl.validate(chain)), "14 comparisons must be capped"
+    # (2026-09-27: comparisons are capped on their own at 16, plain atoms at 10)
+    for n, capped in ((16, False), (17, True)):
+        chain = {"claim": " ^ ".join(f"(x <= {j})" for j in range(1, n + 1)),
+                 "rows": [{"name": "x", "means": "x", "status": "unverified", "value": "[0,50]"}]}
+        got = any(i["code"] == "E_TOOBIG" for i in zfl.validate(chain))
+        assert got == capped, f"{n} comparisons: capped={got}, want {capped}"
     labels = {"claim": "safe", "rows": [
         {"name": "tainted", "ground_kind": "act", "status": "verified", "ground": "src-_GET-L45", "means": "t"},
         {"name": "sanitized", "ground_kind": "act", "status": "verified",
@@ -415,12 +418,12 @@ def sec11_a_public_service_cannot_be_made_to_raise_or_to_stall():
     long_ground = [{"name": "s", "means": "s", "status": "defined", "ground": " & ".join(["~Tr(s)"] * 800)}]
     codes = [(i["code"], i["where"]) for i in zfl.run({"rows": long_ground})["issues"]]
     assert ("E_TOOLONG", "row 1") in codes, codes
-    near = "*".join(["a"] * 2040) + " > b"            # just under the cap
+    near = "*".join(["a"] * 995) + " > b"             # just under the cap (2000 since 2026-09-27)
     t0 = time.time()
     r = zfl.run({"claim": near, "rows": rows})
     assert "E_TOOLONG" not in [i["code"] for i in r.get("issues", [])] and time.time() - t0 < 2.0, r
     print("   a value past float range is an issue, not a traceback; a formula")
-    print("   over 4096 characters is refused by name; one under it reads fast.")
+    print("   over 2000 characters is refused by name; one under it reads fast.")
 
 
 if __name__ == "__main__":

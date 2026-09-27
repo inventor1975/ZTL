@@ -120,10 +120,16 @@ for i in range(200):
     rows3.append({"name": f"ev{i}", "means": "an event", "status": "unverified"})
 doc_w3 = {"claim": claim3, "rows": rows3}
 issues, t = run_real(doc_w3)
-check(not issues, f"W3 the 200-event document passes the validator ({issues})")
-check(t is not None and t < BOUND,
-      f"W3 200 expiry events on rows the claim never reads: zfl.run {fmt(t)} — "
-      f"two judges per event, events uncapped")
+# RESOLVED 2026-09-27: at most MAX_EVENTS (6) events per document, and the floor
+# judges each distinct reading once. Pinned: 200 events are refused by name; six
+# events on rows the claim never reads cost about one judge, not twelve.
+check("E_TOOMANYEVENTS" in (issues or []),
+      f"W3 the 200-event document must be refused by the validator ({issues})")
+rows6 = [r for r in rows3 if not (r["name"].startswith("g") or r["name"].startswith("ev"))
+         or int(r["name"].lstrip("gev") or 0) < 6]
+issues6, t6 = run_real({"claim": claim3, "rows": rows6})
+check(not issues6 and t6 is not None and t6 < BOUND,
+      f"W3 six events on rows the claim never reads pass and cost {fmt(t6)} ({issues6})")
 
 # ---- W4: zverify._only's own tail — found by search at 16 atoms (above today's
 # cap of 10; it bounds how far the cap may rise). Every atom 13-14 times in a
@@ -133,9 +139,15 @@ claim4, names4 = W.fam_longbal(16, random.Random("judgescan:longbal:16:2000:2"),
 W.use_fixed_lazy(True)
 t4, _ = W.timed(lambda: ztljudge.judge(claim4, {a: "Z" for a in names4}), BUDGET)
 W.use_fixed_lazy(False)
-check(t4 is not None and t4 < BOUND,
-      f"W4 16 unverified atoms, each 13-14 times, {len(claim4)} chars: judge {fmt(t4)} "
-      f"(with W1 fixed) — zverify._only splits on every repeated mark")
+# RESOLVED 2026-09-27 by the cap, not by the judge: plain atoms stay capped at 10,
+# so this claim never reaches the judge from the studio. The judge alone remains
+# exponential in repeated marks — that is what the cap is for.
+import zfl
+codes4 = [i["code"] for i in zfl.validate({"claim": claim4, "rows": [
+    {"name": a, "means": a, "status": "unverified"} for a in names4]})]
+check("E_TOOBIG" in codes4,
+      f"W4 16 plain atoms must be refused by the validator before the judge ({codes4}); "
+      f"the judge alone took {fmt(t4)}")
 
 # ---- controls: what the atom cap bounds today
 for fam in ("xorcycle", "grid", "repeat", "random"):

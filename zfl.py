@@ -544,13 +544,21 @@ def coerce(doc):
 
 
 MAX_ATOMS = 10          # см. комментарий в validate(): стоимость 3**atoms
-MAX_ATOMS_WITH_COMPARISONS = 9   # a comparison costs more than a plain atom: see validate()
+MAX_COMPARISONS = 16            # distinct comparisons; measured in validate() 2026-09-27
 # THE LENGTH OF A FORMULA IS CAPPED TOO — the atom cap bounds the reading, not
 # the READERS, which are quadratic in the length of the text. MEASURED
 # 2026-09-24: a product chain of one name, 39 KB, took 4.6 s; at 4 KB the
 # worst of seven adversarial shapes (products, differences, quotients,
 # nested roots and brackets) takes 0.21 s. A public service pays per request.
-MAX_FORMULA_CHARS = 4096
+# 2026-09-27 (the cloud's worst-case search, PR #4): the READING is not linear in
+# the length either — at 4000 characters 8 atoms took 0.49 s and 10 atoms 0.72 s
+# (hill-climbed); at 2000, 0.175 s over 20 variants. 4096 -> 2000.
+MAX_FORMULA_CHARS = 2000
+# EXPIRY EVENTS: each distinct `expires_on` is a crossing the epoch floor reads on
+# both sides; rows are uncapped, so events were (800 events, 126 KB, 76.7 s —
+# PR #4). The floor now judges each distinct reading once, and a document may
+# declare at most this many events.
+MAX_EVENTS = 6
 
 
 def validate(doc):
@@ -598,13 +606,22 @@ def validate(doc):
         _a, _c = _reading_atoms(_text)
         _used |= _a
         _cmps |= _c
-    _cap = MAX_ATOMS_WITH_COMPARISONS if _cmps else MAX_ATOMS
-    if len(_used) + len(_cmps) > _cap:
+    # TWO COUNTS, NOT ONE (2026-09-27). The combined cap of 9 was set by the OLD
+    # walk of the grade, whose cost depended on the hash seed; with the grade exact
+    # (PR #2) and the reverse pass capped (PR #4), comparisons are cheap. MEASURED,
+    # worst zfl.run over three shapes (xor chains, mixed connectives, every plain
+    # atom twice) and three seeds, CPU loaded: 16 comparisons + 10 plain atoms
+    # 0.45 s; 20 comparisons 0.58-0.73 s. So plain atoms <= 10, comparisons <= 16.
+    if len(_used) > MAX_ATOMS:
         issues.append(_issue("error", "E_TOOBIG", "table",
-                             f"{len(_used) + len(_cmps)} atoms in the formulas "
-                             f"({len(_cmps)} of them comparisons): a reading "
-                             f"costs 3**atoms, so it is capped at {_cap} "
+                             f"{len(_used)} plain atoms in the formulas: a reading "
+                             f"costs 3**atoms, so it is capped at {MAX_ATOMS} "
                              f"(rows are NOT capped — split the question instead)"))
+    if len(_cmps) > MAX_COMPARISONS:
+        issues.append(_issue("error", "E_TOOBIG", "table",
+                             f"{len(_cmps)} distinct comparisons in the formulas: each is "
+                             f"an atom of the reading, capped at {MAX_COMPARISONS} "
+                             f"— split the question"))
     for _where, _text in [("claim", doc.get("claim") or "")] + [
             (f"row {i}", (r.get("ground") or "")) for i, r in enumerate(rows, 1)]:
         if len(_text) > MAX_FORMULA_CHARS:
@@ -612,6 +629,12 @@ def validate(doc):
                                  f"{len(_text)} characters: a formula is capped at "
                                  f"{MAX_FORMULA_CHARS} (reading it costs the square of "
                                  f"its length) — split the question"))
+    _events = {(r.get("expires_on") or "").strip() for r in rows} - {""}
+    if len(_events) > MAX_EVENTS:
+        issues.append(_issue("error", "E_TOOMANYEVENTS", "table",
+                             f"{len(_events)} expiry events: the epoch floor reads the claim "
+                             f"on both sides of each, so a document may declare at most "
+                             f"{MAX_EVENTS} — split the question"))
     seen = set()
     for i, r in enumerate(rows, 1):
         at = f"row {i}"
@@ -1280,7 +1303,11 @@ def unredeemable(comp_kind):
 # THE CAP IS FOR A PUBLIC SERVICE, MEASURED 2026-09-24 on this machine, both
 # targets together: 6 unverified inputs 0.12 s, 7 1.0 s, 8 1.5 s, 9 5.4 s.
 # zbackward's own ceiling of 9 is a notebook's; each request here pays its own.
-BACKWARD_CAP = 6
+# 2026-09-27 (PR #4): those were SHORT claims. The count of whole judges is
+# 3 x sum_k C(u,k) 2^k (1,416 at u = 6) and each grows with the claim: u = 6 cost
+# 0.8 s at 100 characters and 23 s at 4000; u = 4, 0.65 s at 1000. With the three
+# targets now sharing one memo, u = 3 stays under 0.3 s at 2000 characters. 6 -> 3.
+BACKWARD_CAP = 3
 
 
 def what_to_check(claim, marking, unverified):
@@ -1291,15 +1318,15 @@ def what_to_check(claim, marking, unverified):
     own = sorted(a for a in unverified if a in atoms)
     if len(own) > BACKWARD_CAP:
         return {"refused": f"{len(own)} unverified inputs; the reverse pass is computed "
-                           f"up to {BACKWARD_CAP} (it grows as 3**n: 6 take 0.12 s, 9 take 5.4 s)"}
+                           f"up to {BACKWARD_CAP} (it calls the whole judge up to 3·Σ C(u,k)·2^k times)"}
     m = {a: v for a, v in marking.items() if a in atoms}
-    out = {}
+    out, memo = {}, {}          # the three targets share one disposition per filling
     # SETTLED is the order a person can act on first: check these, and the
     # verdict becomes final (EARNED or REFUTED) whatever they turn out to be.
     for target, key in (("EARNED", "EARNED"), ("REFUTED", "REFUTED"),
                         (zbackward.TERMINAL, "SETTLED")):
         b = zbackward.backward(phi, m, target, by_disposition=True,
-                               cap_grounds=BACKWARD_CAP)
+                               cap_grounds=BACKWARD_CAP, memo=memo)
         # AN EMPTY FAMILY IS SAID, NOT LEFT EMPTY: a bare [] reads as
         # "nothing to check", the opposite of "no set will do" (zbackward's
         # own rule, kept at the door).
@@ -1484,6 +1511,19 @@ def run(doc, ground_registry=None):
             if ev:
                 events.setdefault(ev, []).append(r["name"])
         staged = []
+        # ONE "BEFORE", AND ONE "AFTER" PER DISTINCT READING (2026-09-27, PR #4):
+        # "before" is the same for every event, and an event whose rows the claim
+        # does not read leaves the claim's marking as it was — a mark foreign to
+        # the claim never moves the judge (the logic red team, PR #3). 800 such
+        # events cost 76.7 s, two judges each; they now cost one.
+        _phi_atoms = _formula_atoms(formalize(claim))
+        _key = lambda mk: tuple(sorted((k, v) for k, v in mk.items() if k in _phi_atoms))
+        _judged = {}
+        def _judge_once(mk):
+            k = _key(mk)
+            if k not in _judged:
+                _judged[k] = judge(claim, mk)
+            return _judged[k]
         for ev in sorted(events):
             # The crossing is applied to the ROWS, not to the marking, so
             # that whatever leans on the expiring ground is recomputed
@@ -1496,8 +1536,8 @@ def run(doc, ground_registry=None):
             rows_after = [dict(r, status="unverified", ground="")
                           if r["name"] in gone else r for r in rows]
             try:
-                b = judge(claim, resolved_marking(rows))
-                a = judge(claim, resolved_marking(rows_after))
+                b = _judge_once(resolved_marking(rows))
+                a = _judge_once(resolved_marking(rows_after))
             except Exception as exc:
                 issues.append(_issue("error", "E_UNREADABLE", "claim",
                                      f"the epoch floor could not read this "

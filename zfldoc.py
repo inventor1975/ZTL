@@ -41,11 +41,17 @@ OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)),
 # here, and a deleted one cannot linger.
 CODE_HELP = {
     "E_EMPTY": ("the table has no rows", "в таблице нет строк"),
-    "E_TOOLONG": ("a formula longer than 4096 characters — the readers cost the square "
+    "E_TOOLONG": ("a formula longer than 2000 characters — the readers cost the square "
                   "of the length (4.6 s at 39 KB, 0.21 s at 4 KB, measured 2026-09-24); "
                   "split the question",
-                  "формула длиннее 4096 знаков — чтение стоит квадрат длины "
+                  "формула длиннее 2000 знаков — чтение стоит квадрат длины "
                   "(4,6 с на 39 КБ, 0,21 с на 4 КБ, промерено 24.09.2026); разделите вопрос"),
+    "E_TOOMANYEVENTS": ("more than 6 expiry events in one document — the epoch floor reads "
+                        "the claim on both sides of each (800 events cost 76.7 s, measured "
+                        "2026-09-27); split the question",
+                        "больше 6 событий истечения в одном документе — эпохальный пол читает "
+                        "утверждение по обе стороны каждого (800 событий — 76,7 с, промерено "
+                        "27.09.2026); разделите вопрос"),
     "E_TOOBIG": ("more ATOMS in the formulas than the cost allows — a reading "
                  "costs 3**atoms (2.9 s at twelve, 29.6 s at fourteen, measured "
                  "2026-09-18). Rows are not capped: a hundred-row table whose "

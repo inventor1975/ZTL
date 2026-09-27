@@ -103,7 +103,7 @@ MAX_K = 4            # дальше наборы не ищем, и говори�
 
 
 def backward(phi, marking, target, by_disposition=True,
-             cap_grounds=None, max_k=MAX_K):
+             cap_grounds=None, max_k=MAX_K, memo=None):
     """От цели назад к минимальным наборам оснований.
 
     Возвращает dict:
@@ -118,7 +118,17 @@ def backward(phi, marking, target, by_disposition=True,
     читается как «ничего не надо», что противоположно правде.
     """
     grounds = tuple(a for a, v in sorted(marking.items()) if v == Z)
-    already = _hits(_outcome(phi, marking, by_disposition), target)
+    # ONE OUTCOME PER FILLING (2026-09-27, the cloud's worst-case search, PR #4):
+    # the studio asks three targets of the same claim and the same fillings, and
+    # each filling is a whole judge. A caller that passes `memo` shares them.
+    def outcome(m):
+        if memo is None:
+            return _outcome(phi, m, by_disposition)
+        key = (by_disposition, tuple(sorted(m.items())))
+        if key not in memo:
+            memo[key] = _outcome(phi, m, by_disposition)
+        return memo[key]
+    already = _hits(outcome(marking), target)
 
     # ПОТОЛОК НАЗВАН, А НЕ ОБНАРУЖЕН ТАЙМАУТОМ (2026-08-30).
     # Первый живой случай — 16 находок ревью OIC, 11 непроверенных оснований —
@@ -150,7 +160,7 @@ def backward(phi, marking, target, by_disposition=True,
             hits = []
             for vals in itertools.product((T, F), repeat=k):
                 m2 = dict(marking); m2.update(dict(zip(S, vals)))
-                hits.append(_hits(_outcome(phi, m2, by_disposition), target))
+                hits.append(_hits(outcome(m2), target))
             if not sub_p and any(hits):
                 possible.append(S)
             if not sub_g and all(hits):

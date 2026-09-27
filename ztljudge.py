@@ -290,6 +290,13 @@ def _lazy(phi, m):
         v, lab = _lazy(phi[1], m)
         return ({T: F, F: T, Z: Z}[v], lab)
     (a, la), (b, lb) = _lazy(phi[1], m), _lazy(phi[2], m)
+    if op == "imp":
+        # FROM THE VALUES IN HAND (2026-09-27, the cloud's worst-case search, PR #4):
+        # this used to re-read the node as ~a | b and evaluate both children AGAIN,
+        # so every nested `->` doubled the work beneath it — 22 levels over one
+        # atom, 155 characters, cost 63.7 s through zfl.run. ~a keeps a's label.
+        a = {T: F, F: T, Z: Z}[a]
+        op = "or"
     if op == "and":
         if a == F:
             return F, la
@@ -302,8 +309,6 @@ def _lazy(phi, m):
         if b == T:
             return T, lb
         return (F, set()) if a == b == F else (Z, la | lb)
-    if op == "imp":
-        return _lazy(("or", ("not", phi[1]), phi[2]), m)
     if op in ("xnor", "xor"):
         if Z in (a, b):
             return Z, la | lb

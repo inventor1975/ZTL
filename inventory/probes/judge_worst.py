@@ -317,6 +317,8 @@ def shapes(sizes, variants, budget, out, fams=None, mixes=("unverified", "mixed"
     res = []
     for n in sizes:
         for fam in (fams or FAMILIES):
+            if fam not in FAMILIES:
+                continue                      # e.g. "numeric": handled below
             fn = FAMILIES[fam]
             for mix in mixes:
                 worst = None
@@ -334,8 +336,8 @@ def shapes(sizes, variants, budget, out, fams=None, mixes=("unverified", "mixed"
                       f"{' REFUSED ' + str(rec.get('run_refused')) if rec.get('run_refused') else ''}"
                       f"{' judge-error ' + rec['judge_error'] if rec.get('judge_error') else ''}",
                       flush=True)
-        for shape in (() if fams and not any(f.startswith("numeric") for f in fams)
-                      else ("xor", "mixed", "repeat_text")):
+        for shape in (("xor", "mixed", "repeat_text")
+                      if not fams or "numeric" in fams else ()):
             worst = None
             for k in range(variants):
                 rnd = random.Random(f"num-{shape}:{n}:{k}")
@@ -436,9 +438,78 @@ def lenscan(us, lengths, variants, budget, out, family="longbal"):
     return res
 
 
+def judgescan(ns, lengths, variants, budget, out, family="longbal"):
+    """judge() CPU, every atom unverified (the reverse pass does not run),
+    as a function of the atom count and the claim's length: where
+    `zverify._only` pays for atoms that occur many times."""
+    res = {}
+    print("n \\ chars " + "".join(f"{L:>9d}" for L in lengths))
+    for n in ns:
+        row = []
+        for L in lengths:
+            worst = 0.0
+            for k in range(variants):
+                rnd = random.Random(f"judgescan:{family}:{n}:{L}:{k}")
+                claim, names = FAMILIES[family](n, rnd, L)
+                m = {a: "Z" for a in names}
+                t, r = timed(lambda: ztljudge.judge(claim, m), budget)
+                if r and "_error" in r:
+                    continue
+                worst = max(worst, float("inf") if t is None else t)
+            row.append(worst)
+            res[f"{n}:{L}"] = worst
+        print(f"n={n:<3d}     " + "".join(" >budget " if v == float("inf") else f"{v:9.3f}"
+                                        for v in row), flush=True)
+    if out:
+        json.dump(res, open(out, "w"), indent=1)
+    return res
+
+
+def impdepth(depths, budget):
+    """W1: k nested `->` over ONE atom — judge() and the REAL zfl.run (the
+    validator and its cap in force), as-is and with the proposed _lazy fix."""
+    print("depth chars   judge as-is   run as-is (real)   judge fixed   run fixed (real)")
+    for k in depths:
+        e = "a"
+        for _ in range(k):
+            e = f"({e} -> a)"
+        doc = {"claim": e, "rows": [{"name": "a", "means": "a", "status": "unverified"}]}
+        assert not [i for i in zfl.validate(doc) if i["level"] == "error"]
+        cells = []
+        for fixed in (False, True):
+            use_fixed_lazy(fixed)
+            tj, _ = timed(lambda: ztljudge.judge(e, {}), budget)
+            tr, _ = timed(lambda: zfl.run(doc), budget)
+            cells += [tj, tr]
+        use_fixed_lazy(False)
+        print(f"{k:5d} {len(e):5d} " + "".join(" >budget " if c is None else f"{c:10.3f}   "
+                                              for c in cells), flush=True)
+
+
+def epoch(counts, budget):
+    """W3: declared expiry events on rows the claim never reads, REAL zfl.run."""
+    claim, names = fam_grid(10, random.Random("epoch"))
+    for n_ev in counts:
+        rows = [{"name": a, "means": a, "status": "unverified"} for a in names]
+        for i in range(n_ev):
+            rows.append({"name": f"g{i}", "means": "g", "status": "verified",
+                         "ground": f"doc-{i}", "expires_on": f"ev{i}"})
+            rows.append({"name": f"ev{i}", "means": "an event", "status": "unverified"})
+        doc = {"claim": claim, "rows": rows}
+        errs = [i["code"] for i in zfl.validate(doc) if i["level"] == "error"]
+        t, r = timed(lambda: zfl.run(doc), budget)
+        kb = len(json.dumps({"doc": doc})) // 1024
+        print(f"{n_ev:5d} events  {kb:4d} KB  validate errors {errs}  zfl.run "
+              f"{'>budget' if t is None else f'{t:.2f} s'}", flush=True)
+
+
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("mode", choices=["shapes", "climb", "one", "lenscan"])
+    ap.add_argument("mode", choices=["shapes", "climb", "one", "lenscan", "judgescan",
+                                     "impdepth", "epoch"])
+    ap.add_argument("--depths", default="12,14,16,18,20,22")
+    ap.add_argument("--events", default="0,50,200,800")
+    ap.add_argument("--ns", default="8,10,12,14,16,20")
     ap.add_argument("--us", default="1,2,3,4,5,6")
     ap.add_argument("--lengths", default="100,250,500,1000,2000,4000")
     ap.add_argument("--sizes", default="10,12,14")
@@ -462,6 +533,13 @@ def main():
         mixes = [int(x) if x.isdigit() else x for x in a.mixes.split(",")]
         shapes([int(x) for x in a.sizes.split(",")], a.variants, a.budget, a.out,
                fams, mixes)
+    elif a.mode == "impdepth":
+        impdepth([int(x) for x in a.depths.split(",")], a.budget)
+    elif a.mode == "epoch":
+        epoch([int(x) for x in a.events.split(",")], a.budget)
+    elif a.mode == "judgescan":
+        judgescan([int(x) for x in a.ns.split(",")], [int(x) for x in a.lengths.split(",")],
+                  a.variants, a.budget, a.out)
     elif a.mode == "lenscan":
         lenscan([int(x) for x in a.us.split(",")], [int(x) for x in a.lengths.split(",")],
                 a.variants, a.budget, a.out)

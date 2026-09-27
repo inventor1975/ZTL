@@ -7,7 +7,7 @@ core-logic article), regenerated from ztl.py (the code is the arbiter) and from
 the neighbour matrices of pssl/family.py. Nothing here is typed in by hand; a
 claim in a paper that this script does not reproduce is a claim the paper must
 not make. Wired into run_all.py (2026-09-19) so that the text and the numbers
-cannot drift apart silently — the 2.0.0 frame (588 = 588 and the same set;
+cannot drift apart silently — the 2.0.0 frame (588 = 588 over the 2926-entry list, 584 = 584 as a set;
 26 laws = 12 + 14 refuted, 0 undecided; the default is external Bochvar,
 0 of 45; 7 and 8 cells; the sink; no conservative default) stands on it.
 

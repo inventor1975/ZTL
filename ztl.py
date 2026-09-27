@@ -2,7 +2,8 @@
 """
 ZTL — Zero-Trust Logic.
 
-Truth values: T (truth), F (falsehood) — verdicts are always two-valued.
+Truth values: T (truth), F (falsehood) — every compound's verdict is two-valued
+(Z lives only on an atom).
 Input mark: Z (zero-trust: "truth not earned") — the third symbol of the
 calculating tables, not a value (passport: paper/ZTL-draft_1.4.md §10).
 

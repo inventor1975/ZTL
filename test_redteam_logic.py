@@ -88,10 +88,20 @@ except Exception as e:                                # noqa: BLE001
     check(False, f"L1 via zfl.run raised {e!r}")
 
 # ------------------------------------------------------------------ L2
+# RESOLVED 2026-09-27 on the DOCUMENTS' side (the curator's choice): the principle bars Z
+# from compounds only, and so do the documents now. Pinned both ways: a single unverified
+# atom answers Z; a compound never does; no living document says "verdicts are always".
 r = ztljudge.judge("p", {})
-check(r["verdict"] in ("T", "F"),
-      f"L2 'verdicts are always two-valued' (ONBOARDING §1, ztl.py): judge('p') "
-      f"gives verdict {r['verdict']}")
+check(r["verdict"] == "Z" and r["disposition"] == "OPEN",
+      f"L2 a claim that is one unverified atom answers Z / OPEN: got {r['verdict']} / {r['disposition']}")
+for text in ("p & q", "p | ~p", "p -> q", "~p", "p ^ q", "p = q", "~~p"):
+    r = ztljudge.judge(text, {})
+    check(r["verdict"] in ("T", "F"), f"L2 compound {text!r} must be two-valued: got {r['verdict']}")
+for doc in ("ONBOARDING.md", "SPEC.md", "README.md", "ztl.py"):
+    txt = open(os.path.join(HERE, doc), encoding="utf-8").read().lower()
+    check("verdicts are always t or f" not in txt and "verdicts are always two-valued" not in txt
+          and "verdicts are always\ntwo-valued" not in txt,
+          f"L2 {doc} still says verdicts are ALWAYS two-valued; the principle says compounds")
 
 # ------------------------------------------------------------------ L3
 BIN = ["and", "or", "imp", "xor", "xnor"]

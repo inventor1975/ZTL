@@ -18,8 +18,8 @@ Z-argument.
 
 ## Values and marks
 
-Truth values: `T` (earned), `F` (falsehood) — verdicts are always
-two-valued. Input mark: `Z` — zero-trust, "not earned"; a property of an
+Truth values: `T` (earned), `F` (falsehood) — the verdict of every
+compound is two-valued (Z lives only on an atom: a claim that is one unverified atom answers Z). Input mark: `Z` — zero-trust, "not earned"; a property of an
 atomic datum, not a truth value (in the design dialogues of 2026-07-10
 it appeared as "L"). The solver's service state `N` ("not yet
 computed", present only under self-reference, never escapes outward) is

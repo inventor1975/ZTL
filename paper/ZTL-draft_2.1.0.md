@@ -15,7 +15,7 @@ v2.0.0 states the relation to classical logic and measures both of its
 halves (§3.1, §4, §10). *On verified data ZTL is classical logic:* every
 formula takes the same value under every mark-free valuation
 (`evalF_agrees`, empty axiom list), and on the regression pool of 2926
-formulas over two atoms the two logics validate the same 588 formulas,
+entries (2906 distinct formulas) over two atoms the two logics validate the same 584 formulas,
 element for element — not one classical law is given up. *On unverified
 data ZTL decides:* of twenty-six classical laws, twelve hold on a marked
 atom and fourteen are refuted with an exhibited witness, none left
@@ -126,7 +126,7 @@ ZTL (Zero-Trust Logic) is a two-valued logic over marked inputs,
 generated in its entirety by a single principle: **truth is never
 granted on credit** — a connective returns T only if T is forced under
 every classical reading of the unverified. There are exactly two truth
-values (verdicts are always classical); the third symbol Z is a **mark**
+values (the verdict of every compound is classical; Z lives only on an atom); the third symbol Z is a **mark**
 on an unverified input, not a truth value. The mark is barred from the
 value of any compound — the greediness theorem (`evalF_classical`, empty
 axiom list): every compound assertion is already T or F, the middle never
@@ -144,7 +144,7 @@ Its relation to classical logic has two halves, both machine-checked, and
 a name. **On verified data the two logics are the same:** every formula
 takes the same value under every mark-free valuation (`evalF_agrees`,
 empty axiom list), and on the regression pool of 2926 formulas over two
-atoms the two validate the same 588 formulas, element for element — not
+atoms the two validate the same 584 formulas (2906 distinct; the list repeats 20), element for element — not
 one classical law is given up. **On unverified data ZTL decides where
 classical logic cannot take the input:** of twenty-six classical laws,
 twelve continue to hold on a marked atom and fourteen are refuted with an
@@ -315,7 +315,7 @@ departure.
 
 What the logic is, set against classical logic, is settled in §3.1, §4
 and §10 and can be said in three lines. On verified data it *is* classical
-logic — cell for cell (`evalF_agrees`) and law for law (the same 588
+logic — cell for cell (`evalF_agrees`) and law for law (the same 584
 validities of the pool, the same set). On unverified data it *decides*:
 twelve classical laws licensed on a marked atom, fourteen refuted with a
 witness, none left open — where classical logic has no input at all. And
@@ -440,7 +440,7 @@ the conclusion T. Tarskian by construction.
 
 **All twenty-six classical laws hold here on verified data, exactly as they hold
 classically — none is given up** (measured: on mark-free valuations ZTL and
-classical logic validate the same 588 formulas of the depth-≤2 pool, the same set
+classical logic validate the same 584 formulas of the depth-≤2 pool, the same set
 element for element). The split below answers a different question: which of them
 still work when an atom carries the mark. Read the numbers in the right
 denominator — classical logic permits NONE of the twenty-six on a marked atom,
@@ -1448,7 +1448,7 @@ parts are worth; it is not a further theorem.
 The final and most precise formulation of what has been built:
 
 ```
-Truth values:    T, F                   (verdicts are always two-valued)
+Truth values:    T, F                   (every compound's verdict is two-valued)
 Input mark:      Z "unverified"          (a property of data, not truth)
 Solver state:    N "not yet computed"    (a computation phase, present
                                           only under self-reference;

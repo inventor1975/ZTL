@@ -101,7 +101,9 @@ add` is refused there, that is the rule working, not an obstacle.
 
 ## 1. ZTL — what it is, in the order that matters
 
-**It is a TWO-VALUED logic.** Not three-valued. Verdicts are always T or F. This
+**It is a TWO-VALUED logic.** Not three-valued. The verdict of every COMPOUND is T or F; Z lives
+only on an atom, so a claim that is one unverified atom answers Z (OPEN). (Until 2026-09-27 this
+sentence claimed two values for EVERY verdict — more than the principle; the cloud red team, PR #3.) This
 is the single most common error to make about it, and the assistant made it in
 a letter to a citing reader before checking.
 

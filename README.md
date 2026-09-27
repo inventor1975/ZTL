@@ -5,7 +5,7 @@
 **Try it without installing anything: [ztl.vitalyreznik.com](https://ztl.vitalyreznik.com)** — the judge, running, on your own sentence.
 
 A logic built on one principle: **truth is never granted on credit**.
-Verdicts are always two-valued (T/F); the third symbol Z (zero-trust,
+The verdict of every compound is two-valued (T/F) — Z lives only on an atom; the third symbol Z (zero-trust,
 "truth not earned") is a mark on an unverified input: it never produces
 T unless T is forced under every classical reading of the unverified.
 Default deny, ported from security into truth tables; the three-symbol

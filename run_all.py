@@ -60,6 +60,7 @@ STANDS = [
     ("test_int_refine.py", ["INT REFINE GREEN"]),
     ("test_redteam_numeric.py", ["REDTEAM NUMERIC GREEN"]),
     ("test_judge_perf.py", ["JUDGE PERF GREEN"]),
+    ("test_redteam_logic.py", ["REDTEAM LOGIC GREEN"]),
     # Поставлен 2026-09-19: CLASSIC-VS-ZTL.md год носила число «1263 из 2924»
     # без определения и без прогона, и оно занижало результат на двадцать
     # пунктов. Сторожим ОБА чтения, чтобы подмена узкого широким не повторилась.

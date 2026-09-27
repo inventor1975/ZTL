@@ -6,7 +6,7 @@ One page, four columns, every number produced by `python3 zledger.py`
 | | |
 |---|---|
 | **Shared** | On Z-free markings ZTL **is** classical logic. Not sampled — **proved**: `lean/ClassicalAgreement.lean`, `evalF_agrees`, structural induction over the whole formula language, empty axiom list. (The 2906 × 4 measurement that preceded it stands as the sanity check.) |
-| **Nothing lost** | **All 26 classical laws hold here on verified data — not one falls, ever** (measured: on mark-free valuations classical and ZTL have the same 588 validities of the depth-≤2 pool, the same set element for element). Of the 26, **12 keep working when an atom carries the mark**; the other **14 do not extend to it** — both De Morgans, contraposition, `¬¬p = p`, excluded middle, `p → p`, idempotence (`audit.py`) — and there ZTL proves the **refutation with a witness** instead, with zero undecided outcomes. The 212 counts validities over the WIDER domain and must never be set beside the 588: different denominators. On that wider domain the comparison is against external Bochvar's 548. |
+| **Nothing lost** | **All 26 classical laws hold here on verified data — not one falls, ever** (measured: on mark-free valuations classical and ZTL have the same 584 validities of the depth-≤2 pool, the same set element for element — 588 counting the pool list's repeated entries; see the erratum below). Of the 26, **12 keep working when an atom carries the mark**; the other **14 do not extend to it** — both De Morgans, contraposition, `¬¬p = p`, excluded middle, `p → p`, idempotence (`audit.py`) — and there ZTL proves the **refutation with a witness** instead, with zero undecided outcomes. The 212 counts validities over the WIDER domain and must never be set beside the 588: different denominators. On that wider domain the comparison is against external Bochvar's 548. |
 | **Gained (laws)** | **Zero, and now machine-checked:** `ztl_taut_is_classical` — every ZTL tautology is a classical one, for every formula, empty axiom list. And the inclusion is **strict** (`not_conversely`: `p → p` is classically valid and fails here at a mark), so "conservative" never reads as "the same logic". This column can never fill. |
 | **Gained (sight)** | Classical logic sorts two-variable formulas into **16** equivalence classes; we sort them into **195**, and **all 16** classical classes are split. Twelvefold refinement: same truths, finer eyes. |
 | **Only here** | `¬(p ↔ p)` answers F, F, **T** on T, F, Z — the mark is sayable *inside the object language*. A two-valued logic has no words for the question, not merely no proof. |
@@ -122,10 +122,10 @@ a family trait, not an exile.
 
 * ~~"ZTL is weaker than classical logic"~~, ~~"strictly fewer
   validities"~~ — false. ZTL is equal to classical logic in strength (on
-  classical's own domain the validities are the same set, 588 = 588), more
+  classical's own domain the validities are the same set, 584 = 584), more
   expressive — it can speak of the unverified — and it dominates classical
   logic as a solver. The 212 counts validities over a wider domain; never
-  set it beside the 588 (see "Can classical logic replace ZTL?" below).
+  set it beside the 584 (see "Can classical logic replace ZTL?" below).
 * ~~"ZTL can express everything"~~ — false on three values: 515 of 19683
   binary functions are expressible (2.6%), a consequence of greediness
   (compound formulas never take Z).
@@ -230,17 +230,17 @@ the depth-≤2 pool of `paper/core_logic_checks.py` §5, 2926 formulas over `p, 
 
 | | validities on grounded inputs only |
 |---|---|
-| classical | 588 |
-| ZTL | 588 — *and the sets are equal, element for element* |
+| classical | 584 (588 list entries) |
+| ZTL | 584 (588 list entries) — *and the sets are equal, element for element* |
 
-**Laws that work classically and fail in ZTL: zero.** Every one of the 588 holds
+**Laws that work classically and fail in ZTL: zero.** Every one of the 584 holds
 here whenever the atoms are verified.
 
-### The 212 is a different denominator — never put it beside the 588
+### The 212 is a different denominator — never put it beside the 584
 
 212 is ZTL's validity count over the *extended* input domain, where an atom may
 be unverified. Extending the input domain can only shrink a validity set — that
-is arithmetic, true of any logic, and it is not weakness. Setting 212 against 588
+is arithmetic, true of any logic, and it is not weakness. Setting 212 against 584
 is the same category error as setting 548 against 584 (see the 2026-09-18 note
 above). The lawful comparison on the extended domain is **ZTL 212 against
 external Bochvar 548**: both are defined on three values, and those 336 are what
@@ -303,7 +303,7 @@ word that invites the wrong reading:
 > round. As a decision procedure, ZTL strictly DOMINATES classical logic.**
 
 Both halves are measured, neither is argued: *no problems the other way round* —
-on grounded input the two are identical, 588 and 588, the same sets, zero laws
+on grounded input the two are identical, 584 and 584, the same sets, zero laws
 lost; *problems ours only* — the `$_GET` exhibit, where both classical defaults
 grant a pass and no conservative default exists at all.
 
@@ -314,7 +314,7 @@ argument, not the facts.
 
 Every word of that is measured: *extension* (the domain gains the unverified
 state), *conservative* (unique validities: exactly zero, machine-checked), and
-nothing lost (588 = 588, same sets).
+nothing lost (584 = 584, same sets).
 
 ### The operational exhibit: a `$_GET` parameter reaching a SQL sink
 
@@ -356,3 +356,15 @@ For the first conjunct not to come out true for free, `tainted` must be T. For
 the second, it must be F. One atom, two incompatible demands: **no conservative
 substitution exists.** The choice classical is forced to make has no safe
 setting — which is precisely why ZTL does not make it.
+
+---
+
+**Erratum, 2026-09-27 (the cloud red team, PR #3, re-checked here).** The depth-≤2 pool
+is a LIST of 2926 entries that repeats 20 formulas, four of them tautologies (`p→p`, `q→q`,
+`p↔p`, `q↔q`). Counted over the list, classical logic and ZTL both validate 588; as a SET,
+2906 formulas and **584 = 584** — the figure `zledger.py` asserts. The equality never
+depended on the duplicates; "the same set" has 584 elements. The published v2.0.0 text
+(`paper/ZENODO.md`, the 2.0.0 preprint) says "588 … the same set": that record is frozen
+and is corrected here and from 2.1.0 on. `paper/core_logic_checks.py` still counts the list
+(588), and says so.
+

@@ -277,6 +277,12 @@ def _lazy(phi, m):
     for decided values; it was always empty, because a label of holes
     cannot say who decided. The field was removed rather than renamed.)"""
     if isinstance(phi, str):
+        if phi in (T, F, Z):
+            # A CONSTANT IS NOT AN ATOM (2026-09-27, the cloud red team, PR #3):
+            # it is never in the marking, so it used to read as Z and land on the
+            # receipt as a pending ground — `T | p` answered EARNED with lazy Z,
+            # waiting on `T`. Its value is itself, and there is nothing to verify.
+            return phi, set()
         v = m.get(phi, Z)
         return (v, {phi}) if v == Z else (v, set())
     op = phi[0]

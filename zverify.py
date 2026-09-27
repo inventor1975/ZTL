@@ -38,7 +38,7 @@ Conclusion for the tool: a verdict = a pair (value, warranty GRADE).
 
 from itertools import product
 
-from ztl import T, F, Z, ev, atoms
+from ztl import T, F, Z, ev, atoms, NOT, OPS2, VALUES
 from zmodal import worlds, ztl_eval, global_super
 
 # marking: dict atom → T | F | 'M' (mark)
@@ -78,6 +78,13 @@ def stable_bit(phi, marking, budget=None):
     # берёшься, чем молоть или отказывать во всём документе.
     if budget is not None and 2 ** len(marks) > budget:
         return None
+    # EXACT, AND IN NO ORDER — see `_only`. The walk below is the definition;
+    # it stays as the fallback and is what `_only` was checked against.
+    fixed = {a: s for a, s in marking.items() if s in (T, F)}
+    free = {a: (T, F) for a, s in marking.items() if s not in (T, F)}
+    got = _only(phi, fixed, free, v)
+    if got is not None:
+        return got
     return all(ev(phi, w) == v for w in worlds(marking))
 
 
@@ -221,7 +228,121 @@ def hereditary_bit(phi, marking, budget=None):
     # 2: уточнение может оставить метку меткой, завершение — не может.
     if budget is not None and 3 ** len(marks) > budget:
         return None
+    # EXACT, AND IN NO ORDER — see `_only`. The walk below is the definition;
+    # it stays as the fallback and is what `_only` was checked against.
+    fixed = {a: (s if s in (T, F) else Z) for a, s in marking.items() if s != "M"}
+    free = {a: (Z, T, F) for a in marks}
+    got = _only(phi, fixed, free, v)
+    if got is not None:
+        return got
     return all(ztl_eval(phi, m2) == v for m2 in refinements(marking))
+
+
+# ------------------------------------- the exhaustive check, without the walk
+# WHY (2026-09-27). One and the same claim took 0.2 s or 16 s depending only on
+# PYTHONHASHSEED. The walk over `refinements` (3^n) and `worlds` (2^n) stops at
+# the first reading that disagrees with the verdict, and WHERE that reading sits
+# depends on the order of the marks — the order of a dict built from a set of
+# atom names, i.e. on the hash seed. MEASURED on `(x<=1) ^ ... ^ (x<=12)` in a
+# studio document: an xor chain's value is decided by the leaves after its last
+# Z (a Z leaf makes its own xor F, and the chain goes on classically), so when
+# the last leaf's mark varies fastest the witness is the 2nd refinement, and
+# when it varies slowest it is the ~3^11-th. And when the verdict IS hereditary
+# there is no witness at all and every order pays the full 3^n.
+#
+# The answer does not depend on the order, so it is computed without one. The
+# value of a formula is compositional (a node's value is its connective applied
+# to its children's values, and only a leaf can be Z). Where every free atom
+# occurs ONCE, the subtrees read disjoint atoms, so the set of values a node can
+# take over all readings is exactly {op(x, y) : x from the left set, y from the
+# right set} — one pass, no enumeration. Atoms that occur more than once are
+# split on (Shannon), one at a time, after constant folding; the residue is
+# memoised. Nothing about WHAT is asked changes: the same readings, the same
+# predicate, the same yes/no.
+
+def _fold(phi, sub):
+    """`phi` with the atoms of `sub` replaced by their values, and every node
+    whose value no longer depends on its free part replaced by that value."""
+    if isinstance(phi, str):
+        return sub.get(phi, phi) if phi not in VALUES else phi
+    if phi[0] == "not":
+        x = _fold(phi[1], sub)
+        return NOT(x) if x in VALUES else ("not", x)
+    op = OPS2[phi[0]]
+    a, b = _fold(phi[1], sub), _fold(phi[2], sub)
+    if a in VALUES and b in VALUES:
+        return op(a, b)
+    # a constant partner that decides the node whatever the other side reads
+    if a in VALUES:
+        outs = {op(a, y) for y in VALUES}
+        if len(outs) == 1:
+            return outs.pop()
+    if b in VALUES:
+        outs = {op(x, b) for x in VALUES}
+        if len(outs) == 1:
+            return outs.pop()
+    return (phi[0], a, b)
+
+
+def _count(phi, acc):
+    if isinstance(phi, str):
+        if phi not in VALUES:
+            acc[phi] = acc.get(phi, 0) + 1
+        return acc
+    for c in phi[1:]:
+        _count(c, acc)
+    return acc
+
+
+def _reach(phi, free):
+    """Every value `phi` takes as each free atom ranges over its choices —
+    EXACT when no free atom occurs twice (the subtrees are then independent)."""
+    if isinstance(phi, str):
+        return frozenset(free[phi]) if phi in free else frozenset((phi,))
+    if phi[0] == "not":
+        return frozenset(NOT(x) for x in _reach(phi[1], free))
+    op = OPS2[phi[0]]
+    ra, rb = _reach(phi[1], free), _reach(phi[2], free)
+    return frozenset(op(x, y) for x in ra for y in rb)
+
+
+def _values(phi, free, v, memo):
+    """The values `phi` takes over the free choices — or, as soon as one of
+    them is not `v`, a set containing it (the caller only asks `== {v}`)."""
+    if phi in VALUES:
+        return frozenset((phi,))
+    hit = memo.get(phi)
+    if hit is not None:
+        return hit
+    occ = _count(phi, {})
+    shared = [a for a, n in occ.items() if n > 1 and a in free]
+    if not shared:
+        out = _reach(phi, free)
+    else:
+        a = min(shared, key=lambda x: (-occ[x], x))        # a fixed rule, no hash
+        seen = set()
+        for c in free[a]:
+            seen |= _values(_fold(phi, {a: c}), free, v, memo)
+            if seen - {v}:
+                break
+        out = frozenset(seen)
+    memo[phi] = out
+    return out
+
+
+def _only(phi, fixed, free, v):
+    """Is `phi` equal to `v` under every choice of the free atoms, the others
+    held at `fixed`? True / False, or None when this path cannot answer (an
+    atom with no value — the walk then raises exactly as before — or a formula
+    too deep for recursion, where the walk, which never recurses, answers)."""
+    known = set(fixed) | set(free)
+    try:
+        if any(a not in known for a in atoms(phi)):
+            return None
+        body = _fold(phi, fixed)
+        return _values(body, free, v, {}) == frozenset((v,))
+    except RecursionError:
+        return None
 
 
 def grade(phi, marking, budget=None):

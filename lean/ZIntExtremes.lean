@@ -25,16 +25,23 @@ before the turn it only fell (`fall_le`), so the turn is the minimum over the wh
 `sum_multiple` is the only direction a lattice may be inherited by a sum; the red team's
 LIE-1 (2026-09-26) was the other, a sum given the lattice of its LAST stepped term.
 
-ARGUED, not checked — the passage to signed coefficients, as in `ZParabola`, because the
-core's `Int` order and ring laws carry `propext` in this toolchain (MEASURED 2026-09-27:
-`Int.le_trans`, `Int.le_refl`, `Int.add_le_add`, `Int.add_comm`, `Int.add_mul`,
-`Int.sub_add_cancel` among them; `Nat.le_of_add_le_add_left` too, hence `cancel_left`):
-(1) on a finite box an integer-valued f plus a large enough constant is `Nat`-valued, and a
-constant is a linear shift; a negative linear coefficient is moved to the other side as `M`;
-(2) a < 0 is the mirror (negate the claim); (3) the turn of a·m² + b·m + c with a > 0 lies
-at ⌊−b/2a⌋ or ⌈−b/2a⌉: the step f(m+1) − f(m) = a(2m+1) + b is ≤ 0 at m = ⌊−b/2a⌋ − 1 and
-≥ 0 at m = ⌈−b/2a⌉. These are measured, not proved: `test_int_refine.py` (3 000 random
-claims against brute force), the cloud red team (8.45 M claims, 0 wrong on this fragment).
+SIGNED VALUES WITHOUT `Int`. The core's `Int` order and ring laws carry `propext` in this
+toolchain (MEASURED 2026-09-27: `Int.le_trans`, `Int.le_refl`, `Int.add_le_add`,
+`Int.add_comm`, `Int.add_mul`, `Int.sub_add_cancel` among them; `Nat.le_of_add_le_add_left`
+too, hence `cancel_left`). So a signed value is what `Int` is by definition, a difference of
+two naturals, f k = P k − N k, and f i ≤ f j is written `P i + N j ≤ P j + N i` (`PLe`).
+Every signed statement below is proved on `Nat` alone:
+
+    pquad_convex        (aP − aN)·k² + (bP − bN)·k + (cP − cN) with aN ≤ aP is convex
+    pmax_at_ends        its maximum on 0 … n is at an end
+    pmin_at_ends_concave  the mirror: a concave f has its minimum at an end
+    pmin_at_turn        a convex f is least where it stops falling
+    pmin_at_vertex      if 2a·t + b ≤ 0 ≤ 2a·(t+1) + b (t = ⌊−b/2a⌋), the minimum is at t or t+1
+
+Indexing from the box's left end (m = lo + k) keeps the leading coefficient and changes only
+b and c, which are arbitrary here. What is NOT kernel-checked is only notation: that an
+integer is a difference of two naturals (the definition of `Int`), and that Python's `//`
+is the floor (`pmin_at_vertex` takes the floor's defining inequalities as hypotheses).
 -/
 
 namespace ZIntExtremes
@@ -194,5 +201,188 @@ theorem sum_multiple (s : Nat) : ∀ (xs : List Nat), (∀ x, x ∈ xs → ∃ q
       match h x (List.Mem.head xs), sum_multiple s xs (fun y hy => h y (List.Mem.tail x hy)) with
       | ⟨q1, e1⟩, ⟨q2, e2⟩ =>
           exact ⟨q1 + q2, by show x + xs.foldr (· + ·) 0 = _; rw [e1, e2, Nat.mul_add]⟩
+
+
+/-- (a+b)+(c+d) = (c+b)+(a+d) -/
+theorem sw1 (a b c d : Nat) : a + b + (c + d) = c + b + (a + d) := by
+  rw [Nat.add_assoc, Nat.add_left_comm b c d, ← Nat.add_assoc a c (b + d), Nat.add_comm a c,
+      Nat.add_assoc c a (b + d), Nat.add_left_comm a b d, ← Nat.add_assoc c b (a + d)]
+
+/-- (a+b)+(c+d) = (a+d)+(c+b) -/
+theorem sw2 (a b c d : Nat) : a + b + (c + d) = a + d + (c + b) := by
+  rw [Nat.add_assoc, Nat.add_left_comm b c d, Nat.add_comm b d, Nat.add_left_comm c d b,
+      ← Nat.add_assoc a d (c + b)]
+
+/-- a+a'+(b+c) = (a+c)+(a'+b) -/
+theorem sw3 (a a' b c : Nat) : a + a' + (b + c) = a + c + (a' + b) := by
+  rw [Nat.add_assoc, Nat.add_comm b c, Nat.add_left_comm a' c b, ← Nat.add_assoc a c (a' + b)]
+
+theorem cancel_right (a b c : Nat) (h : b + a ≤ c + a) : b ≤ c := by
+  rw [Nat.add_comm b a, Nat.add_comm c a] at h
+  exact cancel_left a b c h
+
+/-! ## Signed values, as a difference of two naturals: f k = P k − N k. -/
+
+/-- f i ≤ f j, written without subtraction. -/
+def PLe (P N : Nat → Nat) (i j : Nat) : Prop := P i + N j ≤ P j + N i
+
+theorem ple_refl (P N : Nat → Nat) (i : Nat) : PLe P N i i := Nat.le_refl _
+
+theorem ple_total (P N : Nat → Nat) (i j : Nat) : PLe P N i j ∨ PLe P N j i :=
+  Nat.le_total _ _
+
+theorem ple_trans {P N : Nat → Nat} {i j k : Nat} (h1 : PLe P N i j) (h2 : PLe P N j k) :
+    PLe P N i k := by
+  unfold PLe at *
+  have h := Nat.add_le_add h1 h2
+  rw [sw1 (P i) (N j) (P j) (N k), sw2 (P j) (N i) (P k) (N j)] at h
+  exact cancel_left _ _ _ h
+
+/-- Midpoint convexity of f = P − N. -/
+def PConvex (P N : Nat → Nat) : Prop :=
+  ∀ k, P (k + 1) + P (k + 1) + (N k + N (k + 2)) ≤ P k + P (k + 2) + (N (k + 1) + N (k + 1))
+
+/-- a+b+(c+c) = (b+c)+(a+c) -/
+theorem sw4 (a b c : Nat) : a + b + (c + c) = b + c + (a + c) := by
+  rw [Nat.add_comm a b, Nat.add_assoc, Nat.add_left_comm a c c, ← Nat.add_assoc b c (a + c)]
+
+theorem pstep_up {P N : Nat → Nat} (hc : PConvex P N) (k : Nat) (h : PLe P N k (k + 1)) :
+    PLe P N (k + 1) (k + 2) := by
+  unfold PLe at *
+  have c := hc k
+  rw [sw3 (P (k + 1)) (P (k + 1)) (N k) (N (k + 2)), sw4 (P k) (P (k + 2)) (N (k + 1))] at c
+  exact cancel_right _ _ _ (Nat.le_trans c (Nat.add_le_add_left h _))
+
+theorem pstep_down {P N : Nat → Nat} (hc : PConvex P N) (k : Nat) (h : PLe P N (k + 2) (k + 1)) :
+    PLe P N (k + 1) k := by
+  unfold PLe at *
+  have c := hc k
+  rw [sw3 (P (k + 1)) (P (k + 1)) (N k) (N (k + 2)), sw4 (P k) (P (k + 2)) (N (k + 1))] at c
+  exact cancel_left _ _ _ (Nat.le_trans c (Nat.add_le_add_right h _))
+
+theorem prising {P N : Nat → Nat} (hc : PConvex P N) {k : Nat} (h : PLe P N k (k + 1)) :
+    ∀ j, PLe P N (k + j) (k + j + 1)
+  | 0 => h
+  | j + 1 => pstep_up hc (k + j) (prising hc h j)
+
+theorem prise_le {P N : Nat → Nat} (hc : PConvex P N) {k : Nat} (h : PLe P N k (k + 1)) :
+    ∀ j, PLe P N k (k + j)
+  | 0 => ple_refl P N k
+  | j + 1 => ple_trans (prise_le hc h j) (prising hc h j)
+
+theorem pfall_le {P N : Nat → Nat} (hc : PConvex P N) :
+    ∀ k, PLe P N (k + 1) k → ∀ i, i ≤ k → PLe P N k i
+  | 0, _, i, hi => by
+      cases Nat.eq_or_lt_of_le hi with
+      | inl e => rw [e]; exact ple_refl P N _
+      | inr l => exact absurd l (Nat.not_lt_zero i)
+  | k + 1, h, i, hi => by
+      have hk : PLe P N (k + 1) k := pstep_down hc k h
+      cases Nat.eq_or_lt_of_le hi with
+      | inl e => rw [e]; exact ple_refl P N _
+      | inr l => exact ple_trans hk (pfall_le hc k hk i (Nat.le_of_lt_succ l))
+
+/-- SIGNED: the maximum of a convex f = P − N on 0 … n lies at an end. -/
+theorem pmax_at_ends {P N : Nat → Nat} (hc : PConvex P N) {k n : Nat} (hk : k ≤ n) :
+    PLe P N k 0 ∨ PLe P N k n := by
+  cases ple_total P N k (k + 1) with
+  | inl up =>
+      match Nat.le.dest hk with
+      | ⟨j, hj⟩ => exact Or.inr (hj ▸ prise_le hc up j)
+  | inr down => exact Or.inl (pfall_le hc k down 0 (Nat.zero_le k))
+
+/-- SIGNED: where a convex f = P − N stops falling, it is least over the whole range. -/
+theorem pmin_at_turn {P N : Nat → Nat} (hc : PConvex P N) {t : Nat}
+    (hup : PLe P N t (t + 1)) (hin : ∀ s, s + 1 = t → PLe P N t s) (k : Nat) : PLe P N t k := by
+  cases Nat.le_total t k with
+  | inl h =>
+      match Nat.le.dest h with
+      | ⟨j, hj⟩ => exact hj ▸ prise_le hc hup j
+  | inr h =>
+      cases t with
+      | zero =>
+          cases Nat.eq_or_lt_of_le h with
+          | inl e => rw [e]; exact ple_refl P N _
+          | inr l => exact absurd l (Nat.not_lt_zero k)
+      | succ s =>
+          have hs : PLe P N (s + 1) s := hin s rfl
+          cases Nat.eq_or_lt_of_le h with
+          | inl e => rw [e]; exact ple_refl P N _
+          | inr l => exact ple_trans hs (pfall_le hc s hs k (Nat.le_of_lt_succ l))
+
+/-- A signed quadratic (aP − aN)·k² + (bP − bN)·k + (cP − cN) with aN ≤ aP is convex. -/
+theorem pquad_convex (aP bP cP aN bN cN : Nat) (ha : aN ≤ aP) :
+    PConvex (quad aP bP cP) (quad aN bN cN) := by
+  intro k
+  have mp := quad_mid aP bP cP k
+  have mn := quad_mid aN bN cN k
+  show quad aP bP cP (k + 1) + quad aP bP cP (k + 1) + (quad aN bN cN k + quad aN bN cN (k + 2))
+      ≤ quad aP bP cP k + quad aP bP cP (k + 2) + (quad aN bN cN (k + 1) + quad aN bN cN (k + 1))
+  rw [mn, mp]
+  generalize quad aP bP cP (k + 1) = p
+  generalize quad aN bN cN (k + 1) = q
+  -- p + p + (q + q + 2aN) ≤ p + p + 2aP + (q + q)
+  rw [← Nat.add_assoc (p + p) (q + q) (aN + aN), Nat.add_right_comm (p + p) (aP + aP) (q + q)]
+  exact Nat.add_le_add_left (Nat.add_le_add ha ha) _
+
+/-- The mirror: f = P − N is concave when −f = N − P is convex, and then the MINIMUM lies at an end. -/
+theorem pmin_at_ends_concave {P N : Nat → Nat} (hc : PConvex N P) {k n : Nat} (hk : k ≤ n) :
+    PLe P N 0 k ∨ PLe P N n k := by
+  cases pmax_at_ends hc hk with
+  | inl h => exact Or.inl (by unfold PLe at *; rw [Nat.add_comm (P 0), Nat.add_comm (P k)]; exact h)
+  | inr h => exact Or.inr (by unfold PLe at *; rw [Nat.add_comm (P n), Nat.add_comm (P k)]; exact h)
+
+/-- The step of f = quadP − quadN is ≥ 0 at k when a(2k+1)+b ≥ 0, in pair form. -/
+theorem up_of_d (aP bP cP aN bN cN k : Nat)
+    (h : aN * (k + k + 1) + bN ≤ aP * (k + k + 1) + bP) :
+    PLe (quad aP bP cP) (quad aN bN cN) k (k + 1) := by
+  unfold PLe
+  rw [quad_step aP bP cP k, quad_step aN bN cN k]
+  generalize quad aP bP cP k = p
+  generalize quad aN bN cN k = q
+  rw [Nat.add_right_comm p _ q, ← Nat.add_assoc p q _]
+  exact Nat.add_le_add_left h _
+
+theorem down_of_d (aP bP cP aN bN cN k : Nat)
+    (h : aP * (k + k + 1) + bP ≤ aN * (k + k + 1) + bN) :
+    PLe (quad aP bP cP) (quad aN bN cN) (k + 1) k := by
+  unfold PLe
+  rw [quad_step aP bP cP k, quad_step aN bN cN k]
+  generalize quad aP bP cP k = p
+  generalize quad aN bN cN k = q
+  rw [Nat.add_right_comm p _ q, ← Nat.add_assoc p q _]
+  exact Nat.add_le_add_left h _
+
+theorem two_s (s : Nat) : (s + 1) + (s + 1) = (s + s + 1) + 1 := by
+  show s + 1 + s + 1 = s + s + 1 + 1
+  rw [Nat.add_right_comm s 1 s]
+
+/-- THE MINIMUM IS AT THE VERTEX'S FLOOR OR CEILING. If the vertex −b/2a lies between the
+indices t and t+1 — 2a·t + b ≤ 0 ≤ 2a·(t+1) + b, which is what ⌊−b/2a⌋ = t means — then over
+the whole range f is least at t or at t+1. -/
+theorem pmin_at_vertex (aP bP cP aN bN cN t : Nat) (ha : aN ≤ aP)
+    (hv1 : aP * (t + t) + bP ≤ aN * (t + t) + bN)
+    (hv2 : aN * ((t + 1) + (t + 1)) + bN ≤ aP * ((t + 1) + (t + 1)) + bP) (k : Nat) :
+    PLe (quad aP bP cP) (quad aN bN cN) t k ∨ PLe (quad aP bP cP) (quad aN bN cN) (t + 1) k := by
+  have hc := pquad_convex aP bP cP aN bN cN ha
+  cases ple_total (quad aP bP cP) (quad aN bN cN) t (t + 1) with
+  | inl up =>
+      refine Or.inl (pmin_at_turn hc up ?_ k)
+      intro s hs
+      subst hs
+      apply down_of_d
+      -- aP(s+s+1)+bP ≤ aN(s+s+1)+bN, from hv1 at t = s+1 and aN ≤ aP
+      rw [two_s, Nat.mul_succ aP, Nat.mul_succ aN, Nat.add_right_comm (aP * (s + s + 1)) aP bP,
+          Nat.add_right_comm (aN * (s + s + 1)) aN bN] at hv1
+      exact cancel_right aN _ _ (Nat.le_trans (Nat.add_le_add_left ha _) hv1)
+  | inr down =>
+      refine Or.inr (pmin_at_turn hc (up_of_d aP bP cP aN bN cN (t + 1) ?_) (fun s hs => ?_) k)
+      · -- aN(2t+3)+bN ≤ aP(2t+3)+bP, from hv2 and aN ≤ aP
+        rw [Nat.mul_succ aN, Nat.mul_succ aP, Nat.add_right_comm (aN * (t + 1 + (t + 1))) aN bN,
+            Nat.add_right_comm (aP * (t + 1 + (t + 1))) aP bP]
+        exact Nat.add_le_add hv2 ha
+      · have e : s = t := Nat.succ.inj hs
+        subst e
+        exact down
 
 end ZIntExtremes

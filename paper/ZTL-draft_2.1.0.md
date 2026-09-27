@@ -44,7 +44,7 @@ failure of every classical route to the second five; the v1.4 PDF showed
 six. v1.4 adds: *no numbered section rests on measurement alone* — every one of the
 eighteen sections that carried the MEASURED tag now names kernel-checked
 theorems behind its load-bearing claims, the corpus growing threefold to
-sixty-nine modules and 1160 theorems, all on the empty axiom list (§8);
+sixty-nine modules and 1181 theorems, all on the empty axiom list (§8);
 *the six traditions of §1 as six embedding theorems* — IEEE 754 NaN, SQL
 NULL, taint tracking, abstract interpretation, Dempster–Shafer and
 provenance semirings, each formalised as its own tradition states it,
@@ -222,7 +222,7 @@ engine certificates with cut admissibility, the algebraic witnesses, the
 general fixed-point theorem, the expedition twins, the temporal modules
 and the frame's own mini-theorems, sixty-nine modules in all — is
 formalized in Lean 4 **with an empty axiom list, definitions
-included**: 1160 theorems, each one audited individually rather than by
+included**: 1181 theorems, each one audited individually rather than by
 sample (`inventory/axiom_audit.py`, re-run on every push). As of this
 revision no numbered section rests on measurement alone (the scouting
 subsection §3.7 still does): every one of the eighteen that carried the MEASURED tag now names kernel-checked theorems behind its
@@ -1212,7 +1212,7 @@ an axiom infects every theorem that uses it), but an argument, and one
 that an unused orphan theorem would escape. It is now a measurement:
 `inventory/axiom_audit.py` extracts every theorem name from every
 module, generates one `#print axioms` per name, and fails if a single
-line reads otherwise. **1160 of 1160 clean**, re-run by CI on every push.
+line reads otherwise. **1181 of 1181 clean**, re-run by CI on every push.
 The same stand refuses a module that carries theorems and is built by no
 target — the failure mode that let one module (`QuantumWitness.lean`) go
 unchecked by any automation until 2026-07-20. Three modules of the corpus

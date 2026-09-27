@@ -8,7 +8,8 @@ below runs a pinned case through the REAL path (zfl.run with its validator and
 cap in force, unless it says otherwise) under a CPU budget, so the stand stays
 fast however slow the case is: a case over budget is cut, not waited for.
 
-RED on master @ 7a432ce — three components the atom cap does not bound:
+RED on master @ 7a432ce — three components the atom cap does not bound, and
+one (W4) that bounds how far the cap may be raised:
 
   W1  `ztljudge._lazy` evaluates both children of every binary node (line 292)
       and then, for `->`, re-reads the node as `~a | b` and evaluates both
@@ -23,6 +24,10 @@ RED on master @ 7a432ce — three components the atom cap does not bound:
   W3  the epoch floor judges the claim twice per declared `expires_on` event,
       and events are not capped (rows are not): 200 events on rows the claim
       never reads (32 KB) cost ~15 s.
+  W4  `zverify._only` is exponential in the marked atoms that occur more than
+      once: 16 unverified atoms, each 13-14 times, a 1753-character balanced
+      claim — judge ~64 s even with W1 fixed. Above today's cap (10), so not
+      reachable publicly; it is what a raised cap would expose.
 
 GREEN controls (what the cap already bounds): the shapes built to defeat
 `zverify._only` — xor/biconditional cycles, grids, atoms 2-4 times — judge in
@@ -119,6 +124,18 @@ check(not issues, f"W3 the 200-event document passes the validator ({issues})")
 check(t is not None and t < BOUND,
       f"W3 200 expiry events on rows the claim never reads: zfl.run {fmt(t)} — "
       f"two judges per event, events uncapped")
+
+# ---- W4: zverify._only's own tail — found by search at 16 atoms (above today's
+# cap of 10; it bounds how far the cap may rise). Every atom 13-14 times in a
+# 1753-character balanced claim; one grade builds 57,838 Shannon residues.
+# Measured with the W1 fix in place: judge ~64 s. Five sibling seeds: <= 0.36 s.
+claim4, names4 = W.fam_longbal(16, random.Random("judgescan:longbal:16:2000:2"), 2000)
+W.use_fixed_lazy(True)
+t4, _ = W.timed(lambda: ztljudge.judge(claim4, {a: "Z" for a in names4}), BUDGET)
+W.use_fixed_lazy(False)
+check(t4 is not None and t4 < BOUND,
+      f"W4 16 unverified atoms, each 13-14 times, {len(claim4)} chars: judge {fmt(t4)} "
+      f"(with W1 fixed) — zverify._only splits on every repeated mark")
 
 # ---- controls: what the atom cap bounds today
 for fam in ("xorcycle", "grid", "repeat", "random"):

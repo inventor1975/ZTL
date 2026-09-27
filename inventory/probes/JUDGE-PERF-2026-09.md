@@ -16,11 +16,11 @@ in `zverify.hereditary_bit`, 1,279,525 refinements walked; seed 3: 0.05 s there.
 
 * **1,000,000 seeded claims, identical whole output, old vs new** (see §3);
 * the 12-comparison claim: **0.027–0.038 s on every seed 1..50** (before:
-  __OLD_S1__);
+  0.21–146.7 s, median 0.82 s);
 * no shape found where the new code is slower; on 400 random 10-atom formulas
   with repeated atoms its worst judge call is 0.045 s, where the old code took
-  up to 7.3 s on the same formulas;
-* the regression: __RUNALL__.
+  0.09–7.3 s on those same 8 slowest (`judge_perf_search.py`, seed 1);
+* the regression: 152 stands OK, the same 5 red and 2 skipped as on master — all 5 for want of `lake` (Lean is not installed here).
 
 `zverify.py` is the only core file changed. No verdict, grade, disposition,
 `joint` or `why` moved anywhere in the space tested.
@@ -106,9 +106,9 @@ ENTIRE output (keys sorted). Old = `origin/master` @ `99f8592`, new = this branc
 
 | stream | claims | what is compared | differing |
 |---|---|---|---|
-| `prop` 0..799,999 | 800,000 | `ztljudge.judge(text, marking)`: verdict, grade, disposition, why, unverified, absent, pending, lazy, joint, forgone | __DIFF_PROP__ |
-| `doc` 0..199,999 | 200,000 | `zfl.run(doc)`: the whole report (numeric disposition, verdict, grade, next_check, …) | __DIFF_DOC__ |
-| **total** | **1,000,000** | | __DIFF_TOTAL__ |
+| `prop` 0..799,999 | 800,000 | `ztljudge.judge(text, marking)`: verdict, grade, disposition, why, unverified, absent, pending, lazy, joint, forgone | **0** |
+| `doc` 0..199,999 | 200,000 | `zfl.run(doc)`: the whole report (numeric disposition, verdict, grade, next_check, …) | **0** |
+| **total** | **1,000,000** | | **0** |
 
 `prop`: a formula over 1–10 atoms (the studio cap), connectives
 `& | ^ -> = ~`, depth 1–6, constants T/F/Z, a random marking over T/F/Z/E with
@@ -116,6 +116,9 @@ atoms left out (read as Z). `doc`: 1–3 numeric names with values, statuses and
 scales (int / decimal2 / frac3 / exact), 1–8 comparisons joined by connectives,
 run through the real validator and cap. Claim `i` of stream `K` is
 `random.Random(f"{K}:{i}")`.
+
+The concatenated digest files are byte-identical: sha1 `643f2ebaa8d7def2…` (prop,
+both trees) and `d1c04747f183304b…` (doc, both trees).
 
 Also: `test_judge_perf.py` compares new against the walk IN-PROCESS (`_only`
 switched off) on 6,000 `grade` calls with budgets and 1,500 judge outputs, and
@@ -125,11 +128,19 @@ a direct check of `_only` against `refinements`/`worlds` on 20,000 pairs gave
 ## 4. Timing over PYTHONHASHSEED 1..50
 
 `python3 inventory/probes/judge_perf_timing.py --tree TREE --seeds 1-50`: one
-fresh interpreter per seed, CPU seconds of the judge call alone. Measured while
-the equivalence run occupied the other cores (CPU time, not wall; the old
-numbers are, if anything, flattered by less cache contention on no seed).
+fresh interpreter per seed, CPU seconds of the judge call alone. Both trees were
+measured under the same load (the equivalence run occupied the other cores);
+the figures are CPU seconds of the process, not wall time.
 
-__TIMING__
+| shape | before: min / median / max s | after: min / median / max s | answer (every seed, both) |
+|---|---|---|---|
+| S1 | 0.212 / 0.817 / **146.734** | 0.027 / 0.029 / **0.038** | same: F / until-verification / OPEN |
+| S2 | 0.037 / 0.054 / **1.709** | 0.031 / 0.033 / **0.045** | same: F / until-verification / OPEN |
+| S3 | 0.010 / 0.038 / **2.474** | 0.004 / 0.004 / **0.006** | same: F / until-verification / OPEN |
+| S4 | 0.000 / 0.001 / **0.001** | 0.000 / 0.001 / **0.001** | same: F / until-verification / OPEN |
+| S5 | 0.015 / 0.080 / **5.582** | 0.013 / 0.014 / **0.026** | same: F / until-verification / OPEN |
+| S6 | 1.386 / 1.479 / **1.688** | 0.001 / 0.001 / **0.001** | same: F / hereditary / REFUTED |
+| S7 | 0.026 / 0.039 / **0.148** | 0.017 / 0.019 / **0.035** | same: T / until-verification / ON CREDIT |
 
 Shapes: S1 the 12-comparison studio claim above (validate stubbed); S2 the
 same with 9 comparisons (the most the cap admits, real `zfl.run`); S3
@@ -140,7 +151,20 @@ unverified.
 
 ## 5. Regression
 
-__RUNALL_DETAIL__
+`python3 run_all.py --no-lean` — Lean (`lake`) is **not installed** in this
+environment, so the Lean build could not run, and five Python stands that call
+`lake build` themselves fail with `FileNotFoundError: 'lake'`. Run on both
+trees, the result is the same stand for stand:
+
+| tree | stands | OK | FAIL | SKIP |
+|---|---|---|---|---|
+| master `99f8592` | 159 | 152 | 5 — bridge.py, inventory/СВЕРКА-ССЫЛОК.py, inventory/ПАРАМЕТР-ЯРУС.py, inventory/paper_claims.py, inventory/corpus_book.py (all `lake` missing) | 2 — inventory/py_version_floor.py, dilemmas/tautology_boundary.py |
+| this branch `f38853b` | 159 | 152 | the same 5, the same cause | the same 2 |
+
+No stand that can run here changed its result. The Lean proofs are untouched
+(no `.lean` file changed), but they were not rebuilt here, and that is said
+rather than assumed. `test_judge_perf.py` is not registered in `run_all.py`
+(registration changes the counted stands; left to review).
 
 ## Commands
 
@@ -156,4 +180,6 @@ for s in $(seq 0 25000 175000); do
 done > T_doc.txt
 python3 inventory/probes/judge_equiv.py --compare OLD_prop.txt NEW_prop.txt   # and _doc
 python3 run_all.py --no-lean
+PYTHONHASHSEED=1 python3 inventory/probes/judge_perf_search.py . search 400 top.json
+PYTHONHASHSEED=1 python3 inventory/probes/judge_perf_search.py OLD replay top.json
 ```

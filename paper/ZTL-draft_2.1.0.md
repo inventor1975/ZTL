@@ -183,9 +183,10 @@ mark:** in the taint-sink case both classical defaults grant a pass to an
 unverified sink, and a rule with one atom in both polarities has no
 conservative default at all. Hence, as a decision procedure, ZTL strictly
 dominates classical logic; as a system of proofs on classical logic's own
-domain the two are exactly equal (`ztl_taut_is_classical`) — and
-"stronger", which in logic means "proves more", is a word this paper does
-not use of itself.
+domain the two are exactly equal (`evalF_agrees`), and over its own
+valuations ZTL has fewer validities — the price of admitting unverified
+input (`ztl_taut_is_classical`, `not_conversely`) — and "stronger", which in
+logic means "proves more", is a word this paper does not use of itself.
 
 That the logic is not arbitrary is evidenced, case by case, rather than
 asserted. Six independent engineering traditions — IEEE 754 arithmetic (NaN), SQL's
@@ -344,9 +345,11 @@ witness, none left open — where classical logic has no input at all. And
 no classical default reproduces that: on an unverified sink both defaults
 grant a pass, and for a rule with one atom in both polarities no
 conservative default exists. A reader who takes away "a logic with fewer
-laws" has been misled by the arithmetic of denominators; the right one for
-the twelve is zero — the number of laws classical logic licenses on a
-marked atom.
+laws" has half the fact: once unverified valuations are admitted, fewer
+formulas hold on every valuation — the price of admitting them (§3.2, §10);
+on verified data not one law is lost, and the right comparison for the
+twelve is zero — the number of laws classical logic licenses on a marked
+atom.
 
 The principle from which everything is built borrows its name from
 security: default deny. A defective input may be granted neither
@@ -807,8 +810,8 @@ ordered pairs, the six connectives), depth 1 gives 0 truths of 6 formulas and
 depth ≤ 2 gives 84 of 252 — all 84 at depth exactly 2 (84 of 246), each
 through a false subformula. The first step is also stated *inside* the language, where the
 mark is expressible (isZ(p) = ¬(p↔p), §3.1): isZ(p) → ¬¬p is valid, while
-isZ(p) → p and isZ(p) → ¬p are not — doubt yields a denial of earning, never
-an affirmation. `lean/ZOrigin.lean`, seven theorems, empty axiom list.
+isZ(p) → p and isZ(p) → ¬p are not — doubt yields neither p nor ¬p: never an
+affirmation or a denial of p itself. `lean/ZOrigin.lean`, seven theorems, empty axiom list.
 
 What this is and is not. Classical logic has no such order — not because it
 cannot prove it, but because the question does not arise: without Z every
@@ -1248,11 +1251,12 @@ classically.
   named in §10 — identical as a system of proofs on the classical domain,
   strictly dominant as a decision procedure over marked input — and both
   of its halves are measured, not argued.
-* The 212 validities of the depth-≤2 pool over marked valuations are never
-  to be set beside the 588 over verified valuations: the domains differ
-  (§10). On the extended domain the lawful comparison is with external
-  Bochvar's 548, and the 336 are exactly what that logic grants on
-  ignorance.
+* The 212 validities of the depth-≤2 pool over marked valuations, beside
+  the 584 over verified valuations, measure the price named in §10 — fewer
+  formulas hold on every valuation once the unverified are admitted — not
+  a loss on verified data. Against the classical default the comparison is
+  with external Bochvar's 548, and the 336 are exactly what that logic
+  grants on ignorance.
 * The Suszko reduction is not escaped — nothing escapes it. It is not
   needed above the atoms, because every connective already returns a
   verdict (§4).
@@ -1540,27 +1544,35 @@ entailment, not by its palette.
 runs in three different directions at once, and collapsing them into
 "stronger" or "weaker" loses all three.
 
-* *Conservative extension by data.* On a mark-free valuation ZTL
+* *Classical on verified valuations.* On a mark-free valuation ZTL
   agrees with classical logic formula for formula
-  (`ClassicalAgreement.evalF_agrees`) — where nothing is unverified,
-  nothing changes.
-* *Equal in strength on classical's own domain: the same laws there.* Over
-  the wider domain every ZTL validity is classically valid, and not
-  conversely:
+  (`ClassicalAgreement.evalF_agrees`): the two-element Boolean algebra,
+  with T designated, is a submatrix of the ZTL matrix — where nothing is
+  unverified, nothing changes.
+* *Equal in strength on verified data; fewer validities over its own
+  valuations — the price, named.* Over the wider domain every ZTL validity
+  is classically valid, and not conversely:
   `p → p` is a classical tautology and is refuted here on a marked atom
   (`ztl_taut_is_classical`, `not_conversely`). The count must be read
   with its domain named. Over the depth-≤2 pool of §3, classical
-  logic has 588 tautologies on mark-free valuations and ZTL has 588 on
-  the same valuations — **the same set, element for element; not one
-  classical law fails here where the atoms are verified.** The 212 is a
-  count over the *wider* domain, where an atom may carry the mark, and
-  setting 212 beside 588 compares two different denominators. The lawful
-  comparison on that wider domain is against external Bochvar, which
-  validates 548 of the same pool: the 336 are what a logic grants when it
-  is willing to assert about the unverified.
+  logic and ZTL validate, on mark-free valuations, the same 584 formulas
+  (588 entries of the pool list, which counts four tautologies twice) — **the same set, element
+  for element; not one classical law fails here where the atoms are
+  verified.** The 212 is a count over the *wider* domain, where an atom may
+  carry the mark. A law is a claim about every valuation, and ZTL admits
+  the unverified ones classical logic cannot take at all; that fewer
+  formulas hold on all of them is the price of admitting them — named in
+  §3.2, where the deduction theorem runs one way only — and nothing is
+  lost on the classical ones. Against the classical default the
+  comparison is with external Bochvar, which validates 548 of the same
+  pool: the 336 are what a logic grants when it is willing to assert
+  about the unverified.
 * *Strict expansion in expressive reach.* The clone is exactly the
   projections plus the external functions — 1 + 8 unary, 2 + 512
-  binary, nothing else sneaking in (§3.6, §3.7). Those external
+  binary, nothing else sneaking in (§3.6, §3.7) — every two-valued binary
+  function over the three inputs, against 2 + 16 for the classical default
+  "unverified := false" (external Bochvar), which sees only "true or not"
+  and cannot say `isZ` (measured 2026-09-28). Those external
   functions speak about the **status** of a ground, which classical
   logic has no object to speak about at all — measured on the pool, 1840
   of 2924 compounds are mark-sensitive (§3.1); and single-operator
@@ -1569,9 +1581,10 @@ runs in three different directions at once, and collapsing them into
   ↛ read as the credit detector).
 
 So the honest one-liner is neither "stronger" nor "weaker": **equal to
-classical logic in strength, more expressive, and dominant as a solver** —
-identical on verified data, wider in subject, and decided on unverified
-data where classical logic has no input.
+classical logic in strength on verified data, strictly more expressive than
+any classical default, and dominant as a solver** — identical on verified
+data, wider in subject, and decided correctly on unverified data, where
+classical logic has no input of its own and its defaults err.
 
 **The relation that does hold, and its name.** Those three axes answer
 "which is the larger logic". They do not answer the question an engineer

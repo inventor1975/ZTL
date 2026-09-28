@@ -34,8 +34,10 @@ is** — `paper/ZTL-draft_1.4.md`, three sections, twenty minutes:
   compound), why every connective stays two-valued, the passport on three axes (in 1.4's words:
   conservative extension by data, strict contraction by law, strict expansion
   in expressive reach — the middle axis reads as weakness and is superseded:
-  say, as `CLASSIC-VS-ZTL.md` does, equal to classical logic in strength, more
-  expressive, dominant as a solver), and
+  say, as `CLASSIC-VS-ZTL.md` does, equal to classical logic in strength ON
+  VERIFIED DATA, fewer validities only over unverified input — the price of
+  admitting it —, strictly more expressive than any classical default, dominant
+  as a solver; corrected 2026-09-28), and
   the local-versus-global reading of the mark. That last one matters more than
   it looks: the *global* reading is classical supervaluation, and the whole
   selective-disclosure branch of §1.5 below is that reading turned operational.

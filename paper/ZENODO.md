@@ -160,9 +160,11 @@ default replaces the mark: in the taint-sink case both classical defaults
 grant a pass to an unverified sink, and a rule with one atom in both
 polarities has no conservative default at all. Hence, as a decision
 procedure, ZTL strictly dominates classical logic; as a system of proofs
-on classical logic's own domain the two are exactly equal
-(ztl_taut_is_classical) — "stronger", which in logic means "proves more",
-is a word the paper does not use of itself.
+on classical logic's own domain the two are exactly equal (evalF_agrees),
+and over its own valuations ZTL has fewer validities — the price of
+admitting unverified input (ztl_taut_is_classical, not_conversely);
+"stronger", which in logic means "proves more", is a word the paper does
+not use of itself.
 
 That the logic is not arbitrary is evidenced case by case: six
 independent engineering traditions — IEEE 754 NaN, SQL NULL, taint
@@ -476,7 +478,7 @@ depend on trusting the AI: every claim is checkable by the repository
 code and the Lean 4 kernel.
 
 **Keywords:**
-three-valued logic with two-valued connectives; classical logic; conservative extension;
+three-valued logic with two-valued connectives; classical logic; logical matrices;
 decision procedure; Bochvar logic; paracomplete logic; zero trust;
 unverified data; SQL NULL; IEEE NaN; taint tracking; information flow;
 abstract interpretation; Galois connection; imprecise probabilities;

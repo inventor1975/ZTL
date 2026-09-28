@@ -88,8 +88,8 @@ is the currency here: not steps, witnesses.
 ## The honest boundary
 
 This makes a good **auditor** and a **mathematician that pays for its
-premises**: equal to classical logic in strength — on verified premises
-every classical proof goes through — and never cheaper than its data.
+premises**: equal to classical logic in strength on verified data — on
+verified premises every classical proof goes through — and never cheaper than its data.
 Real theorems go through and cost their own data; what cannot be done is starting from nothing, or reasoning by
 excluded middle about something nobody checked. Narrow search is a virtue
 when judging claims and a constraint when building proofs.
@@ -121,12 +121,18 @@ a family trait, not an exile.
 
 ## What NOT to say
 
-* ~~"ZTL is weaker than classical logic"~~, ~~"strictly fewer
-  validities"~~ — false. ZTL is equal to classical logic in strength (on
-  classical's own domain the validities are the same set, 584 = 584), more
-  expressive — it can speak of the unverified — and it dominates classical
-  logic as a solver. The 212 counts validities over a wider domain; never
-  set it beside the 584 (see "Can classical logic replace ZTL?" below).
+* ~~"ZTL is weaker than classical logic"~~ — misleading, and
+  ~~"strictly fewer validities is false"~~ — WRONG, corrected 2026-09-28
+  (Logik2's hostile review, re-checked): by our own `ztl_taut_is_classical`
+  and `not_conversely` (`p → p`), over its own valuations ZTL has strictly
+  fewer validities. Say instead: equal to classical logic in strength ON
+  VERIFIED DATA (the same set, 584 = 584); fewer validities only over
+  unverified input, where classical logic cannot take the input at all —
+  the price of admitting it (paper §3.2, §10), nothing lost on verified
+  data; strictly more expressive than any classical default (binary clone
+  2 + 512 against 2 + 16 for "unverified := false"); dominant as a solver.
+  The 212 against the 584 is that price, measured — not a category error
+  (see "Can classical logic replace ZTL?" below).
 * ~~"ZTL can express everything"~~ — false on three values: 515 of 19683
   binary functions are expressible (2.6%), a consequence of greediness
   (compound formulas never take Z).
@@ -237,15 +243,19 @@ the depth-≤2 pool of `paper/core_logic_checks.py` §5, 2926 formulas over `p, 
 **Laws that work classically and fail in ZTL: zero.** Every one of the 584 holds
 here whenever the atoms are verified.
 
-### The 212 is a different denominator — never put it beside the 584
+### The 212 against the 584 is the price, measured — name it, do not hide it
 
 212 is ZTL's validity count over the *extended* input domain, where an atom may
-be unverified. Extending the input domain can only shrink a validity set — that
-is arithmetic, true of any logic, and it is not weakness. Setting 212 against 584
-is the same category error as setting 548 against 584 (see the 2026-09-18 note
-above). The lawful comparison on the extended domain is **ZTL 212 against
-external Bochvar 548**: both are defined on three values, and those 336 are what
-Bochvar grants on ignorance.
+be unverified. A law is a claim about every valuation; admitting the unverified
+ones means fewer formulas hold on all of them. That IS "fewer validities" in the
+logician's sense (`ztl_taut_is_classical` + `not_conversely`), and it is the
+price of admitting unverified input — named in the paper (§3.2: the deduction
+theorem runs one way only). Nothing is lost on verified data (584 = 584).
+(Corrected 2026-09-28: this section used to call the comparison a "category
+error"; it is not — same formulas, a wider set of valuations.) The comparison
+that separates ZTL from the classical DEFAULT on the extended domain is **ZTL
+212 against external Bochvar 548**: both are defined on three values, and those
+336 are what Bochvar grants on ignorance.
 
 ### "Classical with unverified := false" is external Bochvar
 
@@ -291,9 +301,14 @@ verdict out of ignorance**: `¬Z = T`, `Z→F = T`, `Z↔Z = T`.
 more* — and our own machine-checked `ztl_taut_is_classical` refutes it instantly.
 The wording that survives:
 
-> **ZTL is a conservative extension of classical logic over a wider input
-> domain: strictly more expressive, strictly more applicable, and adding no
-> theorem about the old domain.**
+> **On verified valuations ZTL is classical logic — the two-element Boolean
+> algebra, with T designated, is a submatrix of the ZTL matrix; over a wider
+> input domain it is strictly more expressive and strictly more applicable,
+> and it adds no theorem about the old domain.**
+>
+> (Until 2026-09-28 this read "a conservative extension of classical logic".
+> Wrong term: an extension keeps every theorem of the original, and ZTL does
+> not validate `p → p` over its own valuations.)
 
 And the sharper claim, the one the exhibit below actually proves — say this when
 someone asks whether ZTL is *stronger*, because it is the strength without the

@@ -332,7 +332,7 @@ PROOFS on classical logic's own domain the two are exactly equal
 (ztl_taut_is_classical). The count 212 (validities over marked
 valuations) is never set beside the 588 (verified valuations): on the
 extended domain the comparison is with external Bochvar's 548, and the
-336 are what that logic grants on ignorance. Every number is produced by
+336 are what that logic grants on ignorance. [Superseded in v2.1.2: the 212 beside the 584 is the price of admitting unverified input, named in §3.2 — not a different denominator.] Every number is produced by
 paper/core_logic_checks.py and marksens.py, both stands of the
 regression. Also in v2.0.0: the repository split (see above).
 

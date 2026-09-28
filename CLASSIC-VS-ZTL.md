@@ -138,7 +138,10 @@ a family trait, not an exile.
   external Bochvar is NOT such a
   default — its negation reads ¬Z = F, the default's ¬Z = T — and its clone
   is the same 2 + 512 as ZTL's: they part in seven cells, not in
-  expressiveness; measured 2026-09-28); dominant as a solver.
+  expressiveness; measured 2026-09-28 — with Bochvar's Δ₀ "meaningful and
+  false" as its negation; with the textbook "not true" (¬Δ₁, ¬Z = T) the
+  external layer IS the substitution default, clone 2 + 16); dominant as a
+  solver.
   The 212 against the 584 is that price, measured — not a category error
   (see "Can classical logic replace ZTL?" below).
 * ~~"ZTL can express everything"~~ — false on three values: 515 of 19683

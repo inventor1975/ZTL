@@ -1592,7 +1592,13 @@ runs in three different directions at once, and collapsing them into
   ":= true" (measured 2026-09-28). External Bochvar is not such a default:
   its own negation reads ¬Z = F where the default reads ¬Z = T, and its
   binary clone is the same 2 + 512 as ZTL's — the two part in seven cells
-  (§4), not in expressive reach. Every uniform classical default (the
+  (§4), not in expressive reach. The choice is named: Bochvar's external
+  operators include Δ₀ "meaningful and false" (ZTL's ¬) and Δ½
+  "meaningless" (= isZ); with Δ₀ the external layer has ZTL's clone; with
+  the textbook external negation "not true" (¬Δ₁, ¬Z = T) it coincides with
+  the substitution default cell for cell, clone 2 + 16. The full logic,
+  with its internal, contagious connectives, is wider still: it has
+  compounds whose value is the third one, which ZTL's never are. Every uniform classical default (the
   unverified read as F, or as T) yields a two-valued function of the
   three-valued inputs; ZTL defines every such function, as a disjunctive
   normal form over its detectors p ∧ p, ¬p and ¬(p ↔ p); and no uniform

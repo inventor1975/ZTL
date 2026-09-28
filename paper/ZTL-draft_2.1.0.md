@@ -11,15 +11,15 @@ v1.3: [10.5281/zenodo.21472971](https://doi.org/10.5281/zenodo.21472971);
 v1.2: [10.5281/zenodo.21440066](https://doi.org/10.5281/zenodo.21440066);
 v1.1: [10.5281/zenodo.21323552](https://doi.org/10.5281/zenodo.21323552);
 v1.0: [10.5281/zenodo.21318982](https://doi.org/10.5281/zenodo.21318982)).
-**v2.1.0 corrects how many values ZTL has, and proves where its values come from.**
+v2.1.0 corrects how many values ZTL has, and proves where its values come from.
 Earlier versions, 2.0.0 included, called ZTL "a two-valued logic with a mark, not a
 three-valued logic". That name was wrong in one respect: it denied the atom its value. An
 atom is an assertion, and an unverified atom has the value Z (`ztl.ev('p', {'p': 'Z'}) = Z`; `eqI m1 m2 = Z` in `ZIndisc.lean` is
-the same fact one order up). ZTL is a **three-valued logic whose every connective is
-two-valued**: three values on the atoms, two on everything built from them. Nothing
+the same fact one order up). ZTL is a *three-valued logic whose every connective is
+two-valued*: three values on the atoms, two on everything built from them. Nothing
 previously measured or proved changes — the greediness theorem is exactly the statement that the
 third value never climbs above the atoms (§§2, 4, 10). And the one asymmetric cell,
-¬Z = F, is shown to give the values an **order of birth**, proved over the whole language
+¬Z = F, is shown to give the values an *order of birth*, proved over the whole language
 (§3.9, `ZOrigin.lean`, empty axiom list): under pure doubt F is born first and T only
 through an F — the Z, F, T part of the genetic order N, Z, F, T that §4 names (N, the
 solver's phase, lies outside the tables); classical logic, whose negation is an involution,
@@ -147,8 +147,8 @@ T or F, the third value never appears above the atoms. This is more than
 Suszko's logical two-valuedness, which every structural logic has for
 free; it is the stronger, truth-functional fact that above the atoms the
 algebraic value already *is* the logical value, so the reduction has
-nothing left to do on compounds: its non-truth-functionality is confined to
-connectives applied to atoms. The one
+nothing left to do on compound arguments: its non-truth-functionality is
+confined to connectives applied directly to atoms. The one
 asymmetric cell, ¬Z = F, gives the values an order of birth, proved over
 the whole language: under pure doubt, F is born first and T only through
 an F (`ZOrigin.lean`, empty axiom list). Its identity among the three-valued matrices is precise and
@@ -848,7 +848,7 @@ on 90 of 90, Łukasiewicz Ł3 on 80 of 90 (MEASURED). In ZTL it never does — *
 of 90**, the greediness theorem (`evalF_classical`, empty axiom list):
 the mark evaporates at the first operator, so no *compound* assertion is
 ever anything but T or F. The reduction's non-truth-functionality in ZTL is confined to connectives
-applied to atoms: there Z and F are both undesignated yet differ as inputs
+applied directly to atoms: there Z and F are both undesignated yet differ as inputs
 (¬F = T but ¬Z = F; F→F = T but Z→F = F), so the bivalent values of the
 arguments do not determine the result — for ¬, →, ⊕ and ↔; ∧ and ∨ stay
 truth-functional even there. On compound arguments, which are T or F, the
@@ -1514,14 +1514,15 @@ parts are worth; it is not a further theorem.
 The final and most precise formulation of what has been built:
 
 ```
-Values:          T, F, Z                (Z — "unverified" — the value of atoms only)
-Connectives:     two-valued              (every compound's verdict is T or F)
+Values:          T, F, Z                (Z, "unverified": the value of
+                                          atoms only)
+Connectives:     two-valued              (a compound is T or F)
 Solver state:    N "not yet computed"    (a computation phase, present
                                           only under self-reference;
                                           provably finite — §9 — and
                                           never escapes outward)
-Reading policy:  local, default deny     (the principle the tables compute;
-                                          the tables are the logic)
+Reading policy:  local, default deny     (the principle the tables
+                                          compute; they are the logic)
 ```
 
 **ZTL is a three-valued logic whose connectives refuse to lie about the
@@ -3492,8 +3493,9 @@ statements, the v1.4 assembly, and the v2.0.0 frame — the relation to
 classical logic carried into the header, abstract, §1, §3.1, §7 and §10
 with `paper/core_logic_checks.py` wired into the regression, the
 mark-sensitivity census placed beside its definition, and the v2.0.0
-assembly; Claude Opus 5, after publication, also the v2.0.0 upload and its
-verification against the Zenodo API, the loss-framing pass over twenty-one
+assembly; Claude Opus 5, after publication, also the v2.0.0 deposit draft
+(publication itself the author's step) and its verification against the
+Zenodo API, the loss-framing pass over twenty-one
 sites, the square root as a proved rational enclosure, and the judge's
 verdict/warranty guard; Claude Opus 5.5 — draft 2.1.0: the numeric floor of
 §15 with `ZNumNames.lean`, `ZParabola.lean` and `ZIntExtremes.lean`, the

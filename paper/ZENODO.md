@@ -1,4 +1,10 @@
-# Zenodo upload sheet — ZTL v2.0.0 (PUBLISHED — the relation to classical logic, and the repository split)
+# Zenodo upload sheet — ZTL v2.1.0 (PREPARED, not yet published — how many values, the order of birth, the numeric floor)
+
+**v2.1.0 — prepared 2026-09-28; the upload is the author's manual step.** A new version of the
+concept record 10.5281/zenodo.21318981, isNewVersionOf v2.0.0 (10.5281/zenodo.22842725). After
+`newversion`, delete the inherited ZTL-preprint-v2.0.0.pdf from the draft (it caught v2.0.0) and
+check the related identifier says 22842725. Reviewed before upload by a second Claude Opus 5.5
+session (4 blockers, 14 fixes, applied; a second pass over the diff: two more, applied).
 
 **v2.0.0 PUBLISHED 2026-09-19: version DOI 10.5281/zenodo.22842725**
 
@@ -74,7 +80,7 @@ PDF, theorems, modules, stands) — the part of this sheet above the version
 history is checked on every run; the history paragraphs carry their own
 versions' numbers and are not.
 
-**File to upload:** `paper/ZTL-preprint-v2.0.0.pdf` (40 pages)
+**File to upload:** `paper/ZTL-preprint-v2.1.0.pdf` (42 pages)
 
 ---
 
@@ -84,7 +90,7 @@ versions' numbers and are not.
 
 **Authors:** Reznik, Vitaly
 
-**Version:** 2.0.0
+**Version:** 2.1.0
 
 **License:** Creative Commons Attribution 4.0 International (CC BY 4.0)
 
@@ -99,7 +105,7 @@ greediness theorem, machine-checked): above the atoms the algebraic
 value already is the logical value, so — beyond Suszko's logical
 two-valuedness, which every structural logic has — ZTL is bivalent on
 compounds by construction, and the reduction's non-truth-functionality is
-confined to connectives applied to atoms.
+confined to connectives applied directly to atoms.
 The one asymmetric cell, ¬Z = F, gives the values an order of birth,
 proved over the whole language: under pure doubt F is born first and T
 only through an F (lean/ZOrigin.lean, empty axiom list) — an order
@@ -201,6 +207,31 @@ literature search after the tables had been generated, not a source; the
 contribution is the generating principle, an implicational floor outside
 the Rosser–Turquette standardness conditions, the calculus, the machine
 verification, and the bridges to the engineering traditions.
+
+What is new in v2.1.0 — HOW MANY VALUES, WHERE THE VALUES COME FROM, and
+the numeric floor kernel-checked. The logic is unchanged; its name and
+what is proved about it changed. First, THE NAME: versions up to 2.0.0
+called ZTL "a two-valued logic with a mark, not a three-valued logic";
+that denied the atom its value — an atom is an assertion, and an
+unverified atom has the value Z. ZTL is a three-valued logic whose every
+connective is two-valued: three values on the atoms, two on everything
+built from them (the greediness theorem is exactly that the third value
+never climbs above the atoms); Suszko's reduction is non-truth-functional
+only in connectives applied directly to atoms. No previously measured or
+proved fact changes. Second, THE ORDER OF BIRTH (§3.9, ZOrigin.lean,
+seven theorems, empty axiom list): under pure doubt — every atom
+unverified, no constant — F is produced first and T only through an F;
+classical logic, whose negation is an involution, has no such order.
+Third, THE NUMERIC FLOOR (§15): a name is one number across the whole
+claim (ZNumNames), a negative discriminant leaves no root (ZParabola),
+where an integer quadratic takes its extremes on a box (ZIntExtremes).
+Fourth, THE WARRANTY GRADE WITHOUT THE WALK (§19, ZOnly). Fifth,
+CORRECTIONS: a constant is not an atom; 584 validities as a set; the
+2.0.0 sentence "every mark-sensitive verdict is a refusal" was false —
+of 1840, 742 at least once assert where the substitution refuses (¬¬p);
+"unless P = NP" where hardness says "cannot"; seven missing references
+added. The corpus now holds seventy-one modules and 1194 theorems (v2.0.0:
+66 and 1112), all on the empty axiom list.
 
 What is new in v2.0.0 — THE RELATION TO CLASSICAL LOGIC, stated and
 measured, in the header, abstract, §1, §3.1, §4, §7 and §10. First, ON
@@ -434,9 +465,9 @@ verification; warranty; NP-hardness; coNP-hardness; epoch boundary;
 institutional computation; Lean 4; machine-checked proofs
 
 **Related/alternate identifiers:**
-- 10.5281/zenodo.22644261 — isNewVersionOf (v1.4.1, the prior version;
+- 10.5281/zenodo.22842725 — isNewVersionOf (v2.0.0, the prior version;
   Zenodo pre-fills the field from the previous form — check it says
-  22644261, not 21440066)
+  22842725, not 22644261)
 - https://github.com/inventor1975/ZTL — isSupplementedBy (the code,
   the Lean corpus, the regression, the ZFL language)
 - https://github.com/inventor1975/introspect — isSupplementedBy (the ZTL

@@ -7,7 +7,7 @@
 19.09 в момент публикации. С тех пор добавлены стенды `dilemmas/dirty_param.py`,
 `test_numeric_names.py`, `test_numbers_need_values.py`, `test_quadratic.py`, `test_solver_logic.py`, `test_solver_provenance.py`, `test_bound_products.py`, `test_unknown_marks.py`, `test_multilinear.py`, `test_higher_degree.py`, `test_catalogue_equations.py` (24.09), `test_int_refine.py` (25.09), `test_redteam_numeric.py` (26.09), `test_judge_perf.py`, `test_redteam_logic.py` и `test_judge_worst.py` (27.09), и в дереве их 162. Запись на Zenodo неизменна и верна о себе;
 лист же готовит СЛЕДУЮЩИЙ выпуск, поэтому живое число тут растёт.
-С 27.09 в корпусе 70 модулей и 1187 теорем (модули `ZNumNames`, 17 теорем, `ZParabola`, 14, `ZIntExtremes`, 38, и `ZOnly`, 6); выпуск 2.0.0
+С 28.09 в корпусе 71 модуль и 1194 теоремы (модули `ZNumNames`, 17 теорем, `ZParabola`, 14, `ZIntExtremes`, 38, `ZOnly`, 6, и `ZOrigin`, 7); выпуск 2.0.0
 называет 66 и 1112 — тоже верно о себе.
 (https://zenodo.org/records/22842725), a new version of the concept record
 10.5281/zenodo.21318981. Verified against the API WITHOUT a token after

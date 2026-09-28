@@ -1571,8 +1571,11 @@ runs in three different directions at once, and collapsing them into
   projections plus the external functions — 1 + 8 unary, 2 + 512
   binary, nothing else sneaking in (§3.6, §3.7) — every two-valued binary
   function over the three inputs, against 2 + 16 for the classical default
-  "unverified := false" (external Bochvar), which sees only "true or not"
-  and cannot say `isZ` (measured 2026-09-28). Those external
+  "unverified := false" (external Bochvar), which sees only "true or not",
+  and 2 + 16 for ":= true" (measured 2026-09-28). Every classical default
+  yields a two-valued function of the three-valued inputs; ZTL defines
+  every such function, as a disjunctive normal form over its detectors
+  p ∧ p, ¬p and ¬(p ↔ p); and no default defines `isZ`. Those external
   functions speak about the **status** of a ground, which classical
   logic has no object to speak about at all — measured on the pool, 1840
   of 2924 compounds are mark-sensitive (§3.1); and single-operator
@@ -2380,7 +2383,8 @@ gap between sufficient and exact is not one more theorem away but a
 complexity class. MEASURED (`zheredtaut.py`): on all 2928 formulas of
 depth ≤ 2 over two atoms as the generator enumerates them (2906
 distinct — it lists 22 depth-1 formulas twice, which moves no verdict;
-588 tautologies) and 2000 random formulas of
+588 tautologies counting that list, 584 as a set; a second enumeration,
+beside the regression pool's 2926 entries) and 2000 random formulas of
 depth ≤ 3 over three atoms (171 tautologies), the brute-force hereditary
 grade of `zverify.py` and classical tautology-hood agree on every one —
 zero divergences.
@@ -2601,9 +2605,10 @@ cheap — 2m evaluations, which is what `joint` does — and the exact width
 cannot be, unless P = NP. Together with E57 (no width at all ⟺ hereditary
 ⟺ a tautology check) and E59 above, the three grades the judge does not
 compute are the three it cannot, unless P = NP: one coNP-hard, two NP-hard. MEASURED
-(`zwidthhard.py`, the instrument's own `width`): on the same 2928-formula
+(`zwidthhard.py`, the instrument's own `width`): on the same 2928-entry
 enumeration of depth ≤ 2 over two atoms the witness's width is 2 on the 2340
-non-tautologies and undefined on the 588 tautologies; on 600 random
+non-tautology entries and undefined on the 588 tautology entries (584 as a
+set); on 600 random
 formulas of depth ≤ 3 over three atoms, 3 on 544 and undefined on 56 —
 zero divergences from the theorem.
 

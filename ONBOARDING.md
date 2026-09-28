@@ -260,12 +260,14 @@ compiles is not done; a proof that compiles **on the empty axiom list** is.
 Also proved for the whole formula language (not sampled): on a **Z-free**
 valuation ZTL agrees with classical logic formula for formula
 (`lean/ClassicalAgreement.lean:evalF_agrees`). So ZTL expresses all of classical
-logic and is cautious *only* where the unknown enters. Never say "weaker than
-classical" or "fewer tautologies" at all: ZTL is **equal to classical logic in
-strength** (on verified data the validities are the same set, 588 = 588),
-**more expressive** (it speaks of the unverified), and **dominant as a solver**
-— `CLASSIC-VS-ZTL.md`. The 212 counts a wider domain and is never set beside
-the 588.
+logic and is cautious *only* where the unknown enters. Say it with the domain
+named (corrected 2026-09-28): ZTL is **equal to classical logic in strength on
+verified data** (the validities are the same set, 584 = 584); over its own
+valuations it has **fewer validities** — the price of admitting unverified input
+(`ztl_taut_is_classical`, `not_conversely`: `p → p`), nothing lost on verified
+data; it is **strictly more expressive than any classical default** (binary
+clone 2 + 512 against 2 + 16); and it is **dominant as a solver** —
+`CLASSIC-VS-ZTL.md`. The 212 beside the 584 is that price, measured.
 
 ### 1.5 E — the letter that arrives from outside
 

@@ -6,7 +6,7 @@ One page, four columns, every number produced by `python3 zledger.py`
 | | |
 |---|---|
 | **Shared** | On Z-free markings ZTL **is** classical logic. Not sampled — **proved**: `lean/ClassicalAgreement.lean`, `evalF_agrees`, structural induction over the whole formula language, empty axiom list. (The 2906 × 4 measurement that preceded it stands as the sanity check.) |
-| **Nothing lost** | **All 26 classical laws hold here on verified data — not one falls, ever** (measured: on mark-free valuations classical and ZTL have the same 584 validities of the depth-≤2 pool, the same set element for element — 588 counting the pool list's repeated entries; see the erratum below). Of the 26, **12 keep working when an atom carries the mark**; the other **14 do not extend to it** — both De Morgans, contraposition, `¬¬p = p`, excluded middle, `p → p`, idempotence (`audit.py`) — and there ZTL proves the **refutation with a witness** instead, with zero undecided outcomes. The 212 counts validities over the WIDER domain and must never be set beside the 588: different denominators. On that wider domain the comparison is against external Bochvar's 548. |
+| **Nothing lost** | **All 26 classical laws hold here on verified data — not one falls, ever** (measured: on mark-free valuations classical and ZTL have the same 584 validities of the depth-≤2 pool, the same set element for element — 588 counting the pool list's repeated entries; see the erratum below). Of the 26, **12 keep working when an atom carries the mark**; the other **14 do not extend to it** — both De Morgans, contraposition, `¬¬p = p`, excluded middle, `p → p`, idempotence (`audit.py`) — and there ZTL proves the **refutation with a witness** instead, with zero undecided outcomes. The 212 counts validities over the WIDER domain: beside the 584 it is the price of admitting unverified input (fewer formulas hold on every valuation), not a loss on verified data (corrected 2026-09-28). Against the classical default on that wider domain the comparison is external Bochvar's 548. |
 | **Gained (laws)** | **Zero, and now machine-checked:** `ztl_taut_is_classical` — every ZTL tautology is a classical one, for every formula, empty axiom list. And the inclusion is **strict** (`not_conversely`: `p → p` is classically valid and fails here at a mark), so "conservative" never reads as "the same logic". This column can never fill. |
 | **Gained (sight)** | Classical logic sorts two-variable formulas into **16** equivalence classes; we sort them into **195**, and **all 16** classical classes are split. Twelvefold refinement: same truths, finer eyes. |
 | **Order of birth** | Under pure doubt (every atom Z, no constants) **F is born first and T only through an F** — proved over the whole language: `lean/ZOrigin.lean`, `T_through_F`, `birth_order`, empty axiom list. Classical logic has no such order: its negation is an involution, and the question does not arise. Not a gain in laws (row above) — a fact about where ZTL's values come from. |
@@ -130,7 +130,10 @@ a family trait, not an exile.
   unverified input, where classical logic cannot take the input at all —
   the price of admitting it (paper §3.2, §10), nothing lost on verified
   data; strictly more expressive than any classical default (binary clone
-  2 + 512 against 2 + 16 for "unverified := false"); dominant as a solver.
+  2 + 512 against 2 + 16 for "unverified := false", and 2 + 16 for ":= true";
+  every default yields a two-valued function of the three-valued inputs, ZTL
+  defines every such function as a DNF over its detectors p ∧ p, ¬p,
+  ¬(p ↔ p), and no default defines isZ); dominant as a solver.
   The 212 against the 584 is that price, measured — not a category error
   (see "Can classical logic replace ZTL?" below).
 * ~~"ZTL can express everything"~~ — false on three values: 515 of 19683

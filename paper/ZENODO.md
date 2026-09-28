@@ -1,6 +1,11 @@
-# Zenodo upload sheet — ZTL v2.1.1 (PREPARED 2026-09-28 — the v2.1.0 text with its own header)
+# Zenodo upload sheet — ZTL v2.1.1 (PUBLISHED 2026-09-28 — the v2.1.0 text with its own header)
 
-**v2.1.1 — prepared 2026-09-28, draft 23008041, reserved DOI 10.5281/zenodo.23008041.**
+**v2.1.1 PUBLISHED 2026-09-28: version DOI 10.5281/zenodo.23008041**
+(https://zenodo.org/records/23008041). Verified against the API WITHOUT a token after
+publication: version 2.1.1, CC BY 4.0, date Created 2026-09-28, 52 keywords, 4 related
+identifiers (isNewVersionOf 23007861), Repository URL github.com/inventor1975/ZTL, latest of
+the concept (index 8), exactly ONE file — ZTL-preprint-v2.1.1.pdf, 433911 bytes, md5 equal to
+the repository copy. Every field filled by the deposit tool; nothing typed in the form.
 Same day as v2.1.0; the header only. The v2.1.0 PDF went out with the working draft's header
 ("draft", "not published", "Version DOI: minted on upload"). v2.1.1 carries its own DOI, reserved
 by the draft before the PDF was built. Measured: the word streams of the two PDFs differ only in

@@ -81,8 +81,9 @@ and **The Gettier Case File** — knowledge as an earned verdict
 
 The specification and all design decisions are in `SPEC.md`; the
 preprint is `paper/ZTL-draft_2.1.0.md` —
-**published on Zenodo, latest v2.1.0
-([10.5281/zenodo.23007861](https://doi.org/10.5281/zenodo.23007861);
+**published on Zenodo, latest v2.1.1
+([10.5281/zenodo.23008041](https://doi.org/10.5281/zenodo.23008041);
+v2.1.0 [10.5281/zenodo.23007861](https://doi.org/10.5281/zenodo.23007861);
 v2.0.0 [10.5281/zenodo.22842725](https://doi.org/10.5281/zenodo.22842725);
 v1.4.1 [10.5281/zenodo.22644261](https://doi.org/10.5281/zenodo.22644261);
 v1.4 [10.5281/zenodo.22643843](https://doi.org/10.5281/zenodo.22643843);

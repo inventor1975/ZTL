@@ -1,4 +1,16 @@
-# Zenodo upload sheet — ZTL v2.1.1 (PUBLISHED 2026-09-28 — the v2.1.0 text with its own header)
+# Zenodo upload sheet — ZTL v2.1.2 (PREPARED 2026-09-28 — the relation to classical logic, worded with its domain)
+
+**v2.1.2 — prepared 2026-09-28, draft 23019513, reserved DOI 10.5281/zenodo.23019513.**
+Same day. A hostile review (Logik2, a second Claude Opus 5.5 session), re-checked by the
+author's session and decided by the author: "equal to classical logic in strength" holds on
+verified data only and is now always said so; over ZTL's own valuations there are fewer
+validities (ztl_taut_is_classical, not_conversely) — the price of admitting unverified input,
+not a "different denominator"; "conservative extension" was the wrong term; ZTL is strictly
+more expressive than any classical default (binary clone 2 + 512 against 2 + 16, measured
+2026-09-28); §10 "588 … the same set" → 584 as a set. isNewVersionOf v2.1.1
+(10.5281/zenodo.23008041). No theorem changed.
+
+**v2.1.1 PUBLISHED 2026-09-28 — the v2.1.0 text with its own header**
 
 **v2.1.1 PUBLISHED 2026-09-28: version DOI 10.5281/zenodo.23008041**
 (https://zenodo.org/records/23008041). Verified against the API WITHOUT a token after
@@ -102,7 +114,7 @@ PDF, theorems, modules, stands) — the part of this sheet above the version
 history is checked on every run; the history paragraphs carry their own
 versions' numbers and are not.
 
-**File to upload:** `paper/ZTL-preprint-v2.1.1.pdf` (42 pages)
+**File to upload:** `paper/ZTL-preprint-v2.1.2.pdf` (43 pages)
 
 ---
 
@@ -112,7 +124,7 @@ versions' numbers and are not.
 
 **Authors:** Reznik, Vitaly
 
-**Version:** 2.1.1
+**Version:** 2.1.2
 
 **License:** Creative Commons Attribution 4.0 International (CC BY 4.0)
 
@@ -231,6 +243,22 @@ literature search after the tables had been generated, not a source; the
 contribution is the generating principle, an implicational floor outside
 the Rosser–Turquette standardness conditions, the calculus, the machine
 verification, and the bridges to the engineering traditions.
+
+What is new in v2.1.2 (same day) — THE RELATION TO CLASSICAL LOGIC,
+WORDED WITH ITS DOMAIN, after a hostile review. "Equal to classical logic
+in strength" holds on verified data — the same 584 validities as a set —
+and is now always said with that domain. Over its own valuations ZTL has
+fewer validities (ztl_taut_is_classical, not_conversely: p → p): the price
+of admitting unverified input, named in §3.2, not a "different
+denominator" as v2.1.0 put it. "Conservative extension" was the wrong term
+(an extension keeps every theorem); on verified valuations the
+two-element Boolean algebra, with T designated, is a submatrix of the ZTL
+matrix. Measured: ZTL is strictly more expressive than any classical
+default — its binary clone holds all 512 two-valued functions of the three
+inputs, the defaults "unverified := false" and ":= true" hold 16 each, and
+no default can say isZ (external Bochvar, whose negation reads ¬Z = F, is
+not such a default: its clone equals ZTL's; the two part in seven cells).
+No theorem changed.
 
 What is new in v2.1.1 (same day) — the header only: the v2.1.0 PDF
 went out with the working draft's header ("draft", "not published",
@@ -494,9 +522,9 @@ verification; warranty; NP-hardness; coNP-hardness; epoch boundary;
 institutional computation; Lean 4; machine-checked proofs
 
 **Related/alternate identifiers:**
-- 10.5281/zenodo.23007861 — isNewVersionOf (v2.1.0, the prior version;
+- 10.5281/zenodo.23008041 — isNewVersionOf (v2.1.1, the prior version;
   Zenodo pre-fills the field from the previous form — check it says
-  23007861, not 22842725)
+  23008041, not 23007861)
 - https://github.com/inventor1975/ZTL — isSupplementedBy (the code,
   the Lean corpus, the regression, the ZFL language)
 - https://github.com/inventor1975/introspect — isSupplementedBy (the ZTL

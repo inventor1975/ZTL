@@ -133,7 +133,10 @@ a family trait, not an exile.
   2 + 512 against 2 + 16 for "unverified := false", and 2 + 16 for ":= true";
   every default yields a two-valued function of the three-valued inputs, ZTL
   defines every such function as a DNF over its detectors p ∧ p, ¬p,
-  ¬(p ↔ p), and no default defines isZ); dominant as a solver.
+  ¬(p ↔ p), and no default defines isZ; external Bochvar is NOT such a
+  default — its negation reads ¬Z = F, the default's ¬Z = T — and its clone
+  is the same 2 + 512 as ZTL's: they part in seven cells, not in
+  expressiveness; measured 2026-09-28); dominant as a solver.
   The 212 against the 584 is that price, measured — not a category error
   (see "Can classical logic replace ZTL?" below).
 * ~~"ZTL can express everything"~~ — false on three values: 515 of 19683

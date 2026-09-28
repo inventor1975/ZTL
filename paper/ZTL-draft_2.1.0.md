@@ -1,11 +1,12 @@
-# ZTL — Zero-Trust Logic — v2.1.1
+# ZTL — Zero-Trust Logic — v2.1.2
 
-**V. Reznik. Preprint, v2.1.1 — 2026-09-28. Version DOI:
-[10.5281/zenodo.23008041](https://doi.org/10.5281/zenodo.23008041)
+**V. Reznik. Preprint, v2.1.2 — 2026-09-28. Version DOI:
+[10.5281/zenodo.23019513](https://doi.org/10.5281/zenodo.23019513)
 (this file is the source; the PDF is built by `paper/mkpreprint.py`).
 Concept DOI:
 [10.5281/zenodo.21318981](https://doi.org/10.5281/zenodo.21318981)
-(v2.1.0: [10.5281/zenodo.23007861](https://doi.org/10.5281/zenodo.23007861);
+(v2.1.1: [10.5281/zenodo.23008041](https://doi.org/10.5281/zenodo.23008041);
+v2.1.0: [10.5281/zenodo.23007861](https://doi.org/10.5281/zenodo.23007861);
 v2.0.0: [10.5281/zenodo.22842725](https://doi.org/10.5281/zenodo.22842725);
 v1.4.1: [10.5281/zenodo.22644261](https://doi.org/10.5281/zenodo.22644261);
 v1.4: [10.5281/zenodo.22643843](https://doi.org/10.5281/zenodo.22643843);
@@ -13,7 +14,16 @@ v1.3: [10.5281/zenodo.21472971](https://doi.org/10.5281/zenodo.21472971);
 v1.2: [10.5281/zenodo.21440066](https://doi.org/10.5281/zenodo.21440066);
 v1.1: [10.5281/zenodo.21323552](https://doi.org/10.5281/zenodo.21323552);
 v1.0: [10.5281/zenodo.21318982](https://doi.org/10.5281/zenodo.21318982)).
-v2.1.1 (same day) changes only this header: the v2.1.0 PDF went out with the working
+v2.1.2 (same day) corrects how the relation to classical logic is worded, after a
+hostile review: "equal to classical logic in strength" holds ON VERIFIED DATA and is now
+always said with that domain; over its own valuations ZTL has fewer validities
+(`ztl_taut_is_classical`, `not_conversely`) — the price of admitting unverified input,
+named in §3.2, not the "different denominator" v2.1.0 called it; "conservative extension"
+was the wrong term and is replaced (§10); ZTL is strictly more expressive than any
+classical default (binary clone 2 + 512 against 2 + 16, measured); §10's "588 … the same
+set" is 584 as a set. No theorem changed; one measurement was added (the clone of the
+classical defaults).
+v2.1.1 (same day) changed only the header: the v2.1.0 PDF went out with the working
 draft's header ("draft", "not published", "Version DOI: minted on upload"); no line of
 the text below changed.
 v2.1.0 corrects how many values ZTL has, and proves where its values come from.
@@ -1571,8 +1581,11 @@ runs in three different directions at once, and collapsing them into
   projections plus the external functions — 1 + 8 unary, 2 + 512
   binary, nothing else sneaking in (§3.6, §3.7) — every two-valued binary
   function over the three inputs, against 2 + 16 for the classical default
-  "unverified := false" (external Bochvar), which sees only "true or not",
-  and 2 + 16 for ":= true" (measured 2026-09-28). Every classical default
+  "unverified := false", which sees only "true or not", and 2 + 16 for
+  ":= true" (measured 2026-09-28). External Bochvar is not such a default:
+  its own negation reads ¬Z = F where the default reads ¬Z = T, and its
+  binary clone is the same 2 + 512 as ZTL's — the two part in seven cells
+  (§4), not in expressive reach. Every classical default
   yields a two-valued function of the three-valued inputs; ZTL defines
   every such function, as a disjunctive normal form over its detectors
   p ∧ p, ¬p and ¬(p ↔ p); and no default defines `isZ`. Those external

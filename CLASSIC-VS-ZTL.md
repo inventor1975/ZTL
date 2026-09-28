@@ -129,11 +129,13 @@ a family trait, not an exile.
   VERIFIED DATA (the same set, 584 = 584); fewer validities only over
   unverified input, where classical logic cannot take the input at all —
   the price of admitting it (paper §3.2, §10), nothing lost on verified
-  data; strictly more expressive than any classical default (binary clone
+  data; strictly more expressive than any uniform classical default (binary clone
   2 + 512 against 2 + 16 for "unverified := false", and 2 + 16 for ":= true";
   every default yields a two-valued function of the three-valued inputs, ZTL
   defines every such function as a DNF over its detectors p ∧ p, ¬p,
-  ¬(p ↔ p), and no default defines isZ; external Bochvar is NOT such a
+  ¬(p ↔ p), and no uniform default defines isZ — a per-polarity default can
+  (p ∨ ¬p = T, T, F), and the rule shape of the sink exhibit defeats it;
+  external Bochvar is NOT such a
   default — its negation reads ¬Z = F, the default's ¬Z = T — and its clone
   is the same 2 + 512 as ZTL's: they part in seven cells, not in
   expressiveness; measured 2026-09-28); dominant as a solver.
@@ -263,12 +265,16 @@ that separates ZTL from the classical DEFAULT on the extended domain is **ZTL
 212 against external Bochvar 548**: both are defined on three values, and those
 336 are what Bochvar grants on ignorance.
 
-### "Classical with unverified := false" is external Bochvar
+### "Classical with unverified := false" is external Bochvar — on the binary connectives
 
 Measured cell by cell: they agree on **every** binary connective (0 divergences
 of 45) and part only at `¬`. So the substitution approach is not a naive
-shortcut — it is Bochvar's external layer, available since 1938. ZTL parts from
-it in exactly **7 cells**: `→` at (Z,F),(Z,Z); `↔` at (F,Z),(Z,F),(Z,Z); `⊕` at
+shortcut — on the binary connectives it is Bochvar's external layer, available
+since 1938. As LOGICS they differ (corrected 2026-09-28): the default reads
+¬Z = T, Bochvar ¬Z = F; binary clone 2 + 16 against 2 + 512; validities over the
+pool 584 against 548. ZTL parts from Bochvar in exactly **7 cells** of the six
+primitive tables (11 across the ten tables of the paper's §2 — four more under
+¬(a⊕b) and ¬(a→b)): `→` at (Z,F),(Z,Z); `↔` at (F,Z),(Z,F),(Z,Z); `⊕` at
 (T,Z),(Z,T). Against the substitution itself the count is 8 — those seven plus
 `¬Z`. Every one of the eight is a place where the substitution **manufactures a
 verdict out of ignorance**: `¬Z = T`, `Z→F = T`, `Z↔Z = T`.

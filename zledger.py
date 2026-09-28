@@ -254,5 +254,5 @@ if __name__ == "__main__":
     print("the same laws on verified ground and provably no new ones; 16")
     print("classical classes split into 195; the mark sayable from inside;")
     print("and the two moves refused at an unchecked atom are the engines")
-    print("of the two paradoxes we resolved. Equal in strength, finer in")
+    print("of the two paradoxes we resolved. Equal in strength on verified data, finer in")
     print("sight, and no truth on credit.")

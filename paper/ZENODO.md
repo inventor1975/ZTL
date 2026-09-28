@@ -6,7 +6,7 @@ author's session and decided by the author: "equal to classical logic in strengt
 verified data only and is now always said so; over ZTL's own valuations there are fewer
 validities (ztl_taut_is_classical, not_conversely) — the price of admitting unverified input,
 not a "different denominator"; "conservative extension" was the wrong term; ZTL is strictly
-more expressive than any classical default (binary clone 2 + 512 against 2 + 16, measured
+more expressive than any uniform classical default (binary clone 2 + 512 against 2 + 16, measured
 2026-09-28); §10 "588 … the same set" → 584 as a set. isNewVersionOf v2.1.1
 (10.5281/zenodo.23008041). No theorem changed.
 
@@ -253,10 +253,10 @@ of admitting unverified input, named in §3.2, not a "different
 denominator" as v2.1.0 put it. "Conservative extension" was the wrong term
 (an extension keeps every theorem); on verified valuations the
 two-element Boolean algebra, with T designated, is a submatrix of the ZTL
-matrix. Measured: ZTL is strictly more expressive than any classical
-default — its binary clone holds all 512 two-valued functions of the three
+matrix. Measured: ZTL is strictly more expressive than any uniform
+classical default — its binary clone holds all 512 two-valued functions of the three
 inputs, the defaults "unverified := false" and ":= true" hold 16 each, and
-no default can say isZ (external Bochvar, whose negation reads ¬Z = F, is
+no uniform default can say isZ (external Bochvar, whose negation reads ¬Z = F, is
 not such a default: its clone equals ZTL's; the two part in seven cells).
 No theorem changed.
 
@@ -293,8 +293,8 @@ added. The corpus now holds seventy-one modules and 1194 theorems (v2.0.0:
 What is new in v2.0.0 — THE RELATION TO CLASSICAL LOGIC, stated and
 measured, in the header, abstract, §1, §3.1, §4, §7 and §10. First, ON
 VERIFIED DATA THE TWO ARE THE SAME LOGIC: evalF_agrees for every formula,
-and on the depth-≤2 pool of 2926 formulas the two validate the same 588,
-element for element — zero classical laws lost. Second, ON UNVERIFIED
+and on the depth-≤2 pool of 2926 formulas the two validate the same 588
+entries — 584 as a set, element for element — zero classical laws lost. Second, ON UNVERIFIED
 DATA ZTL DECIDES: the twenty-six classical laws on a marked atom — twelve
 hold (modus ponens, non-contradiction, transitivity, commutativity,
 associativity, both distributivities, the three positive definitions),
@@ -303,7 +303,7 @@ formulas take the value F: excluded middle, p→p, Peirce, q→(p→q); the ten
 identities have both sides defined and different), undecided outcomes
 zero; classical logic decides none, having no input for the mark; in Lean
 the fourteen are the theorems *_needs_ground, renamed from *_fails
-(twenty-six names in all). Third, THE ENGINEERING DEFAULT IS BOCHVAR:
+(twenty-six names in all). Third, THE ENGINEERING DEFAULT IS BOCHVAR on the binary connectives:
 "classical with unverified := false" agrees with the external layer of
 B3 on every binary connective (0 of 45 cells differ) and parts only at
 negation; ZTL parts from Bochvar in seven cells (→ at (Z,F),(Z,Z); ↔ at

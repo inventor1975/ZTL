@@ -36,7 +36,7 @@ is** — `paper/ZTL-draft_1.4.md`, three sections, twenty minutes:
   in expressive reach — the middle axis reads as weakness and is superseded:
   say, as `CLASSIC-VS-ZTL.md` does, equal to classical logic in strength ON
   VERIFIED DATA, fewer validities only over unverified input — the price of
-  admitting it —, strictly more expressive than any classical default, dominant
+  admitting it —, strictly more expressive than any uniform classical default, dominant
   as a solver; corrected 2026-09-28), and
   the local-versus-global reading of the mark. That last one matters more than
   it looks: the *global* reading is classical supervaluation, and the whole
@@ -265,7 +265,7 @@ named (corrected 2026-09-28): ZTL is **equal to classical logic in strength on
 verified data** (the validities are the same set, 584 = 584); over its own
 valuations it has **fewer validities** — the price of admitting unverified input
 (`ztl_taut_is_classical`, `not_conversely`: `p → p`), nothing lost on verified
-data; it is **strictly more expressive than any classical default** (binary
+data; it is **strictly more expressive than any uniform classical default** (binary
 clone 2 + 512 against 2 + 16); and it is **dominant as a solver** —
 `CLASSIC-VS-ZTL.md`. The 212 beside the 584 is that price, measured.
 

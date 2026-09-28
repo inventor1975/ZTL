@@ -20,9 +20,11 @@ always said with that domain; over its own valuations ZTL has fewer validities
 (`ztl_taut_is_classical`, `not_conversely`) — the price of admitting unverified input,
 named in §3.2, not the "different denominator" v2.1.0 called it; "conservative extension"
 was the wrong term and is replaced (§10); ZTL is strictly more expressive than any
-classical default (binary clone 2 + 512 against 2 + 16, measured); §10's "588 … the same
-set" is 584 as a set. No theorem changed; one measurement was added (the clone of the
-classical defaults).
+uniform classical default (binary clone 2 + 512 against 2 + 16, measured) — external
+Bochvar is not such a default: its clone equals ZTL's, and "the default is Bochvar" holds
+on the binary connectives only (§4); §10's "588 … the same set" is 584 as a set. No
+theorem changed; two measurements were added (the binary clones of the uniform defaults
+and of external Bochvar).
 v2.1.1 (same day) changed only the header: the v2.1.0 PDF went out with the working
 draft's header ("draft", "not published", "Version DOI: minted on upload"); no line of
 the text below changed.
@@ -999,19 +1001,24 @@ third outcome of §10's sink, which the atomic position cannot have. A terminolo
 (McGee–McLaughlin, Varzi) is a distinction at the level of inferences,
 not of operators; our "locality" is a different notion.
 
-**The engineering default is not naive — it is Bochvar, and the delta is the floor.** The default an engineer reaches for when a flag cannot be established is
+**The engineering default is not naive — on the binary connectives it is Bochvar, and the delta is the floor.** The default an engineer reaches for when a flag cannot be established is
 to substitute falsehood and proceed classically. It is worth stating
 precisely what that default *is*, because the literature already owns it.
 Measured cell by cell over the full tables: **"classical logic with
 unverified := false" agrees with the external layer of Bochvar's B3 on
 every binary connective — zero divergences of forty-five cells — and
-parts from it only at negation.** The engineering shortcut is not a
-shortcut; it is a three-valued logic published in 1938.
+parts from it only at negation.** On the binary connectives the engineering
+shortcut is not a shortcut: it is the external layer of a three-valued logic
+published in 1938. As logics the two still differ — the default reads ¬Z = T,
+Bochvar ¬Z = F; the default's binary clone is 2 + 16 against Bochvar's 2 + 512;
+over the pool the default validates 584, Bochvar 548 (measured 2026-09-28).
 
 This relocates the contribution claimed in §1. ZTL parts from external
-Bochvar in exactly seven cells — `→` at (Z,F) and (Z,Z), `↔` at (F,Z),
-(Z,F) and (Z,Z), `⊕` at (T,Z) and (Z,T) — and from the substitution in
-eight, those seven plus `¬Z`. Every one of the eight is a cell where the
+Bochvar in exactly seven cells of the six primitive tables — `→` at (Z,F)
+and (Z,Z), `↔` at (F,Z), (Z,F) and (Z,Z), `⊕` at (T,Z) and (Z,T); across
+the ten tables of §2 eleven, the four more under ¬(a⊕b) and ¬(a→b), where
+Bochvar's routes still hold (a↔b = ¬(a⊕b) in all nine cells) and ZTL's
+fail — and from the substitution in eight, those seven plus `¬Z`. Every one of the eight is a cell where the
 substitution **derives a verdict from the absence of information**:
 `¬Z = T`, `Z → F = T`, `Z ↔ Z = T`. The implicational floor is therefore
 not a stylistic difference from a neighbour in the three-valued family.
@@ -1264,9 +1271,9 @@ classically.
 * The 212 validities of the depth-≤2 pool over marked valuations, beside
   the 584 over verified valuations, measure the price named in §10 — fewer
   formulas hold on every valuation once the unverified are admitted — not
-  a loss on verified data. Against the classical default the comparison is
-  with external Bochvar's 548, and the 336 are exactly what that logic
-  grants on ignorance.
+  a loss on verified data. On the wider domain the comparison is with
+  external Bochvar's 548 (the default itself keeps all 584 by substitution),
+  and the 336 are exactly what Bochvar grants on ignorance.
 * The Suszko reduction is not escaped — nothing escapes it. It is not
   needed above the atoms, because every connective already returns a
   verdict (§4).
@@ -1573,9 +1580,9 @@ runs in three different directions at once, and collapsing them into
   the unverified ones classical logic cannot take at all; that fewer
   formulas hold on all of them is the price of admitting them — named in
   §3.2, where the deduction theorem runs one way only — and nothing is
-  lost on the classical ones. Against the classical default the
-  comparison is with external Bochvar, which validates 548 of the same
-  pool: the 336 are what a logic grants when it is willing to assert
+  lost on the classical ones. On the wider domain the comparison is with
+  external Bochvar, which validates 548 of the same pool (the default
+  itself keeps all 584, by substitution): the 336 are what a logic grants when it is willing to assert
   about the unverified.
 * *Strict expansion in expressive reach.* The clone is exactly the
   projections plus the external functions — 1 + 8 unary, 2 + 512
@@ -1585,10 +1592,12 @@ runs in three different directions at once, and collapsing them into
   ":= true" (measured 2026-09-28). External Bochvar is not such a default:
   its own negation reads ¬Z = F where the default reads ¬Z = T, and its
   binary clone is the same 2 + 512 as ZTL's — the two part in seven cells
-  (§4), not in expressive reach. Every classical default
-  yields a two-valued function of the three-valued inputs; ZTL defines
-  every such function, as a disjunctive normal form over its detectors
-  p ∧ p, ¬p and ¬(p ↔ p); and no default defines `isZ`. Those external
+  (§4), not in expressive reach. Every uniform classical default (the
+  unverified read as F, or as T) yields a two-valued function of the
+  three-valued inputs; ZTL defines every such function, as a disjunctive
+  normal form over its detectors p ∧ p, ¬p and ¬(p ↔ p); and no uniform
+  default defines `isZ` (a default chosen per polarity can — p ∨ ¬p gives
+  T, T, F — and is the one §10's rule shape defeats below). Those external
   functions speak about the **status** of a ground, which classical
   logic has no object to speak about at all — measured on the pool, 1840
   of 2924 compounds are mark-sensitive (§3.1); and single-operator
@@ -1598,7 +1607,7 @@ runs in three different directions at once, and collapsing them into
 
 So the honest one-liner is neither "stronger" nor "weaker": **equal to
 classical logic in strength on verified data, strictly more expressive than
-any classical default, and dominant as a solver** — identical on verified
+any uniform classical default, and dominant as a solver** — identical on verified
 data, wider in subject, and decided correctly on unverified data, where
 classical logic has no input of its own and its defaults err.
 

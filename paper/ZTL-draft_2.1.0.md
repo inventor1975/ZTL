@@ -2925,7 +2925,8 @@ eight theorems, **empty axiom list**):
 - **The sharp divergence: excluded middle.** For a non-denoting atom,
   `P(τ) ∨ ¬P(τ) = F` in ZTL, whereas supervaluational free logic makes it
   *super-true*. ZTL marks the gap rather than completing it; the mark is
-  not a value, so the middle is not excluded (`lem_fails_nondenoting`).
+  the atom's value and never a compound's: Z ∨ ¬Z = Z ∨ F = F, so the middle
+  is not excluded (`lem_fails_nondenoting`).
 - **Divergence from Russell.** "The present king of France is bald" is
   **F** on Russell's `∃x(Kx ∧ unique ∧ Bx)` and **Z** in ZTL: same
   sentence, Russell asserts falsity, ZTL refuses the assertion and marks

@@ -123,7 +123,8 @@ if __name__ == "__main__":
           f"precisification)")
     assert lem == F, "LEM on the non-denoting atom was not F"
     print("    → ZTL is NOT supervaluational: it marks the gap rather than")
-    print("      completing it. LEM is F, because the mark is not a value.")
+    print("      completing it. LEM is F: the marked atom earns neither itself nor its")
+    print("      negation (Z ∨ ¬Z = Z ∨ F = F); the mark is the atom's value, never a compound's.")
 
     # ------------------------------------------------ 3. greedy propagation
     print("\n### 3. Greedy propagation — the mark evaporates in a compound")

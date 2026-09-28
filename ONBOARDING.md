@@ -30,8 +30,8 @@ Added 2026-09-24 on the curator's word.
 **And read the preprint's own positioning before saying anything about what ZTL
 is** — `paper/ZTL-draft_1.4.md`, three sections, twenty minutes:
 
-* **§10** — the passport. What Z is (a mark on data, not a truth value), why the
-  verdicts stay two-valued, the passport on three axes (in 1.4's words:
+* **§10** — the passport. What Z is (the value of an unverified atom, never of a
+  compound), why every connective stays two-valued, the passport on three axes (in 1.4's words:
   conservative extension by data, strict contraction by law, strict expansion
   in expressive reach — the middle axis reads as weakness and is superseded:
   say, as `CLASSIC-VS-ZTL.md` does, equal to classical logic in strength, more
@@ -101,29 +101,31 @@ add` is refused there, that is the rule working, not an obstacle.
 
 ## 1. ZTL — what it is, in the order that matters
 
-**It is a TWO-VALUED logic.** Not three-valued. The verdict of every COMPOUND is T or F; Z lives
-only on an atom, so a claim that is one unverified atom answers Z (OPEN). (Until 2026-09-27 this
-sentence claimed two values for EVERY verdict — more than the principle; the cloud red team, PR #3.) This
-is the single most common error to make about it, and the assistant made it in
-a letter to a citing reader before checking.
+**It is a THREE-VALUED logic whose every connective is two-valued.** Values T, F, Z; the verdict
+of every COMPOUND is T or F; Z lives only on an atom, so a claim that is one unverified atom
+answers Z (OPEN). History of this sentence, because the error went both ways: until 2026-09-27 it
+claimed two values for EVERY verdict (the cloud red team, PR #3); until 2026-09-28 it said "two-valued,
+not three-valued" — the curator found the atom: an assertion whose value is Z. Counting values is
+the single most common error to make about ZTL; answer by layers (atoms three, compounds two,
+Suszko's logical values two — as for every logic).
 
 The alphabet is five symbols **of four different kinds** — do not count them
 together, and never say "five-valued":
 
 | symbol | kind | where it lives |
 |---|---|---|
-| `T`, `F` | truth values | input and output |
-| `Z` | **mark on an input** — Łukasiewicz's indeterminate, "a truth not yet settled" | input only; barred from the value of any compound |
+| `T`, `F` | values | input and output |
+| `Z` | **the third value: the mark of an unverified input** — Łukasiewicz's indeterminate, "a truth not yet settled" | atoms only; barred from the value of any compound |
 | `N` | **solver state** — Kleene's undefined, "a computation not yet run" | only under self-reference; provably finite; never escapes outward |
 | `E` | **the empty case** — no readings at all, no subject at all | a disposition of the judge (both floors — see §1.5), never a value |
 
 The preprint's own §10 is the canonical positioning and beats any paraphrase:
 
-> Truth values: `T, F` · Input mark: `Z` "unverified" · Solver state: `N` "not
+> Values: `T, F, Z` (Z on atoms only) · Connectives: two-valued · Solver state: `N` "not
 > yet computed" · Reading policy: local, default deny.
-> **"ZTL is a two-valued logic that refuses to lie about the unverified."**
+> **"ZTL is a three-valued logic whose connectives refuse to lie about the unverified."**
 
-Two-valuedness of the values is **not** classicality: the entailment relation
+Two-valued connectives are **not** classicality: the entailment relation
 differs (LEM falls, the deduction theorem is one-directional, `¬¬p ⊭ p`). A
 logic is defined by its entailment, not by its palette.
 

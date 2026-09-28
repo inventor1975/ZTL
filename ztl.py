@@ -2,10 +2,11 @@
 """
 ZTL — Zero-Trust Logic.
 
-Truth values: T (truth), F (falsehood) — every compound's verdict is two-valued
-(Z lives only on an atom).
-Input mark: Z (zero-trust: "truth not earned") — the third symbol of the
-calculating tables, not a value (passport: paper/ZTL-draft_1.4.md §10).
+Values: T (truth), F (falsehood), Z (zero-trust: "truth not earned", the mark of
+an unverified input). ZTL is a three-valued logic whose every connective is
+two-valued: Z is the value of atoms only — every compound's verdict is T or F
+(passport: paper/ZTL-draft_2.1.0.md §10; up to 2.0.0 this read "two-valued, Z not
+a value", too strong: an unverified atom is an assertion whose value is Z).
 
 Generating principle (one for all connectives):
     op(...Z...) = AND over all classical substitutions {T,F} for Z,

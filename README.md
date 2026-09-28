@@ -5,8 +5,8 @@
 **Try it without installing anything: [ztl.vitalyreznik.com](https://ztl.vitalyreznik.com)** — the judge, running, on your own sentence.
 
 A logic built on one principle: **truth is never granted on credit**.
-The verdict of every compound is two-valued (T/F) — Z lives only on an atom; the third symbol Z (zero-trust,
-"truth not earned") is a mark on an unverified input: it never produces
+A three-valued logic whose every connective is two-valued: the verdict of every compound is T or F,
+and the third value Z (zero-trust, "truth not earned"), the mark of an unverified input, lives only on atoms: it never produces
 T unless T is forced under every classical reading of the unverified.
 Default deny, ported from security into truth tables; the three-symbol
 tables are the working calculator of this policy (ontological passport —

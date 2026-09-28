@@ -1,8 +1,8 @@
 # ZTL — Zero-Trust Logic
 
 Specification v0.2 — 2026-07-11. Status: word-first phase closed, the
-test bench works, the passport (preprint §10) is adopted: verdicts are
-two-valued, Z is an input mark.
+test bench works, the passport (preprint §10) is adopted: three values T, F, Z; every
+connective two-valued; Z the value of atoms only.
 
 ## The principle (one, generates everything)
 
@@ -18,10 +18,13 @@ Z-argument.
 
 ## Values and marks
 
-Truth values: `T` (earned), `F` (falsehood) — the verdict of every
-compound is two-valued (Z lives only on an atom: a claim that is one unverified atom answers Z). Input mark: `Z` — zero-trust, "not earned"; a property of an
-atomic datum, not a truth value (in the design dialogues of 2026-07-10
-it appeared as "L"). The solver's service state `N` ("not yet
+Values: `T` (earned), `F` (falsehood), `Z` — zero-trust, "not earned", the
+mark of an unverified atom (a property of an atomic datum; in the design
+dialogues of 2026-07-10 it appeared as "L"). ZTL is three-valued and every
+connective is two-valued: the verdict of every compound is T or F, and Z is
+the value of atoms only (a claim that is one unverified atom answers Z).
+Until 2026-09-28 this said "Z is not a truth value" — too strong: the atom
+is an assertion, and its value is Z. The solver's service state `N` ("not yet
 computed", present only under self-reference, never escapes outward) is
 neither a value nor a mark. The lazy register reuses the symbol Z
 positionally for this phase (the role differs, not the alphabet —

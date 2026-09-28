@@ -11,6 +11,18 @@ v1.3: [10.5281/zenodo.21472971](https://doi.org/10.5281/zenodo.21472971);
 v1.2: [10.5281/zenodo.21440066](https://doi.org/10.5281/zenodo.21440066);
 v1.1: [10.5281/zenodo.21323552](https://doi.org/10.5281/zenodo.21323552);
 v1.0: [10.5281/zenodo.21318982](https://doi.org/10.5281/zenodo.21318982)).
+**v2.1.0 corrects how many values ZTL has, and proves where its values come from.**
+Earlier versions, 2.0.0 included, called ZTL "a two-valued logic with a mark, not a
+three-valued logic". That name was too strong: an atom is an assertion, and an unverified
+atom has the value Z (`ztl.ev('p', {'p': 'Z'}) = Z`; `eqI m1 m2 = Z` in `ZIndisc.lean` is
+the same fact one order up). ZTL is a **three-valued logic whose every connective is
+two-valued**: three values on the atoms, two on everything built from them. Nothing
+measured or proved changes — the greediness theorem is exactly the statement that the
+third value never climbs above the atoms (§§2, 4, 10). And the one asymmetric cell,
+¬Z = F, is shown to give the values an **order of birth**, proved over the whole language
+(§3.9, `ZOrigin.lean`, empty axiom list): under pure doubt F is born first and T only
+through an F — the order N, Z, F, T that §4 names, which classical logic, whose negation
+is an involution, does not have.
 v2.0.0 states the relation to classical logic and measures both of its
 halves (§3.1, §4, §10). *On verified data ZTL is classical logic:* every
 formula takes the same value under every mark-free valuation
@@ -44,7 +56,7 @@ failure of every classical route to the second five; the v1.4 PDF showed
 six. v1.4 adds: *no numbered section rests on measurement alone* — every one of the
 eighteen sections that carried the MEASURED tag now names kernel-checked
 theorems behind its load-bearing claims, the corpus growing threefold to
-seventy modules and 1187 theorems, all on the empty axiom list (§8);
+seventy-one modules and 1194 theorems, all on the empty axiom list (§8);
 *the six traditions of §1 as six embedding theorems* — IEEE 754 NaN, SQL
 NULL, taint tracking, abstract interpretation, Dempster–Shafer and
 provenance semirings, each formalised as its own tradition states it,
@@ -122,19 +134,21 @@ checked by the Lean 4 kernel with an **empty axiom list**.
 
 ## Abstract
 
-ZTL (Zero-Trust Logic) is a two-valued logic over marked inputs,
-generated in its entirety by a single principle: **truth is never
+ZTL (Zero-Trust Logic) is a three-valued logic whose every connective is
+two-valued, generated in its entirety by a single principle: **truth is never
 granted on credit** — a connective returns T only if T is forced under
-every classical reading of the unverified. There are exactly two truth
-values (the verdict of every compound is classical; Z lives only on an atom); the third symbol Z is a **mark**
-on an unverified input, not a truth value. The mark is barred from the
-value of any compound — the greediness theorem (`evalF_classical`, empty
-axiom list): every compound assertion is already T or F, the middle never
-appears above the atoms. This is more than Suszko's logical
-two-valuedness, which every structural logic has for free; it is the
-stronger, truth-functional fact that above the atoms the algebraic value
-already *is* the logical value, so the reduction has nothing left to do
-on compounds. Its identity among the three-valued matrices is precise and
+every classical reading of the unverified. It has three values: T, F and
+Z, the **mark** of an unverified atom. Z is the value of atoms only: it is
+barred from the value of any compound — the greediness theorem
+(`evalF_classical`, empty axiom list): every compound assertion is already
+T or F, the third value never appears above the atoms. This is more than
+Suszko's logical two-valuedness, which every structural logic has for
+free; it is the stronger, truth-functional fact that above the atoms the
+algebraic value already *is* the logical value, so the reduction has
+nothing left to do on compounds — its whole work is on the atom. The one
+asymmetric cell, ¬Z = F, gives the values an order of birth, proved over
+the whole language: under pure doubt, F is born first and T only through
+an F (`ZOrigin.lean`, empty axiom list). Its identity among the three-valued matrices is precise and
 machine-checked at its cause: a single rule, **¬¬p ⊨ p**, separates its
 consequence relation from each of its four involutive-negation neighbours
 (K3, LP, weak Kleene, Łukasiewicz Ł₃), and by one lemma from any matrix
@@ -220,9 +234,9 @@ transport truth but cannot mint it — from no premises nothing is derivable, ev
 tautologies, even on credit). The entire development — the core, both
 engine certificates with cut admissibility, the algebraic witnesses, the
 general fixed-point theorem, the expedition twins, the temporal modules
-and the frame's own mini-theorems, seventy modules in all — is
+and the frame's own mini-theorems, seventy-one modules in all — is
 formalized in Lean 4 **with an empty axiom list, definitions
-included**: 1187 theorems, each one audited individually rather than by
+included**: 1194 theorems, each one audited individually rather than by
 sample (`inventory/axiom_audit.py`, re-run on every push). As of this
 revision no numbered section rests on measurement alone (the scouting
 subsection §3.7 still does): every one of the eighteen that carried the MEASURED tag now names kernel-checked theorems behind its
@@ -276,8 +290,8 @@ Each of these inventions parried its own special case of one disease:
 naive treatment of the unverified manufactures confidence out of
 nothing. We exhibit, for each of the six, a worked case in which our
 core reproduces that practice's central move (§§12–16, 20), and argue from
-those six correspondences to a common denominator — a two-valued logic
-over marked inputs with a single generating principle. The claim
+those six correspondences to a common denominator — a three-valued logic
+with two-valued connectives and a single generating principle. The claim
 ceiling, stated here rather than left to the reader: a reproduced case
 is not an embedding. That ceiling no longer stands for any of the six: each has its
 semantics formalised and a theorem placing ZTL's verdict inside it
@@ -755,6 +769,43 @@ seven-table cage banning lone ∧ from negation. The only measured (not
 kernel) remainder is the cardinality of the common clone: 514 = 2
 projections + all 512 external binary tables, by exhaustive closure.
 
+### 3.9 The order of birth: F before T (MEASURED + Lean)
+
+Classical negation is an involution: ¬T = F and ¬F = T, and neither value is
+prior to the other. ZTL breaks the symmetry in one cell, ¬Z = F — the
+generating principle's verdict that a negation of the unverified is not
+earned — and the tables then carry an **order of birth**. Start from *pure
+doubt*: every atom is Z and no constant hands a value in.
+
+* *Doubt yields F first.* One connective over doubt alone gives F — all six
+  (`doubt_gives_F`); no connective over atoms ever yields T
+  (`no_T_at_depth_one`).
+* *T is born only through F.* A formula over pure doubt is T only if some
+  proper subformula is F (`T_through_F`) — truth is never made from doubt
+  directly, only through a falsehood. The first truth is made exactly so:
+  ¬¬p is T when p is Z, via ¬Z = F (`T_second`).
+* *Z is made by nothing.* No compound is Z (`evalF_classical`); with the two
+  above (`birth_order`): Z is only given, F comes first, T only after an F —
+  the genetic order N, Z, F, T of §4, now a theorem about the tables rather
+  than a gloss on them.
+
+MEASURED before it was proved: over one unverified atom, depth 1 gives 0
+truths of 6 formulas, depth 2 gives 84 of 252, all 84 through a false
+subformula. The first step is also stated *inside* the language, where the
+mark is expressible (isZ(p) = ¬(p↔p), §3.1): isZ(p) → ¬¬p is valid, while
+isZ(p) → p and isZ(p) → ¬p are not — doubt yields a denial of earning, never
+an affirmation. `lean/ZOrigin.lean`, seven theorems, empty axiom list.
+
+What this is and is not. Classical logic has no such order — not because it
+cannot prove it, but because the question does not arise: without Z every
+atom hands in T or F alike. The order does not make ZTL prove more on
+classical logic's own domain (§3.1: the same validities), and it is not a
+claim that falsehood is prior in the world: it is the exact consequence of
+the one generating principle, truth never granted on credit, shown total.
+Constants are excluded on purpose — ⊤ hands T in without deriving it — and
+the theorem speaks of values of formulas, not of the verification of atoms:
+¬¬p is T while p stays Z, which is exactly why ¬¬p ⊨ p fails (§4).
+
 ## 4. Place in the literature
 
 The pedigree, with the ledger kept honestly. Nothing here was taken
@@ -780,19 +831,23 @@ only two, designated and undesignated. On that thesis Łukasiewicz, K3
 and Bochvar are already two-valued as logics, their third value an
 algebraic bookkeeping symbol recovered as bivalent by the Suszko
 reduction *after the fact*. ZTL's difference is not that it escapes the
-reduction — nothing does — but that it needs none: it is bivalent **by
-construction**. The discriminator is exact and machine-measurable: does
+reduction — nothing does — but where the reduction has work to do. The discriminator is exact and machine-measurable: does
 the third symbol ever appear as the value of a *compound* assertion? In
 the neighbours it does — on the reproducible depth-2 pool of 90 compounds
 (`paper/core_logic_checks.py` §3) K3, LP and weak Kleene take the middle value
 on 90 of 90, Łukasiewicz Ł3 on 80 of 90 (MEASURED). In ZTL it never does — **0
 of 90**, the greediness theorem (`evalF_classical`, empty axiom list):
 the mark evaporates at the first operator, so no *compound* assertion is
-ever anything but T or F. Where a genuinely three-valued logic is shown
-bivalent by Suszko's reduction, ZTL is bivalent before any reduction,
-because the mark is barred from the value of compounds from the start.
-That is the precise sense in which ZTL is a two-valued logic with a mark,
-not a three-valued logic. ZTL's implication is Bochvar's
+ever anything but T or F. The reduction's whole work in ZTL is on the atom:
+there Z and F are both undesignated, yet they differ as inputs (¬F = T,
+¬Z = F), so the bivalent valuation of an atom does not determine that of
+its negation — Suszko's non-truth-functional bivalence, confined to the one
+place the third value lives. Above the atoms the algebraic value already is
+the logical value. That is the precise sense in which ZTL is a three-valued
+logic whose connectives are two-valued: three values on the atoms, two on
+everything built from them. (Versions up to 2.0.0 called ZTL "two-valued with
+a mark, not three-valued"; the unverified atom — an assertion whose value is
+Z — is why that name was too strong.) ZTL's implication is Bochvar's
 ◇A⊃□B taken as a primitive; a polarity-adaptive translation (□ in
 positive positions, ◇ in negative ones) instead of a uniform one. ZTL
 coincides with none of the literal paralogics of the Karpenko–Tomova
@@ -1212,7 +1267,7 @@ an axiom infects every theorem that uses it), but an argument, and one
 that an unused orphan theorem would escape. It is now a measurement:
 `inventory/axiom_audit.py` extracts every theorem name from every
 module, generates one `#print axioms` per name, and fails if a single
-line reads otherwise. **1187 of 1187 clean**, re-run by CI on every push.
+line reads otherwise. **1194 of 1194 clean**, re-run by CI on every push.
 The same stand refuses a module that carries theorems and is built by no
 target — the failure mode that let one module (`QuantumWitness.lean`) go
 unchecked by any automation until 2026-07-20. Three modules of the corpus
@@ -1448,8 +1503,8 @@ parts are worth; it is not a further theorem.
 The final and most precise formulation of what has been built:
 
 ```
-Truth values:    T, F                   (every compound's verdict is two-valued)
-Input mark:      Z "unverified"          (a property of data, not truth)
+Values:          T, F, Z                (Z — "unverified" — the value of atoms only)
+Connectives:     two-valued              (every compound's verdict is T or F)
 Solver state:    N "not yet computed"    (a computation phase, present
                                           only under self-reference;
                                           provably finite — §9 — and
@@ -1458,8 +1513,8 @@ Reading policy:  local, default deny     (the three-symbol tables are
                                           the policy's calculator)
 ```
 
-**ZTL is a two-valued logic that refuses to lie about the unverified.**
-Two-valuedness of the values does not mean classicality: the entailment
+**ZTL is a three-valued logic whose connectives refuse to lie about the
+unverified.** Two-valued connectives do not mean classicality: the entailment
 relation is provably different (excluded middle is refuted on the mark,
 the deduction theorem is one-directional, ¬¬p ⊭ p — §§3–5). A logic is defined by its
 entailment, not by its palette.
@@ -3092,7 +3147,7 @@ missing: nodes carry a TAG from a four-element inductive (`t f p n`) instead
 of a function, a translation sends tags to signs, formulas have decidable
 equality, and `closedB` decides closure — with `closedB_sound` proving that
 what it calls closed is closed in the sense above, hence has no model. The
-four tags are not four values: ZTL is two-valued with a mark, and a tag says
+four tags are not four values: ZTL's values are T, F and Z, its verdicts two, and a tag says
 which VERDICTS a node admits (`n` = "not T": F, or the still unanswered Z);
 P and N do not clash precisely because both admit the mark. The search runs
 a fuel-bounded worklist: a closed branch is discharged, otherwise the first

@@ -8,7 +8,8 @@ the neighbour matrices of pssl/family.py. Nothing here is typed in by hand; a
 claim in a paper that this script does not reproduce is a claim the paper must
 not make. Wired into run_all.py (2026-09-19) so that the text and the numbers
 cannot drift apart silently — the 2.0.0 frame (588 = 588 over the 2926-entry list, 584 = 584 as a set;
-26 laws = 12 + 14 refuted, 0 undecided; the default is external Bochvar,
+26 laws = 12 + 14 refuted, 0 undecided; the default is external Bochvar on the
+binary connectives (as logics they differ at ¬, clone 2+16 vs 2+512),
 0 of 45; 7 and 8 cells; the sink; no conservative default) stands on it.
 
 Sections, in the order the paper uses them:
@@ -23,7 +24,7 @@ Sections, in the order the paper uses them:
   5. WHAT THE MARK BUYS: on 1840 of 2924 compounds (63%) the verdict depends on
      whether an atom is unverified or false; under the substitution
      unverified := false the count is 0 by construction; isZ(x) = ¬(x↔x)
-  6. THE ENGINEERING DEFAULT IS EXTERNAL BOCHVAR: "classical with
+  6. THE ENGINEERING DEFAULT IS EXTERNAL BOCHVAR ON THE BINARY CONNECTIVES: "classical with
      unverified := false" agrees with Bochvar's external layer on all 45 binary
      cells and parts only at ¬; ZTL parts from Bochvar in 7 cells (listed) and
      from the substitution in 8; on the extended domain ZTL 212 ⊊ Bochvar 548,

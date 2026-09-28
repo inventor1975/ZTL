@@ -6,7 +6,7 @@ authors:
     given-names: "Vitaly"
 type: software
 year: 2026
-version: "2.1.1"
+version: "2.1.2"
 date-released: 2026-09-28
 repository-code: "https://github.com/inventor1975/ZTL"
 license:
@@ -25,6 +25,9 @@ identifiers:
   - type: doi
     value: 10.5281/zenodo.21318981
     description: "Concept DOI (resolves to the latest preprint version)"
+  - type: doi
+    value: 10.5281/zenodo.23019513
+    description: "Preprint v2.1.2 on Zenodo (the relation to classical logic worded with its domain)"
   - type: doi
     value: 10.5281/zenodo.23008041
     description: "Preprint v2.1.1 on Zenodo (the v2.1.0 text with its own header)"

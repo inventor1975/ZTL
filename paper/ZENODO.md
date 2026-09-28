@@ -1,6 +1,11 @@
-# Zenodo upload sheet — ZTL v2.1.2 (PREPARED 2026-09-28 — the relation to classical logic, worded with its domain)
+# Zenodo upload sheet — ZTL v2.1.2 (PUBLISHED 2026-09-28 — the relation to classical logic, worded with its domain)
 
-**v2.1.2 — prepared 2026-09-28, draft 23019513, reserved DOI 10.5281/zenodo.23019513.**
+**v2.1.2 PUBLISHED 2026-09-28: version DOI 10.5281/zenodo.23019513**
+(https://zenodo.org/records/23019513). Verified against the API WITHOUT a token after
+publication: version 2.1.2, CC BY 4.0, date Created 2026-09-28, 52 keywords, 4 related
+identifiers (isNewVersionOf 23008041), Repository URL github.com/inventor1975/ZTL, latest of
+the concept (index 9), exactly ONE file — ZTL-preprint-v2.1.2.pdf, 439857 bytes, md5 equal to
+the repository copy. Every field filled by the deposit tool, the Created date included.
 Same day. A hostile review (Logik2, a second Claude Opus 5.5 session), re-checked by the
 author's session and decided by the author: "equal to classical logic in strength" holds on
 verified data only and is now always said so; over ZTL's own valuations there are fewer

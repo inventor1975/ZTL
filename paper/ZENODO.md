@@ -258,6 +258,9 @@ classical default — its binary clone holds all 512 two-valued functions of the
 inputs, the defaults "unverified := false" and ":= true" hold 16 each, and
 no uniform default can say isZ (external Bochvar, whose negation reads ¬Z = F, is
 not such a default: its clone equals ZTL's; the two part in seven cells).
+And §3.8 now says what the lift makes of the four degenerate kernels: the
+projection p becomes the truth detector J_T(p) — the step from an atom's
+value to a verdict — and ¬p becomes ZTL's own negation, J_F(p).
 No theorem changed.
 
 What is new in v2.1.1 (same day) — the header only: the v2.1.0 PDF

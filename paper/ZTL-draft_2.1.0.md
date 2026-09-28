@@ -24,7 +24,8 @@ uniform classical default (binary clone 2 + 512 against 2 + 16, measured) — ex
 Bochvar is not such a default: its clone equals ZTL's, and "the default is Bochvar" holds
 on the binary connectives only (§4); §10's "588 … the same set" is 584 as a set. No
 theorem changed; two measurements were added (the binary clones of the uniform defaults
-and of external Bochvar).
+and of external Bochvar), and §3.8 now says what the lift makes of the degenerate kernels:
+the projection becomes the truth detector J_T, ¬p becomes ZTL's own negation J_F.
 v2.1.1 (same day) changed only the header: the v2.1.0 PDF went out with the working
 draft's header ("draft", "not published", "Version DOI: minted on upload"); no line of
 the text below changed.
@@ -739,6 +740,12 @@ closing over projections and constants gives, totally:
 | not complete alone | ∧, ∨ | 7 |
 | not complete alone | ⊕, ↔ | 258 |
 | degenerate | p, q, ¬p, ¬q, ⊤, ⊥ | 4–8 |
+
+The degenerate kernels are not degenerate after the lift: the projection p
+becomes the truth detector J_T(p) — the step from an atom's value to a
+verdict, where the mark turns into F — and ¬p becomes ZTL's own negation,
+the falsity detector J_F(p). Classically they copy or flip an argument;
+here they ask whether it was earned (measured on all nine cells, `ztl.lift2`).
 
 **The census law: a lifted binary connective is complete alone (with
 constants) iff its kernel is essentially binary and non-commutative.**

@@ -33,7 +33,7 @@ session (4 blockers, 14 fixes, applied; a second pass over the diff: two more, a
 **Числа ниже — репозиторий СЕЙЧАС, а не снимок выпуска.**
 Опубликованное описание v2.0.0 называет **146 стендов** — столько их было
 19.09 в момент публикации. С тех пор добавлены стенды `dilemmas/dirty_param.py`,
-`test_numeric_names.py`, `test_numbers_need_values.py`, `test_quadratic.py`, `test_solver_logic.py`, `test_solver_provenance.py`, `test_bound_products.py`, `test_unknown_marks.py`, `test_multilinear.py`, `test_higher_degree.py`, `test_catalogue_equations.py` (24.09), `test_int_refine.py` (25.09), `test_redteam_numeric.py` (26.09), `test_judge_perf.py`, `test_redteam_logic.py` и `test_judge_worst.py` (27.09), и в дереве их 162. Запись на Zenodo неизменна и верна о себе;
+`test_numeric_names.py`, `test_numbers_need_values.py`, `test_quadratic.py`, `test_solver_logic.py`, `test_solver_provenance.py`, `test_bound_products.py`, `test_unknown_marks.py`, `test_multilinear.py`, `test_higher_degree.py`, `test_catalogue_equations.py` (24.09), `test_int_refine.py` (25.09), `test_redteam_numeric.py` (26.09), `test_judge_perf.py`, `test_redteam_logic.py` и `test_judge_worst.py` (27.09), `test_redteam_uncovered.py` (28.09, после выпуска 2.1.1 — красная команда PR #5), и в дереве их 163. Опубликованные 2.1.0 и 2.1.1 называют 162 — верно о себе. Запись на Zenodo неизменна и верна о себе;
 лист же готовит СЛЕДУЮЩИЙ выпуск, поэтому живое число тут растёт.
 С 28.09 в корпусе 71 модуль и 1194 теоремы (модули `ZNumNames`, 17 теорем, `ZParabola`, 14, `ZIntExtremes`, 38, `ZOnly`, 6, и `ZOrigin`, 7); выпуск 2.0.0
 называет 66 и 1112 — тоже верно о себе.
@@ -70,7 +70,7 @@ logic alone: the Lean corpus, the papers, and the ZFL formal language with
 its tooling. The seven-language taint analyzer moved to
 github.com/inventor1975/introspect and the natural-language studio to
 github.com/inventor1975/ztlstudio; each vendors a copy of this core so it
-clones self-contained (the repository regression is 162 stands here, the
+clones self-contained (the repository regression is 163 stands here, the
 rest having moved with the tools). As a new version of the concept record
 (DOI 10.5281/zenodo.21318981) it isNewVersionOf v1.4.1
 (10.5281/zenodo.22644261).
@@ -216,7 +216,7 @@ with an EMPTY axiom list (no classical choice, no quotients, not even
 propositional extensionality; definitions included): 1194 theorems, each
 audited individually; no section of the paper rests on measurement
 alone. Every numerical claim is reproducible by the repository's
-regression (162 test stands). As of v2.0.0 the repository is the logic
+regression (163 test stands). As of v2.0.0 the repository is the logic
 itself — the Lean corpus, the papers, and the ZFL formal language with its
 tooling; the seven-language taint analyzer and the natural-language studio
 that translates into ZFL (both of which vendor a copy of this core) have
@@ -506,4 +506,4 @@ institutional computation; Lean 4; machine-checked proofs
 The preprint text is CC BY 4.0; the accompanying repository code is
 dual-licensed Apache-2.0 OR MIT. The ZTL Lean corpus (seventy-one modules,
 1194 theorems) verifies with an empty axiom list; run `python3 run_all.py`
-for the full repository regression (162 stands + Lean build).
+for the full repository regression (163 stands + Lean build).

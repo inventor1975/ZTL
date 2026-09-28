@@ -240,7 +240,7 @@ def sweep_epoch():
             want = ({"verdict": O.ev(phi, mb), "grade": O.grade(phi, mb)},
                     {"verdict": O.ev(phi, ma), "grade": O.grade(phi, ma)})
             bad += (e["before"], e["after"]) != want or \
-                e["survives"] != (want[0]["verdict"] == want[1]["verdict"])
+                e["survives"] != (O.disposition_of(want[0]["verdict"], want[0]["grade"]) == O.disposition_of(want[1]["verdict"], want[1]["grade"]))
     check(f"sweep epoch: {docs} documents, every crossing vs the oracle", bad == 0,
           f"{bad} disagreements")
     pool = O.depth2_pool()

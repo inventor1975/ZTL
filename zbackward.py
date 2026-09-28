@@ -116,6 +116,13 @@ def backward(phi, marking, target, by_disposition=True,
     Пустое семейство означает «такого набора НЕТ», и это сказано полем
     `possible_none` / `guaranteed_none`, а не молчанием: молча пустой список
     читается как «ничего не надо», что противоположно правде.
+
+    ТРИ ЗНАЧЕНИЯ ФЛАГА, НЕ ДВА (2026-09-28, красная команда PR #5):
+      True  — искали ВСЁ и не нашли: набора нет;
+      False — набор есть (или цель уже достигнута: минимален пустой набор);
+      None  — НЕ ИСКАЛИ до конца (поиск обрезан на max_k или отказ на потолке).
+    Раньше обрезанный поиск и отказ отвечали True, и order() говорил
+    «недостижима никакой проверкой» там, где один g0 = F уже опровергал.
     """
     grounds = tuple(a for a, v in sorted(marking.items()) if v == Z)
     # ONE OUTCOME PER FILLING (2026-09-27, the cloud's worst-case search, PR #4):
@@ -129,6 +136,15 @@ def backward(phi, marking, target, by_disposition=True,
             memo[key] = _outcome(phi, m, by_disposition)
         return memo[key]
     already = _hits(outcome(marking), target)
+    # ЦЕЛЬ УЖЕ ДОСТИГНУТА — минимальное семейство {∅}, и больше в нём ничего нет:
+    # любой непустой набор содержит ∅ и не минимален. Раньше перебор шёл и тут и
+    # выдавал «проверь q» рядом с «уже достигнуто» — и даже атомы, которых в
+    # формуле нет (PR #5, B1).
+    if already:
+        return {"grounds": grounds, "already": True,
+                "possible": [], "guaranteed": [],
+                "possible_none": False, "guaranteed_none": False,
+                "target": target}
 
     # ПОТОЛОК НАЗВАН, А НЕ ОБНАРУЖЕН ТАЙМАУТОМ (2026-08-30).
     # Первый живой случай — 16 находок ревью OIC, 11 непроверенных оснований —
@@ -140,7 +156,7 @@ def backward(phi, marking, target, by_disposition=True,
     if len(grounds) > cap_grounds:
         return {"grounds": grounds, "already": already,
                 "possible": [], "guaranteed": [],
-                "possible_none": True, "guaranteed_none": True,
+                "possible_none": None, "guaranteed_none": None,
                 "target": target,
                 "отказ": (f"оснований {len(grounds)}, потолок {cap_grounds} "
                           f"({'по диспозиции' if by_disposition else 'по значению'}): "
@@ -166,14 +182,20 @@ def backward(phi, marking, target, by_disposition=True,
             if not sub_g and all(hits):
                 guaranteed.append(S)
 
+    cut = limit < len(grounds)
+
+    def none(family):
+        # пусто при обрезанном поиске — это «не смотрели» (None), а не «нет»
+        return False if family else (None if cut else True)
+
     out = {"grounds": grounds, "already": already,
            "possible": possible, "guaranteed": guaranteed,
-           "possible_none": not possible, "guaranteed_none": not guaranteed,
+           "possible_none": none(possible), "guaranteed_none": none(guaranteed),
            "target": target}
     # ОБРЕЗАННЫЙ ПОИСК ГОВОРИТ, ЧТО ОБРЕЗАН. Пустое семейство при limit < n
     # неотличимо от «наборов нет», а это разные вещи: во втором случае мы
     # знаем, в первом — не смотрели.
-    if limit < len(grounds):
+    if cut:
         out["не_искал_дальше"] = (
             f"наборы искались до размера {limit} из {len(grounds)} возможных; "
             f"о больших ничего не говорю")
@@ -189,9 +211,19 @@ def order(phi, marking, target, by_disposition=True):
     r = backward(phi, marking, target, by_disposition)
     if r["already"]:
         return f"проверять нечего: цель {target} уже достигнута"
+    if "отказ" in r:
+        # отказ — не «недостижима»: мы не считали (PR #5, B3)
+        return f"НЕ СЧИТАЛ: {r['отказ']}"
     if r["guaranteed"]:
         sets = "; ".join("+".join(S) for S in r["guaranteed"])
         return f"проверить ВМЕСТЕ: {sets} — цель {target} наступит в любом случае"
+    if r["guaranteed_none"] is None:
+        # до обрезки гарантии не нашлось — но дальше мы не смотрели (PR #5, B2)
+        found = ("; ".join("+".join(S) for S in r["possible"])
+                 if r["possible"] else "")
+        return (f"НЕ ИСКАЛ ДАЛЬШЕ: {r['не_искал_дальше']}. "
+                + (f"До этого размера цель {target} лишь ВОЗМОЖНА: {found}"
+                   if found else f"До этого размера набора для {target} нет"))
     if r["possible"]:
         sets = "; ".join("+".join(S) for S in r["possible"])
         return (f"ГАРАНТИИ НЕТ. Цель {target} лишь ВОЗМОЖНА, и только если "

@@ -1548,11 +1548,15 @@ def run(doc, ground_registry=None):
                 "expires": sorted(events[ev]),
                 "before": {"verdict": b["verdict"], "grade": b["grade"]},
                 "after": {"verdict": a["verdict"], "grade": a["grade"]},
-                # SURVIVES means the conclusion is the same on both sides.
-                # It is not praise: a verdict that survives every crossing
-                # reads none of its grounds (EpochBoundary), so a survivor
-                # here is either independently grounded or empty.
-                "survives": b["verdict"] == a["verdict"]})
+                # SURVIVES means the CONCLUSION — the disposition EARNED /
+                # REFUTED / OPEN — is the same on both sides, not the bare
+                # letter. The letter lies at the mark: `~p` is F while p is
+                # verified (REFUTED) and still F once p expires, but only
+                # because ¬Z = F — the warranty is gone and the claim is OPEN
+                # (PR #5, E1). Nor is surviving ONE crossing a statement about
+                # grounds: only a verdict that survives EVERY crossing reads
+                # none of them (EpochBoundary).
+                "survives": b["disposition"] == a["disposition"]})
         report["epoch"] = staged
 
     if what["ledger"]:

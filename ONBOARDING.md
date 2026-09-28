@@ -343,6 +343,10 @@ idea status fails closed (`Z`), while *no ideas at all* passes open and yields
 `resolved` (`E`). Both readings are defensible; the point is that **someone
 chose**, and that the choice is institutional rather than derivable.
 
+**Reading a claim's text** (stated 2026-09-28, red team PR #5): precedence `~` > `&` > `|` >
+`^` > `->` > `=`, all left-associative — `a -> b -> c` is `(a -> b) -> c`. Bracket what you
+mean. SPEC.md, "Reading the text: precedence".
+
 ### 1.6 The judge's report, and what it now guarantees (2026-08-19)
 
 `ztljudge` reports more than a verdict, and three of its fields carry proved or

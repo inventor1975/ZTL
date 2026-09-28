@@ -374,6 +374,20 @@ def codes_in_source():
 # judge's own table below, and `--check` fails if one of them turns up
 # without a meaning here — a reference that lists a symbol it cannot
 # explain is worse than one that omits it.
+# HOW A CLAIM'S TEXT IS READ (2026-09-28, red team PR #5: stated nowhere
+# before, and one reading differs from the usual convention). MEASURED on
+# ztljudge.formalize; the stand test_redteam_uncovered.py pins it.
+PRECEDENCE = {
+    "en": "Binding, strongest first: ~, then & > | > ^ > -> > = (also <->). "
+          "Every connective is left-associative: a & b | c is (a & b) | c, and "
+          "a -> b -> c is (a -> b) -> c, NOT a -> (b -> c). Write the brackets "
+          "when you mean the other reading.",
+    "ru": "Связывание, от сильного к слабому: ~, затем & > | > ^ > -> > = (он же <->). "
+          "Все связки левоассоциативны: a & b | c — это (a & b) | c, а "
+          "a -> b -> c — это (a -> b) -> c, НЕ a -> (b -> c). Если имеете в виду "
+          "другое прочтение, ставьте скобки.",
+}
+
 OP_HELP = {
     "&": ("and", "и"), "|": ("or", "или"), "->": ("if … then", "если … то"),
     "^": ("exactly one of", "ровно одно из"),
@@ -526,6 +540,7 @@ def render(lang="en"):
         parts.append(f"<tr><td><code>{_esc(op)}</code></td>"
                      f"<td>{_esc(pick((en, ru), lang))}</td></tr>")
     parts.append("</table>")
+    parts.append(f"<p>{_esc(pick(PRECEDENCE, lang))}</p>")
 
     parts.append(f"<h2>{_esc(h[18])}</h2><table>")
     for op in arithmetic():

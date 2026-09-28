@@ -93,6 +93,16 @@ Anchor axiom cells (dictated at design time, reproduced by the
 principle, checked by `tests_axioms()`): ¬Z=F, ¬¬Z=T, Z↔Z=F, Z↔T=F,
 Z⊕Z=F, Z⊕F=F, Z⊕T=F.
 
+## Reading the text: precedence (MEASURED `ztljudge.formalize`, 2026-09-28)
+
+Binding, strongest first: `~` (prefix), then `&` > `|` > `^` > `->` > `=` (also `<->`).
+Every binary connective is LEFT-associative. So `a & b | c` is `(a & b) | c`,
+`a | b ^ c` is `(a | b) ^ c`, `a = b -> c` is `a = (b -> c)`, and — the one that differs
+from the usual convention — `a -> b -> c` is `(a -> b) -> c`, not `a -> (b -> c)`.
+Write the brackets when you mean the other reading. The grammar is consistent: every text
+parses to one tree or is refused, and printing a tree then re-reading it is the identity
+(11,111,111 token strings, red team PR #5). Before 2026-09-28 this was stated nowhere.
+
 ## Fixed forks (decided; do not reopen without cause)
 
 1. **¬Z = F, not "Z collapses to F at the atom".** Theorem: {¬Z=F,

@@ -493,3 +493,16 @@ def fo_countermodel(prems, concl, dom, consts_to=None):
                     fo_ev(concl, dom, I, env) != T:
                 return (dom, env, I)
     return None
+
+
+def disposition_of(v, g):
+    """The judge's disposition from verdict and grade, as its docstring states it
+    (ztljudge.judge; no absent grounds in these documents): hereditary T is EARNED,
+    hereditary F is REFUTED, T below hereditary is ON CREDIT, anything else OPEN.
+    Added 2026-09-28 when the epoch floor's `survives` moved from the verdict letter
+    to the disposition (PR #5, E1) — written from the document, not imported.
+    NOT named `disposition`: that name is this oracle's own (phi, m) function, and
+    shadowing it broke the backward sweep (295 false disagreements, 2026-09-28)."""
+    if g == "hereditary":
+        return "EARNED" if v == T else "REFUTED" if v == F else "OPEN"
+    return "ON CREDIT" if v == T else "OPEN"

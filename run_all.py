@@ -62,6 +62,7 @@ STANDS = [
     ("test_judge_perf.py", ["JUDGE PERF GREEN"]),
     ("test_redteam_logic.py", ["REDTEAM LOGIC GREEN"]),
     ("test_judge_worst.py", ["JUDGE WORST GREEN"]),
+    ("test_redteam_uncovered.py", ["GREEN: nothing found"]),
     # Поставлен 2026-09-19: CLASSIC-VS-ZTL.md год носила число «1263 из 2924»
     # без определения и без прогона, и оно занижало результат на двадцать
     # пунктов. Сторожим ОБА чтения, чтобы подмена узкого широким не повторилась.

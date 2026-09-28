@@ -1,4 +1,10 @@
-# Zenodo upload sheet — ZTL v2.1.0 (PUBLISHED 2026-09-28 — how many values, the order of birth, the numeric floor)
+# Zenodo upload sheet — ZTL v2.1.1 (PREPARED 2026-09-28 — the v2.1.0 text with its own header)
+
+**v2.1.1 — prepared 2026-09-28, draft 23008041, reserved DOI 10.5281/zenodo.23008041.**
+Same day as v2.1.0; the header only. The v2.1.0 PDF went out with the working draft's header
+("draft", "not published", "Version DOI: minted on upload"). v2.1.1 carries its own DOI, reserved
+by the draft before the PDF was built. Measured: the word streams of the two PDFs differ only in
+the header. isNewVersionOf v2.1.0 (10.5281/zenodo.23007861).
 
 **v2.1.0 PUBLISHED 2026-09-28: version DOI 10.5281/zenodo.23007861**
 (https://zenodo.org/records/23007861). Verified against the API WITHOUT a token after
@@ -91,7 +97,7 @@ PDF, theorems, modules, stands) — the part of this sheet above the version
 history is checked on every run; the history paragraphs carry their own
 versions' numbers and are not.
 
-**File to upload:** `paper/ZTL-preprint-v2.1.0.pdf` (42 pages)
+**File to upload:** `paper/ZTL-preprint-v2.1.1.pdf` (42 pages)
 
 ---
 
@@ -101,7 +107,7 @@ versions' numbers and are not.
 
 **Authors:** Reznik, Vitaly
 
-**Version:** 2.1.0
+**Version:** 2.1.1
 
 **License:** Creative Commons Attribution 4.0 International (CC BY 4.0)
 
@@ -218,6 +224,11 @@ literature search after the tables had been generated, not a source; the
 contribution is the generating principle, an implicational floor outside
 the Rosser–Turquette standardness conditions, the calculus, the machine
 verification, and the bridges to the engineering traditions.
+
+What is new in v2.1.1 (same day) — the header only: the v2.1.0 PDF
+went out with the working draft's header ("draft", "not published",
+"Version DOI: minted on upload"); v2.1.1 carries its own DOI. No line of
+the text changed.
 
 What is new in v2.1.0 — HOW MANY VALUES, WHERE THE VALUES COME FROM, and
 the numeric floor kernel-checked. The logic is unchanged; its name and
@@ -476,9 +487,9 @@ verification; warranty; NP-hardness; coNP-hardness; epoch boundary;
 institutional computation; Lean 4; machine-checked proofs
 
 **Related/alternate identifiers:**
-- 10.5281/zenodo.22842725 — isNewVersionOf (v2.0.0, the prior version;
+- 10.5281/zenodo.23007861 — isNewVersionOf (v2.1.0, the prior version;
   Zenodo pre-fills the field from the previous form — check it says
-  22842725, not 22644261)
+  23007861, not 22842725)
 - https://github.com/inventor1975/ZTL — isSupplementedBy (the code,
   the Lean corpus, the regression, the ZFL language)
 - https://github.com/inventor1975/introspect — isSupplementedBy (the ZTL

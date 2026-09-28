@@ -1,17 +1,21 @@
-# ZTL — Zero-Trust Logic — v2.1.0
+# ZTL — Zero-Trust Logic — v2.1.1
 
-**V. Reznik. Preprint, v2.1.0 — 2026-09-28. Version DOI:
-[10.5281/zenodo.23007861](https://doi.org/10.5281/zenodo.23007861)
+**V. Reznik. Preprint, v2.1.1 — 2026-09-28. Version DOI:
+[10.5281/zenodo.23008041](https://doi.org/10.5281/zenodo.23008041)
 (this file is the source; the PDF is built by `paper/mkpreprint.py`).
 Concept DOI:
 [10.5281/zenodo.21318981](https://doi.org/10.5281/zenodo.21318981)
-(v2.0.0: [10.5281/zenodo.22842725](https://doi.org/10.5281/zenodo.22842725);
+(v2.1.0: [10.5281/zenodo.23007861](https://doi.org/10.5281/zenodo.23007861);
+v2.0.0: [10.5281/zenodo.22842725](https://doi.org/10.5281/zenodo.22842725);
 v1.4.1: [10.5281/zenodo.22644261](https://doi.org/10.5281/zenodo.22644261);
 v1.4: [10.5281/zenodo.22643843](https://doi.org/10.5281/zenodo.22643843);
 v1.3: [10.5281/zenodo.21472971](https://doi.org/10.5281/zenodo.21472971);
 v1.2: [10.5281/zenodo.21440066](https://doi.org/10.5281/zenodo.21440066);
 v1.1: [10.5281/zenodo.21323552](https://doi.org/10.5281/zenodo.21323552);
 v1.0: [10.5281/zenodo.21318982](https://doi.org/10.5281/zenodo.21318982)).
+v2.1.1 (same day) changes only this header: the v2.1.0 PDF went out with the working
+draft's header ("draft", "not published", "Version DOI: minted on upload"); no line of
+the text below changed.
 v2.1.0 corrects how many values ZTL has, and proves where its values come from.
 Earlier versions, 2.0.0 included, called ZTL "a two-valued logic with a mark, not a
 three-valued logic". That name was wrong in one respect: it denied the atom its value. An

@@ -163,6 +163,8 @@ theorem birth_order (v : Nat → V) (hz : AllZ v) :
 end ZOrigin
 
 #print axioms ZOrigin.doubt_gives_F
+#print axioms ZOrigin.bin_origin
+#print axioms ZOrigin.bin_step
 #print axioms ZOrigin.T_through_F
 #print axioms ZOrigin.no_T_at_depth_one
 #print axioms ZOrigin.T_second

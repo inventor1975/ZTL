@@ -17,9 +17,10 @@ the connectives can make of it:
 and, already proved in ZTL.lean, `evalF_classical`: no compound formula is Z — doubt is not
 made by anything; it lives on the atom and nowhere else.
 
-So the birth order the paper names (§4: nothing, doubt, free denial, earned affirmation —
-N, Z, F, T) is not a gloss laid over the tables: Z is only given, F is the first thing doubt
-yields, T comes only after an F. In classical logic, with no Z, this
+So the Z, F, T part of the birth order the paper names (§4: nothing, doubt, free denial,
+earned affirmation — N, Z, F, T) is not a gloss laid over the tables: Z is only given, F is
+the first thing doubt yields, T comes only after an F. N, the solver's phase, lies outside the
+tables and outside these theorems. In classical logic, with no Z, this
 statement has nothing to be about.
 
 Why the constants are excluded: `.top` hands T in without deriving it, so over a language

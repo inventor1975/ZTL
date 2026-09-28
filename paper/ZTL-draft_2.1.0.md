@@ -13,16 +13,17 @@ v1.1: [10.5281/zenodo.21323552](https://doi.org/10.5281/zenodo.21323552);
 v1.0: [10.5281/zenodo.21318982](https://doi.org/10.5281/zenodo.21318982)).
 **v2.1.0 corrects how many values ZTL has, and proves where its values come from.**
 Earlier versions, 2.0.0 included, called ZTL "a two-valued logic with a mark, not a
-three-valued logic". That name was too strong: an atom is an assertion, and an unverified
-atom has the value Z (`ztl.ev('p', {'p': 'Z'}) = Z`; `eqI m1 m2 = Z` in `ZIndisc.lean` is
+three-valued logic". That name was wrong in one respect: it denied the atom its value. An
+atom is an assertion, and an unverified atom has the value Z (`ztl.ev('p', {'p': 'Z'}) = Z`; `eqI m1 m2 = Z` in `ZIndisc.lean` is
 the same fact one order up). ZTL is a **three-valued logic whose every connective is
 two-valued**: three values on the atoms, two on everything built from them. Nothing
-measured or proved changes — the greediness theorem is exactly the statement that the
+previously measured or proved changes — the greediness theorem is exactly the statement that the
 third value never climbs above the atoms (§§2, 4, 10). And the one asymmetric cell,
 ¬Z = F, is shown to give the values an **order of birth**, proved over the whole language
 (§3.9, `ZOrigin.lean`, empty axiom list): under pure doubt F is born first and T only
-through an F — the order N, Z, F, T that §4 names, which classical logic, whose negation
-is an involution, does not have.
+through an F — the Z, F, T part of the genetic order N, Z, F, T that §4 names (N, the
+solver's phase, lies outside the tables); classical logic, whose negation is an involution,
+has no such order.
 v2.0.0 states the relation to classical logic and measures both of its
 halves (§3.1, §4, §10). *On verified data ZTL is classical logic:* every
 formula takes the same value under every mark-free valuation
@@ -33,7 +34,7 @@ data ZTL decides:* of twenty-six classical laws, twelve hold on a marked
 atom and fourteen are refuted with an exhibited witness, none left
 undecided — where classical logic decides none, because it cannot take
 the input; in Lean the fourteen are the theorems `*_needs_ground`
-(renamed from `*_fails` in this version, twenty-six names in all). The
+(renamed from `*_fails` in v2.0.0, twenty-six names in all). The
 engineering default "unverified := false" is identified as Bochvar's
 external logic of 1938 — zero divergences of forty-five binary cells —
 from which ZTL parts in seven cells and from the default itself in eight,
@@ -56,7 +57,7 @@ failure of every classical route to the second five; the v1.4 PDF showed
 six. v1.4 adds: *no numbered section rests on measurement alone* — every one of the
 eighteen sections that carried the MEASURED tag now names kernel-checked
 theorems behind its load-bearing claims, the corpus growing threefold to
-seventy-one modules and 1194 theorems, all on the empty axiom list (§8);
+sixty-six modules and 1112 theorems, all on the empty axiom list (§8);
 *the six traditions of §1 as six embedding theorems* — IEEE 754 NaN, SQL
 NULL, taint tracking, abstract interpretation, Dempster–Shafer and
 provenance semirings, each formalised as its own tradition states it,
@@ -67,7 +68,7 @@ warranties of §19* — the hereditary grade is a tautology check
 (coNP-hard, `ZHeredTaut.lean`), the exact width of an inquiry is NP-hard
 (`ZWidthHard.lean`), the exact receipt is NP-hard (`ZReceiptHard.lean`),
 so the three grades the judge does not compute are the three it cannot
-compute cheaply — every complexity claim held at hardness, membership
+compute cheaply unless P = NP — every complexity claim held at hardness, membership
 argued and not claimed — with the receipt's exactness on linear claims
 proved under a definite reading (`LabelExactDefinite.lean`); *a syntactic
 cut-elimination procedure with its bound as a function* (§5,
@@ -94,7 +95,8 @@ v1.1: [10.5281/zenodo.21323552](https://doi.org/10.5281/zenodo.21323552);
 v1.0: [10.5281/zenodo.21318982](https://doi.org/10.5281/zenodo.21318982)).
 v1.3 adds: the Suszko positioning (§4) — Z as a mark rather than a third
 truth value is Suszko's Thesis taken as architecture rather than
-recovered by reduction, with the discriminator measured; the signature
+recovered by reduction, with the discriminator measured (that reading
+withdrawn in 2.1.0: Z is the value of atoms, §4); the signature
 result (§4) — the single rule ¬¬p ⊨ p separates ZTL from each of its four
 involutive-negation neighbours (K3, LP, weak Kleene, Ł₃) and, by one
 lemma, from any three-valued matrix with involutive negation, its cause
@@ -145,7 +147,8 @@ T or F, the third value never appears above the atoms. This is more than
 Suszko's logical two-valuedness, which every structural logic has for
 free; it is the stronger, truth-functional fact that above the atoms the
 algebraic value already *is* the logical value, so the reduction has
-nothing left to do on compounds — its whole work is on the atom. The one
+nothing left to do on compounds: its non-truth-functionality is confined to
+connectives applied to atoms. The one
 asymmetric cell, ¬Z = F, gives the values an order of birth, proved over
 the whole language: under pure doubt, F is born first and T only through
 an F (`ZOrigin.lean`, empty axiom list). Its identity among the three-valued matrices is precise and
@@ -347,10 +350,10 @@ classical verdict — "true only if forced".
 
 ## 2. Definitions
 
-**Truth values:** T (earned truth), F (falsehood). **Input mark:**
-Z (zero-trust, "not earned") — a property of an atomic datum, not a
-truth value; it participates in the calculating tables as a third
-symbol.
+**Values:** T (earned truth), F (falsehood), Z (zero-trust, "not
+earned") — the mark of an unverified atomic datum. Z is the value of
+atoms only: no compound takes it (the greediness theorem, §4 and §8,
+`evalF_classical`), so every connective is two-valued.
 
 **Definition (the zero-trust lift).** For any classical connective f,
 its lift:
@@ -448,7 +451,7 @@ that hold on the mark as well.
 **Entailment:** Γ ⊨ φ iff every valuation making all premises T makes
 the conclusion T. Tarskian by construction.
 
-## 3. Results (all MEASURED)
+## 3. Results (MEASURED, and where marked, Lean)
 
 ### 3.1 Laws: which ones you may use on an unverified atom
 
@@ -505,8 +508,12 @@ twenty points:
 The shortest separators are ordinary formulas: ¬p, ¬¬p, (p→p), (p⊕q),
 (q↔p). So on nearly two thirds of the pool ZTL returns a two-valued
 verdict that turns on a distinction the substitution erased before
-evaluating anything, and in every such case the verdict is a refusal that
-the substitution would have turned into an assertion.
+evaluating anything, and it differs from the substitution in both
+directions: in 1098 of the 1840 only by refusing where the substitution
+asserts (¬p, p→p), in the other 742 at least once by asserting where the
+substitution refuses (¬¬p — T on a marked p, F on the substituted one).
+Both are the unverified told apart from the false. (Versions up to 2.0.0
+said every such verdict is a refusal; the count above corrects it.)
 
 **The three laws of thought (MEASURED).** Of the classical triad, exactly
 one survives the lift. Non-contradiction ¬(p∧¬p) is T under every marking
@@ -786,12 +793,14 @@ doubt*: every atom is Z and no constant hands a value in.
   ¬¬p is T when p is Z, via ¬Z = F (`T_second`).
 * *Z is made by nothing.* No compound is Z (`evalF_classical`); with the two
   above (`birth_order`): Z is only given, F comes first, T only after an F —
-  the genetic order N, Z, F, T of §4, now a theorem about the tables rather
-  than a gloss on them.
+  the Z, F, T part of the genetic order N, Z, F, T of §4, now a theorem about
+  the tables rather than a gloss on them (N, the solver's phase, lies outside
+  the tables and outside the theorem).
 
-MEASURED before it was proved: over one unverified atom, depth 1 gives 0
-truths of 6 formulas, depth 2 gives 84 of 252, all 84 through a false
-subformula. The first step is also stated *inside* the language, where the
+MEASURED before it was proved: over one unverified atom (one atom letter,
+ordered pairs, the six connectives), depth 1 gives 0 truths of 6 formulas and
+depth ≤ 2 gives 84 of 252 — all 84 at depth exactly 2 (84 of 246), each
+through a false subformula. The first step is also stated *inside* the language, where the
 mark is expressible (isZ(p) = ¬(p↔p), §3.1): isZ(p) → ¬¬p is valid, while
 isZ(p) → p and isZ(p) → ¬p are not — doubt yields a denial of earning, never
 an affirmation. `lean/ZOrigin.lean`, seven theorems, empty axiom list.
@@ -838,11 +847,13 @@ the neighbours it does — on the reproducible depth-2 pool of 90 compounds
 on 90 of 90, Łukasiewicz Ł3 on 80 of 90 (MEASURED). In ZTL it never does — **0
 of 90**, the greediness theorem (`evalF_classical`, empty axiom list):
 the mark evaporates at the first operator, so no *compound* assertion is
-ever anything but T or F. The reduction's whole work in ZTL is on the atom:
-there Z and F are both undesignated, yet they differ as inputs (¬F = T,
-¬Z = F), so the bivalent valuation of an atom does not determine that of
-its negation — Suszko's non-truth-functional bivalence, confined to the one
-place the third value lives. Above the atoms the algebraic value already is
+ever anything but T or F. The reduction's non-truth-functionality in ZTL is confined to connectives
+applied to atoms: there Z and F are both undesignated yet differ as inputs
+(¬F = T but ¬Z = F; F→F = T but Z→F = F), so the bivalent values of the
+arguments do not determine the result — for ¬, →, ⊕ and ↔; ∧ and ∨ stay
+truth-functional even there. On compound arguments, which are T or F, the
+bivalent reduction is truth-functional for every connective (MEASURED on
+all argument pairs). Above the atoms the algebraic value already is
 the logical value. That is the precise sense in which ZTL is a three-valued
 logic whose connectives are two-valued: three values on the atoms, two on
 everything built from them. (Versions up to 2.0.0 called ZTL "two-valued with
@@ -868,7 +879,7 @@ i.e. that the middle symbol is a *degree of truth* standing between
 falsity and truth. Under that reading — Łukasiewicz's ½, "possible, not
 yet determined" — the condition is compelling: an antecedent no truer
 than its consequent should not falsify the conditional. Under ours it
-has no subject. Z is not a degree but a mark of status, barred from the
+has no subject. Z is not a degree but a value of atoms only, barred from the
 value of compounds (the greediness theorem above); Z ≤ Z does not say
 "equally true on both sides", it says "neither side has been examined",
 and to designate the conditional there is precisely to grant truth on
@@ -909,7 +920,7 @@ are instances. Its non-involutive kin is the exception that keeps the
 claim honest: external Bochvar shares the {¬,∧,∨} tables, hence the
 broken involution itself, so ¬¬p ⊨ p does *not* separate the two — there
 they part in the implication fragment (the seven cells above), not on
-this rule. The same greedy ¬¬Z = T (i) makes the compounds classical
+this rule. The same greedy ¬¬Z = T (i) makes the compounds T/F-valued
 above, (ii) bars ZTL from *expressing* any mark-carrying neighbour —
 greediness lets no compound output the mark, while every neighbour's
 connectives do (MEASURED) — and (iii) witnesses the separation here. One
@@ -1089,7 +1100,7 @@ to depth 3 over three atoms, zero bound violations, the bound met with
 equality in 84 and 76 cases — and the procedure's output NEVER exceeded the
 engine's direct cut-free derivation (equal in all 300 deep instances), while
 the proved bound reached 878 800 for an output of 27 leaves. So the bound is
-loose by five orders of magnitude on the instances that ran; 253 further
+loose by more than four orders of magnitude on the instances that ran; 253 further
 instances whose bound exceeded 10⁶ were not run, and the pool holds none of
 the hard tautologies where cut-free tableaux are known to be exponentially
 larger, so no improvement of the bound in general is claimed — only that on
@@ -1294,7 +1305,7 @@ the computed revenge bullet.
 
 **Part III — the tableau pillars over the whole language.** An
 inductive formula type Fm with evaluation; **pillar 1**: greediness is
-proven for the entire language (every compound formula is classical
+proven for the entire language (every compound formula is T/F-valued
 under every valuation — by constructor analysis, not by battery);
 **pillar 2**: the preimage coverage of each of the 12 tableau rules — as
 ⟺-theorems for arbitrary subformula values (`cover_*`).
@@ -1509,8 +1520,8 @@ Solver state:    N "not yet computed"    (a computation phase, present
                                           only under self-reference;
                                           provably finite — §9 — and
                                           never escapes outward)
-Reading policy:  local, default deny     (the three-symbol tables are
-                                          the policy's calculator)
+Reading policy:  local, default deny     (the principle the tables compute;
+                                          the tables are the logic)
 ```
 
 **ZTL is a three-valued logic whose connectives refuse to lie about the
@@ -1527,7 +1538,7 @@ runs in three different directions at once, and collapsing them into
   agrees with classical logic formula for formula
   (`ClassicalAgreement.evalF_agrees`) — where nothing is unverified,
   nothing changes.
-* *Equal in strength: the same laws on classical's own domain.* Over
+* *Equal in strength on classical's own domain: the same laws there.* Over
   the wider domain every ZTL validity is classically valid, and not
   conversely:
   `p → p` is a classical tautology and is refuted here on a marked atom
@@ -1639,19 +1650,20 @@ instead of modules; it is kept as a possible appendix, not as the core.
 epistemic by intent — "undefined, not yet computed" — but his logic
 has a single register, so the status had no home except inside the
 value algebra, where it was forced to flow (¬N = N: negation passes
-the unknown on). Typed by our passport, his element conflates the two
-non-values: the *mark* on a datum (external, static, lifted only by
+the unknown on). Typed by our passport, his element conflates two
+roles: the *mark* on a datum (external, static, lifted only by
 the act of verification) and the *phase* of a computation (internal,
 dynamic, lifted by the iteration itself — and hardening, when it never
 resolves, into the quarantine mark with its own passport of kinds,
 §9). Strong Kleene logic is what results when both non-values are
-made to share one symbol *as a value of assertions*; SQL NULL's
+made to share one symbol *as a value of compound assertions*; SQL NULL's
 notorious ambiguity — "unknown", "not applicable", "pending" in one
 symbol — is the same conflation observed in the wild. The fault is
 not the shared symbol (our own solver reuses Z positionally during
 iteration) but the promotion of a status to a truth value: ZTL splits
 the *role*, not the alphabet, and revokes the status's right to be
-what a statement evaluates to.
+what a *compound* evaluates to — an atom may be Z, nothing built from
+atoms may.
 
 A closing note on errors: the system has no error letter, and none is
 missing. An *error* is an interface event — the premature read of a
@@ -1686,10 +1698,10 @@ hardware before it had a name for it. None of the register is built, and
 it is mentioned here only so that a reader meeting `E` does not take it
 for a fifth truth value.
 
-Consequence for positioning: ZTL's neighbours are not the many-valued
-logics but the two-valued assertability policies of the supervaluation
-family — from which it differs by locality, tabularity, and greedy
-collapse.
+Consequence for positioning: ZTL is a three-valued logic, and its nearest
+*policy* neighbours are the two-valued assertability policies of the
+supervaluation family — from which it differs by locality, tabularity,
+and greedy collapse.
 
 ## 11. Expeditions: Curry, parity, Yablo, the crocodile (MEASURED + Lean)
 
@@ -1736,7 +1748,8 @@ truth-tellers (underdetermination).
 false" — a paradox without a single cycle. Measured: **every finite
 truncation is fully grounded** (the unique model F…FT, empty
 quarantine, exactly one greedy model). Yablo's paradox lives only at
-actual infinity — a finite instrument cannot see it in principle. So
+actual infinity — a finite instrument cannot see it in principle (the
+limit itself is a theorem below: `ZYablo.lean`). So
 there are three distinct sources of ungroundedness: the odd cycle (the
 liar), the odd infinite progression (Yablo), and the underdetermination
 of even structures (the truth-teller); the first is caught finitely,
@@ -2141,7 +2154,7 @@ when none can, marked otherwise. The two are then proved to agree in all
 three cells, for every finite frame, every proper mass assignment and every
 event — so what was measured on one assignment holds on all of them. With
 it the fifth twin (Walley's imprecise probabilities, whose lower/upper pair
-is exactly Bel/Pl) joins the sixth as an embedding rather than a
+specialises to Bel/Pl on belief functions) joins the sixth as an embedding rather than a
 correspondence.
 
 *The properness condition is not decoration, and finding that out is what
@@ -2184,7 +2197,7 @@ all, ◇φ = in at least one. Measured:
 * **Three logics on one formula** (classical | global □ | ZTL): p→p and
   LEM: T | T | F — supervaluation (one □ over the whole formula)
   preserves all classical tautologies, the local per-operator □ fells
-  them. But ¬¬p: T | Z | T — **ZTL earns a verdict which global
+  them. But ¬¬p: T | Z | T — **ZTL gives a verdict which global
   supervaluation cannot give** (the ladder of floors): the systems are
   incomparable, not ordered by strictness.
 
@@ -2199,7 +2212,7 @@ split. The theoretical relative is Hintikka's epistemic S5 (□ =
 theorem in all three directions at once — T ⟺ □, F ⟺ ¬◇, Z ⟺ contingency
 (`atom_thresholds`) — with the duality ◇ = ¬□¬ over completions
 (`box_dia_duality`). And the separating cell is machine-checked
-(`ladder_vs_global`): the local ladder earns ¬¬Z = T exactly where the global
+(`ladder_vs_global`): the local ladder gives ¬¬Z = T exactly where the global
 □ goes mute, so the two layers are incomparable rather than one refining the
 other.
 
@@ -2443,7 +2456,7 @@ gives F, so `a` is pivotal whatever ψ is — the false that keeps the
 mark is what makes both sides wait together. Hence `labF`, complete and
 exact on linear claims, is the forced cut, as `joint` is for the width:
 with E57 and E58, the three grades the judge does not compute are the
-three it cannot compute cheaply — hereditary (coNP-hard), exact width
+three it cannot compute cheaply unless P = NP — hereditary (coNP-hard), exact width
 (NP-hard), exact receipt (NP-hard). MEASURED (`zreceipthard.py`, the
 judge's own lazy evaluator, and `pivotal` read literally, partial
 readings included): on all 2906 formulas ψ of depth ≤ 2 over two atoms and 600
@@ -2568,7 +2581,7 @@ the claim stops at hardness and "NP-complete" is not claimed). Width 1 is
 cheap — 2m evaluations, which is what `joint` does — and the exact width
 cannot be, unless P = NP. Together with E57 (no width at all ⟺ hereditary
 ⟺ a tautology check) and E59 above, the three grades the judge does not
-compute are the three it cannot: one coNP-hard, two NP-hard. MEASURED
+compute are the three it cannot, unless P = NP: one coNP-hard, two NP-hard. MEASURED
 (`zwidthhard.py`, the instrument's own `width`): on the same 2928-formula
 enumeration of depth ≤ 2 over two atoms the witness's width is 2 on the 2340
 non-tautologies and undefined on the 588 tautologies; on 600 random
@@ -3083,7 +3096,8 @@ enumerating refinements? — MEASURED narrowing, 2026-07-12/13: the
 fence depth is exactly m−1 in the number of marks — sufficient for
 every sound verdict (violations cannot hide in full completions) and
 necessary by the guard family (b₁∧…∧b_{m−1}) → (a→a), checked at
-m = 2,3,4,5 (`zverify` §§5–6); hence NO constant-depth
+m = 2,3,4,5 (`zverify` §§5–6) and since proved for every m
+(`ZFenceDepth.lean`, §19); hence NO constant-depth
 characterization exists — and E57 (`ZHeredTaut.lean`, §19) closes the
 remaining question: no structural, non-enumerative criterion exists
 either, unless P = coNP, because heredity of the guarded witness
@@ -3330,7 +3344,7 @@ already ships in the repository (`tool/`); a possible essay,
 13. Libkin, L. SQL's three-valued logic and certain answers. *ACM
     Transactions on Database Systems* 41:1 (2016), Article 1.
 14. Libkin, L., Peterfreund, L. SQL nulls and two-valued logic. *Proc.
-    PODS 2023*, 11–20.
+    PODS 2023*, 11–20. doi:10.1145/3584372.3588661.
 15. Codd, E. F. *The Relational Model for Database Management: Version
     2*. Addison-Wesley, Reading MA, 1990.
 16. IEEE Standard for Floating-Point Arithmetic (IEEE 754-2019). IEEE,
@@ -3413,13 +3427,30 @@ already ships in the repository (`tool/`); a possible essay,
 
 40. de Kleer, J. An assumption-based TMS. *Artificial Intelligence*
     28:2 (1986), 127–162.
+41. Lehmann, S. Strict Fregean free logic. *Journal of Philosophical
+    Logic* 23:3 (1994), 307–336 — the neutral school of free logic (§25).
+42. Quine, W. V. O. *Ontological Relativity and Other Essays*. Columbia
+    University Press, 1969 — "no entity without identity" (§25).
+43. Hilbert, D., Bernays, P. *Grundlagen der Mathematik*, vol. II.
+    Springer, 1939 — the ε-operator (§25).
+44. Płonka, J. On a method of construction of abstract algebras.
+    *Fundamenta Mathematicae* 61 (1967), 183–189 — Płonka sums (§3.7).
+45. Senellart, P., Jachiet, L., Maniu, S., Ramusat, Y. ProvSQL:
+    provenance and probability management in PostgreSQL. *PVLDB* 11:12
+    (2018), 2034–2037 (§20).
+46. Enck, W., Gilbert, P., Chun, B.-G., Cox, L. P., Jung, J.,
+    McDaniel, P., Sheth, A. N. TaintDroid: an information-flow tracking
+    system for realtime privacy monitoring on smartphones. *Proc. OSDI
+    2010*, 393–407 (§§1, 14).
+47. *perlsec — Perl security* (the taint mode), Perl 5 documentation,
+    perldoc.perl.org/perlsec (§§1, 14).
 
 ## Acknowledgements and AI disclosure
 
 This work was carried out with the substantial participation of the AI
 system Claude (Anthropic) in a dialogue setting: the system generated
 the text, the test-bench code, and the Lean proofs. Across versions the
-dialogue ran on four Claude models, and the attribution is kept honest,
+dialogue ran on five Claude models, and the attribution is kept honest,
 read from the commit trailers: Claude Opus 4.8 — the original corpus
 (v1.0), the 2026-07-14/15 additions (the three-laws capstone §3.1, the
 Finn attribution and reconciliation in §3.8, the paradox-engine synthesis
@@ -3461,7 +3492,18 @@ statements, the v1.4 assembly, and the v2.0.0 frame — the relation to
 classical logic carried into the header, abstract, §1, §3.1, §7 and §10
 with `paper/core_logic_checks.py` wired into the regression, the
 mark-sensitivity census placed beside its definition, and the v2.0.0
-assembly. All design
+assembly; Claude Opus 5, after publication, also the v2.0.0 upload and its
+verification against the Zenodo API, the loss-framing pass over twenty-one
+sites, the square root as a proved rational enclosure, and the judge's
+verdict/warranty guard; Claude Opus 5.5 — draft 2.1.0: the numeric floor of
+§15 with `ZNumNames.lean`, `ZParabola.lean` and `ZIntExtremes.lean`, the
+integer refinement of numeric comparisons, the resolution of three cloud
+red-team reports and of the judge's worst cases, the warranty grade without
+the walk (`ZOnly.lean`), the "equal in strength on classical's own domain"
+correction, and on 2026-09-28 the thesis correction (three-valued, every
+connective two-valued), the order of birth (§3.9, `ZOrigin.lean`) and the
+v2.1.0 assembly, applying a fresh-context review of the draft by a second
+Claude Opus 5.5 session. All design
 decisions, fork choices, hypotheses, and the final responsibility for
 the content rest with the human author. In accordance with COPE/ICMJE
 recommendations, the AI system is not listed as an author. The

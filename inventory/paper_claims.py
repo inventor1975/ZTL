@@ -172,6 +172,15 @@ if __name__ == "__main__":
     print(f"\n### ZTL preprint ({ZTL_DRAFT})")
     thms, mods = corpus_totals()
     d = text(ZTL_DRAFT)
+    # The header above the Abstract is the VERSION HISTORY: each paragraph carries its
+    # own version's numbers (v1.4 had 66 modules / 1112 theorems). Checking it against
+    # today's corpus forced the history to be rewritten to today's count to stay green
+    # (2.1.0 said v1.4 "grew to 1194 theorems"; found by Logik2, 2026-09-28). The
+    # current counts live from the Abstract on, as the Zenodo sheet's do above its history.
+    cut = d.find("## Abstract")
+    if cut > 0:
+        print(f"  [skip] {'version history above the Abstract':46s} each version's own numbers — the record")
+        d = d[cut:]
     for claimed in set(family("theorems in the corpus", d,
                               r"(\d+) theorems", doc)):
         check("theorems in the corpus", claimed, str(thms), doc)

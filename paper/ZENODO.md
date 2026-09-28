@@ -98,7 +98,8 @@ of an unverified atom; Z is barred from the value of any compound (the
 greediness theorem, machine-checked): above the atoms the algebraic
 value already is the logical value, so — beyond Suszko's logical
 two-valuedness, which every structural logic has — ZTL is bivalent on
-compounds by construction, and the reduction's only work is on the atom.
+compounds by construction, and the reduction's non-truth-functionality is
+confined to connectives applied to atoms.
 The one asymmetric cell, ¬Z = F, gives the values an order of birth,
 proved over the whole language: under pure doubt F is born first and T
 only through an F (lean/ZOrigin.lean, empty axiom list) — an order

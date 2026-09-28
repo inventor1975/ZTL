@@ -1,11 +1,12 @@
-# ZTL — Zero-Trust Logic — v2.1.0 (draft)
+# ZTL — Zero-Trust Logic — v2.1.0
 
-**V. Reznik. Preprint, v2.1.0 — DRAFT, not published (opened 2026-09-24 when the
-corpus grew past the published v2.0.0, DOI 10.5281/zenodo.22842725). Version DOI: minted on upload
-(this file is the working draft; the PDF is built by `paper/mkpreprint.py`).
+**V. Reznik. Preprint, v2.1.0 — 2026-09-28. Version DOI:
+[10.5281/zenodo.23007861](https://doi.org/10.5281/zenodo.23007861)
+(this file is the source; the PDF is built by `paper/mkpreprint.py`).
 Concept DOI:
 [10.5281/zenodo.21318981](https://doi.org/10.5281/zenodo.21318981)
-(v1.4.1: [10.5281/zenodo.22644261](https://doi.org/10.5281/zenodo.22644261);
+(v2.0.0: [10.5281/zenodo.22842725](https://doi.org/10.5281/zenodo.22842725);
+v1.4.1: [10.5281/zenodo.22644261](https://doi.org/10.5281/zenodo.22644261);
 v1.4: [10.5281/zenodo.22643843](https://doi.org/10.5281/zenodo.22643843);
 v1.3: [10.5281/zenodo.21472971](https://doi.org/10.5281/zenodo.21472971);
 v1.2: [10.5281/zenodo.21440066](https://doi.org/10.5281/zenodo.21440066);

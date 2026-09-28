@@ -1,6 +1,17 @@
-# Zenodo upload sheet — ZTL v2.1.0 (PREPARED, not yet published — how many values, the order of birth, the numeric floor)
+# Zenodo upload sheet — ZTL v2.1.0 (PUBLISHED 2026-09-28 — how many values, the order of birth, the numeric floor)
 
-**v2.1.0 — prepared 2026-09-28; the upload is the author's manual step.** A new version of the
+**v2.1.0 PUBLISHED 2026-09-28: version DOI 10.5281/zenodo.23007861**
+(https://zenodo.org/records/23007861). Verified against the API WITHOUT a token after
+publication: version 2.1.0, CC BY 4.0, date Created 2026-09-28, 52 keywords, 4 related
+identifiers (isNewVersionOf 22842725 correct), Repository URL github.com/inventor1975/ZTL, and
+exactly ONE file — ZTL-preprint-v2.1.0.pdf, 433680 bytes, md5 equal to the repository copy.
+The draft was filled by the deposit tool; the author set the license and the "Created" date
+in the form by hand (the tool read the legacy view, where they looked set/absent — now it reads
+the form's view). A wart of the published PDF: its header still reads "(draft)" and "DRAFT, not
+published … Version DOI: minted on upload" — built from the working header; the source header
+is corrected after publication.
+
+**v2.1.0 — prepared 2026-09-28.** A new version of the
 concept record 10.5281/zenodo.21318981, isNewVersionOf v2.0.0 (10.5281/zenodo.22842725). After
 `newversion`, delete the inherited ZTL-preprint-v2.0.0.pdf from the draft (it caught v2.0.0) and
 check the related identifier says 22842725. Reviewed before upload by a second Claude Opus 5.5

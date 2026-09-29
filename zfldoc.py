@@ -130,6 +130,12 @@ CODE_HELP = {
     "W_NO_GLOSS": ("no gloss, so nobody can check the name means what it "
                    "seems to",
                    "нет пояснения — некому проверить, то ли значит имя"),
+    "W_SOLVED": ("a `?` value was solved for, not measured: EARNED means a value "
+                 "exists that makes the claim true, not that it is established — "
+                 "for a real unknown quantity give its range, e.g. [0,inf]",
+                 "величина `?` найдена решением, а не измерена: EARNED значит, что "
+                 "такое значение существует, а не что оно установлено — для реальной "
+                 "неизвестной величины дайте её интервал, например [0,inf]"),
 }
 
 PROSE = {

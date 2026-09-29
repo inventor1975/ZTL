@@ -297,13 +297,16 @@ COLUMNS = [
     },
     {
         "key": "value", "type": "text", "required": False, "advanced": False,
-        "en": ("value", "a number, an interval [0,10], or ? for unknown"),
-        "ru": ("величина", "число, интервал [0,10] или ? для неизвестного"),
-        "de": ("Wert", "Zahl, Intervall [0,10] oder ? für unbekannt"),
-        "fr": ("valeur", "nombre, intervalle [0,10] ou ? pour inconnu"),
-        "es": ("valor", "número, intervalo [0,10] o ? para desconocido"),
-        "uk": ("величина", "число, інтервал [0,10] або ? для невідомого"),
-        "he": ("ערך", "מספר, תחום [0,10] או ? ללא ידוע"),
+        # "? FOR UNKNOWN" WAS FALSE (29.09, blind cloud test): `?` is the
+        # quantity the question asks for and is SOLVED for; an unknown input
+        # written as `?` came back T EARNED. An unknown input is an interval.
+        "en": ("value", "a number, an interval [0,10], or ? for the quantity the question asks for (it is solved for, not measured); an unknown input is an interval, e.g. [0,inf]"),
+        "ru": ("величина", "число, интервал [0,10] или ? для искомой величины (её решают, а не измеряют); неизвестное входное значение — интервал, например [0,inf]"),
+        "de": ("Wert", "Zahl, Intervall [0,10] oder ? für die gesuchte Größe (sie wird gelöst, nicht gemessen); ein unbekannter Eingabewert ist ein Intervall, z. B. [0,inf]"),
+        "fr": ("valeur", "nombre, intervalle [0,10] ou ? pour la grandeur cherchée (elle est résolue, pas mesurée) ; une entrée inconnue est un intervalle, p. ex. [0,inf]"),
+        "es": ("valor", "número, intervalo [0,10] o ? para la magnitud buscada (se resuelve, no se mide); un dato desconocido es un intervalo, p. ej. [0,inf]"),
+        "uk": ("величина", "число, інтервал [0,10] або ? для шуканої величини (її розв'язують, а не вимірюють); невідоме вхідне значення — інтервал, напр. [0,inf]"),
+        "he": ("ערך", "מספר, תחום [0,10] או ? לגודל המבוקש (פותרים אותו, לא מודדים); ערך קלט לא ידוע הוא תחום, למשל [0,inf]"),
         "eg": ["1500", "[0,10]", "?"],
     },
     {
@@ -400,8 +403,10 @@ DOC_FIELDS = [
         "key": "ask", "type": "multi", "required": False,
         "options": ["verdict", "warranty", "passport", "stipulations",
                     "blast", "brackets"],
-        "en": ("ask", "narrow the report; empty shows everything that applies"),
-        "ru": ("спросить", "сузить отчёт; пусто — показывается всё применимое"),
+        # NARROWS NOTHING (29.09): read into the document and used by no one —
+        # the report is always whole. Said, rather than promised.
+        "en": ("ask", "reserved: the full report is always shown (this field narrows nothing yet)"),
+        "ru": ("спросить", "зарезервировано: отчёт всегда показывается целиком (поле пока ничего не сужает)"),
     },
 ]
 
@@ -1454,6 +1459,35 @@ def run(doc, ground_registry=None):
                 "hereditary" if r["disposition"] in ("EARNED", "REFUTED") else
                 "until-verification" if r["disposition"] in ("OPEN", "ON CREDIT") else None)
             report["numeric"]["unverified"] = list(core.get("unverified") or [])
+            # nc<i> IS A COMPARISON, SAY WHICH (29.09, blind cloud test: `nc1`
+            # reached a reader with nothing to say what it was).
+            try:
+                _nc = extract_comparisons(claim, {}, parse=False)[1]
+                if _nc:
+                    report["numeric"]["comparisons"] = {k: v[3].strip() for k, v in _nc.items()}
+            except Exception:
+                pass
+            # REFUTED WITH NO LETTER (29.09): a `?` no value can satisfy came
+            # back disposition REFUTED, verdict null. Refuted is F.
+            if report["numeric"]["verdict"] is None and r["disposition"] == "REFUTED":
+                report["numeric"]["verdict"] = "F"
+            # SOLVED IS NOT MEASURED (29.09, curator chose: warn, keep the
+            # meaning). With `?` the claim is read as "does a value exist?";
+            # EARNED then means such a value exists, not that it is known.
+            # Only a BOX, not roots: an equation that pins x (x*x - 5*x + 6 == 0
+            # gives 2 and 3) answered "find x" exactly; a box (-inf..2000) only
+            # says some value would do, which is the trap (MEASURED: the
+            # catalogue's quadratic went RED on the first version).
+            if unknown and solved and r["disposition"] == "EARNED":
+                for _n, _v in solved.items():
+                    if _v.get("pinned") or _v.get("roots"):
+                        continue
+                    issues.append(_issue(
+                        "warning", "W_SOLVED", _n,
+                        f"'{_n}' was SOLVED for, not measured: EARNED here means a value exists "
+                        f"that makes the claim true ({_n} in [{_v['lo']}, {_v['hi']}]), not that "
+                        f"it is established. If '{_n}' is a real quantity you do not know yet, "
+                        f"give its range instead, e.g. [0,inf]."))
             if r.get("polarity"):
                 report["numeric"]["polarity"] = r["polarity"]
             # a REFUTED question needs no more facts: nothing makes it true
@@ -1491,6 +1525,40 @@ def run(doc, ground_registry=None):
                            "grade": r["grade"],
                            "unverified": sorted(r["unverified"]),
                            "why": r.get("why")}
+        # A DEFINED ROW CANNOT BE VERIFIED (29.09, blind cloud test): "verify
+        # ['may_sign']" sent a reader to check a formula, and "verify ['L']"
+        # sent one to check a paradox whose refusal is permanent. The list of
+        # names stays as the core computed it; only the advice says where the
+        # checking actually is.
+        _defs = {x["name"] for x in rows if x.get("status") == "defined"}
+        if r["disposition"] == "OPEN" and _defs & set(r["unverified"]):
+            _by = {x["name"]: x for x in rows}
+            _inputs, _seen, _todo = [], set(), sorted(r["unverified"])
+            while _todo:
+                _n = _todo.pop(0)
+                if _n in _seen:
+                    continue
+                _seen.add(_n)
+                _row = _by.get(_n) or {}
+                if _row.get("status") == "defined":
+                    _todo += sorted(names_in(_row.get("ground")) & set(_by))
+                elif _row.get("status") == "unverified":
+                    _inputs.append(_n)
+            _kinds = {n: (report.get("passport_rows") or {}).get(n, {}).get("kind")
+                      for n in r["unverified"]}
+            _px = [n for n in sorted(r["unverified"]) if _kinds.get(n) == "PARADOX"]
+            _ud = [n for n in sorted(r["unverified"]) if _kinds.get(n) == "UNDERDETERMINED"]
+            _why = "not established"
+            if _inputs:
+                _why += f" — check {sorted(set(_inputs))} (it could still turn either way)"
+            _dd = [n for n in sorted(r["unverified"]) if n in _defs and n not in _px + _ud]
+            if _dd:
+                _why += f"; {_dd} are defined rows: they settle when their inputs do"
+            if _px:
+                _why += f"; {_px} is a paradox: no check can settle it, the refusal is permanent"
+            if _ud:
+                _why += f"; {_ud} is underdetermined: no check settles it, only a stipulation"
+            report["judge"]["why"] = _why
         if r["unverified"]:
             report["what_to_check"] = what_to_check(claim, resolved_marking(rows),
                                                     sorted(r["unverified"]))

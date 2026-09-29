@@ -256,7 +256,7 @@ EXAMPLES = [
      "en": "Contingent liar — world A (harmless)", "ru": "контингентный лжец — мир A (безобидный)",
      "uk": "контингентний брехун — світ A (безневинний)", "he": "שקרן מותנה — עולם A (לא מזיק)", "de": "kontingenter Lügner — Welt A (harmlos)", "fr": "menteur contingent — monde A (inoffensif)", "es": "mentiroso contingente — mundo A (inofensivo)",
      "doc": {
-         "rows": [{"name": "S", "means": "сказанное Смитом истинно", "status": "defined", "ground": "~(Tr(J))"}, {"name": "J", "means": "сказанное Джонсом истинно", "status": "defined", "ground": "Tr(g)"}, {"name": "g", "means": "предложение Карри истинно", "status": "verified", "ground": "the-story"}]}},
+         "rows": [{"name": "S", "means": "сказанное Смитом истинно", "status": "defined", "ground": "~(Tr(J))"}, {"name": "J", "means": "сказанное Джонсом истинно", "status": "defined", "ground": "Tr(g)"}, {"name": "g", "means": "трава зелёная", "status": "verified", "ground": "the-story"}]}},
     {"kind": "paradox", "paper": "Contingent liar — world B (unlucky)",
      "ask_en": "The same Smith sentence, but Jones said: 'what Smith said is true'.",
      "ask_ru": "Тот же Смит, но Джонс говорит «Смит прав». Круг замкнулся.",

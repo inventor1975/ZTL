@@ -72,6 +72,22 @@ from there →
 http://localhost:8190 (no dependencies; without GROQ_API_KEY it runs in
 pro mode — write ZFL by hand).
 
+**For AI agents (MCP).** The same judge is an MCP server:
+`https://api.vitalyreznik.com/mcp` (Streamable HTTP, no key, no sign-up;
+30 requests a minute per address, 256 KB per request). Three tools:
+`language` (the columns and rules of a ZFL table), `examples` (worked
+documents) and `judge`. Your agent's own AI writes the table; ZTL judges
+it. The answer is T or F; Z marks an unverified input and is never the
+answer. In Claude Code:
+
+```
+claude mcp add --transport http ztl https://api.vitalyreznik.com/mcp
+```
+
+Other MCP clients take the same URL as a remote server. Plain HTTP, for
+clients without MCP, lives at the same address: `/language`, `/examples`,
+`/judge` (POST), `/health`.
+
 Companion papers, both built on this core: **The Paradox Docket** — a
 computable classification of the classical paradoxes (`zclassify.py`, E35;
 DOI [10.5281/zenodo.21864082](https://doi.org/10.5281/zenodo.21864082)),

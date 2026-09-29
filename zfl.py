@@ -1471,9 +1471,11 @@ def run(doc, ground_registry=None):
             # back disposition REFUTED, verdict null. Refuted is F.
             if report["numeric"]["verdict"] is None and r["disposition"] == "REFUTED":
                 report["numeric"]["verdict"] = "F"
-            # SOLVED IS NOT MEASURED (29.09, curator chose: warn, keep the
-            # meaning). With `?` the claim is read as "does a value exist?";
-            # EARNED then means such a value exists, not that it is known.
+            # THE QUESTION WAS "WHICH VALUES?" (29.09, curator chose: warn, keep
+            # the meaning; SOLVABLE was tried and withdrawn — `?` IS a question,
+            # sec4 of test_zfl, and its answer is rightly EARNED). The trap is a
+            # yes/no question about an unknown INPUT written as `?`: the answer
+            # then says which values would do, not whether the real one does.
             # Only a BOX, not roots: an equation that pins x (x*x - 5*x + 6 == 0
             # gives 2 and 3) answered "find x" exactly; a box (-inf..2000) only
             # says some value would do, which is the trap (MEASURED: the
@@ -1484,10 +1486,10 @@ def run(doc, ground_registry=None):
                         continue
                     issues.append(_issue(
                         "warning", "W_SOLVED", _n,
-                        f"'{_n}' was SOLVED for, not measured: EARNED here means a value exists "
-                        f"that makes the claim true ({_n} in [{_v['lo']}, {_v['hi']}]), not that "
-                        f"it is established. If '{_n}' is a real quantity you do not know yet, "
-                        f"give its range instead, e.g. [0,inf]."))
+                        f"'{_n}' was read as the QUESTION and solved: the established answer is "
+                        f"{_n} in [{_v['lo']}, {_v['hi']}] — which values satisfy the claim, not "
+                        f"whether the actual {_n} does. If you asked whether the claim holds for a "
+                        f"real {_n} you do not know yet, give its range instead, e.g. [0,inf]."))
             if r.get("polarity"):
                 report["numeric"]["polarity"] = r["polarity"]
             # a REFUTED question needs no more facts: nothing makes it true

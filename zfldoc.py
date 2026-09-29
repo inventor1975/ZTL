@@ -52,16 +52,17 @@ CODE_HELP = {
                         "больше 6 событий истечения в одном документе — эпохальный пол читает "
                         "утверждение по обе стороны каждого (800 событий — 76,7 с, промерено "
                         "27.09.2026); разделите вопрос"),
-    "E_TOOBIG": ("more ATOMS in the formulas than the cost allows — a reading "
-                 "costs 3**atoms (2.9 s at twelve, 29.6 s at fourteen, measured "
-                 "2026-09-18). Rows are not capped: a hundred-row table whose "
-                 "formulas each speak of six atoms reads in 0.003 s. Split the "
+    "E_TOOBIG": ("more than 10 atoms NAMED MORE THAN ONCE in the formulas, or more "
+                 "than 64 atoms in all. The exact guarantee branches only on atoms "
+                 "that repeat; an atom named once costs almost nothing (40 read-once "
+                 "atoms: under 0.01 s; 30 repeated atoms in a pigeonhole witness: "
+                 "0.66 s — measured 2026-09-29). Rows are not capped. Split the "
                  "question, not the table",
-                 "атомов В ФОРМУЛАХ больше, чем позволяет стоимость: разбор стоит "
-                 "3**атомов — двенадцать 2,9 с, четырнадцать 29,6 с (промерено "
-                 "18.09.2026). Строки НЕ ограничены: таблица в сто строк, где "
-                 "каждая формула о шести атомах, читается за 0,003 с. Делить надо "
-                 "вопрос, а не таблицу"),
+                 "больше 10 атомов, НАЗВАННЫХ БОЛЕЕ ОДНОГО РАЗА, или больше 64 атомов "
+                 "всего. Точная гарантия ветвится только по повторным атомам; атом, "
+                 "названный один раз, почти бесплатен (40 таких — меньше 0,01 с; 30 "
+                 "повторных в формуле о голубях — 0,66 с, промерено 29.09.2026). "
+                 "Строки НЕ ограничены. Делить надо вопрос, а не таблицу"),
     "E_NONAME": ("a row without a name", "строка без имени"),
     "E_BADNAME": ("a name a formula could not use",
                   "имя, непригодное для формулы"),

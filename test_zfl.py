@@ -405,6 +405,24 @@ def sec11_a_public_service_cannot_be_made_to_raise_or_to_stall():
         {"name": "safe", "status": "defined", "ground": "~Tr(tainted) | Tr(sanitized)", "means": "c"}]}
     assert not any(i["code"] == "E_TOOBIG" for i in zfl.validate(labels)), "witness labels are not atoms"
     print("   the cap counts comparisons, not witness labels: ok")
+    # 2026-09-29: plain atoms are capped by REPEATS (10), all atoms at 64. The exact
+    # guarantee branches only on atoms named twice (zverify._only); E57 puts the
+    # hardness there. MEASURED in ztlstudio a78db5a (40 read-once atoms < 0.01 s;
+    # 30 repeated in guard -> ~PHP(6,5), 0.66 s).
+    def _rows(ns):
+        return [{"name": n, "means": n, "status": "unverified"} for n in ns]
+    once = [f"a{i}" for i in range(40)]
+    assert not any(i["code"] == "E_TOOBIG" for i in zfl.validate(
+        {"claim": " & ".join(once), "rows": _rows(once)})), "40 atoms named once are not capped"
+    rep = [f"b{i}" for i in range(11)]
+    assert any(i["code"] == "E_TOOBIG" for i in zfl.validate(
+        {"claim": " & ".join(f"({x} | ~{x})" for x in rep), "rows": _rows(rep)})), "11 repeated are capped"
+    assert not any(i["code"] == "E_TOOBIG" for i in zfl.validate(
+        {"claim": " & ".join(f"({x} | ~{x})" for x in rep[:10]), "rows": _rows(rep[:10])})), "10 repeated pass"
+    many = [f"c{i}" for i in range(65)]
+    assert any(i["code"] == "E_TOOBIG" for i in zfl.validate(
+        {"claim": " & ".join(many), "rows": _rows(many)})), "65 distinct are capped"
+    print("   plain atoms: 10 REPEATED, 64 in all (read-once ones cost nothing): ok")
     big = {"claim": "*".join(["a"] * 200) + " > b", "rows": [
         {"name": "a", "means": "a", "status": "verified", "ground": "doc", "value": "1" + "0" * 1000},
         {"name": "b", "means": "b", "status": "verified", "ground": "doc", "value": "1"}]}

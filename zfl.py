@@ -455,6 +455,7 @@ def form_spec(lang="en"):
 # ------------------------------------------------------- validation
 import os
 import re
+from collections import Counter
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))  # ZTL kernel lives beside zfl at the repo root
@@ -548,7 +549,8 @@ def coerce(doc):
     return out
 
 
-MAX_ATOMS = 10          # см. комментарий в validate(): стоимость 3**atoms
+MAX_ATOMS = 10          # REPEATED plain atoms (named twice or more); см. validate()
+MAX_DISTINCT_ATOMS = 64         # all plain atoms; read-once ones cost ~nothing (2026-09-29)
 MAX_COMPARISONS = 16            # distinct comparisons; measured in validate() 2026-09-27
 # THE LENGTH OF A FORMULA IS CAPPED TOO — the atom cap bounds the reading, not
 # the READERS, which are quadratic in the length of the text. MEASURED
@@ -601,7 +603,7 @@ def validate(doc):
     # 10 plain atoms 0.01 s; 9 atoms with comparisons 0.53 s; 10 comparisons
     # 2.83 s; 8 comparisons + 2 atoms 8.33 s. So atoms are counted as the core
     # reads them, and with any comparison present the cap is one lower.
-    _used, _cmps = set(), set()
+    _used, _cmps, _seen = set(), set(), Counter()
     # ONLY FORMULAS (2026-09-26): a ground is a formula only on a `defined` row;
     # elsewhere it names a witness (`san-guard-filter_var-FILTER_VALIDATE_FLOAT-L48`)
     # and the core never reads it. Counting its words as atoms refused 1 080 of
@@ -611,17 +613,38 @@ def validate(doc):
         _a, _c = _reading_atoms(_text)
         _used |= _a
         _cmps |= _c
+        _seen.update(_reading_atom_counts(_text, _a))
     # TWO COUNTS, NOT ONE (2026-09-27). The combined cap of 9 was set by the OLD
     # walk of the grade, whose cost depended on the hash seed; with the grade exact
     # (PR #2) and the reverse pass capped (PR #4), comparisons are cheap. MEASURED,
     # worst zfl.run over three shapes (xor chains, mixed connectives, every plain
     # atom twice) and three seeds, CPU loaded: 16 comparisons + 10 plain atoms
     # 0.45 s; 20 comparisons 0.58-0.73 s. So plain atoms <= 10, comparisons <= 16.
-    if len(_used) > MAX_ATOMS:
+    # REPEATED ATOMS, NOT ALL ATOMS (2026-09-29, the curator: "fix the studio's cap").
+    # Since 2026-09-27 the grade is exact without the walk (`zverify._only`: value
+    # sets over independent subtrees, Shannon splits ONLY on atoms that occur more
+    # than once), and E57 (`lean/ZHeredTaut.lean`) shows the hard part is exactly
+    # those repeated atoms. So the 3**atoms bound above is the OLD walk's; a name
+    # said once costs next to nothing. MEASURED today, zfl.run, cap lifted:
+    #   read-once chains (&, mixed & | -> ^ <->), 100 atoms: <= 0.009 s;
+    #   10 repeated atoms in a hard E57 witness + 200 read-once atoms over
+    #   defined rows, 15.5 KB: 0.010 s;
+    #   worst honest case that fits the 2000-character formula cap: guard ->
+    #   ~PHP(6,5) (pigeonhole, unsat, EARNED only by a full proof), 30 repeated
+    #   atoms, 0.66 s; PHP(7,6), 42 atoms, 8.5 s but 3 KB — refused by E_TOOLONG.
+    # So: repeated plain atoms <= 10 (the old number, now on the only part that
+    # costs), all plain atoms <= 64 (a generous ceiling on the table, not on cost).
+    _repeated = {a for a in _used if _seen[a] > 1}
+    if len(_repeated) > MAX_ATOMS:
         issues.append(_issue("error", "E_TOOBIG", "table",
-                             f"{len(_used)} plain atoms in the formulas: a reading "
-                             f"costs 3**atoms, so it is capped at {MAX_ATOMS} "
-                             f"(rows are NOT capped — split the question instead)"))
+                             f"{len(_repeated)} plain atoms occur more than once in the "
+                             f"formulas: the exact guarantee branches on each of them, "
+                             f"so they are capped at {MAX_ATOMS} (atoms named once cost "
+                             f"almost nothing — split the question)"))
+    if len(_used) > MAX_DISTINCT_ATOMS:
+        issues.append(_issue("error", "E_TOOBIG", "table",
+                             f"{len(_used)} plain atoms in the formulas: capped at "
+                             f"{MAX_DISTINCT_ATOMS} (rows are NOT capped — split the question)"))
     if len(_cmps) > MAX_COMPARISONS:
         issues.append(_issue("error", "E_TOOBIG", "table",
                              f"{len(_cmps)} distinct comparisons in the formulas: each is "
@@ -944,6 +967,14 @@ def _reading_atoms(text):
         return names_in(text), set()
     return ({n for n in names_in(core) if n not in atoms},
             {" ".join(v[3].split()) for v in atoms.values()})
+
+
+def _reading_atom_counts(text, atoms):
+    """How many times each plain reading atom is NAMED in one formula — the count
+    the repeated-atom cap reads. `atoms` comes from `_reading_atoms`, so a name used
+    only inside comparisons is not counted here either."""
+    t = re.sub(r"\bTr\s*\(\s*([^)]+?)\s*\)", r"\1", text or "")
+    return Counter(w for w in re.findall(r"[A-Za-zА-Яа-яЁё_][\wА-Яа-яЁё]*", t) if w in atoms)
 
 
 def names_in(text):

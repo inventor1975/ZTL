@@ -49,11 +49,17 @@ PSSL_TEX = "paper/PSSL_EN_v1_1_0.tex"
 # which is the same blind spot as guarding nothing.
 # Moved to 2.1.0 on 2026-09-24: the corpus grew past the published 2.0.0
 # (ZNumNames, 17 theorems), and 2.0.0 stays frozen as published.
-ZTL_DRAFT = "paper/ZTL-draft_2.1.0.md"
+# FROZEN on 2026-09-29 (curator: "there will be a new paper; the old one keeps its numbers"):
+# 2.1.x is published (v2.1.2, DOI 10.5281/zenodo.23019513) and the corpus grew past it (ZTopology).
+# No live ZTL draft until the new paper exists; it will get its own entry here. Same move as
+# 2.0.0 on 2026-09-24 — freeze the record, do not rewrite it to today's count.
+ZTL_DRAFT = None
 
 FROZEN = {
           "paper/ZTL-draft_1.4.md": "the source of the published v1.4.1 record (DOI 22644261)",
-          "paper/PSSL_EN_v1_0_0.tex": "the published PSSL v1.0.0 (DOI 21452736)"}
+          "paper/PSSL_EN_v1_0_0.tex": "the published PSSL v1.0.0 (DOI 21452736)",
+          "paper/ZTL-draft_2.1.0.md": "the source of the published v2.1.2 record (DOI 23019513), frozen 29.09",
+          "paper/ZENODO.md": "the Zenodo sheet of the published v2.1.2 record, frozen 29.09"}
 
 WORDS = {"twelve": 12, "thirteen": 13, "fourteen": 14, "fifteen": 15,
          "sixteen": 16, "seventeen": 17, "eighteen": 18, "nineteen": 19,
@@ -168,50 +174,55 @@ if __name__ == "__main__":
     print("=" * 78)
 
     # --- 1. the ZTL preprint's corpus figures ---------------------------
-    doc = os.path.basename(ZTL_DRAFT)
-    print(f"\n### ZTL preprint ({ZTL_DRAFT})")
     thms, mods = corpus_totals()
-    d = text(ZTL_DRAFT)
-    # The header above the Abstract is the VERSION HISTORY: each paragraph carries its
-    # own version's numbers (v1.4 had 66 modules / 1112 theorems). Checking it against
-    # today's corpus forced the history to be rewritten to today's count to stay green
-    # (2.1.0 said v1.4 "grew to 1194 theorems"; found by Logik2, 2026-09-28). The
-    # current counts live from the Abstract on, as the Zenodo sheet's do above its history.
-    cut = d.find("## Abstract")
-    if cut > 0:
-        print(f"  [skip] {'version history above the Abstract':46s} each version's own numbers — the record")
-        d = d[cut:]
-    for claimed in set(family("theorems in the corpus", d,
-                              r"(\d+) theorems", doc)):
-        check("theorems in the corpus", claimed, str(thms), doc)
-    # §8's audit line "**N of N clean**" is a corpus count too; it sat at 840
-    # while the abstract said 1112 (2026-09-07) because nothing measured it.
-    for a, b in set(family("audit line 'N of N clean'", d,
-                           r"\*\*(\d+) of (\d+) clean\*\*", doc)):
-        check("audit line 'N of N clean' (N)", a, str(thms), doc)
-        check("audit line 'N of N clean' (of N)", b, str(thms), doc)
-    # The module count is spelled in words. The raw pattern also catches
-    # ordinary prose ("algebra modules"), so the family is judged on the
-    # RECOGNISED number-words, not on the raw hit count — otherwise a
-    # document with prose and no count would look checked.
-    words = {a or b for a, b in
-             re.findall(r"([\w-]+) modules in all|([\w-]+) modules", d)}
-    numeric = sorted(w for w in words if w.lower() in WORDS)
-    if not numeric:
-        print(f"  [FAIL] {'modules (number word)':46s} matched NOTHING in {doc}")
-        failures.append(f"{doc}: no module count in words — the guard is blind "
-                        "or the paper stopped stating it")
+    if ZTL_DRAFT is None:
+        print("\n### ZTL preprint — NO LIVE DRAFT: 2.1.x is published and frozen "
+              "(curator 29.09: a new paper; the old one keeps its numbers)")
+        d, doc = "", "(no live ZTL draft)"
     else:
-        print(f"  [ .. ] {'modules (number word)':46s} {len(numeric)} claim(s): "
-              f"{', '.join(numeric)}")
-        for w in numeric:
-            check(f"modules ('{w}')", str(WORDS[w.lower()]), str(mods), doc)
-    # 2.0.0 states neither a stand count nor a hand-placed-print count, so
-    # these two are not required of it — but a silent skip is what this
-    # stand exists to prevent, so they are announced either way.
-    for claimed in set(family("test stands", d, r"(\d+) (?:test )?stands",
-                              doc, required=False)):
-        check("test stands", claimed, str(stand_count()), doc)
+        doc = os.path.basename(ZTL_DRAFT)
+        print(f"\n### ZTL preprint ({ZTL_DRAFT})")
+        d = text(ZTL_DRAFT)
+        # The header above the Abstract is the VERSION HISTORY: each paragraph carries its
+        # own version's numbers (v1.4 had 66 modules / 1112 theorems). Checking it against
+        # today's corpus forced the history to be rewritten to today's count to stay green
+        # (2.1.0 said v1.4 "grew to 1194 theorems"; found by Logik2, 2026-09-28). The
+        # current counts live from the Abstract on, as the Zenodo sheet's do above its history.
+        cut = d.find("## Abstract")
+        if cut > 0:
+            print(f"  [skip] {'version history above the Abstract':46s} each version's own numbers — the record")
+            d = d[cut:]
+        for claimed in set(family("theorems in the corpus", d,
+                                  r"(\d+) theorems", doc)):
+            check("theorems in the corpus", claimed, str(thms), doc)
+        # §8's audit line "**N of N clean**" is a corpus count too; it sat at 840
+        # while the abstract said 1112 (2026-09-07) because nothing measured it.
+        for a, b in set(family("audit line 'N of N clean'", d,
+                               r"\*\*(\d+) of (\d+) clean\*\*", doc)):
+            check("audit line 'N of N clean' (N)", a, str(thms), doc)
+            check("audit line 'N of N clean' (of N)", b, str(thms), doc)
+        # The module count is spelled in words. The raw pattern also catches
+        # ordinary prose ("algebra modules"), so the family is judged on the
+        # RECOGNISED number-words, not on the raw hit count — otherwise a
+        # document with prose and no count would look checked.
+        words = {a or b for a, b in
+                 re.findall(r"([\w-]+) modules in all|([\w-]+) modules", d)}
+        numeric = sorted(w for w in words if w.lower() in WORDS)
+        if not numeric:
+            print(f"  [FAIL] {'modules (number word)':46s} matched NOTHING in {doc}")
+            failures.append(f"{doc}: no module count in words — the guard is blind "
+                            "or the paper stopped stating it")
+        else:
+            print(f"  [ .. ] {'modules (number word)':46s} {len(numeric)} claim(s): "
+                  f"{', '.join(numeric)}")
+            for w in numeric:
+                check(f"modules ('{w}')", str(WORDS[w.lower()]), str(mods), doc)
+        # 2.0.0 states neither a stand count nor a hand-placed-print count, so
+        # these two are not required of it — but a silent skip is what this
+        # stand exists to prevent, so they are announced either way.
+        for claimed in set(family("test stands", d, r"(\d+) (?:test )?stands",
+                                  doc, required=False)):
+            check("test stands", claimed, str(stand_count()), doc)
     lake = subprocess.run(["lake", "build"], cwd=_LEAN, capture_output=True,
                           text=True, timeout=1800)
     prints = (lake.stdout + lake.stderr).count("does not depend on any axioms")
@@ -336,11 +347,13 @@ if __name__ == "__main__":
     for rel, why in FROZEN.items():
         print(f"  [skip] {rel:42s} {why}")
 
+    if "paper/ZENODO.md" in FROZEN:
+        print("\n### Zenodo sheet (paper/ZENODO.md) — FROZEN, the published v2.1.2 record; not checked")
     print("\n### Zenodo sheet (paper/ZENODO.md) vs the artefact it ships")
     # Only the CURRENT part of the sheet is checked — everything above the
     # "What was new in v1.3" history; the history paragraphs carry their own
     # versions' numbers (371 theorems, 62 stands …) and are the record.
-    zsheet = text("paper/ZENODO.md")
+    zsheet = "" if "paper/ZENODO.md" in FROZEN else text("paper/ZENODO.md")
     cut = zsheet.find("What was new in v1.3")
     zcur = zsheet if cut < 0 else zsheet[:cut]
     zpdf = re.search(r"\*\*File to upload:\*\* `(paper/[^`]+\.pdf)`", zcur)

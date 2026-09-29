@@ -77,8 +77,9 @@ pro mode — write ZFL by hand).
 30 requests a minute per address, 256 KB per request). Three tools:
 `language` (the columns and rules of a ZFL table), `examples` (worked
 documents) and `judge`. Your agent's own AI writes the table; ZTL judges
-it. The answer is T or F; Z marks an unverified input and is never the
-answer. In Claude Code:
+it. A compound claim (`signed & delivered`) is always judged T or F; a
+claim that is a single name answers with that name's own value, which is Z
+while it stays unverified or rests on something unverified. In Claude Code:
 
 ```
 claude mcp add --transport http ztl https://api.vitalyreznik.com/mcp

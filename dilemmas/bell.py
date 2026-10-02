@@ -24,6 +24,17 @@ FIGURE-EIGHT and fly into each other — they OVERLAP. Three measurements, each 
       which the CHSH bound's arithmetic needs, has a FROZEN ceiling. ZTL never granted the
       premise the experiment refutes.
 
+  B4  BELL'S OTHER PREMISES (added 2026-10-02 evening; prediction written before the run:
+      ztl-private notes/BELL-B4-PREDICTION-2026-10-02.md, commit e0616a1). Following Jarrett (1984), local
+      causality = PI (parameter independence) and OI (outcome independence), plus MI (settings independent of
+      the hidden state). All three speak of the hidden state, which no act witnesses: each is Z_PERMANENT.
+      What an act can witness is the violation (CHSH > 2) and no signalling: both EARNED. Bell's conclusion
+      itself, "not (PI and OI and MI)" — non-local, or non-real, or not free — is only ON CREDIT with a frozen
+      ceiling: ZTL does not grant the dilemma as a fact about nature; it keeps the observable pair. LIMIT, not
+      a finding: the theorem "(PI and OI and MI) -> CHSH <= 2" is also only on credit, because a propositional
+      kernel sees PI, OI, MI as independent atoms and cannot see the mathematics inside them; only the modus
+      tollens SCHEMA is earned (a tautology).
+
   PRIOR ART, plainly: Bell (1964), CHSH (1969); Peres (1978), "unperformed experiments have no
   results"; Bell tests by two-photon interference (Ou-Mandel 1988, Franson 1989); ER=EPR
   (Maldacena-Susskind 2013) for the picture; geometric "Bell disproofs" (Christian) failed —
@@ -127,8 +138,28 @@ def run():
           f"{c['ceiling_frozen']}; unmade readings: {sorted(set(st.values()))}")
     assert pair == "EARNED" and c["ceiling_frozen"] and set(st.values()) == {"Z_PERMANENT"}
 
+    print("\n### B4. Bell's other premises — PI, OI (Jarrett's local causality), MI (free settings)")
+    m4 = {"SV": "T", "NS": "T", "PI": "Z", "OI": "Z", "MI": "Z"}
+    rep4 = {"SV", "NS"}                             # no act witnesses the hidden state
+    obs = judge("SV & NS", m4)["disposition"]
+    st4 = {a: stamp(a, m4, rep4) for a in ("PI", "OI", "MI")}
+    loc = ceiling("PI & OI", m4, rep4)
+    dil_j = judge("~(PI & OI & MI)", m4)["disposition"]
+    dil_c = ceiling("~(PI & OI & MI)", m4, rep4)
+    thm = judge("(PI & OI & MI) -> ~SV", m4)["disposition"]
+    mt = judge("((PI & OI & MI) -> ~SV) & SV -> ~(PI & OI & MI)", m4)["disposition"]
+    print(f"ok  violation and no signalling: {obs}; PI, OI, MI: {sorted(set(st4.values()))}; "
+          f"locality PI&OI: ceiling frozen = {loc['ceiling_frozen']}")
+    print(f"ok  Bell's dilemma not(PI & OI & MI): {dil_j}, ceiling frozen = {dil_c['ceiling_frozen']} "
+          f"(earned futures {dil_c['earned_futures']}/{dil_c['futures']})")
+    print(f"ok  LIMIT: the theorem (PI & OI & MI) -> not SV is {thm} as atoms; the modus tollens schema: {mt}")
+    assert obs == "EARNED" and set(st4.values()) == {"Z_PERMANENT"} and loc["ceiling_frozen"]
+    assert dil_j == "ON CREDIT" and dil_c["ceiling_frozen"] and dil_c["earned_futures"] == 0
+    assert thm == "ON CREDIT" and mt == "EARNED"
+
     print("\nBELL: all measurements hold.")
-    print("The eight gives the minus, the overlap gives the cosine; the failed premise was never earned.")
+    print("The eight gives the minus, the overlap gives the cosine; the failed premise was never earned;")
+    print("and Bell's dilemma itself is a theorem about models, not an earned fact: ZTL keeps violation + no signalling.")
 
 
 if __name__ == "__main__":

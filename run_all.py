@@ -474,7 +474,8 @@ STANDS = [
         "ok  at F's own time, 'F-bar saw tails' from 'F saw up' and the rule: OPEN (an inference, not a witnessing)"]),
     ("dilemmas/bell.py", [
         "BELL: all measurements hold.",
-        "ok  turning number of the eight = +0.000 (a circle: 1, a double cover: 2)"]),
+        "ok  turning number of the eight = +0.000 (a circle: 1, a double cover: 2)",
+        "ok  Bell's dilemma not(PI & OI & MI): ON CREDIT, ceiling frozen = True (earned futures 0/1)"]),
     ("dilemmas/indistinguishable.py", [
         "INDISTINGUISHABLE: all measurements hold.",
         "ok  n=3 k=2: labelled (on credit) 8, EARNED distinct 4, Bose-Einstein C(n+k-1,n) = 4"]),

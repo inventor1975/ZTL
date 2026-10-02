@@ -463,6 +463,9 @@ STANDS = [
     ("dilemmas/cogito.py", [
         "ok  F1 t -> i, thinking granted: no delivery                 OPEN      F until-verification weak=['i']",
         "ok  F2 bridge in place: bare modus ponens, earned            EARNED    T hereditary         weak=['i', 't']"]),
+    ("dilemmas/many_worlds.py", [
+        "MANY WORLDS: all measurements hold.",
+        "ok  down-branch split into  5: Born P(up) = 1/3, branch counting P(up) = 1/6, total 1"]),
     ("dilemmas/firewall.py", [
         "FIREWALL: all measurements hold.",
         "ok  BR for the outside decoder: 1 earned future; BA for the infaller: 1 earned future"]),

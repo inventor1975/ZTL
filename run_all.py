@@ -463,6 +463,9 @@ STANDS = [
     ("dilemmas/cogito.py", [
         "ok  F1 t -> i, thinking granted: no delivery                 OPEN      F until-verification weak=['i']",
         "ok  F2 bridge in place: bare modus ponens, earned            EARNED    T hereditary         weak=['i', 't']"]),
+    ("dilemmas/wigner_friends.py", [
+        "WIGNER'S FRIENDS: all measurements hold.",
+        "ok  at F's own time, 'F-bar saw tails' from 'F saw up' and the rule: OPEN (an inference, not a witnessing)"]),
     ("dilemmas/bell.py", [
         "BELL: all measurements hold.",
         "ok  turning number of the eight = +0.000 (a circle: 1, a double cover: 2)"]),

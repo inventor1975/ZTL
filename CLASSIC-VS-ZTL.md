@@ -372,6 +372,25 @@ established, with the address of what is missing.
     unverified := false   ->  safe = ¬F ∨ F = T    PASS
     unverified := true    ->  safe = ¬T ∨ T = T    PASS
 
+The same two lines in PHP (run with `php`, 2026-10-02; both print `bool(true)`):
+
+```php
+<?php
+function safe(bool $tainted, bool $sanitized): bool { return !$tainted || $sanitized; }
+
+$unknown = false;  var_dump(safe($unknown, $unknown));  // bool(true) — PASS: ¬F ∨ F = T
+$unknown = true;   var_dump(safe($unknown, $unknown));  // bool(true) — PASS: ¬T ∨ T = T
+```
+
+The live sink this stands for, three lines, judged by `php2zfl` as **OPEN** ("weak: sanitized,
+tainted … the path crosses clean_input()@L2"):
+
+```php
+<?php
+$id = clean_input($_GET['id']);
+mysqli_query($c, "SELECT * FROM posts WHERE id = '$id'");
+```
+
 Read that twice. The "cautious" default is the dangerous one here, because the
 atom is named `tainted`: assuming *not tainted* is assuming safety. Whether a
 substitution is cautious depends on the **polarity** of the atom, not on the

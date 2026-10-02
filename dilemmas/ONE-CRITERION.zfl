@@ -1,11 +1,11 @@
 {
  "zfl_sidecar": 1,
  "file": "ONE-CRITERION.md",
- "sha256": "38da878819929d31a4a0760154cfc91627c9485f5d8e46f8d1a6e081da73e80a",
+ "sha256": "6e9f8443f2a8820b444dd9e9b70ae9bb54842a9ff0da3c94e4daa9558be53382",
  "decision": {
   "status": "waived",
-  "why": "v2: answers a plain critical review of v1 by a fresh Opus reader (17 findings, all addressed: circularity stated, no negative control, fork only under the operational branch, terms defined, case caveats for BE/Bell-without-CFD/Everett, Brukner-Bong attribution, stands' coverage and self-assertion). Not re-atomized: on prose the atomizer found 11 of the critic's 17.",
-  "at": "2026-10-02T09:54:04+00:00",
-  "operator": "logik1"
+  "why": "Case 3 updated with the B4 result. A fresh prose-reviewer read the whole note (20 findings). Fixed in these bytes: #1 case 4 is a thought experiment, not an experiment; #3 case 3 not one step; #8 'earned' for statistics = stand marking; #9 physics vs encoding separated; #10 'on credit' defined. Findings #2, #4-#7, #11-#20 concern pre-existing text, listed to the curator, NOT fixed here.",
+  "at": "2026-10-02T15:32:00+00:00",
+  "operator": "undeclared"
  }
 }

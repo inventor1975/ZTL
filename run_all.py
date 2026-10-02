@@ -463,6 +463,9 @@ STANDS = [
     ("dilemmas/cogito.py", [
         "ok  F1 t -> i, thinking granted: no delivery                 OPEN      F until-verification weak=['i']",
         "ok  F2 bridge in place: bare modus ponens, earned            EARNED    T hereditary         weak=['i', 't']"]),
+    ("dilemmas/indistinguishable.py", [
+        "INDISTINGUISHABLE: all measurements hold.",
+        "ok  n=3 k=2: labelled (on credit) 8, EARNED distinct 4, Bose-Einstein C(n+k-1,n) = 4"]),
     ("dilemmas/theseus.py", [
         "ok  step 0: material T (ledger)       structural T (witness re-checked)",
         "ok  step 1: material F (culprit n0)   structural T (witness re-checked)"]),

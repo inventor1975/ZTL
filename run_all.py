@@ -463,6 +463,9 @@ STANDS = [
     ("dilemmas/cogito.py", [
         "ok  F1 t -> i, thinking granted: no delivery                 OPEN      F until-verification weak=['i']",
         "ok  F2 bridge in place: bare modus ponens, earned            EARNED    T hereditary         weak=['i', 't']"]),
+    ("dilemmas/bell.py", [
+        "BELL: all measurements hold.",
+        "ok  turning number of the eight = +0.000 (a circle: 1, a double cover: 2)"]),
     ("dilemmas/indistinguishable.py", [
         "INDISTINGUISHABLE: all measurements hold.",
         "ok  n=3 k=2: labelled (on credit) 8, EARNED distinct 4, Bose-Einstein C(n+k-1,n) = 4"]),

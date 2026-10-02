@@ -1,11 +1,11 @@
 {
  "zfl_sidecar": 1,
  "file": "ONE-CRITERION.md",
- "sha256": "6e9f8443f2a8820b444dd9e9b70ae9bb54842a9ff0da3c94e4daa9558be53382",
+ "sha256": "4c4d79b2639dbcb4496cd7da0dc46df4818256378ba4cbe78d1c6449bd6ec9ef",
  "decision": {
   "status": "waived",
-  "why": "Case 3 updated with the B4 result. A fresh prose-reviewer read the whole note (20 findings). Fixed in these bytes: #1 case 4 is a thought experiment, not an experiment; #3 case 3 not one step; #8 'earned' for statistics = stand marking; #9 physics vs encoding separated; #10 'on credit' defined. Findings #2, #4-#7, #11-#20 concern pre-existing text, listed to the curator, NOT fixed here.",
-  "at": "2026-10-02T15:32:00+00:00",
+  "why": "v3. Three fresh prose reviews (17, 20, 22 findings). From the 3rd (prior bytes 158444c12ee3) fixed: case 4 observed/EARNED and Q presupposed (#1,#2), OPEN vs frozen (#4), selection rationale (#5), EARNED-in-stand (#9), Harlow-Hayden complexity (#11), Brukner/Bong conjunctions (#16), eraser reading (#17), Krause qc (#18), 'measured' (#19), never-grants vs on-credit (#20), footer (#22). Accepted as standing objections, not resolved: weight of author's own tests (#6,#8), unification wording (#7,#10,#12,#15), encoding asymmetry case 3 vs 4 (#3), fermionic count (#14), figure-eight/ZQuasi detail for outside readers (#13,#21). A maximally skeptical reader does not converge to zero on this genre; stop rule = fix fact and logic, record the rest.",
+  "at": "2026-10-02T15:37:53+00:00",
   "operator": "undeclared"
  }
 }

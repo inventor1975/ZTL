@@ -1,0 +1,11 @@
+{
+ "zfl_sidecar": 1,
+ "file": "CLASSIC-VS-ZTL.md",
+ "sha256": "22cc878247735a8300d1ee61476fb09f2af6866d5202214c38059d1cb2c532aa",
+ "decision": {
+  "status": "waived",
+  "why": "two PHP code blocks the curator dictated, both run with php; one bridging sentence; no new claim beyond the measured exhibit",
+  "at": "2026-10-02T17:17:16+00:00",
+  "operator": "undeclared"
+ }
+}

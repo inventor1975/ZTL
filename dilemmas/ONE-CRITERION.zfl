@@ -1,0 +1,11 @@
+{
+ "zfl_sidecar": 1,
+ "file": "ONE-CRITERION.md",
+ "sha256": "bd636c33de9f15fbe3410252c9749970e3412ce50048383de4c05ebeec0ca74b",
+ "decision": {
+  "status": "waived",
+  "why": "rewritten after the atomization of the previous version (report veip-use/prose/reports/0015ce1638c6.md): all nine findings addressed - cases 5-6 not experimental refutations; 'share one fork' not 'the same'; HOM stand named; 2.83 vs 2sqrt2; 'any model' attributed to Bell's theorem; case-5 'held' is a reduction; 'no act ever can' is a premise; no primitive quasi-cardinal; Wallace a realist; case 5 undecided",
+  "at": "2026-10-02T09:33:12+00:00",
+  "operator": "logik1"
+ }
+}

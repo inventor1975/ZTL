@@ -600,6 +600,10 @@ def _run_one(item):
     # installed here) and always happens on CI, where it is not. The change
     # that made CI failures legible was the change that broke CI. A single
     # exit makes that particular divergence unrepresentable.
+    out_dir = os.environ.get("ZTL_SUITE_OUT")
+    if out_dir:                                 # this run's output cache (see AFTER_POOL below)
+        with open(os.path.join(out_dir, script.replace("/", "__") + ".out"), "w", encoding="utf-8") as fh:
+            fh.write(r.stdout + r.stderr)
     missing, why = [], ""
     if r.returncode == 0 and "SKIPPED" in r.stdout:
         # A skip is NOT a pass: it is reported separately, its markers are not
@@ -623,6 +627,15 @@ def _run_one(item):
             elif not r.stdout.strip():
                 why = "no output at all"
     return script, ok, missing, r.returncode, why
+
+
+# STANDS THAT READ OTHER STANDS' OUTPUT run AFTER the pool, from this run's cache (2026-10-04, curator: "run_all
+# is slow — what brakes it?"). inventory/note_claims.py re-ran all twenty db/probe_* programs and zbook.py to
+# read their figures — programs the pool had just run as stands — and was one of the two long poles (~350 s).
+# Now the pool writes every stand's stdout+stderr to a per-run directory (ZTL_SUITE_OUT) and note_claims reads
+# it; a program missing from the cache (an --only run) is still run by note_claims itself. Same programs, same
+# run, same outputs — the comparison is now against EXACTLY the outputs the suite judged.
+AFTER_POOL = ("inventory/note_claims.py",)
 
 
 def _selftest_runner():
@@ -733,13 +746,26 @@ def main():
     # advances as each completes (reporting below stays in STANDS order).
     print(f"  running {total} stands, {workers} at a time — the slow part; progress below:",
           flush=True)
+    import tempfile
+    os.environ["ZTL_SUITE_OUT"] = tempfile.mkdtemp(prefix="ztl_suite_out_")
+    first = [item for item in STANDS if item[0] not in AFTER_POOL]
+    after = [item for item in STANDS if item[0] in AFTER_POOL]
+    done = 0
     with ThreadPoolExecutor(max_workers=workers) as pool:
-        futures = [pool.submit(_run_one, item) for item in STANDS]
-        for done, fut in enumerate(as_completed(futures), 1):
+        futures = [pool.submit(_run_one, item) for item in first]
+        for fut in as_completed(futures):
             script, ok, missing, rc, why = fut.result()
             results[script] = (ok, missing, rc, why)
+            done += 1
             print(f"\r    {done}/{total} stands finished…", end="", flush=True)
+    for item in after:                          # they read the cache the pool just wrote
+        script, ok, missing, rc, why = _run_one(item)
+        results[script] = (ok, missing, rc, why)
+        done += 1
+        print(f"\r    {done}/{total} stands finished…", end="", flush=True)
     print()
+    import shutil
+    shutil.rmtree(os.environ.pop("ZTL_SUITE_OUT"), ignore_errors=True)
     skipped = []
     for script, _markers in STANDS:
         ok, missing, rc, why = results[script]

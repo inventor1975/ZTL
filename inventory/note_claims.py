@@ -153,16 +153,38 @@ def out(probe):
     return _OUTPUTS[probe]
 
 
+def _cached(script):
+    """Inside run_all the pool has just run every probe and zbook.py as stands and kept their output
+    (ZTL_SUITE_OUT, 2026-10-04): read it instead of running the same program a second time."""
+    d = os.environ.get("ZTL_SUITE_OUT")
+    path = os.path.join(d, script.replace("/", "__") + ".out") if d else None
+    if path and os.path.exists(path):
+        with open(path, encoding="utf-8") as fh:
+            return fh.read()
+    return None
+
+
 def _run(probe):
+    got = _cached("db/" + probe)
+    if got is not None:
+        return probe, got
     r = subprocess.run([sys.executable, os.path.join(_ROOT, "db", probe)],
                        capture_output=True, text=True, timeout=1800)
     return probe, r.stdout + r.stderr
 
 
+_ZBOOK = []
+
+
 def _zbook_out():
-    r = subprocess.run([sys.executable, os.path.join(_ROOT, "zbook.py")],
-                       capture_output=True, text=True, timeout=900)
-    return r.stdout + r.stderr
+    if not _ZBOOK:                              # once per run (it was run twice), from the cache when there
+        got = _cached("zbook.py")
+        if got is None:
+            r = subprocess.run([sys.executable, os.path.join(_ROOT, "zbook.py")],
+                               capture_output=True, text=True, timeout=900)
+            got = r.stdout + r.stderr
+        _ZBOOK.append(got)
+    return _ZBOOK[0]
 
 
 def _run_all_probes():

@@ -267,6 +267,124 @@ in its own context (Hardy.lean `control_earned`), are not promoted together acro
 theorem hardy_never_promoted : ∀ m', Reachable none contested m' → ¬ Earned hardyChain m' :=
   no_promotion_without_witness none contested hardyChain hardy_no_witness
 
+/-! ## Economy: an account that rests only on what was witnessed, against one that says anything definite
+about the holes (curator 2026-10-04: "prove the economy machine-wise; leave philosophy to philosophers")
+
+An ACCOUNT is a list of claims. The theorem compares two accounts of the same marking: one whose claims are all
+EARNED now, and one that contains a claim with no composition witness. The first is fully earned already; the
+second is fully earned in NO reachable future. It is not a theorem about which account is TRUE — both may be
+consistent — but about which one ever stands on verified ground. -/
+
+def FullyEarned (A : List Fm) (m : Marking) : Prop := ∀ φ, φ ∈ A → Earned φ m
+
+/-- **ECONOMY.** If every claim of A is earned now, and B contains a claim with no composition witness, then A is
+fully earned already, and B is fully earned in no future the repertoire can reach. -/
+theorem economy (R : Nat → Bool) (m : Marking) (A B : List Fm) (hA : FullyEarned A m)
+    (ψ : Fm) (hψ : ψ ∈ B) (hnw : NoWitness R m ψ) :
+    FullyEarned A m ∧ ∀ m', Reachable R m m' → ¬ FullyEarned B m' :=
+  ⟨hA, fun m' hr hB => no_promotion_without_witness R m ψ hnw m' hr (hB ψ hψ)⟩
+
+/-! ### Hardy: the account of what was witnessed, against any claim about the unasked answers -/
+
+/-- The account that asserts only what was witnessed in the contested run: X_A = −, X_B = −. -/
+def witnessed : List Fm := [xa, xb]
+
+theorem witnessed_earned : FullyEarned witnessed contested := by
+  intro φ hφ
+  cases hφ with
+  | head =>
+      refine ⟨rfl, ?_⟩
+      intro m' h
+      show m' 0 = contested 0
+      exact h 0 (by decide)
+  | tail _ h1 =>
+      cases h1 with
+      | head =>
+          refine ⟨rfl, ?_⟩
+          intro m' h
+          show m' 1 = contested 1
+          exact h 1 (by decide)
+      | tail _ h2 => cases h2
+
+/-- Set the two unasked answers (atoms 2, 3) to chosen values, keep everything else. -/
+def setHoles (b : Nat → Bool) (v2 v3 : Bool) : Nat → Bool := fun n =>
+  if n = 2 then v2 else if n = 3 then v3 else b n
+
+theorem setHoles_agrees (b : Nat → Bool) (v2 v3 : Bool) :
+    ∀ n, ¬ (contested n = V.Z ∧ none n = false) → setHoles b v2 v3 n = b n := by
+  intro n hn
+  show (if n = 2 then v2 else if n = 3 then v3 else b n) = b n
+  cases h2 : decide (n = 2) with
+  | true =>
+      have e : n = 2 := of_decide_eq_true h2
+      exact absurd ⟨by rw [e]; rfl, rfl⟩ hn
+  | false =>
+      rw [if_neg (of_decide_eq_false h2)]
+      cases h3 : decide (n = 3) with
+      | true =>
+          have e : n = 3 := of_decide_eq_true h3
+          exact absurd ⟨by rw [e]; rfl, rfl⟩ hn
+      | false => rw [if_neg (of_decide_eq_false h3)]
+
+theorem setHoles_0 (b : Nat → Bool) (v2 v3 : Bool) : setHoles b v2 v3 0 = b 0 := rfl
+theorem setHoles_1 (b : Nat → Bool) (v2 v3 : Bool) : setHoles b v2 v3 1 = b 1 := rfl
+theorem setHoles_2 (b : Nat → Bool) (v2 v3 : Bool) : setHoles b v2 v3 2 = v2 := rfl
+theorem setHoles_3 (b : Nat → Bool) (v2 v3 : Bool) : setHoles b v2 v3 3 = v3 := rfl
+
+/-- A claim about the unasked answers has no composition witness when, for every checkable outcome, the holes
+can be set to falsify it; `holeNoWitness` builds that from two hole values and a falsification. -/
+theorem holeNoWitness (φ : Fm) (v2 v3 : Bool)
+    (hf : ∀ b : Nat → Bool, b 0 = true → b 1 = true → evalB (setHoles b v2 v3) φ = false) :
+    NoWitness none contested φ := by
+  intro b hT _
+  exact ⟨setHoles b v2 v3, setHoles_agrees b v2 v3, hf b (hT 0 rfl) (hT 1 rfl)⟩
+
+/-- **Every definite claim about the unasked answers has no witness** — a value (Z_A = 1, Z_B = 1, or their
+negations) or a law applied to the unasked answer in this run ("had Bob asked Z he would get 1": X_A = − → Z_B = 1;
+its mirror; and "not both 1"). These are the claims a counterfactual account of this run needs. -/
+theorem counterfactual_claims_no_witness :
+    NoWitness none contested za ∧ NoWitness none contested zb ∧
+    NoWitness none contested (.neg za) ∧ NoWitness none contested (.neg zb) ∧
+    NoWitness none contested (.imp xa zb) ∧ NoWitness none contested (.imp xb za) ∧
+    NoWitness none contested (.neg (.conj za zb)) := by
+  refine ⟨holeNoWitness za false false (fun b _ _ => rfl),
+          holeNoWitness zb false false (fun b _ _ => rfl),
+          holeNoWitness (.neg za) true true (fun b _ _ => rfl),
+          holeNoWitness (.neg zb) true true (fun b _ _ => rfl),
+          holeNoWitness (.imp xa zb) false false (fun b h0 _ => ?_),
+          holeNoWitness (.imp xb za) false false (fun b _ h1 => ?_),
+          holeNoWitness (.neg (.conj za zb)) true true (fun b _ _ => rfl)⟩
+  · show (!(setHoles b false false 0) || setHoles b false false 3) = false
+    rw [setHoles_0, h0]; rfl
+  · show (!(setHoles b false false 1) || setHoles b false false 2) = false
+    rw [setHoles_1, h1]; rfl
+
+/-- **ECONOMY, Hardy.** The account of what was witnessed is fully earned now; ANY account containing a definite
+claim about the unasked answers — a value, or a law applied to them in this run — is fully earned in no
+reachable future. Which account is true is not decided here; which one stands on verified ground is. -/
+theorem hardy_economy (B : List Fm)
+    (hB : za ∈ B ∨ zb ∈ B ∨ Fm.neg za ∈ B ∨ Fm.neg zb ∈ B ∨ Fm.imp xa zb ∈ B ∨ Fm.imp xb za ∈ B ∨
+          Fm.neg (Fm.conj za zb) ∈ B) :
+    FullyEarned witnessed contested ∧ ∀ m', Reachable none contested m' → ¬ FullyEarned B m' := by
+  match counterfactual_claims_no_witness with
+  | ⟨n1, n2, n3, n4, n5, n6, n7⟩ =>
+    refine ⟨witnessed_earned, ?_⟩
+    intro m' hr hfe
+    rcases hB with h | h | h | h | h | h | h
+    · exact (economy none contested witnessed B witnessed_earned _ h n1).2 m' hr hfe
+    · exact (economy none contested witnessed B witnessed_earned _ h n2).2 m' hr hfe
+    · exact (economy none contested witnessed B witnessed_earned _ h n3).2 m' hr hfe
+    · exact (economy none contested witnessed B witnessed_earned _ h n4).2 m' hr hfe
+    · exact (economy none contested witnessed B witnessed_earned _ h n5).2 m' hr hfe
+    · exact (economy none contested witnessed B witnessed_earned _ h n6).2 m' hr hfe
+    · exact (economy none contested witnessed B witnessed_earned _ h n7).2 m' hr hfe
+
+#print axioms economy
+#print axioms witnessed_earned
+#print axioms setHoles_agrees
+#print axioms holeNoWitness
+#print axioms counterfactual_claims_no_witness
+#print axioms hardy_economy
 #print axioms toBool_ofBool
 #print axioms znot_ofBool
 #print axioms zand_ofBool

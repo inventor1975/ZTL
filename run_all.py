@@ -469,6 +469,9 @@ STANDS = [
     ("dilemmas/firewall.py", [
         "FIREWALL: all measurements hold.",
         "ok  BR for the outside decoder: 1 earned future; BA for the infaller: 1 earned future"]),
+    ("dilemmas/kochen_specker.py", [
+        "KOCHEN–SPECKER: all measurements hold.",
+        "ok  37 possible runs x 6 laws: refuted 0, earned 37, the rest open; in every run E1's conjunction false in every completion and E2's not"]),
     ("dilemmas/hardy.py", [
         "HARDY: all measurements hold.",
         "ok  13 possible runs x 3 laws: refuted 0, earned 17, the rest open"]),

@@ -21,9 +21,12 @@ non-contextual ones misses KS. The prediction was written BEFORE this file ran
   K1  THE PHYSICS, from 4x4 matrices: the six identities, the contexts commute inside, the square's
       cross pairs do not.
   K2  E1, a run asking row 1: answers EARNED; the six unasked Z_PERMANENT; the six laws together false in
-      EVERY completion (kernel grade 'sound'; brute force 0/64) — but judge() labels it OPEN, not REFUTED (my
-      prediction point 1 FAILED as worded: REFUTED needs 'hereditary', and a parity chain is not; the label's
-      text "could still turn either way" is false for a 'sound' F — reported, the judge is not changed here).
+      EVERY completion (kernel grade 'sound'; brute force 0/64), but NOT hereditary: after checking four of the
+      six (v21=F, v22=T, v31=F, v32=T) the verdict reads T, because the two still unchecked cells make their
+      laws hold ON CREDIT (Z<->Z is F in the greedy register, so its negation is T). A verdict some path of
+      checks revokes is not established, so judge() says OPEN, as the kernel's theorems require (hereditary is
+      the only grade no check revokes). My prediction point 1 (REFUTED) FAILED: I assumed the KS contradiction
+      is hereditary like Hardy's. (I first called OPEN a judge defect — wrong, retracted the same evening.)
   K3  E2, the same run: the six laws together NOT false in every completion — contextual completions exist.
       THE CONTROL: had this come out refuted (or 'sound' F), the lens would kill Bohm, i.e. pick the wrong step.
   K4  The run space: 6 contexts x every outcome with P > 0 x two states — no law is ever refuted under E1.
@@ -208,13 +211,13 @@ def run():
     assert set(st.values()) == {"Z_PERMANENT"} and set(kind.values()) == {"permanent"}
     assert r["verdict"] == "F" and r["grade"] == "sound" and good == 0 and c["ceiling_frozen"]
     assert "REFUTED" not in alone.values()
-    # PREDICTION POINT 1 FAILED AS WORDED (2026-10-04): I predicted REFUTED. The kernel grades the verdict F
-    # 'sound' — false in EVERY completion (the brute force agrees: 0/64), but NOT hereditary: a parity chain
-    # passes through partial groundings whose greedy verdict is T. judge() gives REFUTED only to 'hereditary'
-    # and prints OPEN with "it could still turn either way" for a 'sound' F — a sentence that is false here
-    # (no completion turns it). The kernel is right; the disposition label/text is misleading. Reported to the
-    # curator, not changed here (the judge is his to change).
-    print(f"!!  judge's label for it: {r['disposition']} — '{r['why'][:60]}...' — misleading for a 'sound' F")
+    # PREDICTION POINT 1 FAILED (2026-10-04): I predicted REFUTED. The kernel grades the F 'sound' (false in
+    # every completion; brute force 0/64) but not hereditary: the path below reads T on the way. OPEN is right.
+    path = dict(m, v21="F", v22="T", v31="F", v32="T")
+    on_way = judge(CHAIN_E1, path)["verdict"]
+    print(f"ok  on the way: after checking v21=F, v22=T, v31=F, v32=T (v23, v33 unchecked) the verdict reads {on_way};"
+          f" so the F is revocable on a path -> not hereditary -> judge: {r['disposition']}")
+    assert on_way == "T" and r["disposition"] == "OPEN"
     assert all(judge(a, m)["disposition"] == "EARNED" for a in m if m[a] == "T") and \
         all(judge(a, m)["disposition"] == "REFUTED" for a in m if m[a] == "F")
 

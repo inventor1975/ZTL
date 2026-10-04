@@ -469,6 +469,9 @@ STANDS = [
     ("dilemmas/firewall.py", [
         "FIREWALL: all measurements hold.",
         "ok  BR for the outside decoder: 1 earned future; BA for the infaller: 1 earned future"]),
+    ("dilemmas/hardy.py", [
+        "HARDY: all measurements hold.",
+        "ok  13 possible runs x 3 laws: refuted 0, earned 17, the rest open"]),
     ("dilemmas/wigner_friends.py", [
         "WIGNER'S FRIENDS: all measurements hold.",
         "ok  at F's own time, 'F-bar saw tails' from 'F saw up' and the rule: OPEN (an inference, not a witnessing)"]),

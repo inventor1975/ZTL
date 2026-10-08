@@ -326,6 +326,7 @@ def _solve_param_system(qs, atoms):
 
     rows = []                     # (A_row {unknown: poly}, b_row poly, chunk)
     contributors = set()
+    skipped = []                  # equalities left out: the names they mention
     for kind, e1, e2, chunk in atoms.values():
         if kind != "eq":
             continue
@@ -333,6 +334,7 @@ def _solve_param_system(qs, atoms):
         try:
             terms, _ = _mlin(("sub", e1, e2), qs, [0], keys, seen)
         except (_NotLinear, _NoReadings, KeyError):
+            skipped.append(_names_in(e1) | _names_in(e2))
             continue
         if any(qs[nm].get("sample") for nm in keys.values()):
             continue
@@ -354,6 +356,8 @@ def _solve_param_system(qs, atoms):
         if ok and a_row:
             rows.append((a_row, {m: k for m, k in const.items() if k != 0}, chunk))
             contributors |= seen
+        elif not ok:
+            skipped.append(set(keys.values()))
     if not rows:
         return {}, set(), None
     params = sorted({nm for a_row, b_row, _ in rows
@@ -422,7 +426,16 @@ def _solve_param_system(qs, atoms):
         for u, xv in zip(unknowns, x):
             lo[u] = xv if lo[u] is None or xv < lo[u] else lo[u]
             hi[u] = xv if hi[u] is None or xv > hi[u] else hi[u]
-    return {u: (lo[u], hi[u]) for u in unknowns}, contributors, None
+    # AN EQUALITY LEFT OUT STILL CONSTRAINS (prose review, 2026-10-09): a row not
+    # linear in the unknowns (I*I == ..., a division by an unknown) is not part
+    # of the system; the hull above is then exact for the LINEAR rows only and,
+    # for the unknowns that row mentions, a sound outer range — said so here.
+    loose = sorted({u for names in skipped for u in names if u in unknowns})
+    note = None
+    if loose:
+        note = (f"exact over the linear rows only: {', '.join(loose)} also appear in an "
+                f"equality the system could not read, so their ranges may be wider than the truth")
+    return {u: (lo[u], hi[u]) for u in unknowns}, contributors, note
 
 
 def _solve_monomial_system(qs, atoms):
@@ -844,6 +857,7 @@ def narrow(quantities, formula, rounds=MAX_ROUNDS, orig=None):
     ranges, pcontrib, why = _solve_param_system(qs, atoms)
     if why:
         log.append(why)
+    how = "exact at the corners" if not (ranges and why) else "at the corners, over the linear rows"
     for name, (vlo, vhi) in sorted(ranges.items()):
         q = qs[name]
         lo, hi = max(q["lo"], vlo), min(q["hi"], vhi)
@@ -864,7 +878,7 @@ def narrow(quantities, formula, rounds=MAX_ROUNDS, orig=None):
         nq["grounds"] = nq["derived_from"] = sorted(grounds)
         qs[name] = nq
         log.append(f"{name} -> [{fmt(lo)}, {fmt(hi)}] by the system over its parameters, "
-                   f"exact at the corners ({_prov_of(grounds, orig)})")
+                   f"{how} ({_prov_of(grounds, orig)})")
     single, bad, contributors = _solve_monomial_system(qs, atoms)
     if bad:
         first = sorted(qs)[0]

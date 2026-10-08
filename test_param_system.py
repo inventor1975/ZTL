@@ -191,6 +191,13 @@ def main():
     check("singular inside the box (det = p - 1 changes sign): refused, named",
           any("changes sign" in l or "singular" in l for l in r["log"]), str(r["log"]))
 
+    r = solve_claim("(V - U == I*R1) & (U == I*R2) & (I*I == I*I)",
+                    *parse_quantities("V=10 earned:s, R1=[90,110] credit, R2=[180,220] credit, "
+                                      "I=? credit, U=? credit"))
+    check("a row not linear in the unknowns: the range is kept but NOT called exact",
+          any("over the linear rows only" in l for l in r["log"])
+          and not any("exact at the corners" in l for l in r["log"]), str(r["log"]))
+
     print("6. mutation: a guard that always says 'exact' must turn check 3 red")
     saved = znumsolve._rank_one_in
     znumsolve._rank_one_in = lambda *a, **k: True

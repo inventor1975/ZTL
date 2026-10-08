@@ -1,19 +1,23 @@
 {
- "fingerprint": "f9b4e9b27112822f",
+ "fingerprint": "f3f90d515fd5021c",
  "cases": 480,
  "census": {
-  "ON CREDIT | 1 | credit | document": 88,
-  "EARNED | 1 | earned | -": 72,
   "ON CREDIT | 0 | - | document": 72,
+  "ON CREDIT | 1 | credit | document,narrow": 64,
+  "ON CREDIT | 1 | credit | document": 56,
   "OPEN | 0 | - | document,measure": 56,
-  "ON CREDIT | 1 | credit | document,narrow": 56,
-  "OPEN | 1 | credit | document,measure,narrow": 48,
+  "EARNED | 1 | earned | -": 40,
+  "OPEN | 1 | earned | -": 32,
+  "OPEN | 1 | credit | document": 32,
   "EARNED | 1 | earned | narrow": 32,
+  "OPEN | 1 | credit | document,measure,narrow": 24,
   "REFUTED | 0 | - | -": 16,
-  "OPEN | 1 | earned | measure,narrow": 16,
+  "OPEN | 1 | credit | document,narrow": 16,
   "OPEN | 0 | - | measure": 8,
-  "ON CREDIT | 1 | credit | narrow": 8,
-  "EARNED | 0 | - | -": 8
+  "OPEN | 1 | earned | narrow": 8,
+  "OPEN | 1 | credit | narrow": 8,
+  "EARNED | 0 | - | -": 8,
+  "OPEN | 1 | earned | measure,narrow": 8
  },
  "rare": []
 }

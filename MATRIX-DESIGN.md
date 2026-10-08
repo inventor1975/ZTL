@@ -88,3 +88,32 @@ every reading) would change that old case too; it is the curator's call.
 4. Nothing changes where the floor already worked: the solver's own bench and conformance/solver_table.py
    stay green; a sheet with no parameter in a coefficient takes exactly the old path.
 5. Mutation: break the rank check (always "exact") and the stand must turn red on case 3.
+
+## Second stage, 2026-10-09 02:40 — a solved unknown remembers its dependence; the verdict is not self-fulfilling
+
+The curator's word (02:32, "Да, делай. Только проверь потом все."), after measuring that `x + y == 10` with y in
+[1, 2] is OPEN even ALONE — not because of `&`, but because the solved x is remembered as the box [8, 9] and the
+judge reads x and y apart. Measuring the fix exposed an older SOUNDNESS fault it would have unmasked:
+
+**The fault (pre-existing, live on the server).** `solve_claim` narrows every quantity by the claim's committed
+comparisons — the measured ones too — and then judges the claim on the narrowed ledger. So `(y >= 3/2) & (x == 1)`
+with y verified in [1, 2] came back EARNED, T: the claim's own assumption served as its evidence. A claim about a
+measured quantity holds for EVERY reading of it; only an unknown `?` is a question whose answer the claim may
+narrow.
+
+**Fix 1 — the verdict reads the sheet as given.** The solver still narrows everything (that is the answer, shown
+under `solved`), but the judge receives the ORIGINAL boxes of every quantity that carried a ground, and the
+narrowed boxes only of the unknowns (a box (-inf, inf), `_is_ground` false).
+
+**Fix 2 — dependence instead of a box.** When the committed equalities form a linear system in the unknowns that is
+uniquely solvable at every reading of the parameters (the conditions of the first stage; parameters on the
+right-hand side only are now allowed too, for this purpose), each unknown is a function of the parameters, known
+exactly at every corner. Then, for the verdict:
+* the system's own rows are T — they hold at every reading by construction;
+* any other comparison whose unknown terms have CONSTANT coefficients, and whose parameter terms appear only when
+  no parameter sits in the matrix, is read at the corners: it is then linear-fractional (or multiaffine) in each
+  parameter, so its extremes are at the corners and the corner reading is exact — T if it holds at every corner,
+  F if it fails at every corner (for `==`: one strict sign at every corner), Z otherwise;
+* anything else keeps the separate reading (sound, possibly wide).
+Readings are taken over the ORIGINAL parameter boxes (fix 1), never the narrowed ones: `(x + y == 10) &
+(x <= 17/2)` with y in [1, 2] must stay OPEN (x = 9 at y = 1).

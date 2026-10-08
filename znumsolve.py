@@ -317,16 +317,17 @@ def _solve_exact(Ab, n):
     return [M[i][n] / M[i][i] for i in range(n)], det
 
 
-def _solve_param_system(qs, atoms):
-    """Ranges of the unknowns of a linear system whose coefficients carry
-    parameters. Returns (ranges {name: (lo, hi)}, contributors, reason): ranges
-    is empty and reason says why whenever the exact class does not hold."""
-    def is_unknown(q):
-        return isinstance(q["lo"], float) or isinstance(q["hi"], float)
-
+def _param_corners(qs, atoms, rhs_only_ok=False, is_unknown=None):
+    """Read the committed equalities as A(p) x = b(p) and solve them at every
+    corner of the parameters' box. Returns a dict: unknowns, params, in_A,
+    rows (the chunks used), corners [(at, solution)], contributors, skipped
+    (names in equalities left out), reason (None when solved)."""
+    if is_unknown is None:
+        def is_unknown(q):
+            return isinstance(q["lo"], float) or isinstance(q["hi"], float)
+    out = {"unknowns": [], "params": [], "in_A": set(), "rows": [], "corners": [],
+           "contributors": set(), "skipped": [], "reason": None}
     rows = []                     # (A_row {unknown: poly}, b_row poly, chunk)
-    contributors = set()
-    skipped = []                  # equalities left out: the names they mention
     for kind, e1, e2, chunk in atoms.values():
         if kind != "eq":
             continue
@@ -334,7 +335,7 @@ def _solve_param_system(qs, atoms):
         try:
             terms, _ = _mlin(("sub", e1, e2), qs, [0], keys, seen)
         except (_NotLinear, _NoReadings, KeyError):
-            skipped.append(_names_in(e1) | _names_in(e2))
+            out["skipped"].append(_names_in(e1) | _names_in(e2))
             continue
         if any(qs[nm].get("sample") for nm in keys.values()):
             continue
@@ -355,32 +356,41 @@ def _solve_param_system(qs, atoms):
                 const[par] = const.get(par, Fraction(0)) - coef
         if ok and a_row:
             rows.append((a_row, {m: k for m, k in const.items() if k != 0}, chunk))
-            contributors |= seen
+            out["contributors"] |= seen
         elif not ok:
-            skipped.append(set(keys.values()))
+            out["skipped"].append(set(keys.values()))
     if not rows:
-        return {}, set(), None
+        out["reason"] = ""
+        return out
     params = sorted({nm for a_row, b_row, _ in rows
                      for poly in list(a_row.values()) + [b_row]
                      for m in poly for nm in m})
     in_A = {nm for a_row, _, _ in rows for poly in a_row.values() for m in poly for nm in m}
-    if not in_A:
-        # parameters only on the right-hand side (x + y == 10, y a box): the
-        # existing hull narrowing already reads that, and the old path is kept
-        # word for word — nothing changes where the floor already worked
-        return {}, set(), None
+    out.update(params=params, in_A=in_A, rows=[c for _, _, c in rows])
+    if not params or (not in_A and not rhs_only_ok):
+        # no parameter at all: _solve_linear_system's job; parameters only on the
+        # right-hand side: the existing hull narrowing reads them, and that path is
+        # kept word for word — nothing changes where the floor already worked
+        out["reason"] = ""
+        return out
+    if any(isinstance(qs[p]["lo"], float) or isinstance(qs[p]["hi"], float) for p in params):
+        out["reason"] = "a coefficient rests on an unbounded quantity: not solved as a system"
+        return out
     if len(params) > PARAM_MAX_KEYS:
-        return {}, set(), (f"{len(params)} parameters in the coefficients, "
-                           f"cap {PARAM_MAX_KEYS}: not solved as a system")
+        out["reason"] = (f"{len(params)} parameters in the coefficients, "
+                         f"cap {PARAM_MAX_KEYS}: not solved as a system")
+        return out
     unknowns = sorted({u for a_row, _, _ in rows for u in a_row})
+    out["unknowns"] = unknowns
     A = {(i, u): poly for i, (a_row, _, _) in enumerate(rows) for u, poly in a_row.items()}
     b = {i: b_row for i, (_, b_row, _) in enumerate(rows)}
     ridx = list(range(len(rows)))
     for p in params:
         if not _rank_one_in(p, A, b, ridx, unknowns):
-            return {}, set(), (f"parameter {p} enters the coefficients with rank > 1: "
-                               f"the corners are not exact, not solved as a system")
-    # pick independent rows at the midpoint (exact), the rest are checks
+            out["reason"] = (f"parameter {p} enters the coefficients with rank > 1: "
+                             f"the corners are not exact, not solved as a system")
+            return out
+    # independent rows at the midpoint (exact); the system must be square
     mid = {p: (qs[p]["lo"] + qs[p]["hi"]) / 2 for p in params}
     n = len(unknowns)
     chosen, basis = [], []
@@ -395,17 +405,16 @@ def _solve_param_system(qs, atoms):
             basis.append((nz, v))
             chosen.append(i)
     if len(chosen) < n:
-        return {}, set(), (f"{len(chosen)} independent equalities for {n} unknowns "
-                           f"at the box's midpoint: not uniquely solvable")
-    extra = [i for i in ridx if i not in chosen]
-    if extra:
+        out["reason"] = (f"{len(chosen)} independent equalities for {n} unknowns "
+                         f"at the box's midpoint: not uniquely solvable")
+        return out
+    if len(chosen) < len(ridx):
         # an equality beyond the independent ones holding at every CORNER does not
         # make it hold INSIDE the box (its residual need not be multiaffine), and a
         # reading where it fails has no solution at all — refuse, do not guess
-        return {}, set(), (f"{len(rows)} equalities for {n} unknowns: overdetermined, "
-                           f"not solved as a system")
-    lo = {u: None for u in unknowns}
-    hi = {u: None for u in unknowns}
+        out["reason"] = (f"{len(rows)} equalities for {n} unknowns: overdetermined, "
+                         f"not solved as a system")
+        return out
     sign = None
     corners = [[]]
     for p in params:
@@ -416,26 +425,41 @@ def _solve_param_system(qs, atoms):
               for i in chosen]
         x, det = _solve_exact(Ab, n)
         if x is None or det == 0:
-            return {}, set(), "singular at a corner of the box: not solved as a system"
+            out["reason"] = "singular at a corner of the box: not solved as a system"
+            return out
         s = det > 0
         if sign is None:
             sign = s
         elif s != sign:
-            return {}, set(), ("the determinant changes sign over the box: "
-                               "not solved as a system")
-        for u, xv in zip(unknowns, x):
-            lo[u] = xv if lo[u] is None or xv < lo[u] else lo[u]
-            hi[u] = xv if hi[u] is None or xv > hi[u] else hi[u]
+            out["reason"] = ("the determinant changes sign over the box: "
+                             "not solved as a system")
+            return out
+        out["corners"].append((at, dict(zip(unknowns, x))))
+    return out
+
+
+def _solve_param_system(qs, atoms):
+    """Ranges of the unknowns of a linear system whose coefficients carry
+    parameters. Returns (ranges {name: (lo, hi)}, contributors, reason): ranges
+    is empty and reason says why whenever the exact class does not hold."""
+    pc = _param_corners(qs, atoms)
+    if pc["reason"] is not None:
+        return {}, set(), (pc["reason"] or None)
+    lo, hi = {}, {}
+    for _, x in pc["corners"]:
+        for u, xv in x.items():
+            lo[u] = xv if u not in lo or xv < lo[u] else lo[u]
+            hi[u] = xv if u not in hi or xv > hi[u] else hi[u]
     # AN EQUALITY LEFT OUT STILL CONSTRAINS (prose review, 2026-10-09): a row not
     # linear in the unknowns (I*I == ..., a division by an unknown) is not part
     # of the system; the hull above is then exact for the LINEAR rows only and,
     # for the unknowns that row mentions, a sound outer range — said so here.
-    loose = sorted({u for names in skipped for u in names if u in unknowns})
+    loose = sorted({u for names in pc["skipped"] for u in names if u in pc["unknowns"]})
     note = None
     if loose:
         note = (f"exact over the linear rows only: {', '.join(loose)} also appear in an "
                 f"equality the system could not read, so their ranges may be wider than the truth")
-    return {u: (lo[u], hi[u]) for u in unknowns}, contributors, note
+    return {u: (lo[u], hi[u]) for u in pc["unknowns"]}, pc["contributors"], note
 
 
 def _solve_monomial_system(qs, atoms):
@@ -1007,6 +1031,99 @@ def _no_solution(qs, log, empty, sheet):
             "empty": empty, "next_check": [], "solved": {}}
 
 
+def _verdict_ledger(qs, quantities):
+    """The ledger the VERDICT is read on (MATRIX-DESIGN.md, second stage). The
+    solver narrows every quantity — that is the answer, shown under `solved` —
+    but a quantity that carried a ground is judged on its ORIGINAL box: a claim
+    about a measured value holds for every reading of it, and narrowing it by the
+    claim first made `(y >= 3/2) & (x == 1)`, y verified in [1, 2], come back
+    EARNED (measured 2026-10-09, live). Only an unknown `?` is a question whose
+    answer the claim may narrow."""
+    out = {}
+    for n, q in qs.items():
+        o = quantities.get(n)
+        out[n] = o if (o is not None and _is_ground(o)) else q
+    return out
+
+
+def _dependence_fixed(formula, quantities):
+    """Comparisons read JOINTLY over a linear system's unknowns as functions of
+    its parameters, at the corners, where that is exact (MATRIX-DESIGN.md):
+    {comparison text: (verdict, pedigree, used)} for judge_sheet_claim."""
+    Q = {n: dict(q) for n, q in quantities.items()}
+    try:
+        core, atoms = extract_comparisons(formula, Q)
+    except Exception:
+        return {}
+    committed = _committed_atoms(core)
+    catoms = {k: v for k, v in atoms.items() if k in committed}
+
+    def unknown(q):
+        return q["lo"] == -INF and q["hi"] == INF
+
+    pc = _param_corners(Q, catoms, rhs_only_ok=True, is_unknown=unknown)
+    if pc["reason"] is not None or not pc["corners"]:
+        return {}
+    U, P = set(pc["unknowns"]), set(pc["params"])
+    if any(Q[u].get("discrete") or Q[u].get("sample") for u in U):
+        return {}                         # a lattice answer is not read at corners
+    if any(p not in quantities for p in P):
+        # an interval LITERAL in the claim (`x == [3,4]`, as to_book writes a
+        # bound) says where a value lies — membership, not a measured quantity
+        # that must hold at every reading; it is no parameter of a system
+        return {}
+    ped_rows = {n for n in pc["contributors"] if n in Q and not unknown(Q[n])
+                and Q[n]["prov"] == CREDIT}
+    fixed = {}
+    for chunk in pc["rows"]:
+        fixed[chunk] = ("T", set(ped_rows), set(pc["contributors"]))
+    for kind, e1, e2, chunk in atoms.values():
+        if chunk in fixed:
+            continue
+        keys, seen = {}, set()
+        try:
+            terms, _ = _mlin(("sub", e1, e2), Q, [0], keys, seen)
+        except (_NotLinear, _NoReadings, KeyError):
+            continue
+        names = set(keys.values())
+        if not (names & U) or not names <= (U | P):
+            continue
+        ok = True
+        for mono, coef in terms.items():
+            if coef == 0:
+                continue
+            nm = [keys[k] for k in mono]
+            unk = [x for x in nm if x in U]
+            par = [x for x in nm if x in P]
+            if len(unk) > 1 or (unk and par) or (par and pc["in_A"]):
+                ok = False                # not linear-fractional per parameter: separate reading
+                break
+        if not ok:
+            continue
+        vals = []
+        for at, x in pc["corners"]:
+            env = dict(at)
+            env.update(x)
+            g = Fraction(0)
+            for mono, coef in terms.items():
+                t = coef
+                for k in mono:
+                    t *= env[keys[k]]
+                g += t
+            vals.append(g)
+        if kind == "le":
+            v = "T" if all(g <= 0 for g in vals) else "F" if all(g > 0 for g in vals) else "Z"
+        elif kind == "lt":
+            v = "T" if all(g < 0 for g in vals) else "F" if all(g >= 0 for g in vals) else "Z"
+        else:
+            v = ("T" if all(g == 0 for g in vals) else
+                 "F" if all(g > 0 for g in vals) or all(g < 0 for g in vals) else "Z")
+        ped = set(ped_rows) | {n for n in seen if n in Q and not unknown(Q[n])
+                               and Q[n]["prov"] == CREDIT}
+        fixed[chunk] = (v, ped, set(pc["contributors"]) | set(seen))
+    return fixed
+
+
 def solve_claim(formula, quantities, marks):
     """Narrow first, then judge on the narrowed ledger — and say, for every
     answer the narrowing produced, what it is worth and what would fix it.
@@ -1017,6 +1134,7 @@ def solve_claim(formula, quantities, marks):
     paid to look at."""
     qs, log = narrow(quantities, formula)
     sheet = dict(quantities)
+    dependence = _dependence_fixed(formula, quantities)
     for k, v in qs.items():            # with the claim's literal intervals
         sheet.setdefault(k, v)
     empty = [n for n, q in qs.items() if q.get("empty")]
@@ -1041,7 +1159,8 @@ def solve_claim(formula, quantities, marks):
             if e1:
                 worlds.append((rq, _no_solution(qs1, [], e1, sheet), qs1))
                 continue
-            worlds.append((rq, judge_sheet_claim(formula, qs1, marks), qs1))
+            worlds.append((rq, judge_sheet_claim(formula, _verdict_ledger(qs1, sheet), marks,
+                                                 fixed=dependence), qs1))
         alive_w = [w3 for w3 in worlds if w3[1]["disposition"] != "REFUTED"]
         alive = [(rq, w) for rq, w, _ in alive_w]
         if not alive:
@@ -1079,7 +1198,7 @@ def solve_claim(formula, quantities, marks):
                 (w for _, w in alive), key=lambda w: rank[w["disposition"]])
             kept_roots[name] = [rq for rq, _ in alive]
     if not kept_roots:
-        r = judge_sheet_claim(formula, qs, marks)
+        r = judge_sheet_claim(formula, _verdict_ledger(qs, sheet), marks, fixed=dependence)
     r["narrowed"], r["log"] = qs, log
     solved, cures = {}, list(r["next_check"])
     # a literal of the claim (`_lit`, which the judge's own reading may add

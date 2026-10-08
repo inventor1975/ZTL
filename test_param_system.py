@@ -198,6 +198,67 @@ def main():
           any("over the linear rows only" in l for l in r["log"])
           and not any("exact at the corners" in l for l in r["log"]), str(r["log"]))
 
+    print("7. stage two: dependence, and no self-fulfilling verdict")
+    def disp(sheet_, claim):
+        r = solve_claim(claim, *parse_quantities(sheet_))
+        return r["disposition"], r.get("polarity")
+    y = "y=[1,2] earned:d, x=? credit"
+    check("(y >= 3/2) & (x == 1), y measured in [1,2]: NOT earned (was EARNED, live)",
+          disp(y, "(y >= 3/2) & (x == 1)")[0] == "OPEN")
+    check("x + y == 10 alone: EARNED (x = 10 - y at every reading)", disp(y, "x + y == 10")[0] == "EARNED")
+    check("(x + y == 10) & (x <= 9): EARNED", disp(y, "(x + y == 10) & (x <= 9)")[0] == "EARNED")
+    check("(x + y == 10) & (x <= 17/2): OPEN (x = 9 at y = 1; the narrowed y must not decide it)",
+          disp(y, "(x + y == 10) & (x <= 17/2)")[0] == "OPEN")
+    check("(x + y == 10) & (x >= 11): REFUTED", disp(y, "(x + y == 10) & (x >= 11)")[0] == "REFUTED")
+    circ = "V=10 earned:p, R1=[90,110] earned:d1, R2=[180,220] {p2}, I=? credit, U=? credit"
+    check("circuit, all datasheets: laws & I <= 1/20 EARNED",
+          disp(circ.format(p2="earned:d2"), "(V - U == I*R1) & (U == I*R2) & (I <= 1/20)")[0] == "EARNED")
+    check("circuit, R2 on credit: ON CREDIT toward T",
+          disp(circ.format(p2="credit"), "(V - U == I*R1) & (U == I*R2) & (I <= 1/20)")
+          == ("ON CREDIT", "toward T"))
+    check("circuit: I <= 1/30 with I in [1/33, 1/27]: OPEN",
+          disp(circ.format(p2="earned:d2"), "(V - U == I*R1) & (U == I*R2) & (I <= 1/30)")[0] == "OPEN")
+    check("an interval literal (x == [3,4]) is membership, not a parameter: OPEN as before",
+          disp("x=? credit", "x == [3,4]")[0] == "OPEN")
+    saved_l = znumsolve._verdict_ledger
+    znumsolve._verdict_ledger = lambda qs, quantities: qs
+    caught = disp(y, "(y >= 3/2) & (x == 1)")[0] == "EARNED"
+    znumsolve._verdict_ledger = saved_l
+    check("mutation: judging on the narrowed ledger again brings the self-fulfilling EARNED back",
+          caught)
+
+    print("8. stage two on random networks: the verdict on a current's bound vs nodal corners")
+    rnd2 = random.Random(9102026)
+    agree = total = 0
+    for t in range(60):
+        n = rnd2.randint(3, 5)
+        edges = [(0, n - 1)] + [(x - 1, x) for x in range(1, n)]
+        for _ in range(rnd2.randint(1, 3)):
+            u, v = rnd2.sample(range(n), 2)
+            edges.append((u, v))
+        boxes = {i: (F(c) * F(9, 10), F(c) * F(11, 10))
+                 for i in range(1, len(edges)) for c in [rnd2.choice([47, 100, 220])]}
+        if len(boxes) > 8:
+            continue
+        res = sorted(boxes)
+        k = rnd2.choice(res)
+        vals = []
+        for corner in itertools.product(*[boxes[i] for i in res]):
+            R = [F(1)] * len(edges)
+            for i, c in zip(res, corner):
+                R[i] = c
+            cur, _ = nodal(n, edges, 0, R, F(10))
+            vals.append(cur[k])
+        c = rnd2.choice([min(vals) - F(1, 1000), max(vals) + F(1, 1000), (min(vals) + max(vals)) / 2])
+        want = (("ON CREDIT", "toward T") if max(vals) <= c else
+                ("ON CREDIT", "toward F") if min(vals) > c else ("OPEN", None))
+        qt, claim = sheet(n, edges, 0, boxes, 10)
+        r = solve_claim(claim + f" & (I{k} <= {c})", *parse_quantities(qt))
+        total += 1
+        agree += (r["disposition"], r.get("polarity")) == want
+    check(f"{agree} of {total} random bounds judged as the corners say (credit parts)",
+          agree == total and total >= 40, f"{agree}/{total}")
+
     print("6. mutation: a guard that always says 'exact' must turn check 3 red")
     saved = znumsolve._rank_one_in
     znumsolve._rank_one_in = lambda *a, **k: True

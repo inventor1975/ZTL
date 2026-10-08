@@ -324,14 +324,23 @@ def extract_comparisons(formula, quantities, parse=True):
 
 
 # ----------------------------------------------------------------- judging
-def judge_sheet_claim(formula, quantities, marks):
+def judge_sheet_claim(formula, quantities, marks, fixed=None):
     """Judge one mixed claim. Numeric floor supplies comparison atoms;
     the unchanged core judges the formula; the provenance axis caps the
-    disposition; next_check merges the cures of both floors."""
+    disposition; next_check merges the cures of both floors.
+
+    `fixed` (from znumsolve, 2026-10-09): {comparison text: (verdict, pedigree,
+    used)} for comparisons the solver has read JOINTLY — over a linear system's
+    unknowns as functions of its parameters, at the corners where that is exact.
+    Every other comparison is read here as before."""
     core_formula, natoms = extract_comparisons(formula, quantities)
     marking, numeric = dict(marks), {}
     for name, (kind, e1, e2, chunk) in natoms.items():
-        v, ped, used, why = compare(kind, e1, e2, quantities)
+        if fixed and chunk in fixed:
+            v, ped, used = fixed[chunk]
+            why = None
+        else:
+            v, ped, used, why = compare(kind, e1, e2, quantities)
         if v == "E":
             # THE FOURTH CORNER (2026-08-12): no admissible reading, so
             # this atom cannot be judged at all — and a claim resting on an
@@ -376,9 +385,16 @@ def judge_sheet_claim(formula, quantities, marks):
     # quantity that merely appears in the pedigree buys nothing.
     credit_quantities = sorted({q for n in bearing
                                 for q in numeric[n]["pedigree"]})
+    # an atom read JOINTLY (`fixed`) rests on every credit quantity of its
+    # system: the widening probe re-reads it apart and would see nothing move,
+    # so for it the whole credit pedigree bears — the cautious side
+    def _bears(n, q):
+        if fixed and natoms[n][3] in fixed:
+            return True
+        return bounds_bearing(*natoms[n][:3], quantities, q)
     bearing_credit = sorted({q for n in bearing
                              for q in numeric[n]["pedigree"]
-                             if bounds_bearing(*natoms[n][:3], quantities, q)})
+                             if _bears(n, q)})
     disposition, polarity = core["disposition"], None
     if disposition in ("EARNED", "REFUTED") and bearing_credit:
         polarity = "toward T" if disposition == "EARNED" else "toward F"
@@ -414,7 +430,7 @@ def judge_sheet_claim(formula, quantities, marks):
         # (an atom that is already Z never enters `bearing` — re-marking it
         # Z is a no-op — so every atom here is forced and the probe applies)
         for q in numeric[n]["pedigree"]:
-            if bounds_bearing(kind, e1, e2, quantities, q):
+            if _bears(n, q):
                 next_check.append(f"document {q}")
         if numeric[n]["verdict"] in ("T", "F"):
             for q in numeric[n]["used"]:

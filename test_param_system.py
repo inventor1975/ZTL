@@ -11,9 +11,12 @@ Checks:
   1. series pair, divider, Wheatstone bridge (all parts boxed): every unknown's
      box equals the corner hull of the nodal solution, exactly;
   2. random small networks (seeded): zero mismatches;
-  3. OUTSIDE the class — a parameter with rank two in the coefficients, whose
-     true range has an interior extreme (x = p/(1+p^2), peak at p = 1): NOT
-     narrowed, and the log names the reason; the claim x <= 9/20 is not T;
+  3. ONE parameter with rank two (2026-10-09, `_solve_rank_many`): x = p/(1+p^2)
+     has its peak INSIDE the box (p = 1): the range is exactly [2/5, 1/2], found at
+     the critical point, and x <= 9/20 is not T; 60 seeded random systems with one
+     rank-many parameter: every value on a 401-point grid of it (others at their
+     corners, solved exactly) lies inside the range, and the range is no wider than
+     the grid shows by more than 1%; TWO rank-two parameters: still refused, named;
   4. nothing changes where the floor already worked: a box only on the right
      (x + y == 10) takes the old path, same log line; constant systems too;
   5. overdetermined systems are refused, singular ones are refused;
@@ -171,8 +174,15 @@ def main():
     check(f"{ran} seeded networks (of 40 drawn): every current equals the corner hull",
           mism == 0 and ran >= 30, f"{mism} mismatched, {ran} ran")
 
-    print("3. outside the class: rank two, interior extreme")
+    print("3. one parameter of rank two: the interior extreme found exactly")
     out_of_class()
+    bad, ran = rank_many_random()
+    check(f"{ran} random systems with one rank-two parameter: every grid value inside, range <= 1% wider",
+          not bad and ran >= 20, str(bad[:2]))
+    r = solve_claim("(p*x + q*y == 1) & (q*x - p*y == 0)",
+                    *parse_quantities("p=[1,2] credit, q=[1,2] credit, x=? credit, y=? credit"))
+    check("TWO rank-two parameters: still refused, named",
+          any("rank > 1" in l and "not solved" in l for l in r["log"]), str(r["log"]))
 
     print("4. nothing changes where the floor already worked")
     r = solve_claim("(x + y == 10) & (x <= 9)", *parse_quantities("y=[1,2] credit, x=? credit"))
@@ -259,7 +269,7 @@ def main():
     check(f"{agree} of {total} random bounds judged as the corners say (credit parts)",
           agree == total and total >= 40, f"{agree}/{total}")
 
-    print("6. mutation: a guard that always says 'exact' must turn check 3 red")
+    print("6. mutation: a rank test that always says 'rank one' must turn check 3 red (corners only: [2/5, 2/5])")
     saved = znumsolve._rank_one_in
     znumsolve._rank_one_in = lambda *a, **k: True
     global ok, fail
@@ -277,25 +287,57 @@ def main():
 
 
 def out_of_class(quiet=False):
-    """x - p*y == 0, p*x + y == 1  ->  x = p/(1+p^2): peak 1/2 at p = 1, corners 2/5."""
+    """x - p*y == 0, p*x + y == 1  ->  x = p/(1+p^2): peak 1/2 at p = 1 (inside), ends 2/5."""
     sheet_ = "p=[1/2,2] credit, x=? credit, y=? credit"
     r0 = solve_claim("(x - p*y == 0) & (p*x + y == 1)", *parse_quantities(sheet_))
-    refused = any("rank > 1" in l for l in r0["log"])
-    # the laws alone: x must not be narrowed below its true max 1/2 (the corner
-    # hull would say [2/5, 2/5]); the requirement is judged in a separate claim,
-    # since a committed x <= 9/20 narrows x by itself, as the floor should
-    not_narrowed = r0["narrowed"]["x"]["hi"] >= F(1, 2)
+    xr = r0["narrowed"]["x"]
+    exact = (xr["lo"], xr["hi"]) == (F(2, 5), F(1, 2))
+    named = any("critical points" in l and l.startswith("x ->") for l in r0["log"])
     r = solve_claim("(x - p*y == 0) & (p*x + y == 1) & (x <= 9/20)", *parse_quantities(sheet_))
     not_T = r["disposition"] not in ("EARNED",) and not (r["disposition"] == "ON CREDIT"
                                                          and r.get("polarity") == "toward T")
-    r = r0
-    good = refused and not_narrowed and not_T
+    good = exact and named and not_T
     if not quiet:
-        check("rank two: refused and named", refused, str(r["log"]))
-        check("rank two: x not narrowed to the wrong corner hull [2/5, 2/5]", not_narrowed,
-              str(r0["narrowed"]["x"]))
+        check("rank two: x exactly [2/5, 1/2], the interior peak found at the critical point", exact and named,
+              str((xr, r0["log"])))
         check("rank two: x <= 9/20 not certified (true max is 1/2)", not_T, r["disposition"])
     return good
+
+
+def rank_many_random(n=60, seed=17):
+    """2x2 systems, one parameter p in both rows (rank two), q rank one: the range
+    must contain every grid value (exact solves) and be at most 1% wider."""
+    rng = random.Random(seed)
+    bad, ran = [], 0
+    for _ in range(n):
+        a, c = F(rng.randint(1, 5)), F(rng.randint(1, 5))
+        e2 = F(rng.randint(1, 5))
+        plo = F(rng.randint(1, 4), 2); phi = plo + F(rng.randint(1, 6), 2)
+        qlo = F(rng.randint(1, 4)); qhi = qlo + F(rng.randint(1, 3))
+        claim = f"({fs_(a)}*x + p*y == q) & (p*x + {fs_(c)}*y == {fs_(e2)})"
+        sheet_ = f"p=[{fs_(plo)},{fs_(phi)}] credit, q=[{fs_(qlo)},{fs_(qhi)}] credit, x=? credit, y=? credit"
+        r = solve_claim(claim, *parse_quantities(sheet_))
+        xr = r["narrowed"]["x"]
+        if xr["lo"] == -float("inf") or xr["hi"] == float("inf"):
+            continue                       # refused (a singular reading inside): allowed, not counted
+        ran += 1
+        grid = []
+        for q in (qlo, qhi):
+            for k in range(401):
+                pv = plo + (phi - plo) * k / 400
+                det = a * c - pv * pv
+                if det != 0:
+                    grid.append((q * c - pv * e2) / det)
+        glo, ghi = min(grid), max(grid)
+        if not (xr["lo"] <= glo and ghi <= xr["hi"]):
+            bad.append(("unsound", claim, sheet_, (xr["lo"], xr["hi"]), (glo, ghi)))
+        elif (xr["hi"] - xr["lo"]) > (ghi - glo) * F(101, 100) + F(1, 10**9):
+            bad.append(("too wide", claim, sheet_, (xr["lo"], xr["hi"]), (glo, ghi)))
+    return bad, ran
+
+
+def fs_(x):
+    return f"{x.numerator}/{x.denominator}"
 
 
 if __name__ == "__main__":

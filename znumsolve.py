@@ -52,6 +52,8 @@ from znum import (INF, EARNED, CREDIT, qty, num, fmt, _linear,   # noqa: E402
                   _NotLinear, _step, typename, _poly, _rat_sqrt, _NoReadings,
                   QSqrt, qsqrt_of, _ev_exact, names_in as _names_in,
                   _upoly, _ptrim, _pdivmod, _real_roots)
+from znum import (_padd as _upadd, _pmul as _upmul, _peval as _upeval,     # noqa: E402
+                  _pderiv as _upderiv, _peval_iv as _upeval_iv, _iv_div)
 from znumjudge import (parse_quantities, extract_comparisons,     # noqa: E402
                        judge_sheet_claim, _closes_last)
 
@@ -317,11 +319,17 @@ def _solve_exact(Ab, n):
     return [M[i][n] / M[i][i] for i in range(n)], det
 
 
-def _param_corners(qs, atoms, rhs_only_ok=False, is_unknown=None):
+def _param_corners(qs, atoms, rhs_only_ok=False, is_unknown=None, one_rank_many=False):
     """Read the committed equalities as A(p) x = b(p) and solve them at every
     corner of the parameters' box. Returns a dict: unknowns, params, in_A,
     rows (the chunks used), corners [(at, solution)], contributors, skipped
-    (names in equalities left out), reason (None when solved)."""
+    (names in equalities left out), reason (None when solved).
+
+    one_rank_many: when exactly ONE parameter enters with rank > 1 and every
+    other with rank one, do not refuse — return the system with "rank_many"
+    set to that parameter and no corners (its extremes may lie inside the box;
+    `_solve_rank_many` finds them). Callers that READ the corners (the
+    dependence reading) leave the flag off and keep the refusal."""
     if is_unknown is None:
         def is_unknown(q):
             return isinstance(q["lo"], float) or isinstance(q["hi"], float)
@@ -385,11 +393,12 @@ def _param_corners(qs, atoms, rhs_only_ok=False, is_unknown=None):
     A = {(i, u): poly for i, (a_row, _, _) in enumerate(rows) for u, poly in a_row.items()}
     b = {i: b_row for i, (_, b_row, _) in enumerate(rows)}
     ridx = list(range(len(rows)))
-    for p in params:
-        if not _rank_one_in(p, A, b, ridx, unknowns):
-            out["reason"] = (f"parameter {p} enters the coefficients with rank > 1: "
-                             f"the corners are not exact, not solved as a system")
-            return out
+    bad = [p for p in params if not _rank_one_in(p, A, b, ridx, unknowns)]
+    if bad and not (one_rank_many and len(bad) == 1):
+        out["reason"] = (f"parameter {bad[0]} enters the coefficients with rank > 1: "
+                         f"the corners are not exact, not solved as a system"
+                         + (f" (and {len(bad) - 1} more)" if len(bad) > 1 else ""))
+        return out
     # independent rows at the midpoint (exact); the system must be square
     mid = {p: (qs[p]["lo"] + qs[p]["hi"]) / 2 for p in params}
     n = len(unknowns)
@@ -415,6 +424,10 @@ def _param_corners(qs, atoms, rhs_only_ok=False, is_unknown=None):
         out["reason"] = (f"{len(rows)} equalities for {n} unknowns: overdetermined, "
                          f"not solved as a system")
         return out
+    if bad:
+        out["rank_many"] = bad[0]
+        out["system"] = (A, b, chosen, unknowns, params)
+        return out
     sign = None
     corners = [[]]
     for p in params:
@@ -438,11 +451,116 @@ def _param_corners(qs, atoms, rhs_only_ok=False, is_unknown=None):
     return out
 
 
+def _udet(M):
+    """Determinant of a square matrix of univariate polynomials (coefficient
+    lists, degree 0 first) by fraction-free Bareiss elimination: every division
+    is exact, so the result is the exact determinant polynomial."""
+    n = len(M)
+    M = [[list(c) for c in row] for row in M]
+    sign, prev = 1, [Fraction(1)]
+    for k in range(n - 1):
+        if not any(M[k][k]):
+            sw = next((i for i in range(k + 1, n) if any(M[i][k])), None)
+            if sw is None:
+                return [Fraction(0)]
+            M[k], M[sw] = M[sw], M[k]
+            sign = -sign
+        for i in range(k + 1, n):
+            for j in range(k + 1, n):
+                num_ = _upadd(_upmul(M[k][k], M[i][j]), _upmul(M[i][k], M[k][j]), -1)
+                q, r = _pdivmod(num_, prev)
+                if any(r):
+                    raise ArithmeticError("Bareiss: inexact division")
+                M[i][j] = q
+        prev = M[k][k]
+    det = M[n - 1][n - 1]
+    return [sign * c for c in det]
+
+
+def _solve_rank_many(pc, qs):
+    """One parameter p of rank > 1 (one steel batch for three bars), every other
+    parameter rank one. For each corner of the OTHERS (monotone there: rank one,
+    linear-fractional), every unknown is x_i(p) = N_i(p)/D(p) by Cramer, both
+    polynomials EXACT (`_udet`). D must keep its sign on p's interval at every
+    corner (no singular reading inside the box). The extremes of x_i on the
+    interval sit at its ends or at the real roots of N_i' D - N_i D' (Sturm,
+    `_real_roots`): a rational root is evaluated exactly; an irrational one is
+    clamped to 1e-12 and enclosed by interval Horner — sound, then not exact.
+    Returns (ranges, exact, reason)."""
+    A, b, chosen, unknowns, params = pc["system"]
+    p = pc["rank_many"]
+    plo, phi = qs[p]["lo"], qs[p]["hi"]
+    others = [q for q in params if q != p]
+    corners = [[]]
+    for q in others:
+        corners = [c + [e] for c in corners for e in (qs[q]["lo"], qs[q]["hi"])]
+
+    def upoly(poly, at):          # multivariate {monomial: coef} -> univariate in p
+        out = [Fraction(0), Fraction(0)]
+        for m, k in poly.items():
+            t, deg = k, 0
+            for nm in m:
+                if nm == p:
+                    deg += 1
+                else:
+                    t *= at[nm]
+            while len(out) <= deg:
+                out.append(Fraction(0))
+            out[deg] += t
+        return _ptrim(out)
+
+    n = len(unknowns)
+    lo, hi, exact, sign = {}, {}, True, None
+    for corner in corners:
+        at = dict(zip(others, corner))
+        Mx = [[upoly(A.get((i, u), {}), at) for u in unknowns] for i in chosen]
+        bv = [upoly(b[i], at) for i in chosen]
+        D = _udet(Mx)
+        if not any(D) or _real_roots(D, plo, phi):
+            return {}, False, f"singular for some {p} in its box: not solved as a system"
+        s_ = _upeval(D, plo) > 0
+        if sign is None:
+            sign = s_
+        elif s_ != sign:
+            return {}, False, "the determinant changes sign over the box: not solved as a system"
+        dD = _upderiv(D)
+        for c, u in enumerate(unknowns):
+            N = _udet([row[:c] + [bv[i]] + row[c + 1:] for i, row in enumerate(Mx)])
+            vals = [_upeval(N, plo) / _upeval(D, plo), _upeval(N, phi) / _upeval(D, phi)]
+            crit = _upadd(_upmul(_upderiv(N), D), _upmul(N, dD), -1)
+            ivs = []
+            if any(crit):
+                for l, h in _real_roots(crit, plo, phi):
+                    if l == h:
+                        vals.append(_upeval(N, l) / _upeval(D, l))
+                    else:
+                        exact = False
+                        ivs.append(_iv_div(_upeval_iv(N, (l, h)), _upeval_iv(D, (l, h))))
+            cand_lo = min(vals + [iv[0] for iv in ivs])
+            cand_hi = max(vals + [iv[1] for iv in ivs])
+            lo[u] = cand_lo if u not in lo or cand_lo < lo[u] else lo[u]
+            hi[u] = cand_hi if u not in hi or cand_hi > hi[u] else hi[u]
+    return {u: (lo[u], hi[u]) for u in unknowns}, exact, None
+
+
 def _solve_param_system(qs, atoms):
     """Ranges of the unknowns of a linear system whose coefficients carry
     parameters. Returns (ranges {name: (lo, hi)}, contributors, reason): ranges
     is empty and reason says why whenever the exact class does not hold."""
-    pc = _param_corners(qs, atoms)
+    pc = _param_corners(qs, atoms, one_rank_many=True)
+    if pc["reason"] is None and pc.get("rank_many"):
+        ranges, exact, why = _solve_rank_many(pc, qs)
+        if why:
+            return {}, set(), why
+        p = pc["rank_many"]
+        loose = sorted({u for names in pc["skipped"] for u in names if u in pc["unknowns"]})
+        note = (f"{p} has rank > 1: its extremes taken at the ends and at the real critical points"
+                + ("" if exact else " (an irrational one enclosed, so the range may be wider than the truth)"))
+        if loose:
+            exact = False
+            note += (f"; exact over the linear rows only: {', '.join(loose)} also appear in an "
+                     f"equality the system could not read")
+        return ranges, pc["contributors"], ("RANK_MANY:" + ("exact:" if exact else "outer:") + note)
     if pc["reason"] is not None:
         return {}, set(), (pc["reason"] or None)
     lo, hi = {}, {}
@@ -951,9 +1069,14 @@ def narrow(quantities, formula, rounds=MAX_ROUNDS, orig=None):
     # one system and solved at the corners when that is exact; otherwise the log
     # says which condition failed and nothing is touched.
     ranges, pcontrib, why = _solve_param_system(qs, atoms)
+    how = "exact at the corners" if not (ranges and why) else "at the corners, over the linear rows"
+    if why and why.startswith("RANK_MANY:"):
+        _, kind_rm, text_rm = why.split(":", 2)
+        how = ("exact at the corners and at the critical points" if kind_rm == "exact"
+               else "at the corners and the critical points, an irrational one enclosed")
+        why = text_rm
     if why:
         log.append(why)
-    how = "exact at the corners" if not (ranges and why) else "at the corners, over the linear rows"
     for name, (vlo, vhi) in sorted(ranges.items()):
         q = qs[name]
         lo, hi = max(q["lo"], vlo), min(q["hi"], vhi)

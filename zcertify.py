@@ -206,3 +206,128 @@ def check(expr, quantities, op, bound, cert):
 
     ok, why = walk(cert, box, "")
     return (True, count[0]) if ok else (False, why)
+
+
+# ── A QUANTITY SOLVED FROM A SYSTEM (second tranche, 2026-10-09) ──────────────
+# The bound is on an expression of UNKNOWNS fixed by linear equalities whose
+# coefficients are expressions of boxed quantities: P = VL*I with V - VL == I*Rs,
+# VL == I*RL. A free box per unknown would lose their correlation with the
+# tolerances; so the kernel solves the system ITSELF — Cramer's rule, the
+# determinants kept as cofactor trees of the reader's nodes (no expansion) — and
+# checks the certificate on the solved expression. Nothing the caller says about
+# the solution is used. The determinant is never certified apart: every leaf reads
+# the expression, which divides by it, and a reading over a piece where the
+# determinant's range touches zero has no value — the leaf is refused. So an
+# accepted certificate also shows the system uniquely solvable on the whole box.
+# Above MAX_SYSTEM unknowns (n! cofactor terms) the kernel refuses aloud — the same
+# answer every time, not a budget that runs out.
+MAX_SYSTEM = 6
+
+
+class SystemError_(ValueError):
+    pass
+
+
+def _lin(node, unknowns):
+    """node -> {unknown or 1: coefficient node}, linear in the unknowns."""
+    if isinstance(node, (int, Fraction)):
+        return {1: Fraction(node)}
+    if isinstance(node, str):
+        return {node: ONE} if node in unknowns else {1: node}
+    op, *args = node
+    if op == "sum":
+        out = {}
+        for a in args[0]:
+            for k, v in _lin(a, unknowns).items():
+                out[k] = _add(out[k], v) if k in out else v
+        return out
+    if op == "sqrt":
+        if _names(args[0]) & unknowns:
+            raise SystemError_("an unknown under a square root")
+        return {1: node}
+    a, b = _lin(args[0], unknowns), _lin(args[1], unknowns)
+    if op in ("add", "sub"):
+        out = dict(a)
+        for k, v in b.items():
+            if op == "add":
+                out[k] = _add(out[k], v) if k in out else v
+            else:
+                out[k] = ("sub", out[k], v) if k in out else ("sub", ZERO, v)
+        return out
+    if op == "mul":
+        if set(a) <= {1}:
+            return {k: _mul(a.get(1, ZERO), v) for k, v in b.items()}
+        if set(b) <= {1}:
+            return {k: _mul(v, b.get(1, ZERO)) for k, v in a.items()}
+        raise SystemError_("a product of two unknowns: not a linear system")
+    if op == "div":
+        if set(b) <= {1}:
+            return {k: ("div", v, b.get(1, ZERO)) for k, v in a.items()}
+        raise SystemError_("a division by an unknown: not a linear system")
+    raise SystemError_(f"cannot read {op!r}")
+
+
+def _det(M):
+    n = len(M)
+    if n == 1:
+        return M[0][0]
+    out = ZERO
+    for j in range(n):
+        if _is0(M[0][j]):
+            continue
+        term = _mul(M[0][j], _det([row[:j] + row[j + 1:] for row in M[1:]]))
+        out = _add(out, term) if j % 2 == 0 else ("sub", out, term)
+    return out
+
+
+def solve_system(laws, unknowns, quantities):
+    """{unknown: node} by Cramer's rule. laws: "lhs == rhs" strings."""
+    from znumjudge import _parse_arith
+    unknowns = sorted(set(unknowns))
+    n = len(unknowns)
+    if n > MAX_SYSTEM:
+        raise SystemError_(f"{n} unknowns: more than {MAX_SYSTEM} (n! cofactor terms) — refused, not computed")
+    rows = []
+    for law in laws:
+        if law.count("==") != 1:
+            raise SystemError_(f"not one equality: {law!r}")
+        l, r = law.split("==")
+        a = _lin(_parse_arith(l, quantities), set(unknowns))
+        b = _lin(_parse_arith(r, quantities), set(unknowns))
+        row = dict(a)
+        for k, v in b.items():
+            row[k] = ("sub", row[k], v) if k in row else ("sub", ZERO, v)
+        rows.append(row)
+    if len(rows) != n:
+        raise SystemError_(f"{len(rows)} equalities for {n} unknowns: not a square system")
+    A = [[row.get(u, ZERO) for u in unknowns] for row in rows]
+    rhs = [("sub", ZERO, row[1]) if 1 in row else ZERO for row in rows]
+    D = _det(A)
+    if _is0(D):
+        raise SystemError_("the determinant is identically zero")
+    return {u: ("div", _det([r[:i] + [rhs[k]] + r[i + 1:] for k, r in enumerate(A)]), D)
+            for i, u in enumerate(unknowns)}
+
+
+def _subst(node, sol):
+    if isinstance(node, str):
+        return sol.get(node, node)
+    if isinstance(node, tuple):
+        op, *args = node
+        return (op, *[[_subst(x, sol) for x in a] if isinstance(a, list) else _subst(a, sol) for a in args])
+    return node
+
+
+def check_system(target, laws, unknowns, quantities, op, bound, cert):
+    """Is `target op bound` over the box, where the target is an expression (text) of
+    boxed quantities AND unknowns fixed by the linear `laws`? The kernel solves the
+    system itself, then `check`. (True, pieces) or (False, reason)."""
+    from znumjudge import _parse_arith
+    try:
+        sol = solve_system(laws, unknowns, quantities)
+        e = _subst(_parse_arith(target, quantities), sol)
+    except (SystemError_, ValueError) as err:
+        return False, f"system: {err}"
+    if _names(e) & set(unknowns):
+        return False, "system: an unknown is left in the target"
+    return check(e, quantities, op, bound, cert)

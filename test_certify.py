@@ -24,6 +24,11 @@ Checks:
      a flipped sign is accepted only where the derivative reads exactly [0, 0];
   5. MUTATION of the kernel: with every interval reading collapsed to its midpoint,
      check 4's false bounds must slip through — the stand sees a lying kernel.
+  6. SYSTEMS: 120 random 2x2/3x3 linear systems with boxed coefficients — the kernel's
+     own Cramer solution equals Gauss elimination at every sample point, exactly;
+     certificates accepted, false bounds refused; the load power as a circuit; a
+     determinant crossing zero, a non-square system, a product of unknowns: refused;
+     MUTATION: a determinant with wrong signs is caught.
   (sqrt shapes are sampled in floats; the margin is 1%, far above the rounding.)
 
 Run:  python3 test_certify.py   -> CERTIFY GREEN
@@ -300,6 +305,136 @@ for text, e, qs, op, bound, cert, false_bound in found[:120]:
 ZC._reading = real
 check(f"MUTATION: with every reading collapsed to its midpoint, the false bounds pass ({caught} of 120) — "
       f"the stand sees a lying kernel", caught > 0, "mutation survived")
+
+
+# 6. A QUANTITY SOLVED FROM A SYSTEM: the kernel solves it itself (Cramer), then checks
+print("6. systems: the kernel's own solution")
+
+
+def gauss(rows, unknowns, env):
+    """Exact solution at one point — a different route than the kernel's Cramer."""
+    A = [[r[u](env) for u in unknowns] + [r[1](env)] for r in rows]
+    n = len(unknowns)
+    for c in range(n):
+        p = next(i for i in range(c, n) if A[i][c] != 0)
+        A[c], A[p] = A[p], A[c]
+        for i in range(n):
+            if i != c and A[i][c] != 0:
+                f = A[i][c] / A[c][c]
+                A[i] = [x - f * y for x, y in zip(A[i], A[c])]
+    return {u: A[i][-1] / A[i][i] for i, u in enumerate(unknowns)}
+
+
+def random_system(rng):
+    n = rng.randint(2, 3)
+    unk = [f"u{i}" for i in range(n)]
+    names = [f"p{i}" for i in range(rng.randint(1, 3))]
+    boxes = {}
+    for m in names:
+        a = F(rng.randint(2, 20), rng.randint(1, 3))
+        boxes[m] = (a, a + F(rng.randint(1, 6), rng.randint(2, 4)))
+    laws, rows = [], []
+    for i in range(n):          # diagonally dominant: positive boxes on the diagonal, small off it
+        terms, coef = [], {}
+        for j, u in enumerate(unk):
+            if i == j:
+                m = rng.choice(names); k = rng.randint(n + 2, n + 6)
+                terms.append(f"({k} + {m})*{u}")
+                coef[u] = (lambda k, m: lambda env: k + env[m])(k, m)
+            elif rng.random() < 0.7:
+                c = F(rng.choice([-1, 1]), rng.randint(2, 4))
+                terms.append(f"({fs(c)})*{u}")
+                coef[u] = (lambda c: lambda env: c)(c)
+            else:
+                coef[u] = lambda env: F(0)
+        m = rng.choice(names); k = rng.randint(1, 5)
+        laws.append(" + ".join(terms) + f" == {k}*{m}")
+        coef[1] = (lambda k, m: lambda env: k * env[m])(k, m)
+        rows.append(coef)
+    target = rng.choice(["{a}*{b}", "{a} - {b}*{p}", "{a}*{a} + {p}", "{a}/{p} - {b}"]).format(
+        a=rng.choice(unk), b=rng.choice(unk), p=rng.choice(names))
+    return unk, names, boxes, laws, rows, target
+
+
+def sheet_of(boxes, unk):
+    return ", ".join(f"{m}=[{fs(a)},{fs(b)}] credit" for m, (a, b) in boxes.items()) + \
+        ", " + ", ".join(f"{u}=? credit" for u in unk)
+
+
+def run_systems(n=120, seed=31):
+    rng = random.Random(seed)
+    bad, found, mism = [], [], []
+    for i in range(n):
+        unk, names, boxes, laws, rows, target = random_system(rng)
+        qs = parse_quantities(sheet_of(boxes, unk))[0]
+        sol = ZC.solve_system(laws, unk, qs)
+        e = ZC._subst(_parse_arith(target, qs), sol)
+        pts = samples(names, boxes, rng, n=15)
+        vals = []
+        for p in pts:
+            g = gauss(rows, unk, p)
+            exact = eval(target, {}, dict(p, **g))
+            k = ZC._reading(e, qs, {m: (p[m], p[m]) for m in names})
+            if k is None or k != (exact, exact):
+                mism.append((i, target, p)); break
+            vals.append(exact)
+        else:
+            top = max(vals)
+            bound = top + (abs(top) + 1) / 50
+            cert = search(e, qs, "<=", bound)
+            if cert is None:
+                continue
+            res = ZC.check_system(target, laws, unk, qs, "<=", bound, cert)
+            if not res[0]:
+                bad.append((i, "refused its own", res[1])); continue
+            false = ZC.check_system(target, laws, unk, qs, "<=", top - (abs(top) + 1) / 50, cert)
+            if false[0]:
+                bad.append((i, "ACCEPTED A FALSE BOUND")); continue
+            found.append(i)
+    return bad, found, mism
+
+
+bad, found, mism = run_systems()
+check(f"120 random 2x2/3x3 systems: the kernel's solved expression equals Gauss elimination at every sample "
+      f"point (exact); {len(found)} certificates accepted, false bounds refused", not bad and not mism and len(found) >= 90,
+      str((bad[:2], mism[:2], len(found))))
+
+qs9 = parse_quantities("V=5 credit, RL=[1,100] credit, Rs=[1089/100,1111/100] credit, I=? credit, VL=? credit")[0]
+laws9 = ["V - VL == I*Rs", "VL == I*RL"]
+e9 = ZC._subst(_parse_arith("VL*I", qs9), ZC.solve_system(laws9, ["I", "VL"], qs9))
+c9 = search(e9, qs9, "<=", F(3, 5))
+check("load power as a circuit (P = VL*I from the loop) <= 0.6 W: accepted; <= 0.57 refused (the peak is 0.5739)",
+      ZC.check_system("VL*I", laws9, ["I", "VL"], qs9, "<=", F(3, 5), c9)[0]
+      and not ZC.check_system("VL*I", laws9, ["I", "VL"], qs9, "<=", F(57, 100), c9)[0])
+qs_s = parse_quantities("a=[1,3] credit, b=[1,3] credit, x=? credit, y=? credit")[0]
+r_s = ZC.check_system("x", ["a*x + y == 1", "x + (1/b)*y == 2"], ["x", "y"], qs_s, "<=", F(100), {"leaf": "interval"})
+check("a determinant that crosses zero on the box (a - b): refused, no value claimed", not r_s[0], str(r_s))
+check("not square (two equalities, three unknowns): refused aloud",
+      "not a square system" in ZC.check_system("x", ["x + y == 1", "y + z == 2"], ["x", "y", "z"],
+                                               parse_quantities("x=? credit, y=? credit, z=? credit")[0],
+                                               "<=", F(1), {"leaf": "interval"})[1])
+check("a product of two unknowns in a law: refused aloud (not a linear system)",
+      "not a linear system" in ZC.check_system("x", ["x*y == 1", "y == 2"], ["x", "y"],
+                                               parse_quantities("x=? credit, y=? credit")[0],
+                                               "<=", F(1), {"leaf": "interval"})[1])
+real_det = ZC._det
+
+
+def bad_det(M):
+    n = len(M)
+    if n == 1:
+        return M[0][0]
+    out = ZC.ZERO
+    for j in range(n):
+        term = ZC._mul(M[0][j], bad_det([row[:j] + row[j + 1:] for row in M[1:]]))
+        out = ZC._add(out, term)          # every sign +: a wrong determinant
+    return out
+
+
+ZC._det = bad_det
+_, _, mism_m = run_systems(n=30, seed=37)
+ZC._det = real_det
+check("MUTATION: a determinant with every cofactor sign + is caught by the Gauss comparison", len(mism_m) > 0)
 
 print(f"certify: {ok} ok, {fail} failed")
 print("CERTIFY GREEN" if fail == 0 else "CERTIFY RED")

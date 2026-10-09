@@ -31,6 +31,15 @@ when E's interval reading on the piece is on the right side of c.
 
 The answer is True with the number of pieces, or False with the first reason —
 deterministic, never "not computed".
+
+PROVED IN LEAN (lean/ZCertify.lean, 2026-10-10, empty axiom list): the RULE this
+file walks — cuts cover their piece, an accepted tree carries its leaves' bound to
+the whole box, one corner bounds a monotone piece when the value depends on the
+listed quantities only — `certificate_sound`. Its PREMISES, not proved there: the
+interval reading encloses the value on a piece (`iv_sound`), and a derivative read
+with a sign makes the value monotone there (`deriv_sound`, the mean value theorem).
+The Lean module states the rule abstractly; this code is not extracted from it —
+the correspondence is by reading, and the stand test_certify.py measures it.
 """
 
 import os

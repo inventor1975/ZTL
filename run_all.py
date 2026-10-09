@@ -152,6 +152,7 @@ STANDS = [
                         "pending=['a <= b', 'ok']"]),
     ("test_param_system.py", ["PARAM SYSTEM GREEN"]),
     ("test_mlin_eq.py", ["MLIN EQ GREEN"]),
+    ("test_backward_tree.py", ["BACKWARD TREE GREEN"]),
     ("znumsolve.py",   ["ZNUMSOLVE GREEN", "x in [5, 5]",
                         "a in [6, 6], b in [4, 4]",
                         "solutions dropped by narrowing: 0",

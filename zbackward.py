@@ -103,7 +103,7 @@ MAX_K = 4            # дальше наборы не ищем, и говори�
 
 
 def backward(phi, marking, target, by_disposition=True,
-             cap_grounds=None, max_k=MAX_K, memo=None):
+             cap_grounds=None, max_k=MAX_K, memo=None, use_tree=True):
     """От цели назад к минимальным наборам оснований.
 
     Возвращает dict:
@@ -124,6 +124,18 @@ def backward(phi, marking, target, by_disposition=True,
     Раньше обрезанный поиск и отказ отвечали True, и order() говорил
     «недостижима никакой проверкой» там, где один g0 = F уже опровергал.
     """
+    # READ OFF THE TABLES FIRST (2026-10-09, the curator: "is the backward pass not the
+    # forward one read the other way?"). Where every unverified ground occurs once,
+    # zbackward_tree builds the same families from the connectives' tables — equal to
+    # the enumeration below on 10,500 comparisons (test_backward_tree.py), with no
+    # size cut: a conjunction of six grounds, which this function answered "not
+    # searched further" past MAX_K = 4, gets its one set of six. Elsewhere (a ground
+    # repeated) the enumeration below runs as before.
+    if use_tree:
+        from zbackward_tree import backward_tree
+        got = backward_tree(phi, marking, target, by_disposition)
+        if got is not None:
+            return got
     grounds = tuple(a for a, v in sorted(marking.items()) if v == Z)
     # ONE OUTCOME PER FILLING (2026-09-27, the cloud's worst-case search, PR #4):
     # the studio asks three targets of the same claim and the same fillings, and

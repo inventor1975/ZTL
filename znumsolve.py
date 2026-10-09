@@ -47,7 +47,7 @@ from fractions import Fraction
 _HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, _HERE)
 
-from znum import _mlin                                             # noqa: E402
+from znum import _mlin, _ev_mlin                                   # noqa: E402
 from znum import (INF, EARNED, CREDIT, qty, num, fmt, _linear,   # noqa: E402
                   _NotLinear, _step, typename, _poly, _rat_sqrt, _NoReadings,
                   QSqrt, qsqrt_of, _ev_exact, names_in as _names_in,
@@ -696,6 +696,43 @@ def _apply_pieces(kind, name, pieces, seen, chunk, qs, log, orig=None, exact=())
     return "moved"
 
 
+def _mlin_eq(kind, e1, e2, qs):
+    """`name == E` where E is MULTILINEAR in the other quantities (each to the
+    first power, names correlated): the name lies in E's range over their boxes,
+    and that range is EXACT — a multilinear expression is linear in each name with
+    the others fixed, so its extremes sit at the corners (`_ev_mlin`).
+
+    WHY (2026-10-09, the universal stand's probe tasks, gap Z2): tau == R*C,
+    Tj == Ta + P*(Rjc + Rcs + Rsa) and V == N*(Vcell - I*r) — a quantity defined
+    by a PRODUCT of toleranced quantities — left the name at (-inf, inf): the
+    linear reading refuses a product of two boxes, the parabola and polynomial
+    readings want one name. Three of five tasks hit it; the exact corners were
+    already here for comparisons. Only the defined name is narrowed: the boxes
+    on the other side are not read backwards. Returns (name, lo, hi, seen) or None."""
+    if kind != "eq":
+        return None
+    for side, other in ((e1, e2), (e2, e1)):
+        if not isinstance(side, str) or side not in qs:
+            continue
+        q = qs[side]
+        if q.get("sample") or (q["lo"] == q["hi"] and not isinstance(q["lo"], float)):
+            continue
+        names = {n for n in _names_in(other) if n in qs}
+        if side in names:
+            continue
+        try:
+            got = _ev_mlin(other, qs)
+        except (_NoReadings, ZeroDivisionError):
+            continue
+        if got is None:
+            continue
+        (lo, hi), _, used, _, _ = got
+        if lo in (INF, -INF) or hi in (INF, -INF) or isinstance(lo, float) or isinstance(hi, float):
+            continue
+        return side, lo, hi, set(used) | names
+    return None
+
+
 def _committed_atoms(core):
     """The comparisons the claim COMMITS to: those joined by `&` at the top
     level, through parentheses that only wrap. Under | ~ -> ^ <-> a
@@ -943,6 +980,29 @@ def narrow(quantities, formula, rounds=MAX_ROUNDS, orig=None):
                     if got_u is not None:
                         step = _apply_pieces("eq", got_u[0], got_u[1], got_u[2], chunk,
                                              qs, log, orig, got_u[3])
+                if step is None:
+                    got_m = _mlin_eq(kind, e1, e2, qs)
+                    if got_m is not None:
+                        name_m, mlo, mhi, seen_m = got_m
+                        qm = qs[name_m]
+                        lo, hi = max(qm["lo"], mlo), min(qm["hi"], mhi)
+                        if (lo, hi) != (qm["lo"], qm["hi"]):
+                            g = (_grounds_of(sorted(seen_m - {name_m}), qs, orig)
+                                 | _own(name_m, qs, orig))
+                            if lo > hi:
+                                log.append(f"{name_m}: emptied by [{chunk}] (its range "
+                                           f"[{fmt(mlo)}, {fmt(mhi)}], exact at the corners)")
+                                qs[name_m] = dict(qm, lo=lo, hi=hi, empty=True,
+                                                  empty_grounds=sorted(g))
+                                return qs, log
+                            nm = qty(lo, hi, _prov_of(g, orig),
+                                     ("derived:" + ",".join(sorted(g))) if g else None,
+                                     discrete=qm["discrete"], unit=qm["unit"], sample=False)
+                            nm["grounds"] = nm["derived_from"] = sorted(g)
+                            qs[name_m] = nm
+                            log.append(f"{name_m} -> [{fmt(nm['lo'])}, {fmt(nm['hi'])}] by [{chunk}], "
+                                       f"multilinear, exact at the corners ({_prov_of(g, orig)})")
+                            step = "moved"
                 if step == "empty":
                     return qs, log
                 moved = moved or step == "moved"

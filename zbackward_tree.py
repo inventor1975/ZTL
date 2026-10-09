@@ -137,8 +137,11 @@ def backward_tree(phi, marking, target, by_disposition=True):
         return {"grounds": grounds, "already": False, "possible": [], "guaranteed": [],
                 "possible_none": None, "guaranteed_none": None, "target": target,
                 "отказ": f"a family of more than {MAX_FAMILY} minimal sets ({e.args[0]}): not listed"}
-    # the atoms of a set are in the order zbackward reports them (sorted, as tuples)
-    poss = [tuple(sorted(s)) for s in poss if s]
-    guar = [tuple(sorted(s)) for s in guar if s]
+    # THE SAME ORDER as zbackward's listing — by size, then as itertools.combinations walks
+    # the sorted grounds (a person reads the first set first; the studio shows the list)
+    def order_key(t):
+        return (len(t), [grounds.index(a) for a in t])
+    poss = sorted((tuple(sorted(s, key=grounds.index)) for s in poss if s), key=order_key)
+    guar = sorted((tuple(sorted(s, key=grounds.index)) for s in guar if s), key=order_key)
     return {"grounds": grounds, "already": False, "possible": poss, "guaranteed": guar,
             "possible_none": not poss, "guaranteed_none": not guar, "target": target}

@@ -52,7 +52,9 @@ def gen(rnd, atoms):
 
 
 def norm(r):
-    return {k: (sorted(r[k]) if isinstance(r[k], list) else r[k]) for k in KEYS}
+    # ORDER COUNTS (2026-10-09: the studio shows the list; a first version matched as sets
+    # and the studio's test caught the order) — compared as given, not sorted
+    return {k: r[k] for k in KEYS}
 
 
 def equivalence(n_formulas=1500, seed=3):

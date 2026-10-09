@@ -14,8 +14,10 @@ Checks:
      target "settled": the tree gives one set, all n grounds; the judge confirms it
      — every filling of all n settles the claim, and leaving any ONE ground open
      admits a filling that does not (so the set is minimal); n = 200 answers too;
-  3. a formula that repeats an unverified ground: not handled (None) — the caller
-     keeps the enumeration; and `zbackward.backward` still answers it as before;
+  3. REPEATED unverified grounds (worlds, second tranche): 800 seeded formulas with
+     1..3 repeated leaves, every target — equal to the uncut enumeration, order
+     included; beyond the old cut, (p & a1..a6) | (~p & b1..b2): the judge confirms
+     the guaranteed set; more than REPEAT_CAP repeated grounds -> None (enumeration);
   4. MUTATION: one entry of the AND table flipped — check 1 must FAIL.
 
 Run:  python3 test_backward_tree.py   -> BACKWARD TREE GREEN
@@ -117,12 +119,57 @@ for a in atoms[1:]:
 r = ZT.backward_tree(phi, {a: Z for a in atoms}, settled)
 check("n = 200: one guaranteed set of all 200 grounds", [len(s) for s in r["guaranteed"]] == [200], str(r)[:200])
 
-print("3. a repeated unverified ground: outside the tranche")
-phi = ("or", ("and", "p", "q"), ("and", "p", "r"))
-mk = {"p": Z, "q": Z, "r": Z}
-check("backward_tree returns None (the caller keeps the enumeration)", ZT.backward_tree(phi, mk, settled) is None)
-r = ZB.backward(phi, mk, settled)
-check("zbackward.backward still answers it (by enumeration)", isinstance(r.get("guaranteed"), list), str(r)[:200])
+print("3. repeated unverified grounds: worlds")
+
+
+def equivalence_repeated(n_formulas=800, seed=21):
+    rnd = random.Random(seed)
+    mism, cases = [], 0
+    for _ in range(n_formulas):
+        n = rnd.randint(2, 6)
+        names = [f"a{j}" for j in range(n)]
+        leaves = names + [rnd.choice(names) for _ in range(rnd.randint(1, 3))]
+        rnd.shuffle(leaves)
+        phi = gen(rnd, leaves)
+        mk = {a: rnd.choice((T, F, Z, Z)) for a in names}
+        for by_d, targets in ((True, ["EARNED", "REFUTED", "ON CREDIT", "OPEN", ZB.TERMINAL]), (False, [T, F])):
+            for tg in targets:
+                ref = ZB.backward(phi, mk, tg, by_disposition=by_d, cap_grounds=99, max_k=99, use_tree=False)
+                new = ZT.backward_tree(phi, mk, tg, by_disposition=by_d)
+                cases += 1
+                if new is None or norm(ref) != norm(new):
+                    mism.append((phi, mk, tg, by_d))
+    return mism, cases
+
+
+mism, cases = equivalence_repeated()
+check(f"{cases} comparisons with repeated grounds: 0 mismatches (order included)", not mism, str(mism[:2]))
+a = [f"a{i}" for i in range(1, 7)]
+b = ["b1", "b2"]
+left = "p"
+for x in a:
+    left = ("and", left, x)
+right = ("and", ("not", "p"), ("and", b[0], b[1]))
+phi = ("or", left, right)
+mk = {x: Z for x in ["p"] + a + b}
+r = ZT.backward_tree(phi, mk, settled)
+g = r["guaranteed"]
+grounds = ["p"] + a + b
+ok_g = bool(g)
+for S in g:              # the judge: every filling of S settles it
+    rest = [x for x in grounds if x not in S]
+    ok_g &= all(disp(phi, dict(dict(zip(S, vals)), **{x: Z for x in rest})) in settled
+                for vals in itertools.product((T, F), repeat=len(S)))
+old = ZB.backward(phi, mk, settled, cap_grounds=99, use_tree=False)
+check(f"(p & a1..a6) | (~p & b1 & b2): {len(g)} guaranteed sets, the largest of {max(map(len, g)) if g else 0} — "
+      f"each confirmed by the judge filling by filling; the old pass: "
+      f"{'blind past size 4' if old.get('не_искал_дальше') else 'answered'}", ok_g and max(map(len, g)) > 4, str(g)[:200])
+many = [f"r{i}" for i in range(ZT.REPEAT_CAP + 1)]
+phi = many[0]
+for x in many[1:] + many:
+    phi = ("and", phi, x)
+check(f"more than REPEAT_CAP = {ZT.REPEAT_CAP} repeated grounds -> None (the caller enumerates)",
+      ZT.backward_tree(phi, {x: Z for x in many}, settled) is None)
 
 print("4. mutation: one AND entry flipped must break check 1")
 saved = dict(ZT.TABLE2["and"])

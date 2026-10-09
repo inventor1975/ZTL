@@ -561,6 +561,13 @@ def _solve_param_system(qs, atoms):
             note += (f"; exact over the linear rows only: {', '.join(loose)} also appear in an "
                      f"equality the system could not read")
         return ranges, pc["contributors"], ("RANK_MANY:" + ("exact:" if exact else "outer:") + note)
+    if pc["reason"] == "" and pc["params"] and not pc["in_A"] and len(pc["rows"]) >= 2:
+        # PARAMETERS ONLY ON THE RIGHT-HAND SIDE, TWO OR MORE EQUALITIES (gap Z3, 2026-10-10).
+        # MEASURED before this: (x + y == p) & (x - y == q) left x and y at (-inf, inf) —
+        # not "outer", unbounded. x = A^-1 b(p) with A constant and b multilinear in the
+        # boxes, so x is multilinear too and its range is attained at the corners: EXACT.
+        # One equality stays where it was (the hull narrowing, the multilinear step).
+        pc = _param_corners(qs, atoms, rhs_only_ok=True)
     if pc["reason"] is not None:
         return {}, set(), (pc["reason"] or None)
     lo, hi = {}, {}

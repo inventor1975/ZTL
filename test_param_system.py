@@ -184,6 +184,42 @@ def main():
     check("TWO rank-two parameters: still refused, named",
           any("rank > 1" in l and "not solved" in l for l in r["log"]), str(r["log"]))
 
+    print("3b. parameters only on the right, two or more equalities (Z3, 2026-10-10)")
+    r = solve_claim("(x + y == p) & (x - y == q)",
+                    *parse_quantities("p=[1,2] credit, q=[0,1] credit, x=? credit, y=? credit"))
+    got = {k: (r["narrowed"][k]["lo"], r["narrowed"][k]["hi"]) for k in "xy"}
+    check("x + y == p, x - y == q: x in [1/2, 3/2], y in [0, 1], exact at the corners (it was (-inf, inf))",
+          got == {"x": (F(1, 2), F(3, 2)), "y": (F(0), F(1))}
+          and all("exact at the corners" in l for l in r["log"] if l[:1] in "xy"), str((got, r["log"])))
+    rng_ = random.Random(53)
+    bad_ = []
+    for _ in range(60):
+        a, b2, c, d = [F(rng_.choice([-3, -2, -1, 1, 2, 3])) for _ in range(4)]
+        if a * d - b2 * c == 0:
+            continue
+        P = (F(rng_.randint(-5, 5)), None); P = (P[0], P[0] + rng_.randint(1, 4))
+        Q = (F(rng_.randint(-5, 5)), None); Q = (Q[0], Q[0] + rng_.randint(1, 4))
+        S = (F(rng_.randint(1, 3)), None); S = (S[0], S[0] + rng_.randint(1, 3))
+        r = solve_claim(f"({a}*x + {b2}*y == p) & ({c}*x + {d}*y == q*s)",
+                        *parse_quantities(f"p=[{P[0]},{P[1]}] credit, q=[{Q[0]},{Q[1]}] credit, "
+                                          f"s=[{S[0]},{S[1]}] credit, x=? credit, y=? credit"))
+        pts = []
+        for i in range(5):
+            for j in range(5):
+                for k in range(5):
+                    pv = P[0] + (P[1] - P[0]) * F(i, 4); qv = Q[0] + (Q[1] - Q[0]) * F(j, 4)
+                    sv = S[0] + (S[1] - S[0]) * F(k, 4)
+                    det = a * d - b2 * c
+                    pts.append(((pv * d - b2 * qv * sv) / det, (a * qv * sv - c * pv) / det, i in (0, 4) and j in (0, 4) and k in (0, 4)))
+        for nm, idx in (("x", 0), ("y", 1)):
+            lo_, hi_ = r["narrowed"][nm]["lo"], r["narrowed"][nm]["hi"]
+            vals = [p_[idx] for p_ in pts]
+            corner = [p_[idx] for p_ in pts if p_[2]]
+            if not (lo_ == min(corner) and hi_ == max(corner) and all(lo_ <= v <= hi_ for v in vals)):
+                bad_.append((a, b2, c, d, nm, lo_, hi_, min(vals), max(vals)))
+    check("60 random 2x2 systems, p, q*s on the right: range == corner hull exactly, 125 grid points inside",
+          not bad_, str(bad_[:2]))
+
     print("4. nothing changes where the floor already worked")
     r = solve_claim("(x + y == 10) & (x <= 9)", *parse_quantities("y=[1,2] credit, x=? credit"))
     check("box only on the right takes the old path, same log line",

@@ -214,6 +214,32 @@ except ZC.NoDerivative:
     nod = True
 check("min/max: no derivative (a monotone leaf refuses them; an interval leaf may still use them)", nod)
 
+print("6b. a branch: ifpos(x, a, b) — a where x > 0, b where x <= 0 (blind test 2, Euler / Johnson)")
+import random as _r
+_rnd = _r.Random(11)
+qb = parse_quantities("L=[50,150] credit, Lc=[90,110] credit, S=[300,400] credit")[0]
+eb = _parse_arith("ifpos(L - Lc, 1000/(L*L), S*(1 - L*L/(2*Lc*Lc)))", qb)
+def fb(L, Lc, S_):
+    return 1000 / (L * L) if L - Lc > 0 else S_ * (1 - L * L / (2 * Lc * Lc))
+whole = ZC._reading(eb, qb, {})
+inside = True
+for _ in range(3000):
+    L, Lc, S_ = (F(_rnd.randint(5000, 15000), 100), F(_rnd.randint(9000, 11000), 100), F(_rnd.randint(300, 400)))
+    v = fb(L, Lc, S_)
+    inside &= whole[0] <= v <= whole[1]
+    pt = ZC._reading(eb, qb, {"L": (L, L), "Lc": (Lc, Lc), "S": (S_, S_)})
+    inside &= pt[0] <= v <= pt[1]
+check("branch: 3000 random points inside the whole reading and inside their own point reading", inside)
+check("branch: decided -> exactly that branch's reading (L < Lc everywhere: Johnson only)",
+      ZC._reading(eb, qb, {"L": (F(50), F(60))}) == ZC._reading(
+          _parse_arith("S*(1 - L*L/(2*Lc*Lc))", qb), qb, {"L": (F(50), F(60))}))
+d_b = ZC.derivative(eb, "L")
+check("branch: its derivative is NOT read across the switch (a jump would pass as monotone)",
+      ZC._reading(d_b, qb, {}) is None and ZC._reading(d_b, qb, {"L": (F(120), F(150))}) is not None)
+jump = _parse_arith("ifpos(L - 100, 10, 0)", qb)
+check("branch: a pure jump is never 'constant' — its derivative across the switch has no reading",
+      ZC._reading(ZC.derivative(jump, "L"), qb, {}) is None)
+
 print("7. mutation")
 real = Z.exp_pt
 

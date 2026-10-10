@@ -321,6 +321,37 @@ def iv_max(a, b):
     return max(a[0], b[0]), max(a[1], b[1])
 
 
+def _side(x):
+    """+1 when x > 0 everywhere, -1 when x <= 0 everywhere, 0 when the reading does not decide."""
+    if x[0] > 0:
+        return 1
+    if x[1] <= 0:
+        return -1
+    return 0
+
+
+def iv_ifpos(x, a, b):
+    """A BRANCH (blind test 2, 2026-10-10: Euler or Johnson by slenderness): a where x > 0, b where x <= 0.
+    Decided over the whole reading -> that branch; not decided -> the hull of both (every value either
+    branch can take): sound, may be wide. a or b may be None when that branch is not needed."""
+    s = _side(x)
+    if s == 1:
+        return a
+    if s == -1:
+        return b
+    if a is None or b is None:
+        return None
+    return min(a[0], b[0]), max(a[1], b[1])
+
+
+def iv_ifpos_d(x, a, b):
+    """The DERIVATIVE of a branch: only where the branch is decided. Across the switch the function may
+    jump, so a sign of 'the derivative' there says nothing about monotonicity: no reading (None)."""
+    s = _side(x)
+    return a if s == 1 else (b if s == -1 else None)
+
+
 UNARY = {"exp": iv_exp, "ln": iv_ln, "log10": iv_log10, "atan": iv_atan, "tan": iv_tan}
 BINARY = {"pow": iv_pow, "min": iv_min, "max": iv_max}
-FUNC_OPS = set(UNARY) | set(BINARY)
+TERNARY = {"ifpos": iv_ifpos, "ifpos_d": iv_ifpos_d}
+FUNC_OPS = set(UNARY) | set(BINARY) | set(TERNARY)

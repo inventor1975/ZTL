@@ -94,6 +94,12 @@ def derivative(e, name):
         return ONE if e == name else ZERO
     op, *args = e
     # FUNCTIONS (zfunc, 2026-10-10)
+    if op in ("ifpos", "ifpos_d"):            # a branch: the branch's derivative where decided, else no reading
+        x, a, b = args
+        da, db = derivative(a, name), derivative(b, name)
+        if _is0(da) and _is0(db) and op == "ifpos" and name not in _names(x):
+            return ZERO
+        return ("ifpos_d", x, da, db)
     if op in ("min", "max"):
         if name in _names(e):
             raise NoDerivative(f"{op} has no derivative where its arguments cross")

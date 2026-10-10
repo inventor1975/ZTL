@@ -1443,6 +1443,23 @@ def _ev(expr, quantities):
             step = step if (step is not None and st == step) else None
             iv, ped, used = _iv_add(iv, r), ped | p, used | u
         return iv, ped, used, step, unit
+    if op in _zf.TERNARY:
+        # A BRANCH (blind test 2, 2026-10-10): the condition is read first; a decided condition reads only
+        # its branch (the other may be undefined there), an undecided one reads both. x's unit is free (a
+        # sign is read), the branches share theirs.
+        rx, px, ux, _, _ = _ev(args[0], quantities)
+        side = _zf._side(rx) if rx is not None and not any(isinstance(v, float) for v in rx) else 0
+        want = [1] if side == 1 else ([2] if side == -1 else [1, 2])
+        evs = {i: _ev(args[i], quantities) for i in want}
+        ped = px.union(*[e[1] for e in evs.values()])
+        used = ux.union(*[e[2] for e in evs.values()])
+        units = [e[4] for e in evs.values()]
+        unit = units[0] if len(units) == 1 else _unify_units(units[0], units[1], "add")
+        if rx is None or any(e[0] is None for e in evs.values()):
+            return None, ped, used, None, unit
+        a = evs[1][0] if 1 in evs else None
+        b = evs[2][0] if 2 in evs else None
+        return _zf.TERNARY[op](rx, a, b), ped, used, None, unit
     if op in _FUNC_OPS:
         # FUNCTIONS (zfunc.py, 2026-10-10): a proved bracket of rationals, never a rounding.
         # A transcendental function reads a DIMENSIONLESS argument; pow(x, n) with n a point

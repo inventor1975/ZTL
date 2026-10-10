@@ -194,7 +194,7 @@ def _parse_arith(s, quantities):
     # FUNCTIONS (zfunc, 2026-10-10): exp ln log10 atan tan with one argument, pow min max
     # with two, split at the top-level comma. Same rule as sqrt: only when the parenthesis
     # the name opens is the one that ends the text.
-    m = re.match(r"^(exp|ln|log10|atan|tan|pow|min|max)\(", s)
+    m = re.match(r"^(exp|ln|log10|atan|tan|pow|min|max|ifpos_d|ifpos)\(", s)
     if m and s.endswith(")") and _closes_last(s, len(m.group(1))):
         inner = s[len(m.group(1)) + 1:-1]
         parts, depth, start = [], 0, 0
@@ -207,7 +207,7 @@ def _parse_arith(s, quantities):
                 parts.append(inner[start:i])
                 start = i + 1
         parts.append(inner[start:])
-        want = 2 if m.group(1) in ("pow", "min", "max") else 1
+        want = 2 if m.group(1) in ("pow", "min", "max") else (3 if m.group(1).startswith("ifpos") else 1)
         if len(parts) != want:
             raise ValueError(f"{m.group(1)} takes {want} argument(s), got {len(parts)}: {s!r}")
         return (m.group(1), *[_parse_arith(x, quantities) for x in parts])

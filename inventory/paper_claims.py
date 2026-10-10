@@ -225,7 +225,9 @@ if __name__ == "__main__":
             check("test stands", claimed, str(stand_count()), doc)
     lake = subprocess.run(["lake", "build"], cwd=_LEAN, capture_output=True,
                           text=True, timeout=1800)
-    prints = (lake.stdout + lake.stderr).count("does not depend on any axioms")
+    # ZTL's own prints: VR's numbers, built from lean/vr for ZSlope (2026-10-10), print VR's ledger
+    prints = sum(1 for line in (lake.stdout + lake.stderr).splitlines()
+                 if "does not depend on any axioms" in line and "vr/VR/" not in line)
     for claimed in set(family("hand-placed #print axioms", d,
                               r"(\d+) hand-placed prints", doc,
                               required=False)):

@@ -1,6 +1,7 @@
 __pycache__/
 *.pyc
 lean/.lake/
+lean/vr
 blueprint/web/
 OLD/
 lean/BridgeGen.lean

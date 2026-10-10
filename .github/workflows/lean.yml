@@ -13,6 +13,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      # VR's operational numbers (ZSlope): READ from VRCycle at a pinned commit, not copied.
+      # Only their import closure (seven VR modules, core Lean, no mathlib) is built.
+      - uses: actions/checkout@v4
+        with:
+          repository: inventor1975/VRCycle
+          ref: de72f58d6ed8d3cc9d31a40a5f88b27d4cad5414
+          path: lean/vr
       - uses: leanprover/lean-action@v1
         with:
           lake-package-directory: lean
@@ -23,12 +30,13 @@ jobs:
         working-directory: lean
         run: |
           lake build > build.log 2>&1
-          clean=$(grep -c "does not depend on any axioms" build.log || true)
+          # ZTL's own prints only (VR's, under vr/, are VR's ledger); "dirty" counts both
+          clean=$(grep -v "vr/VR/" build.log | grep -c "does not depend on any axioms" || true)
           dirty=$(grep -c "depends on axioms" build.log || true)
           echo "zero-axiom checks: $clean; dirty: $dirty"
           test "$dirty" -eq 0
-          test "$clean" -ge 699
-      # The hand-placed prints cover 699 names of 1361 theorems; the rest are
+          test "$clean" -ge 711
+      # The hand-placed prints cover 711 names of 1373 theorems; the rest are
       # covered transitively, which is an ARGUMENT. This audits every
       # theorem individually, and fails on an orphan module that no
       # target builds.

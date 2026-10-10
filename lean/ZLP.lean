@@ -13,8 +13,10 @@ raises the cost, so the kernel's `L` bounds the cost of every feasible mix — w
 `y` gives a weak bound, never a false one).
 
 PREMISE, said rather than hidden: `min_sound` — that the kernel's box-minimum of the affine right side lies
-below its value at every point of the box (interval arithmetic on the affine form; the kernel computes it
-with exact fractions). The order laws are parameters (`ORing`), nothing borrowed, as in ZCertify — and for the
+below its value at every point of the box. Since 2026-10-10 it is PROVED for the kernel's reading
+(`corner_below`, `affine_min_sound`; `lower_bound_sound_box` is the chain without it): what stays a premise is
+that the expression equals its affine form with coefficients in the read intervals (`zlp.affine`). "No mix
+exists" (Farkas) is `infeasible_sound`. The order laws are parameters (`ORing`), nothing borrowed, as in ZCertify — and for the
 same reason: an `ORing Int` built from core's lemmas carries `propext` (probed 2026-10-10: `Int.add_comm`,
 `Int.le_trans` …), so the theorems stay axiom-free by taking the laws as given, not by importing them.
 -/
@@ -89,9 +91,141 @@ theorem infeasible_sound (R : ORing α) (M : α) (l : List (α × α))
     ¬ (∀ yh, List.Mem yh l → R.le R.zero yh.1 ∧ R.le R.zero yh.2) :=
   fun feasible => neg (R.le_trans (wsum_nonneg R l feasible) max_sound)
 
+/-! ## The box-minimum, proved (2026-10-10): `min_sound` is no longer a premise
+
+The kernel reads the minimum of an affine form `e0 + Σ c_i·x_i` over a box — each coefficient `c_i` in an
+interval (from the data), each choice `x_i` in its range — as `e0_lo + Σ m_i`, where `m_i` is the least of the
+four corner products of `c_i`'s and `x_i`'s ends (`zlp._mul_iv`). Proved here for any ordered ring given by its
+laws: the corners bound every product (`corner_below`), so the reading bounds every value of the form
+(`affine_min_sound`). What stays a premise is that the expression EQUALS its affine form with coefficients in
+the read intervals — the kernel's affinity check (`zlp.affine`, derivatives by `zcertify.derivative`). -/
+
+/-- The multiplication laws the corner argument uses, beside the ring's (no typeclass, nothing borrowed). -/
+structure OMul (α : Type) extends ORing α where
+  mul_comm : ∀ a b, mul a b = mul b a
+  le_total : ∀ a b, le a b ∨ le b a
+  mul_le_mul_nonneg : ∀ {c a b}, le zero c → le a b → le (mul c a) (mul c b)
+  mul_le_mul_nonpos : ∀ {c a b}, le c zero → le a b → le (mul c b) (mul c a)
+  add_le_add_right : ∀ {a b} (c : α), le a b → le (add a c) (add b c)
+
+/-- THE CORNERS BOUND THE PRODUCT. `C` below all four corner products of `[a1, a2] × [x1, x2]`: then `C ≤ a·x`
+for every `a` and `x` in their intervals. Constructive: `le_total` is a law, cases on it are on a given `Or`. -/
+theorem corner_below (R : OMul α) {a1 a2 x1 x2 a x C : α}
+    (ha1 : R.le a1 a) (ha2 : R.le a a2) (hx1 : R.le x1 x) (hx2 : R.le x x2)
+    (c11 : R.le C (R.mul a1 x1)) (c12 : R.le C (R.mul a1 x2))
+    (c21 : R.le C (R.mul a2 x1)) (c22 : R.le C (R.mul a2 x2)) :
+    R.le C (R.mul a x) := by
+  cases R.le_total R.zero x with
+  | inl hx =>
+      -- 0 ≤ x: a1·x ≤ a·x
+      have h1 : R.le (R.mul a1 x) (R.mul a x) := by
+        have := R.mul_le_mul_nonneg hx ha1
+        rw [R.mul_comm x a1, R.mul_comm x a] at this
+        exact this
+      cases R.le_total R.zero a1 with
+      | inl hp => exact R.le_trans c11 (R.le_trans (R.mul_le_mul_nonneg hp hx1) h1)
+      | inr hn => exact R.le_trans c12 (R.le_trans (R.mul_le_mul_nonpos hn hx2) h1)
+  | inr hx =>
+      -- x ≤ 0: a2·x ≤ a·x
+      have h2 : R.le (R.mul a2 x) (R.mul a x) := by
+        have := R.mul_le_mul_nonpos hx ha2
+        rw [R.mul_comm x a2, R.mul_comm x a] at this
+        exact this
+      cases R.le_total R.zero a2 with
+      | inl hp => exact R.le_trans c21 (R.le_trans (R.mul_le_mul_nonneg hp hx1) h2)
+      | inr hn => exact R.le_trans c22 (R.le_trans (R.mul_le_mul_nonpos hn hx2) h2)
+
+/-- Sums keep the order: `a ≤ b`, `c ≤ d` give `a + c ≤ b + d`. -/
+theorem add_le_add (R : OMul α) {a b c d : α} (h1 : R.le a b) (h2 : R.le c d) :
+    R.le (R.add a c) (R.add b d) :=
+  R.le_trans (R.add_le_add_right c h1) (R.add_le_add_left b h2)
+
+/-- One term of the affine form: the coefficient `c` in `[c1, c2]`, the choice `x` in `[x1, x2]`, and the
+kernel's `m` — below all four corners. -/
+structure Term (α : Type) where
+  (c1 c2 c x1 x2 x m : α)
+
+/-- What the kernel checks of a term (the ends hold the value; `m` below every corner). -/
+def TermOK (R : OMul α) (t : Term α) : Prop :=
+  R.le t.c1 t.c ∧ R.le t.c t.c2 ∧ R.le t.x1 t.x ∧ R.le t.x t.x2 ∧
+  R.le t.m (R.mul t.c1 t.x1) ∧ R.le t.m (R.mul t.c1 t.x2) ∧
+  R.le t.m (R.mul t.c2 t.x1) ∧ R.le t.m (R.mul t.c2 t.x2)
+
+/-- The kernel's reading `Σ m` and the value `Σ c·x`. -/
+def sumM (R : OMul α) : List (Term α) → α
+  | [] => R.zero
+  | t :: rest => R.add t.m (sumM R rest)
+
+def sumV (R : OMul α) : List (Term α) → α
+  | [] => R.zero
+  | t :: rest => R.add (R.mul t.c t.x) (sumV R rest)
+
+/-- THE BOX-MINIMUM IS SOUND. Every term checked: the kernel's `e0_lo + Σ m` is at most `e0 + Σ c·x` — for every
+value of the coefficients and every choice in the box. -/
+theorem affine_min_sound (R : OMul α) (e0lo e0 : α) (h0 : R.le e0lo e0) :
+    ∀ (l : List (Term α)), (∀ t, List.Mem t l → TermOK R t) →
+      R.le (R.add e0lo (sumM R l)) (R.add e0 (sumV R l)) := by
+  intro l hl
+  apply add_le_add R h0
+  induction l with
+  | nil => exact R.le_refl _
+  | cons t rest ih =>
+      have ht := hl t (List.Mem.head rest)
+      have hm : R.le t.m (R.mul t.c t.x) :=
+        corner_below R ht.1 ht.2.1 ht.2.2.1 ht.2.2.2.1 ht.2.2.2.2.1 ht.2.2.2.2.2.1 ht.2.2.2.2.2.2.1
+          ht.2.2.2.2.2.2.2
+      exact add_le_add R hm (ih (fun z hz => hl z (List.Mem.tail t hz)))
+
+/-- WEAK DUALITY WITH THE BOX-MINIMUM PROVED. Feasible mix, multipliers `y ≥ 0`; the expression `cost − Σ y·h`
+equal to its affine form `e0 + Σ c·x` (`affine`, the kernel's affinity check — the one premise left); every term
+checked. Then the kernel's `L = e0_lo + Σ m` bounds the cost. -/
+theorem lower_bound_sound_box (R : OMul α) (cost e0lo e0 : α) (l : List (α × α)) (ts : List (Term α))
+    (feasible : ∀ yh, List.Mem yh l → R.le R.zero yh.1 ∧ R.le R.zero yh.2)
+    (affine : R.add cost (R.neg (wsum R.toORing l)) = R.add e0 (sumV R ts))
+    (h0 : R.le e0lo e0) (hts : ∀ t, List.Mem t ts → TermOK R t) :
+    R.le (R.add e0lo (sumM R ts)) cost := by
+  apply lower_bound_sound R.toORing cost _ l feasible
+  rw [affine]
+  exact affine_min_sound R e0lo e0 h0 ts hts
+
+/-- NONVACUITY: the integers satisfy every law (built from core's `Int` lemmas, which carry `propext` — so this
+instance is NOT among the zero-axiom theorems; it only shows the laws describe a real ordered ring). -/
+def intOMul : OMul Int where
+  zero := 0
+  add := (· + ·)
+  neg := (- ·)
+  mul := (· * ·)
+  le := (· ≤ ·)
+  le_refl := Int.le_refl
+  le_trans := Int.le_trans
+  add_comm := Int.add_comm
+  add_assoc := Int.add_assoc
+  add_zero := Int.add_zero
+  add_neg := Int.add_right_neg
+  add_le_add_left := fun c h => Int.add_le_add_left h c
+  mul_nonneg := Int.mul_nonneg
+  zero_add_zero := rfl
+  mul_comm := Int.mul_comm
+  le_total := Int.le_total
+  mul_le_mul_nonneg := fun hc h => Int.mul_le_mul_of_nonneg_left h hc
+  mul_le_mul_nonpos := fun hc h => Int.mul_le_mul_of_nonpos_left hc h
+  add_le_add_right := fun c h => Int.add_le_add_right h c
+
+/-- The corners at work on ℤ: `a ∈ [-2, 3]`, `x ∈ [-1, 4]`, corner minimum −8 ≤ a·x at a = −2, x = 4. -/
+example : intOMul.le (-8) (intOMul.mul (-2) 4) :=
+  corner_below intOMul (a1 := -2) (a2 := 3) (x1 := -1) (x2 := 4)
+    (show (-2 : Int) ≤ -2 by decide) (show (-2 : Int) ≤ 3 by decide)
+    (show (-1 : Int) ≤ 4 by decide) (show (4 : Int) ≤ 4 by decide)
+    (show (-8 : Int) ≤ (-2) * (-1) by decide) (show (-8 : Int) ≤ (-2) * 4 by decide)
+    (show (-8 : Int) ≤ 3 * (-1) by decide) (show (-8 : Int) ≤ 3 * 4 by decide)
+
 end ZLP
 
 #print axioms ZLP.wsum_nonneg
 #print axioms ZLP.sub_le
 #print axioms ZLP.lower_bound_sound
 #print axioms ZLP.infeasible_sound
+#print axioms ZLP.corner_below
+#print axioms ZLP.add_le_add
+#print axioms ZLP.affine_min_sound
+#print axioms ZLP.lower_bound_sound_box

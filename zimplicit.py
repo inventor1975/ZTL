@@ -68,9 +68,16 @@ def check_implicit(g, q, qs, cert):
         at = b
     if at != shi:
         return False, f"the pieces stop at {at}, not {shi}"
-    # 2. EXCLUSION: on a "none" piece g's reading over the piece × the whole box excludes 0
+    # 2. EXCLUSION: on a "none" piece g's reading over the piece × the whole box excludes 0 — or, with a
+    #    "split", every part of a partition of the box does (the kernel checks the partition tiles the box)
+    splits = {(Fraction(str(p["lo"])), Fraction(str(p["hi"]))): p.get("split") for p in cert["pieces"]
+              if isinstance(p, dict) and p.get("split") is not None}
     for a, b, kind in pieces:
         if kind == "none":
+            if (a, b) in splits:
+                if not _check_tree(g, q, qs, box, (a, b), splits[(a, b)]):
+                    return False, f"q in [{a}, {b}] marked rootless by a partition the kernel does not accept"
+                continue
             s = _sign(_reading(g, qs, dict(box, **{q: (a, b)})))
             if s in (None, 0):
                 return False, f"q in [{a}, {b}] marked rootless, but g's reading there does not exclude 0"
@@ -149,14 +156,155 @@ def check_implicit(g, q, qs, cert):
 
 
 # ---------------------------------------------------------------- the SEARCH (outside the check)
-def search_certificate(g, q, qs, search, depth=40, max_pieces=4000, bracket_steps=200):
+def _split_tree(g, q, qs, whole, box, piece, budget):
+    """A partition of the parameter box on which every part's reading excludes a root for q in piece —
+    or None. Halves the parameter widest relative to the whole box. budget: [readings left]."""
+    budget[0] -= 1
+    if budget[0] < 0:
+        return None
+    if _sign(_reading(g, qs, dict(box, **{q: piece}))) in (1, -1):
+        return {"leaf": True}
+    v = max(box, key=lambda n: (box[n][1] - box[n][0]) / (whole[n][1] - whole[n][0]))
+    m = (box[v][0] + box[v][1]) / 2
+    left = _split_tree(g, q, qs, whole, dict(box, **{v: (box[v][0], m)}), piece, budget)
+    if left is None:
+        return None
+    right = _split_tree(g, q, qs, whole, dict(box, **{v: (m, box[v][1])}), piece, budget)
+    if right is None:
+        return None
+    return {"param": v, "at": str(m), "parts": [left, right]}
+
+
+def _check_tree(g, q, qs, box, piece, tree, depth=0):
+    """The KERNEL's check of a partition: it tiles the box (each cut strictly inside its part), and every
+    leaf's own reading excludes 0 for q in piece."""
+    if depth > 200 or not isinstance(tree, dict):
+        return False
+    if tree.get("leaf") is True and len(tree) == 1:
+        return _sign(_reading(g, qs, dict(box, **{q: piece}))) in (1, -1)
+    try:
+        v, at, parts = tree["param"], Fraction(str(tree["at"])), tree["parts"]
+    except (KeyError, ValueError, TypeError, ZeroDivisionError):
+        return False
+    if v not in box or not (box[v][0] < at < box[v][1]) or not isinstance(parts, list) or len(parts) != 2:
+        return False
+    return (_check_tree(g, q, qs, dict(box, **{v: (box[v][0], at)}), piece, parts[0], depth + 1) and
+            _check_tree(g, q, qs, dict(box, **{v: (at, box[v][1])}), piece, parts[1], depth + 1))
+
+
+def search_certificate(g, q, qs, search, depth=40, max_pieces=4000, bracket_steps=200, split_budget=0,
+                       goal=None, goal_budget=3000, tighten=0, tighten_budget=400):
+    """goal = (lo, hi), either end None: the range a requirement asks of q. When the plain enclosure leaves
+    it, ONE partition of the parameter box is searched to exclude every root beyond the goal (2026-10-10,
+    blind test 2, the oil cooler: Tho <= 62 C needed; the plain hull was 72.7, the partition gives 60.4)."""
+    cert = _search_plain(g, q, qs, search, depth, max_pieces, bracket_steps, split_budget)
+    if cert is None:
+        return cert
+    if tighten and not cert.get("corners"):
+        # no tight corners: pull each edge of the hull inward by bisection, each step ONE partition attempt
+        kept = [(Fraction(p["lo"]), Fraction(p["hi"])) for p in cert["pieces"] if p["kind"] == "kept"]
+        if kept:
+            lo_e, hi_e = kept[0][0], kept[-1][1]
+            glo = goal[0] if goal and goal[0] is not None else None
+            ghi = goal[1] if goal and goal[1] is not None else None
+            names_t = sorted(n for n in ZC._names(g) if n in qs and n != q and qs[n]["lo"] < qs[n]["hi"])
+            box_t = {n: (qs[n]["lo"], qs[n]["hi"]) for n in names_t}
+            if names_t:
+                best_hi, a, b = hi_e, lo_e + (hi_e - lo_e) / 2, hi_e
+                for _ in range(tighten):            # largest excluded [x, hi_e]: x as low as possible
+                    m = (a + b) / 2
+                    if _split_tree(g, q, qs, box_t, box_t, (m, hi_e), [tighten_budget]) is not None:
+                        best_hi, b = m, m
+                    else:
+                        a = m
+                best_lo, a, b = lo_e, lo_e, lo_e + (hi_e - lo_e) / 2
+                for _ in range(tighten):
+                    m = (a + b) / 2
+                    if _split_tree(g, q, qs, box_t, box_t, (lo_e, m), [tighten_budget]) is not None:
+                        best_lo, a = m, m
+                    else:
+                        b = m
+                ghi = best_hi if ghi is None else min(Fraction(str(ghi)), best_hi) if best_hi < hi_e else ghi
+                glo = best_lo if glo is None else max(Fraction(str(glo)), best_lo) if best_lo > lo_e else glo
+                goal = (glo if (glo is not None and glo > lo_e) else None, ghi if (ghi is not None and ghi < hi_e) else None)
+    if not goal or (goal[0] is None and goal[1] is None):
+        return cert
+    names = sorted(n for n in ZC._names(g) if n in qs and n != q and qs[n]["lo"] < qs[n]["hi"])
+    box = {n: (qs[n]["lo"], qs[n]["hi"]) for n in names}
+    if not names:
+        return cert
+    pieces = [(Fraction(p["lo"]), Fraction(p["hi"]), p["kind"], p.get("split")) for p in cert["pieces"]]
+    changed, made = False, []
+    for side in ("hi", "lo"):
+        cut = goal[1] if side == "hi" else goal[0]
+        if cut is None:
+            continue
+        cut = Fraction(str(cut))
+        kept = [(a, b) for a, b, k, _ in pieces if k == "kept"]
+        if not kept:
+            break
+        edge = kept[-1][1] if side == "hi" else kept[0][0]
+        if (side == "hi" and edge <= cut) or (side == "lo" and edge >= cut):
+            continue
+        span = (cut, edge) if side == "hi" else (edge, cut)
+        t = _split_tree(g, q, qs, box, box, span, [goal_budget])
+        if t is None:
+            continue
+        made.append(t)
+        # re-tile: everything beyond the cut becomes ONE rootless piece carrying the partition
+        new = []
+        for a, b, k, tr in pieces:
+            if side == "hi":
+                if b <= cut:
+                    new.append((a, b, k, tr))
+                elif a < cut:
+                    new.append((a, cut, k, tr if k == "none" else None))
+            else:
+                if a >= cut:
+                    new.append((a, b, k, tr))
+                elif b > cut:
+                    new.append((cut, b, k, tr if k == "none" else None))
+        if side == "hi":
+            new.append((cut, edge, "none", t))
+            new += [(a, b, k, tr) for a, b, k, tr in pieces if a >= edge]
+        else:
+            new = [(a, b, k, tr) for a, b, k, tr in pieces if b <= edge] + [(edge, cut, "none", t)] + new
+        # every rootless piece must still be one: a partition is kept only on its own span; a cut piece
+        # without one is read again plainly, and one that no longer reads rootless becomes kept (sound)
+        pieces = []
+        for a, b, k, tr in new:
+            if k == "none" and tr is not None and not any(tr is x for x in made):
+                tr = None
+            if k == "none" and tr is None and _sign(_reading(g, qs, dict(box, **{q: (a, b)}))) not in (1, -1):
+                k = "kept"
+            pieces.append((a, b, k, tr))
+        changed = True
+    if not changed:
+        return cert
+    return {"search": cert["search"],
+            "pieces": [dict({"lo": str(a), "hi": str(b), "kind": k}, **({"split": tr} if k == "none" and tr else {}))
+                       for a, b, k, tr in pieces]}
+
+
+def _search_plain(g, q, qs, search, depth, max_pieces, bracket_steps, split_budget):
     """A certificate for check_implicit, found by bisection. The kernel does not trust it."""
     names = sorted(n for n in ZC._names(g) if n in qs and n != q and qs[n]["lo"] < qs[n]["hi"])
     box = {n: (qs[n]["lo"], qs[n]["hi"]) for n in names}
     lo, hi = (Fraction(str(x)) for x in search)
 
+    trees = {}
+
     def kind(a, b):
-        return "none" if _sign(_reading(g, qs, dict(box, **{q: (a, b)}))) in (1, -1) else "kept"
+        if _sign(_reading(g, qs, dict(box, **{q: (a, b)}))) in (1, -1):
+            return "none"
+        if split_budget and names:
+            # the whole box does not exclude a root here: try a PARTITION of the parameter box (2026-10-10,
+            # blind test 2, the oil cooler: with the affine reading, 85 parts exclude what 4000 plain could not)
+            t = _split_tree(g, q, qs, box, box, (a, b), [split_budget])
+            if t is not None:
+                trees[(a, b)] = t
+                return "none"
+        return "kept"
 
     # level by level; only a kept piece at the EDGE of a kept run is split again (an interior one
     # holds roots for some p anyway — a box of parameters sweeps the root over a whole interval,
@@ -189,7 +337,9 @@ def search_certificate(g, q, qs, search, depth=40, max_pieces=4000, bracket_step
         else:
             merged.append((a, b, k))
     cert = {"search": [str(lo), str(hi)],
-            "pieces": [{"lo": str(a), "hi": str(b), "kind": k} for a, b, k in merged]}
+            "pieces": [dict({"lo": str(a), "hi": str(b), "kind": k},
+                            **({"split": trees[(a, b)]} if k == "none" and (a, b) in trees else {}))
+                       for a, b, k in merged]}
     kept = [(a, b) for a, b, k in merged if k == "kept"]
     if not kept:
         return cert

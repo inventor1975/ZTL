@@ -156,6 +156,7 @@ STANDS = [
     ("test_certify.py", ["CERTIFY GREEN"]),
     ("test_zfunc.py", ["ZFUNC GREEN"]),
     ("test_implicit.py", ["IMPLICIT GREEN"]),
+    ("test_affine.py", ["AFFINE GREEN"]),
     ("znumsolve.py",   ["ZNUMSOLVE GREEN", "x in [5, 5]",
                         "a in [6, 6], b in [4, 4]",
                         "solutions dropped by narrowing: 0",

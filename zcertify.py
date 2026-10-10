@@ -48,7 +48,8 @@ from fractions import Fraction
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from znum import _ev                               # noqa: E402
+from znum import _ev, _rat_sqrt                    # noqa: E402
+import zaffine as _ZA                              # noqa: E402
 
 ZERO, ONE = Fraction(0), Fraction(1)
 
@@ -177,7 +178,25 @@ def _reading(e, qs, piece):
     lo, hi = iv
     if isinstance(lo, float) or isinstance(hi, float):
         return None           # an infinite end: nothing certified from it
+    # AFFINE reading (zaffine.py, 2026-10-10): remembers which input a spread came from; intersected with
+    # the plain one — both enclose, the meet is never wider. Not applied to a POINT reading (nothing to gain).
+    if AFFINE and any(qs[n]["lo"] != qs[n]["hi"] if n not in piece else piece[n][0] != piece[n][1]
+                      for n in _names(e) if n in qs):
+        af = _ZA.read(e, qs, piece, _rat_sqrt, lambda n: _plain(n, q2))
+        if af is not None and af[0] <= hi and af[1] >= lo:
+            lo, hi = max(lo, af[0]), min(hi, af[1])
     return lo, hi
+
+
+AFFINE = True
+
+
+def _plain(e, q2):
+    try:
+        iv = _ev(e, q2)[0]
+    except (ZeroDivisionError, KeyError, ValueError, ArithmeticError):
+        return None
+    return iv
 
 
 def check(expr, quantities, op, bound, cert):

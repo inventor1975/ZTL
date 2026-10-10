@@ -56,13 +56,22 @@ jobs:
       # left the in-regression run without it, so the stand reported
       # "sheet: says 9, measured None" and the workflow was RED on every push
       # from 2026-07-22 onward. The corpus was never at fault.
+      # 2026-10-10: RED on every push since 2026-10-08 — `apt-get install` WITHOUT `apt-get update`,
+      # silenced by `|| true`, failed quietly on fresh runner images, so `pdfinfo` was missing and
+      # paper_claims went red while every stand was green locally. Now: update first, and a failed
+      # install fails THIS step, loudly, instead of a stand three steps later.
       - name: page-count tool for the paper claims
-        run: sudo apt-get install -y poppler-utils >/dev/null 2>&1 || true
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq poppler-utils
+          pdfinfo -v
+      # test_zfunc.py checks the function brackets against mpmath (60 digits): a reference
+      # implementation the brackets do not share code with (2026-10-10)
+      - name: reference library for the function brackets
+        run: pip install mpmath
       - name: all stands + Lean
         run: python3 run_all.py
       # The papers are claims too. Until 2026-07-20 nothing checked that
       # their numbers matched the corpus, and two of them did not.
       - name: paper claims
-        run: |
-          sudo apt-get install -y poppler-utils >/dev/null 2>&1 || true
-          python3 inventory/paper_claims.py
+        run: python3 inventory/paper_claims.py

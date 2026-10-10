@@ -155,6 +155,7 @@ STANDS = [
     ("test_backward_tree.py", ["BACKWARD TREE GREEN"]),
     ("test_certify.py", ["CERTIFY GREEN"]),
     ("test_zfunc.py", ["ZFUNC GREEN"]),
+    ("test_implicit.py", ["IMPLICIT GREEN"]),
     ("znumsolve.py",   ["ZNUMSOLVE GREEN", "x in [5, 5]",
                         "a in [6, 6], b in [4, 4]",
                         "solutions dropped by narrowing: 0",

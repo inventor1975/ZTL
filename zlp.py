@@ -52,6 +52,71 @@ def _mul_iv(a, b):
     return min(ps), max(ps)
 
 
+def _qs_for(qs_con, i):
+    """One box for every constraint, or one per constraint (each mode its own data: 2026-10-10)."""
+    return qs_con[i] if isinstance(qs_con, list) else qs_con
+
+
+def _remainders(constraints, qs_con, xs, ys, points):
+    """[(y, h0, hx)] — each constraint as a remainder h = g - b >= 0 (or b - g), affine in xs, read by the
+    kernel (at its point, when one is given and lies in the box). Raises NotAffine / ValueError."""
+    points = points or [None] * len(constraints)
+    if len(points) != len(constraints):
+        raise ValueError("one point (or none) per constraint")
+    out = []
+    for i, ((node, op, bound), y, pt) in enumerate(zip(constraints, ys, points)):
+        if y == 0:
+            continue
+        q = _qs_for(qs_con, i)
+        piece = {}
+        for n, v in (pt or {}).items():
+            v = Fraction(str(v))
+            if n not in q or n in xs or not (q[n]["lo"] <= v <= q[n]["hi"]):
+                raise ValueError(f"the point's {n} = {v} is not inside its box")
+            piece[n] = (v, v)
+        d0, dx = affine(node, xs, q, piece)
+        b = Fraction(str(bound))
+        if op == ">=":
+            out.append((y, (d0[0] - b, d0[1] - b), dx))
+        elif op == "<=":
+            out.append((y, (b - d0[1], b - d0[0]), {x: (-v[1], -v[0]) for x, v in dx.items()}))
+        else:
+            raise ValueError(f"op {op!r}")
+    return out
+
+
+def infeasible(constraints, qs_con, xs, ys, points=None):
+    """(True, M) when NO x in the box meets every constraint for every value of the data — a FARKAS certificate:
+    with y >= 0, the box-MAXIMUM M of sum y_i h_i(x) is below zero, while a feasible x would make it >= 0.
+    (False, reason) otherwise. Blind test 3: "the robust LP found no mix" was reported as no proof at all."""
+    if len(ys) != len(constraints):
+        return False, "one multiplier per constraint"
+    try:
+        ys = [Fraction(str(y)) for y in ys]
+    except (ValueError, ZeroDivisionError, TypeError):
+        return False, "a multiplier is not a number"
+    if any(y < 0 for y in ys) or not any(y > 0 for y in ys):
+        return False, "multipliers must be >= 0 and not all zero"
+    for x, (lo, hi) in xs.items():
+        if isinstance(lo, float) or isinstance(hi, float) or lo > hi:
+            return False, f"{x}: an infinite or empty range"
+    try:
+        terms = _remainders(constraints, qs_con, xs, ys, points)
+    except (NotAffine, ValueError) as e:
+        return False, str(e)
+    s0 = (Fraction(0), Fraction(0))
+    sx = {}
+    for y, h0, hx in terms:
+        s0 = (s0[0] + y * h0[0], s0[1] + y * h0[1])
+        for x, v in hx.items():
+            a = sx.get(x, (Fraction(0), Fraction(0)))
+            sx[x] = (a[0] + y * v[0], a[1] + y * v[1])
+    M = s0[1]
+    for x, (lo, hi) in xs.items():
+        M += _mul_iv(sx.get(x, (Fraction(0), Fraction(0))), (lo, hi))[1]
+    return (True, M) if M < 0 else (False, f"the box-maximum of sum y*h is {M}, not below zero")
+
+
 def lower_bound(objective, qs_obj, constraints, qs_con, xs, ys, points=None):
     """(True, L) or (False, reason).
     objective: a reader node to MINIMISE, read over qs_obj (e.g. at nominal prices: points).
@@ -74,30 +139,11 @@ def lower_bound(objective, qs_obj, constraints, qs_con, xs, ys, points=None):
             return False, f"{x}: an infinite or empty range"
     try:
         c0, cx = affine(objective, xs, qs_obj)
-        terms = []
-        points = points or [None] * len(constraints)
-        if len(points) != len(constraints):
-            return False, "one point (or none) per constraint"
-        for (node, op, bound), y, pt in zip(constraints, ys, points):
-            if y == 0:
-                continue
-            piece = {}
-            for n, v in (pt or {}).items():
-                v = Fraction(str(v))
-                if n not in qs_con or n in xs or not (qs_con[n]["lo"] <= v <= qs_con[n]["hi"]):
-                    return False, f"the point's {n} = {v} is not inside its box"
-                piece[n] = (v, v)
-            d0, dx = affine(node, xs, qs_con, piece)
-            b = Fraction(str(bound))
-            if op == ">=":          # h = g - b >= 0
-                h0, hx = (d0[0] - b, d0[1] - b), dx
-            elif op == "<=":        # h = b - g >= 0
-                h0, hx = (b - d0[1], b - d0[0]), {x: (-v[1], -v[0]) for x, v in dx.items()}
-            else:
-                return False, f"op {op!r}"
-            terms.append((y, h0, hx))
+        terms = _remainders(constraints, qs_con, xs, ys, points)
     except NotAffine as e:
         return False, f"not affine: {e}"
+    except ValueError as e:
+        return False, str(e)
     # e = objective - sum y_i h_i : affine with interval coefficients
     e0 = c0
     ex = dict(cx)

@@ -12,6 +12,11 @@ it. Checks:
      choices (not affine) in a constraint or in the objective;
   5. MUTATION: a kernel that reads the box at its most favourable end (max, not min) claims L above the
      optimum on the diet — the stand sees it.
+  6. FARKAS (2026-10-10): "no mix exists" proved — the diet asking 0.5 protein (at most 0.44 is possible): the
+     kernel's box-maximum of sum y*h is below zero; 40 seeded random robust LPs the solver calls infeasible get
+     a certificate from the phase-1 LP's multipliers; on every FEASIBLE random LP no multipliers (solver's or
+     random) give one; forgeries (all-zero y, a negative y) refused; the reversed-product mutation "proves" a
+     feasible diet infeasible — seen.
 
 Run:  python3 test_lp.py   -> LP GREEN
 """
@@ -105,6 +110,70 @@ finally:
     zlp._mul_iv = real_mul
 check("the lying kernel claims L above the robust optimum 70/27 (with y = 0, where the honest L is 0) — the "
       "stand sees it", g and L > F(70, 27) and zlp.lower_bound(obj, qn, cons, q, xs, [0, 0, 0], pts) == (True, 0), L)
+
+print("6. Farkas: no mix exists")
+cons_bad = [(_parse_arith("pa*a + pb*b", q), ">=", F(1, 2)), (_parse_arith("a + b", q), ">=", 1),
+            (_parse_arith("a + b", q), "<=", 1)]
+pts_bad = [{"pa": F(9, 100), "pb": F(36, 100)}, None, None]
+r = zlp.infeasible(cons_bad, q, xs, [1, 0, F(36, 100)], pts_bad)
+check("protein 0.5 asked, 0.44 at most: infeasible, the box-maximum of sum y*h = -7/50", r == (True, F(-7, 50)), r)
+r2 = zlp.infeasible(cons_bad, q, xs, [1, 0, F(36, 100)])
+check("without points the coefficients are read over the whole box: here still proved (max 0.44 < 0.5)",
+      r2[0], r2)
+check("all-zero multipliers: refused", not zlp.infeasible(cons_bad, q, xs, [0, 0, 0], pts_bad)[0])
+check("a negative multiplier: refused", not zlp.infeasible(cons_bad, q, xs, [1, -1, 1], pts_bad)[0])
+check("the FEASIBLE diet (0.25): the same multipliers prove nothing",
+      not zlp.infeasible(cons, q, xs, [1, 0, F(36, 100)], pts)[0])
+
+
+def phase1(A, b, box):
+    """min t: A x - t <= b; the multipliers of the rows (sum 1) are a Farkas certificate when t* > 0."""
+    nv = len(A[0])
+    res = linprog([0.0] * nv + [1.0], A_ub=[row + [-1.0] for row in A], b_ub=b,
+                  bounds=box + [(None, None)], method="highs")
+    return res.fun, [F(max(0.0, -m)).limit_denominator(10 ** 9) for m in res.ineqlin.marginals]
+
+
+rnd = random.Random(1010)
+proved = infeasible_n = feas_n = feas_false = 0
+for k in range(400):
+    nv, nc = rnd.randint(2, 5), rnd.randint(2, 6)
+    vs = [f"x{i}" for i in range(nv)]
+    nom = [[F(rnd.randint(1, 30), 10) for _ in vs] for _ in range(nc)]
+    rhs = [F(rnd.randint(5, 60), 10) for _ in range(nc)]
+    ops = [rnd.choice([">=", "<="]) for _ in range(nc)]
+    qtext = [f"c{i}_{j}=[{nom[i][j] * F(9, 10)},{nom[i][j] * F(11, 10)}] credit" for i in range(nc) for j in range(nv)]
+    xt = [f"{v}=[0,1] credit" for v in vs]
+    qc = parse_quantities(", ".join(xt + qtext))[0]
+    consn = [(_parse_arith(" + ".join(f"c{i}_{j}*{v}" for j, v in enumerate(vs)), qc), ops[i], rhs[i])
+             for i in range(nc)]
+    # robust rows (x >= 0): ">=" at the low coefficients, "<=" at the high ones
+    end = [F(9, 10) if ops[i] == ">=" else F(11, 10) for i in range(nc)]
+    A = [[(-1 if ops[i] == ">=" else 1) * float(nom[i][j] * end[i]) for j in range(nv)] for i in range(nc)]
+    bb = [(-1 if ops[i] == ">=" else 1) * float(rhs[i]) for i in range(nc)]
+    tstar, ys = phase1(A, bb, [(0, 1)] * nv)
+    points = [{f"c{i}_{j}": nom[i][j] * end[i] for j in range(nv)} for i in range(nc)]
+    xsr = {v: (F(0), F(1)) for v in vs}
+    if tstar > 1e-6 and infeasible_n < 40:
+        infeasible_n += 1
+        proved += zlp.infeasible(consn, qc, xsr, ys, points)[0]
+    elif tstar < -1e-6 and feas_n < 40:
+        feas_n += 1
+        feas_false += zlp.infeasible(consn, qc, xsr, ys, points)[0] if any(ys) else 0
+        yr = [F(rnd.randint(0, 50), 10) for _ in range(nc)]
+        feas_false += zlp.infeasible(consn, qc, xsr, yr, points)[0] if any(yr) else 0
+check(f"{infeasible_n} random robust LPs the solver calls infeasible: ZTL accepts the phase-1 certificate on all",
+      infeasible_n == 40 and proved == 40, (proved, infeasible_n))
+check(f"{feas_n} FEASIBLE random LPs: no multipliers (solver's or random) give a certificate",
+      feas_n == 40 and feas_false == 0, (feas_false, feas_n))
+
+zlp._mul_iv = lambda u, v: tuple(reversed(real_mul(u, v)))
+try:
+    gm = zlp.infeasible(cons, q, xs, [1, 0, F(36, 100)], pts)
+finally:
+    zlp._mul_iv = real_mul
+check("mutation (the box read at its favourable end): the lying kernel 'proves' the feasible diet has no mix — "
+      "and the honest one refuses the same certificate", gm[0] and not zlp.infeasible(cons, q, xs, [1, 0, F(36, 100)], pts)[0], gm)
 
 print(f"\n{ok} ok, {fail} fail")
 print("LP GREEN" if fail == 0 else "LP RED")

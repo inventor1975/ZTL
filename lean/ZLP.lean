@@ -81,8 +81,17 @@ theorem lower_bound_sound (R : ORing α) (cost L : α) (l : List (α × α))
     R.le L cost :=
   R.le_trans min_sound (sub_le R cost (wsum R l) (wsum_nonneg R l feasible))
 
+/-- NO MIX EXISTS (Farkas, 2026-10-10). Multipliers `y ≥ 0`, and the kernel's box-MAXIMUM `M` of `Σ y·h`
+(`max_sound`, the premise, at the mix in question) strictly below zero: then that mix does not meet every
+requirement — a feasible one would make the sum non-negative. Constructive: the conclusion is a negation. -/
+theorem infeasible_sound (R : ORing α) (M : α) (l : List (α × α))
+    (max_sound : R.le (wsum R l) M) (neg : ¬ R.le R.zero M) :
+    ¬ (∀ yh, List.Mem yh l → R.le R.zero yh.1 ∧ R.le R.zero yh.2) :=
+  fun feasible => neg (R.le_trans (wsum_nonneg R l feasible) max_sound)
+
 end ZLP
 
 #print axioms ZLP.wsum_nonneg
 #print axioms ZLP.sub_le
 #print axioms ZLP.lower_bound_sound
+#print axioms ZLP.infeasible_sound

@@ -191,6 +191,26 @@ def _parse_arith(s, quantities):
     # and only when the parenthesis opened by `sqrt(` is the one that ends.
     if s.startswith("sqrt(") and s.endswith(")") and _closes_last(s, 4):
         return ("sqrt", _parse_arith(s[5:-1], quantities))
+    # FUNCTIONS (zfunc, 2026-10-10): exp ln log10 atan tan with one argument, pow min max
+    # with two, split at the top-level comma. Same rule as sqrt: only when the parenthesis
+    # the name opens is the one that ends the text.
+    m = re.match(r"^(exp|ln|log10|atan|tan|pow|min|max)\(", s)
+    if m and s.endswith(")") and _closes_last(s, len(m.group(1))):
+        inner = s[len(m.group(1)) + 1:-1]
+        parts, depth, start = [], 0, 0
+        for i, c in enumerate(inner):
+            if c in "([":
+                depth += 1
+            elif c in ")]":
+                depth -= 1
+            elif c == "," and depth == 0:
+                parts.append(inner[start:i])
+                start = i + 1
+        parts.append(inner[start:])
+        want = 2 if m.group(1) in ("pow", "min", "max") else 1
+        if len(parts) != want:
+            raise ValueError(f"{m.group(1)} takes {want} argument(s), got {len(parts)}: {s!r}")
+        return (m.group(1), *[_parse_arith(x, quantities) for x in parts])
     if s.startswith("(") and s.endswith(")"):
         return _parse_arith(s[1:-1], quantities)
     # UNARY SIGN. The binary split above starts at index 1, so a leading

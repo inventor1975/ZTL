@@ -352,6 +352,10 @@ class _NoReadings(Exception):
 
 
 # ------------------------------------ the linear fragment, read coherently
+import zfunc as _zf                  # noqa: E402  (functions on the floor, 2026-10-10)
+_FUNC_OPS = _zf.FUNC_OPS
+
+
 class _NotLinear(Exception):
     pass
 
@@ -384,6 +388,8 @@ def _linear(expr, quantities, counter, seen=None):
         return Fraction(0), {key: (Fraction(1), expr)}, q.get("unit"), \
             _step(q.get("discrete"))
     op, *args = expr
+    if op in _FUNC_OPS:              # exp/ln/... (zfunc, 2026-10-10): no exact form — the interval path reads them
+        raise _NotLinear()
     if op == "sqrt":
         # THE ROOT OF A KNOWN NUMBER is a constant when it is exact: sqrt(disc)
         # with disc pinned at 1 is 1 (MEASURED 2026-09-24: a model's table
@@ -511,6 +517,8 @@ def _poly(expr, quantities, counter, seen=None):
         return (Fraction(0), {key: (Fraction(1), Fraction(0), expr)},
                 q.get("unit"), None)
     op, *args = expr
+    if op in _FUNC_OPS:              # exp/ln/... (zfunc, 2026-10-10): no exact form — the interval path reads them
+        raise _NotLinear()
     if op == "sqrt":                     # as in `_linear`: exact roots of constants only
         c1, t1, u1, _ = _poly(args[0], quantities, counter, seen)
         r = _rat_sqrt(c1) if not t1 and c1 >= 0 else None
@@ -712,6 +720,8 @@ def _ev_exact(expr, quantities):
             return q["lo"]
         raise _NotLinear()
     op, *args = expr
+    if op in _FUNC_OPS:              # exp/ln/... (zfunc, 2026-10-10): no exact form — the interval path reads them
+        raise _NotLinear()
     if op == "sqrt":
         v = _ev_exact(args[0], quantities)
         if isinstance(v, QSqrt) or v < 0:
@@ -928,6 +938,8 @@ def _upoly(expr, quantities, seen=None):
             raise _NotLinear()
         return [Fraction(0), Fraction(1)], expr
     op, *args = expr
+    if op in _FUNC_OPS:              # exp/ln/... (zfunc, 2026-10-10): no exact form — the interval path reads them
+        raise _NotLinear()
     if op == "sqrt":
         a, n = _upoly(args[0], quantities, seen)
         r = _rat_sqrt(a[0]) if n is None and len(_ptrim(a)) == 1 and a[0] >= 0 else None
@@ -1034,6 +1046,8 @@ def _mlin(expr, quantities, counter, keys, seen=None):
         keys[key] = expr
         return {frozenset([key]): Fraction(1)}, q.get("unit")
     op, *args = expr
+    if op in _FUNC_OPS:              # exp/ln/... (zfunc, 2026-10-10): no exact form — the interval path reads them
+        raise _NotLinear()
     if op == "sqrt":
         t1, u1 = _mlin(args[0], quantities, counter, keys, seen)
         c1 = t1.get(frozenset(), Fraction(0))
@@ -1153,6 +1167,8 @@ def _ipoly(expr, quantities):
             return {(): Fraction(lo)} if lo else {}
         return {((expr, 1),): Fraction(1)}
     op, *args = expr
+    if op in _FUNC_OPS:              # exp/ln/... (zfunc, 2026-10-10): no exact form — the interval path reads them
+        raise _NotLinear()
     if op == "sum":
         out = {}
         for a in args[0]:
@@ -1427,6 +1443,43 @@ def _ev(expr, quantities):
             step = step if (step is not None and st == step) else None
             iv, ped, used = _iv_add(iv, r), ped | p, used | u
         return iv, ped, used, step, unit
+    if op in _FUNC_OPS:
+        # FUNCTIONS (zfunc.py, 2026-10-10): a proved bracket of rationals, never a rounding.
+        # A transcendental function reads a DIMENSIONLESS argument; pow(x, n) with n a point
+        # integer carries x's unit to the n-th power; min/max unify their units.
+        evs = [_ev(a, quantities) for a in args]
+        ped = set().union(*[e[1] for e in evs])
+        used = set().union(*[e[2] for e in evs])
+        if op in ("min", "max"):
+            unit = _unify_units(evs[0][4], evs[1][4], "add")
+        elif op == "pow":
+            rb = evs[1][0]
+            if evs[1][4]:
+                raise _NoReadings(f"pow: the exponent must be dimensionless, not {evs[1][4]!r}")
+            if evs[0][4] and not (rb is not None and rb[0] == rb[1] and Fraction(rb[0]).denominator == 1):
+                raise _NoReadings(f"pow: a quantity with the unit {evs[0][4]!r} to a non-integer power")
+            unit = None
+            if evs[0][4]:
+                n = int(rb[0])
+                unit = None
+                for _ in range(abs(n)):
+                    unit = _unit_combine(unit, evs[0][4], +1)
+                if n < 0:
+                    unit = _unit_combine(None, unit, -1)
+        else:
+            if evs[0][4]:
+                raise _NoReadings(f"{op}: the argument must be dimensionless, not {evs[0][4]!r}")
+            unit = None
+        if any(e[0] is None for e in evs):
+            return None, ped, used, None, unit
+        try:
+            if op in _zf.UNARY:
+                iv = _zf.UNARY[op](evs[0][0])
+            else:
+                iv = _zf.BINARY[op](evs[0][0], evs[1][0])
+        except _zf.NoReadings as why:
+            raise _NoReadings(str(why))
+        return iv, ped, used, None, unit
     if op == "sqrt":                       # УНАРНАЯ — до распаковки двух
         ra, pa, ua, sa, una = _ev(args[0], quantities)
         unit = _unit_sqrt(una)             # бросит _NoReadings на нечётной

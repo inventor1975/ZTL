@@ -81,6 +81,11 @@ def _mul(a, b):
     return ("mul", a, b)
 
 
+class NoDerivative(ValueError):
+    """min/max have no derivative where their arguments cross; a monotone leaf cannot use them
+    (an interval leaf still can)."""
+
+
 def derivative(e, name):
     """dE/dname, symbolically, over the reader's nodes."""
     if isinstance(e, (int, Fraction)):
@@ -88,6 +93,33 @@ def derivative(e, name):
     if isinstance(e, str):
         return ONE if e == name else ZERO
     op, *args = e
+    # FUNCTIONS (zfunc, 2026-10-10)
+    if op in ("min", "max"):
+        if name in _names(e):
+            raise NoDerivative(f"{op} has no derivative where its arguments cross")
+        return ZERO
+    if op in ("exp", "ln", "log10", "atan", "tan"):
+        u = args[0]
+        du = derivative(u, name)
+        if _is0(du):
+            return ZERO
+        if op == "exp":
+            return _mul(e, du)
+        if op == "ln":
+            return ("div", du, u)
+        if op == "log10":
+            return ("div", du, ("mul", u, ("ln", Fraction(10))))
+        if op == "atan":
+            return ("div", du, ("add", ONE, ("mul", u, u)))
+        return _mul(du, ("add", ONE, ("mul", e, e)))          # tan
+    if op == "pow":
+        u, v = args
+        du, dv = derivative(u, name), derivative(v, name)
+        if _is0(du) and _is0(dv):
+            return ZERO
+        if _is0(dv):                                          # v does not move with name: v·u^(v-1)·u'
+            return _mul(_mul(v, ("pow", u, ("sub", v, ONE))), du)
+        return _mul(e, _add(_mul(dv, ("ln", u)), ("div", _mul(v, du), u)))
     if op == "sum":
         out = ZERO
         for a in args[0]:
@@ -195,7 +227,10 @@ def check(expr, quantities, op, bound, cert):
                 if s not in ("+", "-"):
                     return False, f"{path}: {n} has width and no sign"
                 if n not in derivs:
-                    derivs[n] = derivative(expr, n)
+                    try:
+                        derivs[n] = derivative(expr, n)
+                    except NoDerivative as why:
+                        return False, f"{path}: {why} — a monotone leaf cannot use it (an interval leaf can)"
                 r = _reading(derivs[n], quantities, piece)
                 if r is None:
                     return False, f"{path}: d/d{n} has no reading on the piece"
@@ -250,9 +285,9 @@ def _lin(node, unknowns):
             for k, v in _lin(a, unknowns).items():
                 out[k] = _add(out[k], v) if k in out else v
         return out
-    if op == "sqrt":
-        if _names(args[0]) & unknowns:
-            raise SystemError_("an unknown under a square root")
+    if op == "sqrt" or op in ("exp", "ln", "log10", "atan", "tan", "pow", "min", "max"):
+        if _names(node) & unknowns:
+            raise SystemError_(f"an unknown inside {op}(...): not a linear system")
         return {1: node}
     a, b = _lin(args[0], unknowns), _lin(args[1], unknowns)
     if op in ("add", "sub"):

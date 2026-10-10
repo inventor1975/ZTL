@@ -209,6 +209,15 @@ qs_inf = dict(qs, K=dict(qs["K"], hi=float("inf")))
 refused("an unbounded parameter", cert, qs_inf)
 refused("unreadable", dict(cert, search=["x", "1"]))
 
+# ------------------------------------------------------------------ 5b. min/max in the law
+print("5b. a piecewise law (min): no derivative, the plain enclosure only (blind test 2, c11: it raised)")
+qs_m, g_m = law("a=[1,2] credit, Q=? credit", "min(10 - Q, 20 - 3*Q) - a*Q")
+cert_m = ZI.search_certificate(g_m, "Q", qs_m, ["0", "10"])
+r_m = ZI.check_implicit(g_m, "Q", qs_m, cert_m)
+check("min: the enclosure holds the true roots 10/3 (a = 2) .. 5 (a = 1)",
+      r_m[0] and r_m[1][0] <= F(10, 3) and r_m[1][1] >= 5, r_m)
+check("min: a forged 'unique' is refused, not raised", not ZI.check_implicit(g_m, "Q", qs_m, dict(cert_m, unique=True))[0])
+
 # ------------------------------------------------------------------ 6. a lying kernel
 print("6. mutation: a kernel whose readings collapse to the midpoint")
 real = ZC._reading

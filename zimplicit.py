@@ -82,7 +82,10 @@ def check_implicit(g, q, qs, cert):
     # 3. UNIQUENESS: dg/dq one strict sign over the HULL × box -> g strictly monotone in q there
     if not cert.get("unique"):
         return True, hull, how
-    dq = ZC.derivative(g, q)
+    try:
+        dq = ZC.derivative(g, q)
+    except ZC.NoDerivative as e:            # min/max in g (blind test 2, c11, 2026-10-10: it raised)
+        return False, f"unique claimed, but dg/dq has no derivative: {e}"
     sq = _sign(_reading(dq, qs, dict(box, **{q: hull})))
     if sq in (None, 0):
         return False, "unique claimed, but dg/dq's reading over the hull × box does not keep one sign"
@@ -94,12 +97,16 @@ def check_implicit(g, q, qs, cert):
         return True, hull, how
     signs = {}
     for n in names:
-        sp = _sign(_reading(ZC.derivative(g, n), qs, dict(box, **{q: hull})))
+        try:
+            dn = ZC.derivative(g, n)
+        except ZC.NoDerivative as e:
+            return False, f"monotone claimed, but dg/d{n} has no derivative: {e}"
+        sp = _sign(_reading(dn, qs, dict(box, **{q: hull})))
         if sp is None:
             return False, f"monotone claimed, but dg/d{n} has no reading"
         dir_ = 0 if sp == 0 else -sp * sq          # sign of dq*/dn
         if sp == 0:
-            r = _reading(ZC.derivative(g, n), qs, dict(box, **{q: hull}))
+            r = _reading(dn, qs, dict(box, **{q: hull}))
             if r != (0, 0):
                 return False, f"monotone claimed, but dg/d{n} changes sign over the hull × box"
         if mono.get(n) not in ("+", "-", "0") or {"+": 1, "-": -1, "0": 0}[mono[n]] != dir_:
@@ -187,7 +194,10 @@ def search_certificate(g, q, qs, search, depth=40, max_pieces=4000, bracket_step
     if not kept:
         return cert
     hull = (kept[0][0], kept[-1][1])
-    sq = _sign(_reading(ZC.derivative(g, q), qs, dict(box, **{q: hull})))
+    try:
+        sq = _sign(_reading(ZC.derivative(g, q), qs, dict(box, **{q: hull})))
+    except ZC.NoDerivative:
+        return cert                                    # min/max in g: the plain enclosure only
     if sq in (None, 0):
         return cert
     cert["unique"] = True

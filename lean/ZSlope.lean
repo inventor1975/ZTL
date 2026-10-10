@@ -27,7 +27,7 @@ encloses the value) the kernel's certificate rule holds with no premise left (`c
 
 The readings are RELATIONS the kernel's computed intervals must satisfy (each product interval below and
 above its four corner products), as in `ZLP`: the kernel brings the numbers, the relation is what it checks.
-Functions (`exp`, `ln`) and division are not in this grammar yet — the next steps, on VR's operational reals.
+`exp` is added in `ZSlopeExp` (values become VR's operational reals); `ln` and division are not covered yet.
 -/
 
 namespace ZSlope

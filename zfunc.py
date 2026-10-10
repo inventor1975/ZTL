@@ -79,6 +79,48 @@ def _atanh_series(z: Fraction, terms: int):
     return s - rem, s + rem
 
 
+def _ceil_div(a: int, b: int) -> int:
+    return -((-a) // b)
+
+
+def _atanh_fixed(z: Fraction, terms: int, P: int):
+    """atanh(z), |z| <= 1/4, in FIXED POINT: integers scaled by 2^P, every step rounded DOWN for the lower
+    sum and UP for the upper one (all terms positive for z >= 0; atanh is odd). Sound like _atanh_series,
+    with no growing fractions (MEASURED 2026-10-10: ln of a diode law, 1.7 ms -> microseconds a call)."""
+    neg = z < 0
+    z = -z if neg else z
+    S = 1 << P
+    zl, zh = (z.numerator * S) // z.denominator, _ceil_div(z.numerator * S, z.denominator)
+    z2l, z2h = (zl * zl) >> P, _ceil_div(zh * zh, S)
+    pl, ph, sl, sh = zl, zh, 0, 0
+    for i in range(terms):
+        sl += pl // (2 * i + 1)
+        sh += _ceil_div(ph, 2 * i + 1)
+        pl = (pl * z2l) >> P
+        ph = _ceil_div(ph * z2h, S)
+    rem = Fraction(ph, S) / ((2 * terms + 1) * (1 - Fraction(z2h, S)))   # the tail, bounded from above
+    lo, hi = Fraction(sl, S), Fraction(sh, S) + rem
+    return (-hi, -lo) if neg else (lo, hi)
+
+
+def _exp_fixed(a: Fraction, P: int, stop: Fraction):
+    """e^a for 0 <= a <= 1/4 in fixed point, rounded outward each step; the tail after a term t with
+    a <= 1/4 is below t, so hi adds 2t as the old code did."""
+    S = 1 << P
+    al, ah = (a.numerator * S) // a.denominator, _ceil_div(a.numerator * S, a.denominator)
+    tl, th, sl, sh, n = S, S, S, S, 0
+    stop_fixed = stop * S
+    while True:
+        n += 1
+        tl = ((tl * al) >> P) // n
+        th = _ceil_div(_ceil_div(th * ah, S), n)
+        sl += tl
+        sh += th
+        if th < stop_fixed and n > 4:
+            break
+    return Fraction(sl, S), Fraction(sh + 2 * th, S)
+
+
 def _ln2():
     lo, hi = _atanh_series(Fraction(1, 3), 45)      # ln 2 = 2 atanh(1/3)
     return 2 * lo, 2 * hi
@@ -99,15 +141,12 @@ def exp_pt(x: Fraction):
     while abs(t) > Fraction(1, 4):
         t /= 2
         m += 1
-    s, term, n = Fraction(1), Fraction(1), 0
-    while True:
-        n += 1
-        term = term * t / n
-        s += term
-        if abs(term) < _EPS / (1 << m) / 4 and n > 4:
-            break
-    rem = abs(term) * 2                        # the tail after a term this small, |t| <= 1/4
-    lo, hi = _down(s - rem), _up(s + rem)
+    # fixed point on |t| (MEASURED 2026-10-10: exact-fraction Taylor was 0.6 ms a call); e^-a = 1/e^a
+    P = BITS + 40 + m
+    elo, ehi = _exp_fixed(abs(t), P, _EPS / (1 << m) / 4)
+    if t < 0:
+        elo, ehi = 1 / ehi, 1 / elo
+    lo, hi = _down(elo), _up(ehi)
     for _ in range(m):
         lo, hi = _down(lo * lo), _up(hi * hi)
     return lo, hi
@@ -128,8 +167,8 @@ def ln_pt(x: Fraction):
     while y < Fraction(2, 3):
         y *= 2
         e -= 1
-    z = (y - 1) / (y + 1)                      # |z| <= 1/7
-    a = _atanh_series(z, 30)
+    z = (y - 1) / (y + 1)                      # |z| <= 1/5
+    a = _atanh_fixed(z, 30, BITS + 40)
     lo = 2 * a[0] + (e * LN2[0] if e >= 0 else e * LN2[1])
     hi = 2 * a[1] + (e * LN2[1] if e >= 0 else e * LN2[0])
     return _down(lo), _up(hi)
@@ -191,8 +230,12 @@ def _inf(x):
 def _iv_mono(f, a, at_minus_inf=None, at_plus_inf=None):
     """An increasing function over [a0, a1]; an INFINITE end (the floor's unbounded boxes are
     float +-inf) maps to the function's limit there, given by the caller."""
-    lo = at_minus_inf if (_inf(a[0]) and a[0] < 0) else (at_plus_inf if _inf(a[0]) else f(a[0])[0])
-    hi = at_plus_inf if (_inf(a[1]) and a[1] > 0) else (at_minus_inf if _inf(a[1]) else f(a[1])[1])
+    # each end ROUNDED OUTWARD onto the 2^-BITS relative grid before the series: f increasing, so
+    # f(down(a0)) <= f(a0) and f(up(a1)) >= f(a1) — sound, ~2^-64 wider. The series then runs on a
+    # 64-bit dyadic, not on the reading's exact fraction with a denominator of hundreds of digits
+    # (MEASURED 2026-10-10, blind test 2 c04 — a diode law: 92 % of the run in ln's atanh series)
+    lo = at_minus_inf if (_inf(a[0]) and a[0] < 0) else (at_plus_inf if _inf(a[0]) else f(_down(Fraction(a[0])))[0])
+    hi = at_plus_inf if (_inf(a[1]) and a[1] > 0) else (at_minus_inf if _inf(a[1]) else f(_up(Fraction(a[1])))[1])
     return lo, hi
 
 

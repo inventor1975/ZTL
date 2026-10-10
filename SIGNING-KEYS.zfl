@@ -1,0 +1,11 @@
+{
+ "zfl_sidecar": 1,
+ "file": "SIGNING-KEYS.md",
+ "sha256": "ab6b3542c924e5eacfdc20527bf799801c8b83269d75b148c21db30085f6dabb",
+ "decision": {
+  "status": "waived",
+  "why": "Same text as the previous waiver with one word fixed (refused -> refuted, matching cage.py). Two fork rounds without convergence; every factual/logical finding fixed; remaining are design suggestions (HSM, transparency log, context string), not claims.",
+  "at": "2026-10-10T07:12:26+00:00",
+  "operator": "undeclared"
+ }
+}

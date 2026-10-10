@@ -41,6 +41,13 @@ jobs:
         with:
           fetch-depth: 0
           fetch-tags: true
+      # VR's operational numbers for ZSlope (2026-10-10): READ from VRCycle at a pinned commit,
+      # as in lean.yml — without it `lake build` stops at ZSlope and bridge/paper_claims/lean go red.
+      - uses: actions/checkout@v4
+        with:
+          repository: inventor1975/VRCycle
+          ref: de72f58d6ed8d3cc9d31a40a5f88b27d4cad5414
+          path: lean/vr
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'

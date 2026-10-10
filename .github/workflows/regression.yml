@@ -68,7 +68,7 @@ jobs:
       # test_zfunc.py checks the function brackets against mpmath (60 digits): a reference
       # implementation the brackets do not share code with (2026-10-10)
       - name: reference library for the function brackets
-        run: pip install mpmath
+        run: pip install mpmath scipy
       - name: all stands + Lean
         run: python3 run_all.py
       # The papers are claims too. Until 2026-07-20 nothing checked that

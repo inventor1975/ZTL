@@ -17,7 +17,7 @@ from some index on" (`Ev`) — the comparison `rle` asks for. The kernel's readi
   * `mono_up`, `mono_down`, `certificate_sound` — the kernel's certificate rule, premise-free, as the real order
     `rle` (not total — `ZCertify.corner_bound` is re-proved for it with reflexivity and transitivity only).
 
-Not covered: `ln` and division; the affine reading the kernel intersects with the interval one (`zaffine`).
+Not covered here: division (`ZSlopeDiv`), `ln`; the affine reading the kernel intersects with the interval one (`zaffine`).
 -/
 
 namespace ZSlopeExp

@@ -103,6 +103,27 @@ def _atanh_fixed(z: Fraction, terms: int, P: int):
     return (-hi, -lo) if neg else (lo, hi)
 
 
+def _atan_fixed(x: Fraction, terms: int, P: int):
+    """atan(x), 0 <= x <= 1/2, in FIXED POINT (2^P), like _atanh_fixed: each term x^(2i+1)/(2i+1) bracketed
+    [tl, th] by rounding down / up, the alternating sum taken at its lower and upper ends, and the tail after
+    `terms` terms bounded by the next term's upper bracket on both sides. MEASURED 2026-10-11 (blind test 5,
+    c04, the sewer's circular segment): the exact-fraction series took 137 of 150 s, 86 s of it in gcd."""
+    S = 1 << P
+    xl, xh = (x.numerator * S) // x.denominator, _ceil_div(x.numerator * S, x.denominator)
+    x2l, x2h = (xl * xl) >> P, _ceil_div(xh * xh, S)
+    pl, ph, lo, hi = xl, xh, 0, 0
+    for i in range(terms):
+        tl, th = pl // (2 * i + 1), _ceil_div(ph, 2 * i + 1)
+        if i % 2 == 0:
+            lo, hi = lo + tl, hi + th
+        else:
+            lo, hi = lo - th, hi - tl
+        pl = (pl * x2l) >> P
+        ph = _ceil_div(ph * x2h, S)
+    tail = _ceil_div(ph, 2 * terms + 1)
+    return Fraction(lo - tail, S), Fraction(hi + tail, S)
+
+
 def _exp_fixed(a: Fraction, P: int, stop: Fraction):
     """e^a for 0 <= a <= 1/4 in fixed point, rounded outward each step; the tail after a term t with
     a <= 1/4 is below t, so hi adds 2t as the old code did."""
@@ -128,6 +149,7 @@ def _ln2():
 
 PI = tuple(_down(v) if i == 0 else _up(v) for i, v in enumerate(_pi()))
 LN2 = tuple(_down(v) if i == 0 else _up(v) for i, v in enumerate(_ln2()))
+ATAN_HALF = tuple(_down(v) if i == 0 else _up(v) for i, v in enumerate(_atan_small(Fraction(1, 2), 70)))   # once, exact series
 
 
 # ---------------------------------------------------------------- points
@@ -187,11 +209,11 @@ def atan_pt(x: Fraction):
         lo, hi = atan_pt(1 / x)
         return _down(PI[0] / 2 - hi), _up(PI[1] / 2 - lo)
     if x <= Fraction(1, 2):
-        lo, hi = _atan_small(x, 70)
+        lo, hi = _atan_fixed(x, 60, BITS + 40)
         return _down(lo), _up(hi)
     # 1/2 < x <= 1: atan x = atan(1/2) + atan((x - 1/2)/(1 + x/2))
     y = (x - Fraction(1, 2)) / (1 + x / 2)    # 0 < y <= 2/5
-    a, b = _atan_small(Fraction(1, 2), 70), _atan_small(y, 70)
+    a, b = ATAN_HALF, _atan_fixed(y, 60, BITS + 40)
     return _down(a[0] + b[0]), _up(a[1] + b[1])
 
 

@@ -436,5 +436,209 @@ _, _, mism_m = run_systems(n=30, seed=37)
 ZC._det = real_det
 check("MUTATION: a determinant with every cofactor sign + is caught by the Gauss comparison", len(mism_m) > 0)
 
+
+# 7. IMPLICIT QUANTITIES (third tranche, 2026-10-11): U a root of g(U, x) = 0, moving with the box
+def setup_i(expr_text, g_texts, boxes, uboxes):
+    allb = dict(boxes, **uboxes)
+    sheet = ", ".join(f"{n}=[{fs(a)},{fs(b)}] credit" for n, (a, b) in allb.items())
+    qs = parse_quantities(sheet)[0]
+    return _parse_arith(expr_text, qs), {u: _parse_arith(t, qs) for u, t in g_texts.items()}, qs
+
+
+def bracket_i(g, u, qs, piece, steps=40):
+    """The test's own bisection (outside the kernel): [a, b] with g(a) <= 0 <= g(b) over the piece
+    (g increasing in u assumed by the test's families; the kernel checks)."""
+    lo0, hi0 = qs[u]["lo"], qs[u]["hi"]
+
+    def side(v):
+        r = ZC._reading(g, qs, dict(piece, **{u: (v, v)}))
+        return 0 if r is None else (-1 if r[1] <= 0 else (1 if r[0] >= 0 else 0))
+    lo, hi = lo0, hi0
+    for _ in range(steps):
+        m = (lo + hi) / 2
+        lo, hi = (m, hi) if side(m) == -1 else (lo, m)
+    a = lo
+    lo, hi = a, hi0
+    for _ in range(steps):
+        m = (lo + hi) / 2
+        lo, hi = (lo, m) if side(m) == 1 else (m, hi)
+    return a, hi
+
+
+def search_i(expr, gs, qs, op, bound, depth=10):
+    names = sorted(n for n in set(ZC._names(expr)).union(*[ZC._names(g) for g in gs.values()])
+                   if n in qs and n not in gs)
+    box = {n: (qs[n]["lo"], qs[n]["hi"]) for n in names}
+
+    def go(piece, d):
+        br = {u: bracket_i(g, u, qs, piece, 16) for u, g in gs.items()}
+        rp = dict(piece, **br)
+        roots = {u: [fs(a), fs(b)] for u, (a, b) in br.items()}
+        signs = {}
+        for n, (lo, hi) in piece.items():
+            if lo == hi:
+                continue
+            r = ZC._reading(ZC._total_derivative(expr, n, gs), qs, rp)
+            if r is None or r[0] < 0 < r[1]:
+                signs = None; break
+            signs[n] = "+" if r[0] >= 0 else "-"
+        if signs is not None:
+            corner = {n: ((piece[n][1] if (signs.get(n) == "+") == (op == "<=") else piece[n][0]),) * 2
+                      for n in piece}
+            cr = {u: [fs(a), fs(b)] for u, (a, b) in
+                  ((u, bracket_i(g, u, qs, corner)) for u, g in gs.items())}
+            leaf = {"leaf": "monotone", "signs": signs, "roots": roots, "corner_roots": cr}
+            sub = dict(qs, **{n: dict(qs[n], lo=a, hi=b) for n, (a, b) in piece.items()})
+            if ZC.check(expr, sub, op, bound, leaf, implicit=gs)[0]:
+                return leaf
+        r = ZC._reading(expr, qs, rp)
+        if r is not None and (r[1] <= bound if op == "<=" else r[0] >= bound):
+            return {"leaf": "interval", "roots": roots}
+        if d == 0:
+            return None
+        n = max(piece, key=lambda k: piece[k][1] - piece[k][0])
+        lo, hi = piece[n]
+        at = (lo + hi) / 2
+        a = go(dict(piece, **{n: (lo, at)}), d - 1)
+        b = go(dict(piece, **{n: (at, hi)}), d - 1) if a is not None else None
+        return None if b is None else {"split": n, "at": fs(at), "lo": a, "hi": b}
+
+    return go(box, depth)
+
+
+def root_f(gf, lo, hi):
+    for _ in range(80):
+        m = (lo + hi) / 2
+        lo, hi = (m, hi) if gf(m) < 0 else (lo, m)
+    return (lo + hi) / 2
+
+
+# 7a. the anode of blind test 4 (c02): Es = Ea - I*R, I*R + beta*log10(I/Ip) = Ea - Vp
+CB = {"Ea": (F(3, 2), F(8, 5)), "beta": (F(12, 100), F(18, 100)), "Ip": (F(12, 1000), F(60, 1000))}
+ec, gc, qc = setup_i("Ea - I*(1069/1000)", {"I": "I*(1069/1000) - (Ea - 85/100 - beta*log10(I/Ip))"},
+                     CB, {"I": (F(1, 100), F(1))})
+ct = search_i(ec, gc, qc, "<=", F(118, 100))
+rc = ZC.check(ec, qc, "<=", F(118, 100), ct, implicit=gc) if ct else (False, "no certificate")
+check("implicit (c02): Es <= 1.18 with the current a root that moves with Ea, beta, Ip — certified", rc[0], str(rc))
+fals = search_i(ec, gc, qc, "<=", F(113, 100))
+check("implicit (c02): Es <= 1.13 (true max 1.1313 at Ea=1.6, beta=0.18, Ip=0.012) — no certificate passes",
+      fals is None or not ZC.check(ec, qc, "<=", F(113, 100), fals, implicit=gc)[0])
+free = search(ec, qc, "<=", F(118, 100))
+check("implicit (c02): the SAME bound with I as a free box is not certified (the correlation J6 lost)",
+      free is None or not ZC.check(ec, qc, "<=", F(118, 100), free)[0])
+
+# 7b. mutations of an accepted implicit certificate
+def leaves(t):
+    return [t] if "leaf" in t else leaves(t["lo"]) + leaves(t["hi"])
+
+
+def mutated(t, f):
+    import copy
+    t = copy.deepcopy(t)
+    f(leaves(t))
+    return t
+
+
+def shift_roots(ls):
+    for lf in ls:
+        if "roots" in lf:
+            a, b = (F(x) for x in lf["roots"]["I"])
+            lf["roots"]["I"] = [fs(b + (b - a) + F(1, 10 ** 6)), fs(b + 2 * (b - a) + F(1, 10 ** 5))]
+            return
+
+
+def drop_corner(ls):
+    for lf in ls:
+        if lf["leaf"] == "monotone":
+            lf.pop("corner_roots"); return
+
+
+def flip(ls):
+    for lf in ls:
+        if lf["leaf"] == "monotone":
+            n = sorted(lf["signs"])[0]
+            lf["signs"][n] = "-" if lf["signs"][n] == "+" else "+"; return
+
+
+def out_of_range(ls):
+    for lf in ls:
+        if "roots" in lf:
+            lf["roots"]["I"] = ["0", lf["roots"]["I"][1]]; return
+
+
+for name, f in (("a bracket moved off the root", shift_roots), ("a monotone leaf without its corner bracket",
+                drop_corner), ("a flipped total-derivative sign", flip), ("a bracket outside U's range", out_of_range)):
+    if ct and any(lf["leaf"] == "monotone" for lf in leaves(ct)) or name in ("a bracket moved off the root",
+                                                                            "a bracket outside U's range"):
+        r = ZC.check(ec, qc, "<=", F(118, 100), mutated(ct, f), implicit=gc)
+        check(f"implicit MUTATION refused: {name}", not r[0], str(r))
+# two roots in the range: dg/dU crosses zero -> no bracket claims uniqueness
+e2i, g2i, q2i = setup_i("U + x", {"U": "U*U - x"}, {"x": (F(1), F(2))}, {"U": (F(-2), F(2))})
+r2 = ZC.check(e2i, g2i and e2i, q2i, "<=", F(3), {"leaf": "interval", "roots": {"U": ["1", "2"]}}, implicit=g2i) \
+    if False else ZC.check(e2i, q2i, "<=", F(3), {"leaf": "interval", "roots": {"U": ["1", "2"]}}, implicit=g2i)
+check("implicit: two roots in U's range (U = ±sqrt(x)) — a bracket around one is refused (dg/dU crosses 0)",
+      not r2[0] and "strict sign" in r2[1], str(r2))
+r2b = ZC.check(e2i, q2i, "<=", F(4), {"leaf": "interval"}, implicit=g2i)
+check("implicit: with NO bracket U is read over its whole range — sound for every root (U + x <= 4 holds)", r2b[0], str(r2b))
+r2c = ZC.check(e2i, q2i, "<=", F(3), {"leaf": "interval"}, implicit=g2i)
+check("implicit: ... and U + x <= 3 refused (U = sqrt(2) at x = 2 gives 3.41)", not r2c[0], str(r2c))
+
+# 7c. random implicit cases: certified bounds hold at corners and random interior points (true roots in floats)
+import math
+FAM = [("U*{k} + {c}*exp(U) - ({a}*x + y)", lambda U, x, y, k, c, a: U * k + c * math.exp(U) - (a * x + y)),
+       ("U*U*U + {k}*U - ({a}*x - y)", lambda U, x, y, k, c, a: U ** 3 + k * U - (a * x - y)),
+       ("U*{k} + {c}*ln(U + 3) - x*y", lambda U, x, y, k, c, a: U * k + c * math.log(U + 3) - x * y)]
+EXPRS = [("x - U*{c}", lambda U, x, y, c: x - U * c), ("U*x + y", lambda U, x, y, c: U * x + y),
+         ("x*y - U*U", lambda U, x, y, c: x * y - U * U), ("y/(U + 3) + x", lambda U, x, y, c: y / (U + 3) + x)]
+rng = random.Random(41)
+acc = sound_bad = refused_false = tried_false = 0
+for i in range(60):
+    gt, gf = FAM[i % 3]
+    et, ef = EXPRS[(i // 3) % 4]
+    k, c, a = F(rng.randint(5, 30), 10), F(rng.randint(1, 10), 10), F(rng.randint(5, 20), 10)
+    bx = {"x": (F(rng.randint(1, 5), 10), F(rng.randint(6, 12), 10)), "y": (F(rng.randint(1, 5), 10), F(rng.randint(6, 12), 10))}
+    gtext = gt.format(k=fs(k), c=fs(c), a=fs(a))
+    gfun = lambda U, x, y: gf(U, x, y, float(k), float(c), float(a))
+    efun = lambda U, x, y: ef(U, x, y, float(c))
+    e7, g7, q7 = setup_i(et.format(c=fs(c)), {"U": gtext}, bx, {"U": (F(-2), F(2))})
+    pts = [(x, y) for x in bx["x"] for y in bx["y"]] + \
+        [(float(bx["x"][0]) + rng.random() * float(bx["x"][1] - bx["x"][0]),
+          float(bx["y"][0]) + rng.random() * float(bx["y"][1] - bx["y"][0])) for _ in range(40)]
+    vals = []
+    for x, y in pts:
+        x, y = float(x), float(y)
+        if gfun(-2, x, y) >= 0 or gfun(2, x, y) <= 0:
+            vals = None; break
+        vals.append(efun(root_f(lambda u: gfun(u, x, y), -2.0, 2.0), x, y))
+    if vals is None:
+        continue
+    top = max(vals)
+    bound = F(top + 0.02 * (abs(top) + 1)).limit_denominator(10 ** 6)
+    cert = search_i(e7, g7, q7, "<=", bound, depth=6)
+    if cert and ZC.check(e7, q7, "<=", bound, cert, implicit=g7)[0]:
+        acc += 1
+        if any(v > float(bound) + 1e-9 for v in vals):
+            sound_bad += 1
+    low = F(top - 0.02 * (abs(top) + 1)).limit_denominator(10 ** 6)
+    tried_false += 1
+    cf = search_i(e7, g7, q7, "<=", low, depth=6)
+    if cf is None or not ZC.check(e7, q7, "<=", low, cf, implicit=g7)[0]:
+        refused_false += 1
+check(f"implicit random: {acc} certified bounds, every sampled true value below them", acc >= 30 and sound_bad == 0,
+      f"accepted {acc}, violated {sound_bad}")
+check(f"implicit random: {refused_false}/{tried_false} bounds BELOW a sampled true value refused",
+      refused_false == tried_false and tried_false > 30)
+
+# 7d. MUTATION of the kernel: the total derivative replaced by the partial one (dU/dx forgotten)
+eM, gM, qM = setup_i("x - U", {"U": "U - 2*x"}, {"x": (F(1), F(2))}, {"U": (F(0), F(5))})   # U = 2x: x - U = -x
+lyingcert = {"leaf": "monotone", "signs": {"x": "+"}, "roots": {"U": ["2", "4"]}, "corner_roots": {"U": ["4", "4"]}}
+honest = ZC.check(eM, qM, "<=", F(-2), lyingcert, implicit=gM)
+real_td = ZC._total_derivative
+ZC._total_derivative = lambda e, n, imp: ZC.derivative(e, n)
+lying = ZC.check(eM, qM, "<=", F(-2), lyingcert, implicit=gM)
+ZC._total_derivative = real_td
+check("MUTATION: x - U <= -2 with U = 2x (true max -1 at x = 1) — refused by the kernel; passes once dU/dx is "
+      "forgotten (the stand sees a lying kernel)", not honest[0] and lying[0], str((honest, lying)))
+
 print(f"certify: {ok} ok, {fail} failed")
 print("CERTIFY GREEN" if fail == 0 else "CERTIFY RED")

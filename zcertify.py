@@ -12,6 +12,9 @@ sees it. Zero trust in the searcher: only what checks counts.
 
 WHAT IS CERTIFIED (first tranche): `E <= c` or `E >= c` for an arithmetic
 expression E of boxed quantities (+ - * / sum sqrt), over their whole box.
+(Second tranche: E of unknowns solved from a linear system — check_system. Third,
+2026-10-11: E of IMPLICIT quantities, roots of their own laws, kept moving with the
+box — `check(..., implicit=)`, see IMPLICIT QUANTITIES below; not proved in Lean.)
 
 THE CERTIFICATE is a bisection tree over the box:
     {"split": name, "at": "p/q", "lo": tree, "hi": tree}   the box cut at name = at
@@ -199,19 +202,33 @@ def _plain(e, q2):
     return iv
 
 
-def check(expr, quantities, op, bound, cert):
+def check(expr, quantities, op, bound, cert, implicit=None):
     """Is `expr op bound` true over the quantities' whole box, by this certificate?
     `expr` a reader node (znumjudge._parse_arith), `op` "<=" or ">=", `bound` a
-    Fraction. Returns (True, pieces) or (False, reason)."""
+    Fraction. Returns (True, pieces) or (False, reason).
+
+    implicit = {U: g}: U in expr is not a boxed quantity but a ROOT of g(U, x) = 0 (g a reader node of
+    U and the boxed quantities only), sought in U's own range in `quantities` — see IMPLICIT below."""
     if op not in ("<=", ">="):
         return False, f"op {op!r}: only <= and >= are certified"
-    names = sorted(n for n in _names(expr) if n in quantities)
+    implicit = implicit or {}
+    for u, g in implicit.items():
+        if u not in quantities:
+            return False, f"implicit {u}: no range given"
+        extra = _names(g) & set(implicit) - {u}
+        if extra:
+            return False, f"implicit {u}: its law uses the implicit {sorted(extra)} (coupled roots: not read)"
+    used = set(_names(expr))
+    for g in implicit.values():
+        used |= _names(g)
+    names = sorted(n for n in used if n in quantities and n not in implicit)
     box = {n: (quantities[n]["lo"], quantities[n]["hi"]) for n in names}
-    for n, (lo, hi) in box.items():
+    for n, (lo, hi) in list(box.items()) + [(u, (quantities[u]["lo"], quantities[u]["hi"])) for u in implicit]:
         if isinstance(lo, float) or isinstance(hi, float):
             return False, f"{n} is unbounded: no certificate covers an infinite box"
     derivs = {}
     count = [0]
+    roots_of = _implicit_roots(implicit, quantities)
 
     def walk(node, piece, path):
         if not isinstance(node, dict):
@@ -235,6 +252,11 @@ def check(expr, quantities, op, bound, cert):
             return walk(node.get("hi"), right, path + f"/{n}>={at}")
         leaf = node.get("leaf")
         count[0] += 1
+        if implicit:
+            ok, at_piece = roots_of(node.get("roots"), piece)
+            if not ok:
+                return False, f"{path}: {at_piece}"
+            piece = dict(piece, **at_piece)          # each U read over its bracket on this piece
         if leaf == "interval":
             r = _reading(expr, quantities, piece)
             if r is None:
@@ -243,8 +265,12 @@ def check(expr, quantities, op, bound, cert):
             return (True, None) if good else (False, f"{path}: interval reading [{r[0]}, {r[1]}] does not settle {op} {bound}")
         if leaf == "monotone":
             signs = node.get("signs") or {}
+            if implicit and not all(u in (node.get("roots") or {}) for u in implicit):
+                return False, f"{path}: a monotone leaf with an implicit quantity needs its bracket on the piece"
             corner = {}
             for n, (lo, hi) in piece.items():
+                if n in implicit:
+                    continue
                 if lo == hi:
                     corner[n] = (lo, lo)
                     continue
@@ -253,7 +279,7 @@ def check(expr, quantities, op, bound, cert):
                     return False, f"{path}: {n} has width and no sign"
                 if n not in derivs:
                     try:
-                        derivs[n] = derivative(expr, n)
+                        derivs[n] = _total_derivative(expr, n, implicit)
                     except NoDerivative as why:
                         return False, f"{path}: {why} — a monotone leaf cannot use it (an interval leaf can)"
                 r = _reading(derivs[n], quantities, piece)
@@ -266,6 +292,11 @@ def check(expr, quantities, op, bound, cert):
                 up = (s == "+") == (op == "<=")       # toward the extreme being bounded
                 v = hi if up else lo
                 corner[n] = (v, v)
+            if implicit:
+                ok, at_corner = roots_of(node.get("corner_roots"), corner)
+                if not ok:
+                    return False, f"{path}: at the corner: {at_corner}"
+                corner = dict(corner, **at_corner)
             r = _reading(expr, quantities, corner)
             if r is None:
                 return False, f"{path}: no value at the corner"
@@ -275,6 +306,77 @@ def check(expr, quantities, op, bound, cert):
 
     ok, why = walk(cert, box, "")
     return (True, count[0]) if ok else (False, why)
+
+
+# ── IMPLICIT QUANTITIES (third tranche, 2026-10-11, the universal stand's gap J6) ──────────
+# The bound is on E(x, U) where U is a root of g(U, x) = 0 — a pump's operating point, a cell's
+# current through its own polarisation. Given U as a free box the reading forgets that U moves WITH x
+# (c02 of blind test 4: Es = Ea - I*R read with Ea and I independent, 0.036 V too wide where the
+# margin was 0.002 V). Here U stays a function of x:
+#   UNIQUE: dg/dU has one strict sign over the piece × U's whole range -> at most one root there for
+#           each x (U's range itself — that no root lies outside it — is zimplicit's certificate, checked
+#           apart; this file never widens it);
+#   BRACKET "roots": {U: [a, b]} on a leaf, inside U's range: g(a, piece) and g(b, piece) read on the
+#           two sides of 0 the sign of dg/dU asks for -> for EVERY x of the piece the root exists and
+#           lies in [a, b] (intermediate values). Without a bracket an interval leaf reads U over its
+#           whole range (nothing claimed about it);
+#   MONOTONE: on a piece where the root is unique and bracketed, U(x) is continuous (one root of a
+#           closed graph in a compact bracket) and, as dg/dU != 0, differentiable with
+#           dU/dx = -g_x / g_U (the implicit function theorem); E's TOTAL derivative
+#           dE/dx + dE/dU * dU/dx is read over the piece × the bracket. A sign makes E(x, U(x))
+#           monotone in x on the piece (mean value theorem), and the corner the signs point to is
+#           read with U in the bracket "corner_roots" checked AT that corner.
+# NOT PROVED IN LEAN (the curator, 2026-10-11: "the Lean proof later"): ZCertify.lean proves the rule
+# for explicit expressions; the implicit function step stands on the theorem as stated above.
+def _implicit_roots(implicit, quantities):
+    usign = {}
+
+    def at(brackets, piece):
+        """(True, {U: (a, b)}) — each U's bracket over the piece, checked — or (False, why)."""
+        out = {}
+        brackets = brackets or {}
+        for u, g in implicit.items():
+            rlo, rhi = quantities[u]["lo"], quantities[u]["hi"]
+            if u not in brackets:
+                out[u] = (rlo, rhi)              # anywhere in its range: claims nothing
+                continue
+            try:
+                a, b = (Fraction(str(x)) for x in brackets[u])
+            except (ValueError, TypeError, ZeroDivisionError):
+                return False, f"the bracket of {u} is unreadable"
+            if not (rlo <= a <= b <= rhi):
+                return False, f"the bracket [{a}, {b}] of {u} leaves its range [{rlo}, {rhi}]"
+            key = (u, tuple(sorted(piece.items())))
+            if key not in usign:
+                try:
+                    r = _reading(derivative(g, u), quantities, dict(piece, **{u: (rlo, rhi)}))
+                except NoDerivative as why:
+                    return False, f"d{u} of its law: {why}"
+                usign[key] = None if r is None else (1 if r[0] > 0 else -1 if r[1] < 0 else None)
+            s = usign[key]
+            if s is None:
+                return False, f"d/d{u} of its law does not keep one strict sign over the piece × [{rlo}, {rhi}]"
+            ra = _reading(g, quantities, dict(piece, **{u: (a, a)}))
+            rb = _reading(g, quantities, dict(piece, **{u: (b, b)}))
+            if ra is None or rb is None:
+                return False, f"the law of {u} has no reading at its bracket"
+            if not ((ra[1] <= 0 <= rb[0]) if s > 0 else (ra[0] >= 0 >= rb[1])):
+                return False, f"the law of {u} does not change sign across [{a}, {b}] on the piece"
+            out[u] = (a, b)
+        return True, out
+    return at
+
+
+def _total_derivative(expr, n, implicit):
+    """dE/dn with every implicit U a function of the boxed quantities: + dE/dU * (-g_n / g_U)."""
+    d = derivative(expr, n)
+    for u, g in (implicit or {}).items():
+        du_e = derivative(expr, u)
+        gn = derivative(g, n)
+        if _is0(du_e) or _is0(gn):
+            continue
+        d = _add(d, _mul(du_e, ("div", ("sub", ZERO, gn), derivative(g, u))))
+    return d
 
 
 # ── A QUANTITY SOLVED FROM A SYSTEM (second tranche, 2026-10-09) ──────────────

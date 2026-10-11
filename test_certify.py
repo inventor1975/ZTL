@@ -640,5 +640,73 @@ ZC._total_derivative = real_td
 check("MUTATION: x - U <= -2 with U = 2x (true max -1 at x = 1) — refused by the kernel; passes once dU/dx is "
       "forgotten (the stand sees a lying kernel)", not honest[0] and lying[0], str((honest, lying)))
 
+
+# 8. CASES (2026-10-11): min / max / ifpos read one choice at a time, each choice's condition kept (weak duality),
+#    shared affine symbols — the universal stand's blind test 5, c09 (a coverage margin exactly 0 over regions)
+print("\n8. cases: branches read by choice")
+qc = parse_quantities("B=[1795,1796] credit, I=[1000,3000] credit, u=[1/2,1] credit, cap=[400,400] credit")[0]
+ec = _parse_arith("B + min(cap, max(0, I/u - B)) - I/u + max(0, I/u - B - cap)", qc)     # = max(B - I/u, 0) >= 0
+p_dec = {"I": (F(1800), F(1900)), "u": (F(9, 10), F(1))}             # all branches decided: exactly 0
+p_str = {"I": (F(1790), F(1800)), "u": (F(99, 100), F(1))}           # the switch I/u = B inside the piece
+r_dec, r_str = ZC._reading(ec, qc, p_dec), ZC._reading(ec, qc, p_str)
+ZC.CASES = False
+o_dec, o_str = ZC._reading(ec, qc, p_dec), ZC._reading(ec, qc, p_str)
+ZC.CASES = True
+check("coverage B + F + S - N: [0, 0] where every branch is decided (plain + affine: +-312), lower end exactly 0 "
+      "where the switch crosses the piece (plain: -23)", r_dec == (0, 0) and r_str[0] == 0 and o_dec[0] < 0 and o_str[0] < 0,
+      str((r_dec, r_str, o_dec, o_str)))
+import itertools as _it
+rng8 = random.Random(31)
+
+
+def _gen8(d):
+    if d == 0 or rng8.random() < 0.2:
+        return rng8.choice(["x", "y", "z", str(rng8.randint(1, 4))])
+    k = rng8.random(); a, b = _gen8(d - 1), _gen8(d - 1)
+    if k < 0.2: return f"min({a}, {b})"
+    if k < 0.4: return f"max({a}, {b})"
+    if k < 0.5: return f"ifpos({_gen8(d - 1)}, {a}, {b})"
+    if k < 0.65: return f"({a} + {b})"
+    if k < 0.8: return f"({a} - {b})"
+    if k < 0.9: return f"({a}*{b})"
+    return f"({a}/(1 + {b}*{b}))"
+
+
+unsound = tested8 = tighter8 = 0
+for _ in range(600):
+    txt = _gen8(5)
+    box = {}
+    for v in "xyz":
+        a, b = sorted([F(rng8.randint(-20, 20), rng8.randint(1, 3)), F(rng8.randint(-20, 20), rng8.randint(1, 3))])
+        box[v] = (a, b if b > a else a + 1)
+    q8 = parse_quantities(", ".join(f"{v}=[{fs(a)},{fs(b)}] credit" for v, (a, b) in box.items()))[0]
+    try:
+        e8 = _parse_arith(txt, q8)
+    except Exception:
+        continue
+    ZC.CASES = False; r0 = ZC._reading(e8, q8, box)
+    ZC.CASES = True; r1 = ZC._reading(e8, q8, box)
+    if r0 is None or r1 is None:
+        continue
+    tested8 += 1; tighter8 += (r1[1] - r1[0]) < (r0[1] - r0[0])
+    pts = [dict(zip("xyz", c)) for c in _it.product(*[box[v] for v in "xyz"])]
+    pts += [{v: box[v][0] + (box[v][1] - box[v][0]) * F(rng8.randint(0, 64), 64) for v in "xyz"} for _ in range(20)]
+    ZC.CASES = False
+    for pt in pts:
+        val = ZC._reading(e8, q8, {v: (x, x) for v, x in pt.items()})
+        if val is not None and not (r1[0] <= val[0] and val[1] <= r1[1]):
+            unsound += 1; break
+    ZC.CASES = True
+check(f"cases, random: {tested8} expressions with min/max/ifpos/products/quotients — every corner and 20 inner "
+      f"points inside the case reading ({tighter8} tighter than the plain one)", unsound == 0 and tested8 > 300 and tighter8 > 30,
+      f"unsound {unsound}")
+# MUTATION: a kernel that drops a case's condition (no weak duality) must lose the zero margin across the switch
+_real_dual = ZC._dual_low
+ZC._dual_low = lambda f, gs: (_real_dual(f, [])[0], False)
+r_mut = ZC._reading(ec, qc, p_str)
+ZC._dual_low = _real_dual
+check("MUTATION: with each case's condition dropped the switching piece reads below 0 — the conditions carry it",
+      r_mut[0] < 0, str(r_mut))
+
 print(f"certify: {ok} ok, {fail} failed")
 print("CERTIFY GREEN" if fail == 0 else "CERTIFY RED")

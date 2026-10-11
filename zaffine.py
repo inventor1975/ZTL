@@ -166,9 +166,15 @@ def _atan(x):
     return _minrange(x, f, df, convex, _pick_end(df(a), df(b)))
 
 
-def read(e, qs, piece, rat_sqrt, plain):
+def read(e, qs, piece, rat_sqrt, plain, shared=False):
     """(lo, hi) — the affine reading of reader node e over the box (qs with piece's ranges), or None.
-    plain(node) -> the caller's plain reading of a subtree (used for nodes this file does not linearise)."""
+    plain(node) -> the caller's plain reading of a subtree (used for nodes this file does not linearise).
+
+    shared (2026-10-11, zcertify's case reading): the classic affine-arithmetic form — the error a nonlinear step
+    leaves becomes its OWN noise symbol, and a subtree met twice in the session is read once (the same value at
+    every point: the same symbols). Then x - x is exactly 0 also for a nonlinear x (B + (I/u - B) - I/u: the
+    blind test 5 c09 coverage margin, exactly 0 over whole regions). Sound: each symbol ranges over [-1, 1] and
+    stands for one quantity of the session."""
     def leaf(name):
         lo, hi = piece.get(name, (qs[name]["lo"], qs[name]["hi"]))
         if isinstance(lo, float) or isinstance(hi, float):
@@ -189,7 +195,24 @@ def read(e, qs, piece, rat_sqrt, plain):
         fresh[0] += 1
         return Aff((lo + hi) / 2, {("#", fresh[0]): (hi - lo) / 2} if lo != hi else {})
 
+    memo = {} if shared else None
+    sym = [0]
+
     def ev(n):
+        if memo is None or not isinstance(n, tuple):
+            return ev1(n)
+        key = repr(n)
+        if key not in memo:
+            out = ev1(n)
+            if out.e and n[0] not in ("add", "sub"):
+                sym[0] += 1                  # the step's own error: a symbol of its own, shared by every use
+                t = dict(out.t)
+                t[("~", sym[0])] = out.e
+                out = Aff(out.c, t, Fraction(0))
+            memo[key] = out
+        return memo[key]
+
+    def ev1(n):
         if isinstance(n, (int, Fraction)):
             return Aff(Fraction(n))
         if isinstance(n, str):
@@ -231,7 +254,10 @@ def read(e, qs, piece, rat_sqrt, plain):
             pass
         return opaque(n)                     # min, max, a branch, a sum, tan, or a failed linearisation
 
+
     try:
+        if isinstance(e, list):          # several nodes in ONE session: shared inputs (zcertify's case reading)
+            return [ev(x) for x in e]
         out = ev(e)
     except (Unknown, ZeroDivisionError, ZF.NoReadings, ValueError, OverflowError, TypeError):
         return None

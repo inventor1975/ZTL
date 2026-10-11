@@ -14,7 +14,8 @@ WHAT IS CERTIFIED (first tranche): `E <= c` or `E >= c` for an arithmetic
 expression E of boxed quantities (+ - * / sum sqrt), over their whole box.
 (Second tranche: E of unknowns solved from a linear system — check_system. Third,
 2026-10-11: E of IMPLICIT quantities, roots of their own laws, kept moving with the
-box — `check(..., implicit=)`, see IMPLICIT QUANTITIES below; not proved in Lean.)
+box — `check(..., implicit=)`, see IMPLICIT QUANTITIES below; not proved in Lean.
+Fourth, 2026-10-11: every reading takes min / max / ifpos one choice at a time — see CASES; not proved in Lean.)
 
 THE CERTIFICATE is a bisection tree over the box:
     {"split": name, "at": "p/q", "lo": tree, "hi": tree}   the box cut at name = at
@@ -167,8 +168,217 @@ def _names(e, acc=None):
     return acc
 
 
-def _reading(e, qs, piece):
+# ── CASES: branches read one choice at a time (2026-10-11, the curator's "да"; the universal stand's blind test 5,
+# c09: coverage B + F + S - N with F = min(cap, max(0, N - B)) is EXACTLY 0 wherever B < N < B + cap, and no
+# enclosure with any slack proves ">= 0" there — the reading must see B + (N - B) - N cancel).
+# On a piece, every min / max / ifpos whose condition the reading DECIDES is replaced by its branch; the ones it
+# does not decide (at most CASE_BITS of them) are tried both ways, every combination read on its own (with the
+# affine reading, so the linear parts cancel) and the HULL taken. Sound: at each point of the piece the true value
+# is one combination's value there, and each combination's reading encloses its values over the whole piece.
+# The result is met with the plain reading (both enclose). NOT PROVED IN LEAN (the curator: "Lean later").
+CASES = True
+CASE_BITS = 6
+_BRANCH = ("min", "max", "ifpos")
+
+
+def _branch_nodes(e, acc):
+    if isinstance(e, tuple):
+        if e[0] in _BRANCH:
+            acc.append(e)
+        for a in e[1:]:
+            if isinstance(a, list):
+                for x in a:
+                    _branch_nodes(x, acc)
+            else:
+                _branch_nodes(a, acc)
+    return acc
+
+
+def _unique_branches(nodes):
+    """One per STRUCTURE: a subtree met twice has one value at each point, so one choice (blind test 5, c09: F
+    inside S and beside it)."""
+    seen, out = set(), []
+    for n in nodes:
+        k = repr(n)
+        if k not in seen:
+            seen.add(k)
+            out.append(n)
+    return out
+
+
+def _side_of(node, qs, piece):
+    """+1: the first value is taken over the whole piece (min: a <= b, max: a >= b, ifpos: x > 0); -1: the second;
+    0: not decided."""
+    op = node[0]
+    cond = node[1] if op == "ifpos" else ("sub", node[1], node[2])
+    r = _reading(cond, qs, piece, cases=False)
+    if r is None:
+        return 0
+    if op == "ifpos":
+        return 1 if r[0] > 0 else (-1 if r[1] <= 0 else 0)
+    if op == "min":
+        return 1 if r[1] <= 0 else (-1 if r[0] >= 0 else 0)
+    return 1 if r[0] >= 0 else (-1 if r[1] <= 0 else 0)          # max
+
+
+def _resolve(e, sides):
+    if isinstance(e, tuple):
+        if e[0] in _BRANCH and repr(e) in sides:
+            first = e[2] if e[0] == "ifpos" else e[1]
+            second = e[3] if e[0] == "ifpos" else e[2]
+            return _resolve(first if sides[repr(e)] == 1 else second, sides)
+        return (e[0], *[[_resolve(x, sides) for x in a] if isinstance(a, list) else _resolve(a, sides) for a in e[1:]])
+    return e
+
+
+def _dual_low(f, gs):
+    """A lower bound of the affine f over the inputs' cube [-1, 1]^n where every affine g in gs is <= 0 (each g's
+    own error allowed for) — weak duality: for ANY lam >= 0, min over the cube of f + sum lam_j (g_j - err_j),
+    minus f's error. lam is sought coordinate by coordinate among the breakpoints (any lam is sound; a good one is
+    tight). Returns (bound, impossible): impossible when some lam proves the constraints cannot hold together."""
+    keys = set(f.t)
+    for g in gs:
+        keys |= set(g.t)
+    keys = sorted(keys, key=repr)
+
+    def value(lam, with_f):
+        c = (f.c - f.e) if with_f else Fraction(0)
+        t = {k: (f.t.get(k, Fraction(0)) if with_f else Fraction(0)) for k in keys}
+        for l, g in zip(lam, gs):
+            if l:
+                c += l * (g.c - g.e)
+                for k in keys:
+                    t[k] += l * g.t.get(k, Fraction(0))
+        return c - sum((abs(v) for v in t.values()), Fraction(0))
+
+    def ascend(with_f):
+        lam = [Fraction(0)] * len(gs)
+        best = value(lam, with_f)
+        for _ in range(3):
+            for j, g in enumerate(gs):
+                cands = {Fraction(0)}
+                for k in keys:
+                    b = g.t.get(k, Fraction(0))
+                    if b:
+                        a = (f.t.get(k, Fraction(0)) if with_f else Fraction(0)) + \
+                            sum((l * h.t.get(k, Fraction(0)) for i, (l, h) in enumerate(zip(lam, gs)) if i != j),
+                                Fraction(0))
+                        x = -a / b
+                        if x > 0:
+                            cands.add(x)
+                if not with_f:
+                    cands |= {x * 2 for x in list(cands)} | {Fraction(1)}
+                for x in cands:
+                    trial = lam[:j] + [x] + lam[j + 1:]
+                    v = value(trial, with_f)
+                    if v > best:
+                        best, lam = v, trial
+        return best
+    if gs and ascend(False) > 0:
+        return None, True
+    return ascend(True), False
+
+
+CASE_LEAVES = 256      # combinations read on one piece at most; more and the piece is read plainly (a cut follows)
+
+
+class _TooMany(Exception):
+    pass
+
+
+def _cond_g(n, side):
+    """The condition under which `side` of branch n is taken, as g <= 0 (closed)."""
+    if n[0] == "ifpos":
+        return ("sub", 0, n[1]) if side == 1 else n[1]                 # x > 0  /  x <= 0
+    if n[0] == "min":
+        return ("sub", n[1], n[2]) if side == 1 else ("sub", n[2], n[1])
+    return ("sub", n[2], n[1]) if side == 1 else ("sub", n[1], n[2])   # max
+
+
+def _case_reading(e, qs, piece, base):
+    # an OUTER min / max: its bound is the min / max of its arguments' bounds — each read by cases on its own
+    if isinstance(e, tuple) and e[0] in ("min", "max"):
+        ra = _reading(e[1], qs, piece)
+        rb = _reading(e[2], qs, piece)
+        if ra is None or rb is None:
+            return base
+        r = (min(ra[0], rb[0]), min(ra[1], rb[1])) if e[0] == "min" else (max(ra[0], rb[0]), max(ra[1], rb[1]))
+        if base is None:
+            return r
+        lo, hi = max(r[0], base[0]), min(r[1], base[1])
+        return (lo, hi) if lo <= hi else base
+    if not _branch_nodes(e, []):
+        return base
+    q2 = dict(qs)
+    for n_, (a_, b_) in piece.items():
+        q2[n_] = dict(qs[n_], lo=a_, hi=b_)
+    leaves = []
+
+    def settle(f, gs):
+        """Every branch the reading decides on the piece, replaced — until none is left to decide."""
+        while True:
+            sides = {}
+            for n in _unique_branches(_branch_nodes(f, [])):
+                sd = _side_of(n, qs, piece)
+                if sd:
+                    sides[repr(n)] = sd
+            if not sides:
+                return f, gs
+            f = _resolve(f, sides)
+            gs = [_resolve(g, sides) for g in gs]
+
+    def go(f, gs):
+        # A TREE, not the product (2026-10-11, c09's cost: 7 undecided of 20 — most decide themselves once a
+        # neighbour is chosen, max(0, N - B - F) with F = N - B is max(0, 0)): choose one undecided branch, both
+        # ways, settle what that decides, go on; each choice's condition is kept as g <= 0
+        f, gs = settle(f, gs)
+        open_ = _unique_branches(_branch_nodes(f, []))
+        if not open_:
+            leaves.append((f, gs))
+            if len(leaves) > CASE_LEAVES:
+                raise _TooMany()
+            return
+        n = min(open_, key=lambda x: len(repr(x)))          # an innermost one first
+        for side in (1, -1):
+            sub = {repr(n): side}
+            go(_resolve(f, sub), [_resolve(g, sub) for g in gs] + [_resolve(_cond_g(n, side), sub)])
+    try:
+        go(e, [])
+    except _TooMany:
+        return base
+    lo = hi = None
+    for fe, gs in leaves:
+        r = _reading(fe, qs, piece, cases=False, affine=True)
+        if r is None:
+            return base
+        affs = _ZA.read([fe, ("sub", 0, fe)] + gs, qs, piece, _rat_sqrt, lambda n_: _plain(n_, q2), shared=True)
+        if affs:
+            low, impossible = _dual_low(affs[0], affs[2:])
+            if impossible:
+                continue                    # no point of the piece is in this case
+            neg, _ = _dual_low(affs[1], affs[2:])
+            r = (max(r[0], low), min(r[1], -neg))
+            if r[0] > r[1]:
+                continue
+        lo = r[0] if lo is None else min(lo, r[0])
+        hi = r[1] if hi is None else max(hi, r[1])
+    if lo is None:
+        return base
+    if base is None:
+        return lo, hi
+    lo, hi = max(lo, base[0]), min(hi, base[1])
+    return (lo, hi) if lo <= hi else base
+
+
+def _reading(e, qs, piece, cases=None, affine=None):
     """E's interval over the piece (each name's box replaced), or None."""
+    base = _reading_one(e, qs, piece, AFFINE if affine is None else affine)
+    if (CASES if cases is None else cases):
+        return _case_reading(e, qs, piece, base)
+    return base
+
+
+def _reading_one(e, qs, piece, affine):
     q2 = dict(qs)
     for n, (lo, hi) in piece.items():
         q2[n] = dict(qs[n], lo=lo, hi=hi)
@@ -183,7 +393,7 @@ def _reading(e, qs, piece):
         return None           # an infinite end: nothing certified from it
     # AFFINE reading (zaffine.py, 2026-10-10): remembers which input a spread came from; intersected with
     # the plain one — both enclose, the meet is never wider. Not applied to a POINT reading (nothing to gain).
-    if AFFINE and any(qs[n]["lo"] != qs[n]["hi"] if n not in piece else piece[n][0] != piece[n][1]
+    if affine and any(qs[n]["lo"] != qs[n]["hi"] if n not in piece else piece[n][0] != piece[n][1]
                       for n in _names(e) if n in qs):
         af = _ZA.read(e, qs, piece, _rat_sqrt, lambda n: _plain(n, q2))
         if af is not None and af[0] <= hi and af[1] >= lo:

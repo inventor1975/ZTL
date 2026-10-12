@@ -69,7 +69,7 @@ sys.path.insert(0, _HERE)
 
 from ztljudge import judge                                  # noqa: E402
 from znum import (EARNED, CREDIT, INF, qty, compare, num,   # noqa: E402
-                  typename, bounds_bearing, type_bearing)
+                  typename, type_bearing, _degrade)
 
 
 # ------------------------------------------------------------ sheet parsing
@@ -408,10 +408,23 @@ def judge_sheet_claim(formula, quantities, marks, fixed=None):
     # an atom read JOINTLY (`fixed`) rests on every credit quantity of its
     # system: the widening probe re-reads it apart and would see nothing move,
     # so for it the whole credit pedigree bears — the cautious side
+    # bounds_bearing's probe, each answer computed ONCE (2026-10-12, the universal stand: a pension portfolio of 14
+    # bonds spent 113 s here — every probe re-read the atom's unwidened verdict, and every (atom, quantity) pair was
+    # probed twice, here and in the cures below; 41.5 s with the cache, the same verdicts). Same rule as
+    # znum.bounds_bearing: widen q to full ignorance, does the atom's verdict move?
+    _base, _bear = {}, {}
+
     def _bears(n, q):
         if fixed and natoms[n][3] in fixed:
             return True
-        return bounds_bearing(*natoms[n][:3], quantities, q)
+        if (n, q) not in _bear:
+            kind, e1, e2 = natoms[n][:3]
+            if n not in _base:
+                _base[n] = compare(kind, e1, e2, quantities)[0]
+            wide = dict(quantities)
+            wide[q] = _degrade(quantities[q])
+            _bear[(n, q)] = compare(kind, e1, e2, wide)[0] != _base[n]
+        return _bear[(n, q)]
     bearing_credit = sorted({q for n in bearing
                              for q in numeric[n]["pedigree"]
                              if _bears(n, q)})

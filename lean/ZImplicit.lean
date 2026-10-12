@@ -91,6 +91,59 @@ theorem root_upper_bound (A : ZCertify.Ord α) (V : ZCertify.Ord β) (G : α →
     ∀ x p, InP p → G x p = z → ¬ Lt (ZCertify.Ord.dual A) x r :=
   root_lower_bound (ZCertify.Ord.dual A) (ZCertify.Ord.dual V) G z InP c r strict param root_c
 
+/-! ## A root that moves with the box (zcertify's third tranche, 2026-10-11, 7606b70)
+
+`check(..., implicit={U: g})`: on a piece, `U` is the root of `g(U, x) = 0`. The kernel reads `dg/dU` with one
+strict sign over the piece (UNIQUE), checks `g` on the two sides of `0` at a leaf's bracket `[a, b]` (IN THE
+BRACKET), and on a monotone leaf reads the TOTAL derivative `dE/dx + dE/dU · (−g_x/g_U)` and the one corner, with
+`U` read over the corner's own bracket. Proved here: the two root facts the kernel's checks give, and the leaf
+they make sound. Premises, named: the sign of `dg/dU` gives strict monotonicity, a sign change gives a root
+(intermediate values), and the total derivative's sign makes `E(x, U(x))` monotone (the implicit function and
+mean value theorems) — the analysis, as in ZCertify; what is proved is how the kernel combines them. -/
+
+/-- UNIQUE: a law strictly increasing in `U` has no two roots strictly ordered. -/
+theorem root_unique {γ : Type} (A : ZCertify.Ord γ) (V : ZCertify.Ord β) (g : γ → β) (z : β)
+    (strict : ∀ x y, Lt A x y → Lt V (g x) (g y)) {u1 u2 : γ} (h1 : g u1 = z) (h2 : g u2 = z) :
+    ¬ Lt A u1 u2 := by
+  intro hlt
+  have hs := strict u1 u2 hlt
+  rw [h1, h2] at hs
+  exact hs.2 (V.refl z)
+
+/-- IN THE BRACKET: strictly increasing, `g a ≤ z ≤ g b` — every root lies in `[a, b]` (constructively: not
+strictly below `a`, not strictly above `b`). That a root EXISTS is the intermediate value theorem, a premise. -/
+theorem root_in_bracket {γ : Type} (A : ZCertify.Ord γ) (V : ZCertify.Ord β) (g : γ → β) (z : β)
+    (strict : ∀ x y, Lt A x y → Lt V (g x) (g y)) {a b u : γ}
+    (ha : V.le (g a) z) (hb : V.le z (g b)) (hu : g u = z) :
+    ¬ Lt A u a ∧ ¬ Lt A b u := by
+  constructor
+  · intro hlt
+    have hs := strict u a hlt
+    rw [hu] at hs
+    exact hs.2 ha
+  · intro hlt
+    have hs := strict b u hlt
+    rw [hu] at hs
+    exact hs.2 hb
+
+/-- THE MONOTONE LEAF WITH A ROOT. `U p` is the root of the law `G · p` at each point; `E p (U p)` depends on the
+listed quantities only and is monotone toward their signs on the piece (the total derivative's reading — a
+premise); at the full corner the law is strictly increasing in `U` and changes sign across the corner's bracket
+`[a, b]`; and `E` read at the corner over the whole bracket is under the bound. Then `E p (U p)` is under the
+bound at every point of the piece — the root is never taken as a free box. -/
+theorem implicit_monotone_leaf {γ δ : Type} (O : ZCertify.Ord α) (A : ZCertify.Ord γ) (V : ZCertify.Ord β)
+    (W : ZCertify.Ord δ) (E : Point α → γ → δ) (U : Point α → γ) (G : γ → Point α → β) (z : β)
+    (B : Box α) (sg : Nat → Bool) (ns : List Nat) (c : δ) (a b : γ)
+    (dep : ∀ p q : Point α, (∀ j, List.Mem j ns → p j = q j) → E p (U p) = E q (U q))
+    (mono : ∀ i, List.Mem i ns → Mono O W (fun p => E p (U p)) B i (sg i))
+    (root_c : G (U (corner B sg)) (corner B sg) = z)
+    (strict_c : ∀ x y, Lt A x y → Lt V (G x (corner B sg)) (G y (corner B sg)))
+    (ha : V.le (G a (corner B sg)) z) (hb : V.le z (G b (corner B sg)))
+    (reading : ∀ u, ¬ Lt A u a → ¬ Lt A b u → W.le (E (corner B sg) u) c) :
+    ∀ p, InBox O B p → W.le (E p (U p)) c := by
+  have hbr := root_in_bracket A V (fun u => G u (corner B sg)) z strict_c ha hb root_c
+  exact monotone_leaf O W (fun p => E p (U p)) B sg ns c dep mono (reading _ hbr.1 hbr.2)
+
 /-! ## Nonvacuity, on the naturals -/
 
 /-- A kept piece `[1, 2]` inside the hull `[0, 5]` is accepted. -/
@@ -103,3 +156,6 @@ end ZImplicit
 #print axioms ZImplicit.enclosure_sound
 #print axioms ZImplicit.root_lower_bound
 #print axioms ZImplicit.root_upper_bound
+#print axioms ZImplicit.root_unique
+#print axioms ZImplicit.root_in_bracket
+#print axioms ZImplicit.implicit_monotone_leaf

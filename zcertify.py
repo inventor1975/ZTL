@@ -109,7 +109,7 @@ def derivative(e, name):
         if name in _names(e):
             raise NoDerivative(f"{op} has no derivative where its arguments cross")
         return ZERO
-    if op in ("exp", "ln", "log10", "atan", "tan"):
+    if op in ("exp", "ln", "log10", "atan", "tan", "sin", "cos"):
         u = args[0]
         du = derivative(u, name)
         if _is0(du):
@@ -122,6 +122,10 @@ def derivative(e, name):
             return ("div", du, ("mul", u, ("ln", Fraction(10))))
         if op == "atan":
             return ("div", du, ("add", ONE, ("mul", u, u)))
+        if op == "sin":
+            return _mul(du, ("cos", u))
+        if op == "cos":
+            return _mul(du, ("sub", ZERO, ("sin", u)))
         return _mul(du, ("add", ONE, ("mul", e, e)))          # tan
     if op == "pow":
         u, v = args
@@ -625,7 +629,7 @@ def _lin(node, unknowns):
             for k, v in _lin(a, unknowns).items():
                 out[k] = _add(out[k], v) if k in out else v
         return out
-    if op == "sqrt" or op in ("exp", "ln", "log10", "atan", "tan", "pow", "min", "max"):
+    if op == "sqrt" or op in ("exp", "ln", "log10", "atan", "tan", "sin", "cos", "pow", "min", "max"):
         if _names(node) & unknowns:
             raise SystemError_(f"an unknown inside {op}(...): not a linear system")
         return {1: node}

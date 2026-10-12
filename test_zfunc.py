@@ -77,6 +77,22 @@ check("1600 brackets (exp, ln, atan, tan): the true value inside every one", not
 check("and every bracket narrow (relative width < 1e-13)", not wide, str(wide[:3]))
 check("pi and ln 2 bracketed", mp(Z.PI[0]) <= mpmath.pi <= mp(Z.PI[1]) and mp(Z.LN2[0]) <= mpmath.log(2) <= mp(Z.LN2[1]))
 
+# sin and cos (2026-10-13): an absolute width (a relative one is meaningless at their zeros); any argument
+SC = [("sin", Z.sin_pt, mpmath.sin), ("cos", Z.cos_pt, mpmath.cos)]
+rng_sc, bad_sc, wide_sc = random.Random(13), [], []
+for name, f, ref in SC:
+    for _ in range(400):
+        x = F(rng_sc.randint(-10 ** 6, 10 ** 6), rng_sc.randint(1, 1000))
+        lo, hi = f(x)
+        t = ref(mp(x))
+        if not (mp(lo) <= t <= mp(hi)):
+            bad_sc.append((name, x))
+        elif mp(hi) - mp(lo) > mpmath.mpf("1e-12"):
+            wide_sc.append((name, x, float(mp(hi) - mp(lo))))
+check("800 brackets (sin, cos, |x| up to 10^6 through pi's own bracket): the true value inside every one", not bad_sc,
+      str(bad_sc[:3]))
+check("and every bracket narrow (absolute width < 1e-12)", not wide_sc, str(wide_sc[:3]))
+
 print("2. intervals: sound over the whole interval")
 
 
@@ -86,7 +102,9 @@ def intervals(n=300, seed=9):
              ("ln", Z.iv_ln, mpmath.log, lambda: F(rng.randint(1, 10 ** 5), 100)),
              ("log10", Z.iv_log10, mpmath.log10, lambda: F(rng.randint(1, 10 ** 5), 100)),
              ("atan", Z.iv_atan, mpmath.atan, lambda: F(rng.randint(-10 ** 4, 10 ** 4), 100)),
-             ("tan", Z.iv_tan, mpmath.tan, lambda: F(rng.randint(-1499, 1499), 1000))]
+             ("tan", Z.iv_tan, mpmath.tan, lambda: F(rng.randint(-1499, 1499), 1000)),
+             ("sin", Z.iv_sin, mpmath.sin, lambda: F(rng.randint(-2000, 2000), 100)),
+             ("cos", Z.iv_cos, mpmath.cos, lambda: F(rng.randint(-2000, 2000), 100))]
     for name, f, ref, gen in cases:
         for _ in range(n):
             a, b = sorted((gen(), gen()))
@@ -256,6 +274,23 @@ bad_m, _ = points(n=60, seed=11)
 Z.exp_pt = real
 FUNCS[0] = ("exp", Z.exp_pt, mpmath.exp, FUNCS[0][3])
 check("MUTATION: exp's bracket shrunk by a hair — the mpmath check sees values outside", len(bad_m) > 0)
+
+print("sin, cos: no extremum inside -> the ends; a certificate through their derivatives")
+r = Z.iv_sin((F(1, 10), F(3, 10)))
+check("sin over [0.1, 0.3] (no extremum inside): the ends' values, width within 1e-15 of sin 0.3 - sin 0.1",
+      abs(mp(r[1]) - mp(r[0]) - (mpmath.sin(mpmath.mpf(3) / 10) - mpmath.sin(mpmath.mpf(1) / 10))) < mpmath.mpf("1e-15"),
+      [float(x) for x in r])
+r = Z.iv_cos((F(-1, 2), F(1, 2)))
+check("cos over [-0.5, 0.5] holds its maximum 1 (at 0, inside)", r[1] == 1 and mp(r[0]) <= mpmath.cos(mpmath.mpf(1) / 2),
+      [float(x) for x in r])
+import zcertify as _ZC
+from znumjudge import _parse_arith as _pa, parse_quantities as _pq
+_q = _pq("a=[0.1,0.3] credit, Fo=[100,110] credit")[0]
+_e = _pa("Fo*sin(a)", _q)
+_ok, _n = _ZC.check(_e, _q, "<=", F(3254, 100), {"leaf": "monotone", "signs": {"a": "+", "Fo": "+"}})
+check("a monotone leaf through d/da sin = cos: Fo*sin(a) <= 32.54 over the box (110 sin 0.3 = 32.507...)", _ok, _n)
+_ok2, _why2 = _ZC.check(_e, _q, "<=", F(3250, 100), {"leaf": "monotone", "signs": {"a": "+", "Fo": "+"}})
+check("  ... and 32.50 (below 110 sin 0.3) refused at the corner", not _ok2, _why2)
 
 print(f"zfunc: {ok} ok, {fail} failed")
 print("ZFUNC GREEN" if fail == 0 else "ZFUNC RED")

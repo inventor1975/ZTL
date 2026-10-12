@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-FUNCTIONS ON THE NUMERIC FLOOR — exp, ln, log10, atan, tan, pow, min, max.
+FUNCTIONS ON THE NUMERIC FLOOR — exp, ln, log10, atan, tan, sin, cos, pow, min, max.
 
 WHY (2026-10-10, the universal stand's blind test): eleven problems of twelve needed a
 function the floor did not have, so the authors bounded it by hand, OUTSIDE the judge.
@@ -10,8 +10,10 @@ irrational almost everywhere. So each value is a PROVED BRACKET of two rationals
 same honesty as `_rat_sqrt`: not a rounding, a fork that says what it does not know. Every
 series below has a remainder bound, and every bracket is rounded OUTWARD onto a grid of
 2^-BITS, so the true value is always inside. Over an interval, a monotone function maps the
-ends (exp, ln, log10, atan, tan on (-pi/2, pi/2)); pow is exp(y·ln x) for x > 0 (an integer
-exponent is an exact interval power); min and max are exact.
+ends (exp, ln, log10, atan, tan on (-pi/2, pi/2)); sin and cos (2026-10-13, the universal stand's blind test 6,
+the curator's "да") map the ends and take +-1 wherever an extremum may lie inside, the argument reduced through
+pi's own bracket; pow is exp(y·ln x) for x > 0 (an integer exponent is an exact interval power); min and max are
+exact.
 
 Domain, the floor's three outcomes as for sqrt: an interval wholly outside the domain has
 NO readings (`NoReadings`); one that touches the edge gives None (some readings undefined:
@@ -222,6 +224,15 @@ def sincos_pt(x: Fraction):
     x = Fraction(x)
     if abs(x) > 2:
         raise NoReadings("sin/cos outside |x| <= 2 not supported here")
+    return _sc_series(x)
+
+
+def _sc_series(x: Fraction):
+    """The Taylor sums for |x| <= 4 (40 terms: the next term below 4^81/81! ~ 1e-72); alternating with terms
+    falling from the first one past |x|, so the remainder is below the next term's size."""
+    x = Fraction(x)
+    if abs(x) > 4:
+        raise NoReadings("sin/cos series only for |x| <= 4")
     s, c = Fraction(0), Fraction(0)
     term_s, term_c = x, Fraction(1)
     for n in range(40):
@@ -231,6 +242,38 @@ def sincos_pt(x: Fraction):
         term_c = -term_c * x * x / ((2 * n + 1) * (2 * n + 2))
     rs, rc = abs(term_s), abs(term_c)
     return (_down(s - rs), _up(s + rs)), (_down(c - rc), _up(c + rc))
+
+
+TWO_PI = (2 * PI[0], 2 * PI[1])
+
+
+def _reduced(x: Fraction):
+    """x - 2 pi k as an INTERVAL [r1, r2] (pi is itself a bracket), k = round(x / 2pi): |r| <= ~pi."""
+    x = Fraction(x)
+    k = round(float(x) / (2 * math.pi))
+    if k == 0:
+        return x, x
+    a, b = x - k * TWO_PI[0], x - k * TWO_PI[1]
+    return min(a, b), max(a, b)
+
+
+def _sc_pt(x: Fraction, which: int):
+    """[lo, hi] around sin x (which 0) or cos x (which 1), any x: reduced into |r| <= ~pi; sin and cos are
+    1-Lipschitz, so the reduction's own width (from pi's bracket) widens the bracket by exactly that width."""
+    r1, r2 = _reduced(x)
+    if abs(r1) > 4 or abs(r2) > 4:
+        raise NoReadings("sin/cos: argument reduction failed")
+    w = r2 - r1
+    lo, hi = _sc_series(r1)[which]
+    return _down(max(Fraction(-1), lo - w)), _up(min(Fraction(1), hi + w))
+
+
+def sin_pt(x: Fraction):
+    return _sc_pt(x, 0)
+
+
+def cos_pt(x: Fraction):
+    return _sc_pt(x, 1)
 
 
 def tan_pt(x: Fraction):
@@ -303,6 +346,46 @@ def iv_tan(a):
     return _iv_mono(tan_pt, a)
 
 
+def _touches(a, centre, period):
+    """Can [a0, a1] hold a point centre + k·period (centre, period brackets — pi's)? Sound: True when unsure."""
+    lo_k = math.floor((float(a[0]) - float(centre[1])) / float(period[1])) - 1
+    hi_k = math.ceil((float(a[1]) - float(centre[0])) / float(period[0])) + 1
+    for k in range(lo_k, hi_k + 1):
+        ends = [centre[0] + k * period[0], centre[0] + k * period[1], centre[1] + k * period[0],
+                centre[1] + k * period[1]]
+        if min(ends) <= a[1] and a[0] <= max(ends):
+            return True
+    return False
+
+
+def _iv_sc(a, pt, max_at, min_at):
+    """sin or cos over [a0, a1]: the ends' brackets, and +-1 where a maximum or a minimum (max_at / min_at + 2pi·k,
+    pi bracketed) may lie inside — between such points the function is monotone, so the ends bound it there."""
+    if _inf(a[0]) or _inf(a[1]):
+        return Fraction(-1), Fraction(1)
+    a0, a1 = Fraction(a[0]), Fraction(a[1])
+    if a1 - a0 >= TWO_PI[0]:
+        return Fraction(-1), Fraction(1)
+    p0, p1 = pt(a0), pt(a1)
+    lo, hi = min(p0[0], p1[0]), max(p0[1], p1[1])
+    if _touches((a0, a1), max_at, TWO_PI):
+        hi = Fraction(1)
+    if _touches((a0, a1), min_at, TWO_PI):
+        lo = Fraction(-1)
+    return lo, hi
+
+
+HALF_PI = (PI[0] / 2, PI[1] / 2)
+
+
+def iv_sin(a):
+    return _iv_sc(a, sin_pt, HALF_PI, (-HALF_PI[1], -HALF_PI[0]))
+
+
+def iv_cos(a):
+    return _iv_sc(a, cos_pt, (Fraction(0), Fraction(0)), PI)
+
+
 def _ipow_point(x: Fraction, n: int):
     return x ** n
 
@@ -373,7 +456,7 @@ def iv_ifpos_d(x, a, b):
     return a if s == 1 else (b if s == -1 else None)
 
 
-UNARY = {"exp": iv_exp, "ln": iv_ln, "log10": iv_log10, "atan": iv_atan, "tan": iv_tan}
+UNARY = {"exp": iv_exp, "ln": iv_ln, "log10": iv_log10, "atan": iv_atan, "tan": iv_tan, "sin": iv_sin, "cos": iv_cos}
 BINARY = {"pow": iv_pow, "min": iv_min, "max": iv_max}
 TERNARY = {"ifpos": iv_ifpos, "ifpos_d": iv_ifpos_d}
 FUNC_OPS = set(UNARY) | set(BINARY) | set(TERNARY)

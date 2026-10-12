@@ -191,10 +191,10 @@ def _parse_arith(s, quantities):
     # and only when the parenthesis opened by `sqrt(` is the one that ends.
     if s.startswith("sqrt(") and s.endswith(")") and _closes_last(s, 4):
         return ("sqrt", _parse_arith(s[5:-1], quantities))
-    # FUNCTIONS (zfunc, 2026-10-10): exp ln log10 atan tan with one argument, pow min max
+    # FUNCTIONS (zfunc, 2026-10-10): exp ln log10 atan tan with one argument (sin cos since 2026-10-13), pow min max
     # with two, split at the top-level comma. Same rule as sqrt: only when the parenthesis
     # the name opens is the one that ends the text.
-    m = re.match(r"^(exp|ln|log10|atan|tan|pow|min|max|ifpos_d|ifpos)\(", s)
+    m = re.match(r"^(exp|ln|log10|atan|tan|sin|cos|pow|min|max|ifpos_d|ifpos)\(", s)
     if m and s.endswith(")") and _closes_last(s, len(m.group(1))):
         inner = s[len(m.group(1)) + 1:-1]
         parts, depth, start = [], 0, 0

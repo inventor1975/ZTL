@@ -1,5 +1,5 @@
 name = "ztl"
-defaultTargets = ["ZTL", "TableauCert", "TableauCertN", "ZSets", "Facts", "ZAlgebra", "ZSequent", "ZQuant", "ZGround", "ZExped", "ZClone", "ZTime", "Contextuality", "EpochBoundary", "JunctionWitness", "QuantumWitness", "Frame", "Signature", "ZEq", "ZDesc", "ZIndisc", "ZFreeUI", "ZEqGeneric", "ZFreeUIGeneric", "ZFenceDepth", "ZProv", "ZDempster", "ZYablo", "ZAbsInt", "ZParamSound", "ZCombine", "ZTaint", "ZNoAxiom", "ZIgnorance", "ZParamSyntax", "ZParamTableau", "ZParamClosure", "ZParamProp", "ZParamSearch", "ZParamEngine", "ZParamHintikka", "ZNaN", "ZNull", "ZFlow", "ZEps", "Plato_Equality", "Plato_Conservativity", "Hume_Guillotine", "Cogito_Conservativity", "ZNum", "ClassicalAgreement", "ZNumCoherent", "Layering", "ContextClosure", "Receipt", "Linear", "LabelExact", "NoGift", "RelianceBridge", "ZCutElim", "ZHeredTaut", "ZWidthHard", "ZReceiptHard", "LabelExactDefinite", "ZReconverge", "ZNumPrice", "ZNumNames", "ZParabola", "ZIntExtremes", "ZOnly", "ZOrigin", "ZTopology", "ZMajority", "ZQuasi", "Hardy", "ZComposition", "KochenSpecker", "ZRuntimeGate", "ZLegion", "ZCertify", "ZImplicit", "ZLP", "ZSlope", "ZExp", "ZSlopeExp", "ZRecip", "ZLn", "ZSlopeDiv", "ZCases", "ZMin"]
+defaultTargets = ["ZTL", "TableauCert", "TableauCertN", "ZSets", "Facts", "ZAlgebra", "ZSequent", "ZQuant", "ZGround", "ZExped", "ZClone", "ZTime", "Contextuality", "EpochBoundary", "JunctionWitness", "QuantumWitness", "Frame", "Signature", "ZEq", "ZDesc", "ZIndisc", "ZFreeUI", "ZEqGeneric", "ZFreeUIGeneric", "ZFenceDepth", "ZProv", "ZDempster", "ZYablo", "ZAbsInt", "ZParamSound", "ZCombine", "ZTaint", "ZNoAxiom", "ZIgnorance", "ZParamSyntax", "ZParamTableau", "ZParamClosure", "ZParamProp", "ZParamSearch", "ZParamEngine", "ZParamHintikka", "ZNaN", "ZNull", "ZFlow", "ZEps", "Plato_Equality", "Plato_Conservativity", "Hume_Guillotine", "Cogito_Conservativity", "ZNum", "ClassicalAgreement", "ZNumCoherent", "Layering", "ContextClosure", "Receipt", "Linear", "LabelExact", "NoGift", "RelianceBridge", "ZCutElim", "ZHeredTaut", "ZWidthHard", "ZReceiptHard", "LabelExactDefinite", "ZReconverge", "ZNumPrice", "ZNumNames", "ZParabola", "ZIntExtremes", "ZOnly", "ZOrigin", "ZTopology", "ZMajority", "ZQuasi", "Hardy", "ZComposition", "KochenSpecker", "ZRuntimeGate", "ZLegion", "ZCertify", "ZImplicit", "ZLP", "ZSlope", "ZExp", "ZSlopeExp", "ZRecip", "ZLn", "ZSlopeDiv", "ZCases", "ZMin", "ZNet"]
 
 [[lean_lib]]
 name = "ZTL"
@@ -249,6 +249,9 @@ name = "ZLP"
 
 [[lean_lib]]
 name = "ZMin"
+
+[[lean_lib]]
+name = "ZNet"
 
 # VR's operational numbers (2026-10-10, the curator's "да"): READ from VRCycle, not copied — `lean/vr` is a
 # link to a VRCycle checkout (CI: inventor1975/VRCycle at a pinned commit). Only the numbers' import closure

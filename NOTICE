@@ -10,3 +10,8 @@ of this project.
 
 The preprints deposited on Zenodo are documents and carry CC BY 4.0; that is a
 separate licence for a separate thing and is unaffected by the terms above.
+
+lean/ZNet.lean — the network certificate's mathematics. The method was developed by Vitaly Reznik (circuit
+stand, 2026-10-08/09), prompted by a question from Arkadiy Miteiko; formalised in Lean by Claude (Anthropic,
+an AI model) under the curation of Vitaly Reznik. Published with A. Miteiko's consent (2026-10-12).
+The certificate's implementation is not part of this repository.

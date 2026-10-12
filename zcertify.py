@@ -14,8 +14,8 @@ WHAT IS CERTIFIED (first tranche): `E <= c` or `E >= c` for an arithmetic
 expression E of boxed quantities (+ - * / sum sqrt), over their whole box.
 (Second tranche: E of unknowns solved from a linear system — check_system. Third,
 2026-10-11: E of IMPLICIT quantities, roots of their own laws, kept moving with the
-box — `check(..., implicit=)`, see IMPLICIT QUANTITIES below; not proved in Lean.
-Fourth, 2026-10-11: every reading takes min / max / ifpos one choice at a time — see CASES; not proved in Lean.)
+box — `check(..., implicit=)`, see IMPLICIT QUANTITIES below; Lean: lean/ZImplicit.lean (implicit_monotone_leaf).
+Fourth, 2026-10-11: every reading takes min / max / ifpos one choice at a time — see CASES; Lean: lean/ZCases.lean.)
 
 THE CERTIFICATE is a bisection tree over the box:
     {"split": name, "at": "p/q", "lo": tree, "hi": tree}   the box cut at name = at
@@ -175,7 +175,9 @@ def _names(e, acc=None):
 # does not decide (at most CASE_BITS of them) are tried both ways, every combination read on its own (with the
 # affine reading, so the linear parts cancel) and the HULL taken. Sound: at each point of the piece the true value
 # is one combination's value there, and each combination's reading encloses its values over the whole piece.
-# The result is met with the plain reading (both enclose). NOT PROVED IN LEAN (the curator: "Lean later").
+# The result is met with the plain reading (both enclose). LEAN (2026-10-12): lean/ZCases.lean — cases_sound,
+# dual_leaf_low / dual_leaf_impossible, min_enclosure / max_enclosure / meet_enclosure, zero axioms; the branch
+# semantics and the readings stay named premises.
 CASES = True
 CASE_BITS = 6
 _BRANCH = ("min", "max", "ifpos")
@@ -536,8 +538,9 @@ def check(expr, quantities, op, bound, cert, implicit=None):
 #           dE/dx + dE/dU * dU/dx is read over the piece × the bracket. A sign makes E(x, U(x))
 #           monotone in x on the piece (mean value theorem), and the corner the signs point to is
 #           read with U in the bracket "corner_roots" checked AT that corner.
-# NOT PROVED IN LEAN (the curator, 2026-10-11: "the Lean proof later"): ZCertify.lean proves the rule
-# for explicit expressions; the implicit function step stands on the theorem as stated above.
+# LEAN (2026-10-12): lean/ZImplicit.lean — root_unique, root_in_bracket, implicit_monotone_leaf (zero axioms): the
+# kernel's combination is proved; the implicit function and mean value theorems (the total derivative's sign makes
+# E(x, U(x)) monotone) and the intermediate value theorem (a sign change gives a root) stay named premises.
 def _implicit_roots(implicit, quantities):
     usign = {}
 

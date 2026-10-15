@@ -17,7 +17,10 @@ Checks:
      corner maximum is accepted where found, and NO certificate passes a bound below that maximum;
   4. MUTATION of the kernel: every coefficient read at the piece's centre (a lying reading) — a false bound slips
      through, so this stand sees a lying kernel;
-  5. a ladder of 12 unknowns (25 tolerances; beyond Cramer's 6): the exact worst case found and proved.
+  5. a ladder of 12 unknowns (25 tolerances; beyond Cramer's 6): the exact worst case found and proved;
+  6. ONE LAYER (step 6): the structure proved for every R, G (and the source), refused for p with p^2 and for p off
+     the direction; the identity test; EVERY part +-10 % — the max of 2048 exact corners proved with no slack;
+     mutations refused (a vertex on a non-quantity, a flipped sign, a vertex where the structure does not hold).
 Run: python3 test_zlin.py
 """
 import itertools
@@ -262,6 +265,127 @@ for _ in range(30):                              # descent: a failing corner's v
     bound = max(bound, exact_solve(A, b, qs, corner)[11])
 check(c is not None and Z.check(laws, un, qs, "u11", "<=", bound, c)[0],
       f"u11 <= {float(bound):.6g} (the corner the signs point to, solved exactly): PROVED with no slack")
+
+print("6. one layer (step 6): the structure proved, wide tolerances on EVERY part")
+boxes, laws, un = ladder(4, F(1, 10))
+qs = sheet(boxes, un)
+A, b = Z.system(laws, un, qs)
+kinds = {nm: Z._structure(A, b, nm, qs, dict(boxes)) for nm in sorted(boxes)}
+check(all(kinds[nm] is not None and kinds[nm]["g"] is not None for nm in kinds if nm != "Vs")
+      and kinds["Vs"] is not None and kinds["Vs"]["g"] is None,
+      "every R and G of the ladder enters by one layer (R0 with kappa = Vs, another quantity); Vs by the right side only")
+b2 = {"p": (F(1), F(2))}
+q2 = sheet(b2, ["u0", "u1"])
+A2, bb2 = Z.system(["p*u0 + u1 == 1", "u0 + p*p*u1 == 2"], ["u0", "u1"], q2)
+check(Z._structure(A2, bb2, "p", q2, b2) is None, "p in one row and p^2 in another: NOT one layer (refused)")
+b3 = {"p": (F(1), F(2)), "q": (F(1), F(2))}
+q3 = sheet(b3, ["u0", "u1"])
+A3, bb3 = Z.system(["(1 - u0)/p == u0", "u1 == u0*q + p"], ["u0", "u1"], q3)
+check(Z._structure(A3, bb3, "p", q3, b3) is None, "p in A and in b off the direction u: NOT one layer (refused)")
+check(Z._is_zero(("sub", ("div", F(1), ("mul", "R", "R")), ("div", ("mul", "R", F(1)), ("mul", ("mul", "R", "R"), "R"))))
+      and not Z._is_zero(("sub", ("div", F(1), "R"), ("div", F(1), ("mul", "R", "R")))),
+      "the identity test: 1/R^2 == R/R^3 is zero, 1/R - 1/R^2 is not")
+
+# 5 unknowns, EVERY part +-10 %: the exact max over all 2048 corners, proved — by vertex branches and three-factor
+# pins (the first-order sign read alone found no certificate in 2000 pieces)
+boxes, laws, un = ladder(5, F(1, 10))
+qs = sheet(boxes, un)
+vals = corners(boxes, laws, un, 4)
+mx = max(vals)
+
+
+def search6(laws, un, qs, target, bound, budget=2000):
+    """test_zlin's searcher with step 6: pins by either rule, a vertex branch where nothing pins."""
+    A, b = Z.system(laws, un, qs)
+    k = un.index(target)
+    names = sorted({n for row in A for e in row for n in Z.ZC._names(e)} | {n for e in b for n in Z.ZC._names(e)})
+    piece0 = {n: (qs[n]["lo"], qs[n]["hi"]) for n in names}
+    st = {n: Z._structure(A, b, n, qs, piece0) for n in names}
+    spent = [0]
+    q = lambda v: F(int(round(v * Z.G)), Z.G)
+
+    def go(piece, depth):
+        spent[0] += 1
+        if spent[0] > budget:
+            raise StopIteration
+        wide = [n for n in names if piece[n][0] != piece[n][1]]
+        if not wide:
+            if Z._solve_point(A, b, qs, piece, k) <= bound:
+                return {"leaf": "exact"}
+            raise StopIteration
+        mid = {n: ((lo + hi) / 2, (lo + hi) / 2) for n, (lo, hi) in piece.items()}
+        Rm = finv([[float(Z._read(e, qs, mid)[0]) for e in row] for row in A])
+        bm = [float(Z._read(e, qs, mid)[0]) for e in b]
+        R = [[q(v) for v in row] for row in Rm]
+        xt = [q(sum(Rm[i][j] * bm[j] for j in range(len(bm)))) for i in range(len(bm))]
+        Rs, xs = [[str(v) for v in row] for row in R], [str(v) for v in xt]
+        Ai, bi = Z._imatrix(A, qs, piece), [Z._read(e, qs, piece) for e in b]
+        par = Z._param(A, b, qs, piece)
+        try:
+            if Z._enclose(Ai, bi, R, xt, 0, par)[2][k][1] <= bound:
+                return {"leaf": "enclose", "R": Rs, "x": xs}
+            Z._core(Ai, bi, R, xt, 0, par)
+        except Z.LinError:
+            raise StopIteration
+        signs = {}
+        for n in wide:
+            if st[n] is not None:
+                sg = Z._factor_sign(A, b, k, qs, piece, R, Ai, bi, par, st[n])
+                if sg:
+                    signs[n] = sg
+        if signs:
+            to = {n: (piece[n][1] if s == "+" else piece[n][0]) for n, s in signs.items()}
+            return {"leaf": "pin", "signs": signs, "R": Rs, "x": xs,
+                    "then": go(dict(piece, **{n: (v, v) for n, v in to.items()}), depth + 1)}
+        nm = next(n for n in wide if st[n] is not None)
+        lo, hi = piece[nm]
+        return {"vertex": nm, "R": Rs, "x": xs, "lo": go(dict(piece, **{nm: (lo, lo)}), depth + 1),
+                "hi": go(dict(piece, **{nm: (hi, hi)}), depth + 1)}
+    try:
+        with Z.grid(128):
+            return {"grid": 128, "tree": go(piece0, 0)}
+    except (StopIteration, Z.LinError):
+        return None
+
+
+c6 = search6(laws, un, qs, "u4", mx)
+check(c6 is not None and Z.check(laws, un, qs, "u4", "<=", mx, c6)[0],
+      f"every part +-10 %: u4 <= {float(mx):.6g}, the max of 2048 exact corners, PROVED with no slack")
+check(not Z.check(laws, un, qs, "u4", "<=", mx * (1 - F(1, 10 ** 9)), c6)[0] if c6 else False,
+      "the same certificate for a billionth below: refused")
+
+
+def first(t, key):
+    t = t["tree"] if "tree" in t else t
+    while True:
+        if key in t or t.get("leaf") == key:
+            return t
+        t = t.get("lo") or t.get("then") or (t.get("hi") if "hi" in t else None)
+        if not isinstance(t, dict):
+            return None
+
+
+if c6:
+    m = copy.deepcopy(c6)
+    v = first(m, "vertex")
+    if v is not None:
+        v["vertex"] = "nonexistent"
+        check(not Z.check(laws, un, qs, "u4", "<=", mx, m)[0], "MUTATION: a vertex on a name that is not a quantity: refused")
+    m = copy.deepcopy(c6)
+    p = first(m, "pin")
+    if p is not None:
+        k0 = next(iter(p["signs"]))
+        p["signs"][k0] = "-" if p["signs"][k0] == "+" else "+"
+        check(not Z.check(laws, un, qs, "u4", "<=", mx, m)[0], f"MUTATION: a flipped sign ({k0}) under step 6: refused")
+# a vertex on a quantity that is NOT one layer is refused (the kernel proves the structure itself)
+b4 = {"p": (F(1), F(2))}
+q4 = sheet(b4, ["u0", "u1"])
+L4 = ["p*u0 + u1 == 1", "u0 + p*p*u1 == 2"]
+Rm4 = finv([[1.5, 1.0], [1.0, 2.25]])
+c4 = {"grid": 64, "tree": {"vertex": "p", "R": [[str(F(v).limit_denominator(10**6)) for v in row] for row in Rm4],
+                           "x": ["0", "0"], "lo": {"leaf": "exact"}, "hi": {"leaf": "exact"}}}
+check(not Z.check(L4, ["u0", "u1"], q4, "u0", "<=", F(100), c4)[0],
+      "MUTATION: a vertex branch on p where p is not one layer: refused (the vertex theorem would not hold)")
 
 if FAILS:
     print(f"ZLIN RED: {len(FAILS)} of {CHECKS[0]} checks fail")

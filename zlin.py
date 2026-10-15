@@ -16,6 +16,9 @@ THE CERTIFICATE (brought by a search outside; trusted for nothing) is a tree ove
     {"leaf": "enclose", "R": [[...]], "x": [...]}              the enclosure on the piece settles the bound
     {"leaf": "pin", "signs": {name: "+"|"-"}, "R": [[...]], "x": [...], "then": tree}
     {"leaf": "exact"}                                          on a POINT (every name pinned): x_k solved exactly
+    {"vertex": name, "R": [[...]], "x": [...], "lo": tree, "hi": tree}
+                                                              name enters by one layer (step 6): the faces
+                                                              name = lo and name = hi, each by its subtree
     (an enclose or pin leaf may carry "iter": m — m rounds of the componentwise refinement, step 4b;
      the root may be {"grid": bits, "tree": tree} — the fixed-point grid 2^-bits, 64..1024, default 64)
                                                               x_k is monotone in each listed name over the piece;
@@ -51,6 +54,7 @@ monotonicity by derivative signs — Popova, Kolev, Skalna. What is ours: the ce
 """
 from __future__ import annotations
 
+import itertools
 import os
 import sys
 from fractions import Fraction as F
@@ -524,16 +528,276 @@ def _dread(A, b, names, k, qs, piece, R, xt, Ai, bi, iters=0, par=None):
     return out
 
 
-def _signs(A, b, names_signs, k, qs, piece, R, xt, Ai, bi, iters=0, par=None):
+# ── ELEMENTS THAT ENTER BY ONE LAYER (step 6, 2026-10-15) ─────────────────────────────────────────────────────────
+# Wide tolerances on every part (all +-5 %, +-10 %) defeated the sign read of step 5: one enclosure of d x_k / d p over
+# a wide piece. Most quantities of a linear circuit enter by ONE LAYER: dA/dp = g(p) u v^T and db/dp = g(p) kappa u
+# with CONSTANT u, v, kappa (a resistor between two nodes: u = v = e_a - e_b, g = -1/R^2; a source in series: kappa =
+# its voltage). Then, with A y = u and A^T mu = v,
+#   d x_k / d p = -A^-1 (dA x - db) = -g (v^T x - kappa) y_k = -g * y_k * (mu^T b - kappa),
+# a product of three scalars — each enclosed ON ITS OWN (two systems with a constant right-hand side), so a sign is
+# proved where the product's single enclosure loses it. And integrating, A(p) = A(p0) + (phi(p) - phi(p0)) u v^T,
+# b likewise (phi' = g): x_k is a LINEAR-FRACTIONAL function of phi(p), with no pole where A stays nonsingular — so
+# x_k is MONOTONE in p along every line, whatever the other quantities are: its extremes over a piece sit on the two
+# faces p = lo and p = hi (the "vertex" leaf).
+# The structure is PROVED, not assumed: each identity  E == 0  (an entry of dA/dp against u_i v_j g, of db/dp against
+# kappa u_i g) is checked by exact evaluation on a grid — E's numerator has degree at most d_x in each name x (bounded
+# from E's tree), so if E vanishes on a grid of d_x + 1 values per name, the numerator is the zero polynomial
+# (the combinatorial Nullstellensatz, Alon 1999) and E is identically zero. Candidates u, v, kappa are read at one
+# point; only the exact check decides.
+
+def _ev_exact(node, env):
+    """A node's exact value at a point (rational operations only), or None (a function, a pole)."""
+    if isinstance(node, F):
+        return node
+    if isinstance(node, int):
+        return F(node)
+    if isinstance(node, str):
+        return env.get(node)
+    if not isinstance(node, tuple):
+        return None
+    op, *args = node
+    if op == "sum":
+        vals = [_ev_exact(a, env) for a in args[0]]
+        return None if any(v is None for v in vals) else sum(vals, ZERO)
+    if op == "pow":
+        base, ex = _ev_exact(args[0], env), args[1]
+        if base is None or not isinstance(ex, (F, int)) or F(ex).denominator != 1:
+            return None
+        e = int(F(ex))
+        return None if (base == 0 and e < 0) else base ** e
+    if op not in ("add", "sub", "mul", "div"):
+        return None
+    x, y = _ev_exact(args[0], env), _ev_exact(args[1], env)
+    if x is None or y is None:
+        return None
+    if op == "add":
+        return x + y
+    if op == "sub":
+        return x - y
+    if op == "mul":
+        return x * y
+    return None if y == 0 else x / y
+
+
+def _deg(node, x):
+    """(numerator degree, denominator degree) bounds in the name x of a rational node, or None."""
+    if isinstance(node, (F, int)):
+        return (0, 0)
+    if isinstance(node, str):
+        return (1, 0) if node == x else (0, 0)
+    if not isinstance(node, tuple):
+        return None
+    op, *args = node
+    if op == "sum":
+        out = (0, 0)
+        for a in args[0]:
+            d = _deg(a, x)
+            if d is None:
+                return None
+            out = (max(out[0] + d[1], d[0] + out[1]), out[1] + d[1])
+        return out
+    if op == "pow":
+        d, ex = _deg(args[0], x), args[1]
+        if d is None or not isinstance(ex, (F, int)) or F(ex).denominator != 1:
+            return None
+        e = int(F(ex))
+        return (d[0] * e, d[1] * e) if e >= 0 else (d[1] * -e, d[0] * -e)
+    if op not in ("add", "sub", "mul", "div"):
+        return None
+    a, c = _deg(args[0], x), _deg(args[1], x)
+    if a is None or c is None:
+        return None
+    if op in ("add", "sub"):
+        return (max(a[0] + c[1], c[0] + a[1]), a[1] + c[1])
+    if op == "mul":
+        return (a[0] + c[0], a[1] + c[1])
+    return (a[0] + c[1], a[1] + c[0])
+
+
+MAX_GRID = 4096
+
+
+def _is_zero(node):
+    """True only when the rational node is identically zero (an exact grid by the numerator's degrees); False when
+    it is not, or when it cannot be decided here (a function, a grid too large, poles everywhere tried)."""
+    names = sorted(ZC._names(node))
+    degs = {}
+    for x in names:
+        d = _deg(node, x)
+        if d is None:
+            return False
+        degs[x] = d[0]
+    size = 1
+    for x in names:
+        size *= degs[x] + 1
+    if size > MAX_GRID:
+        return False
+    # values 1, 2, 3, ... shifted past any pole met (a pole at a grid point is skipped by trying the next values)
+    pts = {x: [F(3 + 7 * i, 5) for i in range(degs[x] + 1)] for x in names}
+    for combo in itertools.product(*[pts[x] for x in names]):
+        env = dict(zip(names, combo))
+        v = _ev_exact(node, env)
+        shift = 0
+        while v is None and shift < 8:                  # a pole: move this point (each coordinate keeps distinct values)
+            shift += 1
+            env = {x: c + F(shift, 97) * (1 + names.index(x)) for x, c in zip(names, combo)}
+            v = _ev_exact(node, env)
+        if v is None or v != 0:
+            return False
+    return True
+
+
+def _structure(A, b, name, qs, piece):
+    """How `name` enters, every identity proved — or None.
+    One layer in A:  {"g": node, "u": {i: c}, "v": {j: c}, "kappa": node}   dA = g u v^T, db = g kappa u, kappa free of
+                     name (another quantity — a source in series — or a number);
+    the right-hand side only: {"g": None, "h": node, "u": {i: c}}            dA = 0, db = h u."""
+    n = len(A)
+    dA, db = {}, {}
+    try:
+        for i in range(n):
+            for j in range(n):
+                if not isinstance(A[i][j], F) and name in ZC._names(A[i][j]):
+                    d = ZC.derivative(A[i][j], name)
+                    if not ZC._is0(d):
+                        dA[(i, j)] = d
+            if not isinstance(b[i], F) and name in ZC._names(b[i]):
+                d = ZC.derivative(b[i], name)
+                if not ZC._is0(d):
+                    db[i] = d
+    except ZC.NoDerivative:
+        return None
+    centre = {x: (F(lo) + F(hi)) / 2 for x, (lo, hi) in piece.items()}
+    env = dict({x: qs[x]["lo"] for x in qs if isinstance(qs[x], dict) and "lo" in qs[x] and qs[x]["lo"] == qs[x].get("hi")},
+               **centre)
+    if not dA:
+        # the right-hand side only: db = h u with a constant u
+        if not db:
+            return None
+        i0 = min(db)
+        h = db[i0]
+        hv = _ev_exact(h, env)
+        if not hv:
+            return None
+        u = {}
+        for i, e in db.items():
+            ev = _ev_exact(e, env)
+            if ev is None:
+                return None
+            u[i] = ev / hv
+            if not _is_zero(("sub", e, ("mul", u[i], h))):
+                return None
+        return {"g": None, "h": h, "u": {i: c for i, c in u.items() if c}}
+    ref = min(dA)
+    a0, c0 = ref
+    g = dA[ref]
+    gv = _ev_exact(g, env)
+    if not gv:
+        return None
+    rows = sorted({i for i, _ in dA} | set(db))
+    cols = sorted({j for _, j in dA})
+    u, v = {}, {}
+    for i in rows:
+        e = dA.get((i, c0))
+        ev = _ev_exact(e, env) if e is not None else ZERO
+        if ev is None:
+            return None
+        u[i] = ev / gv
+    for j in cols:
+        e = dA.get((a0, j))
+        ev = _ev_exact(e, env) if e is not None else ZERO
+        if ev is None:
+            return None
+        v[j] = ev / gv
+    for i in rows:
+        for j in cols:
+            c = u[i] * v[j]
+            e = dA.get((i, j))
+            if e is None:
+                if c != 0:
+                    return None
+                continue
+            if not _is_zero(("sub", e, ("mul", c, g))):
+                return None
+    # db = g kappa u: kappa from one row, free of name; every other row in proportion
+    kappa = ZERO
+    if db:
+        i0 = next((i for i in rows if u[i] and i in db), None)
+        if i0 is None:
+            return None
+        kappa = ("div", db[i0], ("mul", u[i0], g))
+        try:
+            if not _is_zero(ZC.derivative(kappa, name)):
+                return None
+        except ZC.NoDerivative:
+            return None
+        for i in rows:
+            e = db.get(i)
+            if e is None:
+                if u[i] != 0:
+                    return None
+                continue
+            if not _is_zero(("sub", ("mul", u[i0], e), ("mul", u[i], db[i0]))):
+                return None
+    return {"g": g, "u": {i: c for i, c in u.items() if c}, "v": {j: c for j, c in v.items() if c}, "kappa": kappa}
+
+
+def _transpose_par(par, rhs):
+    return {"A0": [list(col) for col in zip(*par["A0"])], "b0": rhs,
+            "terms": [(t[0], t[1], {(j, i): iv for (i, j), iv in t[2].items()}, {}) for t in par["terms"]]}
+
+
+def _factor_sign(A, b, k, qs, piece, R, Ai, bi, par, st):
+    """'+' / '-' — the sign of d x_k / d name over the piece by its factors (step 6) — or None."""
+    n = len(A)
+    lead = st["g"] if st["g"] is not None else st["h"]
+    gi = _read(lead, qs, piece)
+    if not (gi[0] > 0 or gi[1] < 0):
+        return None
+    u = st["u"]
+    ui = [(u.get(i, ZERO), u.get(i, ZERO)) for i in range(n)]
+    parU = {"A0": par["A0"], "b0": ui, "terms": [(t[0], t[1], t[2], {}) for t in par["terms"]]} if par else None
+    yt = [sum((R[i][m] * c for m, c in u.items()), ZERO) for i in range(n)]
+    Y = _fiv(_core(Ai, ui, R, yt, 0, parU)["X"][k])
+    if not (Y[0] > 0 or Y[1] < 0):
+        return None
+    sg = (1 if gi[0] > 0 else -1) * (1 if Y[0] > 0 else -1)
+    if st["g"] is None:
+        return "+" if sg > 0 else "-"              # d x_k / d name = h * (A^-1 u)_k
+    v = st["v"]
+    vi = [(v.get(i, ZERO), v.get(i, ZERO)) for i in range(n)]
+    AiT = [list(col) for col in zip(*Ai)]
+    RT = [list(col) for col in zip(*R)]
+    mt = [sum((RT[i][m] * c for m, c in v.items()), ZERO) for i in range(n)]
+    Mu = [_fiv(t) for t in _core(AiT, vi, RT, mt, 0, _transpose_par(par, vi) if par else None)["X"]]
+    ka = st["kappa"]
+    kap = (ka, ka) if isinstance(ka, F) else _read(ka, qs, piece)
+    s_lo, s_hi = -kap[1], -kap[0]
+    for i in range(n):
+        if bi[i] != (ZERO, ZERO):
+            ps = (Mu[i][0] * bi[i][0], Mu[i][0] * bi[i][1], Mu[i][1] * bi[i][0], Mu[i][1] * bi[i][1])
+            s_lo += min(ps)
+            s_hi += max(ps)
+    if not (s_lo > 0 or s_hi < 0):
+        return None
+    sg = -sg * (1 if s_lo > 0 else -1)              # d x_k / d name = -g * y_k * (mu^T b - kappa)
+    return "+" if sg > 0 else "-"
+
+
+def _signs(A, b, names_signs, k, qs, piece, R, xt, Ai, bi, iters=0, par=None, structs=None):
     """Step 5: for each (name, sign), does d x_k / d name keep that sign over the piece? -> the first failure or None."""
     got = _dread(A, b, list(names_signs), k, qs, piece, R, xt, Ai, bi, iters, par)
     for name, sg in names_signs.items():
         d = got[name]
+        if not isinstance(d, str) and (d[0] >= 0 if sg == "+" else d[1] <= 0):
+            continue
+        st = (structs or {}).get(name)
+        if st is not None and _factor_sign(A, b, k, qs, piece, R, Ai, bi, par, st) == sg:
+            continue                                      # step 6: three factors, each enclosed on its own
         if isinstance(d, str):
             return d
         lo, hi = d
-        if sg == "+" and lo < 0 or sg == "-" and hi > 0:
-            return f"{name}: d/d{name} of the target reads [{float(lo):.4g}, {float(hi):.4g}] on the piece, not {sg}"
+        return f"{name}: d/d{name} of the target reads [{float(lo):.4g}, {float(hi):.4g}] on the piece, not {sg}"
     return None
 
 
@@ -588,12 +852,43 @@ def check(laws, unknowns, qs, target, op, bound, cert):
     bits = 64
     if isinstance(cert, dict) and "tree" in cert:          # the root may name the grid: {"grid": bits, "tree": tree}
         bits, cert = cert.get("grid", 64), cert["tree"]
+    structs = {}                                           # step 6: proved once per check (identities over all values)
+
+    def struct(nm):
+        if nm not in structs:
+            structs[nm] = _structure(A, b, nm, qs, piece0)
+        return structs[nm]
 
     def walk(node, piece, depth):
         if depth > 400:
             return "the tree is deeper than 400"
         if not isinstance(node, dict):
             return "a node is not an object"
+        if "vertex" in node:
+            # step 6: nm enters by one layer (proved) and A is nonsingular over the piece (beta < 1 with this R) —
+            # x_k is linear-fractional in phi(nm), monotone along every line in nm: its extremes over the piece lie
+            # on the faces nm = lo and nm = hi; each face is checked by its own subtree
+            nm = node["vertex"]
+            if nm not in piece or piece[nm][0] == piece[nm][1]:
+                return f"vertex on {nm!r}, not a wide quantity of the piece"
+            st = struct(nm)
+            if st is None:
+                return f"vertex on {nm!r}: it does not enter by one layer (or that could not be proved)"
+            gi = _read(st["g"] if st["g"] is not None else st["h"], qs, piece)
+            if not (gi[0] > 0 or gi[1] < 0):
+                return f"vertex on {nm!r}: d phi / d {nm} is not of one sign over the piece"
+            try:
+                R = [[_fr(v) for v in row] for row in node["R"]]
+                xt = [_fr(v) for v in node["x"]]
+                Ai, bi = _imatrix(A, qs, piece), [_read(e, qs, piece) for e in b]
+                _core(Ai, bi, R, xt, 0, _param(A, b, qs, piece))      # beta < 1: nonsingular on the whole piece
+            except (KeyError, TypeError, ValueError, ZeroDivisionError):
+                return "a vertex node without a readable R and x"
+            except LinError as e:
+                return f"vertex on {nm!r}: {e}"
+            lo, hi = piece[nm]
+            return walk(node["lo"], dict(piece, **{nm: (lo, lo)}), depth + 1) or \
+                walk(node["hi"], dict(piece, **{nm: (hi, hi)}), depth + 1)
         if "split" in node:
             nm, at = node["split"], _fr(node["at"])
             if nm not in piece:
@@ -642,7 +937,8 @@ def check(laws, unknowns, qs, target, op, bound, cert):
                     return "a pin leaf needs signs {name: '+' | '-'}"
                 if any(nm not in piece for nm in sg):
                     return "a pin on a name that is not a quantity of the system"
-                bad = _signs(A, b, sg, k, qs, piece, R, xt, Ai, bi, iters, _param(A, b, qs, piece))
+                bad = _signs(A, b, sg, k, qs, piece, R, xt, Ai, bi, iters, _param(A, b, qs, piece),
+                             {nm: struct(nm) for nm in sg})
                 if bad:
                     return bad
                 # the max (<=) sits at the end a sign points up to, the min (>=) at the other

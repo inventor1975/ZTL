@@ -48,6 +48,7 @@ STANDS = [
     ("znumprice.py",    ["E62 GREEN"]),
     # a name is one number across the whole claim (the curator's word, 2026-09-24)
     ("test_numeric_names.py", ["NUMERIC NAMES GREEN"]),
+    ("test_signs.py", ["SIGNS GREEN"]),
     ("test_numbers_need_values.py", ["NUMBERS NEED VALUES GREEN"]),
     ("test_quadratic.py", ["QUADRATIC GREEN"]),
     ("test_solver_logic.py", ["SOLVER LOGIC GREEN"]),

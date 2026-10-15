@@ -180,6 +180,12 @@ def _parse_arith(s, quantities):
             elif c in "([":
                 depth -= 1
             elif c in level and depth == 0:
+                # A SIGN, NOT AN OPERATOR: a `+`/`-` right after another operator or an opening paren is the sign of
+                # its operand (`x0 - -19`, `a * -b`, as Python's ast.unparse writes them). Splitting there left an
+                # empty side — "malformed arithmetic: ''" (found 2026-10-13 by the ztl-stand soundness audit, seven
+                # fuzz bricks); the split moves on to the operator before it.
+                if c in "+-" and s[:i].rstrip()[-1:] in ("", "+", "-", "*", "/", "(", "[", ","):
+                    continue
                 return (_TAG[c], _parse_arith(s[:i], quantities),
                         _parse_arith(s[i + 1:], quantities))
     # SQUARE ROOT, AS A CALL: `sqrt(expr)`. znum has evaluated ("sqrt", e)

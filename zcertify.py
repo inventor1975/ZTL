@@ -817,6 +817,176 @@ def _graph_grad(expr, quantities, piece, wrt, implicit=None):
         _ZN._MEMO[0] = keep
 
 
+# ── TAYLOR COEFFICIENTS ALONG THE GRAPH (2026-10-16, the curator's "делай Тейлора по графу") ─────────────────────
+# c_k = f^(k)(x)/k! for x in an interval X, k = 0..n, by the classic recurrences over the graph (each shared node
+# once): sums termwise, products by convolution, quotients, exp, ln, sqrt, pow (a constant exponent; a variable one as
+# exp(c ln a)), sin/cos together, atan, log10. Each node's c_0 is the kernel's own reading over X (and the box); the
+# rest is interval arithmetic on fractions rounded outward. With X a point: the coefficients there; with X a piece:
+# for every xi in it c_k(xi) lies in the result — so f^(n)(xi)/n! over a piece, the Lagrange remainder's factor.
+# Branches (ifpos, min, max): None — the symbolic derivatives stay (zintegral falls back to them).
+def _sub2(a, b):
+    return _iv_out((a[0] - b[1], a[1] - b[0]))
+
+
+def _scal(a, c):
+    return _imul2(a, (Fraction(c), Fraction(c)))
+
+
+def taylor_coeffs(expr, x, quantities, piece, n):
+    """[(lo, hi)] * (n + 1): f^(k)/k! over piece[x] (and the box of the other names), or None."""
+    import znum as _ZN
+    q2 = dict(quantities)
+    for nm, (lo, hi) in piece.items():
+        q2[nm] = dict(quantities[nm], lo=lo, hi=hi)
+    X = piece[x]
+    keep = _ZN._MEMO[0]
+    _ZN._MEMO[0] = {}
+    Z = (Fraction(0), Fraction(0))
+
+    def val(node):
+        iv = _ev(node, q2)[0]
+        if iv is None or isinstance(iv[0], float) or isinstance(iv[1], float):
+            raise ArithmeticError("no reading")
+        return iv
+    try:
+        memo = {}
+
+        def tc(node):
+            if not isinstance(node, tuple) or node[0] != "sum":
+                if node in memo:
+                    return memo[node]
+            r = _tc(node)
+            if not isinstance(node, tuple) or node[0] != "sum":
+                memo[node] = r
+            return r
+
+        def const(iv):
+            return [iv] + [Z] * n
+
+        def mul(a, b):
+            return [_iv_sum([_imul2(a[i], b[k - i]) for i in range(k + 1)]) for k in range(n + 1)]
+
+        def _tc(node):
+            if isinstance(node, (Fraction, int)):
+                v = Fraction(node)
+                return const((v, v))
+            if isinstance(node, str):
+                if node == x:
+                    return [X, (Fraction(1), Fraction(1))] + [Z] * (n - 1)
+                return const(val(node))
+            op, *args = node
+            if x not in _names(node):
+                return const(val(node))
+            if op == "sum":
+                parts = [tc(a) for a in args[0]]
+                return [_iv_sum([p[k] for p in parts]) for k in range(n + 1)]
+            if op in ("add", "sub"):
+                a, b = tc(args[0]), tc(args[1])
+                return [(_iadd(a[k], b[k]) if op == "add" else _sub2(a[k], b[k])) for k in range(n + 1)]
+            if op == "mul":
+                return mul(tc(args[0]), tc(args[1]))
+            if op == "div":
+                a, b = tc(args[0]), tc(args[1])
+                b0 = b[0]
+                if b0[0] <= 0 <= b0[1]:
+                    raise ArithmeticError("a divisor across zero")
+                q = [val(node)]
+                for k in range(1, n + 1):
+                    acc = a[k]
+                    for i in range(1, k + 1):
+                        acc = _sub2(acc, _imul2(b[i], q[k - i]))
+                    q.append(_idiv2(acc, b0))
+                return q
+            if op == "exp":
+                a = tc(args[0])
+                e = [val(node)]
+                for k in range(1, n + 1):
+                    e.append(_scal(_iv_sum([_scal(_imul2(a[i], e[k - i]), i) for i in range(1, k + 1)]), Fraction(1, k)))
+                return e
+            if op in ("ln", "log10"):
+                a = tc(args[0])
+                a0 = a[0]
+                if a0[0] <= 0:
+                    raise ArithmeticError("ln of a range not positive")
+                l = [val(("ln", args[0]))]
+                for k in range(1, n + 1):
+                    acc = a[k]
+                    if k > 1:
+                        acc = _sub2(acc, _scal(_iv_sum([_scal(_imul2(l[i], a[k - i]), i) for i in range(1, k)]), Fraction(1, k)))
+                    l.append(_idiv2(acc, a0))
+                if op == "log10":
+                    ln10 = val(("ln", Fraction(10)))
+                    return [val(node)] + [_idiv2(l[k], ln10) for k in range(1, n + 1)]
+                return l
+            if op == "sqrt":
+                a = tc(args[0])
+                s0 = val(node)
+                if s0[0] <= 0:
+                    raise ArithmeticError("sqrt at or near 0: its derivatives are unbounded")
+                sq = [s0]
+                two_s0 = _scal(s0, 2)
+                for k in range(1, n + 1):
+                    acc = a[k]
+                    if k > 1:
+                        acc = _sub2(acc, _iv_sum([_imul2(sq[i], sq[k - i]) for i in range(1, k)]))
+                    sq.append(_idiv2(acc, two_s0))
+                return sq
+            if op == "pow":
+                base, c = args
+                if x in _names(c):
+                    return tc(("exp", ("mul", c, ("ln", base))))
+                cv = val(c)
+                if cv[0] != cv[1]:
+                    # an exponent with a box: as exp(c ln a), c a constant series
+                    return tc(("exp", ("mul", c, ("ln", base))))
+                cc = cv[0]
+                a = tc(base)
+                a0 = a[0]
+                if a0[0] <= 0 <= a0[1]:
+                    raise ArithmeticError("a power of a range across 0")
+                p = [val(node)]
+                for k in range(1, n + 1):
+                    acc = _iv_sum([_scal(_imul2(a[k - i], p[i]), cc * (k - i) - i) for i in range(k)])
+                    p.append(_idiv2(acc, _scal(a0, k)))
+                return p
+            if op in ("sin", "cos"):
+                a = tc(args[0])
+                sn = [val(("sin", args[0]))]
+                cs = [val(("cos", args[0]))]
+                for k in range(1, n + 1):
+                    sn.append(_scal(_iv_sum([_scal(_imul2(a[i], cs[k - i]), i) for i in range(1, k + 1)]), Fraction(1, k)))
+                    cs.append(_scal(_iv_sum([_scal(_imul2(a[i], sn[k - i]), i) for i in range(1, k + 1)]), Fraction(-1, k)))
+                return sn if op == "sin" else cs
+            if op == "atan":
+                a = tc(args[0])
+                u = mul(a, a)
+                u[0] = _iadd(u[0], (Fraction(1), Fraction(1)))
+                da = [_scal(a[k + 1], k + 1) for k in range(n)] + [Z]       # a' as a series (one order lost at n)
+                # w = a' / u
+                w = []
+                for k in range(n + 1):
+                    acc = da[k]
+                    for i in range(1, k + 1):
+                        acc = _sub2(acc, _imul2(u[i], w[k - i]))
+                    w.append(_idiv2(acc, u[0]))
+                return [val(node)] + [_scal(w[k - 1], Fraction(1, k)) for k in range(1, n + 1)]
+            if op == "tan":
+                return tc(("div", ("sin", args[0]), ("cos", args[0])))
+            raise ArithmeticError(f"no series for {op}")
+        return tc(expr)
+    except (ArithmeticError, ZeroDivisionError, KeyError, ValueError, TypeError):
+        return None
+    finally:
+        _ZN._MEMO[0] = keep
+
+
+def _iv_sum(ivs):
+    lo = hi = Fraction(0)
+    for a in ivs:
+        lo, hi = lo + a[0], hi + a[1]
+    return _iv_out((lo, hi))
+
+
 # ── A QUANTITY SOLVED FROM A SYSTEM (second tranche, 2026-10-09) ──────────────
 # The bound is on an expression of UNKNOWNS fixed by linear equalities whose
 # coefficients are expressions of boxed quantities: P = VL*I with V - VL == I*Rs,

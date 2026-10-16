@@ -52,11 +52,10 @@ check("gave_up" not in c2 and c2["enclosure"][0] <= TRUE_SIN <= c2["enclosure"][
 
 print("3. sqrt(x) on [0, 1]: f' unbounded at 0 — Taylor leaves refused there, interval/monotone ones carry it")
 f3, qs3 = setup("sqrt(x)", {"x": (F(0), F(1))})
-# 1e-4, not tighter: sqrt's symbolic derivatives to order 6 are trees of nested roots, slow to read (MEASURED: 1e-6
-# took 228 s to search, 66 s to check; Taylor coefficients along the graph would cut it — not yet)
-c3 = ZI.search(f3, "x", 0, 1, qs3, F(1, 10 ** 4))
+# 1e-6: with Taylor coefficients ALONG THE GRAPH 1.1 s (the symbolic derivatives of sqrt to order 6: 228 s, MEASURED)
+c3 = ZI.search(f3, "x", 0, 1, qs3, F(1, 10 ** 6))
 check("gave_up" not in c3 and c3["enclosure"][0] <= F(2, 3) <= c3["enclosure"][1]
-      and c3["enclosure"][1] - c3["enclosure"][0] < F(1, 10 ** 4),
+      and c3["enclosure"][1] - c3["enclosure"][0] < F(1, 10 ** 6),
       f"2/3 inside [{float(c3['enclosure'][0]):.12g}, {float(c3['enclosure'][1]):.12g}], {len(c3['leaves'])} pieces")
 bad = {"points": ["0/1", "1/1"], "leaves": [{"taylor": 2}]}
 check(not ZI.check(f3, "x", 0, 1, qs3, bad)[0], "MUTATION: a Taylor leaf across 0 (f'' unbounded there) refused")
@@ -71,6 +70,26 @@ check("gave_up" not in c4 and c4["pins"] == {"p": "-"}
       f"the exact range [(1-1e-8)/4, (1-1e-4)/2] within 1e-9: {[float(v) for v in c4.get('range', (0, 0))]}")
 m4 = dict(c4, pins={"p": "+"})
 check(not ZI.check_range(f4, "x", F(1, 100), 1, qs4, m4)[0], "MUTATION: a pin with the wrong sign (p +) refused")
+
+print("4b. Taylor coefficients along the graph: f^(k)(x)/k! at a point, k = 0..6, against high-precision derivatives")
+import mpmath
+import zcertify as ZC
+mpmath.mp.dps = 40
+_bad, _n = 0, 0
+for t, mf in (("exp(0 - x*x)", lambda z: mpmath.exp(-z * z)), ("sqrt(x)", mpmath.sqrt),
+              ("sin(x)*ln(x + 1)", lambda z: mpmath.sin(z) * mpmath.log(z + 1)),
+              ("pow(x, 3/2)/(1 + x*x)", lambda z: z ** 1.5 / (1 + z * z)), ("atan(x*x)", lambda z: mpmath.atan(z * z)),
+              ("tan(x/2)", lambda z: mpmath.tan(z / 2)), ("pow(x + 1, x)", lambda z: (z + 1) ** z)):
+    eg, qg = setup(t, {"x": (F(0), F(1))})
+    for pt in (F(1, 5), F(1, 2), F(7, 8)):
+        cg = ZC.taylor_coeffs(eg, "x", qg, {"x": (pt, pt)}, 6)
+        for k in range(7):
+            _n += 1
+            tv = mpmath.diff(mf, mpmath.mpf(pt.numerator) / pt.denominator, k) / mpmath.factorial(k)
+            lo_, hi_ = (mpmath.mpf(v.numerator) / v.denominator for v in cg[k]) if cg else (1, 0)
+            _bad += not (lo_ - mpmath.mpf(10) ** -18 <= tv <= hi_ + mpmath.mpf(10) ** -18)
+check(_bad == 0 and _n == 147,
+      f"Taylor coefficients along the graph hold the true f^(k)/k! (7 functions x 3 points x orders 0..6): {_bad} of {_n} outside")
 
 print("5. the partition itself")
 pts = c["points"]

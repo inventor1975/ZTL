@@ -75,10 +75,21 @@ def _piece_enclosure(f, x, u, v, qs, box, leaf, cache):
         n = leaf["taylor"]
         if not isinstance(n, int) or n < 2 or n > MAX_TAYLOR or n % 2:
             return None, f"taylor order {n!r}: an even number 2..{MAX_TAYLOR}"
-        ds = _derivs(f, x, n, cache)
         m = (u + v) / 2
         h = w / 2
         at_m = dict(box, **{x: (m, m)})
+        # TAYLOR COEFFICIENTS ALONG THE GRAPH first (zcertify.taylor_coeffs: c_j = f^(j)/j!, recurrences over shared
+        # nodes): the symbolic derivatives of sqrt to order 6 were trees of nested roots, 228 s for a 1e-6 search
+        cm = ZC.taylor_coeffs(f, x, qs, at_m, n)
+        cp = ZC.taylor_coeffs(f, x, qs, piece, n) if cm is not None else None
+        if cm is not None and cp is not None:
+            lo = hi = Fraction(0)
+            for j in range(0, n + 1, 2):
+                coef = 2 * h ** (j + 1) / (j + 1)
+                r = cp[n] if j == n else cm[j]
+                lo, hi = lo + coef * r[0], hi + coef * r[1]
+            return _out((lo, hi)), None
+        ds = _derivs(f, x, n, cache)
         lo = hi = Fraction(0)
         fact = Fraction(1)                       # (j+1)!
         for j in range(n + 1):

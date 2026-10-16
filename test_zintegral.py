@@ -106,6 +106,27 @@ check(not ZI.check_limits_range(fl, "x", F(0), Bl, qsl, cm)[0], "MUTATION: a lim
 cw = ZI.check_limits(fl, "x", F(0), Bl, qsl, {"core": cl["high"]["core"]})
 check(not cw[0], "MUTATION: the high corner's core ([0, 2]) refused for the whole box (its core is [0, 1])")
 
+print("4d. a double integral over [0,1]^2: e^(-x^2-y^2) = (∫_0^1 e^(-x^2))^2 — a certificate inside a certificate")
+qs2d = parse_quantities("x=[0/1,1/1] credit, y=[0/1,1/1] credit")[0]
+f2d = _parse_arith("exp(0 - x*x - y*y)", qs2d)
+c2d = ZI.search2(f2d, "x", 0, 1, "y", 0, 1, qs2d, F(1, 10 ** 6))
+check("gave_up" not in c2d and c2d["enclosure"][0] <= TRUE_GAUSS ** 2 <= c2d["enclosure"][1]
+      and c2d["enclosure"][1] - c2d["enclosure"][0] < F(1, 10 ** 6),
+      f"(∫e^(-x²))² inside [{float(c2d['enclosure'][0]):.12g}, {float(c2d['enclosure'][1]):.12g}], "
+      f"{len(c2d.get('leaves', []))} outer pieces")
+m2d = {"points": c2d["points"], "leaves": [dict(c2d["leaves"][0], inner=c2d["leaves"][0]["inner"][:-1])]
+       + c2d["leaves"][1:]}
+check(not ZI.check2(f2d, "x", 0, 1, "y", 0, 1, qs2d, m2d)[0],
+      "MUTATION: an outer Taylor leaf missing its remainder's inner certificate refused")
+_in0 = c2d["leaves"][0]["inner"][0]
+_short = {"points": _in0["points"][:-1], "leaves": _in0["leaves"][:-1]}
+m2e = {"points": c2d["points"], "leaves": [dict(c2d["leaves"][0], inner=[_short] + c2d["leaves"][0]["inner"][1:])]
+       + c2d["leaves"][1:]}
+check(not ZI.check2(f2d, "x", 0, 1, "y", 0, 1, qs2d, m2e)[0],
+      "MUTATION: an inner partition stopping short of y = 1 refused")
+# (two outer pieces merged under one piece's inner certificates is NOT wrong: the kernel re-reads every enclosure for
+#  the merged piece — sound, only wider; the certificate carries partitions and leaf kinds, never the numbers)
+
 print("5. the partition itself")
 pts = c["points"]
 lv = c["leaves"]

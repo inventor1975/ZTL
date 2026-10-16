@@ -421,3 +421,121 @@ def search_limits_range(f, x, A, B, qs, tol, **kw):
         return {"gave_up": f"the kernel refused the search's own certificate: {got[1]}"}
     cert["range"] = got[1]
     return cert
+
+
+# ── A DOUBLE INTEGRAL OVER A RECTANGLE (2026-10-16) ──────────────────────────────────────────────────────────────
+# ∫_a^b ∫_c^d f(x, y) dy dx as iterated integrals, a certificate inside a certificate. The outer partition of [a, b];
+# per piece [u, v] (width w, middle m):
+#     {"interval": inner}           w x ∫_c^d f dy read with x over the whole piece (a parameter box of the inner one)
+#     {"taylor": n, "inner": [I_0, I_2, ..., I_{n-2}, I_n]}
+#                                    f(m + t, y) = sum_{j<n} c_j(m, y) t^j + c_n(xi, y) t^n,  c_j = (d^j f/dx^j)/j!:
+#                                    the even terms integrate over t exactly (2 (w/2)^(j+1)/(j+1)), each ∫_c^d c_j(m, y) dy
+#                                    by its inner certificate I_j; the remainder's ∫ c_n(xi, y) dy by I_n with x over the
+#                                    piece (for each y, c_n(xi(y), y) lies in c_n's reading over the piece — the inner
+#                                    enclosure holds it).
+def _coef_nodes(f, x, n, cache):
+    ds = _derivs(f, x, n, cache)
+    out, fact = [], Fraction(1)
+    for j in range(n + 1):
+        if j:
+            fact *= j
+        out.append(ds[j] if j == 0 else ("div", ds[j], fact))
+    return out
+
+
+def check2(f, x, a, b, y, c, d, qs, cert):
+    """(True, (L, U), inner pieces) — ∫_a^b ∫_c^d f dy dx in [L, U] for every value of the box — or (False, why)."""
+    a, b, c, d = Fraction(a), Fraction(b), Fraction(c), Fraction(d)
+    try:
+        pts = [Fraction(str(p)) for p in cert["points"]]
+        leaves = cert["leaves"]
+    except (KeyError, TypeError, ValueError, ZeroDivisionError):
+        return False, "the certificate is unreadable"
+    if pts[0] != a or pts[-1] != b or any(p2 <= p1 for p1, p2 in zip(pts, pts[1:])) or len(leaves) != len(pts) - 1:
+        return False, "the outer partition does not cover [a, b] in order with a leaf per piece"
+    cache = {}
+    L = U = Fraction(0)
+    count = 0
+
+    def inner(node, xbox, icert):
+        q2 = dict(qs, **{x: dict(qs[x], lo=xbox[0], hi=xbox[1])})
+        return check(node, y, c, d, q2, icert)
+    for i, (u, v, leaf) in enumerate(zip(pts, pts[1:], leaves)):
+        w, m, h = v - u, (u + v) / 2, (v - u) / 2
+        if isinstance(leaf, dict) and "interval" in leaf:
+            g = inner(f, (u, v), leaf["interval"])
+            if not g[0]:
+                return False, f"outer piece {i}: the inner integral: {g[1]}"
+            r = _out((w * g[1][0], w * g[1][1]))
+            count += g[2]
+        elif isinstance(leaf, dict) and "taylor" in leaf:
+            n = leaf["taylor"]
+            ins = leaf.get("inner")
+            if not isinstance(n, int) or n < 2 or n > MAX_TAYLOR or n % 2 or not isinstance(ins, list) \
+                    or len(ins) != n // 2 + 1:
+                return False, f"outer piece {i}: a taylor leaf needs an even order and n/2 + 1 inner certificates"
+            cn = _coef_nodes(f, x, n, cache)
+            lo = hi = Fraction(0)
+            for k, j in enumerate(range(0, n + 1, 2)):
+                g = inner(cn[j], (u, v) if j == n else (m, m), ins[k])
+                if not g[0]:
+                    return False, f"outer piece {i}: the inner integral of c_{j}: {g[1]}"
+                coef = 2 * h ** (j + 1) / (j + 1)
+                lo, hi = lo + coef * g[1][0], hi + coef * g[1][1]
+                count += g[2]
+            r = _out((lo, hi))
+        else:
+            return False, f"outer piece {i}: unknown leaf"
+        L, U = L + r[0], U + r[1]
+    return True, _out((L, U)), count
+
+
+def search2(f, x, a, b, y, c, d, qs, tol, orders=(4, 2), max_pieces=400):
+    """An outer partition with inner certificates (untrusted; check2 decides)."""
+    a, b = Fraction(a), Fraction(b)
+    cache = {}
+    stack, pts, leaves, count = [(a, b)], [a], [], 0
+    while stack:
+        u, v = stack.pop()
+        count += 1
+        if count > max_pieces:
+            return {"gave_up": f"more than {max_pieces} outer pieces"}
+        share = Fraction(tol) * (v - u) / (b - a)
+        m = (u + v) / 2
+        found = None
+        for n in orders:
+            cn = _coef_nodes(f, x, n, cache)
+            ins, lo, hi, ok = [], Fraction(0), Fraction(0), True
+            for j in range(0, n + 1, 2):
+                xb = (u, v) if j == n else (m, m)
+                q2 = dict(qs, **{x: dict(qs[x], lo=xb[0], hi=xb[1])})
+                # inner tolerance: the remainder's share scaled by its weight, the exact terms a fraction of tol
+                coef = 2 * ((v - u) / 2) ** (j + 1) / (j + 1)
+                # the REMAINDER (j == n, x over the piece) is wide by nature — x's own spread — and only weighed by
+                # (w/2)^(n+1): read coarsely (a small budget, else one crude piece); if the sum is still too wide the
+                # OUTER piece is cut, not the inner one (MEASURED: a 1e-6 inner search of it ran 3000 pieces, 106 s)
+                ic = search(cn[j], y, c, d, q2, share / (4 * coef) if coef else share,
+                            max_pieces=8 if j == n else 4000)
+                if "gave_up" in ic and j == n:
+                    ic = search(cn[j], y, c, d, q2, Fraction(10) ** 30, max_pieces=64)
+                if "gave_up" in ic:
+                    ok = False
+                    break
+                ins.append({k: ic[k] for k in ("points", "leaves")})
+                lo, hi = lo + coef * ic["enclosure"][0], hi + coef * ic["enclosure"][1]
+            if ok and hi - lo <= share:
+                found = {"taylor": n, "inner": ins}
+                break
+        if found is not None:
+            pts.append(v)
+            leaves.append(found)
+            continue
+        mid = (u + v) / 2
+        stack.append((mid, v))
+        stack.append((u, mid))
+    cert = {"points": [f"{p.numerator}/{p.denominator}" for p in pts], "leaves": leaves}
+    got = check2(f, x, a, b, y, c, d, qs, cert)
+    if not got[0]:
+        return {"gave_up": f"the kernel refused the search's own certificate: {got[1]}"}
+    cert["enclosure"] = got[1]
+    return cert

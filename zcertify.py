@@ -26,6 +26,11 @@ THE CERTIFICATE is a bisection tree over the box:
                                                            is then ONE corner
     {"leaf": "interval"}                                   E's interval reading on
                                                            the piece settles it
+    {"pin": {name: "+" | "-"}, "then": tree}               (2026-10-16) each pinned
+                                                           name's sign shown over the
+                                                           piece as in a monotone leaf;
+                                                           the tree goes on with it at
+                                                           the end its sign points to
 The tree covers the box by construction (each split halves a piece at a point
 inside it). For a monotone leaf the kernel builds dE/dname ITSELF (symbolically),
 reads it over the piece, and accepts "+" only if the reading is >= 0 (and "-" only
@@ -466,6 +471,47 @@ def check(expr, quantities, op, bound, cert, implicit=None):
             if not ok:
                 return ok, why
             return walk(node.get("hi"), right, path + f"/{n}>={at}")
+        if "pin" in node:
+            # PIN (2026-10-16, the curator's "б"; zlin's pin for the nonlinear certificate): each named quantity's
+            # derivative has its sign over the WHOLE piece (read as in a monotone leaf, the implicit roots in their
+            # brackets) -> the extreme of the piece lies with it at the end its sign points to; the rest of the tree
+            # is checked on that smaller piece. Signs read on the piece hold on every part of it, so several pin
+            # together. (A 28-datum rocket motor: 16 of 18 signs at once, the other two then in 2 dimensions.)
+            pins = node.get("pin")
+            if not isinstance(pins, dict) or not pins:
+                return False, f"{path}: a pin names no quantity"
+            count[0] += 1
+            rpiece = piece
+            if implicit:
+                ok, at_piece = roots_of(node.get("roots"), piece)
+                if not ok:
+                    return False, f"{path}: {at_piece}"
+                if not all(u in (node.get("roots") or {}) for u in implicit):
+                    return False, f"{path}: a pin with an implicit quantity needs its bracket on the piece"
+                rpiece = dict(piece, **at_piece)
+            child = dict(piece)
+            for n, s in pins.items():
+                if n not in piece or n in implicit:
+                    return False, f"{path}: pin on {n!r}, not a quantity of the expression"
+                lo, hi = piece[n]
+                if lo == hi:
+                    return False, f"{path}: pin on {n}, already a point"
+                if s not in ("+", "-"):
+                    return False, f"{path}: pin {n} with no sign"
+                if n not in derivs:
+                    try:
+                        derivs[n] = _total_derivative(expr, n, implicit)
+                    except NoDerivative as why:
+                        return False, f"{path}: {why} — no pin on it"
+                r = _reading(derivs[n], quantities, rpiece)
+                if r is None:
+                    return False, f"{path}: d/d{n} has no reading on the piece"
+                if s == "+" and r[0] < 0 or s == "-" and r[1] > 0:
+                    return False, f"{path}: d/d{n} in [{r[0]}, {r[1]}] has not the sign {s} the pin says"
+                up = (s == "+") == (op == "<=")
+                v = hi if up else lo
+                child[n] = (v, v)
+            return walk(node.get("then"), child, path + "/pin(" + ",".join(sorted(pins)) + ")")
         leaf = node.get("leaf")
         count[0] += 1
         if implicit:

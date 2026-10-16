@@ -708,5 +708,28 @@ ZC._dual_low = _real_dual
 check("MUTATION: with each case's condition dropped the switching piece reads below 0 — the conditions carry it",
       r_mut[0] < 0, str(r_mut))
 
+# PIN (2026-10-16): a quantity whose derivative has its sign over the piece goes to its extreme end, the tree goes on
+# on the smaller piece. The divider: pin V (+) and R2 (+), then one monotone leaf in R1 alone.
+e, qs = setup("V*R2/(R1+R2)", {"V": (F(9, 2), F(11, 2)), "R1": (F(9), F(11)), "R2": (F(9), F(11))})
+e2, qs2 = setup("x*(1 - x)", {"x": (F(0), F(1))})
+mono = {"leaf": "monotone", "signs": {"V": "+", "R1": "-", "R2": "+"}}
+pin_ok = {"pin": {"V": "+", "R2": "+"}, "then": {"leaf": "monotone", "signs": {"R1": "-"}}}
+r_p = ZC.check(e, qs, "<=", F(31, 10), pin_ok)
+r_pn = ZC.check(e, qs, "<=", F(3), pin_ok)
+check("pin: the divider by pins + a monotone leaf in R1 alone — <= 3.1 accepted, <= 3 refused at the same corner",
+      r_p[0] and not r_pn[0] and "121/40" in r_pn[1], str((r_p, r_pn)))
+r_pw = ZC.check(e, qs, "<=", F(31, 10), {"pin": {"V": "+", "R1": "+"}, "then": {"leaf": "monotone", "signs": {"R2": "+"}}})
+check("MUTATION: a pin with a wrong sign (R1 +) is refused by the kernel's own derivative",
+      not r_pw[0] and "d/dR1" in r_pw[1], str(r_pw))
+r_pu = ZC.check(e, qs, "<=", F(31, 10), {"pin": {"Q": "+"}, "then": mono})
+r_pe = ZC.check(e, qs, "<=", F(31, 10), {"pin": {}, "then": mono})
+check("MUTATION: a pin on a name that is not a quantity, or naming nothing, is refused",
+      not r_pu[0] and not r_pe[0], str((r_pu, r_pe)))
+# a pin where the sign holds on the WHOLE piece but a split leaf below disagrees: x*(1-x) is not monotone in x,
+# so no pin on x is accepted on [0, 1]
+r_px = ZC.check(e2, qs2, "<=", F(1, 4), {"pin": {"x": "+"}, "then": {"leaf": "interval"}})
+check("MUTATION: a pin on a quantity the target is NOT monotone in (x*(1-x) on [0, 1]) is refused",
+      not r_px[0] and "d/dx" in r_px[1], str(r_px))
+
 print(f"certify: {ok} ok, {fail} failed")
 print("CERTIFY GREEN" if fail == 0 else "CERTIFY RED")

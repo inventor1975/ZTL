@@ -327,28 +327,21 @@ def _Rtimes(Rr, v, n, sign=1):
     return out
 
 
-def _core(Ai, bi, R, xt, iters, par=None):
-    """Steps 2-4 on the grid: {beta, C, rows, X} (integers, G), or LinError when beta >= 1. With `par` (_param) C and z
-    are each the MEET of the interval form and the parametric form — both enclose, the meet is never wider. Sparse:
-    a coefficient that is zero costs nothing (a ladder network's A has three entries a row)."""
+def _contract(Ai, R, par=None):
+    """Step 2 alone — C = I - R [A] (the meet of the interval and the parametric form), its row sums and beta — with
+    what step 3 reuses. C depends on A, R and the parametric terms' dA, NEVER on the right-hand side: the sign proofs
+    of step 6 solve one system per quantity with the same A (and one with A^T), so a piece computes each C once
+    (Muhanna's truss benchmark 1, 420 quantities: 840 recomputations of a 230 x 230 C per piece, 2026-10-16)."""
     n = len(Ai)
     AI = [[_ivi(a) for a in row] for row in Ai]
-    BI = [_ivi(v) for v in bi]
     Rr = [[_rnd(v) for v in row] for row in R]
-    xr = [_rnd(v) for v in xt]
     GG = G * G
-    # the interval form
     C2 = _RtimesCols(Rr, _cols(AI), n, GG)
-    res = _residual(BI, _rows_nz(AI), xr)
-    z2 = _Rtimes(Rr, {m: r for m, r in enumerate(res) if r[0] or r[1]}, n)
+    A0 = None
     if par is not None:
         A0 = [[_ivi(a) for a in row] for row in par["A0"]]
-        B0 = [_ivi(v) for v in par["b0"]]
         Cp = [[list(c) for c in row] for row in _RtimesCols(Rr, _cols(A0), n, GG)]
-        res0 = _residual(B0, _rows_nz(A0), xr)
-        zp = [list(c) for c in _Rtimes(Rr, {m: r for m, r in enumerate(res0) if r[0] or r[1]}, n)]
-        # each quantity: w_j |R [dA_j]| into C, w_j |R ([db_j] - [dA_j] x~)| into z
-        for _nm, w, dA, db in par["terms"]:
+        for _nm, w, dA, _db in par["terms"]:
             cols = {}
             for (m, j), iv in dA.items():
                 cols.setdefault(j, []).append((m, _ivi(iv)))
@@ -366,6 +359,40 @@ def _core(Ai, bi, R, xt, iters, par=None):
                         rad = _up(max(abs(lo2), abs(hi2)) * w.numerator, w.denominator)
                         Cp[i][j][0] -= rad
                         Cp[i][j][1] += rad
+        C = [[_meet((_dn(a[0]), _up(a[1])), (_dn(c[0]), _up(c[1]))) for a, c in zip(r2, rp)] for r2, rp in zip(C2, Cp)]
+    else:
+        C = [[(_dn(a[0]), _up(a[1])) for a in row] for row in C2]
+    rows = [sum(_mag(c) for c in row) for row in C]
+    beta = max(rows)
+    if beta >= G:
+        raise LinError(f"beta = {beta / G:.4g} >= 1: R is not close enough to A's inverse over the piece "
+                       "(a smaller piece, or a better R)")
+    Cm = [[_mag(c) for c in row] for row in C]
+    return {"beta": beta, "C": C, "Cm": Cm, "rows": rows, "R": Rr, "AI": AI, "A0": A0, "par": par is not None}
+
+
+def _core(Ai, bi, R, xt, iters, par=None, cc=None):
+    """Steps 2-4 on the grid: {beta, C, rows, X} (integers, G), or LinError when beta >= 1. With `par` (_param) C and z
+    are each the MEET of the interval form and the parametric form — both enclose, the meet is never wider. Sparse:
+    a coefficient that is zero costs nothing (a ladder network's A has three entries a row). cc: step 2 already done
+    by _contract for THIS Ai, R and par's matrix part (its right-hand side may differ) — reused, not recomputed."""
+    n = len(Ai)
+    if cc is None:
+        cc = _contract(Ai, R, par)
+    if cc["par"] != (par is not None):
+        raise LinError("a reused contraction of another form")       # never mixed: the caller's bug, refused
+    AI, Rr, A0 = cc["AI"], cc["R"], cc["A0"]
+    BI = [_ivi(v) for v in bi]
+    xr = [_rnd(v) for v in xt]
+    # the interval form
+    res = _residual(BI, _rows_nz(AI), xr)
+    z2 = _Rtimes(Rr, {m: r for m, r in enumerate(res) if r[0] or r[1]}, n)
+    if par is not None:
+        B0 = [_ivi(v) for v in par["b0"]]
+        res0 = _residual(B0, _rows_nz(A0), xr)
+        zp = [list(c) for c in _Rtimes(Rr, {m: r for m, r in enumerate(res0) if r[0] or r[1]}, n)]
+        # each quantity: w_j |R ([db_j] - [dA_j] x~)| into z (its w_j |R [dA_j]| is in C, _contract)
+        for _nm, w, dA, db in par["terms"]:
             v = {}
             for i_, iv in db.items():
                 d = _ivi(iv)
@@ -382,23 +409,15 @@ def _core(Ai, bi, R, xt, iters, par=None):
                     rad = _up(max(abs(lo2), abs(hi2)) * w.numerator, w.denominator)
                     zp[i][0] -= rad
                     zp[i][1] += rad
-        C = [[_meet((_dn(a[0]), _up(a[1])), (_dn(c[0]), _up(c[1]))) for a, c in zip(r2, rp)] for r2, rp in zip(C2, Cp)]
         z = [_meet((_dn(a[0]), _up(a[1])), (_dn(c[0]), _up(c[1]))) for a, c in zip(z2, zp)]
     else:
-        C = [[(_dn(a[0]), _up(a[1])) for a in row] for row in C2]
         z = [(_dn(a[0]), _up(a[1])) for a in z2]
-    rows = [sum(_mag(c) for c in row) for row in C]
-    beta = max(rows)
-    if beta >= G:
-        raise LinError(f"beta = {beta / G:.4g} >= 1: R is not close enough to A's inverse over the piece "
-                       "(a smaller piece, or a better R)")
-    Cm = [[_mag(c) for c in row] for row in C]
+    C, Cm, rows, beta = cc["C"], cc["Cm"], cc["rows"], cc["beta"]
     E = _err_box(z, C, Cm, rows, beta, iters)
     X = [(xr[i] + E[i][0], xr[i] + E[i][1]) for i in range(n)]
     return {"beta": beta, "C": C, "Cm": Cm, "rows": rows, "X": X, "R": Rr}
 
 
-# ── componentwise bounds by a verified vector (step 4c, 2026-10-15) ───────────────────────────────────────────────
 # The error e = z + C e has |e| <= |z| + |C| |e|; as rho(|C|) <= beta < 1, (I - |C|)^-1 = sum |C|^m >= 0, so ANY u
 # with u >= |z| + |C| u bounds |e| <= u componentwise (u - |e| = (I - |C|)^-1 (...) >= 0). A candidate u is computed
 # in floating point (untrusted) and VERIFIED here exactly — one product with |C|; a failed candidate falls back to
@@ -747,8 +766,24 @@ def _transpose_par(par, rhs):
             "terms": [(t[0], t[1], {(j, i): iv for (i, j), iv in t[2].items()}, {}) for t in par["terms"]]}
 
 
-def _factor_sign(A, b, k, qs, piece, R, Ai, bi, par, st):
-    """'+' / '-' — the sign of d x_k / d name over the piece by its factors (step 6) — or None."""
+def _cached(cache, key, make):
+    """cache[key] = make() once — a LinError too (raised again on every later call, never retried)."""
+    if cache is None:
+        return make()
+    if key not in cache:
+        try:
+            cache[key] = make()
+        except LinError as e:
+            cache[key] = e
+    got = cache[key]
+    if isinstance(got, LinError):
+        raise got
+    return got
+
+
+def _factor_sign(A, b, k, qs, piece, R, Ai, bi, par, st, cache=None):
+    """'+' / '-' — the sign of d x_k / d name over the piece by its factors (step 6) — or None. cache: a dict kept for
+    ONE piece (one Ai, R, par) across its quantities — the two contractions, A's and A^T's, computed once."""
     n = len(A)
     lead = st["g"] if st["g"] is not None else st["h"]
     gi = _read(lead, qs, piece)
@@ -758,7 +793,8 @@ def _factor_sign(A, b, k, qs, piece, R, Ai, bi, par, st):
     ui = [(u.get(i, ZERO), u.get(i, ZERO)) for i in range(n)]
     parU = {"A0": par["A0"], "b0": ui, "terms": [(t[0], t[1], t[2], {}) for t in par["terms"]]} if par else None
     yt = [sum((R[i][m] * c for m, c in u.items()), ZERO) for i in range(n)]
-    Y = _fiv(_core(Ai, ui, R, yt, 0, parU)["X"][k])
+    cf = _cached(cache, "fwd", lambda: _contract(Ai, R, parU))
+    Y = _fiv(_core(Ai, ui, R, yt, 0, parU, cf)["X"][k])
     if not (Y[0] > 0 or Y[1] < 0):
         return None
     sg = (1 if gi[0] > 0 else -1) * (1 if Y[0] > 0 else -1)
@@ -766,10 +802,11 @@ def _factor_sign(A, b, k, qs, piece, R, Ai, bi, par, st):
         return "+" if sg > 0 else "-"              # d x_k / d name = h * (A^-1 u)_k
     v = st["v"]
     vi = [(v.get(i, ZERO), v.get(i, ZERO)) for i in range(n)]
-    AiT = [list(col) for col in zip(*Ai)]
-    RT = [list(col) for col in zip(*R)]
+    AiT, RT = _cached(cache, "T", lambda: ([list(col) for col in zip(*Ai)], [list(col) for col in zip(*R)]))
     mt = [sum((RT[i][m] * c for m, c in v.items()), ZERO) for i in range(n)]
-    Mu = [_fiv(t) for t in _core(AiT, vi, RT, mt, 0, _transpose_par(par, vi) if par else None)["X"]]
+    parT = _transpose_par(par, vi) if par else None
+    cb = _cached(cache, "bwd", lambda: _contract(AiT, RT, parT))
+    Mu = [_fiv(t) for t in _core(AiT, vi, RT, mt, 0, parT, cb)["X"]]
     ka = st["kappa"]
     kap = (ka, ka) if isinstance(ka, F) else _read(ka, qs, piece)
     s_lo, s_hi = -kap[1], -kap[0]
@@ -787,12 +824,13 @@ def _factor_sign(A, b, k, qs, piece, R, Ai, bi, par, st):
 def _signs(A, b, names_signs, k, qs, piece, R, xt, Ai, bi, iters=0, par=None, structs=None):
     """Step 5: for each (name, sign), does d x_k / d name keep that sign over the piece? -> the first failure or None."""
     got = _dread(A, b, list(names_signs), k, qs, piece, R, xt, Ai, bi, iters, par)
+    cache = {}                                            # one piece: its contractions computed once
     for name, sg in names_signs.items():
         d = got[name]
         if not isinstance(d, str) and (d[0] >= 0 if sg == "+" else d[1] <= 0):
             continue
         st = (structs or {}).get(name)
-        if st is not None and _factor_sign(A, b, k, qs, piece, R, Ai, bi, par, st) == sg:
+        if st is not None and _factor_sign(A, b, k, qs, piece, R, Ai, bi, par, st, cache) == sg:
             continue                                      # step 6: three factors, each enclosed on its own
         if isinstance(d, str):
             return d

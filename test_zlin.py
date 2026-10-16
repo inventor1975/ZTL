@@ -387,6 +387,36 @@ c4 = {"grid": 64, "tree": {"vertex": "p", "R": [[str(F(v).limit_denominator(10**
 check(not Z.check(L4, ["u0", "u1"], q4, "u0", "<=", F(100), c4)[0],
       "MUTATION: a vertex branch on p where p is not one layer: refused (the vertex theorem would not hold)")
 
+print("7. one piece's contractions reused across its quantities (2026-10-16): the same signs, nothing else")
+boxes, laws, un = ladder(4, F(1, 10))
+qs = sheet(boxes, un)
+A, b = Z.system(laws, un, qs)
+pc = dict(boxes)
+mid = {n: ((lo + hi) / 2, (lo + hi) / 2) for n, (lo, hi) in pc.items()}
+Rm = finv([[float(Z._read(e, qs, mid)[0]) for e in row] for row in A])
+R = [[F(int(round(v * Z.G)), Z.G) for v in row] for row in Rm]
+Ai, bi, par = Z._imatrix(A, qs, pc), [Z._read(e, qs, pc) for e in b], Z._param(A, b, qs, pc)
+k = len(un) - 1
+plain, cached, shared = {}, {}, {}
+for nm in sorted(boxes):
+    st = Z._structure(A, b, nm, qs, pc)
+    if st is None:
+        continue
+    for out, cache in ((plain, None), (cached, shared)):
+        try:
+            out[nm] = Z._factor_sign(A, b, k, qs, pc, R, Ai, bi, par, st, cache)
+        except Z.LinError as e:
+            out[nm] = f"LinError {e}"
+check(plain == cached and len(plain) >= 8 and sum(v in ("+", "-") for v in plain.values()) >= 4,
+      f"every quantity's step-6 sign the same with the piece's contractions computed once: {cached}")
+cc = Z._contract(Ai, R, None)
+try:
+    Z._core(Ai, bi, R, [F(0)] * len(un), 0, par, cc)
+    refused = False
+except Z.LinError:
+    refused = True
+check(refused, "MUTATION: a contraction of the interval form reused for the parametric form: refused")
+
 if FAILS:
     print(f"ZLIN RED: {len(FAILS)} of {CHECKS[0]} checks fail")
     sys.exit(1)

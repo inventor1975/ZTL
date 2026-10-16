@@ -156,6 +156,7 @@ STANDS = [
     ("test_backward_tree.py", ["BACKWARD TREE GREEN"]),
     ("test_certify.py", ["CERTIFY GREEN"]),
     ("test_zlin.py", ["ZLIN GREEN"]),
+    ("test_zintegral.py", ["ZINTEGRAL GREEN"]),
     ("test_zfunc.py", ["ZFUNC GREEN"]),
     ("test_implicit.py", ["IMPLICIT GREEN"]),
     ("test_affine.py", ["AFFINE GREEN"]),

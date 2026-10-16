@@ -33,7 +33,8 @@ lean/ZIntegralT.lean, `taylor2_leaf`): the symmetric second difference is bounde
 along the graph (no mean value theorem), and every SYMMETRIC tagged sum of mesh mu lies in [L, U] widened by
 2*K*mu*h^2 — for the grammar const var + - * exp / sqrt (exp's second-order step from its first-order slopes on a
 grid, lean/ZExp2.lean; / and sqrt by exact identities). Still premises: the readings of pow, sin, cos, atan, tan,
-log10; Taylor of order 2 for ln (the kernel's recurrence needs a same-point argument); Taylor orders above 2; non-symmetric tagged sums for the Taylor leaf.
+log10; Taylor of order 2 for ln (the kernel's recurrence needs a same-point argument); Taylor orders above 2.
+Every tagged sum, not only the symmetric ones, for the order-2 leaf: lean/ZTransfer.lean (`taylor2_every`).
 """
 
 from fractions import Fraction

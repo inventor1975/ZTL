@@ -17,9 +17,9 @@ The proof: the sum is `2h·f(m) + Σ (b − a)·sd` (`sd` the symmetric second d
 `2s²·[C2]`), and `Σ (b − a)·s²` is within `μh²` of `h³/3` (`cube_sum`: per cell `3(b − a)s² − (b³ − a³)` lies within
 `±3μ(b² − a²)`, which telescopes) — rational algebra, no limit taken inside.
 
-NOT covered, said rather than hidden: tagged sums that are not symmetric about `m` (for a Lipschitz integrand —
-which the first-order reading certifies — every Riemann sum shares the limit; that transfer is classical and not
-proved here); orders above 2 (`zintegral.py` also uses 4, 6, …); `ln` in the second coefficient (`ZTaylor2`: the
+Tagged sums that are not symmetric about `m`: `ZTransfer.taylor2_every` (the first-order reading makes the integrand
+Lipschitz; two tagged sums differ by at most `K1·(μ + μQ)·2h`, through their common refinement). NOT covered, said
+rather than hidden: orders above 2 (`zintegral.py` also uses 4, 6, …); `ln` in the second coefficient (`ZTaylor2`: the
 kernel's `ln` recurrence needs a same-point argument this algebra lacks).
 -/
 

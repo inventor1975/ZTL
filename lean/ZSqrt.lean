@@ -288,8 +288,8 @@ theorem gap_ev {y : Nat → QExpr} {lo hi SH : QExpr} (hy : Ev y lo hi) (hlo : q
 
 /-! ## The slope -/
 
-/-- Eventually equal sequences have the same eventual bounds (as `ZSlopeDiv.Ev_congr_ev`, which imports this). -/
-theorem Ev_congr {x y : Nat → QExpr} {l h : QExpr} (N0 : Nat) (e : ∀ n, N0 ≤ n → qEq (x n) (y n))
+/-- Eventually equal sequences have the same eventual bounds (as `ZSlopeDiv.Ev_congr_ev`). -/
+theorem Ev_congr_from {x y : Nat → QExpr} {l h : QExpr} (N0 : Nat) (e : ∀ n, N0 ≤ n → qEq (x n) (y n))
     (hx : Ev x l h) : Ev y l h := fun k => by
   obtain ⟨N, hN⟩ := hx k
   refine ⟨N + N0, fun n hn => ?_⟩
@@ -329,7 +329,7 @@ theorem Ev_sqrt_slope {a b : Nat → QExpr} {lo hi SL SH w1 w2 r1 r2 t1 t2 m M :
   have Q := Ev_mul Num Wr hc
   obtain ⟨J, hJ⟩ := recip_near hR 0
   obtain ⟨N, hN⟩ := W J
-  refine Ev_congr N (fun n hn => ?_) Q
+  refine Ev_congr_from N (fun n hn => ?_) Q
   obtain ⟨x1, x2⟩ := hN n hn
   obtain ⟨hz, _, _⟩ := hJ _ x1 x2
   have e1 : qEq (qsub (qsub (b n) (a n)) (qsub (qsub (b n) (sq (rsqrt (b n) n))) (qsub (a n) (sq (rsqrt (a n) n)))))

@@ -28,8 +28,11 @@ their readings say (a derivative read finite over a piece bounds the derivative 
 Lagrange remainder. Lean, zero axioms: lean/ZIntegral.lean — for interval and monotone leaves, every tagged sum over a
 refinement of the partition lies in [L, U] (`enclosure_sound`); lean/ZIntegralR.lean — the same on VR's operational
 reals with the leaves discharged by the proved readings (ZSlopeSqrt), for the grammar + - * / exp ln sqrt
-(`enclosure_R`; sqrt found on a grid, lean/ZSqrt.lean). Still premises: the readings of pow, sin, cos, atan, tan,
-log10; the Taylor leaf (a limit claim) is NOT in Lean.
+(`enclosure_R`; sqrt found on a grid, lean/ZSqrt.lean). The Taylor leaf of ORDER 2 (lean/ZTaylor2.lean,
+lean/ZIntegralT.lean, `taylor2_leaf`): the symmetric second difference is bounded by the kernel's second coefficient
+along the graph (no mean value theorem), and every SYMMETRIC tagged sum of mesh mu lies in [L, U] widened by
+2*K*mu*h^2 — so far for the grammar const var + - * only. Still premises: the readings of pow, sin, cos, atan, tan,
+log10; Taylor of order 2 for / exp ln sqrt; Taylor orders above 2; non-symmetric tagged sums for the Taylor leaf.
 """
 
 from fractions import Fraction

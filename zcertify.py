@@ -393,10 +393,14 @@ def _reading_one(e, qs, piece, affine):
     q2 = dict(qs)
     for n, (lo, hi) in piece.items():
         q2[n] = dict(qs[n], lo=lo, hi=hi)
+    import znum as _ZN
+    keep, _ZN._MEMO[0] = _ZN._MEMO[0], {}       # one reading: each distinct node once (znum._ev, a graph's memory)
     try:
         iv = _ev(e, q2)[0]
     except (ZeroDivisionError, KeyError, ValueError, ArithmeticError):
         return None
+    finally:
+        _ZN._MEMO[0] = keep
     if iv is None:
         return None
     lo, hi = iv

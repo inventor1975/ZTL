@@ -1408,7 +1408,29 @@ def _int_refine(kind, e1, e2, quantities):
     return "F"
 
 
+_MEMO = [None]          # {node: result} while ONE reading runs (zcertify._reading_one), else None
+
+
 def _ev(expr, quantities):
+    """_ev_tree with a GRAPH's memory (2026-10-16, the curator's "в ZTL нет графов, можно добавить?"): a subtree met
+    again in the same reading — the chamber pressure five times inside a rocket's delta-v — is read once. _ev_tree
+    is a pure function of (expr, quantities), so the reading is the same, only once per distinct node. The sets in a
+    result are copied on every hit: no caller can change what another one reads."""
+    memo = _MEMO[0]
+    if memo is None or not isinstance(expr, tuple):
+        return _ev_tree(expr, quantities)
+    try:
+        hit = memo.get(expr)
+    except TypeError:                       # a node holding a list (a "sum"): not hashable, read as a tree
+        return _ev_tree(expr, quantities)
+    if hit is None:
+        hit = _ev_tree(expr, quantities)
+        memo[expr] = hit
+    iv, ped, used, step, unit = hit
+    return iv, set(ped), set(used), step, unit
+
+
+def _ev_tree(expr, quantities):
     """Rich evaluator: (interval|None, pedigree, used, lattice_step, unit).
     Discreteness is tracked exactly through +, -, *, sum (integer lattices
     are closed there) and is dropped at division — a conservative

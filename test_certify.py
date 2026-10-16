@@ -731,5 +731,46 @@ r_px = ZC.check(e2, qs2, "<=", F(1, 4), {"pin": {"x": "+"}, "then": {"leaf": "in
 check("MUTATION: a pin on a quantity the target is NOT monotone in (x*(1-x) on [0, 1]) is refused",
       not r_px[0] and "d/dx" in r_px[1], str(r_px))
 
+# A GRAPH'S MEMORY (2026-10-16): within one reading a repeated subtree is read once (znum._ev). The reading must be
+# the SAME as the tree's — 300 random expressions full of repeated subtrees, with and without the memory
+import random as _rnd
+import znum as _ZN
+_rg = _rnd.Random(16)
+_leaves = ["x", "y", "z", F(3, 2), F(-1, 3)]
+_bx = {"x": (F(1, 2), F(2)), "y": (F(1), F(3)), "z": (F(-1), F(1, 2))}
+_, _qsg = setup("x + y + z", _bx)
+
+def _rexp(d):
+    if d == 0:
+        return _rg.choice(_leaves)
+    op = _rg.choice(["add", "sub", "mul", "div", "exp", "sqrt_sq"])
+    if op == "exp":
+        return ("exp", ("div", _rexp(d - 1), F(4)))
+    if op == "sqrt_sq":
+        a = _rexp(d - 1)
+        return ("sqrt", ("add", ("mul", a, a), F(1)))
+    a = _rexp(d - 1)
+    b = a if _rg.random() < 0.5 else _rexp(d - 1)       # a SHARED subtree half the time
+    if op == "div":
+        b = ("add", ("mul", b, b), F(1))                # a denominator away from zero
+    return (op, a, b)
+_same, _tried = 0, 0
+for _ in range(300):
+    ex = _rexp(4)
+    _ZN._MEMO[0] = None
+    try:
+        plain = _ZN._ev(ex, _qsg)[0]
+    except (ZeroDivisionError, ValueError, ArithmeticError, KeyError):
+        continue
+    _ZN._MEMO[0] = {}
+    try:
+        mem = _ZN._ev(ex, _qsg)[0]
+    finally:
+        _ZN._MEMO[0] = None
+    _tried += 1
+    _same += plain == mem
+check("a graph's memory: the reading with each node read once equals the tree's reading exactly",
+      _tried >= 250 and _same == _tried, f"{_same} of {_tried}")
+
 print(f"certify: {ok} ok, {fail} failed")
 print("CERTIFY GREEN" if fail == 0 else "CERTIFY RED")

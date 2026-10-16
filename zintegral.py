@@ -25,9 +25,10 @@ That holds for interval and monotone leaves — each tagged sum of such a piece 
 between the end values — but NOT for a Taylor leaf, whose enclosure hugs the integral itself: a coarse sum w*f(u)
 of that piece may fall outside it.) The premises named, not proved here: the elementary functions are as smooth as
 their readings say (a derivative read finite over a piece bounds the derivative there), and Taylor's theorem with the
-Lagrange remainder. Lean (lean/ZIntegral.lean, zero axioms): for interval and monotone leaves, every tagged sum over
-a refinement of the partition lies in [L, U] (`enclosure_sound`, `monotone_leaf`); the readings' soundness is ZSlope's
-for + - * and exp, a premise for the rest; the Taylor leaf (a limit claim) is NOT in Lean.
+Lagrange remainder. Lean, zero axioms: lean/ZIntegral.lean — for interval and monotone leaves, every tagged sum over a
+refinement of the partition lies in [L, U] (`enclosure_sound`); lean/ZIntegralR.lean — the same on VR's operational
+reals with the leaves discharged by ZSlopeDiv's proved readings, for the grammar + - * / exp ln (`enclosure_R`). Still
+premises: the readings of sqrt, pow, sin, cos, atan, tan; the Taylor leaf (a limit claim) is NOT in Lean.
 """
 
 from fractions import Fraction

@@ -1,7 +1,8 @@
-import ZSqrt
+import ZPow
 
 /-!
-# ZSlopeSqrt — the kernel's certificate rule for `+ − × / exp ln sqrt`, on VR's operational reals. Zero axioms.
+# ZSlopeSqrt — the kernel's certificate rule for `+ − × / exp ln sqrt`, integer powers, on VR's operational reals.
+Zero axioms. (`log10`: its value reading only — no derivative reading yet.)
 
 `ZSlopeDiv` with `√` added (`ZSqrt`: the root found on a grid, the value read as the kernel's rational fork
 `[SL, SH]` with `SL² ≤ lo`, `hi ≤ SH²`, as `znum._rat_sqrt` builds it, `lo ≥ 0`). The kernel reads the derivative
@@ -14,7 +15,7 @@ re-stated, not extended).
 
 namespace ZSlopeSqrt
 
-open VR.Numbers ZCertify ZSlope ZExp ZSlopeExp ZRecip ZLn ZSqrt
+open VR.Numbers ZCertify ZSlope ZExp ZSlopeExp ZRecip ZLn ZSqrt ZPow
 
 /-! ## The grammar with `/` and `exp` -/
 
@@ -46,6 +47,8 @@ inductive G where
   | exp   : G → G
   | ln    : G → G
   | sqrt  : G → G
+  | powN  : G → Nat → G
+  | log10 : G → G
 
 def evalN (n : Nat) (p : Point QExpr) : G → QExpr
   | .const c => c
@@ -57,6 +60,8 @@ def evalN (n : Nat) (p : Point QExpr) : G → QExpr
   | .exp u => eseq (evalN n p u) n
   | .ln u => lnseq (evalN n p u) n
   | .sqrt u => rsqrt (evalN n p u) n
+  | .powN u k => qpowN (evalN n p u) k
+  | .log10 u => qmul (lnseq (evalN n p u) n) (qinv' (lnseq (qnat 10) n))
 
 /-- The kernel's value reading: a quotient is `U × [1/V]`, `V` clear of zero (`RecipOK`). -/
 inductive VRead (B : Box QExpr) : G → QExpr → QExpr → Prop where
@@ -76,6 +81,12 @@ inductive VRead (B : Box QExpr) : G → QExpr → QExpr → Prop where
       ExpCert Ll zl wl → qle wl lu → ExpCert Lh wh zh → qle hu wh → VRead B (.ln u) Ll Lh
   | sqrt {u : G} {lu hu SL SH : QExpr} : VRead B u lu hu → qle qzero lu →
       qle qzero SL → qle (sq SL) lu → qle qzero SH → qle hu (sq SH) → VRead B (.sqrt u) SL SH
+  | powN {u : G} {k : Nat} {lu hu l h : QExpr} : VRead B u lu hu → qle qzero lu → qle lu hu →
+      qle l (qpowN lu k) → qle (qpowN hu k) h → VRead B (.powN u k) l h
+  | log10 {u : G} {lu hu Ll Lh zl wl zh wh L1 L2 z1 w1 z2 w2 r1 r2 l h : QExpr} : VRead B u lu hu → qlt qzero lu →
+      ExpCert Ll zl wl → qle wl lu → ExpCert Lh wh zh → qle hu wh →
+      ExpCert L1 z1 w1 → qle w1 (qnat 10) → ExpCert L2 w2 z2 → qle (qnat 10) w2 →
+      RecipOK r1 r2 L1 L2 → Corners l h Ll Lh r1 r2 → VRead B (.log10 u) l h
 
 theorem value_sound {B : Box QExpr} {p : Point QExpr} (hp : InBox qOrd B p) :
     ∀ {e : G} {l h : QExpr}, VRead B e l h → Ev (fun n => evalN n p e) l h := by
@@ -90,6 +101,11 @@ theorem value_sound {B : Box QExpr} {p : Point QExpr} (hp : InBox qOrd B p) :
   | exp _ cl ch ih => exact Ev_exp ih cl ch
   | ln _ hlo cl hwl ch hwh ih => exact Ev_ln ih hlo cl hwl ch hwh
   | sqrt _ _ hSL hSL2 hSH hSH2 ih => exact Ev_sqrt ih hSL hSL2 hSH hSH2
+  | powN _ h0 hlh hl hh ih => exact Ev_widen (Ev_powN ih h0 hlh _) hl hh
+  | log10 _ hlo cl hwl ch hwh c1 hw1 c2 hw2 hR hc ih =>
+      have t := Ev_ln (y := fun _ => qnat 10) (Ev_of_exact 0 (fun _ _ => ⟨qle_refl _, qle_refl _⟩))
+        (qnat_succ_pos 9) c1 hw1 c2 hw2
+      exact Ev_mul (Ev_ln ih hlo cl hwl ch hwh) (Ev_recip t hR) hc
 
 /-- The kernel's derivative reading: the quotient rule `(Du·V − U·Dv) / (V·V)`, each product at its corners,
 `V·V` read as an independent product (which is what bounds `v(p)·v(p')`). -/
@@ -120,6 +136,10 @@ inductive DRead (B : Box QExpr) (i : Nat) : G → QExpr → QExpr → Prop where
   | ln {u : G} {lu hu Li Hi du1 du2 m M l h : QExpr} :
       VRead B u lu hu → qlt qzero lu → RecipOK Li Hi lu hu → DRead B i u du1 du2 →
       Corners m M Li Hi du1 du2 → qle l m → qle M h → DRead B i (.ln u) l h
+  | powZ {u : G} {l h : QExpr} : qle l qzero → qle qzero h → DRead B i (.powN u 0) l h
+  | powN {u : G} {k : Nat} {lu hu pl ph du1 du2 l h : QExpr} : VRead B u lu hu → qle qzero lu → qle lu hu →
+      qle pl (qpowN lu k) → qle (qpowN hu k) ph → DRead B i u du1 du2 →
+      Corners l h du1 du2 (qmul (qnat (k + 1)) pl) (qmul (qnat (k + 1)) ph) → DRead B i (.powN u (k + 1)) l h
   | sqrt {u : G} {lu hu SL SH w1 w2 r1 r2 du1 du2 m M l h : QExpr} :
       VRead B u lu hu → qle qzero lu → qle qzero SL → qle (sq SL) lu → qle qzero SH → qle hu (sq SH) →
       qle w1 (qadd SL SL) → qle (qadd SH SH) w2 → RecipOK r1 r2 w1 w2 → DRead B i u du1 du2 →
@@ -235,6 +255,19 @@ theorem slope_sound {B : Box QExpr} {i : Nat} {p p' : Point QExpr} (hp : InBox q
         have := qmul_respects (qEq_refl (evalN n p v)) e; have z := qmul_zero (evalN n p v)
         exact qle_antisymm (by rat_linarith) (by rat_linarith))
       exact qEq_symm (quot_diff (u := evalN n p u) (u' := evalN n p' u) nv nv')
+  | @powZ u l h hl hh =>
+      have f1 : qle qzero (qmul (qneg l) (qsub (p' i) (p i))) := qmul_nonneg (by rat_linarith) hd
+      have e1 : qEq (qmul (qneg l) (qsub (p' i) (p i))) (qneg (qmul l (qsub (p' i) (p i)))) := by rat_ring
+      have f2 : qle qzero (qmul h (qsub (p' i) (p i))) := qmul_nonneg hh hd
+      have e0 : qEq (qsub qone qone) qzero := by unfold qsub; rat_ring
+      exact Ev_of_exact 0 (fun n _ => ⟨by show qle _ (qsub qone qone); rat_linarith, by show qle (qsub qone qone) _; rat_linarith⟩)
+  | @powN u k lu hu pl ph du1 du2 l h ru h0 hlh hpl hph _ hc ih =>
+      -- u'^(k+1) − u^(k+1) = (u' − u)·Σ u^i u'^(k−i), the sum in [(k+1)·lu^k, (k+1)·hu^k]
+      have Gs := Ev_gsum (value_sound hp ru) (value_sound hp' ru) h0 hlh k
+      have G2 := Ev_widen Gs (scale_l hpl (qnat_nonneg (k + 1))) (scale_l hph (qnat_nonneg (k + 1)))
+      have Q := Ev_mul ih G2 (corners_scale_left hc hd)
+      refine Ev_congr (fun n => ?_) Q
+      exact qEq_symm (pow_diff (evalN n p u) (evalN n p' u) k)
   | @divT u v lu hu lv hv lw hw r1 r2 du1 du2 dv1 dv2 c C n1 n2 l h ru rv hR rw _ _ cc hn1 hn2 cq ih1 ih2 =>
       -- the kernel's Taylor form: w' − w = (Δu − w·Δv)·(1/v'), exactly (v, v' ≠ 0)
       have Wv := Ev_mul (value_sound hp rw) ih2 (corners_scale cc hd)
@@ -312,6 +345,14 @@ theorem evalN_cauchy {B : Box QExpr} {p : Point QExpr} (hp : InBox qOrd B p) :
   | exp _ _ _ ih => exact rexpR_cauchy ⟨_, ih⟩
   | ln ru hlo _ _ _ _ ih => exact ln_cauchy ih (value_sound hp ru) hlo
   | sqrt ru hlo _ _ _ _ ih => exact sqrt_cauchy ih (value_sound hp ru) hlo
+  | powN _ _ _ _ _ ih => exact powN_cauchy ih _
+  | log10 ru hlo _ _ _ _ c1 hw1 c2 hw2 hR _ ih =>
+      have t := Ev_ln (y := fun _ => qnat 10) (Ev_of_exact 0 (fun _ _ => ⟨qle_refl _, qle_refl _⟩))
+        (qnat_succ_pos 9) c1 hw1 c2 hw2
+      have c10 : ZRecip.Cauchy (fun n => lnseq (qnat 10) n) :=
+        ln_cauchy (fun k => ⟨0, fun _ _ _ _ => qclose_refl _ _ (qeps_nonneg k)⟩)
+          (Ev_of_exact 0 (fun _ _ => ⟨qle_refl (qnat 10), qle_refl _⟩)) (qnat_succ_pos 9)
+      exact (rmul ⟨_, ln_cauchy ih (value_sound hp ru) hlo⟩ ⟨_, recip_cauchy c10 t hR⟩).cauchy
 
 /-- The value at `p`, given a value reading over a box containing `p`. -/
 def valR {B : Box QExpr} {p : Point QExpr} {e : G} {l h : QExpr} (hp : InBox qOrd B p) (r : VRead B e l h) : RExpr :=
@@ -383,6 +424,8 @@ def Uses : G → Nat → Prop
   | .exp u, j => Uses u j
   | .ln u, j => Uses u j
   | .sqrt u, j => Uses u j
+  | .powN u _, j => Uses u j
+  | .log10 u, j => Uses u j
 
 theorem evalN_dep (n : Nat) (p q : Point QExpr) : ∀ e : G, (∀ j, Uses e j → p j = q j) → evalN n p e = evalN n q e
   | .const _, _ => rfl
@@ -407,6 +450,12 @@ theorem evalN_dep (n : Nat) (p q : Point QExpr) : ∀ e : G, (∀ j, Uses e j �
       rw [evalN_dep n p q u h]
   | .sqrt u, h => by
       show rsqrt _ n = rsqrt _ n
+      rw [evalN_dep n p q u h]
+  | .powN u k, h => by
+      show qpowN _ k = qpowN _ k
+      rw [evalN_dep n p q u h]
+  | .log10 u, h => by
+      show qmul (lnseq _ n) _ = qmul (lnseq _ n) _
       rw [evalN_dep n p q u h]
 
 theorem corner_bound_S (e : G) (B : Box QExpr) (sg : Nat → Bool) :
@@ -525,6 +574,16 @@ example : ∀ p, InBox qOrd (fun _ => (qone, qnat 4)) p →
       (VRead.var (by decide) (by decide)) (by decide) (by decide) (by unfold sq; decide) (by decide)
       (by unfold sq; decide) (by decide) (by decide) (by unfold RecipOK; decide)
       (DRead.self (by decide) (by decide)) (by unfold Corners; decide) (by decide) (by decide))
+    (by decide)
+
+/-- Nonvacuity: `x³` on `[1, 2]` rises — `u^2` read `[1, 4]`, the derivative `[1, 1]·[3, 12]`. -/
+example : ∀ p, InBox qOrd (fun _ => (qone, qnat 2)) p →
+    SLe (fun n => evalN n p (.powN (.var 0) 3))
+        (fun n => evalN n (upd p 0 (endOf (fun _ => (qone, qnat 2)) true 0)) (.powN (.var 0) 3)) :=
+  mono_up (l := qzero) (h := qnat 12)
+    (DRead.powN (k := 2) (lu := qone) (hu := qnat 2) (pl := qone) (ph := qnat 4) (du1 := qone) (du2 := qone)
+      (VRead.var (by decide) (by decide)) (by decide) (by decide) (by decide) (by decide)
+      (DRead.self (by decide) (by decide)) (by unfold Corners; decide))
     (by decide)
 
 end ZSlopeSqrt

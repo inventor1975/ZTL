@@ -18,12 +18,14 @@ znum._ev, zfunc's brackets) and its own derivatives (zcertify.derivative):
                                        f^(n)(piece) * 2 (w/2)^(n+1) / (n+1)!   (n = 2: the midpoint rule)
 Every piece's enclosure is rounded OUTWARD; their sum encloses the integral for every p of the box.
 
-THE CLAIM, operational (no limit, no "the real integral" as an object): for every p of the box and EVERY Riemann sum
-of every refinement of the partition, the value lies in [L, U] — each piece's sums lie in its own enclosure (an
-interval leaf: between w*inf f and w*sup f; a monotone leaf: between the end values; a Taylor leaf: the integral of a
-C^n function — its derivatives READ finite over the piece). The premises named, not proved here: the elementary
-functions are as smooth as their readings say (a derivative read finite over a piece is a bound of the derivative
-there), and Taylor's theorem with the Lagrange remainder. Lean: not yet.
+THE CLAIM, operational (no "real integral" as an object): for every p of the box and every eps > 0 there is a delta
+such that EVERY Riemann sum of mesh below delta lies in [L - eps, U + eps] — [L, U] holds the limit of the Riemann
+sums. (CORRECTED 2026-10-16, the same day: the first text said every Riemann sum of every refinement lies in [L, U].
+That holds for interval and monotone leaves — each tagged sum of such a piece lies between w*inf f and w*sup f, or
+between the end values — but NOT for a Taylor leaf, whose enclosure hugs the integral itself: a coarse sum w*f(u)
+of that piece may fall outside it.) The premises named, not proved here: the elementary functions are as smooth as
+their readings say (a derivative read finite over a piece bounds the derivative there), and Taylor's theorem with the
+Lagrange remainder. Lean: not yet.
 """
 
 from fractions import Fraction

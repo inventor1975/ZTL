@@ -1,4 +1,4 @@
-import ZSlopeSqrt
+import ZExp2
 
 /-!
 # ZTaylor2 — the kernel's second Taylor coefficient bounds the SYMMETRIC second difference. Zero axioms.
@@ -17,12 +17,12 @@ because it splits along the graph exactly as the kernel's recurrences do. For a 
 — the kernel's `c2(uv) = U0·V2 + U1·V1 + U2·V0`, the two slope products being `ZSlopeSqrt.slope_sound`'s (first
 order, already proved). No odd term is needed: it cancels between `m + s` and `m − s`.
 
-Stage 1 (this file): the grammar `const var + − ×`. `exp`, `/`, `sqrt`, `ln` need their own second-order steps.
+The grammar `const var + − × exp` (`exp`'s own second-order step: `ZExp2.Ev_exp2`). `/`, `sqrt`, `ln` are not covered yet.
 -/
 
 namespace ZTaylor2
 
-open VR.Numbers ZCertify ZSlope ZExp ZSlopeExp ZRecip ZLn ZSqrt ZSlopeSqrt
+open VR.Numbers ZCertify ZSlope ZExp ZSlopeExp ZRecip ZLn ZSqrt ZSlopeSqrt ZExp2
 
 /-- The kernel's reading of the second Taylor coefficient `f''/2` over a box, as relations its computed intervals
 satisfy (`zcertify.taylor_coeffs`, order 2): constants and quantities `0`; sums termwise; a product by the
@@ -39,6 +39,10 @@ inductive T2Read (B : Box QExpr) (i : Nat) : G → QExpr → QExpr → Prop wher
       T2Read B i u a1 a2 → T2Read B i v b1 b2 →
       Corners p1 P1 lu hu b1 b2 → Corners p2 P2 du1 du2 dv1 dv2 → Corners p3 P3 a1 a2 lv hv →
       qle l (qadd (qadd p1 p2) p3) → qle (qadd (qadd P1 P2) P3) h → T2Read B i (.mul u v) l h
+  | exp {u : G} {lu hu El Eh du1 du2 a1 a2 g G r R' t T l h : QExpr} :
+      VRead B u lu hu → (∃ z, ExpCert lu El z) → (∃ z, ExpCert hu z Eh) → DRead B i u du1 du2 → T2Read B i u a1 a2 →
+      Corners g G du1 du2 El Eh → Corners r R' du1 du2 g G → Corners t T a1 a2 El Eh →
+      qle (qadd l l) (qadd r (qadd t t)) → qle (qadd R' (qadd T T)) (qadd h h) → T2Read B i (.exp u) l h
 
 /-- The symmetric second difference at index `n`. -/
 def sd (n : Nat) (p0 pp pm : Point QExpr) (e : G) : QExpr :=
@@ -57,6 +61,11 @@ theorem zero_between {c C d : QExpr} (hc : qle c qzero) (hC : qle qzero C) (hd :
   have e : qEq (qmul (qneg c) d) (qneg (qmul c d)) := by rat_ring
   exact ⟨by rat_linarith, qmul_nonneg hC hd⟩
 
+/-- `a + b ≤ n` gives `a ≤ n` and `b ≤ n` (no `omega`: it brings `propext`). -/
+theorem le_l {a b n : Nat} (h : a + b ≤ n) : a ≤ n := Nat.le_trans (Nat.le_add_right a b) h
+theorem le_r {a b n : Nat} (h : a + b ≤ n) : b ≤ n := Nat.le_trans (Nat.le_add_left b a) h
+
+set_option maxRecDepth 200000 in
 /-- THE SYMMETRIC SECOND DIFFERENCE IS BOUNDED BY THE KERNEL'S SECOND COEFFICIENT. Three points of the box, differing
 only in quantity `i`: `m`, `m + s`, `m − s` (`s ≥ 0`). Then `f(m + s) + f(m − s) − 2f(m)` is eventually in
 `2s²·[l, h]`, to every precision. -/
@@ -135,6 +144,89 @@ theorem sd_sound {B : Box QExpr} {i : Nat} {p0 pp pm : Point QExpr}
       show qEq _ (qsub (qadd (qmul (evalN n pp u) (evalN n pp v)) (qmul (evalN n pm u) (evalN n pm v)))
         (qadd (qmul (evalN n p0 u) (evalN n p0 v)) (qmul (evalN n p0 u) (evalN n p0 v))))
       unfold sd qsub; rat_ring
+  | @exp u lu hu El Eh du1 du2 a1 a2 g G r R' t T l h ru cl ch du _ cg cr c3 hl hh ih =>
+      -- 2·sd(e^u) = r2(u0, u₊) + r2(u0, u₋) + 2·e^{u0}·sd(u)
+      have U0 := value_sound h0 ru
+      have Up := value_sound hp ru
+      have Um := value_sound hm ru
+      have V0 := value_sound h0 (VRead.exp ru cl ch)
+      have Rp := Ev_exp2 U0 Up cl ch
+      have Rm := Ev_exp2 U0 Um cl ch
+      have Sp := slope_sound h0 hp (fun j hj => fp j hj) hs du
+      have Sm := slope_sound hm h0 (fun j hj => fm j hj) hs' du
+      obtain ⟨⟨g11, g12, g21, g22⟩, ⟨G11, G12, G21, G22⟩⟩ := cg
+      have cEl : Corners g G du1 du2 El El := ⟨⟨g11, g11, g21, g21⟩, ⟨G11, G11, G21, G21⟩⟩
+      have cEh : Corners g G du1 du2 Eh Eh := ⟨⟨g12, g12, g22, g22⟩, ⟨G12, G12, G22, G22⟩⟩
+      have kEl : Ev (fun _ => El) El El := Ev_of_exact 0 (fun _ _ => ⟨qle_refl _, qle_refl _⟩)
+      have kEh : Ev (fun _ => Eh) Eh Eh := Ev_of_exact 0 (fun _ _ => ⟨qle_refl _, qle_refl _⟩)
+      have PpL := Ev_mul Sp (Ev_mul Sp kEl (corners_scale_left cEl hs)) (corners_scale (corners_scale_left cr hs) hs)
+      have PpH := Ev_mul Sp (Ev_mul Sp kEh (corners_scale_left cEh hs)) (corners_scale (corners_scale_left cr hs) hs)
+      have PmL := Ev_mul Sm (Ev_mul Sm kEl (corners_scale_left cEl hs')) (corners_scale (corners_scale_left cr hs') hs')
+      have PmH := Ev_mul Sm (Ev_mul Sm kEh (corners_scale_left cEh hs')) (corners_scale (corners_scale_left cr hs') hs')
+      have T3 := Ev_mul ih V0 (corners_scale_left c3 hd)
+      intro k
+      obtain ⟨N1, h1⟩ := Rp (k + 2)
+      obtain ⟨N2, h2⟩ := Rm (k + 2)
+      obtain ⟨N3, h3⟩ := PpL (k + 2)
+      obtain ⟨N4, h4⟩ := PpH (k + 2)
+      obtain ⟨N5, h5⟩ := PmL (k + 2)
+      obtain ⟨N6, h6⟩ := PmH (k + 2)
+      obtain ⟨N7, h7⟩ := T3 (k + 2)
+      refine ⟨N1 + (N2 + (N3 + (N4 + (N5 + (N6 + N7))))), fun n hn => ?_⟩
+      have z1 := le_l hn
+      have z2 := le_r hn
+      have z3 := le_r z2
+      have z4 := le_r z3
+      have z5 := le_r z4
+      have z6 := le_r z5
+      obtain ⟨x1, y1⟩ := h1 n z1
+      obtain ⟨x2, y2⟩ := h2 n (le_l z2)
+      obtain ⟨x3, _⟩ := h3 n (le_l z3)
+      obtain ⟨_, y4⟩ := h4 n (le_l z4)
+      obtain ⟨x5, _⟩ := h5 n (le_l z5)
+      obtain ⟨_, y6⟩ := h6 n (le_l z6)
+      obtain ⟨x7, y7⟩ := h7 n (le_r z6)
+      have X1 : qle (qsub (qmul (qmul (qsub (evalN n pp u) (evalN n p0 u)) (qsub (evalN n pp u) (evalN n p0 u))) El) (qeps (k + 2)))
+          (qmul two (qsub (qsub (eseq (evalN n pp u) n) (eseq (evalN n p0 u) n))
+            (qmul (qsub (evalN n pp u) (evalN n p0 u)) (eseq (evalN n p0 u) n)))) := x1
+      have Y1 : qle (qmul two (qsub (qsub (eseq (evalN n pp u) n) (eseq (evalN n p0 u) n))
+            (qmul (qsub (evalN n pp u) (evalN n p0 u)) (eseq (evalN n p0 u) n))))
+          (qadd (qmul (qmul (qsub (evalN n pp u) (evalN n p0 u)) (qsub (evalN n pp u) (evalN n p0 u))) Eh) (qeps (k + 2))) := y1
+      have X2 : qle (qsub (qmul (qmul (qsub (evalN n pm u) (evalN n p0 u)) (qsub (evalN n pm u) (evalN n p0 u))) El) (qeps (k + 2)))
+          (qmul two (qsub (qsub (eseq (evalN n pm u) n) (eseq (evalN n p0 u) n))
+            (qmul (qsub (evalN n pm u) (evalN n p0 u)) (eseq (evalN n p0 u) n)))) := x2
+      have Y2 : qle (qmul two (qsub (qsub (eseq (evalN n pm u) n) (eseq (evalN n p0 u) n))
+            (qmul (qsub (evalN n pm u) (evalN n p0 u)) (eseq (evalN n p0 u) n))))
+          (qadd (qmul (qmul (qsub (evalN n pm u) (evalN n p0 u)) (qsub (evalN n pm u) (evalN n p0 u))) Eh) (qeps (k + 2))) := y2
+      have X3 : qle (qsub (qmul (qmul r (qsub (pp i) (p0 i))) (qsub (pp i) (p0 i))) (qeps (k + 2)))
+          (qmul (qsub (evalN n pp u) (evalN n p0 u)) (qmul (qsub (evalN n pp u) (evalN n p0 u)) El)) := x3
+      have Y4 : qle (qmul (qsub (evalN n pp u) (evalN n p0 u)) (qmul (qsub (evalN n pp u) (evalN n p0 u)) Eh))
+          (qadd (qmul (qmul R' (qsub (pp i) (p0 i))) (qsub (pp i) (p0 i))) (qeps (k + 2))) := y4
+      have X5 : qle (qsub (qmul (qmul r (qsub (p0 i) (pm i))) (qsub (p0 i) (pm i))) (qeps (k + 2)))
+          (qmul (qsub (evalN n p0 u) (evalN n pm u)) (qmul (qsub (evalN n p0 u) (evalN n pm u)) El)) := x5
+      have Y6 : qle (qmul (qsub (evalN n p0 u) (evalN n pm u)) (qmul (qsub (evalN n p0 u) (evalN n pm u)) Eh))
+          (qadd (qmul (qmul R' (qsub (p0 i) (pm i))) (qsub (p0 i) (pm i))) (qeps (k + 2))) := y6
+      have X7 : qle (qsub (qmul t (two_sq (qsub (pp i) (p0 i)))) (qeps (k + 2)))
+          (qmul (sd n p0 pp pm u) (eseq (evalN n p0 u) n)) := x7
+      have Y7 : qle (qmul (sd n p0 pp pm u) (eseq (evalN n p0 u) n))
+          (qadd (qmul T (two_sq (qsub (pp i) (p0 i)))) (qeps (k + 2))) := y7
+      clear x1 y1 x2 y2 x3 y4 x5 y6 x7 y7 h1 h2 h3 h4 h5 h6 h7 Rp Rm PpL PpH PmL PmH T3 Sp Sm U0 Up Um V0
+        cEl cEh kEl kEh g11 g12 g21 g22 G11 G12 G21 G22 cr c3 ih du ru cl ch
+      have q1 : qEq (qmul (qmul r (qsub (p0 i) (pm i))) (qsub (p0 i) (pm i)))
+          (qmul (qmul r (qsub (pp i) (p0 i))) (qsub (pp i) (p0 i))) := qmul_respects (qmul_respects (qEq_refl _) hsym) hsym
+      have q2 : qEq (qmul (qmul R' (qsub (p0 i) (pm i))) (qsub (p0 i) (pm i)))
+          (qmul (qmul R' (qsub (pp i) (p0 i))) (qsub (pp i) (p0 i))) := qmul_respects (qmul_respects (qEq_refl _) hsym) hsym
+      have s1 := ZExp.scale hl hd
+      have s2 := ZExp.scale hh hd
+      have e2 := qeps_succ_add k
+      have e3 := qeps_succ_add (k + 1)
+      have ep := qeps_nonneg (k + 2)
+      show qle _ (qsub (qadd (eseq (evalN n pp u) n) (eseq (evalN n pm u) n))
+          (qadd (eseq (evalN n p0 u) n) (eseq (evalN n p0 u) n))) ∧
+        qle (qsub (qadd (eseq (evalN n pp u) n) (eseq (evalN n pm u) n))
+          (qadd (eseq (evalN n p0 u) n) (eseq (evalN n p0 u) n))) _
+      unfold two two_sq sd qsub at *
+      exact ⟨by rat_linarith, by rat_linarith⟩
 
 end ZTaylor2
 

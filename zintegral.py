@@ -261,3 +261,163 @@ def search_range(f, x, a, b, qs, tol, **kw):
         return {"gave_up": f"the kernel refused the search's own range certificate: {got[1]}"}
     cert["range"] = got[1]
     return cert
+
+
+# ── LIMITS THAT MOVE WITH THE DATA (2026-10-16) ───────────────────────────────────────────────────────────────────
+# I(p) = ∫_{A(p)}^{B(p)} f(x, p) dx, A and B reader nodes of the box. With A read in [a_lo, a_hi], B in [b_lo, b_hi]
+# and a_hi <= b_lo:  I = ∫_{a_hi}^{b_lo} f  +  ∫_A^{a_hi} f  +  ∫_{b_lo}^B f.  The core is an ordinary certificate;
+# each tail is (its length in [0, spread]) x f(xi), xi in the spread x the box (mean value) — hull{0, spread*f}.
+#     {"core": cert}                                   -> check_limits: an enclosure for every p (sound, may be wide)
+#     {"pins": {p: s}, "low": {"core": cert}, "high": {"core": cert}}
+#                                                      -> check_limits_range: dI/dp = f(B) dB/dp - f(A) dA/dp
+#                                                         + ∫_A^B df/dp keeps the sign s over the box (each term read,
+#                                                         the last as (B - A) x df/dp over the hull) -> the range is
+#                                                         spanned by the two corners, each with its limits near-points.
+def _tail(f, x, qs, box, lo, hi):
+    if lo == hi:
+        return (Fraction(0), Fraction(0))
+    r = ZC._reading(f, qs, dict(box, **{x: (lo, hi)}))
+    if r is None:
+        raise ArithmeticError("f has no reading where a limit moves")
+    w = hi - lo
+    return _out((min(Fraction(0), w * r[0]), max(Fraction(0), w * r[1])))
+
+
+def check_limits(f, x, A, B, qs, cert, box=None):
+    """(True, (L, U), pieces) — ∫_{A}^{B} f dx in [L, U] for every value of the box — or (False, why)."""
+    box = box if box is not None else {n: (qs[n]["lo"], qs[n]["hi"]) for n in set(ZC._names(f)) | ZC._names(A)
+                                         | ZC._names(B) if n in qs and n != x}
+    ra = ZC._reading(A, qs, box) if not isinstance(A, Fraction) else (A, A)
+    rb = ZC._reading(B, qs, box) if not isinstance(B, Fraction) else (B, B)
+    if ra is None or rb is None:
+        return False, "a limit has no reading over the box"
+    if ra[1] > rb[0]:
+        return False, "the limits' ranges overlap (A may exceed B): not read (version 1)"
+    core = cert.get("core") if isinstance(cert, dict) else None
+    if core is None:
+        return False, "no core certificate"
+    qb = dict(qs)
+    for n, (lo, hi) in box.items():
+        qb[n] = dict(qs[n], lo=lo, hi=hi)
+    if ra[1] < rb[0]:
+        got = check(f, x, ra[1], rb[0], qb, core)
+        if not got[0]:
+            return False, f"the core [{float(ra[1]):.9g}, {float(rb[0]):.9g}]: {got[1]}"
+        C, pieces = got[1], got[2]
+    else:
+        C, pieces = (Fraction(0), Fraction(0)), 0
+    fbox = {n: v for n, v in box.items() if n in ZC._names(f)}
+    try:
+        ta = _tail(f, x, qb, fbox, ra[0], ra[1])
+        tb = _tail(f, x, qb, fbox, rb[0], rb[1])
+    except ArithmeticError as e:
+        return False, str(e)
+    return True, _out((C[0] + ta[0] + tb[0], C[1] + ta[1] + tb[1])), pieces
+
+
+def _limits_box(qs, names):
+    return {n: (qs[n]["lo"], qs[n]["hi"]) for n in names if n in qs}
+
+
+def _limit_sign(f, x, A, B, qs, box, ra, rb, p, s):
+    """dI/dp = f(B) dB/dp - f(A) dA/dp + ∫_A^B df/dp, each term read over the box (the last as (B - A) x df/dp over the
+    hull of the limits): (True, None) when it keeps the sign s, else (False, why)."""
+    if p not in box or s not in ("+", "-"):
+        return False, f"a pin on {p!r}: not a datum here, or no sign"
+    try:
+        dA, dB, df = ZC.derivative(A, p), ZC.derivative(B, p), ZC.derivative(f, p)
+    except ZC.NoDerivative as e:
+        return False, f"{p}: {e}"
+    fB = ZC._reading(f, qs, dict(box, **{x: rb}))
+    fA = ZC._reading(f, qs, dict(box, **{x: ra}))
+    rdA, rdB = ZC._reading(dA, qs, box), ZC._reading(dB, qs, box)
+    rdf = ZC._reading(df, qs, dict(box, **{x: (ra[0], rb[1])}))
+    if None in (fB, fA, rdA, rdB, rdf):
+        return False, f"dI/d{p}: a term has no reading"
+    span = (rb[0] - ra[1], rb[1] - ra[0])
+    t = ZC._iadd(ZC._imul2(fB, rdB), ZC._ineg(ZC._imul2(fA, rdA)))
+    t = ZC._iadd(t, ZC._imul2(span, rdf))
+    if (s == "+" and t[0] < 0) or (s == "-" and t[1] > 0):
+        return False, f"dI/d{p} over the box reads [{float(t[0]):.6g}, {float(t[1]):.6g}], not {s}"
+    return True, None
+
+
+def check_limits_range(f, x, A, B, qs, cert):
+    """(True, (L, U)) by pins: each pinned parameter's dI/dp has its sign over the box; L from the low corner, U from
+    the high one (each an ordinary check_limits with the pinned parameters points) — or (False, why)."""
+    pins = cert.get("pins") if isinstance(cert, dict) else None
+    if not isinstance(pins, dict):
+        return False, "no pins"
+    names = (set(ZC._names(f)) | ZC._names(A) | ZC._names(B)) - {x}
+    box = _limits_box(qs, names)
+    ra, rb = ZC._reading(A, qs, box), ZC._reading(B, qs, box)
+    if ra is None or rb is None or ra[1] > rb[0]:
+        return False, "the limits cannot be read apart over the box"
+    low_b, high_b = dict(box), dict(box)
+    for p, s in pins.items():
+        ok, why = _limit_sign(f, x, A, B, qs, box, ra, rb, p, s)
+        if not ok:
+            return False, why
+        lo, hi = box[p]
+        lo_end, hi_end = (lo, hi) if s == "+" else (hi, lo)
+        low_b[p], high_b[p] = (lo_end, lo_end), (hi_end, hi_end)
+    gl = check_limits(f, x, A, B, qs, cert.get("low") or {}, low_b)
+    if not gl[0]:
+        return False, f"the low corner: {gl[1]}"
+    gh = check_limits(f, x, A, B, qs, cert.get("high") or {}, high_b)
+    if not gh[0]:
+        return False, f"the high corner: {gh[1]}"
+    return True, (gl[1][0], gh[1][1])
+
+
+def search_limits(f, x, A, B, qs, tol, box=None, **kw):
+    """The core's certificate for check_limits (the tails are read, not searched)."""
+    box = box if box is not None else _limits_box(qs, (set(ZC._names(f)) | ZC._names(A) | ZC._names(B)) - {x})
+    ra = ZC._reading(A, qs, box) if not isinstance(A, Fraction) else (A, A)
+    rb = ZC._reading(B, qs, box) if not isinstance(B, Fraction) else (B, B)
+    if ra is None or rb is None or ra[1] > rb[0]:
+        return {"gave_up": "the limits cannot be read apart over the box"}
+    qb = dict(qs)
+    for n, (lo, hi) in box.items():
+        qb[n] = dict(qs[n], lo=lo, hi=hi)
+    if ra[1] == rb[0]:
+        core = {"points": [], "leaves": []}
+    else:
+        c = search(f, x, ra[1], rb[0], qb, tol, **kw)
+        if "gave_up" in c:
+            return c
+        core = {k: c[k] for k in ("points", "leaves")}
+    got = check_limits(f, x, A, B, qs, {"core": core}, box)
+    return {"core": core, "enclosure": got[1]} if got[0] else {"gave_up": got[1]}
+
+
+def search_limits_range(f, x, A, B, qs, tol, **kw):
+    """Pins for every datum whose dI/dp sign shows, then the corners' cores."""
+    names = (set(ZC._names(f)) | ZC._names(A) | ZC._names(B)) - {x}
+    box = _limits_box(qs, names)
+    pins = {}
+    for p, (lo, hi) in box.items():
+        if lo == hi:
+            continue
+        ra, rb = ZC._reading(A, qs, box), ZC._reading(B, qs, box)
+        if ra is None or rb is None:
+            break
+        for s in ("+", "-"):
+            if _limit_sign(f, x, A, B, qs, box, ra, rb, p, s)[0]:
+                pins[p] = s
+                break
+    low_b, high_b = dict(box), dict(box)
+    for p, s in pins.items():
+        lo, hi = box[p]
+        lo_end, hi_end = (lo, hi) if s == "+" else (hi, lo)
+        low_b[p], high_b[p] = (lo_end, lo_end), (hi_end, hi_end)
+    lo_c = search_limits(f, x, A, B, qs, tol, box=low_b, **kw)
+    hi_c = search_limits(f, x, A, B, qs, tol, box=high_b, **kw)
+    if "gave_up" in lo_c or "gave_up" in hi_c:
+        return {"gave_up": lo_c.get("gave_up") or hi_c.get("gave_up")}
+    cert = {"pins": pins, "low": {"core": lo_c["core"]}, "high": {"core": hi_c["core"]}}
+    got = check_limits_range(f, x, A, B, qs, cert)
+    if not got[0]:
+        return {"gave_up": f"the kernel refused the search's own certificate: {got[1]}"}
+    cert["range"] = got[1]
+    return cert

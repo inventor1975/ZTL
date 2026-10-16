@@ -91,6 +91,21 @@ for t, mf in (("exp(0 - x*x)", lambda z: mpmath.exp(-z * z)), ("sqrt(x)", mpmath
 check(_bad == 0 and _n == 147,
       f"Taylor coefficients along the graph hold the true f^(k)/k! (7 functions x 3 points x orders 0..6): {_bad} of {_n} outside")
 
+print("4c. limits that move: ∫_0^T e^(-k x) dx, T in [1, 2], k in [1/2, 1] — the exact range by pins")
+import math as _m
+qsl = parse_quantities(", ".join(f"{n}=[{fs(a)},{fs(b)}] credit" for n, (a, b) in
+                                  {"x": (F(0), F(3)), "T": (F(1), F(2)), "k": (F(1, 2), F(1))}.items()))[0]
+fl, Bl = _parse_arith("exp(0 - k*x)", qsl), _parse_arith("T", qsl)
+cl = ZI.search_limits_range(fl, "x", F(0), Bl, qsl, F(1, 10 ** 9))
+true_lo, true_hi = 1 - _m.exp(-1), (1 - _m.exp(-1)) / F(1, 2)
+check("gave_up" not in cl and cl["pins"] == {"k": "-", "T": "+"}
+      and abs(float(cl["range"][0]) - true_lo) < 1e-9 and abs(float(cl["range"][1]) - float(true_hi)) < 1e-9,
+      f"pins k (-) and T (+); the range [1 - 1/e, 2(1 - 1/e)] within 1e-9: {[float(v) for v in cl.get('range', (0, 0))]}")
+cm = dict(cl, pins={"k": "+", "T": "+"})
+check(not ZI.check_limits_range(fl, "x", F(0), Bl, qsl, cm)[0], "MUTATION: a limit pin with the wrong sign (k +) refused")
+cw = ZI.check_limits(fl, "x", F(0), Bl, qsl, {"core": cl["high"]["core"]})
+check(not cw[0], "MUTATION: the high corner's core ([0, 2]) refused for the whole box (its core is [0, 1])")
+
 print("5. the partition itself")
 pts = c["points"]
 lv = c["leaves"]

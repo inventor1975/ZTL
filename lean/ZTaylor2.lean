@@ -17,7 +17,9 @@ because it splits along the graph exactly as the kernel's recurrences do. For a 
 — the kernel's `c2(uv) = U0·V2 + U1·V1 + U2·V0`, the two slope products being `ZSlopeSqrt.slope_sound`'s (first
 order, already proved). No odd term is needed: it cancels between `m + s` and `m − s`.
 
-The grammar `const var + − × exp` (`exp`'s own second-order step: `ZExp2.Ev_exp2`). `/`, `sqrt`, `ln` are not covered yet.
+The grammar `const var + − × exp / sqrt` (`exp`'s own second-order step: `ZExp2.Ev_exp2`; `/` and `sqrt` by the exact
+identities `w·v = u`, `s² = u − gap`). `ln` is NOT covered: the kernel's `l2 = (a2 − l1·a1/2)/a0` holds classically
+at one point ξ, while this algebra produces a ratio `u(ζ)/u(ξ)` of two points — a same-point argument is missing.
 -/
 
 namespace ZTaylor2
@@ -43,6 +45,16 @@ inductive T2Read (B : Box QExpr) (i : Nat) : G → QExpr → QExpr → Prop wher
       VRead B u lu hu → (∃ z, ExpCert lu El z) → (∃ z, ExpCert hu z Eh) → DRead B i u du1 du2 → T2Read B i u a1 a2 →
       Corners g G du1 du2 El Eh → Corners r R' du1 du2 g G → Corners t T a1 a2 El Eh →
       qle (qadd l l) (qadd r (qadd t t)) → qle (qadd R' (qadd T T)) (qadd h h) → T2Read B i (.exp u) l h
+  | div {u v : G} {lv hv lw hw r1 r2 dw1 dw2 dv1 dv2 a1 a2 b1 b2 p P q Q n1 n2 l h : QExpr} :
+      VRead B v lv hv → RecipOK r1 r2 lv hv → VRead B (.div u v) lw hw →
+      DRead B i (.div u v) dw1 dw2 → DRead B i v dv1 dv2 → T2Read B i u a1 a2 → T2Read B i v b1 b2 →
+      Corners p P dw1 dw2 dv1 dv2 → Corners q Q lw hw b1 b2 →
+      qle n1 (qsub (qsub a1 P) Q) → qle (qsub (qsub a2 p) q) n2 → Corners l h n1 n2 r1 r2 → T2Read B i (.div u v) l h
+  | sqrt {u : G} {lu hu SL SH w1 w2 r1 r2 ds1 ds2 a1 a2 p P n1 n2 l h : QExpr} :
+      VRead B u lu hu → qle qzero lu → qle qzero SL → qle (sq SL) lu → qle qzero SH → qle hu (sq SH) →
+      qle w1 (qadd SL SL) → qle (qadd SH SH) w2 → RecipOK r1 r2 w1 w2 →
+      DRead B i (.sqrt u) ds1 ds2 → T2Read B i u a1 a2 → Corners p P ds1 ds2 ds1 ds2 →
+      qle n1 (qsub a1 P) → qle (qsub a2 p) n2 → Corners l h n1 n2 r1 r2 → T2Read B i (.sqrt u) l h
 
 /-- The symmetric second difference at index `n`. -/
 def sd (n : Nat) (p0 pp pm : Point QExpr) (e : G) : QExpr :=
@@ -227,6 +239,120 @@ theorem sd_sound {B : Box QExpr} {i : Nat} {p0 pp pm : Point QExpr}
           (qadd (eseq (evalN n p0 u) n) (eseq (evalN n p0 u) n))) _
       unfold two two_sq sd qsub at *
       exact ⟨by rat_linarith, by rat_linarith⟩
+  | @div u v lv hv lw hw r1 r2 dw1 dw2 dv1 dv2 a1 a2 b1 b2 p P q Q n1 n2 l h rv hR rw dw dv _ _ cp cq hn1 hn2 cl ih1 ih2 =>
+      -- w·v = u at each point: sd(u) − w0·sd(v) − Δ₊wΔ₊v − Δ₋wΔ₋v = v0·sd(w)
+      have T2 := Ev_mul (value_sound h0 rw) ih2 (corners_scale cq hd)
+      have T3 := Ev_mul (slope_sound h0 hp (fun j hj => fp j hj) hs dw) (slope_sound h0 hp (fun j hj => fp j hj) hs dv)
+        (corners_scale (corners_scale_left cp hs) hs)
+      have T4 := Ev_mul (slope_sound hm h0 (fun j hj => fm j hj) hs' dw) (slope_sound hm h0 (fun j hj => fm j hj) hs' dv)
+        (corners_scale (corners_scale_left cp hs') hs')
+      have q1 : qEq (qmul (qmul p (qsub (p0 i) (pm i))) (qsub (p0 i) (pm i)))
+          (qmul (qmul p (qsub (pp i) (p0 i))) (qsub (pp i) (p0 i))) := qmul_respects (qmul_respects (qEq_refl _) hsym) hsym
+      have q2 : qEq (qmul (qmul P (qsub (p0 i) (pm i))) (qsub (p0 i) (pm i)))
+          (qmul (qmul P (qsub (pp i) (p0 i))) (qsub (pp i) (p0 i))) := qmul_respects (qmul_respects (qEq_refl _) hsym) hsym
+      have s1 := ZExp.scale hn1 hd
+      have s2 := ZExp.scale hn2 hd
+      have Num := Ev_widen (Ev_sub (Ev_sub ih1 T2) (Ev_add T3 T4))
+        (l' := qmul n1 (two_sq (qsub (pp i) (p0 i)))) (h' := qmul n2 (two_sq (qsub (pp i) (p0 i))))
+        (by unfold two_sq qsub at *; rat_linarith) (by unfold two_sq qsub at *; rat_linarith)
+      have Rv := Ev_recip (value_sound h0 rv) hR
+      have Qv := Ev_mul Num Rv (corners_scale_left cl hd)
+      obtain ⟨J, hJ⟩ := recip_near hR 0
+      obtain ⟨N0, hN0⟩ := value_sound h0 rv J
+      obtain ⟨Np, hNp⟩ := value_sound hp rv J
+      obtain ⟨Nm, hNm⟩ := value_sound hm rv J
+      refine Ev_congr_ev (N0 + (Np + Nm)) (fun n hn => ?_) Qv
+      obtain ⟨a0', b0'⟩ := hN0 n (le_l hn)
+      obtain ⟨ap', bp'⟩ := hNp n (le_l (le_r hn))
+      obtain ⟨am', bm'⟩ := hNm n (le_r (le_r hn))
+      obtain ⟨z0, _, _⟩ := hJ _ a0' b0'
+      obtain ⟨zp, _, _⟩ := hJ _ ap' bp'
+      obtain ⟨zm, _, _⟩ := hJ _ am' bm'
+      have c0 := qmul_inv'_cancel z0
+      have cp' := qmul_inv'_cancel zp
+      have cm' := qmul_inv'_cancel zm
+      -- w_x·v_x = u_x
+      have wv : ∀ (x y : QExpr), qEq (qmul y (qinv' y)) qone → qEq (qmul (qmul x (qinv' y)) y) x := fun x y c => by
+        have e := qmul_respects (qEq_refl x) c
+        have e2 : qEq (qmul (qmul x (qinv' y)) y) (qmul x (qmul y (qinv' y))) := by rat_ring
+        exact qEq_trans e2 (qEq_trans e (qmul_one x))
+      have f0 := wv (evalN n p0 u) (evalN n p0 v) c0
+      have fp' := wv (evalN n pp u) (evalN n pp v) cp'
+      have fm' := wv (evalN n pm u) (evalN n pm v) cm'
+      -- the numerator is v0·sd(w)
+      have hnum : qEq (qsub (qsub (sd n p0 pp pm u)
+            (qmul (qmul (evalN n p0 u) (qinv' (evalN n p0 v))) (sd n p0 pp pm v)))
+          (qadd (qmul (qsub (qmul (evalN n pp u) (qinv' (evalN n pp v))) (qmul (evalN n p0 u) (qinv' (evalN n p0 v))))
+                  (qsub (evalN n pp v) (evalN n p0 v)))
+                (qmul (qsub (qmul (evalN n p0 u) (qinv' (evalN n p0 v))) (qmul (evalN n pm u) (qinv' (evalN n pm v))))
+                  (qsub (evalN n p0 v) (evalN n pm v)))))
+          (qmul (sd n p0 pp pm (.div u v)) (evalN n p0 v)) := by
+        show qEq _ (qmul (qsub (qadd (qmul (evalN n pp u) (qinv' (evalN n pp v))) (qmul (evalN n pm u) (qinv' (evalN n pm v))))
+          (qadd (qmul (evalN n p0 u) (qinv' (evalN n p0 v))) (qmul (evalN n p0 u) (qinv' (evalN n p0 v))))) (evalN n p0 v))
+        unfold sd qsub at *
+        exact qle_antisymm (by rat_linarith) (by rat_linarith)
+      have e1 := qmul_respects hnum (qEq_refl (qinv' (evalN n p0 v)))
+      have e2 : qEq (qmul (qmul (sd n p0 pp pm (.div u v)) (evalN n p0 v)) (qinv' (evalN n p0 v)))
+          (qmul (sd n p0 pp pm (.div u v)) (qmul (evalN n p0 v) (qinv' (evalN n p0 v)))) := by rat_ring
+      have e3 := qmul_respects (qEq_refl (sd n p0 pp pm (.div u v))) c0
+      exact qEq_trans e1 (qEq_trans e2 (qEq_trans e3 (qmul_one _)))
+  | @sqrt u lu hu SL SH w1 w2 r1 r2 ds1 ds2 a1 a2 p P n1 n2 l h ru hlo hSL hSL2 hSH hSH2 hw1 hw2 hR ds _ cp hn1 hn2 cl ih =>
+      -- s² = u − θ: sd(u) − sd(θ) − (Δ₊s)² − (Δ₋s)² = 2·s0·sd(s)
+      have G0 := gap_ev (value_sound h0 ru) hlo hSH hSH2
+      have Gp := gap_ev (value_sound hp ru) hlo hSH hSH2
+      have Gm := gap_ev (value_sound hm ru) hlo hSH hSH2
+      have Gs := Ev_sub (Ev_add Gp Gm) (Ev_add G0 G0)
+      have Sp := slope_sound h0 hp (fun j hj => fp j hj) hs ds
+      have Sm := slope_sound hm h0 (fun j hj => fm j hj) hs' ds
+      have T3 := Ev_mul Sp Sp (corners_scale (corners_scale_left cp hs) hs)
+      have T4 := Ev_mul Sm Sm (corners_scale (corners_scale_left cp hs') hs')
+      have q1 : qEq (qmul (qmul p (qsub (p0 i) (pm i))) (qsub (p0 i) (pm i)))
+          (qmul (qmul p (qsub (pp i) (p0 i))) (qsub (pp i) (p0 i))) := qmul_respects (qmul_respects (qEq_refl _) hsym) hsym
+      have q2 : qEq (qmul (qmul P (qsub (p0 i) (pm i))) (qsub (p0 i) (pm i)))
+          (qmul (qmul P (qsub (pp i) (p0 i))) (qsub (pp i) (p0 i))) := qmul_respects (qmul_respects (qEq_refl _) hsym) hsym
+      have s1 := ZExp.scale hn1 hd
+      have s2 := ZExp.scale hn2 hd
+      have z0 : qEq (qsub (qadd qzero qzero) (qadd qzero qzero)) qzero := by unfold qsub; rat_ring
+      have Num := Ev_widen (Ev_sub (Ev_sub ih Gs) (Ev_add T3 T4))
+        (l' := qmul n1 (two_sq (qsub (pp i) (p0 i)))) (h' := qmul n2 (two_sq (qsub (pp i) (p0 i))))
+        (by unfold two_sq qsub at *; rat_linarith) (by unfold two_sq qsub at *; rat_linarith)
+      have V0 := value_sound h0 (VRead.sqrt ru hlo hSL hSL2 hSH hSH2)
+      have W := Ev_widen (Ev_add V0 V0) hw1 hw2
+      have Rv := Ev_recip W hR
+      have Qv := Ev_mul Num Rv (corners_scale_left cl hd)
+      obtain ⟨J, hJ⟩ := recip_near hR 0
+      obtain ⟨N0, hN0⟩ := W J
+      refine Ev_congr_ev N0 (fun n hn => ?_) Qv
+      obtain ⟨a0', b0'⟩ := hN0 n hn
+      obtain ⟨z, _, _⟩ := hJ _ a0' b0'
+      have c0 := qmul_inv'_cancel z
+      have hnum : qEq (qsub (qsub (sd n p0 pp pm u)
+            (qsub (qadd (qsub (evalN n pp u) (sq (rsqrt (evalN n pp u) n))) (qsub (evalN n pm u) (sq (rsqrt (evalN n pm u) n))))
+              (qadd (qsub (evalN n p0 u) (sq (rsqrt (evalN n p0 u) n))) (qsub (evalN n p0 u) (sq (rsqrt (evalN n p0 u) n))))))
+          (qadd (qmul (qsub (rsqrt (evalN n pp u) n) (rsqrt (evalN n p0 u) n)) (qsub (rsqrt (evalN n pp u) n) (rsqrt (evalN n p0 u) n)))
+                (qmul (qsub (rsqrt (evalN n p0 u) n) (rsqrt (evalN n pm u) n)) (qsub (rsqrt (evalN n p0 u) n) (rsqrt (evalN n pm u) n)))))
+          (qmul (sd n p0 pp pm (.sqrt u)) (qadd (rsqrt (evalN n p0 u) n) (rsqrt (evalN n p0 u) n))) := by
+        show qEq _ (qmul (qsub (qadd (rsqrt (evalN n pp u) n) (rsqrt (evalN n pm u) n))
+          (qadd (rsqrt (evalN n p0 u) n) (rsqrt (evalN n p0 u) n))) (qadd (rsqrt (evalN n p0 u) n) (rsqrt (evalN n p0 u) n)))
+        unfold sd sq qsub; rat_ring
+      have e1 := qmul_respects hnum (qEq_refl (qinv' (qadd (rsqrt (evalN n p0 u) n) (rsqrt (evalN n p0 u) n))))
+      have e2 : qEq (qmul (qmul (sd n p0 pp pm (.sqrt u)) (qadd (rsqrt (evalN n p0 u) n) (rsqrt (evalN n p0 u) n)))
+            (qinv' (qadd (rsqrt (evalN n p0 u) n) (rsqrt (evalN n p0 u) n))))
+          (qmul (sd n p0 pp pm (.sqrt u)) (qmul (qadd (rsqrt (evalN n p0 u) n) (rsqrt (evalN n p0 u) n))
+            (qinv' (qadd (rsqrt (evalN n p0 u) n) (rsqrt (evalN n p0 u) n))))) := by rat_ring
+      have e3 := qmul_respects (qEq_refl (sd n p0 pp pm (.sqrt u))) c0
+      exact qEq_trans e1 (qEq_trans e2 (qEq_trans e3 (qmul_one _)))
+
+/-- Nonvacuity: `x·x` on `[0, 1]` reads its second coefficient `[1, 1]` — exactly `f''/2`: the convolution
+`U0·V2 + U1·V1 + U2·V0 = [0,1]·0 + 1·1 + 0·[0,1]`. -/
+example : T2Read (fun _ => (qzero, qone)) 0 (.mul (.var 0) (.var 0)) qone qone :=
+  T2Read.mul (lu := qzero) (hu := qone) (lv := qzero) (hv := qone) (du1 := qone) (du2 := qone) (dv1 := qone)
+    (dv2 := qone) (a1 := qzero) (a2 := qzero) (b1 := qzero) (b2 := qzero) (p1 := qzero) (P1 := qzero)
+    (p2 := qone) (P2 := qone) (p3 := qzero) (P3 := qzero)
+    (VRead.var (by decide) (by decide)) (VRead.var (by decide) (by decide))
+    (DRead.self (by decide) (by decide)) (DRead.self (by decide) (by decide))
+    (T2Read.var (by decide) (by decide)) (T2Read.var (by decide) (by decide))
+    (by unfold Corners; decide) (by unfold Corners; decide) (by unfold Corners; decide) (by decide) (by decide)
 
 end ZTaylor2
 

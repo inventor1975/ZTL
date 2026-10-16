@@ -110,6 +110,10 @@ inductive DRead (B : Box QExpr) (i : Nat) : G → QExpr → QExpr → Prop where
       Corners m1 M1 du1 du2 lv hv → Corners m2 M2 lu hu dv1 dv2 →
       qle n1 (qsub m1 M2) → qle (qsub M1 m2) n2 →
       Corners w1 w2 lv hv lv hv → RecipOK r1 r2 w1 w2 → Corners l h n1 n2 r1 r2 → DRead B i (.div u v) l h
+  | divT {u v : G} {lu hu lv hv lw hw r1 r2 du1 du2 dv1 dv2 c C n1 n2 l h : QExpr} :
+      VRead B u lu hu → VRead B v lv hv → RecipOK r1 r2 lv hv → VRead B (.div u v) lw hw →
+      DRead B i u du1 du2 → DRead B i v dv1 dv2 → Corners c C lw hw dv1 dv2 →
+      qle n1 (qsub du1 C) → qle (qsub du2 c) n2 → Corners l h n1 n2 r1 r2 → DRead B i (.div u v) l h
   | exp {u : G} {lu hu El Eh du1 du2 m M l h : QExpr} :
       VRead B u lu hu → (∃ z, ExpCert lu El z) → (∃ z, ExpCert hu z Eh) → DRead B i u du1 du2 →
       Corners m M El Eh du1 du2 → qle l m → qle M h → DRead B i (.exp u) l h
@@ -231,6 +235,51 @@ theorem slope_sound {B : Box QExpr} {i : Nat} {p p' : Point QExpr} (hp : InBox q
         have := qmul_respects (qEq_refl (evalN n p v)) e; have z := qmul_zero (evalN n p v)
         exact qle_antisymm (by rat_linarith) (by rat_linarith))
       exact qEq_symm (quot_diff (u := evalN n p u) (u' := evalN n p' u) nv nv')
+  | @divT u v lu hu lv hv lw hw r1 r2 du1 du2 dv1 dv2 c C n1 n2 l h ru rv hR rw _ _ cc hn1 hn2 cq ih1 ih2 =>
+      -- the kernel's Taylor form: w' − w = (Δu − w·Δv)·(1/v'), exactly (v, v' ≠ 0)
+      have Wv := Ev_mul (value_sound hp rw) ih2 (corners_scale cc hd)
+      have s1 := ZExp.scale hn1 hd
+      have s2 := ZExp.scale hn2 hd
+      have t1 : qEq (qmul (qsub du1 C) (qsub (p' i) (p i)))
+          (qsub (qmul du1 (qsub (p' i) (p i))) (qmul C (qsub (p' i) (p i)))) := by unfold qsub; rat_ring
+      have t2 : qEq (qmul (qsub du2 c) (qsub (p' i) (p i)))
+          (qsub (qmul du2 (qsub (p' i) (p i))) (qmul c (qsub (p' i) (p i)))) := by unfold qsub; rat_ring
+      have Num := Ev_widen (Ev_sub ih1 Wv) (l' := qmul n1 (qsub (p' i) (p i))) (h' := qmul n2 (qsub (p' i) (p i)))
+        (by rat_linarith) (by rat_linarith)
+      have Rv := Ev_recip (value_sound hp' rv) hR
+      have Q := Ev_mul Num Rv (corners_scale_left cq hd)
+      obtain ⟨J, hJ⟩ := recip_near hR 0
+      obtain ⟨N1, hN1⟩ := value_sound hp rv J
+      obtain ⟨N2, hN2⟩ := value_sound hp' rv J
+      refine Ev_congr_ev (N1 + N2) (fun n hn => ?_) Q
+      obtain ⟨a1, b1⟩ := hN1 n (Nat.le_trans (Nat.le_add_right N1 N2) hn)
+      obtain ⟨a2, b2⟩ := hN2 n (Nat.le_trans (Nat.le_add_left N2 N1) hn)
+      obtain ⟨nv, _, _⟩ := hJ _ a1 b1
+      obtain ⟨nv', _, _⟩ := hJ _ a2 b2
+      have c0 := qmul_inv'_cancel nv
+      have c0' := qmul_inv'_cancel nv'
+      show qEq (qmul (qsub (qsub (evalN n p' u) (evalN n p u))
+          (qmul (qmul (evalN n p u) (qinv' (evalN n p v))) (qsub (evalN n p' v) (evalN n p v))))
+          (qinv' (evalN n p' v)))
+        (qsub (qmul (evalN n p' u) (qinv' (evalN n p' v))) (qmul (evalN n p u) (qinv' (evalN n p v))))
+      have f1 := qmul_respects (qmul_respects (qEq_refl (qmul (evalN n p u) (qinv' (evalN n p v)))) c0') (qEq_refl qone)
+      have f2 := qmul_respects (qmul_respects (qEq_refl (evalN n p u)) c0) (qEq_refl (qinv' (evalN n p' v)))
+      have e1 : qEq (qmul (qsub (qsub (evalN n p' u) (evalN n p u))
+          (qmul (qmul (evalN n p u) (qinv' (evalN n p v))) (qsub (evalN n p' v) (evalN n p v))))
+          (qinv' (evalN n p' v)))
+        (qadd (qsub (qmul (evalN n p' u) (qinv' (evalN n p' v))) (qmul (evalN n p u) (qinv' (evalN n p' v))))
+          (qsub (qmul (qmul (evalN n p u) (qmul (evalN n p v) (qinv' (evalN n p v)))) (qinv' (evalN n p' v)))
+            (qmul (qmul (evalN n p u) (qinv' (evalN n p v))) (qmul (evalN n p' v) (qinv' (evalN n p' v)))))) := by
+        unfold qsub; rat_ring
+      have e2 := qmul_respects (qmul_respects (qEq_refl (evalN n p u)) c0) (qEq_refl (qinv' (evalN n p' v)))
+      have e3 := qmul_respects (qEq_refl (qmul (evalN n p u) (qinv' (evalN n p v)))) c0'
+      have e4 := qmul_one (evalN n p u)
+      have e5 := qmul_one (qmul (evalN n p u) (qinv' (evalN n p v)))
+      have e6 := qone_mul (qinv' (evalN n p' v))
+      have e7 : qEq (qmul (qmul (evalN n p u) qone) (qinv' (evalN n p' v))) (qmul (evalN n p u) (qinv' (evalN n p' v))) := by
+        rat_ring
+      unfold qsub at *
+      exact qle_antisymm (by rat_linarith) (by rat_linarith)
   | @exp u lu hu El Eh du1 du2 m M l h ru cl ch _ hc hl hh ih =>
       have s1 := ZExp.scale hl hd
       have s2 := ZExp.scale hh hd

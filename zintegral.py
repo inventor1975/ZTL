@@ -31,8 +31,9 @@ reals with the leaves discharged by the proved readings (ZSlopeSqrt), for the gr
 (`enclosure_R`; sqrt found on a grid, lean/ZSqrt.lean). The Taylor leaf of ORDER 2 (lean/ZTaylor2.lean,
 lean/ZIntegralT.lean, `taylor2_leaf`): the symmetric second difference is bounded by the kernel's second coefficient
 along the graph (no mean value theorem), and every SYMMETRIC tagged sum of mesh mu lies in [L, U] widened by
-2*K*mu*h^2 — for the grammar const var + - * exp (exp's second-order step from its first-order slopes on a grid,
-lean/ZExp2.lean). Still premises: the readings of pow, sin, cos, atan, tan, log10; Taylor of order 2 for / ln sqrt; Taylor orders above 2; non-symmetric tagged sums for the Taylor leaf.
+2*K*mu*h^2 — for the grammar const var + - * exp / sqrt (exp's second-order step from its first-order slopes on a
+grid, lean/ZExp2.lean; / and sqrt by exact identities). Still premises: the readings of pow, sin, cos, atan, tan,
+log10; Taylor of order 2 for ln (the kernel's recurrence needs a same-point argument); Taylor orders above 2; non-symmetric tagged sums for the Taylor leaf.
 """
 
 from fractions import Fraction

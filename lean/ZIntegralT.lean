@@ -19,8 +19,8 @@ The proof: the sum is `2h·f(m) + Σ (b − a)·sd` (`sd` the symmetric second d
 
 NOT covered, said rather than hidden: tagged sums that are not symmetric about `m` (for a Lipschitz integrand —
 which the first-order reading certifies — every Riemann sum shares the limit; that transfer is classical and not
-proved here); orders above 2 (`zintegral.py` also uses 4, 6, …); the grammar beyond `const var + − × exp` for the
-second coefficient (`ZTaylor2`: `/`, `sqrt`, `ln` not yet).
+proved here); orders above 2 (`zintegral.py` also uses 4, 6, …); `ln` in the second coefficient (`ZTaylor2`: the
+kernel's `ln` recurrence needs a same-point argument this algebra lacks).
 -/
 
 namespace ZIntegralT

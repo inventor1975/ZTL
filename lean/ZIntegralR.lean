@@ -1,11 +1,11 @@
-import ZSlopeDiv
+import ZSlopeSqrt
 import ZIntegral
 
 /-!
-# ZIntegralR — the integral enclosure on VR's operational reals, premise-free for `+ − × / exp ln`. Zero axioms.
+# ZIntegralR — the integral enclosure on VR's operational reals, premise-free for `+ − × / exp ln sqrt`. Zero axioms.
 
-`ZIntegral` proves the kernel's sum rule for any laws given as inequalities; `ZSlopeDiv` proves the kernel's
-readings for the grammar `+ − × / exp ln` (a value reading encloses the value, `value_sound`; a derivative reading
+`ZIntegral` proves the kernel's sum rule for any laws given as inequalities; `ZSlopeSqrt` proves the kernel's
+readings for the grammar `+ − × / exp ln sqrt` (a value reading encloses the value, `value_sound`; a derivative reading
 bounds the slope, `slope_sound`). This module joins them. For an integrand `e`, the integration quantity `i` and a
 point `p` of the other quantities:
 
@@ -17,14 +17,14 @@ point `p` of the other quantities:
     operational reals, the value at a tag being the sequence `evalN n`.
 
 So for this grammar the interval and monotone leaves of `zintegral.py` need no premise. NOT covered, said rather
-than hidden: the other functions the kernel reads (`sqrt`, `pow`, `sin`, `cos`, `atan`, `tan`); the TAYLOR leaf
+than hidden: the other functions the kernel reads (`pow`, `sin`, `cos`, `atan`, `tan`, `log10`); the TAYLOR leaf
 (its claim is about the limit of Riemann sums, and its reading — Taylor coefficients along the graph — is not
 proved here); that the pieces tile `[a, b]` (the Python check; the bound does not use it).
 -/
 
 namespace ZIntegralR
 
-open VR.Numbers ZCertify ZSlope ZExp ZSlopeExp ZRecip ZLn ZSlopeDiv ZIntegral
+open VR.Numbers ZCertify ZSlope ZExp ZSlopeExp ZRecip ZLn ZSqrt ZSlopeSqrt ZIntegral
 
 /-- VR's pre-rationals carry `ZIntegral`'s laws (equality is `qEq`, a setoid — the laws are inequalities). -/
 def qSum : OSum QExpr where

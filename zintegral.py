@@ -27,8 +27,9 @@ of that piece may fall outside it.) The premises named, not proved here: the ele
 their readings say (a derivative read finite over a piece bounds the derivative there), and Taylor's theorem with the
 Lagrange remainder. Lean, zero axioms: lean/ZIntegral.lean — for interval and monotone leaves, every tagged sum over a
 refinement of the partition lies in [L, U] (`enclosure_sound`); lean/ZIntegralR.lean — the same on VR's operational
-reals with the leaves discharged by ZSlopeDiv's proved readings, for the grammar + - * / exp ln (`enclosure_R`). Still
-premises: the readings of sqrt, pow, sin, cos, atan, tan; the Taylor leaf (a limit claim) is NOT in Lean.
+reals with the leaves discharged by the proved readings (ZSlopeSqrt), for the grammar + - * / exp ln sqrt
+(`enclosure_R`; sqrt found on a grid, lean/ZSqrt.lean). Still premises: the readings of pow, sin, cos, atan, tan,
+log10; the Taylor leaf (a limit claim) is NOT in Lean.
 """
 
 from fractions import Fraction

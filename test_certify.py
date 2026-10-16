@@ -772,5 +772,58 @@ for _ in range(300):
 check("a graph's memory: the reading with each node read once equals the tree's reading exactly",
       _tried >= 250 and _same == _tried, f"{_same} of {_tried}")
 
+# DERIVATIVES ALONG THE GRAPH (2026-10-16): each enclosure must hold the true derivative (high-precision central
+# differences at random points), and a sign the symbolic reading decides must stay decided (the kernel accepts a
+# sign shown by EITHER, so the graph may only add)
+import mpmath as _mp
+_mp.mp.dps = 40
+_rg2 = _rnd.Random(7)
+_B3 = {"x": (F(1, 2), F(2)), "y": (F(1), F(3)), "z": (F(1, 4), F(1))}
+
+def _rex(d):
+    if d == 0:
+        return _rg2.choice(["x", "y", "z", "3/2", "2"])
+    op = _rg2.choice(["+", "-", "*", "/", "exp", "ln", "sqrt", "pow", "powv", "sin", "atan"])
+    a = _rex(d - 1)
+    b = a if _rg2.random() < 0.4 else _rex(d - 1)
+    if op in "+-*":
+        return f"({a} {op} {b})"
+    return {"/": f"({a} / ({b}*{b} + 1))", "exp": f"exp(({a})/7)", "ln": f"ln(({a})*({a}) + 1)",
+            "sqrt": f"sqrt(({a})*({a}) + 1)", "pow": f"pow(({a})*({a}) + 1, 3/2)", "powv": f"pow(({a})*({a}) + 1, z)",
+            "sin": f"sin({a})", "atan": f"atan({a})"}[op]
+
+def _mpv(t, pt):
+    env = {k: _mp.mpf(v.numerator) / v.denominator for k, v in pt.items()}
+    env.update(exp=_mp.exp, ln=_mp.log, sqrt=_mp.sqrt, pow=lambda a, c: a ** c, sin=_mp.sin, atan=_mp.atan)
+    return eval(t, {"__builtins__": {}}, env)
+_gbad = _gtried = _glost = 0
+for _ in range(150):
+    t = _rex(3)
+    eg, qg = setup(t, _B3)
+    pc = {n: (qg[n]["lo"], qg[n]["hi"]) for n in ("x", "y", "z") if n in qg}
+    nm = sorted(n for n in ZC._names(eg) if n in pc)
+    if not nm:
+        continue
+    gg = ZC._graph_grad(eg, qg, pc, nm)
+    for n in nm:
+        sy = ZC._reading(ZC.derivative(eg, n), qg, pc)
+        g = gg[n]
+        if sy is not None and (sy[0] >= 0 or sy[1] <= 0) and not (g is not None and (g[0] >= 0 or g[1] <= 0)):
+            _glost += 1                  # not unsound — the kernel falls back to the symbolic reading
+        if g is None:
+            continue
+        _gtried += 1
+        for _ in range(4):
+            pt = {k: lo + (hi - lo) * F(_rg2.randint(1, 999), 1000) for k, (lo, hi) in pc.items()}
+            p1, p0 = dict(pt), dict(pt)
+            p1[n] += F(1, 10 ** 15)
+            p0[n] -= F(1, 10 ** 15)
+            d = (_mpv(t, p1) - _mpv(t, p0)) / (2 * _mp.mpf(10) ** -15)
+            lo_, hi_ = (_mp.mpf(x.numerator) / x.denominator for x in g)
+            if not (lo_ - _mp.mpf(10) ** -8 <= d <= hi_ + _mp.mpf(10) ** -8):
+                _gbad += 1
+check("derivatives along the graph: every enclosure holds the true derivative (0 outside, high-precision "
+      "differences at random points)", _gtried > 150 and _gbad == 0, f"{_gbad} of {_gtried}; lost signs {_glost}")
+
 print(f"certify: {ok} ok, {fail} failed")
 print("CERTIFY GREEN" if fail == 0 else "CERTIFY RED")

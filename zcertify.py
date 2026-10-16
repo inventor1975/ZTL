@@ -53,6 +53,7 @@ the correspondence is by reading, and the stand test_certify.py measures it.
 
 import os
 import sys
+import math
 from fractions import Fraction
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -494,6 +495,8 @@ def check(expr, quantities, op, bound, cert, implicit=None):
                     return False, f"{path}: a pin with an implicit quantity needs its bracket on the piece"
                 rpiece = dict(piece, **at_piece)
             child = dict(piece)
+            gg = _graph_grad(expr, quantities, rpiece, [n for n in pins if n in piece and n not in implicit],
+                             implicit) if not any(n not in piece or n in implicit for n in pins) else {}
             for n, s in pins.items():
                 if n not in piece or n in implicit:
                     return False, f"{path}: pin on {n!r}, not a quantity of the expression"
@@ -502,12 +505,14 @@ def check(expr, quantities, op, bound, cert, implicit=None):
                     return False, f"{path}: pin on {n}, already a point"
                 if s not in ("+", "-"):
                     return False, f"{path}: pin {n} with no sign"
-                if n not in derivs:
-                    try:
-                        derivs[n] = _total_derivative(expr, n, implicit)
-                    except NoDerivative as why:
-                        return False, f"{path}: {why} — no pin on it"
-                r = _reading(derivs[n], quantities, rpiece)
+                r = gg.get(n)
+                if r is None or not (s == "+" and r[0] >= 0 or s == "-" and r[1] <= 0):
+                    if n not in derivs:
+                        try:
+                            derivs[n] = _total_derivative(expr, n, implicit)
+                        except NoDerivative as why:
+                            return False, f"{path}: {why} — no pin on it"
+                    r = _reading(derivs[n], quantities, rpiece)
                 if r is None:
                     return False, f"{path}: d/d{n} has no reading on the piece"
                 if s == "+" and r[0] < 0 or s == "-" and r[1] > 0:
@@ -534,6 +539,8 @@ def check(expr, quantities, op, bound, cert, implicit=None):
             if implicit and not all(u in (node.get("roots") or {}) for u in implicit):
                 return False, f"{path}: a monotone leaf with an implicit quantity needs its bracket on the piece"
             corner = {}
+            gg = _graph_grad(expr, quantities, piece,
+                             [n for n, (lo, hi) in piece.items() if n not in implicit and lo != hi], implicit)
             for n, (lo, hi) in piece.items():
                 if n in implicit:
                     continue
@@ -543,12 +550,14 @@ def check(expr, quantities, op, bound, cert, implicit=None):
                 s = signs.get(n)
                 if s not in ("+", "-"):
                     return False, f"{path}: {n} has width and no sign"
-                if n not in derivs:
-                    try:
-                        derivs[n] = _total_derivative(expr, n, implicit)
-                    except NoDerivative as why:
-                        return False, f"{path}: {why} — a monotone leaf cannot use it (an interval leaf can)"
-                r = _reading(derivs[n], quantities, piece)
+                r = gg.get(n)
+                if r is None or not (s == "+" and r[0] >= 0 or s == "-" and r[1] <= 0):
+                    if n not in derivs:
+                        try:
+                            derivs[n] = _total_derivative(expr, n, implicit)
+                        except NoDerivative as why:
+                            return False, f"{path}: {why} — a monotone leaf cannot use it (an interval leaf can)"
+                    r = _reading(derivs[n], quantities, piece)
                 if r is None:
                     return False, f"{path}: d/d{n} has no reading on the piece"
                 if s == "+" and r[0] < 0:
@@ -644,6 +653,168 @@ def _total_derivative(expr, n, implicit):
             continue
         d = _add(d, _mul(du_e, ("div", ("sub", ZERO, gn), derivative(g, u))))
     return d
+
+
+# ── DERIVATIVES ALONG THE GRAPH (2026-10-16, the curator's "да, делай шаг 2") ─────────────────────────────────
+# The symbolic dE/dn of a long expression (a rocket's delta-v: 9 000 characters, the chamber pressure in it five
+# times) is a still longer tree, read once per quantity. Here E is walked ONCE as a graph (a repeated subtree is one
+# node): each node's value is the kernel's own reading (_ev, with the node memory), its derivatives by the chain rule
+# with interval arithmetic on exact fractions, every result rounded OUTWARD to 2^-62 of its size. An implicit root U
+# enters with dU/dp = -g_p/g_U (g's own graph derivatives over U's bracket; g_U must keep one sign). Branches (ifpos,
+# min, max) give no derivative here — the symbolic reading stays. Both are enclosures: a sign is accepted when
+# EITHER shows it (monotone leaf and pin), so nothing the kernel accepted before is lost.
+def _iv_out(iv):
+    lo, hi = iv
+    m = max(abs(lo), abs(hi))
+    if m == 0:
+        return iv
+    k = m.numerator.bit_length() - m.denominator.bit_length() - 62
+    st = Fraction(2) ** k
+    return (Fraction(math.floor(lo / st)) * st, Fraction(math.ceil(hi / st)) * st)
+
+
+def _iadd(a, b):
+    return _iv_out((a[0] + b[0], a[1] + b[1]))
+
+
+def _ineg(a):
+    return (-a[1], -a[0])
+
+
+def _imul2(a, b):
+    ps = (a[0] * b[0], a[0] * b[1], a[1] * b[0], a[1] * b[1])
+    return _iv_out((min(ps), max(ps)))
+
+
+def _idiv2(a, b):
+    if b[0] <= 0 <= b[1]:
+        return None
+    return _imul2(a, (1 / b[1], 1 / b[0]) if b[0] > 0 else (1 / b[1], 1 / b[0]))
+
+
+def _graph_grad(expr, quantities, piece, wrt, implicit=None):
+    """{name: (lo, hi) | None} — dE/dname enclosed over the piece (implicit roots in their brackets, in `piece`)."""
+    import znum as _ZN
+    wrt = set(wrt)
+    q2 = dict(quantities)
+    for n, (lo, hi) in piece.items():
+        q2[n] = dict(quantities[n], lo=lo, hi=hi)
+    keep = _ZN._MEMO[0]
+    _ZN._MEMO[0] = {}
+    UNK = object()
+
+    def val(node):
+        iv = _ev(node, q2)[0]
+        if iv is None or isinstance(iv[0], float) or isinstance(iv[1], float):
+            raise ArithmeticError("no reading")
+        return iv
+    try:
+        memo = {}
+        roots = {}
+
+        def grad(node):
+            key = node if not isinstance(node, tuple) or node[0] != "sum" else None
+            if key is not None and key in memo:
+                return memo[key]
+            g = _grad(node)
+            if key is not None:
+                memo[key] = g
+            return g
+
+        def comb(*parts):
+            """sum over (gradient dict, factor interval) — UNK for a name any part cannot read."""
+            out = {}
+            for gd, f in parts:
+                for k, v in gd.items():
+                    t = UNK if v is UNK or f is None else _imul2(v, f)
+                    if k in out:
+                        out[k] = UNK if out[k] is UNK or t is UNK else _iadd(out[k], t)
+                    else:
+                        out[k] = t
+            return out
+
+        def _grad(node):
+            if isinstance(node, Fraction) or isinstance(node, (int, float)):
+                return {}
+            if isinstance(node, str):
+                if node in roots:
+                    return roots[node]
+                return {node: (Fraction(1), Fraction(1))} if node in wrt else {}
+            op, *args = node
+            if not (_names(node) & (wrt | set(roots))):
+                return {}
+            one = (Fraction(1), Fraction(1))
+            if op == "sum":
+                return comb(*[(grad(a), one) for a in args[0]])
+            if op in ("add", "sub"):
+                gb = grad(args[1])
+                return comb((grad(args[0]), one), (gb, one if op == "add" else (Fraction(-1), Fraction(-1))))
+            if op == "mul":
+                return comb((grad(args[0]), val(args[1])), (grad(args[1]), val(args[0])))
+            if op == "div":
+                b = val(args[1])
+                if b[0] <= 0 <= b[1]:
+                    raise ArithmeticError("a divisor across zero")
+                inv = _idiv2(one, b)
+                v = val(node)
+                return comb((grad(args[0]), inv), (grad(args[1]), _ineg(_imul2(v, inv))))
+            if op == "pow":
+                a, c = args
+                gc = grad(c)
+                if not gc:
+                    cv = val(c)
+                    if cv[0] != cv[1]:
+                        raise ArithmeticError("an exponent with width but no names")
+                    f = _imul2(cv, val(("pow", a, cv[0] - 1)))
+                    return comb((grad(a), f))
+                v = val(node)
+                a_v = val(a)
+                if a_v[0] <= 0:
+                    raise ArithmeticError("a variable exponent of a base not positive")
+                return comb((grad(a), _imul2(v, _idiv2(val(c), a_v))), (gc, _imul2(v, val(("ln", a)))))
+            if op == "exp":
+                return comb((grad(args[0]), val(node)))
+            if op == "ln":
+                return comb((grad(args[0]), _idiv2(one, val(args[0]))))
+            if op == "log10":
+                return comb((grad(args[0]), _idiv2(one, _imul2(val(args[0]), val(("ln", Fraction(10)))))))
+            if op == "sqrt":
+                v = val(node)
+                return comb((grad(args[0]), _idiv2(one, _imul2((Fraction(2), Fraction(2)), v))))
+            if op == "sin":
+                return comb((grad(args[0]), val(("cos", args[0]))))
+            if op == "cos":
+                return comb((grad(args[0]), _ineg(val(("sin", args[0])))))
+            if op == "atan":
+                a = val(args[0])
+                return comb((grad(args[0]), _idiv2(one, _iadd(one, _imul2(a, a)))))
+            if op == "tan":
+                v = val(node)
+                return comb((grad(args[0]), _iadd(one, _imul2(v, v))))
+            return {k: UNK for k in _names(node) & (wrt | set(roots))}      # a branch: no derivative here
+
+        for u, g in (implicit or {}).items():
+            # g's derivatives in U and in each quantity, over U's bracket (in the piece)
+            wrt_u = wrt | {u}
+            saved = wrt
+            wrt = wrt_u
+            memo.clear()
+            gg = grad(g)
+            wrt = saved
+            memo.clear()
+            gu = gg.get(u)
+            if gu is None or gu is UNK or gu[0] <= 0 <= gu[1]:
+                roots[u] = {k: UNK for k in wrt}
+                continue
+            inv = _idiv2((Fraction(-1), Fraction(-1)), gu)
+            roots[u] = {k: (UNK if v is UNK else _imul2(v, inv)) for k, v in gg.items() if k != u}
+        out = grad(expr)
+        return {n: (None if out.get(n, (Fraction(0), Fraction(0))) is UNK else out.get(n, (Fraction(0), Fraction(0))))
+                for n in wrt}
+    except (ArithmeticError, ZeroDivisionError, KeyError, ValueError, TypeError):
+        return {n: None for n in wrt}
+    finally:
+        _ZN._MEMO[0] = keep
 
 
 # ── A QUANTITY SOLVED FROM A SYSTEM (second tranche, 2026-10-09) ──────────────

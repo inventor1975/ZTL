@@ -12,7 +12,9 @@ constructor that step is:
   * the min-range steps: 1/x on a POSITIVE interval, the slope at a (α ≤ −1/a²) or at b (α ≥ −1/b²), the remainder's
     two ends against ζ ± δ (rem_recip_a/b); exp, the slope at a (α ≤ e^a's certified lower bracket, the brackets of e^a
     and e^b certified by ZExp.ExpCert, zexpcert), the ends against ζ ± δ (rem_exp).
-Not in AffR: ln, log10, sqrt, atan, powers, 1/x of a negative interval, the shared form of the case reading. The
+  * ln, the slope at b (α·b ≤ 1, the ends' ln brackets certified as zfunc._cert_ln, rem_ln); log10 = ln × 1/ln 10;
+    u^c (c not an integer) = exp(c·ln u).
+Not in AffR: sqrt, atan, integer powers, 1/x of a negative interval, the shared form of the case reading. The
 replay's interval must equal the kernel's (a mismatch is a FAULT: the mirror lost the kernel).
 """
 from fractions import Fraction as F
@@ -141,6 +143,23 @@ def read_checked(e, qs, piece, rat_sqrt, plain, naive):
             raise RuntimeError("FAULT: the replay of _exp lost the kernel")
         return out
 
+    def ln(x):
+        a, b = x.iv()
+        if a <= 0:
+            raise ZA.Unknown("ln reaching zero")
+        f = lambda t: ZF.ln_pt_cert(F(t))
+        df = lambda t: (1 / F(t), 1 / F(t))
+        alpha, zeta, delta, a, b, fa, fb, inc = minrange(x, f, df, False, "b")
+        # rem_ln: α ≥ 0, α·b ≤ 1, e^{fa0} ≤ a and e^{fb1} ≥ b certified (ExpCert), the ends against ζ ± δ
+        if not (alpha >= 0 and alpha * b <= 1 and ZF._ln_side(a, F(fa[0]), "lo") and ZF._ln_side(b, F(fb[1]), "hi")
+                and zeta - delta <= fa[0] - alpha * a and fb[1] - alpha * b <= zeta + delta):
+            raise Uncovered("ln: the remainder's premises fail")
+        out = nl(x, alpha, zeta, delta)
+        k = ZA._ln(x)
+        if (k.c, k.t, k.e) != (out.c, out.t, out.e):
+            raise RuntimeError("FAULT: the replay of _ln lost the kernel")
+        return out
+
     def ev(n):
         if isinstance(n, (int, F)):
             return ZA.Aff(F(n))
@@ -158,7 +177,15 @@ def read_checked(e, qs, piece, rat_sqrt, plain, naive):
                 return mul(ev(args[0]), recip(ev(args[1])))
             if op == "exp":
                 return exp(ev(args[0]))
-            if op in ("ln", "log10", "sqrt", "atan", "pow"):
+            if op == "ln":
+                return ln(ev(args[0]))
+            if op == "log10":
+                l10 = ZF.LN10
+                c10 = ZA.Aff((F(l10[0]) + F(l10[1])) / 2, {}, (F(l10[1]) - F(l10[0])) / 2)   # basis ln 10, widened
+                return mul(ln(ev(args[0])), recip(c10))
+            if op == "pow" and not (isinstance(args[1], (int, F)) and F(args[1]).denominator == 1):
+                return exp(mul(ev(args[1]), ln(ev(args[0]))))
+            if op in ("sqrt", "atan", "pow"):
                 # the kernel linearises these (or falls back to opaque on Unknown): replay its choice
                 k = ZA.read(n, qs, piece, rat_sqrt, plain)
                 if k is None:

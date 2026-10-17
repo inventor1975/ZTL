@@ -12,14 +12,16 @@ of the node's children (and of the node's lower coefficients):
   * ÷: q_{m+1} ⊇ (a_{m+1} − (q ∗ b')_m)·[1/b0], b0 clear of zero;  exp: e_{m+1} ⊇ (e ∗ D)_m/(m+1), D_t = (t+1)·a_{t+1};
   * sin/cos together: s_{m+1} ⊇ (c ∗ D)_m/(m+1), c_{m+1} ⊇ −(s ∗ D)_m/(m+1);  tan as sin/cos;
   * u^m (m a natural literal, u read ≥ 0): Miller's sum with the weights m(j+1) − (m+1)s combined, as the kernel sums;
-  * √u (its value read > 0): s_1 ⊇ a_1·[1/(2 s0)], s_{j+2} ⊇ (a_{j+2} − (s' ∗ s')_j)·[1/(2 s0)], s' the series from 1.
+  * √u (its value read > 0): s_1 ⊇ a_1·[1/(2 s0)], s_{j+2} ⊇ (a_{j+2} − (s' ∗ s')_j)·[1/(2 s0)], s' the series from 1;
+  * ln u (u read > 0): l_1 ⊇ a_1/a_0, l_{j+2} ⊇ (a_{j+2} − (D ∗ a')_j/(j+2))/a_0, D_t = (t+1)·l_{t+1};  log10 u: ln u's
+    series over ln 10 (from the first coefficient);  u^c, c not a natural literal: Miller with c (Lean: exp(c·ln u)).
 
 The values (k = 0) of ÷, exp, sin, cos, tan, √, powers and of nodes without x must CONTAIN the reading Lean's VRead can
 give: the kernel's reading re-read without its exact linear fragment (`_naive`; red team F1, 2026-10-17: the kernel
 reads 2x − x as x, VRead only widens) — the function readings themselves are VReads by the earlier bridges
-(lean/ZSlopeSqrt, ZTrig10-15 with ztrigcert in the run). A kernel value tighter than that is a premise, not a fault.
-x's own series and the zeros of nodes without x are checked too (F5). Not in CRead: ln, log10, atan,
-a non-natural exponent, a power of a base not read ≥ 0 (a node WITHOUT x may hold ln, log10).
+(lean/ZSlopeSqrt, ZTrig10-15 with ztrigcert in the run, ln with zfunc._cert_ln in the run). A kernel value tighter
+than that is a premise, not a fault. x's own series and the zeros of nodes without x are checked too (F5). Not in
+CRead: atan, a natural power of a base not read ≥ 0.
 """
 from fractions import Fraction as F
 
@@ -98,25 +100,39 @@ def _hkey(node):
     return node
 
 
+def _nat(c):
+    return isinstance(c, (F, int)) and F(c).denominator == 1 and c >= 0
+
+
+def lean_node(node):
+    """The kernel's node as the Lean grammar writes it: u^c (c not a natural literal) is exp(c·ln u)."""
+    if isinstance(node, tuple) and node[0] == "pow" and not _nat(node[2]):
+        return ("exp", ("mul", node[2], ("ln", node[1])))
+    return node
+
+
 def _value_covered(node, quantities, piece):
     """The node is in the grammar of Lean's value readings (VRead)."""
     if isinstance(node, (F, int)) or isinstance(node, str):
         return True
+    node = lean_node(node)
     op, *args = node
+    if op in ("ln", "log10"):
+        r = _naive(args[0], quantities, piece)
+        return r is not None and r[0] > 0 and _value_covered(args[0], quantities, piece)
     if op not in VALUE_OPS:
         return False
     if op == "sum":
         return all(_value_covered(a, quantities, piece) for a in args[0])
     if op == "pow":
         base, c = args
-        if not (isinstance(c, (F, int)) and F(c).denominator == 1 and c >= 0):
-            return False
         r = _naive(base, quantities, piece)
         return r is not None and r[0] >= 0 and _value_covered(base, quantities, piece)
     return all(_value_covered(a, quantities, piece) for a in args)
 
 
-GRAMMAR = ("not in the Lean reading", "outside the value grammar", "value outside the grammar", "not a natural exponent",
+GRAMMAR = ("argument not read > 0", "not read", "not exp(c·ln u)",
+           "not in the Lean reading", "outside the value grammar", "value outside the grammar", "not a natural exponent",
            "base not read >= 0", "no series", "value not read > 0", "tighter than Lean's reading",
            "Lean's reading has none")
 
@@ -143,7 +159,7 @@ def check(expr, x, quantities, piece, n, cs, trace):
 
     def val_ok(node, c0):
         """CRead's value: a VRead [l, h] of the node with c0 ⊇ [l, h] — the tightest is the naive reading."""
-        nv = _naive(node, quantities, piece)
+        nv = _naive(lean_node(node), quantities, piece)
         if nv is None:
             return f"{node[0] if isinstance(node, tuple) else node}: Lean's reading has none"
         if not _hull(c0, nv):
@@ -296,10 +312,8 @@ def check(expr, x, quantities, piece, n, cs, trace):
                 if not _hull(c[m + 1], _corners(acc, R)):
                     return f"tan coefficient {m + 1}"
             return ""
-        if op == "pow":
+        if op == "pow" and _nat(args[1]):
             base, ce = args
-            if not (isinstance(ce, (F, int)) and F(ce).denominator == 1 and ce >= 0):
-                return "pow: not a natural exponent"
             w = ok(base)
             if w:
                 return w
@@ -310,6 +324,81 @@ def check(expr, x, quantities, piece, n, cs, trace):
                 return w
             m = int(ce)
             a = series(base)
+            for j in range(n):
+                W = [_scale(c[s], m * (j + 1) - (m + 1) * s) for s in range(j + 1)]
+                R = _recip(_scale(a[0], j + 1))
+                if R is None:
+                    return "pow: base across zero"
+                if not _hull(c[j + 1], _corners(_cvb(W, a[1:], j), R)):
+                    return f"pow coefficient {j + 1}"
+            return ""
+        if op == "ln":
+            w = ok(args[0])
+            if w:
+                return w
+            if not _value_covered(node, quantities, piece):
+                return "ln: value outside the grammar"
+            w = val_ok(node, c[0])
+            if w:
+                return w
+            a = series(args[0])
+            if not a[0][0] > 0:
+                return "ln: its argument not read > 0"
+            R = _recip(a[0])
+            if n >= 1 and not _hull(c[1], _corners(a[1], R)):
+                return "ln coefficient 1"
+            D = [_scale(c[t + 1], t + 1) for t in range(n)]
+            for j in range(n - 1):
+                sv = _scale(_cvb(D, a[1:], j), F(1, j + 2))
+                acc = (a[j + 2][0] - sv[1], a[j + 2][1] - sv[0])
+                if not _hull(c[j + 2], _corners(acc, R)):
+                    return f"ln coefficient {j + 2}"
+            return ""
+        if op == "log10":
+            u = args[0]
+            w = ok(u) or ok(("ln", u))
+            if w:
+                return w
+            if not _value_covered(node, quantities, piece):
+                return "log10: value outside the grammar"
+            w = val_ok(node, c[0])
+            if w:
+                return w
+            l = tget(("ln", u))
+            L = _val(("ln", F(10)), quantities, piece)
+            if l is None or L is None or not L[0] > 0:
+                return "log10: ln's series or ln 10 not read"
+            R = _recip(L)
+            for k in range(1, n + 1):
+                if not _hull(c[k], _corners(l[k], R)):
+                    return f"log10 coefficient {k}"
+            return ""
+        if op == "pow" and not _nat(args[1]):
+            base, ce = args
+            if not isinstance(ce, (F, int)) and x not in nm(ce):
+                cv_ = _val(ce, quantities, piece)       # the kernel folds a point exponent (3/2 written as a quotient)
+                if cv_ is not None and cv_[0] == cv_[1]:
+                    ce = F(cv_[0])
+                    node = ("pow", base, ce)
+            if not isinstance(ce, (F, int)):
+                # an exponent with x or a box: the kernel reads exp(c·ln u) itself — the same series
+                t = lean_node(node)
+                w = ok(t)
+                if w:
+                    return w
+                return "" if series(t) == c else "pow: its series is not exp(c·ln u)'s"
+            w = ok(base)
+            if w:
+                return w
+            if not _value_covered(node, quantities, piece):
+                return "pow: value outside the grammar"
+            w = val_ok(node, c[0])
+            if w:
+                return w
+            m = F(ce)
+            a = series(base)
+            if not a[0][0] > 0:
+                return "pow: base not read > 0"
             for j in range(n):
                 W = [_scale(c[s], m * (j + 1) - (m + 1) * s) for s in range(j + 1)]
                 R = _recip(_scale(a[0], j + 1))

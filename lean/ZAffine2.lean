@@ -549,6 +549,188 @@ theorem boxEv_meet {B : Box QExpr} {e : G} {l1 h1 l2 h2 l h : QExpr} (r1 : BoxEv
     | inl h' => rat_linarith
     | inr h' => rat_linarith
 
+/-! ## ln's remainder -/
+
+/-- `α ≤ 1/b` from `α·b ≤ 1`, `b > 0`. -/
+theorem le_inv_of_mul {α b : QExpr} (hb : qlt qzero b) (h : qle (qmul α b) qone) : qle α (qinv' b) := by
+  have ib0 := qinv'_nonneg_of_pos hb
+  have c := qmul_inv'_cancel (ne_zero_of_lt hb)
+  have m := ZExp.scale h ib0
+  have e : qEq (qmul (qmul α b) (qinv' b)) (qmul α (qmul b (qinv' b))) := by rat_ring
+  have e2 := qmul_respects (qEq_refl α) c
+  have o : qEq (qmul qone (qinv' b)) (qinv' b) := by rat_ring
+  generalize qmul (qmul α b) (qinv' b) = P at *
+  generalize qmul α (qmul b (qinv' b)) = P' at *
+  generalize qmul qone (qinv' b) = Q at *
+  have o2 : qEq (qmul α qone) α := by rat_ring
+  generalize qmul α qone = R at *
+  rat_linarith
+
+/-- Lower side, `x ≥ a`: `r(x) ≥ r(a) − e − (x − a)·(x − b)⁺/c²`, written with the bound `(x − a)·(ix − α) ≥ −K`. -/
+theorem ln_low_case {lx la x a α ix e K : QExpr} (ch : qle (qsub (qmul (qsub x a) ix) e) (qsub lx la))
+    (hK : qle (qneg K) (qmul (qsub x a) (qsub ix α))) :
+    qle (qsub (qsub (qsub la (qmul α a)) e) K) (qsub lx (qmul α x)) := by
+  unfold qsub at *; rat_linarith
+
+theorem ln_high_case {lx lb x b α ib e K : QExpr} (ch : qle (qsub (qmul (qsub b x) ib) e) (qsub lb lx))
+    (hK : qle (qneg K) (qmul (qsub b x) (qsub ib α))) :
+    qle (qsub lx (qmul α x)) (qadd (qadd (qsub lb (qmul α b)) e) K) := by
+  unfold qsub at *; rat_linarith
+
+/-- `ln` ON `[a, b]`, `a > 0`, THE SLOPE AT `b` (`α·b ≤ 1`): the remainder `ln x − α x` increases; its ends bracketed
+by `ExpCert` (`e^La ≤ a`, `e^Hb ≥ b`). -/
+theorem rem_ln {a b α ζ δ La Hb zl wl wh zh : QExpr} (ha : qlt qzero a) (hab : qle a b) (α0 : qle qzero α)
+    (hα : qle (qmul α b) qone) (cl : ExpCert La zl wl) (hwl : qle wl a) (ch : ExpCert Hb wh zh) (hwh : qle b wh)
+    (hlo : qle (qsub ζ δ) (qsub La (qmul α a))) (hhi : qle (qsub Hb (qmul α b)) (qadd ζ δ)) :
+    Rem (fun n x => lnseq x n) a b α ζ δ := by
+  obtain ⟨hh, h0⟩ := ZTrig.half_facts
+  have cp : qlt qzero (qmul a ZTrig.half) := qmul_pos ha half_pos
+  have ac : qEq a (qadd (qmul a ZTrig.half) (qmul a ZTrig.half)) := by
+    have := qmul_respects (qEq_refl a) hh
+    exact qEq_trans (by rat_ring) (qEq_trans (qEq_symm this) (by rat_ring))
+  have c0 := qle_of_qlt cp
+  have a0 := qle_of_qlt ha
+  have bp : qlt qzero b := qlt_iff_le_not_le.mpr ⟨qle_trans a0 hab, fun h => (qlt_iff_le_not_le.mp ha).2 (qle_trans hab h)⟩
+  have ic0 := qinv'_nonneg_of_pos cp
+  have αb := le_inv_of_mul bp hα
+  have Cb0 : qle qzero (qadd b a) := by rat_linarith
+  refine ⟨qadd (qmul (qadd b a) (qmul (qinv' (qmul a ZTrig.half)) (qinv' (qmul a ZTrig.half))))
+      (qadd (qinv' (qmul a ZTrig.half)) (qinv' (qmul a ZTrig.half))), qmul a ZTrig.half,
+    by have := qmul_nonneg Cb0 (qmul_nonneg ic0 ic0); rat_linarith, cp, fun k => ?_⟩
+  have EA : Ev (fun n => lnseq a n) La Hb := Ev_ln (y := fun _ => a) (Ev_of_exact 0 (fun _ _ => ⟨qle_refl _, qle_refl _⟩))
+    ha cl hwl ch (qle_trans hab hwh)
+  have EB : Ev (fun n => lnseq b n) La Hb := Ev_ln (y := fun _ => b) (Ev_of_exact 0 (fun _ _ => ⟨qle_refl _, qle_refl _⟩))
+    bp cl (qle_trans hwl hab) ch hwh
+  obtain ⟨N1, h1⟩ := EA (k + 2)
+  obtain ⟨N2, h2⟩ := EB (k + 2)
+  obtain ⟨N3, h3⟩ := ZLnStep.chord2 cp Cb0 (k + 2)
+  refine ⟨N1 + N2 + N3, fun n hn x ι ι0 ιc hxa hxb => ?_⟩
+  obtain ⟨A1, _⟩ := h1 n (Nat.le_trans (Nat.le_trans (Nat.le_add_right N1 N2) (Nat.le_add_right _ N3)) hn)
+  obtain ⟨_, B2⟩ := h2 n (Nat.le_trans (Nat.le_trans (Nat.le_add_left N2 N1) (Nat.le_add_right _ N3)) hn)
+  have hc := h3 n (Nat.le_trans (Nat.le_add_left N3 (N1 + N2)) hn)
+  have xc : qle (qmul a ZTrig.half) x := by unfold qsub at hxa; rat_linarith
+  have xC : qle x (qadd b a) := by rat_linarith
+  have ac' : qle (qmul a ZTrig.half) a := by rat_linarith
+  have bC : qle b (qadd b a) := by rat_linarith
+  have bc : qle (qmul a ZTrig.half) b := qle_trans ac' hab
+  have xp : qlt qzero x := qlt_iff_le_not_le.mpr ⟨qle_trans c0 xc, fun h => (qlt_iff_le_not_le.mp cp).2 (qle_trans xc h)⟩
+  obtain ⟨ix0, ixc⟩ := ZTrig.inv_bound cp xc
+  obtain ⟨ia0, iac⟩ := ZTrig.inv_bound cp ac'
+  obtain ⟨ib0, ibc⟩ := ZTrig.inv_bound cp bc
+  have e0 := qeps_nonneg (k + 2)
+  have es := qeps_succ_add k
+  have es1 := qeps_succ_add (k + 1)
+  have ιIC := qmul_nonneg ι0 ic0
+  have IC2 := qmul_nonneg ic0 ic0
+  generalize hic : qinv' (qmul a ZTrig.half) = ic at *
+  -- LOWER: r(x) ≥ r(a) − e − ι(Cb/c² + 2/c)
+  have lower : qle (qsub (qsub (qsub (lnseq a n) (qmul α a)) (qeps (k + 2)))
+      (qmul ι (qadd (qmul (qadd b a) (qmul ic ic)) (qadd ic ic)))) (qsub (lnseq x n) (qmul α x)) := by
+    have bnd : qle qzero (qmul ι (qadd (qmul (qadd b a) (qmul ic ic)) (qadd ic ic))) :=
+      qmul_nonneg ι0 (by have := qmul_nonneg Cb0 IC2; rat_linarith)
+    cases qle_total a x with
+    | inl h =>
+        have c1 := (hc a x ac' h xC).1
+        have K : qle (qneg (qmul (qmul (qadd b a) ι) (qmul ic ic))) (qmul (qsub x a) (qsub (qinv' x) α)) := by
+          cases qle_total x b with
+          | inl h' =>
+              have ixb := ZAffine.inv_ge_of_le xp h'
+              have := qmul_nonneg (show qle qzero (qsub x a) by unfold qsub; rat_linarith)
+                (show qle qzero (qsub (qinv' x) α) by unfold qsub; rat_linarith)
+              have := qmul_nonneg (qmul_nonneg Cb0 ι0) IC2
+              rat_linarith
+          | inr h' =>
+              have dx := ZLnStep.inv_diff (ne_zero_of_lt xp) (ne_zero_of_lt bp)
+              have m := ZLnStep.mul_le4 (show qle qzero (qsub x a) by unfold qsub; rat_linarith)
+                (show qle qzero (qsub x b) by unfold qsub; rat_linarith) ix0 ib0
+                (show qle (qsub x a) (qadd b a) by unfold qsub; rat_linarith)
+                (show qle (qsub x b) ι by unfold qsub at *; rat_linarith) ixc ibc
+              have p := qmul_nonneg (show qle qzero (qsub x a) by unfold qsub; rat_linarith)
+                (show qle qzero (qsub (qinv' b) α) by unfold qsub; rat_linarith)
+              have e1 : qEq (qmul (qsub x a) (qsub (qinv' x) α))
+                  (qadd (qmul (qsub x a) (qsub (qinv' b) α)) (qneg (qmul (qmul (qsub x a) (qsub x b)) (qmul (qinv' x) (qinv' b))))) := by
+                have := qmul_respects (qEq_refl (qsub x a)) dx
+                have e2 : qEq (qmul (qsub x a) (qsub (qinv' x) α))
+                    (qadd (qmul (qsub x a) (qsub (qinv' x) (qinv' b))) (qmul (qsub x a) (qsub (qinv' b) α))) := by unfold qsub; rat_ring
+                have e3 : qEq (qmul (qsub x a) (qmul (qsub b x) (qmul (qinv' x) (qinv' b))))
+                    (qneg (qmul (qmul (qsub x a) (qsub x b)) (qmul (qinv' x) (qinv' b)))) := by unfold qsub; rat_ring
+                exact qEq_trans e2 (by
+                  generalize qmul (qsub x a) (qsub (qinv' x) (qinv' b)) = P at *
+                  generalize qmul (qsub x a) (qmul (qsub b x) (qmul (qinv' x) (qinv' b))) = P' at *
+                  generalize qmul (qsub x a) (qsub (qinv' b) α) = Q at *
+                  generalize qmul (qmul (qsub x a) (qsub x b)) (qmul (qinv' x) (qinv' b)) = R at *
+                  exact qle_antisymm (by rat_linarith) (by rat_linarith))
+              have e4 : qEq (qmul (qmul (qadd b a) ι) (qmul ic ic)) (qmul (qmul (qadd b a) ι) (qmul ic ic)) := qEq_refl _
+              clear e4
+              generalize qmul (qsub x a) (qsub (qinv' x) α) = T at *
+              generalize qmul (qsub x a) (qsub (qinv' b) α) = Q at *
+              generalize qmul (qmul (qsub x a) (qsub x b)) (qmul (qinv' x) (qinv' b)) = R at *
+              generalize qmul (qmul (qadd b a) ι) (qmul ic ic) = Kv at *
+              exact by rat_linarith
+        have r := ln_low_case c1 K
+        have e5 : qEq (qmul ι (qadd (qmul (qadd b a) (qmul ic ic)) (qadd ic ic)))
+            (qadd (qmul (qmul (qadd b a) ι) (qmul ic ic)) (qadd (qmul ι ic) (qmul ι ic))) := by rat_ring
+        have iic := qmul_nonneg ι0 ic0
+        unfold qsub at *
+        generalize qmul ι (qadd (qmul (qadd b a) (qmul ic ic)) (qadd ic ic)) = W at *
+        generalize qmul (qmul (qadd b a) ι) (qmul ic ic) = Kv at *
+        generalize qmul ι ic = I1 at *
+        rat_linarith
+    | inr h =>
+        have c2 := (hc x a xc h (qle_trans hab bC)).2
+        have m := ZLnStep.mul_le4 (show qle qzero (qsub a x) by unfold qsub; rat_linarith) (qle_of_qlt qone_pos) ix0 (qle_of_qlt qone_pos)
+          (show qle (qsub a x) ι by unfold qsub at *; rat_linarith) (qle_refl qone) ixc (qle_refl qone)
+        have p := qmul_nonneg α0 (show qle qzero (qsub a x) by unfold qsub; rat_linarith)
+        have e1 : qEq (qmul (qmul (qsub a x) qone) (qmul (qinv' x) qone)) (qmul (qsub a x) (qinv' x)) := by rat_ring
+        have e2 : qEq (qmul (qmul ι qone) (qmul ic qone)) (qmul ι ic) := by rat_ring
+        have e5 : qEq (qmul ι (qadd (qmul (qadd b a) (qmul ic ic)) (qadd ic ic)))
+            (qadd (qmul (qmul (qadd b a) ι) (qmul ic ic)) (qadd (qmul ι ic) (qmul ι ic))) := by rat_ring
+        have pk := qmul_nonneg (qmul_nonneg Cb0 ι0) IC2
+        have iic := qmul_nonneg ι0 ic0
+        unfold qsub at *
+        generalize qmul (qmul (qadd a (qneg x)) qone) (qmul (qinv' x) qone) = M1 at *
+        generalize qmul (qadd a (qneg x)) (qinv' x) = M2 at *
+        generalize qmul (qmul ι qone) (qmul ic qone) = M3 at *
+        generalize qmul ι ic = I1 at *
+        generalize qmul ι (qadd (qmul (qadd b a) (qmul ic ic)) (qadd ic ic)) = W at *
+        generalize qmul (qmul (qadd b a) ι) (qmul ic ic) = Kv at *
+        rat_linarith
+  -- UPPER: r(x) ≤ r(b) + e + ι/c
+  have upper : qle (qsub (lnseq x n) (qmul α x)) (qadd (qadd (qsub (lnseq b n) (qmul α b)) (qeps (k + 2))) (qmul ι ic)) := by
+    have iic := qmul_nonneg ι0 ic0
+    cases qle_total x b with
+    | inl h =>
+        have c1 := (hc x b xc h bC).1
+        have p := qmul_nonneg (show qle qzero (qsub b x) by unfold qsub; rat_linarith)
+          (show qle qzero (qsub (qinv' b) α) by unfold qsub; rat_linarith)
+        have r := ln_high_case c1 (show qle (qneg qzero) (qmul (qsub b x) (qsub (qinv' b) α)) by rat_linarith)
+        unfold qsub at *; rat_linarith
+    | inr h =>
+        have c2 := (hc b x bc h xC).2
+        have m := ZLnStep.mul_le4 (show qle qzero (qsub x b) by unfold qsub; rat_linarith) (qle_of_qlt qone_pos) ib0 (qle_of_qlt qone_pos)
+          (show qle (qsub x b) ι by unfold qsub at *; rat_linarith) (qle_refl qone) ibc (qle_refl qone)
+        have p := qmul_nonneg α0 (show qle qzero (qsub x b) by unfold qsub; rat_linarith)
+        have e1 : qEq (qmul (qmul (qsub x b) qone) (qmul (qinv' b) qone)) (qmul (qsub x b) (qinv' b)) := by rat_ring
+        have e2 : qEq (qmul (qmul ι qone) (qmul ic qone)) (qmul ι ic) := by rat_ring
+        unfold qsub at *
+        generalize qmul (qmul (qadd x (qneg b)) qone) (qmul (qinv' b) qone) = M1 at *
+        generalize qmul (qadd x (qneg b)) (qinv' b) = M2 at *
+        generalize qmul (qmul ι qone) (qmul ic qone) = M3 at *
+        generalize qmul ι ic = I1 at *
+        rat_linarith
+  -- assemble
+  have pw : qle (qmul ι ic) (qmul ι (qadd (qmul (qadd b a) (qmul ic ic)) (qadd ic ic))) := by
+    have := qmul_nonneg ι0 (show qle qzero (qadd (qmul (qadd b a) (qmul ic ic)) ic) by have := qmul_nonneg Cb0 IC2; rat_linarith)
+    have e : qEq (qmul ι (qadd (qmul (qadd b a) (qmul ic ic)) (qadd ic ic)))
+        (qadd (qmul ι ic) (qmul ι (qadd (qmul (qadd b a) (qmul ic ic)) ic))) := by rat_ring
+    rat_linarith
+  show ZTrig.Ab (qsub (qsub (lnseq x n) (qmul α x)) ζ) _
+  clear hc h1 h2
+  unfold qsub at *
+  generalize qmul ι (qadd (qmul (qadd b a) (qmul ic ic)) (qadd ic ic)) = W at *
+  generalize qmul ι ic = I1 at *
+  exact ⟨by rat_linarith, by rat_linarith⟩
+
 end ZAffine
 
 #print axioms ZAffine.r_diff
@@ -562,3 +744,4 @@ end ZAffine
 #print axioms ZAffine.aff_enc
 #print axioms ZAffine.aff_sound
 #print axioms ZAffine.boxEv_meet
+#print axioms ZAffine.rem_ln

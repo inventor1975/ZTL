@@ -8,7 +8,7 @@ The theorem asks instead:
     bounded on the box (a naive VRead), divisors and cos under tan clear of zero, √'s value read > 0;
   * a box bound of the GRAMMAR's derivative D f (lean_D mirrors ZDeriv.D, no simplification) with the sign: the naive
     reading, the checked affine one (zaffinecert), or their meet (ZAffine.boxEv_meet).
-Not in StepRead: ln, log10, atan, a non-natural exponent (a node without x may hold anything readable).
+Not in StepRead: atan (a node without x may hold anything readable). u^c with c not a natural literal is exp(c·ln u).
 """
 from fractions import Fraction as F
 
@@ -62,6 +62,8 @@ def lean_D(e, x):
         if k == 0:
             return Z
         return ("mul", ("mul", F(k), ("pow", a[0], F(k - 1))), lean_D(a[0], x))
+    if op == "pow":
+        return lean_D(T.lean_node(e), x)                 # u^c = exp(c·ln u)
     raise NotStep(f"{op}: no D in the grammar")
 
 
@@ -128,6 +130,24 @@ def step_ok(e, x, qs, piece):
             if a[1] == 0:
                 return
             go(a[0]); bd(a[0]); bd(lean_D(a[0], x))
+            return
+        if op == "pow":
+            go(T.lean_node(n))
+            return
+        if op == "ln":
+            go(a[0])
+            r = bd(a[0])
+            if not r[0] > 0:
+                raise NotStep("ln: its argument not read > 0")
+            bd(lean_D(a[0], x))
+            return
+        if op == "log10":
+            go(("ln", a[0]))
+            r = bd(a[0])
+            if not r[0] > 0:
+                raise NotStep("log10: its argument not read > 0")
+            if not bd(("ln", F(10)))[0] > 0:
+                raise NotStep("log10: ln 10 not read > 0")
             return
         raise NotStep(f"{op}: not in StepRead")
 

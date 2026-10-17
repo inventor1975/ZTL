@@ -142,7 +142,7 @@ def _ln(x):
     a, b = x.iv()
     if a <= 0:
         raise Unknown("ln reaching zero")
-    f = lambda t: ZF.ln_pt(Fraction(t))
+    f = lambda t: ZF.ln_pt_cert(Fraction(t))            # certified ends (zfunc._cert_ln, lean VRead.ln)
     df = lambda t: (1 / Fraction(t), 1 / Fraction(t))
     return _minrange(x, f, df, False, "b")
 

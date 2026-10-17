@@ -53,7 +53,8 @@ def setup(t, boxes):
 
 COVERED = ["exp(0 - x*x)", "exp(sin(x))", "1/(1 + x*x)", "tan(x/2)", "pow(x + 2, 5)", "cos(x)*exp(x)",
            "exp(x)/(2 + sin(x))", "sin(x*x) - cos(3*x)", "x*x*x - 2*x + 1", "exp(p*x)/(1 + p*x*x)", "tan(x)*sin(x)",
-           "sqrt(x + 1)", "sqrt(1 + x*x)*exp(0 - x)", "1/sqrt(x + p)"]
+           "sqrt(x + 1)", "sqrt(1 + x*x)*exp(0 - x)", "1/sqrt(x + p)",
+           "log10(x + 1)", "sin(x)*ln(x + 1)", "pow(x + 1, 3/2)/(1 + x*x)", "ln(1 + x*x)*exp(0 - x)"]
 PIECES = [(F(1, 4), F(3, 8)), (F(5, 16), F(5, 16)), (F(0), F(1, 2)), (F(7, 8), F(7, 8)), (F(1, 3), F(1, 3) + F(1, 10 ** 6))]
 
 print("1. the Lean grammar: every kernel series passes")
@@ -68,11 +69,10 @@ for t in COVERED:
                 continue
             n_all += 1
             n_ok += T.check(e, "x", qs, {"x": (u, v)}, n, cs, tr)[0]
-check(n_all > 300 and n_ok == n_all, f"{n_ok} of {n_all} series (14 functions x 5 pieces x orders 2..12) pass CRead")
+check(n_all > 400 and n_ok == n_all, f"{n_ok} of {n_all} series (18 functions x 5 pieces x orders 2..12) pass CRead")
 
 print("2. outside the grammar: named, not a fault")
-for t, want in (("log10(x + 1)", "log10"), ("sin(x)*ln(x + 1)", "ln"), ("atan(x*x)", "atan"),
-                ("pow(x, 3/2)/(1 + x*x)", "natural exponent"), ("pow(x - 2, 3)", "base not read >= 0")):
+for t, want in (("atan(x*x)", "atan"), ("ln(x - 1/2)", "no series"), ("pow(x - 2, 3)", "base not read >= 0")):
     e, qs = setup(t, {"x": (F(0), F(1))})
     tr = {}
     cs = ZC.taylor_coeffs(e, "x", qs, {"x": (F(1, 4), F(3, 8))}, 6, trace=tr)

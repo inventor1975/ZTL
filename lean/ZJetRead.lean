@@ -5,7 +5,7 @@ import ZJet
 
 `zcertify.taylor_coeffs` reads `f^(k)/k!` over a piece as intervals, by recurrences along the graph. `ZJet` showed
 the exact jets satisfy those recurrences. Here the interval side: `CRead` mirrors the kernel's recurrences node by node
-(√ included: `(S ∗ S)_k = U_k` from `k = 1` on, exactly; the same sums in the same form — Miller's weights combined as
+(√ included: `(S ∗ S)_k = U_k` from `k = 1` on, exactly; ln, log10 and real powers `exp(c·ln u)` too; the same sums in the same form — Miller's weights combined as
 the kernel combines them, since a combined weight
 gives a tighter interval than two sums), and `cread_sound` shows every coefficient of every point of the box
 eventually lies in its interval.

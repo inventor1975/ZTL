@@ -916,6 +916,7 @@ def taylor_coeffs(expr, x, quantities, piece, n, trace=None):
                         acc = _sub2(acc, _scal(_iv_sum([_scal(_imul2(l[i], a[k - i]), i) for i in range(1, k)]), Fraction(1, k)))
                     l.append(_idiv2(acc, a0))
                 if op == "log10":
+                    memo[("ln", args[0])] = l              # the ln series it divides (ztaylorcert reads it)
                     ln10 = val(("ln", Fraction(10)))
                     return [val(node)] + [_idiv2(l[k], ln10) for k in range(1, n + 1)]
                 return l

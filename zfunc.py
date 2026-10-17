@@ -360,6 +360,12 @@ def iv_ln(a):
 LN10 = _cert_ln((Fraction(10), Fraction(10)), ln_pt(Fraction(10)))
 
 
+def ln_pt_cert(x):
+    """ln_pt with its sides certified as iv_ln's (zaffine's min-range reads ln at the ends of an interval)."""
+    x = Fraction(x)
+    return _cert_ln((x, x), ln_pt(x))
+
+
 def iv_log10(a):
     r = iv_ln(a)
     if r is None:

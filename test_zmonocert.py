@@ -5,8 +5,8 @@ f (ZDeriv.StepRead) and the sign of the grammar's own derivative D f, read by Le
 zmonocert checks both in the run; zintegral counts a leaf it does not cover in MONO_PREMISE.
   1. integrals with monotone leaves: every sign covered (2026-10-17, the integral stand: 182 monotone leaves, 0
      premises; 8 of them only through D f's affine reading);
-  2. lean_D is a derivative: at 60 random points it equals the kernel's symbolic derivative (mpmath, 40 digits);
-  3. no step reading: the reason named (a divisor across zero, ln, √ at 0);
+  2. lean_D is a derivative: at 90 random points it equals the kernel's symbolic derivative (mpmath, 40 digits);
+  3. no step reading: the reason named (a divisor across zero, atan, √ at 0);
   4. MUTATION: the opposite sign claimed is refused.
 Run:  python3 test_zmonocert.py   -> ZMONOCERT GREEN
 """
@@ -45,7 +45,8 @@ def setup(t, boxes):
 
 print("1. monotone leaves: the sign covered")
 for t, boxes in (("exp(0 - x*x)", {"x": (F(0), F(1))}), ("x*exp(0 - x)/(1 + x)", {"x": (F(0), F(3))}),
-                 ("sin(x)*exp(0 - x)", {"x": (F(0), F(2))}), ("pow(x + 1, 3)", {"x": (F(0), F(1, 4))})):
+                 ("sin(x)*exp(0 - x)", {"x": (F(0), F(2))}), ("pow(x + 1, 3)", {"x": (F(0), F(1, 4))}),
+                 ("x*ln(1 + x)", {"x": (F(0), F(1))}), ("pow(1 + x, 3/2)", {"x": (F(0), F(1, 2))})):
     e, qs = setup(t, boxes)
     ZI.MONO_PREMISE.clear()
     n_mono = [0]
@@ -69,7 +70,7 @@ try:
     rng = random.Random(17)
     bad = n = 0
     for t in ("x*exp(0 - x)/(1 + x)", "sin(x)*cos(2*x) - tan(x/3)", "sqrt(1 + x*x)*pow(x + 2, 3)",
-              "exp(sin(x))/(2 + cos(x))"):
+              "exp(sin(x))/(2 + cos(x))", "ln(1 + x*x)*log10(2 + x)", "pow(1 + x, 3/2)"):
         e, qs = setup(t, {"x": (F(0), F(1))})
         dl, dk = M.lean_D(e, "x"), ZC.derivative(e, "x")
         for _ in range(15):
@@ -79,12 +80,12 @@ try:
             b = ZC._reading(dk, q2, {"x": (pt, pt)})
             n += 1
             bad += not (a is not None and b is not None and max(a[0], b[0]) <= min(a[1], b[1]))
-    check(bad == 0 and n == 60, f"{n} points: lean_D's reading meets the kernel's derivative's every time ({bad} apart)")
+    check(bad == 0 and n == 90, f"{n} points: lean_D's reading meets the kernel's derivative's every time ({bad} apart)")
 except ImportError:
     print("  (mpmath not installed: skipped)")
 
 print("3. no step reading: named")
-for t, box, want in (("x/(x - 1/2)", (F(1, 4), F(3, 4)), "divisor"), ("x*ln(1 + x)", (F(0), F(1)), "ln"),
+for t, box, want in (("x/(x - 1/2)", (F(1, 4), F(3, 4)), "divisor"), ("x*atan(1 + x)", (F(0), F(1)), "atan"),
                      ("sqrt(x)", (F(0), F(1, 4)), "sqrt")):
     e, qs = setup(t, {"x": (F(0), F(1))})
     why = M.sign_covered(e, "x", qs, {"x": box}, "+")

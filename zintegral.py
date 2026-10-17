@@ -40,18 +40,17 @@ reading is checked for the Lean witnesses IN THE RUN (ztrigcert; a side without 
 Taylor leaves of EVERY even order (2026-10-17): lean/ZJetRead.lean `CRead` mirrors zcertify.taylor_coeffs node by node,
 `cread_sound` + ZJetClose `cread_good` give `taylorN_kernel` — every symmetric tagged sum of mesh mu in the leaf's
 interval widened by mu-terms, with no hypothesis on the derivatives — for const var + - * / exp sin cos tan sqrt (its
-value read > 0) and natural powers of a base read >= 0; every leaf's two series are checked against CRead IN THE RUN
-(ztaylorcert): a series failing an inequality is refused, one outside that grammar (ln, log10, atan, other powers, and
-the symbolic-derivative fallback when a series has no reading) stays a premise, counted in TAYLOR_PREMISE. Still premises: non-integer pow,
-atan, log10's derivative; Taylor of order 2 for ln (the kernel's recurrence needs a same-point argument); the Taylor
-leaves above order 2 outside CRead's grammar. Every tagged sum, not only the symmetric ones, for the order-2 leaf:
+value read > 0), ln and log10 (argument read > 0), natural powers of a base read >= 0 and real powers exp(c·ln u);
+every leaf's two series are checked against CRead IN THE RUN (ztaylorcert): a series failing an inequality is refused,
+one outside that grammar (atan, and the symbolic-derivative fallback when a series has no reading) stays a premise,
+counted in TAYLOR_PREMISE. Every tagged sum, not only the symmetric ones, for the order-2 leaf:
 lean/ZTransfer.lean (`taylor2_every`); for higher orders only the symmetric ones.
 THE VALUE SEAM (2026-10-17, the red team's F1): the kernel's value readings (zcertify._reading: the exact linear
 fragment, affine forms, cases) can be TIGHTER than any Lean VRead, which only widens — on the integral stand 124 of 761
 readings of interval and monotone leaves were, all through the affine form. lean/ZAffine.lean + ZAffine2.lean prove the
-affine reading (AffR, aff_sound: + − × ÷ exp, 1/x of a positive interval, opaque subtrees, the grid rounding); every
+affine reading (AffR, aff_sound: + − × ÷ exp ln, 1/x of a positive interval, opaque subtrees, the grid rounding); every
 value reading of an interval or monotone leaf is checked IN THE RUN (zaffinecert.lean_covered) to contain Lean's —
-the naive VRead, the affine one, their meet; one that does not (sqrt, ln, a branch read by cases, ...) is a premise,
+the naive VRead, the affine one, their meet; one that does not (sqrt, atan, a branch read by cases, ...) is a premise,
 counted in VALUE_PREMISE. On the integral stand: 0.
 THE MONOTONE LEAF'S SIGN (2026-10-17): the kernel reads its own symbolic derivative fully; lean/ZMonoStep.lean proves
 the leaf from a step reading of f (ZDeriv.StepRead) and the sign of the grammar's derivative D f (ZTaylorN.taylor_rem

@@ -139,6 +139,8 @@ def _piece_enclosure(f, x, u, v, qs, box, leaf, cache):
             if r is None:
                 return None, f"the derivative of order {j} has no reading " + ("on the piece" if j == n else "at the middle")
             lo, hi = lo + coef * r[0], hi + coef * r[1]
+        # the kernel's own symbolic derivatives: outside the Lean reading (ZC.derivative is not Lean's D) — a premise
+        TAYLOR_PREMISE["symbolic derivatives (no series)"] = TAYLOR_PREMISE.get("symbolic derivatives (no series)", 0) + 1
         return _out((lo, hi)), None
     return None, f"unknown leaf {leaf!r}"
 

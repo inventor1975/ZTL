@@ -13,7 +13,9 @@ builds from the kernel's own intervals of the children (convolutions with corner
   2. outside the grammar the reason is named, and it is not a fault;
   3. MUTATION: a coefficient of an inner node (×, ÷, exp, sin, cos, tan, power, +, √) moved inside its own interval to a
      point off the truth is caught as a FAULT naming that node — the rule is not vacuous;
-  4. THE IN-RUN CHECK (zintegral): a covered integrand's leaves have no fault; a kernel whose top coefficient is
+  4. THE IN-RUN CHECK (zintegral): sqrt(x) at 0 has no series and no symbolic leaf either (the 124 "no series" of the
+     integral stand, 2026-10-17: all sqrt(x) on [0, w], all refused — never a premise); a covered integrand's leaves
+     have no fault; a kernel whose top coefficient is
      narrowed off the truth has its Taylor leaf refused.
 Run:  python3 test_ztaylorcert.py   -> ZTAYLORCERT GREEN
 """
@@ -104,6 +106,12 @@ for t, op, k in (("exp(sin(x))*(1 + x)", "mul", 3), ("1/(1 + x*x)", "div", 2), (
     check(good0 and not good and fault, f"{t}: {op} coefficient {k} moved -> fault {why!r}")
 
 print("4. the in-run check (zintegral)")
+ZI.TAYLOR_PREMISE.clear()
+es, qss = setup("sqrt(x)", {"x": (F(0), F(1))})
+cs_ = ZI.search(es, "x", F(0), F(1), qss, F(1, 10 ** 6))
+check("gave_up" not in cs_ and "symbolic derivatives (no series)" not in ZI.TAYLOR_PREMISE,
+      f"sqrt(x) on [0, 1]: the pieces at 0 have no series AND no symbolic leaf — refused, not a premise "
+      f"({ZI.TAYLOR_PREMISE})")
 e, qs = setup("exp(0 - x*x)", {"x": (F(0), F(1))})
 ZI.TAYLOR_FAULT[0] = 0
 c = ZI.search(e, "x", F(0), F(1), qs, F(1, 10 ** 12))

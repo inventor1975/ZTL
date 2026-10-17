@@ -8,8 +8,8 @@ ztaylorcert mirrors CRead in exact rationals: each node's interval must contain 
 builds from the kernel's own intervals of the children (convolutions with corners per term, the quotient through
 [1/b0], exp and the coupled sin/cos through D_t = (t+1)·a_{t+1}, tan as sin/cos, Miller's combined weights).
   1. functions of the Lean grammar, at points and over pieces, orders 2..12: every kernel series passes
-     (2026-10-17, sqrt added: the integral stand's 4153 series — 4005 covered, 0 failing an inequality; the rest
-     outside the grammar: no series 124, a non-natural exponent 18, ln 3, atan 3);
+     (2026-10-17, ln, log10, real powers and atan added: the integral stand's 4153 series — 4029 covered, 0 failing
+     an inequality; the rest: no series 124, all sqrt(x) at 0, refused);
   2. outside the grammar the reason is named, and it is not a fault;
   3. MUTATION: a coefficient of an inner node (×, ÷, exp, sin, cos, tan, power, +, √) moved inside its own interval to a
      point off the truth is caught as a FAULT naming that node — the rule is not vacuous;
@@ -54,7 +54,8 @@ def setup(t, boxes):
 COVERED = ["exp(0 - x*x)", "exp(sin(x))", "1/(1 + x*x)", "tan(x/2)", "pow(x + 2, 5)", "cos(x)*exp(x)",
            "exp(x)/(2 + sin(x))", "sin(x*x) - cos(3*x)", "x*x*x - 2*x + 1", "exp(p*x)/(1 + p*x*x)", "tan(x)*sin(x)",
            "sqrt(x + 1)", "sqrt(1 + x*x)*exp(0 - x)", "1/sqrt(x + p)",
-           "log10(x + 1)", "sin(x)*ln(x + 1)", "pow(x + 1, 3/2)/(1 + x*x)", "ln(1 + x*x)*exp(0 - x)"]
+           "log10(x + 1)", "sin(x)*ln(x + 1)", "pow(x + 1, 3/2)/(1 + x*x)", "ln(1 + x*x)*exp(0 - x)",
+           "atan(x*x)", "atan(1 + x)*exp(0 - x)"]
 PIECES = [(F(1, 4), F(3, 8)), (F(5, 16), F(5, 16)), (F(0), F(1, 2)), (F(7, 8), F(7, 8)), (F(1, 3), F(1, 3) + F(1, 10 ** 6))]
 
 print("1. the Lean grammar: every kernel series passes")
@@ -69,10 +70,10 @@ for t in COVERED:
                 continue
             n_all += 1
             n_ok += T.check(e, "x", qs, {"x": (u, v)}, n, cs, tr)[0]
-check(n_all > 400 and n_ok == n_all, f"{n_ok} of {n_all} series (18 functions x 5 pieces x orders 2..12) pass CRead")
+check(n_all > 450 and n_ok == n_all, f"{n_ok} of {n_all} series (20 functions x 5 pieces x orders 2..12) pass CRead")
 
 print("2. outside the grammar: named, not a fault")
-for t, want in (("atan(x*x)", "atan"), ("ln(x - 1/2)", "no series"), ("pow(x - 2, 3)", "base not read >= 0")):
+for t, want in (("ln(x - 1/2)", "no series"), ("pow(x - 2, 3)", "base not read >= 0")):
     e, qs = setup(t, {"x": (F(0), F(1))})
     tr = {}
     cs = ZC.taylor_coeffs(e, "x", qs, {"x": (F(1, 4), F(3, 8))}, 6, trace=tr)
@@ -101,7 +102,8 @@ def mutate(t, node_op, k, piece=(F(1, 4), F(3, 8)), n=6):
 
 for t, op, k in (("exp(sin(x))*(1 + x)", "mul", 3), ("1/(1 + x*x)", "div", 2), ("exp(sin(x))", "exp", 4),
                  ("exp(sin(x))", "sin", 3), ("cos(x)*x", "cos", 2), ("tan(x/2)", "tan", 3),
-                 ("pow(x + 2, 5)", "pow", 2), ("exp(x) + sin(x)", "add", 1), ("sqrt(x + 1)", "sqrt", 3)):
+                 ("pow(x + 2, 5)", "pow", 2), ("exp(x) + sin(x)", "add", 1), ("sqrt(x + 1)", "sqrt", 3),
+                 ("atan(x*x)", "atan", 3)):
     good0, good, why, fault = mutate(t, op, k)
     check(good0 and not good and fault, f"{t}: {op} coefficient {k} moved -> fault {why!r}")
 

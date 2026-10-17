@@ -160,7 +160,7 @@ def _atan(x):
     a, b = x.iv()
     if a < 0 < b:
         raise Unknown("atan across zero (its curvature changes sign)")
-    f = lambda t: ZF.atan_pt(Fraction(t))
+    f = lambda t: ZF.atan_pt_cert(Fraction(t))          # certified ends (zfunc._cert_atan, lean VRead.atan)
     df = lambda t: (1 / (1 + Fraction(t) * t), 1 / (1 + Fraction(t) * t))
     convex = b <= 0
     return _minrange(x, f, df, convex, _pick_end(df(a), df(b)))

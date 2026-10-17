@@ -1,4 +1,4 @@
-import ZTrig15
+import ZAtan
 
 /-!
 # ZSlopeSqrt — the kernel's certificate rule for `+ − × / exp ln sqrt`, integer powers, on VR's operational reals.
@@ -55,6 +55,7 @@ inductive G where
   | sin   : G → G
   | cos   : G → G
   | tan   : G → G
+  | atan  : G → G
 
 def evalN (n : Nat) (p : Point QExpr) : G → QExpr
   | .const c => c
@@ -71,6 +72,7 @@ def evalN (n : Nat) (p : Point QExpr) : G → QExpr
   | .sin u => ZTrig.Sn (evalN n p u) n
   | .cos u => ZTrig.Cn (evalN n p u) n
   | .tan u => qmul (ZTrig.Sn (evalN n p u) n) (qinv' (ZTrig.Cn (evalN n p u) n))
+  | .atan u => ZAtan.atseq (evalN n p u) n
 
 /-- The kernel's value reading: a quotient is `U × [1/V]`, `V` clear of zero (`RecipOK`). -/
 inductive VRead (B : Box QExpr) : G → QExpr → QExpr → Prop where
@@ -101,6 +103,12 @@ inductive VRead (B : Box QExpr) : G → QExpr → QExpr → Prop where
   | cos {u : G} {lu hu l h : QExpr} : VRead B u lu hu → qle lu hu → ZTrig.CosHi lu hu h → ZTrig.CosLo lu hu l →
       VRead B (.cos u) l h
   | tan {u : G} {lu hu l h : QExpr} : VRead B u lu hu → ZTrig.TanVal lu hu l h → VRead B (.tan u) l h
+  /-- `atan` (`ZAtan.atseq`, the grid sum of `1/(1 + t²)`): monotone, so its ends' values bracket it; the ends'
+  values `atan lu ≥ l`, `atan hu ≤ h` are facts about two rational points, certified by `ZAtanCert` (a Taylor chain
+  from `atan 0 = 0`, checked in the run). -/
+  | atan {u : G} {lu hu l h : QExpr} : VRead B u lu hu →
+      (∀ k, ∃ N, ∀ n, N ≤ n → qle (qsub l (qeps k)) (ZAtan.atseq lu n)) →
+      (∀ k, ∃ N, ∀ n, N ≤ n → qle (ZAtan.atseq hu n) (qadd h (qeps k))) → VRead B (.atan u) l h
 
 theorem value_sound {B : Box QExpr} {p : Point QExpr} (hp : InBox qOrd B p) :
     ∀ {e : G} {l h : QExpr}, VRead B e l h → Ev (fun n => evalN n p e) l h := by
@@ -123,6 +131,7 @@ theorem value_sound {B : Box QExpr} {p : Point QExpr} (hp : InBox qOrd B p) :
   | sin _ hlh hi lo ih => exact ZTrig.Ev_sin ih hlh hi lo
   | cos _ hlh hi lo ih => exact ZTrig.Ev_cos ih hlh hi lo
   | tan _ t ih => exact ZTrig.Ev_tan ih t
+  | atan _ hl hh ih => exact ZAtan.Ev_atan ih hl hh
 
 /-- The kernel's derivative reading: the quotient rule `(Du·V − U·Dv) / (V·V)`, each product at its corners,
 `V·V` read as an independent product (which is what bounds `v(p)·v(p')`). -/
@@ -402,6 +411,7 @@ theorem evalN_cauchy {B : Box QExpr} {p : Point QExpr} (hp : InBox qOrd B p) :
       obtain ⟨A, hA, N0, hN0⟩ := ZTrig.ev_bound (value_sound hp ru)
       have cs := ZTrig.CS_cauchy hA ih hN0
       exact (rmul ⟨_, cs.2⟩ ⟨_, recip_cauchy cs.1 hC rc⟩).cauchy
+  | atan _ _ _ ih => exact ZAtan.atan_cauchy ih
 
 /-- The value at `p`, given a value reading over a box containing `p`. -/
 def valR {B : Box QExpr} {p : Point QExpr} {e : G} {l h : QExpr} (hp : InBox qOrd B p) (r : VRead B e l h) : RExpr :=
@@ -478,6 +488,7 @@ def Uses : G → Nat → Prop
   | .sin u, j => Uses u j
   | .cos u, j => Uses u j
   | .tan u, j => Uses u j
+  | .atan u, j => Uses u j
 
 theorem evalN_dep (n : Nat) (p q : Point QExpr) : ∀ e : G, (∀ j, Uses e j → p j = q j) → evalN n p e = evalN n q e
   | .const _, _ => rfl
@@ -517,6 +528,9 @@ theorem evalN_dep (n : Nat) (p q : Point QExpr) : ∀ e : G, (∀ j, Uses e j �
       rw [evalN_dep n p q u h]
   | .tan u, h => by
       show qmul (ZTrig.Sn _ n) (qinv' (ZTrig.Cn _ n)) = qmul (ZTrig.Sn _ n) (qinv' (ZTrig.Cn _ n))
+      rw [evalN_dep n p q u h]
+  | .atan u, h => by
+      show ZAtan.atseq _ n = ZAtan.atseq _ n
       rw [evalN_dep n p q u h]
 
 theorem corner_bound_S (e : G) (B : Box QExpr) (sg : Nat → Bool) :

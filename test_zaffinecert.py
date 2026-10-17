@@ -10,7 +10,7 @@ reading (the naive VRead, the affine AffR, their meet — ZAffine.boxEv_meet).
      zaffine.read's (a mismatch would raise FAULT);
   3. MUTATION: a kernel reading shrunk past Lean's is named; an exp slope above e^a's certified lower bracket, a 1/x
      slope on the wrong side, and a rounding that drops its error are each caught as a failed premise;
-  4. outside AffR the reason is named (sqrt, atan; 1/x of a negative interval).
+  4. outside AffR the reason is named (sqrt; 1/x of a negative interval).
 Run:  python3 test_zaffinecert.py   -> ZAFFINECERT GREEN
 """
 import os
@@ -59,7 +59,8 @@ print("1. integrals whose readings need the affine form: every value reading cov
 cases = [("exp(0 - k*x)/(1 + k*x)", {"x": (F(0), F(2)), "k": (F(1, 2), F(1))}),
          ("x*exp(0 - x)/(1 + x)", {"x": (F(0), F(3))}),
          ("(exp(0 - x) - exp(0 - 2*x))/(1 + x*x)", {"x": (F(0), F(2))}),
-         ("x*ln(1 + x)/(2 + x)", {"x": (F(0), F(2))}), ("pow(1 + x, 3/2)*exp(0 - x)", {"x": (F(0), F(2))})]
+         ("x*ln(1 + x)/(2 + x)", {"x": (F(0), F(2))}), ("pow(1 + x, 3/2)*exp(0 - x)", {"x": (F(0), F(2))}),
+         ("x*atan(1 + x)/(2 + x)", {"x": (F(0), F(2))}), ("atan(x - 3)*exp(0 - x)", {"x": (F(0), F(2))})]
 total_aff = 0
 for t, boxes in cases:
     e, qs = setup(t, boxes)
@@ -152,7 +153,7 @@ finally:
 check("rounding" in why, f"a rounding that drops its error is caught: {why!r}")
 
 print("4. outside AffR: named")
-for t, boxes, want in (("x*sqrt(1 + x)", {"x": (F(0), F(1))}, "sqrt"), ("x*atan(1 + x)", {"x": (F(0), F(1))}, "atan"),
+for t, boxes, want in (("x*sqrt(1 + x)", {"x": (F(0), F(1))}, "sqrt"),
                        ("x/(x - 3)", {"x": (F(0), F(1))}, "negative")):
     e, qs = setup(t, boxes)
     _, why = replay(e, qs, {"x": (F(1, 4), F(1, 2))})

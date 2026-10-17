@@ -14,7 +14,9 @@ constructor that step is:
     and e^b certified by ZExp.ExpCert, zexpcert), the ends against ζ ± δ (rem_exp).
   * ln, the slope at b (α·b ≤ 1, the ends' ln brackets certified as zfunc._cert_ln, rem_ln); log10 = ln × 1/ln 10;
     u^c (c not an integer) = exp(c·ln u).
-Not in AffR: sqrt, atan, integer powers, 1/x of a negative interval, the shared form of the case reading. The
+  * atan, not across zero: the slope at the end where ψ = 1/(1 + t²) is smaller, α·(1 + end²) ≤ 1, the ends' brackets
+    certified by zatancert (rem_atan_pos / rem_atan_neg, lean/ZAffineAtan.lean).
+Not in AffR: sqrt, integer powers, 1/x of a negative interval, the shared form of the case reading. The
 replay's interval must equal the kernel's (a mismatch is a FAULT: the mirror lost the kernel).
 """
 from fractions import Fraction as F
@@ -143,6 +145,27 @@ def read_checked(e, qs, piece, rat_sqrt, plain, naive):
             raise RuntimeError("FAULT: the replay of _exp lost the kernel")
         return out
 
+    def atan(x):
+        from zatancert import atan_cert
+        a, b = x.iv()
+        if a < 0 < b:
+            raise ZA.Unknown("atan across zero")
+        f = lambda t: ZF.atan_pt_cert(F(t))
+        df = lambda t: (1 / (1 + F(t) * t), 1 / (1 + F(t) * t))
+        end = ZA._pick_end(df(a), df(b))
+        alpha, zeta, delta, a, b, fa, fb, inc = minrange(x, f, df, b <= 0, end)
+        # rem_atan_pos (0 ≤ a: α·(1 + b²) ≤ 1) / rem_atan_neg (b ≤ 0: α·(1 + a²) ≤ 1); the ends' brackets certified
+        # (zatancert: atan a ≥ fa0, atan b ≤ fb1), the ends against ζ ± δ
+        slope = alpha * (1 + b * b) <= 1 if a >= 0 else alpha * (1 + a * a) <= 1
+        if not (slope and atan_cert(a)[0] >= fa[0] and atan_cert(b)[1] <= fb[1]
+                and zeta - delta <= fa[0] - alpha * a and fb[1] - alpha * b <= zeta + delta):
+            raise Uncovered("atan: the remainder's premises fail")
+        out = nl(x, alpha, zeta, delta)
+        k = ZA._atan(x)
+        if (k.c, k.t, k.e) != (out.c, out.t, out.e):
+            raise RuntimeError("FAULT: the replay of _atan lost the kernel")
+        return out
+
     def ln(x):
         a, b = x.iv()
         if a <= 0:
@@ -185,7 +208,9 @@ def read_checked(e, qs, piece, rat_sqrt, plain, naive):
                 return mul(ln(ev(args[0])), recip(c10))
             if op == "pow" and not (isinstance(args[1], (int, F)) and F(args[1]).denominator == 1):
                 return exp(mul(ev(args[1]), ln(ev(args[0]))))
-            if op in ("sqrt", "atan", "pow"):
+            if op == "atan":
+                return atan(ev(args[0]))
+            if op in ("sqrt", "pow"):
                 # the kernel linearises these (or falls back to opaque on Unknown): replay its choice
                 k = ZA.read(n, qs, piece, rat_sqrt, plain)
                 if k is None:

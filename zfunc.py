@@ -376,8 +376,43 @@ def iv_log10(a):
     return l2, h2
 
 
+# Lean's atan (lean/ZAtan.lean) is the grid sum of 1/(1 + t²); VRead.atan takes atan at the ends of the argument's
+# reading as two facts about rational points, certified by a Taylor chain from atan 0 = 0 (lean/ZAtanCert.lean,
+# zatancert). As for ln: each side moved outward by the first margin the chain certifies; none -> kept, counted.
+ATAN_UNCOVERED = [0]
+_ATAN_MARGINS = (Fraction(0), Fraction(1, 2 ** 55), Fraction(1, 2 ** 30), Fraction(1, 2 ** 10))
+
+
+def _cert_atan(a, r):
+    from zatancert import atan_cert
+    lo, hi = r
+    if not (_inf(lo) or _inf(a[0])):
+        L = atan_cert(Fraction(a[0]))[0]
+        for m in _ATAN_MARGINS:
+            if L >= Fraction(lo) - m:
+                lo = Fraction(lo) - m
+                break
+        else:
+            ATAN_UNCOVERED[0] += 1
+    if not (_inf(hi) or _inf(a[1])):
+        H = atan_cert(Fraction(a[1]))[1]
+        for m in _ATAN_MARGINS:
+            if H <= Fraction(hi) + m:
+                hi = Fraction(hi) + m
+                break
+        else:
+            ATAN_UNCOVERED[0] += 1
+    return lo, hi
+
+
 def iv_atan(a):
-    return _iv_mono(atan_pt, a, -PI[1] / 2, PI[1] / 2)
+    return _cert_atan(a, _iv_mono(atan_pt, a, -PI[1] / 2, PI[1] / 2))
+
+
+def atan_pt_cert(x):
+    """atan_pt with its sides certified as iv_atan's (zaffine's min-range reads atan at the ends)."""
+    x = Fraction(x)
+    return _cert_atan((x, x), atan_pt(x))
 
 
 TAN_EDGE = Fraction(3, 2)        # below pi/2 = 1.5707...: tan is read only on |x| <= 1.5

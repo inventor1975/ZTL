@@ -391,6 +391,18 @@ theorem ln_close {u : G} (su : StAll B i u) (bu : BdAll B i u) {l h : QExpr} (b0
         exact StepRead.ln (su 0) b0 hl d
     | succ t => exact divS t (D i u) u (fun s => su (s + 1)) su (bd_Dall bu) bu hc
 
+/-- `1 + u·u` is at least `1` on the box, and bounded. -/
+theorem one_sq_box {u : G} {l h : QExpr} (bu : BoxEv B u l h) :
+    ∃ H, BoxEv B (.add (.const qone) (.mul u u)) qone H := by
+  obtain ⟨M, _, hM⟩ := read_bound bu
+  refine ⟨qadd qone (qmul M M), fun p hp => ?_⟩
+  obtain ⟨N, hN⟩ := hM p hp
+  refine Ev_of_exact N (fun n hn => ?_)
+  have s := ZAtan.sq_le (hN n hn)
+  have z := qmul_self_nonneg (evalN n p u)
+  show qle qone (qadd qone (qmul (evalN n p u) (evalN n p u))) ∧ qle (qadd qone (qmul (evalN n p u) (evalN n p u))) _
+  exact ⟨by rat_linarith, by rat_linarith⟩
+
 /-! ## From the kernel's reading -/
 
 /-- A coefficient reading bounds the value: `BoxEv` from `k = 0`. -/
@@ -464,6 +476,22 @@ theorem cread_good {K : Nat} : ∀ {e : G} {c : Nat → QExpr × QExpr}, CRead B
             obtain ⟨_, _, d⟩ := ihu.1 1
             exact StepRead.ln (ihu.2 0) bu hpos d
         | succ t => exact divS t (D i u) u (fun s => ihu.2 (s + 1)) ihu.2 (bd_Dall ihu.1) ihu.1 hc
+  | @atan u a c U w Dd l0 h0 r1 r2 ru hV _ _ _ _ _ _ _ ihu =>
+      have bu := boxEv_of_cread ru
+      obtain ⟨H, bv⟩ := one_sq_box bu
+      have hc : Cl B (.add (.const qone) (.mul u u)) := cl_pos bv qone_pos
+      have bvA : BdAll B i (.add (.const qone) (.mul u u)) := bd_addAll (bd_constAll qone) (bd_mulAll ihu.1 ihu.1)
+      have svA : StAll B i (.add (.const qone) (.mul u u)) :=
+        st_addAll (st_constAll qone) (st_mulAll ihu.2 ihu.2 ihu.1 ihu.1)
+      refine ⟨fun t => ?_, fun t => ?_⟩
+      · cases t with
+        | zero => exact ⟨l0, h0, boxEv_of_read hV⟩
+        | succ t => exact divG t (D i u) _ (bd_Dall ihu.1) bvA hc
+      · cases t with
+        | zero =>
+            obtain ⟨_, _, d⟩ := ihu.1 1
+            exact StepRead.atan (ihu.2 0) bu d
+        | succ t => exact divS t (D i u) _ (fun s => ihu.2 (s + 1)) svA (bd_Dall ihu.1) bvA hc
   | @sqrt u a c l0 h0 dl dh r1 r2 _ hV hc0 hpos hdv hR _ _ ihu =>
       have bs : BoxEv B (.sqrt u) l0 h0 := boxEv_of_read hV
       cases hV with
@@ -579,6 +607,7 @@ end ZJetClose
 #print axioms ZJetClose.divS
 #print axioms ZJetClose.st_tanAll
 #print axioms ZJetClose.sqrt_close
+#print axioms ZJetClose.one_sq_box
 #print axioms ZJetClose.cread_good
 #print axioms ZJetClose.ev_order
 #print axioms ZJetClose.taylorN_kernel

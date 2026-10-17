@@ -321,6 +321,18 @@ inductive CRead (B : Box QExpr) (i K : Nat) : G → (Nat → QExpr × QExpr) →
         ∃ l h l' h', CvB j (W j) (fun t => a (t + 1)) l h ∧ Corners l' h' l h (R j).1 (R j).2 ∧
           Hull (p (j + 1)) l' h') →
       CRead B i K (.exp (.mul (.const c) (.ln u))) p
+  /-- `atan u` as the kernel: `U = a ∗ a + 1`, `Dd_t ⊇ (t+1)·a_{t+1}`, `w_0 = Dd_0/U_0`,
+  `w_{m+1} = (Dd_{m+1} − (w ∗ U')_m)/U_0`, `c_{t+1} = w_t/(t+1)`; the value read. -/
+  | atan {u : G} {a c U w Dd : Nat → QExpr × QExpr} {l0 h0 r1 r2 : QExpr} : CRead B i K u a →
+      VRead B (.atan u) l0 h0 → Hull (c 0) l0 h0 →
+      (∀ s, s < K → ∃ l h, CvB s a a l h ∧ Hull (U s) (qadd (unitS s) l) (qadd (unitS s) h)) →
+      RecipOK r1 r2 (U 0).1 (U 0).2 →
+      (∀ t, t < K → Corners (Dd t).1 (Dd t).2 (qnat (t + 1)) (qnat (t + 1)) (a (t + 1)).1 (a (t + 1)).2) →
+      (0 < K → ∃ l' h', Corners l' h' (Dd 0).1 (Dd 0).2 r1 r2 ∧ Hull (w 0) l' h') →
+      (∀ m, m + 1 < K → ∃ l h l' h', CvB m w (fun j => U (j + 1)) l h ∧
+        Corners l' h' (qsub (Dd (m + 1)).1 h) (qsub (Dd (m + 1)).2 l) r1 r2 ∧ Hull (w (m + 1)) l' h') →
+      (∀ t, t < K → ∃ l h, Corners l h (w t).1 (w t).2 (inv1 t) (inv1 t) ∧ Hull (c (t + 1)) l h) →
+      CRead B i K (.atan u) c
 
 /-! ## Soundness -/
 
@@ -605,6 +617,49 @@ theorem cread_sound {B : Box QExpr} {q : Point QExpr} (hq : InBox qOrd B q) {i K
               (qmul (qnat (j + 1 + 1)) (J i n q u (j + 2))) := qEq_trans (qEq_symm sh) jl
           exact ln_solve (hN0 n hn) ci h
 
+  | @atan u a c U w Dd l0 h0 r1 r2 _ hV hc0 hU hR hDd hw0 hws hc ihu =>
+      intro k hk
+      -- the bounds of J(1 + u·u)
+      have eV : ∀ s, s < K → Ev (fun n => J i n q (.add (.const qone) (.mul u u)) s) (U s).1 (U s).2 := fun s hs => by
+        obtain ⟨l, h, cb, hh⟩ := hU s hs
+        have ecv := Ev_cv s (fun n => J i n q u) (fun n => J i n q u) a a
+          (fun j hj => ihu j (Nat.le_trans hj (Nat.le_of_lt hs))) (fun j hj => ihu j (Nat.le_trans hj (Nat.le_of_lt hs))) cb
+        have e := Ev_add (Ev_const (unitS s)) ecv
+        exact Ev_hull (Ev_congr_ev 0 (fun n _ => qEq_symm (J_one_sq i n q u s)) e) hh
+      have eDd : ∀ t, t < K → Ev (fun n => ZTrig.Dsh (J i n q u) t) (Dd t).1 (Dd t).2 := fun t ht =>
+        Ev_mul (Ev_const _) (ihu (t + 1) (Nat.succ_le_of_lt ht)) (hDd t ht)
+      -- the derivative's series, by strong induction
+      have eW : ∀ t, t < K → Ev (fun n => ZTrig.Dsh (J i n q (.atan u)) t) (w t).1 (w t).2 := by
+        have st := strong_upto (K := K) (fun t => t < K → Ev (fun n => ZTrig.Dsh (J i n q (.atan u)) t) (w t).1 (w t).2)
+          (fun h0K => by
+            have eV0 := eV 0 h0K
+            obtain ⟨N0, hN0⟩ := ev_nz eV0 hR
+            obtain ⟨l', h', co, hh⟩ := hw0 h0K
+            have e := Ev_mul (eDd 0 h0K) (Ev_recip eV0 hR) co
+            refine Ev_hull (Ev_congr_ev N0 (fun n hn => qEq_symm (mul_solve (hN0 n hn) ?_)) e) hh
+            have ja := J_atan i n q u 0
+            exact qEq_trans (by show qEq _ (qmul _ _); rat_ring) ja)
+          (fun m hm ih hm1 => by
+            have eV0 := eV 0 (Nat.lt_of_le_of_lt (Nat.zero_le _) hm1)
+            obtain ⟨N0, hN0⟩ := ev_nz eV0 hR
+            obtain ⟨l, h, l', h', cb, co, hh⟩ := hws m hm1
+            have ecv := Ev_cv m (fun n => ZTrig.Dsh (J i n q (.atan u))) (fun n t => J i n q (.add (.const qone) (.mul u u)) (t + 1))
+              w (fun j => U (j + 1)) (fun j hj => ih j hj (Nat.lt_of_le_of_lt hj hm))
+              (fun j hj => eV (j + 1) (Nat.lt_of_le_of_lt (Nat.succ_le_succ hj) hm1)) cb
+            have e := Ev_mul (Ev_sub (eDd (m + 1) hm1) ecv) (Ev_recip eV0 hR) co
+            refine Ev_hull (Ev_congr_ev N0 (fun n hn => qEq_symm (div_solve (hN0 n hn) ?_)) e) hh
+            have ja := J_atan i n q u (m + 1)
+            have sh := ZTrig.cv_shiftG m (ZTrig.Dsh (J i n q (.atan u))) (J i n q (.add (.const qone) (.mul u u)))
+            exact qEq_trans (qEq_symm sh) ja)
+        exact fun t ht => st t (Nat.le_of_lt ht) t (Nat.le_refl t) ht
+      cases k with
+      | zero => exact ev0 hq i hV hc0
+      | succ k =>
+          have hk' : k < K := Nat.lt_of_succ_le hk
+          obtain ⟨l, h, co, hh⟩ := hc k hk'
+          have e := Ev_mul (eW k hk') (Ev_const (inv1 k)) co
+          refine Ev_hull (Ev_congr_ev 0 (fun n _ => qEq_symm (mul_solve (ne_zero_of_lt (qnat_succ_pos k)) ?_)) e) hh
+          exact qEq_refl _
   | @log10 u a l c l0 h0 L1 L2 r1 r2 s1 s2 _ _ _ hRu hV hc0 hL _ hR hs ihu ihl =>
       intro k hk
       cases k with

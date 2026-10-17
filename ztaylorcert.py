@@ -21,13 +21,14 @@ give: the kernel's reading re-read without its exact linear fragment (`_naive`; 
 reads 2x − x as x, VRead only widens) — the function readings themselves are VReads by the earlier bridges
 (lean/ZSlopeSqrt, ZTrig10-15 with ztrigcert in the run, ln with zfunc._cert_ln in the run). A kernel value tighter
 than that is a premise, not a fault. x's own series and the zeros of nodes without x are checked too (F5). Not in
-CRead: atan, a natural power of a base not read ≥ 0.
+CRead: a natural power of a base not read ≥ 0. atan (2026-10-17): CRead.atan, U = a∗a + 1 clear of zero, the value
+read by VRead.atan (its ends' values certified in the run: zatancert, a Taylor chain from atan 0 = 0).
 """
 from fractions import Fraction as F
 
 import zcertify as ZC
 
-VALUE_OPS = {"add", "sub", "mul", "div", "exp", "ln", "sqrt", "log10", "sin", "cos", "tan", "sum", "pow"}
+VALUE_OPS = {"add", "sub", "mul", "div", "exp", "ln", "sqrt", "log10", "sin", "cos", "tan", "atan", "sum", "pow"}
 
 
 def _corners(a, b):
@@ -429,6 +430,37 @@ def check(expr, x, quantities, piece, n, cs, trace):
                 acc = (a[j + 2][0] - cv[1], a[j + 2][1] - cv[0])
                 if not _hull(c[j + 2], _corners(acc, R)):
                     return f"sqrt coefficient {j + 2}"
+            return ""
+        if op == "atan":
+            w = ok(args[0])
+            if w:
+                return w
+            if not _value_covered(node, quantities, piece):
+                return "atan: value outside the grammar"
+            w = val_ok(node, c[0])
+            if w:
+                return w
+            a = series(args[0])
+            # CRead.atan: U = a ∗ a + 1, Dd_t = (t+1)·a_{t+1}, w_0 = Dd_0/U_0, w_{j+1} = (Dd_{j+1} − (w ∗ U')_j)/U_0,
+            # c_{t+1} = w_t/(t+1) — the tightest intervals Lean's rule admits from the kernel's a
+            U = []
+            for s_ in range(n):
+                l, h = _cvb(a, a, s_)
+                one = F(1) if s_ == 0 else F(0)
+                U.append((one + l, one + h))
+            if n == 0:
+                return ""
+            R = _recip(U[0])
+            if R is None or not U[0][0] > 0:
+                return "atan: 1 + u·u has no reading clear of zero — Lean's reading has none"
+            Dd = [_scale(a[t + 1], t + 1) for t in range(n)]
+            ws = [_corners(Dd[0], R)]
+            for j in range(n - 1):
+                cv = _cvb(ws, U[1:j + 2], j)
+                ws.append(_corners((Dd[j + 1][0] - cv[1], Dd[j + 1][1] - cv[0]), R))
+            for t in range(n):
+                if not _hull(c[t + 1], _scale(ws[t], F(1, t + 1))):
+                    return f"atan coefficient {t + 1}"
             return ""
         return f"{op}: not in the Lean reading"
 

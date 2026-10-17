@@ -785,6 +785,25 @@ theorem J_millerR (i n : Nat) (p : Point QExpr) (u : G) (c : QExpr) (hu : ¬ qEq
     (fun t => qEq_trans (cv_comm t _ _) (J_ln i n p u hu t))
   exact qEq_trans s1 (qEq_trans s2 (qmul_respects (qEq_refl c) (qEq_trans s3 s4)))
 
+/-! ## atan — `Dsh J(atan u) ∗ J(1 + u·u) = Dsh J(u)`, and `J(1 + u·u) = unit + J(u) ∗ J(u)` -/
+
+theorem one_sq_nz (x : QExpr) : ¬ qEq (qadd qone (qmul x x)) qzero := fun z => by
+  have := qmul_self_nonneg x; have o := qone_pos
+  have o' := qlt_iff_le_not_le.mp o
+  exact o'.2 (by rat_linarith)
+
+theorem J_atan (i n : Nat) (p : Point QExpr) (u : G) (k : Nat) :
+    qEq (ZTrig.cv (ZTrig.Dsh (J i n p (.atan u))) (J i n p (.add (.const qone) (.mul u u))) k) (ZTrig.Dsh (J i n p u) k) := by
+  have jd := J_div i n p k (D i u) (.add (.const qone) (.mul u u)) (one_sq_nz (evalN n p u)) k (Nat.le_refl k)
+  have c1 := ZTrig.cv_congr k (ZTrig.Dsh (J i n p (.atan u))) (J i n p (.div (D i u) (.add (.const qone) (.mul u u))))
+    (J i n p (.add (.const qone) (.mul u u))) (J i n p (.add (.const qone) (.mul u u)))
+    (fun t => J_D i n p (.atan u) t) (fun _ => qEq_refl _)
+  exact qEq_trans c1 (qEq_trans jd (qEq_symm (J_D i n p u k)))
+
+theorem J_one_sq (i n : Nat) (p : Point QExpr) (u : G) (s : Nat) :
+    qEq (J i n p (.add (.const qone) (.mul u u)) s) (qadd (unitS s) (ZTrig.cv (J i n p u) (J i n p u) s)) :=
+  qEq_trans (J_add i n p _ _ s) (qadd_respects (qEq_trans (J_const i n p qone s) (qone_mul _)) (J_mul i n p s u u))
+
 end ZJet
 
 #print axioms ZJet.J_D
@@ -808,4 +827,6 @@ end ZJet
 #print axioms ZJet.J_sqrt
 #print axioms ZJet.J_ln
 #print axioms ZJet.J_log10
+#print axioms ZJet.J_atan
+#print axioms ZJet.J_one_sq
 #print axioms ZJet.J_millerR

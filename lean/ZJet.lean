@@ -99,98 +99,6 @@ theorem J_mul (i n : Nat) (p : Point QExpr) : ∀ k (u v : G), qEq (J i n p (.mu
       generalize qmul (qnat (k + 1)) (ZTrig.cv (J i n p u) (J i n p v) (k + 1)) = W at *
       exact qle_antisymm (by rat_linarith) (by rat_linarith)
 
-theorem z_mul_l {a b : QExpr} (h : qEq a qzero) : qEq (qmul a b) qzero :=
-  qEq_trans (qmul_respects h (qEq_refl b)) (by rat_ring)
-theorem z_mul_r {a b : QExpr} (h : qEq b qzero) : qEq (qmul a b) qzero :=
-  qEq_trans (qmul_respects (qEq_refl a) h) (by rat_ring)
-theorem z_add {a b : QExpr} (h1 : qEq a qzero) (h2 : qEq b qzero) : qEq (qadd a b) qzero :=
-  qEq_trans (qadd_respects h1 h2) (by rat_ring)
-theorem z_sub {a b : QExpr} (h1 : qEq a qzero) (h2 : qEq b qzero) : qEq (qsub a b) qzero := by
-  unfold qsub; exact qEq_trans (qadd_respects h1 (qneg_respects h2)) (by rat_ring)
-
-/-- A node without `x_i`: its derivative is `0` and again without `x_i` — the kernel's constant. -/
-theorem D_free (i n : Nat) (p : Point QExpr) : ∀ e : G, ¬ Uses e i →
-    qEq (evalN n p (D i e)) qzero ∧ ¬ Uses (D i e) i
-  | .const _, _ => ⟨qEq_refl _, fun h => h⟩
-  | .var j, h => by
-      have hj : j ≠ i := fun e => h (e ▸ rfl)
-      refine ⟨?_, fun h => h⟩
-      show qEq (dvar i j) qzero; rw [dvar_ne hj]; exact qEq_refl _
-  | .add u v, h => by
-      obtain ⟨a, b⟩ := D_free i n p u (fun hu => h (Or.inl hu))
-      obtain ⟨c, d⟩ := D_free i n p v (fun hv => h (Or.inr hv))
-      exact ⟨z_add a c, fun h' => h'.elim b d⟩
-  | .sub u v, h => by
-      obtain ⟨a, b⟩ := D_free i n p u (fun hu => h (Or.inl hu))
-      obtain ⟨c, d⟩ := D_free i n p v (fun hv => h (Or.inr hv))
-      exact ⟨z_sub a c, fun h' => h'.elim b d⟩
-  | .mul u v, h => by
-      obtain ⟨a, b⟩ := D_free i n p u (fun hu => h (Or.inl hu))
-      obtain ⟨c, d⟩ := D_free i n p v (fun hv => h (Or.inr hv))
-      refine ⟨z_add (z_mul_l a) (z_mul_r c), fun h' => ?_⟩
-      rcases h' with (h1 | h1) | (h1 | h1)
-      · exact b h1
-      · exact h (Or.inr h1)
-      · exact h (Or.inl h1)
-      · exact d h1
-  | .div u v, h => by
-      obtain ⟨a, b⟩ := D_free i n p u (fun hu => h (Or.inl hu))
-      obtain ⟨c, d⟩ := D_free i n p v (fun hv => h (Or.inr hv))
-      refine ⟨z_mul_l (z_sub (z_mul_l a) (z_mul_r c)), fun h' => ?_⟩
-      rcases h' with ((h1 | h1) | (h1 | h1)) | (h1 | h1)
-      · exact b h1
-      · exact h (Or.inr h1)
-      · exact h (Or.inl h1)
-      · exact d h1
-      · exact h (Or.inr h1)
-      · exact h (Or.inr h1)
-  | .exp u, h => by
-      obtain ⟨a, b⟩ := D_free i n p u h
-      exact ⟨z_mul_r a, fun h' => h'.elim h b⟩
-  | .ln u, h => by
-      obtain ⟨a, b⟩ := D_free i n p u h
-      exact ⟨z_mul_l a, fun h' => h'.elim b h⟩
-  | .sqrt u, h => by
-      obtain ⟨a, b⟩ := D_free i n p u h
-      refine ⟨z_mul_l a, fun h' => ?_⟩
-      rcases h' with h1 | (h1 | h1)
-      · exact b h1
-      · exact h1
-      · exact h h1
-  | .powN u 0, _ => ⟨qEq_refl _, fun h => h⟩
-  | .powN u (k + 1), h => by
-      obtain ⟨a, b⟩ := D_free i n p u h
-      refine ⟨z_mul_r a, fun h' => ?_⟩
-      rcases h' with (h1 | h1) | h1
-      · exact h1
-      · exact h h1
-      · exact b h1
-  | .log10 u, h => by
-      obtain ⟨a, b⟩ := D_free i n p u h
-      refine ⟨z_mul_l a, fun h' => ?_⟩
-      rcases h' with h1 | (h1 | h1)
-      · exact b h1
-      · exact h h1
-      · exact h1
-  | .sin u, h => by
-      obtain ⟨a, b⟩ := D_free i n p u h
-      exact ⟨z_mul_r a, fun h' => h'.elim h b⟩
-  | .cos u, h => by
-      obtain ⟨a, b⟩ := D_free i n p u h
-      refine ⟨z_mul_r a, fun h' => ?_⟩
-      rcases h' with (h1 | h1) | h1
-      · exact h1
-      · exact h h1
-      · exact b h1
-  | .tan u, h => by
-      obtain ⟨a, b⟩ := D_free i n p u h
-      refine ⟨z_mul_r a, fun h' => ?_⟩
-      rcases h' with (h1 | (h1 | h1)) | h1
-      · exact h1
-      · exact h h1
-      · exact h h1
-      · exact b h1
-
 theorem Diter_free (i n : Nat) (p : Point QExpr) : ∀ k (e : G), ¬ Uses e i → qEq (evalN n p (Diter i k (D i e))) qzero
   | 0, e, h => (D_free i n p e h).1
   | k + 1, e, h => Diter_free i n p k (D i e) (D_free i n p e h).2
@@ -732,7 +640,7 @@ end ZJet
 #print axioms ZJet.J_D
 #print axioms ZJet.J_add
 #print axioms ZJet.J_mul
-#print axioms ZJet.D_free
+#print axioms ZDeriv.D_free
 #print axioms ZJet.J_free
 #print axioms ZJet.J_var
 #print axioms ZJet.J_exp

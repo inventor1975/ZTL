@@ -924,13 +924,13 @@ differing in `x_i` by `Δ`, the remainder after the Taylor polynomial of degree 
 (`[L, U]` the reading of `D^m e` over the box), within `ε_k`, from some index on. -/
 theorem taylor_rem {B : Box QExpr} {i : Nat} : ∀ (m : Nat) (e : G) {L U : QExpr},
     (∀ t, t < m → StepRead B i (Diter i t e)) →
-    (∀ t, t < m → ∃ l h, VRead B (Diter i (t + 1) e) l h) →
-    VRead B (Diter i m e) L U →
+    (∀ t, t < m → ∃ l h, BoxEv B (Diter i (t + 1) e) l h) →
+    BoxEv B (Diter i m e) L U →
     ∀ p q, InBox qOrd B p → InBox qOrd B q → (∀ j, j ≠ i → q j = p j) →
     ∀ k, ∃ N, ∀ n, N ≤ n →
       Side (qsub (evalN n q e) (tpoly i n p e (qsub (q i) (p i)) m)) (qmul (qpowN (qsub (q i) (p i)) m) (cf m)) L U (qeps k)
   | 0, e, L, U, _, _, hL, p, q, _, hq, _, k => by
-      obtain ⟨N, hN⟩ := value_sound hq hL k
+      obtain ⟨N, hN⟩ := hL q hq k
       refine ⟨N, fun n hn => ?_⟩
       have ab : qle (qsub L (qeps k)) (evalN n q e) ∧ qle (evalN n q e) (qadd U (qeps k)) := hN n hn
       obtain ⟨a, b⟩ := ab

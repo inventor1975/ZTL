@@ -41,13 +41,20 @@ def D (i : Nat) : G → G
   | .cos u => .mul (.sub (.const qzero) (.sin u)) (D i u)
   | .tan u => .mul (.add (.const qone) (.mul (.tan u) (.tan u))) (D i u)
 
-/-- A reading eventually bounds the value at a point, by one constant for the whole box. -/
-theorem read_bound {B : Box QExpr} {e : G} {l h : QExpr} (r : VRead B e l h) :
+/-- At every point of the box the value eventually lies in `[l, h]` — what a reading gives (`value_sound`), and what
+the kernel's Taylor coefficients give (`ZJetRead.cread_sound`). -/
+def BoxEv (B : Box QExpr) (e : G) (l h : QExpr) : Prop := ∀ p, InBox qOrd B p → Ev (fun n => evalN n p e) l h
+
+theorem boxEv_of_read {B : Box QExpr} {e : G} {l h : QExpr} (r : VRead B e l h) : BoxEv B e l h :=
+  fun _ hp => value_sound hp r
+
+/-- A box bound eventually bounds the value at a point, by one constant for the whole box. -/
+theorem read_bound {B : Box QExpr} {e : G} {l h : QExpr} (r : BoxEv B e l h) :
     ∃ M, qle qzero M ∧ ∀ p, InBox qOrd B p → ∃ N, ∀ n, N ≤ n → ZTrig.Ab (evalN n p e) M := by
   obtain ⟨M, _, hM0, _, m1, m2, _, _⟩ := bound4 l h l h
   have o := qle_of_qlt qone_pos
   refine ⟨qadd M qone, by rat_linarith, fun p hp => ?_⟩
-  obtain ⟨N, hN⟩ := value_sound hp r 0
+  obtain ⟨N, hN⟩ := r p hp 0
   refine ⟨N, fun n hn => ?_⟩
   obtain ⟨a, b⟩ := hN n hn
   have z := qeps_zero
@@ -992,27 +999,124 @@ theorem ustep_tan {c : QExpr} (hc : qlt qzero c) :
       clear h1 h2 hHA hHAR hHR hBc
       exact ⟨by rat_linarith, by rat_linarith⟩
 
-/-- What the step needs from the box, node by node: the readings of the factors and their derivatives. -/
+/-! ## Nodes without `x_i` -/
+
+theorem z_mul_l {a b : QExpr} (h : qEq a qzero) : qEq (qmul a b) qzero :=
+  qEq_trans (qmul_respects h (qEq_refl b)) (by rat_ring)
+theorem z_mul_r {a b : QExpr} (h : qEq b qzero) : qEq (qmul a b) qzero :=
+  qEq_trans (qmul_respects (qEq_refl a) h) (by rat_ring)
+theorem z_add {a b : QExpr} (h1 : qEq a qzero) (h2 : qEq b qzero) : qEq (qadd a b) qzero :=
+  qEq_trans (qadd_respects h1 h2) (by rat_ring)
+theorem z_sub {a b : QExpr} (h1 : qEq a qzero) (h2 : qEq b qzero) : qEq (qsub a b) qzero := by
+  unfold qsub; exact qEq_trans (qadd_respects h1 (qneg_respects h2)) (by rat_ring)
+
+/-- A node without `x_i`: its derivative is `0` and again without `x_i` — the kernel's constant. -/
+theorem D_free (i n : Nat) (p : Point QExpr) : ∀ e : G, ¬ Uses e i →
+    qEq (evalN n p (D i e)) qzero ∧ ¬ Uses (D i e) i
+  | .const _, _ => ⟨qEq_refl _, fun h => h⟩
+  | .var j, h => by
+      have hj : j ≠ i := fun e => h (e ▸ rfl)
+      refine ⟨?_, fun h => h⟩
+      show qEq (dvar i j) qzero; rw [dvar_ne hj]; exact qEq_refl _
+  | .add u v, h => by
+      obtain ⟨a, b⟩ := D_free i n p u (fun hu => h (Or.inl hu))
+      obtain ⟨c, d⟩ := D_free i n p v (fun hv => h (Or.inr hv))
+      exact ⟨z_add a c, fun h' => h'.elim b d⟩
+  | .sub u v, h => by
+      obtain ⟨a, b⟩ := D_free i n p u (fun hu => h (Or.inl hu))
+      obtain ⟨c, d⟩ := D_free i n p v (fun hv => h (Or.inr hv))
+      exact ⟨z_sub a c, fun h' => h'.elim b d⟩
+  | .mul u v, h => by
+      obtain ⟨a, b⟩ := D_free i n p u (fun hu => h (Or.inl hu))
+      obtain ⟨c, d⟩ := D_free i n p v (fun hv => h (Or.inr hv))
+      refine ⟨z_add (z_mul_l a) (z_mul_r c), fun h' => ?_⟩
+      rcases h' with (h1 | h1) | (h1 | h1)
+      · exact b h1
+      · exact h (Or.inr h1)
+      · exact h (Or.inl h1)
+      · exact d h1
+  | .div u v, h => by
+      obtain ⟨a, b⟩ := D_free i n p u (fun hu => h (Or.inl hu))
+      obtain ⟨c, d⟩ := D_free i n p v (fun hv => h (Or.inr hv))
+      refine ⟨z_mul_l (z_sub (z_mul_l a) (z_mul_r c)), fun h' => ?_⟩
+      rcases h' with ((h1 | h1) | (h1 | h1)) | (h1 | h1)
+      · exact b h1
+      · exact h (Or.inr h1)
+      · exact h (Or.inl h1)
+      · exact d h1
+      · exact h (Or.inr h1)
+      · exact h (Or.inr h1)
+  | .exp u, h => by
+      obtain ⟨a, b⟩ := D_free i n p u h
+      exact ⟨z_mul_r a, fun h' => h'.elim h b⟩
+  | .ln u, h => by
+      obtain ⟨a, b⟩ := D_free i n p u h
+      exact ⟨z_mul_l a, fun h' => h'.elim b h⟩
+  | .sqrt u, h => by
+      obtain ⟨a, b⟩ := D_free i n p u h
+      refine ⟨z_mul_l a, fun h' => ?_⟩
+      rcases h' with h1 | (h1 | h1)
+      · exact b h1
+      · exact h1
+      · exact h h1
+  | .powN u 0, _ => ⟨qEq_refl _, fun h => h⟩
+  | .powN u (k + 1), h => by
+      obtain ⟨a, b⟩ := D_free i n p u h
+      refine ⟨z_mul_r a, fun h' => ?_⟩
+      rcases h' with (h1 | h1) | h1
+      · exact h1
+      · exact h h1
+      · exact b h1
+  | .log10 u, h => by
+      obtain ⟨a, b⟩ := D_free i n p u h
+      refine ⟨z_mul_l a, fun h' => ?_⟩
+      rcases h' with h1 | (h1 | h1)
+      · exact b h1
+      · exact h h1
+      · exact h1
+  | .sin u, h => by
+      obtain ⟨a, b⟩ := D_free i n p u h
+      exact ⟨z_mul_r a, fun h' => h'.elim h b⟩
+  | .cos u, h => by
+      obtain ⟨a, b⟩ := D_free i n p u h
+      refine ⟨z_mul_r a, fun h' => ?_⟩
+      rcases h' with (h1 | h1) | h1
+      · exact h1
+      · exact h h1
+      · exact b h1
+  | .tan u, h => by
+      obtain ⟨a, b⟩ := D_free i n p u h
+      refine ⟨z_mul_r a, fun h' => ?_⟩
+      rcases h' with (h1 | (h1 | h1)) | h1
+      · exact h1
+      · exact h h1
+      · exact h h1
+      · exact b h1
+
+/-- What the step needs from the box, node by node: bounds of the factors and their derivatives (`BoxEv` — from value
+readings, or from the kernel's Taylor coefficients); tan as `sin/cos` with `cos` clear of zero; a node without `x_i`
+steps by nothing. -/
 inductive StepRead (B : Box QExpr) (i : Nat) : G → Prop where
   | const {c : QExpr} : StepRead B i (.const c)
   | var {j : Nat} : StepRead B i (.var j)
   | add {u v : G} : StepRead B i u → StepRead B i v → StepRead B i (.add u v)
   | sub {u v : G} : StepRead B i u → StepRead B i v → StepRead B i (.sub u v)
   | mul {u v : G} {lu hu lv hv l1 h1 l2 h2 : QExpr} : StepRead B i u → StepRead B i v →
-      VRead B u lu hu → VRead B v lv hv → VRead B (D i u) l1 h1 → VRead B (D i v) l2 h2 → StepRead B i (.mul u v)
-  | exp {u : G} {lu hu l1 h1 lE hE : QExpr} : StepRead B i u → VRead B u lu hu → VRead B (D i u) l1 h1 →
-      VRead B (.exp u) lE hE → StepRead B i (.exp u)
-  | sin {u : G} {lu hu l1 h1 lC hC : QExpr} : StepRead B i u → VRead B u lu hu → VRead B (D i u) l1 h1 →
-      VRead B (.cos u) lC hC → StepRead B i (.sin u)
-  | cos {u : G} {lu hu l1 h1 lS hS : QExpr} : StepRead B i u → VRead B u lu hu → VRead B (D i u) l1 h1 →
-      VRead B (.sin u) lS hS → StepRead B i (.cos u)
-  | div {u v : G} {lu hu lv hv l1 h1 l2 h2 r1 r2 : QExpr} : StepRead B i u → StepRead B i v → VRead B u lu hu →
-      VRead B v lv hv → RecipOK r1 r2 lv hv → VRead B (D i u) l1 h1 → VRead B (D i v) l2 h2 → StepRead B i (.div u v)
+      BoxEv B u lu hu → BoxEv B v lv hv → BoxEv B (D i u) l1 h1 → BoxEv B (D i v) l2 h2 → StepRead B i (.mul u v)
+  | exp {u : G} {lu hu l1 h1 lE hE : QExpr} : StepRead B i u → BoxEv B u lu hu → BoxEv B (D i u) l1 h1 →
+      BoxEv B (.exp u) lE hE → StepRead B i (.exp u)
+  | sin {u : G} {lu hu l1 h1 lC hC : QExpr} : StepRead B i u → BoxEv B u lu hu → BoxEv B (D i u) l1 h1 →
+      BoxEv B (.cos u) lC hC → StepRead B i (.sin u)
+  | cos {u : G} {lu hu l1 h1 lS hS : QExpr} : StepRead B i u → BoxEv B u lu hu → BoxEv B (D i u) l1 h1 →
+      BoxEv B (.sin u) lS hS → StepRead B i (.cos u)
+  | div {u v : G} {lu hu lv hv l1 h1 l2 h2 r1 r2 : QExpr} : StepRead B i u → StepRead B i v → BoxEv B u lu hu →
+      BoxEv B v lv hv → RecipOK r1 r2 lv hv → BoxEv B (D i u) l1 h1 → BoxEv B (D i v) l2 h2 → StepRead B i (.div u v)
   | powZ {u : G} : StepRead B i (.powN u 0)
-  | powN {u : G} {k : Nat} {lu hu l1 h1 : QExpr} : StepRead B i u → VRead B u lu hu → VRead B (D i u) l1 h1 →
+  | powN {u : G} {k : Nat} {lu hu l1 h1 : QExpr} : StepRead B i u → BoxEv B u lu hu → BoxEv B (D i u) l1 h1 →
       StepRead B i (.powN u (k + 1))
-  | tan {u : G} {lu hu l1 h1 Tl Th : QExpr} : StepRead B i u → VRead B u lu hu → VRead B (D i u) l1 h1 →
-      ZTrig.TanVal lu hu Tl Th → StepRead B i (.tan u)
+  | tan {u : G} {lc hc r1 r2 : QExpr} : StepRead B i (.div (.sin u) (.cos u)) → BoxEv B (.cos u) lc hc →
+      RecipOK r1 r2 lc hc → StepRead B i (.tan u)
+  | free {e : G} : ¬ Uses e i → StepRead B i e
 /-- THE SYMBOLIC DERIVATIVE IS THE DERIVATIVE (the fragment `const var + − ×`): one constant `H` for the box. -/
 theorem step_sound {B : Box QExpr} {i : Nat} : ∀ {e : G}, StepRead B i e → ∃ H, qle qzero H ∧
     ∀ p q, InBox qOrd B p → InBox qOrd B q → (∀ j, j ≠ i → q j = p j) → ZTrig.Ab (qsub (q i) (p i)) qone →
@@ -1171,7 +1275,7 @@ theorem step_sound {B : Box QExpr} {i : Nat} : ∀ {e : G}, StepRead B i e → �
       have nzl : ∀ y, qle (qeps (Bp + 1)) y → ¬ qEq y qzero := fun y hy h =>
         (qlt_iff_le_not_le.mp (qeps_pos (Bp + 1))).2 (by rat_linarith)
       have evd : ∀ X, InBox qOrd B X → ∃ N, ∀ n, N ≤ n → (fun x (_ : Nat) => qle (qeps (Bp + 1)) x) (evalN n X v) n := fun X hX => by
-        obtain ⟨N, hN⟩ := value_sound hX rv (Bp + 1)
+        obtain ⟨N, hN⟩ := rv X hX (Bp + 1)
         exact ⟨N, fun n hn => by obtain ⟨a, _⟩ := hN n hn; have e := qeps_succ_add Bp; unfold qsub at a; rat_linarith⟩
       have mdw0 := qmul_nonneg mψ0 mdv0
       refine ⟨_, qadd_nn (qadd_nn (qmul_nonneg hu0 ic0) (qmul_nonneg mu0 hw0)) (qadd_nn (qmul_nonneg mdu0 mdw0) (qmul_nonneg mdu0 hw0)),
@@ -1200,7 +1304,7 @@ theorem step_sound {B : Box QExpr} {i : Nat} : ∀ {e : G}, StepRead B i e → �
       have nzl : ∀ y, qle y (qneg (qeps (Bp + 1))) → ¬ qEq y qzero := fun y hy h =>
         (qlt_iff_le_not_le.mp (qeps_pos (Bp + 1))).2 (by rat_linarith)
       have evd : ∀ X, InBox qOrd B X → ∃ N, ∀ n, N ≤ n → (fun x (_ : Nat) => qle x (qneg (qeps (Bp + 1)))) (evalN n X v) n := fun X hX => by
-        obtain ⟨N, hN⟩ := value_sound hX rv (Bp + 1)
+        obtain ⟨N, hN⟩ := rv X hX (Bp + 1)
         exact ⟨N, fun n hn => by obtain ⟨_, a⟩ := hN n hn; have e := qeps_succ_add Bp; rat_linarith⟩
       have mdw0 := qmul_nonneg mψ0 mdv0
       refine ⟨_, qadd_nn (qadd_nn (qmul_nonneg hu0 ic0) (qmul_nonneg mu0 hw0)) (qadd_nn (qmul_nonneg mdu0 mdw0) (qmul_nonneg mdu0 hw0)),
@@ -1236,33 +1340,68 @@ theorem step_sound {B : Box QExpr} {i : Nat} : ∀ {e : G}, StepRead B i e → �
     obtain ⟨N, hN⟩ := bu p hp
     exact ⟨N, fun n hn => ZTrig.mul_abs (show ZTrig.Ab (qnat (k + 1)) (qnat (k + 1)) from
       ⟨by have := qnat_nonneg (k + 1); rat_linarith, qle_refl _⟩) (pow_abs (hN n hn) k)⟩
-  | @tan u lu hu l1 h1 Tl Th _ ru rdu tv ihu =>
-    obtain ⟨Hu, hu0, hsu⟩ := ihu
-    obtain ⟨Mu, mu0, bu⟩ := read_bound ru
-    obtain ⟨Mdu, mdu0, bdu⟩ := read_bound rdu
-    obtain ⟨MT, mt0, bT⟩ := read_bound (VRead.tan ru tv)
-    obtain ⟨c0, c1, c0p, hC⟩ := ZTrig.TanVal.cos_all tv
-    obtain ⟨Bp, hBp⟩ := ZTrig.pos_floor c0p
-    have o := qle_of_qlt qone_pos
-    have mψ0 : qle qzero (qadd qone (qmul MT MT)) := by have := qmul_nonneg mt0 mt0; rat_linarith
-    obtain ⟨H, H0, hc⟩ := comp_step_on (φ := fun x n => qmul (ZTrig.Sn x n) (qinv' (ZTrig.Cn x n)))
-      (ψ := fun x n => qadd qone (qmul (qmul (ZTrig.Sn x n) (qinv' (ZTrig.Cn x n))) (qmul (ZTrig.Sn x n) (qinv' (ZTrig.Cn x n)))))
-      (dom := fun x n => qle (qeps (Bp + 1)) (ZTrig.Cn x n)) (ustep_tan (qeps_pos (Bp + 1)))
-      (fun _ _ n e => qmul_respects (ZTrig.Sn_respects e n) (qinv'_respects (ZTrig.Cn_respects e n)))
-      (fun _ _ n e h => qle_trans h (qle_of_qEq (ZTrig.Cn_respects e n))) mu0 mdu0 mψ0 hu0
-    have evd : ∀ X, InBox qOrd B X → ∃ N, ∀ n, N ≤ n → qle (qeps (Bp + 1)) (ZTrig.Cn (evalN n X u) n) := fun X hX => by
-      obtain ⟨N, hN⟩ := hC _ (value_sound hX ru) (Bp + 1)
-      exact ⟨N, fun n hn => by obtain ⟨a, _⟩ := hN n hn; have e := qeps_succ_add Bp; unfold qsub at a; rat_linarith⟩
-    refine ⟨H, H0, fun p q hp hq hfix hδ => hc (fun n => evalN n p u) (fun n => evalN n q u) (fun n => evalN n p (D i u))
-      _ hδ (hsu p q hp hq hfix hδ) (bu p hp) (bdu p hp) ?_ (evd p hp) (evd q hq)⟩
-    obtain ⟨N, hN⟩ := bT p hp
-    exact ⟨N, fun n hn => by
-      have b : ZTrig.Ab (qmul (ZTrig.Sn (evalN n p u) n) (qinv' (ZTrig.Cn (evalN n p u) n))) MT := hN n hn
-      obtain ⟨c1, c2⟩ := ZTrig.mul_abs b b
-      show ZTrig.Ab (qadd qone (qmul (qmul (ZTrig.Sn (evalN n p u) n) (qinv' (ZTrig.Cn (evalN n p u) n)))
-        (qmul (ZTrig.Sn (evalN n p u) n) (qinv' (ZTrig.Cn (evalN n p u) n))))) _
-      have q0 := qmul_self_nonneg (qmul (ZTrig.Sn (evalN n p u) n) (qinv' (ZTrig.Cn (evalN n p u) n)))
-      exact ⟨by rat_linarith, by rat_linarith⟩⟩
+  | @tan u lc hc r1 r2 _ rc hR ihd =>
+    obtain ⟨H, H0, hs⟩ := ihd
+    refine ⟨H, H0, fun p q hp hq hfix hδ k => ?_⟩
+    obtain ⟨N1, h1⟩ := hs p q hp hq hfix hδ k
+    obtain ⟨J0, hJ⟩ := recip_near hR 0
+    obtain ⟨N2, h2⟩ := rc p hp J0
+    refine ⟨N1 + N2, fun n hn => ?_⟩
+    have a := h1 n (ZTrig.le_l' hn)
+    obtain ⟨c1, c2⟩ := h2 n (ZTrig.le_r' hn)
+    have nz : ¬ qEq (ZTrig.Cn (evalN n p u) n) qzero := (hJ _ c1 c2).1
+    -- D(tan u) = D(sin u / cos u) where cos u ≠ 0
+    have eq : qEq (evalN n p (D i (.tan u))) (evalN n p (D i (.div (.sin u) (.cos u)))) := by
+      show qEq (qmul (qadd qone (qmul (qmul (ZTrig.Sn (evalN n p u) n) (qinv' (ZTrig.Cn (evalN n p u) n)))
+          (qmul (ZTrig.Sn (evalN n p u) n) (qinv' (ZTrig.Cn (evalN n p u) n))))) (evalN n p (D i u)))
+        (qmul (qsub (qmul (qmul (ZTrig.Cn (evalN n p u) n) (evalN n p (D i u))) (ZTrig.Cn (evalN n p u) n))
+          (qmul (ZTrig.Sn (evalN n p u) n) (qmul (qsub qzero (ZTrig.Sn (evalN n p u) n)) (evalN n p (D i u)))))
+          (qinv' (qmul (ZTrig.Cn (evalN n p u) n) (ZTrig.Cn (evalN n p u) n))))
+      have im := qinv'_mul nz nz
+      have c := qmul_inv'_cancel nz
+      generalize ZTrig.Sn (evalN n p u) n = S at *
+      generalize ZTrig.Cn (evalN n p u) n = C at *
+      generalize evalN n p (D i u) = d
+      generalize qinv' C = I at *
+      refine qEq_trans ?_ (qEq_symm (qmul_respects (qEq_refl _) im))
+      have e1 : qEq (qmul (qsub (qmul (qmul C d) C) (qmul S (qmul (qsub qzero S) d))) (qmul I I))
+          (qadd (qmul d (qmul (qmul C I) (qmul C I))) (qmul d (qmul (qmul S I) (qmul S I)))) := by unfold qsub; rat_ring
+      have e2 := qmul_respects (qEq_refl d) (qmul_respects c c)
+      have e3 : qEq (qmul (qadd qone (qmul (qmul S I) (qmul S I))) d) (qadd d (qmul d (qmul (qmul S I) (qmul S I)))) := by rat_ring
+      have e4 : qEq (qmul d (qmul qone qone)) d := by rat_ring
+      generalize qmul (qsub (qmul (qmul C d) C) (qmul S (qmul (qsub qzero S) d))) (qmul I I) = L at *
+      generalize qmul d (qmul (qmul C I) (qmul C I)) = X at *
+      generalize qmul d (qmul (qmul S I) (qmul S I)) = Y at *
+      generalize qmul (qadd qone (qmul (qmul S I) (qmul S I))) d = R at *
+      generalize qmul d (qmul qone qone) = Z at *
+      exact qle_antisymm (by rat_linarith) (by rat_linarith)
+    have a' : ZTrig.Ab (qsub (qsub (evalN n q (.tan u)) (evalN n p (.tan u)))
+        (qmul (qsub (q i) (p i)) (evalN n p (D i (.div (.sin u) (.cos u))))))
+        (qadd (qeps k) (qmul (qmul (qsub (q i) (p i)) (qsub (q i) (p i))) H)) := a
+    have m := qmul_respects (qEq_refl (qsub (q i) (p i))) eq
+    obtain ⟨a1, a2⟩ := a'
+    show ZTrig.Ab (qsub (qsub (evalN n q (.tan u)) (evalN n p (.tan u))) (qmul (qsub (q i) (p i)) (evalN n p (D i (.tan u))))) _
+    unfold qsub at *
+    generalize qmul (qadd (q i) (qneg (p i))) (evalN n p (D i (.tan u))) = X at *
+    generalize qmul (qadd (q i) (qneg (p i))) (evalN n p (D i (.div (.sin u) (.cos u)))) = Y at *
+    generalize qadd (qeps k) (qmul (qmul (qadd (q i) (qneg (p i))) (qadd (q i) (qneg (p i)))) H) = W at *
+    exact ⟨by rat_linarith, by rat_linarith⟩
+  | @free e hU =>
+    refine ⟨qzero, qle_refl _, fun p q _ _ hfix _ k => ⟨0, fun n _ => ab_zero ?_ ?_⟩⟩
+    · have dep : evalN n q e = evalN n p e := evalN_dep n q p e (fun j hj => by
+        cases Nat.decEq j i with
+        | isTrue h => exact absurd (h ▸ hj) hU
+        | isFalse h => exact hfix j h)
+      rw [dep]
+      have z := (D_free i n p e hU).1
+      have m := z_mul_r (a := qsub (q i) (p i)) z
+      unfold qsub at *
+      generalize qmul (qadd (q i) (qneg (p i))) (evalN n p (D i e)) = X at *
+      generalize evalN n p e = E
+      exact qle_antisymm (by rat_linarith) (by rat_linarith)
+    · have := qeps_nonneg k
+      have e : qEq (qmul (qmul (qsub (q i) (p i)) (qsub (q i) (p i))) qzero) qzero := by rat_ring
+      generalize qmul (qmul (qsub (q i) (p i)) (qsub (q i) (p i))) qzero = P at *; rat_linarith
 
 end ZDeriv
 

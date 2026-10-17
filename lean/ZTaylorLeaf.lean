@@ -173,8 +173,8 @@ theorem tpoly_congr {i n : Nat} {p : Point QExpr} {e : G} {Δ Δ' : QExpr} (h : 
 in `2·s^n/n!·[L, U]` within `2ε_k`, from some index on (`n = 2(r + 1)`). -/
 theorem cell_taylor {B : Box QExpr} {i r : Nat} {e : G} {L U : QExpr} {p : Point QExpr} {m s h : QExpr}
     (hS : ∀ t, t < 2 * (r + 1) → StepRead B i (Diter i t e))
-    (hV : ∀ t, t < 2 * (r + 1) → ∃ l h, VRead B (Diter i (t + 1) e) l h)
-    (hL : VRead B (Diter i (2 * (r + 1)) e) L U)
+    (hV : ∀ t, t < 2 * (r + 1) → ∃ l h, BoxEv B (Diter i (t + 1) e) l h)
+    (hL : BoxEv B (Diter i (2 * (r + 1)) e) L U)
     (hB : ∀ t, qle (qsub m h) t → qle t (qadd m h) → InBox qOrd B (upd p i t)) (hs0 : qle qzero s) (hsh : qle s h) :
     ∀ k, ∃ N, ∀ n, N ≤ n →
       qle (qsub (qmul (qadd (qmul (qpowN s (2 * (r + 1))) (cf (2 * (r + 1)))) (qmul (qpowN s (2 * (r + 1))) (cf (2 * (r + 1))))) L)
@@ -350,8 +350,8 @@ every precision from some index on, in `Σ_j 2h^(2j+1)/(2j+1)·[a_j, b_j] + 2h^(
 theorem taylorN_leaf {B : Box QExpr} {i r : Nat} {e : G} {L U : QExpr} {p : Point QExpr} {m h μ K KR : QExpr}
     {cs : List Cell} (a b hp : Nat → QExpr)
     (hS : ∀ t, t < 2 * (r + 1) → StepRead B i (Diter i t e))
-    (hV : ∀ t, t < 2 * (r + 1) → ∃ l h, VRead B (Diter i (t + 1) e) l h)
-    (hL : VRead B (Diter i (2 * (r + 1)) e) L U)
+    (hV : ∀ t, t < 2 * (r + 1) → ∃ l h, BoxEv B (Diter i (t + 1) e) l h)
+    (hL : BoxEv B (Diter i (2 * (r + 1)) e) L U)
     (hc : ∀ j, j < r + 1 → Ev (fun n => qmul (evalN n (upd p i m) (Diter i (2 * j) e)) (cf (2 * j))) (a j) (b j))
     (hab : ∀ j, j < r + 1 → ZTrig.Ab (a j) K ∧ ZTrig.Ab (b j) K)
     (hRL : ZTrig.Ab (qmul (cf (2 * (r + 1))) L) KR) (hRU : ZTrig.Ab (qmul (cf (2 * (r + 1))) U) KR)

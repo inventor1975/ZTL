@@ -36,15 +36,26 @@ slopes on a grid, lean/ZExp2.lean; sin's and cos's likewise, lean/ZTrig13.lean; 
 it; / and sqrt by exact identities). Integer powers of a base read >= 0 (value, slope) and log10's
 value: lean/ZPow.lean, ZSlopeSqrt. sin, cos over intervals (pi's bracket checked by cos at its halves), tan on
 |x| <= 1.5, and their slopes (chords on a grid, no mean value theorem): lean/ZTrig10-15.lean; every kernel
-reading is checked for the Lean witnesses IN THE RUN (ztrigcert; a side without them widened to +-1, tan: no reading). Still premises: non-integer
-pow, atan, log10's derivative; Taylor of order 2 for ln (the kernel's recurrence needs a same-point argument); Taylor orders above 2.
-Every tagged sum, not only the symmetric ones, for the order-2 leaf: lean/ZTransfer.lean (`taylor2_every`).
+reading is checked for the Lean witnesses IN THE RUN (ztrigcert; a side without them widened to +-1, tan: no reading).
+Taylor leaves of EVERY even order (2026-10-17): lean/ZJetRead.lean `CRead` mirrors zcertify.taylor_coeffs node by node,
+`cread_sound` + ZJetClose `cread_good` give `taylorN_kernel` — every symmetric tagged sum of mesh mu in the leaf's
+interval widened by mu-terms, with no hypothesis on the derivatives — for const var + - * / exp sin cos tan and natural
+powers of a base read >= 0; every leaf's two series are checked against CRead IN THE RUN (ztaylorcert): a series failing
+an inequality is refused, one outside that grammar (sqrt, ln, log10, atan, other powers, and the symbolic-derivative
+fallback when a series has no reading) stays a premise, counted in TAYLOR_PREMISE. Still premises: non-integer pow,
+atan, log10's derivative; Taylor of order 2 for ln (the kernel's recurrence needs a same-point argument); the Taylor
+leaves above order 2 outside CRead's grammar. Every tagged sum, not only the symmetric ones, for the order-2 leaf:
+lean/ZTransfer.lean (`taylor2_every`); for higher orders only the symmetric ones.
 """
 
 from fractions import Fraction
 import zcertify as ZC
 
 MAX_TAYLOR = 12
+# Taylor leaves checked against the Lean reading in the run: faults (refused) and premises (outside the Lean grammar),
+# by reason
+TAYLOR_FAULT = [0]
+TAYLOR_PREMISE = {}
 
 
 def _out(iv):
@@ -95,9 +106,21 @@ def _piece_enclosure(f, x, u, v, qs, box, leaf, cache):
         at_m = dict(box, **{x: (m, m)})
         # TAYLOR COEFFICIENTS ALONG THE GRAPH first (zcertify.taylor_coeffs: c_j = f^(j)/j!, recurrences over shared
         # nodes): the symbolic derivatives of sqrt to order 6 were trees of nested roots, 228 s for a 1e-6 search
-        cm = ZC.taylor_coeffs(f, x, qs, at_m, n)
-        cp = ZC.taylor_coeffs(f, x, qs, piece, n) if cm is not None else None
+        trm, trp = {}, {}
+        cm = ZC.taylor_coeffs(f, x, qs, at_m, n, trace=trm)
+        cp = ZC.taylor_coeffs(f, x, qs, piece, n, trace=trp) if cm is not None else None
         if cm is not None and cp is not None:
+            # THE LEAN READING, IN THE RUN (ztaylorcert; lean/ZJetRead CRead -> ZJetClose.taylorN_kernel): a series
+            # that fails its inequalities is refused; one outside the Lean grammar (sqrt, ln, ...) stays a premise
+            import ztaylorcert
+            for piece_, cs_, tr_ in ((at_m, cm, trm), (piece, cp, trp)):
+                good, why, fault = ztaylorcert.check(f, x, qs, piece_, n, cs_, tr_)
+                if fault:
+                    TAYLOR_FAULT[0] += 1
+                    return None, f"the Taylor coefficients fail the Lean reading: {why}"
+                if not good:
+                    TAYLOR_PREMISE[why] = TAYLOR_PREMISE.get(why, 0) + 1
+                    break
             lo = hi = Fraction(0)
             for j in range(0, n + 1, 2):
                 coef = 2 * h ** (j + 1) / (j + 1)

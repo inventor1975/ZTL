@@ -832,8 +832,9 @@ def _scal(a, c):
     return _imul2(a, (Fraction(c), Fraction(c)))
 
 
-def taylor_coeffs(expr, x, quantities, piece, n):
-    """[(lo, hi)] * (n + 1): f^(k)/k! over piece[x] (and the box of the other names), or None."""
+def taylor_coeffs(expr, x, quantities, piece, n, trace=None):
+    """[(lo, hi)] * (n + 1): f^(k)/k! over piece[x] (and the box of the other names), or None.
+    trace: a dict to receive every node's series (sums excepted) — ztaylorcert checks them against the Lean reading."""
     import znum as _ZN
     q2 = dict(quantities)
     for nm, (lo, hi) in piece.items():
@@ -956,6 +957,7 @@ def taylor_coeffs(expr, x, quantities, piece, n):
                 for k in range(1, n + 1):
                     sn.append(_scal(_iv_sum([_scal(_imul2(a[i], cs[k - i]), i) for i in range(1, k + 1)]), Fraction(1, k)))
                     cs.append(_scal(_iv_sum([_scal(_imul2(a[i], sn[k - i]), i) for i in range(1, k + 1)]), Fraction(-1, k)))
+                memo[("cos" if op == "sin" else "sin", args[0])] = cs if op == "sin" else sn
                 return sn if op == "sin" else cs
             if op == "atan":
                 a = tc(args[0])
@@ -973,7 +975,10 @@ def taylor_coeffs(expr, x, quantities, piece, n):
             if op == "tan":
                 return tc(("div", ("sin", args[0]), ("cos", args[0])))
             raise ArithmeticError(f"no series for {op}")
-        return tc(expr)
+        out = tc(expr)
+        if trace is not None:
+            trace.update(memo)
+        return out
     except (ArithmeticError, ZeroDivisionError, KeyError, ValueError, TypeError):
         return None
     finally:

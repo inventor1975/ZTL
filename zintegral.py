@@ -52,7 +52,11 @@ readings of interval and monotone leaves were, all through the affine form. lean
 affine reading (AffR, aff_sound: + − × ÷ exp, 1/x of a positive interval, opaque subtrees, the grid rounding); every
 value reading of an interval or monotone leaf is checked IN THE RUN (zaffinecert.lean_covered) to contain Lean's —
 the naive VRead, the affine one, their meet; one that does not (sqrt, ln, a branch read by cases, ...) is a premise,
-counted in VALUE_PREMISE. On the integral stand: 0. Not checked here: the derivative-sign reading of a monotone leaf.
+counted in VALUE_PREMISE. On the integral stand: 0.
+THE MONOTONE LEAF'S SIGN (2026-10-17): the kernel reads its own symbolic derivative fully; lean/ZMonoStep.lean proves
+the leaf from a step reading of f (ZDeriv.StepRead) and the sign of the grammar's derivative D f (ZTaylorN.taylor_rem
+at order 1, no mean value theorem); zmonocert checks both IN THE RUN (D f read naive, affine, their meet), a sign Lean
+does not reach is a premise counted in MONO_PREMISE. On the integral stand: 182 monotone leaves, 0 premises.
 """
 
 from fractions import Fraction
@@ -67,6 +71,18 @@ TAYLOR_PREMISE = {}
 # value readings of interval and monotone leaves checked against Lean's (naive VRead, the affine AffR, their meet;
 # zaffinecert, 2026-10-17): the ones Lean does not reach, by reason — premises
 VALUE_PREMISE = {}
+
+
+# the monotone leaf's sign checked against Lean's (ZMonoStep: a step reading of f, D f's sign; zmonocert): premises by
+# reason
+MONO_PREMISE = {}
+
+
+def _mono_seam(f, x, qs, piece, s):
+    import zmonocert
+    why = zmonocert.sign_covered(f, x, qs, piece, s)
+    if why:
+        MONO_PREMISE[why] = MONO_PREMISE.get(why, 0) + 1
 
 
 def _value_seam(f, qs, piece, r):
@@ -120,6 +136,7 @@ def _piece_enclosure_raw(f, x, u, v, qs, box, leaf, cache):
         if r is None or (s == "+" and r[0] < 0) or (s == "-" and r[1] > 0):
             return None, (f"df/d{x} on the piece reads [{float(r[0]):.6g}, {float(r[1]):.6g}], not {s}" if r is not None
                           else f"df/d{x} has no reading on the piece")
+        _mono_seam(f, x, qs, piece, s)
         fu = ZC._reading(f, qs, dict(box, **{x: (u, u)}))
         fv = ZC._reading(f, qs, dict(box, **{x: (v, v)}))
         if fu is None or fv is None:

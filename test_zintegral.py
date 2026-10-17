@@ -62,7 +62,18 @@ check(not ZI.check(f3, "x", 0, 1, qs3, bad)[0], "MUTATION: a Taylor leaf across 
 
 print("4. a parameter: x^p on [1/100, 1], p in [1, 3] — its range by pins")
 f4, qs4 = setup("pow(x, p)", {"x": (F(1, 100), F(1)), "p": (F(1), F(3))})
+ZI.RULE_PREMISE.clear()
 c4 = ZI.search_range(f4, "x", F(1, 100), 1, qs4, F(1, 10 ** 9))
+check(not ZI.RULE_PREMISE, f"the pin's sign reached by Lean (lean/ZRangePin, zmonocert along p): premises {ZI.RULE_PREMISE}")
+import zmonocert as _ZM
+_keep = _ZM.sign_covered
+_ZM.sign_covered = lambda *a: "a sign Lean does not reach"
+try:
+    _g = ZI.check_range(f4, "x", F(1, 100), 1, qs4, c4)
+finally:
+    _ZM.sign_covered = _keep
+check(_g[0] and ZI.RULE_PREMISE.get("range pin: a sign Lean does not reach") == 1,
+      f"a pin Lean does not reach is counted, not silent: {ZI.RULE_PREMISE}")
 lo_true, hi_true = (1 - F(1, 100) ** 4) / 4, (1 - F(1, 100) ** 2) / 2
 check("gave_up" not in c4 and c4["pins"] == {"p": "-"}
       and c4["range"][0] <= lo_true and hi_true <= c4["range"][1]
@@ -96,7 +107,10 @@ import math as _m
 qsl = parse_quantities(", ".join(f"{n}=[{fs(a)},{fs(b)}] credit" for n, (a, b) in
                                   {"x": (F(0), F(3)), "T": (F(1), F(2)), "k": (F(1, 2), F(1))}.items()))[0]
 fl, Bl = _parse_arith("exp(0 - k*x)", qsl), _parse_arith("T", qsl)
+ZI.RULE_PREMISE.clear()
 cl = ZI.search_limits_range(fl, "x", F(0), Bl, qsl, F(1, 10 ** 9))
+check(ZI.RULE_PREMISE == {"dI/dp with moving limits (Leibniz: no Lean theorem)": 1},
+      f"the pin on k (fixed limits) reached by Lean; the moving limit T's dI/dT counted: {ZI.RULE_PREMISE}")
 true_lo, true_hi = 1 - _m.exp(-1), (1 - _m.exp(-1)) / F(1, 2)
 check("gave_up" not in cl and cl["pins"] == {"k": "-", "T": "+"}
       and abs(float(cl["range"][0]) - true_lo) < 1e-9 and abs(float(cl["range"][1]) - float(true_hi)) < 1e-9,
@@ -105,6 +119,10 @@ cm = dict(cl, pins={"k": "+", "T": "+"})
 check(not ZI.check_limits_range(fl, "x", F(0), Bl, qsl, cm)[0], "MUTATION: a limit pin with the wrong sign (k +) refused")
 cw = ZI.check_limits(fl, "x", F(0), Bl, qsl, {"core": cl["high"]["core"]})
 check(not cw[0], "MUTATION: the high corner's core ([0, 2]) refused for the whole box (its core is [0, 1])")
+ZI.RULE_PREMISE.clear()
+ct = ZI.search_limits(fl, "x", F(0), Bl, qsl, F(1, 10 ** 6))
+check("gave_up" not in ct and ZI.RULE_PREMISE.get("moving limits: the tail rule (no Lean theorem)", 0) >= 1,
+      f"the whole box (T moving): an enclosure through the tail rule, counted: {ZI.RULE_PREMISE}")
 
 print("4d. a double integral over [0,1]^2: e^(-x^2-y^2) = (∫_0^1 e^(-x^2))^2 — a certificate inside a certificate")
 qs2d = parse_quantities("x=[0/1,1/1] credit, y=[0/1,1/1] credit")[0]

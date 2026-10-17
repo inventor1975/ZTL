@@ -59,6 +59,11 @@ THE MONOTONE LEAF'S SIGN (2026-10-17): the kernel reads its own symbolic derivat
 the leaf from a step reading of f (ZDeriv.StepRead) and the sign of the grammar's derivative D f (ZTaylorN.taylor_rem
 at order 1, no mean value theorem); zmonocert checks both IN THE RUN (D f read naive, affine, their meet), a sign Lean
 does not reach is a premise counted in MONO_PREMISE. On the integral stand: 182 monotone leaves, 0 premises.
+THE RULES ABOVE THE LEAVES (2026-10-17): the range by pins (check_range, and check_limits_range's pins with fixed
+limits) is lean/ZRangePin — every point of the box has its tagged sums over the low corner's certificate above L − ε
+and over the high corner's below U + ε, from each pin's sign (zmonocert along the pin, checked in the run; a sign Lean
+does not reach counted in RULE_PREMISE). Moving limits (the tail rule) and dI/dp with a moving limit (Leibniz) have NO
+Lean theorem: counted in RULE_PREMISE each time they are used; their value readings go through the value seam.
 """
 
 from fractions import Fraction
@@ -78,6 +83,23 @@ VALUE_PREMISE = {}
 # the monotone leaf's sign checked against Lean's (ZMonoStep: a step reading of f, D f's sign; zmonocert): premises by
 # reason
 MONO_PREMISE = {}
+
+# the RULES above the leaves (2026-10-17, red team F6): the range by pins is lean/ZRangePin (range_low/range_high) —
+# each pin's sign checked IN THE RUN as the monotone leaf's (zmonocert.sign_covered along the pin, over [a, b] x the
+# box); moving limits (the tails) and dI/dp with moving limits (Leibniz) have NO Lean theorem — counted here, with the
+# pins Lean does not reach. Their value readings (the limits, the tails' f) go through the value seam.
+RULE_PREMISE = {}
+
+
+def _rule(why):
+    RULE_PREMISE[why] = RULE_PREMISE.get(why, 0) + 1
+
+
+def _pin_seam(f, p, qs, whole, s):
+    import zmonocert
+    why = zmonocert.sign_covered(f, p, qs, whole, s)
+    if why:
+        _rule("range pin: " + why)
 
 
 def _mono_seam(f, x, qs, piece, s):
@@ -313,6 +335,7 @@ def check_range(f, x, a, b, qs, cert):
         if r is None or (s == "+" and r[0] < 0) or (s == "-" and r[1] > 0):
             return False, (f"df/d{p} over [a, b] x the box reads "
                            + (f"[{float(r[0]):.6g}, {float(r[1]):.6g}]" if r is not None else "nothing") + f", not {s}")
+        _pin_seam(f, p, qs, whole, s)
         lo, hi = box[p]
         lo_end, hi_end = (lo, hi) if s == "+" else (hi, lo)
         low_q[p] = dict(qs[p], lo=lo_end, hi=lo_end)
@@ -374,6 +397,7 @@ def _tail(f, x, qs, box, lo, hi):
     r = ZC._reading(f, qs, dict(box, **{x: (lo, hi)}))
     if r is None:
         raise ArithmeticError("f has no reading where a limit moves")
+    _value_seam(f, qs, dict(box, **{x: (lo, hi)}), r)
     w = hi - lo
     return _out((min(Fraction(0), w * r[0]), max(Fraction(0), w * r[1])))
 
@@ -388,6 +412,11 @@ def check_limits(f, x, A, B, qs, cert, box=None):
         return False, "a limit has no reading over the box"
     if ra[1] > rb[0]:
         return False, "the limits' ranges overlap (A may exceed B): not read (version 1)"
+    for L_, rl in ((A, ra), (B, rb)):
+        if not isinstance(L_, Fraction):
+            _value_seam(L_, qs, box, rl)
+    if ra[0] < ra[1] or rb[0] < rb[1]:
+        _rule("moving limits: the tail rule (no Lean theorem)")
     core = cert.get("core") if isinstance(cert, dict) else None
     if core is None:
         return False, "no core certificate"
@@ -453,6 +482,10 @@ def check_limits_range(f, x, A, B, qs, cert):
         ok, why = _limit_sign(f, x, A, B, qs, box, ra, rb, p, s)
         if not ok:
             return False, why
+        if p in ZC._names(A) or p in ZC._names(B):
+            _rule("dI/dp with moving limits (Leibniz: no Lean theorem)")
+        else:                                  # fixed limits: the pin of lean/ZRangePin, its sign in the run
+            _pin_seam(f, p, qs, dict(box, **{x: (ra[0], rb[1])}), s)
         lo, hi = box[p]
         lo_end, hi_end = (lo, hi) if s == "+" else (hi, lo)
         low_b[p], high_b[p] = (lo_end, lo_end), (hi_end, hi_end)

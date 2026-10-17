@@ -979,7 +979,7 @@ def taylor_coeffs(expr, x, quantities, piece, n, trace=None):
         if trace is not None:
             trace.update(memo)
         return out
-    except (ArithmeticError, ZeroDivisionError, KeyError, ValueError, TypeError):
+    except (ArithmeticError, ZeroDivisionError, KeyError, ValueError, TypeError, _ZN._NoReadings):
         return None
     finally:
         _ZN._MEMO[0] = keep

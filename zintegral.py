@@ -46,12 +46,17 @@ the symbolic-derivative fallback when a series has no reading) stays a premise, 
 atan, log10's derivative; Taylor of order 2 for ln (the kernel's recurrence needs a same-point argument); the Taylor
 leaves above order 2 outside CRead's grammar. Every tagged sum, not only the symmetric ones, for the order-2 leaf:
 lean/ZTransfer.lean (`taylor2_every`); for higher orders only the symmetric ones.
+THE VALUE SEAM, MEASURED 2026-10-17 (red team F1): the kernel's value readings (zcertify._reading: the exact linear
+fragment, affine forms, cases) can be TIGHTER than any Lean VRead, which only widens. On the integral stand 108 of 397
+interval-leaf readings and 16 of 364 monotone end readings were; those enclosures rest on the kernel's reading, not on
+the Lean theorems (no in-run check for interval and monotone leaves yet). The Taylor leaves are checked (ztaylorcert).
 """
 
 from fractions import Fraction
 import zcertify as ZC
 
 MAX_TAYLOR = 12
+from znum import _NoReadings as _NoReadingsAny      # noqa: E402 — a reading that has no value (tan past 1.5, ...)
 # Taylor leaves checked against the Lean reading in the run: faults (refused) and premises (outside the Lean grammar),
 # by reason
 TAYLOR_FAULT = [0]
@@ -72,7 +77,17 @@ def _derivs(f, x, n, cache):
 
 
 def _piece_enclosure(f, x, u, v, qs, box, leaf, cache):
-    """(lo, hi) of ∫_u^v f dx for every p of the box, or (None, why)."""
+    """(lo, hi) of ∫_u^v f dx for every p of the box, or (None, why). A reading that raises (tan past 1.5, min with no
+    derivative, a node holding a sum) refuses the leaf as the interval leaf does — it never escapes (red team F2/F3,
+    2026-10-17)."""
+    import znum as _ZN
+    try:
+        return _piece_enclosure_raw(f, x, u, v, qs, box, leaf, cache)
+    except (ArithmeticError, ValueError, KeyError, TypeError, _ZN._NoReadings) as ex:
+        return None, f"no reading: {type(ex).__name__}: {ex}"
+
+
+def _piece_enclosure_raw(f, x, u, v, qs, box, leaf, cache):
     w = v - u
     if w <= 0:
         return None, "a piece of no width"
@@ -206,7 +221,11 @@ def search(f, x, a, b, qs, tol, max_pieces=20000, orders=(6, 4, 2)):
         share = Fraction(tol) * (v - u) / width_total
         # the PARAMETERS' own spread on this piece (w * f at the middle over the box) no cut in x removes: only the
         # discretisation error is refined (a parameter's range is tightened by pinning it — range_with_pins)
-        fm = ZC._reading(f, qs, dict(box, **{x: ((u + v) / 2, (u + v) / 2)}))
+        no_point = None
+        try:
+            fm = ZC._reading(f, qs, dict(box, **{x: ((u + v) / 2, (u + v) / 2)}))
+        except _NoReadingsAny as ex:
+            fm, no_point = None, str(ex)
         share += (v - u) * (fm[1] - fm[0]) if fm is not None else 0
         best = None
         cands = [{"taylor": n} for n in orders] + [{"monotone": "+"}, {"monotone": "-"}, "interval"]
@@ -220,6 +239,9 @@ def search(f, x, a, b, qs, tol, max_pieces=20000, orders=(6, 4, 2)):
             out_pts.append(v)
             out_leaves.append(best[0])
             continue
+        if best is None and no_point is not None:
+            # f has no reading AT a point of [a, b]: no cut makes one there (red team F3, 2026-10-17)
+            return {"gave_up": f"f has no reading at x = {float((u + v) / 2):.9g}: {no_point}"}
         mid = (u + v) / 2
         mid = Fraction(round(mid * 2 ** 40), 2 ** 40) if u < Fraction(round(mid * 2 ** 40), 2 ** 40) < v else mid
         stack.append((mid, v))
@@ -521,6 +543,8 @@ def check2(f, x, a, b, y, c, d, qs, cert):
                 coef = 2 * h ** (j + 1) / (j + 1)
                 lo, hi = lo + coef * g[1][0], hi + coef * g[1][1]
                 count += g[2]
+            # the outer coefficients are the kernel's symbolic derivatives (_coef_nodes): outside the Lean reading
+            TAYLOR_PREMISE["double integral: outer Taylor leaf"] = TAYLOR_PREMISE.get("double integral: outer Taylor leaf", 0) + 1
             r = _out((lo, hi))
         else:
             return False, f"outer piece {i}: unknown leaf"

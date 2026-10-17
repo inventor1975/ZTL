@@ -14,8 +14,11 @@ of the node's children (and of the node's lower coefficients):
   * u^m (m a natural literal, u read ≥ 0): Miller's sum with the weights m(j+1) − (m+1)s combined, as the kernel sums;
   * √u (its value read > 0): s_1 ⊇ a_1·[1/(2 s0)], s_{j+2} ⊇ (a_{j+2} − (s' ∗ s')_j)·[1/(2 s0)], s' the series from 1.
 
-The values (k = 0) of ÷, exp, sin, cos, tan, powers and of nodes without x are the kernel's value readings — Lean
-VReads by the earlier bridges (lean/ZSlopeSqrt, ZTrig10-15 with ztrigcert in the run). Not in CRead: ln, log10, atan,
+The values (k = 0) of ÷, exp, sin, cos, tan, √, powers and of nodes without x must CONTAIN the reading Lean's VRead can
+give: the kernel's reading re-read without its exact linear fragment (`_naive`; red team F1, 2026-10-17: the kernel
+reads 2x − x as x, VRead only widens) — the function readings themselves are VReads by the earlier bridges
+(lean/ZSlopeSqrt, ZTrig10-15 with ztrigcert in the run). A kernel value tighter than that is a premise, not a fault.
+x's own series and the zeros of nodes without x are checked too (F5). Not in CRead: ln, log10, atan,
 a non-natural exponent, a power of a base not read ≥ 0 (a node WITHOUT x may hold ln, log10).
 """
 from fractions import Fraction as F
@@ -64,13 +67,35 @@ def _val(node, quantities, piece):
     _ZN._MEMO[0] = {}
     try:
         iv = _ZN._ev(node, q2)[0]
-    except (ArithmeticError, ZeroDivisionError, KeyError, ValueError, TypeError):
+    except (ArithmeticError, ZeroDivisionError, KeyError, ValueError, TypeError, _ZN._NoReadings):
         iv = None
     finally:
         _ZN._MEMO[0] = keep
     if iv is None or isinstance(iv[0], float) or isinstance(iv[1], float):
         return None
     return iv
+
+
+def _naive(node, quantities, piece):
+    """The value reading Lean's VRead can give: the kernel's own reading WITHOUT its exact linear fragment
+    (znum._ev_linear reads 2x − x as x; VRead's +, −, × only widen, so it reads [2a − b, 2b − a]). Every VRead of the
+    node lies outside this interval or equals it (red team F1, 2026-10-17)."""
+    import znum as _ZN
+    keep = _ZN._ev_linear
+    _ZN._ev_linear = lambda expr, quantities: None
+    try:
+        return _val(node, quantities, piece)
+    finally:
+        _ZN._ev_linear = keep
+
+
+def _hkey(node):
+    """A hashable key for a node (a "sum" holds a list)."""
+    if isinstance(node, list):
+        return ("__list__",) + tuple(_hkey(a) for a in node)
+    if isinstance(node, tuple):
+        return tuple(_hkey(a) for a in node)
+    return node
 
 
 def _value_covered(node, quantities, piece):
@@ -86,13 +111,14 @@ def _value_covered(node, quantities, piece):
         base, c = args
         if not (isinstance(c, (F, int)) and F(c).denominator == 1 and c >= 0):
             return False
-        r = _val(base, quantities, piece)
+        r = _naive(base, quantities, piece)
         return r is not None and r[0] >= 0 and _value_covered(base, quantities, piece)
     return all(_value_covered(a, quantities, piece) for a in args)
 
 
 GRAMMAR = ("not in the Lean reading", "outside the value grammar", "value outside the grammar", "not a natural exponent",
-           "base not read >= 0", "no series", "value not read > 0")
+           "base not read >= 0", "no series", "value not read > 0", "tighter than Lean's reading",
+           "Lean's reading has none")
 
 
 def check(expr, x, quantities, piece, n, cs, trace):
@@ -104,9 +130,25 @@ def check(expr, x, quantities, piece, n, cs, trace):
     seen = {}
 
     def nm(node):
-        if node not in names:
-            names[node] = ZC._names(node)
-        return names[node]
+        k = _hkey(node)
+        if k not in names:
+            names[k] = ZC._names(node)
+        return names[k]
+
+    def tget(node):
+        try:
+            return trace.get(node)
+        except TypeError:                 # a node holding a "sum": the kernel memoizes none
+            return None
+
+    def val_ok(node, c0):
+        """CRead's value: a VRead [l, h] of the node with c0 ⊇ [l, h] — the tightest is the naive reading."""
+        nv = _naive(node, quantities, piece)
+        if nv is None:
+            return f"{node[0] if isinstance(node, tuple) else node}: Lean's reading has none"
+        if not _hull(c0, nv):
+            return f"{node[0] if isinstance(node, tuple) else node}: the kernel's value is tighter than Lean's reading"
+        return ""
 
     def series(node):
         if isinstance(node, tuple) and node[0] == "sum":
@@ -117,12 +159,15 @@ def check(expr, x, quantities, piece, n, cs, trace):
         if isinstance(node, (F, int)):
             v = F(node)
             return [(v, v)] + [Z] * n
-        return trace.get(node)
+        return tget(node)
 
     def sc_ok(u, a):
-        s, c = trace.get(("sin", u)), trace.get(("cos", u))
+        s, c = tget(("sin", u)), tget(("cos", u))
         if s is None or c is None:
             return "sin/cos series not traced"
+        w = val_ok(("sin", u), s[0]) or val_ok(("cos", u), c[0])
+        if w:
+            return w
         D = [_scale(a[t + 1], t + 1) for t in range(n)]
         for m in range(n):
             if not _hull(s[m + 1], _scale(_cvb(c, D, m), F(1, m + 1))):
@@ -132,22 +177,43 @@ def check(expr, x, quantities, piece, n, cs, trace):
         return ""
 
     def ok(node):
-        key = node if not isinstance(node, list) else None
-        if key is not None and key in seen:
+        key = _hkey(node)
+        if key in seen:
             return seen[key]
         r = _ok(node)
-        if key is not None:
-            seen[key] = r
+        seen[key] = r
         return r
+
+    def free_ok(node):
+        """CRead.free: a VRead of the node in c0, then zeros."""
+        if not _value_covered(node, quantities, piece):
+            return f"{node[0] if isinstance(node, tuple) else node}: a node without {x} outside the value grammar"
+        c = series(node)
+        if c is None:
+            return "a node without x: no series traced"
+        w = val_ok(node, c[0])
+        if w:
+            return w
+        return next((f"a node without {x}: coefficient {k} not 0" for k in range(1, n + 1)
+                     if not _hull(c[k], (F(0), F(0)))), "")
 
     def _ok(node):
         if isinstance(node, (F, int)):
             return ""
         if isinstance(node, str):
-            return ""
+            if node != x:
+                return free_ok(node)
+            c = series(node)                # CRead.var: (X, 1, 0, ...)
+            if c is None:
+                return f"{x}: no series traced"
+            if not _hull(c[0], piece[x]):
+                return f"{x}: coefficient 0"
+            if n >= 1 and not _hull(c[1], (F(1), F(1))):
+                return f"{x}: coefficient 1"
+            return next((f"{x}: coefficient {k}" for k in range(2, n + 1) if not _hull(c[k], (F(0), F(0)))), "")
         op, *args = node
         if x not in nm(node):
-            return "" if _value_covered(node, quantities, piece) else f"{op}: a node without {x} outside the value grammar"
+            return free_ok(node)
         c = series(node)
         if c is None:
             return f"{op}: no series traced"
@@ -179,6 +245,9 @@ def check(expr, x, quantities, piece, n, cs, trace):
                 return next((f"mul coefficient {k}" for k in range(n + 1) if not _hull(c[k], _cvb(a, b, k))), "")
             if not _value_covered(node, quantities, piece):
                 return "div: value outside the grammar"
+            w = val_ok(node, c[0])
+            if w:
+                return w
             R = _recip(b[0])
             if R is None:
                 return "div: divisor across zero"
@@ -195,6 +264,9 @@ def check(expr, x, quantities, piece, n, cs, trace):
                 return w
             if not _value_covered(node, quantities, piece):
                 return "exp: value outside the grammar"
+            w = val_ok(node, c[0])
+            if w:
+                return w
             a = series(args[0])
             D = [_scale(a[t + 1], t + 1) for t in range(n)]
             return next((f"exp coefficient {m + 1}" for m in range(n)
@@ -210,7 +282,10 @@ def check(expr, x, quantities, piece, n, cs, trace):
             w = sc_ok(u, a)
             if w or op != "tan":
                 return w
-            s, co = trace[("sin", u)], trace[("cos", u)]
+            s, co = tget(("sin", u)), tget(("cos", u))
+            w = val_ok(("div", ("sin", u), ("cos", u)), c[0])
+            if w:
+                return w
             R = _recip(co[0])
             if R is None:
                 return "tan: cos across zero"
@@ -230,6 +305,9 @@ def check(expr, x, quantities, piece, n, cs, trace):
                 return w
             if not _value_covered(node, quantities, piece):
                 return "pow: base not read >= 0"
+            w = val_ok(node, c[0])
+            if w:
+                return w
             m = int(ce)
             a = series(base)
             for j in range(n):
@@ -246,8 +324,12 @@ def check(expr, x, quantities, piece, n, cs, trace):
                 return w
             if not _value_covered(node, quantities, piece):
                 return "sqrt: value outside the grammar"
-            if not c[0][0] > 0:
+            nv = _naive(node, quantities, piece)
+            if nv is None or not nv[0] > 0:
                 return "sqrt: value not read > 0"
+            w = val_ok(node, c[0])
+            if w:
+                return w
             a = series(args[0])
             R = _recip(_scale(c[0], 2))
             if n >= 1 and not _hull(c[1], _corners(a[1], R)):

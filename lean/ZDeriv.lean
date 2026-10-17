@@ -822,6 +822,176 @@ theorem powN_respects {x y : QExpr} (h : qEq x y) : ∀ k, qEq (qpowN x k) (qpow
   | 0 => qEq_refl _
   | k + 1 => qmul_respects (powN_respects h k) h
 
+/-- ONE GRID STEP OF `tan` (index `m + 2`), `cos ≥ c > 0` at both points: within `(1/c)³·(T1 + T2 + T3 + T4)`. -/
+theorem tan_stepR {x δ A a c R : QExpr} (hx : ZTrig.Ab x A) (h1 : ZTrig.Ab δ R) (hδ : ZTrig.Ab δ a) (hc : qlt qzero c) (m : Nat)
+    (cx : qle c (ZTrig.Cn x (m + 2))) (cx' : qle c (ZTrig.Cn (qadd x δ) (m + 2))) :
+    ZTrig.Ab (qsub (qsub (qmul (ZTrig.Sn (qadd x δ) (m + 2)) (qinv' (ZTrig.Cn (qadd x δ) (m + 2))))
+        (qmul (ZTrig.Sn x (m + 2)) (qinv' (ZTrig.Cn x (m + 2)))))
+        (qmul δ (qadd qone (qmul (qmul (ZTrig.Sn x (m + 2)) (qinv' (ZTrig.Cn x (m + 2)))) (qmul (ZTrig.Sn x (m + 2)) (qinv' (ZTrig.Cn x (m + 2))))))))
+      (qmul (qmul (qmul (qinv' c) (qinv' c)) (qinv' c))
+        (qadd (qadd (qmul (S A (m + 2)) (qmul (qmul a a) (S a m))) (qmul a (qmul a (S (qadd A R) (m + 2)))))
+          (qadd (qmul (qadd (ZTrig.corner (tm (qadd A R)) (tm A) (m + 2)) (ZTrig.corner (tm (qadd A R)) (tm A) (m + 2))) (S A (m + 2)))
+            (qmul (qmul R (qadd (ZTrig.corner (tm A) (tm A) (m + 2)) (ZTrig.corner (tm A) (tm A) (m + 2)))) (S (qadd A R) (m + 2)))))) := by
+  have o := qle_of_qlt qone_pos
+  obtain ⟨x1, x2⟩ := hx
+  obtain ⟨d1, d2⟩ := h1
+  have hx1 : ZTrig.Ab (qadd x δ) (qadd A R) := ⟨by rat_linarith, by rat_linarith⟩
+  have hxA1 : ZTrig.Ab x (qadd A R) := ⟨by rat_linarith, by rat_linarith⟩
+  have hnx : ZTrig.Ab (qneg x) A := ⟨by rat_linarith, by rat_linarith⟩
+  have hd : ZTrig.Ab (qsub (qadd x δ) x) a := by
+    obtain ⟨e1, e2⟩ := hδ; unfold qsub; exact ⟨by rat_linarith, by rat_linarith⟩
+  -- the pieces
+  obtain ⟨_, eA⟩ := ZTrig.add_bounds hx1 hnx (m + 2)
+  obtain ⟨eB1, eB2⟩ := ZTrig.pyth ⟨x1, x2⟩ (m + 1)
+  have nS := ZTrig.near_S hδ m
+  have lip := (ZTrig.CS_lip hx1 hxA1 hd (m + 2)).1
+  have cA := (ZTrig.CS_abs ⟨x1, x2⟩ (m + 2)).1
+  have cA1 := (ZTrig.CS_abs hx1 (m + 2)).1
+  have r1 := ZTrig.Sn_respects (show qEq (qadd (qadd x δ) (qneg x)) δ by rat_ring) (m + 2)
+  have r2 := ZTrig.Sn_neg x (m + 2)
+  have r3 := ZTrig.Cn_neg x (m + 2)
+  -- the reciprocals
+  have cp : qlt qzero (ZTrig.Cn x (m + 2)) := qlt_iff_le_not_le.mpr ⟨qle_trans (qle_of_qlt hc) cx,
+    fun h => (qlt_iff_le_not_le.mp hc).2 (qle_trans cx h)⟩
+  have cp' : qlt qzero (ZTrig.Cn (qadd x δ) (m + 2)) := qlt_iff_le_not_le.mpr ⟨qle_trans (qle_of_qlt hc) cx',
+    fun h => (qlt_iff_le_not_le.mp hc).2 (qle_trans cx' h)⟩
+  have hu := qmul_inv'_cancel (ne_zero_of_lt cp)
+  have hv := qmul_inv'_cancel (ne_zero_of_lt cp')
+  obtain ⟨i0, i1⟩ := ZTrig.inv_bound hc cx
+  obtain ⟨j0, j1⟩ := ZTrig.inv_bound hc cx'
+  have id := ZTrig.tan_id (S := ZTrig.Sn x (m + 2)) (S' := ZTrig.Sn (qadd x δ) (m + 2)) (δ := δ) hu hv
+  -- |B|
+  generalize ZTrig.Sn x (m + 2) = Sv at *; generalize ZTrig.Cn x (m + 2) = C at *
+  generalize ZTrig.Sn (qadd x δ) (m + 2) = S' at *; generalize ZTrig.Cn (qadd x δ) (m + 2) = C' at *
+  generalize ZTrig.Sn δ (m + 2) = Sd at *
+  generalize ZTrig.Sn (qadd (qadd x δ) (qneg x)) (m + 2) = Sx at *
+  generalize ZTrig.Sn (qneg x) (m + 2) = Snx at *; generalize ZTrig.Cn (qneg x) (m + 2) = Cnx at *
+  have E1 : ZTrig.Ab (qsub (qsub (qmul S' C) (qmul Sv C')) Sd)
+      (qadd (ZTrig.corner (tm (qadd A R)) (tm A) (m + 2)) (ZTrig.corner (tm (qadd A R)) (tm A) (m + 2))) := by
+    obtain ⟨g1, g2⟩ := eA
+    have q1 : qEq (qmul C' Snx) (qneg (qmul C' Sv)) := by
+      have := qmul_respects (qEq_refl C') r2; exact qEq_trans this (by rat_ring)
+    have q2 : qEq (qmul S' Cnx) (qmul S' C) := qmul_respects (qEq_refl S') r3
+    have q3 : qEq (qmul Sv C') (qmul C' Sv) := qmul_comm _ _
+    generalize qmul C' Snx = P1 at *; generalize qmul S' Cnx = P2 at *
+    generalize qmul S' C = P3 at *; generalize qmul Sv C' = P4 at *; generalize qmul C' Sv = P5 at *
+    generalize ZTrig.corner (tm (qadd A R)) (tm A) (m + 2) = K at *
+    unfold qsub at *; exact ⟨by rat_linarith, by rat_linarith⟩
+  have Bid : qEq (qsub (qmul (qsub (qmul S' C) (qmul Sv C')) C) (qmul (qmul δ (qadd (qmul C C) (qmul Sv Sv))) C'))
+      (qadd (qsub (qmul C (qsub Sd δ)) (qmul δ (qsub C' C)))
+        (qadd (qmul (qsub (qsub (qmul S' C) (qmul Sv C')) Sd) C) (qmul (qmul δ (qsub qone (qadd (qmul C C) (qmul Sv Sv)))) C'))) := by
+    unfold qsub; rat_ring
+  obtain ⟨t1, t2⟩ := ZTrig.mul_abs cA nS
+  obtain ⟨t3, t4⟩ := ZTrig.mul_abs hδ lip
+  obtain ⟨t5, t6⟩ := ZTrig.mul_abs E1 cA
+  obtain ⟨t7, t8⟩ := ZTrig.mul_abs (ZTrig.mul_abs ⟨d1, d2⟩ ⟨eB1, eB2⟩) cA1
+  have hB : ZTrig.Ab (qsub (qmul (qsub (qmul S' C) (qmul Sv C')) C) (qmul (qmul δ (qadd (qmul C C) (qmul Sv Sv))) C'))
+      (qadd (qadd (qmul (S A (m + 2)) (qmul (qmul a a) (S a m))) (qmul a (qmul a (S (qadd A R) (m + 2)))))
+          (qadd (qmul (qadd (ZTrig.corner (tm (qadd A R)) (tm A) (m + 2)) (ZTrig.corner (tm (qadd A R)) (tm A) (m + 2))) (S A (m + 2)))
+            (qmul (qmul R (qadd (ZTrig.corner (tm A) (tm A) (m + 2)) (ZTrig.corner (tm A) (tm A) (m + 2)))) (S (qadd A R) (m + 2))))) := by
+    generalize qsub (qmul (qsub (qmul S' C) (qmul Sv C')) C) (qmul (qmul δ (qadd (qmul C C) (qmul Sv Sv))) C') = B at *
+    generalize qmul C (qsub Sd δ) = U1 at *; generalize qmul δ (qsub C' C) = U2 at *
+    generalize qmul (qsub (qsub (qmul S' C) (qmul Sv C')) Sd) C = U3 at *
+    generalize qmul (qmul δ (qsub qone (qadd (qmul C C) (qmul Sv Sv)))) C' = U4 at *
+    generalize qmul (S A (m + 2)) (qmul (qmul a a) (S a m)) = V1 at *
+    generalize qmul a (qmul a (S (qadd A R) (m + 2))) = V2 at *
+    generalize qmul (qadd (ZTrig.corner (tm (qadd A R)) (tm A) (m + 2)) (ZTrig.corner (tm (qadd A R)) (tm A) (m + 2))) (S A (m + 2)) = V3 at *
+    generalize qmul (qmul R (qadd (ZTrig.corner (tm A) (tm A) (m + 2)) (ZTrig.corner (tm A) (tm A) (m + 2)))) (S (qadd A R) (m + 2)) = V4 at *
+    unfold qsub at Bid; exact ⟨by rat_linarith, by rat_linarith⟩
+  have hI : ZTrig.Ab (qmul (qmul (qinv' C) (qinv' C)) (qinv' C')) (qmul (qmul (qinv' c) (qinv' c)) (qinv' c)) :=
+    ZTrig.mul_abs (ZTrig.mul_abs ⟨by rat_linarith, i1⟩ ⟨by rat_linarith, i1⟩) ⟨by rat_linarith, j1⟩
+  obtain ⟨f1, f2⟩ := ZTrig.mul_abs hI hB
+  generalize qmul (qmul (qmul (qinv' C) (qinv' C)) (qinv' C'))
+    (qsub (qmul (qsub (qmul S' C) (qmul Sv C')) C) (qmul (qmul δ (qadd (qmul C C) (qmul Sv Sv))) C')) = Z at *
+  exact ⟨by rat_linarith, by rat_linarith⟩
+
+/-- `tan` has a uniform step where `cos ≥ c > 0` at both points (at the index), derivative `1 + tan²`. -/
+theorem ustep_tan {c : QExpr} (hc : qlt qzero c) :
+    UStepOn (fun x n => qle c (ZTrig.Cn x n)) (fun x n => qmul (ZTrig.Sn x n) (qinv' (ZTrig.Cn x n)))
+      (fun x n => qadd qone (qmul (qmul (ZTrig.Sn x n) (qinv' (ZTrig.Cn x n))) (qmul (ZTrig.Sn x n) (qinv' (ZTrig.Cn x n))))) := by
+  intro A R hA hR
+  have o := qle_of_qlt qone_pos
+  have hAR : qle qzero (qadd A R) := by rat_linarith
+  obtain ⟨HA, hHA⟩ := S_bounded hA
+  obtain ⟨HAR, hHAR⟩ := S_bounded hAR
+  obtain ⟨HR, hHR⟩ := S_bounded hR
+  have HA0 : qle qzero HA := qle_trans (S_nonneg hA 0) (hHA 0)
+  have HAR0 : qle qzero HAR := qle_trans (S_nonneg hAR 0) (hHAR 0)
+  have HR0 : qle qzero HR := qle_trans (S_nonneg hR 0) (hHR 0)
+  have ic0 := qinv'_nonneg_of_pos hc
+  have I0 : qle qzero (qmul (qmul (qinv' c) (qinv' c)) (qinv' c)) := qmul_nonneg (qmul_nonneg ic0 ic0) ic0
+  have Hn := qmul_nonneg I0 (show qle qzero (qadd (qmul HA HR) HAR) by have := qmul_nonneg HA0 HR0; rat_linarith)
+  refine ⟨qmul (qmul (qmul (qinv' c) (qinv' c)) (qinv' c)) (qadd (qmul HA HR) HAR), Hn, fun k => ?_⟩
+  have Y0 := qmul_nonneg I0 (show qle qzero (qadd (qadd HA HA) (qmul R (qadd HAR HAR))) by
+    have := qmul_nonneg hR (show qle qzero (qadd HAR HAR) by rat_linarith); rat_linarith)
+  obtain ⟨Bc, hBc⟩ := eps_scaled Y0
+  obtain ⟨N1, h1⟩ := ZTrig.corner_small hAR hA (k + Bc)
+  obtain ⟨N2, h2⟩ := ZTrig.corner_small hA hA (k + Bc)
+  refine ⟨(N1 + N2) + 2, fun n hn x d hx hd cx cx' => ?_⟩
+  obtain ⟨a, ha, aa, a0, aR⟩ := abs_le hd
+  cases n with
+  | zero => exact absurd hn (Nat.not_succ_le_zero _)
+  | succ n' => cases n' with
+    | zero => exact absurd (Nat.le_of_succ_le_succ hn) (Nat.not_succ_le_zero _)
+    | succ m =>
+      have hm : N1 + N2 ≤ m + 2 := Nat.le_trans (Nat.le_add_right _ 2) hn
+      obtain ⟨s1, s2⟩ := tan_stepR hx hd ha hc m cx cx'
+      have K1 := h1 (m + 2) (ZTrig.le_l' hm)
+      have K2 := h2 (m + 2) (ZTrig.le_r' hm)
+      have K10 := ZTrig.corner_nonneg (tm_nonneg hA) (m + 2) (tm (qadd A R)) (tm_nonneg hAR)
+      have K20 := ZTrig.corner_nonneg (tm_nonneg hA) (m + 2) (tm A) (tm_nonneg hA)
+      -- T1 ≤ HA·(d²·HR), T2 ≤ d²·HAR
+      have sa := qle_trans (ZTrig.S_mono_x a0 aR m) (hHR m)
+      have u1 := qle_trans (scale_l (scale_l sa (qmul_self_nonneg a)) (S_nonneg hA (m + 2)))
+        (ZExp.scale (hHA (m + 2)) (qmul_nonneg (qmul_self_nonneg a) HR0))
+      have u2 := scale_l (scale_l (hHAR (m + 2)) a0) a0
+      have u3 := scale_l (hHA (m + 2)) (show qle qzero (qadd (ZTrig.corner (tm (qadd A R)) (tm A) (m + 2))
+        (ZTrig.corner (tm (qadd A R)) (tm A) (m + 2))) by rat_linarith)
+      have u4 := scale_l (hHAR (m + 2)) (qmul_nonneg hR (show qle qzero (qadd (ZTrig.corner (tm A) (tm A) (m + 2))
+        (ZTrig.corner (tm A) (tm A) (m + 2))) by rat_linarith))
+      have w1 := ZExp.scale (show qle (qadd (ZTrig.corner (tm (qadd A R)) (tm A) (m + 2)) (ZTrig.corner (tm (qadd A R)) (tm A) (m + 2)))
+        (qadd (qeps (k + Bc)) (qeps (k + Bc))) by rat_linarith) HA0
+      have w2 := ZExp.scale (scale_l (show qle (qadd (ZTrig.corner (tm A) (tm A) (m + 2)) (ZTrig.corner (tm A) (tm A) (m + 2)))
+        (qadd (qeps (k + Bc)) (qeps (k + Bc))) by rat_linarith) hR) HAR0
+      have ia : qEq (qmul HA (qmul (qmul a a) HR)) (qmul HA (qmul (qmul d d) HR)) :=
+        qmul_respects (qEq_refl HA) (qmul_respects aa (qEq_refl HR))
+      have ib : qEq (qmul a (qmul a HAR)) (qmul (qmul d d) HAR) := qEq_trans (by rat_ring) (qmul_respects aa (qEq_refl HAR))
+      have pH : qEq (qadd (qadd (qmul HA (qmul (qmul d d) HR)) (qmul (qmul d d) HAR))
+          (qadd (qmul (qadd (qeps (k + Bc)) (qeps (k + Bc))) HA) (qmul (qmul R (qadd (qeps (k + Bc)) (qeps (k + Bc)))) HAR)))
+          (qadd (qmul (qmul d d) (qadd (qmul HA HR) HAR)) (qmul (qeps (k + Bc)) (qadd (qadd HA HA) (qmul R (qadd HAR HAR))))) := by
+        rat_ring
+      generalize hTs : qadd (qadd (qmul (S A (m + 2)) (qmul (qmul a a) (S a m))) (qmul a (qmul a (S (qadd A R) (m + 2)))))
+          (qadd (qmul (qadd (ZTrig.corner (tm (qadd A R)) (tm A) (m + 2)) (ZTrig.corner (tm (qadd A R)) (tm A) (m + 2))) (S A (m + 2)))
+            (qmul (qmul R (qadd (ZTrig.corner (tm A) (tm A) (m + 2)) (ZTrig.corner (tm A) (tm A) (m + 2)))) (S (qadd A R) (m + 2)))) = Ts at s1 s2
+      have hT : qle Ts (qadd (qmul (qmul d d) (qadd (qmul HA HR) HAR)) (qmul (qeps (k + Bc)) (qadd (qadd HA HA) (qmul R (qadd HAR HAR))))) := by
+        rw [← hTs]
+        generalize qmul (S A (m + 2)) (qmul (qmul a a) (S a m)) = T1 at *
+        generalize qmul a (qmul a (S (qadd A R) (m + 2))) = T2 at *
+        generalize qmul (qadd (ZTrig.corner (tm (qadd A R)) (tm A) (m + 2)) (ZTrig.corner (tm (qadd A R)) (tm A) (m + 2))) (S A (m + 2)) = T3 at *
+        generalize qmul (qmul R (qadd (ZTrig.corner (tm A) (tm A) (m + 2)) (ZTrig.corner (tm A) (tm A) (m + 2)))) (S (qadd A R) (m + 2)) = T4 at *
+        generalize qmul (qadd (ZTrig.corner (tm (qadd A R)) (tm A) (m + 2)) (ZTrig.corner (tm (qadd A R)) (tm A) (m + 2))) HA = P3 at *
+        generalize qmul (qmul R (qadd (ZTrig.corner (tm A) (tm A) (m + 2)) (ZTrig.corner (tm A) (tm A) (m + 2)))) HAR = P4 at *
+        generalize qmul HA (qmul (qmul a a) HR) = P1 at *; generalize qmul a (qmul a HAR) = P2 at *
+        generalize qmul (qadd (qeps (k + Bc)) (qeps (k + Bc))) HA = Q1 at *
+        generalize qmul (qmul R (qadd (qeps (k + Bc)) (qeps (k + Bc)))) HAR = Q2 at *
+        generalize qmul HA (qmul (qmul d d) HR) = R1 at *; generalize qmul (qmul d d) HAR = R2 at *
+        generalize qadd (qmul (qmul d d) (qadd (qmul HA HR) HAR)) (qmul (qeps (k + Bc)) (qadd (qadd HA HA) (qmul R (qadd HAR HAR)))) = Z at *
+        rat_linarith
+      have v := scale_l hT I0
+      have be := hBc k
+      have id : qEq (qmul (qmul (qmul (qinv' c) (qinv' c)) (qinv' c))
+          (qadd (qmul (qmul d d) (qadd (qmul HA HR) HAR)) (qmul (qeps (k + Bc)) (qadd (qadd HA HA) (qmul R (qadd HAR HAR))))))
+          (qadd (qmul (qmul d d) (qmul (qmul (qmul (qinv' c) (qinv' c)) (qinv' c)) (qadd (qmul HA HR) HAR)))
+            (qmul (qeps (k + Bc)) (qmul (qmul (qmul (qinv' c) (qinv' c)) (qinv' c)) (qadd (qadd HA HA) (qmul R (qadd HAR HAR)))))) := by
+        rat_ring
+      generalize qmul (qmul (qmul (qinv' c) (qinv' c)) (qinv' c)) Ts = W at *
+      generalize qmul (qmul (qmul (qinv' c) (qinv' c)) (qinv' c))
+          (qadd (qmul (qmul d d) (qadd (qmul HA HR) HAR)) (qmul (qeps (k + Bc)) (qadd (qadd HA HA) (qmul R (qadd HAR HAR))))) = W' at *
+      generalize qmul (qmul d d) (qmul (qmul (qmul (qinv' c) (qinv' c)) (qinv' c)) (qadd (qmul HA HR) HAR)) = X at *
+      generalize qmul (qeps (k + Bc)) (qmul (qmul (qmul (qinv' c) (qinv' c)) (qinv' c)) (qadd (qadd HA HA) (qmul R (qadd HAR HAR)))) = Y at *
+      clear h1 h2 hHA hHAR hHR hBc
+      exact ⟨by rat_linarith, by rat_linarith⟩
+
 /-- What the step needs from the box, node by node: the readings of the factors and their derivatives. -/
 inductive StepRead (B : Box QExpr) (i : Nat) : G → Prop where
   | const {c : QExpr} : StepRead B i (.const c)
@@ -841,6 +1011,8 @@ inductive StepRead (B : Box QExpr) (i : Nat) : G → Prop where
   | powZ {u : G} : StepRead B i (.powN u 0)
   | powN {u : G} {k : Nat} {lu hu l1 h1 : QExpr} : StepRead B i u → VRead B u lu hu → VRead B (D i u) l1 h1 →
       StepRead B i (.powN u (k + 1))
+  | tan {u : G} {lu hu l1 h1 Tl Th : QExpr} : StepRead B i u → VRead B u lu hu → VRead B (D i u) l1 h1 →
+      ZTrig.TanVal lu hu Tl Th → StepRead B i (.tan u)
 /-- THE SYMBOLIC DERIVATIVE IS THE DERIVATIVE (the fragment `const var + − ×`): one constant `H` for the box. -/
 theorem step_sound {B : Box QExpr} {i : Nat} : ∀ {e : G}, StepRead B i e → ∃ H, qle qzero H ∧
     ∀ p q, InBox qOrd B p → InBox qOrd B q → (∀ j, j ≠ i → q j = p j) → ZTrig.Ab (qsub (q i) (p i)) qone →
@@ -1064,6 +1236,33 @@ theorem step_sound {B : Box QExpr} {i : Nat} : ∀ {e : G}, StepRead B i e → �
     obtain ⟨N, hN⟩ := bu p hp
     exact ⟨N, fun n hn => ZTrig.mul_abs (show ZTrig.Ab (qnat (k + 1)) (qnat (k + 1)) from
       ⟨by have := qnat_nonneg (k + 1); rat_linarith, qle_refl _⟩) (pow_abs (hN n hn) k)⟩
+  | @tan u lu hu l1 h1 Tl Th _ ru rdu tv ihu =>
+    obtain ⟨Hu, hu0, hsu⟩ := ihu
+    obtain ⟨Mu, mu0, bu⟩ := read_bound ru
+    obtain ⟨Mdu, mdu0, bdu⟩ := read_bound rdu
+    obtain ⟨MT, mt0, bT⟩ := read_bound (VRead.tan ru tv)
+    obtain ⟨c0, c1, c0p, hC⟩ := ZTrig.TanVal.cos_all tv
+    obtain ⟨Bp, hBp⟩ := ZTrig.pos_floor c0p
+    have o := qle_of_qlt qone_pos
+    have mψ0 : qle qzero (qadd qone (qmul MT MT)) := by have := qmul_nonneg mt0 mt0; rat_linarith
+    obtain ⟨H, H0, hc⟩ := comp_step_on (φ := fun x n => qmul (ZTrig.Sn x n) (qinv' (ZTrig.Cn x n)))
+      (ψ := fun x n => qadd qone (qmul (qmul (ZTrig.Sn x n) (qinv' (ZTrig.Cn x n))) (qmul (ZTrig.Sn x n) (qinv' (ZTrig.Cn x n)))))
+      (dom := fun x n => qle (qeps (Bp + 1)) (ZTrig.Cn x n)) (ustep_tan (qeps_pos (Bp + 1)))
+      (fun _ _ n e => qmul_respects (ZTrig.Sn_respects e n) (qinv'_respects (ZTrig.Cn_respects e n)))
+      (fun _ _ n e h => qle_trans h (qle_of_qEq (ZTrig.Cn_respects e n))) mu0 mdu0 mψ0 hu0
+    have evd : ∀ X, InBox qOrd B X → ∃ N, ∀ n, N ≤ n → qle (qeps (Bp + 1)) (ZTrig.Cn (evalN n X u) n) := fun X hX => by
+      obtain ⟨N, hN⟩ := hC _ (value_sound hX ru) (Bp + 1)
+      exact ⟨N, fun n hn => by obtain ⟨a, _⟩ := hN n hn; have e := qeps_succ_add Bp; unfold qsub at a; rat_linarith⟩
+    refine ⟨H, H0, fun p q hp hq hfix hδ => hc (fun n => evalN n p u) (fun n => evalN n q u) (fun n => evalN n p (D i u))
+      _ hδ (hsu p q hp hq hfix hδ) (bu p hp) (bdu p hp) ?_ (evd p hp) (evd q hq)⟩
+    obtain ⟨N, hN⟩ := bT p hp
+    exact ⟨N, fun n hn => by
+      have b : ZTrig.Ab (qmul (ZTrig.Sn (evalN n p u) n) (qinv' (ZTrig.Cn (evalN n p u) n))) MT := hN n hn
+      obtain ⟨c1, c2⟩ := ZTrig.mul_abs b b
+      show ZTrig.Ab (qadd qone (qmul (qmul (ZTrig.Sn (evalN n p u) n) (qinv' (ZTrig.Cn (evalN n p u) n)))
+        (qmul (ZTrig.Sn (evalN n p u) n) (qinv' (ZTrig.Cn (evalN n p u) n))))) _
+      have q0 := qmul_self_nonneg (qmul (ZTrig.Sn (evalN n p u) n) (qinv' (ZTrig.Cn (evalN n p u) n)))
+      exact ⟨by rat_linarith, by rat_linarith⟩⟩
 
 end ZDeriv
 
@@ -1084,3 +1283,5 @@ end ZDeriv
 #print axioms ZDeriv.div_step
 #print axioms ZDeriv.pow_err
 #print axioms ZDeriv.ustep_pow
+#print axioms ZDeriv.tan_stepR
+#print axioms ZDeriv.ustep_tan

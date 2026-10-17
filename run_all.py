@@ -166,6 +166,7 @@ STANDS = [
     ("test_trigcert.py", ["TRIGCERT GREEN"]),
     ("test_ztaylorcert.py", ["ZTAYLORCERT GREEN"]),
     ("test_redteam_taylor.py", ["REDTEAM TAYLOR GREEN"]),
+    ("test_zaffinecert.py", ["ZAFFINECERT GREEN"]),
     ("znumsolve.py",   ["ZNUMSOLVE GREEN", "x in [5, 5]",
                         "a in [6, 6], b in [4, 4]",
                         "solutions dropped by narrowing: 0",

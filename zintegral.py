@@ -46,10 +46,13 @@ the symbolic-derivative fallback when a series has no reading) stays a premise, 
 atan, log10's derivative; Taylor of order 2 for ln (the kernel's recurrence needs a same-point argument); the Taylor
 leaves above order 2 outside CRead's grammar. Every tagged sum, not only the symmetric ones, for the order-2 leaf:
 lean/ZTransfer.lean (`taylor2_every`); for higher orders only the symmetric ones.
-THE VALUE SEAM, MEASURED 2026-10-17 (red team F1): the kernel's value readings (zcertify._reading: the exact linear
-fragment, affine forms, cases) can be TIGHTER than any Lean VRead, which only widens. On the integral stand 108 of 397
-interval-leaf readings and 16 of 364 monotone end readings were; those enclosures rest on the kernel's reading, not on
-the Lean theorems (no in-run check for interval and monotone leaves yet). The Taylor leaves are checked (ztaylorcert).
+THE VALUE SEAM (2026-10-17, the red team's F1): the kernel's value readings (zcertify._reading: the exact linear
+fragment, affine forms, cases) can be TIGHTER than any Lean VRead, which only widens — on the integral stand 124 of 761
+readings of interval and monotone leaves were, all through the affine form. lean/ZAffine.lean + ZAffine2.lean prove the
+affine reading (AffR, aff_sound: + − × ÷ exp, 1/x of a positive interval, opaque subtrees, the grid rounding); every
+value reading of an interval or monotone leaf is checked IN THE RUN (zaffinecert.lean_covered) to contain Lean's —
+the naive VRead, the affine one, their meet; one that does not (sqrt, ln, a branch read by cases, ...) is a premise,
+counted in VALUE_PREMISE. On the integral stand: 0. Not checked here: the derivative-sign reading of a monotone leaf.
 """
 
 from fractions import Fraction
@@ -61,6 +64,16 @@ from znum import _NoReadings as _NoReadingsAny      # noqa: E402 — a reading t
 # by reason
 TAYLOR_FAULT = [0]
 TAYLOR_PREMISE = {}
+# value readings of interval and monotone leaves checked against Lean's (naive VRead, the affine AffR, their meet;
+# zaffinecert, 2026-10-17): the ones Lean does not reach, by reason — premises
+VALUE_PREMISE = {}
+
+
+def _value_seam(f, qs, piece, r):
+    import zaffinecert
+    why = zaffinecert.lean_covered(f, qs, piece, r)
+    if why:
+        VALUE_PREMISE[why] = VALUE_PREMISE.get(why, 0) + 1
 
 
 def _out(iv):
@@ -96,6 +109,7 @@ def _piece_enclosure_raw(f, x, u, v, qs, box, leaf, cache):
         r = ZC._reading(f, qs, piece)
         if r is None:
             return None, "f has no reading on the piece"
+        _value_seam(f, qs, piece, r)
         return _out((w * r[0], w * r[1])), None
     if isinstance(leaf, dict) and "monotone" in leaf:
         s = leaf["monotone"]
@@ -110,6 +124,8 @@ def _piece_enclosure_raw(f, x, u, v, qs, box, leaf, cache):
         fv = ZC._reading(f, qs, dict(box, **{x: (v, v)}))
         if fu is None or fv is None:
             return None, "f has no value at an end"
+        _value_seam(f, qs, dict(box, **{x: (u, u)}), fu)
+        _value_seam(f, qs, dict(box, **{x: (v, v)}), fv)
         lo_end, hi_end = (fu, fv) if s == "+" else (fv, fu)
         return _out((w * lo_end[0], w * hi_end[1])), None
     if isinstance(leaf, dict) and "taylor" in leaf:

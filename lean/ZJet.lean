@@ -14,11 +14,13 @@ the graph; here, node by node, the jets satisfy those recurrences exactly:
   * `J_div` — `Q ∗ V = U` (`q_k = (a_k − Σ_{i≥1} b_i q_{k−i})/b₀`), `v(p) ≠ 0`, by multiplying by `V` and cancelling;
   * `J_tan` — `T ∗ C = S` (the kernel reads tan as sin/cos), `cos u(p) ≠ 0`, by uniqueness of a linear jet
     equation (`ode_zero`);
+  * `J_sqrt` — `(S ∗ S)_{k+1} = U_{k+1}` (`√u(p) ≠ 0`; the value itself is a reading — the grid root squares to `u`
+    only up to its gap);
   * `J_pow_succ` — `J(u^{m+1}) = J(u) ∗ J(u^m)`; `J_miller` — `A ∗ Dsh P = m·P ∗ Dsh A`, Miller's
     `k·a₀·p_k = Σ_{i<k} (m(k−i) − i)·a_{k−i}·p_i`.
 
 The convolution's algebra on the way: commutative, associative (through `Dsh`), the unit `(1, 0, …)`, cancellation
-by a series with a nonzero head. Not covered: ln, sqrt, log10, atan, a non-natural exponent.
+by a series with a nonzero head. Not covered: ln, log10, atan, a non-natural exponent.
 -/
 
 namespace ZJet
@@ -635,6 +637,48 @@ theorem J_miller (i n : Nat) (p : Point QExpr) (u : G) : ∀ (m t : Nat),
       refine qEq_trans (qEq_symm (cv_assoc t _ _ _)) ?_
       exact ZTrig.cv_congr t _ _ _ _ (fun s => qEq_symm (J_pow_succ i n p u m s)) (fun _ => qEq_refl _)
 
+/-! ## The square root — `S ∗ S = U` from the first coefficient on, exactly at every index -/
+
+theorem two_ne : ¬ qEq (qadd qone qone) qzero := fun e => by
+  have := qle_of_qlt qone_pos
+  exact (qlt_iff_le_not_le.mp qone_pos).2 (by rat_linarith)
+
+theorem two_mul_nz {s : QExpr} (h : ¬ qEq s qzero) : ¬ qEq (qmul (qadd qone qone) s) qzero := fun z => by
+  apply h
+  have c := qmul_inv'_cancel two_ne
+  have r : qEq s (qmul (qmul (qadd qone qone) s) (qinv' (qadd qone qone))) := by
+    have := qmul_respects (qEq_refl s) c
+    exact qEq_trans (by rat_ring) (qEq_trans (qEq_symm this) (by rat_ring))
+  exact qEq_trans r (qEq_trans (qmul_respects z (qEq_refl _)) (by rat_ring))
+
+/-- SQRT: `(S ∗ S)_{k+1} = U_{k+1}` — the kernel's `sq_k = (a_k − Σ_{1≤i<k} sq_i sq_{k−i})/(2 s₀)`; `√u(p) ≠ 0` at `n`
+(the grid root squares to `u` only up to its gap, so the value `k = 0` is a reading, not an identity). -/
+theorem J_sqrt (i n : Nat) (p : Point QExpr) (u : G) (hs : ¬ qEq (evalN n p (.sqrt u)) qzero) (k : Nat) :
+    qEq (ZTrig.cv (J i n p (.sqrt u)) (J i n p (.sqrt u)) (k + 1)) (J i n p u (k + 1)) := by
+  have hv : ¬ qEq (evalN n p (.mul (.const (qadd qone qone)) (.sqrt u))) qzero := two_mul_nz hs
+  have jd := J_div i n p k (D i u) (.mul (.const (qadd qone qone)) (.sqrt u)) hv k (Nat.le_refl k)
+  -- J(D √u) = Dsh S, J(2√u) = 2·S, J(D u) = Dsh U
+  have c1 := ZTrig.cv_congr k (J i n p (.div (D i u) (.mul (.const (qadd qone qone)) (.sqrt u))))
+    (ZTrig.Dsh (J i n p (.sqrt u))) (J i n p (.mul (.const (qadd qone qone)) (.sqrt u)))
+    (fun t => qmul (qadd qone qone) (J i n p (.sqrt u) t))
+    (fun t => qEq_symm (J_D i n p (.sqrt u) t)) (J_cmul i n p (qadd qone qone) (.sqrt u))
+  have c2 := ZTrig.cv_scaleG (qadd qone qone) k (ZTrig.Dsh (J i n p (.sqrt u))) (J i n p (.sqrt u))
+  have du := qEq_symm (J_D i n p u k)
+  have lb := ZTrig.leibniz (J i n p (.sqrt u)) k (J i n p (.sqrt u))
+  have co := cv_comm k (J i n p (.sqrt u)) (ZTrig.Dsh (J i n p (.sqrt u)))
+  have dd : qEq (ZTrig.Dsh (J i n p u) k) (qmul (qnat (k + 1)) (J i n p u (k + 1))) := qEq_refl _
+  apply cancel_succ k
+  generalize ZTrig.cv (J i n p (.div (D i u) (.mul (.const (qadd qone qone)) (.sqrt u))))
+    (J i n p (.mul (.const (qadd qone qone)) (.sqrt u))) k = A at *
+  generalize ZTrig.cv (ZTrig.Dsh (J i n p (.sqrt u))) (fun t => qmul (qadd qone qone) (J i n p (.sqrt u) t)) k = A' at *
+  generalize ZTrig.cv (ZTrig.Dsh (J i n p (.sqrt u))) (J i n p (.sqrt u)) k = X at *
+  generalize ZTrig.cv (J i n p (.sqrt u)) (ZTrig.Dsh (J i n p (.sqrt u))) k = X' at *
+  generalize J i n p (D i u) k = W at *
+  generalize ZTrig.Dsh (J i n p u) k = W' at *
+  generalize qmul (qnat (k + 1)) (ZTrig.cv (J i n p (.sqrt u)) (J i n p (.sqrt u)) (k + 1)) = L at *
+  generalize qmul (qnat (k + 1)) (J i n p u (k + 1)) = R at *
+  exact qle_antisymm (by rat_linarith) (by rat_linarith)
+
 end ZJet
 
 #print axioms ZJet.J_D
@@ -655,3 +699,4 @@ end ZJet
 #print axioms ZJet.J_tan
 #print axioms ZJet.J_pow_succ
 #print axioms ZJet.J_miller
+#print axioms ZJet.J_sqrt

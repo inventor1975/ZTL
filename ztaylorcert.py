@@ -11,11 +11,12 @@ of the node's children (and of the node's lower coefficients):
   * ×: the interval convolution (corners per term, exact sums — the tightest witnesses of `CvB`);
   * ÷: q_{m+1} ⊇ (a_{m+1} − (q ∗ b')_m)·[1/b0], b0 clear of zero;  exp: e_{m+1} ⊇ (e ∗ D)_m/(m+1), D_t = (t+1)·a_{t+1};
   * sin/cos together: s_{m+1} ⊇ (c ∗ D)_m/(m+1), c_{m+1} ⊇ −(s ∗ D)_m/(m+1);  tan as sin/cos;
-  * u^m (m a natural literal, u read ≥ 0): Miller's sum with the weights m(j+1) − (m+1)s combined, as the kernel sums.
+  * u^m (m a natural literal, u read ≥ 0): Miller's sum with the weights m(j+1) − (m+1)s combined, as the kernel sums;
+  * √u (its value read > 0): s_1 ⊇ a_1·[1/(2 s0)], s_{j+2} ⊇ (a_{j+2} − (s' ∗ s')_j)·[1/(2 s0)], s' the series from 1.
 
 The values (k = 0) of ÷, exp, sin, cos, tan, powers and of nodes without x are the kernel's value readings — Lean
-VReads by the earlier bridges (lean/ZSlopeSqrt, ZTrig10-15 with ztrigcert in the run). Not in CRead: ln, log10, sqrt,
-atan, a non-natural exponent, a power of a base not read ≥ 0 (a node WITHOUT x may hold ln, sqrt, log10).
+VReads by the earlier bridges (lean/ZSlopeSqrt, ZTrig10-15 with ztrigcert in the run). Not in CRead: ln, log10, atan,
+a non-natural exponent, a power of a base not read ≥ 0 (a node WITHOUT x may hold ln, log10).
 """
 from fractions import Fraction as F
 
@@ -91,7 +92,7 @@ def _value_covered(node, quantities, piece):
 
 
 GRAMMAR = ("not in the Lean reading", "outside the value grammar", "value outside the grammar", "not a natural exponent",
-           "base not read >= 0", "no series")
+           "base not read >= 0", "no series", "value not read > 0")
 
 
 def check(expr, x, quantities, piece, n, cs, trace):
@@ -238,6 +239,25 @@ def check(expr, x, quantities, piece, n, cs, trace):
                     return "pow: base across zero"
                 if not _hull(c[j + 1], _corners(_cvb(W, a[1:], j), R)):
                     return f"pow coefficient {j + 1}"
+            return ""
+        if op == "sqrt":
+            w = ok(args[0])
+            if w:
+                return w
+            if not _value_covered(node, quantities, piece):
+                return "sqrt: value outside the grammar"
+            if not c[0][0] > 0:
+                return "sqrt: value not read > 0"
+            a = series(args[0])
+            R = _recip(_scale(c[0], 2))
+            if n >= 1 and not _hull(c[1], _corners(a[1], R)):
+                return "sqrt coefficient 1"
+            cs1 = c[1:]
+            for j in range(n - 1):
+                cv = _cvb(cs1, cs1, j)
+                acc = (a[j + 2][0] - cv[1], a[j + 2][1] - cv[0])
+                if not _hull(c[j + 2], _corners(acc, R)):
+                    return f"sqrt coefficient {j + 2}"
             return ""
         return f"{op}: not in the Lean reading"
 

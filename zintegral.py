@@ -39,10 +39,10 @@ value: lean/ZPow.lean, ZSlopeSqrt. sin, cos over intervals (pi's bracket checked
 reading is checked for the Lean witnesses IN THE RUN (ztrigcert; a side without them widened to +-1, tan: no reading).
 Taylor leaves of EVERY even order (2026-10-17): lean/ZJetRead.lean `CRead` mirrors zcertify.taylor_coeffs node by node,
 `cread_sound` + ZJetClose `cread_good` give `taylorN_kernel` — every symmetric tagged sum of mesh mu in the leaf's
-interval widened by mu-terms, with no hypothesis on the derivatives — for const var + - * / exp sin cos tan and natural
-powers of a base read >= 0; every leaf's two series are checked against CRead IN THE RUN (ztaylorcert): a series failing
-an inequality is refused, one outside that grammar (sqrt, ln, log10, atan, other powers, and the symbolic-derivative
-fallback when a series has no reading) stays a premise, counted in TAYLOR_PREMISE. Still premises: non-integer pow,
+interval widened by mu-terms, with no hypothesis on the derivatives — for const var + - * / exp sin cos tan sqrt (its
+value read > 0) and natural powers of a base read >= 0; every leaf's two series are checked against CRead IN THE RUN
+(ztaylorcert): a series failing an inequality is refused, one outside that grammar (ln, log10, atan, other powers, and
+the symbolic-derivative fallback when a series has no reading) stays a premise, counted in TAYLOR_PREMISE. Still premises: non-integer pow,
 atan, log10's derivative; Taylor of order 2 for ln (the kernel's recurrence needs a same-point argument); the Taylor
 leaves above order 2 outside CRead's grammar. Every tagged sum, not only the symmetric ones, for the order-2 leaf:
 lean/ZTransfer.lean (`taylor2_every`); for higher orders only the symmetric ones.

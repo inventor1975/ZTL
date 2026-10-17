@@ -5,7 +5,8 @@ import ZJet
 
 `zcertify.taylor_coeffs` reads `f^(k)/k!` over a piece as intervals, by recurrences along the graph. `ZJet` showed
 the exact jets satisfy those recurrences. Here the interval side: `CRead` mirrors the kernel's recurrences node by node
-(the same sums in the same form — Miller's weights combined as the kernel combines them, since a combined weight
+(√ included: `(S ∗ S)_k = U_k` from `k = 1` on, exactly; the same sums in the same form — Miller's weights combined as
+the kernel combines them, since a combined weight
 gives a tighter interval than two sums), and `cread_sound` shows every coefficient of every point of the box
 eventually lies in its interval.
 
@@ -237,6 +238,13 @@ inductive CRead (B : Box QExpr) (i K : Nat) : G → (Nat → QExpr × QExpr) →
         ∃ l h l' h', CvB j (W j) (fun t => a (t + 1)) l h ∧ Corners l' h' l h (R j).1 (R j).2 ∧
           Hull (p (j + 1)) l' h') →
       CRead B i K (.powN u m) p
+  | sqrt {u : G} {a c : Nat → QExpr × QExpr} {l0 h0 dl dh r1 r2 : QExpr} : CRead B i K u a →
+      VRead B (.sqrt u) l0 h0 → Hull (c 0) l0 h0 → qlt qzero l0 →
+      Corners dl dh (qadd qone qone) (qadd qone qone) (c 0).1 (c 0).2 → RecipOK r1 r2 dl dh →
+      (0 < K → ∃ l' h', Corners l' h' (a 1).1 (a 1).2 r1 r2 ∧ Hull (c 1) l' h') →
+      (∀ j, j + 1 < K → ∃ l h l' h', CvB j (fun t => c (t + 1)) (fun t => c (t + 1)) l h ∧
+        Corners l' h' (qsub (a (j + 2)).1 h) (qsub (a (j + 2)).2 l) r1 r2 ∧ Hull (c (j + 2)) l' h') →
+      CRead B i K (.sqrt u) c
 
 /-! ## Soundness -/
 
@@ -413,6 +421,47 @@ theorem cread_sound {B : Box QExpr} {q : Point QExpr} (hq : InBox qOrd B q) {i K
         (fun s hs' => ihu (s + 1) (Nat.succ_le_of_lt (Nat.lt_of_le_of_lt hs' hj))) cb)
         (Ev_recip edv hR) co
       exact Ev_hull (Ev_congr_ev N0 (fun n hn => qEq_symm (mul_solve (hN0 n hn) (pow_form i n q u m j))) e) hh
+  | @sqrt u a c l0 h0 dl dh r1 r2 _ hV hc0 _ hdv hR h1 h2 ihu =>
+      intro k hk
+      refine strong_upto (K := K) (fun j => Ev (fun n => J i n q (.sqrt u) j) (c j).1 (c j).2)
+        (ev0 hq i hV hc0) (fun m hm ih => ?_) k hk k (Nat.le_refl k)
+      have edv : Ev (fun n => qmul (qadd qone qone) (J i n q (.sqrt u) 0)) dl dh :=
+        Ev_mul (Ev_const _) (ih 0 (Nat.zero_le _)) hdv
+      obtain ⟨N0, hN0⟩ := ev_nz edv hR
+      have nzs : ∀ n, N0 ≤ n → ¬ qEq (evalN n q (.sqrt u)) qzero := fun n hn z =>
+        hN0 n hn (z_mul_r (qEq_trans (J_zero i n q (.sqrt u)) z))
+      cases m with
+      | zero =>
+          obtain ⟨l', h', co, hh⟩ := h1 hm
+          have e := Ev_mul (ihu 1 (Nat.succ_le_of_lt hm)) (Ev_recip edv hR) co
+          refine Ev_hull (Ev_congr_ev N0 (fun n hn => qEq_symm (mul_solve (hN0 n hn) ?_)) e) hh
+          have js := J_sqrt i n q u (nzs n hn) 0
+          refine qEq_trans ?_ js
+          show qEq _ (qadd (qmul (J i n q (.sqrt u) 0) (J i n q (.sqrt u) 1)) (qmul (J i n q (.sqrt u) 1) (J i n q (.sqrt u) 0)))
+          rat_ring
+      | succ j =>
+          obtain ⟨l, h, l', h', cb, co, hh⟩ := h2 j hm
+          have e := Ev_mul (Ev_sub (ihu (j + 2) (Nat.succ_le_of_lt hm))
+            (Ev_cv j (fun n t => J i n q (.sqrt u) (t + 1)) (fun n t => J i n q (.sqrt u) (t + 1))
+              (fun t => c (t + 1)) (fun t => c (t + 1))
+              (fun t ht => ih (t + 1) (Nat.succ_le_succ ht)) (fun t ht => ih (t + 1) (Nat.succ_le_succ ht)) cb))
+            (Ev_recip edv hR) co
+          refine Ev_hull (Ev_congr_ev N0 (fun n hn => qEq_symm (div_solve (hN0 n hn) ?_)) e) hh
+          have js := J_sqrt i n q u (nzs n hn) (j + 1)
+          have sh := ZTrig.cv_shiftG j (fun t => J i n q (.sqrt u) (t + 1)) (J i n q (.sqrt u))
+          have d0 : qEq (ZTrig.cv (J i n q (.sqrt u)) (J i n q (.sqrt u)) (j + 1 + 1))
+              (qadd (qmul (J i n q (.sqrt u) 0) (J i n q (.sqrt u) (j + 2)))
+                (ZTrig.cv (fun t => J i n q (.sqrt u) (t + 1)) (J i n q (.sqrt u)) (j + 1))) := qEq_refl _
+          have rr : qEq (qmul (J i n q (.sqrt u) (j + 2)) (qmul (qadd qone qone) (J i n q (.sqrt u) 0)))
+              (qadd (qmul (J i n q (.sqrt u) 0) (J i n q (.sqrt u) (j + 2))) (qmul (J i n q (.sqrt u) (j + 2)) (J i n q (.sqrt u) 0))) := by
+            rat_ring
+          generalize ZTrig.cv (J i n q (.sqrt u)) (J i n q (.sqrt u)) (j + 1 + 1) = A at *
+          generalize ZTrig.cv (fun t => J i n q (.sqrt u) (t + 1)) (J i n q (.sqrt u)) (j + 1) = B' at *
+          generalize ZTrig.cv (fun t => J i n q (.sqrt u) (t + 1)) (fun t => J i n q (.sqrt u) (t + 1)) j = C' at *
+          generalize qmul (J i n q (.sqrt u) (j + 2)) (qmul (qadd qone qone) (J i n q (.sqrt u) 0)) = X at *
+          generalize qmul (J i n q (.sqrt u) 0) (J i n q (.sqrt u) (j + 2)) = P1 at *
+          generalize qmul (J i n q (.sqrt u) (j + 2)) (J i n q (.sqrt u) 0) = P2 at *
+          exact qle_antisymm (by rat_linarith) (by rat_linarith)
 
 end ZJetRead
 

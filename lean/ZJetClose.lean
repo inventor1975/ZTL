@@ -146,11 +146,25 @@ theorem bd_mulAll {u v : G} (hu : BdAll B i u) (hv : BdAll B i v) : BdAll B i (.
 
 theorem bd_Dall {u : G} (hu : BdAll B i u) : BdAll B i (D i u) := fun t => hu (t + 1)
 
-theorem divG : ∀ t (u v : G), BdAll B i u → BdAll B i v → Cl B v → Bd B (Diter i t (.div u v))
-  | 0, _, _, hu, _, hc => bd_div (hu 0) hc
+/-- The quotient, graded: its iterates to `t` need the parts' iterates to `t` only (the square root's denominator
+holds the node itself). -/
+theorem divGg : ∀ t (u v : G), (∀ s, s ≤ t → Bd B (Diter i s u)) → (∀ s, s ≤ t → Bd B (Diter i s v)) → Cl B v →
+    Bd B (Diter i t (.div u v))
+  | 0, _, _, hu, _, hc => bd_div (hu 0 (Nat.le_refl 0)) hc
   | t + 1, u, v, hu, hv, hc =>
-      divG t (.sub (.mul (D i u) v) (.mul u (D i v))) (.mul v v)
-        (bd_subAll (bd_mulAll (bd_Dall hu) hv) (bd_mulAll hu (bd_Dall hv))) (bd_mulAll hv hv) (cl_sq hc)
+      divGg t (.sub (.mul (D i u) v) (.mul u (D i v))) (.mul v v)
+        (fun s hs => by
+          rw [Diter_sub]
+          exact bd_sub (mulG s (D i u) v (fun s' hs' => hu (s' + 1) (Nat.succ_le_succ (Nat.le_trans hs' hs)))
+              (fun s' hs' => hv s' (Nat.le_trans hs' (Nat.le_trans hs (Nat.le_succ t)))))
+            (mulG s u (D i v) (fun s' hs' => hu s' (Nat.le_trans hs' (Nat.le_trans hs (Nat.le_succ t))))
+              (fun s' hs' => hv (s' + 1) (Nat.succ_le_succ (Nat.le_trans hs' hs)))))
+        (fun s hs => mulG s v v (fun s' hs' => hv s' (Nat.le_trans hs' (Nat.le_trans hs (Nat.le_succ t))))
+          (fun s' hs' => hv s' (Nat.le_trans hs' (Nat.le_trans hs (Nat.le_succ t)))))
+        (cl_sq hc)
+
+theorem divG (t : Nat) (u v : G) (hu : BdAll B i u) (hv : BdAll B i v) (hc : Cl B v) : Bd B (Diter i t (.div u v)) :=
+  divGg t u v (fun s _ => hu s) (fun s _ => hv s) hc
 
 theorem bd_expAll {u : G} (hu : BdAll B i u) (he : Bd B (.exp u)) : BdAll B i (.exp u) :=
   strongAll _ he (fun t ih => mulG t (.exp u) (D i u) ih (fun s _ => hu (s + 1)))
@@ -213,18 +227,29 @@ theorem mulS : ∀ t (u v : G), (∀ s, s ≤ t → StepRead B i (Diter i s u)) 
 theorem st_mulAll {u v : G} (su : StAll B i u) (sv : StAll B i v) (bu : BdAll B i u) (bv : BdAll B i v) :
     StAll B i (.mul u v) := fun t => mulS t u v (fun s _ => su s) (fun s _ => sv s) bu bv
 
-theorem divS : ∀ t (u v : G), StAll B i u → StAll B i v → BdAll B i u → BdAll B i v → Cl B v →
-    StepRead B i (Diter i t (.div u v))
+theorem divSg : ∀ t (u v : G), (∀ s, s ≤ t → StepRead B i (Diter i s u)) → (∀ s, s ≤ t → StepRead B i (Diter i s v)) →
+    BdAll B i u → BdAll B i v → Cl B v → StepRead B i (Diter i t (.div u v))
   | 0, _, _, su, sv, bu, bv, ⟨_, _, _, _, b, hR⟩ =>
       let ⟨_, _, a⟩ := bu 0
       let ⟨_, _, c⟩ := bu 1
       let ⟨_, _, d⟩ := bv 1
-      StepRead.div (su 0) (sv 0) a b hR c d
+      StepRead.div (su 0 (Nat.le_refl 0)) (sv 0 (Nat.le_refl 0)) a b hR c d
   | t + 1, u, v, su, sv, bu, bv, hc =>
-      divS t (.sub (.mul (D i u) v) (.mul u (D i v))) (.mul v v)
-        (st_subAll (st_mulAll (fun s => su (s + 1)) sv (bd_Dall bu) bv) (st_mulAll su (fun s => sv (s + 1)) bu (bd_Dall bv)))
-        (st_mulAll sv sv bv bv)
+      divSg t (.sub (.mul (D i u) v) (.mul u (D i v))) (.mul v v)
+        (fun s hs => by
+          rw [Diter_sub]
+          exact StepRead.sub
+            (mulS s (D i u) v (fun s' hs' => su (s' + 1) (Nat.succ_le_succ (Nat.le_trans hs' hs)))
+              (fun s' hs' => sv s' (Nat.le_trans hs' (Nat.le_trans hs (Nat.le_succ t)))) (bd_Dall bu) bv)
+            (mulS s u (D i v) (fun s' hs' => su s' (Nat.le_trans hs' (Nat.le_trans hs (Nat.le_succ t))))
+              (fun s' hs' => sv (s' + 1) (Nat.succ_le_succ (Nat.le_trans hs' hs))) bu (bd_Dall bv)))
+        (fun s hs => mulS s v v (fun s' hs' => sv s' (Nat.le_trans hs' (Nat.le_trans hs (Nat.le_succ t))))
+          (fun s' hs' => sv s' (Nat.le_trans hs' (Nat.le_trans hs (Nat.le_succ t)))) bv bv)
         (bd_subAll (bd_mulAll (bd_Dall bu) bv) (bd_mulAll bu (bd_Dall bv))) (bd_mulAll bv bv) (cl_sq hc)
+
+theorem divS (t : Nat) (u v : G) (su : StAll B i u) (sv : StAll B i v) (bu : BdAll B i u) (bv : BdAll B i v)
+    (hc : Cl B v) : StepRead B i (Diter i t (.div u v)) :=
+  divSg t u v (fun s _ => su s) (fun s _ => sv s) bu bv hc
 
 theorem st_expAll {u : G} (su : StAll B i u) (bu : BdAll B i u) (he : Bd B (.exp u)) : StAll B i (.exp u) :=
   strongAll _
@@ -274,6 +299,26 @@ theorem st_powAll {u : G} (su : StAll B i u) (bu : BdAll B i u) : ∀ k, StAll B
       st_mulAll (st_mulAll (st_constAll _) (st_powAll su bu k) (bd_constAll _) (bd_powAll bu k)) (fun s => su (s + 1))
         (bd_mulAll (bd_constAll _) (bd_powAll bu k)) (bd_Dall bu) t
 
+/-- The square root: `D√u = Du / (2√u)` — its iterates by the graded quotient. -/
+theorem sqrt_close {u : G} (su : StAll B i u) (bu : BdAll B i u) {lu hu SL SH dl dh r1 r2 : QExpr}
+    (ru : BoxEv B u lu hu) (hlo : qle qzero lu) (hSL : qlt qzero SL) (hSL2 : qle (sq SL) lu) (hSH : qle qzero SH)
+    (hSH2 : qle hu (sq SH)) (bs : BoxEv B (.sqrt u) SL SH) {cl ch : QExpr} (bs2 : BoxEv B (.sqrt u) cl ch)
+    (hdv : Corners dl dh (qadd qone qone) (qadd qone qone) cl ch) (hR : RecipOK r1 r2 dl dh) :
+    BdAll B i (.sqrt u) ∧ StAll B i (.sqrt u) := by
+  have cl : Cl B (.mul (.const (qadd qone qone)) (.sqrt u)) :=
+    ⟨dl, dh, r1, r2, fun p hp => Ev_mul (Ev_const _) (bs2 p hp) hdv, hR⟩
+  have bd : BdAll B i (.sqrt u) := strongAll _ ⟨SL, SH, bs⟩ (fun t ih =>
+    divGg t (D i u) (.mul (.const (qadd qone qone)) (.sqrt u)) (fun s _ => bu (s + 1))
+      (fun s hs => mulG s (.const (qadd qone qone)) (.sqrt u) (fun s' _ => bd_constAll _ s')
+        (fun s' hs' => ih s' (Nat.le_trans hs' hs))) cl)
+  refine ⟨bd, strongAll _ ?_ (fun t ih =>
+    divSg t (D i u) (.mul (.const (qadd qone qone)) (.sqrt u)) (fun s _ => su (s + 1))
+      (fun s hs => mulS s (.const (qadd qone qone)) (.sqrt u) (fun s' _ => st_constAll _ s')
+        (fun s' hs' => ih s' (Nat.le_trans hs' hs)) (bd_constAll _) bd)
+      (bd_Dall bu) (bd_mulAll (bd_constAll _) bd) cl)⟩
+  obtain ⟨_, _, d⟩ := bu 1
+  exact StepRead.sqrt (su 0) ru hlo hSL hSL2 hSH hSH2 d
+
 /-! ## From the kernel's reading -/
 
 /-- A coefficient reading bounds the value: `BoxEv` from `k = 0`. -/
@@ -309,6 +354,12 @@ theorem cread_good {K : Nat} : ∀ {e : G} {c : Nat → QExpr × QExpr}, CRead B
       have cl : Cl B (.cos u) := ⟨_, _, r1, r2, fun p hp => Ev_widen (boxEv_of_read rc p hp) hcc.1 hcc.2, hR⟩
       exact ⟨bd_tanAll ihu.1 ht, st_tanAll ihu.2 ihu.1 ⟨ls, hs, boxEv_of_read rs⟩ cl ht⟩
   | @powN u m a p l0 h0 W dv R _ _ _ _ ihu => exact ⟨bd_powAll ihu.1 m, st_powAll ihu.2 ihu.1 m⟩
+  | @sqrt u a c l0 h0 dl dh r1 r2 _ hV hc0 hpos hdv hR _ _ ihu =>
+      have bs : BoxEv B (.sqrt u) l0 h0 := boxEv_of_read hV
+      cases hV with
+      | sqrt ru hlo _ hSL2 hSH hSH2 =>
+          exact sqrt_close ihu.2 ihu.1 (boxEv_of_read ru) hlo hpos hSL2 hSH hSH2 bs
+            (fun p hp => Ev_widen (bs p hp) hc0.1 hc0.2) hdv hR
 
 /-! ## The leaf from the kernel's readings -/
 
@@ -417,6 +468,7 @@ end ZJetClose
 #print axioms ZJetClose.cl_sq
 #print axioms ZJetClose.divS
 #print axioms ZJetClose.st_tanAll
+#print axioms ZJetClose.sqrt_close
 #print axioms ZJetClose.cread_good
 #print axioms ZJetClose.ev_order
 #print axioms ZJetClose.taylorN_kernel

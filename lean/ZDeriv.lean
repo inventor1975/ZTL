@@ -999,6 +999,172 @@ theorem ustep_tan {c : QExpr} (hc : qlt qzero c) :
       clear h1 h2 hHA hHAR hHR hBc
       exact ⟨by rat_linarith, by rat_linarith⟩
 
+/-! ## The square root's step, at one index -/
+
+/-- `|δ|` as a witness: `d ≥ 0`, `Ab δ d`, `d·d = δ·δ`. -/
+theorem abs_wit (δ : QExpr) : ∃ d, qle qzero d ∧ ZTrig.Ab δ d ∧ qEq (qmul d d) (qmul δ δ) := by
+  cases qle_total qzero δ with
+  | inl h => exact ⟨δ, h, ⟨by rat_linarith, qle_refl _⟩, qEq_refl _⟩
+  | inr h => exact ⟨qneg δ, by rat_linarith, ⟨by rat_linarith, by rat_linarith⟩, by rat_ring⟩
+
+theorem abs_wit1 {δ : QExpr} (hδ : ZTrig.Ab δ qone) :
+    ∃ d, qle qzero d ∧ qle d qone ∧ ZTrig.Ab δ d ∧ qEq (qmul d d) (qmul δ δ) := by
+  obtain ⟨h1, h2⟩ := hδ
+  cases qle_total qzero δ with
+  | inl h => exact ⟨δ, h, h2, ⟨by rat_linarith, qle_refl _⟩, qEq_refl _⟩
+  | inr h => exact ⟨qneg δ, by rat_linarith, by rat_linarith, ⟨by rat_linarith, by rat_linarith⟩, by rat_ring⟩
+
+theorem ab_comb {Y r g1 g2 DD e1 e2 E A Q : QExpr} (eY : qEq Y (qsub (qsub (qadd r g1) g2) DD))
+    (hr : ZTrig.Ab r (qadd e1 A)) (h1 : ZTrig.Ab g1 e2) (h2 : ZTrig.Ab g2 e2) (d0 : qle qzero DD) (dQ : qle DD Q)
+    (hE : qEq (qadd e1 (qadd e2 e2)) E) : ZTrig.Ab Y (qadd (qadd E A) Q) := by
+  obtain ⟨r1, r2⟩ := hr; obtain ⟨a1, a2⟩ := h1; obtain ⟨b1, b2⟩ := h2
+  unfold qsub at eY
+  exact ⟨by rat_linarith, by rat_linarith⟩
+
+/-- THE STEP OF `√`, ALGEBRA ONLY: grid roots `s`, `t` of `a`, `b` with gaps `a − s²`, `b − t²` within `e2`, both roots
+`≥ σ > 0`, the inner step `b − a − δ·du` within `e1 + δ²·Hu`: then `t − s − δ·du/(2s)` lies within `E·K₀ + δ²·H`,
+`E = e1 + 2·e2`, `I = 1/(2σ)`, `C = Mdu + Hu`, `K₀ = I(1 + I²(2C + 1))`, `H = I(Hu + I²C²)`. -/
+theorem sqrt_step_alg {a b s t δ du σ Mdu Hu e1 e2 : QExpr} (hσ : qlt qzero σ) (hs : qle σ s) (ht : qle σ t)
+    (hδ : ZTrig.Ab δ qone) (hM : qle qzero Mdu) (hH : qle qzero Hu) (hdu : ZTrig.Ab du Mdu)
+    (hr : ZTrig.Ab (qsub (qsub b a) (qmul δ du)) (qadd e1 (qmul (qmul δ δ) Hu)))
+    (gp : ZTrig.Ab (qsub a (qmul s s)) e2) (gq : ZTrig.Ab (qsub b (qmul t t)) e2)
+    (hE0 : qle qzero (qadd e1 (qadd e2 e2))) (hE1 : qle (qadd e1 (qadd e2 e2)) qone) :
+    ZTrig.Ab (qsub (qsub t s) (qmul δ (qmul du (qinv' (qmul (qadd qone qone) s)))))
+      (qadd (qmul (qadd e1 (qadd e2 e2)) (qmul (qinv' (qadd σ σ)) (qadd qone (qmul (qmul (qinv' (qadd σ σ)) (qinv' (qadd σ σ)))
+          (qadd (qadd (qadd Mdu Hu) (qadd Mdu Hu)) qone)))))
+        (qmul (qmul δ δ) (qmul (qinv' (qadd σ σ)) (qadd Hu (qmul (qmul (qinv' (qadd σ σ)) (qinv' (qadd σ σ)))
+          (qmul (qadd Mdu Hu) (qadd Mdu Hu))))))) := by
+  obtain ⟨d, d0, d1, hdδ, hdd⟩ := abs_wit1 hδ
+  have σσ : qlt qzero (qadd σ σ) := qlt_iff_le_not_le.mpr ⟨by have := qle_of_qlt hσ; rat_linarith,
+    fun h => (qlt_iff_le_not_le.mp hσ).2 (by rat_linarith)⟩
+  -- the two reciprocals
+  have hw : qle (qadd σ σ) (qmul (qadd qone qone) s) := by
+    have : qEq (qmul (qadd qone qone) s) (qadd s s) := by rat_ring
+    rat_linarith
+  have hts : qle (qadd σ σ) (qadd t s) := by rat_linarith
+  obtain ⟨iw0, iw1⟩ := ZTrig.inv_bound σσ hw
+  obtain ⟨it0, it1⟩ := ZTrig.inv_bound σσ hts
+  have I0 := qinv'_nonneg_of_pos σσ
+  have nzw : ¬ qEq (qmul (qadd qone qone) s) qzero := fun z =>
+    (qlt_iff_le_not_le.mp σσ).2 (by rat_linarith)
+  have nzt : ¬ qEq (qadd t s) qzero := fun z => (qlt_iff_le_not_le.mp σσ).2 (by rat_linarith)
+  have cw := qmul_inv'_cancel nzw
+  have ct := qmul_inv'_cancel nzt
+  generalize qinv' (qadd σ σ) = I at *
+  generalize qinv' (qmul (qadd qone qone) s) = iw at *
+  generalize qinv' (qadd t s) = it at *
+  generalize hX : qadd (qsub b a) (qsub (qsub a (qmul s s)) (qsub b (qmul t t))) = X
+  -- Δ = X / (t + s)
+  have eX : qEq (qmul (qadd t s) (qsub t s)) X := by rw [← hX]; unfold qsub; rat_ring
+  have eΔ : qEq (qsub t s) (qmul X it) := by
+    have a1 : qEq (qsub t s) (qmul (qmul (qadd t s) (qsub t s)) it) := by
+      have := qmul_respects (qEq_refl (qsub t s)) ct
+      exact qEq_trans (by rat_ring) (qEq_trans (qEq_symm this) (by rat_ring))
+    exact qEq_trans a1 (qmul_respects eX (qEq_refl _))
+  -- |X| ≤ d·C + E
+  have pδ := ZTrig.mul_abs hdδ hdu
+  have dd_le : qle (qmul (qmul d d) Hu) (qmul d Hu) := by
+    have := qmul_nonneg (qmul_nonneg d0 (show qle qzero (qsub qone d) by unfold qsub; rat_linarith)) hH
+    unfold qsub at this
+    have e : qEq (qmul (qmul d (qadd qone (qneg d))) Hu) (qsub (qmul d Hu) (qmul (qmul d d) Hu)) := by unfold qsub; rat_ring
+    unfold qsub at e; rat_linarith
+  have dHu := qmul_respects hdd (qEq_refl Hu)
+  have hXb : ZTrig.Ab X (qadd (qmul d (qadd Mdu Hu)) (qadd e1 (qadd e2 e2))) := by
+    obtain ⟨r1, r2⟩ := hr; obtain ⟨p1, p2⟩ := pδ; obtain ⟨g1, g2⟩ := gp; obtain ⟨g3, g4⟩ := gq
+    rw [← hX]
+    have e : qEq (qmul d (qadd Mdu Hu)) (qadd (qmul d Mdu) (qmul d Hu)) := by rat_ring
+    unfold qsub at *
+    generalize qmul (qmul δ δ) Hu = A at *
+    generalize qmul (qmul d d) Hu = A' at *
+    generalize qmul δ du = P at *
+    generalize qmul d Mdu = Q at *
+    generalize qmul d Hu = R at *
+    generalize qmul d (qadd Mdu Hu) = R' at *
+    generalize qmul s s = SS at *
+    generalize qmul t t = TT at *
+    exact ⟨by rat_linarith, by rat_linarith⟩
+  -- |Δ| ≤ (d·C + E)·I, Δ² ≤ I²(d²C² + 2CE + E)
+  have hΔ : ZTrig.Ab (qsub t s) (qmul (qadd (qmul d (qadd Mdu Hu)) (qadd e1 (qadd e2 e2))) I) := by
+    have := ZTrig.mul_abs hXb (show ZTrig.Ab it I from ⟨by rat_linarith, it1⟩)
+    obtain ⟨a1, a2⟩ := this; exact ⟨by rat_linarith, by rat_linarith⟩
+  have hΔ2 := (ZTrig.mul_abs hΔ hΔ).2
+  generalize hC : qadd Mdu Hu = C at *
+  generalize hE : qadd e1 (qadd e2 e2) = E at *
+  have C0 : qle qzero C := by rw [← hC]; rat_linarith
+  have b1 : qle (qmul (qmul d C) E) (qmul C E) := by
+    have := qmul_nonneg (show qle qzero (qsub qone d) by unfold qsub; rat_linarith) (qmul_nonneg C0 hE0)
+    have e : qEq (qmul (qsub qone d) (qmul C E)) (qsub (qmul C E) (qmul (qmul d C) E)) := by unfold qsub; rat_ring
+    unfold qsub at this e; rat_linarith
+  have b2 : qle (qmul E E) E := by
+    have := qmul_nonneg hE0 (show qle qzero (qsub qone E) by unfold qsub; rat_linarith)
+    have e : qEq (qmul E (qsub qone E)) (qsub E (qmul E E)) := by unfold qsub; rat_ring
+    unfold qsub at this e; rat_linarith
+  have hP : qle (qmul (qmul (qadd (qmul d C) E) I) (qmul (qadd (qmul d C) E) I))
+      (qmul (qmul I I) (qadd (qmul (qmul d d) (qmul C C)) (qadd (qadd (qmul C E) (qmul C E)) E))) := by
+    have diff := qmul_nonneg (qmul_self_nonneg I)
+      (show qle qzero (qsub (qadd (qadd (qmul C E) (qmul C E)) E) (qadd (qadd (qmul (qmul d C) E) (qmul (qmul d C) E)) (qmul E E)))
+        by unfold qsub; rat_linarith)
+    have e1' : qEq (qmul (qmul (qadd (qmul d C) E) I) (qmul (qadd (qmul d C) E) I))
+        (qmul (qmul I I) (qadd (qmul (qmul d d) (qmul C C)) (qadd (qadd (qmul (qmul d C) E) (qmul (qmul d C) E)) (qmul E E)))) := by
+      rat_ring
+    have e2' : qEq (qmul (qmul I I) (qsub (qadd (qadd (qmul C E) (qmul C E)) E) (qadd (qadd (qmul (qmul d C) E) (qmul (qmul d C) E)) (qmul E E))))
+        (qsub (qmul (qmul I I) (qadd (qmul (qmul d d) (qmul C C)) (qadd (qadd (qmul C E) (qmul C E)) E)))
+          (qmul (qmul I I) (qadd (qmul (qmul d d) (qmul C C)) (qadd (qadd (qmul (qmul d C) E) (qmul (qmul d C) E)) (qmul E E))))) := by
+      unfold qsub; rat_ring
+    generalize qmul (qmul (qadd (qmul d C) E) I) (qmul (qadd (qmul d C) E) I) = L at *
+    generalize qmul (qmul I I) (qadd (qmul (qmul d d) (qmul C C)) (qadd (qadd (qmul C E) (qmul C E)) E)) = R at *
+    generalize qmul (qmul I I) (qadd (qmul (qmul d d) (qmul C C)) (qadd (qadd (qmul (qmul d C) E) (qmul (qmul d C) E)) (qmul E E))) = R' at *
+    generalize qmul (qmul I I) (qsub (qadd (qadd (qmul C E) (qmul C E)) E) (qadd (qadd (qmul (qmul d C) E) (qmul (qmul d C) E)) (qmul E E))) = Dg at *
+    unfold qsub at *
+    exact by rat_linarith
+  -- Y = 2s·(Δ − δ·du/(2s)) = (b − a − δdu) + gaps − Δ²
+  have eY : qEq (qmul (qmul (qadd qone qone) s) (qsub (qsub t s) (qmul δ (qmul du iw))))
+      (qsub (qsub (qadd (qsub (qsub b a) (qmul δ du)) (qsub a (qmul s s))) (qsub b (qmul t t))) (qmul (qsub t s) (qsub t s))) := by
+    have e : qEq (qmul (qmul (qadd qone qone) s) (qmul δ (qmul du iw))) (qmul δ du) := by
+      have := qmul_respects (qEq_refl (qmul δ du)) cw
+      exact qEq_trans (by rat_ring) (qEq_trans this (by rat_ring))
+    have e2 : qEq (qmul (qmul (qadd qone qone) s) (qsub (qsub t s) (qmul δ (qmul du iw))))
+        (qsub (qmul (qmul (qadd qone qone) s) (qsub t s)) (qmul (qmul (qadd qone qone) s) (qmul δ (qmul du iw)))) := by
+      unfold qsub; rat_ring
+    have e3 : qEq (qmul (qmul (qadd qone qone) s) (qsub t s))
+        (qsub (qadd (qsub b a) (qsub (qsub a (qmul s s)) (qsub b (qmul t t)))) (qmul (qsub t s) (qsub t s))) := by
+      unfold qsub; rat_ring
+    unfold qsub at *
+    generalize qmul (qmul (qadd qone qone) s) (qadd (qadd t (qneg s)) (qneg (qmul δ (qmul du iw)))) = Y at *
+    generalize qmul (qmul (qadd qone qone) s) (qmul δ (qmul du iw)) = Z at *
+    generalize qmul (qmul (qadd qone qone) s) (qadd t (qneg s)) = W at *
+    generalize qmul (qadd t (qneg s)) (qadd t (qneg s)) = DD at *
+    generalize qmul δ du = P at *
+    exact qle_antisymm (by rat_linarith) (by rat_linarith)
+  have hYb : ZTrig.Ab (qmul (qmul (qadd qone qone) s) (qsub (qsub t s) (qmul δ (qmul du iw))))
+      (qadd (qadd E (qmul (qmul δ δ) Hu)) (qmul (qmul I I) (qadd (qmul (qmul d d) (qmul C C)) (qadd (qadd (qmul C E) (qmul C E)) E)))) := by
+    exact ab_comb eY hr gp gq (qmul_self_nonneg (qsub t s)) (qle_trans hΔ2 hP) (by rw [← hE]; exact qEq_refl _)
+  -- divide by 2s
+  have eT : qEq (qsub (qsub t s) (qmul δ (qmul du iw)))
+      (qmul (qmul (qmul (qadd qone qone) s) (qsub (qsub t s) (qmul δ (qmul du iw)))) iw) := by
+    have := qmul_respects (qEq_refl (qsub (qsub t s) (qmul δ (qmul du iw)))) cw
+    exact qEq_trans (by rat_ring) (qEq_trans (qEq_symm this) (by rat_ring))
+  have hT := ZTrig.mul_abs hYb (show ZTrig.Ab iw I from ⟨by rat_linarith, iw1⟩)
+  -- the bound's form
+  have dC2 := qmul_respects (qmul_respects hdd (qEq_refl (qmul C C))) (qEq_refl (qmul (qmul I I) I))
+  have eF : qEq (qmul (qadd (qadd E (qmul (qmul δ δ) Hu)) (qmul (qmul I I) (qadd (qmul (qmul d d) (qmul C C)) (qadd (qadd (qmul C E) (qmul C E)) E)))) I)
+      (qadd (qadd (qmul E (qmul I (qadd qone (qmul (qmul I I) (qadd (qadd C C) qone))))) (qmul (qmul δ δ) (qmul I Hu)))
+        (qmul (qmul (qmul d d) (qmul C C)) (qmul (qmul I I) I))) := by rat_ring
+  have eG : qEq (qadd (qmul E (qmul I (qadd qone (qmul (qmul I I) (qadd (qadd C C) qone)))))
+        (qmul (qmul δ δ) (qmul I (qadd Hu (qmul (qmul I I) (qmul C C))))))
+      (qadd (qadd (qmul E (qmul I (qadd qone (qmul (qmul I I) (qadd (qadd C C) qone))))) (qmul (qmul δ δ) (qmul I Hu)))
+        (qmul (qmul (qmul δ δ) (qmul C C)) (qmul (qmul I I) I))) := by rat_ring
+  obtain ⟨t1, t2⟩ := hT
+  generalize qmul (qmul (qmul (qadd qone qone) s) (qsub (qsub t s) (qmul δ (qmul du iw)))) iw = V at *
+  generalize qsub (qsub t s) (qmul δ (qmul du iw)) = T at *
+  generalize qmul (qadd (qadd E (qmul (qmul δ δ) Hu)) (qmul (qmul I I) (qadd (qmul (qmul d d) (qmul C C)) (qadd (qadd (qmul C E) (qmul C E)) E)))) I = F at *
+  generalize qmul (qmul (qmul d d) (qmul C C)) (qmul (qmul I I) I) = G1 at *
+  generalize qmul (qmul (qmul δ δ) (qmul C C)) (qmul (qmul I I) I) = G2 at *
+  generalize qmul E (qmul I (qadd qone (qmul (qmul I I) (qadd (qadd C C) qone)))) = G3 at *
+  generalize qmul (qmul δ δ) (qmul I Hu) = G4 at *
+  generalize qmul (qmul δ δ) (qmul I (qadd Hu (qmul (qmul I I) (qmul C C)))) = G5 at *
+  exact ⟨by rat_linarith, by rat_linarith⟩
+
 /-! ## Nodes without `x_i` -/
 
 theorem z_mul_l {a b : QExpr} (h : qEq a qzero) : qEq (qmul a b) qzero :=
@@ -1094,8 +1260,8 @@ theorem D_free (i n : Nat) (p : Point QExpr) : ∀ e : G, ¬ Uses e i →
       · exact b h1
 
 /-- What the step needs from the box, node by node: bounds of the factors and their derivatives (`BoxEv` — from value
-readings, or from the kernel's Taylor coefficients); tan as `sin/cos` with `cos` clear of zero; a node without `x_i`
-steps by nothing. -/
+readings, or from the kernel's Taylor coefficients); tan as `sin/cos` with `cos` clear of zero; `√u` by the grid root's
+own identity `s² = u − gap` (`sqrt_step_alg`), its value `≥ SL > 0`; a node without `x_i` steps by nothing. -/
 inductive StepRead (B : Box QExpr) (i : Nat) : G → Prop where
   | const {c : QExpr} : StepRead B i (.const c)
   | var {j : Nat} : StepRead B i (.var j)
@@ -1117,6 +1283,8 @@ inductive StepRead (B : Box QExpr) (i : Nat) : G → Prop where
   | tan {u : G} {lc hc r1 r2 : QExpr} : StepRead B i (.div (.sin u) (.cos u)) → BoxEv B (.cos u) lc hc →
       RecipOK r1 r2 lc hc → StepRead B i (.tan u)
   | free {e : G} : ¬ Uses e i → StepRead B i e
+  | sqrt {u : G} {lu hu SL SH l1 h1 : QExpr} : StepRead B i u → BoxEv B u lu hu → qle qzero lu → qlt qzero SL →
+      qle (sq SL) lu → qle qzero SH → qle hu (sq SH) → BoxEv B (D i u) l1 h1 → StepRead B i (.sqrt u)
 /-- THE SYMBOLIC DERIVATIVE IS THE DERIVATIVE (the fragment `const var + − ×`): one constant `H` for the box. -/
 theorem step_sound {B : Box QExpr} {i : Nat} : ∀ {e : G}, StepRead B i e → ∃ H, qle qzero H ∧
     ∀ p q, InBox qOrd B p → InBox qOrd B q → (∀ j, j ≠ i → q j = p j) → ZTrig.Ab (qsub (q i) (p i)) qone →
@@ -1386,6 +1554,70 @@ theorem step_sound {B : Box QExpr} {i : Nat} : ∀ {e : G}, StepRead B i e → �
     generalize qmul (qadd (q i) (qneg (p i))) (evalN n p (D i (.div (.sin u) (.cos u)))) = Y at *
     generalize qadd (qeps k) (qmul (qmul (qadd (q i) (qneg (p i))) (qadd (q i) (qneg (p i)))) H) = W at *
     exact ⟨by rat_linarith, by rat_linarith⟩
+  | @sqrt u lu hu SL SH l1 h1 _ ru hlo hSL hSL2 hSH hSH2 rdu ihu =>
+    obtain ⟨Hu, hu0, hsu⟩ := ihu
+    obtain ⟨Mdu, mdu0, bdu⟩ := read_bound rdu
+    obtain ⟨Bq, hBq⟩ := ZTrig.pos_floor hSL
+    have ep := qeps_pos (Bq + 1)
+    have es := qeps_succ_add Bq
+    have hσ : qlt qzero (qsub SL (qeps (Bq + 1))) := qlt_iff_le_not_le.mpr
+      ⟨by have := qle_of_qlt ep; unfold qsub; rat_linarith,
+       fun h => (qlt_iff_le_not_le.mp ep).2 (by unfold qsub at h; rat_linarith)⟩
+    have σσ : qlt qzero (qadd (qsub SL (qeps (Bq + 1))) (qsub SL (qeps (Bq + 1)))) := qlt_iff_le_not_le.mpr
+      ⟨by have := qle_of_qlt hσ; rat_linarith, fun h => (qlt_iff_le_not_le.mp hσ).2 (by rat_linarith)⟩
+    have I0 := qinv'_nonneg_of_pos σσ
+    have SL0 := qle_of_qlt hSL
+    generalize hI : qinv' (qadd (qsub SL (qeps (Bq + 1))) (qsub SL (qeps (Bq + 1)))) = I at *
+    have C0 : qle qzero (qadd Mdu Hu) := by rat_linarith
+    have K00 : qle qzero (qmul I (qadd qone (qmul (qmul I I) (qadd (qadd (qadd Mdu Hu) (qadd Mdu Hu)) qone)))) := by
+      have := qmul_nonneg (qmul_nonneg I0 I0) (show qle qzero (qadd (qadd (qadd Mdu Hu) (qadd Mdu Hu)) qone) by
+        have := qle_of_qlt qone_pos; rat_linarith)
+      exact qmul_nonneg I0 (by have := qle_of_qlt qone_pos; rat_linarith)
+    have H0 : qle qzero (qmul I (qadd Hu (qmul (qmul I I) (qmul (qadd Mdu Hu) (qadd Mdu Hu))))) :=
+      qmul_nonneg I0 (by have := qmul_nonneg (qmul_nonneg I0 I0) (qmul_nonneg C0 C0); rat_linarith)
+    generalize hK : qmul I (qadd qone (qmul (qmul I I) (qadd (qadd (qadd Mdu Hu) (qadd Mdu Hu)) qone))) = K0 at *
+    obtain ⟨Bc, hBc⟩ := eps_scaled (C := qadd (qadd (qadd K0 K0) K0) (qadd qone (qadd qone qone)))
+      (by have := qle_of_qlt qone_pos; rat_linarith)
+    refine ⟨_, H0, fun p q hp hq hfix hδ k => ?_⟩
+    obtain ⟨N1, h1'⟩ := hsu p q hp hq hfix hδ (k + Bc)
+    obtain ⟨N2, h2'⟩ := Ev_sqrt (ru p hp) SL0 hSL2 hSH hSH2 (Bq + 1)
+    obtain ⟨N3, h3'⟩ := Ev_sqrt (ru q hq) SL0 hSL2 hSH hSH2 (Bq + 1)
+    obtain ⟨N4, h4'⟩ := gap_ev (ru p hp) hlo hSH hSH2 (k + Bc)
+    obtain ⟨N5, h5'⟩ := gap_ev (ru q hq) hlo hSH hSH2 (k + Bc)
+    obtain ⟨N6, h6'⟩ := bdu p hp
+    refine ⟨N1 + (N2 + (N3 + (N4 + (N5 + N6)))), fun n hn => ?_⟩
+    have a1 : ZTrig.Ab (qsub (qsub (evalN n q u) (evalN n p u)) (qmul (qsub (q i) (p i)) (evalN n p (D i u))))
+        (qadd (qeps (k + Bc)) (qmul (qmul (qsub (q i) (p i)) (qsub (q i) (p i))) Hu)) := h1' n (ZTrig.le_l' hn)
+    have s1 : qle (qsub SL (qeps (Bq + 1))) (rsqrt (evalN n p u) n) := (h2' n (ZTrig.le_l' (ZTrig.le_r' hn))).1
+    have t1 : qle (qsub SL (qeps (Bq + 1))) (rsqrt (evalN n q u) n) := (h3' n (ZTrig.le_l' (ZTrig.le_r' (ZTrig.le_r' hn)))).1
+    have g1 : qle (qsub qzero (qeps (k + Bc))) (qsub (evalN n p u) (sq (rsqrt (evalN n p u) n))) :=
+      (h4' n (ZTrig.le_l' (ZTrig.le_r' (ZTrig.le_r' (ZTrig.le_r' hn))))).1
+    have g2 : qle (qsub (evalN n p u) (sq (rsqrt (evalN n p u) n))) (qadd qzero (qeps (k + Bc))) :=
+      (h4' n (ZTrig.le_l' (ZTrig.le_r' (ZTrig.le_r' (ZTrig.le_r' hn))))).2
+    have g3 : qle (qsub qzero (qeps (k + Bc))) (qsub (evalN n q u) (sq (rsqrt (evalN n q u) n))) :=
+      (h5' n (ZTrig.le_l' (ZTrig.le_r' (ZTrig.le_r' (ZTrig.le_r' (ZTrig.le_r' hn)))))).1
+    have g4 : qle (qsub (evalN n q u) (sq (rsqrt (evalN n q u) n))) (qadd qzero (qeps (k + Bc))) :=
+      (h5' n (ZTrig.le_l' (ZTrig.le_r' (ZTrig.le_r' (ZTrig.le_r' (ZTrig.le_r' hn)))))).2
+    have du : ZTrig.Ab (evalN n p (D i u)) Mdu := h6' n (ZTrig.le_r' (ZTrig.le_r' (ZTrig.le_r' (ZTrig.le_r' (ZTrig.le_r' hn)))))
+    have be := hBc k
+    have e1 := eps_le_one k
+    have em := qeps_nonneg (k + Bc)
+    have kk := qmul_nonneg em K00
+    unfold sq at g1 g2 g3 g4
+    have gp : ZTrig.Ab (qsub (evalN n p u) (qmul (rsqrt (evalN n p u) n) (rsqrt (evalN n p u) n))) (qeps (k + Bc)) :=
+      ⟨by unfold qsub at g1 ⊢; rat_linarith, by unfold qsub at g2 ⊢; rat_linarith⟩
+    have gq : ZTrig.Ab (qsub (evalN n q u) (qmul (rsqrt (evalN n q u) n) (rsqrt (evalN n q u) n))) (qeps (k + Bc)) :=
+      ⟨by unfold qsub at g3 ⊢; rat_linarith, by unfold qsub at g4 ⊢; rat_linarith⟩
+    have hE1 : qle (qadd (qeps (k + Bc)) (qadd (qeps (k + Bc)) (qeps (k + Bc)))) qone := by rat_linarith
+    have r := sqrt_step_alg hσ s1 t1 hδ mdu0 hu0 du a1 gp gq (by rat_linarith) hE1
+    rw [hI, hK] at r
+    obtain ⟨r1, r2⟩ := r
+    show ZTrig.Ab (qsub (qsub (rsqrt (evalN n q u) n) (rsqrt (evalN n p u) n))
+      (qmul (qsub (q i) (p i)) (qmul (evalN n p (D i u)) (qinv' (qmul (qadd qone qone) (rsqrt (evalN n p u) n)))))) _
+    generalize qsub (qsub (rsqrt (evalN n q u) n) (rsqrt (evalN n p u) n))
+      (qmul (qsub (q i) (p i)) (qmul (evalN n p (D i u)) (qinv' (qmul (qadd qone qone) (rsqrt (evalN n p u) n))))) = T at *
+    generalize qmul (qmul (qsub (q i) (p i)) (qsub (q i) (p i))) (qmul I (qadd Hu (qmul (qmul I I) (qmul (qadd Mdu Hu) (qadd Mdu Hu))))) = W at *
+    exact ⟨by rat_linarith, by rat_linarith⟩
   | @free e hU =>
     refine ⟨qzero, qle_refl _, fun p q _ _ hfix _ k => ⟨0, fun n _ => ab_zero ?_ ?_⟩⟩
     · have dep : evalN n q e = evalN n p e := evalN_dep n q p e (fun j hj => by
@@ -1409,6 +1641,7 @@ end ZDeriv
 #print axioms ZDeriv.eps_scaled
 #print axioms ZDeriv.mul_step
 #print axioms ZDeriv.step_sound
+#print axioms ZDeriv.sqrt_step_alg
 #print axioms ZDeriv.ustep_S
 #print axioms ZDeriv.ustep_C
 #print axioms ZDeriv.ustep_E

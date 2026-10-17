@@ -18,7 +18,7 @@ because it splits along the graph exactly as the kernel's recurrences do. For a 
 order, already proved). No odd term is needed: it cancels between `m + s` and `m − s`.
 
 The grammar `const var + − × exp / sqrt sin cos` (`exp`'s own second-order step: `ZExp2.Ev_exp2`; `sin`, `cos`:
-`ZTrig.Ev_sin2`/`Ev_cos2`, chords on a grid; `/` and `sqrt` by the exact identities `w·v = u`, `s² = u − gap`). `ln` is NOT covered: the kernel's `l2 = (a2 − l1·a1/2)/a0` holds classically
+`ZTrig.Ev_sin2`/`Ev_cos2`, chords on a grid; `tan` as the kernel reads it, `sin/cos`; `/` and `sqrt` by the exact identities `w·v = u`, `s² = u − gap`). `ln` is NOT covered: the kernel's `l2 = (a2 − l1·a1/2)/a0` holds classically
 at one point ξ, while this algebra produces a ratio `u(ζ)/u(ξ)` of two points — a same-point argument is missing.
 -/
 
@@ -65,6 +65,7 @@ inductive T2Read (B : Box QExpr) (i : Nat) : G → QExpr → QExpr → Prop wher
       ZTrig.SinLo lu hu sl → DRead B i u du1 du2 → T2Read B i u a1 a2 →
       Corners g G du1 du2 (qneg ch) (qneg cl) → Corners r R' du1 du2 g G → Corners t T a1 a2 (qneg sh) (qneg sl) →
       qle (qadd l l) (qadd r (qadd t t)) → qle (qadd R' (qadd T T)) (qadd h h) → T2Read B i (.cos u) l h
+  | tan {u : G} {l h : QExpr} : T2Read B i (.div (.sin u) (.cos u)) l h → T2Read B i (.tan u) l h
 
 /-- The symmetric second difference at index `n`. -/
 def sd (n : Nat) (p0 pp pm : Point QExpr) (e : G) : QExpr :=
@@ -413,6 +414,7 @@ theorem sd_sound {B : Box QExpr} {i : Nat} {p0 pp pm : Point QExpr}
           (qadd (ZTrig.Cn (evalN n p0 u) n) (ZTrig.Cn (evalN n p0 u) n))) _
       unfold two_sq sd qsub at *
       exact ⟨by rat_linarith, by rat_linarith⟩
+  | tan _ ih => exact ih
   | @div u v lv hv lw hw r1 r2 dw1 dw2 dv1 dv2 a1 a2 b1 b2 p P q Q n1 n2 l h rv hR rw dw dv _ _ cp cq hn1 hn2 cl ih1 ih2 =>
       -- w·v = u at each point: sd(u) − w0·sd(v) − Δ₊wΔ₊v − Δ₋wΔ₋v = v0·sd(w)
       have T2 := Ev_mul (value_sound h0 rw) ih2 (corners_scale cq hd)

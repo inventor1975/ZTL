@@ -12,7 +12,8 @@ bracket checked by cos at its halves (PiBr). This stand mirrors those definition
      k·pi/2, |k| <= 8: for every side the kernel returns, the Lean witnesses exist — the theorems cover what the
      kernel outputs (2026-10-17: 13 952 sides measured over 16 seeds, 0 without witnesses);
   3. MUTATION: a top moved below the true value at an end, and a window that holds an extremum, are refused —
-     the rule is not vacuous.
+     the rule is not vacuous;
+  4. tan (ZTrig14.TanVal): the kernel's iv_tan readings have their witnesses; a bottom above the truth is refused.
 Run:  python3 test_trigcert.py   -> TRIGCERT GREEN
 """
 import math
@@ -156,6 +157,61 @@ holds = [("cosHi", F(-1, 10), F(1, 10)), ("cosLo", F(3), F(13, 4)), ("sinHi", F(
          ("sinLo", F(-8, 5), F(-3, 2)), ("cosHi", F(62, 10), F(64, 10)), ("cosLo", F(-32, 10), F(-31, 10))]
 check(f"{len(holds)} windows holding an extremum (0, pi, pi/2, -pi/2, 2pi, -pi): no no-extremum witness",
       all(window(k, a, b) is None for k, a, b in holds), [(k, float(a)) for k, a, b in holds if window(k, a, b)])
+
+# TAN (ZTrig14.TanVal): the kernel's iv_tan over windows in [-1.5, 1.5]; ends rounded outward (q0, q1)
+
+
+def tan_end(q, T, low, Mmax=400):
+    """Certified sin/cos brackets at q with c_lo > 0 and T·c ≤ s_lo at both c ends (low) / s_hi ≤ T·c (high)."""
+    a = abs(q)
+    M = 1
+    while 2 * a > M + 1:
+        M += 1
+    while M <= Mmax:
+        C, S = series(q, M)
+        t = 2 * tm(a, M)
+        cl, ch, sl, sh = C - t, C + t, S - t, S + t
+        if cl > 0 and ((low and T * cl <= sl and T * ch <= sl) or (not low and sh <= T * cl and sh <= T * ch)):
+            return M
+        M += max(1, M // 4)
+    return None
+
+
+def tanval(lu, hu, Tl, Th):
+    q0, q1 = zfunc._down(lu), zfunc._up(hu)
+    c0 = min(math.cos(float(q0)), math.cos(float(q1))) / 2
+    if c0 <= 0:
+        return "cos window"
+    c0 = F(c0)
+    if not (window("cosLo", q0, q1) and cert(q0, "cos", need_lo=c0) and cert(q1, "cos", need_lo=c0)):
+        return "cos window"
+    d = q1 - q0
+    if not (window("sinLo", F(0), d) and cert(F(0), "sin", need_lo=F(0)) and cert(d, "sin", need_lo=F(0))):
+        return "sin window"
+    if tan_end(q0, Tl, True) is None:
+        return "low end"
+    if tan_end(q1, Th, False) is None:
+        return "high end"
+    return "ok"
+
+
+tcases = []
+for _ in range(120):
+    c = rnd.uniform(-1.45, 1.45); w = rnd.choice([1e-6, 1e-3, 0.05, 0.3, 1.0])
+    lo_, hi_ = max(-1.5, c - w / 2), min(1.5, c + w / 2)
+    tcases.append((dyad(lo_), dyad(hi_)))
+tcases += [(F(-3, 2), F(3, 2)), (F(0), F(0)), (F(3, 2), F(3, 2)), (F(-3, 2), F(-3, 2))]
+tbad = [(float(a), float(b), r) for a, b in tcases
+        for r in [tanval(a, b, *(F(v) for v in zfunc.iv_tan((a, b))))] if r != "ok"]
+check(f"{len(tcases)} kernel tan readings over windows in [-1.5, 1.5] (incl. the edges): every one has its Lean "
+      f"witnesses (ZTrig14.TanVal)", not tbad, tbad[:3])
+tmiss = []
+for a, b in tcases[:40]:
+    Tl, Th = (F(v) for v in zfunc.iv_tan((a, b)))
+    q0 = zfunc._down(a)
+    if tan_end(q0, F(math.tan(float(q0))) + F(1, 1000), True, Mmax=200) is not None:
+        tmiss.append(float(a))
+check("40 tan bottoms moved 1e-3 above the true tan at the end: every one refused", not tmiss, tmiss[:3])
 
 print(f"\n{ok} ok, {fail} fail")
 print("TRIGCERT GREEN" if fail == 0 else "TRIGCERT RED")

@@ -1,9 +1,10 @@
-import ZTrig11
+import ZTrig12
 
 /-!
 # ZSlopeSqrt — the kernel's certificate rule for `+ − × / exp ln sqrt`, integer powers, on VR's operational reals.
-Zero axioms. (`log10`, `sin`, `cos`: their value readings only — no derivative reading yet. `sin`/`cos` read
-as `zfunc.iv_sin`/`iv_cos` do, sound by `ZTrig.Ev_sin`/`Ev_cos`; their sequences are `ZTrig.Sn`/`Cn` at the index.)
+Zero axioms. (`log10`: its value reading only — no derivative reading yet. `sin`/`cos` read as `zfunc.iv_sin`/`iv_cos`
+do, sound by `ZTrig.Ev_sin`/`Ev_cos`; their slopes `cos(U)·Du`, `−sin(U)·Du` by `ZTrig.Ev_sin_slope`/`Ev_cos_slope`
+— chords on a grid, no mean value theorem; their sequences are `ZTrig.Sn`/`Cn` at the index.)
 
 `ZSlopeDiv` with `√` added (`ZSqrt`: the root found on a grid, the value read as the kernel's rational fork
 `[SL, SH]` with `SL² ≤ lo`, `hi ≤ SH²`, as `znum._rat_sqrt` builds it, `lo ≥ 0`). The kernel reads the derivative
@@ -155,6 +156,12 @@ inductive DRead (B : Box QExpr) (i : Nat) : G → QExpr → QExpr → Prop where
       VRead B u lu hu → qle qzero lu → qle qzero SL → qle (sq SL) lu → qle qzero SH → qle hu (sq SH) →
       qle w1 (qadd SL SL) → qle (qadd SH SH) w2 → RecipOK r1 r2 w1 w2 → DRead B i u du1 du2 →
       Corners m M du1 du2 r1 r2 → qle l m → qle M h → DRead B i (.sqrt u) l h
+  | sin {u : G} {lu hu cl ch du1 du2 m M l h : QExpr} :
+      VRead B u lu hu → qle lu hu → ZTrig.CosHi lu hu ch → ZTrig.CosLo lu hu cl → DRead B i u du1 du2 →
+      Corners m M cl ch du1 du2 → qle l m → qle M h → DRead B i (.sin u) l h
+  | cos {u : G} {lu hu sl sh du1 du2 m M l h : QExpr} :
+      VRead B u lu hu → qle lu hu → ZTrig.SinHi lu hu sh → ZTrig.SinLo lu hu sl → DRead B i u du1 du2 →
+      Corners m M (qneg sh) (qneg sl) du1 du2 → qle l m → qle M h → DRead B i (.cos u) l h
 
 /-- The quotient's difference, exactly: `u'/v' − u/v = (Δu·v − u·Δv)·(1/v)(1/v')`, `v, v' ≠ 0`. -/
 theorem quot_diff {u v u' v' : QExpr} (hv : ¬ qEq v qzero) (hv' : ¬ qEq v' qzero) :
@@ -338,6 +345,14 @@ theorem slope_sound {B : Box QExpr} {i : Nat} {p p' : Point QExpr} (hp : InBox q
       have s2 := ZExp.scale hh hd
       exact Ev_widen (Ev_sqrt_slope (value_sound hp ru) (value_sound hp' ru) hlo hSL hSL2 hSH hSH2 hw1 hw2 hR ih
         (corners_scale_left hc hd)) s1 s2
+  | @sin u lu hu cl ch du1 du2 m M l h ru hlh hi lo _ hc hl hh ih =>
+      have s1 := ZExp.scale hl hd
+      have s2 := ZExp.scale hh hd
+      exact Ev_widen (ZTrig.Ev_sin_slope (value_sound hp ru) (value_sound hp' ru) hlh hi lo ih (corners_scale hc hd)) s1 s2
+  | @cos u lu hu sl sh du1 du2 m M l h ru hlh hi lo _ hc hl hh ih =>
+      have s1 := ZExp.scale hl hd
+      have s2 := ZExp.scale hh hd
+      exact Ev_widen (ZTrig.Ev_cos_slope (value_sound hp ru) (value_sound hp' ru) hlh hi lo ih (corners_scale hc hd)) s1 s2
 
 /-! ## The value is an operational real wherever a value reading covers the point -/
 

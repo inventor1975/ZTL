@@ -679,6 +679,112 @@ theorem J_sqrt (i n : Nat) (p : Point QExpr) (u : G) (hs : ¬ qEq (evalN n p (.s
   generalize qmul (qnat (k + 1)) (J i n p u (k + 1)) = R at *
   exact qle_antisymm (by rat_linarith) (by rat_linarith)
 
+/-! ## The logarithm — `Dsh L ∗ U = Dsh U` -/
+
+/-- LN: `(Dsh J(ln u)) ∗ J(u) = Dsh J(u)` — the kernel's `l_k = (a_k − (1/k)Σ_{1≤i<k} i·l_i·a_{k−i})/a₀`; `u(p) ≠ 0`. -/
+theorem J_ln (i n : Nat) (p : Point QExpr) (u : G) (hu : ¬ qEq (evalN n p u) qzero) (k : Nat) :
+    qEq (ZTrig.cv (ZTrig.Dsh (J i n p (.ln u))) (J i n p u) k) (ZTrig.Dsh (J i n p u) k) := by
+  have jd := J_div i n p k (D i u) u hu k (Nat.le_refl k)
+  have c1 := ZTrig.cv_congr k (ZTrig.Dsh (J i n p (.ln u))) (J i n p (.div (D i u) u)) (J i n p u) (J i n p u)
+    (fun t => J_D i n p (.ln u) t) (fun _ => qEq_refl _)
+  exact qEq_trans c1 (qEq_trans jd (qEq_symm (J_D i n p u k)))
+
+/-! ## log10 — `L·J(log10 u)_{k+1} = J(ln u)_{k+1}`, `L = ln 10` -/
+
+theorem nz_mul {x y : QExpr} (hx : ¬ qEq x qzero) (hy : ¬ qEq y qzero) : ¬ qEq (qmul x y) qzero := fun z => by
+  apply hx
+  have c := qmul_inv'_cancel hy
+  have r : qEq x (qmul (qmul x y) (qinv' y)) := by
+    have := qmul_respects (qEq_refl x) c
+    exact qEq_trans (by rat_ring) (qEq_trans (qEq_symm this) (by rat_ring))
+  exact qEq_trans r (qEq_trans (qmul_respects z (qEq_refl _)) (by rat_ring))
+
+/-- LOG10: the kernel's `log10` series is `ln`'s divided by `ln 10` (from the first coefficient on). -/
+theorem J_log10 (i n : Nat) (p : Point QExpr) (u : G) (hu : ¬ qEq (evalN n p u) qzero)
+    (hL : ¬ qEq (evalN n p (.ln (.const (qnat 10)))) qzero) (t : Nat) :
+    qEq (qmul (evalN n p (.ln (.const (qnat 10)))) (J i n p (.log10 u) (t + 1))) (J i n p (.ln u) (t + 1)) := by
+  generalize hLv : evalN n p (.ln (.const (qnat 10))) = L at hL
+  have Jl : ∀ s, qEq (J i n p (.ln (.const (qnat 10))) s) (qmul L (unitS s)) := fun s => by
+    cases s with
+    | zero => rw [← hLv]; exact qEq_trans (J_free i n p (.ln (.const (qnat 10))) (fun h => h)).1 (by show qEq _ (qmul _ qone); rat_ring)
+    | succ s => exact qEq_trans ((J_free i n p (.ln (.const (qnat 10))) (fun h => h)).2 s) (by show qEq qzero (qmul L qzero); rat_ring)
+  -- J(u·ℓ) = L·J(u)
+  have Jm : ∀ s, qEq (J i n p (.mul u (.ln (.const (qnat 10)))) s) (qmul L (J i n p u s)) := fun s =>
+    qEq_trans (J_mul i n p s u _) (qEq_trans (cv_congr_uptoG s _ _ _ (fun s' _ => Jl s'))
+      (qEq_trans (ZTrig.cv_scaleG L s _ unitS) (qmul_respects (qEq_refl L)
+        (qEq_trans (cv_comm s _ _) (cv_unit s _)))))
+  have huL : ¬ qEq (evalN n p (.mul u (.ln (.const (qnat 10))))) qzero := by
+    show ¬ qEq (qmul (evalN n p u) (evalN n p (.ln (.const (qnat 10))))) qzero
+    rw [hLv]; exact nz_mul hu hL
+  -- L·cv(Dsh Log, U) = Dsh U = cv(Dsh Ln, U), for every index
+  have zero : ∀ k, qEq (ZTrig.cv (fun s => qsub (qmul L (ZTrig.Dsh (J i n p (.log10 u)) s)) (ZTrig.Dsh (J i n p (.ln u)) s))
+      (J i n p u) k) qzero := fun k => by
+    have jd := J_div i n p k (D i u) (.mul u (.ln (.const (qnat 10)))) huL k (Nat.le_refl k)
+    have c1 := ZTrig.cv_congr k (J i n p (.div (D i u) (.mul u (.ln (.const (qnat 10))))))
+      (ZTrig.Dsh (J i n p (.log10 u))) _ (fun s => qmul L (J i n p u s))
+      (fun s => qEq_symm (J_D i n p (.log10 u) s)) Jm
+    have c2 := ZTrig.cv_scaleG L k (ZTrig.Dsh (J i n p (.log10 u))) (J i n p u)
+    have jl := J_ln i n p u hu k
+    have sf := ZTrig.cv_subF k (fun s => qmul L (ZTrig.Dsh (J i n p (.log10 u)) s)) (ZTrig.Dsh (J i n p (.ln u))) (J i n p u)
+    have s1 := ZTrig.cv_scaleF L k (ZTrig.Dsh (J i n p (.log10 u))) (J i n p u)
+    have du := qEq_symm (J_D i n p u k)
+    have c3 := cv_comm k (ZTrig.Dsh (J i n p (.log10 u))) (fun s => qmul L (J i n p u s))
+    clear Jm Jl
+    unfold qsub at *
+    generalize ZTrig.cv (fun s => qadd (qmul L (ZTrig.Dsh (J i n p (.log10 u)) s)) (qneg (ZTrig.Dsh (J i n p (.ln u)) s))) (J i n p u) k = X at *
+    generalize ZTrig.cv (fun s => qmul L (ZTrig.Dsh (J i n p (.log10 u)) s)) (J i n p u) k = Y at *
+    generalize ZTrig.cv (ZTrig.Dsh (J i n p (.ln u))) (J i n p u) k = Z at *
+    generalize ZTrig.cv (J i n p (.div (D i u) (.mul u (.ln (.const (qnat 10)))))) (J i n p (.mul u (.ln (.const (qnat 10))))) k = W1 at *
+    generalize ZTrig.cv (ZTrig.Dsh (J i n p (.log10 u))) (fun s => qmul L (J i n p u s)) k = W2 at *
+    generalize ZTrig.cv (ZTrig.Dsh (J i n p (.log10 u))) (J i n p u) k = W3 at *
+    generalize ZTrig.cv (fun s => qmul L (J i n p u s)) (ZTrig.Dsh (J i n p (.log10 u))) k = W4 at *
+    generalize J i n p (D i u) k = V1 at *
+    generalize ZTrig.Dsh (J i n p u) k = V2 at *
+    generalize qmul L W3 = LW at *
+    exact qle_antisymm (by rat_linarith) (by rat_linarith)
+  have hu0 : ¬ qEq (J i n p u 0) qzero := nz_J0 i n p hu
+  have z := cv_cancel hu0 t (fun j _ => zero j) t (Nat.le_refl t)
+  apply cancel_succ t
+  have d1 : qEq (ZTrig.Dsh (J i n p (.log10 u)) t) (qmul (qnat (t + 1)) (J i n p (.log10 u) (t + 1))) := qEq_refl _
+  have d2 : qEq (ZTrig.Dsh (J i n p (.ln u)) t) (qmul (qnat (t + 1)) (J i n p (.ln u) (t + 1))) := qEq_refl _
+  have z' : qEq (qsub (qmul L (ZTrig.Dsh (J i n p (.log10 u)) t)) (ZTrig.Dsh (J i n p (.ln u)) t)) qzero := z
+  have e : qEq (qmul (qnat (t + 1)) (qmul L (J i n p (.log10 u) (t + 1)))) (qmul L (qmul (qnat (t + 1)) (J i n p (.log10 u) (t + 1)))) := by
+    rat_ring
+  have m := qmul_respects (qEq_refl L) d1
+  unfold qsub at z'
+  generalize ZTrig.Dsh (J i n p (.log10 u)) t = A at *
+  generalize ZTrig.Dsh (J i n p (.ln u)) t = A' at *
+  generalize qmul (qnat (t + 1)) (J i n p (.ln u) (t + 1)) = R at *
+  generalize qmul (qnat (t + 1)) (qmul L (J i n p (.log10 u) (t + 1))) = R' at *
+  generalize qmul (qnat (t + 1)) (J i n p (.log10 u) (t + 1)) = R'' at *
+  generalize qmul L A = LA at *
+  generalize qmul L R'' = LR at *
+  exact qle_antisymm (by rat_linarith) (by rat_linarith)
+
+/-! ## A real exponent — `u^c = exp(c·ln u)`, Miller's recurrence with `c` -/
+
+/-- MILLER, ANY EXPONENT: `J(u) ∗ Dsh J(exp(c·ln u)) = c·J(exp(c·ln u)) ∗ Dsh J(u)`; `u(p) ≠ 0`. -/
+theorem J_millerR (i n : Nat) (p : Point QExpr) (u : G) (c : QExpr) (hu : ¬ qEq (evalN n p u) qzero) (j : Nat) :
+    qEq (ZTrig.cv (J i n p u) (ZTrig.Dsh (J i n p (.exp (.mul (.const c) (.ln u))))) j)
+      (qmul c (ZTrig.cv (J i n p (.exp (.mul (.const c) (.ln u)))) (ZTrig.Dsh (J i n p u)) j)) := by
+  -- Dsh P = c·(P ∗ Dsh L)
+  have dw : ∀ t, qEq (ZTrig.Dsh (J i n p (.mul (.const c) (.ln u))) t) (qmul c (ZTrig.Dsh (J i n p (.ln u)) t)) := fun t => by
+    show qEq (qmul (qnat (t + 1)) (J i n p (.mul (.const c) (.ln u)) (t + 1))) (qmul c (qmul (qnat (t + 1)) (J i n p (.ln u) (t + 1))))
+    have := J_cmul i n p c (.ln u) (t + 1)
+    exact qEq_trans (qmul_respects (qEq_refl _) this) (by rat_ring)
+  have dP : ∀ t, qEq (ZTrig.Dsh (J i n p (.exp (.mul (.const c) (.ln u)))) t)
+      (qmul c (ZTrig.cv (J i n p (.exp (.mul (.const c) (.ln u)))) (ZTrig.Dsh (J i n p (.ln u))) t)) := fun t =>
+    qEq_trans (J_exp i n p _ t) (qEq_trans (ZTrig.cv_congr t _ _ _ _ (fun _ => qEq_refl _) dw)
+      (ZTrig.cv_scaleG c t _ _))
+  -- U ∗ (c·(P ∗ DshL)) = c·(P ∗ (U ∗ DshL)) = c·(P ∗ DshU)
+  have s1 := ZTrig.cv_congr j (J i n p u) (J i n p u) _ _ (fun _ => qEq_refl _) dP
+  have s2 := ZTrig.cv_scaleG c j (J i n p u) (ZTrig.cv (J i n p (.exp (.mul (.const c) (.ln u)))) (ZTrig.Dsh (J i n p (.ln u))))
+  have s3 := cv_swap (J i n p u) (J i n p (.exp (.mul (.const c) (.ln u)))) (ZTrig.Dsh (J i n p (.ln u))) j
+  have s4 := ZTrig.cv_congr j (J i n p (.exp (.mul (.const c) (.ln u)))) (J i n p (.exp (.mul (.const c) (.ln u))))
+    (ZTrig.cv (J i n p u) (ZTrig.Dsh (J i n p (.ln u)))) (ZTrig.Dsh (J i n p u)) (fun _ => qEq_refl _)
+    (fun t => qEq_trans (cv_comm t _ _) (J_ln i n p u hu t))
+  exact qEq_trans s1 (qEq_trans s2 (qmul_respects (qEq_refl c) (qEq_trans s3 s4)))
+
 end ZJet
 
 #print axioms ZJet.J_D
@@ -700,3 +806,6 @@ end ZJet
 #print axioms ZJet.J_pow_succ
 #print axioms ZJet.J_miller
 #print axioms ZJet.J_sqrt
+#print axioms ZJet.J_ln
+#print axioms ZJet.J_log10
+#print axioms ZJet.J_millerR

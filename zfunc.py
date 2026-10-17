@@ -308,15 +308,56 @@ def iv_exp(a):
     return _iv_mono(exp_pt, a, Fraction(0), INF)
 
 
+# EVERY ln reading is checked for the Lean witnesses of ZSlopeSqrt.VRead.ln (2026-10-17): its low side L needs an
+# ExpCert of e^L whose top is <= the argument's low end, its high side one whose bottom is >= the argument's high end
+# (zexpcert, lean/ZExp ExpCert). MEASURED: ln_pt's brackets are tighter than exp_pt's, 5955 of 6000 sides had no
+# certificate as computed; moved outward by 2^-55 all 4000 of a second sample had one. A side is moved by the first
+# margin that certifies; one that none does is kept and counted (LN_UNCOVERED) — a premise.
+LN_UNCOVERED = [0]
+_LN_MARGINS = (Fraction(0), Fraction(1, 2 ** 55), Fraction(1, 2 ** 30), Fraction(1, 2 ** 10))
+_LN_CERT = {}
+
+
+def _ln_side(u, L, side):
+    key = (u, L, side)
+    if key not in _LN_CERT:
+        from zexpcert import exp_cert
+        lo, hi = exp_pt(L)
+        ok = exp_cert(L, lo, hi)[0] and (hi <= u if side == "lo" else lo >= u)
+        _LN_CERT[key] = ok
+    return _LN_CERT[key]
+
+
+def _cert_ln(a, r):
+    lo, hi = r
+    if not (_inf(lo) or _inf(a[0])):
+        u = Fraction(a[0])
+        for m in _LN_MARGINS:
+            if _ln_side(u, Fraction(lo) - m, "lo"):
+                lo = Fraction(lo) - m
+                break
+        else:
+            LN_UNCOVERED[0] += 1
+    if not (_inf(hi) or _inf(a[1])):
+        u = Fraction(a[1])
+        for m in _LN_MARGINS:
+            if _ln_side(u, Fraction(hi) + m, "hi"):
+                hi = Fraction(hi) + m
+                break
+        else:
+            LN_UNCOVERED[0] += 1
+    return lo, hi
+
+
 def iv_ln(a):
     if a[1] <= 0:
         raise NoReadings("ln of a quantity that is never positive")
     if a[0] <= 0:
         return None
-    return _iv_mono(ln_pt, a, -INF, INF)
+    return _cert_ln(a, _iv_mono(ln_pt, a, -INF, INF))
 
 
-LN10 = ln_pt(Fraction(10))
+LN10 = _cert_ln((Fraction(10), Fraction(10)), ln_pt(Fraction(10)))
 
 
 def iv_log10(a):

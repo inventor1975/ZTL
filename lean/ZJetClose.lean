@@ -110,6 +110,54 @@ theorem cl_sq {v : G} : Cl B v → Cl B (.mul v v)
       have e : qEq (qmul (qmul r1 h) (qmul r1 h)) (qmul (qmul r1 r1) (qmul h h)) := by rat_ring
       exact qle_trans s (qle_of_qEq e)
 
+theorem ev_le {x : Nat → QExpr} {l h : QExpr} (hx : Ev x l h) : qle l h := by
+  cases qle.decidable l h with
+  | isTrue t => exact t
+  | isFalse f =>
+    exfalso
+    have hl : qle h l := (qle_total l h).resolve_left f
+    have pos : qlt qzero (qsub l h) := qlt_iff_le_not_le.mpr ⟨by unfold qsub; rat_linarith,
+      fun z => f (by unfold qsub at z; rat_linarith)⟩
+    obtain ⟨Bq, hB⟩ := ZTrig.pos_floor pos
+    obtain ⟨N, hN⟩ := hx (Bq + 1 + 1)
+    obtain ⟨a, b⟩ := hN N (Nat.le_refl N)
+    have e := qeps_succ_add Bq
+    have e2 := qeps_succ_add (Bq + 1)
+    have np := (qlt_iff_le_not_le.mp (qeps_pos (Bq + 1))).2
+    apply np
+    unfold qsub at *
+    rat_linarith
+
+/-- A box with no point: every bound holds there. -/
+theorem boxEv_empty {e : G} {l h : QExpr} (r : BoxEv B e l h) (hn : ¬ qle l h) (e' : G) (l' h' : QExpr) :
+    BoxEv B e' l' h' := fun p hp => absurd (ev_le (r p hp)) hn
+
+/-- Two positive factors (`u ≥ lu > 0`, `v ≥ lv > 0`): their product is clear of zero. -/
+theorem cl_mul_pos {u v : G} {lu hu lv hv : QExpr} (bu : BoxEv B u lu hu) (hlu : qlt qzero lu)
+    (bv : BoxEv B v lv hv) (hlv : qlt qzero lv) : Cl B (.mul u v) := by
+  cases qle.decidable lu hu with
+  | isFalse f => exact ⟨qone, qone, qone, qone, boxEv_empty bu f _ _ _, qle_refl _, Or.inl ⟨qone_pos, by
+      have := qle_of_qlt qone_pos; rat_linarith, by rat_linarith⟩⟩
+  | isTrue h1 =>
+  cases qle.decidable lv hv with
+  | isFalse f => exact ⟨qone, qone, qone, qone, boxEv_empty bv f _ _ _, qle_refl _, Or.inl ⟨qone_pos, by
+      have := qle_of_qlt qone_pos; rat_linarith, by rat_linarith⟩⟩
+  | isTrue h2 =>
+  have l0 := qle_of_qlt hlu
+  have v0 := qle_of_qlt hlv
+  have p1 := qmul_nonneg l0 (show qle qzero (qsub hv lv) by unfold qsub; rat_linarith)
+  have p2 := qmul_nonneg (show qle qzero (qsub hu lu) by unfold qsub; rat_linarith) v0
+  have p3 := qmul_nonneg (show qle qzero (qsub hu lu) by unfold qsub; rat_linarith) (show qle qzero (qsub hv lv) by unfold qsub; rat_linarith)
+  have c : Corners (qmul lu lv) (qmul hu hv) lu hu lv hv := by
+    unfold qsub at p1 p2 p3
+    exact ⟨⟨qle_refl _, by rat_linarith, by rat_linarith, by rat_linarith⟩, ⟨by rat_linarith, by rat_linarith, by rat_linarith, qle_refl _⟩⟩
+  have pp := qmul_pos hlu hlv
+  have cc := qmul_inv'_cancel (ne_zero_of_lt pp)
+  have e : qEq (qmul (qinv' (qmul lu lv)) (qmul lu lv)) (qmul (qmul lu lv) (qinv' (qmul lu lv))) := by rat_ring
+  unfold qsub at p1 p2 p3
+  exact ⟨_, _, qzero, qinv' (qmul lu lv), fun p hp => Ev_mul (bu p hp) (bv p hp) c, by rat_linarith,
+    Or.inl ⟨pp, by rat_linarith, by rat_linarith⟩⟩
+
 theorem diter_uses {e : G} (hU : ¬ Uses e i) : ∀ t, ¬ Uses (Diter i t e) i := by
   intro t
   induction t generalizing e with
@@ -319,6 +367,30 @@ theorem sqrt_close {u : G} (su : StAll B i u) (bu : BdAll B i u) {lu hu SL SH dl
   obtain ⟨_, _, d⟩ := bu 1
   exact StepRead.sqrt (su 0) ru hlo hSL hSL2 hSH hSH2 d
 
+/-- A positive box bound is clear of zero. -/
+theorem cl_pos {u : G} {l h : QExpr} (bu : BoxEv B u l h) (hl : qlt qzero l) : Cl B u := by
+  cases qle.decidable l h with
+  | isFalse f => exact ⟨qone, qone, qone, qone, boxEv_empty bu f _ _ _, qle_refl _, Or.inl ⟨qone_pos, by
+      have := qle_of_qlt qone_pos; rat_linarith, by rat_linarith⟩⟩
+  | isTrue h1 =>
+    have cc := qmul_inv'_cancel (ne_zero_of_lt hl)
+    have e : qEq (qmul (qinv' l) l) (qmul l (qinv' l)) := by rat_ring
+    exact ⟨l, h, qzero, qinv' l, bu, h1, Or.inl ⟨hl, by rat_linarith, by rat_linarith⟩⟩
+
+/-- `ln u`, `u` bounded below by a positive box bound: every iterate bounded and step-readable. -/
+theorem ln_close {u : G} (su : StAll B i u) (bu : BdAll B i u) {l h : QExpr} (b0 : BoxEv B u l h) (hl : qlt qzero l)
+    (hln : Bd B (.ln u)) : BdAll B i (.ln u) ∧ StAll B i (.ln u) := by
+  have hc := cl_pos b0 hl
+  refine ⟨fun t => ?_, fun t => ?_⟩
+  · cases t with
+    | zero => exact hln
+    | succ t => exact divG t (D i u) u (bd_Dall bu) bu hc
+  · cases t with
+    | zero =>
+        obtain ⟨_, _, d⟩ := bu 1
+        exact StepRead.ln (su 0) b0 hl d
+    | succ t => exact divS t (D i u) u (fun s => su (s + 1)) su (bd_Dall bu) bu hc
+
 /-! ## From the kernel's reading -/
 
 /-- A coefficient reading bounds the value: `BoxEv` from `k = 0`. -/
@@ -354,6 +426,44 @@ theorem cread_good {K : Nat} : ∀ {e : G} {c : Nat → QExpr × QExpr}, CRead B
       have cl : Cl B (.cos u) := ⟨_, _, r1, r2, fun p hp => Ev_widen (boxEv_of_read rc p hp) hcc.1 hcc.2, hR⟩
       exact ⟨bd_tanAll ihu.1 ht, st_tanAll ihu.2 ihu.1 ⟨ls, hs, boxEv_of_read rs⟩ cl ht⟩
   | @powN u m a p l0 h0 W dv R _ _ _ _ ihu => exact ⟨bd_powAll ihu.1 m, st_powAll ihu.2 ihu.1 m⟩
+  | @powR u c a p l0 h0 W dv R ru hpos hV _ _ ihu =>
+      have bu := boxEv_of_cread ru
+      have lnB : Bd B (.ln u) := by
+        cases hV with
+        | exp rw _ _ =>
+          cases rw with
+          | mul _ rl _ => exact ⟨_, _, boxEv_of_read rl⟩
+      obtain ⟨bl, sl⟩ := ln_close ihu.2 ihu.1 bu hpos lnB
+      have bw := bd_mulAll (bd_constAll c) bl
+      have sw := st_mulAll (st_constAll c) sl (bd_constAll c) bl
+      have be : Bd B (.exp (.mul (.const c) (.ln u))) := ⟨_, _, boxEv_of_read hV⟩
+      exact ⟨bd_expAll bw be, st_expAll sw bw be⟩
+  | @log10 u a l c l0 h0 L1 L2 r1 r2 s1 s2 ru rl hpos hRu hV _ hL hL1 hR _ ihu ihl =>
+      have bu := boxEv_of_cread ru
+      have bL : BoxEv B (.ln (.const (qnat 10))) L1 L2 := boxEv_of_read hL
+      have clm : Cl B (.mul u (.ln (.const (qnat 10)))) := cl_mul_pos bu hpos bL hL1
+      have bfree : BdAll B i (.ln (.const (qnat 10))) := bd_free (fun h => h) ⟨_, _, bL⟩
+      refine ⟨fun t => ?_, fun t => ?_⟩
+      · cases t with
+        | zero => exact ⟨_, _, boxEv_of_read hV⟩
+        | succ t => exact divG t (D i u) (.mul u (.ln (.const (qnat 10)))) (bd_Dall ihu.1) (bd_mulAll ihu.1 bfree) clm
+      · cases t with
+        | zero => exact StepRead.log10 (ihl.2 0) bu hpos bL hL1
+        | succ t =>
+            exact divS t (D i u) (.mul u (.ln (.const (qnat 10)))) (fun s => ihu.2 (s + 1))
+              (st_mulAll ihu.2 (st_free (fun h => h)) ihu.1 bfree) (bd_Dall ihu.1) (bd_mulAll ihu.1 bfree) clm
+  | @ln u a c Dl l0 h0 r1 r2 ru _ _ hpos hR _ _ _ ihu =>
+      have bu := boxEv_of_cread ru
+      have hc : Cl B u := ⟨_, _, r1, r2, bu, hR⟩
+      refine ⟨fun t => ?_, fun t => ?_⟩
+      · cases t with
+        | zero => exact ⟨_, _, fun p hp => (boxEv_of_cread (CRead.ln ru ‹_› ‹_› hpos hR ‹_› ‹_› ‹_›) p hp)⟩
+        | succ t => exact divG t (D i u) u (bd_Dall ihu.1) ihu.1 hc
+      · cases t with
+        | zero =>
+            obtain ⟨_, _, d⟩ := ihu.1 1
+            exact StepRead.ln (ihu.2 0) bu hpos d
+        | succ t => exact divS t (D i u) u (fun s => ihu.2 (s + 1)) ihu.2 (bd_Dall ihu.1) ihu.1 hc
   | @sqrt u a c l0 h0 dl dh r1 r2 _ hV hc0 hpos hdv hR _ _ ihu =>
       have bs : BoxEv B (.sqrt u) l0 h0 := boxEv_of_read hV
       cases hV with

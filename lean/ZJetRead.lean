@@ -184,6 +184,57 @@ theorem pow_form (i n : Nat) (p : Point QExpr) (u : G) (m j : Nat) :
   clear wt dA hPD q
   exact qle_antisymm (by rat_linarith) (by rat_linarith)
 
+/-- MILLER IN THE KERNEL'S FORM, A REAL EXPONENT (`u^c = exp(c·ln u)`): `(j+1)·A₀·P_{j+1} = Σ_{s≤j} (m(j+1) − (m+1)s)·P_s·A_{j+1−s}`. -/
+theorem pow_formR (i n : Nat) (p : Point QExpr) (u : G) (c : QExpr) (hu : ¬ qEq (evalN n p u) qzero) (j : Nat) :
+    qEq (qmul (qmul (qnat (j + 1)) (J i n p u 0)) (J i n p (.exp (.mul (.const c) (.ln u))) (j + 1)))
+      (ZTrig.cv (fun s => qmul (qsub (qmul c (qnat (j + 1))) (qmul (qadd c qone) (qnat s))) (J i n p (.exp (.mul (.const c) (.ln u))) s))
+        (fun t => J i n p u (t + 1)) j) := by
+  have mi := J_millerR i n p u c hu j
+  have co := cv_comm j (J i n p u) (ZTrig.Dsh (J i n p (.exp (.mul (.const c) (.ln u)))))
+  have ds := cvD_shift (J i n p (.exp (.mul (.const c) (.ln u)))) (J i n p u) j
+  have wt := cv_weight j (J i n p (.exp (.mul (.const c) (.ln u)))) (fun t => J i n p u (t + 1))
+  have dA : qEq (ZTrig.cv (J i n p (.exp (.mul (.const c) (.ln u)))) (ZTrig.Dsh (J i n p u)) j)
+      (ZTrig.cv (J i n p (.exp (.mul (.const c) (.ln u)))) (fun s => qmul (qnat (s + 1)) ((fun t => J i n p u (t + 1)) s)) j) := qEq_refl _
+  -- the target, by linearity
+  have lin := ZTrig.cv_congr j
+    (fun s => qmul (qsub (qmul c (qnat (j + 1))) (qmul (qadd c qone) (qnat s))) (J i n p (.exp (.mul (.const c) (.ln u))) s))
+    (fun s => qsub (qmul (qmul c (qnat (j + 1))) (J i n p (.exp (.mul (.const c) (.ln u))) s))
+      (qmul (qadd c qone) (qmul (qnat s) (J i n p (.exp (.mul (.const c) (.ln u))) s))))
+    (fun t => J i n p u (t + 1)) (fun t => J i n p u (t + 1))
+    (fun s => by
+      show qEq (qmul (qsub (qmul c (qnat (j + 1))) (qmul (qadd c qone) (qnat s))) (J i n p (.exp (.mul (.const c) (.ln u))) s))
+        (qsub (qmul (qmul c (qnat (j + 1))) (J i n p (.exp (.mul (.const c) (.ln u))) s))
+          (qmul (qadd c qone) (qmul (qnat s) (J i n p (.exp (.mul (.const c) (.ln u))) s))))
+      unfold qsub; rat_ring) (fun _ => qEq_refl _)
+  have sb := ZTrig.cv_subF j (fun s => qmul (qmul c (qnat (j + 1))) (J i n p (.exp (.mul (.const c) (.ln u))) s))
+    (fun s => qmul (qadd c qone) (qmul (qnat s) (J i n p (.exp (.mul (.const c) (.ln u))) s))) (fun t => J i n p u (t + 1))
+  have s1 := ZTrig.cv_scaleF (qmul c (qnat (j + 1))) j (J i n p (.exp (.mul (.const c) (.ln u)))) (fun t => J i n p u (t + 1))
+  have s2 := ZTrig.cv_scaleF (qadd c qone) j (fun s => qmul (qnat s) (J i n p (.exp (.mul (.const c) (.ln u))) s)) (fun t => J i n p u (t + 1))
+  have q : qEq (qadd c qone) (qadd c qone) := qEq_refl _
+  unfold qsub at *
+  generalize ZTrig.cv (fun s => qmul (qadd (qmul c (qnat (j + 1))) (qneg (qmul (qadd c qone) (qnat s)))) (J i n p (.exp (.mul (.const c) (.ln u))) s))
+    (fun t => J i n p u (t + 1)) j = T at *
+  generalize ZTrig.cv (fun s => qadd (qmul (qmul c (qnat (j + 1))) (J i n p (.exp (.mul (.const c) (.ln u))) s))
+      (qneg (qmul (qadd c qone) (qmul (qnat s) (J i n p (.exp (.mul (.const c) (.ln u))) s))))) (fun t => J i n p u (t + 1)) j = T' at *
+  generalize ZTrig.cv (fun s => qmul (qmul c (qnat (j + 1))) (J i n p (.exp (.mul (.const c) (.ln u))) s)) (fun t => J i n p u (t + 1)) j = T1 at *
+  generalize ZTrig.cv (fun s => qmul (qadd c qone) (qmul (qnat s) (J i n p (.exp (.mul (.const c) (.ln u))) s))) (fun t => J i n p u (t + 1)) j = T2 at *
+  generalize ZTrig.cv (fun s => qmul (qnat s) (J i n p (.exp (.mul (.const c) (.ln u))) s)) (fun t => J i n p u (t + 1)) j = IP at *
+  generalize ZTrig.cv (J i n p (.exp (.mul (.const c) (.ln u)))) (fun t => J i n p u (t + 1)) j = PA at *
+  generalize ZTrig.cv (J i n p (.exp (.mul (.const c) (.ln u)))) (fun s => qmul (qnat (s + 1)) ((fun t => J i n p u (t + 1)) s)) j = PD at *
+  generalize ZTrig.cv (J i n p (.exp (.mul (.const c) (.ln u)))) (ZTrig.Dsh (J i n p u)) j = PD' at *
+  generalize ZTrig.cv (J i n p u) (ZTrig.Dsh (J i n p (.exp (.mul (.const c) (.ln u))))) j = AP at *
+  generalize ZTrig.cv (ZTrig.Dsh (J i n p (.exp (.mul (.const c) (.ln u))))) (J i n p u) j = AP' at *
+  generalize J i n p (.exp (.mul (.const c) (.ln u))) (j + 1) = Pk at *
+  generalize J i n p u 0 = A0 at *
+  generalize qnat (j + 1) = K at *
+  -- the two nonlinear steps by hand, the rest is linear in the monomials
+  have hPD : qEq PD' (qadd (qmul K PA) (qneg IP)) := by
+    clear mi co ds lin sb s1 s2 q
+    exact qle_antisymm (by rat_linarith) (by rat_linarith)
+  have hM := qmul_respects (qEq_refl c) hPD
+  clear wt dA hPD q
+  exact qle_antisymm (by rat_linarith) (by rat_linarith)
+
 /-! ## The reading -/
 
 /-- `1/(m+1)`. -/
@@ -245,6 +296,31 @@ inductive CRead (B : Box QExpr) (i K : Nat) : G → (Nat → QExpr × QExpr) →
       (∀ j, j + 1 < K → ∃ l h l' h', CvB j (fun t => c (t + 1)) (fun t => c (t + 1)) l h ∧
         Corners l' h' (qsub (a (j + 2)).1 h) (qsub (a (j + 2)).2 l) r1 r2 ∧ Hull (c (j + 2)) l' h') →
       CRead B i K (.sqrt u) c
+  | ln {u : G} {a c D : Nat → QExpr × QExpr} {l0 h0 r1 r2 : QExpr} : CRead B i K u a →
+      VRead B (.ln u) l0 h0 → Hull (c 0) l0 h0 → qlt qzero (a 0).1 → RecipOK r1 r2 (a 0).1 (a 0).2 →
+      (∀ t, t + 1 < K → Corners (D t).1 (D t).2 (qnat (t + 1)) (qnat (t + 1)) (c (t + 1)).1 (c (t + 1)).2) →
+      (0 < K → ∃ l' h', Corners l' h' (a 1).1 (a 1).2 r1 r2 ∧ Hull (c 1) l' h') →
+      (∀ j, j + 1 < K → ∃ l h l1 h1 l' h', CvB j D (fun t => a (t + 1)) l h ∧ Corners l1 h1 l h (inv1 (j + 1)) (inv1 (j + 1)) ∧
+        Corners l' h' (qsub (a (j + 2)).1 h1) (qsub (a (j + 2)).2 l1) r1 r2 ∧ Hull (c (j + 2)) l' h') →
+      CRead B i K (.ln u) c
+  | log10 {u : G} {a l c : Nat → QExpr × QExpr} {l0 h0 L1 L2 r1 r2 s1 s2 : QExpr} : CRead B i K u a →
+      CRead B i K (.ln u) l → qlt qzero (a 0).1 → RecipOK s1 s2 (a 0).1 (a 0).2 →
+      VRead B (.log10 u) l0 h0 → Hull (c 0) l0 h0 → VRead B (.ln (.const (qnat 10))) L1 L2 → qlt qzero L1 →
+      RecipOK r1 r2 L1 L2 →
+      (∀ k, k < K → ∃ l' h', Corners l' h' (l (k + 1)).1 (l (k + 1)).2 r1 r2 ∧ Hull (c (k + 1)) l' h') →
+      CRead B i K (.log10 u) c
+  | powR {u : G} {c : QExpr} {a p : Nat → QExpr × QExpr} {l0 h0 : QExpr} (W : Nat → Nat → QExpr × QExpr)
+      (dv R : Nat → QExpr × QExpr) : CRead B i K u a → qlt qzero (a 0).1 →
+      VRead B (.exp (.mul (.const c) (.ln u))) l0 h0 → Hull (p 0) l0 h0 →
+      (∀ j, j < K →
+        (∀ s, s ≤ j → Corners (W j s).1 (W j s).2
+          (qsub (qmul c (qnat (j + 1))) (qmul (qadd c qone) (qnat s)))
+          (qsub (qmul c (qnat (j + 1))) (qmul (qadd c qone) (qnat s))) (p s).1 (p s).2) ∧
+        Corners (dv j).1 (dv j).2 (qnat (j + 1)) (qnat (j + 1)) (a 0).1 (a 0).2 ∧
+        RecipOK (R j).1 (R j).2 (dv j).1 (dv j).2 ∧
+        ∃ l h l' h', CvB j (W j) (fun t => a (t + 1)) l h ∧ Corners l' h' l h (R j).1 (R j).2 ∧
+          Hull (p (j + 1)) l' h') →
+      CRead B i K (.exp (.mul (.const c) (.ln u))) p
 
 /-! ## Soundness -/
 
@@ -280,6 +356,28 @@ theorem cv_negF (F G : Nat → QExpr) (m : Nat) :
   have c := ZTrig.cv_congr m (fun t => qneg (F t)) (fun t => qmul (qneg qone) (F t)) G G
     (fun j => by show qEq (qneg (F j)) (qmul (qneg qone) (F j)); rat_ring) (fun _ => qEq_refl _)
   exact qEq_trans c (qEq_trans (ZTrig.cv_scaleF (qneg qone) m F G) (by rat_ring))
+
+theorem ln_solve {L U0 Uk C N : QExpr} (hz : ¬ qEq U0 qzero) (hN : qEq (qmul N (qinv' N)) qone)
+    (h : qEq (qadd C (qmul (qmul N L) U0)) (qmul N Uk)) :
+    qEq L (qmul (qsub Uk (qmul C (qinv' N))) (qinv' U0)) := by
+  apply div_solve hz
+  have m := qmul_respects h (qEq_refl (qinv' N))
+  have e1 : qEq (qmul (qadd C (qmul (qmul N L) U0)) (qinv' N))
+      (qadd (qmul C (qinv' N)) (qmul (qmul N (qinv' N)) (qmul L U0))) := by rat_ring
+  have e2 : qEq (qmul (qmul N Uk) (qinv' N)) (qmul (qmul N (qinv' N)) Uk) := by rat_ring
+  have e3 := qmul_respects hN (qEq_refl (qmul L U0))
+  have e4 := qmul_respects hN (qEq_refl Uk)
+  have o1 : qEq (qmul qone (qmul L U0)) (qmul L U0) := by rat_ring
+  have o2 : qEq (qmul qone Uk) Uk := by rat_ring
+  generalize qmul (qadd C (qmul (qmul N L) U0)) (qinv' N) = A at *
+  generalize qmul (qmul N Uk) (qinv' N) = B' at *
+  generalize qmul (qmul N (qinv' N)) (qmul L U0) = P at *
+  generalize qmul (qmul N (qinv' N)) Uk = Q at *
+  generalize qmul C (qinv' N) = CN at *
+  generalize qmul L U0 = LU at *
+  generalize qmul qone LU = LU' at *
+  generalize qmul qone Uk = U' at *
+  exact qle_antisymm (by rat_linarith) (by rat_linarith)
 
 /-- The value of a reading, at `k = 0`. -/
 theorem ev0 {B : Box QExpr} {q : Point QExpr} (hq : InBox qOrd B q) (i : Nat) {e : G} {l h : QExpr}
@@ -463,10 +561,92 @@ theorem cread_sound {B : Box QExpr} {q : Point QExpr} (hq : InBox qOrd B q) {i K
           generalize qmul (J i n q (.sqrt u) (j + 2)) (J i n q (.sqrt u) 0) = P2 at *
           exact qle_antisymm (by rat_linarith) (by rat_linarith)
 
+  | @ln u a c D l0 h0 r1 r2 _ hV hc0 _ hR hD h1 h2 ihu =>
+      intro k hk
+      refine strong_upto (K := K) (fun j => Ev (fun n => J i n q (.ln u) j) (c j).1 (c j).2)
+        (ev0 hq i hV hc0) (fun m hm ih => ?_) k hk k (Nat.le_refl k)
+      obtain ⟨N0, hN0⟩ := ev_nz (ihu 0 (Nat.zero_le _)) hR
+      have nzu : ∀ n, N0 ≤ n → ¬ qEq (evalN n q u) qzero := fun n hn z => hN0 n hn (qEq_trans (J_zero i n q u) z)
+      have eU := ihu 0 (Nat.zero_le _)
+      cases m with
+      | zero =>
+          obtain ⟨l', h', co, hh⟩ := h1 hm
+          have e := Ev_mul (ihu 1 (Nat.succ_le_of_lt hm)) (Ev_recip eU hR) co
+          refine Ev_hull (Ev_congr_ev N0 (fun n hn => qEq_symm (mul_solve (hN0 n hn) ?_)) e) hh
+          have jl := J_ln i n q u (nzu n hn) 0
+          have q1 : qEq (qnat (0 + 1)) qone := qEq_trans (qnat_succ 0) (qEq_trans (qadd_respects qnat_zero (qEq_refl _)) (by rat_ring))
+          have a1 := qmul_respects q1 (qEq_refl (J i n q (.ln u) 1))
+          have a2 := qmul_respects q1 (qEq_refl (J i n q u 1))
+          have jl' : qEq (qmul (qmul (qnat (0 + 1)) (J i n q (.ln u) 1)) (J i n q u 0)) (qmul (qnat (0 + 1)) (J i n q u 1)) := jl
+          generalize qmul (qnat (0 + 1)) (J i n q (.ln u) 1) = X at *
+          generalize qmul (qnat (0 + 1)) (J i n q u 1) = Y at *
+          have r : qEq (qmul (qmul qone (J i n q (.ln u) 1)) (J i n q u 0)) (qmul (J i n q u 0) (J i n q (.ln u) 1)) := by rat_ring
+          have r2 : qEq (qmul qone (J i n q u 1)) (J i n q u 1) := by rat_ring
+          have m1 := qmul_respects a1 (qEq_refl (J i n q u 0))
+          generalize qmul (J i n q u 0) (J i n q (.ln u) 1) = Z at *
+          generalize qmul (qmul qone (J i n q (.ln u) 1)) (J i n q u 0) = Z' at *
+          generalize qmul X (J i n q u 0) = Z'' at *
+          generalize qmul qone (J i n q u 1) = W at *
+          exact qle_antisymm (by rat_linarith) (by rat_linarith)
+      | succ j =>
+          obtain ⟨l, h, l1, h1', l', h', cb, cs, co, hh⟩ := h2 j hm
+          have eD : ∀ t, t ≤ j → Ev (fun n => ZTrig.Dsh (J i n q (.ln u)) t) (D t).1 (D t).2 := fun t ht =>
+            Ev_mul (Ev_const _) (ih (t + 1) (Nat.succ_le_succ ht)) (hD t (Nat.lt_of_le_of_lt (Nat.succ_le_succ ht) hm))
+          have ecv := Ev_cv j (fun n => ZTrig.Dsh (J i n q (.ln u))) (fun n t => J i n q u (t + 1)) D (fun t => a (t + 1)) eD
+            (fun t ht => ihu (t + 1) (Nat.succ_le_of_lt (Nat.lt_of_le_of_lt ht (Nat.lt_of_succ_lt hm)))) cb
+          have e := Ev_mul (Ev_sub (ihu (j + 2) (Nat.succ_le_of_lt hm)) (Ev_mul ecv (Ev_const (inv1 (j + 1))) cs))
+            (Ev_recip eU hR) co
+          refine Ev_hull (Ev_congr_ev N0 (fun n hn => qEq_symm ?_) e) hh
+          have jl := J_ln i n q u (nzu n hn) (j + 1)
+          have sh := ZTrig.cv_shiftG j (ZTrig.Dsh (J i n q (.ln u))) (J i n q u)
+          have ci := qmul_inv'_cancel (ne_zero_of_lt (qnat_succ_pos (j + 1)))
+          have h : qEq (qadd (ZTrig.cv (ZTrig.Dsh (J i n q (.ln u))) (fun t => J i n q u (t + 1)) j)
+              (qmul (qmul (qnat (j + 1 + 1)) (J i n q (.ln u) (j + 2))) (J i n q u 0)))
+              (qmul (qnat (j + 1 + 1)) (J i n q u (j + 2))) := qEq_trans (qEq_symm sh) jl
+          exact ln_solve (hN0 n hn) ci h
+
+  | @log10 u a l c l0 h0 L1 L2 r1 r2 s1 s2 _ _ _ hRu hV hc0 hL _ hR hs ihu ihl =>
+      intro k hk
+      cases k with
+      | zero => exact ev0 hq i hV hc0
+      | succ k =>
+          obtain ⟨l', h', co, hh⟩ := hs k (Nat.lt_of_succ_le hk)
+          have eL : Ev (fun n => evalN n q (.ln (.const (qnat 10)))) L1 L2 := value_sound hq hL
+          obtain ⟨N1, hN1⟩ := ev_nz eL hR
+          obtain ⟨N2, hN2⟩ := ev_nz (ihu 0 (Nat.zero_le _)) hRu
+          have e := Ev_mul (ihl (k + 1) hk) (Ev_recip eL hR) co
+          refine Ev_hull (Ev_congr_ev (N1 + N2) (fun n hn => qEq_symm ?_) e) hh
+          have nL := hN1 n (Nat.le_trans (Nat.le_add_right N1 N2) hn)
+          have nU : ¬ qEq (evalN n q u) qzero := fun z => hN2 n (Nat.le_trans (Nat.le_add_left N2 N1) hn)
+            (qEq_trans (J_zero i n q u) z)
+          have jl := J_log10 i n q u nU nL k
+          exact mul_solve nL jl
+
+  | @powR u c a p l0 h0 W dv R _ _ hV hp0 hs ihu =>
+      intro k hk
+      refine strong_upto (K := K) (fun j => Ev (fun n => J i n q (.exp (.mul (.const c) (.ln u))) j) (p j).1 (p j).2)
+        (ev0 hq i hV hp0) (fun j hj ih => ?_) k hk k (Nat.le_refl k)
+      obtain ⟨hW, hdv, hR, l, h, l', h', cb, co, hh⟩ := hs j hj
+      have edv : Ev (fun n => qmul (qnat (j + 1)) (J i n q u 0)) (dv j).1 (dv j).2 :=
+        Ev_mul (Ev_const _) (ihu 0 (Nat.zero_le _)) hdv
+      obtain ⟨N0, hN0⟩ := ev_nz edv hR
+      have e := Ev_mul (Ev_cv j
+        (fun n s => qmul (qsub (qmul c (qnat (j + 1))) (qmul (qadd c qone) (qnat s))) (J i n q (.exp (.mul (.const c) (.ln u))) s))
+        (fun n t => J i n q u (t + 1)) (W j) (fun t => a (t + 1))
+        (fun s hs' => Ev_mul (Ev_const _) (ih s hs') (hW s hs'))
+        (fun s hs' => ihu (s + 1) (Nat.succ_le_of_lt (Nat.lt_of_le_of_lt hs' hj))) cb)
+        (Ev_recip edv hR) co
+      refine Ev_hull (Ev_congr_ev N0 (fun n hn => qEq_symm (mul_solve (hN0 n hn) ?_)) e) hh
+      have nu : ¬ qEq (evalN n q u) qzero := fun z => hN0 n hn (by
+        have := qEq_trans (J_zero i n q u) z
+        exact z_mul_r this)
+      exact pow_formR i n q u c nu j
+
 end ZJetRead
 
 #print axioms ZJetRead.Ev_cv
 #print axioms ZJetRead.cv_weight
 #print axioms ZJetRead.pow_form
+#print axioms ZJetRead.pow_formR
 #print axioms ZJetRead.sc_sound
 #print axioms ZJetRead.cread_sound

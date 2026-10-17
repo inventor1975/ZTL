@@ -27,14 +27,17 @@ of that piece may fall outside it.) The premises named, not proved here: the ele
 their readings say (a derivative read finite over a piece bounds the derivative there), and Taylor's theorem with the
 Lagrange remainder. Lean, zero axioms: lean/ZIntegral.lean — for interval and monotone leaves, every tagged sum over a
 refinement of the partition lies in [L, U] (`enclosure_sound`); lean/ZIntegralR.lean — the same on VR's operational
-reals with the leaves discharged by the proved readings (ZSlopeSqrt), for the grammar + - * / exp ln sqrt
-(`enclosure_R`; sqrt found on a grid, lean/ZSqrt.lean). The Taylor leaf of ORDER 2 (lean/ZTaylor2.lean,
+reals with the leaves discharged by the proved readings (ZSlopeSqrt), for the grammar + - * / exp ln sqrt sin cos
+tan (`enclosure_R`; sqrt found on a grid, lean/ZSqrt.lean). The Taylor leaf of ORDER 2 (lean/ZTaylor2.lean,
 lean/ZIntegralT.lean, `taylor2_leaf`): the symmetric second difference is bounded by the kernel's second coefficient
 along the graph (no mean value theorem), and every SYMMETRIC tagged sum of mesh mu lies in [L, U] widened by
-2*K*mu*h^2 — for the grammar const var + - * exp / sqrt (exp's second-order step from its first-order slopes on a
-grid, lean/ZExp2.lean; / and sqrt by exact identities). Integer powers of a base read >= 0 (value, slope) and log10's
-value: lean/ZPow.lean, ZSlopeSqrt. Still premises: non-integer pow, sin, cos, atan, tan (their derivative readings
-need a same-point argument or exp's functional equation), log10's derivative; Taylor of order 2 for ln (the kernel's recurrence needs a same-point argument); Taylor orders above 2.
+2*K*mu*h^2 — for the grammar const var + - * exp / sqrt sin cos tan (exp's second-order step from its first-order
+slopes on a grid, lean/ZExp2.lean; sin's and cos's likewise, lean/ZTrig13.lean; tan as sin/cos, as the kernel reads
+it; / and sqrt by exact identities). Integer powers of a base read >= 0 (value, slope) and log10's
+value: lean/ZPow.lean, ZSlopeSqrt. sin, cos over intervals (pi's bracket checked by cos at its halves), tan on
+|x| <= 1.5, and their slopes (chords on a grid, no mean value theorem): lean/ZTrig10-15.lean; that the kernel's
+readings always carry the Lean witnesses is MEASURED (test_trigcert.py), not proved. Still premises: non-integer
+pow, atan, log10's derivative; Taylor of order 2 for ln (the kernel's recurrence needs a same-point argument); Taylor orders above 2.
 Every tagged sum, not only the symmetric ones, for the order-2 leaf: lean/ZTransfer.lean (`taylor2_every`).
 """
 

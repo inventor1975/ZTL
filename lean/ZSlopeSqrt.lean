@@ -1,8 +1,9 @@
-import ZPow
+import ZTrig11
 
 /-!
 # ZSlopeSqrt — the kernel's certificate rule for `+ − × / exp ln sqrt`, integer powers, on VR's operational reals.
-Zero axioms. (`log10`: its value reading only — no derivative reading yet.)
+Zero axioms. (`log10`, `sin`, `cos`: their value readings only — no derivative reading yet. `sin`/`cos` read
+as `zfunc.iv_sin`/`iv_cos` do, sound by `ZTrig.Ev_sin`/`Ev_cos`; their sequences are `ZTrig.Sn`/`Cn` at the index.)
 
 `ZSlopeDiv` with `√` added (`ZSqrt`: the root found on a grid, the value read as the kernel's rational fork
 `[SL, SH]` with `SL² ≤ lo`, `hi ≤ SH²`, as `znum._rat_sqrt` builds it, `lo ≥ 0`). The kernel reads the derivative
@@ -49,6 +50,8 @@ inductive G where
   | sqrt  : G → G
   | powN  : G → Nat → G
   | log10 : G → G
+  | sin   : G → G
+  | cos   : G → G
 
 def evalN (n : Nat) (p : Point QExpr) : G → QExpr
   | .const c => c
@@ -62,6 +65,8 @@ def evalN (n : Nat) (p : Point QExpr) : G → QExpr
   | .sqrt u => rsqrt (evalN n p u) n
   | .powN u k => qpowN (evalN n p u) k
   | .log10 u => qmul (lnseq (evalN n p u) n) (qinv' (lnseq (qnat 10) n))
+  | .sin u => ZTrig.Sn (evalN n p u) n
+  | .cos u => ZTrig.Cn (evalN n p u) n
 
 /-- The kernel's value reading: a quotient is `U × [1/V]`, `V` clear of zero (`RecipOK`). -/
 inductive VRead (B : Box QExpr) : G → QExpr → QExpr → Prop where
@@ -87,6 +92,10 @@ inductive VRead (B : Box QExpr) : G → QExpr → QExpr → Prop where
       ExpCert Ll zl wl → qle wl lu → ExpCert Lh wh zh → qle hu wh →
       ExpCert L1 z1 w1 → qle w1 (qnat 10) → ExpCert L2 w2 z2 → qle (qnat 10) w2 →
       RecipOK r1 r2 L1 L2 → Corners l h Ll Lh r1 r2 → VRead B (.log10 u) l h
+  | sin {u : G} {lu hu l h : QExpr} : VRead B u lu hu → qle lu hu → ZTrig.SinHi lu hu h → ZTrig.SinLo lu hu l →
+      VRead B (.sin u) l h
+  | cos {u : G} {lu hu l h : QExpr} : VRead B u lu hu → qle lu hu → ZTrig.CosHi lu hu h → ZTrig.CosLo lu hu l →
+      VRead B (.cos u) l h
 
 theorem value_sound {B : Box QExpr} {p : Point QExpr} (hp : InBox qOrd B p) :
     ∀ {e : G} {l h : QExpr}, VRead B e l h → Ev (fun n => evalN n p e) l h := by
@@ -106,6 +115,8 @@ theorem value_sound {B : Box QExpr} {p : Point QExpr} (hp : InBox qOrd B p) :
       have t := Ev_ln (y := fun _ => qnat 10) (Ev_of_exact 0 (fun _ _ => ⟨qle_refl _, qle_refl _⟩))
         (qnat_succ_pos 9) c1 hw1 c2 hw2
       exact Ev_mul (Ev_ln ih hlo cl hwl ch hwh) (Ev_recip t hR) hc
+  | sin _ hlh hi lo ih => exact ZTrig.Ev_sin ih hlh hi lo
+  | cos _ hlh hi lo ih => exact ZTrig.Ev_cos ih hlh hi lo
 
 /-- The kernel's derivative reading: the quotient rule `(Du·V − U·Dv) / (V·V)`, each product at its corners,
 `V·V` read as an independent product (which is what bounds `v(p)·v(p')`). -/
@@ -353,6 +364,12 @@ theorem evalN_cauchy {B : Box QExpr} {p : Point QExpr} (hp : InBox qOrd B p) :
         ln_cauchy (fun k => ⟨0, fun _ _ _ _ => qclose_refl _ _ (qeps_nonneg k)⟩)
           (Ev_of_exact 0 (fun _ _ => ⟨qle_refl (qnat 10), qle_refl _⟩)) (qnat_succ_pos 9)
       exact (rmul ⟨_, ln_cauchy ih (value_sound hp ru) hlo⟩ ⟨_, recip_cauchy c10 t hR⟩).cauchy
+  | sin ru _ _ _ ih =>
+      obtain ⟨A, hA, N0, hN0⟩ := ZTrig.ev_bound (value_sound hp ru)
+      exact (ZTrig.CS_cauchy hA ih hN0).2
+  | cos ru _ _ _ ih =>
+      obtain ⟨A, hA, N0, hN0⟩ := ZTrig.ev_bound (value_sound hp ru)
+      exact (ZTrig.CS_cauchy hA ih hN0).1
 
 /-- The value at `p`, given a value reading over a box containing `p`. -/
 def valR {B : Box QExpr} {p : Point QExpr} {e : G} {l h : QExpr} (hp : InBox qOrd B p) (r : VRead B e l h) : RExpr :=
@@ -426,6 +443,8 @@ def Uses : G → Nat → Prop
   | .sqrt u, j => Uses u j
   | .powN u _, j => Uses u j
   | .log10 u, j => Uses u j
+  | .sin u, j => Uses u j
+  | .cos u, j => Uses u j
 
 theorem evalN_dep (n : Nat) (p q : Point QExpr) : ∀ e : G, (∀ j, Uses e j → p j = q j) → evalN n p e = evalN n q e
   | .const _, _ => rfl
@@ -456,6 +475,12 @@ theorem evalN_dep (n : Nat) (p q : Point QExpr) : ∀ e : G, (∀ j, Uses e j �
       rw [evalN_dep n p q u h]
   | .log10 u, h => by
       show qmul (lnseq _ n) _ = qmul (lnseq _ n) _
+      rw [evalN_dep n p q u h]
+  | .sin u, h => by
+      show ZTrig.Sn _ n = ZTrig.Sn _ n
+      rw [evalN_dep n p q u h]
+  | .cos u, h => by
+      show ZTrig.Cn _ n = ZTrig.Cn _ n
       rw [evalN_dep n p q u h]
 
 theorem corner_bound_S (e : G) (B : Box QExpr) (sg : Nat → Bool) :

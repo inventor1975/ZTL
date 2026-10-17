@@ -61,19 +61,30 @@ def _recip(b):
 
 
 def _val(node, quantities, piece):
-    """The kernel's value reading of `node` over the piece, as taylor_coeffs' val() reads it."""
+    """The kernel's value reading of `node` over the piece, as taylor_coeffs' val() reads it — None when it is no
+    Lean VRead: a quantity of the node read with an infinite end (Box QExpr has rational ends only; atan, sin, cos
+    give a finite result of an unbounded argument — red team 2026-10-17, F1), or a side of ln/atan the run could not
+    certify (zfunc.LN_UNCOVERED / ATAN_UNCOVERED rose during this reading — F2: the certificate is a gate, not a
+    count)."""
     import znum as _ZN
+    import zfunc as _ZF
     q2 = dict(quantities)
     for nm, (lo, hi) in piece.items():
         q2[nm] = dict(quantities[nm], lo=lo, hi=hi)
+    for nm in ZC._names(node):
+        if nm in q2 and any(v is None or isinstance(v, float) for v in (q2[nm].get("lo"), q2[nm].get("hi"))):
+            return None
     keep = _ZN._MEMO[0]
     _ZN._MEMO[0] = {}
+    unc = (_ZF.LN_UNCOVERED[0], _ZF.ATAN_UNCOVERED[0])
     try:
         iv = _ZN._ev(node, q2)[0]
     except (ArithmeticError, ZeroDivisionError, KeyError, ValueError, TypeError, _ZN._NoReadings):
         iv = None
     finally:
         _ZN._MEMO[0] = keep
+    if (_ZF.LN_UNCOVERED[0], _ZF.ATAN_UNCOVERED[0]) != unc:
+        return None
     if iv is None or isinstance(iv[0], float) or isinstance(iv[1], float):
         return None
     return iv

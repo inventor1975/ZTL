@@ -163,7 +163,9 @@ def _atan(x):
     f = lambda t: ZF.atan_pt_cert(Fraction(t))          # certified ends (zfunc._cert_atan, lean VRead.atan)
     df = lambda t: (1 / (1 + Fraction(t) * t), 1 / (1 + Fraction(t) * t))
     convex = b <= 0
-    return _minrange(x, f, df, convex, _pick_end(df(a), df(b)))
+    # the end where ψ = 1/(1 + t²) is smaller, by sign (a point a = b > 0 tied to "a" and rounded α up past ψ(b):
+    # red team F4) — lean/ZAffineAtan rem_atan_pos (0 ≤ a: end b) / rem_atan_neg (b ≤ 0: end a)
+    return _minrange(x, f, df, convex, "a" if convex else "b")
 
 
 def read(e, qs, piece, rat_sqrt, plain, shared=False):

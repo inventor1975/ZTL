@@ -152,7 +152,7 @@ def read_checked(e, qs, piece, rat_sqrt, plain, naive):
             raise ZA.Unknown("atan across zero")
         f = lambda t: ZF.atan_pt_cert(F(t))
         df = lambda t: (1 / (1 + F(t) * t), 1 / (1 + F(t) * t))
-        end = ZA._pick_end(df(a), df(b))
+        end = "a" if b <= 0 else "b"
         alpha, zeta, delta, a, b, fa, fb, inc = minrange(x, f, df, b <= 0, end)
         # rem_atan_pos (0 ≤ a: α·(1 + b²) ≤ 1) / rem_atan_neg (b ≤ 0: α·(1 + a²) ≤ 1); the ends' brackets certified
         # (zatancert: atan a ≥ fa0, atan b ≤ fb1), the ends against ζ ± δ

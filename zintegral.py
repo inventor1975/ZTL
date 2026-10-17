@@ -52,7 +52,9 @@ readings of interval and monotone leaves were, all through the affine form. lean
 affine reading (AffR, aff_sound: + − × ÷ exp ln atan, 1/x of a positive interval, opaque subtrees, the grid rounding); every
 value reading of an interval or monotone leaf is checked IN THE RUN (zaffinecert.lean_covered) to contain Lean's —
 the naive VRead, the affine one, their meet; one that does not (sqrt, a branch read by cases, ...) is a premise,
-counted in VALUE_PREMISE. On the integral stand: 0.
+counted in VALUE_PREMISE. On the integral stand: 0. No Lean reading either (red team 2026-10-17): a quantity read
+with an infinite end (atan/sin/cos give a finite result of it; Box QExpr has rational ends), or a reading during which
+an ln/atan side went uncertified (zfunc.LN_UNCOVERED/ATAN_UNCOVERED rose) — ztaylorcert._val; stand test_atancert.
 THE MONOTONE LEAF'S SIGN (2026-10-17): the kernel reads its own symbolic derivative fully; lean/ZMonoStep.lean proves
 the leaf from a step reading of f (ZDeriv.StepRead) and the sign of the grammar's derivative D f (ZTaylorN.taylor_rem
 at order 1, no mean value theorem); zmonocert checks both IN THE RUN (D f read naive, affine, their meet), a sign Lean

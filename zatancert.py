@@ -33,13 +33,19 @@ def _cvb(A, B, m):
     return lo, hi
 
 
+def _flog2(q):
+    """floor(log2 q) for a Fraction q > 0, exactly (a float underflows below 2^-1074: red team F3, atan of 1e12)."""
+    e = q.numerator.bit_length() - q.denominator.bit_length()
+    return e if F(2) ** e <= q else e - 1
+
+
 def _out(iv, bits=110):
     """Round an interval outward to `bits` significant bits (Lean: Hull — a wider coefficient is admitted)."""
     l, h = iv
     mag = max(abs(l), abs(h))
     if mag == 0:
         return iv
-    e = math.floor(math.log2(mag)) - bits
+    e = _flog2(mag) - bits
     g = F(2) ** e
     return F(math.floor(l / g)) * g, F(math.ceil(h / g)) * g
 
@@ -56,6 +62,8 @@ def series(lo, hi, m=ORDER):
         U.append((u + l, u + h))
     if m == 0:
         return [(-Y, Y)]
+    if not U[0][0] > 0:
+        raise ValueError("atan series: 1 + u·u not read clear of zero (RecipOK)")     # red team F5
     r = (F(1) / U[0][1], F(1) / U[0][0])
     Dd = [_corners((F(t + 1), F(t + 1)), a[t + 1]) for t in range(m)]
     r = _out(r)
@@ -87,7 +95,7 @@ def _round(L, H):
 
 def _dyadic_step(t):
     s = max(F(1, 16), abs(t) / 16)
-    return F(2) ** math.floor(math.log2(s))
+    return F(2) ** _flog2(s)
 
 
 def _next(t, x, sg):

@@ -165,6 +165,7 @@ STANDS = [
     ("test_expcert.py", ["EXPCERT GREEN"]),
     ("test_trigcert.py", ["TRIGCERT GREEN"]),
     ("test_lncert.py", ["LNCERT GREEN"]),
+    ("test_atancert.py", ["ATANCERT GREEN"]),
     ("test_ztaylorcert.py", ["ZTAYLORCERT GREEN"]),
     ("test_redteam_taylor.py", ["REDTEAM TAYLOR GREEN"]),
     ("test_zaffinecert.py", ["ZAFFINECERT GREEN"]),

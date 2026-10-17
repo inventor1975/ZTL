@@ -163,6 +163,30 @@ def step_ok(e, x, qs, piece):
     return ""
 
 
+def lean_D_reading(f, x, qs, piece):
+    """((lo, hi), "") — a box bound Lean proves for D_x f with a step reading of f along x (ZDeriv.StepRead), or
+    (None, why)."""
+    try:
+        d = lean_D(f, x)
+    except NotStep as ns:
+        return None, str(ns)
+    w = step_ok(f, x, qs, piece)
+    if w:
+        return None, "no step reading: " + w
+    nv = T._naive(d, qs, piece)
+    q2 = dict(qs)
+    for n_, (lo, hi) in piece.items():
+        q2[n_] = dict(qs[n_], lo=lo, hi=hi)
+    try:
+        av, _ = AC.read_checked(d, qs, piece, ZC._rat_sqrt, lambda n: ZC._plain(n, q2), lambda n: T._naive(n, qs, piece))
+    except RecursionError:
+        av = None
+    cands = [iv for iv in (nv, av) if iv is not None]
+    if not cands:
+        return None, "D f: no Lean reading"
+    return (max(iv[0] for iv in cands), min(iv[1] for iv in cands)), ""
+
+
 def sign_covered(f, x, qs, piece, sign):
     """"" when Lean proves the monotone leaf's sign over the piece (ZMonoStep), else why not."""
     try:

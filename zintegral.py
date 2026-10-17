@@ -61,9 +61,13 @@ at order 1, no mean value theorem); zmonocert checks both IN THE RUN (D f read n
 does not reach is a premise counted in MONO_PREMISE. On the integral stand: 182 monotone leaves, 0 premises.
 THE RULES ABOVE THE LEAVES (2026-10-17): the range by pins (check_range, and check_limits_range's pins with fixed
 limits) is lean/ZRangePin — every point of the box has its tagged sums over the low corner's certificate above L − ε
-and over the high corner's below U + ε, from each pin's sign (zmonocert along the pin, checked in the run; a sign Lean
-does not reach counted in RULE_PREMISE). Moving limits (the tail rule) and dI/dp with a moving limit (Leibniz) have NO
-Lean theorem: counted in RULE_PREMISE each time they are used; their value readings go through the value seam.
+and over the high corner's below U + ε, from each pin's sign (zmonocert along the pin, checked in the run). Moving
+limits: the tail rule is lean/ZLimits (tail_rule, limits_enclosure) — for every rational end in a limit's reading the
+tail's tagged sums lie in hull{0, w·f}; its readings (the limits, f on the tails) go through the value seam. dI/dp
+with a moving limit is lean/ZLeibniz (leibniz_low/high) — a finite difference between a point and its corner, sums
+sharing their middle, the limits at index m and the integrand at n (a double limit, no derivative of I); its premises
+(step readings and Lean's D along each pin of f, A, B; f read at the limits; t_j by corners) checked in the run by
+zleibcert. Whatever Lean does not reach is counted in RULE_PREMISE.
 """
 
 from fractions import Fraction
@@ -415,8 +419,8 @@ def check_limits(f, x, A, B, qs, cert, box=None):
     for L_, rl in ((A, ra), (B, rb)):
         if not isinstance(L_, Fraction):
             _value_seam(L_, qs, box, rl)
-    if ra[0] < ra[1] or rb[0] < rb[1]:
-        _rule("moving limits: the tail rule (no Lean theorem)")
+    # the tails: lean/ZLimits.tail_rule — the hull {0, w·f} holds for every rational end in the limit's reading, once
+    # f's reading there contains a Lean one (the value seam, in _tail); the limits' readings through the value seam
     core = cert.get("core") if isinstance(cert, dict) else None
     if core is None:
         return False, "no core certificate"
@@ -482,13 +486,21 @@ def check_limits_range(f, x, A, B, qs, cert):
         ok, why = _limit_sign(f, x, A, B, qs, box, ra, rb, p, s)
         if not ok:
             return False, why
-        if p in ZC._names(A) or p in ZC._names(B):
-            _rule("dI/dp with moving limits (Leibniz: no Lean theorem)")
-        else:                                  # fixed limits: the pin of lean/ZRangePin, its sign in the run
-            _pin_seam(f, p, qs, dict(box, **{x: (ra[0], rb[1])}), s)
         lo, hi = box[p]
         lo_end, hi_end = (lo, hi) if s == "+" else (hi, lo)
         low_b[p], high_b[p] = (lo_end, lo_end), (hi_end, hi_end)
+    for L_, rl in ((A, ra), (B, rb)):
+        if not isinstance(L_, Fraction):
+            _value_seam(L_, qs, box, rl)
+    if any(p in ZC._names(A) or p in ZC._names(B) for p in pins):
+        # a pin moves a limit: lean/ZLeibniz (leibniz_low / leibniz_high), every pin's t_j with Lean's readings
+        import zleibcert
+        why = zleibcert.leibniz_covered(f, x, A, B, qs, box, ra, rb, pins)
+        if why:
+            _rule("dI/dp with moving limits: " + why)
+    else:                                      # fixed limits: the pins of lean/ZRangePin, their signs in the run
+        for p, s in pins.items():
+            _pin_seam(f, p, qs, dict(box, **{x: (ra[0], rb[1])}), s)
     gl = check_limits(f, x, A, B, qs, cert.get("low") or {}, low_b)
     if not gl[0]:
         return False, f"the low corner: {gl[1]}"

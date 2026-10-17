@@ -109,8 +109,22 @@ qsl = parse_quantities(", ".join(f"{n}=[{fs(a)},{fs(b)}] credit" for n, (a, b) i
 fl, Bl = _parse_arith("exp(0 - k*x)", qsl), _parse_arith("T", qsl)
 ZI.RULE_PREMISE.clear()
 cl = ZI.search_limits_range(fl, "x", F(0), Bl, qsl, F(1, 10 ** 9))
-check(ZI.RULE_PREMISE == {"dI/dp with moving limits (Leibniz: no Lean theorem)": 1},
-      f"the pin on k (fixed limits) reached by Lean; the moving limit T's dI/dT counted: {ZI.RULE_PREMISE}")
+check(not ZI.RULE_PREMISE and not ZI.VALUE_PREMISE,
+      f"pins k and T (T moves the limit) reached by Lean (lean/ZLeibniz, zleibcert): premises {ZI.RULE_PREMISE}")
+import zleibcert as _ZLB
+_box = ZI._limits_box(qsl, {"T", "k"})
+_ra, _rb = (F(0), F(0)), ZC._reading(Bl, qsl, _box)
+check("t_j" in _ZLB.leibniz_covered(fl, "x", F(0), Bl, qsl, _box, _ra, _rb, {"k": "+", "T": "+"}),
+      "MUTATION: the pin on k with the wrong sign fails Lean's t_j (the kernel refuses it too)")
+_keepL = _ZLB.leibniz_covered
+_ZLB.leibniz_covered = lambda *a: "a t_j Lean does not reach"
+ZI.RULE_PREMISE.clear()
+try:
+    _gl = ZI.check_limits_range(fl, "x", F(0), Bl, qsl, cl)
+finally:
+    _ZLB.leibniz_covered = _keepL
+check(_gl[0] and ZI.RULE_PREMISE == {"dI/dp with moving limits: a t_j Lean does not reach": 1},
+      f"a Leibniz pin Lean does not reach is counted, not silent: {ZI.RULE_PREMISE}")
 true_lo, true_hi = 1 - _m.exp(-1), (1 - _m.exp(-1)) / F(1, 2)
 check("gave_up" not in cl and cl["pins"] == {"k": "-", "T": "+"}
       and abs(float(cl["range"][0]) - true_lo) < 1e-9 and abs(float(cl["range"][1]) - float(true_hi)) < 1e-9,
@@ -121,8 +135,8 @@ cw = ZI.check_limits(fl, "x", F(0), Bl, qsl, {"core": cl["high"]["core"]})
 check(not cw[0], "MUTATION: the high corner's core ([0, 2]) refused for the whole box (its core is [0, 1])")
 ZI.RULE_PREMISE.clear()
 ct = ZI.search_limits(fl, "x", F(0), Bl, qsl, F(1, 10 ** 6))
-check("gave_up" not in ct and ZI.RULE_PREMISE.get("moving limits: the tail rule (no Lean theorem)", 0) >= 1,
-      f"the whole box (T moving): an enclosure through the tail rule, counted: {ZI.RULE_PREMISE}")
+check("gave_up" not in ct and not ZI.RULE_PREMISE and not ZI.VALUE_PREMISE,
+      f"the whole box (T moving): an enclosure through the tail rule (lean/ZLimits), premises {ZI.RULE_PREMISE}")
 
 print("4d. a double integral over [0,1]^2: e^(-x^2-y^2) = (∫_0^1 e^(-x^2))^2 — a certificate inside a certificate")
 qs2d = parse_quantities("x=[0/1,1/1] credit, y=[0/1,1/1] credit")[0]

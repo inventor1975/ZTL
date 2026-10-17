@@ -17,8 +17,8 @@ because it splits along the graph exactly as the kernel's recurrences do. For a 
 — the kernel's `c2(uv) = U0·V2 + U1·V1 + U2·V0`, the two slope products being `ZSlopeSqrt.slope_sound`'s (first
 order, already proved). No odd term is needed: it cancels between `m + s` and `m − s`.
 
-The grammar `const var + − × exp / sqrt` (`exp`'s own second-order step: `ZExp2.Ev_exp2`; `/` and `sqrt` by the exact
-identities `w·v = u`, `s² = u − gap`). `ln` is NOT covered: the kernel's `l2 = (a2 − l1·a1/2)/a0` holds classically
+The grammar `const var + − × exp / sqrt sin cos` (`exp`'s own second-order step: `ZExp2.Ev_exp2`; `sin`, `cos`:
+`ZTrig.Ev_sin2`/`Ev_cos2`, chords on a grid; `/` and `sqrt` by the exact identities `w·v = u`, `s² = u − gap`). `ln` is NOT covered: the kernel's `l2 = (a2 − l1·a1/2)/a0` holds classically
 at one point ξ, while this algebra produces a ratio `u(ζ)/u(ξ)` of two points — a same-point argument is missing.
 -/
 
@@ -55,6 +55,16 @@ inductive T2Read (B : Box QExpr) (i : Nat) : G → QExpr → QExpr → Prop wher
       qle w1 (qadd SL SL) → qle (qadd SH SH) w2 → RecipOK r1 r2 w1 w2 →
       DRead B i (.sqrt u) ds1 ds2 → T2Read B i u a1 a2 → Corners p P ds1 ds2 ds1 ds2 →
       qle n1 (qsub a1 P) → qle (qsub a2 p) n2 → Corners l h n1 n2 r1 r2 → T2Read B i (.sqrt u) l h
+  | sin {u : G} {lu hu sl sh cl ch du1 du2 a1 a2 g G r R' t T l h : QExpr} :
+      VRead B u lu hu → qle lu hu → ZTrig.SinHi lu hu sh → ZTrig.SinLo lu hu sl → ZTrig.CosHi lu hu ch →
+      ZTrig.CosLo lu hu cl → DRead B i u du1 du2 → T2Read B i u a1 a2 →
+      Corners g G du1 du2 (qneg sh) (qneg sl) → Corners r R' du1 du2 g G → Corners t T a1 a2 cl ch →
+      qle (qadd l l) (qadd r (qadd t t)) → qle (qadd R' (qadd T T)) (qadd h h) → T2Read B i (.sin u) l h
+  | cos {u : G} {lu hu cl ch sl sh du1 du2 a1 a2 g G r R' t T l h : QExpr} :
+      VRead B u lu hu → qle lu hu → ZTrig.CosHi lu hu ch → ZTrig.CosLo lu hu cl → ZTrig.SinHi lu hu sh →
+      ZTrig.SinLo lu hu sl → DRead B i u du1 du2 → T2Read B i u a1 a2 →
+      Corners g G du1 du2 (qneg ch) (qneg cl) → Corners r R' du1 du2 g G → Corners t T a1 a2 (qneg sh) (qneg sl) →
+      qle (qadd l l) (qadd r (qadd t t)) → qle (qadd R' (qadd T T)) (qadd h h) → T2Read B i (.cos u) l h
 
 /-- The symmetric second difference at index `n`. -/
 def sd (n : Nat) (p0 pp pm : Point QExpr) (e : G) : QExpr :=
@@ -238,6 +248,170 @@ theorem sd_sound {B : Box QExpr} {i : Nat} {p0 pp pm : Point QExpr}
         qle (qsub (qadd (eseq (evalN n pp u) n) (eseq (evalN n pm u) n))
           (qadd (eseq (evalN n p0 u) n) (eseq (evalN n p0 u) n))) _
       unfold two two_sq sd qsub at *
+      exact ⟨by rat_linarith, by rat_linarith⟩
+  | @sin u lu hu sl sh cl ch du1 du2 a1 a2 g G r R' t T l h ru hlh shi slo chi clo du _ cg cr c3 hl hh ih =>
+      have U0 := value_sound h0 ru
+      have Up := value_sound hp ru
+      have Um := value_sound hm ru
+      have V0 := ZTrig.Ev_cos U0 hlh chi clo
+      have Rp := ZTrig.Ev_sin2 U0 Up hlh shi slo
+      have Rm := ZTrig.Ev_sin2 U0 Um hlh shi slo
+      have Sp := slope_sound h0 hp (fun j hj => fp j hj) hs du
+      have Sm := slope_sound hm h0 (fun j hj => fm j hj) hs' du
+      obtain ⟨⟨g11, g12, g21, g22⟩, ⟨G11, G12, G21, G22⟩⟩ := cg
+      have cEl : Corners g G du1 du2 (qneg sh) (qneg sh) := ⟨⟨g11, g11, g21, g21⟩, ⟨G11, G11, G21, G21⟩⟩
+      have cEh : Corners g G du1 du2 (qneg sl) (qneg sl) := ⟨⟨g12, g12, g22, g22⟩, ⟨G12, G12, G22, G22⟩⟩
+      have kEl : Ev (fun _ => (qneg sh)) (qneg sh) (qneg sh) := Ev_of_exact 0 (fun _ _ => ⟨qle_refl _, qle_refl _⟩)
+      have kEh : Ev (fun _ => (qneg sl)) (qneg sl) (qneg sl) := Ev_of_exact 0 (fun _ _ => ⟨qle_refl _, qle_refl _⟩)
+      have PpL := Ev_mul Sp (Ev_mul Sp kEl (corners_scale_left cEl hs)) (corners_scale (corners_scale_left cr hs) hs)
+      have PpH := Ev_mul Sp (Ev_mul Sp kEh (corners_scale_left cEh hs)) (corners_scale (corners_scale_left cr hs) hs)
+      have PmL := Ev_mul Sm (Ev_mul Sm kEl (corners_scale_left cEl hs')) (corners_scale (corners_scale_left cr hs') hs')
+      have PmH := Ev_mul Sm (Ev_mul Sm kEh (corners_scale_left cEh hs')) (corners_scale (corners_scale_left cr hs') hs')
+      have T3 := Ev_mul ih V0 (corners_scale_left c3 hd)
+      intro k
+      obtain ⟨N1, h1⟩ := Rp (k + 2)
+      obtain ⟨N2, h2⟩ := Rm (k + 2)
+      obtain ⟨N3, h3⟩ := PpL (k + 2)
+      obtain ⟨N4, h4⟩ := PpH (k + 2)
+      obtain ⟨N5, h5⟩ := PmL (k + 2)
+      obtain ⟨N6, h6⟩ := PmH (k + 2)
+      obtain ⟨N7, h7⟩ := T3 (k + 2)
+      refine ⟨N1 + (N2 + (N3 + (N4 + (N5 + (N6 + N7))))), fun n hn => ?_⟩
+      have z1 := le_l hn
+      have z2 := le_r hn
+      have z3 := le_r z2
+      have z4 := le_r z3
+      have z5 := le_r z4
+      have z6 := le_r z5
+      obtain ⟨x1, y1⟩ := h1 n z1
+      obtain ⟨x2, y2⟩ := h2 n (le_l z2)
+      obtain ⟨x3, _⟩ := h3 n (le_l z3)
+      obtain ⟨_, y4⟩ := h4 n (le_l z4)
+      obtain ⟨x5, _⟩ := h5 n (le_l z5)
+      obtain ⟨_, y6⟩ := h6 n (le_l z6)
+      obtain ⟨x7, y7⟩ := h7 n (le_r z6)
+      have X1 : qle (qsub (qmul (qmul (qsub (evalN n pp u) (evalN n p0 u)) (qsub (evalN n pp u) (evalN n p0 u))) (qneg sh)) (qeps (k + 2)))
+          (qadd (qsub (qsub (ZTrig.Sn (evalN n pp u) n) (ZTrig.Sn (evalN n p0 u) n)) (qmul (qsub (evalN n pp u) (evalN n p0 u)) (ZTrig.Cn (evalN n p0 u) n)))
+            (qsub (qsub (ZTrig.Sn (evalN n pp u) n) (ZTrig.Sn (evalN n p0 u) n)) (qmul (qsub (evalN n pp u) (evalN n p0 u)) (ZTrig.Cn (evalN n p0 u) n)))) := x1
+      have Y1 : qle (qadd (qsub (qsub (ZTrig.Sn (evalN n pp u) n) (ZTrig.Sn (evalN n p0 u) n)) (qmul (qsub (evalN n pp u) (evalN n p0 u)) (ZTrig.Cn (evalN n p0 u) n)))
+            (qsub (qsub (ZTrig.Sn (evalN n pp u) n) (ZTrig.Sn (evalN n p0 u) n)) (qmul (qsub (evalN n pp u) (evalN n p0 u)) (ZTrig.Cn (evalN n p0 u) n))))
+          (qadd (qmul (qmul (qsub (evalN n pp u) (evalN n p0 u)) (qsub (evalN n pp u) (evalN n p0 u))) (qneg sl)) (qeps (k + 2))) := y1
+      have X2 : qle (qsub (qmul (qmul (qsub (evalN n pm u) (evalN n p0 u)) (qsub (evalN n pm u) (evalN n p0 u))) (qneg sh)) (qeps (k + 2)))
+          (qadd (qsub (qsub (ZTrig.Sn (evalN n pm u) n) (ZTrig.Sn (evalN n p0 u) n)) (qmul (qsub (evalN n pm u) (evalN n p0 u)) (ZTrig.Cn (evalN n p0 u) n)))
+            (qsub (qsub (ZTrig.Sn (evalN n pm u) n) (ZTrig.Sn (evalN n p0 u) n)) (qmul (qsub (evalN n pm u) (evalN n p0 u)) (ZTrig.Cn (evalN n p0 u) n)))) := x2
+      have Y2 : qle (qadd (qsub (qsub (ZTrig.Sn (evalN n pm u) n) (ZTrig.Sn (evalN n p0 u) n)) (qmul (qsub (evalN n pm u) (evalN n p0 u)) (ZTrig.Cn (evalN n p0 u) n)))
+            (qsub (qsub (ZTrig.Sn (evalN n pm u) n) (ZTrig.Sn (evalN n p0 u) n)) (qmul (qsub (evalN n pm u) (evalN n p0 u)) (ZTrig.Cn (evalN n p0 u) n))))
+          (qadd (qmul (qmul (qsub (evalN n pm u) (evalN n p0 u)) (qsub (evalN n pm u) (evalN n p0 u))) (qneg sl)) (qeps (k + 2))) := y2
+      have X3 : qle (qsub (qmul (qmul r (qsub (pp i) (p0 i))) (qsub (pp i) (p0 i))) (qeps (k + 2)))
+          (qmul (qsub (evalN n pp u) (evalN n p0 u)) (qmul (qsub (evalN n pp u) (evalN n p0 u)) (qneg sh))) := x3
+      have Y4 : qle (qmul (qsub (evalN n pp u) (evalN n p0 u)) (qmul (qsub (evalN n pp u) (evalN n p0 u)) (qneg sl)))
+          (qadd (qmul (qmul R' (qsub (pp i) (p0 i))) (qsub (pp i) (p0 i))) (qeps (k + 2))) := y4
+      have X5 : qle (qsub (qmul (qmul r (qsub (p0 i) (pm i))) (qsub (p0 i) (pm i))) (qeps (k + 2)))
+          (qmul (qsub (evalN n p0 u) (evalN n pm u)) (qmul (qsub (evalN n p0 u) (evalN n pm u)) (qneg sh))) := x5
+      have Y6 : qle (qmul (qsub (evalN n p0 u) (evalN n pm u)) (qmul (qsub (evalN n p0 u) (evalN n pm u)) (qneg sl)))
+          (qadd (qmul (qmul R' (qsub (p0 i) (pm i))) (qsub (p0 i) (pm i))) (qeps (k + 2))) := y6
+      have X7 : qle (qsub (qmul t (two_sq (qsub (pp i) (p0 i)))) (qeps (k + 2)))
+          (qmul (sd n p0 pp pm u) (ZTrig.Cn (evalN n p0 u) n)) := x7
+      have Y7 : qle (qmul (sd n p0 pp pm u) (ZTrig.Cn (evalN n p0 u) n))
+          (qadd (qmul T (two_sq (qsub (pp i) (p0 i)))) (qeps (k + 2))) := y7
+      clear x1 y1 x2 y2 x3 y4 x5 y6 x7 y7 h1 h2 h3 h4 h5 h6 h7 Rp Rm PpL PpH PmL PmH T3 Sp Sm U0 Up Um V0
+        cEl cEh kEl kEh g11 g12 g21 g22 G11 G12 G21 G22 cr c3 ih du ru shi slo chi clo
+      have q1 : qEq (qmul (qmul r (qsub (p0 i) (pm i))) (qsub (p0 i) (pm i)))
+          (qmul (qmul r (qsub (pp i) (p0 i))) (qsub (pp i) (p0 i))) := qmul_respects (qmul_respects (qEq_refl _) hsym) hsym
+      have q2 : qEq (qmul (qmul R' (qsub (p0 i) (pm i))) (qsub (p0 i) (pm i)))
+          (qmul (qmul R' (qsub (pp i) (p0 i))) (qsub (pp i) (p0 i))) := qmul_respects (qmul_respects (qEq_refl _) hsym) hsym
+      have s1 := ZExp.scale hl hd
+      have s2 := ZExp.scale hh hd
+      have e2 := qeps_succ_add k
+      have e3 := qeps_succ_add (k + 1)
+      have ep := qeps_nonneg (k + 2)
+      show qle _ (qsub (qadd (ZTrig.Sn (evalN n pp u) n) (ZTrig.Sn (evalN n pm u) n))
+          (qadd (ZTrig.Sn (evalN n p0 u) n) (ZTrig.Sn (evalN n p0 u) n))) ∧
+        qle (qsub (qadd (ZTrig.Sn (evalN n pp u) n) (ZTrig.Sn (evalN n pm u) n))
+          (qadd (ZTrig.Sn (evalN n p0 u) n) (ZTrig.Sn (evalN n p0 u) n))) _
+      unfold two_sq sd qsub at *
+      exact ⟨by rat_linarith, by rat_linarith⟩
+  | @cos u lu hu cl ch sl sh du1 du2 a1 a2 g G r R' t T l h ru hlh chi clo shi slo du _ cg cr c3 hl hh ih =>
+      have U0 := value_sound h0 ru
+      have Up := value_sound hp ru
+      have Um := value_sound hm ru
+      have V0 := ZTrig.Ev_negate (ZTrig.Ev_sin U0 hlh shi slo)
+      have Rp := ZTrig.Ev_cos2 U0 Up hlh chi clo
+      have Rm := ZTrig.Ev_cos2 U0 Um hlh chi clo
+      have Sp := slope_sound h0 hp (fun j hj => fp j hj) hs du
+      have Sm := slope_sound hm h0 (fun j hj => fm j hj) hs' du
+      obtain ⟨⟨g11, g12, g21, g22⟩, ⟨G11, G12, G21, G22⟩⟩ := cg
+      have cEl : Corners g G du1 du2 (qneg ch) (qneg ch) := ⟨⟨g11, g11, g21, g21⟩, ⟨G11, G11, G21, G21⟩⟩
+      have cEh : Corners g G du1 du2 (qneg cl) (qneg cl) := ⟨⟨g12, g12, g22, g22⟩, ⟨G12, G12, G22, G22⟩⟩
+      have kEl : Ev (fun _ => (qneg ch)) (qneg ch) (qneg ch) := Ev_of_exact 0 (fun _ _ => ⟨qle_refl _, qle_refl _⟩)
+      have kEh : Ev (fun _ => (qneg cl)) (qneg cl) (qneg cl) := Ev_of_exact 0 (fun _ _ => ⟨qle_refl _, qle_refl _⟩)
+      have PpL := Ev_mul Sp (Ev_mul Sp kEl (corners_scale_left cEl hs)) (corners_scale (corners_scale_left cr hs) hs)
+      have PpH := Ev_mul Sp (Ev_mul Sp kEh (corners_scale_left cEh hs)) (corners_scale (corners_scale_left cr hs) hs)
+      have PmL := Ev_mul Sm (Ev_mul Sm kEl (corners_scale_left cEl hs')) (corners_scale (corners_scale_left cr hs') hs')
+      have PmH := Ev_mul Sm (Ev_mul Sm kEh (corners_scale_left cEh hs')) (corners_scale (corners_scale_left cr hs') hs')
+      have T3 := Ev_mul ih V0 (corners_scale_left c3 hd)
+      intro k
+      obtain ⟨N1, h1⟩ := Rp (k + 2)
+      obtain ⟨N2, h2⟩ := Rm (k + 2)
+      obtain ⟨N3, h3⟩ := PpL (k + 2)
+      obtain ⟨N4, h4⟩ := PpH (k + 2)
+      obtain ⟨N5, h5⟩ := PmL (k + 2)
+      obtain ⟨N6, h6⟩ := PmH (k + 2)
+      obtain ⟨N7, h7⟩ := T3 (k + 2)
+      refine ⟨N1 + (N2 + (N3 + (N4 + (N5 + (N6 + N7))))), fun n hn => ?_⟩
+      have z1 := le_l hn
+      have z2 := le_r hn
+      have z3 := le_r z2
+      have z4 := le_r z3
+      have z5 := le_r z4
+      have z6 := le_r z5
+      obtain ⟨x1, y1⟩ := h1 n z1
+      obtain ⟨x2, y2⟩ := h2 n (le_l z2)
+      obtain ⟨x3, _⟩ := h3 n (le_l z3)
+      obtain ⟨_, y4⟩ := h4 n (le_l z4)
+      obtain ⟨x5, _⟩ := h5 n (le_l z5)
+      obtain ⟨_, y6⟩ := h6 n (le_l z6)
+      obtain ⟨x7, y7⟩ := h7 n (le_r z6)
+      have X1 : qle (qsub (qmul (qmul (qsub (evalN n pp u) (evalN n p0 u)) (qsub (evalN n pp u) (evalN n p0 u))) (qneg ch)) (qeps (k + 2)))
+          (qadd (qsub (qsub (ZTrig.Cn (evalN n pp u) n) (ZTrig.Cn (evalN n p0 u) n)) (qmul (qsub (evalN n pp u) (evalN n p0 u)) (qneg (ZTrig.Sn (evalN n p0 u) n))))
+            (qsub (qsub (ZTrig.Cn (evalN n pp u) n) (ZTrig.Cn (evalN n p0 u) n)) (qmul (qsub (evalN n pp u) (evalN n p0 u)) (qneg (ZTrig.Sn (evalN n p0 u) n))))) := x1
+      have Y1 : qle (qadd (qsub (qsub (ZTrig.Cn (evalN n pp u) n) (ZTrig.Cn (evalN n p0 u) n)) (qmul (qsub (evalN n pp u) (evalN n p0 u)) (qneg (ZTrig.Sn (evalN n p0 u) n))))
+            (qsub (qsub (ZTrig.Cn (evalN n pp u) n) (ZTrig.Cn (evalN n p0 u) n)) (qmul (qsub (evalN n pp u) (evalN n p0 u)) (qneg (ZTrig.Sn (evalN n p0 u) n)))))
+          (qadd (qmul (qmul (qsub (evalN n pp u) (evalN n p0 u)) (qsub (evalN n pp u) (evalN n p0 u))) (qneg cl)) (qeps (k + 2))) := y1
+      have X2 : qle (qsub (qmul (qmul (qsub (evalN n pm u) (evalN n p0 u)) (qsub (evalN n pm u) (evalN n p0 u))) (qneg ch)) (qeps (k + 2)))
+          (qadd (qsub (qsub (ZTrig.Cn (evalN n pm u) n) (ZTrig.Cn (evalN n p0 u) n)) (qmul (qsub (evalN n pm u) (evalN n p0 u)) (qneg (ZTrig.Sn (evalN n p0 u) n))))
+            (qsub (qsub (ZTrig.Cn (evalN n pm u) n) (ZTrig.Cn (evalN n p0 u) n)) (qmul (qsub (evalN n pm u) (evalN n p0 u)) (qneg (ZTrig.Sn (evalN n p0 u) n))))) := x2
+      have Y2 : qle (qadd (qsub (qsub (ZTrig.Cn (evalN n pm u) n) (ZTrig.Cn (evalN n p0 u) n)) (qmul (qsub (evalN n pm u) (evalN n p0 u)) (qneg (ZTrig.Sn (evalN n p0 u) n))))
+            (qsub (qsub (ZTrig.Cn (evalN n pm u) n) (ZTrig.Cn (evalN n p0 u) n)) (qmul (qsub (evalN n pm u) (evalN n p0 u)) (qneg (ZTrig.Sn (evalN n p0 u) n)))))
+          (qadd (qmul (qmul (qsub (evalN n pm u) (evalN n p0 u)) (qsub (evalN n pm u) (evalN n p0 u))) (qneg cl)) (qeps (k + 2))) := y2
+      have X3 : qle (qsub (qmul (qmul r (qsub (pp i) (p0 i))) (qsub (pp i) (p0 i))) (qeps (k + 2)))
+          (qmul (qsub (evalN n pp u) (evalN n p0 u)) (qmul (qsub (evalN n pp u) (evalN n p0 u)) (qneg ch))) := x3
+      have Y4 : qle (qmul (qsub (evalN n pp u) (evalN n p0 u)) (qmul (qsub (evalN n pp u) (evalN n p0 u)) (qneg cl)))
+          (qadd (qmul (qmul R' (qsub (pp i) (p0 i))) (qsub (pp i) (p0 i))) (qeps (k + 2))) := y4
+      have X5 : qle (qsub (qmul (qmul r (qsub (p0 i) (pm i))) (qsub (p0 i) (pm i))) (qeps (k + 2)))
+          (qmul (qsub (evalN n p0 u) (evalN n pm u)) (qmul (qsub (evalN n p0 u) (evalN n pm u)) (qneg ch))) := x5
+      have Y6 : qle (qmul (qsub (evalN n p0 u) (evalN n pm u)) (qmul (qsub (evalN n p0 u) (evalN n pm u)) (qneg cl)))
+          (qadd (qmul (qmul R' (qsub (p0 i) (pm i))) (qsub (p0 i) (pm i))) (qeps (k + 2))) := y6
+      have X7 : qle (qsub (qmul t (two_sq (qsub (pp i) (p0 i)))) (qeps (k + 2)))
+          (qmul (sd n p0 pp pm u) (qneg (ZTrig.Sn (evalN n p0 u) n))) := x7
+      have Y7 : qle (qmul (sd n p0 pp pm u) (qneg (ZTrig.Sn (evalN n p0 u) n)))
+          (qadd (qmul T (two_sq (qsub (pp i) (p0 i)))) (qeps (k + 2))) := y7
+      clear x1 y1 x2 y2 x3 y4 x5 y6 x7 y7 h1 h2 h3 h4 h5 h6 h7 Rp Rm PpL PpH PmL PmH T3 Sp Sm U0 Up Um V0
+        cEl cEh kEl kEh g11 g12 g21 g22 G11 G12 G21 G22 cr c3 ih du ru shi slo chi clo
+      have q1 : qEq (qmul (qmul r (qsub (p0 i) (pm i))) (qsub (p0 i) (pm i)))
+          (qmul (qmul r (qsub (pp i) (p0 i))) (qsub (pp i) (p0 i))) := qmul_respects (qmul_respects (qEq_refl _) hsym) hsym
+      have q2 : qEq (qmul (qmul R' (qsub (p0 i) (pm i))) (qsub (p0 i) (pm i)))
+          (qmul (qmul R' (qsub (pp i) (p0 i))) (qsub (pp i) (p0 i))) := qmul_respects (qmul_respects (qEq_refl _) hsym) hsym
+      have s1 := ZExp.scale hl hd
+      have s2 := ZExp.scale hh hd
+      have e2 := qeps_succ_add k
+      have e3 := qeps_succ_add (k + 1)
+      have ep := qeps_nonneg (k + 2)
+      show qle _ (qsub (qadd (ZTrig.Cn (evalN n pp u) n) (ZTrig.Cn (evalN n pm u) n))
+          (qadd (ZTrig.Cn (evalN n p0 u) n) (ZTrig.Cn (evalN n p0 u) n))) ∧
+        qle (qsub (qadd (ZTrig.Cn (evalN n pp u) n) (ZTrig.Cn (evalN n pm u) n))
+          (qadd (ZTrig.Cn (evalN n p0 u) n) (ZTrig.Cn (evalN n p0 u) n))) _
+      unfold two_sq sd qsub at *
       exact ⟨by rat_linarith, by rat_linarith⟩
   | @div u v lv hv lw hw r1 r2 dw1 dw2 dv1 dv2 a1 a2 b1 b2 p P q Q n1 n2 l h rv hR rw dw dv _ _ cp cq hn1 hn2 cl ih1 ih2 =>
       -- w·v = u at each point: sd(u) − w0·sd(v) − Δ₊wΔ₊v − Δ₋wΔ₋v = v0·sd(w)

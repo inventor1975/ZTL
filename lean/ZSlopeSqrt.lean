@@ -1,4 +1,4 @@
-import ZTrig12
+import ZTrig13
 
 /-!
 # ZSlopeSqrt — the kernel's certificate rule for `+ − × / exp ln sqrt`, integer powers, on VR's operational reals.

@@ -13,7 +13,9 @@ bracket checked by cos at its halves (PiBr). This stand mirrors those definition
      kernel outputs (2026-10-17: 13 952 sides measured over 16 seeds, 0 without witnesses);
   3. MUTATION: a top moved below the true value at an end, and a window that holds an extremum, are refused —
      the rule is not vacuous;
-  4. tan (ZTrig14.TanVal): the kernel's iv_tan readings have their witnesses; a bottom above the truth is refused.
+  4. tan (ZTrig14.TanVal): the kernel's iv_tan readings have their witnesses; a bottom above the truth is refused;
+  5. THE IN-RUN CHECK (zfunc._covered + ztrigcert, 2026-10-17): no reading needed widening; a kernel bracket
+     shifted off the truth is widened to +-1 (tan: no reading) and counted — never sent out uncovered.
 Run:  python3 test_trigcert.py   -> TRIGCERT GREEN
 """
 import math
@@ -212,6 +214,27 @@ for a, b in tcases[:40]:
     if tan_end(q0, F(math.tan(float(q0))) + F(1, 1000), True, Mmax=200) is not None:
         tmiss.append(float(a))
 check("40 tan bottoms moved 1e-3 above the true tan at the end: every one refused", not tmiss, tmiss[:3])
+
+# THE IN-RUN CHECK (zfunc._covered, ztrigcert): every reading above was checked before it left; none was widened
+check(f"in-run check: no sin/cos/tan reading of this stand needed widening (zfunc.TRIG_UNCOVERED = "
+      f"{dict(zfunc.TRIG_UNCOVERED)})", all(v == 0 for v in zfunc.TRIG_UNCOVERED.values()))
+
+# MUTATION OF THE KERNEL: a cos_pt / tan_pt bracket shifted off the truth must not leave uncovered
+orig_cos, orig_tan = zfunc.cos_pt, zfunc.tan_pt
+zfunc.cos_pt = lambda x: tuple(v - F(1, 100) for v in orig_cos(x))
+before = zfunc.TRIG_UNCOVERED["cos"]
+r = zfunc.iv_cos((F(1, 2), F(1)))
+zfunc.cos_pt = orig_cos
+check(f"a kernel cos bracket shifted 0.01 below the truth over [0.5, 1]: the top is widened to 1, counted "
+      f"(got hi = {float(r[1])})", r[1] == 1 and zfunc.TRIG_UNCOVERED["cos"] > before)
+zfunc.tan_pt = lambda x: tuple(v + F(1, 100) for v in orig_tan(x))
+before = zfunc.TRIG_UNCOVERED["tan"]
+r = zfunc.iv_tan((F(1, 2), F(1)))
+zfunc.tan_pt = orig_tan
+check("a kernel tan bracket shifted 0.01 above the truth over [0.5, 1]: no reading (a mark), counted",
+      r is None and zfunc.TRIG_UNCOVERED["tan"] > before)
+r = zfunc.iv_cos((F(1, 2), F(1)))
+check("after the mutations are undone, the same reading is covered again (not widened)", r[1] < 1 and r[0] > -1)
 
 print(f"\n{ok} ok, {fail} fail")
 print("TRIGCERT GREEN" if fail == 0 else "TRIGCERT RED")

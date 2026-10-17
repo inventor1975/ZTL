@@ -343,7 +343,12 @@ def iv_tan(a):
         raise NoReadings("tan read only on |x| <= 1.5 (below pi/2)")
     if a[0] < -TAN_EDGE or a[1] > TAN_EDGE:
         return None
-    return _iv_mono(tan_pt, a)
+    r = _iv_mono(tan_pt, a)
+    import ztrigcert
+    if not ztrigcert.tan_ok(a[0], a[1], r[0], r[1]):
+        TRIG_UNCOVERED["tan"] += 1
+        return None                       # no Lean witnesses: a mark, not a value
+    return r
 
 
 def _touches(a, centre, period):
@@ -378,12 +383,34 @@ def _iv_sc(a, pt, max_at, min_at):
 HALF_PI = (PI[0] / 2, PI[1] / 2)
 
 
+# EVERY sin / cos / tan reading is checked against the Lean theorems' own witnesses (ztrigcert; lean/ZTrig10-14,
+# zero axioms) before it leaves: a side without them is widened to +-1 (tan: no reading) and counted here. So
+# a reading this module returns is covered by ZTrig.Ev_cos / Ev_sin / Ev_tan in THIS run, not only on a sample
+# (2026-10-17; before, the seam was measured by test_trigcert.py alone). MEASURED: ~6 ms per reading.
+TRIG_UNCOVERED = {"sin": 0, "cos": 0, "tan": 0}
+
+
+def _covered(which, a, r):
+    if _inf(a[0]) or _inf(a[1]):
+        return r
+    import ztrigcert
+    lu, hu = Fraction(a[0]), Fraction(a[1])
+    lo, hi = r
+    if not ztrigcert.side_ok(which, lu, hu, lo, hi, "hi"):
+        TRIG_UNCOVERED[which] += 1
+        hi = Fraction(1)
+    if not ztrigcert.side_ok(which, lu, hu, lo, hi, "lo"):
+        TRIG_UNCOVERED[which] += 1
+        lo = Fraction(-1)
+    return lo, hi
+
+
 def iv_sin(a):
-    return _iv_sc(a, sin_pt, HALF_PI, (-HALF_PI[1], -HALF_PI[0]))
+    return _covered("sin", a, _iv_sc(a, sin_pt, HALF_PI, (-HALF_PI[1], -HALF_PI[0])))
 
 
 def iv_cos(a):
-    return _iv_sc(a, cos_pt, (Fraction(0), Fraction(0)), PI)
+    return _covered("cos", a, _iv_sc(a, cos_pt, (Fraction(0), Fraction(0)), PI))
 
 
 def _ipow_point(x: Fraction, n: int):

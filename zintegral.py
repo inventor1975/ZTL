@@ -35,8 +35,8 @@ along the graph (no mean value theorem), and every SYMMETRIC tagged sum of mesh 
 slopes on a grid, lean/ZExp2.lean; sin's and cos's likewise, lean/ZTrig13.lean; tan as sin/cos, as the kernel reads
 it; / and sqrt by exact identities). Integer powers of a base read >= 0 (value, slope) and log10's
 value: lean/ZPow.lean, ZSlopeSqrt. sin, cos over intervals (pi's bracket checked by cos at its halves), tan on
-|x| <= 1.5, and their slopes (chords on a grid, no mean value theorem): lean/ZTrig10-15.lean; that the kernel's
-readings always carry the Lean witnesses is MEASURED (test_trigcert.py), not proved. Still premises: non-integer
+|x| <= 1.5, and their slopes (chords on a grid, no mean value theorem): lean/ZTrig10-15.lean; every kernel
+reading is checked for the Lean witnesses IN THE RUN (ztrigcert; a side without them widened to +-1, tan: no reading). Still premises: non-integer
 pow, atan, log10's derivative; Taylor of order 2 for ln (the kernel's recurrence needs a same-point argument); Taylor orders above 2.
 Every tagged sum, not only the symmetric ones, for the order-2 leaf: lean/ZTransfer.lean (`taylor2_every`).
 """

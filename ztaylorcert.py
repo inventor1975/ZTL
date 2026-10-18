@@ -103,6 +103,14 @@ def _naive(node, quantities, piece):
         _ZN._ev_linear = keep
 
 
+def lean_naive(node, quantities, piece):
+    """The naive reading as a Lean VRead: None unless the node is in VRead's grammar (_value_covered — a power of a
+    base not read >= 0, ln of a non-positive argument, ... have no VRead; red team 2026-10-18, finding 2)."""
+    if not _value_covered(node, quantities, piece):
+        return None
+    return _naive(node, quantities, piece)
+
+
 def _hkey(node):
     """A hashable key for a node (a "sum" holds a list)."""
     if isinstance(node, list):

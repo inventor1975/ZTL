@@ -245,11 +245,11 @@ def lean_covered(f, qs, piece, r):
     q2 = dict(qs)
     for n_, (lo, hi) in piece.items():
         q2[n_] = dict(qs[n_], lo=lo, hi=hi)
-    nv = T._naive(f, qs, piece)
+    nv = T.lean_naive(f, qs, piece)
     av, why = (None, "affine off")
     if ZC.AFFINE:
         try:
-            av, why = read_checked(f, qs, piece, ZC._rat_sqrt, lambda n: ZC._plain(n, q2), lambda n: T._naive(n, qs, piece))
+            av, why = read_checked(f, qs, piece, ZC._rat_sqrt, lambda n: ZC._plain(n, q2), lambda n: T.lean_naive(n, qs, piece))
         except RecursionError:
             av, why = None, "too deep"
     cands = [iv for iv in (nv, av) if iv is not None]

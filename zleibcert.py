@@ -28,8 +28,8 @@ def leibniz_covered(f, x, A, B, qs, box, ra, rb, pins):
     if ra[1] > rb[0]:
         return "the limits' readings overlap"
     whole = dict(box, **{x: (ra[0], rb[1])})
-    fA = T._naive(f, qs, dict(box, **{x: ra}))
-    fB = T._naive(f, qs, dict(box, **{x: rb}))
+    fA = T.lean_naive(f, qs, dict(box, **{x: ra}))
+    fB = T.lean_naive(f, qs, dict(box, **{x: rb}))
     if fA is None or fB is None:
         return "f at a limit: no Lean reading"
     span = (rb[0] - ra[1], rb[1] - ra[0])

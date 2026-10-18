@@ -78,7 +78,7 @@ def step_ok(e, x, qs, piece):
     def bd(n):
         if not T._value_covered(n, qs, piece):
             raise NotStep(f"{n[0] if isinstance(n, tuple) else n}: no Lean value reading")
-        r = T._naive(n, qs, piece)
+        r = T._naive(n, qs, piece)  # bd(): _value_covered checked just above
         if r is None:
             raise NotStep(f"{n[0] if isinstance(n, tuple) else n}: no reading on the box")
         return r
@@ -166,6 +166,8 @@ def step_ok(e, x, qs, piece):
 def lean_D_reading(f, x, qs, piece):
     """((lo, hi), "") — a box bound Lean proves for D_x f with a step reading of f along x (ZDeriv.StepRead), or
     (None, why)."""
+    if x not in _names(f):
+        return (F(0), F(0)), ""                          # StepRead.free; ZDeriv.D_free: D_x f is exactly 0
     try:
         d = lean_D(f, x)
     except NotStep as ns:
@@ -173,12 +175,12 @@ def lean_D_reading(f, x, qs, piece):
     w = step_ok(f, x, qs, piece)
     if w:
         return None, "no step reading: " + w
-    nv = T._naive(d, qs, piece)
+    nv = T.lean_naive(d, qs, piece)
     q2 = dict(qs)
     for n_, (lo, hi) in piece.items():
         q2[n_] = dict(qs[n_], lo=lo, hi=hi)
     try:
-        av, _ = AC.read_checked(d, qs, piece, ZC._rat_sqrt, lambda n: ZC._plain(n, q2), lambda n: T._naive(n, qs, piece))
+        av, _ = AC.read_checked(d, qs, piece, ZC._rat_sqrt, lambda n: ZC._plain(n, q2), lambda n: T.lean_naive(n, qs, piece))
     except RecursionError:
         av = None
     cands = [iv for iv in (nv, av) if iv is not None]
@@ -196,12 +198,12 @@ def sign_covered(f, x, qs, piece, sign):
     w = step_ok(f, x, qs, piece)
     if w:
         return "no step reading: " + w
-    nv = T._naive(d, qs, piece)
+    nv = T.lean_naive(d, qs, piece)
     q2 = dict(qs)
     for n_, (lo, hi) in piece.items():
         q2[n_] = dict(qs[n_], lo=lo, hi=hi)
     try:
-        av, why = AC.read_checked(d, qs, piece, ZC._rat_sqrt, lambda n: ZC._plain(n, q2), lambda n: T._naive(n, qs, piece))
+        av, why = AC.read_checked(d, qs, piece, ZC._rat_sqrt, lambda n: ZC._plain(n, q2), lambda n: T.lean_naive(n, qs, piece))
     except RecursionError:
         av, why = None, "too deep"
     cands = [iv for iv in (nv, av) if iv is not None]

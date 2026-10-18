@@ -64,7 +64,8 @@ print("4. a parameter: x^p on [1/100, 1], p in [1, 3] — its range by pins")
 f4, qs4 = setup("pow(x, p)", {"x": (F(1, 100), F(1)), "p": (F(1), F(3))})
 ZI.RULE_PREMISE.clear()
 c4 = ZI.search_range(f4, "x", F(1, 100), 1, qs4, F(1, 10 ** 9))
-check(not ZI.RULE_PREMISE, f"the pin's sign reached by Lean (lean/ZRangePin, zmonocert along p): premises {ZI.RULE_PREMISE}")
+check(not ZI.RULE_PREMISE and any(isinstance(l, dict) and "taylor" in l for l in c4["low"]["leaves"]),
+      f"Taylor corners: the pin's sign reached by Lean (lean/ZRangeTaylor, zmonocert along p): premises {ZI.RULE_PREMISE}")
 import zmonocert as _ZM
 _keep = _ZM.sign_covered
 _ZM.sign_covered = lambda *a: "a sign Lean does not reach"
@@ -137,6 +138,15 @@ ZI.RULE_PREMISE.clear()
 ct = ZI.search_limits(fl, "x", F(0), Bl, qsl, F(1, 10 ** 6))
 check("gave_up" not in ct and not ZI.RULE_PREMISE and not ZI.VALUE_PREMISE,
       f"the whole box (T moving): an enclosure through the tail rule (lean/ZLimits), premises {ZI.RULE_PREMISE}")
+check(not ZI.check_limits(fl, "x", _parse_arith("x/2", qsl), Bl, qsl, {"core": ct["core"]})[0],
+      "a limit depending on the variable of integration refused (red team 2026-10-18)")
+print("4c'. a power of a negative base has no Lean reading (red team 2026-10-18): counted, not covered")
+qsn = parse_quantities("x=[0/1,3/1] credit, T=[1/1,2/1] credit, k=[1/2,1/1] credit, a=[-1/1,-1/2] credit")[0]
+fn, An = _parse_arith("exp(0 - k*x)", qsn), _parse_arith("pow(a, 3)", qsn)
+ZI.RULE_PREMISE.clear(); ZI.VALUE_PREMISE.clear()
+cn = ZI.search_limits_range(fn, "x", An, _parse_arith("T", qsn), qsn, F(1, 10 ** 6))
+check("gave_up" not in cn and (ZI.RULE_PREMISE or ZI.VALUE_PREMISE),
+      f"A = a^3, a < 0: premises {ZI.RULE_PREMISE} {ZI.VALUE_PREMISE}")
 
 print("4d. a double integral over [0,1]^2: e^(-x^2-y^2) = (∫_0^1 e^(-x^2))^2 — a certificate inside a certificate")
 qs2d = parse_quantities("x=[0/1,1/1] credit, y=[0/1,1/1] credit")[0]

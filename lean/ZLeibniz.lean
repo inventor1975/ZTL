@@ -655,6 +655,36 @@ theorem leibniz_high {B : Box QExpr} {e A Bn : G} {i : Nat} {up : Nat → Bool} 
   generalize rsum qSum (fun t => evalN n (upd c i t) (ng e)) EcB = c4 at *
   unfold qsub at *; rat_linarith
 
+/-- ASSEMBLED, FROM BELOW: the corner's sum is at least `L` up to `ε` (from its pieces: the tails by
+`ZLimits.tail_rule`, the core by its leaves — the per-piece standard of every certificate); with `leibniz_low` the sum
+at `p` sharing its middle is at least `L` up to `ε`. -/
+theorem limits_range_low {Sp Sc : Nat → QExpr} {L : QExpr}
+    (hL : ∀ k, ∃ N, ∀ n, N ≤ n → qle (qsub L (qeps k)) (Sc n))
+    (hD : ∀ k, ∃ N, ∀ n, N ≤ n → qle (qsub (Sc n) (qeps k)) (Sp n)) :
+    ∀ k, ∃ N, ∀ n, N ≤ n → qle (qsub L (qeps k)) (Sp n) := by
+  intro k
+  obtain ⟨N1, h1⟩ := hL (k + 1)
+  obtain ⟨N2, h2⟩ := hD (k + 1)
+  refine ⟨N1 + N2, fun n hn => ?_⟩
+  have a := h1 n (Nat.le_trans (Nat.le_add_right _ _) hn)
+  have b := h2 n (Nat.le_trans (Nat.le_add_left _ _) hn)
+  have s := qeps_succ_add k
+  unfold qsub at *; rat_linarith
+
+/-- ASSEMBLED, FROM ABOVE (`leibniz_high`). -/
+theorem limits_range_high {Sp Sc : Nat → QExpr} {U : QExpr}
+    (hU : ∀ k, ∃ N, ∀ n, N ≤ n → qle (Sc n) (qadd U (qeps k)))
+    (hD : ∀ k, ∃ N, ∀ n, N ≤ n → qle (Sp n) (qadd (Sc n) (qeps k))) :
+    ∀ k, ∃ N, ∀ n, N ≤ n → qle (Sp n) (qadd U (qeps k)) := by
+  intro k
+  obtain ⟨N1, h1⟩ := hU (k + 1)
+  obtain ⟨N2, h2⟩ := hD (k + 1)
+  refine ⟨N1 + N2, fun n hn => ?_⟩
+  have a := h1 n (Nat.le_trans (Nat.le_add_right _ _) hn)
+  have b := h2 n (Nat.le_trans (Nat.le_add_left _ _) hn)
+  have s := qeps_succ_add k
+  rat_linarith
+
 end ZLeibniz
 
 #print axioms ZLeibniz.tele_id
@@ -667,3 +697,5 @@ end ZLeibniz
 #print axioms ZLeibniz.leibniz_low
 #print axioms ZLeibniz.rsum_ng
 #print axioms ZLeibniz.leibniz_high
+#print axioms ZLeibniz.limits_range_low
+#print axioms ZLeibniz.limits_range_high

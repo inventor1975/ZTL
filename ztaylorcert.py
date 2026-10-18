@@ -398,6 +398,9 @@ def check(expr, x, quantities, piece, n, cs, trace):
             if not isinstance(ce, (F, int)) and x not in nm(ce):
                 cv_ = _val(ce, quantities, piece)       # the kernel folds a point exponent (3/2 written as a quotient)
                 if cv_ is not None and cv_[0] == cv_[1]:
+                    lv = lean_naive(ce, quantities, piece)
+                    if lv is None or lv[0] != lv[1]:    # Lean reads the exponent wider (k − k + 3/2): red team 2
+                        return "pow: an exponent the kernel folds to a point and Lean's reading has none as a point"
                     ce = F(cv_[0])
                     node = ("pow", base, ce)
             if not isinstance(ce, (F, int)):

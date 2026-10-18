@@ -59,18 +59,21 @@ THE MONOTONE LEAF'S SIGN (2026-10-17): the kernel reads its own symbolic derivat
 the leaf from a step reading of f (ZDeriv.StepRead) and the sign of the grammar's derivative D f (ZTaylorN.taylor_rem
 at order 1, no mean value theorem); zmonocert checks both IN THE RUN (D f read naive, affine, their meet), a sign Lean
 does not reach is a premise counted in MONO_PREMISE. On the integral stand: 182 monotone leaves, 0 premises.
-THE RULES ABOVE THE LEAVES (2026-10-17; corrected 2026-10-18 after the red team). The standard is check()'s: each
-piece's claim is its leaf's theorem, the pieces' sums add. The range by pins with FIXED limits (check_range,
-check_limits_range when the limits are read as points), at every RATIONAL point p of the box: a corner piece with an
-interval or monotone leaf (a bound at every tag) by lean/ZRangePin — every tagged sum over its refinement at p is
-above the low corner's L − ε, below the high corner's U + ε; a Taylor leaf (it bounds the integral, not f at a tag)
-by lean/ZRangeTaylor — every SYMMETRIC sum (the cells' m ± s) at p likewise. Each pin's sign: zmonocert along the
-pin, in the run. Moving limits without pins (check_limits): the tails by lean/ZLimits.tail_rule (for every RATIONAL
-end in a limit's reading, hull{0, w·f}), the core by its leaves; the readings through the value seam. Moving limits
-WITH pins (check_limits_range): lean/ZLeibniz — a finite difference between p and its corner for sums SHARING THEIR
-MIDDLE, the limits at index m (clamped into their readings) and the integrand at n (a double limit; no derivative of
-I, no integral with a real end as an object), composed with the corner's pieces (limits_range_low/high); its premises
-(step readings and Lean's D along each pin of f, A, B; f read at the limits; t_j by corners) checked by zleibcert.
+THE RULES ABOVE THE LEAVES (2026-10-17; corrected 2026-10-18 after two red-team rounds). The standard is check()'s:
+each piece's claim is its leaf's theorem, and the pieces' bounds add (lean/ZLimits.sum_pieces_low/high — whatever
+theorem gives each piece's bound). The range by pins with FIXED limits (check_range, check_limits_range when the
+limits are read as points), at every RATIONAL point p of the box: a corner piece with an interval or monotone leaf (a
+bound at every tag) by lean/ZRangePin — every tagged sum over its refinement at p above the low corner's bound − ε,
+below the high corner's + ε; a Taylor leaf (it bounds the integral, not f at a tag) by lean/ZRangeTaylor — every
+SYMMETRIC sum (the cells' m ± s) at p above the corner's taylorN_kernel bound (L minus its mesh terms) − ε·Σw. Each
+pin's sign: zmonocert along the pin, in the run. Moving limits without pins (check_limits): the tails by
+lean/ZLimits.tail_rule (for every RATIONAL end in a limit's reading, hull{0, w·f}), the core by its leaves; the readings
+through the value seam. Moving limits WITH pins (check_limits_range): lean/ZLeibniz — a finite difference between p
+and its corner for sums SHARING THEIR MIDDLE (with Taylor core leaves the middle must be symmetric about each corner
+piece's middle), the limits at index m clamped into the box's readings and the integrand at n (a double limit; no
+derivative of I, no integral with a real end as an object), glued with the corner's bound in that double index
+(leibniz_assembled_low/high, which apply leibniz_low/high); its premises (step readings and Lean's D along each pin of
+f, A, B; f read at the limits; t_j by corners) checked by zleibcert, and the corners' limit readings inside the box's.
 Whatever Lean does not reach is counted in RULE_PREMISE.
 """
 
@@ -92,20 +95,8 @@ VALUE_PREMISE = {}
 # reason
 MONO_PREMISE = {}
 
-# the RULES above the leaves, by reason: what Lean does not reach (see the module docstring; red team 2026-10-18 — a
-# corner's Taylor leaf is outside ZRangePin, the moving-limit rule is not assembled in Lean)
+# the RULES above the leaves, by reason: what Lean does not reach (see the module docstring)
 RULE_PREMISE = {}
-
-
-def _corner_leaves(cert):
-    """"" when every leaf of the corners' certificates has its pin composition in Lean: interval and monotone leaves
-    lean/ZRangePin (a bound at every tag), Taylor leaves lean/ZRangeTaylor (the symmetric sums); else why."""
-    for side in ("low", "high"):
-        sub = cert.get(side) or {}
-        for lf in sub.get("leaves") or (sub.get("core") or {}).get("leaves") or []:
-            if not (lf == "interval" or (isinstance(lf, dict) and ("taylor" in lf or "monotone" in lf))):
-                return f"a corner's leaf {lf!r} with no pin composition in Lean"
-    return ""
 
 
 def _rule(why):
@@ -360,10 +351,6 @@ def check_range(f, x, a, b, qs, cert):
         lo_end, hi_end = (lo, hi) if s == "+" else (hi, lo)
         low_q[p] = dict(qs[p], lo=lo_end, hi=lo_end)
         high_q[p] = dict(qs[p], lo=hi_end, hi=hi_end)
-    if pins:
-        w_ = _corner_leaves(cert)
-        if w_:
-            _rule("range pin: " + w_)
     gl = check(f, x, a, b, low_q, cert.get("low") or {})
     if not gl[0]:
         return False, f"the low corner: {gl[1]}"
@@ -516,21 +503,23 @@ def check_limits_range(f, x, A, B, qs, cert):
             _value_seam(L_, qs, box, rl)
     if ra[0] < ra[1] or rb[0] < rb[1]:
         # the limits move over the box: lean/ZLeibniz — the pins' finite difference (leibniz_low/high, premises checked
-        # here by zleibcert) composed with the corner's sum (limits_range_low/high), that sum bounded by its pieces
+        # here by zleibcert) glued with the corner's sum (leibniz_assembled_low/high), that sum bounded by its pieces
         # (the tails lean/ZLimits.tail_rule, the core its leaves)
         import zleibcert
         why = zleibcert.leibniz_covered(f, x, A, B, qs, box, ra, rb, pins)
         if why:
             _rule("dI/dp with moving limits: " + why)
-        w_ = _corner_leaves(cert)
-        if w_:
-            _rule("moving limits: " + w_)
+        # the corner's tails lie inside the box's limit ranges (the corner's ends are clamped into its own readings,
+        # leibniz_low's tags into the box's): the two must nest
+        for cb_ in (low_b, high_b):
+            rac = ZC._reading(A, qs, cb_) if not isinstance(A, Fraction) else (A, A)
+            rbc = ZC._reading(B, qs, cb_) if not isinstance(B, Fraction) else (B, B)
+            if rac is None or rbc is None or rac[0] < ra[0] or rac[1] > ra[1] or rbc[0] < rb[0] or rbc[1] > rb[1]:
+                _rule("moving limits: a corner's limit reading outside the box's")
+                break
     else:                                      # fixed limits: the pins of lean/ZRangePin, their signs in the run
         for p, s in pins.items():
             _pin_seam(f, p, qs, dict(box, **{x: (ra[0], rb[1])}), s)
-        w_ = _corner_leaves(cert)
-        if w_:
-            _rule("range pin: " + w_)
     gl = check_limits(f, x, A, B, qs, cert.get("low") or {}, low_b)
     if not gl[0]:
         return False, f"the low corner: {gl[1]}"

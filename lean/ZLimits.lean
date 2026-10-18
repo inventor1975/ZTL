@@ -137,9 +137,66 @@ theorem limits_enclosure {SA Sc SB : Nat → QExpr} {Cl Ch Tal Tah Tbl Tbh wa wb
   clear p1 p2 q1 q2 c1 c2
   unfold qsub at *; exact ⟨by rat_linarith, by rat_linarith⟩
 
+/-- THE PER-PIECE STANDARD, as a lemma: each piece's sums eventually above its own bound make the total eventually
+above the sum of the bounds, up to `ε_k` per piece — whatever theorem gives each piece's bound (interval, monotone,
+Taylor's symmetric sums, a tail). -/
+theorem sum_pieces_low : ∀ (ps : List (QExpr × (Nat → QExpr))),
+    (∀ q, List.Mem q ps → ∀ k, ∃ N, ∀ n, N ≤ n → qle (qsub q.1 (qeps k)) (q.2 n)) →
+    ∀ k, ∃ N, ∀ n, N ≤ n →
+      qle (qsub (ps.foldr (fun q acc => qadd q.1 acc) qzero) (qmul (qeps k) (qnat ps.length)))
+        (ps.foldr (fun q acc => qadd (q.2 n) acc) qzero)
+  | [], _, k => ⟨0, fun n _ => by
+      show qle (qsub qzero (qmul (qeps k) (qnat 0))) qzero
+      have z : qEq (qmul (qeps k) (qnat 0)) qzero := qEq_trans (qmul_respects (qEq_refl _) qnat_zero) (qmul_zero _)
+      unfold qsub; rat_linarith⟩
+  | q :: rest, h, k => by
+      obtain ⟨N1, h1⟩ := h q (List.Mem.head rest) k
+      obtain ⟨N2, h2⟩ := sum_pieces_low rest (fun z hz => h z (List.Mem.tail _ hz)) k
+      refine ⟨N1 + N2, fun n hn => ?_⟩
+      have a := h1 n (Nat.le_trans (Nat.le_add_right _ _) hn)
+      have b := h2 n (Nat.le_trans (Nat.le_add_left _ _) hn)
+      have l := qnat_succ rest.length
+      have e : qEq (qmul (qeps k) (qnat (rest.length + 1))) (qadd (qmul (qeps k) (qnat rest.length)) (qeps k)) :=
+        qEq_trans (qmul_respects (qEq_refl _) l) (by rat_ring)
+      show qle (qsub (qadd q.1 (rest.foldr (fun q acc => qadd q.1 acc) qzero)) (qmul (qeps k) (qnat (rest.length + 1))))
+        (qadd (q.2 n) (rest.foldr (fun q acc => qadd (q.2 n) acc) qzero))
+      generalize rest.foldr (fun q acc => qadd q.1 acc) qzero = R1 at *
+      generalize rest.foldr (fun q acc => qadd (q.2 n) acc) qzero = R2 at *
+      generalize qmul (qeps k) (qnat (rest.length + 1)) = X at *
+      generalize qmul (qeps k) (qnat rest.length) = Y at *
+      unfold qsub at *; rat_linarith
+
+theorem sum_pieces_high : ∀ (ps : List (QExpr × (Nat → QExpr))),
+    (∀ q, List.Mem q ps → ∀ k, ∃ N, ∀ n, N ≤ n → qle (q.2 n) (qadd q.1 (qeps k))) →
+    ∀ k, ∃ N, ∀ n, N ≤ n →
+      qle (ps.foldr (fun q acc => qadd (q.2 n) acc) qzero)
+        (qadd (ps.foldr (fun q acc => qadd q.1 acc) qzero) (qmul (qeps k) (qnat ps.length)))
+  | [], _, k => ⟨0, fun n _ => by
+      show qle qzero (qadd qzero (qmul (qeps k) (qnat 0)))
+      have z : qEq (qmul (qeps k) (qnat 0)) qzero := qEq_trans (qmul_respects (qEq_refl _) qnat_zero) (qmul_zero _)
+      rat_linarith⟩
+  | q :: rest, h, k => by
+      obtain ⟨N1, h1⟩ := h q (List.Mem.head rest) k
+      obtain ⟨N2, h2⟩ := sum_pieces_high rest (fun z hz => h z (List.Mem.tail _ hz)) k
+      refine ⟨N1 + N2, fun n hn => ?_⟩
+      have a := h1 n (Nat.le_trans (Nat.le_add_right _ _) hn)
+      have b := h2 n (Nat.le_trans (Nat.le_add_left _ _) hn)
+      have l := qnat_succ rest.length
+      have e : qEq (qmul (qeps k) (qnat (rest.length + 1))) (qadd (qmul (qeps k) (qnat rest.length)) (qeps k)) :=
+        qEq_trans (qmul_respects (qEq_refl _) l) (by rat_ring)
+      show qle (qadd (q.2 n) (rest.foldr (fun q acc => qadd (q.2 n) acc) qzero))
+        (qadd (qadd q.1 (rest.foldr (fun q acc => qadd q.1 acc) qzero)) (qmul (qeps k) (qnat (rest.length + 1))))
+      generalize rest.foldr (fun q acc => qadd q.1 acc) qzero = R1 at *
+      generalize rest.foldr (fun q acc => qadd (q.2 n) acc) qzero = R2 at *
+      generalize qmul (qeps k) (qnat (rest.length + 1)) = X at *
+      generalize qmul (qeps k) (qnat rest.length) = Y at *
+      rat_linarith
+
 end ZLimits
 
 #print axioms ZLimits.hull_lo
 #print axioms ZLimits.hull_hi
 #print axioms ZLimits.tail_rule
 #print axioms ZLimits.limits_enclosure
+#print axioms ZLimits.sum_pieces_low
+#print axioms ZLimits.sum_pieces_high

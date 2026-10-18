@@ -80,6 +80,13 @@ for t, want in (("ln(x - 1/2)", "no series"), ("pow(x - 2, 3)", "base not read >
     good, why, fault = T.check(e, "x", qs, {"x": (F(1, 4), F(3, 8))}, 6, cs, tr)
     check(not good and want in why and not fault, f"{t}: {why!r}, no fault")
 
+e, qs = setup("pow(x + 1, k - k + 3/2)", {"x": (F(0), F(1)), "k": (F(1), F(2))})
+tr = {}
+cs = ZC.taylor_coeffs(e, "x", qs, {"x": (F(1, 4), F(3, 8))}, 6, trace=tr)
+good, why, fault = T.check(e, "x", qs, {"x": (F(1, 4), F(3, 8))}, 6, cs, tr)
+check(not good and "folds" in why and not fault,
+      f"pow(x + 1, k - k + 3/2): the kernel folds the exponent, Lean reads [1/2, 5/2] — {why!r}, no fault (red team 2)")
+
 print("3. MUTATION: an inner coefficient moved off the truth is a fault naming its node")
 
 

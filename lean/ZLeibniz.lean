@@ -15,7 +15,11 @@ pinned `p_j` moved to the end where `I` is smallest), two tagged sums that SHARE
 so the difference is `Σ_j Δ_j·t_j ≥ 0` up to `ε` — the sum at `p` is at least the corner's. The limits enter as their
 values at an index `m` (rational), the integrand at `n` (tags fixed once `m` is): a double limit, as operational.
 This file: the telescoping (`tele_id`), each pin's finite difference with its sign folded in (`step_up`), the
-per-pin inequality (`pin_term`).
+per-pin inequality (`pin_term`), the pins at the sequences' level (`pin_ev`, `chain_ev`), the ends (`end_value`,
+`side_value`), the rule (`leibniz_low`, `leibniz_high` for `0 − f`), and its glue with the corner's bound in the same
+double index (`glue2_low/high`, `leibniz_assembled_low/high`). The corner's bound is a hypothesis: it comes from the
+corner's pieces (tails `ZLimits.tail_rule`, the core's leaves; summed by `ZLimits.sum_pieces_low/high`); with Taylor
+core leaves those bounds hold for symmetric sums, so the shared middle must be symmetric about each core piece.
 -/
 
 namespace ZLeibniz
@@ -655,35 +659,131 @@ theorem leibniz_high {B : Box QExpr} {e A Bn : G} {i : Nat} {up : Nat → Bool} 
   generalize rsum qSum (fun t => evalN n (upd c i t) (ng e)) EcB = c4 at *
   unfold qsub at *; rat_linarith
 
-/-- ASSEMBLED, FROM BELOW: the corner's sum is at least `L` up to `ε` (from its pieces: the tails by
-`ZLimits.tail_rule`, the core by its leaves — the per-piece standard of every certificate); with `leibniz_low` the sum
-at `p` sharing its middle is at least `L` up to `ε`. -/
-theorem limits_range_low {Sp Sc : Nat → QExpr} {L : QExpr}
-    (hL : ∀ k, ∃ N, ∀ n, N ≤ n → qle (qsub L (qeps k)) (Sc n))
-    (hD : ∀ k, ∃ N, ∀ n, N ≤ n → qle (qsub (Sc n) (qeps k)) (Sp n)) :
-    ∀ k, ∃ N, ∀ n, N ≤ n → qle (qsub L (qeps k)) (Sp n) := by
+/-- THE GLUE, in the double index of `leibniz_low` (limits at `m`, lists depending on `m`, integrand at `n`): a
+lower bound of the corner's sums and the finite difference give the bound at `p`. -/
+theorem glue2_low {Λ : Type} {P : Nat → Λ → Prop} {Sp Sc : Nat → Λ → Nat → QExpr} {L : QExpr}
+    (hL : ∀ k, ∃ M, ∀ m, M ≤ m → ∀ l, P m l → ∃ N, ∀ n, N ≤ n → qle (qsub L (qeps k)) (Sc m l n))
+    (hD : ∀ k, ∃ M, ∀ m, M ≤ m → ∀ l, P m l → ∃ N, ∀ n, N ≤ n → qle (qsub (Sc m l n) (qeps k)) (Sp m l n)) :
+    ∀ k, ∃ M, ∀ m, M ≤ m → ∀ l, P m l → ∃ N, ∀ n, N ≤ n → qle (qsub L (qeps k)) (Sp m l n) := by
   intro k
-  obtain ⟨N1, h1⟩ := hL (k + 1)
-  obtain ⟨N2, h2⟩ := hD (k + 1)
+  obtain ⟨M1, h1⟩ := hL (k + 1)
+  obtain ⟨M2, h2⟩ := hD (k + 1)
+  refine ⟨M1 + M2, fun m hm l hl => ?_⟩
+  obtain ⟨N1, g1⟩ := h1 m (Nat.le_trans (Nat.le_add_right _ _) hm) l hl
+  obtain ⟨N2, g2⟩ := h2 m (Nat.le_trans (Nat.le_add_left _ _) hm) l hl
   refine ⟨N1 + N2, fun n hn => ?_⟩
-  have a := h1 n (Nat.le_trans (Nat.le_add_right _ _) hn)
-  have b := h2 n (Nat.le_trans (Nat.le_add_left _ _) hn)
+  have a := g1 n (Nat.le_trans (Nat.le_add_right _ _) hn)
+  have b := g2 n (Nat.le_trans (Nat.le_add_left _ _) hn)
   have s := qeps_succ_add k
   unfold qsub at *; rat_linarith
 
-/-- ASSEMBLED, FROM ABOVE (`leibniz_high`). -/
-theorem limits_range_high {Sp Sc : Nat → QExpr} {U : QExpr}
-    (hU : ∀ k, ∃ N, ∀ n, N ≤ n → qle (Sc n) (qadd U (qeps k)))
-    (hD : ∀ k, ∃ N, ∀ n, N ≤ n → qle (Sp n) (qadd (Sc n) (qeps k))) :
-    ∀ k, ∃ N, ∀ n, N ≤ n → qle (Sp n) (qadd U (qeps k)) := by
+theorem glue2_high {Λ : Type} {P : Nat → Λ → Prop} {Sp Sc : Nat → Λ → Nat → QExpr} {U : QExpr}
+    (hU : ∀ k, ∃ M, ∀ m, M ≤ m → ∀ l, P m l → ∃ N, ∀ n, N ≤ n → qle (Sc m l n) (qadd U (qeps k)))
+    (hD : ∀ k, ∃ M, ∀ m, M ≤ m → ∀ l, P m l → ∃ N, ∀ n, N ≤ n → qle (Sp m l n) (qadd (Sc m l n) (qeps k))) :
+    ∀ k, ∃ M, ∀ m, M ≤ m → ∀ l, P m l → ∃ N, ∀ n, N ≤ n → qle (Sp m l n) (qadd U (qeps k)) := by
   intro k
-  obtain ⟨N1, h1⟩ := hU (k + 1)
-  obtain ⟨N2, h2⟩ := hD (k + 1)
+  obtain ⟨M1, h1⟩ := hU (k + 1)
+  obtain ⟨M2, h2⟩ := hD (k + 1)
+  refine ⟨M1 + M2, fun m hm l hl => ?_⟩
+  obtain ⟨N1, g1⟩ := h1 m (Nat.le_trans (Nat.le_add_right _ _) hm) l hl
+  obtain ⟨N2, g2⟩ := h2 m (Nat.le_trans (Nat.le_add_left _ _) hm) l hl
   refine ⟨N1 + N2, fun n hn => ?_⟩
-  have a := h1 n (Nat.le_trans (Nat.le_add_right _ _) hn)
-  have b := h2 n (Nat.le_trans (Nat.le_add_left _ _) hn)
+  have a := g1 n (Nat.le_trans (Nat.le_add_right _ _) hn)
+  have b := g2 n (Nat.le_trans (Nat.le_add_left _ _) hn)
   have s := qeps_succ_add k
   rat_linarith
+
+/-- The five lists of one comparison: the middle, `p`'s and the corner's `A`-end, `p`'s and the corner's `B`-end. -/
+abbrev Lists := List (QExpr × QExpr) × List (QExpr × QExpr) × List (QExpr × QExpr) × List (QExpr × QExpr) ×
+  List (QExpr × QExpr)
+
+/-- The lists of one comparison: the middle and the four end lists, with `leibniz_low`'s conditions at index `m`. -/
+def LOK (B : Box QExpr) (i : Nat) (Sl Sh ra0 ra1 rb0 rb1 : QExpr) (ap ac bp bc : Nat → QExpr) (m : Nat)
+    (l : List (QExpr × QExpr) × List (QExpr × QExpr) × List (QExpr × QExpr) × List (QExpr × QExpr) ×
+      List (QExpr × QExpr)) : Prop :=
+  (∀ wt, List.Mem wt l.1 → qle qzero wt.1 ∧ qle (B i).1 wt.2 ∧ qle wt.2 (B i).2) ∧
+  qle Sl (wtotal qSum l.1) ∧ qle (wtotal qSum l.1) Sh ∧
+  (∀ wt, List.Mem wt l.2.1 → qle qzero wt.1 ∧ qle ra0 wt.2 ∧ qle wt.2 ra1) ∧
+  (∀ wt, List.Mem wt l.2.2.1 → qle qzero wt.1 ∧ qle ra0 wt.2 ∧ qle wt.2 ra1) ∧
+  (∀ wt, List.Mem wt l.2.2.2.1 → qle qzero wt.1 ∧ qle rb0 wt.2 ∧ qle wt.2 rb1) ∧
+  (∀ wt, List.Mem wt l.2.2.2.2 → qle qzero wt.1 ∧ qle rb0 wt.2 ∧ qle wt.2 rb1) ∧
+  ((l.2.2.1 = [] ∧ qEq (wtotal qSum l.2.1) (qsub (ac m) (ap m))) ∨
+    (l.2.1 = [] ∧ qEq (wtotal qSum l.2.2.1) (qsub (ap m) (ac m)))) ∧
+  ((l.2.2.2.2 = [] ∧ qEq (wtotal qSum l.2.2.2.1) (qsub (bp m) (bc m))) ∨
+    (l.2.2.2.1 = [] ∧ qEq (wtotal qSum l.2.2.2.2) (qsub (bc m) (bp m))))
+
+/-- The sum at `q` over the middle and the two given end lists. -/
+def SS (e : G) (i n : Nat) (q : Point QExpr) (Ml EA EB : List (QExpr × QExpr)) : QExpr :=
+  qadd (qadd (mid e i n Ml q) (rsum qSum (fun t => evalN n (upd q i t) e) EA)) (rsum qSum (fun t => evalN n (upd q i t) e) EB)
+
+/-- ASSEMBLED, FROM BELOW — `leibniz_low` itself glued: once the corner's sums (over the same lists) are eventually at
+least `L`, so are the sums at `p` sharing their middle. -/
+theorem leibniz_assembled_low {B : Box QExpr} {e A Bn : G} {i : Nat} {up : Nat → Bool} {ns : List Nat}
+    {Lf Uf LA UA LB UB cSl cSh cAl cAh cBl cBh : Nat → QExpr} {Sl Sh fAl fAh fBl fBh ra0 ra1 rb0 rb1 : QExpr}
+    (hS0 : qle qzero Sh) (hSl0 : qle qzero Sl)
+    (hchain : ∀ j, List.Mem j ns →
+      j ≠ i ∧ StepRead B j e ∧ BoxEv B (D j e) (Lf j) (Uf j) ∧ StepRead B j A ∧ BoxEv B (D j A) (LA j) (UA j) ∧
+      StepRead B j Bn ∧ BoxEv B (D j Bn) (LB j) (UB j) ∧
+      qle (DRd (up j) (Lf j) (Uf j)).1 (DRd (up j) (Lf j) (Uf j)).2 ∧
+      Corners (cSl j) (cSh j) Sl Sh (DRd (up j) (Lf j) (Uf j)).1 (DRd (up j) (Lf j) (Uf j)).2 ∧
+      Corners (cAl j) (cAh j) fAl fAh (DRd (up j) (LA j) (UA j)).1 (DRd (up j) (LA j) (UA j)).2 ∧
+      Corners (cBl j) (cBh j) fBl fBh (DRd (up j) (LB j) (UB j)).1 (DRd (up j) (LB j) (UB j)).2 ∧
+      qle qzero (qadd (qsub (cBl j) (cAh j)) (cSl j)))
+    {p : Point QExpr} (hp : InBox qOrd B p) (hfA : qle fAl fAh) (hfB : qle fBl fBh)
+    (lAp : LeafEv e p i ra0 ra1 fAl fAh) (lAc : LeafEv e (cornerOn B (fun j => !up j) ns p) i ra0 ra1 fAl fAh)
+    (lBp : LeafEv e p i rb0 rb1 fBl fBh) (lBc : LeafEv e (cornerOn B (fun j => !up j) ns p) i rb0 rb1 fBl fBh)
+    {ap ac bp bc : Nat → QExpr}
+    (hrA : ∀ k, ∃ M, ∀ m, M ≤ m → ZTrig.Ab (qsub (qsub (ap m) (evalN m p A))
+      (qsub (ac m) (evalN m (cornerOn B (fun j => !up j) ns p) A))) (qeps k))
+    (hrB : ∀ k, ∃ M, ∀ m, M ≤ m → ZTrig.Ab (qsub (qsub (bp m) (evalN m p Bn))
+      (qsub (bc m) (evalN m (cornerOn B (fun j => !up j) ns p) Bn))) (qeps k)) {L : QExpr}
+    (hL : ∀ k, ∃ M, ∀ m, M ≤ m → ∀ l, LOK B i Sl Sh ra0 ra1 rb0 rb1 ap ac bp bc m l → ∃ N, ∀ n, N ≤ n →
+      qle (qsub L (qeps k)) (SS e i n (cornerOn B (fun j => !up j) ns p) l.1 l.2.2.1 l.2.2.2.2)) :
+    ∀ k, ∃ M, ∀ m, M ≤ m → ∀ l, LOK B i Sl Sh ra0 ra1 rb0 rb1 ap ac bp bc m l → ∃ N, ∀ n, N ≤ n →
+      qle (qsub L (qeps k)) (SS e i n p l.1 l.2.1 l.2.2.2.1) := by
+  refine glue2_low (Λ := Lists)
+    (Sc := fun (_ : Nat) (l : Lists) (n : Nat) => SS e i n (cornerOn B (fun j => !up j) ns p) l.1 l.2.2.1 l.2.2.2.2)
+    (Sp := fun (_ : Nat) (l : Lists) (n : Nat) => SS e i n p l.1 l.2.1 l.2.2.2.1) hL ?_
+  intro k
+  obtain ⟨M, hM⟩ := leibniz_low hS0 hSl0 hchain hp hfA hfB lAp lAc lBp lBc hrA hrB k
+  refine ⟨M, fun m hm l hl => ?_⟩
+  obtain ⟨Ml, EpA, EcA, EpB, EcB⟩ := l
+  obtain ⟨a1, a2, a3, a4, a5, a6, a7, a8, a9⟩ := hl
+  exact hM m hm Ml EpA EcA EpB EcB a1 a2 a3 a4 a5 a6 a7 a8 a9
+
+/-- ASSEMBLED, FROM ABOVE — `leibniz_high` glued. -/
+theorem leibniz_assembled_high {B : Box QExpr} {e A Bn : G} {i : Nat} {up : Nat → Bool} {ns : List Nat}
+    {Lf Uf LA UA LB UB cSl cSh cAl cAh cBl cBh : Nat → QExpr} {Sl Sh fAl fAh fBl fBh ra0 ra1 rb0 rb1 : QExpr}
+    (hS0 : qle qzero Sh) (hSl0 : qle qzero Sl)
+    (hchain : ∀ j, List.Mem j ns →
+      j ≠ i ∧ StepRead B j (ng e) ∧ BoxEv B (D j (ng e)) (Lf j) (Uf j) ∧ StepRead B j A ∧ BoxEv B (D j A) (LA j) (UA j) ∧
+      StepRead B j Bn ∧ BoxEv B (D j Bn) (LB j) (UB j) ∧
+      qle (DRd (up j) (Lf j) (Uf j)).1 (DRd (up j) (Lf j) (Uf j)).2 ∧
+      Corners (cSl j) (cSh j) Sl Sh (DRd (up j) (Lf j) (Uf j)).1 (DRd (up j) (Lf j) (Uf j)).2 ∧
+      Corners (cAl j) (cAh j) fAl fAh (DRd (up j) (LA j) (UA j)).1 (DRd (up j) (LA j) (UA j)).2 ∧
+      Corners (cBl j) (cBh j) fBl fBh (DRd (up j) (LB j) (UB j)).1 (DRd (up j) (LB j) (UB j)).2 ∧
+      qle qzero (qadd (qsub (cBl j) (cAh j)) (cSl j)))
+    {p : Point QExpr} (hp : InBox qOrd B p) (hfA : qle fAl fAh) (hfB : qle fBl fBh)
+    (lAp : LeafEv (ng e) p i ra0 ra1 fAl fAh) (lAc : LeafEv (ng e) (cornerOn B (fun j => !up j) ns p) i ra0 ra1 fAl fAh)
+    (lBp : LeafEv (ng e) p i rb0 rb1 fBl fBh) (lBc : LeafEv (ng e) (cornerOn B (fun j => !up j) ns p) i rb0 rb1 fBl fBh)
+    {ap ac bp bc : Nat → QExpr}
+    (hrA : ∀ k, ∃ M, ∀ m, M ≤ m → ZTrig.Ab (qsub (qsub (ap m) (evalN m p A))
+      (qsub (ac m) (evalN m (cornerOn B (fun j => !up j) ns p) A))) (qeps k))
+    (hrB : ∀ k, ∃ M, ∀ m, M ≤ m → ZTrig.Ab (qsub (qsub (bp m) (evalN m p Bn))
+      (qsub (bc m) (evalN m (cornerOn B (fun j => !up j) ns p) Bn))) (qeps k)) {U : QExpr}
+    (hU : ∀ k, ∃ M, ∀ m, M ≤ m → ∀ l, LOK B i Sl Sh ra0 ra1 rb0 rb1 ap ac bp bc m l → ∃ N, ∀ n, N ≤ n →
+      qle (SS e i n (cornerOn B (fun j => !up j) ns p) l.1 l.2.2.1 l.2.2.2.2) (qadd U (qeps k))) :
+    ∀ k, ∃ M, ∀ m, M ≤ m → ∀ l, LOK B i Sl Sh ra0 ra1 rb0 rb1 ap ac bp bc m l → ∃ N, ∀ n, N ≤ n →
+      qle (SS e i n p l.1 l.2.1 l.2.2.2.1) (qadd U (qeps k)) := by
+  refine glue2_high (Λ := Lists)
+    (Sc := fun (_ : Nat) (l : Lists) (n : Nat) => SS e i n (cornerOn B (fun j => !up j) ns p) l.1 l.2.2.1 l.2.2.2.2)
+    (Sp := fun (_ : Nat) (l : Lists) (n : Nat) => SS e i n p l.1 l.2.1 l.2.2.2.1) hU ?_
+  intro k
+  obtain ⟨M, hM⟩ := leibniz_high hS0 hSl0 hchain hp hfA hfB lAp lAc lBp lBc hrA hrB k
+  refine ⟨M, fun m hm l hl => ?_⟩
+  obtain ⟨Ml, EpA, EcA, EpB, EcB⟩ := l
+  obtain ⟨a1, a2, a3, a4, a5, a6, a7, a8, a9⟩ := hl
+  exact hM m hm Ml EpA EcA EpB EcB a1 a2 a3 a4 a5 a6 a7 a8 a9
 
 end ZLeibniz
 
@@ -697,5 +797,7 @@ end ZLeibniz
 #print axioms ZLeibniz.leibniz_low
 #print axioms ZLeibniz.rsum_ng
 #print axioms ZLeibniz.leibniz_high
-#print axioms ZLeibniz.limits_range_low
-#print axioms ZLeibniz.limits_range_high
+#print axioms ZLeibniz.glue2_low
+#print axioms ZLeibniz.glue2_high
+#print axioms ZLeibniz.leibniz_assembled_low
+#print axioms ZLeibniz.leibniz_assembled_high

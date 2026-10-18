@@ -162,6 +162,7 @@ STANDS = [
     ("test_affine.py", ["AFFINE GREEN"]),
     ("test_lp.py", ["LP GREEN"]),
     ("test_min.py", ["MIN GREEN"]),
+    ("test_zcontract.py", ["ZCONTRACT GREEN"]),
     ("test_expcert.py", ["EXPCERT GREEN"]),
     ("test_trigcert.py", ["TRIGCERT GREEN"]),
     ("test_lncert.py", ["LNCERT GREEN"]),

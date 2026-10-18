@@ -11,6 +11,10 @@ than L" is made checkable by a CERTIFICATE over the box of the amounts x:
     {"leaf": "cost", "cert": c}                               the objective is >= L on this piece
                                                               (c: a zcertify tree for that bound)
     {"leaf": "fails", "row": i, "at": {d: "p/q"}, "bound": "p/q", "cert": c}
+    {"leaf": "fails", "row": i, "at": {d: "p/q"}, "cert": {"leaf": "hc4"}}
+                                                              the same, shown by CONTRACTION (zcontract): the
+                                                              requirement met, contracted over the piece, is
+                                                              EMPTY (2026-10-19)
                                                               requirement i FAILS on this piece at ONE point
                                                               of its data (d = the given point, inside the
                                                               requirement's own box): for ">= b" the row is
@@ -88,9 +92,10 @@ def check_lower_bound(objective, qs_obj, rows, xs, L, cert):
             if not isinstance(i, int) or not 0 <= i < len(rows):
                 return False, f"{path}: no requirement {i!r}"
             rnode, op, b, qs = rows[i]
+            hc4 = isinstance(node.get("cert"), dict) and node["cert"].get("leaf") == "hc4"
             try:
                 pt = {d: _frac(v) for d, v in (node.get("at") or {}).items()}
-                bound = _frac(node["bound"])
+                bound = None if hc4 else _frac(node["bound"])
             except (ValueError, ZeroDivisionError, KeyError, AttributeError):
                 return False, f"{path}: point or bound unreadable"
             for d, v in pt.items():
@@ -98,6 +103,15 @@ def check_lower_bound(objective, qs_obj, rows, xs, L, cert):
                     return False, f"{path}: {d} is not a datum of requirement {i}"
                 if not qs[d]["lo"] <= v <= qs[d]["hi"]:
                     return False, f"{path}: {d} = {v} lies outside its box [{qs[d]['lo']}, {qs[d]['hi']}]"
+            if hc4:
+                # CONTRACTION (2026-10-19, zcontract; lean/ZContract.lean): the requirement MET is contracted over
+                # the piece (the data at the point, the rest over their boxes) — an EMPTY box: no mix of the piece
+                # meets it there. The kernel runs the contraction itself; the search's word is not taken.
+                import zcontract as ZK
+                if not ZK.empty(rnode, op, b, _on(qs, dict(piece, **{d: (v, v) for d, v in pt.items()}))):
+                    return False, f"{path}: requirement {i} not contracted to empty on the piece"
+                count["fails"] += 1
+                return True, None
             if op == ">=" and bound < b:
                 side = "<="
             elif op == "<=" and bound > b:

@@ -12,12 +12,15 @@ this file produces them the way ZAtanCert.atan_step proves them:
 Exact arithmetic throughout; each reading rounded outward to a 2^-90 grid (Lean: Hull, a wider P_0 is allowed).
 """
 from fractions import Fraction as F
+import bisect
 import math
 
 ORDER = 26                      # MEASURED 2026-10-17: steps max(1/16, |t|/16), order 26 -> width ~2^-80 at
                                 # x = 1, 10, 1000 (step 1/4, order 30: 2^-44 .. 2^-24, the box remainder over-read)
 _GRID = 2 ** 90
 _CACHE = {F(0): (F(0), F(0))}
+_KEYS = [F(0)]                  # the cached points, sorted: the nearest start by bisection (a linear min over the
+                                # cache cost test_implicit 449 s of 777, MEASURED 2026-10-18)
 
 
 def _corners(a, b):
@@ -74,9 +77,25 @@ def series(lo, hi, m=ORDER):
     return [(-Y, Y)] + [_out(_corners(w[t], (F(1, t + 1), F(1, t + 1)))) for t in range(m)]
 
 
-def step(x0, x1, L, H, m=ORDER):
+def _order(x0, x1):
+    """The series' order for a step: the remainder falls about log2(R/|d|) − 1 bits per order (R ≥ max(1, |t|), the
+    radius at the step's near end; the box over-reads), 84 bits wanted; order 26 at the widest step |d| = R/16
+    (MEASURED 2026-10-17: width ~2^-80), fewer for the short last steps."""
+    d = abs(x1 - x0)
+    if d == 0:
+        return 1
+    R = max(F(1), min(abs(x0), abs(x1)))
+    bits = _flog2(R / d) - 1
+    if bits <= 3:
+        return ORDER
+    return max(4, min(ORDER, -(-84 // bits)))
+
+
+def step(x0, x1, L, H, m=None):
     """atan_step: a reading [L, H] of atan x0 carried to one of atan x1."""
     x0, x1 = F(x0), F(x1)
+    if m is None:
+        m = _order(x0, x1)
     cB = series(min(x0, x1), max(x0, x1), m)
     cP = series(x0, x0, m)
     d = x1 - x0
@@ -111,7 +130,8 @@ def atan_cert(x):
     if x in _CACHE:
         return _CACHE[x]
     # start from the certified point nearest to x (0 is always one: atan 0 = 0)
-    t = min(_CACHE, key=lambda c: abs(c - x))
+    j = bisect.bisect_left(_KEYS, x)
+    t = min((_KEYS[k] for k in (j - 1, j) if 0 <= k < len(_KEYS)), key=lambda c: abs(c - x))
     L, H = _CACHE[t]
     sg = 1 if x > t else -1
     while t != x:
@@ -120,5 +140,8 @@ def atan_cert(x):
         t = nxt
         if t not in _CACHE and t.denominator & (t.denominator - 1) == 0:
             _CACHE[t] = (L, H)          # chain points are dyadic: kept as later starts
+            bisect.insort(_KEYS, t)
+    if x not in _CACHE:
+        bisect.insort(_KEYS, x)
     _CACHE[x] = (L, H)
     return L, H

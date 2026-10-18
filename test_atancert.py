@@ -88,7 +88,7 @@ acc0, tp0, vp0 = leaves(f, qs, {"taylor": 4})
 check(acc0 and not tp0 and not vp0, f"atan(1/2 + x/4)·e^-x: the Taylor leaves covered (premises {tp0} {vp0})")
 keep = ZF.atan_pt
 ZF.atan_pt = lambda x: tuple(v + F(1, 64) for v in keep(x))
-A._CACHE.clear(); A._CACHE[F(0)] = (F(0), F(0))
+A._CACHE.clear(); A._CACHE[F(0)] = (F(0), F(0)); A._KEYS[:] = [F(0)]
 try:
     for leaf in ({"taylor": 4}, "interval"):
         acc, tp, vp = leaves(f, qs, leaf)

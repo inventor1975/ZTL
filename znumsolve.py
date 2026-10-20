@@ -645,10 +645,14 @@ def _solve_rank_many(pc, qs):
     return {u: (lo[u], hi[u]) for u in unknowns}, exact, None
 
 
+_LAST_AFFINE = [None]     # the affine forms of the last system solved by superposition: ({u: (c0, {p: c})}, params)
+
+
 def _solve_param_system(qs, atoms):
     """Ranges of the unknowns of a linear system whose coefficients carry
     parameters. Returns (ranges {name: (lo, hi)}, contributors, reason): ranges
     is empty and reason says why whenever the exact class does not hold."""
+    _LAST_AFFINE[0] = None
     pc = _param_corners(qs, atoms, one_rank_many=True)
     if pc["reason"] is None and pc.get("rank_many"):
         ranges, exact, why = _solve_rank_many(pc, qs)
@@ -674,6 +678,7 @@ def _solve_param_system(qs, atoms):
         return {}, set(), (pc["reason"] or None)
     lo, hi = {}, {}
     if pc.get("affine"):
+        _LAST_AFFINE[0] = (pc["affine"], list(pc["params"]))
         box = {p: (qs[p]["lo"], qs[p]["hi"]) for p in pc["params"]}
         for u, (c0, coef) in pc["affine"].items():
             lo[u], hi[u] = affine_range(c0, coef, box)
@@ -964,6 +969,137 @@ def _mlin_eq(kind, e1, e2, qs):
     return None
 
 
+class _NotAffine(Exception):
+    pass
+
+
+def _lin_in(e, U):
+    """e as  rest + sum_u coef_u * u  over the names U, every coefficient and the rest a tree free of U:
+    {None: rest, u: coef}. Raises _NotAffine where e is not linear in U."""
+    if isinstance(e, str):
+        return {e: Fraction(1)} if e in U else {None: e}
+    if not isinstance(e, tuple):
+        return {None: e}
+    op = e[0]
+    if op == "sum":
+        out = {None: Fraction(0)}
+        for a in e[1]:
+            out = _lin_merge(out, _lin_in(a, U), "add")
+        return out
+    if op in ("add", "sub") and len(e) == 3:
+        return _lin_merge(_lin_in(e[1], U), _lin_in(e[2], U), op)
+    if op == "mul" and len(e) == 3:
+        a, b = _lin_in(e[1], U), _lin_in(e[2], U)
+        if set(a) == {None}:
+            return {k: ("mul", a[None], t) for k, t in b.items()}
+        if set(b) == {None}:
+            return {k: ("mul", t, b[None]) for k, t in a.items()}
+        raise _NotAffine("a product of two unknowns")
+    if op == "div" and len(e) == 3:
+        a, b = _lin_in(e[1], U), _lin_in(e[2], U)
+        if set(b) != {None}:
+            raise _NotAffine("a division by an unknown")
+        return {k: ("div", t, b[None]) for k, t in a.items()}
+    if _names_in(e) & set(U):
+        raise _NotAffine(f"{op} of an unknown")
+    return {None: e}
+
+
+def _lin_merge(a, b, op):
+    out = dict(a)
+    for k, t in b.items():
+        if k in out:
+            out[k] = (op, out[k], t)
+        else:
+            out[k] = t if op == "add" else ("sub", Fraction(0), t)
+    return out
+
+
+def _affine_def_eq(kind, e1, e2, qs, affine):
+    """`name == E` with E LINEAR in the unknowns of a system solved by superposition (2026-10-20, the bridge girder:
+    the deflection, a sum over 45 bars of N_i n_i L_i / (E_i A_i), read by intervals with each N_i's own range, lost
+    the loads' correlation — the designs at the limit stayed OPEN, and they are the optimum). Each unknown is
+    u = c0 + sum_p c_p p; with them put in, E = a0 + sum_p a_p p, the a's trees of the OTHER quantities. When every
+    a_p keeps one sign over the box, each p is taken at the end its sign picks (lean/ZSuperpose `term_low` /
+    `term_high`, pointwise for every value of the other quantities); what is left is read by intervals — sound, and
+    narrow when each other quantity appears once. Returns (name, lo, hi, seen) or None."""
+    if kind != "eq" or affine is None:
+        return None
+    aff, params = affine
+    U = {u for u, (c0, cs) in aff.items() if cs}            # unknowns that move with the parameters
+    for side, other in ((e1, e2), (e2, e1)):
+        if not isinstance(side, str) or side not in qs or side in aff:
+            continue
+        q = qs[side]
+        if q.get("sample") or (q["lo"] == q["hi"] and not isinstance(q["lo"], float)):
+            continue
+        names = {n for n in _names_in(other) if n in qs}
+        if side in names or not (names & U):
+            continue
+        try:
+            parts = _lin_in(other, U)
+        except _NotAffine:
+            continue
+        # like coefficients first: the same tree from several unknowns adds as NUMBERS (x/k + y/k: the 1/k's of p
+        # sum to 1/k, of q to 0 exactly — read one by one, the zero became [-1/4, 1/4] and its sign unknown)
+        g0, gp = {}, {p: {} for p in params}
+        for u, coef in parts.items():
+            if u is None:
+                continue
+            c0, cs = aff[u]
+            g0[coef] = g0.get(coef, Fraction(0)) + c0
+            for p, c in cs.items():
+                gp[p][coef] = gp[p].get(coef, Fraction(0)) + c
+
+        def build(base, groups):
+            t = base
+            for coef, k in groups.items():
+                if k != 0:
+                    t = ("add", t, ("mul", coef, k))
+            return t
+        a0 = build(parts.get(None, Fraction(0)), g0)
+        ap = {p: build(Fraction(0), gp[p]) for p in params}
+        if any(n in params for t in [a0] + list(ap.values()) for n in _names_in(t)):
+            continue                                        # a parameter also in a coefficient: not affine in it
+        seen = set(names)
+        try:
+            pick_lo, pick_hi = {}, {}
+            for p, t in ap.items():
+                iv, _, used, _, _ = _ev(t, qs)
+                if iv is None:
+                    raise _NotAffine("an unread coefficient")
+                seen |= set(used)
+                plo, phi = qs[p]["lo"], qs[p]["hi"]
+                if iv[0] >= 0:
+                    pick_lo[p], pick_hi[p] = plo, phi
+                elif iv[1] <= 0:
+                    pick_lo[p], pick_hi[p] = phi, plo
+                else:
+                    raise _NotAffine("a coefficient changes sign over the box")
+            # the ends, built PER COEFFICIENT: each coefficient tree once, times its number at the picked corner —
+            # a quantity in one coefficient is read once (the 45 moduli of the girder, each in one bar's term; built
+            # per parameter, each modulus sat in all twelve sums and the reading widened ~10 %)
+            def ends(pick):
+                t = parts.get(None, Fraction(0))
+                for coef in g0.keys() | {c for gq in gp.values() for c in gq}:
+                    k = g0.get(coef, Fraction(0)) + sum((gp[p].get(coef, Fraction(0)) * pick[p] for p in params),
+                                                        Fraction(0))
+                    if k != 0:
+                        t = ("add", t, ("mul", coef, k))
+                return t
+            ivl, _, ul, _, _ = _ev(ends(pick_lo), qs)
+            ivh, _, uh, _, _ = _ev(ends(pick_hi), qs)
+        except (_NotAffine, _NoReadings, ZeroDivisionError, KeyError, ValueError):
+            continue
+        if ivl is None or ivh is None:
+            continue
+        lo, hi = ivl[0], ivh[1]
+        if any(v in (INF, -INF) or isinstance(v, float) for v in (lo, hi)):
+            continue
+        return side, lo, hi, seen | set(ul) | set(uh) | set(params)
+    return None
+
+
 def _iv_eq(kind, e1, e2, qs):
     """`name == E` where E is NOT multilinear (a name squared, a division by a
     box): the name lies in E's INTERVAL reading over the boxes — sound (it never
@@ -1182,6 +1318,7 @@ def narrow(quantities, formula, rounds=MAX_ROUNDS, orig=None):
     # one system and solved at the corners when that is exact; otherwise the log
     # says which condition failed and nothing is touched.
     ranges, pcontrib, why = _solve_param_system(qs, atoms)
+    affine_sys = _LAST_AFFINE[0]
     how = "exact at the corners" if not (ranges and why) else "at the corners, over the linear rows"
     if why and why.startswith("RANK_MANY:"):
         _, kind_rm, text_rm = why.split(":", 2)
@@ -1257,8 +1394,12 @@ def narrow(quantities, formula, rounds=MAX_ROUNDS, orig=None):
                         step = _apply_pieces("eq", got_u[0], got_u[1], got_u[2], chunk,
                                              qs, log, orig, got_u[3])
                 if step is None:
-                    got_m = _mlin_eq(kind, e1, e2, qs)
-                    how_m = "multilinear, exact at the corners"
+                    got_m = _affine_def_eq(kind, e1, e2, qs, affine_sys)
+                    how_m = ("affine in the system's parameters, each at the end its coefficient's sign picks; the "
+                             "rest by interval reading, sound")
+                    if got_m is None:
+                        got_m = _mlin_eq(kind, e1, e2, qs)
+                        how_m = "multilinear, exact at the corners"
                     if got_m is None:
                         got_m = _iv_eq(kind, e1, e2, qs)
                         how_m = "interval reading, sound, may be wider than the truth"

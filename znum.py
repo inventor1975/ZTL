@@ -378,10 +378,30 @@ class Integrand:
 
 
 # The search is untrusted (zintegral.search); the enclosure it returns is the KERNEL's check() of its certificate.
-# Tolerances tried in turn: a certificate this narrow, else a wider one, else the mark (undecided, never a guess).
-INTEGRAL_TOLS = (Fraction(1, 10 ** 9), Fraction(1, 10 ** 6), Fraction(1, 10 ** 3))
+# Tolerances RELATIVE to the integral's scale (width x the largest |f| read over the box), tried in turn: a
+# certificate this narrow, else a wider one, else the mark (undecided, never a guess). With every datum a point the
+# answer can be narrow; with a datum's RANGE the enclosure is dominated by that range (each piece carries it), and
+# chasing a narrow tolerance only exhausts the pieces — MEASURED 2026-10-20 on P0*exp(-t/tau), P0 in [95,105],
+# tau in [9,11], t in [0,20]: absolute 1e-9 and 1e-6 each gave up at 4000 pieces (20 s each), 1e-2 gave
+# [762.342, 967.524] in 1.8 s against the true range [762.345, 967.520].
+INTEGRAL_REL_POINT = (Fraction(1, 10 ** 12), Fraction(1, 10 ** 9), Fraction(1, 10 ** 6))
+INTEGRAL_REL_RANGE = (Fraction(1, 10 ** 5), Fraction(1, 10 ** 3))
 INTEGRAL_MAX_PIECES = 4000
 _INTEGRAL_CACHE = {}
+
+
+def _integral_scale(I, qs2, hull):
+    """(b - a) x max |f| read over the whole box — the size the tolerances are relative to (1 when unreadable)."""
+    import zcertify as _ZC
+    try:
+        box = {n: (qs2[n]["lo"], qs2[n]["hi"]) for n in _ZC._names(I.f) if n in qs2}
+        box[I.x] = hull
+        r = _ZC._reading(I.f, qs2, box)
+    except Exception:                         # noqa: BLE001 — a scale only; the kernel decides elsewhere
+        r = None
+    if r is None or any(v in (INF, -INF) for v in r):
+        return Fraction(1)
+    return max(Fraction(1, 10 ** 30), (hull[1] - hull[0]) * max(abs(Fraction(r[0])), abs(Fraction(r[1]))))
 
 
 def _ev_integral(args, quantities):
@@ -412,7 +432,10 @@ def _ev_integral(args, quantities):
     if hit is None:
         hit = ("none",)
         point = ra[0] == ra[1] and rb[0] == rb[1]
-        for tol in INTEGRAL_TOLS:
+        boxed = any(quantities[p]["lo"] != quantities[p]["hi"] for p in params if p in quantities)
+        scale = _integral_scale(I, qs2, hull)
+        for rel in (INTEGRAL_REL_RANGE if boxed or not point else INTEGRAL_REL_POINT):
+            tol = rel * scale
             if point:
                 A, B = ra[0], rb[0]
                 if A == B:

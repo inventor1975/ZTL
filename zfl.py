@@ -500,7 +500,12 @@ RESERVED_NAMES = ("T", "F", "Z")
 # который стоял в спеке первого поколения и потерялся при переходе на v2.
 OPERATOR_WORDS = ("not", "and", "or", "imp", "xor", "xnor",
                   "sum", "min", "max", "abs", "sqrt")
-_SERVICE_WORDS = set(RESERVED_NAMES) | set(OPERATOR_WORDS)
+# THE FUNCTIONS OF THE NUMERIC FLOOR (ZTL zfunc 2026-10-10/13, zintegral 2026-10-16; in ZFL 2026-10-20): each a
+# proved bracket of rationals, never a rounding; `pi` is the constant's proved bracket; `integral(f, x, a, b)` the
+# kernel-checked enclosure of a definite integral. Taken here for the same reason as the connectives: a row called
+# `sin` or `pi` would never be bound — the formula reads the function.
+FUNCTION_WORDS = ("exp", "ln", "log10", "sin", "cos", "tan", "atan", "pow", "integral", "pi")
+_SERVICE_WORDS = set(RESERVED_NAMES) | set(OPERATOR_WORDS) | set(FUNCTION_WORDS)
 
 # status -> what the core's two floors each call it
 _MARK = {"verified": "T", "refuted": "F", "unverified": "Z"}
@@ -679,6 +684,12 @@ def validate(doc):
                                  f"name: used as a row name it silently changes "
                                  f"the reading. Pick a descriptive name "
                                  f"(lower-case '{name.lower()}' is free)"))
+        elif name in FUNCTION_WORDS:
+            issues.append(_issue("error", "E_RESERVED", f"{at} / name",
+                                 f"'{name}' is a function of the language, "
+                                 f"not a name: a formula mentioning it reads "
+                                 f"as the function, so the row is never bound. "
+                                 f"Pick a descriptive name"))
         elif name in OPERATOR_WORDS:
             issues.append(_issue("error", "E_RESERVED", f"{at} / name",
                                  f"'{name}' is a connective of the language, "
@@ -868,6 +879,16 @@ def validate(doc):
         if unknown:
             issues.append(_issue("error", "E_UNKNOWN_NAME", "claim",
                                  f"no row is called {sorted(unknown)}"))
+    for where, text in [("claim", claim)] + [
+            (f"row {i} / ground", r.get("ground")) for i, r in enumerate(rows, 1)
+            if (r.get("status") or "") == "defined"]:
+        clash = bound_names(text) & declared
+        if clash:
+            issues.append(_issue(
+                "error", "E_BOUNDVAR", where,
+                f"the variable of integration {sorted(clash)} is also a row: inside "
+                f"integral(f, x, a, b) the x runs over [a, b] and is not the row — "
+                f"give it a letter of its own"))
     return issues
 
 
@@ -980,10 +1001,37 @@ def _reading_atom_counts(text, atoms):
 def names_in(text):
     """Every name a formula mentions. A table is a closed world: a formula
     may only speak of rows that exist, and a typo in a name is the commonest
-    way to ask a question about nothing at all."""
+    way to ask a question about nothing at all. The variable of an integral
+    is not a row: `integral(f, x, a, b)` binds x inside f (`bound_names`)."""
     t = re.sub(r"\bTr\s*\(\s*([^)]+?)\s*\)", r"\1", text or "")
     words = set(re.findall(r"[A-Za-zА-Яа-яЁё_][\wА-Яа-яЁё]*", t))
-    return {w for w in words if w not in _SERVICE_WORDS}
+    return {w for w in words if w not in _SERVICE_WORDS} - bound_names(text)
+
+
+_INTEGRAL_RE = re.compile(r"\bintegral\s*\(")
+
+
+def bound_names(text):
+    """The variables of integration in a formula: the second argument of every
+    `integral(f, x, a, b)`."""
+    text, out = text or "", set()
+    for m in _INTEGRAL_RE.finditer(text):
+        depth, start, args = 1, m.end(), []
+        for i in range(m.end(), len(text)):
+            c = text[i]
+            if c in "([":
+                depth += 1
+            elif c in ")]":
+                depth -= 1
+                if depth == 0:
+                    args.append(text[start:i])
+                    break
+            elif c == "," and depth == 1:
+                args.append(text[start:i])
+                start = i + 1
+        if len(args) >= 2 and re.fullmatch(r"\s*[A-Za-z_]\w*\s*", args[1]):
+            out.add(args[1].strip())
+    return out
 
 
 _LONE_EQ = re.compile(r"(?<![<>=!])=(?!=)")

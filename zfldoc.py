@@ -67,9 +67,22 @@ CODE_HELP = {
     "E_BADNAME": ("a name a formula could not use",
                   "имя, непригодное для формулы"),
     "E_DUPNAME": ("the same name twice", "имя повторяется"),
-    "E_RESERVED": ("a constant of the language used as a row name — it silently "
+    "E_RESERVED": ("a constant, connective or function of the language used as a row name — it silently "
                    "changes the reading",
-                   "константа языка в роли имени строки — молча меняет разбор"),
+                   "константа, связка или функция языка в роли имени строки — молча меняет разбор"),
+    "E_BOUNDVAR": {"en": "the variable of an integral is also a row — inside integral(f, x, a, b) the x runs over "
+                         "[a, b]; give it a letter of its own",
+                   "ru": "переменная интеграла совпала с именем строки — внутри integral(f, x, a, b) x пробегает "
+                         "[a, b]; дайте ей свою букву",
+                   "uk": "змінна інтеграла збіглася з назвою рядка — усередині integral(f, x, a, b) x пробігає "
+                         "[a, b]; дайте їй свою літеру",
+                   "he": "משתנה האינטגרל זהה לשם של שורה — בתוך integral(f, x, a, b) ה-x רץ על [a, b]; תנו לו אות משלו",
+                   "de": "die Variable eines Integrals ist auch eine Zeile — in integral(f, x, a, b) läuft x über "
+                         "[a, b]; geben Sie ihr einen eigenen Buchstaben",
+                   "fr": "la variable d'une intégrale est aussi une ligne — dans integral(f, x, a, b), x parcourt "
+                         "[a, b] ; donnez-lui sa propre lettre",
+                   "es": "la variable de una integral también es una fila — en integral(f, x, a, b) la x recorre "
+                         "[a, b]; dele una letra propia"},
     "E_STATUS": ("a status outside the four", "статус вне четырёх"),
     "E_SCALE": ("a scale that is not empty/int/decimalK/fracM, or out of bounds",
                 "шкала не пустая/int/decimalK/fracM либо вне границ"),
@@ -455,6 +468,11 @@ ARITH_HELP = {
                 "квадратный корень — доказанная вилка, точная там, где корень "
                 "рационален; у отрицательной величины прочтения нет; неизвестное "
                 "под корнем решатель не ищет"),
+    'exp(x), ln(x), log10(x)': {'en': 'exponent and logarithms — each value a proved bracket of two rationals, never a rounding; ln and log10 of a quantity that may be 0 or below have no reading there', 'ru': 'экспонента и логарифмы — каждое значение доказанная вилка из двух дробей, а не округление; у ln и log10 от величины, которая может быть 0 или меньше, там прочтения нет', 'uk': 'експонента й логарифми — кожне значення доведена вилка з двох дробів, а не округлення; ln і log10 від величини, що може бути 0 або менше, там не мають прочитання', 'he': 'מעריכית ולוגריתמים — כל ערך הוא מזלג מוכח של שני שברים, לא עיגול; ל-ln ול-log10 של גודל שעשוי להיות 0 או פחות אין שם קריאה', 'de': 'Exponential und Logarithmen — jeder Wert eine bewiesene Klammer aus zwei Brüchen, nie eine Rundung; ln und log10 einer Größe, die 0 oder kleiner sein kann, haben dort keine Lesung', 'fr': "exponentielle et logarithmes — chaque valeur est un encadrement prouvé par deux fractions, jamais un arrondi ; ln et log10 d'une grandeur pouvant valoir 0 ou moins n'y ont pas de lecture", 'es': 'exponencial y logaritmos — cada valor es una horquilla probada de dos fracciones, nunca un redondeo; ln y log10 de una magnitud que puede ser 0 o menos no tienen lectura allí'},
+    'sin(x), cos(x), tan(x), atan(x)': {'en': 'trigonometry in radians — proved brackets; over a range, sin and cos take ±1 wherever an extremum may lie inside', 'ru': 'тригонометрия в радианах — доказанные вилки; на диапазоне sin и cos берут ±1 везде, где внутри может лежать экстремум', 'uk': 'тригонометрія в радіанах — доведені вилки; на діапазоні sin і cos беруть ±1 скрізь, де всередині може бути екстремум', 'he': 'טריגונומטריה ברדיאנים — מזלגות מוכחים; על תחום, sin ו-cos לוקחים ±1 בכל מקום שבו עשוי להיות קיצון בפנים', 'de': 'Trigonometrie im Bogenmaß — bewiesene Klammern; über einen Bereich nehmen sin und cos ±1 an, wo innen ein Extremum liegen kann', 'fr': "trigonométrie en radians — encadrements prouvés ; sur un intervalle, sin et cos prennent ±1 là où un extremum peut se trouver à l'intérieur", 'es': 'trigonometría en radianes — horquillas probadas; en un rango, sin y cos toman ±1 donde pueda haber un extremo dentro'},
+    'pow(x, y), min(a, b), max(a, b)': {'en': 'power (x > 0, or an integer exponent exactly), the smaller and the larger of two', 'ru': 'степень (x > 0 или точно при целом показателе), меньшее и большее из двух', 'uk': 'степінь (x > 0 або точно при цілому показнику), менше й більше з двох', 'he': 'חזקה (x > 0, או בדיוק במעריך שלם), הקטן והגדול מבין שניים', 'de': 'Potenz (x > 0 oder exakt bei ganzzahligem Exponenten), das Kleinere und das Größere von zweien', 'fr': 'puissance (x > 0, ou exactement pour un exposant entier), le plus petit et le plus grand de deux', 'es': 'potencia (x > 0, o exacta con exponente entero), el menor y el mayor de dos'},
+    'pi': {'en': 'the constant pi — a proved bracket 3.14159265… < pi < 3.14159266…, so `pi == 3.14159265` is refuted and an equality with pi is never forced', 'ru': 'константа пи — доказанная вилка 3,14159265… < пи < 3,14159266…, поэтому `pi == 3.14159265` опровергнуто, а равенство с пи никогда не вынуждено', 'uk': 'константа пі — доведена вилка 3,14159265… < пі < 3,14159266…, тож `pi == 3.14159265` спростовано, а рівність із пі ніколи не вимушена', 'he': 'הקבוע פאי — מזלג מוכח 3.14159265… < pi < 3.14159266…, ולכן `pi == 3.14159265` מופרך ושוויון עם פאי לעולם אינו מחויב', 'de': 'die Konstante Pi — eine bewiesene Klammer 3,14159265… < pi < 3,14159266…, daher ist `pi == 3.14159265` widerlegt und eine Gleichheit mit Pi nie erzwungen', 'fr': "la constante pi — un encadrement prouvé 3,14159265… < pi < 3,14159266…, donc `pi == 3.14159265` est réfuté et une égalité avec pi n'est jamais forcée", 'es': 'la constante pi — una horquilla probada 3,14159265… < pi < 3,14159266…, así que `pi == 3.14159265` queda refutado y una igualdad con pi nunca es forzada'},
+    'integral(f, x, a, b)': {'en': "the definite integral of f over x from a to b — x is the integration variable, not a row; the studio searches a certificate (a partition with a Taylor, monotone or interval leaf per piece), the kernel checks it and gives an enclosure valid for EVERY value of f's quantities and of the limits; limits may be ranges; if no certificate is found the answer stays open, never a guess", 'ru': 'определённый интеграл f по x от a до b — x переменная интегрирования, не строка; студия ищет сертификат (разбиение с листом Тейлора, монотонности или интервала на каждом куске), ядро его проверяет и даёт вилку, верную для ЛЮБЫХ значений величин f и пределов; пределы могут быть диапазонами; если сертификат не найден, ответ остаётся открытым, а не угаданным', 'uk': 'визначений інтеграл f за x від a до b — x змінна інтегрування, не рядок; студія шукає сертифікат (розбиття з листом Тейлора, монотонності чи інтервалу на кожному шматку), ядро його перевіряє й дає вилку, правильну для БУДЬ-ЯКИХ значень величин f і меж; межі можуть бути діапазонами; якщо сертифікат не знайдено, відповідь лишається відкритою, а не вгаданою', 'he': 'האינטגרל המסוים של f לפי x מ-a עד b — x הוא משתנה האינטגרציה, לא שורה; הסטודיו מחפש תעודה (חלוקה עם עלה טיילור, מונוטוני או קטע לכל חתיכה), הליבה בודקת אותה ונותנת מזלג שתקף לכל ערך של גדלי f ושל הגבולות; הגבולות יכולים להיות תחומים; אם לא נמצאה תעודה התשובה נשארת פתוחה, לעולם לא ניחוש', 'de': 'das bestimmte Integral von f über x von a bis b — x ist die Integrationsvariable, keine Zeile; das Studio sucht ein Zertifikat (eine Zerlegung mit einem Taylor-, Monotonie- oder Intervallblatt je Stück), der Kern prüft es und liefert eine Einschließung, die für JEDEN Wert der Größen von f und der Grenzen gilt; Grenzen dürfen Bereiche sein; ohne Zertifikat bleibt die Antwort offen, nie geraten', 'fr': "l'intégrale définie de f selon x de a à b — x est la variable d'intégration, pas une ligne ; le studio cherche un certificat (une partition avec une feuille de Taylor, monotone ou d'intervalle par morceau), le noyau le vérifie et donne un encadrement valable pour TOUTE valeur des grandeurs de f et des bornes ; les bornes peuvent être des intervalles ; sans certificat la réponse reste ouverte, jamais devinée", 'es': 'la integral definida de f en x de a a b — x es la variable de integración, no una fila; el estudio busca un certificado (una partición con una hoja de Taylor, monótona o de intervalo por trozo), el núcleo lo comprueba y da una horquilla válida para CUALQUIER valor de las magnitudes de f y de los límites; los límites pueden ser rangos; si no hay certificado la respuesta queda abierta, nunca adivinada'},
     "( )": ("brackets, to say what goes first",
             "скобки — чтобы сказать, что раньше"),
     "-x": ("a leading minus: the sign of a term, not the operation between "
@@ -475,7 +493,12 @@ def arithmetic():
     # THE CALLS, like the symbols, come from the reader: a function is listed
     # only if the reader has its branch (sqrt was in the core five days before
     # any reader produced it, 2026-09-24).
-    calls = [c for c, probe in (("sum(a,b,…)", "^sum\\("), ("sqrt(x)", 'startswith("sqrt(")'))
+    calls = [c for c, probe in (("sum(a,b,…)", "^sum\\("), ("sqrt(x)", 'startswith("sqrt(")'),
+                                ("exp(x), ln(x), log10(x)", "exp|ln|log10|atan"),
+                                ("sin(x), cos(x), tan(x), atan(x)", "tan|sin|cos"),
+                                ("pow(x, y), min(a, b), max(a, b)", "pow|min|max"),
+                                ("pi", 's == "pi"'),
+                                ("integral(f, x, a, b)", 'startswith("integral(")'))
              if probe in src]
     return sorted(ops) + calls + ["( )", "-x"]
 
@@ -553,9 +576,8 @@ def render(lang="en"):
 
     parts.append(f"<h2>{_esc(h[18])}</h2><table>")
     for op in arithmetic():
-        en, ru = ARITH_HELP.get(op, ("—", "—"))
         parts.append(f"<tr><td><code>{_esc(op)}</code></td>"
-                     f"<td>{_esc(pick((en, ru), lang))}</td></tr>")
+                     f"<td>{_esc(pick(ARITH_HELP.get(op, ('—', '—')), lang))}</td></tr>")
     parts.append("</table>")
 
     parts.append(f"<h2>{_esc(h[17])}</h2><table>")
@@ -579,9 +601,8 @@ def render(lang="en"):
 
     parts.append(f"<h2>{_esc(h[7])}</h2><table>")
     for code in sorted(codes_in_source()):
-        en, ru = CODE_HELP.get(code, ("—", "—"))
         parts.append(f"<tr><td><code>{_esc(code)}</code></td>"
-                     f"<td>{_esc(pick((en, ru), lang))}</td></tr>")
+                     f"<td>{_esc(pick(CODE_HELP.get(code, ('—', '—')), lang))}</td></tr>")
     parts.append("</table>")
     return "\n".join(parts)
 

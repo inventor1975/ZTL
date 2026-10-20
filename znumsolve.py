@@ -319,6 +319,79 @@ def _solve_exact(Ab, n):
     return [M[i][n] / M[i][i] for i in range(n)], det
 
 
+def _solve_exact_multi(M, n):
+    """Gauss-Jordan over Fractions on n x n rows [a_1..a_n, b_1..b_k] (several right-hand sides at once).
+    Returns (columns: k lists of n values, det), or (None, 0) if singular."""
+    M = [list(r) for r in M]
+    det = Fraction(1)
+    for c in range(n):
+        piv = next((i for i in range(c, n) if M[i][c] != 0), None)
+        if piv is None:
+            return None, Fraction(0)
+        if piv != c:
+            M[c], M[piv] = M[piv], M[c]
+            det = -det
+        det *= M[c][c]
+        inv = 1 / M[c][c]
+        for i in range(n):
+            if i != c and M[i][c] != 0:
+                f = M[i][c] * inv
+                M[i] = [a - f * bb for a, bb in zip(M[i], M[c])]
+    k = len(M[0]) - n
+    return [[M[i][n + j] / M[i][i] for i in range(n)] for j in range(k)], det
+
+
+def affine_range(c0, coef, box):
+    """The exact range of c0 + sum_p coef[p] * p over a box {p: (lo, hi)}: each term at its own end, chosen by the
+    sign of its coefficient (lean/ZSuperpose.lean, `affine_low_le` / `affine_high_ge` / `affine_attained`)."""
+    lo = hi = Fraction(c0)
+    for p, c in coef.items():
+        a, b = box[p]
+        lo += c * (a if c >= 0 else b)
+        hi += c * (b if c >= 0 else a)
+    return lo, hi
+
+
+def _superpose(A, b, ridx, unknowns, params):
+    """PARAMETERS ONLY ON THE RIGHT-HAND SIDE, the right-hand side AFFINE in them (2026-10-20, the bridge girder:
+    a constant 141 x 141 truss matrix, 11 toleranced loads — over the corner cap of 10, so the floor refused and the
+    stand certified 90 unknowns one by one, minutes each). A x = b0 + sum_p b_p p with A constant gives, by linearity,
+    x = A^-1 b0 + sum_p (A^-1 b_p) p EXACTLY: one elimination with 1 + |params| right-hand sides instead of 2^|params|
+    solutions. -> ({unknown: (c0, {p: c})}, None) or (None, reason)."""
+    n = len(unknowns)
+    full = {i: [_peval(A.get((i, u), {}), {}) for u in unknowns]
+            + [b[i].get((), Fraction(0))] + [b[i].get((p,), Fraction(0)) for p in params] for i in ridx}
+    # independent rows of the constant matrix; an OVERDETERMINED system (more rows than unknowns — a quantity fixed
+    # earlier leaves a redundant equality, 2026-10-20) is kept only if every extra row holds for EVERY value of the
+    # parameters: its residual, affine in them, must vanish identically (each coefficient exactly 0)
+    chosen, basis = [], []
+    for i in ridx:
+        v = full[i][:n]
+        for (pc_, bv) in basis:
+            if v[pc_] != 0:
+                f = v[pc_] / bv[pc_]
+                v = [x - f * y for x, y in zip(v, bv)]
+        nz = next((c for c, x in enumerate(v) if x != 0), None)
+        if nz is not None:
+            basis.append((nz, v))
+            chosen.append(i)
+    if len(chosen) < n:
+        return None, None
+    cols, det = _solve_exact_multi([full[i] for i in chosen], n)
+    if cols is None or det == 0:
+        return None, "singular: the constant matrix of the system has no inverse"
+    for i in ridx:
+        if i in chosen:
+            continue
+        row = full[i]
+        for k in range(1 + len(params)):            # residual's constant and each parameter's coefficient
+            if sum((row[j] * cols[k][j] for j in range(n)), Fraction(0)) != row[n + k]:
+                return None, ("overdetermined: an equality beyond the independent ones does not hold for every "
+                              "value of the parameters")
+    return {u: (cols[0][j], {p: cols[1 + k][j] for k, p in enumerate(params) if cols[1 + k][j] != 0})
+            for j, u in enumerate(unknowns)}, None
+
+
 def _param_corners(qs, atoms, rhs_only_ok=False, is_unknown=None, one_rank_many=False):
     """Read the committed equalities as A(p) x = b(p) and solve them at every
     corner of the parameters' box. Returns a dict: unknowns, params, in_A,
@@ -384,6 +457,35 @@ def _param_corners(qs, atoms, rhs_only_ok=False, is_unknown=None, one_rank_many=
     if any(isinstance(qs[p]["lo"], float) or isinstance(qs[p]["hi"], float) for p in params):
         out["reason"] = "a coefficient rests on an unbounded quantity: not solved as a system"
         return out
+    # A quantity known EXACTLY (lo == hi: a catalogue value of the chosen design, a given constant) is a number, not a
+    # parameter: it may sit in the matrix (2026-10-20, the bridge girder: the stress laws s == N / BOT.A put the chosen
+    # section in A, and the system was refused as "11 parameters > 10" though only the 11 loads vary).
+    point = {p: qs[p]["lo"] for p in params if qs[p]["lo"] == qs[p]["hi"]}
+    wide = [p for p in params if p not in point]
+    if wide and not (in_A - set(point)) and all(
+            sum(1 for nm in m if nm not in point) <= 1 for _, b_row, _ in rows for m in b_row):
+        # SUPERPOSITION: no varying parameter in A, the right-hand side affine in them — exact for ANY number
+        unknowns_s = sorted({u for a_row, _, _ in rows for u in a_row})
+        A_s = {(i, u): {(): _peval(poly, point)} for i, (a_row, _, _) in enumerate(rows) for u, poly in a_row.items()}
+        b_s = {}
+        for i, (_, b_row, _) in enumerate(rows):
+            acc = {}
+            for m, coef in b_row.items():
+                w = [nm for nm in m if nm not in point]
+                val = coef
+                for nm in m:
+                    if nm in point:
+                        val *= point[nm]
+                key = (w[0],) if w else ()
+                acc[key] = acc.get(key, Fraction(0)) + val
+            b_s[i] = acc
+        aff, why = _superpose(A_s, b_s, list(range(len(rows))), unknowns_s, wide)
+        if aff is not None:
+            out.update(unknowns=unknowns_s, affine=aff, params=wide)
+            return out
+        if why:
+            out["reason"] = why
+            return out
     if len(params) > PARAM_MAX_KEYS:
         out["reason"] = (f"{len(params)} parameters in the coefficients, "
                          f"cap {PARAM_MAX_KEYS}: not solved as a system")
@@ -571,6 +673,10 @@ def _solve_param_system(qs, atoms):
     if pc["reason"] is not None:
         return {}, set(), (pc["reason"] or None)
     lo, hi = {}, {}
+    if pc.get("affine"):
+        box = {p: (qs[p]["lo"], qs[p]["hi"]) for p in pc["params"]}
+        for u, (c0, coef) in pc["affine"].items():
+            lo[u], hi[u] = affine_range(c0, coef, box)
     for _, x in pc["corners"]:
         for u, xv in x.items():
             lo[u] = xv if u not in lo or xv < lo[u] else lo[u]
@@ -1303,7 +1409,7 @@ def _dependence_fixed(formula, quantities):
         return q["lo"] == -INF and q["hi"] == INF
 
     pc = _param_corners(Q, catoms, rhs_only_ok=True, is_unknown=unknown)
-    if pc["reason"] is not None or not pc["corners"]:
+    if pc["reason"] is not None or not (pc["corners"] or pc.get("affine")):
         return {}
     U, P = set(pc["unknowns"]), set(pc["params"])
     if any(Q[u].get("discrete") or Q[u].get("sample") for u in U):
@@ -1341,8 +1447,27 @@ def _dependence_fixed(formula, quantities):
                 break
         if not ok:
             continue
-        vals = []
-        for at, x in pc["corners"]:
+        if pc.get("affine") and any(len(m) > 1 for m in terms if terms[m] != 0):
+            continue                      # a product of parameters: not affine — read separately
+        if pc.get("affine"):
+            # the comparison's left side minus right side is AFFINE in the parameters: its exact range decides
+            g0, gc = Fraction(0), {}
+            for mono, coef in terms.items():
+                nm = [keys[k] for k in mono]
+                if not nm:
+                    g0 += coef
+                elif nm[0] in U:
+                    c0u, cu = pc["affine"][nm[0]]
+                    g0 += coef * c0u
+                    for pp, cc in cu.items():
+                        gc[pp] = gc.get(pp, Fraction(0)) + coef * cc
+                else:
+                    gc[nm[0]] = gc.get(nm[0], Fraction(0)) + coef
+            glo, ghi = affine_range(g0, gc, {p: (Q[p]["lo"], Q[p]["hi"]) for p in gc})
+            vals = [glo, ghi]
+        else:
+            vals = []
+        for at, x in ([] if pc.get("affine") else pc["corners"]):
             env = dict(at)
             env.update(x)
             g = Fraction(0)

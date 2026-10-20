@@ -158,6 +158,7 @@ STANDS = [
     ("test_zlin.py", ["ZLIN GREEN"]),
     ("test_zintegral.py", ["ZINTEGRAL GREEN"]),
     ("test_zfloor_integral.py", ["ZFLOOR INTEGRAL GREEN"]),
+    ("test_zsuperpose.py", ["ZSUPERPOSE GREEN"]),
     ("test_zfunc.py", ["ZFUNC GREEN"]),
     ("test_implicit.py", ["IMPLICIT GREEN"]),
     ("test_affine.py", ["AFFINE GREEN"]),

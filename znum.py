@@ -353,7 +353,88 @@ class _NoReadings(Exception):
 
 # ------------------------------------ the linear fragment, read coherently
 import zfunc as _zf                  # noqa: E402  (functions on the floor, 2026-10-10)
-_FUNC_OPS = _zf.FUNC_OPS
+# "integral" joins the functions for every walker that only asks "is this exact/linear/polynomial?" (no: the
+# interval path reads it); _ev_tree reads it before the functions' own branch.
+_FUNC_OPS = _zf.FUNC_OPS | {"integral"}
+
+
+class Integrand:
+    """The integrand of `integral(f, x, a, b)` with its bound variable (2026-10-20). OPAQUE to the walkers that
+    collect names (names_in, zcertify._names): x is not a quantity of the sheet. The parameters f reads travel as
+    the node's own arguments after the limits — their names and provenance are collected as for any node."""
+    __slots__ = ("f", "x")
+
+    def __init__(self, f, x):
+        self.f, self.x = f, x
+
+    def __eq__(self, o):
+        return isinstance(o, Integrand) and (self.f, self.x) == (o.f, o.x)
+
+    def __hash__(self):
+        return hash(("Integrand", self.f, self.x))
+
+    def __repr__(self):
+        return f"Integrand({self.x}: {self.f!r})"
+
+
+# The search is untrusted (zintegral.search); the enclosure it returns is the KERNEL's check() of its certificate.
+# Tolerances tried in turn: a certificate this narrow, else a wider one, else the mark (undecided, never a guess).
+INTEGRAL_TOLS = (Fraction(1, 10 ** 9), Fraction(1, 10 ** 6), Fraction(1, 10 ** 3))
+INTEGRAL_MAX_PIECES = 4000
+_INTEGRAL_CACHE = {}
+
+
+def _ev_integral(args, quantities):
+    """∫_a^b f dx over the sheet's readings: the kernel-checked enclosure for EVERY value of f's parameters and of the
+    limits (moving limits by zintegral.check_limits), or None (undecided) when no certificate was found. Units: f's
+    unit times the limits' unit. A reversed pair of point limits is the negated integral."""
+    import zintegral as _ZI                  # zintegral imports zcertify imports znum: read lazily
+    I, a, b, *params = args
+    ea, eb = _ev(a, quantities), _ev(b, quantities)
+    eps = [_ev(p, quantities) for p in params]
+    ped = ea[1] | eb[1] | set().union(*[e[1] for e in eps]) if eps else ea[1] | eb[1]
+    used = ea[2] | eb[2] | set().union(*[e[2] for e in eps]) if eps else ea[2] | eb[2]
+    ux = _unify_units(ea[4], eb[4], "add")
+    ra, rb = ea[0], eb[0]
+    qs2 = dict(quantities)
+    finite = ra is not None and rb is not None and all(v not in (INF, -INF) for v in (*ra, *rb))
+    hull = (min(ra[0], rb[0]), max(ra[1], rb[1])) if finite else (Fraction(0), Fraction(0))
+    qs2[I.x] = qty(hull[0], hull[1], CREDIT, None, unit=ux)
+    try:
+        unit_f = _ev(I.f, qs2)[4]
+    except _NoReadings:
+        unit_f = None
+    unit = _unit_combine(unit_f, ux, +1)
+    if not finite:
+        return None, ped, used, None, unit           # an improper integral is not read: the mark
+    key = (I, ra, rb, tuple((p, quantities[p]["lo"], quantities[p]["hi"]) for p in params if p in quantities))
+    hit = _INTEGRAL_CACHE.get(key)
+    if hit is None:
+        hit = ("none",)
+        point = ra[0] == ra[1] and rb[0] == rb[1]
+        for tol in INTEGRAL_TOLS:
+            if point:
+                A, B = ra[0], rb[0]
+                if A == B:
+                    hit = ("iv", (Fraction(0), Fraction(0)))
+                    break
+                lo_, hi_ = (A, B) if A < B else (B, A)
+                c = _ZI.search(I.f, I.x, lo_, hi_, qs2, tol, max_pieces=INTEGRAL_MAX_PIECES)
+                if "gave_up" not in c:
+                    L, U = c["enclosure"]
+                    hit = ("iv", (L, U) if A < B else (-U, -L))
+                    break
+            else:
+                c = _ZI.search_limits(I.f, I.x, a, b, qs2, tol, max_pieces=INTEGRAL_MAX_PIECES)
+                if "gave_up" not in c:
+                    hit = ("iv", tuple(c["enclosure"]))
+                    break
+                if "apart" in c["gave_up"]:
+                    break                              # limits that cross over the box: no tolerance helps
+        _INTEGRAL_CACHE[key] = hit
+    if hit[0] != "iv":
+        return None, ped, used, None, unit
+    return hit[1], ped, used, None, unit
 
 
 class _NotLinear(Exception):
@@ -1482,6 +1563,8 @@ def _ev_tree(expr, quantities):
         a = evs[1][0] if 1 in evs else None
         b = evs[2][0] if 2 in evs else None
         return _zf.TERNARY[op](rx, a, b), ped, used, None, unit
+    if op == "integral":
+        return _ev_integral(args, quantities)
     if op in _FUNC_OPS:
         # FUNCTIONS (zfunc.py, 2026-10-10): a proved bracket of rationals, never a rounding.
         # A transcendental function reads a DIMENSIONLESS argument; pow(x, n) with n a point

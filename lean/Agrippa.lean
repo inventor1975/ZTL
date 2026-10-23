@@ -26,6 +26,22 @@ THE THEOREMS.
                    circle a := ¬b, b := ¬a all read twice: DOGMA AND THE EVEN CIRCLE ARE ONE PLACE.
   `nullary_one`    the forced stop (a ground) reads once — the other half of the split horn.
   `liar_zero`      x := ¬x reads never.
+  `knowledge_iff_ground`  the converse, and the point of the file: x has exactly one reading IFF its chain reaches a
+                   nullary ground. Nothing else on a finite base gives one reading.
+
+AGRIPPA IS ABOUT KNOWLEDGE, so the count is read as knowledge (2026-10-23, the curator's frame). All three classical
+horns fall short of it: the REGRESS cannot occur on a finite base; the CIRCLE is either a paradox (odd: no reading,
+it asserts nothing) or a fork (even: two readings); the DOGMA "p because p" is the same fork — a PREMISE, a
+hypothesis, an axiom however true, chosen from outside, not knowledge. What gives knowledge is not a horn but the
+split of the third: the nullary ground, a primary act that rests on nothing and so has one reading — no choice.
+Read in ZTL's terms: one reading = EARNED; two = ON CREDIT (it holds while the chosen premise holds); none = Z,
+no value at all — the paradox asserts nothing.
+
+WHAT THIS DOES NOT SETTLE, said. (1) The theorem is relative to the base: WHICH grounds a base contains is given, and
+"who chose the base?" is the skeptic's next move (Albert's "dogmatic break-off"). (2) A ground here carries a value
+(`ground b`); that an ACT yields a truth value, rather than merely happening, is a philosophical claim (Sellars'
+"myth of the given" is the standing objection) — VR's answer is that the nullary is an operation with both answers
+given, not an asserted content. Neither is a theorem here.
 THE SKEPTIC (Hardy's three-valued V, greedy lifts; atoms j, k, ra, rb, rc as in agrippa.py):
   `skeptic_earned` F1 — (bridges ∧ j ∧ (ra ∨ rb ∨ rc)) → ¬k is T at EVERY marking, partial or total: the
                    trilemma's logic is earned outright.
@@ -492,6 +508,133 @@ def liar : Sys := fun _ => .ref 0 true
 
 theorem liar_zero : ¬ ∃ v, Reading liar 0 v := odd_zero liar 0 0 1 rfl rfl
 
+/-! ## Only the ground is knowledge — the converse of `forced_one` (2026-10-23)
+
+`forced_one` says a ground gives exactly one reading. The converse closes the count: on a closed finite base a
+statement has exactly one reading ONLY when its chain reaches a ground. The proof walks the three places: the chain
+loops (`no_regress`); a loop with an odd return reads never (`odd_zero`); a loop whose every return is even reads
+twice (`even_two`). Which of the two holds is DECIDED by a bounded search over one turn of the loop (`oddBelow`) and
+carried to every return (`all_even`) — no excluded middle, no axiom. -/
+
+theorem par_add (J : Sys) (x m : Nat) : ∀ d, par J x (m + d) = xor (par J x m) (par J (path J x m) d)
+  | 0 => (xf _).symm
+  | d + 1 => by
+    show xor (par J x (m + d)) (sign J (path J x (m + d))) =
+      xor (par J x m) (xor (par J (path J x m) d) (sign J (path J (path J x m) d)))
+    rw [par_add J x m d, path_add J x m d, ← xa]
+
+/-- Is there an odd return to p within r links? A bounded search: decided, not assumed. -/
+def oddBelow (J : Sys) (p : Nat) : Nat → Bool
+  | 0 => false
+  | k + 1 => match oddBelow J p k with
+    | true => true
+    | false => match Nat.decEq (path J p (k + 1)) p with
+      | isTrue _ => par J p (k + 1)
+      | isFalse _ => false
+
+theorem oddBelow_true (J : Sys) (p : Nat) : ∀ r, oddBelow J p r = true →
+    ∃ k, path J p k = p ∧ par J p k = true
+  | 0, h => Bool.noConfusion h
+  | k + 1, h => by
+    unfold oddBelow at h
+    cases hb : oddBelow J p k with
+    | true => exact oddBelow_true J p k hb
+    | false =>
+      rw [hb] at h
+      cases hd : Nat.decEq (path J p (k + 1)) p with
+      | isTrue e => rw [hd] at h; exact ⟨k + 1, e, h⟩
+      | isFalse _ => rw [hd] at h; exact Bool.noConfusion h
+
+theorem oddBelow_false (J : Sys) (p : Nat) : ∀ r, oddBelow J p r = false →
+    ∀ k, k ≤ r → path J p k = p → par J p k = false
+  | 0, _, k, hk, _ => by
+    cases k with
+    | zero => rfl
+    | succ k => exact absurd hk (Nat.not_succ_le_zero k)
+  | r + 1, h, k, hk, hp => by
+    unfold oddBelow at h
+    cases hb : oddBelow J p r with
+    | true => rw [hb] at h; exact Bool.noConfusion h
+    | false =>
+      rw [hb] at h
+      cases Nat.lt_or_ge k (r + 1) with
+      | inl hlt => exact oddBelow_false J p r hb k (Nat.le_of_lt_succ hlt) hp
+      | inr hge =>
+        have hkr : k = r + 1 := Nat.le_antisymm hk hge
+        subst hkr
+        cases hd : Nat.decEq (path J p (r + 1)) p with
+        | isTrue _ => rw [hd] at h; exact h
+        | isFalse e => exact absurd hp e
+
+/-- `a ≤ b` gives the distance, by the order's own induction (core's subtraction lemmas carry `propext`). -/
+theorem le_split {a b : Nat} (h : a ≤ b) : ∃ d, a + d = b := by
+  induction h with
+  | refl => exact ⟨0, rfl⟩
+  | step _ ih =>
+    obtain ⟨d, hd⟩ := ih
+    exact ⟨d + 1, by rw [← hd]; rfl⟩
+
+/-- A loop whose returns within one turn are all even has ONLY even returns. -/
+theorem all_even (J : Sys) (p r : Nat) (hr : path J p r = p) (hpos : 0 < r)
+    (hlow : ∀ k, k ≤ r → path J p k = p → par J p k = false) :
+    ∀ N k, k ≤ N → path J p k = p → par J p k = false
+  | 0, k, hk, _ => by
+    cases k with
+    | zero => rfl
+    | succ k => exact absurd hk (Nat.not_succ_le_zero k)
+  | N + 1, k, hk, hp => by
+    cases Nat.lt_or_ge r k with
+    | inr hle => exact hlow k hle hp
+    | inl hlt =>
+      obtain ⟨e, he⟩ := le_split (Nat.le_of_lt hlt)
+      have hd : path J p e = p := by
+        have q := path_add J p r e
+        rw [he, hr] at q
+        rw [← q]; exact hp
+      have heN : e ≤ N := by
+        have h1 : e < r + e := Nat.lt_add_of_pos_left hpos
+        rw [he] at h1
+        exact Nat.le_of_lt_succ (Nat.lt_of_lt_of_le h1 hk)
+      have q := par_add J p r e
+      rw [he, hr, hlow r (Nat.le_refl r) hr, fx] at q
+      rw [q]
+      exact all_even J p r hr hpos hlow N e heN hd
+
+/-- ONLY THE GROUND IS KNOWLEDGE. On a closed finite base, x has exactly one reading — one exists and all agree —
+if and only if its chain of reasons reaches a nullary ground. -/
+theorem knowledge_iff_ground (J : Sys) (n : Nat) (hc : Closed J n) (x : Nat) (hx : x < n) :
+    ((∃ v, Reading J x v) ∧ ∀ v w, Reading J x v → Reading J x w → v x = w x) ↔
+      ∃ a c, J (path J x a) = .ground c := by
+  constructor
+  · intro ⟨hex, huniq⟩
+    obtain ⟨a, b, hab, _, heq⟩ := no_regress J n hc x hx
+    cases hJ : J (path J x a) with
+    | ground c => exact ⟨a, c, hJ⟩
+    | ref j s =>
+      exfalso
+      obtain ⟨e, he⟩ := le_split (Nat.le_of_lt hab)
+      cases e with
+      | zero =>
+        have hab' : a < a := by
+          have e0 : a = b := he
+          rw [← e0] at hab; exact hab
+        exact absurd hab' (Nat.lt_irrefl a)
+      | succ L =>
+        have hr : path J (path J x a) (L + 1) = path J x a := by
+          rw [← path_add, he]; exact heq.symm
+        cases ho : oddBelow J (path J x a) (L + 1) with
+        | true =>
+          obtain ⟨k, hk, hpk⟩ := oddBelow_true J _ _ ho
+          exact odd_zero J x a k hk hpk hex
+        | false =>
+          have hlow := oddBelow_false J _ _ ho
+          have hall : ∀ r, path J (path J x a) r = path J x a → par J (path J x a) r = false :=
+            fun r hp => all_even J _ (L + 1) hr (Nat.succ_pos L) hlow r r (Nat.le_refl r) hp
+          obtain ⟨v, w, hv, hw, hne⟩ := even_two J x a L j s hJ hr hall
+          exact hne (huniq v w hv hw)
+  · intro ⟨a, c, hg⟩
+    exact forced_one J x a c hg
+
 /-! ## The skeptic's engine, in Hardy's three values (agrippa.py F1, F2) -/
 
 section Skeptic
@@ -533,5 +676,11 @@ end Agrippa
 #print axioms Agrippa.circle_two
 #print axioms Agrippa.twoneg_two
 #print axioms Agrippa.liar_zero
+#print axioms Agrippa.le_split
+#print axioms Agrippa.par_add
+#print axioms Agrippa.oddBelow_true
+#print axioms Agrippa.oddBelow_false
+#print axioms Agrippa.all_even
+#print axioms Agrippa.knowledge_iff_ground
 #print axioms Agrippa.skeptic_earned
 #print axioms Agrippa.lethality_on_j

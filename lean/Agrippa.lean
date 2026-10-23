@@ -28,6 +28,9 @@ THE THEOREMS.
   `liar_zero`      x := ¬x reads never.
   `knowledge_iff_ground`  the converse, and the point of the file: x has exactly one reading IFF its chain reaches a
                    nullary ground. Nothing else on a finite base gives one reading.
+  `act_absolute`, `posit_relative`  and which ground: a value resting on an ACT (computed from its content) is the
+                   same under every base; one resting on a POSIT (an axiom, a Thing) has a rival base reading it the
+                   other way. Knowledge independent of the base rests on an act.
 
 AGRIPPA IS ABOUT KNOWLEDGE, so the count is read as knowledge (2026-10-23, the curator's frame). All three classical
 horns fall short of it: the REGRESS cannot occur on a finite base; the CIRCLE is either a paradox (odd: no reading,
@@ -37,8 +40,18 @@ split of the third: the nullary ground, a primary act that rests on nothing and 
 Read in ZTL's terms: one reading = EARNED; two = ON CREDIT (it holds while the chosen premise holds); none = Z,
 no value at all — the paradox asserts nothing.
 
-WHAT THIS DOES NOT SETTLE, said. (1) The theorem is relative to the base: WHICH grounds a base contains is given, and
-"who chose the base?" is the skeptic's next move (Albert's "dogmatic break-off"). (2) A ground here carries a value
+WHERE AGRIPPA IS RIGHT (the curator as critic, 2026-10-23). Historically the five modes (Sextus, PH I.164-177) are
+aimed at DOGMA — assent to the non-evident, to how things are by nature — not at acting: the Pyrrhonist lives by
+appearances and by the arts. Read so, the horns stand, and this file proves it rather than refutes it: a THING
+(a posit — a cardinal, the uncountable, choice, actual infinity, a centaur, any axiom) is exactly what has a rival
+base, `posit_relative` being his modes of disagreement and relativity. The theorem is about ACTS; for Things the
+trilemma is the signature of the formal register. What a Thing gives below, to acts, is what is CONSTRUCTED
+without it — not "what holds in every base", which is the classical supervaluation move: in ZTL "A or not A" with A
+unsettled is OPEN, weak link A, not knowledge.
+
+WHAT THIS DOES NOT SETTLE, said. (1) "Who chose the base?" (Albert's second move) is answered for ACTS — their value
+is no base's to choose (`act_absolute`) — and conceded for POSITS (`posit_relative`); the content of an act, which
+claim is constructed, is still someone's to write. (2) A ground here carries a value
 (`ground b`); that an ACT yields a truth value, rather than merely happening, is a philosophical claim (Sellars'
 "myth of the given" is the standing objection) — VR's answer is that the nullary is an operation with both answers
 given, not an asserted content. Neither is a theorem here.
@@ -635,6 +648,102 @@ theorem knowledge_iff_ground (J : Sys) (n : Nat) (hc : Closed J n) (x : Nat) (hx
   · intro ⟨a, c, hg⟩
     exact forced_one J x a c hg
 
+/-! ## Acts and posits — the line the count alone cannot draw (2026-10-23; VR-Forms, "Things and Acts")
+
+`knowledge_iff_ground` sorts a GROUND from a SELF-REFERENCE. It does not sort an ACT from an AXIOM: an axiom written as
+`ground b` also reads once (the critics' stand, dilemmas/agrippa_critics.py, found it: Albert's "who chose the base?"
+and the foundationalist both stand against the bare count). VR-Forms draws the line: an ACT is what an operation
+constructs — its value is computed from its content; a THING is what an axiom posits — optional, "a system may reject
+it and still reason". Here: a base fixes every posit's value (β) and none of the acts'. Proved: a value resting on an
+act is the same under EVERY base (`act_absolute`); a value resting on a posit has a rival base that reads it, once,
+the other way (`posit_relative`). The act's value is computed by `Nat.beq` — a decidable claim; the content (which
+m, n) is still written by someone: that chooses WHICH claim, not its value. The logic the chain is read in is the
+medium (VR-Forms), presupposed, not a posit. -/
+
+inductive Base where
+  | act : Nat → Nat → Base          -- the claim "m = n", its value computed (Nat.beq)
+  | posit : Nat → Base              -- the i-th posit: its value is the base's choice
+  | ref : Nat → Bool → Base         -- rests on j (negated if s), as before
+
+abbrev BSys := Nat → Base
+
+/-- A base fixes every posit's value (β); acts are not the base's to fix. -/
+def realize (K : BSys) (β : Nat → Bool) : Sys := fun x =>
+  match K x with
+  | .act m n => .ground (Nat.beq m n)
+  | .posit i => .ground (β i)
+  | .ref j s => .ref j s
+
+theorem realize_act {K : BSys} {β : Nat → Bool} {y m n : Nat} (h : K y = .act m n) :
+    realize K β y = .ground (Nat.beq m n) := by
+  unfold realize; rw [h]
+
+theorem realize_posit {K : BSys} {β : Nat → Bool} {y i : Nat} (h : K y = .posit i) :
+    realize K β y = .ground (β i) := by
+  unfold realize; rw [h]
+
+theorem step_realize (K : BSys) (β β' : Nat → Bool) (x : Nat) : step (realize K β) x = step (realize K β') x := by
+  unfold step realize
+  cases K x <;> rfl
+
+theorem sign_realize (K : BSys) (β β' : Nat → Bool) (x : Nat) : sign (realize K β) x = sign (realize K β') x := by
+  unfold sign realize
+  cases K x <;> rfl
+
+theorem path_realize (K : BSys) (β β' : Nat → Bool) (x : Nat) :
+    ∀ k, path (realize K β) x k = path (realize K β') x k
+  | 0 => rfl
+  | k + 1 => by
+    show step (realize K β) (path (realize K β) x k) = step (realize K β') (path (realize K β') x k)
+    rw [path_realize K β β' x k, step_realize K β β']
+
+theorem par_realize (K : BSys) (β β' : Nat → Bool) (x : Nat) :
+    ∀ k, par (realize K β) x k = par (realize K β') x k
+  | 0 => rfl
+  | k + 1 => by
+    show xor (par (realize K β) x k) (sign (realize K β) (path (realize K β) x k)) =
+      xor (par (realize K β') x k) (sign (realize K β') (path (realize K β') x k))
+    rw [par_realize K β β' x k, path_realize K β β' x k, sign_realize K β β']
+
+/-- THE ACT IS ABSOLUTE. x's chain reaches an act: every reading under EVERY base gives x the same value. The
+base cannot choose it — there is no rival base. -/
+theorem act_absolute (K : BSys) (x a m n : Nat) (h : K (path (realize K (fun _ => false)) x a) = .act m n) :
+    ∀ β β' v w, Reading (realize K β) x v → Reading (realize K β') x w → v x = w x := by
+  intro β β' v w hv hw
+  have pβ : path (realize K β) x a = path (realize K (fun _ => false)) x a := path_realize K _ _ x a
+  have pβ' : path (realize K β') x a = path (realize K (fun _ => false)) x a := path_realize K _ _ x a
+  have hβ : K (path (realize K β) x a) = .act m n := by rw [pβ]; exact h
+  have hβ' : K (path (realize K β') x a) = .act m n := by rw [pβ']; exact h
+  have gv : v (path (realize K β) x a) = Nat.beq m n := by
+    have e := hv a; unfold Holds at e; rw [val_ground (realize_act hβ)] at e; exact e
+  have gw : w (path (realize K β') x a) = Nat.beq m n := by
+    have e := hw a; unfold Holds at e; rw [val_ground (realize_act hβ')] at e; exact e
+  rw [chain_value hv a, chain_value hw a, gv, gw, par_realize K β β' x a]
+
+theorem xor_true_ne_false (b : Bool) : xor b true ≠ xor b false := by cases b <;> decide
+
+/-- THE POSIT IS RELATIVE. x's chain reaches a posit: two bases read x — each exactly once — with OPPOSITE values.
+The axiom is optional: the rival base is always there. -/
+theorem posit_relative (K : BSys) (x a i : Nat) (h : K (path (realize K (fun _ => false)) x a) = .posit i) :
+    ∃ β β' v w, Reading (realize K β) x v ∧ Reading (realize K β') x w ∧ v x ≠ w x := by
+  have hT : K (path (realize K (fun _ => true)) x a) = .posit i := by
+    rw [path_realize K (fun _ => true) (fun _ => false) x a]; exact h
+  have gT : realize K (fun _ => true) (path (realize K (fun _ => true)) x a) = .ground true :=
+    realize_posit hT
+  have gF : realize K (fun _ => false) (path (realize K (fun _ => false)) x a) = .ground false :=
+    realize_posit h
+  obtain ⟨⟨v, hv⟩, _⟩ := forced_one (realize K (fun _ => true)) x a true gT
+  obtain ⟨⟨w, hw⟩, _⟩ := forced_one (realize K (fun _ => false)) x a false gF
+  refine ⟨fun _ => true, fun _ => false, v, w, hv, hw, ?_⟩
+  have ev := chain_value hv a
+  have ew := chain_value hw a
+  have gv : v (path (realize K (fun _ => true)) x a) = true := by
+    have e := hv a; unfold Holds at e; rw [val_ground gT] at e; exact e
+  have gw : w (path (realize K (fun _ => false)) x a) = false := by
+    have e := hw a; unfold Holds at e; rw [val_ground gF] at e; exact e
+  rw [ev, ew, gv, gw, par_realize K (fun _ => true) (fun _ => false) x a]
+  exact xor_true_ne_false _
+
 /-! ## The skeptic's engine, in Hardy's three values (agrippa.py F1, F2) -/
 
 section Skeptic
@@ -682,5 +791,14 @@ end Agrippa
 #print axioms Agrippa.oddBelow_false
 #print axioms Agrippa.all_even
 #print axioms Agrippa.knowledge_iff_ground
+#print axioms Agrippa.realize_act
+#print axioms Agrippa.realize_posit
+#print axioms Agrippa.step_realize
+#print axioms Agrippa.sign_realize
+#print axioms Agrippa.path_realize
+#print axioms Agrippa.par_realize
+#print axioms Agrippa.act_absolute
+#print axioms Agrippa.xor_true_ne_false
+#print axioms Agrippa.posit_relative
 #print axioms Agrippa.skeptic_earned
 #print axioms Agrippa.lethality_on_j

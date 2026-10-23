@@ -511,6 +511,11 @@ STANDS = [
     ("dilemmas/theseus.py", [
         "ok  step 0: material T (ledger)       structural T (witness re-checked)",
         "ok  step 1: material F (culprit n0)   structural T (witness re-checked)"]),
+    ("dilemmas/agrippa_critics.py", [
+        "    over every base: act -> [True], posit -> [False, True]",
+        "Albert, second move: who chose the base?                                 FAILS    —",
+        "Albert, second move, against a POSIT (control)                           STANDS   —",
+        "17 rows: 10 fail on a measured premise, 2 stand, 5 rest on credit."]),
     ("dilemmas/agrippa_nullary.py", ["AGRIPPA-NULLARY GREEN",
                         "UNDERDETERMINED  settings=2",
                         "INTRINSIC        settings=1",

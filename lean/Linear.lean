@@ -24,7 +24,7 @@ grants `T` while the completion `p := F` defeats it. The mark dies at the FIRST
 connective (`¬Z = F`), and the outer negation then works on a settled falsehood,
 so multiplicity cannot explain the over-grants. It explains only the losses.
 
-The census that followed (`lab/losses/`): 280,118 marked cells over an
+The census that followed (`book/checks/census.py`): 280,118 marked cells over an
 exhaustive depth-2 pool on three atoms plus 40,000 random formulas of depth ≤ 6
 on four. **Zero losses at multiplicity one**, in both polarities separately —
 46,431 cells where both completions give T, 28,731 where both give F, no

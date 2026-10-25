@@ -418,6 +418,52 @@ theorem act_or_dogma :
       | inl h => subst h; rfl
       | inr h => subst h; rfl
 
+
+/-- x := b ∨ d with b the FALSE act "0 = 1": the dogma decides, and x reads twice. Only a true act overrides. -/
+def falseActOrDogma : Net := fun n =>
+  if n = 0 then .expr (.or (.ref 1) (.ref 2)) else if n = 1 then .act 0 1 else .expr (.ref 2)
+
+theorem cone_faod {y : Nat} (c : Cone falseActOrDogma 0 y) : y = 0 ∨ y = 1 ∨ y = 2 := by
+  induction c with
+  | self => exact .inl rfl
+  | @step y e z _ hy hz ih =>
+      cases ih with
+      | inl h0 =>
+          subst h0
+          have hy' : Sup.expr (.or (.ref 1) (.ref 2)) = Sup.expr e := hy
+          cases hy'
+          cases hz with
+          | orL h => cases h; exact .inr (.inl rfl)
+          | orR h => cases h; exact .inr (.inr rfl)
+      | inr h12 =>
+          cases h12 with
+          | inl h1 =>
+              subst h1
+              have hy' : Sup.act 0 1 = Sup.expr e := hy
+              exact Sup.noConfusion hy'
+          | inr h2 =>
+              subst h2
+              have hy' : Sup.expr (.ref 2) = Sup.expr e := hy
+              cases hy'
+              cases hz
+              exact .inr (.inr rfl)
+
+theorem false_act_or_dogma_two : ∃ v w, Reading falseActOrDogma (fun _ => false) 0 v ∧
+    Reading falseActOrDogma (fun _ => false) 0 w ∧ v 0 ≠ w 0 := by
+  refine ⟨fun n => if n = 1 then false else true, fun _ => false, ?_, ?_, Bool.noConfusion⟩
+  · intro y c
+    cases cone_faod c with
+    | inl h => subst h; rfl
+    | inr h => cases h with
+      | inl h => subst h; rfl
+      | inr h => subst h; rfl
+  · intro y c
+    cases cone_faod c with
+    | inl h => subst h; rfl
+    | inr h => cases h with
+      | inl h => subst h; rfl
+      | inr h => subst h; rfl
+
 /-- The dogma alone: d := d, two readings that disagree. -/
 def dogmaNet : Net := fun _ => .expr (.ref 0)
 
@@ -463,5 +509,6 @@ end AgrippaNet
 #print axioms AgrippaNet.good_unless_loop_or_posit
 #print axioms AgrippaNet.knows_unless_loop_or_posit
 #print axioms AgrippaNet.act_or_dogma
+#print axioms AgrippaNet.false_act_or_dogma_two
 #print axioms AgrippaNet.dogma_net_two
 #print axioms AgrippaNet.liar_net_zero

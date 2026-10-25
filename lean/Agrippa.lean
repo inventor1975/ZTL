@@ -51,8 +51,11 @@ unsettled is OPEN, weak link A, not knowledge.
 
 CONTINUED ELSEWHERE (2026-10-25). `AgrippaNet.lean`: the same count with and/or/not — knowledge is a value FORCED
 by acts; on a finite base whatever is not knowledge rests on a loop or a posit; an act can override a dogma
-(`act_or_dogma`). `AgrippaZ.lean`: the count read in ZTL's own terms — two readings = a verdict some admissible future
-reverses (on credit), one forced value = settled by one tick and hereditary after it (earned), none = no future.
+(`act_or_dogma`). `AgrippaZ.lean`: the count read in ZTL's own terms, both sides in one state — a ground: every admissible future
+gives one verdict (earned); two readings: two admissible futures disagree (on credit); none: no future. And here:
+`regress_two` — an infinite chain of distinct reasons reads TWICE, so on an infinite base the regress is the same fork
+as the dogma; finiteness is needed for the constructive proof of `knowledge_iff_ground`, not for the count.
+`act_reads` and `posit_each_once` complete `act_absolute` and `posit_relative` (existence; one reading per base).
 
 EMPIRICAL KNOWLEDGE (the curator's decision, 2026-10-25). "It is raining" is a posit: the world, a base, sets its
 value, and its twin is thinkable. So it is not EARNED knowledge here but knowledge ON CREDIT; EARNED is kept for
@@ -761,6 +764,33 @@ theorem posit_relative (K : BSys) (x a i : Nat) (h : K (path (realize K (fun _ =
   rw [ev, ew, gv, gw, par_realize K (fun _ => true) (fun _ => false) x a]
   exact xor_true_ne_false _
 
+
+/-- With `act_absolute`: under EVERY base the act's chain has a reading (the 2026-10-25 review: existence was implicit). -/
+theorem act_reads (K : BSys) (x a m n : Nat) (h : K (path (realize K (fun _ => false)) x a) = .act m n) :
+    ∀ β, ∃ v, Reading (realize K β) x v := by
+  intro β
+  have hβ : K (path (realize K β) x a) = .act m n := by
+    rw [path_realize K β (fun _ => false) x a]; exact h
+  exact (forced_one (realize K β) x a (Nat.beq m n) (realize_act hβ)).1
+
+/-- With `posit_relative`: under EACH base the posit's chain reads exactly once — the rival bases each settle it,
+the other way. -/
+theorem posit_each_once (K : BSys) (x a i : Nat) (h : K (path (realize K (fun _ => false)) x a) = .posit i) :
+    ∀ β, (∃ v, Reading (realize K β) x v) ∧
+      ∀ v w, Reading (realize K β) x v → Reading (realize K β) x w → v x = w x := by
+  intro β
+  have hβ : K (path (realize K β) x a) = .posit i := by
+    rw [path_realize K β (fun _ => false) x a]; exact h
+  exact forced_one (realize K β) x a (β i) (realize_posit hβ)
+
+/-- THE REGRESS READS TWICE (the review's point, kept): an infinite chain of distinct reasons, n because n + 1, has
+two readings — all true, all false. On an infinite base the regress is the same fork as the dogma; finiteness is
+needed for the constructive proof of `knowledge_iff_ground`, not for the count. -/
+def regress : Sys := fun n => .ref (n + 1) false
+
+theorem regress_two : ∃ v w, Reading regress 0 v ∧ Reading regress 0 w ∧ v 0 ≠ w 0 :=
+  ⟨fun _ => true, fun _ => false, fun _ => rfl, fun _ => rfl, Bool.noConfusion⟩
+
 /-! ## The skeptic's engine, in Hardy's three values (agrippa.py F1, F2) -/
 
 section Skeptic
@@ -817,5 +847,8 @@ end Agrippa
 #print axioms Agrippa.act_absolute
 #print axioms Agrippa.xor_true_ne_false
 #print axioms Agrippa.posit_relative
+#print axioms Agrippa.act_reads
+#print axioms Agrippa.posit_each_once
+#print axioms Agrippa.regress_two
 #print axioms Agrippa.skeptic_earned
 #print axioms Agrippa.lethality_on_j

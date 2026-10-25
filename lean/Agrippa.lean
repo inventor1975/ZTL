@@ -49,6 +49,23 @@ trilemma is the signature of the formal register. What a Thing gives below, to a
 without it — not "what holds in every base", which is the classical supervaluation move: in ZTL "A or not A" with A
 unsettled is OPEN, weak link A, not knowledge.
 
+CONTINUED ELSEWHERE (2026-10-25). `AgrippaNet.lean`: the same count with and/or/not — knowledge is a value FORCED
+by acts; on a finite base whatever is not knowledge rests on a loop or a posit; an act can override a dogma
+(`act_or_dogma`). `AgrippaZ.lean`: the count read in ZTL's own terms — two readings = a verdict some admissible future
+reverses (on credit), one forced value = settled by one tick and hereditary after it (earned), none = no future.
+
+EMPIRICAL KNOWLEDGE (the curator's decision, 2026-10-25). "It is raining" is a posit: the world, a base, sets its
+value, and its twin is thinkable. So it is not EARNED knowledge here but knowledge ON CREDIT; EARNED is kept for
+what acts force. Reading an observation as an "act of measurement" only moves the credit onto the instrument, which
+is itself a Thing.
+
+THE LIMITS OF THE MODEL, said. Which real statement is an act and which a posit is decided OUTSIDE these theorems:
+that choice is a posit follows from Gödel and Cohen, not from `posit_relative` (which is near-definitional once
+posits are free parameters). The act here is a decidable claim (`Nat.beq`); its value is absolute relative to the
+medium — the logic the chain is read in — and an attack on the medium is answered philosophically, not here. The
+mathematics is known (kernels of digraphs, parity of feedback circuits, the truth-teller, Brouwer's construction);
+what is ours is the reading of Agrippa by one count and the act/Thing line, kernel-checked.
+
 WHAT THIS DOES NOT SETTLE, said. (1) "Who chose the base?" (Albert's second move) is answered for ACTS — their value
 is no base's to choose (`act_absolute`) — and conceded for POSITS (`posit_relative`); the content of an act, which
 claim is constructed, is still someone's to write. (2) A ground here carries a value

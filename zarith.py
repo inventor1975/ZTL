@@ -2,7 +2,7 @@
 """
 Expedition E8: arithmetic with marks.
 
-Numbers: verified ('V', n) and marks ('M', id, lo, hi) — unverified
+Numbers: verified ('V', n) and marks ('M', id, lo, hi) — dirty
 with an interval of partial knowledge (None = unbounded). Operations
 are computations ⇒ lazy: intervals FLOW (interval arithmetic,
 decorrelated — each occurrence of a mark reads independently).

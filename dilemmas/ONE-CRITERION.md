@@ -44,7 +44,7 @@ Read that claim narrowly.
   future, not the past.
 - **Frozen ceiling:** no reachable future ever earns the claim. A claim with a Z_PERMANENT atom it needs has one.
 - **Ceiling open:** some reachable future earns the claim.
-- **On credit:** the kernel's verdict is T, but it rests on an unverified atom, so the claim is not EARNED.
+- **On credit:** the kernel's verdict is T, but it rests on a dirty atom, so the claim is not EARNED.
 - **"Never grants":** a conclusion resting on a Z_PERMANENT atom is not EARNED. The kernel's raw verdict may be T
   ("on credit", case 3), but the grade is not EARNED. Such a conclusion may still be REFUTED by what is recorded,
   as in case 4's modelled run.

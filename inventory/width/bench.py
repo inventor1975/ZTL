@@ -10,7 +10,7 @@ TERMINAL = {"EARNED", "REFUTED"}
 
 
 def width(phi, m, atoms):
-    """Smallest number of unverified grounds whose JOINT filling moves the
+    """Smallest number of dirty grounds whose JOINT filling moves the
     verdict. Returns None if no subset moves it at all."""
     marks = [a for a in atoms if m[a] == Z]
     base = ev(phi, m)

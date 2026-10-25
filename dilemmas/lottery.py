@@ -14,7 +14,7 @@ The machine blames neither. It never held the conjuncts.
 
 MEASURED HERE:
 
-  1. with each "ticket i loses" left as what it is — unverified, however
+  1. with each "ticket i loses" left as what it is — dirty, however
      probable — the conjunction is denied outright and "some ticket wins"
      stays earned. No contradiction arises, because nothing was believed;
   2. stamp the beliefs (the rule "believe what is probable enough") and

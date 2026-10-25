@@ -8,7 +8,7 @@ whose status is approved / rejected / pending. That maps cleanly onto ZTL:
 
     approved  →  T   (a grounded, accepted proposal)
     rejected  →  F   (a refuted proposal)
-    pending   →  Z   (unverified — not yet adjudicated)
+    pending   →  Z   (dirty — not yet adjudicated)
 
 The warrant judge then reads each topic as the claim "this topic has a
 standing accepted proposal" = OR over its ideas, and — separately — flags any

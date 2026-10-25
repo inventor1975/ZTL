@@ -90,7 +90,7 @@ theorem lift2_classical (f : Bool → Bool → Bool) (x y : V) :
   · exact Or.inl rfl
   · exact Or.inr rfl
 
-/-! ## The 12 laws you MAY USE on an unverified atom
+/-! ## The 12 laws you MAY USE on a dirty atom
 
 All twenty-six classical laws hold here on verified data, exactly as they do
 classically — none is given up. The split below answers a different question:
@@ -116,7 +116,7 @@ theorem imp_trans_law : ∀ p q r,
 /-- Modus ponens, semantic: earned truth is transported. -/
 theorem modus_ponens : ∀ p q : V, p = T → zimp p q = T → q = T := by decide
 
-/-! ## The 14 laws NOT available on an unverified atom — machine-certified
+/-! ## The 14 laws NOT available on a dirty atom — machine-certified
 
 These do not extend to a marked atom, and that is a RESULT rather than a hole:
 each theorem below asserts a refutation with a counterexample, not a silence.

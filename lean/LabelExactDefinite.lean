@@ -5,7 +5,7 @@ import ZReceiptHard
 # Zero axioms. (E60)
 
 `label_exact_linear` (LabelExact.lean) proves that on a linear claim every atom
-on the receipt is pivotal: some reading of the other unverified grounds — and
+on the receipt is pivotal: some reading of the other dirty grounds — and
 `pivotal` lets that reading stay partial — makes `a := T` and `a := F` give
 different verdicts. The paper's sentence was stronger: a DEFINITE reading of
 the others. E59 (2026-09-07) found the gap between prose and theorem, softened
@@ -25,7 +25,7 @@ does not have, while the other side, definite, stays where it was; then fill.
 Nine pairs of verdicts: three are excluded by the pair disagreeing, two are
 filled, four are driven.
 
-The one fact needed about `a` itself — that `v` has it unverified — is not a
+The one fact needed about `a` itself — that `v` has it dirty — is not a
 lemma about `labF`; it is read off the pair: `w₁ a = T ≠ F = w₂ a`, while both
 agree with `v` wherever `v` is verified.
 
@@ -107,7 +107,7 @@ theorem leqb_of_fills (w u : Nat → V) (φ : Fm) (hf : fills w u φ) :
       rw [hf.1 n hne]; exact leqb_refl (w n)
 
 /-- Re-pointing `a` inside a refinement of `v` is still a refinement of `v`,
-provided `v` has `a` unverified and the claim reads `a`. -/
+provided `v` has `a` dirty and the claim reads `a`. -/
 theorem fills_setA (v u : Nat → V) (φ : Fm) (a : Nat) (x : V)
     (hva : v a = Z) (ho : occurs a φ = true) (hf : fills v u φ) :
     fills v (setA a x u) φ := by
@@ -222,7 +222,7 @@ theorem label_exact_linear_definite (v : Nat → V) (a : Nat) :
   have hp := label_exact_linear v a φ hlin hl
   have ho : occurs a φ = true := pivotal_occurs v φ a hp
   obtain ⟨w1, w2, hf1, hf2, ha1, ha2, hd, hne⟩ := hp
-  -- `a` is unverified in `v`: otherwise both readings would agree with `v` there
+  -- `a` is dirty in `v`: otherwise both readings would agree with `v` there
   have hva : v a = Z := by
     cases hv : decide (v a = Z) with
     | true => exact of_decide_eq_true hv

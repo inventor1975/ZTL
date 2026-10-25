@@ -36,7 +36,7 @@ stipulation theorem), E27 (redeemability), plus one computational lemma.
       skeptic's conclusion must be exhibited per claim, never inherited.
 
   F4  REGRESS = CREDIT WHOSE WEAK-LINK SET GROWS. Chains of length 2/3/4:
-      grade never leaves until-verification and the unverified set gains
+      grade never leaves until-verification and the dirty set gains
       one link per storey — the debt is not merely unpaid, it compounds.
       And on FINITE justification bases the horn evaporates: every total
       justifier map on n nodes repeats within n steps (checked exhaustively,

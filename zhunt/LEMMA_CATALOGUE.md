@@ -15,7 +15,7 @@ judged by the ZTL core in 1 h 47 m (30 cores).
 | **suspect (sound, not hereditary)** | **2,756,520** | **a classical tautology broken ONLY under ZTL** |
 | dangerous (T-until-verification) | 277,374,535 | classically refutable already (has a countermodel) |
 | deny (F-until-verification) | 643,313,105 | a refusal verification would grant |
-| atom_z | 5 | the bare unverified atoms |
+| atom_z | 5 | the bare dirty atoms |
 
 `suspect` depth histogram (marks that must be verified before the break shows):
 
@@ -64,7 +64,7 @@ incomparable, established earlier as E20): here are 817 distinct witnesses of
 the direction "ZTL strictly refuses what intuitionism grants," at ≤9 nodes,
 with their exact masking depth. These are not hidden bugs in real theorems —
 they are the universally-used inferences (identity, weakening) that ZTL's
-zero-trust discipline uniquely denies on *unverified* inputs. That denial is
+zero-trust discipline uniquely denies on *dirty* inputs. That denial is
 the philosophical core of ZTL — now a census, not a slogan.
 
 The one quantity that is ZTL's alone throughout: the **fence depth** — a

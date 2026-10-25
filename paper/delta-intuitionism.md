@@ -71,7 +71,7 @@ Three consequences worth stating plainly:
 
 1. **ZTL is not an intermediate (superintuitionistic) logic.**
    Intermediate logics live between IPC and CPC; every one of them
-   proves p→p. ZTL refuses p→p (an unverified input does not certify
+   proves p→p. ZTL refuses p→p (a dirty input does not certify
    itself), so ZTL is not above IPC at all — it sits *beside* it,
    inside CPC. The tabular kin of ZTL remain the Bochvar family — a
    post-hoc kinship, three tables of six, not a source (preprint §4,
@@ -96,7 +96,7 @@ two IPC refuses:
 
 * **¬¬-elimination** ¬¬p ⊬ p. IPC: a proof of ¬¬p carries no
   construction of p. ZTL: the premise launders the mark — ¬¬Z = T, so
-  the premise is true while p itself is still unverified.
+  the premise is true while p itself is still dirty.
 * **tautology-in-conclusion** p ⊬ q∨¬q. IPC: q∨¬q is not a theorem.
   ZTL: premises about p earn nothing for the fresh atom q.
 
@@ -118,7 +118,7 @@ These are not battery facts; they are architecture.
 1. **Verdicts are two-valued; Z is not a truth value.** IPC's
    "values" are proof-contents — potentially infinitely many, ordered
    by construction. ZTL asks a Boolean question — *is T forced under
-   every classical reading of the unverified input?* — and therefore
+   every classical reading of the dirty input?* — and therefore
    legitimately lives in a 3-cell table where the third cell is an
    input mark, not a value (preprint §10). This is why ZTL can be
    tabular at all.
@@ -227,7 +227,7 @@ the second:
 * not classical — on the 27-law battery all 27 hold on verified
   valuations; on a marked one 15 still hold, 12 are refuted with the
   witness named, and none is left undecided (`zipc.py`). Those twelve
-  are theorems about unverified data — statements classical logic does
+  are theorems about dirty data — statements classical logic does
   not make at all, because it cannot take the input;
 * not intuitionistic — incomparable law-sets (both directions
   witnessed), tabular where IPC provably cannot be, no disjunction

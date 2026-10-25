@@ -15,10 +15,10 @@ from zpassport import passports              # what KIND of refusal
 
 ```python
 judge('paid & delivered', {'paid': 'T', 'delivered': 'Z'})
-# disposition OPEN, unverified ['delivered'], why "...verify [...]"
+# disposition OPEN, dirty ['delivered'], why "...verify [...]"
 ```
 
-Operators: `&  |  ~  ->  ^  =`. Marks: `T`, `F`, `Z` (unverified).
+Operators: `&  |  ~  ->  ^  =`. Marks: `T`, `F`, `Z` (dirty — a parameter that is not ours: its owner may change it between two reads, so each occurrence is read on its own; verification cleans it, i.e. replaces it with a checked value).
 
 The report carries **two registers side by side**:
 
@@ -26,8 +26,16 @@ The report carries **two registers side by side**:
 |---|---|---|
 | `disposition`, `verdict`, `grade` | greedy | do I sign this, and how well is it held up? |
 | `lazy` | Kleene | is the matter still running (`Z`) or settled? |
-| `unverified` | — | every hole |
+| `dirty` (also returned as `unverified`) | — | the dirty atoms the verdict rests on — every hole |
 | `pending` | Kleene label | the holes still holding the answer up |
+
+**Field names.** The list of dirty atoms is returned under BOTH names:
+`dirty` (the name from now on) and `unverified` (the older name, kept for
+compatibility; it will be retired in a later release, announced in the
+CHANGELOG). Read `dirty`.
+
+**Statuses (ZFL).** The status value `unverified` is still accepted;
+`dirty` is accepted too and is mapped to `unverified` internally.
 
 `pending` is a **safe candidate list**: measured over 10806 pending cells
 it never missed a load-bearing hole and named an innocent one in 1778 of
@@ -95,7 +103,7 @@ passports({'liar': ('not', 'liar')})
 ```
 
 Classes: `PARADOX` (0 models, incurable), `INTRINSIC` (1 model, forced),
-`UNDERDETERMINED` (≥2, cured by stipulation), `INPUT` (unverified),
+`UNDERDETERMINED` (≥2, cured by stipulation), `INPUT` (dirty),
 `DOWNSTREAM` (infected, culprits named).
 
 **Two registers, and mixing them is the classic slip.** The passport reads

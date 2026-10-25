@@ -24,7 +24,7 @@
 
   THE CONVERSE FAILS, and that is proved too (`witness_not_sufficient`): `h ∨ ¬h` over a hole h is
   classically true for every value of h, yet it is F in every reachable future — ZTL does not even promote a
-  classically valid composition across a hole, because each occurrence of an unverified atom is read
+  classically valid composition across a hole, because each occurrence of a dirty atom is read
   independently. The witness is NECESSARY, not sufficient: the law is a ceiling, stated as one.
 
   THE COROLLARY (`hardy_never_promoted`): the Hardy chain in the contested run (Hardy.lean's grounding; the
@@ -223,7 +223,7 @@ theorem no_promotion_without_witness (R : Nat → Bool) (m : Marking) (φ : Fm)
 
 /-- `h ∨ ¬h` over a hole h (atom 0; marking all Z; empty repertoire): classically true for both values of
 h, yet F in every reachable future — ZTL does not promote even a classically valid composition across a
-hole, since each occurrence of an unverified atom is read independently. -/
+hole, since each occurrence of a dirty atom is read independently. -/
 def allZ : Marking := fun _ => V.Z
 def none : Nat → Bool := fun _ => false
 def lem : Fm := .disj (.atom 0) (.neg (.atom 0))

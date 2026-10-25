@@ -13,10 +13,10 @@ The native Russian version is `RESOLUTION-RU.md`; this file renders it.*
 
 ## The stones (measured)
 
-**K1. "One's own truth" lives only on the unverified.** 202
-disagreements between agents — all 202 involve an unverified atom; between
+**K1. "One's own truth" lives only on the dirty.** 202
+disagreements between agents — all 202 involve a dirty atom; between
 fully informed agents, zero. What is private is not the truth but the
-colouring of the unverified.
+colouring of the dirty.
 
 **K2. "One's own truth" is perishable.** Of 112 confident verdicts held
 on partial views, 49 die on further verification (44%) — and all 49 are
@@ -89,7 +89,7 @@ earned "=".
 
 The lie is the same sign without the collation: the tautology (p=p
 without reading p), the witnessless merge (Z↔Z=F), the credit (equality
-of the unverified). **The difference between truth and lie is whether
+of the dirty). **The difference between truth and lie is whether
 the identity sign has been paid for.**
 
 A minting step kept as a finding: the monopoly — "truth or goodness
@@ -113,7 +113,7 @@ disputants' "truths"; the "only" is true of the disputed territory.
 
 **Truth is never one's own: the table has no agent index. One's own are
 the state of knowledge, the pending case, the choice — and the credits.
-"Own truths" live only on the unverified, rot under verification and are
+"Own truths" live only on the dirty, rot under verification and are
 not equal even to each other; what their owners share is one thing — the
 counterfeit machine. A dispute is not won but grounded, and the earned
 identity is handed to both. Everyone has his own truth — and only the

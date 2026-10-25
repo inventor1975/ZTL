@@ -5,10 +5,10 @@ zrefuter — batch trust-classifier over the ZTL core (Opus, 2026-07-14).
 Sorts a spectrum of hypotheses into trust buckets by EXHAUSTIVE evaluation
 over {T,F,Z} (decidable → guaranteed):
 
-  VALID         — T under EVERY assignment, incl. unverified (Z). Robust.
+  VALID         — T under EVERY assignment, incl. dirty (Z). Robust.
   FRAGILE       — T under all {T,F}, but F under some {T,F,Z}. The
                   Strong-Law-of-Small-Numbers class: holds classically,
-                  breaks when an input is unverified.
+                  breaks when an input is dirty.
   INVALID       — F under some {T,F}. Not a law.
   CONTRADICTION — F everywhere. Always false.
   DEFERRED      — too heavy for the budget → SEPARATE report, not attempted.

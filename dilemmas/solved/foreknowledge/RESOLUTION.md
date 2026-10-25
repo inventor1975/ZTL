@@ -11,7 +11,7 @@ language); this file is its English rendering.*
 
 **1. The classical dilemma runs on credit.** Its inference frame
 ((K→D)∧(¬K→N))→(D∨N) is *hereditary* — the fork's logic is honest. The fuel
-is not: to fire, the fork must assert K∨¬K over an unverified K, and that
+is not: to fire, the fork must assert K∨¬K over a dirty K, and that
 cell grades **F, until-verification** — the very cell of "who is not with us
 is against us". A question stamped settled while still open. The dilemma that
 demanded an answer for centuries never had the right to demand it.

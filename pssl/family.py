@@ -50,7 +50,7 @@ import zipc                                                   # noqa: E402
 import grounds as G                                           # noqa: E402
 
 # Three matrix values. `u` is the third; what it MEANS differs per ground
-# (undefined, both, unverified) and the tables say so, not the name.
+# (undefined, both, dirty) and the tables say so, not the name.
 TT, UU, FF = "1", "u", "0"
 VALS = [TT, UU, FF]
 

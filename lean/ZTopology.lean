@@ -49,7 +49,7 @@ theorem refines_refl (v : Nat → V) : refines v v := fun n => leqb_refl (v n)
 theorem refines_trans {u v w : Nat → V} (h1 : refines u v) (h2 : refines v w) :
     refines u w := fun n => leqb_trans (u n) (v n) (w n) (h1 n) (h2 n)
 
-/-- A total valuation: nothing left unverified. -/
+/-- A total valuation: nothing left dirty. -/
 def total (w : Nat → V) : Prop := ∀ n, w n ≠ Z
 
 /-! ## The judge's stable verdicts -/

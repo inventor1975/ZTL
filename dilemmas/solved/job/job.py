@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 """job — the sufferer's guilt / victim-blaming (the Book of Job).
 
-Atoms:  j = the world repays by deeds   (the theory — unverified)
+Atoms:  j = the world repays by deeds   (the theory — dirty)
         s = he suffers                  (observed fact — T)
-        g = he is guilty                (hidden — unverified)
+        g = he is guilty                (hidden — dirty)
 
 The friends' machine, run cell by cell: the inference is honest, the fuel
 is credit, and the guilty verdict is a STIPULATION that saves a dying

@@ -16,7 +16,7 @@ j ("the world repays") and the verdict g are both until-verification. As
 with the Rambam fork: the frame is free, the charge is on credit.
 
 **2. The stamp: guilt serves the theory.** The theory s↔g, at the fact
-s=T and an honestly unverified guilt, is already dying (greedy court: F).
+s=T and an honestly dirty guilt, is already dying (greedy court: F).
 Exactly one stipulation revives it: g:=T. **The victim's guilt is not an
 observation — it is the stipulation that saves a beloved theory.**
 
@@ -27,7 +27,7 @@ holds Z, refusing to confess a guilt he does not know. The two-register
 theorem, played by humans millennia before SQL.
 
 **4. The counterfeit test (the curator's step): arguing "from the
-negative" about another's guilt.** p→p fails honestly on the unverified
+negative" about another's guilt.** p→p fails honestly on the dirty
 (F at Z — identity must be earned). But ¬p→¬p — "not guilty, not hurting"
 — **cannot fail**: negation burns the mark at first touch (¬Z=F); the
 test returns T on T, F and Z — a constant, a frame, not a fact. Checking
@@ -42,7 +42,7 @@ Identity — the law refuted on the mark — earns exactly at the owner's ground
 the guilt atom is grounded only in its bearer:
 
 ```
-g→g outside (g unverified)   →  F, until-verification   another's guilt is credit
+g→g outside (g dirty)        →  F, until-verification   another's guilt is credit
 g→g self, guilty   (T→T)     →  T, hereditary            earned
 g→g self, innocent (F→F)     →  T, hereditary            earned — this is Job
 ¬g  Job's word, own ground   →  T, hereditary            never revoked

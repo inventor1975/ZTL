@@ -23,7 +23,7 @@ is Z, the claim is pending, and the receipt names `a` (`named`) — by its own
 rule, since neither branch of the outer conjunction is settled.
 
 Whether `a` was worth naming (`pivotal`, LabelExact.lean: a reading of the
-other unverified grounds — possibly partial — under which `a := T` and
+other dirty grounds — possibly partial — under which `a := T` and
 `a := F` give different verdicts) is then exactly whether ψ has a classical
 point. With `a := T` the claim reads `ψ`; with `a := F` it reads `ψ ∧ ¬ψ`,
 which is Z where ψ is Z and F where ψ is settled; the two differ precisely
@@ -74,7 +74,7 @@ form over the partial one.)
 
 namespace V
 
-/-- Every ground still unverified. -/
+/-- Every ground still dirty. -/
 def allZ : Nat → V := fun _ => Z
 
 /-- No `⊤`/`⊥` inside — what keeps a formula at Z while every atom is Z. -/

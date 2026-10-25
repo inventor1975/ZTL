@@ -37,20 +37,20 @@ A single JSON object:
 claim  : string   — a ZTL formula over named atoms (e.g. "cleared & ~flagged")
 rule   : { id: string, version: semver, hash: sha256-hex }
 atoms  : [ { name       : string,
-             value      : "T" | "F" | "Z",   # Z = the mark: unverified / unknown ground (default-deny)
+             value      : "T" | "F" | "Z",   # Z = the mark: dirty / unknown ground (default-deny)
              provenance : string,            # audit-only; NEVER judged
              admissible : "yes" | "no" } ]    # "no" ⇒ coerced to Z (fail-closed)
 ```
 
 **Atom model — true to the kernel.** In the ZTL kernel an atom's marking is
 *one* value from `{T, F, Z}`. `Z` **is** the mark — it means the ground is
-unverified/unknown, and it is default-deny (an atom absent from `atoms` is `Z`,
+dirty (not ours: its owner may change it between two reads, so each occurrence is read on its own; verification cleans it — replaces it with a checked value) / unknown, and it is default-deny (an atom absent from `atoms` is `Z`,
 never on credit). There is no separate "mark" field; `Z` carries that role.
 
 **Fail-closed (the MindReef lesson, non-negotiable).** Before judging, the
 connector coerces to `Z` any atom whose `value ∉ {T, F}` (unknown / missing /
 malformed) **or** whose `admissible == "no"`. Unrecognised ground is never waved
-through — it is treated as unverified.
+through — it is treated as dirty.
 
 **`provenance` is audit-only.** It records where the value came from (source id,
 method). The judge never reads it. It travels for the record, not the verdict —
@@ -69,14 +69,16 @@ verdict      : "T" | "F"                              — the truth-check result
 grade        : "hereditary" | "sound" | "until-verification"   — the warranty ladder (zverify)
 disposition  : "EARNED" | "REFUTED" | "ON CREDIT" | "OPEN"
 why          : string                                 — plain-language reason
-unverified   : [atom names still on Z]                — the weak link(s)
+dirty        : [atom names still on Z]                — the dirty atoms the verdict rests on (the weak link(s))
+unverified   : [same list]                            — the older name of `dirty`, still returned for compatibility;
+                                                        to be retired in a later release, announced in the CHANGELOG
 ```
 
 Disposition rule (exactly as the kernel computes it):
 - `grade == hereditary` & `verdict T` → **EARNED** (grounded; marks irrelevant).
 - `grade == hereditary` & `verdict F` → **REFUTED** (false regardless of marks).
 - `grade != hereditary` & `verdict T` → **ON CREDIT** (true only while an
-  unverified link holds; if it flips, the claim can die).
+  dirty link holds; if it flips, the claim can die).
 - otherwise → **OPEN** (not established; a mark actually matters — verify it).
 
 The warranty ladder is `hereditary ⟹ sound ⟹ until-verification`; the judge
@@ -89,7 +91,7 @@ dispositions.
 input_digest   : sha256 of the RFC-8785-canonicalized {claim, rule, atoms}
 rule           : { id, version, hash }
 kernel_version : string      — which reference judge produced this
-verdict, grade, disposition, why, unverified   — from §2
+verdict, grade, disposition, why, dirty (and `unverified`, the older name) — from §2
 signature      : { scheme: "ed25519+ml-dsa", value: ... }   — crypto-agile
 ```
 

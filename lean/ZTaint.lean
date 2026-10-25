@@ -4,7 +4,7 @@
   Two claims that §§12 and 14 measured on worked cases, proved in general.
 
   1. NO FUNCTION LAUNDERS A MARK (§14). A function is a computation, not a
-     verdict; applied to an unverified reference it returns an unverified
+     verdict; applied to a dirty reference it returns a dirty
      reference with a longer pedigree, and no composition of any length
      changes that. In security terms this is no-declassification: the only
      sanitizer is external verification of the value, which is a
@@ -45,7 +45,7 @@ def taints : List (Nat → Nat) → El → El
   | f :: r, x => taint f (taints r x)
 
 /-- **NO COMPOSITION LAUNDERS.** Whatever chain of verified functions is
-applied to an unverified reference, the result is an unverified reference.
+applied to a dirty reference, the result is a dirty reference.
 The pedigree grows; the mark never comes off. -/
 theorem no_laundering : ∀ (fs : List (Nat → Nat)) (i : Nat),
     ∃ j, taints fs (El.z i) = El.z j

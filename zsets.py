@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Expedition E5: sets with unverified elements (ZTL-sets).
+Expedition E5: sets with dirty elements (ZTL-sets).
 
 Sets are NOT postulated — they are derived from the logic:
   * element equality eq(a,b) is an ATOM with value T/F/Z
@@ -13,7 +13,7 @@ Everything computes through the ztl.py tables — not a single special
 rule.
 
 Representation: ZSet = (core: frozenset of verified, quar: tuple of
-marks). A mark ('Z', id) is an unverified observation; id is provenance
+marks). A mark ('Z', id) is a dirty observation; id is provenance
 and does NOT participate in equality (zero-trust: provenance does not
 prove identity).
 
@@ -33,7 +33,7 @@ def V_(x):
 
 
 def M_(ident):
-    return ("Z", ident)      # unverified mark (quarantine)
+    return ("Z", ident)      # dirty mark (quarantine)
 
 
 def eq_atom(a, b):

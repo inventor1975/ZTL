@@ -4,7 +4,7 @@ Expedition E60: THE RECEIPT NAMES NOTHING IDLE ON A LINEAR CLAIM — UNDER A
 DEFINITE READING OF THE OTHER GROUNDS.
 
 `label_exact_linear` (LabelExact.lean) proves exactness with `pivotal`, whose
-reading of the other unverified atoms may stay PARTIAL. §19 said "definite";
+reading of the other dirty atoms may stay PARTIAL. §19 said "definite";
 E59 found the gap and softened the prose. `lean/LabelExactDefinite.lean` proves
 the strong form (`label_exact_linear_definite`, empty axiom list), as a layer
 over the partial theorem: drive the Z side with `drivable`, keep the definite
@@ -12,7 +12,7 @@ side by monotonicity, fill the rest.
 
 Measured here with the judge's own `_lazy`: every pending LINEAR cell of the
 exhaustive depth ≤ 2 pool over three atoms, all 27 markings; for every named
-atom, is there a DEFINITE reading of the other unverified atoms (each T or F,
+atom, is there a DEFINITE reading of the other dirty atoms (each T or F,
 never Z) under which a := T and a := F give different lazy verdicts? And the
 negative control: OUTSIDE the linear class the same census must find named
 atoms that are not — `p ∧ ¬p` first among them — or the linearity hypothesis

@@ -1,7 +1,7 @@
 import ZTL
 
 /-!
-# Lean port of E5: sets with unverified elements. Zero axioms.
+# Lean port of E5: sets with dirty elements. Zero axioms.
 
 Element equality is an atom (T/F for verified, Z with any mark);
 membership/inclusion are recursive zor/zand folds. The identity laws

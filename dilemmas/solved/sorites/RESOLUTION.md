@@ -71,7 +71,7 @@ next to it for scale:
 
 ```
 liar  : PARADOX      no classical models; period 2; refusal PERMANENT
-h5    : INPUT        unverified input; refusal until verification
+h5    : INPUT        dirty input; refusal until verification
 tol6  : DOWNSTREAM   culprits ['h5','h6'], refusal conditional
 ```
 

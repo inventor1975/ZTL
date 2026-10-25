@@ -7,11 +7,11 @@ THE CURATOR'S QUESTION (2026-10-09): is the backward pass not the forward pass
 read the other way? Measured the same day: one judge call costs 0.04-0.07 ms, so
 the backward pass is no longer slow — it is BLIND past size four. It lists the
 sets of grounds by size and stops at MAX_K = 4, so a conjunction of six
-unverified grounds, whose answer is plainly "check all six", comes back as
+dirty grounds, whose answer is plainly "check all six", comes back as
 "not searched further". Its own definition does not need the listing.
 
 THE IDEA, AND WHY IT IS EXACT. For a set S of grounds, filled in every way (the
-other grounds left unverified), each subformula takes a TYPE: the set of pairs
+other grounds left dirty), each subformula takes a TYPE: the set of pairs
 (its value now, the set of values it can take over every refinement of the
 grounds still open) over the fillings of S. A connective's type follows from
 its children's types by its table — on disjoint atoms the fillings and the
@@ -25,7 +25,7 @@ one would give the same parent type with a smaller S). So the minimal sets of
 each type are products of the children's minimal sets, then the minimal ones
 among those. No size cap; the work follows the answer's size, not 3^n.
 
-REPEATED GROUNDS (second tranche, the same day): an unverified ground that occurs
+REPEATED GROUNDS (second tranche, the same day): a dirty ground that occurs
 twice breaks the independence, so its values are enumerated as WORLDS — filled
 (T/F) when it is in the set, refined (Z/T/F) when it is left open — and every
 subtree carries one type per world; the non-repeated grounds still go down the
@@ -112,7 +112,7 @@ def _types(phi, marking, grounds):
     return {t: _minimal(f) for t, f in out.items()}
 
 
-REPEAT_CAP = 6     # repeated unverified grounds handled by worlds (about 5^k worlds in all)
+REPEAT_CAP = 6     # repeated dirty grounds handled by worlds (about 5^k worlds in all)
 
 
 def _types_w(phi, marking, grounds, worlds):
@@ -192,7 +192,7 @@ def _families_repeated(phi, marking, grounds, repeated, hit):
 def backward_tree(phi, marking, target, by_disposition=True):
     """`zbackward.backward`'s families, computed from the tables. Returns the
     same dict shape (no size cap, never 'not searched further'), or None when the
-    formula repeats an unverified ground (outside this tranche)."""
+    formula repeats a dirty ground (outside this tranche)."""
     grounds = tuple(a for a, v in sorted(marking.items()) if v == Z)
     occ = _occurrences(phi, {})
     repeated = [a for a in grounds if occ.get(a, 0) > 1]

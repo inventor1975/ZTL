@@ -22,7 +22,7 @@ did not have — the credit/earned distinction and the named weak link.
   TWO ARGUMENTS, NOT ONE (Parmenides 132a-b).
 
   The regress version (no u): the tower of Forms. MEASURED: with everything
-  unverified the engine (g&s&n)->r is ON CREDIT — true only while four
+  dirty the engine (g&s&n)->r is ON CREDIT — true only while four
   metaphysical links hold; with every premise GRANTED it is still OPEN with
   the weak link named as r. Largeness-2 is never exhibited, only demanded,
   and a finite instrument cannot exhibit an infinite ladder: r stays in
@@ -48,7 +48,7 @@ did not have — the credit/earned distinction and the named weak link.
   says resemblance requires shared character: m -> s. MEASURED: (m->s)&~s&m
   is hereditary REFUTED — participation-as-resemblance dies with
   self-predication under ALL markings, not under some; and while s is merely
-  unverified, m->s is OPEN with the weak link named as s: resemblance RIDES
+  dirty, m->s is OPEN with the weak link named as s: resemblance RIDES
   on self-predication. The judge points where Parmenides pointed.
 
 HONEST SCOPE.

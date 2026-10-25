@@ -5,7 +5,7 @@ import ZTL
 
 Classical negation is an involution: ¬T = F and ¬F = T, and neither value is prior to the
 other. ZTL breaks that symmetry in one cell, ¬Z = F, and the tables then carry an ORDER OF
-BIRTH. Start from pure doubt — every atom unverified (Z), no constant handed in — and ask what
+BIRTH. Start from pure doubt — every atom dirty (Z), no constant handed in — and ask what
 the connectives can make of it:
 
     doubt_gives_F      one connective over doubt alone gives F, every time (all six)
@@ -59,7 +59,7 @@ def ThroughF (v : Nat → V) : Fm → Prop
   | .xor φ ψ  => (evalF v φ = F ∨ ThroughF v φ) ∨ (evalF v ψ = F ∨ ThroughF v ψ)
   | .xnor φ ψ => (evalF v φ = F ∨ ThroughF v φ) ∨ (evalF v ψ = F ∨ ThroughF v ψ)
 
-/-- Pure doubt: every atom is unverified. -/
+/-- Pure doubt: every atom is dirty. -/
 def AllZ (v : Nat → V) : Prop := ∀ n, v n = Z
 
 /-! ### Doubt yields F first -/

@@ -13,7 +13,7 @@ one's own ground (T→T and F→F) → hereditary. Desert, like guilt
 (solved/job), is grounded only in its bearer: "he deserved it" is credit
 in every mouth but his own.
 
-**p∨¬p — the stamping fork.** d∨¬d over an unverified soul →
+**p∨¬p — the stamping fork.** d∨¬d over a dirty soul →
 until-verification. And the doctrine r↔d stamps **both ways with one
 machine**: at misfortune (r=F) it dies on the honest mark and lives by
 the single stipulation d:=F — "the sick man earned his karma"; at fortune

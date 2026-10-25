@@ -21,7 +21,7 @@ hand it both and an operator, and they are glued:
 (~ ∧→&, | ∨, -> →, ^ ⊕, = ↔, parentheses) into the kernel's own form; the
 kernel is unchanged and does the judging. A marking says which atoms are
 verified (T/F) and which are not (Z, the default) — truth is never granted
-on credit, so an unverified atom stays a mark.
+on credit, so a dirty atom stays a mark.
 
 Run:  python3 ztljudge.py                 (a worked stepwise session)
       python3 ztljudge.py -i              (interactive: check / join / mark)
@@ -193,7 +193,7 @@ def _kernel(m):
 # ------------------------------------------------------------------- report
 def _grade_marking(m):
     """zverify speaks the E12 mark dialect, where the mark symbol is 'M';
-    ztljudge marks the unverified atom with the value Z. Translate Z→'M' so
+    ztljudge marks the dirty atom with the value Z. Translate Z→'M' so
     the warranty grade actually SEES the marks — otherwise it finds none, the
     refinement set is a singleton, and every verdict reads 'hereditary'."""
     return {a: ("M" if v in (Z, E) else v) for a, v in m.items()}
@@ -213,8 +213,8 @@ def _lazy(phi, m):
     The label tracks UNCHECKED atoms only, and it is a SOUND
     OVER-APPROXIMATION of the load-bearing ones. The sound half is now
     PROVED, not merely measured: `lean/Receipt.lean`, `receipt_complete`,
-    empty axiom list — for the whole language and every valuation, an
-    unverified atom the label omits cannot change the answer. Read the
+    empty axiom list — for the whole language and every valuation, a
+    dirty atom the label omits cannot change the answer. Read the
     other way, an atom that could change it is always on the receipt, so
     a refusal never withholds a verdict for a reason it failed to name.
     (The Lean `labF` is this function, asked of both engines rather than
@@ -222,7 +222,7 @@ def _lazy(phi, m):
 
     AND IT COVERS THE VERDICT, not only this column. `pending` is printed
     beside a GREEDY verdict, and `receipt_complete_greedy` proves the
-    same guarantee there — an unverified atom off the label cannot move
+    same guarantee there — a dirty atom off the label cannot move
     `ev` either. That was measured before it was proved and I had
     predicted the opposite: the greedy register is non-monotone, so a
     branch Kleene calls decisive looked like where the receipt would
@@ -240,7 +240,7 @@ def _lazy(phi, m):
     cells, and never once too small (14,530 cells, zero violations).
 
     The remaining 7% is a genuine over-approximation and it has one
-    cause. `p ∧ (p ∨ q)` with both unverified names `q`, which cannot
+    cause. `p ∧ (p ∨ q)` with both dirty names `q`, which cannot
     move anything: the analysis reads the two branches independently,
     sees the right one could reach F, and does not notice that it gets
     there only when `p` is F — at which point the left branch has already
@@ -250,9 +250,9 @@ def _lazy(phi, m):
     AND THE 7% IS ENTIRELY A MULTIPLICITY EFFECT — measured 2026-08-20
     (`lab/label/`: 128,372 linear cells, zero inexact) and then PROVED
     (`lean/LabelExact.lean:label_exact_linear`, zero axioms). On a LINEAR
-    claim — every unverified ground mentioned at most once — every atom
+    claim — every dirty ground mentioned at most once — every atom
     the receipt names is one the answer is genuinely waiting on: there is
-    a definite reading of the other unverified grounds under which
+    a definite reading of the other dirty grounds under which
     answering this one yes and answering it no give different verdicts.
     All 13-18% of the inexactness sits in cells where some marked atom
     occurs twice, and `clash_names_an_idle_atom` shows the hypothesis is
@@ -341,7 +341,7 @@ def _happened(phi, m, budget=None):
             "dirty": unver,
             "unverified": unver,
             # NOT a sub-list of `unverified`, and the separation is the whole
-            # point: an unverified atom is an open question, an absent one is
+            # point: a dirty atom is an open question, an absent one is
             # no question at all. Nothing may be ASKED of the atoms named here.
             "absent": gone,
             # the second register, as a COLUMN beside the verdict and
@@ -401,7 +401,7 @@ def _joint(phi, m, unv):
 
     Measured 2026-08-19 (`inventory/width/`): for 91-93% of unsettled claims some
     single ground moves the matter, and inquiry is incremental. For the rest it
-    is not — and the width goes as high as the number of unverified grounds, 4
+    is not — and the width goes as high as the number of dirty grounds, 4
     of 4 and 5 of 5 in the hunt. There a one-ground order is worse than none:
     it names a check that provably achieves nothing on its own.
 
@@ -539,7 +539,7 @@ def judge(text, marking=None, budget=None):
 
       EARNED    verdict T, hereditary — grounded; any marks are irrelevant.
       REFUTED   verdict F, hereditary — false regardless of the marks.
-      ON CREDIT verdict T, but not hereditary — true only while an unverified
+      ON CREDIT verdict T, but not hereditary — true only while a dirty
                 link holds; if it flips, the claim can die.
       OPEN      not established — a mark actually matters; verify it.
       E         not established, and it CANNOT BE: what the claim rests on has
@@ -662,7 +662,7 @@ def ledger(claims):
 
 
 def what_if(text, marking=None):
-    """The actionable half of the judge: for each still-unverified link, what
+    """The actionable half of the judge: for each still-dirty link, what
     verifying it would do to the claim. Returns [{atom, if_T, if_F, settles}],
     where `settles` means BOTH outcomes are terminal (EARNED/REFUTED) — i.e.
     checking that link resolves the claim whichever way it turns.
@@ -684,7 +684,7 @@ def what_if(text, marking=None):
 
 
 def next_check(text, marking=None):
-    """Recommend which unverified link to check next: one that settles the
+    """Recommend which dirty link to check next: one that settles the
     claim either way if possible, otherwise one that can settle it in at least
     one direction, otherwise the first open link. Returns the what_if entry, or
     None if there is nothing left to verify.
@@ -698,7 +698,7 @@ def next_check(text, marking=None):
     rather than verify anything.
 
     THE THIRD CASE WAS A DEFECT UNTIL 2026-08-19, and Meno found it. This
-    returned an order whenever an unverified atom EXISTED, not when one was
+    returned an order whenever a dirty atom EXISTED, not when one was
     worth checking, so `p ∧ q` with `p = F` — verdict F, grade hereditary,
     disposition REFUTED, the matter closed — still sent the reader off to
     verify `q`. Measured before it was fixed (`lab/meno/`): 27% of settled
@@ -872,7 +872,7 @@ if __name__ == "__main__":
     assert judge(_CASE, {"suspect_was_present": T})["disposition"] == "OPEN"
     _r = judge(_CASE, {"suspect_was_present": T, "weapon_carries_trace": E})
     assert _r["disposition"] == "E" and _r["absent"] == ["weapon_carries_trace"]
-    assert _r["unverified"] == []                # absent is NOT unverified
+    assert _r["unverified"] == []                # absent is NOT dirty
     # THE FIX ITSELF: no order is issued that could not be filled
     assert next_check(_CASE, {"suspect_was_present": T})["atom"] \
         == "weapon_carries_trace"
@@ -880,7 +880,7 @@ if __name__ == "__main__":
                               "weapon_carries_trace": E}) is None
     # Meno's first horn: no order on a matter already decided (2026-08-19).
     assert judge("p & q", {"p": F})["disposition"] == "REFUTED"
-    assert next_check("p & q", {"p": F}) is None       # q is unverified and moot
+    assert next_check("p & q", {"p": F}) is None       # q is dirty and moot
     assert next_check("p | q", {"p": T}) is None       # earned; nothing to seek
     # ...and Meno's residue: claims where NO single ground moves anything, so a
     # one-at-a-time order is empty work. Measured in inventory/width/: 6-7% of

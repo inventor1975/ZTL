@@ -6,7 +6,7 @@ One page, four columns, every number produced by `python3 zledger.py`
 | | |
 |---|---|
 | **Shared** | On Z-free markings ZTL **is** classical logic. Not sampled — **proved**: `lean/ClassicalAgreement.lean`, `evalF_agrees`, structural induction over the whole formula language, empty axiom list. (The 2906 × 4 measurement that preceded it stands as the sanity check.) |
-| **Nothing lost** | **All 26 classical laws hold here on verified data — not one falls, ever** (measured: on mark-free valuations classical and ZTL have the same 584 validities of the depth-≤2 pool, the same set element for element — 588 counting the pool list's repeated entries; see the erratum below). Of the 26, **12 keep working when an atom carries the mark**; the other **14 do not extend to it** — both De Morgans, contraposition, `¬¬p = p`, excluded middle, `p → p`, idempotence (`audit.py`) — and there ZTL proves the **refutation with a witness** instead, with zero undecided outcomes. The 212 counts validities over the WIDER domain: beside the 584 it is the price of admitting unverified input (fewer formulas hold on every valuation), not a loss on verified data (corrected 2026-09-28). Against the classical default on that wider domain the comparison is external Bochvar's 548. |
+| **Nothing lost** | **All 26 classical laws hold here on verified data — not one falls, ever** (measured: on mark-free valuations classical and ZTL have the same 584 validities of the depth-≤2 pool, the same set element for element — 588 counting the pool list's repeated entries; see the erratum below). Of the 26, **12 keep working when an atom carries the mark**; the other **14 do not extend to it** — both De Morgans, contraposition, `¬¬p = p`, excluded middle, `p → p`, idempotence (`audit.py`) — and there ZTL proves the **refutation with a witness** instead, with zero undecided outcomes. The 212 counts validities over the WIDER domain: beside the 584 it is the price of admitting dirty input (fewer formulas hold on every valuation), not a loss on verified data (corrected 2026-09-28). Against the classical default on that wider domain the comparison is external Bochvar's 548. |
 | **Gained (laws)** | **Zero, and now machine-checked:** `ztl_taut_is_classical` — every ZTL tautology is a classical one, for every formula, empty axiom list. And the inclusion is **strict** (`not_conversely`: `p → p` is classically valid and fails here at a mark), so "conservative" never reads as "the same logic". This column can never fill. |
 | **Gained (sight)** | Classical logic sorts two-variable formulas into **16** equivalence classes; we sort them into **195**, and **all 16** classical classes are split. Twelvefold refinement: same truths, finer eyes. |
 | **Order of birth** | Under pure doubt (every atom Z, no constants) **F is born first and T only through an F** — proved over the whole language: `lean/ZOrigin.lean`, `T_through_F`, `birth_order`, empty axiom list. Classical logic has no such order: its negation is an involution, and the question does not arise. Not a gain in laws (row above) — a fact about where ZTL's values come from. |
@@ -67,7 +67,7 @@ bought by breaking inference; what is refused is truth on credit.
 
 ## Two traps in our own numbers
 
-* **Vacuous validity.** Under default deny an unverified antecedent is
+* **Vacuous validity.** Under default deny a dirty antecedent is
   F, so *every* conditional over unchecked atoms is ZTL-valid for free.
   "ZTL-valid" for a conditional must always be read with "and its
   antecedent is earnable at all" (`zprove.py`, section 2).
@@ -75,7 +75,7 @@ bought by breaking inference; what is refused is truth on credit.
   derivable, not even a guarded tautology (E26); the twelve rules are
   incomplete. Inference *transports* verification into compound claims —
   the pigeonhole conclusion is earned with three of six atoms still
-  unverified — but never mints the first coin.
+  dirty — but never mints the first coin.
 
 ## What a theorem costs
 
@@ -127,10 +127,10 @@ a family trait, not an exile.
   and `not_conversely` (`p → p`), over its own valuations ZTL has strictly
   fewer validities. Say instead: equal to classical logic in strength ON
   VERIFIED DATA (the same set, 584 = 584); fewer validities only over
-  unverified input, where classical logic cannot take the input at all —
+  dirty input, where classical logic cannot take the input at all —
   the price of admitting it (paper §3.2, §10), nothing lost on verified
   data; strictly more expressive than any uniform classical default (binary clone
-  2 + 512 against 2 + 16 for "unverified := false", and 2 + 16 for ":= true";
+  2 + 512 against 2 + 16 for "dirty := false", and 2 + 16 for ":= true";
   every default yields a two-valued function of the three-valued inputs, ZTL
   defines every such function as a DNF over its detectors p ∧ p, ¬p,
   ¬(p ↔ p), and no uniform default defines isZ — a per-polarity default can
@@ -257,10 +257,10 @@ here whenever the atoms are verified.
 ### The 212 against the 584 is the price, measured — name it, do not hide it
 
 212 is ZTL's validity count over the *extended* input domain, where an atom may
-be unverified. A law is a claim about every valuation; admitting the unverified
+be dirty. A law is a claim about every valuation; admitting the dirty
 ones means fewer formulas hold on all of them. That IS "fewer validities" in the
 logician's sense (`ztl_taut_is_classical` + `not_conversely`), and it is the
-price of admitting unverified input — named in the paper (§3.2: the deduction
+price of admitting dirty input — named in the paper (§3.2: the deduction
 theorem runs one way only). Nothing is lost on verified data (584 = 584).
 (Corrected 2026-09-28: this section used to call the comparison a "category
 error"; it is not — same formulas, a wider set of valuations.) The comparison
@@ -268,7 +268,7 @@ that separates ZTL from the classical DEFAULT on the extended domain is **ZTL
 212 against external Bochvar 548**: both are defined on three values, and those
 336 are what Bochvar grants on ignorance.
 
-### "Classical with unverified := false" is external Bochvar — on the binary connectives
+### "Classical with dirty := false" is external Bochvar — on the binary connectives
 
 Measured cell by cell: they agree on **every** binary connective (0 divergences
 of 45) and part only at `¬`. So the substitution approach is not a naive
@@ -284,7 +284,7 @@ verdict out of ignorance**: `¬Z = T`, `Z→F = T`, `Z↔Z = T`.
 
 ### What the mark buys, in numbers
 
-* **1840 of 2924 compound formulas (63%) distinguish "unverified" from "false"**
+* **1840 of 2924 compound formulas (63%) distinguish "dirty" from "false"**
   while still returning a two-valued verdict. Call a compound *mark-sensitive*
   when, on **some** valuation, replacing **every** mark by false changes the
   verdict — that is the definition behind the figure, and the figure means
@@ -305,9 +305,9 @@ verdict out of ignorance**: `¬Z = T`, `Z→F = T`, `Z↔Z = T`.
   `marksens.py` now prints all three readings.
 * The mark is sayable inside the language: `isZ(x) = ¬(x↔x)` gives T on Z and F
   on both T and F.
-* **On unverified input ZTL decides all 26 classical laws: 12 hold, 14 are
+* **On dirty input ZTL decides all 26 classical laws: 12 hold, 14 are
   REFUTED with a witness value, 0 undecided.** The fourteen are not a hole; they
-  are fourteen theorems about unverified data. Classical decides 0 of 26, because
+  are fourteen theorems about dirty data. Classical decides 0 of 26, because
   it cannot accept the input at all.
 
 ### How to say this without being refuted in one line
@@ -343,7 +343,7 @@ proofs the two are exactly equal on classical's own domain; as a solver ZTL
 dominates.** Saying "stronger" without naming which relation is what loses the
 argument, not the facts.
 
-Every word of that is measured: *extension* (the domain gains the unverified
+Every word of that is measured: *extension* (the domain gains the dirty
 state), *conservative* (unique validities: exactly zero, machine-checked), and
 nothing lost (584 = 584, same sets).
 
@@ -362,15 +362,15 @@ live one `php2zfl` builds for every sink — three rows, judged by `zfl.run`:
 |---|---|---|
 | tainted verified, sanitized verified | `T` | EARNED, hereditary |
 | tainted verified, sanitized refuted | `F` | REFUTED, hereditary |
-| **neither established** | `Z` | **OPEN, until-verification, naming `safe` as unverified** |
+| **neither established** | `Z` | **OPEN, until-verification, naming `safe` as dirty** |
 
 The third row is the whole point: a *decided* verdict that safety is not
 established, with the address of what is missing.
 
 **Classical has no third row, and both of its defaults grant a PASS:**
 
-    unverified := false   ->  safe = ¬F ∨ F = T    PASS
-    unverified := true    ->  safe = ¬T ∨ T = T    PASS
+    dirty := false        ->  safe = ¬F ∨ F = T    PASS
+    dirty := true         ->  safe = ¬T ∨ T = T    PASS
 
 The same two lines in PHP (run with `php`, 2026-10-02; both print `bool(true)`):
 

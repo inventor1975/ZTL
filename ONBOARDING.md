@@ -30,12 +30,12 @@ Added 2026-09-24 on the curator's word.
 **And read the preprint's own positioning before saying anything about what ZTL
 is** — `paper/ZTL-draft_1.4.md`, three sections, twenty minutes:
 
-* **§10** — the passport. What Z is (the value of an unverified atom, never of a
+* **§10** — the passport. What Z is (the value of a dirty atom, never of a
   compound), why every connective stays two-valued, the passport on three axes (in 1.4's words:
   conservative extension by data, strict contraction by law, strict expansion
   in expressive reach — the middle axis reads as weakness and is superseded:
   say, as `CLASSIC-VS-ZTL.md` does, equal to classical logic in strength ON
-  VERIFIED DATA, fewer validities only over unverified input — the price of
+  VERIFIED DATA, fewer validities only over dirty input — the price of
   admitting it —, strictly more expressive than any uniform classical default, dominant
   as a solver; corrected 2026-09-28), and
   the local-versus-global reading of the mark. That last one matters more than
@@ -104,7 +104,7 @@ add` is refused there, that is the rule working, not an obstacle.
 ## 1. ZTL — what it is, in the order that matters
 
 **It is a THREE-VALUED logic whose every connective is two-valued.** Values T, F, Z; the verdict
-of every COMPOUND is T or F; Z lives only on an atom, so a claim that is one unverified atom
+of every COMPOUND is T or F; Z lives only on an atom, so a claim that is one dirty atom
 answers Z (OPEN). History of this sentence, because the error went both ways: until 2026-09-27 it
 claimed two values for EVERY verdict (the cloud red team, PR #3); until 2026-09-28 it said "two-valued,
 not three-valued" — the curator found the atom: an assertion whose value is Z. Counting values is
@@ -117,7 +117,7 @@ together, and never say "five-valued":
 | symbol | kind | where it lives |
 |---|---|---|
 | `T`, `F` | values | input and output |
-| `Z` | **the third value: the mark of an unverified input** — Łukasiewicz's indeterminate, "a truth not yet settled" | atoms only; barred from the value of any compound |
+| `Z` | **the third value: the mark of a dirty input** (not ours: its owner may change it between two reads, so each occurrence is read on its own; verification cleans it — replaces it with a checked value) — Łukasiewicz's indeterminate, "a truth not yet settled" | atoms only; barred from the value of any compound |
 | `N` | **solver state** — Kleene's undefined, "a computation not yet run" | only under self-reference; provably finite; never escapes outward |
 | `E` | **the empty case** — no readings at all, no subject at all | a disposition of the judge (both floors — see §1.5), never a value |
 
@@ -145,7 +145,7 @@ all the unusual behaviour comes from:
 Under the strict Kleene lift these would be `Z∨Z = Z` and `¬¬Z = Z` — involution
 intact, and ZTL would sit inside Kleene's family. **The independence of
 occurrences is what puts it outside.** Read it as: the logic refuses to identify
-two occurrences of the same unverified atom. "This unknown" and "that unknown"
+two occurrences of the same dirty atom. "This unknown" and "that unknown"
 are not the same unknown until checked.
 
     python3 ztl.py                 # the six internal tables
@@ -263,7 +263,7 @@ valuation ZTL agrees with classical logic formula for formula
 logic and is cautious *only* where the unknown enters. Say it with the domain
 named (corrected 2026-09-28): ZTL is **equal to classical logic in strength on
 verified data** (the validities are the same set, 584 = 584); over its own
-valuations it has **fewer validities** — the price of admitting unverified input
+valuations it has **fewer validities** — the price of admitting dirty input
 (`ztl_taut_is_classical`, `not_conversely`: `p → p`), nothing lost on verified
 data; it is **strictly more expressive than any uniform classical default** (binary
 clone 2 + 512 against 2 + 16); and it is **dominant as a solver** —
@@ -323,7 +323,7 @@ separately: the revenge sentence lands in a category that already existed, so
 there is no level to climb.
 
 Note for the next E32 version: `zdesc.iota` (published, v1.3) marks zero
-satisfiers, several satisfiers and an unverified denotation alike. That is
+satisfiers, several satisfiers and a dirty denotation alike. That is
 correct **as a value** — all three are non-denoting. The distinction is one of
 disposition, not of value, and belongs in the paper as a note, not an erratum.
 
@@ -333,7 +333,7 @@ under-worked one:**
     Z   no witness  ->  no truth ON CREDIT
     E   no subject  ->  no truth VACUOUSLY
 
-Classical logic grants both: an unverified ground reads as false under a
+Classical logic grants both: a dirty ground reads as false under a
 negation, and a universal over the empty set is true by definition.
 
 **THE OPERATIONAL RULE, and it was learned by walking into it twice.** Any
@@ -357,8 +357,8 @@ mean. SPEC.md, "Reading the text: precedence".
 measured guarantees. Read this before trusting — or changing — any of them.
 
 **`pending` — the receipt, and it provably never misses.** The lazy register
-returns a value plus a label of the unverified atoms still holding the answer
-up. `lean/Receipt.lean` proves, on the empty axiom list, that an unverified
+returns a value plus a label of the dirty atoms still holding the answer
+up. `lean/Receipt.lean` proves, on the empty axiom list, that a dirty
 ground the label OMITS cannot change the answer — first for `evalK`
 (`receipt_complete`), then for `evalF`, the register that actually issues
 verdicts (`receipt_complete_greedy`). Read the other way: **an atom that could
@@ -376,13 +376,13 @@ more as formulas deepen — 16% of pending cells at depth 2 over two atoms, 35% 
 depth ≤6 over four. Soundness, never exactness.
 
 **`absent` and `forgone` — a ground with no subject.** A marking may declare an
-atom `E`: not unverified, *absent*. See §1.5. `forgone` bills the declaration —
+atom `E`: not dirty, *absent*. See §1.5. `forgone` bills the declaration —
 which settlement it removed — because a declaration that comes from outside the
 judge is otherwise a trapdoor.
 
 **`joint` — where step-by-step inquiry is impossible.** Measured 2026-08-19
 (`inventory/width/`): for 91-93% of unsettled claims some single ground moves the
-matter. For the rest none does, and the width reaches the number of unverified
+matter. For the rest none does, and the width reaches the number of dirty
 grounds — 4 of 4, 5 of 5 in the hunt. "The two witnesses agree" is the everyday
 shape: check the first and you know nothing about agreement. `joint` names the
 grounds that must be filled TOGETHER; the exact width is deliberately not

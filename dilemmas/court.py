@@ -36,7 +36,7 @@ MEASURED HERE:
      the case has two ledgers and they disagree by construction;
   2. hold the condition as decided and each side proves its own
      conclusion — 2 of 2 branches, both sides. Hold it as what it is at
-     the moment of the ruling, unverified, and neither side earns
+     the moment of the ruling, dirty, and neither side earns
      anything: 0 of 2, both sides. The contradiction is not made by the
      logic. It is made by spending a fact the judgment has not yet
      issued;
@@ -50,7 +50,7 @@ MEASURED HERE:
      precedent to the moment at which the promisor is compelled to pay"
      (The Common Law, Lecture IX). A clause whose fact is fixed BY the
      outcome of the dispute about that clause cannot be tried in that
-     dispute. Not void — unverified. The sound order is not a verdict
+     dispute. Not void — dirty. The sound order is not a verdict
      but a GROUNDING ORDER: settle the fact first, then judge.
 
 Run:  python3 dilemmas/court.py

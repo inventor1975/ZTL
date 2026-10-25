@@ -319,7 +319,7 @@ def main():
 
     # honest self-check
     assert b1 == "EARNED" and expired == ["badge"] and b2 == "OPEN"
-    assert r1["disposition"] == "OPEN"       # funds unverified
+    assert r1["disposition"] == "OPEN"       # funds dirty
     assert r2["disposition"] == "EARNED"     # funds grounded
     assert r3["disposition"] == "REFUTED"    # funds refuted
     assert again == r3["verdict_hash"]       # deterministic / reproducible

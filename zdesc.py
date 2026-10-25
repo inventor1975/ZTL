@@ -13,9 +13,9 @@ NON-DENOTING term is worth:
 
 ZTL gives a fourth, principled answer that no prior school gives: a
 non-denoting term makes the atomic statement **Z** — on credit, reference
-unverified — and the greedy lift then propagates it. This is the native
+dirty — and the greedy lift then propagates it. This is the native
 home of Z: a description that has not been shown to denote is exactly an
-"unverified until verification".
+"dirty until verification".
 
 THE SPINE — existence is EARNED SELF-IDENTITY (Quine, "no entity without
 identity", made literal on top of E31):

@@ -2,7 +2,7 @@
 """
 Expedition E10: the modal layer of ZTL.
 
-Worlds = classical completions of the unverified atoms. □φ = in all
+Worlds = classical completions of the dirty atoms. □φ = in all
 worlds, ◇φ = in at least one. Measurements:
   1. Atom verdicts = modal thresholds (T⟺□, F⟺□¬, Z⟺contingent) +
      the duality ◇ = ¬□¬ and the S5 collapse (□□=□).

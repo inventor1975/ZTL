@@ -6,8 +6,8 @@
 
 A logic built on one principle: **truth is never granted on credit**.
 A three-valued logic whose every connective is two-valued: the verdict of every compound is T or F,
-and the third value Z (zero-trust, "truth not earned"), the mark of an unverified input, lives only on atoms: it never produces
-T unless T is forced under every classical reading of the unverified.
+and the third value Z (zero-trust, "truth not earned"), the mark of a dirty input (not ours: its owner may change it between two reads, so each occurrence is read on its own; verification cleans it), lives only on atoms: it never produces
+T unless T is forced under every classical reading of the dirty atom.
 Default deny, ported from security into truth tables; the three-symbol
 tables are the working calculator of this policy (ontological passport —
 preprint, §10).
@@ -79,7 +79,7 @@ pro mode — write ZFL by hand).
 documents) and `judge`. Your agent's own AI writes the table; ZTL judges
 it. A compound claim (`signed & delivered`) is always judged T or F; a
 claim that is a single name answers with that name's own value, which is Z
-while it stays unverified or rests on something unverified. In Claude Code:
+while it stays dirty or rests on something dirty. In Claude Code:
 
 ```
 claude mcp add --transport http ztl https://api.vitalyreznik.com/mcp

@@ -32,7 +32,7 @@ OPS = ("and", "or", "imp", "xor", "xnor")
 
 
 def pivotal(phi, m, a, atoms):
-    """LabelExact.pivotal, literally: some reading of the OTHER unverified atoms
+    """LabelExact.pivotal, literally: some reading of the OTHER dirty atoms
     (each may stay Z) under which a := T and a := F give different lazy verdicts."""
     others = [x for x in atoms if x != a and m[x] == Z]
     for vals in itertools.product((T, F, Z), repeat=len(others)):

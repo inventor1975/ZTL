@@ -12,19 +12,19 @@ file renders it.*
 ## The measured path
 
 **1. The wrapper: the refuted law laundered by self-application.** p→p
-falls honestly on the unverified (F at Z — identity must be earned). But
+falls honestly on the dirty (F at Z — identity must be earned). But
 (p→p)→(p→p) is T on T, F and Z: a **hereditary CONSTANT**. Worse than
 credit — the court catches credit, while the wrapper passes every court
 and reads no one: "that's just how they are" asserts nothing about
 anyone. Truth of the frame is not truth about a person.
 
 **2. The transfer: identity does not travel between persons.**
-(a→a)→(b→b) with b unverified — F, until-verification. There is no road
+(a→a)→(b→b) with b dirty — F, until-verification. There is no road
 from my identity to another's: each atom earns only on its own ground
 (solved/job).
 
 **3. The merge: "he is one of THEM" is forbidden by the table itself.**
-b↔p with both unverified — F: the axiom Z↔Z=F. Two unverified atoms are
+b↔p with both dirty — F: the axiom Z↔Z=F. Two dirty atoms are
 not equal even to each other — the glue that presses a million b_i into
 one p is rejected not by morality but by the core. The witnessless merge
 is the forged step that feeds the wrapper.

@@ -18,20 +18,20 @@ one (W4) that bounds how far the cap may be raised:
       cost ~15 s in zfl.run. Not a wrong verdict; a cost.
   W2  `zfl.what_to_check` (the reverse pass, `zbackward.backward` x 3 targets)
       calls the whole judge 3 * sum_{k<=4} C(u,k) 2^k times — 1,419 at u = 6
-      unverified inputs — and each call grows with the claim's length. The
-      grid claim below (10 atoms, 6 unverified, 308 characters): ~8 s; ~2.8 s
+      dirty inputs — and each call grows with the claim's length. The
+      grid claim below (10 atoms, 6 dirty, 308 characters): ~8 s; ~2.8 s
       even with W1 fixed. This is the "~1 s at 10 atoms" on old and new code.
   W3  the epoch floor judges the claim twice per declared `expires_on` event,
       and events are not capped (rows are not): 200 events on rows the claim
       never reads (32 KB) cost ~15 s.
   W4  `zverify._only` is exponential in the marked atoms that occur more than
-      once: 16 unverified atoms, each 13-14 times, a 1753-character balanced
+      once: 16 dirty atoms, each 13-14 times, a 1753-character balanced
       claim — judge ~64 s even with W1 fixed. Above today's cap (10), so not
       reachable publicly; it is what a raised cap would expose.
 
 GREEN controls (what the cap already bounds): the shapes built to defeat
 `zverify._only` — xor/biconditional cycles, grids, atoms 2-4 times — judge in
-well under 0.5 s at 10 atoms, all unverified. And the proposed W1 fix (the
+well under 0.5 s at 10 atoms, all dirty. And the proposed W1 fix (the
 `imp` branch computed from the children already in hand) is checked to be the
 same function as `_lazy`, so adopting it cannot move a lazy value or a label.
 

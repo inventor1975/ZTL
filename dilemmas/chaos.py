@@ -63,7 +63,7 @@ from itertools import product
 def forced(q, known):
     """The stage court of the query: the verdict forced by the known
     bits, or None. (The greedy register never asks — it answers F on the
-    unverified; the honest verification trigger is UNFORCEDNESS.)"""
+    dirty; the honest verification trigger is UNFORCEDNESS.)"""
     unk = sorted(a for a in atoms_of(q) if a not in known)
     vals = set()
     for combo in product((T, F), repeat=len(unk)):

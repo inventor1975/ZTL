@@ -24,7 +24,7 @@ The answer measured below has three parts:
 2. WHERE THE LAYER IS INERT — every ground used ONCE. `Linear.linear_no_loss`
    already proves that at multiplicity one no answer both readings agree on is
    lost. Nothing is added.
-3. WHERE IT CANNOT BE IDENTIFIED WITH THE PROOF CONTEXT — the same unverified
+3. WHERE IT CANNOT BE IDENTIFIED WITH THE PROOF CONTEXT — the same dirty
    ground used TWICE. The verdict changes, and an ordinary hypothesis context
    cannot follow it while keeping contraction, which such contexts admit.
 
@@ -171,7 +171,7 @@ theorem contraction_proof_side (φ ψ : Fm) (b : Nat → Bool) :
 /-- Permutation, on the reliance side: the order of grounds is immaterial. -/
 theorem bundle_commutative : ∀ x y : V, zand x y = zand y x := by decide
 
-/-- **And contraction FAILS on the reliance side.** One unverified ground, used
+/-- **And contraction FAILS on the reliance side.** One dirty ground, used
 twice, is not the same as used once. -/
 theorem contraction_fails_reliance : ∃ x : V, zand x x ≠ x :=
   ⟨Z, by decide⟩
@@ -199,15 +199,15 @@ second; the first is weakening — adding an assumption never costs anything.
 
 The case is not ours: it is the one our own fidelity contract records, and it is
 the sharper of the two because the added ground is a CLASSICAL TAUTOLOGY. Adding
-`q ∨ ¬q` over an unverified `q` to a bundle that was earned outright destroys
+`q ∨ ¬q` over a dirty `q` to a bundle that was earned outright destroys
 the verdict. Classically that conjunct is free. Here it is not free, because it
-introduces an unverified ground, and an unverified ground is what the discipline
+introduces a dirty ground, and a dirty ground is what the discipline
 is about. -/
 
 /-- Excluded middle over one atom: the classically weightless ground. -/
 def excludedMiddle (a : Nat) : Fm := .disj (.atom a) (.neg (.atom a))
 
-/-- Proof checked, one further ground unverified. -/
+/-- Proof checked, one further ground dirty. -/
 def mOneUnchecked : Nat → V := fun n => if n = 0 then T else Z
 
 /-- **Weakening holds for the proof graph.** A ground that is true adds nothing
@@ -221,7 +221,7 @@ theorem weakening_proof_side (φ ψ : Fm) (b : Nat → Bool) (h : cval b ψ = tr
 
 /-- **Weakening FAILS on the reliance side**, and the added ground is a
 classical tautology. `p` alone is earned; `p` together with `q ∨ ¬q` over an
-unverified `q` is refused. -/
+dirty `q` is refused. -/
 theorem weakening_fails_reliance :
     verdict mOneUnchecked [proofValid] = T
       ∧ verdict mOneUnchecked [proofValid, excludedMiddle 1] = F := by decide
@@ -275,7 +275,7 @@ theorem no_new_laws (φ : Fm) (h : ∀ v : Nat → V, evalF v φ = T) :
 
 The reliance side has one further property with a direct reading in the proof
 graph: applying lemmas is function application, and no chain of applications
-launders an unverified reference. The pedigree grows; the mark does not come
+launders a dirty reference. The pedigree grows; the mark does not come
 off. Restated from `ZTaint.no_laundering`, whose subject is exactly a chain of
 verified functions applied to a marked element. -/
 

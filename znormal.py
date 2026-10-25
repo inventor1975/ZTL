@@ -29,7 +29,7 @@ and on fully verified data nothing changes at all (11,624 comparisons, zero
 disagreements), because where nothing carries the mark ZTL is classical logic
 formula for formula.
 
-So this is a lever, not a fix: it buys "never grant what the unverified could
+So this is a lever, not a fix: it buys "never grant what the dirty could
 overturn" and it spends "never lose what every completion upholds". Which of
 those two errors matters more is not a question this file can answer.
 """
@@ -82,7 +82,7 @@ def on_credit(phi, env):
     """Is this `T` resting on the mark?
 
     True when the formula reads `T` as written and no longer does once
-    normalised. Such a verdict was carried by an unverified ground reading as
+    normalised. Such a verdict was carried by a dirty ground reading as
     false under a negation — the shape `zverify.grade` calls
     `until-verification`, here with the cause named and the remedy shown."""
     if ev(phi, env) != T:

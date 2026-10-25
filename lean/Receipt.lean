@@ -4,7 +4,7 @@ import ContextClosure
 /-!
 # The receipt is complete: what it omits could not have mattered. Zero axioms.
 
-`ztljudge._lazy` answers with a value AND a label — which unverified atoms are
+`ztljudge._lazy` answers with a value AND a label — which dirty atoms are
 still holding the answer up. The label is what makes a refusal ACCOUNTABLE: it
 names the cause instead of merely withholding the verdict. Its docstring has
 carried the honest qualifier since it was written — *a sound over-approximation
@@ -30,7 +30,7 @@ verdict for a reason it failed to name.
 THE SECOND THEOREM WAS PREDICTED TO BE FALSE, by me, in writing
 (`lab/greedy/PREDICTIONS.md`, P1), on the ground that the greedy lift is
 non-monotone and connective-local. The census refuted the prediction — zero
-misses in 296,161 cells carrying an unverified atom — and the reason is
+misses in 296,161 cells carrying a dirty atom — and the reason is
 `greedy_agrees_when_decided` plus the shape of the greedy tables. Recorded here
 rather than quietly dropped, because a prediction that was wrong is the only
 kind worth keeping.
@@ -303,7 +303,7 @@ decisive, whose holes the label therefore drops, looked like the obvious place
 for the receipt to leak.
 
 The census refuted the prediction: zero misses in 296,161 cells carrying at
-least one unverified atom. It holds because of a fact worth stating on its own —
+least one dirty atom. It holds because of a fact worth stating on its own —
 
     greedy_agrees_when_decided :  whenever the LAZY register commits,
                                   the GREEDY one agrees with it
@@ -370,7 +370,7 @@ theorem greedy_agrees_when_decided (v : Nat → V) :
 /-! ## The receipt crosses the register -/
 
 /-- The same guarantee for the register that actually issues verdicts: an
-unverified atom the label omits cannot move the greedy verdict either. -/
+dirty atom the label omits cannot move the greedy verdict either. -/
 theorem receipt_complete_greedy (a : Nat) (x : V) (v : Nat → V) (hv : v a = Z) :
     ∀ φ : Fm, labF v φ a = false → evalF (setA a x v) φ = evalF v φ := by
   intro φ

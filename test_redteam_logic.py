@@ -11,7 +11,7 @@ none of the code under test.
 Findings pinned — each check below FAILS on master @ 99f8592 and names what
 disagrees with what:
 
-  L1  CODE. `ztljudge._lazy` reads the CONSTANTS T and F as unverified marks
+  L1  CODE. `ztljudge._lazy` reads the CONSTANTS T and F as dirty marks
       (its leaf case is `m.get(phi, Z)`, and a constant is never in the
       marking). `F` has lazy value Z and "pending ['F']"; `T | p` is EARNED yet
       lazy Z, pending ['T', 'p']. Strong Kleene — the register the docstring
@@ -89,7 +89,7 @@ except Exception as e:                                # noqa: BLE001
 
 # ------------------------------------------------------------------ L2
 # RESOLVED 2026-09-27 on the DOCUMENTS' side (the curator's choice): the principle bars Z
-# from compounds only, and so do the documents now. Pinned both ways: a single unverified
+# from compounds only, and so do the documents now. Pinned both ways: a single dirty
 # atom answers Z; a compound never does; no living document says "verdicts are always".
 r = ztljudge.judge("p", {})
 check(r["verdict"] == "Z" and r["disposition"] == "OPEN",

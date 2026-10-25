@@ -22,7 +22,7 @@ Buckets (by warranty grade, then by direction of the break):
     clean       — HEREDITARY: never revoked. "всё ровно."
     deny        — UNTIL-VERIFICATION with value F: a refusal now that
                   verification would GRANT. Safe pessimism.
-    atom_z      — a bare marked atom, value Z: the unverified datum itself.
+    atom_z      — a bare marked atom, value Z: the dirty datum itself.
 
 Node-count enumeration is streamed layer by layer so the formula list is never
 fully materialised (5 atoms / big node budgets stay in memory bounds). The

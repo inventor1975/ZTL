@@ -19,7 +19,7 @@
        asked for, and it is one theorem rather than a procedure.
 
     3. The infinite system IS satisfiable in the LAZY register: everything
-       unverified is admissible (`yablo_lazy_home`). So Yablo receives the
+       dirty is admissible (`yablo_lazy_home`). So Yablo receives the
        same diagnosis as the liar and Curry — homeless where signatures are
        issued, housed where they are withheld — except that for Yablo this
        could not be seen at any finite stage.
@@ -109,7 +109,7 @@ def LazyAdmissible (v : Nat → V) : Prop :=
   ∀ i, (v i = T ↔ ∀ j, i < j → knot (v j) = T)
      ∧ (v i = F ↔ ∃ j, i < j ∧ knot (v j) = F)
 
-/-- **AND YABLO HAS A HOME.** Everything unverified is admissible: no later
+/-- **AND YABLO HAS A HOME.** Everything dirty is admissible: no later
 denial is earned, none is refused, so nothing forces a verdict. The same
 shape as `liar_kleene_home` and `curry_kleene_home` — reached here for a
 system no finite stage could diagnose. -/

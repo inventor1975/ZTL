@@ -111,7 +111,7 @@ def backward(phi, marking, target, by_disposition=True,
       possible     — семейство минимальных наборов: цель СТАНОВИТСЯ достижима.
       guaranteed   — семейство минимальных наборов: цель НАСТУПАЕТ при любом
                      заполнении набора.
-      grounds      — какие основания вообще непроверены.
+      grounds      — какие основания вообще грязные.
 
     Пустое семейство означает «такого набора НЕТ», и это сказано полем
     `possible_none` / `guaranteed_none`, а не молчанием: молча пустой список
@@ -125,7 +125,7 @@ def backward(phi, marking, target, by_disposition=True,
     «недостижима никакой проверкой» там, где один g0 = F уже опровергал.
     """
     # READ OFF THE TABLES FIRST (2026-10-09, the curator: "is the backward pass not the
-    # forward one read the other way?"). Where every unverified ground occurs once,
+    # forward one read the other way?"). Where every dirty ground occurs once,
     # zbackward_tree builds the same families from the connectives' tables — equal to
     # the enumeration below on 10,500 comparisons (test_backward_tree.py), with no
     # size cut: a conjunction of six grounds, which this function answered "not

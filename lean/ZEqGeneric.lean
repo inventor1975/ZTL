@@ -18,7 +18,7 @@
 
   WHY IT GOES THROUGH AT ALL. Because zero-trust identity is not a relation
   invented on top of a domain — it is the SAME rule at every point: if either
-  side is unverified the verdict is Z, otherwise it is decided by the
+  side is dirty the verdict is Z, otherwise it is decided by the
   underlying equality. Nothing in that rule counts individuals. The five-point
   version was never a special case; it was a witness that the rule is
   consistent.
@@ -40,7 +40,7 @@ open V
 variable {α : Type} [DecidableEq α]
 
 /-- Zero-trust identity over an arbitrary domain: `marked` says which
-references are unverified, and the verdict is Z wherever either side is. The
+references are dirty, and the verdict is Z wherever either side is. The
 rule is pointwise — it never looks at the domain as a whole. -/
 def eqG (marked : α → Bool) (a b : α) : V :=
   match marked a || marked b, a == b with

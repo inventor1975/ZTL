@@ -63,7 +63,7 @@ falsifies the submission.
 
 ## 5. Grounding schema
 
-Each ground enters as an atom with a status `T | F | Z` (Z = unverified,
+Each ground enters as an atom with a status `T | F | Z` (Z = dirty,
 passed to the core as the mark `M`). The full institutional grounding
 record — the metadata ZTL does NOT carry — is out of scope for the
 kernel and belongs to the grounding layer (a downstream consumer):

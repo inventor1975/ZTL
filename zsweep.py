@@ -88,7 +88,7 @@ def no_credit(f, designated):
     """OUR defining principle as a property of the arrow alone: never
     designate a conditional whose truth is not FORCED under every reading
     of the marks. (The first draft of this predicate said 'never
-    designate when the consequent is unverified' and the machine rejected
+    designate when the consequent is dirty' and the machine rejected
     our own arrow with it — F -> Z is designated here because falsity of
     the antecedent forces it, credit does not enter. The correction is
     recorded because the caricature was the author's, not the logic's.)

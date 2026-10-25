@@ -40,9 +40,9 @@ Map your domain data to atoms. Each atom is a decided verdict or the mark:
 ```
 
 Rules that matter:
-- `value` is `"T"` / `"F"` (decided) or `"Z"` (the mark: unverified/unknown).
+- `value` is `"T"` / `"F"` (decided) or `"Z"` (the mark: dirty/unknown).
 - **Fail-closed is on your side too**: map anything you are unsure about to `Z`,
-  or set `admissible: "no"` — the connector will treat it as unverified ground
+  or set `admissible: "no"` — the connector will treat it as dirty ground
   and never wave it through. Do not invent a `T`/`F` you cannot stand behind.
 - `provenance` is for the record only; the judge never reads it. Put your source
   id / method there.
@@ -63,15 +63,15 @@ artifact = judge_warrant(warrant_form, signer)
 
 The artifact carries the `verdict` (`T`/`F`/`Z`), the warranty `grade`
 (`hereditary` / `sound` / `until-verification`), the `disposition`
-(`EARNED` / `REFUTED` / `ON CREDIT` / `OPEN`), the weak-link `unverified` list,
+(`EARNED` / `REFUTED` / `ON CREDIT` / `OPEN`), the weak-link `dirty` list (also returned as `unverified`, the older name, kept for compatibility and to be retired in a later release announced in the CHANGELOG),
 the `input_digest`, the pinned `rule`, and the `signature`.
 
 **Read the disposition, not just the verdict:**
 - `EARNED` — grounded; safe to act on.
 - `REFUTED` — grounded false.
-- `ON CREDIT` — true only while an unverified link holds; it can die. Do **not**
+- `ON CREDIT` — true only while a dirty link holds; it can die. Do **not**
   treat it as settled.
-- `OPEN` — not established; the `unverified` list names exactly what to check
+- `OPEN` — not established; the `dirty` list names exactly what to check
   next.
 
 ## Step 4 — Map the verdict to your product, and prove conformance

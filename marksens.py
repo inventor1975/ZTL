@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-MARK SENSITIVITY: how many compound formulas can tell "unverified" from "false".
+MARK SENSITIVITY: how many compound formulas can tell "dirty" from "false".
 
 CLASSIC-VS-ZTL.md carried the figure "1263 of 2924 (43%)" from 2026-09-18 with
 no definition beside it and no script anywhere in the tree that produced it.
@@ -12,7 +12,7 @@ The pool is the depth<=2 regression pool over p, q and the six connectives,
 built exactly as in paper/core_logic_checks.py: 2926 formulas, of which 2924
 are compound.
 
-Three readings of "distinguishes unverified from false", and they differ:
+Three readings of "distinguishes dirty from false", and they differ:
 
   ONE MARK    the mark sits on one designated atom, the other is verified:
               exists b in {T,F} with  phi(Z,b) != phi(F,b)              -> 1263
@@ -22,11 +22,11 @@ Three readings of "distinguishes unverified from false", and they differ:
               the verdict                                               -> 1840
 
 The ten formulas that only the third reading sees are the ones that need BOTH
-atoms unverified at once -- e.g. ((p->p) v (q->q)), which is F when both atoms
+atoms dirty at once -- e.g. ((p->p) v (q->q)), which is F when both atoms
 carry the mark and T as soon as either is verified. Marking one atom at a time
 cannot reach them, which is exactly why the one-mark count understates.
 
-Under the engineering default (unverified := false) the count is 0 by
+Under the engineering default (dirty := false) the count is 0 by
 construction, and that zero is the point: the substitution merges the two
 inputs, so nothing downstream can ever separate them again.
 """

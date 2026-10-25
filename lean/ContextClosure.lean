@@ -344,11 +344,11 @@ Witness: `¬(a ∧ b)` with `b` withheld.
   * disclosed `a = F` — the conjunction is false whatever `b` is, so the
     kernel's `T` survives every completion. Sound.
   * disclosed `a = T` — the conjunction reads `F` only because `b` is
-    unverified, and the completion `b := T` defeats the claim. Unsound.
+    dirty, and the completion `b := T` defeats the claim. Unsound.
 
 So the syntactic criterion proved above is **maximal in its class**: a sharper
 condition must look at the disclosure too, and ask whether the `F` the kernel
-reasoned from is a real falsehood or merely an unverified ground. -/
+reasoned from is a real falsehood or merely a dirty ground. -/
 
 theorem no_syntactic_characterisation :
     ∃ (φ : Fm) (a : Nat) (v w : Nat → V),

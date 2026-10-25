@@ -2,7 +2,7 @@
 """
 zboundary — judging inside a DECLARED world of admissible readings.
 
-An unverified ground normally stands for every reading of itself: the judge
+A dirty ground normally stands for every reading of itself: the judge
 quantifies over all of them. Sometimes a reader declares that some readings are
 not in view at all — a jurisdiction that declines to consider one, a hypothesis
 that sets one aside, a fiction that never contains it. None of those makes the
@@ -51,7 +51,7 @@ def _marked(env):
 
 
 def admissible(env, boundary):
-    """Completions of the unverified grounds that the declared boundary keeps.
+    """Completions of the dirty grounds that the declared boundary keeps.
 
     `boundary` maps an atom to the values NOT in view, e.g. {"b": ["T"]}."""
     boundary = boundary or {}

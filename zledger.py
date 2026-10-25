@@ -16,7 +16,7 @@ in one place, so this stand puts them there:
               unobserved — but a twelvefold refinement of DISTINCTIONS:
               formulas classical logic cannot tell apart, we can.
   ONLY HERE   the mark is expressible inside the object language:
-              ~(p <-> p) says "this is unverified". A two-valued logic
+              ~(p <-> p) says "this is dirty". A two-valued logic
               has no words for that at all.
 
 And the punchline for the docket: both paradoxes resolved this week run

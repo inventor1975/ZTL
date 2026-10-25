@@ -109,7 +109,7 @@ COLUMNS = [
         # the reader was answering for a status they had never chosen. Found
         # 2026-08-15 by reading the live page rather than the source.
         #
-        # The default is the doctrine's own: unverified. Zero trust means a
+        # The default is the doctrine's own: dirty. Zero trust means a
         # name arrives unearned, the judge already reads an unlisted atom as
         # Z, and a studio whose default was `verified` would be granting
         # truth on credit in its very first row.
@@ -1170,7 +1170,7 @@ def to_marking(rows):
 def to_system(rows):
     """The self-referential part, if there is one. Names a definition leans
     on that are NOT themselves defined enter as inputs carrying their own
-    status — an unverified input imported into the system, exactly as v1
+    status — a dirty input imported into the system, exactly as v1
     did it, but without anyone having to declare a genre to get there."""
     defined = {r["name"]: r for r in rows if r.get("status") == "defined"}
     if not defined:
@@ -1386,13 +1386,13 @@ def unredeemable(comp_kind):
     return out
 
 
-# THE REVERSE PASS, after the verdict: which unverified inputs to check, and
+# THE REVERSE PASS, after the verdict: which dirty inputs to check, and
 # how. `zbackward` (moved from inventory/ on 2026-09-24) gives the minimal
 # sets by GUARANTEE — check them together and the target comes whatever they
 # turn out to be; a work order is written only from these — and by
 # POSSIBILITY — the target becomes reachable if the check goes the right way.
 # THE CAP IS FOR A PUBLIC SERVICE, MEASURED 2026-09-24 on this machine, both
-# targets together: 6 unverified inputs 0.12 s, 7 1.0 s, 8 1.5 s, 9 5.4 s.
+# targets together: 6 dirty inputs 0.12 s, 7 1.0 s, 8 1.5 s, 9 5.4 s.
 # zbackward's own ceiling of 9 is a notebook's; each request here pays its own.
 # 2026-09-27 (PR #4): those were SHORT claims. The count of whole judges is
 # 3 x sum_k C(u,k) 2^k (1,416 at u = 6) and each grows with the claim: u = 6 cost
@@ -1402,7 +1402,7 @@ BACKWARD_CAP = 3
 
 
 def what_to_check(claim, marking, unverified):
-    """Minimal sets of the claim's own unverified inputs: for EARNED, for REFUTED,
+    """Minimal sets of the claim's own dirty inputs: for EARNED, for REFUTED,
     and to SETTLE the matter either way."""
     phi = formalize(claim)
     atoms = _formula_atoms(phi)

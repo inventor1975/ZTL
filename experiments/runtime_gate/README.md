@@ -9,7 +9,7 @@ atom. This directory MEASURES what the theorems cannot: wall-clock time.
 
 `RESULTS-x86-i9-14900F-loaded.txt` (2026-10-05 00:17): Intel i9-14900F, ONE thread, machine under load
 (load average ~33 on 32 cores — other jobs running at nice 19). Random formulas over 64 atoms, ~20% of atoms
-unverified (Z). Every incremental result is checked against a full pass (a mismatch aborts the run); built
+dirty (Z). Every incremental result is checked against a full pass (a mismatch aborts the run); built
 and run once under AddressSanitizer, clean.
 
 | formula size | full check p50 / p99 | incremental re-check p50 / p99 | 10 000 checks, one thread |

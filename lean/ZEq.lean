@@ -3,13 +3,13 @@
 
   Classical FO has a `=` predicate with reflexivity and Leibniz's law.
   ZTL's FO layer never had one. Here identity is an EARNED verdict: a
-  *marked* individual is a reference that is not yet verified (the
+  *marked* individual is a reference that is dirty (not yet verified; the
   individual-level face of Z — a null pointer, an unresolved description,
   1/0), and equality inherits the mark:
 
       eqI a b = T   if a,b grounded and the same object
               = F   if a,b grounded and different
-              = Z   if a or b is a marked (unverified) reference.
+              = Z   if a or b is a marked (dirty) reference.
 
   Measured in full in zeq.py; this file promotes the first-order core to
   theorems on the EMPTY axiom list (imports only ZTL, no mathlib):
@@ -44,7 +44,7 @@ instance (p : Indiv → Prop) [DecidablePred p] : Decidable (∀ x : Indiv, p x)
     ⟨fun ⟨h0, h1, h2, hm1, hm2⟩ x => by cases x <;> assumption,
      fun h => ⟨h g0, h g1, h g2, h m1, h m2⟩⟩
 
-/-- A marked individual is an unverified reference. Cases are EXHAUSTIVE
+/-- A marked individual is a dirty reference. Cases are EXHAUSTIVE
 and NON-overlapping (no wildcard): an overlapping `_` compiles to a matcher
 that drags `propext`, keeping the theorems off the empty axiom list. -/
 def marked : Indiv → Bool
@@ -54,7 +54,7 @@ def marked : Indiv → Bool
   | m1 => true
   | m2 => true
 
-/-- Zero-trust identity: Z whenever a reference is unverified. `a = b` goes
+/-- Zero-trust identity: Z whenever a reference is dirty. `a = b` goes
 through the derived `DecidableEq Indiv`, which is axiom-free. -/
 def eqI (a b : Indiv) : V :=
   if marked a || marked b then Z

@@ -79,7 +79,7 @@ def sign_layer():
 def the_stones():
     """The curator's construction, revised stone by stone. Money is a
     receipt for an EARNED BIT — and an earned NO has the same nominal as
-    an earned YES (the information equivalent); the unverified mints
+    an earned YES (the information equivalent); the dirty mints
     nothing. The sign must carry the level (∧, not the blind ↔). The
     single root leak is issuance without a bit (money built on money);
     default is the grounding day of an unrooted pyramid."""

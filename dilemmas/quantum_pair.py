@@ -17,7 +17,7 @@ projection lattice of C^4 (pure stdlib linear algebra, no numpy).
      its own tables (cover_or_T, ZTL.lean, empty axiom list). Here:
      OPP = join(|ud>, |du>) is TRUE while BOTH disjuncts are Z — a true
      disjunction with no true disjunct, built from parts that are all
-     unverified. On ONE quantum this law fell in its LEM form
+     dirty. On ONE quantum this law fell in its LEM form
      (x ∨ x^⊥ = ⊤, neither side true); on TWO it falls in CORRELATION
      form — and the correlation form IS entanglement written as a
      logical fact: the truth is stored in the pair and not distributed

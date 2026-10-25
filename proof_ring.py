@@ -21,7 +21,7 @@ are ARITHMETIC facts, handed in as grounded inputs. ZTL cannot see a number;
 it does not compute 2+3. It certifies the LOGICAL ring that combines those
 facts — congruence and transitivity of the reductions — and it enforces the
 one rule that makes it a check and not a rubber stamp: no link may be taken
-on credit. Leave a single reduction unverified (Z) and the ring will not
+on credit. Leave a single reduction dirty (Z) and the ring will not
 close. That is ZTL proving the proof, not the arithmetic, and not itself.
 
 Run:  python3 proof_ring.py
@@ -87,7 +87,7 @@ def main():
     print(f"\n    RING {'CLOSED' if closed else 'OPEN'} — "
           f"{'2 + 3 = 5 confirmed inside ZTL' if closed else 'not confirmed'}")
 
-    # --- 2. one reduction left unverified: the ring will not close ----------
+    # --- 2. one reduction left dirty: the ring will not close ----------
     _banner("2. one reduction NOT verified (flatten = Z) — zero trust")
     one_missing = {k: T for k in FACTS if k != "flatten"}   # flatten stays Z
     j2, closed2 = ring(one_missing)

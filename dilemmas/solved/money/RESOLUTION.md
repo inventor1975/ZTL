@@ -31,7 +31,7 @@ promise (F) → a working T.
 
 **Nominal.** An earned YES — hereditary; an earned NO — hereditary:
 **one grade, one bit, one nominal** — polarity does not price (a
-refutation is worth as much as a confirmation). The unverified —
+refutation is worth as much as a confirmation). The dirty —
 until-verification: the note is not issued. Money = receipts for earned
 bits.
 

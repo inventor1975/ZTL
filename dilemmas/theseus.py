@@ -59,7 +59,7 @@ least three, each with its own witness discipline:
       once the relation is named. The line separates; it is not a grave
       that swallows everything.
 
-  F5  "HOW MANY SHIPS?" IS AN INTERVAL. With the A≈B atom unverified the
+  F5  "HOW MANY SHIPS?" IS AN INTERVAL. With the A≈B atom dirty the
       count is [1,2]; verifying materially collapses it to 2, verifying
       structurally to 1. Hobbes's question has no answer BEFORE a sortal
       is named and exactly one answer after — counting waits on the same

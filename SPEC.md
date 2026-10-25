@@ -19,10 +19,10 @@ Z-argument.
 ## Values and marks
 
 Values: `T` (earned), `F` (falsehood), `Z` — zero-trust, "not earned", the
-mark of an unverified atom (a property of an atomic datum; in the design
+mark of a dirty atom — not ours: its owner may change it between two reads, so each occurrence is read on its own; verification cleans it, replaces it with a checked value (a property of an atomic datum; in the design
 dialogues of 2026-07-10 it appeared as "L"). ZTL is three-valued and every
 connective is two-valued: the verdict of every compound is T or F, and Z is
-the value of atoms only (a claim that is one unverified atom answers Z).
+the value of atoms only (a claim that is one dirty atom answers Z).
 Until 2026-09-28 this said "Z is not a truth value" — too strong: the atom
 is an assertion, and its value is Z. The solver's service state `N` ("not yet
 computed", present only under self-reference, never escapes outward) is
@@ -326,7 +326,7 @@ contradiction.
   same mechanics, without negation), the parity theorem (62 cycles,
   total), Yablo (finite truncations grounded — the paradox lives only
   at infinity). Preprint §11.
-* `zsets.py` — sets with unverified elements: eq is an atom,
+* `zsets.py` — sets with dirty elements: eq is an atom,
   membership/inclusion/equality are quantifier folds of the tables;
   {Z,Z}≠{Z}, Z∉{Z}, the identity laws fell (inheritance), cardinality
   is an interval (|{Z}|=[1,1] — cardinality is earned without
@@ -476,7 +476,7 @@ contradiction.
   Curry/both crocodiles/barber/Russell/Yablo/Epimenides/sensor, and
   Berry+sorites honestly refused; run by hand — AI-nondeterministic,
   not in the regression; measured 2026-07-12: 17/17). The pipeline
-  embodies the logic: the LLM's output is an unverified input; the
+  embodies the logic: the LLM's output is a dirty input; the
   core is the customs.
 
 ## The road ahead (not started)

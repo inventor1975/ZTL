@@ -22,7 +22,7 @@ classical models its strongly connected component admits:
     PARADOX          0 models   — permanent; no act ever lifts it
     INTRINSIC        1 model    — ungrounded yet forced (Kripke)
     UNDERDETERMINED  ≥2 models  — lifted by stipulation, freely
-    INPUT                       — a plain unverified input
+    INPUT                       — a plain dirty input
     DOWNSTREAM                  — inherited from a culprit below
 
 **On that axis the names are provably ALL of them**: 0, 1 and ≥2 exhaust

@@ -11,7 +11,7 @@ The point — the thing a plain truth-check and a proof kernel do NOT give:
     * two claims both read 'true', yet one is EARNED and one is ON CREDIT;
     * two claims both read 'not true', yet one is REFUTED and one is merely
       OPEN (not yet established) — one unchecked fact away from either answer.
-Telling these apart, and pointing at the exact unverified link, is the sort.
+Telling these apart, and pointing at the exact dirty link, is the sort.
 
 Run:  python3 claim_ledger.py              (built-in stream)
       python3 claim_ledger.py claims.txt   (a stream from a file)

@@ -4,7 +4,7 @@ Expedition E7: functions over marked sets.
 
 A function is a computation, not a verdict ⇒ by the two-register
 theorem it behaves LAZILY: the mark flows through the function
-(f(unverified) = unverified with a pedigree). This is exactly taint
+(f(dirty) = dirty with a pedigree). This is exactly taint
 tracking from security (Denning 1976): the Z-mark = taint, verdicts =
 sanitizers.
 

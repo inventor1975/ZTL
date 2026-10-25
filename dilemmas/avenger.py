@@ -24,14 +24,14 @@ WHAT IS NOT NAMEABLE, which is half the answer:
 
 WHAT THE RUN SHOWS. Four constructions, and they split:
 
-    A = isZ(A)              "my slot is unverified"     INTRINSIC, model A=F
+    A = isZ(A)              "my slot is dirty"          INTRINSIC, model A=F
     B = ¬isZ(B)             "my slot is verified"       INTRINSIC, model B=T
-    C = isZ(C) ∨ ¬C         "unverified OR false"       PARADOX, period 2
+    C = isZ(C) ∨ ¬C         "dirty OR false"            PARADOX, period 2
     D = ¬isZ(D) ∧ ¬D        "verified AND false"        PARADOX, period 2
 
 **The pure avenger does not bite.** A and B are not paradoxes but forced
 stipulations: exactly one classical model each, the value compelled rather than
-chosen. Saying of a slot that it is unverified does not make it verified, and
+chosen. Saying of a slot that it is dirty does not make it verified, and
 saying it is verified supplies no witness — neither statement inverts, and
 inversion is what makes a liar.
 
@@ -77,9 +77,9 @@ def isZ(name):
 SYSTEM = {
     "liar":   ("not", "liar"),                        # the classical bullet
     "truth":  "truth",                                # the truth-teller
-    "A":      isZ("A"),                               # "my slot is unverified"
+    "A":      isZ("A"),                               # "my slot is dirty"
     "B":      ("not", isZ("B")),                      # "my slot is verified"
-    "C":      ("or", isZ("C"), ("not", "C")),         # "unverified OR false"
+    "C":      ("or", isZ("C"), ("not", "C")),         # "dirty OR false"
     "D":      ("and", ("not", isZ("D")), ("not", "D")),  # "verified AND false"
 }
 

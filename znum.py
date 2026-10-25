@@ -1942,7 +1942,7 @@ def sec2_claims_sheet():
     print("2. THE CLAIMS SHEET (the riding task, in miniature)")
     q = {"line1": qty(1000, 1000, EARNED, "invoice-17"),
          "line2": qty(2000, 2000, EARNED, "invoice-18"),
-         "line3": bare(1800),                          # unverified line
+         "line3": bare(1800),                          # dirty line
          "budget": qty(5000, 5000, EARNED, "order-o4")}
     smeta = judge_claim("le", ("sum", ["line1", "line2", "line3"]), "budget", q)
     print(f"   smeta: sum(lines) <= budget -> {smeta['disposition']}, "

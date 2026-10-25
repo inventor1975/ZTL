@@ -27,7 +27,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from ztl import VALUES  # noqa: E402  ("T", "F", "Z")
 from ztljudge import formalize as _formalize, _atoms as _formula_atoms  # noqa: E402
 
-MARK = "Z"  # the mark / unverified / default-deny ground
+MARK = "Z"  # the mark / dirty / default-deny ground
 
 # --- input bounds: DoS guard on the wire (SPEC §7 is the world; this is the pipe) ---
 # The kernel's warranty grade costs O(3 ** distinct_atoms) — it scans every
@@ -41,7 +41,7 @@ MAX_DISTINCT_ATOMS = 12       # atoms in the CLAIM -> 3**12 ~= 5.3e5, sub-second
 MAX_NAME_LEN = 128            # characters in an atom name
 # ИМЕНА, КОТОРЫЕ НЕЛЬЗЯ ОТДАВАТЬ АТОМАМ. `ev` читает голый токен T/F/Z как
 # ЛОГИЧЕСКУЮ КОНСТАНТУ, а не как имя: атом, названный «T» и оставленный
-# НЕПРОВЕРЕННЫМ, молча читается как истина, а его разметка Z игнорируется —
+# ГРЯЗНЫМ, молча читается как истина, а его разметка Z игнорируется —
 # то есть истина выдаётся в кредит, и артефакт получает валидную подпись.
 # ПРОВЕРЕНО 2026-08-25: ev("T", {"T": Z}) == T. Студийный слой это ловил
 # (zfl.RESERVED), а коннектор — нет, хотя подписывает наружу именно он.
@@ -112,7 +112,7 @@ def to_marking(wf: Any) -> dict:
 
     For each declared atom, the effective value is its `value` ONLY when the
     value is a real T/F verdict AND `admissible == "yes"`; anything else
-    (Z, unknown, missing, malformed, inadmissible) becomes Z — unverified
+    (Z, unknown, missing, malformed, inadmissible) becomes Z — dirty
     ground is never waved through. Atoms named in the claim but absent from the
     list are left to the kernel's own default-deny (also Z).
     """

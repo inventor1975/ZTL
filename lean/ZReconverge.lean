@@ -20,7 +20,7 @@ their bundles, and
 
 THE EDGE THE STAND FOUND, before the kernel did. The meet identity was
 predicted for all bundles and is false for the empty one: `bundle [] = ⊤`
-and `bundle [φ] = φ` bare, so a singleton keeps the Z of an unverified atom,
+and `bundle [φ] = φ` bare, so a singleton keeps the Z of a dirty atom,
 while `zand Z T = F` — the greedy register reads a mark as not-yet-true inside
 any connective. 12 of 135,225 measured cells, all of that shape; eligibility
 unaffected in every cell, because neither Z nor F is T. So the meet identity
@@ -34,7 +34,7 @@ a consequence's verdict being a function of its own bundle; `verdict_append`
 says what the bundle of a fan-in is: the meet.
 
 WHERE THE SHARED ANCESTOR DOES BITE: below eligibility, in the verdict. The
-same unverified ground read once refuses (Z) and read twice denies (F) —
+same dirty ground read once refuses (Z) and read twice denies (F) —
 `same_grounds_two_verdicts` — and neither is eligible, so no recombination of
 eligible branches ever sees it (`reconvergence_moves_the_verdict_not_eligibility`).
 An unresolved ground makes every branch that reads it ineligible before any

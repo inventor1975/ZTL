@@ -16,7 +16,7 @@ atomic predicate whose value is:
 
     Eq(a, b) = T   if a, b are grounded and denote the same object
              = F   if a, b are grounded and denote different objects
-             = Z   if a or b is a marked (unverified) reference.
+             = Z   if a or b is a marked (dirty) reference.
 
 A generic predicate P likewise reads a marked reference as Z: an atomic
 statement about an unresolved reference is on credit, P(marked) = Z.
@@ -40,13 +40,13 @@ WHAT THE ZERO-TRUST LIFT DOES TO THE IDENTITY AXIOMS (all MEASURED):
   3. LEIBNIZ SUBSTITUTIVITY survives as a rule — salva veritate but not
      salva Z. Eq(a,b) ⊨ P(a) ↔ P(b) for every generic predicate P: when
      the equality is EARNED (T), a and b are the same grounded object and
-     P agrees; where a reference is unverified the equality is never T, so
+     P agrees; where a reference is dirty the equality is never T, so
      the substitution is simply never licensed. You cannot launder a mark
      through identity.
 
   4. IDENTITY OF INDISCERNIBLES fails for the mark. Two distinct marked
      references give Z under every generic predicate — indiscernible — yet
-     Eq(m1,m2) = Z, not T. Unverified references are not made equal by the
+     Eq(m1,m2) = Z, not T. Dirty references are not made equal by the
      mere absence of a distinguishing predicate.
 
 So ZTL keeps FO identity as a consequence relation (Leibniz, symmetry,
@@ -79,7 +79,7 @@ def is_marked(x):
 def Eq(a, b):
     """The identity predicate, zero-trust."""
     if is_marked(a) or is_marked(b):
-        return Z                       # reference unverified → on credit
+        return Z                       # reference dirty → on credit
     return T if a == b else F
 
 

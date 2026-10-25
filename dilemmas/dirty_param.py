@@ -15,8 +15,9 @@ all it must put a value in X's place, and putting a value there is
 assuming something System 2 never promised. Whichever value is chosen,
 the choice is the analyst's, not the data's.
 
-THREE READINGS OF "UNVERIFIED", AND THEY ARE NOT THE SAME (measured
-below, and the difference is the point of this stand):
+THREE READINGS OF A PARAMETER WE HAVE NOT CHECKED, AND THEY ARE NOT THE SAME
+(measured below, and the difference is the point of this stand). Only the third
+treats X as what it is — DIRTY: not ours, free to change between two reads:
 
   SUBSTITUTED  X is given a default. One value for the whole formula,
                chosen by us. Every classical law survives — because we
@@ -91,7 +92,7 @@ def holds(law, values):
 
 
 def survives_ztl(law):
-    """ONE foreign parameter: X is unverified, every other atom is System
+    """ONE foreign parameter: X is dirty, every other atom is System
     1's own and verified. This is the scene — and it is a NARROWER question
     than audit.py asks, which is why the two print different numbers. Both
     are true; the denominators differ, and a number without its definition
@@ -109,7 +110,7 @@ def survives_ztl(law):
 
 def survives_ztl_any(law):
     """ANY parameter may be foreign — every atom ranges over T, F and
-    unverified. This is audit.py's question, and its answer is the one
+    dirty. This is audit.py's question, and its answer is the one
     quoted in the paper."""
     names = sorted(atoms_of(law[1]) |
                    (atoms_of(law[2]) if len(law) == 3 else set()))
@@ -139,7 +140,7 @@ def main():
 
     print("\n1. What classical logic can do with an unverified X")
     # Not a measurement dressed up as one: classical valuations range over
-    # {T,F}, so there is no classical value that MEANS "not verified". The
+    # {T,F}, so there is no classical value that MEANS "dirty". The
     # count is 0 by construction, and the mechanism is worth showing rather
     # than asserting: the two careful defaults are both available and they
     # disagree on the very first law.

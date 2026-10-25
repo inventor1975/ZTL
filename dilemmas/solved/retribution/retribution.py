@@ -10,7 +10,7 @@ Atoms:  d = he deserved it   (another's soul — hidden)
 
 The doctrine's three organs, one refuted law each:
   p→p   — "desert is desert": judging ANOTHER's desert (Job's cell);
-  p∨¬p  — "deserved or not": the fork stamped over an unverified soul;
+  p∨¬p  — "deserved or not": the fork stamped over a dirty soul;
   ¬¬p   — "it WILL be repaid": the future comfort minted by double
           negation from ignorance (the E12/E22 witness cell ¬¬a0).
 """

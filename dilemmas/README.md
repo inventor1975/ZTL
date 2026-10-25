@@ -2,7 +2,7 @@
 
 The genre: take a question that tradition settles by **postulate** or a folk
 certainty that grants itself a verdict, find its logical skeleton, mark the
-unverified atom `Z`, and **run it — don't argue it**. Then read the
+dirty atom `Z`, and **run it — don't argue it**. Then read the
 **warranty, not the verdict**:
 
 - `hereditary` — earned; holds under every grounding;

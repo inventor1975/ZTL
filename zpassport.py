@@ -18,7 +18,7 @@ per strongly connected component of the dependency graph:
                    stipulation is FORCED, not chosen.
   UNDERDETERMINED  classical models exist (≥ 2): the refusal stands
                    UNTIL STIPULATION — an external choice grounds it.
-  INPUT            a plain unverified input imported into the system:
+  INPUT            a plain dirty input imported into the system:
                    the refusal stands until verification (E12).
   DOWNSTREAM       inherited quarantine: the component itself is fine,
                    but it reads quarantined sentences below; culprits
@@ -243,7 +243,7 @@ MIXED = {
     "A":  "B", "B": ("not", "A"),             # carousel — paradox, period 4
     "E1": ("not", "E2"), "E2": ("not", "E1"),  # even cycle — 2 models
     "I":  ("xnor", "I", "I"),                 # intrinsic: unique model T
-    "m":  "Z",                                # unverified input
+    "m":  "Z",                                # dirty input
     "g0": "T",                                # grounded
     "g1": ("not", "λ"),                       # downstream of the liar
     "g2": ("or", "E1", ("not", "E1")),        # downstream of a choice

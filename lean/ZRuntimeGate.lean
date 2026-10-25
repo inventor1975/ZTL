@@ -13,7 +13,7 @@ admissibility of a composition at runtime without enumerating all possible world
 
   1. `gate_sound`        — a pass is EARNED (no false pass);
   2. `gateC_steps`       — the gate's cost is exactly the formula's size: one step per node, the same for every
-                           marking — independent of how many atoms are unverified (no 2^k search);
+                           marking — independent of how many atoms are dirty (no 2^k search);
   3. `gate_incomplete`   — the price: ¬(a ∧ ¬a) on no data is EARNED and the gate does not pass it; such cases
                            go to a hold / to a human, never to a false pass;
   4. `kevalF_frozen`     — after one atom changes, every subformula that does not mention it keeps its value;
@@ -106,7 +106,7 @@ theorem kevalC_steps (v : Nat → V) : ∀ φ, (kevalC v φ).2 = size φ := by
 def gateC (v : Nat → V) (φ : Fm) : Bool × Nat := (isT (kevalC v φ).1, (kevalC v φ).2)
 
 /-- 2. **Linear, no enumeration**: the gate's answer is the gate, and its cost is the formula's size — the same
-for every marking, however many atoms are unverified. -/
+for every marking, however many atoms are dirty. -/
 theorem gateC_steps (v : Nat → V) (φ : Fm) : gateC v φ = (gate v φ, size φ) := by
   show (isT (kevalC v φ).1, (kevalC v φ).2) = (isT (kevalF v φ), size φ)
   rw [kevalC_value, kevalC_steps]

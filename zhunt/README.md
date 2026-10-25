@@ -29,7 +29,7 @@ in `summary.json`, never dumped):
 | **dangerous** | until-verification, value T | NOT sound ⇒ it has a classical countermodel ⇒ **classical logic already refutes it**. Not unique to ZTL, so counted only. |
 | clean | hereditary | never revoked. «всё ровно» |
 | deny | until-verification, value F | a refusal now that verification would GRANT. Safe pessimism. |
-| atom_z | value Z | a bare marked atom: the unverified datum itself. «Или Z» |
+| atom_z | value Z | a bare marked atom: the dirty datum itself. «Или Z» |
 
 The point: **only `suspect` is broken *only* in ZTL.** Everything else is either
 fine (clean), a safe refusal (deny), or already broken classically (dangerous).

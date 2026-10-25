@@ -7,14 +7,14 @@ cap raised), where it can finish; past that the answers are checked against the
 judge directly, filling by filling.
 
 Checks:
-  1. 1500 seeded random formulas, each unverified ground once (read-once), up to
+  1. 1500 seeded random formulas, each dirty ground once (read-once), up to
      7 grounds, every target (EARNED, REFUTED, ON CREDIT, OPEN, settled; T, F by
      value): the families equal `zbackward.backward`'s exactly — 0 mismatches;
-  2. BEYOND the old cut (MAX_K = 4): a conjunction of n = 5..12 unverified grounds,
+  2. BEYOND the old cut (MAX_K = 4): a conjunction of n = 5..12 dirty grounds,
      target "settled": the tree gives one set, all n grounds; the judge confirms it
      — every filling of all n settles the claim, and leaving any ONE ground open
      admits a filling that does not (so the set is minimal); n = 200 answers too;
-  3. REPEATED unverified grounds (worlds, second tranche): 800 seeded formulas with
+  3. REPEATED dirty grounds (worlds, second tranche): 800 seeded formulas with
      1..3 repeated leaves, every target — equal to the uncut enumeration, order
      included; beyond the old cut, (p & a1..a6) | (~p & b1..b2): the judge confirms
      the guaranteed set; more than REPEAT_CAP repeated grounds -> None (enumeration);

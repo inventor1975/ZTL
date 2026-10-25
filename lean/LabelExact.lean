@@ -3,7 +3,7 @@ import Linear
 /-!
 # The receipt names nothing irrelevant — on a linear claim. Zero axioms.
 
-`Linear.linear_no_loss` says the judge loses no truth when every unverified
+`Linear.linear_no_loss` says the judge loses no truth when every dirty
 ground is mentioned once. This file adds the other half: on such a claim the
 receipt also names nothing that could not matter.
 
@@ -20,7 +20,7 @@ grants).
 WHY THE STATEMENT CARRIES A COMPLETION. Exactness cannot be said one atom at a
 time. `p ⊕ q` is linear, the label names both atoms correctly, and yet NEITHER
 moves the answer alone — `kxor Z Z = kxor T Z = kxor F Z = Z`. So `pivotal` asks
-the joint question instead: is there a definite reading of the OTHER unverified
+the joint question instead: is there a definite reading of the OTHER dirty
 grounds under which answering this one yes and answering it no give different
 verdicts? That is the human meaning of "the answer is waiting on you", and it is
 what the bench measured.
@@ -527,8 +527,8 @@ theorem drivable (v : Nat → V) :
 
 The receipt names an atom because the answer is waiting on it. The honest test
 of that claim is not "flip it and watch the value move" — with the sibling still
-unverified, almost anything moves. The test is **joint**: fix every other
-unverified atom to a definite reading, and see whether this atom still decides
+dirty, almost anything moves. The test is **joint**: fix every other
+dirty atom to a definite reading, and see whether this atom still decides
 the outcome. That is what the bench measured, and it is what is proved below. -/
 
 def pivotal (v : Nat → V) (φ : Fm) (a : Nat) : Prop :=
@@ -611,18 +611,18 @@ theorem lift_right (v : Nat → V) (op : Fm → Fm → Fm) (f : V → V → V)
 /-! ## The receipt names nothing idle — on a linear claim
 
 Completeness (`receipt_complete`, `Receipt.lean`) says the label is never too
-small. This says that on a claim where no unverified atom is read twice, it is
+small. This says that on a claim where no dirty atom is read twice, it is
 never too large either: **every atom on the receipt decides the answer** under
 some definite reading of the others. 128 372 linear cells were measured first;
 not one was inexact. The 13-18% inexactness of the general case lives entirely
-where an unverified atom occurs more than once — `p ∧ ¬p` names `p` and `p`
+where a dirty atom occurs more than once — `p ∧ ¬p` names `p` and `p`
 cannot move it — which is the same occurrence-independence that costs the
 tautologies. -/
 
 theorem knot_inj : ∀ x y : V, knot x = knot y → x = y := by
   intro x y h; cases x <;> cases y <;> first | rfl | exact absurd h (by decide)
 
-/-- The label of an atom is raised exactly when that atom is the unverified one. -/
+/-- The label of an atom is raised exactly when that atom is the dirty one. -/
 theorem atomL_true (x : V) (n m : Nat) (h : atomL x n m = true) : x = Z ∧ n = m := by
   cases x with
   | T => exact Bool.noConfusion h
@@ -1078,7 +1078,7 @@ theorem label_exact_linear (v : Nat → V) (a : Nat) :
 
 /-! ## The hypothesis is not decoration
 
-`p ∧ ¬p` reads one unverified atom twice. The receipt names `p` — correctly, by
+`p ∧ ¬p` reads one dirty atom twice. The receipt names `p` — correctly, by
 its own rule, since neither branch is settled — but no reading of `p` moves the
 answer: yes gives `F`, no gives `F`. This is the whole of the measured 13-18%
 inexactness, and it is the same occurrence-independence that costs `p → p`. -/

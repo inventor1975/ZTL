@@ -2,7 +2,7 @@
   ZWidthHard.lean — E58: THE WIDTH OF AN INQUIRY IS NP-HARD TO KNOW.
 
   §19 defines the WIDTH of an unsettled claim: the smallest number of
-  unverified grounds whose JOINT verification moves the verdict — width 1 is
+  dirty grounds whose JOINT verification moves the verdict — width 1 is
   ordinary step-by-step inquiry, width ≥ 2 means no single check helps, and
   no width at all (nothing moves it) is the hereditary grade. The judge
   reports `joint` and deliberately does not compute the exact width: "that

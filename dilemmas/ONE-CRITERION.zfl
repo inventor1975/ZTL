@@ -1,11 +1,11 @@
 {
  "zfl_sidecar": 1,
  "file": "ONE-CRITERION.md",
- "sha256": "4c4d79b2639dbcb4496cd7da0dc46df4818256378ba4cbe78d1c6449bd6ec9ef",
+ "sha256": "3257f979a4730d9957761b9680d5b8e621cd2071b18b5a0e09821059f2f86b34",
  "decision": {
   "status": "waived",
-  "why": "v3. Three fresh prose reviews (17, 20, 22 findings). From the 3rd (prior bytes 158444c12ee3) fixed: case 4 observed/EARNED and Q presupposed (#1,#2), OPEN vs frozen (#4), selection rationale (#5), EARNED-in-stand (#9), Harlow-Hayden complexity (#11), Brukner/Bong conjunctions (#16), eraser reading (#17), Krause qc (#18), 'measured' (#19), never-grants vs on-credit (#20), footer (#22). Accepted as standing objections, not resolved: weight of author's own tests (#6,#8), unification wording (#7,#10,#12,#15), encoding asymmetry case 3 vs 4 (#3), fermionic count (#14), figure-eight/ZQuasi detail for outside readers (#13,#21). A maximally skeptical reader does not converge to zero on this genre; stop rule = fix fact and logic, record the rest.",
-  "at": "2026-10-02T15:37:53+00:00",
+  "why": "Final bytes reviewed by me: the curator's dirty-Z terminology rule (DIRTY-RULE.md) applied by an agent, terminology only — Z glossed as 'dirty' (canonical wording where Z is defined), API docs say the list is returned as 'dirty' and, for compatibility, 'unverified'; no claim changed; quotes, dated records and published papers left as they were.",
+  "at": "2026-10-25T18:06:01+00:00",
   "operator": "undeclared"
  }
 }

@@ -13,7 +13,7 @@ This file settles the other half, and the axis is different — MULTIPLICITY.
                       both completions give the same classical x
                       →  the verdict is x
 
-Read as: **the judge can lose a truth only where the same unverified ground is
+Read as: **the judge can lose a truth only where the same dirty ground is
 mentioned twice.** Where a ground appears once, no answer that both readings
 agree on can be lost.
 
@@ -207,7 +207,7 @@ theorem split_succ {k n : Nat} (h : k + 1 + n ≤ 1) : n = 0 ∧ k = 0 := by
 def isClassical (x : V) : Bool :=
   match x with | T => true | F => true | Z => false
 
-/-- **The judge can lose a truth only where the same unverified ground is
+/-- **The judge can lose a truth only where the same dirty ground is
 mentioned twice.** Where a ground occurs at most once, no answer that both of
 its readings agree on can be lost. -/
 theorem linear_no_loss (a : Nat) (v : Nat → V) (hv : v a = Z) :

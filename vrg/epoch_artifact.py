@@ -23,7 +23,7 @@ Agreed with A. (a downstream consumer) 2026-07-18/19; implements the reviewed sp
     UNGROUNDED VERIFICATION EVENT and is REJECTED — the closed-world loan
     ("no proof of revocation, hence not revoked") cannot enter as a tick;
     the core itself refuses the argument from absence. The check is stated
-    on the atom it is ABOUT: with R = `revoked` unverified (R = Z), the
+    on the atom it is ABOUT: with R = `revoked` dirty (R = Z), the
     proposition ¬R ("not revoked") evaluates F/until-verification — never
     T. (`fresh` is NOT that atom: it already MEANS "not revoked", the
     opposite polarity; the earlier draft computed ¬fresh under the ¬revoked
@@ -37,7 +37,7 @@ Agreed with A. (a downstream consumer) 2026-07-18/19; implements the reviewed sp
 
 The mark `M` (IDEAS 12.6, staked): the rejection above IS `M` in the
 wild — "no ground was ever offered", as distinct from `Z` = "offered,
-not verified". Named in the comments only; the JSON is byte-frozen
+still dirty". Named in the comments only; the JSON is byte-frozen
 against an external SHA-256 pin and is not touched to carry a name.
 
 Scenario = the two reviewed formulations:
@@ -116,7 +116,7 @@ class Ledger:
                  # (REJECT_EVENT) is never shadowed by the state's decision
                  "state_after": cell(self.marking)})
             # THIS IS THE MARK `M` (IDEAS 12.6), working here unnamed since
-            # 2026-07-19. `Z` says a ground was offered and not verified;
+            # 2026-07-19. `Z` says a ground was offered and is still dirty;
             # this rejection says a ground was NEVER OFFERED — a different
             # state of the atom, and the boundary's counterpart to the
             # solver's phase `N`. The name is left out of the JSON on
@@ -215,7 +215,7 @@ if __name__ == "__main__":
         print(f"    REJECTED: {e}")
     # The CWA loan is about the atom `revoked` itself (R), NOT about
     # `fresh` (which already MEANS "not revoked" — the opposite polarity).
-    # With R unverified, the core is asked whether "not revoked" holds.
+    # With R dirty, the core is asked whether "not revoked" holds.
     R_UNKNOWN = {"revoked": "M"}
     NOT_R = ("not", "revoked")
     nr, nrg = ztl_eval(NOT_R, R_UNKNOWN), grade(NOT_R, R_UNKNOWN)

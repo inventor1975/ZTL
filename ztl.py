@@ -3,10 +3,12 @@
 ZTL — Zero-Trust Logic.
 
 Values: T (truth), F (falsehood), Z (zero-trust: "truth not earned", the mark of
-an unverified input). ZTL is a three-valued logic whose every connective is
+a dirty input). Z is a dirty parameter: not ours, its owner may change it between
+two reads, so each occurrence is read on its own; verification cleans it —
+replaces it with a checked value. ZTL is a three-valued logic whose every connective is
 two-valued: Z is the value of atoms only — every compound's verdict is T or F
 (passport: paper/ZTL-draft_2.1.0.md §10; up to 2.0.0 this read "two-valued, Z not
-a value", too strong: an unverified atom is an assertion whose value is Z).
+a value", too strong: a dirty atom is an assertion whose value is Z).
 
 Generating principle (one for all connectives):
     op(...Z...) = AND over all classical substitutions {T,F} for Z,

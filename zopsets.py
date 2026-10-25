@@ -17,7 +17,7 @@ MEASURED here:
      mark, not a fate — contrast E6, where stream equality is
      Z-permanent).
   2. Deduplication is earned: {∅,∅} ≈ {∅} with an explicit witness —
-     closing E5's story ({Z,Z} ≠ {Z}: merging unverified members is NOT
+     closing E5's story ({Z,Z} ≠ {Z}: merging dirty members is NOT
      earned; merging WITNESSED-identical members IS).
   3. Alive ZTL rules over ≈-atoms are backed by witness CONSTRUCTORS:
      refl = diagonal, symm = converse, trans = composition,
@@ -41,7 +41,7 @@ MEASURED here:
      refinement), measured here: 0 deaths, totally. Enacted 2026-07-12:
      the two-grade warranty ladder is canon (zverify.py revised,
      preprint §19 → v1.1, unpublished).
-  5. Cardinality of a collection with unverified identity = an interval
+  5. Cardinality of a collection with dirty identity = an interval
      (E5/E8); truthful verification narrows it monotonically, and
      partition consistency (= witness composition) can earn the last
      atom for free.

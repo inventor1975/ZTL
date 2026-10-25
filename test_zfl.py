@@ -251,7 +251,7 @@ def sec8_the_credit_that_cannot_be_redeemed():
     `until-verification` ("go and check") about the very name the passport
     called a PERMANENT refusal ("there is nothing to check, ever"). Three
     invariants here — the mark appears where the ring is dead, it does NOT
-    appear on an ordinary unverified atom, and the verdict itself is
+    appear on an ordinary dirty atom, and the verdict itself is
     untouched (the core computed it correctly; only what the marking could
     not say is added beside it)."""
     print("\n### 8. a credit that cannot be redeemed says so")
@@ -266,7 +266,7 @@ def sec8_the_credit_that_cannot_be_redeemed():
     assert j["verdict"] == "Z", j                     # nor the verdict
     print("   the liar: grade untouched, credit marked UNREDEEMABLE")
 
-    # An ordinary unverified atom is a real credit — it must NOT be marked.
+    # An ordinary dirty atom is a real credit — it must NOT be marked.
     plain = {"claim": "p", "rows": [
         {"name": "p", "means": "the cat lives next door",
          "status": "unverified", "ground": ""}]}
@@ -343,7 +343,7 @@ def sec9_the_world_has_a_clock_too():
 
 def sec10_what_the_ground_holds_and_what_to_check():
     """After the verdict, the report says what each ground holds and how it
-    came out, and — for a claim still resting on unverified inputs — which
+    came out, and — for a claim still resting on dirty inputs — which
     of them to check, by GUARANTEE and by POSSIBILITY (2026-09-24)."""
     print("\n### 10. What the ground holds, and what to check")
     yablo = {"rows": [

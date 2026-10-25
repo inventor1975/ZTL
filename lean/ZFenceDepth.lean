@@ -19,7 +19,7 @@
   WHAT IS PROVED. For every n, the cell with n+1 guards over an all-marked
   atom set is
     * SOUND — every completion agrees with the greedy verdict T;
-    * INVARIANT under every refinement that leaves ANY ONE guard unverified,
+    * INVARIANT under every refinement that leaves ANY ONE guard dirty,
       no matter how many others are verified and to what;
     * DEAD the moment all n+1 guards are verified true, while the gap atom
       is not.
@@ -27,7 +27,7 @@
   NOWHERE ELSE. The full guard set is the unique killer.
 
   WHY THAT IS THE NECESSITY CLAIM. A check of depth d inspects d atoms; with
-  m−1 = d+1 guards it must leave one unverified, and by the second clause it
+  m−1 = d+1 guards it must leave one dirty, and by the second clause it
   then sees nothing. Hence no constant depth certifies the hereditary grade.
   THE COUNTING STEP IS THE ONLY THING NOT IN LEAN HERE: "fewer than n atoms
   cannot cover n distinct guards" is finite arithmetic, and it is stated as
@@ -76,7 +76,7 @@ def guardConj : Nat → Fm
   | 0     => Fm.top
   | n + 1 => Fm.conj (Fm.atom (n + 1)) (guardConj n)
 
-/-- The gap: the law of identity over the unverified atom 0. -/
+/-- The gap: the law of identity over the dirty atom 0. -/
 def gap : Fm := Fm.imp (Fm.atom 0) (Fm.atom 0)
 
 /-- The cell of §19 with `n` guards. -/
@@ -121,7 +121,7 @@ theorem cell_sound (n : Nat) : Sound (cell (n + 1)) allZ := by
 
 /-! ### Nothing short of the FULL guard set can touch it -/
 
-/-- If any guard in range is left unverified, the guard conjunction is still
+/-- If any guard in range is left dirty, the guard conjunction is still
 F — the others may all be verified, and to anything. -/
 theorem guard_F_of_missing (S : Nat → Bool) :
     ∀ (n k : Nat), 1 ≤ k → k ≤ n → S k = false →
@@ -142,7 +142,7 @@ theorem guard_F_of_missing (S : Nat → Bool) :
           rw [this]; exact and_Z_left _
 
 /-- THE SURVIVAL CLAUSE, and it is STRONGER than §19 needed. A refinement
-that leaves one guard unverified reproduces the verdict exactly — whatever
+that leaves one guard dirty reproduces the verdict exactly — whatever
 it did to the other guards AND whatever it did to the gap atom. The linter
 found this: the hypothesis `S 0 = false` was stated and never used, because
 a sunk guard makes the arrow vacuously true no matter what stands to its
@@ -199,7 +199,7 @@ theorem dies_when_all_guards_verified (n : Nat) (S : Nat → Bool)
 /-- **THE FENCE DEPTH IS NECESSARY, FOR EVERY m.** The cell's own atoms are
 m = n+2, all of them marked — n+1 guards and the gap; nothing else occurs in
 it, so `allZ` marking every atom costs nothing. The cell is sound; it is invariant under every
-refinement that leaves any single guard unverified; and it dies exactly when
+refinement that leaves any single guard dirty; and it dies exactly when
 all m−1 guards are verified. What §19 checked at m = 3, 4, 5 holds at every
 m at once — so no constant-depth check certifies the hereditary grade. -/
 theorem fence_depth_necessary (n : Nat) :
@@ -377,7 +377,7 @@ theorem resolved_all_marks_agrees {φ : Fm} {m m' : Marking}
     on, because such a refinement has become an ending and endings agree.
 
     NECESSARY — and never shallower: for every m there is a sound cell that
-    survives every refinement leaving even one guard unverified, and dies the
+    survives every refinement leaving even one guard dirty, and dies the
     moment the full guard set is verified.
 
     The same single step is left to prose in both halves, deliberately: the

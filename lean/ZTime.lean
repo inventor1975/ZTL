@@ -79,7 +79,7 @@ inductive Fm where
   | top  : Fm
   | bot  : Fm
 
-/-- A marking: every atom carries a value, `Z` = "marked, unverified". -/
+/-- A marking: every atom carries a value, `Z` = "marked, dirty". -/
 def Marking := Nat → V
 
 def evalF (m : Marking) : Fm → V

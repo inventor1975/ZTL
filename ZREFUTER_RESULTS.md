@@ -3,9 +3,9 @@
 `zrefuter.py` sorts every hypothesis (formula) by its behaviour over
 `{T,F,Z}` (decidable → guaranteed) into four buckets:
 
-- **VALID** — `T` under **every** assignment, including any unverified (`Z`). Robust.
+- **VALID** — `T` under **every** assignment, including any dirty (`Z`). Robust.
 - **FRAGILE** — `T` under all `{T,F}`, but `F` under some `{T,F,Z}`. A classical
-  tautology that breaks when an input is unverified — the
+  tautology that breaks when an input is dirty — the
   *Strong-Law-of-Small-Numbers* class.
 - **INVALID** — `F` under some `{T,F}`. Not a law.
 - **CONTRADICTION** — `F` everywhere.
@@ -49,7 +49,7 @@ The fragile class dwarfs everything as `n` grows; but VALID stays **exactly 1**.
 **No contingent law is robust under full ignorance — only the constant truth.**
 Over `{T,F,Z}` the single unconditionally-VALID function is `⊤` itself
 (`not(xor(a,a))`); every non-trivial law either fails classically (INVALID) or
-holds classically yet breaks once an input is left unverified (FRAGILE). This
+holds classically yet breaks once an input is left dirty (FRAGILE). This
 is *"truth is never granted on credit"* stated as a theorem about the whole
 spectrum — the machine analogue of the Strong Law of Small Numbers (a claim can
 survive every check you make and die on the one you didn't).

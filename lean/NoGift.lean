@@ -9,7 +9,7 @@ hands out verdicts that were never earned — measured, 2744 of them against 144
 honest verdicts killed — and an unearned T is indistinguishable from an earned
 one, where a refusal at least announces itself.
 
-WHAT IS PROVED. If every unverified atom of a claim stands under no negation,
+WHAT IS PROVED. If every dirty atom of a claim stands under no negation,
 then a greedy T survives every refinement of the marks — every subset of them
 verified to any classical values. The machine cannot grant on that fragment.
 
@@ -119,7 +119,7 @@ def posMarks (v : Nat → V) (φ : Fm) : Prop := ∀ n, v n = Z → negFree n φ
 
 def refines (v w : Nat → V) : Prop := ∀ n, v n ≠ Z → w n = v n
 
-/-- **No gift.** Where every unverified atom stands under no negation, a greedy
+/-- **No gift.** Where every dirty atom stands under no negation, a greedy
 `T` survives every refinement of the marks. -/
 theorem no_gift (v w : Nat → V) (hr : refines v w) :
     ∀ φ : Fm, posMarks v φ → evalF v φ = T → evalF w φ = T := by
@@ -190,13 +190,13 @@ theorem F_is_not_protected :
   ∧ evalF (fun _ => T) (Fm.conj (Fm.atom 0) (Fm.atom 0)) = T :=
   ⟨fun _ _ => rfl, rfl, fun _ h => absurd rfl h, rfl⟩
 
-/-- The valuation of the witness below: atom 0 unverified, everything else
+/-- The valuation of the witness below: atom 0 dirty, everything else
 verified true. -/
 def vGap : Nat → V
   | 0 => Z
   | _ => T
 
-/-- **The fragment is sufficient, not necessary.** `p → q` with `p` unverified
+/-- **The fragment is sufficient, not necessary.** `p → q` with `p` dirty
 and `q` verified true is OUTSIDE the fragment — the mark stands in an antecedent
 — and yet no refinement can move it. Measured, this is the common case, not the
 exception: 66% of hereditary verdicts at depth 2 lie outside the fragment, 97%
@@ -242,7 +242,7 @@ cells, zero revivals. The proof is short because `frozen` already carries the
 weight.
 
 THE HONEST LIMIT, stated where it will be read: this does NOT help a first pass
-over an untouched claim — there every conjunct is a bare unverified ground and
+over an untouched claim — there every conjunct is a bare dirty ground and
 none is mark-free. It pays from the second pass onward, once some checks are in.
 -/
 

@@ -20,7 +20,7 @@ here they are as theorems over the whole formula language:
    so the two theorems above cannot be read as "the logics coincide".
 
 Nothing here uses the third value in a clever way; that is the point.
-The whole content is that Z is a discipline about UNVERIFIED ground and
+The whole content is that Z is a discipline about DIRTY ground and
 takes nothing away from verified ground.
 -/
 

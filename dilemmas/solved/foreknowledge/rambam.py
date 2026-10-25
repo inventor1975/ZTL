@@ -27,7 +27,7 @@ Three instruments, one target:
     policy (answer on ground, withhold on the free) verified to never lie.
 
 MEASURED verdict, in one line: the dilemma's inference frame is free
-(hereditary), but its fuel K∨¬K over an unverified K is credit — the very
+(hereditary), but its fuel K∨¬K over a dirty K is credit — the very
 cell of "who is not with us is against us"; and inside the fork,
 knowledge-with-ground ⟺ a closed future (exact partition, 0 exceptions).
 Maimonides' postulate reads as the refusal to take LEM on credit, seven

@@ -2,7 +2,7 @@
 """
 Expedition E58: THE WIDTH OF AN INQUIRY IS NP-HARD TO KNOW.
 
-§19's width: the smallest number of unverified grounds whose JOINT filling
+§19's width: the smallest number of dirty grounds whose JOINT filling
 moves the greedy verdict; None if nothing moves it (= the hereditary grade).
 The judge reports width 1 (`joint`) and does not compute the exact width.
 `lean/ZWidthHard.lean` proves, on the empty axiom list, that on E57's witness
@@ -24,7 +24,7 @@ from zheredtaut import witness, taut, formulas
 
 
 def width(phi, m, atoms):
-    """Smallest number of unverified grounds whose JOINT filling moves the
+    """Smallest number of dirty grounds whose JOINT filling moves the
     verdict. Returns None if no subset moves it at all.
     (inventory/width/bench.py, verbatim.)"""
     marks = [a for a in atoms if m[a] == Z]

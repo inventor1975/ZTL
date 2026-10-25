@@ -140,7 +140,7 @@ def main():
         after = judge(c["fixed_claim"], dict(c["witness"]))
         line("corrected", after)
         print()
-        # The sentence as written must ride an unverified atom, and the
+        # The sentence as written must ride a dirty atom, and the
         # correction must not. That is the whole test, and it is the test the
         # author could not apply to himself by reading.
         assert c["gap"] in before["unverified"], (

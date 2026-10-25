@@ -73,7 +73,7 @@ inductive Prov where
   | add  : Prov → Prov → Prov
   | mul  : Prov → Prov → Prov
 
-/-- What each source is worth: earned, unverified, or refuted. -/
+/-- What each source is worth: earned, dirty, or refuted. -/
 def Trust := Nat → V
 
 /-! ### The lazy register IS a commutative semiring -/
@@ -165,7 +165,7 @@ theorem natBeq_refl : ∀ n : Nat, Nat.beq n n = true
   | 0     => rfl
   | n + 1 => natBeq_refl n
 
-/-- The trust order: refuted below unverified below earned. -/
+/-- The trust order: refuted below dirty below earned. -/
 def trustLe : V → V → Bool
   | T, T => true  | T, F => false | T, Z => false
   | F, T => true  | F, F => true  | F, Z => true

@@ -12,7 +12,7 @@ Two registers:
   * GREEDY (ZTL): Z evaporates at every operator — the verdict register;
   * LAZY (strong Kleene): Z flows (¬Z=Z etc.) — the grounding register.
 Note on the alphabet (preprint §10): the symbol Z is reused
-POSITIONALLY — on an input it is the mark ("unverified"), inside the
+POSITIONALLY — on an input it is the mark ("dirty"), inside the
 lazy iteration it plays the solver's phase N ("not yet computed"),
 and a phase that never resolves hardens into the quarantine mark.
 ZTL splits the role, not the alphabet; what it forbids is promoting

@@ -5,11 +5,11 @@ zmodid — E33: MODAL IDENTITY — necessity of identity and rigid designation.
 Kripke (1971): identity, once it holds, holds necessarily — a = b ⊨ □(a=b).
 Classically this follows from Leibniz's law plus □(a=a). ZTL now has both
 identity (E31, zeq.py) and a modal layer (§17, zmodal.py: worlds are the
-completions of the unverified). This stand crosses them, and the mark turns
+completions of the dirty). This stand crosses them, and the mark turns
 out to be the single locus where rigidity — and with it the necessity of
 identity — breaks.
 
-THE MODEL. A world is a completion that RESOLVES every unverified
+THE MODEL. A world is a completion that RESOLVES every dirty
 reference: it assigns a grounded referent to each marked name. A grounded
 name denotes itself in every world (a RIGID designator); a marked name's
 referent VARIES across worlds (NON-rigid). Within a world everything
@@ -24,7 +24,7 @@ FINDINGS (measured total):
      source of contingency.
   2. NECESSITY OF IDENTITY holds for earned identities: whenever the
      zero-trust verdict eqI(x,y) = T (so x,y are grounded and the same),
-     □(x=y) = T. Kripke, recovered. Where a reference is unverified the
+     □(x=y) = T. Kripke, recovered. Where a reference is dirty the
      equality is never T, so the law is vacuous there — the mark yields no
      necessary identity because it yields no identity at all.
   3. NECESSITY OF DISTINCTNESS likewise: eqI(x,y)=F ⟹ □(x≠y).
@@ -79,7 +79,7 @@ def dia_eq(x, y):
 
 
 def eqI(x, y):
-    """The zero-trust verdict (E31): Z if a reference is unverified."""
+    """The zero-trust verdict (E31): Z if a reference is dirty."""
     if x in MARKED or y in MARKED:
         return Z
     return T if x == y else F

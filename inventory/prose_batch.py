@@ -18,10 +18,10 @@ INPUT FORMAT — `paper/prose-atoms.txt`, one sentence per line:
   LOCATION   where it lives, e.g. `note §3.6` or `probe_real:172`
   FORMULA    ZTL formula over named atoms: `&  |  ->  ~  ( )`
   WITNESSED  comma-separated atoms a run actually delivered; blank means none.
-             Prefix an atom with `!` to mark it REFUTED rather than unverified.
+             Prefix an atom with `!` to mark it REFUTED rather than dirty.
   SENTENCE   the prose itself, for the report
 
-Everything not listed in WITNESSED is Z — unverified — which is the default a
+Everything not listed in WITNESSED is Z — dirty — which is the default a
 zero-trust reading requires: an atom is unpaid until a run pays it.
 
 Append ` | !` to require the line to come out EARNED. Those are the pins: a

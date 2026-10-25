@@ -1,3 +1,5 @@
+<div class="cover"><img src="../v4/figs/cover_v4.svg" alt="Честная машинка и обманщик"></div>
+
 # Введение
 
 ---

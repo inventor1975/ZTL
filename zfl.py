@@ -123,14 +123,14 @@ COLUMNS = [
         "he": ("מעמד", "מאיפה זה הגיע אלינו"),
         "labels": {
             "en": {"verified": "verified", "refuted": "refuted",
-                   "unverified": "not verified", "defined": "defined"},
+                   "unverified": "dirty", "defined": "defined"},
             "ru": {"verified": "проверено", "refuted": "опровергнуто",
-                   "unverified": "не проверено", "defined": "определено"},
-            "de": {"verified": "geprüft", "refuted": "widerlegt", "unverified": "ungeprüft", "defined": "definiert"},
-            "fr": {"verified": "vérifié", "refuted": "réfuté", "unverified": "non vérifié", "defined": "défini"},
-            "es": {"verified": "verificado", "refuted": "refutado", "unverified": "sin verificar", "defined": "definido"},
-            "uk": {"verified": "перевірено", "refuted": "спростовано", "unverified": "не перевірено", "defined": "визначено"},
-            "he": {"verified": "מאומת", "refuted": "הופרך", "unverified": "לא אומת", "defined": "מוגדר"},
+                   "unverified": "грязное", "defined": "определено"},
+            "de": {"verified": "geprüft", "refuted": "widerlegt", "unverified": "unsauber", "defined": "definiert"},
+            "fr": {"verified": "vérifié", "refuted": "réfuté", "unverified": "souillé", "defined": "défini"},
+            "es": {"verified": "verificado", "refuted": "refutado", "unverified": "sucio", "defined": "definido"},
+            "uk": {"verified": "перевірено", "refuted": "спростовано", "unverified": "брудне", "defined": "визначено"},
+            "he": {"verified": "מאומת", "refuted": "הופרך", "unverified": "מלוכלך", "defined": "מוגדר"},
         },
     },
     {
@@ -198,9 +198,9 @@ COLUMNS = [
                        "~Tr(L) значит, что строка ложна ровно когда L "
                        "истинно", "~Tr(L)")},
             "unverified": {
-                "en": ("nothing needed — an unverified name has no ground",
+                "en": ("nothing needed — a dirty name has no ground",
                        ""),
-                "ru": ("ничего не нужно — у непроверенного имени основания "
+                "ru": ("ничего не нужно — у грязного имени основания "
                        "нет", "")},
         },
     },
@@ -411,6 +411,11 @@ DOC_FIELDS = [
 ]
 
 STATUSES = {c["key"]: c for c in COLUMNS}["status"]["options"]
+# Z IS A DIRTY PARAMETER (2026-10-25, the curator): not ours — its owner may change it between two reads, so each
+# occurrence is read on its own; verification CLEANS it, replacing it with a checked value. The word a sheet writes
+# for it is now "dirty"; "unverified", the older word, is still accepted and is what the code calls it inside, so
+# no stored document changes meaning. A later release may retire the old word — said in the CHANGELOG first.
+STATUS_ALIASES = {"dirty": "unverified"}
 GROUND_KINDS = {c["key"]: c for c in COLUMNS}["ground_kind"]["options"]
 
 
@@ -544,6 +549,8 @@ def coerce(doc):
         for k, v in r.items():
             if k == "sample":
                 row[k] = bool(v)
+            elif k == "status" and isinstance(v, str) and v.strip() in STATUS_ALIASES:
+                row[k] = STATUS_ALIASES[v.strip()]
             elif v is None:
                 row[k] = ""
             elif isinstance(v, bool):
@@ -1604,7 +1611,8 @@ def run(doc, ground_registry=None):
         report["judge"] = {"verdict": r["verdict"],
                            "disposition": r["disposition"],
                            "grade": r["grade"],
-                           "unverified": sorted(r["unverified"]),
+                           "dirty": sorted(r["unverified"]),
+                           "unverified": sorted(r["unverified"]),   # the older name; see STATUS_ALIASES
                            "why": r.get("why")}
         # A DEFINED ROW CANNOT BE VERIFIED (29.09, blind cloud test): "verify
         # ['may_sign']" sent a reader to check a formula, and "verify ['L']"

@@ -54,7 +54,8 @@ def _kernel_verdict(wf: dict) -> dict:
         "grade": r["grade"],
         "disposition": r["disposition"],
         "why": r["why"],
-        "unverified": r["unverified"],
+        "dirty": r["unverified"],
+        "unverified": r["unverified"],   # older name of the same list
     }
 
 

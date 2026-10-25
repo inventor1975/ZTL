@@ -96,7 +96,7 @@ def receipt(report: dict, doc: dict, epoch: str,
     if not judge and rep.get("numeric"):
         n = rep["numeric"]
         judge = {"verdict": n.get("verdict"), "disposition": n.get("disposition"),
-                 "grade": n.get("grade"), "unverified": n.get("unverified") or [],
+                 "grade": n.get("grade"), "dirty": n.get("unverified") or [], "unverified": n.get("unverified") or [],
                  "polarity": n.get("polarity")}
     rows = {r.get("name"): r for r in (doc.get("rows") or [])}
     holding = {}

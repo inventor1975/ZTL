@@ -335,6 +335,10 @@ def _happened(phi, m, budget=None):
     lv, lab = _lazy(phi, k)
     return {"formula": _show(phi), "verdict": v, "grade": g,
             "marking": {a: m[a] for a in sorted(_atoms(phi))},
+            # Z is a DIRTY parameter (2026-10-25): not ours, free to change between two reads; "dirty" is the name
+            # of this list from now on, "unverified" the older one, kept so clients do not break (to be retired in
+            # a later release, announced in the CHANGELOG first).
+            "dirty": unver,
             "unverified": unver,
             # NOT a sub-list of `unverified`, and the separation is the whole
             # point: an unverified atom is an open question, an absent one is

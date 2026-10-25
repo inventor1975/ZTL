@@ -1,4 +1,4 @@
-<div class="cover"><img src="../v4/figs/cover_v4.svg" alt="Честная машинка и обманщик"></div>
+<div class="cover"><img src="../figs/cover.png" alt="Проверили? Введение в ZTL"></div>
 
 # Введение
 

@@ -9,7 +9,7 @@ than the sentence it stood under, and an unnamed run is not evidence. This
 instrument is the missing run. Measured 2026-09-19.
 
 The pool is the depth<=2 regression pool over p, q and the six connectives,
-built exactly as in paper/core_logic_checks.py: 2926 formulas, of which 2924
+built exactly as in publications/ztl/core_logic_checks.py: 2926 formulas, of which 2924
 are compound.
 
 Three readings of "distinguishes dirty from false", and they differ:
@@ -56,7 +56,7 @@ def show(phi):
 
 
 def pool():
-    """The depth<=2 regression pool, verbatim from paper/core_logic_checks.py."""
+    """The depth<=2 regression pool, verbatim from publications/ztl/core_logic_checks.py."""
     d1 = ["p", "q"] + [("not", x) for x in ("p", "q")] + \
          [(o, a, b) for o in ("and", "or", "imp", "xor", "xnor")
           for a in ("p", "q") for b in ("p", "q")]

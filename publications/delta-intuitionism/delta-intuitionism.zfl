@@ -1,0 +1,11 @@
+{
+ "zfl_sidecar": 1,
+ "file": "delta-intuitionism.md",
+ "sha256": "81d94d4b4a8326fda104ea420b89b23646fae16b12a644815a43a31220a05d7d",
+ "decision": {
+  "status": "waived",
+  "why": "Unpublished companion note; terminology only (dirty-Z rule), reviewed by me.",
+  "at": "2026-10-25T18:08:15+00:00",
+  "operator": "undeclared"
+ }
+}

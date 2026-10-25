@@ -13,13 +13,13 @@ and there is Chrome, which is exactly what v1.0 used.
 FIGURES. The docket's markdown carries figure BRIEFS — blockquotes describing
 a picture to be drawn — not images. The images of v1.0 exist only inside the
 published PDF, so they were extracted from it (`pdfimages -j`) into
-`paper/figures/` and are mapped by hand below. A brief with no mapped image
+`publications/paradox-docket/figures/` and are mapped by hand below. A brief with no mapped image
 stays in the output as a visible brief, which is the honest default: better a
 page that says "figure to be drawn here" than one that quietly lost a figure.
 
 Usage:
-    python3 paper/mkpdf.py paper/paradox-docket-EN-build.md \\
-                           paper/paradox-docket-EN-v1.1.pdf
+    python3 publications/paradox-docket/mkpdf.py publications/paradox-docket/paradox-docket-EN-build.md \\
+                           publications/paradox-docket/paradox-docket-EN-v1.1.pdf
 """
 import os
 import re

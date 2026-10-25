@@ -242,7 +242,7 @@ the poster and the abstract and cannot be improved without a library.
 ## Can classical logic replace ZTL? — measured 2026-09-18
 
 Asked by the curator, answered by running rather than arguing. Pool throughout:
-the depth-≤2 pool of `paper/core_logic_checks.py` §5, 2926 formulas over `p, q`.
+the depth-≤2 pool of `publications/ztl/core_logic_checks.py` §5, 2926 formulas over `p, q`.
 
 **On grounded input, classical and ZTL are THE SAME — not close, identical.**
 
@@ -414,7 +414,7 @@ is a LIST of 2926 entries that repeats 20 formulas, four of them tautologies (`p
 `p↔p`, `q↔q`). Counted over the list, classical logic and ZTL both validate 588; as a SET,
 2906 formulas and **584 = 584** — the figure `zledger.py` asserts. The equality never
 depended on the duplicates; "the same set" has 584 elements. The published v2.0.0 text
-(`paper/ZENODO.md`, the 2.0.0 preprint) says "588 … the same set": that record is frozen
-and is corrected here and from 2.1.0 on. `paper/core_logic_checks.py` still counts the list
+(`publications/ztl/ZENODO.md`, the 2.0.0 preprint) says "588 … the same set": that record is frozen
+and is corrected here and from 2.1.0 on. `publications/ztl/core_logic_checks.py` still counts the list
 (588), and says so.
 

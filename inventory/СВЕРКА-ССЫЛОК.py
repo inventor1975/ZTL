@@ -9,7 +9,7 @@
 import os, re, sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 LEAN = os.path.join(os.path.dirname(HERE), "lean")
-PAPER = os.path.join(os.path.dirname(HERE), "paper", "ZTL-draft_1.4.md")
+PAPER = os.path.join(os.path.dirname(HERE), "publications", "ztl", "ZTL-draft_1.4.md")
 
 модули = {f[:-5] for f in os.listdir(LEAN) if f.endswith(".lean")}
 имена = set()

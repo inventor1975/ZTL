@@ -10,9 +10,9 @@ tool/.*_key
 zrefuter_runs/
 
 # LaTeX build artefacts
-paper/*.log
-paper/*.out
-paper/*.aux
+publications/**/*.log
+publications/**/*.out
+publications/**/*.aux
 mindreef_topics.json
 ztljudgenode.db
 
@@ -41,7 +41,7 @@ requirements.lock
 Containerfile
 
 # Разбор книги прибором — по решению куратора 2026-08-25 живёт в ПРИВАТНОМ репозитории
-book/credit-ledger-KNIGA.md
+publications/book/credit-ledger-KNIGA.md
 IDEAS.md
 
 # черновики форка при прогонах атом-стора

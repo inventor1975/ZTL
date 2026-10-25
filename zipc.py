@@ -230,7 +230,7 @@ def run_laws():
     print("  Both witness lists are non-empty and every law sits inside CPC:")
     print("  ZTL and IPC are INCOMPARABLE sublogics of classical logic.")
 
-    # Перепись батареи, поставлена 2026-09-19. paper/delta-intuitionism.md с
+    # Перепись батареи, поставлена 2026-09-19. publications/delta-intuitionism/delta-intuitionism.md с
     # 2026-07-12 печатала «15 of 27 classical laws fall» — это число тех, что
     # ДЕРЖАТ, названное числом павших. Документ не сверялся ничем: paper_claims
     # его не знает, батарея смотрела только на incomparable/14 of 14. Девять

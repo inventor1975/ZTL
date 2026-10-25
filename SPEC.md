@@ -219,7 +219,7 @@ contradiction.
 * `tableau.py` — the calculus: signed tableaux (signs T, F, P={T,Z},
   N={F,Z}); preimage coverage and a check against ⊨ on 2462
   entailments — MEASURED, all coincided. The rules are written out in
-  paper/ZTL-draft_1.4.md §5.
+  publications/ztl/ZTL-draft_1.4.md §5.
 * `quantifiers.py` — quantifiers on finite domains: ∀/∃ with strict
   witnesses; UI alive as a law, EG only as a rule, ¬∃⊨∀¬ fell (the
   quantifier twin of ¬¬-elimination), the drinker fell. Preprint §6.
@@ -428,7 +428,7 @@ contradiction.
   Jankov's axiom — holds here); the 14 premised classical rules
   coincide 14/14 including both casualties; DP lost (measured witness
   + census); ¬¬ verdict-transparent (786-formula pool) vs Glivenko
-  (27/27 proved). paper/delta-intuitionism.md.
+  (27/27 proved). publications/delta-intuitionism/delta-intuitionism.md.
 * `zzhegalkin.py` — E23 Zhegalkin under zero trust: the {∧,⊕}+consts
   basis generates the FULL E19 clone (514 = 514; ¬ verbatim as x⊕⊤;
   ∨/→/↔ reached through double-touch terms), and x⊕x ≡ ⊥ holds as a

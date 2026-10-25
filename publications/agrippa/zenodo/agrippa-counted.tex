@@ -1,0 +1,392 @@
+% Agrippa's trilemma, counted — preprint for Zenodo. Build: lualatex twice
+% (FreeSerif/FreeMono are needed for ¬ ∧ ∨ ⊕ ↔). Russian source: AGRIPPA-RU.md.
+\documentclass[11pt,a4paper]{article}
+\usepackage{fontspec}
+\setmainfont{FreeSerif}[RawFeature={-ccmp;-mark;-mkmk}]
+\setmonofont{FreeMono}
+\usepackage{amsmath,amssymb}
+\usepackage{geometry}
+\geometry{margin=1in}
+\usepackage{enumitem}
+\setlist{nosep,leftmargin=1.4em}
+\usepackage[hidelinks,pdftitle={Agrippa's Trilemma, Counted: Acts, Posits and the Formal Register},pdfauthor={Vitaly Reznik}]{hyperref}
+\usepackage{microtype}
+\setlength{\emergencystretch}{3em}
+
+\newcommand{\T}{\mathsf{T}}
+\newcommand{\F}{\mathsf{F}}
+\newcommand{\Z}{\mathsf{Z}}
+\newcommand{\ZTL}{\textsc{ztl}}
+\newcommand{\code}[1]{\texttt{#1}}
+
+\title{\textbf{Agrippa's Trilemma, Counted:\\ Acts, Posits and the Formal Register}\\[6pt]
+\large A kernel-checked reading of the regress, the circle and the dogma}
+\author{Vitaly Reznik\\[2pt]
+\small Independent researcher \quad ORCID 0009-0002-4103-6387 \quad \texttt{vitalyreznik@gmail.com}}
+\date{\small October 2026 \quad---\quad Lean 4 sources: \url{https://github.com/inventor1975/ZTL}}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+\noindent
+Agrippa's trilemma says that a justification either regresses without end, closes into a circle, or breaks off at a
+dogma. We read it by one number: how many admissible readings a chain of reasons has, under classical (supported)
+semantics. On a finite base the regress cannot occur (on an infinite one it reads twice, like the dogma). An odd loop
+has no reading: it is a paradox. An even loop and the dogma ``$p$ because $p$'' have two
+each: they are one and the same fork. Only a chain that reaches a ground --- a reason that rests on nothing --- reads once. Grounds come in two kinds. The
+value of an \emph{act} is computed from its content and is the same under every base. The value of a \emph{posit}
+(an axiom, a Thing) is set by the base, and a rival base always exists. We read this as the thesis that knowledge rests on acts alone, while about Things Agrippa is right and his horns are
+the signature of the formal register. The formal results are proved in Lean~4 on the empty axiom list (98 theorems in four modules, auxiliary lemmas included); the thesis is our reading of them, and where it goes beyond them we say so. The count itself is old (Kripke's grounded, ungrounded and paradoxical sentences); we report the literature
+found and read, and claim novelty only for applying it to Agrippa, for the act/posit line and for the machine-checked
+proofs.
+\end{abstract}
+
+\section{The problem}
+
+Sextus transmits Agrippa's five modes: disagreement, regress, relativity, hypothesis, circularity (\emph{Outlines of
+Pyrrhonism} I.164--177). Albert reduced three of them to the ``Münchhausen trilemma'' (1968): every justification ends
+in a regress, a circle or a dogmatic break-off, so nothing is justified.
+
+We do not dispute the trilemma's logic; its case analysis is sound. We dispute that its three outcomes are of equal
+standing. The question we ask of each is: how many values are compatible with the chain of reasons?
+
+\section{The model}
+
+A justification system on a base of $n$ statements. Each statement rests either on a \emph{nullary ground} (its value
+is given and nothing further is asked) or on another statement $j$ --- on $j$ itself or on its negation. The base is
+\emph{closed}: the reasons of the first $n$ statements are among them.
+
+A \emph{reading} of a statement $x$ is an assignment of truth values under which every support on $x$'s chain holds.
+Only the supports of that chain count; the rest of the system does not affect the count.
+
+The semantics is classical (supported): ``$p$ because $p$'' admits both true and false. This is a choice, and the
+count depends on it. In logic programming the rule $p \leftarrow p$ has one stable model (the empty one): minimality
+chooses false, and under that semantics the dogma would read once. Clark's completion $p \leftrightarrow p$ has two
+models; for tight programs (no positive loops) the two semantics coincide (Fages 1994). We do not adopt minimality
+because it settles the dogma by a default --- false unless supported --- that the chain itself does not supply; that
+default is the kind of stop we are examining. A reader who accepts minimality as a neutral principle will count
+differently, and not only the dogma: the positive circle $a := b,\ b := a$ then also reads once (the empty model),
+while the circle with two negations still reads twice, so under minimality ``the dogma and the even circle take the
+same place'' no longer holds.
+
+Finiteness matters for the constructive proofs, not for the count: an infinite chain of distinct reasons reads
+twice (\code{regress\_two} below), the same fork as the dogma. Yablo's paradox (1993) needs a statement resting on
+infinitely many others at once, which is outside both models here (a reason is one statement, or a finite
+expression).
+
+\section{The count}
+
+Module \code{lean/Agrippa.lean}.
+\begin{itemize}
+\item \code{no\_regress}: on a closed base of $n$ statements a chain repeats within $n$ steps (pigeonhole). An
+  infinite regress of distinct reasons needs an infinite base.
+\item \code{regress\_two}: on an infinite base the chain ``$n$ because $n + 1$'' has two readings (all true, all
+  false). The regress horn, where it can occur, is the fork.
+\item \code{chain\_value}: along a reading, the value of $x$ is the parity of negations on the path combined with the
+  value reached.
+\item \code{odd\_zero}: a loop with an odd return has no reading. Example: the liar $x := \neg x$ (\code{liar\_zero}).
+\item \code{even\_two}: a loop all of whose returns are even has two readings that disagree on $x$.
+\item \code{forced\_one}: a chain that reaches a ground has one reading.
+\item \code{dogma\_two}, \code{circle\_two}, \code{twoneg\_two}: the dogma $f := f$, the circle $a := b,\ b := a$ and
+  the circle $a := \neg b,\ b := \neg a$ read twice. \emph{The dogma and the even circle take the same place in the
+  count.}
+\item \code{knowledge\_iff\_ground}: $x$ has exactly one reading if and only if its chain reaches a ground.
+\end{itemize}
+The last theorem is proved without excluded middle: the parity of returns is decided by a bounded search over one
+turn of the loop (\code{oddBelow}) and carried to every return (\code{all\_even}).
+
+In sum: on a finite base the regress is impossible; where it occurs it gives 2; the circle gives 0 or 2; the dogma
+gives 2; a chain reaching a ground gives 1. For chains, one count sorts every horn. Classically
+\code{knowledge\_iff\_ground} also holds on an infinite base; finiteness is what makes the proof constructive. Klein's
+infinitism is not refuted: an infinite regress is admitted, and counted as a fork.
+
+\section{Several reasons at once}
+
+A chain is a simplification: a statement rests on one reason. Module \code{lean/AgrippaNet.lean} lets a statement
+rest on an expression over other statements built with ``and'', ``or'', ``not''.
+\begin{itemize}
+\item \code{knows\_of\_good} (sufficiency): if the reasons bottom out, in finitely many steps, in acts alone, a reading
+  exists under every base and every reading under every base gives one value.
+\item \code{knows\_unless\_loop\_or\_posit} (necessity, constructively): on a finite closed base, the absence of loops
+  and posits among the reasons implies knowledge. By contraposition (classically; constructively one gets
+  its double negation), whatever is not knowledge rests on a loop (circle, dogma, liar) or on a posit.
+\item \code{act\_or\_dogma} (counterexample): $x := (\text{the act } 0 = 0) \lor (\text{a dogma})$ has one value under
+  every base, although a dogma is among its reasons. A true act overrides the dogma here; with a false act ($0 = 1$)
+  the dogma decides and $x$ reads twice (\code{false\_act\_or\_dogma\_two}). The right formulation is therefore ``the value is forced by acts'',
+  not ``no dogma among the reasons'' --- and with several reasons the count classifies statements, not horns.
+\item \code{dogma\_net\_two}, \code{liar\_net\_zero}: the controls in the richer language.
+\end{itemize}
+The connectives are given as the medium; they are not derived from the act.
+
+\section{Act and posit}
+
+The count separates a ground from a self-reference, not an act from an axiom: an axiom written as a ground also reads
+once. We draw the line with the two registers of VR-Forms (Reznik 2026b): an \emph{act} is constructed, a \emph{Thing}
+is posited, and every axiom is optional --- a system may reject it and go on reasoning. (The act/Thing names are
+introduced in the revision note of VR-Forms version 1.0.3.)
+
+In Lean a ground is of two kinds. An act is a claim $m = n$ whose value is computed (\code{Nat.beq}). A posit is a value
+set by the base $\beta$.
+\begin{itemize}
+\item \code{act\_absolute}, \code{act\_reads}: if $x$'s chain reaches an act, a reading exists under every base,
+  and all readings under all bases give $x$ one value.
+\item \code{posit\_relative}, \code{posit\_each\_once}: if the chain reaches a posit, each base gives exactly one
+  reading, and two bases give $x$ opposite values.
+\end{itemize}
+
+The act is a bounded computation over given numerals. By Hamkins (2012), different models of set theory have
+different natural numbers and different arithmetic truths. This does not reach our acts: an equality $m = n$ of
+numerals is proved or refuted already in Robinson's arithmetic Q, so it has the same value in every model of
+arithmetic, nonstandard ones included. Statements with unbounded quantifiers over all numbers --- for instance the
+consistency of ZFC --- are not acts in our sense and may themselves belong to the formal register. We do not claim
+that all of arithmetic is settled.
+
+Both theorems nearly follow from the definitions: the posit is a free parameter, the act a computed value. The
+substantive step lies outside them, in classifying a real statement. That the axiom of choice and the continuum
+hypothesis are posits follows from independence (Gödel 1938, Cohen 1963), not from these theorems.
+
+\section{In \ZTL's own terms}
+
+\ZTL\ is a three-valued logic whose connectives are two-valued: the value $\Z$ occurs only on atoms, and a verdict is
+always $\T$ or $\F$. $\Z$ is a \emph{dirty} parameter: it is not ours, another system controls it, and it may change
+between two reads. A connective therefore reads $\Z$ at each occurrence separately --- both readings, independently ---
+and returns $\T$ only if $\T$ is forced; so $p \to p$ with $p = \Z$ is not a law (one occurrence may read true, the
+other false). The word ``unverified'' would mislead here: it suggests one value that is merely unknown, which is the
+supervaluation reading \ZTL\ rejects. Verification is not a property of $\Z$ but a way to clean it: the dirty
+parameter is replaced by a checked value, a new and clean input, rather than its hidden value being disclosed. (The stand \code{dilemmas/dirty\_param.py} separates the substituted, the
+stable and the foreign reading and shows that \ZTL\ reads the third.)
+
+The number of readings shows not in the verdict but in its future. Module \code{lean/AgrippaZ.lean}: an admissible
+future of $x$ is a cleaning of every $\Z$ to $\T$ or $\F$ under which the chain's supports hold. Quantifying over
+cleanings is not supervaluation: today's verdict is still computed occurrence by occurrence; the futures only grade
+it. Both sides are compared in the same state, before anything is cleaned.
+\begin{itemize}
+\item \code{forced\_futures\_agree}: a chain reaching a ground has an admissible future, and every admissible future
+  gives the same verdict. Knowledge earned.
+\item \code{two\_readings\_futures\_split}: with two readings, two admissible futures give opposite verdicts.
+  Knowledge on credit.
+\item \code{paradox\_no\_future}: no reading, no admissible future.
+\end{itemize}
+
+\emph{The descent of a Thing} (module \code{lean/ZDescent.lean}). A formal atom is replaced by its operational meaning
+($\pi$).
+\begin{itemize}
+\item \code{conservative}: if $\pi$ of every formal axiom follows from the operational theory, the formal register adds
+  no operational consequence.
+\end{itemize}
+The consequence relation is semantic (\ZTL\ valuations); no proof calculus is used, and a substitution lemma
+suffices (\code{descend\_eval}). The premise --- every formal axiom is operationally harmless --- is the substantive
+condition, as in Hilbert; Shapiro (1983) shows through Gödel sentences that it fails for real theories that prove new
+consistency statements, so it must be checked Thing by Thing. VR-Forms (Reznik 2026b) proves the same shape
+for a classical system with Peirce's law. Classical logic is the case of \ZTL\ in which every atom is settled, so the
+classical proof does not carry over by itself.
+\begin{itemize}
+\item \code{every\_base\_is\_not\_knowledge}: ``$A$ or not $A$'' is true in the base with $A$ and in the base with
+  $\neg A$, but does not follow in \ZTL. A base fixes $A$; a dirty parameter is not fixed by anything until it is
+cleaned. The operational part of a
+  Thing is what is constructed without it, not what is ``true in every base'' (supervaluation).
+\end{itemize}
+
+\section{Reading Agrippa}
+
+Sextus calls dogma assent to the non-evident, to how things are by nature (I.13). The sceptic does not abolish
+appearances: doubt concerns the account given of an appearance, not the appearance (I.19--20). He lives by nature,
+the passions, laws and customs, and instruction in the arts (I.21--24). Against hypothesis Sextus sets: the opposite
+hypothesis deserves no less credence (I.173--174) --- close to what we call a rival base.
+
+Two sides follow.
+\begin{itemize}
+\item \emph{The trilemma does not reach acts.} An act rests on nothing, reads once, and no base changes it. Sextus
+  aims the modes at assent, not at acting (I.19--24). His ``acting'' is wider than our technical act: laws, customs
+  and the arts are, by our own definition, posits; the sceptic follows them without assent, which is the point.
+\item \emph{About Things Agrippa is right.} A posit has a rival base: Euclidean and Lobachevskian geometry, ZF with
+  choice and with its negation (both proved consistent relative to ZF); a world with centaurs and without (an
+  informal case). The modes of disagreement and relativity
+  describe exactly this. Agrippa's horns are the signature of the formal register.
+\end{itemize}
+
+\emph{Empirical knowledge.} ``It is raining'' is a posit: the world sets its value, and its twin is thinkable. It is
+knowledge on credit. Earned knowledge is only what acts force. Reading an observation as an act of measurement moves
+the credit onto the instrument, whose reliability is itself a premise.
+
+\emph{The thesis, stated.} In this paper ``knowledge'' is a technical term: exactly one reading, the same under
+every base. The philosophical claim is that knowledge in this sense \emph{rests} on acts. Whether the ground itself
+deserves the word is a decision about the word, not a theorem; Wittgenstein places at the bottom an acting that is
+not itself known (\emph{On Certainty}, §§204, 253).
+
+\emph{The paradox} is not a third entity beside the act and the Thing. It has no reading, no model, no future. We
+read it as a failed claim to become a Thing: a posit that has no model to be admitted by.
+
+\section{The critics}
+
+The stand \code{dilemmas/agrippa\_critics.py} runs 17 objections through \ZTL's judge (\code{ztljudge}). For each: the
+logic of the inference (conceded in full if it holds at every value), then the premises under values taken \emph{from
+computation} --- the count of readings on small systems --- not written in by hand. A premise nothing computes stays
+dirty ($\Z$), and the instrument says whether it can ever be cleaned.
+
+The objections and their formulations are ours, and so is the judge; the stand is a disciplined check, not an
+independent verdict. Result (17 rows): 10 objections, as formalized here, fall on a premise whose value the count computes as false in the
+model; 2 stand, both controls built to test the same argument against the dogma and the posit; 5 rows rest on credit
+(Klein and Peirce share one row) --- four of them permanent, which neither side can repay, and one, Kant's,
+redeemable in principle by exhibiting the table of categories as forced, which is not done.
+\begin{itemize}
+\item \emph{Fall (as formalized):} Albert against the act, Popper, Quine, Albert's second move (``who chose the base?'') against the
+  act, Sellars/Davidson within the model, BonJour, Hegel, foundationalism, Descartes, Fichte. Fichte falls
+  instructively: the self-positing ``I = I'' is ``$p$ because $p$'', two readings. The primary act rests on nothing,
+  not on itself. Descartes falls on the circle of the guarantee (clear perception $\leftarrow$ God $\leftarrow$ clear
+  perception; Arnauld's Fourth Objections), not on the cogito.
+\item \emph{Stand (controls):} Albert against the dogma and Albert against a posit. The argument that fails against the act
+  holds against the dogma and against the posit.
+\item \emph{Credit:} Kant (the given table of categories), Sellars (does a real act yield a value), Sextus (is the act
+  a mere appearance), Klein and Peirce (an infinite base), Wittgenstein (the word ``knowledge'').
+\end{itemize}
+
+\section{Prior work and the limits of our search}
+
+The literature check (about thirty English-language searches, October 2026) was carried out by AI-assisted
+sessions (see the disclosure) and then checked by an independent AI review, which caught two errors, corrected
+here. Below, ``read'' means read in full by those sessions; the author has not re-read every source. Not finding a work
+does not mean it does not exist: an author unknown to us may have done the same.
+
+\emph{Known before us, and read:}
+\begin{itemize}
+\item The count as a classifier. Kripke (1975) already separates grounded sentences, the ungrounded but consistent
+  truth-teller and the paradoxical liar --- our 1, 2 and 0; see also Herzberger (1970), Yablo (1982), Leitgeb (2005) on
+  grounding and dependence, and Richardson (1953) on kernels of digraphs. In Gaifman (1992) the truth-teller has two
+  self-supporting valuations and the liar none. Walicki and Dyrkolbotn (2022) use the graph normal form, in which our structure of supports appears: a ground is
+  a sink, models are kernels, the liar has none.
+\item The regress on graphs. Miao (2023) and Berker (2015) describe the trilemma by a root, a cycle and an infinite
+  path, without counting values.
+\item Splitting the third horn into a break-off and an ungrounded break-off: Day and Athos (2026). They have no count,
+  and their reliable stop needs warrant from outside the chain; ours is forced within the model. Their work is
+  independent of ours (self-published; one author is an AI persona).
+\item Independence as a mark of the posited: Hamkins (2012, the multiverse) and Feferman (2011, the indefiniteness of
+  CH). Feferman's criterion is the provability of excluded middle, not a rival model. He holds CH to be indefinite:
+  formally definite in his semi-constructive SCS with full power set, but, as he conjectured and Rathjen (2016)
+  proved, not definite with the power set of $\omega$ only.
+\item The act as ground: Fichte, Hintikka (1962), Wittgenstein. None of them has invariance under the base.
+\item Conservativity as the criterion for admitting the ideal: Hilbert (1926), Field (1980). Shapiro's (1983)
+  objection through Gödel sentences applies to our descent too.
+\item The fork of two equally coherent systems is a known objection to coherentism.
+\end{itemize}
+
+\emph{Seen only in abstract or summary:} Walicki, ``Reference, paradoxes and truth'' (2009, closed access); Kripke
+(1975); Gupta and Belnap (1993); Barnes (1990), a monograph on the Agrippan modes themselves --- a gap we name; Dung
+(1995); Fages (1994); Cook (2004).
+
+\emph{Not found in anything we read:}
+\begin{itemize}
+\item the 0 / 1 / 2 count applied to Agrippa's horns (the count itself is Kripke's);
+\item the constructive equivalence ``exactly one reading iff the chain reaches a ground'' (the kernel literature
+  above gives existence and counts, not this equivalence for chains) and its form with and/or/not;
+\item the distinction ``an act is base-invariant / a posit has a rival base'' as theorems;
+\item ``two readings = on credit'' in a three-valued logic;
+\item the contrast between ``constructed without the Thing'' and ``true in every base''.
+\end{itemize}
+We claim novelty only for this combination and for the machine check. The parts are known mathematics and known
+philosophical moves.
+
+\section{Limitations}
+
+\begin{itemize}
+\item The base is finite in the constructive results; an infinite regress is counted (two readings), but Yablo-style
+  reasons resting on infinitely many statements are outside the models.
+\item The model is two-valued in its readings. The link to three-valued \ZTL\ is given in Section~6 through the
+  verdict's future: admissible futures are cleanings of dirty atoms, not their hidden values.
+\item The act is a decidable equality of numerals --- a thin base for a general epistemology. Its absoluteness is
+  relative to the medium: the logic, the connectives and the numerals the chain is read in. An attack on the medium
+  itself is not closed by a theorem.
+\item The Lean kernel checks that the proofs prove the stated theorems. It does not check that the definitions
+  (reading, act, posit, base) model Agrippa, Sextus or Hamkins faithfully; that is for the reader to judge from the
+  definitions, which are short.
+\item Fogelin (1994) makes ordinary knowledge relative to a level of scrutiny; whether our act survives a stricter
+  standard than the model's is not shown.
+\item Classifying real statements into acts and posits is done outside the model.
+\item Whether the Pyrrhonist has any beliefs at all, everyday ones included, is disputed (Burnyeat 1980, Barnes
+  1982 against Frede 1979). Our reading, that the modes target assent and not acting, rests on I.19--24 and sides with
+  Frede.
+\end{itemize}
+
+\section*{Reproducibility}
+
+All theorems are in \url{https://github.com/inventor1975/ZTL}, directory \code{lean/}, at the tag
+\code{agrippa-preprint-v1.0} (commit f8c4fae): \code{Agrippa} (62 theorems), \code{AgrippaNet} (24),
+\code{AgrippaZ} (8), \code{ZDescent} (4) --- 98 in all, auxiliary lemmas included. History: 55857aa (the count),
+5ab548f (\code{knowledge\_iff\_ground}), 0e6b3f2 (acts and posits, the critics' stand), fbcd9b2 (\code{ZDescent}),
+66fcf06 (\code{AgrippaNet}), bc51055 and f8c4fae (\code{AgrippaZ} and the corrections after review). Each theorem is
+on the empty axiom list; to check: \code{cd lean \&\& lake build}, then \code{python3 inventory/axiom\_audit.py} from
+the repository root, which audits every theorem individually. The critics' stand: \code{python3
+dilemmas/agrippa\_critics.py}; the three readings of a dirty parameter: \code{python3 dilemmas/dirty\_param.py}.
+
+\section*{Acknowledgements and AI disclosure}
+
+The text, the Lean proofs and the stand's code were prepared with the substantial participation of the AI system
+Claude (Anthropic), model Opus~5.5, in a dialogue setting: the system drafted the text, the proofs and the code under the author's direction. Every decision
+on the question, the frame and the wording was made by the author, Vitaly Reznik, who bears the responsibility for
+the content. The literature check was carried out by auxiliary sessions of the same system. In accordance with COPE
+and ICMJE recommendations the AI system is not listed as an author. The correctness of the proofs does not depend on trusting the AI: every theorem is checked by the Lean~4 kernel on
+the empty axiom list. The fidelity of the definitions to the philosophical questions, and the literature check, do
+depend on reading them, and the reader is invited to.
+
+\begin{thebibliography}{99}\small
+\bibitem{arnauld} A.~Arnauld. Fourth Objections. In R.~Descartes, \emph{Meditationes de prima philosophia}, 1641.
+\bibitem{gupta} A.~Gupta, N.~Belnap. \emph{The Revision Theory of Truth}. MIT Press, 1993.
+\bibitem{peirce} C.~S. Peirce. Questions concerning certain faculties claimed for man. \emph{Journal of
+  Speculative Philosophy} 2 (1868) 103--114.
+\bibitem{davidson} D.~Davidson. A coherence theory of truth and knowledge. In E.~LePore (ed.), \emph{Truth and
+  Interpretation}, Blackwell, 1986.
+\bibitem{hilbert} D.~Hilbert. Über das Unendliche. \emph{Mathematische Annalen} 95 (1926) 161--190.
+\bibitem{fages} F.~Fages. Consistency of Clark's completion and existence of stable models. \emph{Journal of Methods of
+  Logic in Computer Science} 1 (1994) 51--60.
+\bibitem{hegel} G.~W.~F. Hegel. \emph{Phänomenologie des Geistes}. 1807.
+\bibitem{albert} H.~Albert. \emph{Traktat über kritische Vernunft}. Mohr, Tübingen, 1968.
+\bibitem{field} H.~Field. \emph{Science Without Numbers}. Princeton University Press, 1980.
+\bibitem{gaifman} H.~Gaifman. Pointers to truth. \emph{Journal of Philosophy} 89 (1992) 223--261.
+\bibitem{herzberger} H.~Herzberger. Paradoxes of grounding in semantics. \emph{Journal of Philosophy} 67 (1970) 145--167.
+\bibitem{leitgeb} H.~Leitgeb. What truth depends on. \emph{Journal of Philosophical Logic} 34 (2005) 155--192.
+\bibitem{kant} I.~Kant. \emph{Kritik der reinen Vernunft}. 1781/1787.
+\bibitem{barnes} J.~Barnes. \emph{The Toils of Scepticism}. Cambridge University Press, 1990.
+\bibitem{barnes82} J.~Barnes. The beliefs of a Pyrrhonist. \emph{Proceedings of the Cambridge Philological Society} 28 (1982) 1--29.
+\bibitem{hamkins} J.~D. Hamkins. The set-theoretic multiverse. \emph{Review of Symbolic Logic} 5 (2012) 416--449.
+\bibitem{fichte} J.~G. Fichte. \emph{Grundlage der gesammten Wissenschaftslehre}. 1794.
+\bibitem{hintikka} J.~Hintikka. Cogito, ergo sum: inference or performance? \emph{Philosophical Review} 71 (1962) 3--32.
+\bibitem{godel} K.~Gödel. The consistency of the axiom of choice and of the generalized continuum hypothesis.
+  \emph{PNAS} 24 (1938) 556--557.
+\bibitem{popper} K.~Popper. \emph{Logik der Forschung}. Springer, 1935.
+\bibitem{bonjour} L.~BonJour. \emph{The Structure of Empirical Knowledge}. Harvard University Press, 1985.
+\bibitem{wittgenstein} L.~Wittgenstein. \emph{On Certainty}. Blackwell, Oxford, 1969.
+\bibitem{burnyeat} M.~Burnyeat. Can the sceptic live his scepticism? In M.~Schofield et al. (eds.), \emph{Doubt and
+  Dogmatism}, Oxford, 1980.
+\bibitem{frede} M.~Frede. Des Skeptikers Meinungen. \emph{Neue Hefte für Philosophie} 15/16 (1979) 102--129.
+\bibitem{rathjen} M.~Rathjen. Indefiniteness in semi-intuitionistic set theories: on a conjecture of Feferman. \emph{Journal of Symbolic Logic} 81 (2016) 742--754.
+\bibitem{richardson} M.~Richardson. Solutions of irreflexive relations. \emph{Annals of Mathematics} 58 (1953) 573--590.
+\bibitem{walicki22} M.~Walicki, S.~Dyrkolbotn. Paraconsistent resolution. \emph{Australasian Journal of Logic} 19(3)
+  (2022) 96--123.
+\bibitem{walicki09} M.~Walicki. Reference, paradoxes and truth. \emph{Synthese} 171 (2009) 195--226.
+\bibitem{cohen} P.~J. Cohen. The independence of the continuum hypothesis, I and II. \emph{PNAS} 50 (1963)
+  1143--1148; 51 (1964) 105--110.
+\bibitem{klein} P.~Klein. Human knowledge and the infinite regress of reasons. \emph{Philosophical Perspectives} 13
+  (1999) 297--325.
+\bibitem{dung} P.~M. Dung. On the acceptability of arguments. \emph{Artificial Intelligence} 77 (1995) 321--357.
+\bibitem{fogelin} R.~Fogelin. \emph{Pyrrhonian Reflections on Knowledge and Justification}. Oxford University Press,
+  1994.
+\bibitem{cook} R.~T. Cook. Patterns of paradox. \emph{Journal of Symbolic Logic} 69 (2004) 767--774.
+\bibitem{berker} S.~Berker. Coherentism via graphs. \emph{Philosophical Issues} 25 (2015) 322--352.
+\bibitem{feferman} S.~Feferman. Is the continuum hypothesis a definite mathematical problem? EFI project draft, 2011.
+\bibitem{kripke} S.~Kripke. Outline of a theory of truth. \emph{Journal of Philosophy} 72 (1975) 690--716.
+\bibitem{shapiro} S.~Shapiro. Conservativeness and incompleteness. \emph{Journal of Philosophy} 80 (1983) 521--531.
+\bibitem{yablo82} S.~Yablo. Grounding, dependence, and paradox. \emph{Journal of Philosophical Logic} 11 (1982) 117--137.
+\bibitem{yablo} S.~Yablo. Paradox without self-reference. \emph{Analysis} 53 (1993) 251--252.
+\bibitem{sextus} Sextus Empiricus. \emph{Outlines of Pyrrhonism}, transl. R.~G. Bury. Loeb Classical Library, 1933.
+\bibitem{miao} T.~Miao. Reducing causality to functions with structural models. arXiv:2307.07524, 2023.
+\bibitem{day} V.~Day, C.~Athos. The amphiboly in the third horn. Zenodo, 2026, doi:10.5281/zenodo.18888781.
+\bibitem{reznikForms} V.~Reznik. VR-Forms: An operational two-register apparatus over VR-Sets, version 1.0.3.
+  Zenodo, 2026, doi:10.5281/zenodo.23647163.
+\bibitem{reznikZTL} V.~Reznik. Zero-Trust Logic, version 2.1.2. Zenodo, 2026, doi:10.5281/zenodo.23019513.
+\bibitem{sellars} W.~Sellars. Empiricism and the philosophy of mind. \emph{Minnesota Studies in the Philosophy of
+  Science} 1 (1956) 253--329.
+\bibitem{quine} W.~V.~O. Quine. Two dogmas of empiricism. \emph{Philosophical Review} 60 (1951) 20--43.
+\end{thebibliography}
+
+\end{document}

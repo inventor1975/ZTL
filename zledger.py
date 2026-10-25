@@ -118,7 +118,7 @@ def sec2_lost_and_gained(pool):
     print("   212 beside 584 is the price of admitting unverified input — fewer")
     print("   formulas hold on every valuation; on verified ground the sets are")
     print("   equal — section 1, and 588 = 588 as a list in")
-    print("   paper/core_logic_checks.py; corrected 2026-09-28)")
+    print("   publications/ztl/core_logic_checks.py; corrected 2026-09-28)")
     print("   and the zero is not an absence of evidence: a ZTL tautology")
     print("   holds under every marking, hence under the Z-free ones, where")
     print("   section 1 shows we are classical. Our validities are a SUBSET")

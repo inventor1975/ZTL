@@ -1,0 +1,11 @@
+{
+ "zfl_sidecar": 1,
+ "file": "warrant-containment-note-v1.2-DRAFT.md",
+ "sha256": "cd11d66d72d4c166067c35a1ffbc88190aebb475796ccce9197e18750bbe5c8b",
+ "decision": {
+  "status": "waived",
+  "why": "No change: an agent's one-word edit was reverted with git checkout; the current bytes equal HEAD (curator: nothing is done to Warrant Containment, a joint work with I.A. Lerer).",
+  "at": "2026-10-25T18:08:15+00:00",
+  "operator": "undeclared"
+ }
+}

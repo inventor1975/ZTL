@@ -25,7 +25,7 @@ sys.path.insert(0, _ROOT)
 
 from zclassify import DOCKET, measure                          # noqa: E402
 
-PAPER = os.path.join(_ROOT, "paper", "paradox-docket-EN-draft.md")
+PAPER = os.path.join(_ROOT, "publications", "paradox-docket", "paradox-docket-EN-draft.md")
 
 
 def paper_rows(path):

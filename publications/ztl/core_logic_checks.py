@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 core_logic_checks — every number the ZTL papers quote about the core matrix and
-its relation to classical logic (paper/ZTL-draft_2.0.0.md §§2-4, 10 and the
+its relation to classical logic (publications/ztl/ZTL-draft_2.0.0.md §§2-4, 10 and the
 core-logic article), regenerated from ztl.py (the code is the arbiter) and from
 the neighbour matrices of pssl/family.py. Nothing here is typed in by hand; a
 claim in a paper that this script does not reproduce is a claim the paper must
@@ -35,7 +35,7 @@ Sections, in the order the paper uses them:
   8. the Suszko discriminator on the 90-compound regression pool
   9. Tomova's criteria: (1) yes (2) yes (3) broken in exactly one cell (Z,Z)
 
-Run:  python3 paper/core_logic_checks.py      (from the repository root; the root
+Run:  python3 publications/ztl/core_logic_checks.py      (from the repository root; the root
       is also found via $ZTL_ROOT or as the parent of this file's directory)
 Exit 0 = every number in the paper is reproduced.
 """
@@ -46,7 +46,8 @@ import sys
 _HERE = os.path.dirname(os.path.abspath(__file__))
 _CANDIDATES = [os.environ.get("ZTL_ROOT", ""),
                os.path.join(_HERE, "..", "..", "ZTL"),
-               os.path.dirname(_HERE), os.getcwd()]
+               os.path.dirname(_HERE), os.path.dirname(os.path.dirname(_HERE)),
+               os.getcwd()]
 _ROOT = next((os.path.abspath(c) for c in _CANDIDATES
               if c and os.path.exists(os.path.join(c, "ztl.py"))), None)
 if _ROOT is None:

@@ -12,7 +12,7 @@ line in the lualatex log, and this script fails on any such line rather
 than shipping a PDF with holes.
 
 Usage:
-    python3 paper/mkpreprint.py paper/ZTL-draft_1.4.md paper/ZTL-preprint-v1.4.pdf [--margin 1in]
+    python3 publications/ztl/mkpreprint.py publications/ztl/ZTL-draft_1.4.md publications/ztl/ZTL-preprint-v1.4.pdf [--margin 1in]
 """
 import os, re, shutil, subprocess, sys, tempfile
 

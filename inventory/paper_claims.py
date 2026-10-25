@@ -33,15 +33,14 @@ import sys
 _HERE = os.path.dirname(os.path.abspath(__file__))
 _ROOT = os.path.dirname(_HERE)
 _LEAN = os.path.join(_ROOT, "lean")
-_PAPER = os.path.join(_ROOT, "paper")
 
 # LIVE documents are checked against reality. FROZEN ones describe a
-# record already published and must NOT be "corrected" — paper/ZENODO.md
+# record already published and must NOT be "corrected" — publications/ztl/ZENODO.md
 # says 40 stands because v1.2 was published with 40, and rewriting it
 # would misdescribe the public record. Distinguishing the two is the
 # whole reason this list is explicit rather than a glob.
 # the live PSSL source; v1_0_0 is the published record and is frozen
-PSSL_TEX = "paper/PSSL_EN_v1_1_0.tex"
+PSSL_TEX = "publications/pssl/PSSL_EN_v1_1_0.tex"
 
 # The live ZTL preprint. Moved from ZTL-draft_1.4.md to 2.0.0 on 2026-09-19,
 # the day 2.0.0 was published (DOI 10.5281/zenodo.22842725) — until then this
@@ -56,10 +55,10 @@ PSSL_TEX = "paper/PSSL_EN_v1_1_0.tex"
 ZTL_DRAFT = None
 
 FROZEN = {
-          "paper/ZTL-draft_1.4.md": "the source of the published v1.4.1 record (DOI 22644261)",
-          "paper/PSSL_EN_v1_0_0.tex": "the published PSSL v1.0.0 (DOI 21452736)",
-          "paper/ZTL-draft_2.1.0.md": "the source of the published v2.1.2 record (DOI 23019513), frozen 29.09",
-          "paper/ZENODO.md": "the Zenodo sheet of the published v2.1.2 record, frozen 29.09"}
+          "publications/ztl/ZTL-draft_1.4.md": "the source of the published v1.4.1 record (DOI 22644261)",
+          "publications/pssl/PSSL_EN_v1_0_0.tex": "the published PSSL v1.0.0 (DOI 21452736)",
+          "publications/ztl/ZTL-draft_2.1.0.md": "the source of the published v2.1.3 record (DOI 23648237; v2.1.2 23019513), frozen 25.10",
+          "publications/ztl/ZENODO.md": "the Zenodo sheet of the published v2.1.2 record, frozen 29.09"}
 
 WORDS = {"twelve": 12, "thirteen": 13, "fourteen": 14, "fifteen": 15,
          "sixteen": 16, "seventeen": 17, "eighteen": 18, "nineteen": 19,
@@ -349,16 +348,16 @@ if __name__ == "__main__":
     for rel, why in FROZEN.items():
         print(f"  [skip] {rel:42s} {why}")
 
-    if "paper/ZENODO.md" in FROZEN:
-        print("\n### Zenodo sheet (paper/ZENODO.md) — FROZEN, the published v2.1.2 record; not checked")
-    print("\n### Zenodo sheet (paper/ZENODO.md) vs the artefact it ships")
+    if "publications/ztl/ZENODO.md" in FROZEN:
+        print("\n### Zenodo sheet (publications/ztl/ZENODO.md) — FROZEN, the published v2.1.2 record; not checked")
+    print("\n### Zenodo sheet (publications/ztl/ZENODO.md) vs the artefact it ships")
     # Only the CURRENT part of the sheet is checked — everything above the
     # "What was new in v1.3" history; the history paragraphs carry their own
     # versions' numbers (371 theorems, 62 stands …) and are the record.
-    zsheet = "" if "paper/ZENODO.md" in FROZEN else text("paper/ZENODO.md")
+    zsheet = "" if "publications/ztl/ZENODO.md" in FROZEN else text("publications/ztl/ZENODO.md")
     cut = zsheet.find("What was new in v1.3")
     zcur = zsheet if cut < 0 else zsheet[:cut]
-    zpdf = re.search(r"\*\*File to upload:\*\* `(paper/[^`]+\.pdf)`", zcur)
+    zpdf = re.search(r"\*\*File to upload:\*\* `((?:paper|publications)/[^`]+\.pdf)`", zcur)
     if zpdf:
         zpages = pdf_pages(zpdf.group(1))
         for claimed in set(re.findall(r"\((\d+) pages\)", zcur)):
@@ -371,9 +370,9 @@ if __name__ == "__main__":
     for claimed in set(re.findall(r"(\d+) (?:test )?stands", zcur)):
         check("ZTL sheet: stands", claimed, str(stand_count()), "ZENODO.md")
 
-    print("\n### Zenodo sheet (paper/PSSL-ZENODO.md) vs the PDF it ships")
-    sheet = text("paper/PSSL-ZENODO.md")
-    pages = pdf_pages("paper/PSSL_EN_v1_1_0.pdf")
+    print("\n### Zenodo sheet (publications/pssl/PSSL-ZENODO.md) vs the PDF it ships")
+    sheet = text("publications/pssl/PSSL-ZENODO.md")
+    pages = pdf_pages("publications/pssl/PSSL_EN_v1_1_0.pdf")
     for claimed in set(re.findall(r"\((\d+) pages", sheet)):
         check("pages of the uploaded PDF", claimed, str(pages), "sheet")
     m = re.search(r"(\d+) \+ (\d+) \+ (\d+) \+ (\d+) = (\d+) objects", sheet)

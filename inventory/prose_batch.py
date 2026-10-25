@@ -11,7 +11,7 @@ His fix: the expensive part is the FORMALISATION and nothing else, so make that
 one terse line and let the core answer the whole batch. Then it is twenty
 minutes for a paper, not twenty minutes for a sentence.
 
-INPUT FORMAT — `paper/prose-atoms.txt`, one sentence per line:
+INPUT FORMAT — `publications/_tools/prose-atoms.txt`, one sentence per line:
 
     LOCATION | FORMULA | WITNESSED | SENTENCE
 
@@ -44,7 +44,7 @@ sys.path.insert(0, _ROOT)
 
 from ztljudge import judge                                     # noqa: E402
 
-DEFAULT = os.path.join(_ROOT, "paper", "prose-atoms.txt")
+DEFAULT = os.path.join(_ROOT, "publications", "_tools", "prose-atoms.txt")
 
 
 def parse(path):

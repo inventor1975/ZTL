@@ -23,11 +23,11 @@ import subprocess
 import sys
 
 _ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-NOTE = os.path.join(_ROOT, "paper", "warrant-containment-note.md")
+NOTE = os.path.join(_ROOT, "publications", "warrant-containment", "warrant-containment-note.md")
 # The second note, written for a different reader and made of the material
 # that survived adversarial review. Same rule: nothing in it may be a figure
 # no program prints.
-LEDGER_NOTE = os.path.join(_ROOT, "paper", "ledger-of-grounds-note.md")
+LEDGER_NOTE = os.path.join(_ROOT, "publications", "ledger-of-grounds", "ledger-of-grounds-note.md")
 LEDGER_CLAIMS = [
     ("zbook.py", "the bracket, with its width",
      "plain-deed             [1, 1]   <- zero width: nothing taken on trust"),

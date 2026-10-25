@@ -76,7 +76,7 @@ STANDS = [
     # пропусками и отсутствие консервативного умолчания — сторожится ЗДЕСЬ,
     # а не в приватной копии рядом со статьёй: прибор, не позванный из батареи,
     # назавтра молча расходится с текстом.
-    ("paper/core_logic_checks.py",
+    ("publications/ztl/core_logic_checks.py",
      ["CORE CHECKS GREEN", "classical 588 validities, ZTL 588",
       "the two sets are EQUAL", "ALL 26 hold on verified data",
       "12 hold on a marked atom", "undecided outcomes: 0",
@@ -211,7 +211,7 @@ STANDS = [
     ("bridge.py",      ["ALL ANSWERS COINCIDE"]),
     ("zquasi.py",      ["SUBDIRECTLY IRREDUCIBLE", "= 2 + 512, ALL externals",
                         "NOT a"]),
-    # Перепись добавлена в маяки 2026-09-19: paper/delta-intuitionism.md девять
+    # Перепись добавлена в маяки 2026-09-19: publications/delta-intuitionism/delta-intuitionism.md девять
     # недель говорила «15 of 27 classical laws fall», хотя 15 — это сколько
     # ДЕРЖИТ, а опровергнуты 12. Документ не сверял никто, и стенд смотрел
     # мимо — на incomparable и 14 of 14. Теперь оба числа под маяком.

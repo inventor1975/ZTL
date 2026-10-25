@@ -45,13 +45,13 @@ if __name__ == "__main__":
 
     print("\n### 4. МЕСТО: открыть и посмотреть, а не поверить")
     check("документ есть и в нём искомое",
-          ga.elevate("book/13-na-chem-vse-stoit.md", "place", "Агриппа")["reason"]
+          ga.elevate("publications/book/13-na-chem-vse-stoit.md", "place", "Агриппа")["reason"]
           == "PLACE_CONFIRMS")
     check("документ есть, искомого НЕТ — отказ",
-          ga.elevate("book/13-na-chem-vse-stoit.md", "place",
+          ga.elevate("publications/book/13-na-chem-vse-stoit.md", "place",
                      "такого текста тут нет")["reason"] == "PLACE_SILENT")
     check("без искомого — допущено, но сказано, что не сверялось",
-          ga.elevate("book/13-na-chem-vse-stoit.md", "place")["reason"]
+          ga.elevate("publications/book/13-na-chem-vse-stoit.md", "place")["reason"]
           == "PLACE_EXISTS")
 
     print("\n### 5. ДВЕРЬ ВНУТРЬ ЗАКРЫТА — модуль ИСПОЛНЯЕТ КОД")

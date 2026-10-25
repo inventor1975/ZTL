@@ -28,7 +28,7 @@ list of what NOT to say outward and the two traps in our own numbers.
 Added 2026-09-24 on the curator's word.
 
 **And read the preprint's own positioning before saying anything about what ZTL
-is** — `paper/ZTL-draft_1.4.md`, three sections, twenty minutes:
+is** — `publications/ztl/ZTL-draft_1.4.md`, three sections, twenty minutes:
 
 * **§10** — the passport. What Z is (the value of a dirty atom, never of a
   compound), why every connective stays two-valued, the passport on three axes (in 1.4's words:
@@ -171,7 +171,7 @@ not a source. The delta is 7 cells in `→, ↔, ⊕`. The mark's *meaning* is
 ZTL's difference is not that it escapes the reduction — nothing does — but that
 it needs none. The machine-measurable discriminator: does the third symbol ever
 appear as the value of a *compound*? On the reproducible depth-2 pool
-(`paper/core_logic_checks.py` §3, 90 compounds): neighbours K3, LP and weak
+(`publications/ztl/core_logic_checks.py` §3, 90 compounds): neighbours K3, LP and weak
 Kleene 90 of 90, Łukasiewicz Ł3 80 of 90; ZTL **0 of 90** (the greediness
 theorem, `evalF_classical`). The earlier figure "602–784 of 784" is withdrawn:
 no program in this tree produces that pool, and a number nothing reproduces
@@ -570,8 +570,8 @@ code, not a text. Do not retire it.
 The applications. As of 2026-08-17 the honest position is that ZTL's
 *applications* are covered by existing tools — ProvSQL closed four of four
 properties an internal note had claimed as its own, and the note was rewritten
-to measurements and their limits. See `paper/PROVSQL-REVIEW-FINDINGS.md` and
-`paper/AVAILABILITY-SURVEY.md` before claiming any application is new.
+to measurements and their limits. See `publications/ledger-of-grounds/PROVSQL-REVIEW-FINDINGS.md` and
+`publications/ledger-of-grounds/AVAILABILITY-SURVEY.md` before claiming any application is new.
 
 What survived every round is the *logic* and the *negative measurements*.
 Deposited: `10.5281/zenodo.21981727`.

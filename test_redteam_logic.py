@@ -25,7 +25,7 @@ disagrees with what:
       call; the check pins the disagreement.
   L3  DOCUMENTS. CLASSIC-VS-ZTL.md ("the same 588 validities of the depth-≤2
       pool, the same set element for element"), the preprint and
-      paper/core_logic_checks.py count 588 on a 2926-entry pool that lists 20
+      publications/ztl/core_logic_checks.py count 588 on a 2926-entry pool that lists 20
       formulas twice; as a SET the pool has 2906 formulas and 584 validities —
       which is what zledger.py and the card's own schedule table (584 / 584)
       say. 588 = 588 still holds; "the set" has 584 elements.

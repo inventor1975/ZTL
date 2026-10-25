@@ -25,7 +25,7 @@ p = [f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" '
      f'<text x="{W/2}" y="{H-150}" fill="{RED}">F</text>',
      f'<text x="{W/2+120}" y="{H-150}" fill="{GREY}">Z</text></g>',
      f'<text x="{W/2}" y="{H-100}" font-size="29" fill="#888" text-anchor="middle">'
-     f'правда · ложь · не проверено</text>',
+     f'правда · ложь · грязное</text>',
      '</svg>']
 (pathlib.Path(__file__).parent / "cover.svg").write_text("".join(p), encoding="utf-8")
 print("cover.svg переписан, ZTL=360")

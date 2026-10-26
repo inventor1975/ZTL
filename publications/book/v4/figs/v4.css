@@ -1,0 +1,8 @@
+/* v4 additions over ../figs/book.css: page numbers and contents */
+@page { @bottom-center { content: counter(page); font-family: Georgia, serif; font-size: 9pt; color: #888; } }
+@page :first { @bottom-center { content: none; } }
+p { text-align: left; hyphens: auto; -webkit-hyphens: auto; }  /* headless Chrome has no ru hyphenation dictionary: justify gave huge gaps */
+.toc { list-style: none; padding: 0; }
+.toc li { display: flex; margin: .35rem 0; }
+.toc li .t { flex: 1; }
+.toc li .n { padding-left: .6rem; }

@@ -1,11 +1,11 @@
 {
  "zfl_sidecar": 1,
  "file": "ZENODO-GETTIER.md",
- "sha256": "c7502f74bb74230d7990c92c2bcd3abf9f07a87870321527e3103f42e2e428a5",
+ "sha256": "c77829b4ce434d569bc4362bc5021ad28dc206cd99fe28b9f645013b8b42b0fa",
  "decision": {
   "status": "waived",
-  "why": "Only the Zenodo-reserved version DOI stamped into the header / sheet (draft opened today; read back from Zenodo), and the Gettier sheet's version string; the rest of the text was reviewed earlier today (Sonnet prose-reviewer, findings acted on).",
-  "at": "2026-10-26T10:42:13+00:00",
+  "why": "Status line only: PREPARED -> PUBLISHED with the API verification of the live record.",
+  "at": "2026-10-26T10:50:06+00:00",
   "operator": "undeclared"
  }
 }

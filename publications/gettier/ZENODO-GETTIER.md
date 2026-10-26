@@ -1,6 +1,6 @@
 # Zenodo sheet — The Gettier Case File
 
-## v1.1 — PREPARED 2026-10-26 (the dirty Z). Draft 23663277, reserved DOI 10.5281/zenodo.23663277. Claude never publishes; the curator does.
+## v1.1 — PUBLISHED 2026-10-26 (the dirty Z): DOI 10.5281/zenodo.23663277. Verified by API 2026-10-26: status published, concept lineage intact (latest = this), one PDF, md5 = local, version/date/license/ORCID/relations as entered. Claude never publishes; the curator does.
 
 - **Flow:** open https://zenodo.org/records/21877469 → **New version** (keeps the concept DOI and the lineage).
 - **File:** replace with `publications/gettier/Gettier-case-file-EN-v1.1.pdf` (10 pages). Build: `pandoc gettier-docket-EN-build.md -o Gettier-case-file-EN-v1.1.pdf --pdf-engine=lualatex -V mainfont=FreeSerif -V monofont=FreeMono -V geometry:margin=1in -V papersize=letter` (run in `publications/gettier/`; same letter page and fonts as v1.0).

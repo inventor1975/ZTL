@@ -1,4 +1,4 @@
-# Zenodo sheet — PSSL **v1.1.1 PREPARED 2026-10-26** — draft 23663278, reserved DOI 10.5281/zenodo.23663278 (v1.1.0 published 2026-07-20)
+# Zenodo sheet — PSSL **v1.1.1 PUBLISHED 2026-10-26** — DOI 10.5281/zenodo.23663278. Verified by API 2026-10-26: status published, concept lineage intact (latest = this), one PDF, md5 = local, version/date/license/ORCID/relations as entered. (v1.1.0 published 2026-07-20)
 
 **Published history**
 - **v1.1.0** — 2026-07-20, version DOI

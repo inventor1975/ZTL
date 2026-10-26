@@ -1,6 +1,6 @@
 # Zenodo sheet — The Paradox Docket
 
-## v1.2 — PREPARED 2026-10-26 (the dirty Z). Claude never publishes; the curator does.
+## v1.2 — PREPARED 2026-10-26 (the dirty Z). Draft 23663274, reserved DOI 10.5281/zenodo.23663274. Claude never publishes; the curator does.
 
 - **Flow:** open https://zenodo.org/records/21916017 → **New version** (keeps concept DOI 21864081).
 - **File:** replace with `publications/paradox-docket/paradox-docket-EN-v1.2.pdf` (14 pages; rebuilt by `python3 publications/paradox-docket/mkpdf.py`).

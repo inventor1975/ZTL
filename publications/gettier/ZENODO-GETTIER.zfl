@@ -1,11 +1,11 @@
 {
  "zfl_sidecar": 1,
  "file": "ZENODO-GETTIER.md",
- "sha256": "c6121e1093f4f74c5aa8bffd1cfabcbcc49b2cbb0b69b30b9974d89cc28e0af1",
+ "sha256": "c7502f74bb74230d7990c92c2bcd3abf9f07a87870321527e3103f42e2e428a5",
  "decision": {
   "status": "waived",
-  "why": "Zenodo upload sheet: upload flow, file, version and a 'what changed' paragraph restating the reviewed version note; the curator pastes and publishes. Dirty-Z terminology per the curator's DIRTY-RULE: Z re-glossed as a dirty parameter (canonical v2.1.3 wording), version header/notes, AI disclosure. Changed passages reviewed by a Sonnet prose-reviewer on an excerpt (file >25k chars); acted on: ambiguous negation rationale, a non-sequitur 'therefore', 'never spent as truth' narrowed to 'a dirty atom is never itself counted as true'; the rest concern pre-existing text or the curator's canonical wording. No verdict, table, proposition or number changed (docket_claims and paper_claims green).",
-  "at": "2026-10-26T10:33:40+00:00",
+  "why": "Only the Zenodo-reserved version DOI stamped into the header / sheet (draft opened today; read back from Zenodo), and the Gettier sheet's version string; the rest of the text was reviewed earlier today (Sonnet prose-reviewer, findings acted on).",
+  "at": "2026-10-26T10:42:13+00:00",
   "operator": "undeclared"
  }
 }

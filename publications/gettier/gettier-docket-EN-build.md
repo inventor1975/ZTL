@@ -1,6 +1,6 @@
 # The Gettier Case File: Knowledge as an Earned Verdict
 
-**v1.1 — 2026-10-26. English edition.** Supersedes v1.0 (2026-08-10, DOI [10.5281/zenodo.21877469](https://doi.org/10.5281/zenodo.21877469)). *Changes in v1.1:* Z is named for what it is — a **dirty** parameter, following ZTL v2.1.3 (DOI 10.5281/zenodo.23648237). §2.1 is rewritten: v1.0 called Z an "unverified" tag, one of three statuses of the data, which suggested the wrong reading — one hidden value merely not yet known. The glossary and the phrases that name a Z-marked link follow. No verdict, carrier or measurement changes.
+**v1.1 — 2026-10-26. English edition.** Version DOI [10.5281/zenodo.23663277](https://doi.org/10.5281/zenodo.23663277). Supersedes v1.0 (2026-08-10, DOI [10.5281/zenodo.21877469](https://doi.org/10.5281/zenodo.21877469)). *Changes in v1.1:* Z is named for what it is — a **dirty** parameter, following ZTL v2.1.3 (DOI 10.5281/zenodo.23648237). §2.1 is rewritten: v1.0 called Z an "unverified" tag, one of three statuses of the data, which suggested the wrong reading — one hidden value merely not yet known. The glossary and the phrases that name a Z-marked link follow. No verdict, carrier or measurement changes.
 
 *Vitaly Reznik. AI participation disclosed — see Acknowledgements.*
 

@@ -1,4 +1,4 @@
-# Zenodo sheet — PSSL **v1.1.1 PREPARED 2026-10-26** (v1.1.0 published 2026-07-20)
+# Zenodo sheet — PSSL **v1.1.1 PREPARED 2026-10-26** — draft 23663278, reserved DOI 10.5281/zenodo.23663278 (v1.1.0 published 2026-07-20)
 
 **Published history**
 - **v1.1.0** — 2026-07-20, version DOI

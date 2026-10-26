@@ -1,6 +1,6 @@
 # The Paradox Docket: A Computable Classification of the Classical Paradoxes
 
-**v1.2 — 2026-10-26. English edition.** Supersedes v1.1 (2026-08-13, DOI
+**v1.2 — 2026-10-26. English edition.** Version DOI 10.5281/zenodo.23663274. Supersedes v1.1 (2026-08-13, DOI
 10.5281/zenodo.21916017) and v1.0 (2026-08-09, DOI 10.5281/zenodo.21864082); the
 concept DOI 10.5281/zenodo.21864081 always resolves to the current version.
 *Changes in v1.2:* Z is named for what it is — a **dirty** parameter, following

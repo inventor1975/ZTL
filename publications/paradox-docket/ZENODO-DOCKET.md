@@ -1,4 +1,21 @@
-# Zenodo sheet — The Paradox Docket (v1.1 PUBLISHED 2026-08-13)
+# Zenodo sheet — The Paradox Docket
+
+## v1.2 — PREPARED 2026-10-26 (the dirty Z). Claude never publishes; the curator does.
+
+- **Flow:** open https://zenodo.org/records/21916017 → **New version** (keeps concept DOI 21864081).
+- **File:** replace with `publications/paradox-docket/paradox-docket-EN-v1.2.pdf` (14 pages; rebuilt by `python3 publications/paradox-docket/mkpdf.py`).
+- **Version:** `1.2`. **Publication date:** 2026-10-26. Title, authors, license, keywords — unchanged.
+- **Description:** keep the v1.1 text below and put this paragraph first:
+
+> **New in v1.2.** Z is named for what it is — a **dirty** parameter, following ZTL v2.1.3 (DOI 10.5281/zenodo.23648237): not ours, its owner may change it between two reads, so each occurrence is read on its own, and verification cleans it. v1.1 called Z an "unverified" tag, one of three statuses of the data — wording that suggested one hidden value merely not yet known. §2.1, the glossary and the phrases naming a Z-marked link are corrected. No verdict, passport, table or measurement changes; the docket table re-checks green (`inventory/docket_claims.py`).
+
+- **Related identifiers (add):** `isNewVersionOf` 10.5281/zenodo.21916017 (v1.1); keep the v1.1 relations.
+- **AI disclosure:** v1.2 corrections with Claude Opus 5.5 (Anthropic), Variant A, curator Vitaly Reznik — already in the PDF.
+
+---
+
+## v1.1 — record of what was entered (published 2026-08-13)
+
 
 **v1.1 PUBLISHED 2026-08-13: version DOI 10.5281/zenodo.21916017**
 (https://zenodo.org/records/21916017). Prior: v1.0 10.5281/zenodo.21864082

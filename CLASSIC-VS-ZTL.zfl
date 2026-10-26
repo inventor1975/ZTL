@@ -1,11 +1,11 @@
 {
  "zfl_sidecar": 1,
  "file": "CLASSIC-VS-ZTL.md",
- "sha256": "7f60f6e3cadc6ce2fc733904686b89103470c42fb57d131cadda8eae0c0a7697",
+ "sha256": "8106a2affe45194bf9b34d1556cceb95c30f6b3f2ba0c59fa8ebbafcf240d736",
  "decision": {
   "status": "waived",
-  "why": "Final bytes reviewed by me: the curator's dirty-Z terminology rule (DIRTY-RULE.md) applied by an agent, terminology only — Z glossed as 'dirty' (canonical wording where Z is defined), API docs say the list is returned as 'dirty' and, for compatibility, 'unverified'; no claim changed; quotes, dated records and published papers left as they were.",
-  "at": "2026-10-25T18:06:01+00:00",
+  "why": "path-only edit for the 2026-10-25 move to publications/<work>/ (curator's decision): file paths rewritten and, in the READMEs, one pointer sentence to publications/README.md; no claim, number or argument changed",
+  "at": "2026-10-25T19:18:41+00:00",
   "operator": "undeclared"
  }
 }

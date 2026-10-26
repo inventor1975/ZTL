@@ -1,4 +1,21 @@
-# Zenodo upload sheet — The Gettier Case File v1.0
+# Zenodo sheet — The Gettier Case File
+
+## v1.1 — PREPARED 2026-10-26 (the dirty Z). Claude never publishes; the curator does.
+
+- **Flow:** open https://zenodo.org/records/21877469 → **New version** (keeps the concept DOI and the lineage).
+- **File:** replace with `publications/gettier/Gettier-case-file-EN-v1.1.pdf` (10 pages). Build: `pandoc gettier-docket-EN-build.md -o Gettier-case-file-EN-v1.1.pdf --pdf-engine=lualatex -V mainfont=FreeSerif -V monofont=FreeMono -V geometry:margin=1in -V papersize=letter` (run in `publications/gettier/`; same letter page and fonts as v1.0).
+- **Version:** `v1.1`. **Publication date:** 2026-10-26. Title, authors, license, keywords — unchanged.
+- **Description:** keep the v1.0 text below and put this paragraph first:
+
+> **New in v1.1.** Z is named for what it is — a **dirty** parameter, following ZTL v2.1.3 (DOI 10.5281/zenodo.23648237): not ours, its owner may change it between two reads, so each occurrence is read on its own, and verification cleans it. v1.0 called Z an "unverified" tag, one of three statuses of the data — wording that suggested one hidden value merely not yet known. §2.1, the glossary and the phrases naming a Z-marked link are corrected. No verdict, carrier or measurement changes.
+
+- **Related identifiers (add):** `isNewVersionOf` 10.5281/zenodo.21877469 (v1.0); keep the v1.0 relations.
+- **AI disclosure:** v1.1 corrections with Claude Opus 5.5 (Anthropic), Variant A, curator Vitaly Reznik — already in the PDF.
+
+---
+
+## v1.0 — record of what was entered (published 2026-08-10)
+
 
 **PUBLISHED 2026-08-10: DOI 10.5281/zenodo.21877469** (relations used:
 Derived from 10.5281/zenodo.21318981; References 10.5281/zenodo.21864082 —

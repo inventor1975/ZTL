@@ -40,7 +40,7 @@ _LEAN = os.path.join(_ROOT, "lean")
 # would misdescribe the public record. Distinguishing the two is the
 # whole reason this list is explicit rather than a glob.
 # the live PSSL source; v1_0_0 is the published record and is frozen
-PSSL_TEX = "publications/pssl/PSSL_EN_v1_1_0.tex"
+PSSL_TEX = "publications/pssl/PSSL_EN_v1_1_1.tex"
 
 # The live ZTL preprint. Moved from ZTL-draft_1.4.md to 2.0.0 on 2026-09-19,
 # the day 2.0.0 was published (DOI 10.5281/zenodo.22842725) — until then this
@@ -57,6 +57,7 @@ ZTL_DRAFT = None
 FROZEN = {
           "publications/ztl/ZTL-draft_1.4.md": "the source of the published v1.4.1 record (DOI 22644261)",
           "publications/pssl/PSSL_EN_v1_0_0.tex": "the published PSSL v1.0.0 (DOI 21452736)",
+          "publications/pssl/PSSL_EN_v1_1_0.tex": "the published PSSL v1.1.0 (DOI 21455696), frozen 26.10 when 1.1.1 (dirty Z) began",
           "publications/ztl/ZTL-draft_2.1.0.md": "the source of the published v2.1.3 record (DOI 23648237; v2.1.2 23019513), frozen 25.10",
           "publications/ztl/ZENODO.md": "the Zenodo sheet of the published v2.1.2 record, frozen 29.09"}
 
@@ -372,7 +373,7 @@ if __name__ == "__main__":
 
     print("\n### Zenodo sheet (publications/pssl/PSSL-ZENODO.md) vs the PDF it ships")
     sheet = text("publications/pssl/PSSL-ZENODO.md")
-    pages = pdf_pages("publications/pssl/PSSL_EN_v1_1_0.pdf")
+    pages = pdf_pages("publications/pssl/PSSL_EN_v1_1_1.pdf")
     for claimed in set(re.findall(r"\((\d+) pages", sheet)):
         check("pages of the uploaded PDF", claimed, str(pages), "sheet")
     m = re.search(r"(\d+) \+ (\d+) \+ (\d+) \+ (\d+) = (\d+) objects", sheet)

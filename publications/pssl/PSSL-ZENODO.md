@@ -1,4 +1,4 @@
-# Zenodo sheet — PSSL **v1.1.0 PUBLISHED 2026-07-20**
+# Zenodo sheet — PSSL **v1.1.1 PREPARED 2026-10-26** (v1.1.0 published 2026-07-20)
 
 **Published history**
 - **v1.1.0** — 2026-07-20, version DOI
@@ -13,24 +13,24 @@
 - **Concept DOI (always latest):**
   [10.5281/zenodo.21452735](https://doi.org/10.5281/zenodo.21452735)
 
-**This file prepared the v1.1.0 upload. Claude never publishes; the curator
-did. Kept as the record of what was entered.**
+**This file now prepares the v1.1.1 upload (the dirty Z). Claude never
+publishes; the curator does. The v1.1.0 entries below record what was entered then.**
 
-Source: `paper/PSSL_EN_v1_1_0.tex` → **`paper/PSSL_EN_v1_1_0.pdf` (9 pages,
-lualatex, 2026-07-20)** = the file to upload. English only: the Russian
+Source: `publications/pssl/PSSL_EN_v1_1_1.tex` → **`publications/pssl/PSSL_EN_v1_1_1.pdf` (9 pages,
+lualatex, 2026-10-26)** = the file to upload. (v1.1.0: `PSSL_EN_v1_1_0.tex/.pdf`, frozen.) English only: the Russian
 reading copy was removed in v1.1.0 (see the foot of this sheet).
 Verifiable anchor: `lean/ZTL.lean` + `lean/QuantumWitness.lean` +
 `lean/Contextuality.lean` + `lean/JunctionWitness.lean` (all empty axiom list,
 re-measured 2026-07-20: 13 + 11 + 3 + 8 = 35 objects).
 
 **Upload flow — NOT a new record.** Open the existing record
-https://zenodo.org/records/21452736 → **New version** → replace the file with
-`paper/PSSL_EN_v1_1_0.pdf` → set Version to **1.1.0** → paste the block below
+https://zenodo.org/records/21455696 → **New version** → replace the file with
+`publications/pssl/PSSL_EN_v1_1_1.pdf` → set Version to **1.1.1** → paste the block below
 over the old description → Publish → paste the new version DOI back here.
 Going through "New version" keeps the concept DOI 21452735 and the lineage;
 a fresh record would orphan v1.1.0 from v1.0.0.
 
-**File to upload:** `paper/PSSL_EN_v1_1_0.pdf` (9 pages)
+**File to upload:** `publications/pssl/PSSL_EN_v1_1_1.pdf` (9 pages)
 
 ---
 
@@ -43,7 +43,7 @@ universal diagonal — a synthesis with five machine-checked components.
 
 **Authors:** Reznik, Vitaly
 
-**Version:** 1.1.0
+**Version:** 1.1.1
 
 **License:** Creative Commons Attribution 4.0 International (CC BY 4.0)
 
@@ -113,6 +113,14 @@ ZTL as the paracomplete relative that breaks the involution its Lukasiewicz
 ancestor and its quantum cousin both keep (the known bridge from orthomodular
 to many-valued logic runs through Lukasiewicz, Pykacz 2010).
 
+What changed in version 1.1.1. Z is named for what it is: a dirty parameter —
+not ours; its owner may change it between two reads, so each occurrence is read
+on its own, and verification cleans it — following ZTL v2.1.3
+(DOI 10.5281/zenodo.23648237). Version 1.1.0 called Z "a status mark, not a truth
+value" marking an "unverified" input; both phrases suggested the wrong reading
+(one hidden value not yet known), and ZTL has since recognised Z as the value of
+atoms. No proposition, proof or Lean file changes.
+
 What changed in version 1.1.0. Classical logic is no longer listed as a
 fourth resolution. Version 1.0.0 tabled it beside the other three, which
 counted classical logic among the "non-classical logics" of its own subtitle,
@@ -142,7 +150,8 @@ reliability of the machine-checked components does not depend on trusting the
 author or the AI: all four Lean files verify against the Lean 4 kernel on the
 empty axiom list, 35 objects in about a second in total.
 
-AI disclosure: written in dialogue with the AI system Claude (Anthropic); all
+AI disclosure: written in dialogue with the AI system Claude (Anthropic; the
+corrections of 1.1.1 with Claude Opus 5.5); all
 design decisions, framing, and final responsibility rest with the human author.
 
 **Keywords:**
@@ -154,6 +163,7 @@ deduction theorem; Sasaki hook; relative pseudocomplement; Heyting algebra;
 Lean 4; machine-checked proofs; empty axiom list
 
 **Related/alternate identifiers:**
+- https://doi.org/10.5281/zenodo.21455696 — isNewVersionOf (PSSL v1.1.0)
 - https://doi.org/10.5281/zenodo.21318981 — references (ZTL, Zero-Trust Logic — the ZTL corner)
 - https://doi.org/10.5281/zenodo.21419290 — references (Choice as an Act — verify-from-zero precedent)
 - https://github.com/inventor1975/ZTL — isSupplementedBy (the four Lean files + the measured stands)

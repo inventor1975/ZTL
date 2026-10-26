@@ -135,7 +135,7 @@ if __name__ == "__main__":
     src = sys.argv[1] if len(sys.argv) > 1 else \
         os.path.join(_HERE, "paradox-docket-EN-build.md")
     dst = sys.argv[2] if len(sys.argv) > 2 else \
-        os.path.join(_HERE, "paradox-docket-EN-v1.1.pdf")
+        os.path.join(_HERE, "paradox-docket-EN-v1.2.pdf")
     os.chdir(_HERE)
     print("building", os.path.basename(src))
     build(os.path.basename(src), os.path.basename(dst))

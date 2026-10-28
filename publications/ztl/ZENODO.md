@@ -1,3 +1,10 @@
+**v2.1.5 PUBLISHED 2026-10-28 (by the curator): version DOI 10.5281/zenodo.23740723**
+(https://zenodo.org/records/23740723). Dominance of the earned verdict proved (lean/ZDirty.lean, empty axiom
+list); the dirty reading is strong Kleene. DOI reserved before the build, so the PDF header carries it.
+Verified against the API WITHOUT a token: version 2.1.5, exactly ONE file ZTL-preprint-v2.1.5.pdf, 452153
+bytes, md5 088e62bf368001a4c72a126f6e9f94fd equal to the repository copy, isNewVersionOf 23737470, latest of
+the concept. Description: ZENODO-v2.1.5-description.md.
+
 **v2.1.4 PUBLISHED 2026-10-28 (by the curator): version DOI 10.5281/zenodo.23737470**
 (https://zenodo.org/records/23737470). A CORRECTION of v2.1.3 in four places: tables 7–10 are
 compositions, not lifts (found by the curator); "strictly dominates" withdrawn; "no conservative

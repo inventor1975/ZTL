@@ -14,7 +14,7 @@ PREDICTION, frozen before the run:
       greedy T is also not earned under occurrences.
 Cut-off: one P1 exception and the book does NOT say "against dirty, nothing is lost"."""
 import os, sys, itertools, random, collections
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))  # repo root (moved to publications/book/checks 2026-10-25)
 from ztl import T, F, Z, ev
 from ztljudge import _show
 

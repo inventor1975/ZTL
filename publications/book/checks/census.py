@@ -5,7 +5,7 @@
 параметр, и терпеливый судья, давая «да», молча считает, что хозяин его не
 поменял. Сверка с грязным чтением — dirty_census.py рядом."""
 import os, sys, itertools, random, collections
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))  # repo root (moved to publications/book/checks 2026-10-25)
 from ztl import T, F, Z, ev
 from ztljudge import _show
 

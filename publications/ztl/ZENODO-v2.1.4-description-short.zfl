@@ -1,0 +1,11 @@
+{
+ "zfl_sidecar": 1,
+ "file": "ZENODO-v2.1.4-description-short.md",
+ "sha256": "70e91670e8b0f93899b7b454244c1625bad8dbdebd680b753b20ea8eab8e57c1",
+ "decision": {
+  "status": "waived",
+  "why": "reviewed by a Sonnet reader (15 findings); fixed: per-connective scope of the guarantee with the ¬¬p example, what exactly was wrong in 2.1.3, non-constant unary, the sink stated with both forms, proved vs measured split with theorem names and pool scope; left: general critiques of the logic, answered in the paper",
+  "at": "2026-10-28T17:20:46+00:00",
+  "operator": "undeclared"
+ }
+}

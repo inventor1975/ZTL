@@ -6,6 +6,8 @@ publication: version 2.1.4, exactly ONE file ZTL-preprint-v2.1.4.pdf, 451943 byt
 48b1cc7e24cd6ef2b3545db0cf7d656a equal to the repository copy, isNewVersionOf 23648237, latest of the
 concept. Description: ZENODO-v2.1.4-description.html. The PDF's header reads "Version DOI: assigned by
 Zenodo on publication" (built before the DOI existed); the source header now carries it.
+Same evening the curator replaced the description by the short one
+(ZENODO-v2.1.4-description-short.md, 2912 characters as Zenodo renders it); verified via the API, file unchanged.
 
 # Zenodo upload sheet — ZTL v2.1.2 (PUBLISHED 2026-09-28 — the relation to classical logic, worded with its domain)
 

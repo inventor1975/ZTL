@@ -1,3 +1,12 @@
+**v2.1.4 PUBLISHED 2026-10-28 (by the curator): version DOI 10.5281/zenodo.23737470**
+(https://zenodo.org/records/23737470). A CORRECTION of v2.1.3 in four places: tables 7–10 are
+compositions, not lifts (found by the curator); "strictly dominates" withdrawn; "no conservative
+default" withdrawn; the sink is form-dependent. Verified against the API WITHOUT a token after
+publication: version 2.1.4, exactly ONE file ZTL-preprint-v2.1.4.pdf, 451943 bytes, md5
+48b1cc7e24cd6ef2b3545db0cf7d656a equal to the repository copy, isNewVersionOf 23648237, latest of the
+concept. Description: ZENODO-v2.1.4-description.html. The PDF's header reads "Version DOI: assigned by
+Zenodo on publication" (built before the DOI existed); the source header now carries it.
+
 # Zenodo upload sheet — ZTL v2.1.2 (PUBLISHED 2026-09-28 — the relation to classical logic, worded with its domain)
 
 **v2.1.2 PUBLISHED 2026-09-28: version DOI 10.5281/zenodo.23019513**

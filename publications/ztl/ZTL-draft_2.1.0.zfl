@@ -1,11 +1,11 @@
 {
  "zfl_sidecar": 1,
  "file": "ZTL-draft_2.1.0.md",
- "sha256": "83104f81874276b60e33a274c8cf6cd5eacba5d5fef3ca9cd836b6b9941ebcd4",
+ "sha256": "8db197d258c39800111184e361a3e1742f57b17269daf6fae10f075b906eaf54",
  "decision": {
   "status": "waived",
-  "why": "changed passages reviewed by a Sonnet reader fork (11 findings); fixed: 'protected only where' -> sufficient condition, per-atom default scoped to the sink with the p∨¬p counterexample, 'refusal the mark caused', De Morgan+double negation named; not changed: excerpt-splicing artifacts, pre-existing unchanged claims (evalF_agrees wording, 'more expressive'); the full v3 journal paper carries the deeper fixes",
-  "at": "2026-10-28T16:50:22+00:00",
+  "why": "only the published version DOI added to the header; the text was reviewed and published as v2.1.4",
+  "at": "2026-10-28T17:04:06+00:00",
   "operator": "undeclared"
  }
 }

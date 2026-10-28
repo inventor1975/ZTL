@@ -327,6 +327,53 @@ theorem no_exam_on_credit (k : Nat) :
   rw [e2, hv] at e1
   exact V.noConfusion e1
 
+/-! ## 7. The class's logic is right; the teacher keeps the promise
+
+The two statements that close the account. First, the backward induction itself, classically: if the
+class KNEW the whole announcement — "exactly one exam, on a day you will not be able to single out" —
+the set of possible exam days would have to be a fixed point of "a day is possible only if a later
+possible day remains", and the only fixed point is empty. The class's logic is sound; what it lacks is
+the premise (`ann_never_known_before_exam`). Second, the teacher: for every exam day the announcement is
+earned once the week is over, and on that morning the class did not know. Both sides are right, at
+different times — which is all the paradox ever was. -/
+
+/-- A classical candidate set of exam days, `W i` for the days `i < n`, is CONSISTENT WITH KNOWING THE
+WHOLE ANNOUNCEMENT when a day is possible exactly if, on its morning, a later possible day would still
+be open (otherwise the class would single it out, and the surprise clause would fail). -/
+def KnownFixed (n : Nat) (W : Nat → Bool) : Prop :=
+  ∀ e, e < n → (W e = true ↔ ∃ j, e < j ∧ j < n ∧ W j = true)
+
+/-- **The class's backward induction is valid**: with the announcement known, no day is possible. -/
+theorem classical_elimination {n : Nat} {W : Nat → Bool} (h : KnownFixed n W) :
+    ∀ e, e < n → W e = false := by
+  -- by the distance to the end of the week, without subtraction: `Q t` covers the days `e` with `n ≤ e + t`
+  have step : ∀ t e, n ≤ e + t → e < n → W e = false := by
+    intro t
+    induction t with
+    | zero => intro e hle hlt; exact absurd hlt (Nat.not_lt_of_le hle)
+    | succ t ih =>
+        intro e hle hlt
+        cases hW : W e with
+        | false => rfl
+        | true =>
+            match (h e hlt).1 hW with
+            | ⟨j, hej, hjn, hWj⟩ =>
+                have hj : n ≤ j + t := Nat.le_trans hle (by
+                  show e + (t + 1) ≤ j + t
+                  rw [← Nat.add_assoc, Nat.add_right_comm]
+                  exact Nat.add_le_add_right hej t)
+                rw [ih j hj hjn] at hWj
+                exact absurd hWj Bool.false_ne_true
+  intro e he
+  exact step n e (Nat.le_add_left n e) he
+
+/-- **The teacher keeps the promise.** For every exam day `e` of the week: the announcement is known
+once the whole week is verified, and on the morning of day `e` the class did not know the exam was
+that day — nor anything that would single it out (`surprise_guaranteed`). -/
+theorem teacher_keeps_promise {n e : Nat} (hen : e < n) :
+    Knows (hist e n) (ann n) ∧ ¬ Knows (morning e) (.atom e) :=
+  ⟨(ann_known_iff_week_over hen hen).2 (Nat.le_refl n), today_unknown e⟩
+
 /-! ## 6. Perfect knowers: the liar in the calendar -/
 
 /-- Row 0 is the announcement about one day for knowers whose knowledge is instantaneous and
@@ -370,3 +417,5 @@ end Surprise
 #print axioms Surprise.no_exam_on_credit
 #print axioms Surprise.liar_when_exam_today
 #print axioms Surprise.grounded_when_no_exam
+#print axioms Surprise.classical_elimination
+#print axioms Surprise.teacher_keeps_promise

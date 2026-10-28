@@ -374,6 +374,76 @@ theorem enum_strict : Enum (fun _ => Z) (.imp (.atom 0) (.atom 0)) ∧
   revert h0
   cases w 0 <;> decide
 
+/-! Kleene with one verdict at the end, and ZTL (2026-10-29). Kleene followed by the assertion ↑ once,
+for the whole formula, is a verdict for every formula, but not a compositional one: the verdict of ¬φ is
+not a function of the verdict of φ. Conversely, any compositional (truth-functional) semantics that gives
+Kleene's verdict on every single connective applied to atoms is ZTL, on every formula. -/
+
+/-- **Kleene's end verdict is not compositional.** No table m gives the verdict of ¬φ from the verdict
+of φ: p false and ¬p with p dirty both have verdict F, yet ¬p has verdict T and ¬¬p has verdict F. -/
+theorem kleene_end_verdict_not_compositional :
+    ¬ ∃ m : V → V, ∀ (v : Nat → V) (φ : Fm), up (kev v (.neg φ)) = m (up (kev v φ)) := by
+  intro ⟨m, h⟩
+  have h1 := h (fun _ => F) (.atom 0)
+  have h2 := h (fun _ => Z) (.neg (.atom 0))
+  have e1 : up (kev (fun _ => F) (.neg (.atom 0))) = T := by decide
+  have e2 : up (kev (fun _ => F) (.atom 0)) = F := by decide
+  have e3 : up (kev (fun _ => Z) (.neg (.neg (.atom 0)))) = F := by decide
+  have e4 : up (kev (fun _ => Z) (.neg (.atom 0))) = F := by decide
+  rw [e1, e2] at h1
+  rw [e3, e4, ← h1] at h2
+  exact absurd h2 (by decide)
+
+/-- A compositional semantics: one table per connective, applied at every node. -/
+def mev (n : V → V) (c d i x e : V → V → V) (v : Nat → V) : Fm → V
+  | .atom k    => v k
+  | .top       => T
+  | .bot       => F
+  | .neg φ     => n (mev n c d i x e v φ)
+  | .conj φ ψ  => c (mev n c d i x e v φ) (mev n c d i x e v ψ)
+  | .disj φ ψ  => d (mev n c d i x e v φ) (mev n c d i x e v ψ)
+  | .imp φ ψ   => i (mev n c d i x e v φ) (mev n c d i x e v ψ)
+  | .xor φ ψ   => x (mev n c d i x e v φ) (mev n c d i x e v ψ)
+  | .xnor φ ψ  => e (mev n c d i x e v φ) (mev n c d i x e v ψ)
+
+/-- the valuation p ↦ a, every other atom ↦ b -/
+def two (a b : V) : Nat → V := fun k => match k with | 0 => a | _ => b
+
+/-- **ZTL is the unique compositional extension of Kleene's verdict on one connective.** If a
+compositional semantics agrees with Kleene-then-↑ on every connective applied to atoms (¬p and p∘q,
+at every valuation), it agrees with ZTL on every formula at every valuation. -/
+theorem ztl_unique_compositional (n : V → V) (c d i x e : V → V → V)
+    (hn : ∀ v, mev n c d i x e v (.neg (.atom 0)) = up (kev v (.neg (.atom 0))))
+    (hc : ∀ v, mev n c d i x e v (.conj (.atom 0) (.atom 1)) = up (kev v (.conj (.atom 0) (.atom 1))))
+    (hd : ∀ v, mev n c d i x e v (.disj (.atom 0) (.atom 1)) = up (kev v (.disj (.atom 0) (.atom 1))))
+    (hi : ∀ v, mev n c d i x e v (.imp (.atom 0) (.atom 1)) = up (kev v (.imp (.atom 0) (.atom 1))))
+    (hx : ∀ v, mev n c d i x e v (.xor (.atom 0) (.atom 1)) = up (kev v (.xor (.atom 0) (.atom 1))))
+    (he : ∀ v, mev n c d i x e v (.xnor (.atom 0) (.atom 1)) = up (kev v (.xnor (.atom 0) (.atom 1)))) :
+    ∀ (v : Nat → V) (φ : Fm), mev n c d i x e v φ = evalF v φ := by
+  have tn : ∀ a, n a = znot a := fun a => (hn (fun _ => a)).trans (not_is_up_kleene a).symm
+  have tc : ∀ a b, c a b = zand a b := fun a b => (hc (two a b)).trans (and_is_up_kleene a b).symm
+  have td : ∀ a b, d a b = zor a b := fun a b => (hd (two a b)).trans (or_is_up_kleene a b).symm
+  have ti : ∀ a b, i a b = zimp a b := fun a b => (hi (two a b)).trans (imp_is_up_kleene a b).symm
+  have tx : ∀ a b, x a b = zxor a b := fun a b => (hx (two a b)).trans (xor_is_up_kleene a b).symm
+  have te : ∀ a b, e a b = zxnor a b := fun a b => (he (two a b)).trans (xnor_is_up_kleene a b).symm
+  intro v φ
+  induction φ with
+  | atom k => rfl
+  | top => rfl
+  | bot => rfl
+  | neg φ ih => show n _ = znot _; rw [tn, ih]
+  | conj φ ψ ih1 ih2 => show c _ _ = zand _ _; rw [tc, ih1, ih2]
+  | disj φ ψ ih1 ih2 => show d _ _ = zor _ _; rw [td, ih1, ih2]
+  | imp φ ψ ih1 ih2 => show i _ _ = zimp _ _; rw [ti, ih1, ih2]
+  | xor φ ψ ih1 ih2 => show x _ _ = zxor _ _; rw [tx, ih1, ih2]
+  | xnor φ ψ ih1 ih2 => show e _ _ = zxnor _ _; rw [te, ih1, ih2]
+
+/-- And ZTL itself is such a semantics, so the hypotheses are not empty. -/
+theorem ztl_is_compositional_kleene_verdict (v : Nat → V) :
+    evalF v (.neg (.atom 0)) = up (kev v (.neg (.atom 0))) ∧
+    evalF v (.conj (.atom 0) (.atom 1)) = up (kev v (.conj (.atom 0) (.atom 1))) :=
+  ⟨not_is_up_kleene (v 0), and_is_up_kleene (v 0) (v 1)⟩
+
 end V
 
 #print axioms V.covers_rd
@@ -402,3 +472,6 @@ end V
 #print axioms V.enum_of_earned
 #print axioms V.earned_dominates_enum
 #print axioms V.enum_strict
+#print axioms V.kleene_end_verdict_not_compositional
+#print axioms V.ztl_unique_compositional
+#print axioms V.ztl_is_compositional_kleene_verdict

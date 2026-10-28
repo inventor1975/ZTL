@@ -1,11 +1,11 @@
-# ZTL — Zero-Trust Logic — v2.1.3
+# ZTL — Zero-Trust Logic — v2.1.4
 
-**V. Reznik. Preprint, v2.1.3 — 2026-10-25. Version DOI:
-[10.5281/zenodo.23648237](https://doi.org/10.5281/zenodo.23648237)
-(this file is the source; the PDF is built by `paper/mkpreprint.py`).
+**V. Reznik. Preprint, v2.1.4 — 2026-10-28. Version DOI: assigned by Zenodo on publication
+(this file is the source; the PDF is built by `publications/ztl/mkpreprint.py`).
 Concept DOI:
 [10.5281/zenodo.21318981](https://doi.org/10.5281/zenodo.21318981)
-(v2.1.2: [10.5281/zenodo.23019513](https://doi.org/10.5281/zenodo.23019513);
+(v2.1.3: [10.5281/zenodo.23648237](https://doi.org/10.5281/zenodo.23648237);
+v2.1.2: [10.5281/zenodo.23019513](https://doi.org/10.5281/zenodo.23019513);
 v2.1.1: [10.5281/zenodo.23008041](https://doi.org/10.5281/zenodo.23008041);
 v2.1.0: [10.5281/zenodo.23007861](https://doi.org/10.5281/zenodo.23007861);
 v2.0.0: [10.5281/zenodo.22842725](https://doi.org/10.5281/zenodo.22842725);
@@ -15,6 +15,41 @@ v1.3: [10.5281/zenodo.21472971](https://doi.org/10.5281/zenodo.21472971);
 v1.2: [10.5281/zenodo.21440066](https://doi.org/10.5281/zenodo.21440066);
 v1.1: [10.5281/zenodo.21323552](https://doi.org/10.5281/zenodo.21323552);
 v1.0: [10.5281/zenodo.21318982](https://doi.org/10.5281/zenodo.21318982)).
+v2.1.4 (2026-10-28) is a CORRECTION of v2.1.3, in four connected places; nothing else in
+the text changes. (1) *The tables of §2.* v2.1.3 printed ten tables, said all ten are generated
+by the principle, and said the last four — ¬(a∧b), ¬(a∨b), ¬(a⊕b), ¬(a→b) — "cannot be
+read off the first five"; the companion file `ZTL-TABLES.txt` named two of them Sheffer's
+stroke and Peirce's arrow. That was wrong, and the curator found it: those four are
+COMPOSITIONS — ¬ applied to the verdict of a binary connective — not lifts. The principle
+applied to classical NAND, NOR, XNOR and non-implication gives other tables, and those
+ARE read off the primitives, on the argument side of De Morgan's laws: lifted NAND =
+¬a∨¬b, lifted NOR = ¬a∧¬b, lifted XNOR = ↔, lifted non-implication = a∧¬b (each differs
+from the composition in 3, 3, 5 and 3 cells). §2 now prints the lifts of all sixteen binary
+and both unary classical functions, and the four compositions under their own name. What
+stays true is narrower than v2.1.3 said: negating a VERDICT is not lifting a negated
+connective. The results built on the six primitives — greediness, agreement on verified
+data, the twenty-six laws (De Morgan fails as a law of formulas), the signature, the order
+of birth, the seven Bochvar cells, the clone of §3.8 (whose NAND and NOR were the
+true lifts all along) — do not change. The count "eleven cells across the ten tables"
+against Bochvar (§10) counted compositions and is removed. (2) *"Dominates".* v2.0.0–v2.1.3
+said that as a decision procedure ZTL strictly dominates classical logic: problems ZTL
+answers correctly and no classical default does, "and none the other way round". The
+second half is false by the criterion the first half uses: on ¬¬p with p dirty ZTL grants
+T and the default "dirty := false" refuses, and cleaning p := F overturns ZTL's grant —
+the over-grant v2.1.3 itself measured. The claim is withdrawn (§1, §4, §10). What holds:
+on verified data ZTL is classical logic; every refusal ZTL makes is witnessed by a reading
+of the dirty occurrences (measured exhaustively in §2, zero exceptions); grants are protected
+against every cleaning where no dirty atom stands under a negation (`NoGift.no_gift`, a
+sufficient condition); and no uniform classical
+default reproduces ZTL in either direction. (3) *"No conservative default exists"*
+(§1, §4, §10) was wrong: a conjunction is refused when either conjunct is, so a per-atom
+worst-case choice refuses the sink rule; on it only uniform defaults fail. (4) *The sink is
+form-dependent.* The matrix refuses ¬tainted ∨ sanitized, the form the tool writes, and
+grants the classically equivalent ¬(tainted ∧ ¬sanitized) with both atoms dirty: a
+negation over a compound turns a refusal into a grant. The judge's warranty grade
+withholds the pass there (ON CREDIT, not EARNED); the matrix alone does not. Items (3)
+and (4) were found by a reviewer fork reading the companion journal paper; (1) by the
+curator.
 v2.1.3 (2026-10-25) names what Z is. Earlier versions called Z the mark of an
 *unverified* atom, and the word suggested the wrong reading: that the atom has one value
 we merely do not know yet — the stable reading on which supervaluation rests and which
@@ -213,12 +248,18 @@ an atom is dirty or false — a distinction the usual substitution
 "unverified := false" cannot draw at all. That substitution is shown to be
 Bochvar's external logic of 1938, cell for cell on every binary
 connective; ZTL parts from it in eight cells, each a place where a verdict
-is derived from the absence of information. **No default replaces the
-mark:** in the taint-sink case both classical defaults grant a pass to an
-dirty sink, and a rule with one atom in both polarities has no
-conservative default at all. Hence, as a decision procedure, ZTL strictly
-dominates classical logic; as a system of proofs on classical logic's own
-domain the two are exactly equal (`evalF_agrees`), and over its own
+is derived from the absence of information. **No uniform default replaces the
+mark:** in the taint-sink case, as the tool writes the rule (¬tainted ∨ sanitized),
+both uniform classical defaults grant a pass to a dirty sink and ZTL refuses. The
+matrix's refusal depends on that form: the classically equivalent ¬(tainted ∧ ¬sanitized)
+receives T, and it is the judge's warranty grade, not the matrix, that withholds the
+pass there (ON CREDIT: true only until a cleaning). Every refusal of the matrix is
+witnessed by a reading of the dirty occurrences (§2, measured exhaustively); its grants
+are protected against every cleaning where no dirty atom stands under a negation
+(§19, `no_gift`, a sufficient condition). (Up to
+v2.1.3 this paragraph concluded that ZTL "strictly dominates" classical logic as a
+decision procedure; that is withdrawn in v2.1.4, see the version note.) As a system of
+proofs on classical logic's own domain the two are exactly equal (`evalF_agrees`), and over its own
 valuations ZTL has fewer validities — the price of admitting dirty
 input (`ztl_taut_is_classical`, `not_conversely`) — and "stronger", which in
 logic means "proves more", is a word this paper does not use of itself.
@@ -380,9 +421,9 @@ logic — cell for cell (`evalF_agrees`) and law for law (the same 584
 validities of the pool, the same set). On dirty data it *decides*:
 twelve classical laws licensed on a marked atom, fourteen refuted with a
 witness, none left open — where classical logic has no input at all. And
-no classical default reproduces that: on a dirty sink both defaults
-grant a pass, and for a rule with one atom in both polarities no
-conservative default exists. A reader who takes away "a logic with fewer
+no uniform classical default reproduces that: on a dirty sink, written as the tool
+writes it, both uniform defaults grant a pass. (A per-atom worst-case choice does
+refuse it; v2.1.3's "no conservative default exists" was wrong and is withdrawn.) A reader who takes away "a logic with fewer
 laws" has half the fact: once valuations with dirty atoms are admitted, fewer
 formulas hold on every valuation — the price of admitting them (§3.2, §10);
 on verified data not one law is lost, and the right comparison for the
@@ -454,12 +495,10 @@ notation.)
 **Corollary (greediness theorem, MEASURED):** no compound formula ever
 takes the value Z; Z lives only on atoms.
 
-**Tables — all ten of ZTL** (generated by the principle; the anchor
-cells were postulated at design time and are reproduced by the principle
-— `ztl.py`; the same ten are kept in `ZTL-TABLES.txt`, regenerated and
-checked by `ztl_tables.py`, and the six primitive ones are read off the
-kernel's `znot`/`zand`/`zor`/`zimp`/`zxor`/`zxnor`). The five primitives
-and ↔:
+**Tables of ZTL** (generated by the principle; the anchor cells were postulated at
+design time and are reproduced by the principle — `ztl.py`; the full set of lifts is kept in `ZTL-TABLES.txt`; the six primitive ones
+are read off the kernel's `znot`/`zand`/`zor`/`zimp`/`zxor`/`zxnor`). The six
+primitives:
 
 | x | ¬x |   | ∧ | T | F | Z |   | ∨ | T | F | Z |   | → | T | F | Z |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
@@ -467,33 +506,71 @@ and ↔:
 | F | T  |   | F | F | F | F |   | F | T | F | F |   | F | T | T | T |
 | Z | F  |   | Z | F | F | F |   | Z | T | F | F |   | Z | T | F | F |
 
-| ⊕ | T | F | Z |   | ↔ | T | F | Z |   | ¬(a∧b) | T | F | Z |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| T | F | T | F |   | T | T | F | F |   | T | F | T | T |
-| F | T | F | F |   | F | F | T | F |   | F | T | T | T |
-| Z | F | F | F |   | Z | F | F | F |   | Z | T | T | T |
+| ⊕ | T | F | Z |   | ↔ | T | F | Z |
+|---|---|---|---|---|---|---|---|---|
+| T | F | T | F |   | T | T | F | F |
+| F | T | F | F |   | F | F | T | F |
+| Z | F | F | F |   | Z | F | F | F |
 
-| ¬(a∨b) | T | F | Z |   | ¬(a⊕b) | T | F | Z |   | ¬(a→b) | T | F | Z |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| T | F | F | F |   | T | T | F | T |   | T | F | T | T |
-| F | F | T | T |   | F | F | T | T |   | F | F | F | F |
-| Z | F | T | T |   | Z | T | T | T |   | Z | F | T | T |
+**All lifts.** The principle applies to every classical connective. The lifts of
+all sixteen binary and both non-constant unary functions (classical column: values
+at (1,1),(1,0),(0,1),(0,0); then the lifted row for a = T, F, Z, with b = T, F, Z
+inside each group):
 
-**Why the second five are on the page.** Classically five of these ten
-are redundant: ↔ is ¬⊕, the two De Morgan laws give the negated
-conjunction and disjunction from ¬ and the other connective, and
-¬(a→b) is a∧¬b — a reader reconstructs them and no textbook prints
-them. Here every one of those routes fails, and MEASURED at the marked
-cells: a↔b differs from ¬(a⊕b) in 5 of 9 cells, ¬(a∧b) from ¬a∨¬b in 3,
-¬(a∨b) from ¬a∧¬b in 3, ¬(a→b) from a∧¬b in 3 — always where an input
-is Z. What does hold is trivial and is the reason: ¬ acts on a verdict,
-and a compound's verdict is already classical, so ¬(a∧b) is exactly the
-T/F swap of the ∧ table; the negation of a compound never sees the mark
-its inputs carried, which is what De Morgan needs. So the second five
-carry information of their own and cannot be read off the first five.
-(The positive definitions survive — a→b = ¬a∨b, a⊕b = (a∧¬b)∨(¬a∧b),
-a↔b = (a∧b)∨(¬a∧¬b), zero cells apart — which is the generating basis
-below; it is the negative routes that need verified ground, §3.1.)
+| lift of | classical | a=T | a=F | a=Z |   | lift of | classical | a=T | a=F | a=Z |
+|---|---|---|---|---|---|---|---|---|---|---|
+| ∧ | 1000 | TFF | FFF | FFF |   | NAND | 0111 | FTF | TTT | FTF |
+| ∨ | 1110 | TTT | TFF | TFF |   | NOR | 0001 | FFF | FTF | FFF |
+| → | 1011 | TFF | TTT | TFF |   | ↛ | 0100 | FTF | FFF | FFF |
+| ← | 1101 | TTT | FTF | FTF |   | ↚ | 0010 | FFF | TFF | FFF |
+| ⊕ | 0110 | FTF | TFF | FFF |   | ↔ | 1001 | TFF | FTF | FFF |
+| π₁ | 1100 | TTT | FFF | FFF |   | ¬π₁ | 0011 | FFF | TTT | FFF |
+| π₂ | 1010 | TFF | TFF | TFF |   | ¬π₂ | 0101 | FTF | FTF | FTF |
+| ⊤ | 1111 | TTT | TTT | TTT |   | ⊥ | 0000 | FFF | FFF | FFF |
+| id | 10 | T | F | F |   | ¬ | 01 | F | T | F |
+
+The lift of the identity is the assertion: T stays T, F and Z go to F; it is
+definable as x∧x, and the failure of idempotence on the mark (§3.1) is exactly
+↑p ≠ p. The lifts of the negated connectives are read off the primitives on the
+argument side of De Morgan's laws: lifted NAND = ¬a∨¬b, lifted NOR = ¬a∧¬b, lifted
+XNOR = ↔, lifted ↛ = a∧¬b (checked cell by cell; the same `znand`/`znor` are the
+operators of the clone in §3.8).
+
+**Negating a verdict is not lifting a negation.** The four tables v2.1.3 printed in
+this place are not lifts but COMPOSITIONS — ¬ applied to the verdict of a binary
+connective — and are kept here under that name:
+
+| ¬(a∧b) | T | F | Z |   | ¬(a∨b) | T | F | Z |
+|--------|---|---|---|---|--------|---|---|---|
+| T | F | T | T |   | T | F | F | F |
+| F | T | T | T |   | F | F | T | T |
+| Z | T | T | T |   | Z | F | T | T |
+
+| ¬(a⊕b) | T | F | Z |   | ¬(a→b) | T | F | Z |
+|--------|---|---|---|---|--------|---|---|---|
+| T | T | F | T |   | T | F | T | T |
+| F | F | T | T |   | F | F | F | F |
+| Z | T | T | T |   | Z | F | T | T |
+
+Each differs from the lift of the corresponding negated connective — ¬(a∧b) from
+¬a∨¬b in 3 cells, ¬(a∨b) from ¬a∧¬b in 3, ¬(a⊕b) from a↔b in 5, ¬(a→b) from a∧¬b
+in 3 — always where an input is Z. The reason: ¬ acts on a verdict, a compound's
+verdict is already classical, so ¬(a∧b) is the T/F swap of the ∧ table and never
+sees the marks its inputs carried, while the lift reads those marks directly. (The
+positive definitions survive — a→b = ¬a∨b, a⊕b = (a∧¬b)∨(¬a∧b), a↔b =
+(a∧b)∨(¬a∧¬b), zero cells apart — which is the generating basis below; it is the
+negative routes that need verified ground, §3.1.) v2.1.3 called these four
+"generated by the principle" and said they "cannot be read off the first five", and
+`ZTL-TABLES.txt` named two of them Sheffer's stroke and Peirce's arrow; that was
+wrong (see the version note). A compound's negation is a legitimate formula, and its
+table is printed because it is not the lift; the lifted Sheffer stroke and Peirce
+arrow are ¬a∨¬b and ¬a∧¬b.
+
+A consequence that matters in use: a negation over a compound turns a refusal that the
+mark caused into a grant. With both atoms dirty, ¬(p∧q) = ¬F = T, and the sink rule ¬tainted ∨ sanitized,
+which the matrix refuses, becomes T when rewritten as ¬(tainted ∧ ¬sanitized). These
+are over-grants of the kind measured above; the judge reports them as ON CREDIT, and
+`no_gift` (§19) fences the fragment where they cannot occur.
 
 **The lazy register** (strong Kleene, §9), in which the mark flows — the
 same primitives as the kernel's `knot`/`kand`/`kor`/`kimp`/`kxor`/`kxnor`:
@@ -1076,10 +1153,15 @@ over the pool the default validates 584, Bochvar 548 (measured 2026-09-28).
 
 This relocates the contribution claimed in §1. ZTL parts from external
 Bochvar in exactly seven cells of the six primitive tables — `→` at (Z,F)
-and (Z,Z), `↔` at (F,Z), (Z,F) and (Z,Z), `⊕` at (T,Z) and (Z,T); across
-the ten tables of §2 eleven, the four more under ¬(a⊕b) and ¬(a→b), where
-Bochvar's routes still hold (a↔b = ¬(a⊕b) in all nine cells) and ZTL's
-fail — and from the substitution in eight, those seven plus `¬Z`. Every one of the eight is a cell where the
+and (Z,Z), `↔` at (F,Z), (Z,F) and (Z,Z), `⊕` at (T,Z) and (Z,T) — and from the
+substitution in eight, those seven plus `¬Z`. (v2.1.3 added "across the ten tables of §2
+eleven"; the extra four were cells of the compositions of §2, which repeat the → and ⊕
+divergences, and the count is removed.) Which name the substitution bears depends on a
+convention for Bochvar's external negation: read as "A is false" (J₀ — Finn; Bonzio and
+Pra Baldi [32]; Carrara and Pra Baldi, RSL 18(4), 2025), it sends the third value to F, as ZTL does, and the
+substitution parts from Bochvar at ¬ only; read as "A is not true" (∼⊢A, Karpenko and
+Tomova's [11] table of Bochvar's external connectives), it sends it to T, and then the
+substitution is that table cell for cell, negation included. Every one of the eight is a cell where the
 substitution **derives a verdict from the absence of information**:
 `¬Z = T`, `Z → F = T`, `Z ↔ Z = T`. The implicational floor is therefore
 not a stylistic difference from a neighbour in the three-valued family.
@@ -1087,8 +1169,8 @@ It is the precise set of places where the standard default converts
 ignorance into a warrant, and the whole of the delta lives there.
 
 The same measurement answers the sceptic who proposes to keep classical
-logic and pick sensible defaults: §10 shows that for a formula in which
-one atom occurs in both polarities no conservative default exists at all.
+logic and pick one sensible default for every dirty atom: §10 shows that on the sink
+both uniform defaults grant the pass.
 
 ## 5. The calculus: signed tableaux (MEASURED + Lean)
 
@@ -1674,10 +1756,10 @@ runs in three different directions at once, and collapsing them into
   ↛ read as the credit detector).
 
 So the honest one-liner is neither "stronger" nor "weaker": **equal to
-classical logic in strength on verified data, strictly more expressive than
-any uniform classical default, and dominant as a solver** — identical on verified
-data, wider in subject, and decided correctly on dirty data, where
-classical logic has no input of its own and its defaults err.
+classical logic in strength on verified data, and strictly more expressive than
+any uniform classical default** — identical on verified data and wider in subject.
+(Up to v2.1.3 the line added "and dominant as a solver"; withdrawn in v2.1.4, see
+below and the version note.)
 
 **The relation that does hold, and its name.** Those three axes answer
 "which is the larger logic". They do not answer the question an engineer
@@ -1693,17 +1775,27 @@ default is the dangerous one here, because caution is a property of the
 atom's polarity rather than of the analyst's intent. Nor does choosing per
 polarity rescue it: in `(¬tainted ∨ sanitized) ∧ (tainted ∨ logged)` —
 an ordinary rule shape — the first conjunct needs `tainted` true to avoid
-a free pass and the second needs it false. **No conservative default
-exists.** Hence:
+a free pass and the second needs it false. Up to v2.1.3 this paragraph concluded
+"no conservative default exists", and from it that ZTL strictly **dominates**
+classical logic as a decision procedure, "and none the other way round". **Both are
+withdrawn in v2.1.4.** A conjunction is refused when either conjunct is, so the
+per-atom choice tainted := T, sanitized := F, logged := F refuses that rule, and
+tainted := T, sanitized := F refuses the bare sink: on these rules what fails is only a
+*uniform* default. (A per-atom choice is no general substitute for the mark either:
+on p ∨ ¬p every classical assignment grants, while ZTL refuses.) And the other way round does exist: on ¬¬p with p dirty
+the matrix grants T where "dirty := false" refuses, and the cleaning p := F overturns
+the grant; on ¬(tainted ∧ ¬sanitized), the sink rule rewritten by the classical equivalences of De
+Morgan and double negation, the matrix grants T with both atoms dirty. What holds is narrower and proved or measured:
 
-> There are problems ZTL answers correctly that classical logic answers
-> correctly under no choice of default, and none the other way round —
-> identical on verified data, better on dirty. As a decision
-> procedure ZTL strictly **dominates** classical logic.
+> On verified data ZTL is classical logic (`evalF_agrees`). On dirty data every
+> refusal of the matrix is witnessed by a reading of the dirty occurrences (§2,
+> exhaustive, zero exceptions); a grant is protected against every cleaning
+> where no dirty atom stands under a negation (`no_gift`, a sufficient condition), and
+> where it is not, the judge's grade says so: ON CREDIT, not EARNED. No uniform classical default reproduces
+> ZTL in either direction.
 
-Dominance and deductive strength are different relations, and only the
-first holds. Stating it as "stronger" invites the second reading, which
-this paper's own `ztl_taut_is_classical` refutes in one line.
+Deductive strength is a different relation again, and ZTL does not have more of
+it: this paper's own `ztl_taut_is_classical` says so in one line.
 
 **Local versus global reading of the mark.** "Z is a mark on the atom"
 admits two readings of verdicts: the global one ("a formula is

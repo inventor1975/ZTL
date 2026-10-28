@@ -1,0 +1,11 @@
+{
+ "zfl_sidecar": 1,
+ "file": "ZTL-TABLES.txt",
+ "sha256": "2ee562abafac03c5cfd35ff1b0fb9ddf7a8cd81fee053b777f9114b6a0e145b3",
+ "decision": {
+  "status": "waived",
+  "why": "the curator's own generated tables (ZTL-ALL-TABLES-16plus2.txt, checked against the lift: 0 mismatches) plus a two-sentence correction note stating what this file wrongly said before 2026-10-28",
+  "at": "2026-10-28T16:45:29+00:00",
+  "operator": "undeclared"
+ }
+}

@@ -1,11 +1,11 @@
 {
  "zfl_sidecar": 1,
  "file": "ZTL-draft_2.1.0.md",
- "sha256": "d07e830b63a9d6572974c65669eee5abe60d011d7acfb775f14be0ab064783d5",
+ "sha256": "83104f81874276b60e33a274c8cf6cd5eacba5d5fef3ca9cd836b6b9941ebcd4",
  "decision": {
   "status": "waived",
-  "why": "v2.1.3 changes are confined to the header note, abstract, §2, §10, two corpus-count notes and a word rename; those passages were extracted and read by a Sonnet prose-reviewer (15 findings), the factual ones fixed (inverted 'never stricter' direction, collapse vs occurrence independence, over-grant scale, global=after any cleaning); the rest of the text is v2.1.2 as published (md5-verified)",
-  "at": "2026-10-25T18:49:00+00:00",
+  "why": "changed passages reviewed by a Sonnet reader fork (11 findings); fixed: 'protected only where' -> sufficient condition, per-atom default scoped to the sink with the p∨¬p counterexample, 'refusal the mark caused', De Morgan+double negation named; not changed: excerpt-splicing artifacts, pre-existing unchanged claims (evalF_agrees wording, 'more expressive'); the full v3 journal paper carries the deeper fixes",
+  "at": "2026-10-28T16:50:22+00:00",
   "operator": "undeclared"
  }
 }

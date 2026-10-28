@@ -268,6 +268,112 @@ theorem strict_any (w : Nat → V) (hw : w 0 = T ∨ w 0 = F) :
 reading — and there every substitution grants it too. -/
 theorem judge_can_err : kev (fun _ => Z) (.neg (.conj (.atom 0) (.neg (.atom 0)))) ≠ T := by decide
 
+/-! Bochvar's external connectives are the classical default "dirty := false" (2026-10-29).
+Each external connective of Bochvar (Karpenko–Tomova convention: external negation reads "not true")
+applies the assertion J₂ (x ↦ x = T) to its arguments and then the classical connective. -/
+def bj (x : V) : Bool := x == T
+def bof (b : Bool) : V := if b then T else F
+
+def bev (v : Nat → V) : Fm → V
+  | .atom n    => v n
+  | .top       => T
+  | .bot       => F
+  | .neg φ     => bof (!bj (bev v φ))
+  | .conj φ ψ  => bof (bj (bev v φ) && bj (bev v ψ))
+  | .disj φ ψ  => bof (bj (bev v φ) || bj (bev v ψ))
+  | .imp φ ψ   => bof (!bj (bev v φ) || bj (bev v ψ))
+  | .xor φ ψ   => bof (bj (bev v φ) != bj (bev v ψ))
+  | .xnor φ ψ  => bof (bj (bev v φ) == bj (bev v ψ))
+
+theorem bj_bof : ∀ b : Bool, bj (bof b) = b := by decide
+theorem bj_T : ∀ x : V, bj x = true → x = T := by decide
+theorem bNot : ∀ y : V, y ≠ Z → bj (znot y) = !bj y := by decide
+theorem bAnd : ∀ x y : V, x ≠ Z → y ≠ Z → bj (zand x y) = (bj x && bj y) := by decide
+theorem bOr : ∀ x y : V, x ≠ Z → y ≠ Z → bj (zor x y) = (bj x || bj y) := by decide
+theorem bImp : ∀ x y : V, x ≠ Z → y ≠ Z → bj (zimp x y) = (!bj x || bj y) := by decide
+theorem bXor : ∀ x y : V, x ≠ Z → y ≠ Z → bj (zxor x y) = (bj x != bj y) := by decide
+theorem bXnor : ∀ x y : V, x ≠ Z → y ≠ Z → bj (zxnor x y) = (bj x == bj y) := by decide
+theorem bAtom : ∀ x : V, bj x = bj (if x = Z then F else x) := by decide
+
+/-- After the default "dirty := false" no formula takes Z. -/
+theorem subst_F_ne_Z (v : Nat → V) (φ : Fm) : evalF (subst v F) φ ≠ Z := by
+  cases evalF_classical (subst v F) φ with
+  | inl h =>
+      obtain ⟨n, rfl⟩ := h
+      show (if v n = Z then F else v n) ≠ Z
+      cases h : v n <;> decide
+  | inr h => cases h with
+    | inl h => rw [h]; decide
+    | inr h => rw [h]; decide
+
+/-- **Bochvar's external logic is classical logic under the default "dirty := false":** at every
+valuation, a formula is true in Bochvar's external connectives iff it is true after every dirty atom
+is set to false. -/
+theorem bochvar_is_default_false (v : Nat → V) : ∀ φ : Fm, bj (bev v φ) = bj (evalF (subst v F) φ)
+  | .atom n => bAtom (v n)
+  | .top => rfl
+  | .bot => rfl
+  | .neg φ => by
+      show bj (bof (!bj (bev v φ))) = bj (znot (evalF (subst v F) φ))
+      rw [bj_bof, bNot _ (subst_F_ne_Z v φ), bochvar_is_default_false v φ]
+  | .conj φ ψ => by
+      show bj (bof (bj (bev v φ) && bj (bev v ψ))) = bj (zand (evalF (subst v F) φ) (evalF (subst v F) ψ))
+      rw [bj_bof, bAnd _ _ (subst_F_ne_Z v φ) (subst_F_ne_Z v ψ),
+        bochvar_is_default_false v φ, bochvar_is_default_false v ψ]
+  | .disj φ ψ => by
+      show bj (bof (bj (bev v φ) || bj (bev v ψ))) = bj (zor (evalF (subst v F) φ) (evalF (subst v F) ψ))
+      rw [bj_bof, bOr _ _ (subst_F_ne_Z v φ) (subst_F_ne_Z v ψ),
+        bochvar_is_default_false v φ, bochvar_is_default_false v ψ]
+  | .imp φ ψ => by
+      show bj (bof (!bj (bev v φ) || bj (bev v ψ))) = bj (zimp (evalF (subst v F) φ) (evalF (subst v F) ψ))
+      rw [bj_bof, bImp _ _ (subst_F_ne_Z v φ) (subst_F_ne_Z v ψ),
+        bochvar_is_default_false v φ, bochvar_is_default_false v ψ]
+  | .xor φ ψ => by
+      show bj (bof (bj (bev v φ) != bj (bev v ψ))) = bj (zxor (evalF (subst v F) φ) (evalF (subst v F) ψ))
+      rw [bj_bof, bXor _ _ (subst_F_ne_Z v φ) (subst_F_ne_Z v ψ),
+        bochvar_is_default_false v φ, bochvar_is_default_false v ψ]
+  | .xnor φ ψ => by
+      show bj (bof (bj (bev v φ) == bj (bev v ψ))) = bj (zxnor (evalF (subst v F) φ) (evalF (subst v F) ψ))
+      rw [bj_bof, bXnor _ _ (subst_F_ne_Z v φ) (subst_F_ne_Z v ψ),
+        bochvar_is_default_false v φ, bochvar_is_default_false v ψ]
+
+theorem refines_refl (v : Nat → V) : refines v v := fun _ _ => rfl
+
+/-- **The judge dominates Bochvar.** What the judge earns, Bochvar grants; and on a dirty p,
+Bochvar grants ¬p, which the judge refuses and the dirty reading does not earn. -/
+theorem earned_dominates_bochvar (v : Nat → V) (φ : Fm) (h : Earned v φ) : bev v φ = T :=
+  bj_T _ (by rw [bochvar_is_default_false]; have e := default_of_earned v φ F h; rw [e]; rfl)
+theorem bochvar_strict : bev (fun _ => Z) (.neg (.atom 0)) = T ∧ ¬ Earned (fun _ => Z) (.neg (.atom 0)) ∧
+    kev (fun _ => Z) (.neg (.atom 0)) ≠ T :=
+  ⟨by decide, fun h => absurd (h _ (refines_refl _)) (by decide), by decide⟩
+
+/-! Classical logic with enumeration: grant iff the formula is classically true in every completion
+(a total refinement; on total valuations ZTL is classical, `evalF_agrees`). Under the criterion of this
+module (a grant is right iff the dirty reading earns it, i.e. strong Kleene T) the judge has the same
+right grants and its wrong grants are among enumeration's. -/
+def total (w : Nat → V) : Prop := ∀ n, w n ≠ Z
+def Enum (v : Nat → V) (φ : Fm) : Prop := ∀ w, refines v w → total w → evalF w φ = T
+
+theorem enum_of_earned (v : Nat → V) (φ : Fm) (h : Earned v φ) : Enum v φ := fun w hr _ => h w hr
+
+/-- **The judge dominates enumeration under the dirty reading.** Right grants coincide (both are
+exactly the strong Kleene T), and every wrong grant of the judge is a wrong grant of enumeration. -/
+theorem earned_dominates_enum (v : Nat → V) (φ : Fm) :
+    ((Earned v φ ∧ kev v φ = T) ↔ (Enum v φ ∧ kev v φ = T)) ∧
+    ((Earned v φ ∧ kev v φ ≠ T) → (Enum v φ ∧ kev v φ ≠ T)) :=
+  ⟨⟨fun ⟨h, k⟩ => ⟨enum_of_earned v φ h, k⟩, fun ⟨_, k⟩ => ⟨earned_of_kleene v φ k, k⟩⟩,
+   fun ⟨h, k⟩ => ⟨enum_of_earned v φ h, k⟩⟩
+
+/-- Strictly: on a dirty p, enumeration grants p → p, which the judge refuses and the dirty reading
+does not earn (two reads may give 1 and 0). -/
+theorem enum_strict : Enum (fun _ => Z) (.imp (.atom 0) (.atom 0)) ∧
+    ¬ Earned (fun _ => Z) (.imp (.atom 0) (.atom 0)) ∧ kev (fun _ => Z) (.imp (.atom 0) (.atom 0)) ≠ T := by
+  refine ⟨fun w _ ht => ?_, fun h => absurd (h _ (refines_refl _)) (by decide), by decide⟩
+  have h0 := ht 0
+  show zimp (w 0) (w 0) = T
+  revert h0
+  cases w 0 <;> decide
+
 end V
 
 #print axioms V.covers_rd
@@ -290,3 +396,9 @@ end V
 #print axioms V.substitution_of_earned
 #print axioms V.strict_any
 #print axioms V.judge_can_err
+#print axioms V.bochvar_is_default_false
+#print axioms V.earned_dominates_bochvar
+#print axioms V.bochvar_strict
+#print axioms V.enum_of_earned
+#print axioms V.earned_dominates_enum
+#print axioms V.enum_strict

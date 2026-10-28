@@ -1,12 +1,12 @@
-# ZTL — Zero-Trust Logic — v2.1.4
+# ZTL — Zero-Trust Logic — v2.1.5
 
-**V. Reznik. Preprint, v2.1.4 — 2026-10-28. Version DOI:
-[10.5281/zenodo.23737470](https://doi.org/10.5281/zenodo.23737470)
+**V. Reznik. Preprint, v2.1.5 — 2026-10-28. Version DOI:
+[10.5281/zenodo.23740723](https://doi.org/10.5281/zenodo.23740723)
 (this file is the source; the PDF is built by `publications/ztl/mkpreprint.py`).
 Concept DOI:
 [10.5281/zenodo.21318981](https://doi.org/10.5281/zenodo.21318981)**
 
-*Version 2.1.4 corrects 2.1.3 in four places: the tables of §2 (the four negated tables are compositions, not lifts), the withdrawn claims that ZTL strictly dominates classical logic and that no conservative default exists, and the form-dependence of the sink. Details, and the notes of every earlier version, are in the Version history at the end.*
+*Version 2.1.5 proves a dominance theorem (§10, `ZDirty.lean`): under the criterion that a grant is right iff the dirty reading earns it, the judge's EARNED verdict is right wherever any classical substitution of the dirty atoms is right, and right where each such substitution is wrong. 2.1.4 withdrew the older claim that the matrix dominates classical logic; for the matrix alone that withdrawal stands (¬¬p). It also proves that the dirty reading, taken as a semantics, is strong Kleene logic (§2). Version 2.1.4 corrected the tables of §2 (the four negated tables are compositions, not lifts) and the form-dependence of the sink. Details, and the notes of every earlier version, are in the Version history at the end.*
 
 The tag MEASURED means "verified by machine enumeration" (code in this
 repository), as opposed to "argued"; references to Lean mean proofs
@@ -63,9 +63,12 @@ receives T, and it is the judge's warranty grade, not the matrix, that withholds
 pass there (ON CREDIT: true only until a cleaning). Every refusal of the matrix is
 witnessed by a reading of the dirty occurrences (§2, measured exhaustively); its grants
 are protected against every cleaning where no dirty atom stands under a negation
-(§19, `no_gift`, a sufficient condition). (Up to
-v2.1.3 this paragraph concluded that ZTL "strictly dominates" classical logic as a
-decision procedure; that is withdrawn in v2.1.4, see the Version history.) As a system of
+(§19, `no_gift`, a sufficient condition). Under the criterion
+that a grant is right iff the dirty reading earns it, the checked verdict dominates: the
+judge's EARNED (T under every refinement of the marks) is right wherever any classical
+substitution of the dirty atoms is right, and right where each substitution is wrong (§10,
+`ZDirty.lean`, empty axiom list). The matrix alone does not dominate (¬¬p), and v2.1.4's
+withdrawal of the older claim, which was made of the matrix, stands. As a system of
 proofs on classical logic's own domain the two are exactly equal (`evalF_agrees`), and over its own
 valuations ZTL has fewer validities — the price of admitting dirty
 input (`ztl_taut_is_classical`, `not_conversely`) — and "stronger", which in
@@ -275,7 +278,13 @@ a formula earned iff true under every classical reading of its
 occurrences — the greedy judge is never stricter than the dirty reading:
 in 248,121 marked cells (exhaustive, depth ≤ 2, three atoms) and 14,555
 random formulas (depth ≤ 6, four atoms; 740 longer ones skipped) the judge
-never answers F where every occurrence-reading is T. Each of the 14,844
+never answers F where every occurrence-reading is T. PROVED since v2.1.5
+(`lean/ZDirty.lean`, empty axiom list): read as a semantics, the dirty reading IS strong
+Kleene logic — the lazy register of §9 — since occurrences in different subformulas are
+independent reads (`rd_is_kleene`); each ZTL connective is that register followed by the
+assertion that sends Z to F (`*_is_up_kleene`); and the matrix never answers F where
+Kleene answers T (`never_stricter`), so every refusal is witnessed by a reading
+(`refusal_witnessed`). Each of the 14,844
 pool cells where it answers F and the global reading T is a cell only the
 stable reading grants. The converse does not hold, and it is named: the
 judge grants 55,176 verdicts the occurrence-reading does not earn — 44,847
@@ -1565,8 +1574,9 @@ runs in three different directions at once, and collapsing them into
 So the honest one-liner is neither "stronger" nor "weaker": **equal to
 classical logic in strength on verified data, and strictly more expressive than
 any uniform classical default** — identical on verified data and wider in subject.
-(Up to v2.1.3 the line added "and dominant as a solver"; withdrawn in v2.1.4, see
-below and the Version history.)
+And with the heredity check, **dominant as a solver** over every classical substitution
+of the dirty atoms, under the dirty criterion — a theorem since v2.1.5, stated exactly
+below; the matrix alone is not.
 
 **The relation that does hold, and its name.** Those three axes answer
 "which is the larger logic". They do not answer the question an engineer
@@ -1592,14 +1602,36 @@ tainted := T, sanitized := F refuses the bare sink: on these rules what fails is
 on p ∨ ¬p every classical assignment grants, while ZTL refuses.) And the other way round does exist: on ¬¬p with p dirty
 the matrix grants T where "dirty := false" refuses, and the cleaning p := F overturns
 the grant; on ¬(tainted ∧ ¬sanitized), the sink rule rewritten by the classical equivalences of De
-Morgan and double negation, the matrix grants T with both atoms dirty. What holds is narrower and proved or measured:
+Morgan and double negation, the matrix grants T with both atoms dirty. So the matrix alone does not dominate. **The checked verdict does, and this is proved
+(v2.1.5, `lean/ZDirty.lean`, empty axiom list).** Take as the criterion of a right
+answer the one this paper adopts: a grant is right iff the dirty reading earns it,
+that is, iff the formula is true under every reading of its occurrences — which is
+exactly its strong Kleene value T (`rd_is_kleene`). Call φ EARNED at v, as the judge
+does, if it is T at v and under every refinement of the marks. Then for every
+valuation v, formula φ and classical substitution σ of the dirty atoms (uniform, like
+"dirty := false", or chosen atom by atom):
 
-> On verified data ZTL is classical logic (`evalF_agrees`). On dirty data every
-> refusal of the matrix is witnessed by a reading of the dirty occurrences (§2,
-> exhaustive, zero exceptions); a grant is protected against every cleaning
-> where no dirty atom stands under a negation (`no_gift`, a sufficient condition), and
-> where it is not, the judge's grade says so: ON CREDIT, not EARNED. No uniform classical default reproduces
-> ZTL in either direction.
+> (a) strong Kleene T ⇒ EARNED (`earned_of_kleene`: Kleene is monotone under
+> refinement, and the matrix never refuses what Kleene earns, `never_stricter`);
+> (b) EARNED ⇒ σ grants (`substitution_of_earned`: a substitution is a total refinement).
+> So if the right answer is to grant, the judge grants, by (a); if the right answer is
+> to refuse and σ refuses, the judge refuses, since by (b) a grant of the judge would
+> make σ grant. Wherever σ answers right, the judge answers right. Strictly: whatever
+> value σ gives a dirty p, it grants one of p, ¬p, which the judge refuses and the dirty
+> reading does not earn (`strict_any`).
+
+The judge is not always right: ¬(p ∧ ¬p) is EARNED on a dirty p and not earned on the
+dirty reading (`judge_can_err`) — and there every substitution grants it too.
+
+MEASURED on the regression pool, 14,530 cells with a dirty atom, against the two
+uniform substitutions: the judge right and "dirty := false" wrong in 4,408 cells,
+"dirty := true" wrong in 5,638, and the reverse zero for both, as the theorem requires; for the matrix alone the reverse counts are 1,458 and 1,606. Dominance
+is relative to the criterion: under the stable one (a grant is right iff every cleaning
+grants) the judge refuses p ∨ ¬p, which "dirty := false" rightly grants. On verified
+data ZTL is classical logic (`evalF_agrees`); every refusal of the matrix is witnessed
+(§2); a grant survives every cleaning where no dirty atom stands under a negation
+(`no_gift`, a sufficient condition), and where it does not, the judge says so — ON
+CREDIT, not EARNED.
 
 Deductive strength is a different relation again, and ZTL does not have more of
 it: this paper's own `ztl_taut_is_classical` says so in one line.
@@ -3543,7 +3575,8 @@ axiom list, `#print axioms`).
 
 ## Version history
 
-Earlier versions on Zenodo: v2.1.3: [10.5281/zenodo.23648237](https://doi.org/10.5281/zenodo.23648237);
+Earlier versions on Zenodo: v2.1.4: [10.5281/zenodo.23737470](https://doi.org/10.5281/zenodo.23737470);
+v2.1.3: [10.5281/zenodo.23648237](https://doi.org/10.5281/zenodo.23648237);
 v2.1.2: [10.5281/zenodo.23019513](https://doi.org/10.5281/zenodo.23019513);
 v2.1.1: [10.5281/zenodo.23008041](https://doi.org/10.5281/zenodo.23008041);
 v2.1.0: [10.5281/zenodo.23007861](https://doi.org/10.5281/zenodo.23007861);
@@ -3555,6 +3588,21 @@ v1.2: [10.5281/zenodo.21440066](https://doi.org/10.5281/zenodo.21440066);
 v1.1: [10.5281/zenodo.21323552](https://doi.org/10.5281/zenodo.21323552);
 v1.0: [10.5281/zenodo.21318982](https://doi.org/10.5281/zenodo.21318982).
 
+v2.1.5 (2026-10-28) proves a dominance theorem. v2.1.4 withdrew "ZTL strictly dominates
+classical logic as a decision procedure", a claim made of the matrix, which the matrix
+does not satisfy (¬¬p); that withdrawal stands. At the curator's question whether a
+dominance holds for the system as used, one does: under the criterion that a grant is
+right iff the dirty reading earns it, the judge's EARNED verdict — T under every
+refinement of the marks — is right wherever any classical substitution of the dirty
+atoms is right, and right where each substitution is wrong; it can still be wrong
+(¬(p ∧ ¬p)), and then every substitution is wrong too. New module `lean/ZDirty.lean`, empty axiom list:
+`rd_is_kleene` (the dirty reading is strong Kleene logic), `*_is_up_kleene` (each
+connective is Kleene followed by the assertion), `covers_rd`/`never_stricter` (refusals
+witnessed), the lifted negated connectives (`nand_lift` …), and the dominance theorem
+(`earned_of_kleene`, `substitution_of_earned`, `strict_any`, `judge_can_err`); measured on
+the pool against the two uniform substitutions, 0 reverse cases in 14,530. The version notes moved to this history; the abstract
+now starts on page 1. Corpus: 2,627 theorems across 144 modules, all on the empty axiom
+list.
 v2.1.4 (2026-10-28) is a CORRECTION of v2.1.3, in four connected places; nothing else in
 the text changes. (1) *The tables of §2.* v2.1.3 printed ten tables, said all ten are generated
 by the principle, and said the last four — ¬(a∧b), ¬(a∨b), ¬(a⊕b), ¬(a→b) — "cannot be

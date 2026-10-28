@@ -1,11 +1,11 @@
 {
  "zfl_sidecar": 1,
  "file": "ZTL-draft_2.1.0.md",
- "sha256": "ca9fdc780e11dcf3d2dfd7e5da9f6279dbedf9eb32e92e052dd52a9a9ec60450",
+ "sha256": "024d679884fa29b344a9afc490c19b22e1647d8dc8dce225c9e641d73c53c184",
  "decision": {
   "status": "waived",
-  "why": "layout only: version notes moved verbatim to a 'Version history' appendix, a 3-line notice on top, cross-references renamed; no claim changed (curator's request)",
-  "at": "2026-10-28T17:18:21+00:00",
+  "why": "v2.1.5 changes reviewed by a Sonnet reader (11 findings); fixed: generalized to any classical substitution, refusal half of the argument written out, 'judge can err' stated (¬(p∧¬p)), 'restores' dropped (2.1.4's withdrawal for the matrix stands), criterion up front; left: splice artifacts, modelling-choice critique (answered: criterion stated, stable criterion gives no dominance)",
+  "at": "2026-10-28T18:20:06+00:00",
   "operator": "undeclared"
  }
 }

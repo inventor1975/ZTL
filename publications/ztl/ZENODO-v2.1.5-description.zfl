@@ -1,0 +1,11 @@
+{
+ "zfl_sidecar": 1,
+ "file": "ZENODO-v2.1.5-description.md",
+ "sha256": "c415cd7bd99a22d655e47b12217d0853ec946e54b57d0628a77e37a3722a6d7d",
+ "decision": {
+  "status": "waived",
+  "why": "short description assembled from the reviewed v2.1.5 text and the reviewed v2.1.4 short description; same claims, same hedges",
+  "at": "2026-10-28T18:20:06+00:00",
+  "operator": "undeclared"
+ }
+}

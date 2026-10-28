@@ -4,204 +4,10 @@
 [10.5281/zenodo.23737470](https://doi.org/10.5281/zenodo.23737470)
 (this file is the source; the PDF is built by `publications/ztl/mkpreprint.py`).
 Concept DOI:
-[10.5281/zenodo.21318981](https://doi.org/10.5281/zenodo.21318981)
-(v2.1.3: [10.5281/zenodo.23648237](https://doi.org/10.5281/zenodo.23648237);
-v2.1.2: [10.5281/zenodo.23019513](https://doi.org/10.5281/zenodo.23019513);
-v2.1.1: [10.5281/zenodo.23008041](https://doi.org/10.5281/zenodo.23008041);
-v2.1.0: [10.5281/zenodo.23007861](https://doi.org/10.5281/zenodo.23007861);
-v2.0.0: [10.5281/zenodo.22842725](https://doi.org/10.5281/zenodo.22842725);
-v1.4.1: [10.5281/zenodo.22644261](https://doi.org/10.5281/zenodo.22644261);
-v1.4: [10.5281/zenodo.22643843](https://doi.org/10.5281/zenodo.22643843);
-v1.3: [10.5281/zenodo.21472971](https://doi.org/10.5281/zenodo.21472971);
-v1.2: [10.5281/zenodo.21440066](https://doi.org/10.5281/zenodo.21440066);
-v1.1: [10.5281/zenodo.21323552](https://doi.org/10.5281/zenodo.21323552);
-v1.0: [10.5281/zenodo.21318982](https://doi.org/10.5281/zenodo.21318982)).
-v2.1.4 (2026-10-28) is a CORRECTION of v2.1.3, in four connected places; nothing else in
-the text changes. (1) *The tables of §2.* v2.1.3 printed ten tables, said all ten are generated
-by the principle, and said the last four — ¬(a∧b), ¬(a∨b), ¬(a⊕b), ¬(a→b) — "cannot be
-read off the first five"; the companion file `ZTL-TABLES.txt` named two of them Sheffer's
-stroke and Peirce's arrow. That was wrong, and the curator found it: those four are
-COMPOSITIONS — ¬ applied to the verdict of a binary connective — not lifts. The principle
-applied to classical NAND, NOR, XNOR and non-implication gives other tables, and those
-ARE read off the primitives, on the argument side of De Morgan's laws: lifted NAND =
-¬a∨¬b, lifted NOR = ¬a∧¬b, lifted XNOR = ↔, lifted non-implication = a∧¬b (each differs
-from the composition in 3, 3, 5 and 3 cells). §2 now prints the lifts of all sixteen binary
-and both unary classical functions, and the four compositions under their own name. What
-stays true is narrower than v2.1.3 said: negating a VERDICT is not lifting a negated
-connective. The results built on the six primitives — greediness, agreement on verified
-data, the twenty-six laws (De Morgan fails as a law of formulas), the signature, the order
-of birth, the seven Bochvar cells, the clone of §3.8 (whose NAND and NOR were the
-true lifts all along) — do not change. The count "eleven cells across the ten tables"
-against Bochvar (§10) counted compositions and is removed. (2) *"Dominates".* v2.0.0–v2.1.3
-said that as a decision procedure ZTL strictly dominates classical logic: problems ZTL
-answers correctly and no classical default does, "and none the other way round". The
-second half is false by the criterion the first half uses: on ¬¬p with p dirty ZTL grants
-T and the default "dirty := false" refuses, and cleaning p := F overturns ZTL's grant —
-the over-grant v2.1.3 itself measured. The claim is withdrawn (§1, §4, §10). What holds:
-on verified data ZTL is classical logic; every refusal ZTL makes is witnessed by a reading
-of the dirty occurrences (measured exhaustively in §2, zero exceptions); grants are protected
-against every cleaning where no dirty atom stands under a negation (`NoGift.no_gift`, a
-sufficient condition); and no uniform classical
-default reproduces ZTL in either direction. (3) *"No conservative default exists"*
-(§1, §4, §10) was wrong: a conjunction is refused when either conjunct is, so a per-atom
-worst-case choice refuses the sink rule; on it only uniform defaults fail. (4) *The sink is
-form-dependent.* The matrix refuses ¬tainted ∨ sanitized, the form the tool writes, and
-grants the classically equivalent ¬(tainted ∧ ¬sanitized) with both atoms dirty: a
-negation over a compound turns a refusal into a grant. The judge's warranty grade
-withholds the pass there (ON CREDIT, not EARNED); the matrix alone does not. Items (3)
-and (4) were found by a reviewer fork reading the companion journal paper; (1) by the
-curator.
-v2.1.3 (2026-10-25) names what Z is. Earlier versions called Z the mark of an
-*unverified* atom, and the word suggested the wrong reading: that the atom has one value
-we merely do not know yet — the stable reading on which supervaluation rests and which
-ZTL rejects (§10). Z is a **dirty** parameter: not ours — another system owns it, and
-its owner may change it between two reads — so each occurrence is read on its own, and
-verification is what cleans it, replacing the dirty parameter by a checked value. That
-is the reason, absent until now, for the construction everything rests on: the lift
-substitutes every occurrence of Z independently (§2). No table, theorem or earlier
-number changes. One measurement is added (§2, `book/checks/dirty_census.py`): against
-the dirty reading itself — a formula is earned iff it is true under every reading of
-its occurrences — the greedy judge refuses nothing it would earn: zero such refusals in
-248,121 marked cells (exhaustive, depth ≤ 2, three atoms) and in 14,555 random formulas
-of depth ≤ 6 (740 longer ones skipped, not hidden); and every one of the 14,844 cells
-in which it refuses what the global reading grants is a cell that only the stable
-reading grants. What the dirty reading does not explain is named beside it: the
-over-grants — 44,847 verdicts T in that pool that a cleaning can overturn, ¬¬Z = T the
-shortest (the dirty reading would read it F) — stay the price of the greedy collapse. The
-judge's API reports the field `dirty`, keeping `unverified` as a deprecated alias. The
-version notes below keep the word "unverified": they record what earlier versions said.
-v2.1.2 (same day) corrects how the relation to classical logic is worded, after a
-hostile review: "equal to classical logic in strength" holds ON VERIFIED DATA and is now
-always said with that domain; over its own valuations ZTL has fewer validities
-(`ztl_taut_is_classical`, `not_conversely`) — the price of admitting unverified input,
-named in §3.2, not the "different denominator" v2.1.0 called it; "conservative extension"
-was the wrong term and is replaced (§10); ZTL is strictly more expressive than any
-uniform classical default (binary clone 2 + 512 against 2 + 16, measured) — external
-Bochvar is not such a default: its clone equals ZTL's, and "the default is Bochvar" holds
-on the binary connectives only (§4); §10's "588 … the same set" is 584 as a set. No
-theorem changed; two measurements were added (the binary clones of the uniform defaults
-and of external Bochvar), and §3.8 now says what the lift makes of the degenerate kernels:
-the projection becomes the truth detector J_T, ¬p becomes ZTL's own negation J_F.
-v2.1.1 (same day) changed only the header: the v2.1.0 PDF went out with the working
-draft's header ("draft", "not published", "Version DOI: minted on upload"); no line of
-the text below changed.
-v2.1.0 corrects how many values ZTL has, and proves where its values come from.
-Earlier versions, 2.0.0 included, called ZTL "a two-valued logic with a mark, not a
-three-valued logic". That name was wrong in one respect: it denied the atom its value. An
-atom is an assertion, and an unverified atom has the value Z (`ztl.ev('p', {'p': 'Z'}) = Z`; `eqI m1 m2 = Z` in `ZIndisc.lean` is
-the same fact one order up). ZTL is a *three-valued logic whose every connective is
-two-valued*: three values on the atoms, two on everything built from them. Nothing
-previously measured or proved changes — the greediness theorem is exactly the statement that the
-third value never climbs above the atoms (§§2, 4, 10). And the one asymmetric cell,
-¬Z = F, is shown to give the values an *order of birth*, proved over the whole language
-(§3.9, `ZOrigin.lean`, empty axiom list): under pure doubt F is born first and T only
-through an F — the Z, F, T part of the genetic order N, Z, F, T that §4 names (N, the
-solver's phase, lies outside the tables); classical logic, whose negation is an involution,
-has no such order.
-v2.0.0 states the relation to classical logic and measures both of its
-halves (§3.1, §4, §10). *On verified data ZTL is classical logic:* every
-formula takes the same value under every mark-free valuation
-(`evalF_agrees`, empty axiom list), and on the regression pool of 2926
-entries (2906 distinct formulas) over two atoms the two logics validate the same 584 formulas,
-element for element — not one classical law is given up. *On unverified
-data ZTL decides:* of twenty-six classical laws, twelve hold on a marked
-atom and fourteen are refuted with an exhibited witness, none left
-undecided — where classical logic decides none, because it cannot take
-the input; in Lean the fourteen are the theorems `*_needs_ground`
-(renamed from `*_fails` in v2.0.0, twenty-six names in all). The
-engineering default "unverified := false" is identified as Bochvar's
-external logic of 1938 — zero divergences of forty-five binary cells —
-from which ZTL parts in seven cells and from the default itself in eight,
-each a verdict derived from no information. The mark is shown expressible
-inside the language and its reach measured: 1840 of 2924 compounds of the
-pool are mark-sensitive (`marksens.py`, with the definition beside the
-number). And the taint-sink exhibit shows both classical defaults granting
-a pass to an unverified sink, with no conservative default available —
-whence, *as a decision procedure, ZTL strictly dominates classical logic,
-while remaining exactly its equal as a system of proofs on classical
-logic's own domain* (`ztl_taut_is_classical`). Every number of this frame
-is regenerated by `paper/core_logic_checks.py`, now a stand of the
-regression. v2.0.0 is also the structural release: the repository is the
-logic alone — the seven-language taint analyzer moved to
-`inventor1975/introspect`, the natural-language studio to
-`inventor1975/ztlstudio`, each vendoring a copy of this core.
-v1.4.1 (2026-09-07) corrected §2: all ten ZTL tables are shown — the
-five primitives, ↔ and the four negated compounds — with the measured
-failure of every classical route to the second five; the v1.4 PDF showed
-six. v1.4 adds: *no numbered section rests on measurement alone* — every one of the
-eighteen sections that carried the MEASURED tag now names kernel-checked
-theorems behind its load-bearing claims, the corpus growing threefold to
-sixty-six modules and 1112 theorems, all on the empty axiom list (§8);
-*the six traditions of §1 as six embedding theorems* — IEEE 754 NaN, SQL
-NULL, taint tracking, abstract interpretation, Dempster–Shafer and
-provenance semirings, each formalised as its own tradition states it,
-ZTL's verdict placed inside it and the unformalised remainder named
-(`ZNaN.lean`, `ZNull.lean`, `ZFlow.lean`, `ZAbsInt.lean`, `ZDempster.lean`,
-`ZProv.lean`; §§1, 15, 16, 20, 27); *three hardness results on the
-warranties of §19* — the hereditary grade is a tautology check
-(coNP-hard, `ZHeredTaut.lean`), the exact width of an inquiry is NP-hard
-(`ZWidthHard.lean`), the exact receipt is NP-hard (`ZReceiptHard.lean`),
-so the three grades the judge does not compute are the three it cannot
-compute cheaply unless P = NP — every complexity claim held at hardness, membership
-argued and not claimed — with the receipt's exactness on linear claims
-proved under a definite reading (`LabelExactDefinite.lean`); *a syntactic
-cut-elimination procedure with its bound as a function* (§5,
-`ZCutElim.lean`); *the Lean port of the parameter tableaux of §6* — the
-axiom tier of the four quantifier rules measured — three sound on the
-empty axiom list, the fourth only classically and kept outside the
-corpus — a fuel-bounded search built and proved sound, and the finite half
-of completeness a theorem, the infinite half stated with its parts and
-left argued (`ZParamEngine.lean`, `ZParamHintikka.lean`; §§6, 27); the
-census of the numeric floor — which laws hold on marked intervals: for
-numbers commutativity and the unit, for samples neither — (§15,
-`ZNumPrice.lean`, `ZNumNames.lean`); the global
-reading with theorems of its own (§10, `ContextClosure.lean`); the
-identity and free-instantiation results of §25 for an arbitrary domain
-(`ZEqGeneric.lean`, `ZFreeUIGeneric.lean`); and the precise position
-against Tomova's natural-implication criterion (§4).**
+[10.5281/zenodo.21318981](https://doi.org/10.5281/zenodo.21318981)**
 
-**Carried over from the published v1.3 — version DOI
-[10.5281/zenodo.21472971](https://doi.org/10.5281/zenodo.21472971).
-Concept DOI:
-[10.5281/zenodo.21318981](https://doi.org/10.5281/zenodo.21318981)
-(v1.2: [10.5281/zenodo.21440066](https://doi.org/10.5281/zenodo.21440066);
-v1.1: [10.5281/zenodo.21323552](https://doi.org/10.5281/zenodo.21323552);
-v1.0: [10.5281/zenodo.21318982](https://doi.org/10.5281/zenodo.21318982)).
-v1.3 adds: the Suszko positioning (§4) — Z as a mark rather than a third
-truth value is Suszko's Thesis taken as architecture rather than
-recovered by reduction, with the discriminator measured (that reading
-withdrawn in 2.1.0: Z is the value of atoms, §4); the signature
-result (§4) — the single rule ¬¬p ⊨ p separates ZTL from each of its four
-involutive-negation neighbours (K3, LP, weak Kleene, Ł₃) and, by one
-lemma, from any three-valued matrix with involutive negation, its cause
-proved in `lean/Signature.lean` on the empty axiom list; *first-order
-identity* (§24, `ZEq.lean`) — a `=` predicate whose reflexivity is an
-earned verdict, falling to Z on an unverified reference, while Leibniz's
-law licenses substitution only through an earned equality; and *free
-logic with definite descriptions* (§25, `ZDesc.lean`) — a non-denoting
-term takes the mark (existence = earned self-identity), and the greedy
-collapse (excluded middle on it is F, not a gap and not super-true)
-sets ZTL apart from the neutral free-logic school. v1.2 added: the central construction named — the zero-trust lift (§2);
-§3.8, an explicit Lean-verified census of the sixteen lifted binary
-connectives — re-deriving Finn's external-Bochvar completeness landscape
-(Finn 1974): solo-completeness tracks non-commutative directionality (Sheffer's
-stroke and Peirce's arrow are not complete alone; both implications and
-both abjunctions are), and the basis ↛ reads as the credit detector; the
-fence-depth theorem in §19 (exactly m−1; no constant-depth fence);
-the at-scale stress-test of the warranty ladder; the recalculated
-Bochvar ledger (§4); and the three-laws-of-thought reading — a denial is
-free, an affirmation is on credit (§3.1); and the paradox engine (§11) — the
-expeditions unified as one construction paradox(f)=ground(S=f(S)) with three
-measured layers; and — the headline of this version — a TEMPORAL LAYER
-(§§21–23) in which the only clock is the arrival of ground: the warranty
-ladder read as temporal quantifiers (now / at every ending / always on
-every path), the absorption and arrow theorems machine-checked
-(`ZTime.lean`), an expiry event that opens epochs, and the EPOCH BOUNDARY
-THEOREM (`EpochBoundary.lean`) — a verdict invariant across unrestricted
-epoch crossing reads none of its grounds, so non-trivial guarantees
-require the boundary between learning and world change; plus the
-derivation theorem (§23) — the rules that hold on marked data transport
-truth but cannot mint it.**
+*Version 2.1.4 corrects 2.1.3 in four places: the tables of §2 (the four negated tables are compositions, not lifts), the withdrawn claims that ZTL strictly dominates classical logic and that no conservative default exists, and the form-dependence of the sink. Details, and the notes of every earlier version, are in the Version history at the end.*
+
 The tag MEASURED means "verified by machine enumeration" (code in this
 repository), as opposed to "argued"; references to Lean mean proofs
 checked by the Lean 4 kernel with an **empty axiom list**.
@@ -259,7 +65,7 @@ witnessed by a reading of the dirty occurrences (§2, measured exhaustively); it
 are protected against every cleaning where no dirty atom stands under a negation
 (§19, `no_gift`, a sufficient condition). (Up to
 v2.1.3 this paragraph concluded that ZTL "strictly dominates" classical logic as a
-decision procedure; that is withdrawn in v2.1.4, see the version note.) As a system of
+decision procedure; that is withdrawn in v2.1.4, see the Version history.) As a system of
 proofs on classical logic's own domain the two are exactly equal (`evalF_agrees`), and over its own
 valuations ZTL has fewer validities — the price of admitting dirty
 input (`ztl_taut_is_classical`, `not_conversely`) — and "stronger", which in
@@ -563,7 +369,7 @@ positive definitions survive — a→b = ¬a∨b, a⊕b = (a∧¬b)∨(¬a∧b),
 negative routes that need verified ground, §3.1.) v2.1.3 called these four
 "generated by the principle" and said they "cannot be read off the first five", and
 `ZTL-TABLES.txt` named two of them Sheffer's stroke and Peirce's arrow; that was
-wrong (see the version note). A compound's negation is a legitimate formula, and its
+wrong (see the Version history). A compound's negation is a legitimate formula, and its
 table is printed because it is not the lift; the lifted Sheffer stroke and Peirce
 arrow are ¬a∨¬b and ¬a∧¬b.
 
@@ -1760,7 +1566,7 @@ So the honest one-liner is neither "stronger" nor "weaker": **equal to
 classical logic in strength on verified data, and strictly more expressive than
 any uniform classical default** — identical on verified data and wider in subject.
 (Up to v2.1.3 the line added "and dominant as a solver"; withdrawn in v2.1.4, see
-below and the version note.)
+below and the Version history.)
 
 **The relation that does hold, and its name.** Those three axes answer
 "which is the larger logic". They do not answer the question an engineer
@@ -3732,3 +3538,206 @@ reliability of the results does not depend on trusting the AI: every
 numerical claim is checkable by the repository code (`run_all.py` —
 full regression), and every Lean claim by the Lean 4 kernel (empty
 axiom list, `#print axioms`).
+
+---
+
+## Version history
+
+Earlier versions on Zenodo: v2.1.3: [10.5281/zenodo.23648237](https://doi.org/10.5281/zenodo.23648237);
+v2.1.2: [10.5281/zenodo.23019513](https://doi.org/10.5281/zenodo.23019513);
+v2.1.1: [10.5281/zenodo.23008041](https://doi.org/10.5281/zenodo.23008041);
+v2.1.0: [10.5281/zenodo.23007861](https://doi.org/10.5281/zenodo.23007861);
+v2.0.0: [10.5281/zenodo.22842725](https://doi.org/10.5281/zenodo.22842725);
+v1.4.1: [10.5281/zenodo.22644261](https://doi.org/10.5281/zenodo.22644261);
+v1.4: [10.5281/zenodo.22643843](https://doi.org/10.5281/zenodo.22643843);
+v1.3: [10.5281/zenodo.21472971](https://doi.org/10.5281/zenodo.21472971);
+v1.2: [10.5281/zenodo.21440066](https://doi.org/10.5281/zenodo.21440066);
+v1.1: [10.5281/zenodo.21323552](https://doi.org/10.5281/zenodo.21323552);
+v1.0: [10.5281/zenodo.21318982](https://doi.org/10.5281/zenodo.21318982).
+
+v2.1.4 (2026-10-28) is a CORRECTION of v2.1.3, in four connected places; nothing else in
+the text changes. (1) *The tables of §2.* v2.1.3 printed ten tables, said all ten are generated
+by the principle, and said the last four — ¬(a∧b), ¬(a∨b), ¬(a⊕b), ¬(a→b) — "cannot be
+read off the first five"; the companion file `ZTL-TABLES.txt` named two of them Sheffer's
+stroke and Peirce's arrow. That was wrong, and the curator found it: those four are
+COMPOSITIONS — ¬ applied to the verdict of a binary connective — not lifts. The principle
+applied to classical NAND, NOR, XNOR and non-implication gives other tables, and those
+ARE read off the primitives, on the argument side of De Morgan's laws: lifted NAND =
+¬a∨¬b, lifted NOR = ¬a∧¬b, lifted XNOR = ↔, lifted non-implication = a∧¬b (each differs
+from the composition in 3, 3, 5 and 3 cells). §2 now prints the lifts of all sixteen binary
+and both unary classical functions, and the four compositions under their own name. What
+stays true is narrower than v2.1.3 said: negating a VERDICT is not lifting a negated
+connective. The results built on the six primitives — greediness, agreement on verified
+data, the twenty-six laws (De Morgan fails as a law of formulas), the signature, the order
+of birth, the seven Bochvar cells, the clone of §3.8 (whose NAND and NOR were the
+true lifts all along) — do not change. The count "eleven cells across the ten tables"
+against Bochvar (§10) counted compositions and is removed. (2) *"Dominates".* v2.0.0–v2.1.3
+said that as a decision procedure ZTL strictly dominates classical logic: problems ZTL
+answers correctly and no classical default does, "and none the other way round". The
+second half is false by the criterion the first half uses: on ¬¬p with p dirty ZTL grants
+T and the default "dirty := false" refuses, and cleaning p := F overturns ZTL's grant —
+the over-grant v2.1.3 itself measured. The claim is withdrawn (§1, §4, §10). What holds:
+on verified data ZTL is classical logic; every refusal ZTL makes is witnessed by a reading
+of the dirty occurrences (measured exhaustively in §2, zero exceptions); grants are protected
+against every cleaning where no dirty atom stands under a negation (`NoGift.no_gift`, a
+sufficient condition); and no uniform classical
+default reproduces ZTL in either direction. (3) *"No conservative default exists"*
+(§1, §4, §10) was wrong: a conjunction is refused when either conjunct is, so a per-atom
+worst-case choice refuses the sink rule; on it only uniform defaults fail. (4) *The sink is
+form-dependent.* The matrix refuses ¬tainted ∨ sanitized, the form the tool writes, and
+grants the classically equivalent ¬(tainted ∧ ¬sanitized) with both atoms dirty: a
+negation over a compound turns a refusal into a grant. The judge's warranty grade
+withholds the pass there (ON CREDIT, not EARNED); the matrix alone does not. Items (3)
+and (4) were found by a reviewer fork reading the companion journal paper; (1) by the
+curator.
+v2.1.3 (2026-10-25) names what Z is. Earlier versions called Z the mark of an
+*unverified* atom, and the word suggested the wrong reading: that the atom has one value
+we merely do not know yet — the stable reading on which supervaluation rests and which
+ZTL rejects (§10). Z is a **dirty** parameter: not ours — another system owns it, and
+its owner may change it between two reads — so each occurrence is read on its own, and
+verification is what cleans it, replacing the dirty parameter by a checked value. That
+is the reason, absent until now, for the construction everything rests on: the lift
+substitutes every occurrence of Z independently (§2). No table, theorem or earlier
+number changes. One measurement is added (§2, `book/checks/dirty_census.py`): against
+the dirty reading itself — a formula is earned iff it is true under every reading of
+its occurrences — the greedy judge refuses nothing it would earn: zero such refusals in
+248,121 marked cells (exhaustive, depth ≤ 2, three atoms) and in 14,555 random formulas
+of depth ≤ 6 (740 longer ones skipped, not hidden); and every one of the 14,844 cells
+in which it refuses what the global reading grants is a cell that only the stable
+reading grants. What the dirty reading does not explain is named beside it: the
+over-grants — 44,847 verdicts T in that pool that a cleaning can overturn, ¬¬Z = T the
+shortest (the dirty reading would read it F) — stay the price of the greedy collapse. The
+judge's API reports the field `dirty`, keeping `unverified` as a deprecated alias. The
+version notes in this history keep the word "unverified": they record what earlier versions said.
+v2.1.2 (same day) corrects how the relation to classical logic is worded, after a
+hostile review: "equal to classical logic in strength" holds ON VERIFIED DATA and is now
+always said with that domain; over its own valuations ZTL has fewer validities
+(`ztl_taut_is_classical`, `not_conversely`) — the price of admitting unverified input,
+named in §3.2, not the "different denominator" v2.1.0 called it; "conservative extension"
+was the wrong term and is replaced (§10); ZTL is strictly more expressive than any
+uniform classical default (binary clone 2 + 512 against 2 + 16, measured) — external
+Bochvar is not such a default: its clone equals ZTL's, and "the default is Bochvar" holds
+on the binary connectives only (§4); §10's "588 … the same set" is 584 as a set. No
+theorem changed; two measurements were added (the binary clones of the uniform defaults
+and of external Bochvar), and §3.8 now says what the lift makes of the degenerate kernels:
+the projection becomes the truth detector J_T, ¬p becomes ZTL's own negation J_F.
+v2.1.1 (same day) changed only the header: the v2.1.0 PDF went out with the working
+draft's header ("draft", "not published", "Version DOI: minted on upload"); no line of
+the text below changed.
+v2.1.0 corrects how many values ZTL has, and proves where its values come from.
+Earlier versions, 2.0.0 included, called ZTL "a two-valued logic with a mark, not a
+three-valued logic". That name was wrong in one respect: it denied the atom its value. An
+atom is an assertion, and an unverified atom has the value Z (`ztl.ev('p', {'p': 'Z'}) = Z`; `eqI m1 m2 = Z` in `ZIndisc.lean` is
+the same fact one order up). ZTL is a *three-valued logic whose every connective is
+two-valued*: three values on the atoms, two on everything built from them. Nothing
+previously measured or proved changes — the greediness theorem is exactly the statement that the
+third value never climbs above the atoms (§§2, 4, 10). And the one asymmetric cell,
+¬Z = F, is shown to give the values an *order of birth*, proved over the whole language
+(§3.9, `ZOrigin.lean`, empty axiom list): under pure doubt F is born first and T only
+through an F — the Z, F, T part of the genetic order N, Z, F, T that §4 names (N, the
+solver's phase, lies outside the tables); classical logic, whose negation is an involution,
+has no such order.
+v2.0.0 states the relation to classical logic and measures both of its
+halves (§3.1, §4, §10). *On verified data ZTL is classical logic:* every
+formula takes the same value under every mark-free valuation
+(`evalF_agrees`, empty axiom list), and on the regression pool of 2926
+entries (2906 distinct formulas) over two atoms the two logics validate the same 584 formulas,
+element for element — not one classical law is given up. *On unverified
+data ZTL decides:* of twenty-six classical laws, twelve hold on a marked
+atom and fourteen are refuted with an exhibited witness, none left
+undecided — where classical logic decides none, because it cannot take
+the input; in Lean the fourteen are the theorems `*_needs_ground`
+(renamed from `*_fails` in v2.0.0, twenty-six names in all). The
+engineering default "unverified := false" is identified as Bochvar's
+external logic of 1938 — zero divergences of forty-five binary cells —
+from which ZTL parts in seven cells and from the default itself in eight,
+each a verdict derived from no information. The mark is shown expressible
+inside the language and its reach measured: 1840 of 2924 compounds of the
+pool are mark-sensitive (`marksens.py`, with the definition beside the
+number). And the taint-sink exhibit shows both classical defaults granting
+a pass to an unverified sink, with no conservative default available —
+whence, *as a decision procedure, ZTL strictly dominates classical logic,
+while remaining exactly its equal as a system of proofs on classical
+logic's own domain* (`ztl_taut_is_classical`). Every number of this frame
+is regenerated by `paper/core_logic_checks.py`, now a stand of the
+regression. v2.0.0 is also the structural release: the repository is the
+logic alone — the seven-language taint analyzer moved to
+`inventor1975/introspect`, the natural-language studio to
+`inventor1975/ztlstudio`, each vendoring a copy of this core.
+v1.4.1 (2026-09-07) corrected §2: all ten ZTL tables are shown — the
+five primitives, ↔ and the four negated compounds — with the measured
+failure of every classical route to the second five; the v1.4 PDF showed
+six. v1.4 adds: *no numbered section rests on measurement alone* — every one of the
+eighteen sections that carried the MEASURED tag now names kernel-checked
+theorems behind its load-bearing claims, the corpus growing threefold to
+sixty-six modules and 1112 theorems, all on the empty axiom list (§8);
+*the six traditions of §1 as six embedding theorems* — IEEE 754 NaN, SQL
+NULL, taint tracking, abstract interpretation, Dempster–Shafer and
+provenance semirings, each formalised as its own tradition states it,
+ZTL's verdict placed inside it and the unformalised remainder named
+(`ZNaN.lean`, `ZNull.lean`, `ZFlow.lean`, `ZAbsInt.lean`, `ZDempster.lean`,
+`ZProv.lean`; §§1, 15, 16, 20, 27); *three hardness results on the
+warranties of §19* — the hereditary grade is a tautology check
+(coNP-hard, `ZHeredTaut.lean`), the exact width of an inquiry is NP-hard
+(`ZWidthHard.lean`), the exact receipt is NP-hard (`ZReceiptHard.lean`),
+so the three grades the judge does not compute are the three it cannot
+compute cheaply unless P = NP — every complexity claim held at hardness, membership
+argued and not claimed — with the receipt's exactness on linear claims
+proved under a definite reading (`LabelExactDefinite.lean`); *a syntactic
+cut-elimination procedure with its bound as a function* (§5,
+`ZCutElim.lean`); *the Lean port of the parameter tableaux of §6* — the
+axiom tier of the four quantifier rules measured — three sound on the
+empty axiom list, the fourth only classically and kept outside the
+corpus — a fuel-bounded search built and proved sound, and the finite half
+of completeness a theorem, the infinite half stated with its parts and
+left argued (`ZParamEngine.lean`, `ZParamHintikka.lean`; §§6, 27); the
+census of the numeric floor — which laws hold on marked intervals: for
+numbers commutativity and the unit, for samples neither — (§15,
+`ZNumPrice.lean`, `ZNumNames.lean`); the global
+reading with theorems of its own (§10, `ContextClosure.lean`); the
+identity and free-instantiation results of §25 for an arbitrary domain
+(`ZEqGeneric.lean`, `ZFreeUIGeneric.lean`); and the precise position
+against Tomova's natural-implication criterion (§4).**
+
+**Carried over from the published v1.3 — version DOI
+[10.5281/zenodo.21472971](https://doi.org/10.5281/zenodo.21472971).
+Concept DOI:
+[10.5281/zenodo.21318981](https://doi.org/10.5281/zenodo.21318981)
+(v1.2: [10.5281/zenodo.21440066](https://doi.org/10.5281/zenodo.21440066);
+v1.1: [10.5281/zenodo.21323552](https://doi.org/10.5281/zenodo.21323552);
+v1.0: [10.5281/zenodo.21318982](https://doi.org/10.5281/zenodo.21318982)).
+v1.3 adds: the Suszko positioning (§4) — Z as a mark rather than a third
+truth value is Suszko's Thesis taken as architecture rather than
+recovered by reduction, with the discriminator measured (that reading
+withdrawn in 2.1.0: Z is the value of atoms, §4); the signature
+result (§4) — the single rule ¬¬p ⊨ p separates ZTL from each of its four
+involutive-negation neighbours (K3, LP, weak Kleene, Ł₃) and, by one
+lemma, from any three-valued matrix with involutive negation, its cause
+proved in `lean/Signature.lean` on the empty axiom list; *first-order
+identity* (§24, `ZEq.lean`) — a `=` predicate whose reflexivity is an
+earned verdict, falling to Z on an unverified reference, while Leibniz's
+law licenses substitution only through an earned equality; and *free
+logic with definite descriptions* (§25, `ZDesc.lean`) — a non-denoting
+term takes the mark (existence = earned self-identity), and the greedy
+collapse (excluded middle on it is F, not a gap and not super-true)
+sets ZTL apart from the neutral free-logic school. v1.2 added: the central construction named — the zero-trust lift (§2);
+§3.8, an explicit Lean-verified census of the sixteen lifted binary
+connectives — re-deriving Finn's external-Bochvar completeness landscape
+(Finn 1974): solo-completeness tracks non-commutative directionality (Sheffer's
+stroke and Peirce's arrow are not complete alone; both implications and
+both abjunctions are), and the basis ↛ reads as the credit detector; the
+fence-depth theorem in §19 (exactly m−1; no constant-depth fence);
+the at-scale stress-test of the warranty ladder; the recalculated
+Bochvar ledger (§4); and the three-laws-of-thought reading — a denial is
+free, an affirmation is on credit (§3.1); and the paradox engine (§11) — the
+expeditions unified as one construction paradox(f)=ground(S=f(S)) with three
+measured layers; and — the headline of this version — a TEMPORAL LAYER
+(§§21–23) in which the only clock is the arrival of ground: the warranty
+ladder read as temporal quantifiers (now / at every ending / always on
+every path), the absorption and arrow theorems machine-checked
+(`ZTime.lean`), an expiry event that opens epochs, and the EPOCH BOUNDARY
+THEOREM (`EpochBoundary.lean`) — a verdict invariant across unrestricted
+epoch crossing reads none of its grounds, so non-trivial guarantees
+require the boundary between learning and world change; plus the
+derivation theorem (§23) — the rules that hold on marked data transport
+truth but cannot mint it.

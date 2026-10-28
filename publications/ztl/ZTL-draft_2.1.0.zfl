@@ -1,11 +1,11 @@
 {
  "zfl_sidecar": 1,
  "file": "ZTL-draft_2.1.0.md",
- "sha256": "8db197d258c39800111184e361a3e1742f57b17269daf6fae10f075b906eaf54",
+ "sha256": "ca9fdc780e11dcf3d2dfd7e5da9f6279dbedf9eb32e92e052dd52a9a9ec60450",
  "decision": {
   "status": "waived",
-  "why": "only the published version DOI added to the header; the text was reviewed and published as v2.1.4",
-  "at": "2026-10-28T17:04:06+00:00",
+  "why": "layout only: version notes moved verbatim to a 'Version history' appendix, a 3-line notice on top, cross-references renamed; no claim changed (curator's request)",
+  "at": "2026-10-28T17:18:21+00:00",
   "operator": "undeclared"
  }
 }

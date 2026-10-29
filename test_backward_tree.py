@@ -68,7 +68,7 @@ def equivalence(n_formulas=1500, seed=3):
         rnd.shuffle(atoms)
         phi = gen(rnd, atoms)
         mk = {a: rnd.choice((T, F, Z, Z)) for a in atoms}
-        for by_d, targets in ((True, ["EARNED", "REFUTED", "ON CREDIT", "OPEN", ZB.TERMINAL]), (False, [T, F])):
+        for by_d, targets in ((True, ["EARNED", "REFUTED", "EARNED IF STABLE", "REFUTED IF STABLE", "ON CREDIT", "OPEN", ZB.TERMINAL]), (False, [T, F])):
             for tg in targets:
                 ref = ZB.backward(phi, mk, tg, by_disposition=by_d, cap_grounds=99, max_k=99, use_tree=False)
                 new = ZT.backward_tree(phi, mk, tg, by_disposition=by_d)
@@ -132,7 +132,7 @@ def equivalence_repeated(n_formulas=800, seed=21):
         rnd.shuffle(leaves)
         phi = gen(rnd, leaves)
         mk = {a: rnd.choice((T, F, Z, Z)) for a in names}
-        for by_d, targets in ((True, ["EARNED", "REFUTED", "ON CREDIT", "OPEN", ZB.TERMINAL]), (False, [T, F])):
+        for by_d, targets in ((True, ["EARNED", "REFUTED", "EARNED IF STABLE", "REFUTED IF STABLE", "ON CREDIT", "OPEN", ZB.TERMINAL]), (False, [T, F])):
             for tg in targets:
                 ref = ZB.backward(phi, mk, tg, by_disposition=by_d, cap_grounds=99, max_k=99, use_tree=False)
                 new = ZT.backward_tree(phi, mk, tg, by_disposition=by_d)

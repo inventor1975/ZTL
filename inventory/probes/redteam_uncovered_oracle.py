@@ -72,6 +72,17 @@ def ev(phi, m):
     return lift(phi[0], ev(phi[1], m), ev(phi[2], m))
 
 
+def reads(phi, m):
+    """The classical values over every reading of every OCCURRENCE (each occurrence of a mark read on its own) —
+    a set, by brute force, without the Kleene tables (2026-10-29, the IF STABLE dispositions)."""
+    if isinstance(phi, str):
+        x = phi if phi in CONSTS else m.get(phi, Z)
+        return {True} if x == T else {False} if x == F else {True, False}
+    if phi[0] == "not":
+        return {not a for a in reads(phi[1], m)}
+    return {_CL[phi[0]](a, b) for a in reads(phi[1], m) for b in reads(phi[2], m)}
+
+
 def atoms(phi, acc=None):
     acc = set() if acc is None else acc
     if isinstance(phi, str):
@@ -128,10 +139,11 @@ def disposition(phi, m):
     v, g = ev(phi, mm), grade(phi, mm)
     unv = [a for a in atoms(phi) if mm[a] == Z]
     gone = [a for a in atoms(phi) if mm[a] == E]
+    rd = reads(phi, mm)
     if g == "hereditary" and v == T:
-        return "EARNED"
+        return "EARNED" if rd == {True} else "EARNED IF STABLE"
     if g == "hereditary" and v == F:
-        return "REFUTED"
+        return "REFUTED" if rd == {False} else "REFUTED IF STABLE"
     if v == T:
         return "ON CREDIT"
     if gone and not unv:
@@ -495,7 +507,7 @@ def fo_countermodel(prems, concl, dom, consts_to=None):
     return None
 
 
-def disposition_of(v, g):
+def disposition_of(v, g, rd=None):
     """The judge's disposition from verdict and grade, as its docstring states it
     (ztljudge.judge; no absent grounds in these documents): hereditary T is EARNED,
     hereditary F is REFUTED, T below hereditary is ON CREDIT, anything else OPEN.
@@ -504,5 +516,9 @@ def disposition_of(v, g):
     NOT named `disposition`: that name is this oracle's own (phi, m) function, and
     shadowing it broke the backward sweep (295 false disagreements, 2026-09-28)."""
     if g == "hereditary":
-        return "EARNED" if v == T else "REFUTED" if v == F else "OPEN"
+        if v == T:
+            return "EARNED" if rd in (None, {True}) else "EARNED IF STABLE"
+        if v == F:
+            return "REFUTED" if rd in (None, {False}) else "REFUTED IF STABLE"
+        return "OPEN"
     return "ON CREDIT" if v == T else "OPEN"

@@ -21,7 +21,11 @@ the derivation bare modus ponens; five objects, empty axiom lists).
       stays OPEN, weak link = i. Occurrence never hands the subject over.
 
   F2  THE LOGIC IS INNOCENT — AND DESCARTES AGREED. With the bridge in
-      place the derivation is hereditary-EARNED (bare modus ponens).
+      place the derivation is hereditary — EARNED IF STABLE on t and i
+      (bare modus ponens; since 2026-10-29 the judge names the condition):
+      valid only if the "I" that thinks and the "I" that exists read the
+      same. Read each occurrence on its own and it is not established —
+      Lichtenberg's "it thinks" is exactly that reading.
       Descartes himself denied the cogito is a syllogism (Second
       Replies): he refused the bridge reading. The judge shows what that
       refusal costs: without the bridge, F1; with it, the certainty
@@ -168,9 +172,9 @@ def run():
     expect("F1 t -> i, thinking granted: no delivery",
            "t -> i", {"t": "T"},
            "OPEN", "F", "until-verification", ["i"])
-    expect("F2 bridge in place: bare modus ponens, earned",
+    expect("F2 bridge in place: bare modus ponens, earned if stable",
            "((t & (t -> i)) -> i)", None,
-           "EARNED", "T", "hereditary", ["i", "t"])
+           "EARNED IF STABLE", "T", "hereditary", ["i", "t"])
 
     print("\n### F3. The package sheds links and never settles")
     expect("   everything unverified", PACKAGE, None,

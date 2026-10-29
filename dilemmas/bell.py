@@ -155,7 +155,9 @@ def run():
     print(f"ok  LIMIT: the theorem (PI & OI & MI) -> not SV is {thm} as atoms; the modus tollens schema: {mt}")
     assert obs == "EARNED" and set(st4.values()) == {"Z_PERMANENT"} and loc["ceiling_frozen"]
     assert dil_j == "ON CREDIT" and dil_c["ceiling_frozen"] and dil_c["earned_futures"] == 0
-    assert thm == "ON CREDIT" and mt == "EARNED"
+    # EARNED IF STABLE since 2026-10-29: the schema is valid if PI, OI, MI each read the same in premise and
+    # conclusion — the hidden variables keep their values across the argument (non-contextuality again).
+    assert thm == "ON CREDIT" and mt == "EARNED IF STABLE"
 
     print("\nBELL: all measurements hold.")
     print("The eight gives the minus, the overlap gives the cosine; the failed premise was never earned;")

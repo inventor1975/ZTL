@@ -22,9 +22,11 @@ stipulation theorem), E27 (redeemability), plus one computational lemma.
   WHAT THE MEASUREMENTS SAY (each pinned as an assert below):
 
   F1  THE SKEPTIC'S LOGIC IS EARNED. The full inference
-      (bridges & j & (ra|rb|rc)) -> ~k grades hereditary-EARNED: the
-      trichotomy case analysis is valid at every marking. Agrippa is
-      conceded the logic — entirely.
+      (bridges & j & (ra|rb|rc)) -> ~k grades hereditary — EARNED IF
+      STABLE (since 2026-10-29 the judge names the condition: each term
+      reads the same in premise and conclusion): the trichotomy case
+      analysis is valid at every marking. Agrippa is conceded the logic —
+      entirely, on the one condition every argument needs.
 
   F2  THE LETHALITY IS NOT IN THE LOGIC. Grant everything except j:
       the package grades OPEN with the weak link named as exactly j.
@@ -119,7 +121,7 @@ def run():
 
     print("\n### F1-F3. The skeptic's engine")
     expect("F1 inference itself, everything unverified", SKEPTIC, None,
-           "EARNED", "T", "hereditary", ["j", "k", "ra", "rb", "rc"])
+           "EARNED IF STABLE", "T", "hereditary", ["j", "k", "ra", "rb", "rc"])
     expect("F2 everything granted EXCEPT j", PACKAGE, {"rc": "T", "k": "F"},
            "OPEN", "F", "until-verification", ["j"])
     expect("F3 premises granted, k open", PACKAGE, {"j": "T", "rc": "T"},

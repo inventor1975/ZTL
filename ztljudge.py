@@ -537,8 +537,16 @@ def judge(text, marking=None, budget=None):
     cannot tell 'earned' from 'true-on-credit', nor 'refuted' from 'not yet
     established' — the warranty GRADE does, and it names the weak link.
 
-      EARNED    verdict T, hereditary — grounded; any marks are irrelevant.
-      REFUTED   verdict F, hereditary — false regardless of the marks.
+      EARNED    verdict T, hereditary, and T under every read of every
+                occurrence (the lazy register agrees) — grounded outright.
+      EARNED IF STABLE
+                verdict T, hereditary, but the lazy register does not say T:
+                earned only if each atom in `if_stable` reads the same at
+                every occurrence. Verifying them settles it.
+      REFUTED   verdict F, hereditary, and F under every read — false
+                regardless of the marks.
+      REFUTED IF STABLE
+                the mirror: refuted only if `if_stable` reads the same.
       ON CREDIT verdict T, but not hereditary — true only while a dirty
                 link holds; if it flips, the claim can die.
       OPEN      not established — a mark actually matters; verify it.
@@ -590,16 +598,45 @@ def judge(text, marking=None, budget=None):
         why = f"not established — verify {unv} (it could still turn either way)"
         if gone:
             why += f"; {gone} is not on that list — it has no subject"
+    # IF STABLE (2026-10-29, the curator's decision). The grade's "hereditary" refines each dirty atom to ONE value,
+    # so it presumes that every occurrence of an atom reads the same. ZTL's own premise is that two reads may differ
+    # (time of check vs time of use; or, in an argument, the same word in premise and conclusion). The lazy register
+    # reads every occurrence on its own, so when it does not agree (`lazy` is not T for an earned T, not F for a
+    # refuted F) the settlement holds only under that presumption, and the disposition says so. Found by running every
+    # stand under dilemmas/: 19 claims, all argument forms (Cogito, Hume's guillotine, Plato's third man, Bell,
+    # Agrippa's critics). Only an atom that occurs more than once can be read two ways, so those are named
+    # (`if_stable`); on a claim where each dirty atom occurs once the lazy register always agrees (none is named).
+    phi = formalize(text)
+    if_stable = []
+    if (disp == "EARNED" and r["lazy"] != T) or (disp == "REFUTED" and r["lazy"] != F):
+        occ = {}
+        _occurrences(phi, occ)
+        if_stable = sorted(a for a, c in occ.items() if c > 1 and a in unv + gone)
+        what = "true" if disp == "EARNED" else "false"
+        disp += " IF STABLE"
+        why = (f"{what} only if {if_stable} reads the same at every occurrence — between check and use, or in "
+               f"premise and conclusion; read each occurrence on its own and the matter is not established "
+               f"(verify {if_stable} to settle it outright)")
     # The declaration is billed, always — an absence that removes a settlement
     # is a claim about the world, and must be contestable as one.
-    phi = formalize(text)
-    joint = ([] if disp in ("EARNED", "REFUTED", "E")
+    joint = ([] if disp in ("EARNED", "REFUTED", "E") or disp.endswith("IF STABLE")
              else _joint(phi, _full(phi, marking), unv))
     if joint:
         why += (f"; and NO SINGLE ground moves it — {joint} must be filled"
                 f" together, so a one-at-a-time order would be empty work")
-    return {**r, "disposition": disp, "why": why, "joint": joint,
+    return {**r, "disposition": disp, "why": why, "joint": joint, "if_stable": if_stable,
             "forgone": _forgone(text, marking, gone, disp) if gone else []}
+
+
+def _occurrences(phi, acc):
+    """atom -> number of occurrences (constants are not atoms)"""
+    if isinstance(phi, str):
+        if phi not in VALUES:
+            acc[phi] = acc.get(phi, 0) + 1
+    else:
+        for s in phi[1:]:
+            _occurrences(s, acc)
+    return acc
 
 
 def absence_report(phi, marking=None):
@@ -645,7 +682,7 @@ def load_claims(path):
     return claims
 
 
-DISPOSITIONS = ("EARNED", "ON CREDIT", "OPEN", "REFUTED", "E")
+DISPOSITIONS = ("EARNED", "EARNED IF STABLE", "ON CREDIT", "OPEN", "REFUTED IF STABLE", "REFUTED", "E")
 
 
 def ledger(claims):

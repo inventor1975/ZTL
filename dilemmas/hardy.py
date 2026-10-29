@@ -104,7 +104,11 @@ def run():
     print(f"ok  chain: {r['disposition']}, weak links {sorted(r['unverified'])}, ceiling frozen = {c['ceiling_frozen']}")
     print(f"ok  stamps: {st}")
     assert m == {"xa_m": "T", "xb_m": "T", "za_1": "Z", "zb_1": "Z"}
-    assert r["disposition"] == "REFUTED" and sorted(r["unverified"]) == ["za_1", "zb_1"] and c["ceiling_frozen"]
+    # REFUTED IF STABLE since 2026-10-29: false for every ONE value of each unasked answer — the condition named is
+    # exactly non-contextuality (the same value of za_1, zb_1 in every law). Read each occurrence on its own
+    # (a contextual value) and the conjunction is not refuted.
+    assert r["disposition"] == "REFUTED IF STABLE" and r["if_stable"] == ["za_1", "zb_1"] and \
+        sorted(r["unverified"]) == ["za_1", "zb_1"] and c["ceiling_frozen"]
     assert st["za_1"] == st["zb_1"] == "Z_PERMANENT" and st["xa_m"] == st["xb_m"] == "GROUNDED"
     for a in ("xa_m", "xb_m"):
         assert judge(a, m)["disposition"] == "EARNED"
@@ -113,8 +117,9 @@ def run():
     assert "REFUTED" not in laws.values()
     print("ok  READING: the witnessed atoms are all T, each law alone survives; only their conjunction is false, and")
     print("    false for EVERY value of the two unasked answers ('false regardless'): what is refuted is that the")
-    print("    unasked questions HAVE answers at all. (judge's 'unverified' lists every Z atom present; here they are")
-    print("    exactly the two unasked answers.)")
+    print("    unasked questions HAVE answers at all — answers that are the SAME in every law. The judge names that")
+    print("    condition (REFUTED IF STABLE on the two unasked answers): non-contextuality. (judge's 'unverified'")
+    print("    lists every Z atom present; here they are exactly the two unasked answers.)")
 
     print("\n### H3. The control: where the rule could have failed")
     assert prob("X", "-", "Z", "0") < 1e-12 < prob("X", "-", "Z", "1")     # given X_A=-, Bob's Z is surely 1

@@ -134,12 +134,35 @@ def grade(phi, marking):
     return "sound" if sound(phi, marking) else "until-verification"
 
 
-def disposition(verdict, grade_, unverified, absent):
-    """ztljudge.judge's docstring, read literally."""
+def reads(phi, env):
+    """The classical values of phi over every reading of every OCCURRENCE (each occurrence of a Z atom read on its
+    own), by brute force over sets — written without the Kleene tables, so that it checks them."""
+    if isinstance(phi, str):
+        x = phi if phi in CONSTS else env[phi]
+        return {1} if x == T else {0} if x == F else {0, 1}
+    if phi[0] == "not":
+        return {1 - a for a in reads(phi[1], env)}
+    return {KERN2[phi[0]](a, b) for a in reads(phi[1], env) for b in reads(phi[2], env)}
+
+
+def occurrences(phi, acc=None):
+    acc = {} if acc is None else acc
+    if isinstance(phi, str):
+        if phi not in CONSTS:
+            acc[phi] = acc.get(phi, 0) + 1
+    else:
+        for s in phi[1:]:
+            occurrences(s, acc)
+    return acc
+
+
+def disposition(verdict, grade_, unverified, absent, every_read=None):
+    """ztljudge.judge's docstring, read literally. `every_read`: the set `reads` gives (since 2026-10-29: a
+    hereditary T that is not 1 under every read of every occurrence is EARNED IF STABLE; F likewise)."""
     if grade_ == "hereditary" and verdict == T:
-        return "EARNED"
+        return "EARNED" if every_read in (None, {1}) else "EARNED IF STABLE"
     if grade_ == "hereditary" and verdict == F:
-        return "REFUTED"
+        return "REFUTED" if every_read in (None, {0}) else "REFUTED IF STABLE"
     if verdict == T:
         return "ON CREDIT"
     if absent and not unverified:

@@ -174,7 +174,10 @@ def critic(name, objection, inference, premises, marking, sources, repertoire, e
     print(f"    premises  : {sound['disposition']}  weak={weak or '—'}  "
           f"{' '.join(f'{a}:{s}' for a, s in stamps.items())}")
     print(f"    OUTCOME   : {outcome} — {lesson}")
-    assert logic["disposition"] == "EARNED", f"{name}: the critic's logic must be conceded"
+    # The critic's logic is a schema (modus ponens / tollens) whose terms recur in premise and conclusion: since
+    # 2026-10-29 the judge grades it EARNED IF STABLE — valid on the one condition every argument needs, that each
+    # term reads the same throughout. That is conceding the logic.
+    assert logic["disposition"] in ("EARNED", "EARNED IF STABLE"), f"{name}: the critic's logic must be conceded"
     assert outcome == expect[0], f"{name}: expected {expect[0]}, got {outcome}"
     if len(expect) > 1:
         assert stamps == expect[1], f"{name}: expected stamps {expect[1]}, got {stamps}"

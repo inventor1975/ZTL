@@ -478,14 +478,14 @@ STANDS = [
         "ok  regress engine, all links unverified                                ON CREDIT T  until-verification weak=['g', 'n', 'r', 's']",
         "ok  middle Plato: every premise granted — regress still not delivered   OPEN      F  until-verification weak=['r']"]),
     ("dilemmas/agrippa.py", [
-        "ok  F1 inference itself, everything unverified                 EARNED    T hereditary         weak=['j', 'k', 'ra', 'rb', 'rc']",
+        "ok  F1 inference itself, everything unverified                 EARNED IF STABLE T hereditary         weak=['j', 'k', 'ra', 'rb', 'rc']",
         "ok  F2 everything granted EXCEPT j                             OPEN      F until-verification weak=['j']"]),
     ("dilemmas/hume_guillotine.py", [
         "ok  F1 is -> ought, fact granted: nothing is delivered       OPEN      F until-verification weak=['o']",
-        "ok  F2 bridge in place: bare modus ponens, earned            EARNED    T hereditary         weak=['d', 'o']"]),
+        "ok  F2 bridge in place: bare modus ponens, earned if stable  EARNED IF STABLE T hereditary         weak=['d', 'o']"]),
     ("dilemmas/cogito.py", [
         "ok  F1 t -> i, thinking granted: no delivery                 OPEN      F until-verification weak=['i']",
-        "ok  F2 bridge in place: bare modus ponens, earned            EARNED    T hereditary         weak=['i', 't']"]),
+        "ok  F2 bridge in place: bare modus ponens, earned if stable  EARNED IF STABLE T hereditary         weak=['i', 't']"]),
     ("dilemmas/many_worlds.py", [
         "MANY WORLDS: all measurements hold.",
         "ok  down-branch split into  5: Born P(up) = 1/3, branch counting P(up) = 1/6, total 1"]),
@@ -530,7 +530,7 @@ STANDS = [
                         "the strict reading of the web IS the tower",
                         "retract the original: nothing falls"]),
     ("dilemmas/epoch_line.py", ["EPOCH-LINE GREEN",
-                        "the assertion, over all 9 markings: ['REFUTED']",
+                        "the assertion, over all 9 markings: ['REFUTED', 'REFUTED IF STABLE']",
                         "with earned costs FROZEN — no expire allowed: 1 distinct answers, [100]",
                         "moore            single-marking",
                         "surprise exam    verify-only",
@@ -545,7 +545,7 @@ STANDS = [
     ("dilemmas/moore.py", ["MOORE GREEN",
                            "'it is raining but I do not believe it'  : 1 of 9",
                            "'raining, and I do not believe it', asserted: 0 of 9",
-                           "omissive, over all 9 markings   : ['REFUTED']",
+                           "omissive, over all 9 markings   : ['REFUTED', 'REFUTED IF STABLE']",
                            "the surviving marking(s): [{'p': 'T', 'bp': 'T', 'bt': 'F'}]"]),
     ("dilemmas/lottery.py", ["LOTTERY GREEN",
                              "5 losses believed: 'some ticket wins' -> REFUTED",

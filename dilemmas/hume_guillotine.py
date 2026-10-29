@@ -22,7 +22,8 @@ objects, empty axiom lists).
       OPEN, weak link = o. Description never hands the norm over.
 
   F2  THE LOGIC IS INNOCENT. With the bridge in place the derivation is
-      hereditary-EARNED (modus ponens survives in ZTL). The guillotine
+      hereditary — EARNED IF STABLE on d and o (modus ponens survives in
+      ZTL, provided d and o mean the same in premise and conclusion). The guillotine
       does not cut between premise and conclusion; it cuts between
       description and norm. Blame the smuggling, not the inference.
 
@@ -94,9 +95,9 @@ def run():
     expect("F1 is -> ought, fact granted: nothing is delivered",
            "d -> o", {"d": "T"},
            "OPEN", "F", "until-verification", ["o"])
-    expect("F2 bridge in place: bare modus ponens, earned",
+    expect("F2 bridge in place: bare modus ponens, earned if stable",
            "((d & (d -> o)) -> o)", None,
-           "EARNED", "T", "hereditary", ["d", "o"])
+           "EARNED IF STABLE", "T", "hereditary", ["d", "o"])
 
     print("\n### F3. The ethics package sheds links but never settles")
     expect("   everything unverified", PACKAGE, None,

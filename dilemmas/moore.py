@@ -152,18 +152,25 @@ def sec3_the_bridge_was_already_ours():
     print(f"   commissive, over all 9 markings : {sorted(com_d)}")
     print(f"   the hoped-for soft case (p=T, bp=Z): {soft['disposition']}"
           f", named check {sorted(soft['unverified'])}")
-    assert om_d == com_d == {"REFUTED"}
+    # Since 2026-10-29: REFUTED where every term is settled, REFUTED IF STABLE where a term is open — refuted on the
+    # condition that the open belief is read once (the same moment in both places).
+    assert om_d == com_d == {"REFUTED", "REFUTED IF STABLE"}
+    assert soft["disposition"] == "REFUTED IF STABLE" and soft["if_stable"] == ["bp"]
     print("   The prediction failed, and the refusal is worth more than the")
-    print("   prediction was. There is no gentler form: both die REFUTED in")
+    print("   prediction was. There is no gentler form: both die refuted in")
     print("   every marking, and 'my belief is not settled yet' does not")
-    print("   help. The reason is our own axiom, NOT(Z) = F — an unsettled")
+    print("   help. Where the belief is open the judge adds one condition:")
+    print("   refuted IF the belief is read once — the same moment in both")
+    print("   places. Read at two moments, the sentence is the harmless past")
+    print("   tense ('it was raining and I did not believe it'). The reason is our own axiom, NOT(Z) = F — an unsettled")
     print("   belief makes 'I do not believe it' FALSE, because non-belief")
     print("   cannot be claimed on credit either. The judge still names the")
     print("   check `bp`, which is honest and useless here: verifying it")
     print("   cannot rescue a formula that is already refuted.")
     print("   So the corpus is harsher on Moore than the literature is. It")
     print("   does not say the sentence is odd, or unassertable, or")
-    print("   pragmatically self-defeating. It says: false, whatever you do.")
+    print("   pragmatically self-defeating. It says: false, whatever you do —")
+    print("   at one moment of saying it.")
 
 
 def sec4_the_escape_is_an_epoch():

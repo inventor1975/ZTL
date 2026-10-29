@@ -29,6 +29,26 @@ The report carries **two registers side by side**:
 | `dirty` (also returned as `unverified`) | — | the dirty atoms the verdict rests on — every hole |
 | `pending` | Kleene label | the holes still holding the answer up |
 
+**Dispositions** (since 2026-10-29: seven):
+
+| disposition | meaning |
+|---|---|
+| `EARNED` | T, survives every verification, and T under every read of every occurrence (the lazy register agrees) |
+| `EARNED IF STABLE` | T and survives every verification, but only if each atom in `if_stable` reads the same at every occurrence (between check and use; in premise and conclusion). Read each occurrence on its own and it is not established. Verify `if_stable` to settle it. |
+| `ON CREDIT` | T now; a verification can overturn it |
+| `OPEN` | not established; a dirty atom matters |
+| `REFUTED IF STABLE` | the mirror of `EARNED IF STABLE` for F |
+| `REFUTED` | F, survives every verification, and F under every read |
+| `E` | unjudgeable: what the claim rests on has no subject |
+
+`if_stable` names the dirty atoms that occur more than once; on a claim where
+each dirty atom occurs once it is always empty. Example: the Cogito,
+`(t & (t -> i)) -> i` with both dirty, is `EARNED IF STABLE` on `['i', 't']` —
+valid if "I" means the same in premise and conclusion. **Change from earlier
+releases:** what was `EARNED` (or `REFUTED`) splits into the strict word and the
+`IF STABLE` one; a client that accepts only `EARNED` now refuses the
+`IF STABLE` cases, which is the safe direction.
+
 **Field names.** The list of dirty atoms is returned under BOTH names:
 `dirty` (the name from now on) and `unverified` (the older name, kept for
 compatibility; it will be retired in a later release, announced in the

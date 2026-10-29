@@ -205,8 +205,13 @@ for _ in range(8000):
         wrong.append("parse")
     if (r["verdict"], r["grade"], r["unverified"], r["absent"]) != (v, g, unv, gone):
         wrong.append("verdict/grade/unverified")
-    if r["disposition"] != O.disposition(v, g, unv, gone):
+    d = O.disposition(v, g, unv, gone, O.reads(phi, kern))
+    if r["disposition"] != d:
         wrong.append("disposition")
+    want_if = (sorted(a for a, c in O.occurrences(phi).items() if c > 1 and a in unv + gone)
+               if d.endswith("IF STABLE") else [])
+    if r["if_stable"] != want_if:
+        wrong.append("if_stable")
     if r["lazy"] != O.ev_lazy(phi, kern) and not has_const:
         wrong.append("lazy")
     if wrong:

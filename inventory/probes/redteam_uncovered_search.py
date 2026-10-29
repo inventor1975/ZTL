@@ -393,7 +393,7 @@ def s_epoch(seed, n):
             want.append({"event": ev_name, "expires": sorted(expiring[ev_name]),
                          "before": {"verdict": vb, "grade": gb},
                          "after": {"verdict": va, "grade": ga},
-                         "survives": O.disposition_of(vb, gb) == O.disposition_of(va, ga)})
+                         "survives": O.disposition_of(vb, gb, O.reads(phi, m_b)) == O.disposition_of(va, ga, O.reads(phi, m_a))})
             crossings += 1
             reads = m_a != m_b
             if vb == va and reads and ga != "hereditary" and not O.constant(phi):

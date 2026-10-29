@@ -1,5 +1,5 @@
 {
- "fingerprint": "991efdf9a7dc3e97",
+ "fingerprint": "f260f90060da628e",
  "verdicts": 1188,
  "formulas": 132,
  "census": {
@@ -9,12 +9,16 @@
   "F | OPEN | until-verification | q": 76,
   "T | ON CREDIT | until-verification | q": 73,
   "T | ON CREDIT | until-verification | p": 73,
-  "F | REFUTED | hereditary | q": 39,
-  "F | REFUTED | hereditary | p": 39,
-  "T | EARNED | hereditary | q": 39,
-  "T | EARNED | hereditary | p": 39,
   "F | OPEN | until-verification | p,q": 32,
   "T | ON CREDIT | until-verification | p,q": 32,
+  "F | REFUTED | hereditary | q": 24,
+  "F | REFUTED | hereditary | p": 24,
+  "T | EARNED | hereditary | q": 24,
+  "T | EARNED | hereditary | p": 24,
+  "F | REFUTED IF STABLE | hereditary | p": 15,
+  "F | REFUTED IF STABLE | hereditary | q": 15,
+  "T | EARNED IF STABLE | hereditary | p": 15,
+  "T | EARNED IF STABLE | hereditary | q": 15,
   "Z | OPEN | until-verification | p": 3,
   "Z | OPEN | until-verification | q": 3
  },

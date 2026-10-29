@@ -75,16 +75,20 @@ def sec1_moore_needs_no_event():
     verdicts = {judge(formula, dict(zip(["p", "bp"], c)))["disposition"]
                 for c in product(VALUES, repeat=2)}
     print(f"   the assertion, over all 9 markings: {sorted(verdicts)}")
-    assert verdicts == {"REFUTED"}
+    # REFUTED where p and bp are settled; REFUTED IF STABLE where one is open (since 2026-10-29): refuted on the
+    # condition that each open term is read ONCE — one moment, one index.
+    assert verdicts == {"REFUTED", "REFUTED IF STABLE"}
     # a defect that is present at EVERY marking cannot require reaching one
-    still = judge(formula, {"p": Z, "bp": Z})["disposition"]
+    still = judge(formula, {"p": Z, "bp": Z})
     print(f"   at the wholly unverified marking, before anything happens: "
-          f"{still}")
-    assert still == "REFUTED"
+          f"{still['disposition']} on {still['if_stable']}")
+    assert still["disposition"] == "REFUTED IF STABLE" and still["if_stable"] == ["bp", "p"]
     print("   Refuted with nothing verified and nothing expired — the defect")
     print("   is already there in the starting position. That is a")
     print("   constraint inside ONE marking, and no notion of time is doing")
-    print("   any work. The docket's own §5 says the same thing in its own")
+    print("   any work. The condition the judge names (IF STABLE: each open")
+    print("   term read once) IS that coincidence: the same belief at the same")
+    print("   index. The docket's own §5 says the same thing in its own")
     print("   words when it locates Moore in the coincidence of two indices;")
     print("   what it should not say is `epoch boundary`, which names a")
     print("   crossing that never occurs here.")

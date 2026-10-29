@@ -111,11 +111,11 @@ CASES = [
 
     ("price: paradigmatism + thesis + resemblance — jointly impossible",
      "(m -> s) & ~s & m", None,
-     ("REFUTED", "F", "hereditary", ["m", "s"])),
+     ("REFUTED IF STABLE", "F", "hereditary", ["m", "s"])),
 
     ("price, drawn: no resemblance (modus tollens survives in ZTL)",
      "((m -> s) & ~s) -> ~m", None,
-     ("EARNED", "T", "hereditary", ["m", "s"])),
+     ("EARNED IF STABLE", "T", "hereditary", ["m", "s"])),
 
     ("Parmenides 132d: resemblance rides on self-predication",
      "(m -> s)", {"m": "T"},
@@ -123,13 +123,18 @@ CASES = [
 
     ("Vlastos finite version: bridges + premises, all merely claimed",
      "((s & n) -> ~q) & ((s & u) -> q) & s & n & u", None,
-     ("REFUTED", "F", "hereditary", ["n", "q", "s", "u"])),
+     ("REFUTED IF STABLE", "F", "hereditary", ["n", "q", "s", "u"])),
 
     ("Vlastos finite version, premises granted: weak link collapses to q",
      "((s & n) -> ~q) & ((s & u) -> q) & s & n & u",
      {"s": "T", "n": "T", "u": "T"},
-     ("REFUTED", "F", "hereditary", ["q"])),
+     ("REFUTED IF STABLE", "F", "hereditary", ["q"])),
 ]
+
+
+# IF STABLE (2026-10-29): the inconsistency and its modus tollens hold only if each term reads the same at every
+# occurrence ("large", the Form, resemblance). Read each occurrence on its own and nothing is established — the
+# equivocation reading of the Third Man (Sellars 1955) is exactly that reading; the judge now names the condition.
 
 
 def run():

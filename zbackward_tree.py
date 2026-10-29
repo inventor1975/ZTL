@@ -46,6 +46,18 @@ VALS = (T, F, Z)
 BIN = ("and", "or", "imp", "xor", "xnor")
 TABLE2 = {op: {(x, y): ev((op, "a", "b"), {"a": x, "b": y}) for x in VALS for y in VALS} for op in BIN}
 TABLE1 = {"not": {x: ev(("not", "a"), {"a": x}) for x in VALS}}
+_RD = {T: (True,), F: (False,), Z: (True, False)}
+_CL = {"and": lambda a, b: a and b, "or": lambda a, b: a or b, "imp": lambda a, b: (not a) or b,
+       "xor": lambda a, b: a != b, "xnor": lambda a, b: a == b}
+
+
+def _k(outs):
+    return T if outs == {True} else F if outs == {False} else Z
+
+
+# strong Kleene (the lazy register): the outcome over every reading of each argument
+KTABLE2 = {op: {(x, y): _k({_CL[op](a, b) for a in _RD[x] for b in _RD[y]}) for x in VALS for y in VALS} for op in BIN}
+KTABLE1 = {"not": {x: _k({not a for a in _RD[x]}) for x in VALS}}
 MAX_FAMILY = 20000          # an antichain larger than this is refused aloud, not ground
 
 
@@ -53,11 +65,13 @@ class TooBig(Exception):
     pass
 
 
-def disposition_of(cur, refset):
+def disposition_of(cur, refset, lazy=None):
+    """`lazy`: the strong Kleene value now (each occurrence read on its own). None on a claim where every dirty
+    ground occurs once — there a hereditary verdict always agrees with it, so nothing is lost (2026-10-29)."""
     if cur == T and refset == frozenset((T,)):
-        return "EARNED"
+        return "EARNED" if lazy in (None, T) else "EARNED IF STABLE"
     if cur == F and refset == frozenset((F,)):
-        return "REFUTED"
+        return "REFUTED" if lazy in (None, F) else "REFUTED IF STABLE"
     if cur == T:
         return "ON CREDIT"
     return "OPEN"
@@ -123,29 +137,29 @@ def _types_w(phi, marking, grounds, worlds):
     W = len(worlds)
     if isinstance(phi, str):
         if worlds and phi in worlds[0]:
-            return {frozenset([tuple((w[phi], frozenset((w[phi],))) for w in worlds)]): [frozenset()]}
+            return {frozenset([tuple((w[phi], frozenset((w[phi],)), w[phi]) for w in worlds)]): [frozenset()]}
         if phi in grounds:
-            open_ = frozenset([tuple((Z, frozenset(VALS)) for _ in range(W))])
-            filled = frozenset([tuple((T, frozenset((T,))) for _ in range(W)),
-                                tuple((F, frozenset((F,))) for _ in range(W))])
+            open_ = frozenset([tuple((Z, frozenset(VALS), Z) for _ in range(W))])
+            filled = frozenset([tuple((T, frozenset((T,)), T) for _ in range(W)),
+                                tuple((F, frozenset((F,)), F) for _ in range(W))])
             return {open_: [frozenset()], filled: [frozenset((phi,))]}
         v = marking.get(phi)
-        return {frozenset([tuple((v, frozenset((v,))) for _ in range(W))]): [frozenset()]}
+        return {frozenset([tuple((v, frozenset((v,)), v) for _ in range(W))]): [frozenset()]}
     op = phi[0]
     if op in TABLE1:
-        tab = TABLE1[op]
+        tab, ktab = TABLE1[op], KTABLE1[op]
         out = {}
         for t, fam in _types_w(phi[1], marking, grounds, worlds).items():
-            nt = frozenset(tuple((tab[c], frozenset(tab[x] for x in r)) for c, r in tup) for tup in t)
+            nt = frozenset(tuple((tab[c], frozenset(tab[x] for x in r), ktab[k]) for c, r, k in tup) for tup in t)
             out.setdefault(nt, []).extend(fam)
         return {t: _minimal(f) for t, f in out.items()}
-    tab = TABLE2[op]
+    tab, ktab = TABLE2[op], KTABLE2[op]
     A, B = _types_w(phi[1], marking, grounds, worlds), _types_w(phi[2], marking, grounds, worlds)
     out = {}
     for ta, fa in A.items():
         for tb, fb in B.items():
-            nt = frozenset(tuple((tab[(ca, cb)], frozenset(tab[(x, y)] for x in ra for y in rb))
-                                 for (ca, ra), (cb, rb) in zip(tua, tub))
+            nt = frozenset(tuple((tab[(ca, cb)], frozenset(tab[(x, y)] for x in ra for y in rb), ktab[(ka, kb)])
+                                 for (ca, ra, ka), (cb, rb, kb) in zip(tua, tub))
                            for tua in ta for tub in tb)
             out.setdefault(nt, []).extend(sa | sb for sa in fa for sb in fb)
     return {t: _minimal(f) for t, f in out.items()}
@@ -175,9 +189,9 @@ def _families_repeated(phi, marking, grounds, repeated, hit):
                     for xi in range(len(xs)):       # one filling x of R_in
                         block = tup[xi * len(rs):(xi + 1) * len(rs)]
                         z_world = rs.index(tuple(Z for _ in r_open))
-                        cur = block[z_world][0]
-                        ref = frozenset().union(*(rf for _, rf in block))
-                        pairs.add((cur, ref))
+                        cur, lazy = block[z_world][0], block[z_world][2]
+                        ref = frozenset().union(*(rf for _, rf, _ in block))
+                        pairs.add((cur, ref, lazy))
                 hits = [hit(p) for p in pairs]
                 sets = [frozenset(r_in) | s for s in fam]
                 if not r_in and frozenset() in fam:

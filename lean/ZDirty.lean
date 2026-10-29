@@ -462,6 +462,33 @@ theorem verdict_everywhere_excludes_de_morgan (n : V → V) (c d i x e : V → V
   rw [u, u] at w
   exact absurd w (by decide)
 
+/-! The judge's strict dispositions are strong Kleene (2026-10-29). Since the IF STABLE split, EARNED means
+T under every refinement AND T under every read of every occurrence; REFUTED the same for F. Both are exactly
+the strong Kleene value: the whole-formula question is answered by the judge as Kleene answers it, no more and
+no less; everything Kleene leaves at U is marked by the other dispositions. -/
+def StrictEarned (v : Nat → V) (φ : Fm) : Prop := Earned v φ ∧ kev v φ = T
+def Refuted (v : Nat → V) (φ : Fm) : Prop := ∀ w, refines v w → evalF w φ = F
+def StrictRefuted (v : Nat → V) (φ : Fm) : Prop := Refuted v φ ∧ kev v φ = F
+
+/-- **Strict EARNED is strong Kleene T.** -/
+theorem strict_earned_iff_kleene (v : Nat → V) (φ : Fm) : StrictEarned v φ ↔ kev v φ = T :=
+  ⟨fun h => h.2, fun h => ⟨earned_of_kleene v φ h, h⟩⟩
+
+theorem covers_false_only : ∀ x : V, covers x (false, true) = true → x = F := by decide
+theorem kle_F (y : V) (h : kle F y = true) : y = F := by cases y <;> first | rfl | exact absurd h (by decide)
+
+/-- What strong Kleene refutes, ZTL refutes: false under every reading ⇒ the verdict is F. -/
+theorem never_laxer (v : Nat → V) (φ : Fm) (h : kev v φ = F) : evalF v φ = F := by
+  have c := covers_rd v φ
+  rw [rd_is_kleene, h] at c
+  exact covers_false_only _ c
+
+/-- **Strict REFUTED is strong Kleene F.** -/
+theorem strict_refuted_iff_kleene (v : Nat → V) (φ : Fm) : StrictRefuted v φ ↔ kev v φ = F := by
+  refine ⟨fun h => h.2, fun h => ⟨fun w hr => ?_, h⟩⟩
+  have hw : kev w φ = F := kle_F _ (by have m := kev_mono v w hr φ; rw [h] at m; exact m)
+  exact never_laxer w φ hw
+
 /-! The primitives, not the clone (2026-10-29). A table for a classical connective g is DECISIVE if it
 never answers Z, SOUND if its T is forced by every reading of its arguments, MAXIMAL if it answers T
 whenever every reading forces it. The ZTL connective is the only table with all three. Bochvar's
@@ -579,3 +606,6 @@ end V
 #print axioms V.kleene_not_decisive
 #print axioms V.bochvar_not_sound
 #print axioms V.verdict_everywhere_excludes_de_morgan
+#print axioms V.strict_earned_iff_kleene
+#print axioms V.never_laxer
+#print axioms V.strict_refuted_iff_kleene

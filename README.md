@@ -2,7 +2,7 @@
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21318981.svg)](https://doi.org/10.5281/zenodo.21318981)
 
-**Try it without installing anything: [ztl.vitalyreznik.com](https://ztl.vitalyreznik.com)** — the judge, running, on your own sentence.
+**Try it without installing anything: [studio.ztljudge.com](https://studio.ztljudge.com)** — the judge, running, on your own sentence.
 
 A logic built on one principle: **truth is never granted on credit**.
 A three-valued logic whose every connective is two-valued: the verdict of every compound is T or F,
@@ -65,7 +65,7 @@ understanding → ZFL, the Zero-trust Formal Language, with a
 deterministic Russian back-reading as the non-hallucinating auditor and
 a validator-driven repair loop), and the measured ZTL core *judges*:
 verdicts with warranties, quarantine passports, stipulation options.
-A public instance runs at **https://ztl.vitalyreznik.com** — nothing to
+A public instance runs at **https://studio.ztljudge.com** — nothing to
 install. To run your own: the studio lives in its **own tree**
 (`ztlstudio/ztlstudio.py`), not in this repository — `python3 ztlstudio.py`
 from there →
@@ -73,7 +73,7 @@ http://localhost:8190 (no dependencies; without GROQ_API_KEY it runs in
 pro mode — write ZFL by hand).
 
 **For AI agents (MCP).** The same judge is an MCP server:
-`https://api.vitalyreznik.com/mcp` (Streamable HTTP, no key, no sign-up;
+`https://api.ztljudge.com/mcp` (Streamable HTTP, no key, no sign-up;
 30 requests a minute per address, 256 KB per request). Three tools:
 `language` (the columns and rules of a ZFL table), `examples` (worked
 documents) and `judge`. Your agent's own AI writes the table; ZTL judges
@@ -82,7 +82,7 @@ claim that is a single name answers with that name's own value, which is Z
 while it stays dirty or rests on something dirty. In Claude Code:
 
 ```
-claude mcp add --transport http ztl https://api.vitalyreznik.com/mcp
+claude mcp add --transport http ztl https://api.ztljudge.com/mcp
 ```
 
 Other MCP clients take the same URL as a remote server. Plain HTTP, for

@@ -66,7 +66,7 @@ The control weight of the whole construction: a court that cannot convict is wor
 
 ### 2.4. ZTLStudio: touch it yourself
 
-Both instruments are available live: **ZTLStudio** (https://ztl.vitalyreznik.com) — a web interface over the very same core, no installation. The *Paradoxes* tab is the passport office: a drop-down list of classical examples, the formal record visible and editable, and a "Run on the core" button that returns the passport. The built-in AI translates from human language into the formal one — but it never issues verdicts; the studio warns explicitly: *"AI explanation unverified by definition — the verdict above is the authority."* We return to the recipe in §7.
+Both instruments are available live: **ZTLStudio** (https://studio.ztljudge.com) — a web interface over the very same core, no installation. The *Paradoxes* tab is the passport office: a drop-down list of classical examples, the formal record visible and editable, and a "Run on the core" button that returns the passport. The built-in AI translates from human language into the formal one — but it never issues verdicts; the studio warns explicitly: *"AI explanation unverified by definition — the verdict above is the authority."* We return to the recipe in §7.
 
 ## 3. The docket: the whole collection at one table
 
@@ -214,7 +214,7 @@ What is ours is **executability and arbitration**: one instrument, one corpus, e
 
 Two ways to recompute this paper.
 
-**In the browser (no installation):** ZTLStudio — https://ztl.vitalyreznik.com, the *Paradoxes* tab. The drop-down list holds this paper's entire collection: the liar, the barber, Grelling, Russell with his twin, Jourdain's postcard, both crocodiles, both Currys, the strong liar with its mirror, Yablo, the three worlds of the contingent liar, the Theseus title contest, Agrippa's dogma, "the same person" (variants such as Yablo-6 are one edited line away — hints are in the example descriptions). Pick an example, press *Validate* — the studio shows a human back-reading of the formal record — then *Run on the core*. The passport, the solution count, the stipulations — all on screen. The formal record is editable: flip one negation in a cycle and watch a conviction turn into a blank (§4.6).
+**In the browser (no installation):** ZTLStudio — https://studio.ztljudge.com, the *Paradoxes* tab. The drop-down list holds this paper's entire collection: the liar, the barber, Grelling, Russell with his twin, Jourdain's postcard, both crocodiles, both Currys, the strong liar with its mirror, Yablo, the three worlds of the contingent liar, the Theseus title contest, Agrippa's dogma, "the same person" (variants such as Yablo-6 are one edited line away — hints are in the example descriptions). Pick an example, press *Validate* — the studio shows a human back-reading of the formal record — then *Run on the core*. The passport, the solution count, the stipulations — all on screen. The formal record is editable: flip one negation in a cycle and watch a conviction turn into a blank (§4.6).
 
 **Locally:** the repository https://github.com/inventor1975/ZTL,
 

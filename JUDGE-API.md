@@ -137,7 +137,7 @@ can be Z in one and F in the other, and that is not a contradiction.
 
 ## For humans, not for scripts
 
-ZTLStudio at `ztl.vitalyreznik.com` runs the same cores behind a text
+ZTLStudio at `studio.ztljudge.com` runs the same cores behind a text
 box. Three tabs today; the plan is one door that detects the genre and
 prints verdict + warranty + refusal class + cure together — deferred
 until the judge stops changing weekly, since a shop window over a moving

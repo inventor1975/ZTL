@@ -65,16 +65,26 @@ class TooBig(Exception):
     pass
 
 
-def disposition_of(cur, refset, lazy=None):
-    """`lazy`: the strong Kleene value now (each occurrence read on its own). None on a claim where every dirty
-    ground occurs once — there a hereditary verdict always agrees with it, so nothing is lost (2026-10-29)."""
-    if cur == T and refset == frozenset((T,)):
-        return "EARNED" if lazy in (None, T) else "EARNED IF STABLE"
-    if cur == F and refset == frozenset((F,)):
-        return "REFUTED" if lazy in (None, F) else "REFUTED IF STABLE"
-    if cur == T:
-        return "ON CREDIT"
-    return "OPEN"
+def disposition_of(cur, refset, lazy=None, comp=None):
+    """`lazy`: the strong Kleene value now (each occurrence read on its own); `comp`: the values over every
+    completion of the open grounds (each read the same at all its occurrences). Both None on a claim where every
+    dirty ground occurs once: there strong Kleene is exact, so Kleene T is (T, {T}), Kleene F is (F, {F}), and no
+    claim is settled by its completions alone (2026-10-29, IF STABLE by completions)."""
+    if lazy is None:
+        if cur == T and refset == frozenset((T,)):
+            return "EARNED"
+        if cur == F and refset == frozenset((F,)):
+            return "REFUTED"
+        return "ON CREDIT" if cur == T else "OPEN"
+    if lazy == T:
+        return "EARNED"
+    if lazy == F:
+        return "REFUTED"
+    if comp == frozenset((T,)):
+        return "EARNED IF STABLE"
+    if comp == frozenset((F,)):
+        return "REFUTED IF STABLE"
+    return "ON CREDIT" if cur == T else "OPEN"
 
 
 def _occurrences(phi, acc):
@@ -136,21 +146,26 @@ def _types_w(phi, marking, grounds, worlds):
     between children, so the per-world images are exact as before."""
     W = len(worlds)
     if isinstance(phi, str):
+        # the 4th component: values over the completions (a repeated ground at Z in a world has none there;
+        # its completions are the worlds where it is T or F)
         if worlds and phi in worlds[0]:
-            return {frozenset([tuple((w[phi], frozenset((w[phi],)), w[phi]) for w in worlds)]): [frozenset()]}
+            return {frozenset([tuple((w[phi], frozenset((w[phi],)), w[phi],
+                                      frozenset((w[phi],)) if w[phi] != Z else frozenset()) for w in worlds)]):
+                    [frozenset()]}
         if phi in grounds:
-            open_ = frozenset([tuple((Z, frozenset(VALS), Z) for _ in range(W))])
-            filled = frozenset([tuple((T, frozenset((T,)), T) for _ in range(W)),
-                                tuple((F, frozenset((F,)), F) for _ in range(W))])
+            open_ = frozenset([tuple((Z, frozenset(VALS), Z, frozenset((T, F))) for _ in range(W))])
+            filled = frozenset([tuple((T, frozenset((T,)), T, frozenset((T,))) for _ in range(W)),
+                                tuple((F, frozenset((F,)), F, frozenset((F,))) for _ in range(W))])
             return {open_: [frozenset()], filled: [frozenset((phi,))]}
         v = marking.get(phi)
-        return {frozenset([tuple((v, frozenset((v,)), v) for _ in range(W))]): [frozenset()]}
+        return {frozenset([tuple((v, frozenset((v,)), v, frozenset((v,))) for _ in range(W))]): [frozenset()]}
     op = phi[0]
     if op in TABLE1:
         tab, ktab = TABLE1[op], KTABLE1[op]
         out = {}
         for t, fam in _types_w(phi[1], marking, grounds, worlds).items():
-            nt = frozenset(tuple((tab[c], frozenset(tab[x] for x in r), ktab[k]) for c, r, k in tup) for tup in t)
+            nt = frozenset(tuple((tab[c], frozenset(tab[x] for x in r), ktab[k], frozenset(tab[x] for x in q))
+                                 for c, r, k, q in tup) for tup in t)
             out.setdefault(nt, []).extend(fam)
         return {t: _minimal(f) for t, f in out.items()}
     tab, ktab = TABLE2[op], KTABLE2[op]
@@ -158,8 +173,9 @@ def _types_w(phi, marking, grounds, worlds):
     out = {}
     for ta, fa in A.items():
         for tb, fb in B.items():
-            nt = frozenset(tuple((tab[(ca, cb)], frozenset(tab[(x, y)] for x in ra for y in rb), ktab[(ka, kb)])
-                                 for (ca, ra, ka), (cb, rb, kb) in zip(tua, tub))
+            nt = frozenset(tuple((tab[(ca, cb)], frozenset(tab[(x, y)] for x in ra for y in rb), ktab[(ka, kb)],
+                                  frozenset(tab[(x, y)] for x in qa for y in qb))
+                                 for (ca, ra, ka, qa), (cb, rb, kb, qb) in zip(tua, tub))
                            for tua in ta for tub in tb)
             out.setdefault(nt, []).extend(sa | sb for sa in fa for sb in fb)
     return {t: _minimal(f) for t, f in out.items()}
@@ -190,8 +206,9 @@ def _families_repeated(phi, marking, grounds, repeated, hit):
                         block = tup[xi * len(rs):(xi + 1) * len(rs)]
                         z_world = rs.index(tuple(Z for _ in r_open))
                         cur, lazy = block[z_world][0], block[z_world][2]
-                        ref = frozenset().union(*(rf for _, rf, _ in block))
-                        pairs.add((cur, ref, lazy))
+                        ref = frozenset().union(*(rf for _, rf, _, _ in block))
+                        comp = frozenset().union(*(q for r, (_, _, _, q) in zip(rs, block) if Z not in r))
+                        pairs.add((cur, ref, lazy, comp))
                 hits = [hit(p) for p in pairs]
                 sets = [frozenset(r_in) | s for s in fam]
                 if not r_in and frozenset() in fam:

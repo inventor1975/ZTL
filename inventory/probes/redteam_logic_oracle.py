@@ -156,13 +156,24 @@ def occurrences(phi, acc=None):
     return acc
 
 
-def disposition(verdict, grade_, unverified, absent, every_read=None):
-    """ztljudge.judge's docstring, read literally. `every_read`: the set `reads` gives (since 2026-10-29: a
-    hereditary T that is not 1 under every read of every occurrence is EARNED IF STABLE; F likewise)."""
-    if grade_ == "hereditary" and verdict == T:
-        return "EARNED" if every_read in (None, {1}) else "EARNED IF STABLE"
-    if grade_ == "hereditary" and verdict == F:
-        return "REFUTED" if every_read in (None, {0}) else "REFUTED IF STABLE"
+def stable(phi, marking):
+    """The classical values of phi under the STABLE reading, by brute force: every completion of the Z atoms (each
+    read the same at all its occurrences), and within it every read of each occurrence of a constant Z — a constant
+    is not an atom, nothing completes it, so its occurrences stay free reads."""
+    return set().union(*(reads(phi, w) for w in completions(marking)))
+
+
+def disposition(verdict, grade_, unverified, absent, every_read, stable_):
+    """ztljudge.judge's docstring, read literally (IF STABLE by completions since 2026-10-29, evening).
+    `every_read`: the set `reads` gives; `stable_`: the set `stable` gives."""
+    if every_read == {1}:
+        return "EARNED"
+    if every_read == {0}:
+        return "REFUTED"
+    if stable_ == {1}:
+        return "EARNED IF STABLE"
+    if stable_ == {0}:
+        return "REFUTED IF STABLE"
     if verdict == T:
         return "ON CREDIT"
     if absent and not unverified:

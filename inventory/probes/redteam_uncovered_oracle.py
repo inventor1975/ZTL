@@ -140,10 +140,15 @@ def disposition(phi, m):
     unv = [a for a in atoms(phi) if mm[a] == Z]
     gone = [a for a in atoms(phi) if mm[a] == E]
     rd = reads(phi, mm)
-    if g == "hereditary" and v == T:
-        return "EARNED" if rd == {True} else "EARNED IF STABLE"
-    if g == "hereditary" and v == F:
-        return "REFUTED" if rd == {False} else "REFUTED IF STABLE"
+    cs = stable(phi, mm)
+    if rd == {True}:
+        return "EARNED"
+    if rd == {False}:
+        return "REFUTED"
+    if cs == {True}:
+        return "EARNED IF STABLE"
+    if cs == {False}:
+        return "REFUTED IF STABLE"
     if v == T:
         return "ON CREDIT"
     if gone and not unv:
@@ -507,7 +512,13 @@ def fo_countermodel(prems, concl, dom, consts_to=None):
     return None
 
 
-def disposition_of(v, g, rd=None):
+def stable(phi, m):
+    """The values over every completion (each dirty atom read the same at all its occurrences), by brute force."""
+    m = _full(phi, m)
+    return set().union(*(reads(phi, c) for c in completions(m, sorted(atoms(phi)))))
+
+
+def disposition_of(v, g, rd=None, cs=None):
     """The judge's disposition from verdict and grade, as its docstring states it
     (ztljudge.judge; no absent grounds in these documents): hereditary T is EARNED,
     hereditary F is REFUTED, T below hereditary is ON CREDIT, anything else OPEN.
@@ -515,10 +526,20 @@ def disposition_of(v, g, rd=None):
     to the disposition (PR #5, E1) — written from the document, not imported.
     NOT named `disposition`: that name is this oracle's own (phi, m) function, and
     shadowing it broke the backward sweep (295 false disagreements, 2026-09-28)."""
+    if rd is not None:          # IF STABLE by completions (2026-10-29, evening)
+        if rd == {True}:
+            return "EARNED"
+        if rd == {False}:
+            return "REFUTED"
+        if cs == {True}:
+            return "EARNED IF STABLE"
+        if cs == {False}:
+            return "REFUTED IF STABLE"
+        return "ON CREDIT" if v == T else "OPEN"
     if g == "hereditary":
         if v == T:
-            return "EARNED" if rd in (None, {True}) else "EARNED IF STABLE"
+            return "EARNED"
         if v == F:
-            return "REFUTED" if rd in (None, {False}) else "REFUTED IF STABLE"
+            return "REFUTED"
         return "OPEN"
     return "ON CREDIT" if v == T else "OPEN"

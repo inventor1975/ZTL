@@ -1,7 +1,7 @@
 ZTL — the theorem inventory
 ============================================================
 
-2780 theorems across 148 modules, all on the empty axiom list.
+2793 theorems across 148 modules, all on the empty axiom list.
 
 Every theorem below is machine-checked by the Lean 4 kernel
 on the EMPTY axiom list (no Classical.choice, no Quot.sound,
@@ -3093,7 +3093,7 @@ inventory/axiom_audit.py, which re-checks every line in CI.
     V.Cpl.toV_T
     V.Cpl.ztl_interpolation
 
-## ZSpeaks.lean  (16)
+## ZSpeaks.lean  (29)
     V.Speak.and3
     V.Speak.and3_intro
     V.Speak.bool_eq_of_iff
@@ -3107,7 +3107,20 @@ inventory/axiom_audit.py, which re-checks every line in CI.
     V.Speak.every_refinement_congr
     V.Speak.allR_congr
     V.Speak.kev_congr
+    V.Speak.fill_total
+    V.Speak.fill_refines
+    V.Speak.not_decide_iff
+    V.Speak.and2
+    V.Speak.and2_intro
+    V.Speak.allC_sound
+    V.Speak.allC_complete
+    V.Speak.allC_iff
+    V.Speak.every_completion_congr
+    V.Speak.allC_congr
     V.Speak.speak
     V.Speak.judge_speaks_ztl
     V.Speak.dispositions_partition
+    V.Speak.lnc_if_stable
+    V.Speak.grant_right_where_substitution_right
+    V.Speak.grant_iff_enum
 

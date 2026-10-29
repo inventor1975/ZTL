@@ -217,7 +217,10 @@ def run():
     on_way = judge(CHAIN_E1, path)["verdict"]
     print(f"ok  on the way: after checking v21=F, v22=T, v31=F, v32=T (v23, v33 unchecked) the verdict reads {on_way};"
           f" so the F is revocable on a path -> not hereditary -> judge: {r['disposition']}")
-    assert on_way == "T" and r["disposition"] == "OPEN"
+    # Since 2026-10-29 (IF STABLE by completions) the judge names what the grade found: false in every completion,
+    # i.e. under every NON-CONTEXTUAL assignment (each observable read the same in every context it occurs in),
+    # while not refuted read by read — REFUTED IF STABLE, Kochen–Specker's own statement. It was OPEN before.
+    assert on_way == "T" and r["disposition"] == "REFUTED IF STABLE"
     assert all(judge(a, m)["disposition"] == "EARNED" for a in m if m[a] == "T") and \
         all(judge(a, m)["disposition"] == "REFUTED" for a in m if m[a] == "F")
 
@@ -228,7 +231,7 @@ def run():
     good2, total2 = completions(CHAIN_E2, m2)
     print(f"ok  the six laws together: verdict {r2['verdict']}, grade {r2['grade']!r}, disposition {r2['disposition']}; "
           f"brute force: {good2} of {total2} completions satisfy them")
-    assert r2["disposition"] != "REFUTED" and r2["grade"] != "sound" and good2 > 0
+    assert r2["disposition"] not in ("REFUTED", "REFUTED IF STABLE") and r2["grade"] != "sound" and good2 > 0
     print("ok  READING: non-contextual values are false in every completion (E1), contextual ones are not (E2) — what falls is")
     print("    NON-CONTEXTUAL value definiteness, exactly the content of Kochen–Specker; Bohm's contextual values stand")
 
@@ -250,7 +253,8 @@ def run():
                 r1 = judge(CHAIN_E1, m)
                 assert r1["verdict"] == "F" and r1["grade"] in ("sound", "hereditary")
                 r2_ = judge(CHAIN_E2, ground_e2(ctx, sg)[0])
-                assert r2_["disposition"] != "REFUTED" and r2_["grade"] != "sound"
+                assert r2_["disposition"] not in ("REFUTED", "REFUTED IF STABLE") and r2_["grade"] != "sound"
+                assert r1["disposition"] in ("REFUTED", "REFUTED IF STABLE")
     print(f"ok  {runs} possible runs x 6 laws: refuted {len(bad)}, earned {earned}, the rest open; "
           f"in every run E1's conjunction false in every completion and E2's not")
     assert not bad and earned > 0

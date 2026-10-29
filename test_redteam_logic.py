@@ -205,7 +205,7 @@ for _ in range(8000):
         wrong.append("parse")
     if (r["verdict"], r["grade"], r["unverified"], r["absent"]) != (v, g, unv, gone):
         wrong.append("verdict/grade/unverified")
-    d = O.disposition(v, g, unv, gone, O.reads(phi, kern))
+    d = O.disposition(v, g, unv, gone, O.reads(phi, kern), O.stable(phi, kern))
     if r["disposition"] != d:
         wrong.append("disposition")
     want_if = (sorted(a for a, c in O.occurrences(phi).items() if c > 1 and a in unv + gone)

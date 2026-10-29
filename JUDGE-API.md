@@ -33,21 +33,25 @@ The report carries **two registers side by side**:
 
 | disposition | meaning |
 |---|---|
-| `EARNED` | T, survives every verification, and T under every read of every occurrence (the lazy register agrees) |
-| `EARNED IF STABLE` | T and survives every verification, but only if each atom in `if_stable` reads the same at every occurrence (between check and use; in premise and conclusion). Read each occurrence on its own and it is not established. Verify `if_stable` to settle it. |
-| `ON CREDIT` | T now; a verification can overturn it |
-| `OPEN` | not established; a dirty atom matters |
-| `REFUTED IF STABLE` | the mirror of `EARNED IF STABLE` for F |
-| `REFUTED` | F, survives every verification, and F under every read |
+| `EARNED` | T under every read of every occurrence (strong Kleene T): true whatever the dirty atoms turn out to be, even if each occurrence is read on its own |
+| `EARNED IF STABLE` | not settled read by read, but T in every completion: true if each dirty atom reads the same at all its occurrences (between check and use; in premise and conclusion). `if_stable` names the repeated dirty atoms — enough to make every atom stable, not necessarily the fewest. Verify the dirty atoms to settle it. |
+| `ON CREDIT` | T now, and the completions disagree: a verification can overturn it |
+| `OPEN` | not T now, and the completions disagree: not established |
+| `REFUTED IF STABLE` | the mirror of `EARNED IF STABLE`: F in every completion |
+| `REFUTED` | F under every read of every occurrence (strong Kleene F) |
 | `E` | unjudgeable: what the claim rests on has no subject |
 
-`if_stable` names the dirty atoms that occur more than once; on a claim where
-each dirty atom occurs once it is always empty. Example: the Cogito,
-`(t & (t -> i)) -> i` with both dirty, is `EARNED IF STABLE` on `['i', 't']` —
-valid if "I" means the same in premise and conclusion. **Change from earlier
-releases:** what was `EARNED` (or `REFUTED`) splits into the strict word and the
-`IF STABLE` one; a client that accepts only `EARNED` now refuses the
-`IF STABLE` cases, which is the safe direction.
+`if_stable` is empty except on the two `IF STABLE` dispositions. Examples, all
+atoms dirty: `p -> p` and `p | ~p` are `EARNED IF STABLE` on `['p']`;
+`~(p -> p)` is `REFUTED IF STABLE`; `~~p` is `ON CREDIT`; `p` is `OPEN`; the Cogito,
+`(t & (t -> i)) -> i`, is `EARNED IF STABLE` on `['i', 't']` — valid if "I"
+means the same in premise and conclusion. A constant `Z` is not an atom: nothing
+completes it, so its occurrences stay free reads. The judge grants (`EARNED` or
+`EARNED IF STABLE`) exactly what classical evaluation over all completions
+grants; `EARNED` marks the part that also holds when each occurrence is read on
+its own. **Changes:** 2026-10-29 afternoon, what was `EARNED`/`REFUTED` split
+into the strict word and the `IF STABLE` one; 2026-10-29 evening, `IF STABLE` is
+decided by completions (see CHANGELOG).
 
 **Field names.** The list of dirty atoms is returned under BOTH names:
 `dirty` (the name from now on) and `unverified` (the older name, kept for

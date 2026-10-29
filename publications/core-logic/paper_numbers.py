@@ -372,7 +372,7 @@ check(len(SIDES) == 19 and some_u == 19 and len(only_u) == 8,
 print("P. the judge's dispositions against strong Kleene (v7 §5), dirty cells of the distinct pool")
 sys.path.insert(0, ZTL)
 import ztljudge as _J                                                    # noqa: E402
-_seen, _disp = set(), {}
+_seen, _disp, _dom = set(), {}, {F: [0, 0], T: [0, 0]}   # per default d: [judge right & d wrong, the reverse]
 for f in POOL:
     key = show(f)
     if key in _seen:
@@ -386,9 +386,16 @@ for f in POOL:
         kk = "T" if k == {1} else "F" if k == {0} else "U"
         d = _J.judge(_J._show(phi), dict(e))["disposition"]
         _disp[(d, kk)] = _disp.get((d, kk), 0) + 1
-_exp = {("EARNED", "T"): 2450, ("REFUTED", "F"): 1274, ("EARNED IF STABLE", "U"): 950,
-        ("REFUTED IF STABLE", "U"): 1014, ("ON CREDIT", "U"): 2788, ("OPEN", "U"): 6054}
-check(_disp == _exp, f"judge vs strong Kleene: {dict(sorted(_disp.items()))}")   # quoted in v7 §5 (section O)
+        right, grant = kk == "T", d in ("EARNED", "EARNED IF STABLE")
+        for dflt in (F, T):
+            sg = ev(CL, f, {a: (dflt if x == Z else x) for a, x in e.items()}) == T
+            _dom[dflt][0] += grant == right and sg != right
+            _dom[dflt][1] += sg == right and grant != right
+_exp = {("EARNED", "T"): 2450, ("REFUTED", "F"): 1274, ("EARNED IF STABLE", "U"): 2440,   # IF STABLE by completions
+        ("REFUTED IF STABLE", "U"): 1470, ("ON CREDIT", "U"): 2296, ("OPEN", "U"): 4600}  # since 2026-10-29 evening
+check(_disp == _exp, f"judge vs strong Kleene: {dict(sorted(_disp.items()))}")
+check(_dom == {F: [2918, 0], T: [4148, 0]},
+      f"judge's grant vs the uniform defaults (right / the default wrong, and the reverse): {_dom}")  # preprint 2.1.6 §10   # quoted in v7 §5 (section O)
 
 print("G. every number this script owns appears in the paper")
 if not PAPER:
@@ -406,8 +413,10 @@ if not PAPER:
     print("  - SKIP: the paper text is not available here")
 V7 = open(os.path.join(PAPER, "v7", "v7-draft.md"), encoding="utf-8").read() if PAPER else ""
 for n in () if not PAPER else ("82 binary functions", "514", "only 18 binary functions", "eight of them only",
-          "twenty-one of the twenty-six", "EARNED 2 450", "REFUTED 1 274", "EARNED IF STABLE (950)",
-          "REFUTED IF STABLE (1 014)", "ON CREDIT (2 788)", "(6 054)"):
+          "twenty-one of the twenty-six", "EARNED 2 450", "REFUTED 1 274"):
+    # The v7 §5 counts of the four IF STABLE / ON CREDIT / OPEN dispositions went stale when IF STABLE moved to
+    # completions (2026-10-29 evening); the article is paused (curator) and §5 is to be rewritten — section P above
+    # holds the current numbers.
     check(n in V7, f"in the v7 draft: {n}")
 
 print()

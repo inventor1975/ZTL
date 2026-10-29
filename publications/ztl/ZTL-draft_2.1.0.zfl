@@ -1,11 +1,11 @@
 {
  "zfl_sidecar": 1,
  "file": "ZTL-draft_2.1.0.md",
- "sha256": "24b57bdaf61ddf439ed4be497414fe93790639ea1484ebf7324baca8af66f0fb",
+ "sha256": "f9d97b5ce785f8eefaec14fb8b85b14ffde2dd80e070c6b1b579292bbc0543cf",
  "decision": {
   "status": "waived",
-  "why": "v2.1.6 changes reviewed by a Sonnet reader (22 findings); fixed: 'dominance unchanged' now says it is about EARNED and EARNED IF STABLE together, 'flags, does not avoid' stated, 'applied to atoms' qualification restored in the short form, expressive completeness domain stated (T, F, Z to {T, F}), 'in practice' replaced by the two sufficient conditions, version attribution of the Kleene result; left: criterion-relativity (stated up front, by design), tautology-like characterization (a characterization), counts as redundant checks, excerpt artifacts and pre-2.1.6 text",
-  "at": "2026-10-29T19:07:04+00:00",
+  "why": "v2.1.6 rewritten after two cloud reviews (IF STABLE by completions) and read again by a Sonnet reader (16 findings); fixed: 'right where each substitution is wrong' restricted to the 2.1.5 verdict, the price stated (2,440 wrong grants under the dirty criterion vs 950; EARNED never wrong), one label carries both criteria, characterization restricted to lifted tables, interpolation for entailments, partition of definitions vs implementation cap; left: criterion-relativity and near-definitional results (stated as such in the text), stable reading as a design choice (stated as a condition to verify), counts as checks",
+  "at": "2026-10-29T19:56:13+00:00",
   "operator": "undeclared"
  }
 }

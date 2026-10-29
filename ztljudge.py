@@ -537,19 +537,20 @@ def judge(text, marking=None, budget=None):
     cannot tell 'earned' from 'true-on-credit', nor 'refuted' from 'not yet
     established' — the warranty GRADE does, and it names the weak link.
 
-      EARNED    verdict T, hereditary, and T under every read of every
-                occurrence (the lazy register agrees) — grounded outright.
+      EARNED    T under every read of every occurrence (the lazy register,
+                strong Kleene, says T) — grounded outright.
+      REFUTED   F under every read of every occurrence — false regardless of
+                the marks.
       EARNED IF STABLE
-                verdict T, hereditary, but the lazy register does not say T:
-                earned only if each atom in `if_stable` reads the same at
-                every occurrence. Verifying them settles it.
-      REFUTED   verdict F, hereditary, and F under every read — false
-                regardless of the marks.
+                not settled read by read, but T in every completion of the
+                dirty atoms: true if each dirty atom reads the same at all its
+                occurrences (`if_stable` names the repeated ones, which is
+                enough; not necessarily the fewest). Verifying settles it.
       REFUTED IF STABLE
-                the mirror: refuted only if `if_stable` reads the same.
-      ON CREDIT verdict T, but not hereditary — true only while a dirty
-                link holds; if it flips, the claim can die.
-      OPEN      not established — a mark actually matters; verify it.
+                the mirror: F in every completion.
+      ON CREDIT verdict T now, but some completion makes it F — a
+                verification can kill it.
+      OPEN      not established — the completions disagree; verify.
       E         not established, and it CANNOT BE: what the claim rests on has
                 no subject. Not a fifth kind of ignorance — the same fourth
                 corner `znumjudge` has reported since 2026-08-12, arriving here
@@ -598,25 +599,65 @@ def judge(text, marking=None, budget=None):
         why = f"not established — verify {unv} (it could still turn either way)"
         if gone:
             why += f"; {gone} is not on that list — it has no subject"
-    # IF STABLE (2026-10-29, the curator's decision). The grade's "hereditary" refines each dirty atom to ONE value,
-    # so it presumes that every occurrence of an atom reads the same. ZTL's own premise is that two reads may differ
-    # (time of check vs time of use; or, in an argument, the same word in premise and conclusion). The lazy register
-    # reads every occurrence on its own, so when it does not agree (`lazy` is not T for an earned T, not F for a
-    # refuted F) the settlement holds only under that presumption, and the disposition says so. Found by running every
-    # stand under dilemmas/: 19 claims, all argument forms (Cogito, Hume's guillotine, Plato's third man, Bell,
-    # Agrippa's critics). Only an atom that occurs more than once can be read two ways, so those are named
-    # (`if_stable`); on a claim where each dirty atom occurs once the lazy register always agrees (none is named).
+    # IF STABLE, by completions (2026-10-29, evening; the curator's decision after two cloud reviews). A claim whose
+    # strong Kleene value is undecided (the lazy register: every occurrence read on its own) may still be settled
+    # under the STABLE reading, where each atom reads the same at all its occurrences, i.e. in every completion of the
+    # dirty atoms by T or F. True in every completion: EARNED IF STABLE; false in every completion: REFUTED IF STABLE.
+    # The first definition (afternoon) used the grade's refinements, which keep Z among their values, and so tied the
+    # label to ZTL's own verdicts on dirty atoms: p -> p was OPEN while ~(p & ~p) was EARNED IF STABLE, though both are
+    # true in every completion. MEASURED on the regression pool (14,530 dirty cells): EARNED IF STABLE 950 -> 2,440,
+    # REFUTED IF STABLE 1,014 -> 1,470; EARNED (2,450) and REFUTED (1,274) are strong Kleene T and F, unchanged.
+    # Cost: only REPEATED dirty atoms are enumerated. With them fixed, every other dirty atom occurs once, and on a
+    # formula where each atom occurs once strong Kleene is exact (the reads of an atom that occurs once are its
+    # completions), so one lazy pass per assignment of the repeated atoms decides the rest: 2^r passes, r = repeated.
     phi = formalize(text)
-    if_stable = []
-    if (disp == "EARNED" and r["lazy"] != T) or (disp == "REFUTED" and r["lazy"] != F):
-        occ = {}
-        _occurrences(phi, occ)
-        if_stable = sorted(a for a, c in occ.items() if c > 1 and a in unv + gone)
-        what = "true" if disp == "EARNED" else "false"
-        disp += " IF STABLE"
-        why = (f"{what} only if {if_stable} reads the same at every occurrence — between check and use, or in "
-               f"premise and conclusion; read each occurrence on its own and the matter is not established "
-               f"(verify {if_stable} to settle it outright)")
+    k = _kernel(_full(phi, marking))
+    occ = {}
+    _occurrences(phi, occ)
+    dirty = [a for a in unv + gone if a in occ]
+    repeated = sorted(a for a in dirty if occ[a] > 1)
+    lv = r["lazy"]
+    if_stable, stable = [], None
+    if lv == T:
+        disp = "EARNED"
+        why = (f"true under every read of every occurrence; {_besides(unv, gone)} do not matter"
+               if unv or gone else "grounded outright")
+    elif lv == F:
+        disp = "REFUTED"
+        why = (f"false under every read of every occurrence, whatever {_besides(unv, gone)} turn out to be"
+               if unv or gone else "grounded false")
+    elif len(repeated) <= _STABLE_CAP:
+        seen = set()
+        for bits in itertools.product((T, F), repeat=len(repeated)):
+            k2 = dict(k); k2.update(zip(repeated, bits))
+            seen.add(_lazy(phi, k2)[0])
+            if Z in seen or len(seen) > 1:
+                break
+        stable = seen.pop() if len(seen) == 1 else None
+        if stable in (T, F):
+            if_stable = repeated
+            what = "true" if stable == T else "false"
+            disp = "EARNED IF STABLE" if stable == T else "REFUTED IF STABLE"
+            why = (f"{what} in every completion, i.e. if each dirty atom reads the same at all its occurrences "
+                   f"(it is enough that {if_stable} do: no other dirty atom occurs twice); read each occurrence on "
+                   f"its own and the matter is not established (verify the dirty atoms to settle it outright)")
+    else:
+        # Over the cap the grade still decides one direction: a hereditary T (F) is T (F) in every completion —
+        # when no constant Z occurs (a constant is read freely, the grade fixes it).
+        if disp in ("EARNED", "REFUTED") and not _has_const_z(phi):
+            if_stable = repeated
+            disp += " IF STABLE"
+        why += (f"; stability not searched: {len(repeated)} repeated dirty atoms exceed the cap of {_STABLE_CAP} "
+                f"(2^{len(repeated)} passes)" + ("; settled by the warranty grade instead" if if_stable else ""))
+    # EARNED and REFUTED are strong Kleene T and F, nothing else: a hereditary grade without them (only with a
+    # constant Z, which no refinement touches) is not a settlement.
+    if disp in ("EARNED", "REFUTED") and lv != (T if disp == "EARNED" else F):
+        if v == T:
+            disp, why = "ON CREDIT", "true only on credit — it rides a constant Z, which no verification resolves"
+        elif gone and not unv:
+            disp, why = "E", _no_subject(gone)
+        else:
+            disp, why = "OPEN", "not established"
     # The declaration is billed, always — an absence that removes a settlement
     # is a claim about the world, and must be contestable as one.
     joint = ([] if disp in ("EARNED", "REFUTED", "E") or disp.endswith("IF STABLE")
@@ -626,6 +667,13 @@ def judge(text, marking=None, budget=None):
                 f" together, so a one-at-a-time order would be empty work")
     return {**r, "disposition": disp, "why": why, "joint": joint, "if_stable": if_stable,
             "forgone": _forgone(text, marking, gone, disp) if gone else []}
+
+
+def _has_const_z(phi):
+    return phi == Z if isinstance(phi, str) else any(_has_const_z(c) for c in phi[1:])
+
+
+_STABLE_CAP = 16   # repeated dirty atoms enumerated for IF STABLE: 2^16 lazy passes at most
 
 
 def _occurrences(phi, acc):

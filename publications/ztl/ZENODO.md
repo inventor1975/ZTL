@@ -1,8 +1,9 @@
 **v2.1.6 DRAFT READY 2026-10-29 (not published; publishing is the curator's step): reserved DOI 10.5281/zenodo.23776523**
-(https://zenodo.org/uploads/23776523). The judge's earned verdict split (EARNED = strong Kleene T; EARNED IF STABLE
-flagged); ZComplete, ZSpeaks, ZClone directional completeness, ZDirty characterization. Read back from the API: version
-2.1.6, exactly ONE file ZTL-preprint-v2.1.6.pdf, 489862 bytes, md5 c8a92c7fd518cfca044c5ce905105946 equal to the
-repository copy (the inherited v2.1.5 PDF deleted, 204), isNewVersionOf 23740723, three isSupplementedBy links,
+(https://zenodo.org/uploads/23776523). The judge's dispositions by strong Kleene and by completions (EARNED = Kleene T;
+IF STABLE = T/F in every completion); ZComplete, ZSpeaks, ZClone directional completeness, ZDirty characterization.
+Rewritten after two cloud reviews the same evening (the first IF STABLE, by refinements, replaced before publication).
+Read back from the API: version 2.1.6, exactly ONE file ZTL-preprint-v2.1.6.pdf, 494691 bytes, md5
+0dc0163826b156efc17a8f81777b25ad equal to the repository copy, isNewVersionOf 23740723, three isSupplementedBy links,
 Repository URL, licence cc-by-4.0, Created 2026-10-29. Description: ZENODO-v2.1.6-description.md.
 
 **v2.1.5 PUBLISHED 2026-10-28 (by the curator): version DOI 10.5281/zenodo.23740723**

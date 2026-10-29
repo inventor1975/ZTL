@@ -14,8 +14,7 @@ among the 18. Strikingly, NAND and NOR stall in the SAME 18-table
 cage — and both still reach negation (x↑x = ¬x survives verbatim),
 yet neither can rebuild its own De Morgan partner.
 
-The sole surviving solo basis is NONIMPLICATION ↛ (p ∧ ¬q, the refusal
-connective): explicit witness terms, extracted from the measured
+NONIMPLICATION ↛ (p ∧ ¬q, the refusal connective) survives: explicit witness terms, extracted from the measured
 search and re-checked cell by cell by the kernel, reach ¬, ∧ and ∨ —
 the full canonical basis of ZTL.
 
@@ -24,6 +23,9 @@ the full canonical basis of ZTL.
     x∨y  = ⊤ ↛ ((⊤ ↛ (x ↛ ⊥)) ↛ (y ↛ ⊥))
 
 (Note `y ↛ ⊥` is the truth detector J_T(y).)
+
+The implication survives too (§5, `imp_clone_eq`; ¬x = x → ⊥). Solo-completeness holds exactly for the four
+directional connectives (`zzhegalkin.py` §5, measured); NAND and NOR fall (§1).
 
 VR discipline: `#print axioms` at the bottom — the whole module must
 stand on the empty axiom list.
@@ -199,7 +201,7 @@ theorem nor_reaches_not : Reach znor notTbl := by
   exact (show map2 znor projX projX = notTbl by decide) ▸ h
 
 -- ============================================================
--- §2.  Nonimplication: the sole surviving solo basis
+-- §2.  Nonimplication: a surviving solo basis (§5: so does implication)
 -- ============================================================
 
 /-- ¬x = ⊤ ↛ x. -/
@@ -423,6 +425,72 @@ theorem and_cannot_not : ¬ Reach zand notTbl := by
   intro h
   exact absurd (reach_and_in_cage h) (by decide)
 
+-- ============================================================
+-- §5.  Implication alone (2026-10-29): the curator's connective
+-- ============================================================
+
+/-! The census of `zzhegalkin.py` §5 had measured that the four directional connectives (both implications,
+both nonimplications) are complete alone with the constants, and corrected this file's former "sole surviving
+solo basis is ↛". Here the implication itself, in the kernel. The witness terms were found by search and are
+re-checked cell by cell. Negation is x → ⊥. -/
+
+theorem cell_not_imp : ∀ v, zimp v V.F = znot v := by decide
+theorem cell_and_imp :
+    ∀ x y, zimp (zimp (zimp x y) (zimp (zimp V.T x) V.F)) V.F = zand x y := by decide
+theorem cell_or_imp : ∀ x y, zimp (zimp (zimp V.T x) y) y = zor x y := by decide
+theorem cell_imp_canon : ∀ x y, zor (znot x) y = zimp x y := by decide
+
+/-- **Implication subsumes the canonical basis**: everything {¬,∧,∨} reach, → reaches alone (with ⊤, ⊥). -/
+theorem imp_subsumes_canon {t : Tbl} (h : ReachC t) : Reach zimp t := by
+  induction h with
+  | fst => exact .fst
+  | snd => exact .snd
+  | top => exact .top
+  | bot => exact .bot
+  | nots _ ih =>
+      rename_i a _
+      have key : map2 zimp a cnstF = map1 znot a :=
+        tbl_eq_of_cells (cell_not_imp _) (cell_not_imp _) (cell_not_imp _)
+          (cell_not_imp _) (cell_not_imp _) (cell_not_imp _)
+          (cell_not_imp _) (cell_not_imp _) (cell_not_imp _)
+      exact key ▸ Reach.app ih Reach.bot
+  | ands _ _ iha ihb =>
+      rename_i a b _ _
+      have key : map2 zimp (map2 zimp (map2 zimp a b) (map2 zimp (map2 zimp cnstT a) cnstF)) cnstF
+          = map2 zand a b :=
+        tbl_eq_of_cells (cell_and_imp _ _) (cell_and_imp _ _) (cell_and_imp _ _)
+          (cell_and_imp _ _) (cell_and_imp _ _) (cell_and_imp _ _)
+          (cell_and_imp _ _) (cell_and_imp _ _) (cell_and_imp _ _)
+      exact key ▸ Reach.app (Reach.app (Reach.app iha ihb)
+        (Reach.app (Reach.app Reach.top iha) Reach.bot)) Reach.bot
+  | ors _ _ iha ihb =>
+      rename_i a b _ _
+      have key : map2 zimp (map2 zimp (map2 zimp cnstT a) b) b = map2 zor a b :=
+        tbl_eq_of_cells (cell_or_imp _ _) (cell_or_imp _ _) (cell_or_imp _ _)
+          (cell_or_imp _ _) (cell_or_imp _ _) (cell_or_imp _ _)
+          (cell_or_imp _ _) (cell_or_imp _ _) (cell_or_imp _ _)
+      exact key ▸ Reach.app (Reach.app (Reach.app Reach.top iha) ihb) ihb
+
+/-- ...and conversely (→ = ¬p ∨ q holds as a table), so the clones are EQUAL. -/
+theorem canon_subsumes_imp {t : Tbl} (h : Reach zimp t) : ReachC t := by
+  induction h with
+  | fst => exact .fst
+  | snd => exact .snd
+  | top => exact .top
+  | bot => exact .bot
+  | app _ _ iha ihb =>
+      rename_i a b _ _
+      have key : map2 zor (map1 znot a) b = map2 zimp a b :=
+        tbl_eq_of_cells (cell_imp_canon _ _) (cell_imp_canon _ _) (cell_imp_canon _ _)
+          (cell_imp_canon _ _) (cell_imp_canon _ _) (cell_imp_canon _ _)
+          (cell_imp_canon _ _) (cell_imp_canon _ _) (cell_imp_canon _ _)
+      exact key ▸ ReachC.ors (ReachC.nots iha) ihb
+
+/-- **Implication alone generates the whole canonical clone** (with ⊤, ⊥) — unlike Sheffer's stroke and
+Peirce's arrow, which stall in the 18-table cage. -/
+theorem imp_clone_eq : ∀ t, Reach zimp t ↔ ReachC t :=
+  fun _ => ⟨canon_subsumes_imp, imp_subsumes_canon⟩
+
 -- CHECKS: no sorry, no admit.
 
 -- Axiom audit — MEASURED (VR discipline): the empty list, module-wide.
@@ -441,3 +509,6 @@ theorem and_cannot_not : ¬ Reach zand notTbl := by
 #print axioms zhegalkin_clone_eq
 #print axioms nimp_eq_zhegalkin
 #print axioms and_cannot_not
+#print axioms imp_subsumes_canon
+#print axioms canon_subsumes_imp
+#print axioms imp_clone_eq

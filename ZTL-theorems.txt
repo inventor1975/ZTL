@@ -1,7 +1,7 @@
 ZTL — the theorem inventory
 ============================================================
 
-1143 theorems across 68 modules, all on the empty axiom list.
+2780 theorems across 148 modules, all on the empty axiom list.
 
 Every theorem below is machine-checked by the Lean 4 kernel
 on the EMPTY axiom list (no Classical.choice, no Quot.sound,
@@ -294,7 +294,7 @@ inventory/axiom_audit.py, which re-checks every line in CI.
     V.russell_grounded
     V.russell_verdicts
 
-## ZClone.lean  (34)
+## ZClone.lean  (51)
      — the clone / single-operator completeness census of the sixteen connectives (Finn's external-Bochvar landscape)
     andEqTrueC
     cage_closed_nand
@@ -330,6 +330,23 @@ inventory/axiom_audit.py, which re-checks every line in CI.
     andCage_closed
     reach_and_in_cage
     and_cannot_not
+    cell_not_imp
+    cell_and_imp
+    cell_or_imp
+    cell_imp_canon
+    imp_subsumes_canon
+    canon_subsumes_imp
+    imp_clone_eq
+    negated_lift_differs
+    negated_lift_constants
+    two_nands
+    reach_congr
+    reach_swap
+    reach_inv13
+    reach_inv14
+    reach_affine
+    nondirectional_incomplete
+    directional_complete
 
 ## ZTime.lean  (16)
      — logical time: the warranty ladder as temporal quantifiers (now / at every ending / always on every path)
@@ -1313,4 +1330,1784 @@ inventory/axiom_audit.py, which re-checks every line in CI.
     ZParabola.a_pos
     ZParabola.form_pos
     ZParabola.no_root_line
+
+## ZIntExtremes.lean  (38)
+    ZIntExtremes.cancel_left
+    ZIntExtremes.step_up
+    ZIntExtremes.step_down
+    ZIntExtremes.rising
+    ZIntExtremes.rise_le
+    ZIntExtremes.fall_le
+    ZIntExtremes.max_at_ends
+    ZIntExtremes.min_at_turn
+    ZIntExtremes.convex_of_linear_shift
+    ZIntExtremes.lin4
+    ZIntExtremes.odd_step
+    ZIntExtremes.mid_lin
+    ZIntExtremes.quad_step
+    ZIntExtremes.quad_step_grows
+    ZIntExtremes.quad_mid
+    ZIntExtremes.quad_convex
+    ZIntExtremes.sum_multiple
+    ZIntExtremes.sw1
+    ZIntExtremes.sw2
+    ZIntExtremes.sw3
+    ZIntExtremes.cancel_right
+    ZIntExtremes.ple_refl
+    ZIntExtremes.ple_total
+    ZIntExtremes.ple_trans
+    ZIntExtremes.sw4
+    ZIntExtremes.pstep_up
+    ZIntExtremes.pstep_down
+    ZIntExtremes.prising
+    ZIntExtremes.prise_le
+    ZIntExtremes.pfall_le
+    ZIntExtremes.pmax_at_ends
+    ZIntExtremes.pmin_at_turn
+    ZIntExtremes.pquad_convex
+    ZIntExtremes.pmin_at_ends_concave
+    ZIntExtremes.up_of_d
+    ZIntExtremes.down_of_d
+    ZIntExtremes.two_s
+    ZIntExtremes.pmin_at_vertex
+
+## ZOnly.lean  (6)
+    V.reach_sound
+    V.merge_both
+    V.reach_complete
+    V.only_exact
+    V.pin_fixed
+    V.split
+
+## ZOrigin.lean  (7)
+    ZOrigin.doubt_gives_F
+    ZOrigin.bin_origin
+    ZOrigin.bin_step
+    ZOrigin.T_through_F
+    ZOrigin.no_T_at_depth_one
+    ZOrigin.T_second
+    ZOrigin.birth_order
+
+## ZTopology.lean  (30)
+    ZTopology.leqb_refl
+    ZTopology.leqb_trans
+    ZTopology.refines_refl
+    ZTopology.refines_trans
+    ZTopology.earned_now
+    ZTopology.refuted_now
+    ZTopology.earned_open
+    ZTopology.refuted_open
+    ZTopology.earned_sub_super
+    ZTopology.agree_neg
+    ZTopology.agree_conj
+    ZTopology.agree_disj
+    ZTopology.agree_imp
+    ZTopology.agree_xor
+    ZTopology.agree_xnor
+    ZTopology.kleene_agrees
+    ZTopology.kimp_monotone
+    ZTopology.kxor_monotone
+    ZTopology.kxnor_monotone
+    ZTopology.kleene_monotone
+    ZTopology.leqb_T
+    ZTopology.leqb_F
+    ZTopology.kleene_sub_earned
+    ZTopology.kleene_sub_refuted
+    ZTopology.nc_value
+    ZTopology.not_a_and_not_a_earned
+    ZTopology.not_a_and_not_a_kleene_silent
+    ZTopology.em_total
+    ZTopology.excluded_middle_super
+    ZTopology.excluded_middle_not_earned
+
+## ZMajority.lean  (20)
+    ZMajority.maj3_F
+    ZMajority.maj3_T
+    ZMajority.maj3_kleene
+    ZMajority.le_toF
+    ZMajority.le_toT
+    ZMajority.triple_T_iff_earned
+    ZMajority.triple_F_iff_refuted
+    ZMajority.seats_eq
+    ZMajority.two_of_three
+    ZMajority.lie_needs
+    ZMajority.truth_needs
+    ZMajority.few_lies_safe
+    ZMajority.allT_fold
+    ZMajority.allT_lies
+    ZMajority.allT_honest
+    ZMajority.capture_fold
+    ZMajority.capture_lies
+    ZMajority.capture_full
+    ZMajority.lie_suffices
+    ZMajority.depth4
+
+## ZQuasi.lean  (9)
+    ZQuasi.refines_sameT
+    ZQuasi.refines_sameF
+    ZQuasi.occurrences_earned
+    ZQuasi.two_objects_not_earned
+    ZQuasi.two_objects_not_refuted
+    ZQuasi.two_objects_open
+    ZQuasi.one_object_open
+    ZQuasi.one_or_two_not_earned
+    ZQuasi.count_follows_identity
+
+## Hardy.lean  (14)
+    Hardy.contested_occurs
+    Hardy.certainties
+    Hardy.incompatible
+    Hardy.contested_marks
+    Hardy.chain_eval
+    Hardy.contested_false
+    Hardy.contested_hereditary
+    Hardy.fill_refines
+    Hardy.laws_alone_survive
+    Hardy.control_occurs
+    Hardy.control_earned
+    Hardy.control_mirror
+    Hardy.no_law_refuted
+    Hardy.thirteen_runs
+
+## ZComposition.lean  (22)
+    ZComposition.toBool_ofBool
+    ZComposition.ofBool_ne_Z
+    ZComposition.znot_ofBool
+    ZComposition.zand_ofBool
+    ZComposition.zor_ofBool
+    ZComposition.zimp_ofBool
+    ZComposition.evalF_classical_of_noZ
+    ZComposition.evalB_congr
+    ZComposition.no_promotion_without_witness
+    ZComposition.witness_not_sufficient
+    ZComposition.hardy_no_witness
+    ZComposition.hardy_never_promoted
+    ZComposition.economy
+    ZComposition.witnessed_earned
+    ZComposition.setHoles_agrees
+    ZComposition.setHoles_0
+    ZComposition.setHoles_1
+    ZComposition.setHoles_2
+    ZComposition.setHoles_3
+    ZComposition.holeNoWitness
+    ZComposition.counterfactual_claims_no_witness
+    ZComposition.hardy_economy
+
+## KochenSpecker.lean  (21)
+    KochenSpecker.physics
+    KochenSpecker.holes
+    KochenSpecker.znot_ofBool
+    KochenSpecker.zand_ofBool
+    KochenSpecker.zxnor_ofBool
+    KochenSpecker.evalF_classical_of_noZ
+    KochenSpecker.e1_false_now
+    KochenSpecker.e1_classical
+    KochenSpecker.e1_false_every_completion
+    KochenSpecker.path_refines
+    KochenSpecker.e1_path_reads_T
+    KochenSpecker.fill3_refines
+    KochenSpecker.e1_laws_alone
+    KochenSpecker.bohm_completes
+    KochenSpecker.e2_completion_T
+    KochenSpecker.run_space_row1
+    KochenSpecker.run_space_row2
+    KochenSpecker.run_space_row3
+    KochenSpecker.run_space_col1
+    KochenSpecker.run_space_col2
+    KochenSpecker.run_space_col3
+
+## ZRuntimeGate.lean  (15)
+    ZRuntimeGate.gate_sound
+    ZRuntimeGate.kevalC_value
+    ZRuntimeGate.kevalC_steps
+    ZRuntimeGate.gateC_steps
+    ZRuntimeGate.gate_incomplete
+    ZRuntimeGate.beq_self
+    ZRuntimeGate.or_false_left
+    ZRuntimeGate.or_false_right
+    ZRuntimeGate.kevalF_frozen
+    ZRuntimeGate.build_val
+    ZRuntimeGate.build_frozen
+    ZRuntimeGate.reval_correct
+    ZRuntimeGate.reval_cost
+    ZRuntimeGate.touched_le_size
+    ZRuntimeGate.gate_after_change
+
+## ZLegion.lean  (15)
+    ZLegion.beq_self
+    ZLegion.or_true_left
+    ZLegion.or_true_right
+    ZLegion.evalF_congr
+    ZLegion.earned_congr
+    ZLegion.expired_link_never_promoted
+    ZLegion.earned_not_persistent
+    ZLegion.earned_persists_if_no_expiry
+    ZLegion.comb_ZZ
+    ZLegion.merge_invents_nothing
+    ZLegion.distributed_no_promotion
+    ZLegion.local_earned
+    ZLegion.merged_link_unchecked
+    ZLegion.joined_no_witness
+    ZLegion.local_facts_global_link
+
+## ZCertify.lean  (9)
+    ZCertify.cut_cover
+    ZCertify.accepts_sound
+    ZCertify.upd_end_inbox
+    ZCertify.corner_bound
+    ZCertify.upd_at
+    ZCertify.cornerOn_keeps
+    ZCertify.cornerOn_agrees
+    ZCertify.monotone_leaf
+    ZCertify.certificate_sound
+
+## ZImplicit.lean  (7)
+    ZImplicit.none_no_root
+    ZImplicit.enclosure_sound
+    ZImplicit.root_lower_bound
+    ZImplicit.root_upper_bound
+    ZImplicit.root_unique
+    ZImplicit.root_in_bracket
+    ZImplicit.implicit_monotone_leaf
+
+## ZLP.lean  (8)
+    ZLP.wsum_nonneg
+    ZLP.sub_le
+    ZLP.lower_bound_sound
+    ZLP.infeasible_sound
+    ZLP.corner_below
+    ZLP.add_le_add
+    ZLP.affine_min_sound
+    ZLP.lower_bound_sound_box
+
+## ZSlope.lean  (12)
+    ZSlope.eval_dep
+    ZSlope.mul_lo
+    ZSlope.mul_hi
+    ZSlope.value_sound
+    ZSlope.scale
+    ZSlope.scaled
+    ZSlope.slope_sound
+    ZSlope.upd_other
+    ZSlope.upd_self
+    ZSlope.mono_up
+    ZSlope.mono_down
+    ZSlope.certificate_sound_E
+
+## ZExp.lean  (50)
+    ZExp.qnat_zero
+    ZExp.qnat_succ
+    ZExp.qnat_nonneg
+    ZExp.qnat_succ_pos
+    ZExp.exists_nat_bound
+    ZExp.scale
+    ZExp.scale_l
+    ZExp.qnat_mono
+    ZExp.qnat_ne_zero
+    ZExp.nonpos_of_mul
+    ZExp.tm_succ
+    ZExp.tm_nonneg
+    ZExp.S_mono
+    ZExp.tm_half
+    ZExp.good_mono
+    ZExp.tail_tele
+    ZExp.tm_decay
+    ZExp.le_ex
+    ZExp.qnat_add
+    ZExp.good_exists
+    ZExp.tm_small
+    ZExp.S_cauchy
+    ZExp.S_ge_one
+    ZExp.S_ge_one'
+    ZExp.inv_facts
+    ZExp.inv_lip
+    ZExp.eseq_pos
+    ZExp.eseq_neg
+    ZExp.neg_nonneg_of_not
+    ZExp.eseq_cauchy
+    ZExp.rle_of_eventually
+    ZExp.S_between
+    ZExp.bracket_sound
+    ZExp.le_of_nat_mul
+    ZExp.tm_one
+    ZExp.tm_mono
+    ZExp.tm_slope
+    ZExp.S_slope
+    ZExp.tm_zero_succ
+    ZExp.S_zero
+    ZExp.inv_diff
+    ZExp.E_slope
+    ZExp.S_nonneg
+    ZExp.E_mono
+    ZExp.E_nonneg
+    ZExp.E_le_SR
+    ZExp.S_bounded
+    ZExp.E_unif
+    ZExp.E_lip
+    ZExp.rexpR_cauchy
+
+## ZSlopeExp.lean  (26)
+    ZSlopeExp.shift_prod
+    ZSlopeExp.approx_corner
+    ZSlopeExp.Ev_of_exact
+    ZSlopeExp.Ev_widen
+    ZSlopeExp.Ev_add
+    ZSlopeExp.Ev_sub
+    ZSlopeExp.eps_le_one
+    ZSlopeExp.eps_scale
+    ZSlopeExp.bound4
+    ZSlopeExp.Ev_mul
+    ZSlopeExp.Ev_exp
+    ZSlopeExp.evalR_seq
+    ZSlopeExp.value_sound
+    ZSlopeExp.Ev_congr
+    ZSlopeExp.corners_scale
+    ZSlopeExp.le_add_l
+    ZSlopeExp.le6
+    ZSlopeExp.Ev_exp_slope
+    ZSlopeExp.slope_sound
+    ZSlopeExp.mono_up
+    ZSlopeExp.mono_down
+    ZSlopeExp.evalN_dep
+    ZSlopeExp.corner_bound_R
+    ZSlopeExp.iv_le
+    ZSlopeExp.rle_of_seq_eq
+    ZSlopeExp.certificate_sound
+
+## ZRecip.lean  (13)
+    ZRecip.ne_zero_of_lt
+    ZRecip.inv_unique
+    ZRecip.qinv'_neg
+    ZRecip.qinv'_mul
+    ZRecip.recip_close
+    ZRecip.recip_exact
+    ZRecip.clamp_facts
+    ZRecip.recip_near_pos
+    ZRecip.recip_near
+    ZRecip.Ev_recip
+    ZRecip.lv_floor
+    ZRecip.recip_cauchy_pos
+    ZRecip.recip_cauchy
+
+## ZLn.lean  (34)
+    ZLn.tm_respects
+    ZLn.S_respects
+    ZLn.eseq_respects
+    ZLn.S_ge_lin
+    ZLn.qnat_mul
+    ZLn.qnat_pow2
+    ZLn.gpt_succ
+    ZLn.gpt_zero
+    ZLn.gpt_last
+    ZLn.cnt_true
+    ZLn.cnt_false
+    ZLn.P_down
+    ZLn.cnt_spec
+    ZLn.ln_bracket
+    ZLn.ln_bracket_unif
+    ZLn.inv_anti
+    ZLn.ln_range
+    ZLn.E_gap
+    ZLn.qeps_mul
+    ZLn.gap_const
+    ZLn.trap
+    ZLn.le7
+    ZLn.eps_anti
+    ZLn.Ev_ln
+    ZLn.ln_sigma_pt
+    ZLn.combine
+    ZLn.flip_up
+    ZLn.flip_dn
+    ZLn.near_up
+    ZLn.chain3
+    ZLn.near_lo
+    ZLn.Ev_ln_slope
+    ZLn.ln_side
+    ZLn.ln_cauchy
+
+## ZSlopeDiv.lean  (15)
+    ZSlopeDiv.Ev_congr_ev
+    ZSlopeDiv.corners_scale_left
+    ZSlopeDiv.value_sound
+    ZSlopeDiv.quot_diff
+    ZSlopeDiv.slope_sound
+    ZSlopeDiv.evalN_cauchy
+    ZSlopeDiv.SLe_refl
+    ZSlopeDiv.SLe_trans
+    ZSlopeDiv.mono_up
+    ZSlopeDiv.mono_down
+    ZSlopeDiv.evalN_dep
+    ZSlopeDiv.corner_bound_S
+    ZSlopeDiv.iv_le
+    ZSlopeDiv.certificate_sound
+    ZSlopeDiv.certificate_sound_R
+
+## ZCases.lean  (12)
+    ZCases.mem_append_left
+    ZCases.mem_append_right
+    ZCases.mem_map_inv
+    ZCases.impossible_leaf
+    ZCases.cases_sound_acc
+    ZCases.cases_sound
+    ZCases.neg_nonneg
+    ZCases.dual_leaf_low
+    ZCases.dual_leaf_impossible
+    ZCases.min_enclosure
+    ZCases.max_enclosure
+    ZCases.meet_enclosure
+
+## ZMin.lean  (3)
+    ZMin.fails_not_robust
+    ZMin.min_sound
+    ZMin.no_mix
+
+## ZNet.lean  (69)
+    ZNet.add4
+    ZNet.zero_add
+    ZNet.S_add
+    ZNet.S_mul
+    ZNet.S_congr
+    ZNet.S_le
+    ZNet.S_swap
+    ZNet.S_zero
+    ZNet.S_nonneg
+    ZNet.zero_mul
+    ZNet.add_mul
+    ZNet.mul4
+    ZNet.mul_neg
+    ZNet.sq_sub
+    ZNet.two_ab_sq
+    ZNet.pair_form
+    ZNet.pair_le
+    ZNet.r1
+    ZNet.r2
+    ZNet.cw_bound
+    ZNet.add_le_cancel
+    ZNet.two_ab_le
+    ZNet.energy_bound
+    ZNet.S_mul_right
+    ZNet.r3
+    ZNet.laplacian_energy
+    ZNet.term_le_S
+    ZNet.branch_error
+    ZNet.pin_sound
+    ZNet.mono_restrict
+    ZNet.rounds_sound
+    ZNet.split_sound
+    ZNet.S_prod
+    ZNet.r_cross
+    ZNet.r_sq
+    ZNet.cs_weighted
+    ZNet.eq_neg_of_add
+    ZNet.sq_le_sq
+    ZNet.neg_sq
+    ZNet.cancel_A
+    ZNet.kcl_orth
+    ZNet.r_gdu
+    ZNet.r_cross2
+    ZNet.energy_perturbation
+    ZNet.perturbation_branch
+    ZNet.laplacian_bilinear
+    ZNet.lap_symm
+    ZNet.kcl_form
+    ZNet.r_t1
+    ZNet.r_t2
+    ZNet.target_identity
+    ZNet.target_second
+    ZNet.abs_S
+    ZNet.target_first
+    ZNet.target_enclosure
+    ZNet.pair_cs
+    ZNet.sub_self
+    ZNet.sub_nonneg_of_le
+    ZNet.le_of_sub_nonneg
+    ZNet.le_of_sub_nonpos
+    ZNet.sq_diff
+    ZNet.sub_sub_cancel
+    ZNet.split_mul
+    ZNet.quad_bound
+    ZNet.neg_add
+    ZNet.neg_zero
+    ZNet.S_neg
+    ZNet.reff_identity
+    ZNet.pair_center
+
+## ZIntegral.lean  (7)
+    ZIntegral.piece_lower
+    ZIntegral.piece_upper
+    ZIntegral.enclosure_sound
+    ZIntegral.tags_of_piece
+    ZIntegral.enclosure_sound_leaf
+    ZIntegral.monotone_leaf
+    ZIntegral.antitone_leaf
+
+## ZIntegralR.lean  (12)
+    ZIntegralR.inbox_upd
+    ZIntegralR.interval_leaf
+    ZIntegralR.upd_fix
+    ZIntegralR.slope_at
+    ZIntegralR.monotone_leaf_up
+    ZIntegralR.monotone_leaf_down
+    ZIntegralR.total_widen
+    ZIntegralR.lower_widen
+    ZIntegralR.upper_widen
+    ZIntegralR.mem_widen
+    ZIntegralR.ev_list
+    ZIntegralR.enclosure_R
+
+## ZSqrt.lean  (21)
+    ZSqrt.sq_respects
+    ZSqrt.sq_mono
+    ZSqrt.gq_nonneg
+    ZSqrt.gq_succ
+    ZSqrt.gq_zero
+    ZSqrt.gq_last
+    ZSqrt.scnt_true
+    ZSqrt.scnt_false
+    ZSqrt.rsqrt_nonneg
+    ZSqrt.Q_down
+    ZSqrt.scnt_spec
+    ZSqrt.sqrt_bracket
+    ZSqrt.sq_big
+    ZSqrt.nat_le_a
+    ZSqrt.Ev_sqrt
+    ZSqrt.gap_ev
+    ZSqrt.Ev_congr_from
+    ZSqrt.sqrt_diff
+    ZSqrt.Ev_sqrt_slope
+    ZSqrt.sqrt_side
+    ZSqrt.sqrt_cauchy
+
+## ZSlopeSqrt.lean  (15)
+    ZSlopeSqrt.Ev_congr_ev
+    ZSlopeSqrt.corners_scale_left
+    ZSlopeSqrt.value_sound
+    ZSlopeSqrt.quot_diff
+    ZSlopeSqrt.slope_sound
+    ZSlopeSqrt.evalN_cauchy
+    ZSlopeSqrt.SLe_refl
+    ZSlopeSqrt.SLe_trans
+    ZSlopeSqrt.mono_up
+    ZSlopeSqrt.mono_down
+    ZSlopeSqrt.evalN_dep
+    ZSlopeSqrt.corner_bound_S
+    ZSlopeSqrt.iv_le
+    ZSlopeSqrt.certificate_sound
+    ZSlopeSqrt.certificate_sound_R
+
+## ZTaylor2.lean  (5)
+    ZTaylor2.two_sq_nonneg
+    ZTaylor2.zero_between
+    ZTaylor2.le_l
+    ZTaylor2.le_r
+    ZTaylor2.sd_sound
+
+## ZIntegralT.lean  (10)
+    ZIntegralT.csum_mono
+    ZIntegralT.csum_congr
+    ZIntegralT.csum_add
+    ZIntegralT.csum_scale
+    ZIntegralT.width_chain
+    ZIntegralT.cells_within
+    ZIntegralT.cell_err
+    ZIntegralT.cube_sum
+    ZIntegralT.cell_sd
+    ZIntegralT.taylor2_leaf
+
+## ZExp2.lean  (22)
+    ZExp2.mul_qeq_zero
+    ZExp2.gp_zero
+    ZExp2.gm_zero
+    ZExp2.grid_up
+    ZExp2.grid_lo
+    ZExp2.grid_dn_up
+    ZExp2.grid_dn_lo
+    ZExp2.between_close
+    ZExp2.gp_succ
+    ZExp2.gp_from
+    ZExp2.gp_in
+    ZExp2.nn_succ
+    ZExp2.nn_pred
+    ZExp2.exp2_up
+    ZExp2.gm_succ
+    ZExp2.gm_from
+    ZExp2.gm_in
+    ZExp2.exp2_dn
+    ZExp2.fin_up
+    ZExp2.fin_lo
+    ZExp2.pow2_steps
+    ZExp2.Ev_exp2
+
+## ZTransfer.lean  (44)
+    ZTransfer.qmin_spec
+    ZTransfer.qmax_spec
+    ZTransfer.eq_qEq
+    ZTransfer.qmin_l
+    ZTransfer.qmin_r
+    ZTransfer.qmax_r
+    ZTransfer.qmax_l
+    ZTransfer.clip_cases
+    ZTransfer.clip_in
+    ZTransfer.clip_mono
+    ZTransfer.clip_lo
+    ZTransfer.clip_mid
+    ZTransfer.clip_hi
+    ZTransfer.clip_split
+    ZTransfer.clip_respects
+    ZTransfer.clip_reflect
+    ZTransfer.clip_shift
+    ZTransfer.lsum_congr
+    ZTransfer.lsum_mono
+    ZTransfer.lsum_add
+    ZTransfer.lsum_scale
+    ZTransfer.lsum_zero
+    ZTransfer.lsum_swap
+    ZTransfer.chain_le
+    ZTransfer.clip_respects_t
+    ZTransfer.ov_telescope
+    ZTransfer.ov_chain
+    ZTransfer.ov_inside
+    ZTransfer.ov_around
+    ZTransfer.ov_facts
+    ZTransfer.pair_bound
+    ZTransfer.transfer
+    ZTransfer.lsum_append
+    ZTransfer.lsum_map
+    ZTransfer.all_map
+    ZTransfer.all_app
+    ZTransfer.csum_lsum
+    ZTransfer.tsum_mirror
+    ZTransfer.ov_shift
+    ZTransfer.ov_reflect
+    ZTransfer.mirror_cover
+    ZTransfer.lip_pair
+    ZTransfer.chain_within
+    ZTransfer.taylor2_every
+
+## ZPow.lean  (7)
+    ZPow.pow_diff
+    ZPow.powN_nonneg
+    ZPow.powN_mono
+    ZPow.corners_nonneg
+    ZPow.Ev_powN
+    ZPow.Ev_gsum
+    ZPow.powN_cauchy
+
+## ZTrig.lean  (34)
+    ZTrig.cv_congr
+    ZTrig.cv_addF
+    ZTrig.cv_scaleF
+    ZTrig.cv_scaleG
+    ZTrig.leibniz
+    ZTrig.cancel_nat
+    ZTrig.tm_D
+    ZTrig.binom
+    ZTrig.cr_D
+    ZTrig.ci_D
+    ZTrig.cv_subF
+    ZTrig.binom_c
+    ZTrig.bs_shift
+    ZTrig.cv_shiftG
+    ZTrig.tri_recF
+    ZTrig.tri_recG
+    ZTrig.corner_rec
+    ZTrig.bs_abs
+    ZTrig.mul_abs
+    ZTrig.corner_abs
+    ZTrig.cv_nonneg
+    ZTrig.bs_nonneg
+    ZTrig.bs_mono
+    ZTrig.idx2
+    ZTrig.sq_le_tri
+    ZTrig.S_bs
+    ZTrig.corner_exp
+    ZTrig.bs_congr
+    ZTrig.bs_add
+    ZTrig.bs_sub
+    ZTrig.crci_abs
+    ZTrig.add_C_exact
+    ZTrig.add_S_exact
+    ZTrig.add_bounds
+
+## ZTrig2.lean  (17)
+    ZTrig.crci_respects
+    ZTrig.crci_neg
+    ZTrig.crci_zero
+    ZTrig.Cn_zero
+    ZTrig.Sn_zero
+    ZTrig.Cn_respects
+    ZTrig.Sn_respects
+    ZTrig.Cn_neg
+    ZTrig.bs_neg
+    ZTrig.Sn_neg
+    ZTrig.crci_lip
+    ZTrig.bs_Lb
+    ZTrig.bs_Lb_le
+    ZTrig.bs_scale
+    ZTrig.CS_lip
+    ZTrig.CS_tail
+    ZTrig.pyth
+
+## ZTrig3.lean  (18)
+    ZTrig.qnat_val
+    ZTrig.first_terms
+    ZTrig.low_sums
+    ZTrig.nlit1
+    ZTrig.nlit2
+    ZTrig.nlit3
+    ZTrig.nlit4
+    ZTrig.nlit5
+    ZTrig.nlit6
+    ZTrig.nlit9
+    ZTrig.nlit7
+    ZTrig.step_le
+    ZTrig.sin_lower_step
+    ZTrig.halve_c3
+    ZTrig.sin_lower
+    ZTrig.cos_two
+    ZTrig.cos_one
+    ZTrig.sum_to_product
+
+## ZTrig4.lean  (21)
+    ZTrig.c225_nonneg
+    ZTrig.two_pos
+    ZTrig.half_facts
+    ZTrig.nonneg_of_scaled
+    ZTrig.cos_mono
+    ZTrig.cos_slope
+    ZTrig.K4_small
+    ZTrig.gq_pow
+    ZTrig.gq_top
+    ZTrig.gq_mono
+    ZTrig.rl_step_t
+    ZTrig.rl_step_f
+    ZTrig.rl_spec
+    ZTrig.pow_le_top
+    ZTrig.rho_facts
+    ZTrig.C_unif
+    ZTrig.rho_side
+    ZTrig.tl
+    ZTrig.tr
+    ZTrig.close_of_sides
+    ZTrig.rho_cauchy
+
+## ZTrig5.lean  (7)
+    ZTrig.CS_unif
+    ZTrig.eps_combine
+    ZTrig.CS_cauchy
+    ZTrig.cos_rho
+    ZTrig.near_one
+    ZTrig.corner_nonneg
+    ZTrig.sin_rho
+
+## ZTrig6.lean  (17)
+    ZTrig.Eq0_of
+    ZTrig.Eq0_get
+    ZTrig.corner_small
+    ZTrig.add_lim
+    ZTrig.Eq0_congr
+    ZTrig.Eq0_symm
+    ZTrig.Eq0_trans
+    ZTrig.Eq0_add
+    ZTrig.Eq0_neg
+    ZTrig.Eq0_mul_const
+    ZTrig.CS_abs
+    ZTrig.cs_bounded
+    ZTrig.Eq0_of_Ev
+    ZTrig.rho_bnd
+    ZTrig.Eq0_sub
+    ZTrig.shift_sin
+    ZTrig.shift_cos
+
+## ZTrig7.lean  (6)
+    ZTrig.K4_nonneg
+    ZTrig.cos_ge
+    ZTrig.half_le
+    ZTrig.mid_le
+    ZTrig.sin_up_unif
+    ZTrig.shift_unif
+
+## ZTrig8.lean  (8)
+    ZTrig.le_l'
+    ZTrig.le_r'
+    ZTrig.cos_dec_win
+    ZTrig.bnd3
+    ZTrig.three_combine
+    ZTrig.three_eps
+    ZTrig.three_shift
+    ZTrig.cos_inc_win
+
+## ZTrig9.lean  (9)
+    ZTrig.bnd4
+    ZTrig.four_combine
+    ZTrig.four_eps
+    ZTrig.four_shift
+    ZTrig.four_facts
+    ZTrig.bnd_shift
+    ZTrig.period_unif
+    ZTrig.cos_win_up
+    ZTrig.cos_win_lo
+
+## ZTrig10.lean  (24)
+    ZTrig.cert_cos
+    ZTrig.cert_sin
+    ZTrig.pos_floor
+    ZTrig.rho_ge
+    ZTrig.rho_le
+    ZTrig.rho_br
+    ZTrig.cos_abs_unif
+    ZTrig.period_pq
+    ZTrig.qeps_le_one
+    ZTrig.clamp
+    ZTrig.lip_eps
+    ZTrig.dd_bound
+    ZTrig.near_shift
+    ZTrig.cos_up
+    ZTrig.cos_lo
+    ZTrig.mult_rho
+    ZTrig.dd_f4
+    ZTrig.win_up_of
+    ZTrig.win_lo_of
+    ZTrig.ev_bound
+    ZTrig.cos_pm1
+    ZTrig.Ev_of_sides
+    ZTrig.PiBr.ev
+    ZTrig.Ev_cos
+
+## ZTrig11.lean  (12)
+    ZTrig.six_nonneg
+    ZTrig.sin_abs_unif
+    ZTrig.period_pq_S
+    ZTrig.sin_win_up
+    ZTrig.sin_win_lo
+    ZTrig.near_shift_S
+    ZTrig.sin_up
+    ZTrig.sin_lo
+    ZTrig.swin_up_of
+    ZTrig.swin_lo_of
+    ZTrig.sin_pm1
+    ZTrig.Ev_sin
+
+## ZTrig12.lean  (36)
+    ZTrig.tm_succ_le
+    ZTrig.tm_two
+    ZTrig.tail2
+    ZTrig.bs_two
+    ZTrig.ci_one
+    ZTrig.cr_one
+    ZTrig.near_S
+    ZTrig.near_C
+    ZTrig.tm_mono_x
+    ZTrig.S_mono_x
+    ZTrig.step_S
+    ZTrig.step_C
+    ZTrig.g_one
+    ZTrig.xg_zero
+    ZTrig.xg_top
+    ZTrig.xg_succ
+    ZTrig.xg_T
+    ZTrig.T_unit
+    ZTrig.conv
+    ZTrig.bs_tele
+    ZTrig.bs_abs_c
+    ZTrig.bs_in_c
+    ZTrig.fin_N
+    ZTrig.Ev_xg
+    ZTrig.avg_in
+    ZTrig.err_total
+    ZTrig.chord_gen
+    ZTrig.step_unif_core
+    ZTrig.step_unif_S
+    ZTrig.step_unif_C
+    ZTrig.Ev_negate
+    ZTrig.chord_sin
+    ZTrig.chord_cos
+    ZTrig.Ev_chord_mul
+    ZTrig.Ev_sin_slope
+    ZTrig.Ev_cos_slope
+
+## ZTrig13.lean  (12)
+    ZTrig.bs_nat
+    ZTrig.term_bound
+    ZTrig.bs_const
+    ZTrig.bs_lohi
+    ZTrig.bs_jw
+    ZTrig.bs_jw'
+    ZTrig.sq_grid
+    ZTrig.gq_scale
+    ZTrig.chord2_gen
+    ZTrig.Ev_sin2
+    ZTrig.chord_nsin
+    ZTrig.Ev_cos2
+
+## ZTrig14.lean  (12)
+    ZTrig.ev_congr_ev
+    ZTrig.corners_nn
+    ZTrig.nonneg_prod
+    ZTrig.ev_pos
+    ZTrig.recip_hi_nonneg
+    ZTrig.lin_end
+    ZTrig.tan_low
+    ZTrig.sincert_neg
+    ZTrig.coscert_neg
+    ZTrig.tan_high
+    ZTrig.TanVal.cos
+    ZTrig.Ev_tan
+
+## ZTrig15.lean  (8)
+    ZTrig.chord_gen_P
+    ZTrig.inv_bound
+    ZTrig.tan_id
+    ZTrig.tan_step
+    ZTrig.tan_step_unif
+    ZTrig.TanVal.cos_all
+    ZTrig.chord_tan
+    ZTrig.Ev_tan_slope
+
+## ZAtan.lean  (43)
+    ZAtan.acnt_true
+    ZAtan.acnt_false
+    ZAtan.gpt_mono
+    ZAtan.gpt_add
+    ZAtan.acnt_spec
+    ZAtan.acnt_bracket
+    ZAtan.acnt_mono
+    ZAtan.psi_facts
+    ZAtan.psi_t
+    ZAtan.psi_diff
+    ZAtan.psi_P
+    ZAtan.psi_lip
+    ZAtan.psi_anti_pos
+    ZAtan.psi_mono_neg
+    ZAtan.psum_block
+    ZAtan.atan_window
+    ZAtan.atan_lip
+    ZAtan.atan_step_core
+    ZAtan.eps_scaledA
+    ZAtan.inR_of
+    ZAtan.ustep_atan
+    ZAtan.atseq_zero
+    ZAtan.atan_near
+    ZAtan.le4a
+    ZAtan.le4b
+    ZAtan.le4c
+    ZAtan.le4d
+    ZAtan.eps_of_le
+    ZAtan.ab_window
+    ZAtan.ab_le
+    ZAtan.atan_lo
+    ZAtan.atan_hi
+    ZAtan.Ev_atan
+    ZAtan.rpt_eq
+    ZAtan.pow_eps
+    ZAtan.rpt_ab
+    ZAtan.sq_le
+    ZAtan.atan_riemann
+    ZAtan.close_of_two
+    ZAtan.atan_cauchy
+    ZAtan.acnt_respects
+    ZAtan.atseq_respects
+    ZAtan.atan_crude
+
+## ZLnStep.lean  (16)
+    ZLnStep.eps_scaled'
+    ZLnStep.inv_diff
+    ZLnStep.mul_le4
+    ZLnStep.ln_alg
+    ZLnStep.fin_pos
+    ZLnStep.fin_neg
+    ZLnStep.ab_conv
+    ZLnStep.ab_conv2
+    ZLnStep.half_pos'
+    ZLnStep.ustep_ln
+    ZLnStep.cnt_respects
+    ZLnStep.lnseq_respects
+    ZLnStep.chord_alg
+    ZLnStep.chord_conv
+    ZLnStep.ln_chord
+    ZLnStep.chord2
+
+## ZDeriv.lean  (46)
+    ZDeriv.boxEv_of_read
+    ZDeriv.read_bound
+    ZDeriv.eps_scaled
+    ZDeriv.mul_step
+    ZDeriv.dvar_eq
+    ZDeriv.dvar_ne
+    ZDeriv.ab_zero
+    ZDeriv.step_SR
+    ZDeriv.step_CR
+    ZDeriv.abs_le
+    ZDeriv.sc_unif
+    ZDeriv.ustep_S
+    ZDeriv.ustep_C
+    ZDeriv.exp_case_pos
+    ZDeriv.exp_case_neg
+    ZDeriv.ustep_E
+    ZDeriv.comp_alg
+    ZDeriv.comp_step
+    ZDeriv.ustep_C0
+    ZDeriv.comp_step_on
+    ZDeriv.inv_id
+    ZDeriv.ustep_inv
+    ZDeriv.inv_bound_neg
+    ZDeriv.ustep_inv_neg
+    ZDeriv.quot_form
+    ZDeriv.div_step
+    ZDeriv.qadd_nn
+    ZDeriv.pow_abs
+    ZDeriv.Hpow_nonneg
+    ZDeriv.pow_rec
+    ZDeriv.pow_err
+    ZDeriv.ustep_pow
+    ZDeriv.powN_respects
+    ZDeriv.tan_stepR
+    ZDeriv.ustep_tan
+    ZDeriv.abs_wit
+    ZDeriv.abs_wit1
+    ZDeriv.ab_comb
+    ZDeriv.sqrt_step_alg
+    ZDeriv.z_mul_l
+    ZDeriv.z_mul_r
+    ZDeriv.z_add
+    ZDeriv.z_sub
+    ZDeriv.D_free
+    ZDeriv.log10_id
+    ZDeriv.step_sound
+
+## ZTaylorN.lean  (48)
+    ZTaylorN.gsum_bounds
+    ZTaylorN.faul_up
+    ZTaylorN.faul_lo
+    ZTaylorN.fact_succ_pred
+    ZTaylorN.fact_pos
+    ZTaylorN.cf_nonneg
+    ZTaylorN.cf_succ
+    ZTaylorN.side_pos
+    ZTaylorN.side_neg
+    ZTaylorN.mul_rearr
+    ZTaylorN.side_mul
+    ZTaylorN.bs_mulr
+    ZTaylorN.bs_wx
+    ZTaylorN.bs_sign
+    ZTaylorN.side_sum
+    ZTaylorN.side_shift
+    ZTaylorN.bs_swap
+    ZTaylorN.powN_mul
+    ZTaylorN.cf_le_one
+    ZTaylorN.side_err
+    ZTaylorN.side_widen
+    ZTaylorN.fin_bound
+    ZTaylorN.faul_weight
+    ZTaylorN.powN_le_add
+    ZTaylorN.powN_le_exp
+    ZTaylorN.sum_offs
+    ZTaylorN.poly_err
+    ZTaylorN.wt_form
+    ZTaylorN.wt_sign
+    ZTaylorN.wt_err
+    ZTaylorN.cf_zero
+    ZTaylorN.step_alg
+    ZTaylorN.upd_ne'
+    ZTaylorN.upd_inbox
+    ZTaylorN.gpt_inbox
+    ZTaylorN.gpt_fix
+    ZTaylorN.gpt_at
+    ZTaylorN.gpt_off
+    ZTaylorN.gpt_step
+    ZTaylorN.gpt_end0
+    ZTaylorN.gpt_endG
+    ZTaylorN.step_zero
+    ZTaylorN.step_conv
+    ZTaylorN.pow2_eps
+    ZTaylorN.fin_sum_a
+    ZTaylorN.fin_sum
+    ZTaylorN.total_le
+    ZTaylorN.taylor_rem
+
+## ZTaylorLeaf.lean  (13)
+    ZTaylorLeaf.powN_neg
+    ZTaylorLeaf.bs_pairs
+    ZTaylorLeaf.cell_pow
+    ZTaylorLeaf.psum_cells
+    ZTaylorLeaf.tsym
+    ZTaylorLeaf.tpoly_congr
+    ZTaylorLeaf.cell_taylor
+    ZTaylorLeaf.csum_bs_swap
+    ZTaylorLeaf.div_nat
+    ZTaylorLeaf.qsum_hp
+    ZTaylorLeaf.prod_bound
+    ZTaylorLeaf.csum_nonneg
+    ZTaylorLeaf.taylorN_leaf
+
+## ZJet.lean  (49)
+    ZJet.J_D
+    ZJet.Diter_add
+    ZJet.Diter_sub
+    ZJet.J_add
+    ZJet.J_sub
+    ZJet.cancel_succ
+    ZJet.J_mul
+    ZJet.Diter_free
+    ZJet.J_free
+    ZJet.J_var
+    ZJet.J_exp
+    ZJet.J_sin
+    ZJet.J_cos
+    ZJet.cv_comm
+    ZJet.cv_addG
+    ZJet.cv_congr_upto
+    ZJet.cv_congr_uptoG
+    ZJet.Dsh_cv
+    ZJet.cv_assoc
+    ZJet.cv_unit
+    ZJet.cv_cancel
+    ZJet.J_zero
+    ZJet.nz_sq
+    ZJet.nz_J0
+    ZJet.J_div
+    ZJet.cv_zeroG
+    ZJet.cv_negG
+    ZJet.cv_subG
+    ZJet.cv_swap
+    ZJet.ode_zero
+    ZJet.tan_ode
+    ZJet.J_tan
+    ZJet.J_const
+    ZJet.J_cmul
+    ZJet.J_pow0
+    ZJet.Dsh_pow0
+    ZJet.J_powD
+    ZJet.J_pow_succ
+    ZJet.J_miller
+    ZJet.two_ne
+    ZJet.two_mul_nz
+    ZJet.J_sqrt
+    ZJet.J_ln
+    ZJet.nz_mul
+    ZJet.J_log10
+    ZJet.J_millerR
+    ZJet.one_sq_nz
+    ZJet.J_atan
+    ZJet.J_one_sq
+
+## ZJetRead.lean  (18)
+    ZJetRead.Ev_cv
+    ZJetRead.Ev_hull
+    ZJetRead.Ev_const
+    ZJetRead.ev_nz
+    ZJetRead.cv_weight
+    ZJetRead.cvD_shift
+    ZJetRead.pow_form
+    ZJetRead.pow_formR
+    ZJetRead.strong_upto
+    ZJetRead.div_solve
+    ZJetRead.mul_solve
+    ZJetRead.nat_solve
+    ZJetRead.cv_negF
+    ZJetRead.ln_solve
+    ZJetRead.ev0
+    ZJetRead.ev_D
+    ZJetRead.sc_sound
+    ZJetRead.cread_sound
+
+## ZJetClose.lean  (54)
+    ZJetClose.strongAll
+    ZJetClose.corners_exist
+    ZJetClose.bd_const
+    ZJetClose.bd_var
+    ZJetClose.bd_add
+    ZJetClose.bd_sub
+    ZJetClose.bd_mul
+    ZJetClose.bd_div
+    ZJetClose.bd_powN
+    ZJetClose.sq_pos
+    ZJetClose.one_le_sq
+    ZJetClose.cl_sq
+    ZJetClose.ev_le
+    ZJetClose.boxEv_empty
+    ZJetClose.cl_mul_pos
+    ZJetClose.diter_uses
+    ZJetClose.bd_free
+    ZJetClose.bd_constAll
+    ZJetClose.bd_varAll
+    ZJetClose.bd_addAll
+    ZJetClose.bd_subAll
+    ZJetClose.mulG
+    ZJetClose.bd_mulAll
+    ZJetClose.bd_Dall
+    ZJetClose.divGg
+    ZJetClose.divG
+    ZJetClose.bd_expAll
+    ZJetClose.bd_scAll
+    ZJetClose.bd_tanAll
+    ZJetClose.bd_powAll
+    ZJetClose.st_free
+    ZJetClose.st_constAll
+    ZJetClose.st_varAll
+    ZJetClose.st_addAll
+    ZJetClose.st_subAll
+    ZJetClose.mulS
+    ZJetClose.st_mulAll
+    ZJetClose.divSg
+    ZJetClose.divS
+    ZJetClose.st_expAll
+    ZJetClose.st_scAll
+    ZJetClose.st_tanAll
+    ZJetClose.st_powAll
+    ZJetClose.sqrt_close
+    ZJetClose.cl_pos
+    ZJetClose.ln_close
+    ZJetClose.one_sq_box
+    ZJetClose.boxEv_of_cread
+    ZJetClose.cread_good
+    ZJetClose.ev_order
+    ZJetClose.boxEv_top
+    ZJetClose.cf_fact
+    ZJetClose.ab_congr
+    ZJetClose.taylorN_kernel
+
+## ZAffine.lean  (30)
+    ZAffine.ab_add
+    ZAffine.ab_congr
+    ZAffine.ab_widen
+    ZAffine.bs_abs_lt
+    ZAffine.bs_congr_lt
+    ZAffine.bs_nonneg_lt
+    ZAffine.bs_le_lt
+    ZAffine.bs_scale
+    ZAffine.bs_zero
+    ZAffine.fin_ev
+    ZAffine.lin_add
+    ZAffine.lin_sub
+    ZAffine.lin_scale
+    ZAffine.lin_zero
+    ZAffine.bs_upd_out
+    ZAffine.bs_upd_in
+    ZAffine.lin_bound
+    ZAffine.enc_sound
+    ZAffine.pos_min
+    ZAffine.enc_const
+    ZAffine.enc_basis
+    ZAffine.enc_point
+    ZAffine.enc_pair
+    ZAffine.enc_add
+    ZAffine.enc_sub
+    ZAffine.enc_widen
+    ZAffine.prod_ab
+    ZAffine.enc_mul
+    ZAffine.eps_mono
+    ZAffine.enc_rem
+
+## ZAffine2.lean  (28)
+    ZAffine.inv_ge_of_le
+    ZAffine.inv_id
+    ZAffine.r_diff
+    ZAffine.half_pos
+    ZAffine.nz_of_pos
+    ZAffine.recip_frame
+    ZAffine.rem_recip_b
+    ZAffine.rem_recip_a
+    ZAffine.eseq_nonneg
+    ZAffine.exp_lo_ge
+    ZAffine.exp_lo_lt
+    ZAffine.exp_up_le
+    ZAffine.exp_up_gt
+    ZAffine.sub_nonneg_le
+    ZAffine.exp_lo_fix
+    ZAffine.exp_hX_ge
+    ZAffine.exp_hX_lt
+    ZAffine.exp_up_fix
+    ZAffine.exp_up_fix2
+    ZAffine.exp_assemble
+    ZAffine.rem_exp
+    ZAffine.aff_enc
+    ZAffine.aff_sound
+    ZAffine.boxEv_meet
+    ZAffine.le_inv_of_mul
+    ZAffine.ln_low_case
+    ZAffine.ln_high_case
+    ZAffine.rem_ln
+
+## ZMonoStep.lean  (3)
+    ZMonoStep.slope_step
+    ZMonoStep.monotone_leaf_up_step
+    ZMonoStep.monotone_leaf_down_step
+
+## ZTaylorPt.lean  (4)
+    ZTaylorPt.fact_cancel
+    ZTaylorPt.corners_const
+    ZTaylorPt.Ev_bs
+    ZTaylorPt.taylor_value
+
+## ZAtanCert.lean  (3)
+    ZAtanCert.atan_zero
+    ZAtanCert.crude_read
+    ZAtanCert.atan_step
+
+## ZAffineAtan.lean  (9)
+    ZAffine.ab_mul
+    ZAffine.le_psi
+    ZAffine.psi_floor_pos
+    ZAffine.psi_floor_neg
+    ZAffine.r_rise
+    ZAffine.r_near
+    ZAffine.rem_atan_core
+    ZAffine.rem_atan_pos
+    ZAffine.rem_atan_neg
+
+## ZRangePin.lean  (12)
+    ZRangePin.upd_same_pt
+    ZRangePin.eval_upd_same
+    ZRangePin.pin_low
+    ZRangePin.pin_high
+    ZRangePin.corner_low
+    ZRangePin.corner_inbox
+    ZRangePin.corner_congr
+    ZRangePin.corner_upd
+    ZRangePin.lower_only
+    ZRangePin.upper_only
+    ZRangePin.range_low
+    ZRangePin.range_high
+
+## ZLimits.lean  (6)
+    ZLimits.hull_lo
+    ZLimits.hull_hi
+    ZLimits.tail_rule
+    ZLimits.limits_enclosure
+    ZLimits.sum_pieces_low
+    ZLimits.sum_pieces_high
+
+## ZLeibniz.lean  (21)
+    ZLeibniz.tele_id
+    ZLeibniz.step_up
+    ZLeibniz.corners_scale_right
+    ZLeibniz.pin_term
+    ZLeibniz.rsum_sub
+    ZLeibniz.upd_swap
+    ZLeibniz.tag_inbox
+    ZLeibniz.pin_ev
+    ZLeibniz.chain_ev
+    ZLeibniz.ab_mul'
+    ZLeibniz.wtotal_nonneg
+    ZLeibniz.end_value
+    ZLeibniz.side_value
+    ZLeibniz.leibniz_low
+    ZLeibniz.rsum_zero
+    ZLeibniz.rsum_ng
+    ZLeibniz.leibniz_high
+    ZLeibniz.glue2_low
+    ZLeibniz.glue2_high
+    ZLeibniz.leibniz_assembled_low
+    ZLeibniz.leibniz_assembled_high
+
+## ZRangeTaylor.lean  (5)
+    ZRangeTaylor.tag_inbox'
+    ZRangeTaylor.csum_lower
+    ZRangeTaylor.range_taylor_low
+    ZRangeTaylor.csum_upper
+    ZRangeTaylor.range_taylor_high
+
+## ZConflict.lean  (13)
+    ZConflict.earned_sub
+    ZConflict.refuted_sup
+    ZConflict.not_both
+    ZConflict.probe
+    ZConflict.design_core
+    ZConflict.no_mix_core
+    ZConflict.robust_on_all
+    ZConflict.infeasible_core
+    ZConflict.skip_sound
+    ZConflict.skip_reading
+    ZConflict.enclosure_earned
+    ZConflict.lift_sound
+    ZConflict.lift_vs_enclosure
+
+## ZContract.lean  (16)
+    ZContract.sound_comp
+    ZContract.sound_iter
+    ZContract.empty_no_point
+    ZContract.contract_empty_sound
+    ZContract.hc4_fails
+    ZContract.add_le_add'
+    ZContract.zero_add'
+    ZContract.neg_anti
+    ZContract.cancel_add
+    ZContract.cancel_sub
+    ZContract.add_proj
+    ZContract.sub_proj_left
+    ZContract.sub_proj_right
+    ZContract.inv_proj
+    ZContract.inv_proj_anti
+    ZContract.corner2
+
+## ZFrauchiger.lean  (12)
+    ZFrauchiger.contradiction_run
+    ZFrauchiger.s3_after_okb
+    ZFrauchiger.s2_s1_after_okb
+    ZFrauchiger.copy_s3
+    ZFrauchiger.record_erased
+    ZFrauchiger.chain_eval
+    ZFrauchiger.kill4_refines
+    ZFrauchiger.chainV_F5
+    ZFrauchiger.expired_never_earns
+    ZFrauchiger.paradox_open
+    ZFrauchiger.copy_refuted
+    ZFrauchiger.control_earned
+
+## Agrippa.lean  (62)
+    Agrippa.fx
+    Agrippa.xf
+    Agrippa.xx
+    Agrippa.xa
+    Agrippa.xc
+    Agrippa.step_ground
+    Agrippa.step_ref
+    Agrippa.sign_ground
+    Agrippa.sign_ref
+    Agrippa.val_ground
+    Agrippa.val_ref
+    Agrippa.hit_or_miss
+    Agrippa.pigeon
+    Agrippa.path_lt
+    Agrippa.no_regress
+    Agrippa.path_succ'
+    Agrippa.path_add
+    Agrippa.par_front
+    Agrippa.link
+    Agrippa.chain_value
+    Agrippa.reading_shift
+    Agrippa.odd_zero
+    Agrippa.within_zero
+    Agrippa.within_step
+    Agrippa.pt_stable
+    Agrippa.pt_is_par
+    Agrippa.path_fixed
+    Agrippa.build_off
+    Agrippa.chain_within
+    Agrippa.build_reads
+    Agrippa.build_p
+    Agrippa.forced_one
+    Agrippa.even_two
+    Agrippa.nullary_one
+    Agrippa.dogma_path
+    Agrippa.dogma_par
+    Agrippa.dogma_two
+    Agrippa.circle_state
+    Agrippa.circle_two
+    Agrippa.twoneg_state
+    Agrippa.twoneg_two
+    Agrippa.liar_zero
+    Agrippa.par_add
+    Agrippa.oddBelow_true
+    Agrippa.oddBelow_false
+    Agrippa.le_split
+    Agrippa.all_even
+    Agrippa.knowledge_iff_ground
+    Agrippa.realize_act
+    Agrippa.realize_posit
+    Agrippa.step_realize
+    Agrippa.sign_realize
+    Agrippa.path_realize
+    Agrippa.par_realize
+    Agrippa.act_absolute
+    Agrippa.xor_true_ne_false
+    Agrippa.posit_relative
+    Agrippa.act_reads
+    Agrippa.posit_each_once
+    Agrippa.regress_two
+    Agrippa.skeptic_earned
+    Agrippa.lethality_on_j
+
+## ZSuperpose.lean  (10)
+    ZSuperpose.superpose
+    ZSuperpose.superpose_unique
+    ZSuperpose.term_low
+    ZSuperpose.term_high
+    ZSuperpose.affine_low_le
+    ZSuperpose.affine_high_ge
+    ZSuperpose.sum_atLow
+    ZSuperpose.sum_atHigh
+    ZSuperpose.affine_attained
+    ZSuperpose.ends_in_box
+
+## ZDescent.lean  (4)
+    V.descend_eval
+    V.op_eval
+    V.conservative
+    V.every_base_is_not_knowledge
+
+## ZClock.lean  (8)
+    ZClock.clock_tick_refines
+    ZClock.zand_Z_left_ne_T
+    ZClock.open_window_blocks
+    ZClock.closed_window_stays
+    ZClock.run_refines
+    ZClock.permit_survives_clock
+    ZClock.only_revocation_takes_back
+    ZClock.revocation_breaks_hereditary
+
+## AgrippaNet.lean  (24)
+    AgrippaNet.evalEx_congr
+    AgrippaNet.goodH_mono
+    AgrippaNet.goodH_le
+    AgrippaNet.cone_good
+    AgrippaNet.good_unique
+    AgrippaNet.ev_act
+    AgrippaNet.ev_expr
+    AgrippaNet.ev_stable
+    AgrippaNet.knows_of_good
+    AgrippaNet.allB_true
+    AgrippaNet.allB_false
+    AgrippaNet.refs_nonempty
+    AgrippaNet.goodB_sound
+    AgrippaNet.fail_path
+    AgrippaNet.cone_lt
+    AgrippaNet.good_unless_loop_or_posit
+    AgrippaNet.knows_unless_loop_or_posit
+    AgrippaNet.cone_aod
+    AgrippaNet.act_or_dogma
+    AgrippaNet.cone_faod
+    AgrippaNet.false_act_or_dogma_two
+    AgrippaNet.cone_dogma
+    AgrippaNet.dogma_net_two
+    AgrippaNet.liar_net_zero
+
+## AgrippaZ.lean  (8)
+    AgrippaZ.verdict_emb
+    AgrippaZ.emb_inj
+    AgrippaZ.forced_futures_agree
+    AgrippaZ.two_readings_futures_split
+    AgrippaZ.paradox_no_future
+    AgrippaZ.nullary_earned
+    AgrippaZ.dogma_on_credit
+    AgrippaZ.liar_no_future
+
+## Surprise.lean  (30)
+    Surprise.zor_T_left
+    Surprise.zor_T_right
+    Surprise.zand_F_left
+    Surprise.zand_F_right
+    Surprise.zimp_F_left
+    Surprise.morning_FZ
+    Surprise.some_morning
+    Surprise.some_noExam
+    Surprise.some_of_T
+    Surprise.some_exam_le
+    Surprise.atMost_noExam
+    Surprise.atMost_exam
+    Surprise.atMost_two
+    Surprise.some_congr
+    Surprise.atMost_congr
+    Surprise.ann_congr
+    Surprise.noExam_refines_morning
+    Surprise.exam_refines_morning
+    Surprise.two_refines_hist
+    Surprise.today_unknown
+    Surprise.surprise_guaranteed
+    Surprise.ann_never_known_before_exam
+    Surprise.exam_known_after_it
+    Surprise.ann_known_iff_week_over
+    Surprise.last_step_conditional
+    Surprise.no_exam_on_credit
+    Surprise.classical_elimination
+    Surprise.teacher_keeps_promise
+    Surprise.liar_when_exam_today
+    Surprise.grounded_when_no_exam
+
+## ZDirty.lean  (89)
+    V.stepNot
+    V.stepBin
+    V.hAnd
+    V.hOr
+    V.hImp
+    V.hXor
+    V.hXnor
+    V.covers_rd
+    V.refusal_witnessed
+    V.never_stricter
+    V.over_grant
+    V.not_is_up_kleene
+    V.and_is_up_kleene
+    V.or_is_up_kleene
+    V.imp_is_up_kleene
+    V.xor_is_up_kleene
+    V.xnor_is_up_kleene
+    V.k_matches_core
+    V.nand_lift
+    V.nor_lift
+    V.nimp_lift
+    V.nxor_lift
+    V.lift_id_is_up
+    V.and_self_is_up
+    V.kNot
+    V.kAnd
+    V.kOr
+    V.kImp
+    V.kXor
+    V.kXnor
+    V.kAtom
+    V.rd_is_kleene
+    V.earned_iff_kleene_T
+    V.kmono1
+    V.kmonoAnd
+    V.kmonoOr
+    V.kmonoImp
+    V.kmonoXor
+    V.kmonoXnor
+    V.kle_of_refines
+    V.kev_mono
+    V.kle_T
+    V.earned_of_kleene
+    V.subst_refines
+    V.default_of_earned
+    V.strict_false
+    V.strict_true
+    V.substitution_of_earned
+    V.strict_any
+    V.judge_can_err
+    V.bj_bof
+    V.bj_T
+    V.bNot
+    V.bAnd
+    V.bOr
+    V.bImp
+    V.bXor
+    V.bXnor
+    V.bAtom
+    V.subst_F_ne_Z
+    V.bochvar_is_default_false
+    V.refines_refl
+    V.earned_dominates_bochvar
+    V.bochvar_strict
+    V.enum_of_earned
+    V.earned_dominates_enum
+    V.enum_strict
+    V.kleene_end_verdict_not_compositional
+    V.ztl_unique_compositional
+    V.ztl_is_compositional_kleene_verdict
+    V.verdict_everywhere_excludes_de_morgan
+    V.strict_earned_iff_kleene
+    V.covers_false_only
+    V.kle_F
+    V.never_laxer
+    V.strict_refuted_iff_kleene
+    V.refines_from_Z
+    V.kleene_cannot_jump
+    V.kleene_cannot_assert
+    V.kleene_cannot_say_established
+    V.kleene_cannot_say_mark
+    V.ztl_says_evidence
+    V.lift1_eq
+    V.lift2_eq
+    V.lift1_characterized
+    V.lift2_characterized
+    V.kleene_sound_maximal2
+    V.kleene_not_decisive
+    V.bochvar_not_sound
+
+## ZGames.lean  (37)
+    V.glue0
+    V.glue1
+    V.negS
+    V.negC
+    V.conjS
+    V.conjC
+    V.disjS
+    V.disjC
+    V.impS
+    V.impC
+    V.xorS
+    V.xorC
+    V.xnorS
+    V.xnorC
+    V.atomS
+    V.play_sound
+    V.negE
+    V.conjE
+    V.disjE
+    V.impE
+    V.xorE
+    V.xnorE
+    V.atomE
+    V.play_complete
+    V.safe_iff_rd
+    V.formula_scope_is_kleene
+    V.rnot
+    V.rconj
+    V.rdisj
+    V.rimp
+    V.rxor
+    V.rxnor
+    V.compound_classical
+    V.subs_of_classical
+    V.check_scope_is_ztl
+    V.formula_safe_implies_checks
+    V.scopes_differ
+
+## ZEvidence.lean  (14)
+    V.cconst_cev
+    V.bin_cev
+    V.lnot
+    V.l_conj
+    V.l_disj
+    V.l_imp
+    V.l_xor
+    V.l_xnor
+    V.atom_rd
+    V.cls_true
+    V.cls_false
+    V.ev_compound_classical
+    V.tr_exact
+    V.ztl_is_evidence_logic
+
+## ZComplete.lean  (30)
+    V.Cpl.evalF_constF
+    V.Cpl.upd_at
+    V.Cpl.agree_upd
+    V.Cpl.agree_upd_self
+    V.Cpl.select
+    V.Cpl.dep_upd
+    V.Cpl.dep_self
+    V.Cpl.dnf_spec
+    V.Cpl.ztl_expressively_complete
+    V.Cpl.or3
+    V.Cpl.or_left'
+    V.Cpl.or_right'
+    V.Cpl.memB_append
+    V.Cpl.bin_to_memB
+    V.Cpl.occurs_memB
+    V.Cpl.memB_split
+    V.Cpl.memB_to_bin
+    V.Cpl.atomsL_occurs
+    V.Cpl.filter_sub
+    V.Cpl.memB_filter
+    V.Cpl.filter_sound
+    V.Cpl.agree_mem
+    V.Cpl.exE_out
+    V.Cpl.exE_in
+    V.Cpl.exE_dep
+    V.Cpl.dnf_atoms
+    V.Cpl.isTB_true
+    V.Cpl.isTB_of_T
+    V.Cpl.toV_T
+    V.Cpl.ztl_interpolation
+
+## ZSpeaks.lean  (16)
+    V.Speak.and3
+    V.Speak.and3_intro
+    V.Speak.bool_eq_of_iff
+    V.Speak.toV_iff
+    V.Speak.decide_iff
+    V.Speak.and_not_iff
+    V.Speak.not_and_not_iff
+    V.Speak.allR_sound
+    V.Speak.allR_complete
+    V.Speak.allR_iff
+    V.Speak.every_refinement_congr
+    V.Speak.allR_congr
+    V.Speak.kev_congr
+    V.Speak.speak
+    V.Speak.judge_speaks_ztl
+    V.Speak.dispositions_partition
 

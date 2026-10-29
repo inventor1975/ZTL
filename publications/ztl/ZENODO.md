@@ -1,3 +1,10 @@
+**v2.1.6 DRAFT READY 2026-10-29 (not published; publishing is the curator's step): reserved DOI 10.5281/zenodo.23776523**
+(https://zenodo.org/uploads/23776523). The judge's earned verdict split (EARNED = strong Kleene T; EARNED IF STABLE
+flagged); ZComplete, ZSpeaks, ZClone directional completeness, ZDirty characterization. Read back from the API: version
+2.1.6, exactly ONE file ZTL-preprint-v2.1.6.pdf, 489862 bytes, md5 c8a92c7fd518cfca044c5ce905105946 equal to the
+repository copy (the inherited v2.1.5 PDF deleted, 204), isNewVersionOf 23740723, three isSupplementedBy links,
+Repository URL, licence cc-by-4.0, Created 2026-10-29. Description: ZENODO-v2.1.6-description.md.
+
 **v2.1.5 PUBLISHED 2026-10-28 (by the curator): version DOI 10.5281/zenodo.23740723**
 (https://zenodo.org/records/23740723). Dominance of the earned verdict proved (lean/ZDirty.lean, empty axiom
 list); the dirty reading is strong Kleene. DOI reserved before the build, so the PDF header carries it.

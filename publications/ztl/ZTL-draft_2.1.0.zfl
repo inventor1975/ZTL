@@ -1,11 +1,11 @@
 {
  "zfl_sidecar": 1,
  "file": "ZTL-draft_2.1.0.md",
- "sha256": "024d679884fa29b344a9afc490c19b22e1647d8dc8dce225c9e641d73c53c184",
+ "sha256": "24b57bdaf61ddf439ed4be497414fe93790639ea1484ebf7324baca8af66f0fb",
  "decision": {
   "status": "waived",
-  "why": "v2.1.5 changes reviewed by a Sonnet reader (11 findings); fixed: generalized to any classical substitution, refusal half of the argument written out, 'judge can err' stated (¬(p∧¬p)), 'restores' dropped (2.1.4's withdrawal for the matrix stands), criterion up front; left: splice artifacts, modelling-choice critique (answered: criterion stated, stable criterion gives no dominance)",
-  "at": "2026-10-28T18:20:06+00:00",
+  "why": "v2.1.6 changes reviewed by a Sonnet reader (22 findings); fixed: 'dominance unchanged' now says it is about EARNED and EARNED IF STABLE together, 'flags, does not avoid' stated, 'applied to atoms' qualification restored in the short form, expressive completeness domain stated (T, F, Z to {T, F}), 'in practice' replaced by the two sufficient conditions, version attribution of the Kleene result; left: criterion-relativity (stated up front, by design), tautology-like characterization (a characterization), counts as redundant checks, excerpt artifacts and pre-2.1.6 text",
+  "at": "2026-10-29T19:07:04+00:00",
   "operator": "undeclared"
  }
 }

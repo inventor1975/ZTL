@@ -1,0 +1,11 @@
+{
+ "zfl_sidecar": 1,
+ "file": "ZENODO-v2.1.6-description.md",
+ "sha256": "ef626f29477f51b1d7363b6cb17391c1f840220773138ae457db8ec1320b9d32",
+ "decision": {
+  "status": "waived",
+  "why": "short description assembled from the reviewed v2.1.6 text and the reviewed v2.1.5 description; same claims, same hedges; reviewed together with the preprint changes (Sonnet reader), fixes applied to both",
+  "at": "2026-10-29T19:07:04+00:00",
+  "operator": "undeclared"
+ }
+}

@@ -1,12 +1,12 @@
-# ZTL — Zero-Trust Logic — v2.1.5
+# ZTL — Zero-Trust Logic — v2.1.6
 
-**V. Reznik. Preprint, v2.1.5 — 2026-10-28. Version DOI:
-[10.5281/zenodo.23740723](https://doi.org/10.5281/zenodo.23740723)
+**V. Reznik. Preprint, v2.1.6 — 2026-10-29. Version DOI:
+[10.5281/zenodo.23776523](https://doi.org/10.5281/zenodo.23776523)
 (this file is the source; the PDF is built by `publications/ztl/mkpreprint.py`).
 Concept DOI:
 [10.5281/zenodo.21318981](https://doi.org/10.5281/zenodo.21318981)**
 
-*Version 2.1.5 proves a dominance theorem (§10, `ZDirty.lean`): under the criterion that a grant is right iff the dirty reading earns it, the judge's EARNED verdict is right wherever any classical substitution of the dirty atoms is right, and right where each such substitution is wrong. 2.1.4 withdrew the older claim that the matrix dominates classical logic; for the matrix alone that withdrawal stands (¬¬p). It also proves that the dirty reading, taken as a semantics, is strong Kleene logic (§2). Version 2.1.4 corrected the tables of §2 (the four negated tables are compositions, not lifts) and the form-dependence of the sink. Details, and the notes of every earlier version, are in the Version history at the end.*
+*Version 2.1.6 splits the judge's earned verdict in two (§10, §19). EARNED is now exactly the strong Kleene T, and under the criterion of §10 never a wrong grant; what is earned under every refinement of the marks but is not Kleene-true is reported as EARNED IF STABLE, with the dirty atoms named that must read the same at every occurrence — the only place an earned grant of the judge can be wrong; the judge flags these grants, it does not avoid them. REFUTED and REFUTED IF STABLE mirror them. 2.1.6 also adds Lean proofs (§8): the ZTL tables are the only decisive, sound and maximal ones; ZTL is the only truth-functional semantics that gives strong Kleene's verdict on each connective applied to atoms; every function from the values of the atoms to {T, F} is a ZTL formula, and so is each disposition of the judge on a formula; Craig interpolation; exactly the four directional connectives are complete alone. Version 2.1.5 proved a dominance theorem (§10, `ZDirty.lean`): under the criterion that a grant is right iff the dirty reading earns it, the judge's earned verdict is right wherever any classical substitution of the dirty atoms is right, and right where each such substitution is wrong. 2.1.4 withdrew the older claim that the matrix dominates classical logic; for the matrix alone that withdrawal stands (¬¬p). 2.1.5 also proved that the dirty reading, taken as a semantics, is strong Kleene logic (§2). Version 2.1.4 corrected the tables of §2 (the four negated tables are compositions, not lifts) and the form-dependence of the sink. Details, and the notes of every earlier version, are in the Version history at the end.*
 
 The tag MEASURED means "verified by machine enumeration" (code in this
 repository), as opposed to "argued"; references to Lean mean proofs
@@ -65,7 +65,8 @@ witnessed by a reading of the dirty occurrences (§2, measured exhaustively); it
 are protected against every cleaning where no dirty atom stands under a negation
 (§19, `no_gift`, a sufficient condition). Under the criterion
 that a grant is right iff the dirty reading earns it, the checked verdict dominates: the
-judge's EARNED (T under every refinement of the marks) is right wherever any classical
+judge's earned verdict (T under every refinement of the marks; since v2.1.6 reported as EARNED where
+strong Kleene gives T and as EARNED IF STABLE where it does not) is right wherever any classical
 substitution of the dirty atoms is right, and right where each substitution is wrong (§10,
 `ZDirty.lean`, empty axiom list). The matrix alone does not dominate (¬¬p), and v2.1.4's
 withdrawal of the older claim, which was made of the matrix, stands. As a system of
@@ -1273,6 +1274,23 @@ consumer's reliance layer (whether a proof, and a fan-in of proofs, is
 eligible for reliance); they are counted and audited here, and not
 discussed in this paper.
 
+**New in v2.1.6** (empty axiom list). `ZDirty.lean`: each ZTL table is the only
+table for its classical function that is decisive (never Z), sound (T only where every
+reading of the dirty arguments gives T) and maximal (T wherever that holds)
+(`lift1_characterized`, `lift2_characterized`); ZTL is the only truth-functional semantics
+that gives strong Kleene's verdict on each connective applied to atoms, on every formula
+(`ztl_unique_compositional`), and a verdict at every connective excludes De Morgan's laws
+(`verdict_everywhere_excludes_de_morgan`); strong Kleene cannot express "p is established",
+ZTL can (`kleene_cannot_say_established`, `ztl_says_evidence`); the judge's dispositions
+against strong Kleene and Bochvar (§10). `ZComplete.lean`: every two-valued function of a
+finite list of atoms (a function from their values T, F, Z to {T, F}) is a ZTL formula, its J-DNF (`ztl_expressively_complete`; earlier
+proved for one atom and measured for two), and Craig interpolation for every pair of
+formulas (`ztl_interpolation`; earlier argued and measured on pools, §3).
+`ZClone.lean`: the solo-completeness dichotomy of §3.8 — the four directional connectives
+are complete alone, the twelve others are not (`directional_complete`,
+`nondirectional_incomplete`). `ZSpeaks.lean`: the dispositions as formulas (§19). The
+corpus at v2.1.6: 2,780 theorems across 148 modules, every one on the empty axiom list.
+
 **The temporal modules** (v1.2): `ZTime.lean` — the verification tree,
 with absorption, arrow and ladder-inclusion proven structurally for
 every formula and marking; `EpochBoundary.lean` — the epoch boundary
@@ -1620,8 +1638,9 @@ valuation v, formula φ and classical substitution σ of the dirty atoms (unifor
 > value σ gives a dirty p, it grants one of p, ¬p, which the judge refuses and the dirty
 > reading does not earn (`strict_any`).
 
-The judge is not always right: ¬(p ∧ ¬p) is EARNED on a dirty p and not earned on the
-dirty reading (`judge_can_err`) — and there every substitution grants it too.
+The judge is not always right: ¬(p ∧ ¬p) is earned on a dirty p and not earned on the
+dirty reading (`judge_can_err`) — and there every substitution grants it too. Since v2.1.6
+the judge reports it as EARNED IF STABLE, below.
 
 MEASURED on the regression pool, 14,530 cells with a dirty atom, against the two
 uniform substitutions: the judge right and "dirty := false" wrong in 4,408 cells,
@@ -1632,6 +1651,24 @@ data ZTL is classical logic (`evalF_agrees`); every refusal of the matrix is wit
 (§2); a grant survives every cleaning where no dirty atom stands under a negation
 (`no_gift`, a sufficient condition), and where it does not, the judge says so — ON
 CREDIT, not EARNED.
+
+**Since v2.1.6 the judge says where it can be wrong** (`lean/ZDirty.lean`, empty axiom
+list). The earned verdict splits in two. EARNED: earned, and the strong Kleene value is T;
+this is exactly the strong Kleene T (`strict_earned_iff_kleene`), so under the criterion
+above it is never a wrong grant. EARNED IF STABLE: earned, but the Kleene value is not T;
+the formula holds if each repeated dirty atom reads the same at every occurrence, and not
+otherwise, and the judge names those atoms. Every wrong grant of the judge is an EARNED IF
+STABLE; ¬(p ∧ ¬p) on a dirty p is one, with p named. The judge flags these grants, it does
+not avoid them: the dominance theorem above is about the earned verdict, EARNED and EARNED IF
+STABLE together, and is unchanged. Symmetrically, REFUTED is exactly the
+strong Kleene F (`strict_refuted_iff_kleene`), and REFUTED IF STABLE is false under every
+refinement but not Kleene-false. The domination extends to Bochvar's external logic, which
+under the "not true" reading is the default "dirty := false" (`bochvar_is_default_false`,
+`earned_dominates_bochvar`, `bochvar_strict`), and to classical evaluation over all
+completions, which has the same right grants as the judge and every wrong grant of the
+judge among its own (`earned_dominates_enum`, `enum_strict`). MEASURED on the same 14,530
+cells: EARNED 2,450, exactly the strong Kleene T cells; REFUTED 1,274, exactly the strong
+Kleene F cells; EARNED IF STABLE 950; REFUTED IF STABLE 1,014; ON CREDIT 2,788; OPEN 6,054.
 
 Deductive strength is a different relation again, and ZTL does not have more of
 it: this paper's own `ztl_taut_is_classical` says so in one line.
@@ -2430,6 +2467,18 @@ T-until-verification — a ladder report (¬¬p), alive till the first
 check; symmetrically for F, with F-until-verification as default deny.
 The Frege cell is fenced by the top grade only; the middle grade
 fences lying, not spoiling.
+
+**The judge's report since v2.1.6: seven dispositions.** The hereditary T splits by strong
+Kleene: EARNED where the Kleene value is T, EARNED IF STABLE where it is not (§10); the
+hereditary F likewise into REFUTED and REFUTED IF STABLE. ON CREDIT is a T that is not
+hereditary, OPEN a non-T that is not hereditarily F; E marks a ground with no subject (§25).
+For every formula, each of the six dispositions other than E is the T-value of a ZTL
+formula over the atoms of that formula (`ZSpeaks.judge_speaks_ztl`, empty axiom list):
+the judge is ZTL speaking about its own formulas. Every case falls under one of the six
+(`dispositions_partition`). Deciding EARNED and REFUTED takes one strong Kleene pass;
+separating EARNED IF STABLE from ON CREDIT and OPEN needs, in the worst case, a search over
+the refinements of the repeated dirty atoms; two sufficient conditions, `no_gift` and `f_locked`,
+settle a verdict without it.
 
 **A verdict carries a warranty; a refusal carries a receipt** (Lean,
 `Receipt.lean` and `LabelExact.lean`, zero axioms). The lazy register
@@ -3562,7 +3611,10 @@ connective two-valued), the order of birth (§3.9, `ZOrigin.lean`) and the
 v2.1.0 assembly, applying a fresh-context review of the draft by a second
 Claude Opus 5.5 session; and v2.1.3 — the dirty reading of Z carried into the
 abstract, §2 and §10, the occurrence-reading census (`book/checks/dirty_census.py`)
-and the v2.1.3 assembly; the word "dirty" and its meaning are the author's. All design
+and the v2.1.3 assembly; and v2.1.4–v2.1.6 — the corrections of v2.1.4, the dominance
+theorem (`ZDirty.lean`), the split of the earned verdict, `ZComplete.lean`, `ZSpeaks.lean`
+and the directional completeness in `ZClone.lean`; the word "dirty" and its meaning are the
+author's. All design
 decisions, fork choices, hypotheses, and the final responsibility for
 the content rest with the human author. In accordance with COPE/ICMJE
 recommendations, the AI system is not listed as an author. The
@@ -3575,7 +3627,8 @@ axiom list, `#print axioms`).
 
 ## Version history
 
-Earlier versions on Zenodo: v2.1.4: [10.5281/zenodo.23737470](https://doi.org/10.5281/zenodo.23737470);
+Earlier versions on Zenodo: v2.1.5: [10.5281/zenodo.23740723](https://doi.org/10.5281/zenodo.23740723);
+v2.1.4: [10.5281/zenodo.23737470](https://doi.org/10.5281/zenodo.23737470);
 v2.1.3: [10.5281/zenodo.23648237](https://doi.org/10.5281/zenodo.23648237);
 v2.1.2: [10.5281/zenodo.23019513](https://doi.org/10.5281/zenodo.23019513);
 v2.1.1: [10.5281/zenodo.23008041](https://doi.org/10.5281/zenodo.23008041);
@@ -3588,6 +3641,23 @@ v1.2: [10.5281/zenodo.21440066](https://doi.org/10.5281/zenodo.21440066);
 v1.1: [10.5281/zenodo.21323552](https://doi.org/10.5281/zenodo.21323552);
 v1.0: [10.5281/zenodo.21318982](https://doi.org/10.5281/zenodo.21318982).
 
+v2.1.6 (2026-10-29) splits the judge's earned verdict. In v2.1.5 the judge's EARNED was
+"T under every refinement of the marks", and the dominance theorem of §10 was proved for it;
+¬(p ∧ ¬p) on a dirty p was EARNED and wrong (`judge_can_err`). Now EARNED is that verdict
+where the strong Kleene value is T — exactly the strong Kleene T, never wrong under the
+criterion of §10 — and the rest of it is EARNED IF STABLE, which names the repeated dirty
+atoms on which it depends; ¬(p ∧ ¬p) is one. REFUTED and REFUTED IF STABLE likewise. The
+dominance theorem, about EARNED and EARNED IF STABLE together, is unchanged; its wrong grants are
+now flagged, not avoided. Added in Lean, all on the
+empty axiom list: the characterization of the tables (decisive, sound, maximal), the
+uniqueness of ZTL as the compositional extension of strong Kleene's verdict, the exclusion
+of De Morgan by a verdict at every connective, strong Kleene's inability to say "p is
+established", the judge against Bochvar and against evaluation over all completions
+(`ZDirty.lean`); expressive completeness for any finite list of atoms and Craig
+interpolation (`ZComplete.lean`); the solo-completeness dichotomy (`ZClone.lean`); the
+dispositions as ZTL formulas (`ZSpeaks.lean`). Measured on the regression pool: the judge's
+EARNED and REFUTED cells coincide with strong Kleene's T and F cells (2,450 and 1,274 of
+14,530). Corpus: 2,780 theorems across 148 modules, all on the empty axiom list.
 v2.1.5 (2026-10-28) proves a dominance theorem. v2.1.4 withdrew "ZTL strictly dominates
 classical logic as a decision procedure", a claim made of the matrix, which the matrix
 does not satisfy (¬¬p); that withdrawal stands. At the curator's question whether a

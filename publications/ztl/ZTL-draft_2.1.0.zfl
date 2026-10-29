@@ -1,11 +1,11 @@
 {
  "zfl_sidecar": 1,
  "file": "ZTL-draft_2.1.0.md",
- "sha256": "f9d97b5ce785f8eefaec14fb8b85b14ffde2dd80e070c6b1b579292bbc0543cf",
+ "sha256": "c063aa0e3b7c5ad28d1016b415b9d0fa0bf51eb3da5f682d8150680b730b7ac6",
  "decision": {
   "status": "waived",
-  "why": "v2.1.6 rewritten after two cloud reviews (IF STABLE by completions) and read again by a Sonnet reader (16 findings); fixed: 'right where each substitution is wrong' restricted to the 2.1.5 verdict, the price stated (2,440 wrong grants under the dirty criterion vs 950; EARNED never wrong), one label carries both criteria, characterization restricted to lifted tables, interpolation for entailments, partition of definitions vs implementation cap; left: criterion-relativity and near-definitional results (stated as such in the text), stable reading as a design choice (stated as a condition to verify), counts as checks",
-  "at": "2026-10-29T19:56:13+00:00",
+  "why": "third review (cloud Claude, fresh session, read against commit 1ae8a5c, brute-force model) applied: IF STABLE glossed as 'in every cleaning' (stable reads ≠ cleaning on mark-sensitive formulas: isZ, established), the grant characterized (right iff some substitution is right) and the hereditary grade's strict dominance over it stated (1,490 cells), grant_strict replaces strict_any for the grant, stale ON CREDIT/no_gift sentence fixed, Bochvar conventions named in the abstract and §10, cost step written out; Lean lnc_earned and grant_strict added",
+  "at": "2026-10-29T20:22:24+00:00",
   "operator": "undeclared"
  }
 }

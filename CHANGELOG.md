@@ -6,7 +6,7 @@ Changes to what a client of `ztljudge` receives. Announced here before anything 
 
 - `EARNED` and `REFUTED` are now exactly strong Kleene T and F (the lazy register), nothing else.
 - `EARNED IF STABLE` (`REFUTED IF STABLE`): not settled read by read, but T (F) in every completion of the dirty
-  atoms, i.e. if each dirty atom reads the same at all its occurrences. The afternoon definition used the grade's
+  atoms, i.e. once every dirty atom is verified (a cleaning), to either value. The afternoon definition used the grade's
   refinements, which keep Z among their values, so the label followed ZTL's own verdicts on dirty atoms: `p -> p`
   was `OPEN` while `~(p & ~p)` was `EARNED IF STABLE`, though both are true in every completion. Found by two cloud
   reviews of preprint 2.1.6 and the journal draft.

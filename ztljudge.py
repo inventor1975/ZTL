@@ -543,7 +543,9 @@ def judge(text, marking=None, budget=None):
                 the marks.
       EARNED IF STABLE
                 not settled read by read, but T in every completion of the
-                dirty atoms: true if each dirty atom reads the same at all its
+                dirty atoms (every cleaning): true once they are verified,
+                to either value; for a claim about the world, if each dirty
+                atom stands for one fact at all its
                 occurrences (`if_stable` names the repeated ones, which is
                 enough; not necessarily the fewest). Verifying settles it.
       REFUTED IF STABLE
@@ -638,7 +640,8 @@ def judge(text, marking=None, budget=None):
             if_stable = repeated
             what = "true" if stable == T else "false"
             disp = "EARNED IF STABLE" if stable == T else "REFUTED IF STABLE"
-            why = (f"{what} in every completion, i.e. if each dirty atom reads the same at all its occurrences "
+            why = (f"{what} in every cleaning of the dirty atoms (once they are verified, to either value; for a claim "
+                   f"about the world, if each dirty atom stands for one fact at all its occurrences) "
                    f"(it is enough that {if_stable} do: no other dirty atom occurs twice); read each occurrence on "
                    f"its own and the matter is not established (verify the dirty atoms to settle it outright)")
     else:

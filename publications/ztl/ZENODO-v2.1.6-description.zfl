@@ -1,11 +1,11 @@
 {
  "zfl_sidecar": 1,
  "file": "ZENODO-v2.1.6-description.md",
- "sha256": "10b1956564d62c74781f9cf8343af9d4c19fd689dab9e905227800cd7115e9d2",
+ "sha256": "be8998a4ae7ad8e709de0557f7f199a7ea0997c337c4d32a76057bd3d80f763d",
  "decision": {
   "status": "waived",
-  "why": "short description of the reviewed v2.1.6 text; same claims, same hedges; read with it by the Sonnet reader, its fixes (price stated, E named, lifted tables, entailments, refinement defined, stale heredity sentence) applied",
-  "at": "2026-10-29T19:56:13+00:00",
+  "why": "short description of the reviewed v2.1.6 text; gloss changed to 'every cleaning' with it; same claims, same hedges",
+  "at": "2026-10-29T20:22:24+00:00",
   "operator": "undeclared"
  }
 }

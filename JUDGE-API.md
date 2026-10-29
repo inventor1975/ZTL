@@ -34,7 +34,7 @@ The report carries **two registers side by side**:
 | disposition | meaning |
 |---|---|
 | `EARNED` | T under every read of every occurrence (strong Kleene T): true whatever the dirty atoms turn out to be, even if each occurrence is read on its own |
-| `EARNED IF STABLE` | not settled read by read, but T in every completion: true if each dirty atom reads the same at all its occurrences (between check and use; in premise and conclusion). `if_stable` names the repeated dirty atoms — enough to make every atom stable, not necessarily the fewest. Verify the dirty atoms to settle it. |
+| `EARNED IF STABLE` | not settled read by read, but T in every cleaning (every completion of the dirty atoms by T or F): true once they are verified, to either value; for a claim about the world, if each dirty atom stands for one fact at all its occurrences (between check and use; in premise and conclusion). On a formula about the mark itself the cleaning decides: `~(p = p)` (p is dirty) is `REFUTED IF STABLE`. `if_stable` names the repeated dirty atoms — enough to make every atom stable, not necessarily the fewest. Verify the dirty atoms to settle it. |
 | `ON CREDIT` | T now, and the completions disagree: a verification can overturn it |
 | `OPEN` | not T now, and the completions disagree: not established |
 | `REFUTED IF STABLE` | the mirror of `EARNED IF STABLE`: F in every completion |

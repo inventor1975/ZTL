@@ -264,8 +264,9 @@ theorem strict_any (w : Nat → V) (hw : w 0 = T ∨ w 0 = F) :
   | inl h => exact Or.inl ⟨h, by decide, by decide⟩
   | inr h => exact Or.inr ⟨by show znot (w 0) = T; rw [h]; rfl, by decide, by decide⟩
 
-/-- The judge is not always right: ¬(p ∧ ¬p) is EARNED on a dirty p, yet not earned on the dirty
-reading — and there every substitution grants it too. -/
+/-- The earned verdict is not always right: strong Kleene does not give ¬(p ∧ ¬p) T on a dirty p. That the
+formula is earned there and that every substitution grants it are `ZSpeaks.lnc_earned` and
+`ZSpeaks.lnc_if_stable`. -/
 theorem judge_can_err : kev (fun _ => Z) (.neg (.conj (.atom 0) (.neg (.atom 0)))) ≠ T := by decide
 
 /-! Bochvar's external connectives are the classical default "dirty := false" (2026-10-29).

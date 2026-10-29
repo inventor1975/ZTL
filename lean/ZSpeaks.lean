@@ -2,9 +2,10 @@ import ZDirty
 import ZComplete
 /-! # ZSpeaks — every disposition of the judge is a ZTL formula over the atoms of φ. Zero axioms.
 
-Paper v7 §5.3 (2026-10-29). Two steps, glued here into one theorem:
-(1) for a fixed φ, each disposition at v is decided by a finite search over the refinements of the dirty
-    atoms of φ (`allR`), so it is a yes/no function of the values of the atoms of φ;
+Paper v7 §5.3, preprint 2.1.6 §19 (2026-10-29). Two steps, glued here into one theorem:
+(1) for a fixed φ, each disposition at v is decided by strong Kleene (`kev`) and a finite search over the
+    completions (cleanings) of the dirty atoms of φ (`allC`), so it is a yes/no function of the values of the
+    atoms of φ; (`allR`, the search over refinements, decides the hereditary grade: the judge's EARNED of 2.1.5);
 (2) every such function is a ZTL formula (`Cpl.ztl_expressively_complete`, the J-DNF).
 The six dispositions: EARNED, EARNED IF STABLE, ON CREDIT, OPEN, REFUTED IF STABLE, REFUTED.
 Strong Kleene cannot state even "p is established" (`ZDirty.kleene_cannot_say_established`).
@@ -428,7 +429,20 @@ theorem dispositions_partition (v : Nat → V) (φ : Fm) :
   | isTrue t => exact Or.inr (Or.inr (Or.inl ⟨t, kT, ne, nr⟩))
   | isFalse t => exact Or.inr (Or.inr (Or.inr (Or.inl ⟨t, kF, ne, nr⟩)))
 
-/-! ## Two statements the first cloud review asked for (2026-10-29) -/
+/-! ## Statements the cloud reviews asked for (2026-10-29) -/
+
+/-- ¬(p ∧ ¬p) on a dirty p is T under every refinement of the marks (the hereditary grade, the judge's EARNED
+of 2.1.5), though strong Kleene does not give it T (`ZDirty.judge_can_err`). -/
+theorem lnc_earned : Earned (fun _ => Z) (.neg (.conj (.atom 0) (.neg (.atom 0)))) :=
+  (allR_iff T _ _).mp (by decide)
+
+/-- The grant is strict too: on a dirty p it grants neither p nor ¬p, while every classical substitution grants
+one of them (`ZDirty.strict_any`). -/
+theorem grant_strict : ¬ Enum (fun _ => Z) (.atom 0) ∧ ¬ Enum (fun _ => Z) (.neg (.atom 0)) := by
+  have hr : ∀ c : V, refines (fun _ => Z) (fun _ => c) := fun _ _ h => absurd rfl h
+  refine ⟨fun h => ?_, fun h => ?_⟩
+  · have := h (fun _ => F) (hr F) (fun _ e => nomatch e); exact nomatch this
+  · have := h (fun _ => T) (hr T) (fun _ e => nomatch e); exact nomatch this
 
 /-- ¬(p ∧ ¬p) on a dirty p: strong Kleene does not say T, the judge says EARNED IF STABLE, and every completion
 (every classical substitution of p) grants it. -/
@@ -463,3 +477,5 @@ end V
 #print axioms V.Speak.lnc_if_stable
 #print axioms V.Speak.grant_right_where_substitution_right
 #print axioms V.Speak.grant_iff_enum
+#print axioms V.Speak.lnc_earned
+#print axioms V.Speak.grant_strict

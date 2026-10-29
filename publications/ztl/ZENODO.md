@@ -2,8 +2,8 @@
 (https://zenodo.org/uploads/23776523). The judge's dispositions by strong Kleene and by completions (EARNED = Kleene T;
 IF STABLE = T/F in every completion); ZComplete, ZSpeaks, ZClone directional completeness, ZDirty characterization.
 Rewritten after two cloud reviews the same evening (the first IF STABLE, by refinements, replaced before publication).
-Read back from the API: version 2.1.6, exactly ONE file ZTL-preprint-v2.1.6.pdf, 494691 bytes, md5
-0dc0163826b156efc17a8f81777b25ad equal to the repository copy, isNewVersionOf 23740723, three isSupplementedBy links,
+Read back from the API: version 2.1.6, exactly ONE file ZTL-preprint-v2.1.6.pdf, 496241 bytes, md5
+1d6e5735f85e70dc385be199871129f3 (refilled after the third cloud review) equal to the repository copy, isNewVersionOf 23740723, three isSupplementedBy links,
 Repository URL, licence cc-by-4.0, Created 2026-10-29. Description: ZENODO-v2.1.6-description.md.
 
 **v2.1.5 PUBLISHED 2026-10-28 (by the curator): version DOI 10.5281/zenodo.23740723**

@@ -444,6 +444,86 @@ theorem ztl_is_compositional_kleene_verdict (v : Nat → V) :
     evalF v (.conj (.atom 0) (.atom 1)) = up (kev v (.conj (.atom 0) (.atom 1))) :=
   ⟨not_is_up_kleene (v 0), and_is_up_kleene (v 0) (v 1)⟩
 
+/-! The primitives, not the clone (2026-10-29). A table for a classical connective g is DECISIVE if it
+never answers Z, SOUND if its T is forced by every reading of its arguments, MAXIMAL if it answers T
+whenever every reading forces it. The ZTL connective is the only table with all three. Bochvar's
+external connectives are decisive but not sound (¬Z = T, Z → F = T); strong Kleene's are sound and
+maximal but not decisive (¬Z = Z). The judge and the stand rest on all three. -/
+def forced1 (g : Bool → Bool) (x : V) : Bool := (subs x).all (fun a => g a)
+def forced2 (g : Bool → Bool → Bool) (x y : V) : Bool := (subs x).all (fun a => (subs y).all (fun b => g a b))
+
+def Decisive1 (t : V → V) : Prop := ∀ x, t x ≠ Z
+def Sound1 (g : Bool → Bool) (t : V → V) : Prop := ∀ x, t x = T → forced1 g x = true
+def Maximal1 (g : Bool → Bool) (t : V → V) : Prop := ∀ x, forced1 g x = true → t x = T
+def Decisive2 (t : V → V → V) : Prop := ∀ x y, t x y ≠ Z
+def Sound2 (g : Bool → Bool → Bool) (t : V → V → V) : Prop := ∀ x y, t x y = T → forced2 g x y = true
+def Maximal2 (g : Bool → Bool → Bool) (t : V → V → V) : Prop := ∀ x y, forced2 g x y = true → t x y = T
+
+theorem lift1_eq (g : Bool → Bool) (x : V) : lift1 g x = (if forced1 g x = true then T else F) := rfl
+theorem lift2_eq (g : Bool → Bool → Bool) (x y : V) :
+    lift2 g x y = (if forced2 g x y = true then T else F) := rfl
+
+/-- **The ZTL connective is the unique decisive, sound and maximal table** (unary). -/
+theorem lift1_characterized (g : Bool → Bool) (t : V → V) :
+    (Decisive1 t ∧ Sound1 g t ∧ Maximal1 g t) ↔ (∀ x, t x = lift1 g x) := by
+  constructor
+  · intro ⟨hd, hs, hm⟩ x
+    rw [lift1_eq]
+    cases hf : forced1 g x with
+    | true => exact hm x hf
+    | false =>
+      cases ht : t x with
+      | T => exact absurd (hs x ht) (by rw [hf]; decide)
+      | F => rfl
+      | Z => exact absurd ht (hd x)
+  · intro h
+    refine ⟨fun x => ?_, fun x ht => ?_, fun x hf => ?_⟩
+    · rw [h, lift1_eq]; cases forced1 g x <;> decide
+    · rw [h, lift1_eq] at ht
+      revert ht; cases forced1 g x <;> decide
+    · rw [h, lift1_eq, hf]; rfl
+
+/-- **The ZTL connective is the unique decisive, sound and maximal table** (binary). -/
+theorem lift2_characterized (g : Bool → Bool → Bool) (t : V → V → V) :
+    (Decisive2 t ∧ Sound2 g t ∧ Maximal2 g t) ↔ (∀ x y, t x y = lift2 g x y) := by
+  constructor
+  · intro ⟨hd, hs, hm⟩ x y
+    rw [lift2_eq]
+    cases hf : forced2 g x y with
+    | true => exact hm x y hf
+    | false =>
+      cases ht : t x y with
+      | T => exact absurd (hs x y ht) (by rw [hf]; decide)
+      | F => rfl
+      | Z => exact absurd ht (hd x y)
+  · intro h
+    refine ⟨fun x y => ?_, fun x y ht => ?_, fun x y hf => ?_⟩
+    · rw [h, lift2_eq]; cases forced2 g x y <;> decide
+    · rw [h, lift2_eq] at ht
+      revert ht; cases forced2 g x y <;> decide
+    · rw [h, lift2_eq, hf]; rfl
+
+/-- Strong Kleene is sound and maximal at every connective, but not decisive: ¬Z = Z. -/
+theorem kleene_sound_maximal2 (g : Bool → Bool → Bool) : Sound2 g (k2 g) ∧ Maximal2 g (k2 g) := by
+  refine ⟨fun x y ht => ?_, fun x y hf => ?_⟩
+  · revert ht
+    show (if forced2 g x y = true then T else if (subs x).all (fun a => (subs y).all (fun b => !g a b)) then F else Z) = T → _
+    cases forced2 g x y with
+    | true => intro _; rfl
+    | false => cases (subs x).all (fun a => (subs y).all (fun b => !g a b)) <;> decide
+  · show (if forced2 g x y = true then T else _) = T
+    rw [hf]; rfl
+theorem kleene_not_decisive : ¬ Decisive1 (k1 (fun a => !a)) ∧ ¬ Decisive2 (k2 (fun a b => !a || b)) :=
+  ⟨fun h => h Z (by decide), fun h => h Z Z (by decide)⟩
+
+/-- Bochvar's external negation and implication are decisive but not sound: ¬Z = T and Z → F = T,
+though a reading of Z as true makes each false. The implication fails under either convention for
+external negation, since it does not use it. -/
+theorem bochvar_not_sound :
+    ¬ Sound1 (fun a => !a) (fun x => bof (!bj x)) ∧
+    ¬ Sound2 (fun a b => !a || b) (fun x y => bof (!bj x || bj y)) :=
+  ⟨fun h => absurd (h Z (by decide)) (by decide), fun h => absurd (h Z F (by decide)) (by decide)⟩
+
 end V
 
 #print axioms V.covers_rd
@@ -475,3 +555,8 @@ end V
 #print axioms V.kleene_end_verdict_not_compositional
 #print axioms V.ztl_unique_compositional
 #print axioms V.ztl_is_compositional_kleene_verdict
+#print axioms V.lift1_characterized
+#print axioms V.lift2_characterized
+#print axioms V.kleene_sound_maximal2
+#print axioms V.kleene_not_decisive
+#print axioms V.bochvar_not_sound

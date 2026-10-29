@@ -491,6 +491,41 @@ Peirce's arrow, which stall in the 18-table cage. -/
 theorem imp_clone_eq : ∀ t, Reach zimp t ↔ ReachC t :=
   fun _ => ⟨canon_subsumes_imp, imp_subsumes_canon⟩
 
+-- ============================================================
+-- §6.  Two NANDs: the lift of a negated function is not the negated lift
+-- ============================================================
+
+/-! In classical logic, strong Kleene and Bochvar's external logic, the connective of ¬f and the negation of
+the connective of f coincide (NAND(a,b) is ¬(a ∧ b)). In ZTL they differ for every non-constant binary f:
+the verdict does not commute with negation. Measured first (2026-10-29), then here for all 16 functions. -/
+
+/-- The binary Boolean function with the four given outputs. -/
+def mkF (b00 b01 b10 b11 : Bool) : Bool → Bool → Bool := fun x y =>
+  match x, y with
+  | false, false => b00
+  | false, true => b01
+  | true, false => b10
+  | true, true => b11
+
+/-- Does the lift of ¬f differ from ¬(lift of f) in some of the nine cells? -/
+def liftNegDiffers (b00 b01 b10 b11 : Bool) : Bool :=
+  let f := mkF b00 b01 b10 b11
+  let g := fun x y => !(f x y)
+  let d := fun a b => !(decide (V.lift2 g a b = znot (V.lift2 f a b)))
+  d V.T V.T || d V.T V.F || d V.T V.Z || d V.F V.T || d V.F V.F || d V.F V.Z ||
+  d V.Z V.T || d V.Z V.F || d V.Z V.Z
+
+/-- **For every non-constant binary function, the lift of its negation and the negation of its lift differ.** -/
+theorem negated_lift_differs : ∀ b00 b01 b10 b11 : Bool,
+    (b00 == b01 && b01 == b10 && b10 == b11) = false → liftNegDiffers b00 b01 b10 b11 = true := by decide
+
+/-- ...and for the two constants they agree. -/
+theorem negated_lift_constants : liftNegDiffers true true true true = false ∧
+    liftNegDiffers false false false false = false := by decide
+
+/-- The NAND example: at (Z, T) the lifted NAND is F, while ¬(Z ∧ T) is T. -/
+theorem two_nands : znand V.Z V.T = V.F ∧ znot (zand V.Z V.T) = V.T := by decide
+
 -- CHECKS: no sorry, no admit.
 
 -- Axiom audit — MEASURED (VR discipline): the empty list, module-wide.
@@ -512,3 +547,6 @@ theorem imp_clone_eq : ∀ t, Reach zimp t ↔ ReachC t :=
 #print axioms imp_subsumes_canon
 #print axioms canon_subsumes_imp
 #print axioms imp_clone_eq
+#print axioms negated_lift_differs
+#print axioms negated_lift_constants
+#print axioms two_nands

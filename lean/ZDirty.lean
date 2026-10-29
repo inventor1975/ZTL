@@ -489,6 +489,42 @@ theorem strict_refuted_iff_kleene (v : Nat → V) (φ : Fm) : StrictRefuted v φ
   have hw : kev w φ = F := kle_F _ (by have m := kev_mono v w hr φ; rw [h] at m; exact m)
   exact never_laxer w φ hw
 
+/-! Kleene cannot say what is established; ZTL can (2026-10-29). Every strong Kleene formula is monotone under
+refinement (`kev_mono`): a refined input never makes the output jump. A statement about the state of evidence —
+"x is established true", "x is established", "x is not established" — jumps (Z ↦ F, T ↦ T), so no Kleene formula,
+over any number of atoms, expresses it. ZTL expresses all three with its own connectives. The non-monotone
+cells that cost ZTL laws at the tables (¬Z = F, ¬¬Z = T) are what let it speak about evidence. -/
+
+theorem refines_from_Z (w : Nat → V) : refines (fun _ => Z) w := fun _ h => absurd rfl h
+
+/-- **No Kleene formula defines a function that jumps on refinement.** If g decides at Z (g Z ≠ Z) and
+changes from Z to T (g Z ≠ g T), no strong Kleene formula computes g on the valuations "every atom = x". -/
+theorem kleene_cannot_jump (g : V → V) (hz : g Z ≠ Z) (hzt : g Z ≠ g T) :
+    ¬ ∃ φ : Fm, ∀ x : V, kev (fun _ => x) φ = g x := by
+  intro ⟨φ, h⟩
+  have m := kev_mono (fun _ => Z) (fun _ => T) (refines_from_Z _) φ
+  rw [h Z, h T] at m
+  revert m hz hzt
+  cases g Z <;> cases g T <;> decide
+
+def established (x : V) : V := if x = Z then F else T
+def isMark (x : V) : V := if x = Z then T else F
+
+/-- Kleene cannot say "x is established true" (its own end verdict ↑), "x is established", "x is not established". -/
+theorem kleene_cannot_assert : ¬ ∃ φ : Fm, ∀ x : V, kev (fun _ => x) φ = up x :=
+  kleene_cannot_jump up (by decide) (by decide)
+theorem kleene_cannot_say_established : ¬ ∃ φ : Fm, ∀ x : V, kev (fun _ => x) φ = established x :=
+  kleene_cannot_jump established (by decide) (by decide)
+theorem kleene_cannot_say_mark : ¬ ∃ φ : Fm, ∀ x : V, kev (fun _ => x) φ = isMark x :=
+  kleene_cannot_jump isMark (by decide) (by decide)
+
+/-- **ZTL says all three with its own connectives:** p ∧ p, p ∨ ¬p, ¬(p ↔ p). -/
+theorem ztl_says_evidence :
+    (∀ x : V, evalF (fun _ => x) (.conj (.atom 0) (.atom 0)) = up x) ∧
+    (∀ x : V, evalF (fun _ => x) (.disj (.atom 0) (.neg (.atom 0))) = established x) ∧
+    (∀ x : V, evalF (fun _ => x) (.neg (.xnor (.atom 0) (.atom 0))) = isMark x) := by
+  refine ⟨?_, ?_, ?_⟩ <;> decide
+
 /-! The primitives, not the clone (2026-10-29). A table for a classical connective g is DECISIVE if it
 never answers Z, SOUND if its T is forced by every reading of its arguments, MAXIMAL if it answers T
 whenever every reading forces it. The ZTL connective is the only table with all three. Bochvar's
@@ -609,3 +645,8 @@ end V
 #print axioms V.strict_earned_iff_kleene
 #print axioms V.never_laxer
 #print axioms V.strict_refuted_iff_kleene
+#print axioms V.kleene_cannot_jump
+#print axioms V.kleene_cannot_assert
+#print axioms V.kleene_cannot_say_established
+#print axioms V.kleene_cannot_say_mark
+#print axioms V.ztl_says_evidence

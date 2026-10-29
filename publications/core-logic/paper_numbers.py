@@ -152,10 +152,12 @@ check(jc == 514, f"J0 convention binary clone: {jc}")
 print("I. Table tab:all against the lift (parsed from the paper)")
 import itertools as _it
 sbs = {T: [1], F: [0], Z: [1, 0]}
-TEX = open(os.path.join(PAPER, "ZTL-core-logic.tex"), encoding="utf-8").read() if PAPER else ""
-if not PAPER:
-    print("  - SKIP: the paper text is not available here")
-_e = TEX.find("label{tab:all}"); blk = TEX[TEX.rfind("\\begin{table}", 0, _e):_e] if PAPER else ""
+V6TEX = os.path.join(PAPER, "ZTL-core-logic.tex") if PAPER else None
+V6 = bool(V6TEX and os.path.exists(V6TEX))       # the v6 .tex: sections I and G read it; v8 is read by section O
+TEX = open(V6TEX, encoding="utf-8").read() if V6 else ""
+if not V6:
+    print("  - SKIP: the v6 paper text is not available here")
+_e = TEX.find("label{tab:all}"); blk = TEX[TEX.rfind("\\begin{table}", 0, _e):_e] if V6 else ""
 toks = re.findall(r"\$([^$]*)\$", blk)
 rows = [(toks[k], "".join(toks[k + 1:k + 4])) for k in range(len(toks)) if re.fullmatch(r"[01]{4}", toks[k])]
 n = 0
@@ -165,7 +167,7 @@ for core, rest in rows:
     want = [lift_ for a in V for b in V for lift_ in [T if all(f[(x, y)] for x in sbs[a] for y in sbs[b]) else F]]
     check(vals == want, f"tab:all row {core}")
     n += 1
-check(n == 16 or not PAPER, f"tab:all has {n} binary rows")
+check(n == 16 or not V6, f"tab:all has {n} binary rows")
 
 print("J. strong Kleene: the reading semantics, the census, the over-grant share")
 import itertools as _it2
@@ -445,13 +447,13 @@ check(_unsound == {"ZTL": [6186, 3738], "J0": [7538, 5090], "KT": [7806, 5358]},
       f"T verdicts of compounds on dirty cells, and of them not strong Kleene T: {_unsound}")
 
 print("G. every number this script owns appears in the paper")
-if not PAPER:
-    print("  - SKIP: the paper text is not available here")
-tex = open(os.path.join(PAPER, "ZTL-core-logic.tex"), encoding="utf-8").read() if PAPER else None
+if not V6:
+    print("  - SKIP: the v6 paper text is not available here")
+tex = open(V6TEX, encoding="utf-8").read() if V6 else None
 NOT_QUOTED = {"10\\,329", "14\\,530", "14\\,555", "14\\,844", "1\\,088", "1\\,458", "1\\,606", "1\\,830", "246",
               "248\\,121", "252", "2\\,904", "336", "44\\,847", "4\\,408", "512", "548", "55\\,176", "5\\,638", "63\\%",
               "740", "742", "84", "20261025"}   # recomputed above, not quoted in the v4 text (2026-10-28 rewrite)
-for n in (sorted(set(owned) - NOT_QUOTED) if PAPER else []):
+for n in (sorted(set(owned) - NOT_QUOTED) if V6 else []):
     pat = re.escape(n).replace("\\\\,", "(?:\\\\,|,|)")
     check(re.search(r"(?<![\d.])" + pat + r"(?![\d])", tex) is not None, f"in the text: {n}")
 
@@ -463,9 +465,22 @@ for n in () if not PAPER else ("82 binary functions", "generate 514", "only 18 b
           "twenty-one of the twenty-six", "validate 548 formulas of our pool to ZTL's 212", "EARNED 2 450",
           "REFUTED 1 274", "EARNED IF STABLE 2 440", "REFUTED IF STABLE 1 470", "ON CREDIT 2 296", "OPEN 4 600",
           "14 530", "2 918 cells", "4 148", "1 490 cells", "2 184 of the 14 530", "1 314", "870 the", "2 642",
-          "1 632 and 1 010", "3 738 of 6 186", "5 090 of 7 538", "5 358 of 7 806", "twelve hold", "fourteen are refuted",
-          "2 795 theorems across 148 modules", "79 theorems cited"):
+          "1 632 and 1 010", "ZTL issues 3 738 T's", "(of 6 186)", "5 090 (of 7 538)", "5 358 (of 7 806)", "twelve hold", "fourteen are refuted", "same 2 448 right", "2 448 claims",
+          ):
     check(n in V8, f"in the v8 draft: {n}")
+if PAPER:
+    # computed, not typed: the corpus count from the theorem inventory, the cited count from the v8 text
+    _inv = subprocess.run([sys.executable, os.path.join(ZTL, "inventory", "list_theorems.py")], capture_output=True,
+                          text=True, timeout=600).stdout
+    _m = re.search(r"(\d+) theorems across (\d+) modules", _inv)
+    _tot = f"{int(_m.group(1)):,} theorems across {_m.group(2)} modules".replace(",", " ")
+    check(_tot in V8, f"in the v8 draft, recomputed: {_tot}")
+    _lines = [l.strip() for l in open(os.path.join(ZTL, "ZTL-theorems.txt"), encoding="utf-8")]
+    _cited = set()
+    for nm in set(re.findall(r"`([A-Za-z_][A-Za-z0-9_'*]*)`", V8)):
+        pat = re.compile(r"(^|[.])" + re.escape(nm).replace("\\*", "[A-Za-z0-9_]*") + r"$")
+        _cited |= {l for l in _lines if pat.search(l)}
+    check(f"each of the {len(_cited)} theorems cited" in V8, f"in the v8 draft, recomputed: {len(_cited)} theorems cited")
 
 print()
 if failures:

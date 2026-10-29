@@ -1,11 +1,11 @@
 {
  "zfl_sidecar": 1,
  "file": "ZENODO-v2.1.6-description.md",
- "sha256": "be8998a4ae7ad8e709de0557f7f199a7ea0997c337c4d32a76057bd3d80f763d",
+ "sha256": "3dfb2da035fbe663e34ad7d19b78ea5618aa93e7024f2c98f83a3028b476301e",
  "decision": {
   "status": "waived",
-  "why": "short description of the reviewed v2.1.6 text; gloss changed to 'every cleaning' with it; same claims, same hedges",
-  "at": "2026-10-29T20:22:24+00:00",
+  "why": "short description of the revised v2.1.6 text: model-checking credit, ζ, counts; same claims and hedges as the reviewed text",
+  "at": "2026-10-29T21:13:23+00:00",
   "operator": "undeclared"
  }
 }

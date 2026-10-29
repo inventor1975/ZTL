@@ -1,11 +1,11 @@
 {
  "zfl_sidecar": 1,
  "file": "ZTL-draft_2.1.0.md",
- "sha256": "c063aa0e3b7c5ad28d1016b415b9d0fa0bf51eb3da5f682d8150680b730b7ac6",
+ "sha256": "b4bb9822e54e1171eb0808d88784497b7df986a642a518fbbbcb4915b0ad608e",
  "decision": {
   "status": "waived",
-  "why": "third review (cloud Claude, fresh session, read against commit 1ae8a5c, brute-force model) applied: IF STABLE glossed as 'in every cleaning' (stable reads ≠ cleaning on mark-sensitive formulas: isZ, established), the grant characterized (right iff some substitution is right) and the hereditary grade's strict dominance over it stated (1,490 cells), grant_strict replaces strict_any for the grant, stale ON CREDIT/no_gift sentence fixed, Bochvar conventions named in the abstract and §10, cost step written out; Lean lnc_earned and grant_strict added",
-  "at": "2026-10-29T20:22:24+00:00",
+  "why": "fourth review (cloud referee of the journal v8) applied to the preprint: the judge's first two readings credited to three-valued model checking (Bruns-Godefroid 1999/2000, Godefroid-Huth 2005), the 2^r fact to semantic minimization (Reps-Loginov-Sagiv 2002); the measured count of unforced T's per basis added; ZBochvar (ζ both ways) added to §8; counts 2,809/149",
+  "at": "2026-10-29T21:13:23+00:00",
   "operator": "undeclared"
  }
 }

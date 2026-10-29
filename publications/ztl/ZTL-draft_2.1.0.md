@@ -1295,7 +1295,10 @@ shared atom the interpolant is a constant; the constant-free case is §3). `ZClo
 the constants, each of the four directional connectives generates the clone of ¬, ∧, ∨ and
 none of the twelve others does (`directional_complete`, `nondirectional_incomplete`) — Finn's
 completeness landscape of §3.8, checked in the kernel. `ZSpeaks.lean`: the judge's
-dispositions (§10, §19). The corpus at v2.1.6: 2,795 theorems across 148 modules, every one on
+dispositions (§10, §19). `ZBochvar.lean`: the translation ζ of ZTL into Bochvar's external logic B^e and back — every
+ZTL formula has the value of its image (`zeta_exact`), every B^e formula that never takes ½ has the value of some ZTL
+formula (`external_is_ztl`): by the functions computed, ZTL is the two-valued fragment of B^e in another basis. The
+corpus at v2.1.6: 2,809 theorems across 149 modules, every one on
 the empty axiom list.
 
 **The temporal modules** (v1.2): `ZTime.lean` — the verification tree,
@@ -1662,7 +1665,9 @@ data ZTL is classical logic (`evalF_agrees`); every refusal of the matrix is wit
 (`no_gift`, a sufficient condition), and where it does not, the warranty grade says so:
 not hereditary.
 
-**Since v2.1.6 one label carries both criteria** (`lean/ZSpeaks.lean`, empty axiom list):
+**Since v2.1.6 one label carries both criteria** (`lean/ZSpeaks.lean`, empty axiom list). Strong Kleene's T
+and truth in every cleaning are the compositional and the thorough semantics of three-valued model checking [48, 49];
+ZTL's verdict, which separates ON CREDIT from OPEN, is the third reading:
 EARNED holds by both, EARNED IF STABLE by the stable one only, ON CREDIT and OPEN by neither.
 The stable reading is not ZTL's; EARNED IF STABLE reports what holds under it as a condition
 still to be verified. EARNED is the strong Kleene T (`strict_earned_iff_kleene`). Under the
@@ -1697,7 +1702,10 @@ MEASURED on the same 14,530 cells, with 0 disagreements against brute force: EAR
 REFUTED 1,274, exactly the strong Kleene T and F cells; EARNED IF STABLE 2,440; REFUTED IF STABLE
 1,470; ON CREDIT 2,296; OPEN 4,600. Against the uniform substitutions the judge's grant is right
 and "dirty := false" wrong in 2,918 cells, "dirty := true" wrong in 4,148, the reverse zero for
-both.
+both. And over the T verdicts of compound formulas on the same cells, ZTL and Bochvar's external connectives in both
+conventions issue the same 2,448 T's that strong Kleene gives; ZTL issues 3,738 that strong Kleene does not give,
+Bochvar's connectives 5,090 (J₀ convention) and 5,358 ("not true" convention): equally complete, and ZTL's basis has
+the fewest wrong T's — by count, not cell by cell.
 
 Deductive strength is a different relation again, and ZTL does not have more of
 it: this paper's own `ztl_taut_is_classical` says so in one line.
@@ -2515,7 +2523,8 @@ Kleene is exact — when each dirty atom occurs once, the readings of the occurr
 the completions, so the set of values strong Kleene computes (`rd_is_kleene`) is the set over the
 completions — so 2^r strong Kleene passes decide it, r the number of repeated dirty
 atoms (argued; checked against brute force on the pool, 0 disagreements; the judge skips the
-search past r = 16 and says so).
+search past r = 16 and says so). That a formula in which each atom occurs once is its own semantic minimization, so
+that its compositional and thorough values coincide, is known [50, 51].
 
 **A verdict carries a warranty; a refusal carries a receipt** (Lean,
 `Receipt.lean` and `LabelExact.lean`, zero axioms). The lazy register
@@ -3586,6 +3595,13 @@ already ships in the repository (`tool/`); a possible essay,
     2010*, 393–407 (§§1, 14).
 47. *perlsec — Perl security* (the taint mode), Perl 5 documentation,
     perldoc.perl.org/perlsec (§§1, 14).
+48. Bruns, G., Godefroid, P. Model checking partial state spaces with 3-valued temporal logics. *CAV'99*, LNCS 1633
+   (1999), 274–287.
+49. Bruns, G., Godefroid, P. Generalized model checking: reasoning about partial state spaces. *CONCUR 2000*, LNCS 1877
+   (2000), 168–182.
+50. Reps, T., Loginov, A., Sagiv, M. Semantic minimization of 3-valued propositional formulae. *LICS 2002*, 40–51.
+51. Godefroid, P., Huth, M. Model checking vs. generalized model checking: semantic minimizations for temporal logics.
+   *LICS 2005*, 158–167.
 
 ## Acknowledgements and AI disclosure
 
@@ -3697,8 +3713,9 @@ false" (`ZDirty.lean`); expressive completeness for any finite list of atoms and
 interpolation, with constants (`ZComplete.lean`); the solo-completeness dichotomy, with
 constants (`ZClone.lean`); the dispositions, each a ZTL formula (`ZSpeaks.lean`). Measured on the
 regression pool: EARNED and REFUTED coincide with strong Kleene's T and F cells (2,450 and 1,274
-of 14,530); the dispositions agree with brute force on every cell. Corpus: 2,795 theorems across
-148 modules, all on the empty axiom list.
+of 14,530); the dispositions agree with brute force on every cell. The first two readings are the compositional and
+thorough semantics of three-valued model checking [48–51]. Added late in this release: the translation into Bochvar's
+external logic, both ways (`ZBochvar.lean`). Corpus: 2,809 theorems across 149 modules, all on the empty axiom list.
 v2.1.5 (2026-10-28) proves a dominance theorem. v2.1.4 withdrew "ZTL strictly dominates
 classical logic as a decision procedure", a claim made of the matrix, which the matrix
 does not satisfy (¬¬p); that withdrawal stands. At the curator's question whether a

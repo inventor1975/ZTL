@@ -1,7 +1,7 @@
 ZTL — the theorem inventory
 ============================================================
 
-2795 theorems across 148 modules, all on the empty axiom list.
+2809 theorems across 149 modules, all on the empty axiom list.
 
 Every theorem below is machine-checked by the Lean 4 kernel
 on the EMPTY axiom list (no Classical.choice, no Quot.sound,
@@ -3125,4 +3125,20 @@ inventory/axiom_audit.py, which re-checks every line in CI.
     V.Speak.lnc_if_stable
     V.Speak.grant_right_where_substitution_right
     V.Speak.grant_iff_enum
+
+## ZBochvar.lean  (14)
+    V.Boch.c_neg
+    V.Boch.c_and
+    V.Boch.c_or
+    V.Boch.c_imp
+    V.Boch.c_xor
+    V.Boch.c_xnor
+    V.Boch.zeta_exact
+    V.Boch.zeta_consequence
+    V.Boch.memB_app_l
+    V.Boch.memB_app_r
+    V.Boch.beval_congr
+    V.Boch.toV_isT
+    V.Boch.external_is_ztl
+    V.Boch.delta_formula
 

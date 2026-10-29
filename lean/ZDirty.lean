@@ -357,7 +357,8 @@ def Enum (v : Nat → V) (φ : Fm) : Prop := ∀ w, refines v w → total w → 
 
 theorem enum_of_earned (v : Nat → V) (φ : Fm) (h : Earned v φ) : Enum v φ := fun w hr _ => h w hr
 
-/-- **The judge dominates enumeration under the dirty reading.** Right grants coincide (both are
+/-- **The hereditary grade dominates enumeration under the dirty reading.** (The judge's EARNED of 2.1.5; since
+2.1.6 the judge's grant IS enumeration, `ZSpeaks.grant_iff_enum`, and the grade is returned beside it.) Right grants coincide (both are
 exactly the strong Kleene T), and every wrong grant of the judge is a wrong grant of enumeration. -/
 theorem earned_dominates_enum (v : Nat → V) (φ : Fm) :
     ((Earned v φ ∧ kev v φ = T) ↔ (Enum v φ ∧ kev v φ = T)) ∧

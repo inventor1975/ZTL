@@ -444,6 +444,24 @@ theorem ztl_is_compositional_kleene_verdict (v : Nat → V) :
     evalF v (.conj (.atom 0) (.atom 1)) = up (kev v (.conj (.atom 0) (.atom 1))) :=
   ⟨not_is_up_kleene (v 0), and_is_up_kleene (v 0) (v 1)⟩
 
+/-- **A verdict at every connective excludes De Morgan.** No compositional semantics that gives
+Kleene's verdict on every single connective satisfies ¬(p ∧ q) = ¬p ∨ ¬q: by uniqueness it is ZTL, and
+at p dirty, q true the two sides are T and F. -/
+theorem verdict_everywhere_excludes_de_morgan (n : V → V) (c d i x e : V → V → V)
+    (hn : ∀ v, mev n c d i x e v (.neg (.atom 0)) = up (kev v (.neg (.atom 0))))
+    (hc : ∀ v, mev n c d i x e v (.conj (.atom 0) (.atom 1)) = up (kev v (.conj (.atom 0) (.atom 1))))
+    (hd : ∀ v, mev n c d i x e v (.disj (.atom 0) (.atom 1)) = up (kev v (.disj (.atom 0) (.atom 1))))
+    (hi : ∀ v, mev n c d i x e v (.imp (.atom 0) (.atom 1)) = up (kev v (.imp (.atom 0) (.atom 1))))
+    (hx : ∀ v, mev n c d i x e v (.xor (.atom 0) (.atom 1)) = up (kev v (.xor (.atom 0) (.atom 1))))
+    (he : ∀ v, mev n c d i x e v (.xnor (.atom 0) (.atom 1)) = up (kev v (.xnor (.atom 0) (.atom 1)))) :
+    ¬ ∀ v, mev n c d i x e v (.neg (.conj (.atom 0) (.atom 1))) =
+      mev n c d i x e v (.disj (.neg (.atom 0)) (.neg (.atom 1))) := by
+  intro h
+  have u := ztl_unique_compositional n c d i x e hn hc hd hi hx he
+  have w := h (two Z T)
+  rw [u, u] at w
+  exact absurd w (by decide)
+
 /-! The primitives, not the clone (2026-10-29). A table for a classical connective g is DECISIVE if it
 never answers Z, SOUND if its T is forced by every reading of its arguments, MAXIMAL if it answers T
 whenever every reading forces it. The ZTL connective is the only table with all three. Bochvar's
@@ -560,3 +578,4 @@ end V
 #print axioms V.kleene_sound_maximal2
 #print axioms V.kleene_not_decisive
 #print axioms V.bochvar_not_sound
+#print axioms V.verdict_everywhere_excludes_de_morgan

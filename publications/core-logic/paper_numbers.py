@@ -29,7 +29,7 @@ ZTL = os.path.abspath(os.path.join(HERE, "..", ".."))                     # the 
 CORE = os.path.join(ZTL, "publications", "ztl", "core_logic_checks.py")
 PAPER = next((os.path.abspath(d) for d in (os.environ.get("ZTL_PAPER_DIR", ""), HERE,
               os.path.join(ZTL, "..", "ztl-private", "publications", "core-logic"))
-              if d and os.path.exists(os.path.join(d, "v7", "v7-draft.md"))), None)
+              if d and os.path.exists(os.path.join(d, "v8", "v8-draft.md"))), None)
 with contextlib.redirect_stdout(io.StringIO()):
     C = runpy.run_path(CORE)
 if C["failures"]:
@@ -372,7 +372,7 @@ check(len(SIDES) == 19 and some_u == 19 and len(only_u) == 8,
 print("P. the judge's dispositions against strong Kleene (v7 §5), dirty cells of the distinct pool")
 sys.path.insert(0, ZTL)
 import ztljudge as _J                                                    # noqa: E402
-_seen, _disp, _dom = set(), {}, {F: [0, 0], T: [0, 0]}   # per default d: [judge right & d wrong, the reverse]
+_seen, _disp, _hg, _dom = set(), {}, {}, {F: [0, 0], T: [0, 0]}   # per default d: [judge right & d wrong, the reverse]
 for f in POOL:
     key = show(f)
     if key in _seen:
@@ -386,6 +386,9 @@ for f in POOL:
         kk = "T" if k == {1} else "F" if k == {0} else "U"
         d = _J.judge(_J._show(phi), dict(e))["disposition"]
         _disp[(d, kk)] = _disp.get((d, kk), 0) + 1
+        _rj = _J.check(_J._show(phi), dict(e))
+        _her = _rj["verdict"] == T and _rj["grade"] == "hereditary"
+        _hg[(d, _her)] = _hg.get((d, _her), 0) + 1
         right, grant = kk == "T", d in ("EARNED", "EARNED IF STABLE")
         for dflt in (F, T):
             sg = ev(CL, f, {a: (dflt if x == Z else x) for a, x in e.items()}) == T
@@ -394,8 +397,52 @@ for f in POOL:
 _exp = {("EARNED", "T"): 2450, ("REFUTED", "F"): 1274, ("EARNED IF STABLE", "U"): 2440,   # IF STABLE by completions
         ("REFUTED IF STABLE", "U"): 1470, ("ON CREDIT", "U"): 2296, ("OPEN", "U"): 4600}  # since 2026-10-29 evening
 check(_disp == _exp, f"judge vs strong Kleene: {dict(sorted(_disp.items()))}")
+check(_hg.get(("EARNED IF STABLE", True)) == 950 and _hg.get(("EARNED IF STABLE", False)) == 1490
+      and _hg.get(("EARNED", True)) == 2450,
+      f"EARNED IF STABLE split by the hereditary grade: {_hg.get(('EARNED IF STABLE', True))} hereditary, "
+      f"{_hg.get(('EARNED IF STABLE', False))} not (where the grant is wrong and the grade refuses)")
 check(_dom == {F: [2918, 0], T: [4148, 0]},
       f"judge's grant vs the uniform defaults (right / the default wrong, and the reverse): {_dom}")  # preprint 2.1.6 §10   # quoted in v7 §5 (section O)
+
+print("Q. the judge on Bochvar's connectives; T verdicts of compounds that strong Kleene does not give T (v8 §4, §5)")
+_bq = {T: 1, F: 0, Z: 0}                    # own copy: `box` is rebound further up (late binding in J0/KT)
+_EXQ = {"and": lambda a, b: tv(_bq[a] and _bq[b]), "or": lambda a, b: tv(_bq[a] or _bq[b]),
+        "imp": lambda a, b: tv((not _bq[a]) or _bq[b]), "xnor": lambda a, b: tv(_bq[a] == _bq[b]),
+        "xor": lambda a, b: tv(_bq[a] != _bq[b])}
+J0q = dict(_EXQ, **{"not": lambda a: tv(a == F)})
+KTq = dict(_EXQ, **{"not": lambda a: tv(not _bq[a])})
+_dz = {"J0": [0, 0], "KT": [0, 0]}         # [ZTL OPEN & Bochvar ON CREDIT, ZTL ON CREDIT & Bochvar OPEN]
+_unsound = {"ZTL": [0, 0], "J0": [0, 0], "KT": [0, 0]}   # [T verdicts on compounds, of them not Kleene T]
+_seen = set()
+for f in POOL:
+    key = show(f)
+    if key in _seen:
+        continue
+    _seen.add(key)
+    for e in ENVS:
+        if Z not in e.values():
+            continue
+        k = kv(f, e)
+        if not isinstance(f, str):
+            for nm, M in (("ZTL", OPS), ("J0", J0q), ("KT", KTq)):
+                if ev(M, f, e) == T:
+                    _unsound[nm][0] += 1
+                    _unsound[nm][1] += k != {1}
+        if k in ({1}, {0}):
+            continue
+        dirty = [a for a in e if e[a] == Z]
+        cs = {ev(CL, f, dict(e, **dict(zip(dirty, bits)))) for bits in _it2.product((T, F), repeat=len(dirty))}
+        if cs in ({T}, {F}):
+            continue
+        z = ev(OPS, f, e) == T
+        for nm, M in (("J0", J0q), ("KT", KTq)):
+            b_ = ev(M, f, e) == T
+            _dz[nm][0] += (not z) and b_
+            _dz[nm][1] += z and not b_
+check(_dz == {"J0": [1314, 870], "KT": [1632, 1010]},
+      f"the judge on Bochvar's connectives differs from ZTL's only in ON CREDIT / OPEN: {_dz}")
+check(_unsound == {"ZTL": [6186, 3738], "J0": [7538, 5090], "KT": [7806, 5358]},
+      f"T verdicts of compounds on dirty cells, and of them not strong Kleene T: {_unsound}")
 
 print("G. every number this script owns appears in the paper")
 if not PAPER:
@@ -408,16 +455,17 @@ for n in (sorted(set(owned) - NOT_QUOTED) if PAPER else []):
     pat = re.escape(n).replace("\\\\,", "(?:\\\\,|,|)")
     check(re.search(r"(?<![\d.])" + pat + r"(?![\d])", tex) is not None, f"in the text: {n}")
 
-print("O. the numbers of the v7 draft owned here appear in v7/v7-draft.md")
+print("O. the numbers owned here appear in v8/v8-draft.md")
 if not PAPER:
     print("  - SKIP: the paper text is not available here")
-V7 = open(os.path.join(PAPER, "v7", "v7-draft.md"), encoding="utf-8").read() if PAPER else ""
-for n in () if not PAPER else ("82 binary functions", "514", "only 18 binary functions", "eight of them only",
-          "twenty-one of the twenty-six", "EARNED 2 450", "REFUTED 1 274"):
-    # The v7 §5 counts of the four IF STABLE / ON CREDIT / OPEN dispositions went stale when IF STABLE moved to
-    # completions (2026-10-29 evening); the article is paused (curator) and §5 is to be rewritten — section P above
-    # holds the current numbers.
-    check(n in V7, f"in the v7 draft: {n}")
+V8 = open(os.path.join(PAPER, "v8", "v8-draft.md"), encoding="utf-8").read() if PAPER else ""
+for n in () if not PAPER else ("82 binary functions", "generate 514", "only 18 binary functions", "eight of them hold",
+          "twenty-one of the twenty-six", "validate 548 formulas of our pool to ZTL's 212", "EARNED 2 450",
+          "REFUTED 1 274", "EARNED IF STABLE 2 440", "REFUTED IF STABLE 1 470", "ON CREDIT 2 296", "OPEN 4 600",
+          "14 530", "2 918 cells", "4 148", "1 490 cells", "2 184 of the 14 530", "1 314", "870 the", "2 642",
+          "1 632 and 1 010", "3 738 of 6 186", "5 090 of 7 538", "5 358 of 7 806", "twelve hold", "fourteen are refuted",
+          "2 795 theorems across 148 modules", "79 theorems cited"):
+    check(n in V8, f"in the v8 draft: {n}")
 
 print()
 if failures:

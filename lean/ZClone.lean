@@ -526,6 +526,110 @@ theorem negated_lift_constants : liftNegDiffers true true true true = false ∧
 /-- The NAND example: at (Z, T) the lifted NAND is F, while ¬(Z ∧ T) is T. -/
 theorem two_nands : znand V.Z V.T = V.F ∧ znot (zand V.Z V.T) = V.T := by decide
 
+-- ============================================================
+-- §7.  Exactly the four directional connectives are complete alone
+-- ============================================================
+
+/-! Measured by `zzhegalkin.py` §5 (2026-09) and here in the kernel (2026-10-29): with the constants, the lift of
+a binary function is complete alone iff the function is one of the four directional ones (both implications,
+both nonimplications). The twelve others stay inside an invariant: a relation between cells that the lifted
+operation preserves, that the generators satisfy, and that negation or conjunction violates. -/
+
+/-- Transport along a pointwise equality of operations (no funext). -/
+theorem reach_congr {g h : V → V → V} (e : ∀ x y, g x y = h x y) {t : Tbl} (r : Reach g t) : Reach h t := by
+  induction r with
+  | fst => exact .fst
+  | snd => exact .snd
+  | top => exact .top
+  | bot => exact .bot
+  | app _ _ iha ihb =>
+      rename_i a b _ _
+      have key : map2 h a b = map2 g a b :=
+        tbl_eq_of_cells (e _ _).symm (e _ _).symm (e _ _).symm (e _ _).symm (e _ _).symm (e _ _).symm
+          (e _ _).symm (e _ _).symm (e _ _).symm
+      exact key ▸ Reach.app iha ihb
+
+/-- Swapping the arguments does not change the clone (from g to its converse). -/
+theorem reach_swap {g : V → V → V} {t : Tbl} (r : Reach g t) : Reach (fun x y => g y x) t := by
+  induction r with
+  | fst => exact .fst
+  | snd => exact .snd
+  | top => exact .top
+  | bot => exact .bot
+  | app _ _ iha ihb =>
+      rename_i a b _ _
+      exact (show map2 (fun x y => g y x) b a = map2 g a b from rfl) ▸ Reach.app ihb iha
+
+/-- Two-cell invariants: cells 1 and 3, cells 1 and 4. -/
+theorem reach_inv13 (g : V → V → V) (R : V → V → Bool)
+    (hcl : ∀ x y u w : V, R x y = true → R u w = true → R (g x u) (g y w) = true)
+    (hX : R projX.c1 projX.c3 = true) (hY : R projY.c1 projY.c3 = true)
+    (hT : R V.T V.T = true) (hF : R V.F V.F = true) {t : Tbl} (r : Reach g t) : R t.c1 t.c3 = true := by
+  induction r with
+  | fst => exact hX
+  | snd => exact hY
+  | top => exact hT
+  | bot => exact hF
+  | app _ _ iha ihb => exact hcl _ _ _ _ iha ihb
+
+theorem reach_inv14 (g : V → V → V) (R : V → V → Bool)
+    (hcl : ∀ x y u w : V, R x y = true → R u w = true → R (g x u) (g y w) = true)
+    (hX : R projX.c1 projX.c4 = true) (hY : R projY.c1 projY.c4 = true)
+    (hT : R V.T V.T = true) (hF : R V.F V.F = true) {t : Tbl} (r : Reach g t) : R t.c1 t.c4 = true := by
+  induction r with
+  | fst => exact hX
+  | snd => exact hY
+  | top => exact hT
+  | bot => exact hF
+  | app _ _ iha ihb => exact hcl _ _ _ _ iha ihb
+
+/-- The affine invariant on the four classical cells: none is Z, and an even number are T. -/
+def affine4 (a b c d : V) : Bool :=
+  (a != V.Z && b != V.Z && c != V.Z && d != V.Z) &&
+  (((a == V.T) != (b == V.T)) != ((c == V.T) != (d == V.T))) == false
+
+theorem reach_affine (g : V → V → V)
+    (hcl : ∀ x1 x2 x3 x4 y1 y2 y3 y4 : V, affine4 x1 x2 x3 x4 = true → affine4 y1 y2 y3 y4 = true →
+      affine4 (g x1 y1) (g x2 y2) (g x3 y3) (g x4 y4) = true)
+    {t : Tbl} (r : Reach g t) : affine4 t.c1 t.c2 t.c4 t.c5 = true := by
+  induction r with
+  | fst => decide
+  | snd => decide
+  | top => decide
+  | bot => decide
+  | app _ _ iha ihb => exact hcl _ _ _ _ _ _ _ _ iha ihb
+
+def Rge (x y : V) : Bool := (x == y) || (x == V.T && y == V.F)        -- c1 ≥ c4: {(F,F),(T,F),(T,T)}
+def Rtz (x y : V) : Bool := (x == y) || (x == V.T && y == V.Z)        -- {(F,F),(T,T),(T,Z)} (and (Z,Z))
+
+def lf (b00 b01 b10 b11 : Bool) : V → V → V := V.lift2 (mkF b00 b01 b10 b11)
+
+/-- The twelve non-directional lifts are not complete: each misses negation or conjunction. -/
+theorem nondirectional_incomplete :
+    ¬ Reach (lf false false false false) (ofOp zand) ∧ ¬ Reach (lf true true true true) (ofOp zand) ∧
+    ¬ Reach (lf true false false false) (ofOp zand) ∧ ¬ Reach (lf true true true false) (ofOp zand) ∧
+    ¬ Reach (lf true false true false) (ofOp zand) ∧ ¬ Reach (lf true true false false) (ofOp zand) ∧
+    ¬ Reach (lf false false false true) notTbl ∧ ¬ Reach (lf false true true true) notTbl ∧
+    ¬ Reach (lf false false true true) notTbl ∧ ¬ Reach (lf false true false true) notTbl ∧
+    ¬ Reach (lf false true true false) (ofOp zand) ∧ ¬ Reach (lf true false false true) (ofOp zand) := by
+  refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  all_goals first
+    | (intro h; exact absurd (reach_inv13 _ Rtz (by decide) (by decide) (by decide) (by decide) (by decide) h)
+        (by decide))
+    | (intro h; exact absurd (reach_inv14 _ Rge (by decide) (by decide) (by decide) (by decide) (by decide) h)
+        (by decide))
+    | (intro h; exact absurd (reach_affine _ (by decide) h) (by decide))
+
+/-- The four directional lifts are complete: each generates the canonical clone {¬, ∧, ∨}. -/
+theorem directional_complete :
+    (∀ t, ReachC t → Reach (lf true true false true) t) ∧ (∀ t, ReachC t → Reach (lf true false true true) t) ∧
+    (∀ t, ReachC t → Reach (lf false false true false) t) ∧ (∀ t, ReachC t → Reach (lf false true false false) t) := by
+  refine ⟨fun t h => ?_, fun t h => ?_, fun t h => ?_, fun t h => ?_⟩
+  · exact reach_congr (g := zimp) (by decide) (imp_subsumes_canon h)
+  · exact reach_congr (g := fun x y => zimp y x) (by decide) (reach_swap (imp_subsumes_canon h))
+  · exact reach_congr (g := znimp) (by decide) (nimp_subsumes_canon h)
+  · exact reach_congr (g := fun x y => znimp y x) (by decide) (reach_swap (nimp_subsumes_canon h))
+
 -- CHECKS: no sorry, no admit.
 
 -- Axiom audit — MEASURED (VR discipline): the empty list, module-wide.
@@ -550,3 +654,7 @@ theorem two_nands : znand V.Z V.T = V.F ∧ znot (zand V.Z V.T) = V.T := by deci
 #print axioms negated_lift_differs
 #print axioms negated_lift_constants
 #print axioms two_nands
+#print axioms reach_congr
+#print axioms reach_swap
+#print axioms nondirectional_incomplete
+#print axioms directional_complete

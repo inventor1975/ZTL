@@ -1,10 +1,10 @@
-**v2.1.6 DRAFT READY 2026-10-29 (not published; publishing is the curator's step): reserved DOI 10.5281/zenodo.23776523**
-(https://zenodo.org/uploads/23776523). The judge's dispositions by strong Kleene and by completions (EARNED = Kleene T;
-IF STABLE = T/F in every completion); ZComplete, ZSpeaks, ZClone directional completeness, ZDirty characterization.
-Rewritten after two cloud reviews the same evening (the first IF STABLE, by refinements, replaced before publication).
-Read back from the API: version 2.1.6, exactly ONE file ZTL-preprint-v2.1.6.pdf, 498900 bytes, md5
-78043deeb4d499e41cb4b695df9deadc (refilled after the fourth review: model-checking credit, ZBochvar) equal to the repository copy, isNewVersionOf 23740723, three isSupplementedBy links,
-Repository URL, licence cc-by-4.0, Created 2026-10-29. Description: ZENODO-v2.1.6-description.md.
+**v2.1.6 PUBLISHED 2026-10-29 (by the curator): version DOI 10.5281/zenodo.23776523**
+(https://zenodo.org/records/23776523). The judge's dispositions by strong Kleene and by cleanings (the compositional and
+thorough semantics of three-valued model checking); ZComplete, ZSpeaks, ZBochvar, ZClone directional completeness, ZDirty
+characterization. Verified against the API WITHOUT a token: version 2.1.6, exactly ONE file ZTL-preprint-v2.1.6.pdf,
+498900 bytes, md5 78043deeb4d499e41cb4b695df9deadc equal to the repository copy, isNewVersionOf 23740723, three
+isSupplementedBy links, Repository URL https://github.com/inventor1975/ZTL, licence cc-by-4.0, latest of the concept
+(version index 14). Description: ZENODO-v2.1.6-description.md. Source commit 08f9df2.
 
 **v2.1.5 PUBLISHED 2026-10-28 (by the curator): version DOI 10.5281/zenodo.23740723**
 (https://zenodo.org/records/23740723). Dominance of the earned verdict proved (lean/ZDirty.lean, empty axiom

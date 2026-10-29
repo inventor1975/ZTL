@@ -1,11 +1,11 @@
 {
  "zfl_sidecar": 1,
  "file": "ZENODO.md",
- "sha256": "b06747345621f8f2b49e9b66dfb4bebe91aa1160617747a0c565607230c0f4f2",
+ "sha256": "e1656329b53d56e15f051e2f3864ab53589b4e85f1e17cdac9611afbf98e45dc",
  "decision": {
   "status": "waived",
-  "why": "internal upload sheet: facts read back from the Zenodo API, no claims about the logic",
-  "at": "2026-10-29T21:13:51+00:00",
+  "why": "internal upload sheet: facts read back from the Zenodo API after publication, no claims about the logic",
+  "at": "2026-10-29T21:20:47+00:00",
   "operator": "undeclared"
  }
 }

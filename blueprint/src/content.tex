@@ -1,19 +1,36 @@
-% ZTL Blueprint: formalization map. All \leanok items are proven in the
-% repository's Lean corpus with an empty axiom list.
+% ZTL Blueprint: formalization map of the core. All \leanok items are proven in
+% the repository's Lean corpus (lean/) with an empty axiom list. Updated
+% 2026-10-30 against the core as of preprint 2.1.6 (judge vocabulary of
+% 2026-10-29). Every name in a lean tag is checked against the built corpus.
 
-\chapter{Semantics}
+\chapter*{About this blueprint}
+
+This blueprint is a dependency graph of the \emph{core} of ZTL: the values and
+the one rule that generates every connective, the sixteen lifted tables, the
+agreement with classical logic on verified inputs, the twenty-six laws and the
+rules of inference, the two registers and the judge's dispositions, the
+relation to Bochvar's external logic, and the receipt. Each node names the Lean
+declarations that prove it; it does not try to cover the whole corpus (about
+2800 theorems, most of them about numbers and applications). The human reading
+of the same material is on the site:
+\href{https://ztljudge.com/ztl/rule/}{the rule} and
+\href{https://ztljudge.com/ztl/theorems/}{the theorems}; the preprint is
+\href{https://doi.org/10.5281/zenodo.23776523}{doi:10.5281/zenodo.23776523}.
+
+\chapter{The values and the rule}
 
 \begin{definition}[Values and the mark]\label{def:values}
   \lean{V}\leanok
-  Truth values are $T$ and $F$; the third symbol $Z$ is a mark for an
-  unverified input, not a truth value.
+  Truth values are $T$ and $F$; the third symbol $Z$ is a mark for a dirty
+  (unverified) input, not a truth value.
 \end{definition}
 
 \begin{definition}[Generating principle: the lift]\label{def:lift}
-  \uses{def:values}\lean{V.lift1, V.lift2}\leanok
-  For a classical connective $f$, its ZTL lift returns $T$ iff $f$ is
-  forced to $T$ under \emph{every} classical reading of $Z$; otherwise
-  $F$. Truth is never granted on credit.
+  \uses{def:values}\lean{V.subs, V.lift1, V.lift2}\leanok
+  $Z$ has two classical readings, $T$ has one, $F$ has one. For a classical
+  connective $f$, its ZTL lift returns $T$ iff $f$ is $T$ under \emph{every}
+  classical reading of its arguments (each occurrence of $Z$ read on its own);
+  otherwise $F$. Truth is never granted on credit.
 \end{definition}
 
 \begin{definition}[Connectives]\label{def:ops}
@@ -23,41 +40,317 @@
 \end{definition}
 
 \begin{theorem}[Anchor cells]\label{thm:anchors}
-  \uses{def:ops}\lean{V.ax_not_Z, V.ax_notnot_Z, V.ax_xnor_ZZ, V.ax_xor_ZT}\leanok
-  The design anchor cells hold: $\neg Z=F$, $\neg\neg Z=T$,
-  $Z\leftrightarrow Z=F$, $Z\oplus T=F$, etc.
+  \uses{def:ops}\lean{V.ax_not_Z, V.ax_notnot_Z, V.ax_xnor_ZZ, V.ax_xnor_ZT, V.ax_xor_ZZ, V.ax_xor_ZF, V.ax_xor_ZT}\leanok
+  The design anchor cells are theorems of the lift: $\neg Z=F$,
+  $\neg\neg Z=T$, $Z\leftrightarrow Z=F$, $Z\leftrightarrow T=F$,
+  $Z\oplus Z=Z\oplus F=Z\oplus T=F$.
 \end{theorem}
 
 \begin{theorem}[Greediness]\label{thm:greedy}
-  \uses{def:ops}\lean{V.evalF_classical}\leanok
-  Every compound formula is classical under every valuation: $Z$ lives
+  \uses{def:ops}\lean{V.lift1_classical, V.lift2_classical, V.evalF_classical}\leanok
+  Every lifted connective answers $T$ or $F$; hence every compound formula is
+  classical under every valuation, over the whole formula language: $Z$ lives
   only on atoms.
 \end{theorem}
 
-\chapter{Laws and rules}
+\begin{theorem}[The lift is the only decisive, sound and maximal table]\label{thm:liftchar}
+  \uses{def:lift}\lean{V.lift1_characterized, V.lift2_characterized}\leanok
+  Call a table for a classical connective $g$ \emph{decisive} if it never
+  answers $Z$, \emph{sound} if its $T$ is forced by every reading of its
+  arguments, \emph{maximal} if it answers $T$ whenever every reading forces
+  it. For unary and binary $g$, a table has all three properties iff it is
+  the ZTL lift of $g$.
+\end{theorem}
+
+\chapter{The sixteen tables}
+
+\begin{definition}[Every binary kernel, lifted]\label{def:sixteen}
+  \uses{def:lift}\lean{mkF, lf, znand, znor, znimp}\leanok
+  \texttt{mkF} enumerates the sixteen binary Boolean functions by their four
+  outputs; \texttt{lf} is the lift of each. The six connectives of
+  Definition~\ref{def:ops} and the lifted NAND, NOR and nonimplication are
+  members of this family.
+\end{definition}
+
+\begin{theorem}[Lifts of the negated connectives]\label{thm:neglifts}
+  \uses{def:sixteen, def:ops}\lean{V.nand_lift, V.nor_lift, V.nimp_lift, V.nxor_lift, V.lift_id_is_up, V.and_self_is_up}\leanok
+  The lift of a negated classical connective is the argument-side De Morgan
+  form: $\mathrm{lift}(\uparrow)(a,b)=\neg a\vee\neg b$,
+  $\mathrm{lift}(\downarrow)(a,b)=\neg a\wedge\neg b$,
+  $\mathrm{lift}(\not\to)(a,b)=a\wedge\neg b$, and the lift of
+  $\neg\oplus$ is $\leftrightarrow$. The lift of the identity is the
+  assertion $\uparrow x$ ($T\mapsto T$, else $F$), definable as $x\wedge x$.
+\end{theorem}
+
+\begin{theorem}[Composite $\neq$ primitive]\label{thm:composite}
+  \uses{def:sixteen}\lean{negated_lift_differs, negated_lift_constants, two_nands}\leanok
+  For every non-constant binary function $f$ (fourteen of the sixteen), the
+  lift of $\neg f$ differs from the negated verdict $\neg\,\mathrm{lift}(f)$
+  in some cell; for the two constants they agree. Example: lifted NAND gives
+  $F$ at $(Z,T)$ while $\neg(Z\wedge T)=T$. So a table printed as
+  $\neg(a\circ b)$ is a composition of two lifts, not the lift of the negated
+  connective.
+\end{theorem}
+
+\begin{theorem}[Single-operator completeness]\label{thm:clone}
+  \uses{def:sixteen, thm:neglifts}\lean{directional_complete, nondirectional_incomplete, nand_cannot_and, nand_cannot_or, nor_cannot_and, nor_cannot_or, nimp_clone_eq, imp_clone_eq}\leanok
+  With the constants, the lift of a binary function generates the canonical
+  clone $\{\neg,\wedge,\vee\}$ alone iff the function is one of the four
+  directional ones (both implications, both nonimplications). The other
+  twelve each miss negation or conjunction; in particular lifted NAND and NOR,
+  complete classically, are not complete here.
+\end{theorem}
+
+\chapter{Agreement with classical logic}
+
+\begin{definition}[Classical evaluation]\label{def:cval}
+  \uses{def:values}\lean{V.emb, V.cval}\leanok
+  A classical valuation is embedded into ZTL values without the mark;
+  \texttt{cval} is ordinary two-valued evaluation of the same formulas.
+\end{definition}
+
+\begin{theorem}[Conservativity on verified inputs]\label{thm:conservative}
+  \uses{def:cval, def:ops}\lean{V.evalF_agrees}\leanok
+  On a valuation that carries no mark, ZTL evaluation and classical
+  evaluation agree on every formula of the language (structural induction,
+  not enumeration). In particular all twenty-six classical laws of
+  Chapter~\ref{chap:laws} hold on verified data.
+\end{theorem}
+
+\begin{theorem}[No new laws]\label{thm:taut}
+  \uses{thm:conservative}\lean{V.ztl_taut_is_classical}\leanok
+  A formula that is $T$ under every ZTL valuation is a classical tautology.
+\end{theorem}
+
+\begin{theorem}[Strictly fewer]\label{thm:notconversely}
+  \uses{thm:taut}\lean{V.not_conversely}\leanok
+  The inclusion is proper: $p\to p$ is a classical tautology and is $F$ at a
+  marked $p$. ZTL is conservative over classical logic, not the same logic.
+\end{theorem}
+
+\chapter{Laws and rules}\label{chap:laws}
+
+\begin{theorem}[The twelve laws that hold on a dirty atom]\label{thm:laws12}
+  \uses{def:ops}\lean{V.imp_def, V.xor_def, V.xnor_def, V.xnor_imps, V.and_comm', V.or_comm', V.and_assoc', V.or_assoc', V.and_distrib, V.or_distrib, V.no_contradiction, V.imp_trans_law}\leanok
+  Definitions of $\to,\oplus,\leftrightarrow$ by $\neg,\wedge,\vee$;
+  $\leftrightarrow$ as two implications; commutativity and associativity of
+  $\wedge,\vee$; both distributive laws; non-contradiction
+  $\neg(p\wedge\neg p)=T$; the transitivity law. Each holds at every value,
+  the mark included.
+\end{theorem}
+
+\begin{theorem}[The fourteen laws that need ground]\label{thm:laws14}
+  \uses{def:ops}\lean{V.double_neg_needs_ground, V.deMorgan1_needs_ground, V.deMorgan2_needs_ground, V.contraposition_needs_ground, V.xor_as_not_xnor_needs_ground, V.and_idem_needs_ground, V.or_idem_needs_ground, V.absorption_needs_ground, V.and_true_needs_ground, V.or_false_needs_ground, V.lem_needs_ground, V.imp_refl_needs_ground, V.peirce_needs_ground, V.k_axiom_needs_ground}\leanok
+  Double negation, both De Morgan laws, contraposition as an identity,
+  $\oplus$ as $\neg\leftrightarrow$, both idempotences, absorption, the two
+  unit laws, excluded middle, $p\to p$, Peirce and the K axiom are refuted at a
+  marked atom (each with a counterexample, not a silence); on verified data
+  they hold (Theorem~\ref{thm:conservative}).
+\end{theorem}
 
 \begin{theorem}[Modus ponens]\label{thm:mp}
   \uses{def:ops}\lean{V.modus_ponens}\leanok
   From $p=T$ and $p\to q=T$ follows $q=T$: earned truth is transported.
 \end{theorem}
 
-\begin{theorem}[Fallen laws]\label{thm:fallen}
-  \uses{def:ops}\lean{V.lem_needs_ground, V.deMorgan1_needs_ground, V.contraposition_needs_ground, V.imp_refl_needs_ground}\leanok
-  Excluded middle, De Morgan, contraposition-as-identity and $p\to p$
-  fail --- all only on $Z$, all are ``truth from form''.
+\begin{theorem}[Rules of inference]\label{thm:rules}
+  \uses{thm:mp}\lean{V.rule_modus_tollens, V.rule_contraposition, V.rule_disj_syllogism, V.rule_and_intro, V.rule_and_elim, V.rule_or_intro, V.rule_dn_intro, V.rule_transitivity, V.rule_K, V.rule_explosion, V.rule_resolution}\leanok
+  With designated value $\{T\}$: modus tollens, contraposition, disjunctive
+  syllogism, $\wedge$-introduction and elimination, $\vee$-introduction,
+  $\neg\neg$-introduction, transitivity, K, explosion and resolution are sound
+  rules at every value.
 \end{theorem}
 
 \begin{theorem}[Rules vs laws split]\label{thm:split}
-  \uses{thm:mp, thm:fallen}\lean{V.rule_contraposition, V.rule_dn_elim_needs_ground}\leanok
-  Contraposition survives as an inference rule while failing as an
-  identity; double-negation elimination fails even as a rule. The
-  deduction theorem holds only left-to-right.
+  \uses{thm:rules, thm:laws14}\lean{V.rule_contraposition, V.rule_dn_elim_needs_ground, V.rule_taut_concl_needs_ground, V.dt_one_way}\leanok
+  Contraposition survives as an inference rule while failing as an identity;
+  $\neg\neg$-elimination and a tautology in the conclusion fail even as rules.
+  The deduction theorem holds in one direction only: $p\vDash p$, yet
+  $Z\to Z=F$.
 \end{theorem}
 
 \begin{theorem}[No gluts]\label{thm:nogluts}
   \uses{def:ops}\lean{V.no_gluts}\leanok
   $v(p)=v(\neg p)=T$ is unsatisfiable: ZTL is paracomplete, not
   paraconsistent.
+\end{theorem}
+
+\chapter{Two registers and the judge}
+
+\begin{definition}[The cautious register: strong Kleene]\label{def:kleene}
+  \uses{def:values}\lean{V.knot, V.kand, V.kor, V.k1, V.k2, V.kev, V.k_matches_core}\leanok
+  The lazy register is strong Kleene: $T$ if every reading gives $1$, $F$ if
+  every reading gives $0$, else $Z$. \texttt{kev} evaluates a formula in it.
+\end{definition}
+
+\begin{theorem}[Kleene register]\label{thm:kleene}
+  \uses{def:kleene, thm:liar}\lean{V.kleene_and_monotone, V.eager_and_not_monotone, V.liar_kleene_home}\leanok
+  The lazy register is monotone in the information order and homes the liar
+  ($\neg Z=Z$); the decisive (eager) register is not monotone: grounding and
+  verdicts are done in two different registers.
+\end{theorem}
+
+\begin{theorem}[The dirty reading is strong Kleene]\label{thm:dirty}
+  \uses{def:kleene, def:ops}\lean{V.rd_is_kleene, V.covers_rd, V.refusal_witnessed, V.never_stricter, V.over_grant}\leanok
+  Read every occurrence of a dirty atom on its own; the resulting semantics is
+  strong Kleene. Every $F$ of ZTL is witnessed by such a reading, and ZTL is
+  never stricter than it; the converse fails: $\neg\neg p$ is granted on a
+  dirty $p$.
+\end{theorem}
+
+\begin{theorem}[Each connective is Kleene followed by the assertion]\label{thm:upkleene}
+  \uses{def:kleene, thm:neglifts}\lean{V.not_is_up_kleene, V.and_is_up_kleene, V.or_is_up_kleene, V.imp_is_up_kleene, V.xor_is_up_kleene, V.xnor_is_up_kleene}\leanok
+  Every ZTL connective equals the strong Kleene connective followed by the
+  assertion $\uparrow$ ($Z\mapsto F$).
+\end{theorem}
+
+\begin{theorem}[ZTL is the compositional Kleene verdict]\label{thm:uniquecomp}
+  \uses{thm:upkleene}\lean{V.kleene_end_verdict_not_compositional, V.ztl_unique_compositional, V.ztl_is_compositional_kleene_verdict, V.verdict_everywhere_excludes_de_morgan}\leanok
+  Kleene with one verdict at the end is not compositional. Any compositional
+  semantics that gives Kleene's verdict on every single connective applied to
+  atoms agrees with ZTL on every formula, and no such semantics satisfies De
+  Morgan.
+\end{theorem}
+
+\begin{theorem}[Two registers, three properties]\label{thm:registers}
+  \uses{thm:liftchar, def:kleene}\lean{V.kleene_sound_maximal2, V.kleene_not_decisive, V.bochvar_not_sound}\leanok
+  Strong Kleene is sound and maximal but not decisive ($\neg Z=Z$); Bochvar's
+  external connectives are decisive but not sound ($\neg Z=T$, $Z\to F=T$);
+  only the ZTL lift has all three (Theorem~\ref{thm:liftchar}).
+\end{theorem}
+
+\begin{theorem}[What Kleene cannot say]\label{thm:kleenemute}
+  \uses{def:kleene, def:jops}\lean{V.kleene_cannot_jump, V.kleene_cannot_assert, V.kleene_cannot_say_established, V.kleene_cannot_say_mark, V.ztl_says_evidence}\leanok
+  No strong Kleene formula says ``$x$ is established true'', ``$x$ is
+  established'' or ``$x$ is a mark''; ZTL says all three with its own
+  connectives: $p\wedge p$, $p\vee\neg p$, $\neg(p\leftrightarrow p)$.
+\end{theorem}
+
+\begin{theorem}[Expressive completeness]\label{thm:expcomplete}
+  \uses{def:jops, thm:unary}\lean{V.Cpl.dnf_spec, V.Cpl.ztl_expressively_complete}\leanok
+  Every two-valued function of a valuation that depends only on a finite list
+  of atoms is the value of a ZTL formula (the J-DNF over those atoms, with
+  $3^{|\mathrm{atoms}|}$ leaves).
+\end{theorem}
+
+\begin{definition}[Grades and dispositions]\label{def:grades}
+  \uses{def:kleene, thm:dirty}\lean{V.refines, V.Earned, V.Refuted, V.StrictEarned, V.StrictRefuted, V.total, V.Enum, V.Speak.StableF, V.Speak.EarnedIfStable, V.Speak.RefutedIfStable, V.Speak.OnCredit, V.Speak.Open}\leanok
+  The hereditary grade: $T$ under every refinement of the marks. A
+  completion (cleaning) is a total refinement; \texttt{Enum} is ``$T$ in
+  every completion''. The judge's dispositions (2026-10-29):
+  EARNED / REFUTED = strong Kleene $T$ / $F$;
+  EARNED IF STABLE / REFUTED IF STABLE = not settled by Kleene, but $T$ / $F$
+  in every completion (each dirty atom read the same at all its
+  occurrences);
+  ON CREDIT = $T$ now, the completions disagree;
+  OPEN = not $T$ now, the completions disagree.
+  The judge's seventh answer, E (the claim rests on something that has no
+  subject), is assigned by declaration in \texttt{ztljudge.py} and is not
+  formalized in the Lean corpus.
+\end{definition}
+
+\begin{theorem}[EARNED and REFUTED are strong Kleene]\label{thm:strictkleene}
+  \uses{def:grades}\lean{V.earned_of_kleene, V.strict_earned_iff_kleene, V.never_laxer, V.strict_refuted_iff_kleene}\leanok
+  The strict dispositions are exactly the strong Kleene values $T$ and $F$:
+  the judge answers the whole-formula question as Kleene does, no more and no
+  less.
+\end{theorem}
+
+\begin{theorem}[The grant is classical enumeration]\label{thm:grant}
+  \uses{def:grades, thm:strictkleene, thm:conservative}\lean{V.Speak.grant_iff_enum, V.Speak.grant_strict}\leanok
+  The judge grants (EARNED or EARNED IF STABLE) exactly when the formula is
+  $T$ in every completion of its dirty atoms. The grant is strict: on a dirty
+  $p$ it grants neither $p$ nor $\neg p$.
+\end{theorem}
+
+\begin{theorem}[Dominance]\label{thm:dominance}
+  \uses{thm:grant, thm:dirty}\lean{V.substitution_of_earned, V.strict_any, V.earned_dominates_enum, V.enum_strict, V.Speak.grant_right_where_substitution_right}\leanok
+  Criterion: a grant is right iff the dirty reading earns it (strong Kleene
+  $T$). Under it the hereditary grade strictly dominates the grant
+  (enumeration): their right grants coincide, every wrong grant of the
+  hereditary grade is a wrong grant of enumeration, and enumeration grants
+  $p\to p$ on a dirty $p$, which the grade refuses. The grant in turn is right
+  wherever any single classical substitution of the dirty atoms is right, and
+  every substitution grants one of $p,\neg p$ that the judge refuses.
+\end{theorem}
+
+\begin{theorem}[The limits of the hereditary grade]\label{thm:canerr}
+  \uses{thm:dominance}\lean{V.judge_can_err, V.Speak.lnc_earned, V.Speak.lnc_if_stable}\leanok
+  The hereditary grade can be wrong under the criterion: $\neg(p\wedge\neg p)$
+  is $T$ under every refinement of a dirty $p$, yet strong Kleene does not
+  give it $T$; the judge reports it as EARNED IF STABLE.
+\end{theorem}
+
+\begin{theorem}[The dispositions cover every case]\label{thm:partition}
+  \uses{def:grades}\lean{V.Speak.dispositions_partition}\leanok
+  At every valuation each formula receives at least one of the six
+  dispositions. (Coverage only: the theorem states the disjunction, not
+  mutual exclusivity.)
+\end{theorem}
+
+\begin{theorem}[The judge speaks ZTL]\label{thm:speaks}
+  \uses{def:grades, thm:expcomplete}\lean{V.Speak.allR_iff, V.Speak.allC_iff, V.Speak.judge_speaks_ztl}\leanok
+  For a fixed formula $\varphi$, each of the six dispositions is decided by
+  strong Kleene and a finite search over the completions of its dirty atoms,
+  and is the $T$-value of a ZTL formula over the atoms of $\varphi$. The
+  judge is not code over ZTL but ZTL about itself (expressible, not cheap: the
+  J-DNF has $3^{|\mathrm{atoms}|}$ leaves).
+\end{theorem}
+
+\chapter{Bochvar's external logic}
+
+\begin{definition}[$B^e$ and the translation $\zeta$]\label{def:bochvar}
+  \uses{def:values}\lean{V.Boch.BFm, V.Boch.beval, V.Boch.zeta}\leanok
+  $B^e$: weak Kleene $\neg,\wedge,\vee$ ($Z$ contaminates), the external
+  operators $J_0,J_1,J_2$ and the constants, designated value $T$. $\zeta$
+  sends $\neg$ to $J_0$ and each binary connective to its classical form
+  over $J_0,J_2$ of the arguments.
+\end{definition}
+
+\begin{theorem}[$\zeta$ is exact]\label{thm:zeta}
+  \uses{def:bochvar, def:ops}\lean{V.Boch.zeta_exact, V.Boch.zeta_consequence}\leanok
+  $\zeta\varphi$ has, at every valuation, the value $\varphi$ has in ZTL;
+  hence $\Gamma\vDash\varphi$ in ZTL iff $\zeta\Gamma\vdash\zeta\varphi$ in
+  $B^e$.
+\end{theorem}
+
+\begin{theorem}[ZTL is the two-valued fragment of $B^e$]\label{thm:externalztl}
+  \uses{thm:zeta, thm:expcomplete}\lean{V.Boch.external_is_ztl}\leanok
+  Every $B^e$ formula that never takes the middle value (every external
+  formula among them) has, at every valuation, the value of some ZTL formula.
+  By the functions they compute, ZTL is the two-valued fragment of $B^e$ in
+  another basis, up to bare atoms (which carry $Z$ in both).
+\end{theorem}
+
+\begin{theorem}[Bochvar is the default ``dirty := false'']\label{thm:bochdefault}
+  \uses{def:grades, thm:registers}\lean{V.bochvar_is_default_false, V.earned_dominates_bochvar, V.bochvar_strict}\leanok
+  Bochvar's external connectives compute the classical value with every dirty
+  atom set to $F$. What the hereditary grade grants, Bochvar grants; on a
+  dirty $p$, Bochvar grants $\neg p$, which the grade and the judge refuse.
+\end{theorem}
+
+\chapter{The receipt}
+
+\begin{definition}[The label]\label{def:label}
+  \uses{def:kleene}\lean{V.labF}\leanok
+  With every value the judge returns a label: the dirty atoms still holding the
+  answer up.
+\end{definition}
+
+\begin{theorem}[The receipt is complete]\label{thm:receipt}
+  \uses{def:label, thm:greedy}\lean{V.receipt_complete, V.receipt_complete_greedy}\leanok
+  For every formula, valuation and dirty atom: if the label leaves the atom
+  out, setting it to anything changes neither the lazy value nor the greedy
+  verdict. An atom that could change the answer is always on the receipt. The
+  label is a sound over-approximation, not exact in general.
+\end{theorem}
+
+\begin{theorem}[Exact on linear claims]\label{thm:labelexact}
+  \uses{thm:receipt}\lean{V.linear_no_loss, V.drivable, V.label_exact_linear, V.clash_names_an_idle_atom}\leanok
+  Where each dirty atom occurs at most once, the judge loses no truth and the
+  label names only atoms that can move the verdict jointly with the others.
+  Without linearity this fails: $p\wedge\neg p$ names $p$, which no reading
+  moves.
 \end{theorem}
 
 \chapter{Tableau calculus, certified}
@@ -99,13 +392,6 @@
   \uses{def:ops}\lean{V.liar_homeless}\leanok
   Negation has no fixed point: no value seats the liar; quarantine is
   irremovable.
-\end{theorem}
-
-\begin{theorem}[Kleene register]\label{thm:kleene}
-  \uses{thm:liar}\lean{V.kleene_and_monotone, V.eager_and_not_monotone, V.liar_kleene_home}\leanok
-  The lazy register is monotone and homes the liar ($\neg Z=Z$); the
-  eager register is not monotone: grounding and verdicts require two
-  different registers.
 \end{theorem}
 
 \begin{theorem}[Carousel and revenge]\label{thm:carousel}
@@ -154,8 +440,8 @@
 \begin{theorem}[Expressive completeness, unary]\label{thm:unary}
   \uses{def:jops}\lean{V.unary_complete}\leanok
   Every unary external function $V\to\{T,F\}$ is a J-DNF: one theorem
-  over all eight target tables (binary case $512/512$ measured in
-  Python).
+  over all eight target tables. The general case, any finite list of atoms,
+  is Theorem~\ref{thm:expcomplete}.
 \end{theorem}
 
 \begin{theorem}[Full deduction theorem for E]\label{thm:ddt}
@@ -164,7 +450,7 @@
   $E(p,q)=\neg(p\wedge p)\vee(q\wedge q)$ satisfies
   $\Gamma,\varphi \vDash \psi \iff \Gamma \vDash E(\varphi,\psi)$ in
   both directions, over the whole language; the primitive arrow stays
-  one-way.
+  one-way. (This $E$ is a connective, not the judge's disposition E.)
 \end{theorem}
 
 \begin{theorem}[Blok--Pigozzi witnesses]\label{thm:bp}
@@ -177,7 +463,7 @@
 \end{theorem}
 
 \begin{theorem}[Not self-extensional]\label{thm:selfext}
-  \uses{def:jops}\lean{V.idem_interderivable, V.not_selfextensional}\leanok
+  \uses{def:jops}\lean{V.idem_interderivable, V.not_selfextensional, V.equiv_not_identical}\leanok
   $p \dashv\vDash p\wedge p$, yet $\neg(p\wedge p) \nvDash \neg p$:
   interderivability is not a congruence --- the same failure that
   builds the detectors.
@@ -192,11 +478,11 @@
 \end{theorem}
 
 \begin{theorem}[Craig interpolation]\label{thm:interp}
-  \uses{thm:unary}
-  If $A \vDash B$, the J-DNF of $A$'s projection onto the shared atoms
-  interpolates: an external function of the shared atoms is always a
-  formula. Measured totally ($400/400$ and $32/32$); Lean port on the
-  roadmap.
+  \uses{thm:expcomplete}\lean{V.Cpl.ztl_interpolation}\leanok
+  If $\varphi \vDash \psi$, there is $\chi$ whose atoms all occur in both,
+  with $\varphi\vDash\chi$ and $\chi\vDash\psi$: the J-DNF, over the shared
+  atoms, of ``some value of $\varphi$'s private atoms makes $\varphi$ true''.
+  With no shared atom it is a constant.
 \end{theorem}
 
 \chapter{Proof theory and quantifiers}
@@ -210,13 +496,20 @@
 \end{theorem}
 
 \begin{theorem}[Parameter tableaux, arbitrary domains]\label{thm:fo}
-  \uses{thm:closesiff}
+  \uses{thm:closesiff}\lean{ZParamEngine.entails_of_closed, ZParamEngine.entails_of_closed_core, ZParamEngine.run_fallen_bridge, ZParamHintikka.stuck_refutes}\leanok
   The $\gamma/\delta$ parameter rules carry the sign discipline to
-  arbitrary domains (fresh witnesses exactly where the weak signs
-  live); soundness measured ($13/13$ verdicts cross-checked, open
-  branches yield verified countermodels), completeness by Hintikka
-  saturation (argued); undecidability via the J-guard embedding of
-  classical FO. Lean port on the roadmap.
+  arbitrary domains. Kernel-checked: a closed run of the search without the
+  classical step $\delta_2$ is a proof of entailment in every total model
+  (with $\delta_2$, under its soundness as a stated hypothesis); without
+  $\delta_2$ the search declines the fallen bridge
+  $\neg\forall x P \vDash \exists x\neg P$; on closed inputs, a run that stops
+  open yields a total countermodel read off the open branch, whose
+  weakly signed atoms carry the mark. The soundness of $\delta_2$ needs
+  $\neg\forall\to\exists\neg$; it is proved classically outside the
+  zero-axiom corpus and enters it only as that hypothesis. Argued, not
+  formalized: the infinite half of completeness (fair strategy, K\"onig's
+  lemma, a model over an infinite domain). Undecidability of first-order ZTL (via the J-guard embedding of classical
+  FO) is argued.
 \end{theorem}
 
 \begin{theorem}[Quantifier tableaux, finite domains]\label{thm:quant}
@@ -254,8 +547,9 @@
   \uses{thm:memz, def:jops}\lean{V.eqStream_never_T, V.eqStream_apart, V.diag_not_member, V.inj_cert_marked, V.mark_self_not_earned, V.atom_thresholds}\leanok
   Streams never earn identity while apartness is earned by a finite
   witness and persists; the diagonal earns strict non-membership; one
-  marked pair collapses the injectivity certificate; a nondegenerate
-  mark does not equal itself; atom verdicts are the modal thresholds.
+  marked pair collapses the injectivity certificate; under the separate
+  reading of two sides (two acts of measurement) a nondegenerate mark does
+  not equal itself; atom verdicts are the modal thresholds.
 \end{theorem}
 
 \begin{theorem}[Russell grounded, kernel-computed]\label{thm:russellkt}

@@ -25,9 +25,12 @@ junction arrives with a warranty grade, not with certainty.
 MEASURED (IBM ibm_fez, 156-qubit Heron, 2026-07-19, 4096 shots per
 basis; jobs d9e7811htsac739dtca0 / d9e782qneu4c739o40i0):
   Z basis: join P(01)+P(10) = 0.951; disjuncts 0.476 / 0.475;
-           marginals: particle 1 → 0.504, particle 2 → 0.503
+           marginals: particle 1 → 0.503, particle 2 → 0.504
   X basis: join P(+-)+P(-+) = 0.958; disjuncts 0.491 / 0.467;
-           marginals: 0.517 / 0.493
+           marginals: particle 1 → 0.493, particle 2 → 0.517
+  (marginals relabelled 2026-10-30: the code had particles 1 and 2 swapped through qiskit's "c1 c0" order;
+   the counts are unchanged. Disjuncts are the raw strings P(01), P(10) = P(particle 2 up, particle 1 down),
+   P(particle 2 down, particle 1 up) with 0 = up.)
   → the join true at ~95%, every disjunct and every local address at
     ~1/2 along BOTH complementary axes: the truth lives at the seam,
     on silicon as in the kernel. The ~5% same-outcome rate is the
@@ -61,8 +64,10 @@ def junction_ledger(counts, basis):
     total = sum(counts.values())
     p = {k: counts.get(k, 0) / total for k in ("00", "01", "10", "11")}
     join = p["01"] + p["10"]
-    m1 = p["00"] + p["01"]     # particle 1 reads 0 (qiskit order: c1 c0)
-    m2 = p["00"] + p["10"]
+    # qiskit writes the bit string as "c1 c0"; particle 1 is qubit 0 (bit c0, the RIGHT character).
+    # Until 2026-10-30 these two were swapped (m1 summed c1 = 0, which is particle 2); the values differ by < 0.03.
+    m1 = p["00"] + p["10"]     # particle 1 reads 0: c0 = 0
+    m2 = p["00"] + p["01"]     # particle 2 reads 0: c1 = 0
     a, b = ("+-", "-+") if basis == "X" else ("01", "10")
     print(f"\n  {basis} basis ({total} shots):")
     print(f"    THE JOIN  P({a})+P({b})   = {join:.3f}   (the pair "

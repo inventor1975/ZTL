@@ -46,7 +46,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: inventor1975/VRCycle
-          ref: de72f58d6ed8d3cc9d31a40a5f88b27d4cad5414
+          ref: d40d9c9849ff5b5ed2aaed6ebf02623b46c2945d
           path: lean/vr
       - uses: actions/setup-python@v5
         with:

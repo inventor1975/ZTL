@@ -1,6 +1,8 @@
 # Signing keys of the ZTL API
 
-The ZTL API at `https://api.vitalyreznik.com` signs the verdicts it gives on `POST /cage/v1/verify`.
+The ZTL API signs the verdicts it gives on `POST /cage/v1/verify`. It answers at `https://api.ztljudge.com` and at
+`https://api.vitalyreznik.com` — the same service, operated by the same operator, with the same signing keys (since
+2026-10-30; before that only at `https://api.vitalyreznik.com`).
 
 - **Only a 200 response carries a signed receipt.** Every other response carries none: refusals, errors
   and the rate limit. An unsigned response can be forged or suppressed in transit; treat it as "no

@@ -33,8 +33,8 @@ What is proved, for every week length `n`, every day, every formula:
      whole week has been verified: "there is an exam" is earned on the exam day
      (`exam_known_after_it`), "exactly one" only when no later day can bring a second one. The
      receipt the class spends on Monday is dated at the end of the week.
-  4. `last_step_conditional` — on the last morning the class does earn the conditional "if the
-     announcement holds, the exam is today"; what it lacks is the antecedent (theorem 2). The
+  4. `last_step_conditional` — on the last morning the conditional "if the announcement holds, the
+     exam is today" evaluates to `T` (as written; heredity is not stated); what it lacks is the antecedent (theorem 2). The
      backward induction is valid; its first step spends an announcement it has not earned.
   5. `no_exam_on_credit` — on Monday "there will be no exam" evaluates to `T` and is not hereditary:
      the class's conclusion is a value on credit, overturned by the tick of the exam day.
@@ -296,8 +296,8 @@ theorem ann_known_iff_week_over {e d n : Nat} (hed : e < d) (hen : e < n) :
 
 /-! ## 4. The backward step: a valid conditional on an unearned antecedent -/
 
-/-- **On the last morning the class earns "if the announcement holds, the exam is today"** — and
-`ann_never_known_before_exam` says it does not hold the antecedent. -/
+/-- **On the last morning "if the announcement holds, the exam is today" evaluates to `T`** (as written; the
+theorem does not state heredity) — and `ann_never_known_before_exam` says the class does not hold the antecedent. -/
 theorem last_step_conditional (k : Nat) :
     evalF (morning k) (.imp (ann (k + 1)) (.atom k)) = V.T := by
   show zimp (zand (zor (evalF (morning k) (some_ k)) (morning k k)) (evalF (morning k) (atMost (k + 1))))

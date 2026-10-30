@@ -9,14 +9,21 @@ are native to ZTL. Measured first with ztljudge, proved here.
 The case. A detector clicks twice. `c1`, `c2` — the two clicks, each witnessed (T).
 `same` — "the two clicks came from one and the same thing": nothing witnessed it (Z).
 
+Vocabulary (2026-10-30). `earned` / `refuted` are `ZTopology`'s: T / F now and under every refinement — the
+HEREDITARY T / F. The judge's words since 2026-10-29 differ: EARNED / REFUTED = the strong Kleene T / F (which
+implies hereditary), EARNED IF STABLE = T in every cleaning. Each item says where the two agree.
+
 Proved here, on the empty axiom list:
-1. `occurrences_earned` — "there were two occurrences" (c1 ∧ c2) is EARNED.
+1. `occurrences_earned` — "there were two occurrences" (c1 ∧ c2) is a hereditary T, proved through its strong
+   Kleene T: the judge's EARNED as well.
 2. `two_objects_open`, `one_object_open` — "two distinct things" (c1 ∧ c2 ∧ ¬same) and
-   "one thing" (c1 ∧ c2 ∧ same) are each neither EARNED nor REFUTED: further data could
-   settle either way.
-3. `one_or_two_not_earned` — not even "one or two things" is EARNED: excluded middle on an
-   unwitnessed identity is not granted (`ZTopology.excluded_middle_not_earned`).
-4. `count_follows_identity` — once identity is witnessed (same = F), "two things" is EARNED:
+   "one thing" (c1 ∧ c2 ∧ same) are each neither a hereditary T nor a hereditary F: further data
+   could settle either way (the judge: OPEN).
+3. `one_or_two_not_earned` — not even "one or two things" is a hereditary T: it is F as written, since
+   excluded middle on an unwitnessed identity is not granted (`ZTopology.excluded_middle_not_earned`). It is T in
+   every cleaning, so the judge says EARNED IF STABLE.
+4. `count_follows_identity` — once identity is witnessed (same = F), "two things" is a hereditary T, proved
+   through its strong Kleene T (the judge's EARNED):
    the number of objects is earned exactly by witnessing identity; nothing else is needed.
 
 So in ZTL a quasi-set is a count of WITNESSING ACTS whose bearers' identity is Z, and the
@@ -72,18 +79,18 @@ theorem refines_sameF : refines clicks sameF := by
   | 1 => rfl
   | _ + 2 => rfl
 
-/-- 1. Two occurrences: earned. -/
+/-- 1. Two occurrences: a hereditary T (through the strong Kleene T, so also the judge's EARNED). -/
 theorem occurrences_earned : earned twoOccurrences clicks :=
   kleene_sub_earned rfl
 
-/-- 2a. "Two distinct things": not earned (identity might turn out T) ... -/
+/-- 2a. "Two distinct things": not a hereditary T (identity might turn out T) ... -/
 theorem two_objects_not_earned : ¬ earned twoObjects clicks := by
   intro h
   have h1 : evalF sameT twoObjects = T := h sameT refines_sameT
   have h2 : evalF sameT twoObjects = F := rfl
   exact V.noConfusion (h2.symm.trans h1)
 
-/-- ... and not refuted (identity might turn out F). -/
+/-- ... and not a hereditary F (identity might turn out F). -/
 theorem two_objects_not_refuted : ¬ refuted twoObjects clicks := by
   intro h
   have h1 : evalF sameF twoObjects = F := h sameF refines_sameF
@@ -105,14 +112,15 @@ theorem one_object_open : ¬ earned oneObject clicks ∧ ¬ refuted oneObject cl
     have h2 : evalF sameT oneObject = T := rfl
     exact V.noConfusion (h2.symm.trans h1)
 
-/-- 3. Not even "one or two things" is earned. -/
+/-- 3. Not even "one or two things" is a hereditary T (F as written; the judge: EARNED IF STABLE). -/
 theorem one_or_two_not_earned : ¬ earned oneOrTwo clicks := by
   intro h
   have h1 : evalF clicks oneOrTwo = T := earned_now h
   have h2 : evalF clicks oneOrTwo = F := rfl
   exact V.noConfusion (h2.symm.trans h1)
 
-/-- 4. Witness the identity and the number of objects is earned. -/
+/-- 4. Witness the identity and the number of objects is a hereditary T (through the strong Kleene T, so also
+the judge's EARNED). -/
 theorem count_follows_identity : earned twoObjects sameF :=
   kleene_sub_earned rfl
 

@@ -14,9 +14,11 @@ Proved here, on the empty axiom list:
 
 1. `triple_T_iff_earned`, `triple_F_iff_refuted` — the triple table is the ZTL
    judge's disposition of the majority formula `(a∧b)∨(a∧c)∨(b∧c)` over the three
-   voices: the triple says `T` exactly when the formula is EARNED, `F` exactly when
-   it is REFUTED (`ZTopology`'s definitions, which match ztljudge on 5 400 of 5 400
-   markings — measured there, not proved), `Z` otherwise. NOT its value: ZTL connectives are
+   voices: the triple says `T` exactly when the formula is a hereditary T (`ZTopology.earned`: T now and
+   under every refinement), `F` exactly when it is a hereditary F (`ZTopology.refuted`), `Z` otherwise
+   (`ZTopology`'s definitions matched ztljudge as it was then on 5 400 of 5 400 markings — measured there,
+   not proved). By `maj3_kleene` the table is also the strong Kleene value, i.e. the judge's EARNED /
+   REFUTED in its vocabulary since 2026-10-29: on this negation-free formula the two coincide. NOT its value: ZTL connectives are
    two-valued, and the formula's value is `F` on every undecided triple (measured:
    13 of 27 cells differ) — the kit reads the disposition, and so does this file.
 2. `lie_needs` — a tree of depth `d` says `F` only if at least `2^d` of its

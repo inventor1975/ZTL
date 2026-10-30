@@ -405,7 +405,8 @@ theorem judge_speaks_ztl (φ : Fm) :
       (fun v => (decide_iff _).trans (strict_refuted_iff_kleene v φ).symm)
       (fun v w h => by dsimp only; rw [kev_congr v w φ h])
 
-/-- The six dispositions cover every case. -/
+/-- The six dispositions cover every case. Coverage only: this theorem does not prove that they are mutually
+exclusive (the name says partition; the statement is the disjunction). -/
 theorem dispositions_partition (v : Nat → V) (φ : Fm) :
     StrictEarned v φ ∨ EarnedIfStable v φ ∨ OnCredit v φ ∨ Open v φ ∨ RefutedIfStable v φ ∨
       StrictRefuted v φ := by

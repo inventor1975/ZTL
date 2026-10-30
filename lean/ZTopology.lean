@@ -1,7 +1,7 @@
 import ZTL
 
 /-!
-# ZTopology — the judge's dispositions as the topology of partial information
+# ZTopology — hereditary verdicts as the topology of partial information
 
 The curator's line of 2026-09-29, from the swarm work: ZTL describes more than two
 values, so it should say something *exact from partial data*. Measured first
@@ -12,18 +12,25 @@ Setting. A valuation `v : Nat → V` is a state of partial information; `refines
 says `w` knows at least what `v` knows (the order `leqb`: Z below T and F). Upward
 closed sets are the open sets of the Alexandrov (= Scott, on this order) topology.
 
-* `earned φ v`  — φ is T at v and at every refinement of v (the judge's EARNED:
-  verdict T, grade hereditary);
-* `refuted φ v` — the same for F.
+* `earned φ v`  — φ is T at v and at every refinement of v: the HEREDITARY T (verdict T, grade
+  hereditary);
+* `refuted φ v` — the same for F: the hereditary F.
+
+Vocabulary (2026-10-30). The identifiers `earned`/`refuted` predate the judge's vocabulary of
+2026-10-29, in which EARNED / REFUTED mean the strong Kleene T / F (stronger: item 3 below), EARNED IF
+STABLE means T in every cleaning, and ON CREDIT a T as written that is not earned. Below, the
+identifiers are kept (they are cited elsewhere); the prose says "hereditary T / F".
 
 Proved, all on the empty axiom list:
-1. `earned_open`, `refuted_open` — EARNED and REFUTED are open: more data never
+1. `earned_open`, `refuted_open` — hereditary T and hereditary F are open: more data never
    overturns them. This is "exact from partial data".
-2. `earned_sub_super` — EARNED ⊆ supervaluation-T (true on every total refinement).
-3. `kleene_sub_earned`, `kleene_sub_refuted` — strong Kleene ⊆ EARNED / REFUTED.
+2. `earned_sub_super` — hereditary T ⊆ supervaluation-T (true on every total refinement).
+3. `kleene_sub_earned`, `kleene_sub_refuted` — strong Kleene T / F (the judge's EARNED / REFUTED)
+   ⊆ hereditary T / F.
    The engine is `kleene_agrees`: wherever Kleene decides, the greedy value agrees.
-4. Both inclusions are STRICT: `not_a_and_not_a` is EARNED where Kleene is silent;
-   `excluded_middle` is supervaluation-T and not EARNED.
+4. Both inclusions are STRICT: `not_a_and_not_a` is hereditary T where Kleene is silent (the judge:
+   EARNED IF STABLE); `excluded_middle` is supervaluation-T and not hereditary T (F as written; the
+   judge: EARNED IF STABLE).
 
 So ZTL decides more than Kleene and less than supervaluation, and what it decides
 is stable under new data. What it does NOT give (measured): its present value
@@ -52,12 +59,13 @@ theorem refines_trans {u v w : Nat → V} (h1 : refines u v) (h2 : refines v w) 
 /-- A total valuation: nothing left dirty. -/
 def total (w : Nat → V) : Prop := ∀ n, w n ≠ Z
 
-/-! ## The judge's stable verdicts -/
+/-! ## The hereditary verdicts -/
 
-/-- EARNED: T now and after any further data. -/
+/-- Hereditary T: T now and after any further data. (Not the judge's EARNED, which is the strong Kleene T;
+see the header.) -/
 def earned (φ : Fm) (v : Nat → V) : Prop := ∀ w, refines v w → evalF w φ = T
 
-/-- REFUTED: F now and after any further data. -/
+/-- Hereditary F: F now and after any further data. (Not the judge's REFUTED; see the header.) -/
 def refuted (φ : Fm) (v : Nat → V) : Prop := ∀ w, refines v w → evalF w φ = F
 
 /-- Supervaluation: T on every total refinement. -/
@@ -69,17 +77,17 @@ theorem earned_now {φ : Fm} {v : Nat → V} (h : earned φ v) : evalF v φ = T 
 theorem refuted_now {φ : Fm} {v : Nat → V} (h : refuted φ v) : evalF v φ = F :=
   h v (refines_refl v)
 
-/-- 1. EARNED is open: new data never overturns it. -/
+/-- 1. Hereditary T is open: new data never overturns it. -/
 theorem earned_open {φ : Fm} {v w : Nat → V} (h : earned φ v) (hw : refines v w) :
     earned φ w :=
   fun u hu => h u (refines_trans hw hu)
 
-/-- 1'. REFUTED is open. -/
+/-- 1'. Hereditary F is open. -/
 theorem refuted_open {φ : Fm} {v w : Nat → V} (h : refuted φ v) (hw : refines v w) :
     refuted φ w :=
   fun u hu => h u (refines_trans hw hu)
 
-/-- 2. EARNED ⊆ supervaluation-T. -/
+/-- 2. Hereditary T ⊆ supervaluation-T. -/
 theorem earned_sub_super {φ : Fm} {v : Nat → V} (h : earned φ v) : superT φ v :=
   fun w hw _ => h w hw
 
@@ -161,13 +169,13 @@ theorem kleene_monotone {v w : Nat → V} (h : refines v w) :
 theorem leqb_T : ∀ a : V, leqb T a = true → a = T := by decide
 theorem leqb_F : ∀ a : V, leqb F a = true → a = F := by decide
 
-/-- 3. Strong Kleene ⊆ EARNED. -/
+/-- 3. Strong Kleene T (the judge's EARNED) ⊆ hereditary T. -/
 theorem kleene_sub_earned {φ : Fm} {v : Nat → V} (h : kevalF v φ = T) : earned φ v := by
   intro w hw
   have hk : kevalF w φ = T := leqb_T _ (h ▸ kleene_monotone hw φ)
   exact (kleene_agrees w φ).1 hk
 
-/-- 3'. Strong Kleene ⊆ REFUTED. -/
+/-- 3'. Strong Kleene F (the judge's REFUTED) ⊆ hereditary F. -/
 theorem kleene_sub_refuted {φ : Fm} {v : Nat → V} (h : kevalF v φ = F) : refuted φ v := by
   intro w hw
   have hk : kevalF w φ = F := leqb_F _ (h ▸ kleene_monotone hw φ)
@@ -186,11 +194,11 @@ def excludedMiddle : Fm := .disj (.atom 0) (.neg (.atom 0))
 
 theorem nc_value : ∀ a : V, znot (zand a (znot a)) = T := by decide
 
-/-- ¬(a ∧ ¬a) on no data: EARNED ... -/
+/-- ¬(a ∧ ¬a) on no data: hereditary T (the judge: EARNED IF STABLE) ... -/
 theorem not_a_and_not_a_earned : earned nonContradiction blank :=
   fun w _ => nc_value (w 0)
 
-/-- ... while strong Kleene is silent: Kleene ⊊ EARNED. -/
+/-- ... while strong Kleene is silent: Kleene T ⊊ hereditary T. -/
 theorem not_a_and_not_a_kleene_silent : kevalF blank nonContradiction = Z := rfl
 
 theorem em_total : ∀ a : V, a ≠ Z → zor a (znot a) = T := by decide
@@ -199,8 +207,8 @@ theorem em_total : ∀ a : V, a ≠ Z → zor a (znot a) = T := by decide
 theorem excluded_middle_super : superT excludedMiddle blank :=
   fun w _ ht => em_total (w 0) (ht 0)
 
-/-- ... and not EARNED: EARNED ⊊ supervaluation. Truth is not granted on credit
-for reasoning about what nobody checked. -/
+/-- ... and not hereditary T: hereditary T ⊊ supervaluation. Truth is not granted as written
+for reasoning about what nobody checked (it is F as written; the judge: EARNED IF STABLE). -/
 theorem excluded_middle_not_earned : ¬ earned excludedMiddle blank := by
   intro h
   have h0 : evalF blank excludedMiddle = T := earned_now h

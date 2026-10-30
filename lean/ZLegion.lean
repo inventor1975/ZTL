@@ -5,19 +5,25 @@ import ZComposition
 Asked 2026-10-05 by the curator for Arkady (DARPA LEGION/ERIS), items 1 and 2 of his list; built on
 `ZComposition.lean` (holes, composition witness, `no_promotion_without_witness`).
 
+Vocabulary (2026-10-30): `earned` in the identifiers below is `ZComposition.Earned` — T and hereditary, which
+the prose calls SETTLED (the hereditary T). It is not the judge's EARNED of 2026-10-29 (the strong Kleene T, which implies it); a
+conclusion settled in no reachable future is a fortiori never EARNED in the judge's sense.
+
 1. TIME AND REVOCATION. A checked ground carries an expiry; past it (or revoked) it reads Z again.
    * `expired_link_never_promoted` — if a joining atom has expired at time t and no act can re-check it, a
-     conclusion with no composition witness is EARNED in no reachable future, however true the other facts stay;
-   * `earned_not_persistent` — EARNED now does not carry over to later by itself (a ground expires);
+     conclusion with no composition witness is settled in no reachable future, however true the other facts stay;
+   * `earned_not_persistent` — settled now does not carry over to later by itself (a ground expires);
    * `earned_persists_if_no_expiry` — it DOES carry over when no atom of the conclusion changed: the runtime
      needs to re-check a conclusion only when one of ITS atoms expires.
 2. MANY AGENTS. Each agent holds its own marking; they are merged atom by atom — a value one agent checked
-   is taken, two agents disagreeing read Z (a conflict is not a verification).
+   is taken, two agents disagreeing read Z (a conflict is not a verification). That holds for TWO agents. The
+   merge folds the two-agent rule from the right, so with three or more it depends on the order and can hide a
+   conflict: merge [T, F, T] = T, merge [F, T, T] = Z (checked by #eval, not a theorem).
    * `merge_invents_nothing` — an atom no agent checked is Z in the merge;
    * `distributed_no_promotion` — a joining atom no agent checked, outside the repertoire, blocks promotion of a
-     conclusion with no composition witness — whatever each agent has earned locally;
-   * `local_facts_global_link` — the example: agent A has X earned, agent B has Y earned, and X ∧ Y ∧ link, with
-     the link checked by nobody, is EARNED in no reachable future.
+     conclusion with no composition witness — whatever each agent has settled locally;
+   * `local_facts_global_link` — the example: agent A has X settled, agent B has Y settled, and X ∧ Y ∧ link, with
+     the link checked by nobody, is settled in no reachable future.
 
 Zero axioms, audited at the bottom.
 -/
@@ -64,7 +70,7 @@ theorem evalF_congr (m m' : Marking) : ∀ φ, (∀ n, occ n φ = true → m n =
       show V.zimp (evalF m φ) (evalF m ψ) = V.zimp (evalF m' φ) (evalF m' ψ)
       rw [ih1 (fun n hn => h n (or_true_left hn)), ih2 (fun n hn => h n (or_true_right hn))]
 
-/-- EARNED depends only on the conclusion's own atoms. -/
+/-- Settled (the hereditary T, `Earned`) depends only on the conclusion's own atoms. -/
 theorem earned_congr (φ : Fm) (m m' : Marking) (hag : ∀ n, occ n φ = true → m' n = m n)
     (he : Earned φ m) : Earned φ m' := by
   refine ⟨(evalF_congr m' m φ hag).trans he.1, ?_⟩
@@ -101,7 +107,7 @@ def markAt (g : Nat → Option Ground) (t : Nat) : Marking := fun n =>
   | Option.some r => if t < r.expiry then r.val else V.Z
 
 /-- **An expired link blocks promotion.** At time t, with no composition witness (the expired, un-recheckable
-links among the holes), the conclusion is EARNED in no reachable future. -/
+links among the holes), the conclusion is settled in no reachable future. -/
 theorem expired_link_never_promoted (g : Nat → Option Ground) (t : Nat) (R : Nat → Bool) (φ : Fm)
     (hnw : NoWitness R (markAt g t) φ) : ∀ m', Reachable R (markAt g t) m' → ¬ Earned φ m' :=
   no_promotion_without_witness R (markAt g t) φ hnw
@@ -109,7 +115,7 @@ theorem expired_link_never_promoted (g : Nat → Option Ground) (t : Nat) (R : N
 /-- One ground X (atom 0), checked T, valid until time 1. -/
 def gX : Nat → Option Ground := fun n => if n = 0 then Option.some ⟨V.T, 1⟩ else Option.none
 
-/-- **EARNED now is not EARNED later by itself**: X is earned at time 0 and not at time 1, when its ground
+/-- **Settled now is not settled later by itself**: X is settled at time 0 and not at time 1, when its ground
 expired. The runtime must re-check. -/
 theorem earned_not_persistent : Earned (.atom 0) (markAt gX 0) ∧ ¬ Earned (.atom 0) (markAt gX 1) := by
   refine ⟨⟨rfl, ?_⟩, ?_⟩
@@ -122,7 +128,7 @@ theorem earned_not_persistent : Earned (.atom 0) (markAt gX 0) ∧ ¬ Earned (.a
     exact V.noConfusion h2
 
 /-- **…and it persists when none of ITS atoms changed**: if the marking at a later time agrees with the
-earlier one on the conclusion's atoms, EARNED carries over. Re-check only on expiry of the conclusion's
+earlier one on the conclusion's atoms, settled carries over. Re-check only on expiry of the conclusion's
 own atoms. -/
 theorem earned_persists_if_no_expiry (g : Nat → Option Ground) (t t' : Nat) (φ : Fm)
     (hsame : ∀ n, occ n φ = true → markAt g t' n = markAt g t n) (he : Earned φ (markAt g t)) :
@@ -132,7 +138,9 @@ theorem earned_persists_if_no_expiry (g : Nat → Option Ground) (t t' : Nat) (�
 /-! ## 2. Many agents -/
 
 /-- Merging two agents' values: one checked, the other not — take it; both checked and agree — take it;
-both checked and disagree — Z (a conflict is not a verification). -/
+both checked and disagree — Z (a conflict is not a verification). For two agents only: `merge` folds this
+from the right, so with three it depends on the order — merge [T, F, T] = T, merge [F, T, T] = Z (checked by
+#eval, not a theorem). -/
 def comb : V → V → V
   | V.Z, b   => b
   | V.T, V.Z => V.T
@@ -159,8 +167,8 @@ theorem merge_invents_nothing : ∀ (ms : List Marking) (n : Nat), (∀ m, m ∈
       rw [h m (List.Mem.head ms), ih n (fun m' hm' => h m' (List.Mem.tail m hm'))]
       rfl
 
-/-- **Distributed: no promotion across a link nobody checked.** Whatever each agent earned locally, a
-conclusion with no composition witness over the merged marking is EARNED in no reachable future. -/
+/-- **Distributed: no promotion across a link nobody checked.** Whatever each agent settled locally, a
+conclusion with no composition witness over the merged marking is settled in no reachable future. -/
 theorem distributed_no_promotion (ms : List Marking) (R : Nat → Bool) (φ : Fm)
     (hnw : NoWitness R (merge ms) φ) : ∀ m', Reachable R (merge ms) m' → ¬ Earned φ m' :=
   no_promotion_without_witness R (merge ms) φ hnw
@@ -190,8 +198,8 @@ theorem joined_no_witness : NoWitness noRecheck (merge [agentA, agentB]) joined 
         = false
     cases b 0 <;> cases b 1 <;> rfl
 
-/-- **The example, end to end**: X earned by agent A, Y earned by agent B, and X ∧ Y ∧ link — the link checked
-by nobody and not re-checkable — is EARNED in no reachable future of the merged state. -/
+/-- **The example, end to end**: X settled by agent A, Y settled by agent B, and X ∧ Y ∧ link — the link checked
+by nobody and not re-checkable — is settled in no reachable future of the merged state. -/
 theorem local_facts_global_link :
     (Earned (.atom 0) agentA ∧ Earned (.atom 1) agentB) ∧
     ∀ m', Reachable noRecheck (merge [agentA, agentB]) m' → ¬ Earned joined m' :=

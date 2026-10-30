@@ -1,7 +1,7 @@
 import ZTL
 import ZClone
 import NoGift
-/-! # ZDirty — the dirty reading, strong Kleene, and the dominance of the earned verdict. Zero axioms.
+/-! # ZDirty — the dirty reading, strong Kleene, and the dominance of the hereditary verdict. Zero axioms.
 
 Z is a dirty parameter: not ours, its owner may change it between two reads, so each occurrence
 is read on its own. What is proved here (2026-10-28):
@@ -10,11 +10,12 @@ is read on its own. What is proved here (2026-10-28):
   * `covers_rd`, `refusal_witnessed`, `never_stricter` — every F of ZTL is witnessed by a reading;
   * `nand_lift` …      — the lifts of the negated connectives are the argument-side De Morgan forms
                           (the tables ¬(a∘b) are compositions, not lifts — the v2.1.4 correction);
-  * `earned_of_kleene`, `substitution_of_earned`, `strict_any` — the judge's EARNED verdict
-    (T under every refinement) strictly dominates every classical substitution of the dirty
+  * `earned_of_kleene`, `substitution_of_earned`, `strict_any` — the hereditary verdict `Earned`
+    (T under every refinement; the judge's EARNED of 2.1.5 — since 2026-10-29 the judge's EARNED is the
+    strong Kleene T, `strict_earned_iff_kleene`) strictly dominates every classical substitution of the dirty
     atoms, uniform or atom by atom, under the criterion "a grant is right iff the dirty reading
-    earns it"; `judge_can_err` — it can still be wrong (¬(p ∧ ¬p)), and then so is every
-    substitution.
+    earns it"; `judge_can_err` — it can still be wrong (¬(p ∧ ¬p), which the judge now reports
+    as EARNED IF STABLE), and then so is every substitution.
 The matrix ALONE does not dominate (¬¬p); the stable criterion gives no dominance (p ∨ ¬p).
 
 The original header of the working file follows.
@@ -192,8 +193,9 @@ theorem rd_is_kleene (v : Nat → V) : ∀ φ : Fm, rd v φ = enc (kev v φ)
 theorem earned_iff_kleene_T (v : Nat → V) (φ : Fm) : (rd v φ).2 = false ↔ kev v φ = T := by
   rw [rd_is_kleene]; cases kev v φ <;> decide
 
-/-! The judge dominates every uniform classical default (criterion: a grant is right iff the dirty
-reading earns it, i.e. strong Kleene T). `Earned` is the judge's EARNED: T now and under every refinement. -/
+/-! The hereditary grade dominates every uniform classical default (criterion: a grant is right iff the dirty
+reading earns it, i.e. strong Kleene T). `Earned` is the hereditary grade: T now and under every refinement —
+the judge's EARNED of 2.1.5, not the judge's EARNED since 2026-10-29 (the strong Kleene T, `StrictEarned`). -/
 def kle (x y : V) : Bool := x == Z || x == y          -- information order: Z below everything
 
 theorem kmono1 : ∀ x x' : V, kle x x' = true → kle (k1 (fun a => !a) x) (k1 (fun a => !a) x') = true := by decide
@@ -224,10 +226,11 @@ theorem kev_mono (v w : Nat → V) (hr : refines v w) : ∀ φ : Fm, kle (kev v 
 
 theorem kle_T (y : V) (h : kle T y = true) : y = T := by cases y <;> first | rfl | exact absurd h (by decide)
 
-/-- The judge's EARNED: T now and under every refinement of the marks. -/
+/-- The hereditary grade: T now and under every refinement of the marks (the judge's EARNED of 2.1.5; since
+2026-10-29 the judge's EARNED is `StrictEarned`, the strong Kleene T). -/
 def Earned (v : Nat → V) (φ : Fm) : Prop := ∀ w, refines v w → evalF w φ = T
 
-/-- (1) What the dirty reading earns, the judge grants. -/
+/-- (1) What the dirty reading earns, the hereditary grade grants. -/
 theorem earned_of_kleene (v : Nat → V) (φ : Fm) (h : kev v φ = T) : Earned v φ := by
   intro w hr
   have hw : kev w φ = T := kle_T _ (by have m := kev_mono v w hr φ; rw [h] at m; exact m)
@@ -239,7 +242,7 @@ def subst (v : Nat → V) (d : V) : Nat → V := fun n => if v n = Z then d else
 theorem subst_refines (v : Nat → V) (d : V) : refines v (subst v d) := by
   intro n hn; show (if v n = Z then d else v n) = v n; exact if_neg hn
 
-/-- (2) What the judge grants, every uniform default grants. -/
+/-- (2) What the hereditary grade grants, every uniform default grants. -/
 theorem default_of_earned (v : Nat → V) (φ : Fm) (d : V) (h : Earned v φ) : evalF (subst v d) φ = T :=
   h _ (subst_refines v d)
 
@@ -250,7 +253,7 @@ theorem strict_true : kev (fun _ => Z) (.atom 0) ≠ T ∧ evalF (fun _ => Z) (.
     evalF (subst (fun _ => Z) T) (.atom 0) = T := by decide
 
 /-- (2') The same against ANY classical substitution of the dirty atoms, uniform or chosen per atom:
-a substitution is a total refinement, so what the judge earns, it grants. -/
+a substitution is a total refinement, so what the hereditary grade grants, it grants. -/
 theorem substitution_of_earned (v w : Nat → V) (φ : Fm) (hr : refines v w) (h : Earned v φ) :
     evalF w φ = T := h w hr
 
@@ -264,9 +267,9 @@ theorem strict_any (w : Nat → V) (hw : w 0 = T ∨ w 0 = F) :
   | inl h => exact Or.inl ⟨h, by decide, by decide⟩
   | inr h => exact Or.inr ⟨by show znot (w 0) = T; rw [h]; rfl, by decide, by decide⟩
 
-/-- The earned verdict is not always right: strong Kleene does not give ¬(p ∧ ¬p) T on a dirty p. That the
-formula is earned there and that every substitution grants it are `ZSpeaks.lnc_earned` and
-`ZSpeaks.lnc_if_stable`. -/
+/-- The hereditary verdict is not always right: strong Kleene does not give ¬(p ∧ ¬p) T on a dirty p. That the
+formula is a hereditary T there is `ZSpeaks.lnc_earned`; that every substitution grants it, so the judge (since
+2026-10-29) says EARNED IF STABLE, not EARNED, is `ZSpeaks.lnc_if_stable`. -/
 theorem judge_can_err : kev (fun _ => Z) (.neg (.conj (.atom 0) (.neg (.atom 0)))) ≠ T := by decide
 
 /-! Bochvar's external connectives are the classical default "dirty := false" (2026-10-29).
@@ -340,8 +343,8 @@ theorem bochvar_is_default_false (v : Nat → V) : ∀ φ : Fm, bj (bev v φ) = 
 
 theorem refines_refl (v : Nat → V) : refines v v := fun _ _ => rfl
 
-/-- **The judge dominates Bochvar.** What the judge earns, Bochvar grants; and on a dirty p,
-Bochvar grants ¬p, which the judge refuses and the dirty reading does not earn. -/
+/-- **The hereditary grade dominates Bochvar.** What it grants, Bochvar grants; and on a dirty p,
+Bochvar grants ¬p, which the hereditary grade (and the judge) refuses and the dirty reading does not earn. -/
 theorem earned_dominates_bochvar (v : Nat → V) (φ : Fm) (h : Earned v φ) : bev v φ = T :=
   bj_T _ (by rw [bochvar_is_default_false]; have e := default_of_earned v φ F h; rw [e]; rfl)
 theorem bochvar_strict : bev (fun _ => Z) (.neg (.atom 0)) = T ∧ ¬ Earned (fun _ => Z) (.neg (.atom 0)) ∧
@@ -350,7 +353,7 @@ theorem bochvar_strict : bev (fun _ => Z) (.neg (.atom 0)) = T ∧ ¬ Earned (fu
 
 /-! Classical logic with enumeration: grant iff the formula is classically true in every completion
 (a total refinement; on total valuations ZTL is classical, `evalF_agrees`). Under the criterion of this
-module (a grant is right iff the dirty reading earns it, i.e. strong Kleene T) the judge has the same
+module (a grant is right iff the dirty reading earns it, i.e. strong Kleene T) the hereditary grade has the same
 right grants and its wrong grants are among enumeration's. -/
 def total (w : Nat → V) : Prop := ∀ n, w n ≠ Z
 def Enum (v : Nat → V) (φ : Fm) : Prop := ∀ w, refines v w → total w → evalF w φ = T
@@ -359,15 +362,15 @@ theorem enum_of_earned (v : Nat → V) (φ : Fm) (h : Earned v φ) : Enum v φ :
 
 /-- **The hereditary grade dominates enumeration under the dirty reading.** (The judge's EARNED of 2.1.5; since
 2.1.6 the judge's grant IS enumeration, `ZSpeaks.grant_iff_enum`, and the grade is returned beside it.) Right grants coincide (both are
-exactly the strong Kleene T), and every wrong grant of the judge is a wrong grant of enumeration. -/
+exactly the strong Kleene T), and every wrong grant of the hereditary grade is a wrong grant of enumeration. -/
 theorem earned_dominates_enum (v : Nat → V) (φ : Fm) :
     ((Earned v φ ∧ kev v φ = T) ↔ (Enum v φ ∧ kev v φ = T)) ∧
     ((Earned v φ ∧ kev v φ ≠ T) → (Enum v φ ∧ kev v φ ≠ T)) :=
   ⟨⟨fun ⟨h, k⟩ => ⟨enum_of_earned v φ h, k⟩, fun ⟨_, k⟩ => ⟨earned_of_kleene v φ k, k⟩⟩,
    fun ⟨h, k⟩ => ⟨enum_of_earned v φ h, k⟩⟩
 
-/-- Strictly: on a dirty p, enumeration grants p → p, which the judge refuses and the dirty reading
-does not earn (two reads may give 1 and 0). -/
+/-- Strictly: on a dirty p, enumeration grants p → p, which the hereditary grade refuses and the dirty reading
+does not earn (two reads may give 1 and 0); the judge since 2.1.6 grants it as EARNED IF STABLE. -/
 theorem enum_strict : Enum (fun _ => Z) (.imp (.atom 0) (.atom 0)) ∧
     ¬ Earned (fun _ => Z) (.imp (.atom 0) (.atom 0)) ∧ kev (fun _ => Z) (.imp (.atom 0) (.atom 0)) ≠ T := by
   refine ⟨fun w _ ht => ?_, fun h => absurd (h _ (refines_refl _)) (by decide), by decide⟩

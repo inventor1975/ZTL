@@ -1,6 +1,6 @@
 /-
   ZComposition.lean — NO PROMOTION WITHOUT A COMPOSITION WITNESS. Local validity is not compositional
-  validity: grounds that each hold in their own context cannot be promoted together into one EARNED state
+  validity: grounds that each hold in their own context cannot be promoted together into one SETTLED state (a hereditary T)
   when what joins them is an atom no act can ever verify.
 
   Asked 2026-10-04 by the curator after Hardy.lean, for Arkady's reading of it: "individually valid facts do
@@ -12,12 +12,15 @@
     A marking `m` is the present state of checking (T, F checked; Z not). A REPERTOIRE `R` names the atoms
     some future act can still check. A future `m'` is REACHABLE when it refines `m` and touches only atoms
     in `R`. A HOLE is an atom that is Z now and outside the repertoire: it stays Z in every reachable future.
-    EARNED at `m'` = verdict T and hereditary (no further refinement revokes it).
+    SETTLED at `m'` (the identifier `Earned`) = verdict T and hereditary (no further refinement revokes it):
+    the HEREDITARY T. Vocabulary (2026-10-30): this is not the judge's EARNED of 2026-10-29, which is the
+    strong Kleene T and implies the hereditary T; so "settled in no reachable future" below also means
+    "EARNED, in the judge's sense, in no reachable future".
 
   THE THEOREM (`no_promotion_without_witness`). Suppose that, however the checkable atoms come out
   (any classical valuation `b` agreeing with what is already checked), some values of the HOLES make φ
-  classically false. Then in NO reachable future is φ EARNED.
-  Read backwards: a φ that ever becomes EARNED has a COMPOSITION WITNESS — an outcome of the checkable atoms
+  classically false. Then in NO reachable future is φ settled.
+  Read backwards: a φ that ever becomes settled has a COMPOSITION WITNESS — an outcome of the checkable atoms
   under which φ holds for EVERY value of the holes. The holes are where "facts from incompatible frameworks"
   live (Hardy: the answers to the questions not asked); the theorem forbids promoting a conjunction across
   them, whatever each conjunct's own standing.
@@ -28,7 +31,7 @@
   independently. The witness is NECESSARY, not sufficient: the law is a ceiling, stated as one.
 
   THE COROLLARY (`hardy_never_promoted`): the Hardy chain in the contested run (Hardy.lean's grounding; the
-  two unasked answers are holes) is EARNED in no reachable future.
+  two unasked answers are holes) is settled in no reachable future.
 
   What is NOT claimed: that the operational reading of an unasked question is the true one (a realist
   rejects it — Stapp, Bohm); the theorem is about what may be promoted GIVEN which atoms are holes. Which
@@ -98,7 +101,8 @@ def Refines (m' m : Marking) : Prop :=
 def Hereditary (φ : Fm) (m : Marking) : Prop :=
   ∀ m', Refines m' m → evalF m' φ = evalF m φ
 
-/-- EARNED: true, and no refinement revokes it. -/
+/-- Settled (the hereditary T): true, and no refinement revokes it. Not the judge's EARNED (the strong Kleene T);
+see the header. -/
 def Earned (φ : Fm) (m : Marking) : Prop :=
   evalF m φ = V.T ∧ Hereditary φ m
 
@@ -172,7 +176,7 @@ def NoWitness (R : Nat → Bool) (m : Marking) (φ : Fm) : Prop :=
     ∃ p : Nat → Bool, (∀ n, ¬ (m n = V.Z ∧ R n = false) → p n = b n) ∧ evalB p φ = false
 
 /-- **NO PROMOTION WITHOUT A COMPOSITION WITNESS.** If no outcome of the checkable atoms makes φ true for
-every value of the holes, then φ is EARNED in no future the repertoire can reach. -/
+every value of the holes, then φ is settled (a hereditary T) in no future the repertoire can reach. -/
 theorem no_promotion_without_witness (R : Nat → Bool) (m : Marking) (φ : Fm)
     (hnw : NoWitness R m φ) : ∀ m', Reachable R m m' → ¬ Earned φ m' := by
   intro m' hreach hearn
@@ -262,7 +266,7 @@ theorem hardy_no_witness : NoWitness none contested hardyChain := by
   rw [b0, b1]
   cases b 2 <;> cases b 3 <;> rfl
 
-/-- **Hardy, as a corollary**: the chain is EARNED in no reachable future — the three laws, each earned
+/-- **Hardy, as a corollary**: the chain is settled in no reachable future — the three laws, each settled
 in its own context (Hardy.lean `control_earned`), are not promoted together across the unasked answers. -/
 theorem hardy_never_promoted : ∀ m', Reachable none contested m' → ¬ Earned hardyChain m' :=
   no_promotion_without_witness none contested hardyChain hardy_no_witness
@@ -271,14 +275,14 @@ theorem hardy_never_promoted : ∀ m', Reachable none contested m' → ¬ Earned
 about the holes (curator 2026-10-04: "prove the economy machine-wise; leave philosophy to philosophers")
 
 An ACCOUNT is a list of claims. The theorem compares two accounts of the same marking: one whose claims are all
-EARNED now, and one that contains a claim with no composition witness. The first is fully earned already; the
-second is fully earned in NO reachable future. It is not a theorem about which account is TRUE — both may be
+settled now (hereditary T), and one that contains a claim with no composition witness. The first is fully settled
+already; the second is fully settled in NO reachable future. It is not a theorem about which account is TRUE — both may be
 consistent — but about which one ever stands on verified ground. -/
 
 def FullyEarned (A : List Fm) (m : Marking) : Prop := ∀ φ, φ ∈ A → Earned φ m
 
-/-- **ECONOMY.** If every claim of A is earned now, and B contains a claim with no composition witness, then A is
-fully earned already, and B is fully earned in no future the repertoire can reach. -/
+/-- **ECONOMY.** If every claim of A is settled now (hereditary T), and B contains a claim with no composition
+witness, then A is fully settled already, and B is fully settled in no future the repertoire can reach. -/
 theorem economy (R : Nat → Bool) (m : Marking) (A B : List Fm) (hA : FullyEarned A m)
     (ψ : Fm) (hψ : ψ ∈ B) (hnw : NoWitness R m ψ) :
     FullyEarned A m ∧ ∀ m', Reachable R m m' → ¬ FullyEarned B m' :=
@@ -359,8 +363,8 @@ theorem counterfactual_claims_no_witness :
   · show (!(setHoles b false false 1) || setHoles b false false 2) = false
     rw [setHoles_1, h1]; rfl
 
-/-- **ECONOMY, Hardy.** The account of what was witnessed is fully earned now; ANY account containing a definite
-claim about the unasked answers — a value, or a law applied to them in this run — is fully earned in no
+/-- **ECONOMY, Hardy.** The account of what was witnessed is fully settled now; ANY account containing a definite
+claim about the unasked answers — a value, or a law applied to them in this run — is fully settled in no
 reachable future. Which account is true is not decided here; which one stands on verified ground is. -/
 theorem hardy_economy (B : List Fm)
     (hB : za ∈ B ∨ zb ∈ B ∨ Fm.neg za ∈ B ∨ Fm.neg zb ∈ B ∨ Fm.imp xa zb ∈ B ∨ Fm.imp xb za ∈ B ∨

@@ -5,16 +5,19 @@ import ZTopology
 Asked 2026-10-05 by the curator for Arkady (DARPA LEGION/ERIS): "prove that the system can check the
 admissibility of a composition at runtime without enumerating all possible worlds". The honest form:
 
-* EXACT "is this conclusion EARNED?" is NOT linear in general — in `ZHeredTaut.lean` the hereditary grade is
+* EXACT "is this conclusion a hereditary T?" (T now and under every refinement; `ZTopology.earned`) is NOT
+  linear in general — in `ZHeredTaut.lean` the hereditary grade is
   shown equivalent to tautology (`hereditary_iff_taut`), a coNP-hard question. No gate can decide it exactly
   in linear time unless P = NP.
 * A SOUND gate is linear: evaluate once in the lazy (strong Kleene) register; pass iff the value is T.
-  `ZTopology.kleene_sub_earned` already proves that a pass is EARNED. This file adds:
+  A pass is exactly the judge's EARNED (the strong Kleene T, the judge's vocabulary since 2026-10-29), and
+  `ZTopology.kleene_sub_earned` already proves that a pass is a hereditary T. This file adds:
 
-  1. `gate_sound`        — a pass is EARNED (no false pass);
+  1. `gate_sound`        — a pass is a hereditary T (no false pass);
   2. `gateC_steps`       — the gate's cost is exactly the formula's size: one step per node, the same for every
                            marking — independent of how many atoms are dirty (no 2^k search);
-  3. `gate_incomplete`   — the price: ¬(a ∧ ¬a) on no data is EARNED and the gate does not pass it; such cases
+  3. `gate_incomplete`   — the price: ¬(a ∧ ¬a) on no data is a hereditary T (the judge: EARNED IF STABLE)
+                           and the gate does not pass it; such cases
                            go to a hold / to a human, never to a false pass;
   4. `kevalF_frozen`     — after one atom changes, every subformula that does not mention it keeps its value;
   5. `reval_correct`, `reval_cost` — the incremental re-check: with the previous evaluation cached node by
@@ -43,7 +46,7 @@ def isT : V → Bool
 /-- THE GATE: one pass in the lazy register; pass iff T. -/
 def gate (v : Nat → V) (φ : Fm) : Bool := isT (kevalF v φ)
 
-/-- 1. **No false pass**: what the gate passes is EARNED (T now and after any further data). -/
+/-- 1. **No false pass**: what the gate passes is a hereditary T (T now and after any further data). -/
 theorem gate_sound {v : Nat → V} {φ : Fm} (h : gate v φ = true) : earned φ v := by
   unfold gate at h
   cases hk : kevalF v φ with
@@ -111,8 +114,8 @@ theorem gateC_steps (v : Nat → V) (φ : Fm) : gateC v φ = (gate v φ, size φ
   show (isT (kevalC v φ).1, (kevalC v φ).2) = (isT (kevalF v φ), size φ)
   rw [kevalC_value, kevalC_steps]
 
-/-- 3. **The price, stated**: ¬(a ∧ ¬a) on no data is EARNED, and the gate does not pass it. Incomplete, never
-unsound: what it cannot certify goes to a hold, not to a false pass. -/
+/-- 3. **The price, stated**: ¬(a ∧ ¬a) on no data is a hereditary T (the judge: EARNED IF STABLE), and the
+gate does not pass it. Incomplete, never unsound: what it cannot certify goes to a hold, not to a false pass. -/
 theorem gate_incomplete : gate blank nonContradiction = false ∧ earned nonContradiction blank :=
   ⟨rfl, not_a_and_not_a_earned⟩
 

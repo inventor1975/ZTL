@@ -1,6 +1,6 @@
 # Signing keys of the ZTL API
 
-The ZTL API signs the verdicts it gives on `POST /cage/v1/verify`. It answers at `https://api.ztljudge.com` and at
+The ZTL API signs the verdicts it gives on `POST /signed/v1/verify` (the same service also answers at `POST /cage/v1/verify`). It answers at `https://api.ztljudge.com` and at
 `https://api.vitalyreznik.com` — the same service, operated by the same operator, with the same signing keys (since
 2026-10-30; before that only at `https://api.vitalyreznik.com`).
 
@@ -35,7 +35,7 @@ The ZTL API signs the verdicts it gives on `POST /cage/v1/verify`. It answers at
   again as if new.
 - `issuedAt`: the signer's own clock, not a trusted time.
 
-**The keys.** The server publishes them as a JWKS at `GET /cage/v1/keys`. This file is a second copy,
+**The keys.** The server publishes them as a JWKS at `GET /signed/v1/keys` (the same at `GET /cage/v1/keys`). This file is a second copy,
 kept in the GitHub repository `inventor1975/ZTL`. That repository is a different system from the
 server, with different credentials, but it has the same owner.
 

@@ -1,11 +1,11 @@
 {
  "zfl_sidecar": 1,
  "file": "SIGNING-KEYS.md",
- "sha256": "42c38b0c8f2bb52bf0642e0da6739d23419f4839f37b153d033fac4a6090f531",
+ "sha256": "8345ecfbf9915a884aa70f23bb219db011adc19ebd642d59195690f9b91d75c1",
  "decision": {
   "status": "waived",
-  "why": "One-sentence host change only: the opening line now names both hosts (api.ztljudge.com and api.vitalyreznik.com) with Logic3's wording 'the same service, operated by the same operator, with the same signing keys'; verified: both hosts resolve to the same server and serve the same JWKS kid ztl-c6e5de87c91ad73b. The rest of the file is unchanged from its two earlier review rounds.",
-  "at": "2026-10-30T10:54:05+00:00",
+  "why": "Path names only: /signed/v1 added beside /cage/v1 for verify and keys (same service, same key, checked live 13:18 on both hosts). No other change.",
+  "at": "2026-10-30T11:18:58+00:00",
   "operator": "undeclared"
  }
 }

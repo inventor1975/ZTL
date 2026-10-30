@@ -4,6 +4,8 @@
 
 **Try it without installing anything: [studio.ztljudge.com](https://studio.ztljudge.com)** — the judge, running, on your own sentence.
 
+📐 **Blueprint (browsable, with dependency graph): https://inventor1975.github.io/ZTL/** — each statement of the core tied to its Lean theorem. The readable account: **[ztljudge.com](https://ztljudge.com)**.
+
 A logic built on one principle: **truth is never granted on credit**.
 A three-valued logic whose every connective is two-valued: the verdict of every compound is T or F,
 and the third value Z (zero-trust, "truth not earned"), the mark of a dirty input (not ours: its owner may change it between two reads, so each occurrence is read on its own; verification cleans it), lives only on atoms: it never produces

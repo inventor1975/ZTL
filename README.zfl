@@ -1,0 +1,11 @@
+{
+ "zfl_sidecar": 1,
+ "file": "README.md",
+ "sha256": "90e38e94ea38c98e273874ad2b8263a08773aa084956ef59c7dc51b5cd6d520d",
+ "decision": {
+  "status": "waived",
+  "why": "Adds one line: links to the ZTL blueprint (live, rebuilt today, 68 nodes) and to ztljudge.com; no new claim.",
+  "at": "2026-10-30T12:45:43+00:00",
+  "operator": "undeclared"
+ }
+}

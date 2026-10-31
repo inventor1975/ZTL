@@ -1,6 +1,6 @@
 # Zenodo sheet — The Paradox Docket
 
-## v1.2.1 — DRAFT FILLED 2026-10-31, awaiting the curator's Publish: https://zenodo.org/uploads/23838452 (reserved DOI 10.5281/zenodo.23838452). Claude never publishes; the curator does.
+## v1.2.1 — PUBLISHED 2026-10-31 by the curator: DOI 10.5281/zenodo.23838452. Verified by API: status published, one PDF with md5 = local, version/date/relations as entered, concept DOI 21864081 resolves to this record. Claude never publishes; the curator does.
 
 - **Why:** the judge's IF STABLE verdicts (ZTL v2.1.6, 2026-10-29). Every cited stand re-run on judge 7a3c9d9 (before) and current (after), outputs compared line by line: only Moore (3 of 9 markings) and the sorites' tolerance premise moved, REFUTED → REFUTED IF STABLE. Sonnet reader's findings on the changed passages applied; table GREEN (`inventory/docket_claims.py`).
 - **File:** `paradox-docket-EN-v1.2.1.pdf` (15 pages, md5 e3a7384e4d8bb59973e5ce6278a5e610) — the only file; the inherited v1.2 PDF deleted (204).

@@ -279,6 +279,65 @@ def pd_certificate(n, entries, lam, bits=192):
     return True
 
 
+def pd_ieee(n, entries, mu):
+    """lambda_min(K) >= the returned rational, by a FLOATING Cholesky (LAPACK, banded after reverse Cuthill-McKee)
+    of A_f = fl(K - mu I) and Higham's backward-error theorem (2026-11-01, the curator's "Берем" to IEEE arithmetic
+    as a NAMED premise):
+      PREMISE (not proved here, not in Lean): IEEE 754 binary64, round to nearest, and LAPACK's Cholesky (any order
+      of the inner products, FMA allowed). THEOREM USED (Higham, Accuracy and Stability of Numerical Algorithms,
+      2nd ed. 2002, Thm 10.3, with Weyl's inequality): if the floating Cholesky of A_f runs to completion, the
+      computed factor R satisfies R^T R = A_f + dA, |dA| <= g |R^T| |R|, g = gamma_{k+1} = (k+1)u/(1-(k+1)u) with
+      k the longest inner product (k <= n; in a banded factorization k <= bw + 1, the rest exact zeros),
+      u = 2^-53; and sum_k r_kj^2 <= a_jj/(1-g), so ||dA||_2 <= g/(1-g) tr(A_f), hence
+      lambda_min(A_f) >= -g/(1-g) tr(A_f); and K - mu I = A_f + E with E computed EXACTLY here (the rounding of the
+      entries), ||E||_2 <= ||E||_F. So lambda_min(K) >= mu - g/(1-g) tr(A_f) - ||E||_F.
+    Returns None if the Cholesky fails or the bound is not positive."""
+    import numpy as np
+    import scipy.sparse as sp
+    from scipy.sparse.csgraph import reverse_cuthill_mckee
+    from scipy.linalg import cholesky_banded, LinAlgError
+    mu = _q(mu)
+    rows, cols, vals = [], [], []
+    for (i, j), v in entries.items():
+        rows.append(i); cols.append(j)
+        rows.append(j); cols.append(i)
+    A = sp.csr_matrix((np.ones(len(rows)), (rows, cols)), shape=(n, n))
+    perm = reverse_cuthill_mckee(A, symmetric_mode=True)
+    inv = np.empty(n, dtype=np.int64)
+    inv[perm] = np.arange(n)
+    bw = 0
+    exact = {}
+    for (i, j), v in entries.items():
+        a, b = int(inv[i]), int(inv[j])
+        if a < b:
+            a, b = b, a
+        exact[(a, b)] = exact.get((a, b), Fr(0)) + _q(v)
+        bw = max(bw, a - b)
+    for d in range(n):
+        exact[(d, d)] = exact.get((d, d), Fr(0)) - mu
+    ab = np.zeros((bw + 1, n))
+    E2, tr = Fr(0), Fr(0)
+    for (a, b), v in exact.items():
+        fv = float(v)
+        ab[a - b, b] = fv
+        err = v - Fr(fv)
+        E2 += err * err * (1 if a == b else 2)
+        if a == b:
+            tr += Fr(fv)
+    try:
+        cholesky_banded(ab, lower=True, overwrite_ab=True, check_finite=True)
+    except (LinAlgError, ValueError):
+        return None
+    # gamma by the BAND, not by n: in a banded Cholesky every inner product has at most bw + 1 terms (the rest are
+    # exact zeros, never computed), so Higham's gamma_{n+1} sharpens to gamma_{bw+2} (MEASURED 2026-11-01: with
+    # gamma_{n+1} a 27900-unknown frame failed — the correction ~120 exceeded lambda_min ~40)
+    u = Fr(1, 2 ** 53)
+    m = min(n, bw + 1) + 1
+    g = m * u / (1 - m * u)
+    lam = mu - g / (1 - g) * max(tr, Fr(0)) - _sqrt_up(E2)
+    return lam if lam > 0 else None
+
+
 def _float_search(parts, f, e, n):
     import numpy as np
     import scipy.sparse as sp
@@ -300,7 +359,7 @@ def _float_search(parts, f, e, n):
     return K, u, y, lam
 
 
-def certify_output_fp(parts, f, e, n, bits=192):
+def certify_output_fp(parts, f, e, n, bits=192, pd="ieee"):
     """As certify_output, without exact solves: floats searched, everything CHECKED exactly (see above).
     Returns the same keys (lo, hi, nominal as an interval midpoint, first, rest, T, slopes) plus 'lam'."""
     for p in parts:
@@ -315,22 +374,35 @@ def certify_output_fp(parts, f, e, n, bits=192):
     ut = [Fr(float(x)) for x in uf]                     # dyadic: exact, short
     yt = [Fr(float(x)) for x in yf]
     # 2. lam: a dyadic below the float estimate, proved; halve until proved (at most a few tries)
+    if pd == "ieee":                                   # the floating Cholesky (named premise: IEEE 754, LAPACK)
+        lam, used_bits = None, 0
+        mu = Fr(lam_f) * Fr(9, 10) if lam_f > 0 else Fr(0)
+        for _ in range(6):
+            if mu > 0:
+                lam = pd_ieee(n, K, mu)
+            if lam:
+                break
+            mu /= 4
+        if not lam:
+            raise ArithmeticError("lambda_min(K0) not proved positive by the floating Cholesky")
+        proved = True
     # the interval widths grow along the elimination: more bits first (MEASURED 2026-11-01: a 7200-unknown frame
     # was not proved at 192 bits, proved at 384 in 33 s), then a smaller lam
-    lam = Fr(lam_f) / 2 if lam_f > 0 else Fr(0)
-    proved, used_bits = False, bits
-    if n > 4000 and bits < 384:                      # MEASURED: 7200 unknowns fail at 192, pass at 384
-        bits = 384
-    for _ in range(6):
-        for b in (bits, 2 * bits, 4 * bits):
-            if lam > 0 and pd_certificate(n, K, lam, b):
-                proved, used_bits = True, b
+    else:
+        lam = Fr(lam_f) / 2 if lam_f > 0 else Fr(0)
+        proved, used_bits = False, bits
+        if n > 4000 and bits < 384:                  # MEASURED: 7200 unknowns fail at 192, pass at 384
+            bits = 384
+        for _ in range(6):
+            for b in (bits, 2 * bits, 4 * bits):
+                if lam > 0 and pd_certificate(n, K, lam, b):
+                    proved, used_bits = True, b
+                    break
+            if proved:
                 break
-        if proved:
-            break
-        lam /= 4
-    if not proved:
-        raise ArithmeticError("lambda_min(K0) not proved positive: K0 may not be positive definite")
+            lam /= 4
+        if not proved:
+            raise ArithmeticError("lambda_min(K0) not proved positive: K0 may not be positive definite")
     # 1. residuals, exact
     def kmul(x):
         r = [Fr(0)] * n
@@ -419,6 +491,18 @@ def _selftest():
         assert b2["lo"] <= a["lo"] and a["hi"] <= b2["hi"], (trial, a, b2)
         fp_cases += 1
     print(f"   floating path: {fp_cases} random systems, its proved range contains the exact path's every time")
+    # the IEEE certificate agrees with the exact interval one, and is sharp: proves lam*0.9, refuses lam*1.01
+    parts, f, e, n = _cantilever_demo(40)
+    K = matrix(parts, n)
+    lam_f = _float_search(parts, f, e, n)[3]
+    agree = 0
+    for fac in (Fr(1, 2), Fr(9, 10), Fr(101, 100), Fr(2)):
+        a_ = pd_ieee(n, K, Fr(lam_f) * fac) is not None
+        b_ = pd_certificate(n, K, Fr(lam_f) * fac, 384)
+        assert a_ == b_ == (fac < 1), (fac, a_, b_)
+        agree += 1
+    print(f"   IEEE certificate (premise: IEEE 754 + LAPACK, Higham Thm 10.3): agrees with the exact interval one "
+          f"{agree}/4, proves 0.9 lambda_min, refuses 1.01")
     print(f"   {cases} random systems, {checked} points (every vertex where <= 9 parts, plus 20 interior each):")
     print("   every value inside [lo, hi]; dropping the second-order rest lets a point escape (mutation caught)")
 

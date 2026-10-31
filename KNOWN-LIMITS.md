@@ -226,3 +226,11 @@ revision so a reader can see the difference between a ceiling and a gap:
   is named and the declared scope added;
 - the five philosophical case stands outside the regression suite — wired the
   same day, after three months of holding by luck.
+
+**A named premise: IEEE arithmetic in `zenergy`'s floating path (2026-11-01, the curator's decision).** Above 600
+unknowns `zenergy.certify_output_fp` proves `lambda_min(K0) > 0` by a floating Cholesky (`pd_ieee`): it TRUSTS IEEE 754
+binary64 with rounding to nearest and LAPACK's banded Cholesky, and uses Higham's backward-error theorem (Accuracy and
+Stability of Numerical Algorithms, 2nd ed., Thm 10.3) with Weyl's inequality — cited, not proved in Lean (the corpus's
+Lean has no floating-point semantics). Every other step of that path is exact: the residuals, the rounding of the
+entries (`||E||_F`), the bounds. The exact alternative stays in the module (`pd="exact"`: an interval LDL^T in integer
+fixed point, no premise beyond integer arithmetic) and the self-test checks that the two agree.

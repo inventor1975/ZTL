@@ -20,7 +20,23 @@ WHAT IS PROVED: for every p in the box,  e^T u(p)  in  [ e^T u0 - D1 - R ,  e^T 
 and when the caller asks, a WITNESS: the vertex p_i = 1 - sgn(...) t_i that drives the first order up, solved
 exactly — a point where e^T u is attained, for refuting a bound.
 
-THE PROOF (on paper; Lean pending — it needs matrix analysis the corpus's Lean does not have, said, not hidden).
+THE PROOF IS IN LEAN ALREADY (found 2026-11-01 — I had written "Lean pending", forgetting our own work): it is step 4
+of the network certificate, lean/ZNet.lean (2026-10-12, zero axioms), stated for ANY vectors s_e, so it covers a
+bar's elongation row as well as a branch's incidence:
+  target_identity   the output's change = -(first order) - (second order), exact, from the equilibrium at p and the
+                    reverse field L0 z0 = q (here y0, its exact residual checked);
+  target_first      |first| <= sum_e g0_e t_e |T0_e| |u0_e|                    (= D1 for one-term parts);
+  target_second     (1 - t)^2 Sec^2 <= (sum_e g0_e (t_e T0_e)^2)(sum_e g0_e (t_e u0_e)^2)
+                    with T = max t_e this is <= (T^2/(1-T))^2 (e . y0)(f . u0)   (= R; ZNet's per-part form is
+                    tighter, so R is covered);
+  energy_perturbation, cs_weighted   the energy step and Cauchy-Schwarz with weights, squared, no roots.
+What ZNet does NOT cover, said: a part of SEVERAL terms sharing one factor (a beam element split by its LDL^T): the
+grouped first order t |sum_j x_j| <= sum_j t |x_j| is the other direction, so D1 grouped needs a one-line lemma
+(d common to the terms: |d sum_j x_j| = |d| |sum_j x_j|) — to add when such parts are used; trusses and networks have
+one term per part. And what the stand's network module (ztl-stand ustand/znet.py, 2026-10-11) left open — "trusses
+have the same form with vector unknowns; there L is not an M-matrix and step 2 needs another certificate" — is what
+this module supplies: an EXACT solve, its residual checked, instead of an approximate one with an eigenvalue bound.
+The derivation, for the reader:
   e^T u - e^T u0 = e^T (K^-1 - K0^-1) f = -y^T DK u0  with y = K^-1 e (K symmetric), and y = y0 - K^-1 DK y0, so
   e^T u - e^T u0 = -y0^T DK u0 + y0^T DK K^-1 DK u0.
   The first term is sum_i delta_i (-sum_j w_ij (y0.g_ij)(g_ij.u0)); over |delta_i| <= t_i its range is exactly +-D1.

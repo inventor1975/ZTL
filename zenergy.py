@@ -31,9 +31,9 @@ bar's elongation row as well as a branch's incidence:
                     tighter, so R is covered);
   energy_perturbation, cs_weighted   the energy step and Cauchy-Schwarz with weights, squared, no roots.
 What ZNet does NOT cover, said: a part of SEVERAL terms sharing one factor (a beam element split by its LDL^T): the
-grouped first order t |sum_j x_j| <= sum_j t |x_j| is the other direction, so D1 grouped needs a one-line lemma
-(d common to the terms: |d sum_j x_j| = |d| |sum_j x_j|) — to add when such parts are used; trusses and networks have
-one term per part. And what the stand's network module (ztl-stand ustand/znet.py, 2026-10-11) left open — "trusses
+grouped first order is proved in lean/ZEnergy.lean (2026-11-01, zero axioms): `target_first_grouped` — with d
+constant on each part, |sum over all terms of g0 d T0 u0| <= sum_P t_P |sum_{e in P} g0 T0 u0| = D1. Trusses and
+networks have one term per part and needed nothing new. And what the stand's network module (ztl-stand ustand/znet.py, 2026-10-11) left open — "trusses
 have the same form with vector unknowns; there L is not an M-matrix and step 2 needs another certificate" — is what
 this module supplies: an EXACT solve, its residual checked, instead of an approximate one with an eigenvalue bound.
 The derivation, for the reader:

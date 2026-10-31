@@ -156,7 +156,7 @@ STANDS = [
     ("test_backward_tree.py", ["BACKWARD TREE GREEN"]),
     ("test_certify.py", ["CERTIFY GREEN"]),
     ("test_zlin.py", ["ZLIN GREEN"]),
-    ("zenergy.py", ["ZENERGY GREEN", "mutation caught"]),     # 2026-10-31: energy-norm bound, PSD-sum stiffness
+    ("zenergy.py", ["ZENERGY GREEN", "mutation caught", "floating path: 15 random systems"]),     # 2026-10-31: energy-norm bound, PSD-sum stiffness
     ("test_zintegral.py", ["ZINTEGRAL GREEN"]),
     ("test_zfloor_integral.py", ["ZFLOOR INTEGRAL GREEN"]),
     ("test_zsuperpose.py", ["ZSUPERPOSE GREEN"]),

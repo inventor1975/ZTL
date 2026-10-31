@@ -193,6 +193,175 @@ def value_at(parts, f, e, n, ps):
 
 
 # ----------------------------------------------------------------------------------------------------------------
+# THE FLOATING PATH (2026-11-01): exact fractions grow to thousands of digits on large systems (a 1080-unknown frame
+# took 151 s, ~n^3.3). The search solves in floats (trusted for nothing); the kernel checks, exactly:
+#   1. the residuals r_u = f - K0 u~, r_y = e - K0 y~ (u~, y~ dyadic: short, no digit growth);
+#   2. lam <= lambda_min(K0): K0 - lam I positive definite, by an INTERVAL LDL^T in integer fixed point (2^-bits,
+#      every operation rounded outward) whose pivots all have positive lower ends;
+#   3. then, in the K0-norm, ||u0 - u~|| <= ||r_u|| / sqrt(lam) (and y): the error's energy is r^T K0^-1 r;
+#      e.u0 = e.u~ + y~.r_u + eps_y.r_u, |eps_y.r_u| = |eps_y^T K0 eps_u| <= ||eps_y|| ||eps_u||;
+#      the first order's change from (y~, u~) to (y0, u0) is at most T (||eps_y|| ||u0|| + ||y~|| ||eps_u||)
+#      (sum_P |x^T K_P z| <= ||x|| ||z|| by Cauchy-Schwarz over the PSD parts); the rest with ||u0|| <= ||u~|| + ||eps_u||.
+# The derivation is on paper here; ZNet's step 3 (energy_bound, cs_weighted) carries its pieces in Lean, the
+# assembly is to be written there.
+
+class _FX:
+    """Integer fixed-point intervals: a value v is the pair (lo, hi) of integers with lo/2^b <= v <= hi/2^b."""
+    def __init__(self, bits):
+        self.b = bits
+        self.one = 1 << bits
+
+    def of(self, q):
+        q = _q(q)
+        n, d = q.numerator << self.b, q.denominator
+        return (n // d, -((-n) // d))
+
+    def sub(self, x, y):
+        return (x[0] - y[1], x[1] - y[0])
+
+    def mul(self, x, y):
+        c = (x[0] * y[0], x[0] * y[1], x[1] * y[0], x[1] * y[1])
+        return (min(c) >> self.b, -((-max(c)) >> self.b))
+
+    def sq(self, x):
+        lo, hi = x
+        if lo >= 0:
+            a, b = lo * lo, hi * hi
+        elif hi <= 0:
+            a, b = hi * hi, lo * lo
+        else:
+            a, b = 0, max(lo * lo, hi * hi)
+        return (a >> self.b, -((-b) >> self.b))
+
+    def div(self, x, y):
+        if y[0] <= 0:
+            raise ArithmeticError("division by an interval reaching zero")
+        c = ((x[0] << self.b), (x[1] << self.b))
+        cands = (c[0] // y[0], c[0] // y[1], c[1] // y[0], c[1] // y[1])
+        cu = (-((-c[0]) // y[0]), -((-c[0]) // y[1]), -((-c[1]) // y[0]), -((-c[1]) // y[1]))
+        return (min(cands), max(cu))
+
+
+def pd_certificate(n, entries, lam, bits=192):
+    """True iff K - lam I is proved positive definite by an interval LDL^T in fixed point (outward rounding): every
+    pivot's lower end > 0. (False is not a refutation, only "not proved at these bits".)"""
+    X = _FX(bits)
+    cols = [dict() for _ in range(n)]
+    for (i, j), v in entries.items():
+        if i < j:
+            i, j = j, i
+        cols[j][i] = _q(v) + cols[j].get(i, Fr(0)) if i in cols[j] else _q(v)
+    for j in range(n):
+        cols[j][j] = cols[j].get(j, Fr(0)) - _q(lam)
+        cols[j] = {i: X.of(v) for i, v in cols[j].items()}
+    for k in range(n):
+        ck = cols[k]
+        dk = ck.pop(k, (0, 0))
+        if dk[0] <= 0:
+            return False
+        rest = list(ck.items())
+        cols[k] = {}
+        for ii, (i, ai) in enumerate(rest):
+            for j, aj in rest[:ii + 1]:                # j <= i in insertion order is not index order: fix below
+                lo, hi = (j, i) if j <= i else (i, j)
+                upd = X.div(X.sq(ai), dk) if i == j else X.div(X.mul(ai, aj), dk)
+                col = cols[lo]
+                col[hi] = X.sub(col.get(hi, (0, 0)), upd)
+    return True
+
+
+def _float_search(parts, f, e, n):
+    import numpy as np
+    import scipy.sparse as sp
+    import scipy.sparse.linalg as sla
+    K = matrix(parts, n)
+    rows, cols_, vals = [], [], []
+    for (i, j), v in K.items():
+        rows.append(i); cols_.append(j); vals.append(float(v))
+        if i != j:
+            rows.append(j); cols_.append(i); vals.append(float(v))
+    A = sp.csc_matrix((vals, (rows, cols_)), shape=(n, n))
+    lu = sla.splu(A)
+    u = lu.solve(np.array([float(x) for x in f]))
+    y = lu.solve(np.array([float(x) for x in e]))
+    try:
+        lam = float(sla.eigsh(A, k=1, sigma=0, which="LM", return_eigenvectors=False)[0])
+    except Exception:
+        lam = float(min(A.diagonal())) * 1e-12
+    return K, u, y, lam
+
+
+def certify_output_fp(parts, f, e, n, bits=192):
+    """As certify_output, without exact solves: floats searched, everything CHECKED exactly (see above).
+    Returns the same keys (lo, hi, nominal as an interval midpoint, first, rest, T, slopes) plus 'lam'."""
+    for p in parts:
+        t = _q(p["t"])
+        if not (0 <= t < 1):
+            raise ValueError("a tolerance must be in [0, 1)")
+        for w, g in p["terms"]:
+            if _q(w) < 0:
+                raise ValueError("a part's term has a negative weight: the part is not PSD as given")
+    T = max((_q(p["t"]) for p in parts), default=Fr(0))
+    K, uf, yf, lam_f = _float_search(parts, f, e, n)
+    ut = [Fr(float(x)) for x in uf]                     # dyadic: exact, short
+    yt = [Fr(float(x)) for x in yf]
+    # 2. lam: a dyadic below the float estimate, proved; halve until proved (at most a few tries)
+    # the interval widths grow along the elimination: more bits first (MEASURED 2026-11-01: a 7200-unknown frame
+    # was not proved at 192 bits, proved at 384 in 33 s), then a smaller lam
+    lam = Fr(lam_f) / 2 if lam_f > 0 else Fr(0)
+    proved, used_bits = False, bits
+    for _ in range(6):
+        for b in (bits, 2 * bits, 4 * bits):
+            if lam > 0 and pd_certificate(n, K, lam, b):
+                proved, used_bits = True, b
+                break
+        if proved:
+            break
+        lam /= 4
+    if not proved:
+        raise ArithmeticError("lambda_min(K0) not proved positive: K0 may not be positive definite")
+    # 1. residuals, exact
+    def kmul(x):
+        r = [Fr(0)] * n
+        for (i, j), v in K.items():
+            r[i] += v * x[j]
+            if i != j:
+                r[j] += v * x[i]
+        return r
+    Ku, Ky = kmul(ut), kmul(yt)
+    ru = [_q(f[i]) - Ku[i] for i in range(n)]
+    ry = [_q(e[i]) - Ky[i] for i in range(n)]
+    eu = _sqrt_up(sum(x * x for x in ru) / lam)          # ||u0 - u~||_K0
+    ey = _sqrt_up(sum(x * x for x in ry) / lam)
+    nu_t = _sqrt_up(sum(a * b for a, b in zip(ut, Ku)))   # ||u~||_K0
+    ny_t = _sqrt_up(sum(a * b for a, b in zip(yt, Ky)))
+    nu, ny = nu_t + eu, ny_t + ey
+    centre = sum(_q(a) * b for a, b in zip(e, ut)) + sum(a * b for a, b in zip(yt, ru))
+    cerr = ey * eu
+    signed, D1 = [], Fr(0)
+    for p in parts:
+        c = sum(_q(w) * _dot(g, yt) * _dot(g, ut) for w, g in p["terms"])
+        signed.append(c)
+        D1 += _q(p["t"]) * abs(c)
+    D1 += T * (ey * nu + ny_t * eu)
+    rest = T * T / (1 - T) * ny * nu if T else Fr(0)
+    return {"nominal": centre, "nominal_err": cerr, "lo": centre - cerr - D1 - rest, "hi": centre + cerr + D1 + rest,
+            "first": D1, "rest": rest, "T": T, "slopes": [-c for c in signed], "lam": lam, "bits": used_bits}
+
+
+def value_enclosure_fp(parts, f, e, n, ps, bits=192):
+    """[lo, hi] containing e^T u at the point p (the floating path at that point: every part fixed, t = 0)."""
+    scaled = [{"t": 0, "terms": [(_q(w) * _q(pi), g) for w, g in p["terms"]]} for p, pi in zip(parts, ps)]
+    r = certify_output_fp(scaled, f, e, n, bits)
+    return r["lo"], r["hi"]
+
+
+def certify(parts, f, e, n, exact_up_to=600):
+    """The kernel's choice: exact solves up to `exact_up_to` unknowns, the floating path above (both proved)."""
+    return certify_output(parts, f, e, n) if n <= exact_up_to else certify_output_fp(parts, f, e, n)
+
+
+# ----------------------------------------------------------------------------------------------------------------
 # self-test: against every vertex and random interior points; a mutation (the rest dropped) must be caught
 
 def _random_case(rng, n, m, t):
@@ -231,6 +400,14 @@ def _selftest():
             if not (r["nominal"] - r["first"] <= v <= r["nominal"] + r["first"]):
                 caught = True                           # the rest is needed: without it this point escapes
     assert caught, "the mutation (rest dropped) was never caught: the self-test is too weak"
+    fp_cases = 0
+    for trial in range(15):                             # the floating path must contain the exact one
+        n, m = rng.randint(3, 8), rng.randint(2, 6)
+        parts, f, e = _random_case(rng, n, m, Fr(rng.choice([1, 5, 20]), 100))
+        a, b2 = certify_output(parts, f, e, n), certify_output_fp(parts, f, e, n)
+        assert b2["lo"] <= a["lo"] and a["hi"] <= b2["hi"], (trial, a, b2)
+        fp_cases += 1
+    print(f"   floating path: {fp_cases} random systems, its proved range contains the exact path's every time")
     print(f"   {cases} random systems, {checked} points (every vertex where <= 9 parts, plus 20 interior each):")
     print("   every value inside [lo, hi]; dropping the second-order rest lets a point escape (mutation caught)")
 

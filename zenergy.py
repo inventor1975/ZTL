@@ -291,6 +291,11 @@ def pd_ieee(n, entries, mu):
       u = 2^-53; and sum_k r_kj^2 <= a_jj/(1-g), so ||dA||_2 <= g/(1-g) tr(A_f), hence
       lambda_min(A_f) >= -g/(1-g) tr(A_f); and K - mu I = A_f + E with E computed EXACTLY here (the rounding of the
       entries), ||E||_2 <= ||E||_F. So lambda_min(K) >= mu - g/(1-g) tr(A_f) - ||E||_F.
+    PROVED IN LEAN (lean/ZRound.lean, 2026-11-01, zero axioms): everything AFTER Higham's theorem — `pd_lower`:
+      A_f + E = K - mu I, A_f + D = R^T R with |D_ij| <= g (|R|^T|R|)_ij, m + g = 1, sum E_ij^2 <= s^2 ==>
+      0 <= m x^T(K - mu I)x + g tr(A_f)|x|^2 + m s |x|^2, i.e. x^T K x >= (mu - s - (g/m) tr A_f)|x|^2 — the lam
+      returned (`chol_lower`: the Cholesky step; `weyl_frob`: the rounding of the entries). What stays CITED: Higham
+      10.3 itself (the backward error of a floating Cholesky under the rounding model) and IEEE 754 / LAPACK.
     Returns None if the Cholesky fails or the bound is not positive."""
     import numpy as np
     import scipy.sparse as sp

@@ -157,7 +157,8 @@ def certify_output(parts, f, e, n, want_witness=False):
     ey, fu = sum(_q(a) * b for a, b in zip(e, y0)), sum(_q(a) * b for a, b in zip(f, u0))
     rest = T * T / (1 - T) * _sqrt_up(ey * fu) if T else Fr(0)
     out = {"nominal": nominal, "lo": nominal - D1 - rest, "hi": nominal + D1 + rest,
-           "first": D1, "rest": rest, "T": T}
+           "first": D1, "rest": rest, "T": T,
+           "slopes": [-c for c in signed]}    # d(e.u)/d p_i at p = 1 (exact): e.u moves by +slope_i * delta_i
     if want_witness:
         # e^T u moves by -sum delta_i c_i to first order: up when delta_i = -sgn(c_i) t_i
         ps = [1 - (_q(p["t"]) if c > 0 else -_q(p["t"]) if c < 0 else 0) for p, c in zip(parts, signed)]

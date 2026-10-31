@@ -489,15 +489,22 @@ def judge_sheet_claim(formula, quantities, marks, fixed=None):
                              for q in numeric[n]["pedigree"]
                              if _bears(n, q)})
     disposition, polarity = core["disposition"], None
-    if disposition in ("EARNED", "REFUTED") and bearing_credit:
-        polarity = "toward T" if disposition == "EARNED" else "toward F"
+    # the cap covers the IF STABLE verdicts too (2026-10-31): the judge gained
+    # them on 2026-10-29 and this line still read only the plain two, so
+    # `x <= 10 & (ok -> ok)` with x on credit came out EARNED IF STABLE while
+    # its truth rode x's unearned bounds — a forced verdict above ON CREDIT
+    if disposition in ("EARNED", "REFUTED", "EARNED IF STABLE", "REFUTED IF STABLE") \
+            and bearing_credit:
+        polarity = "toward T" if disposition.startswith("EARNED") else "toward F"
         disposition = "ON CREDIT"
 
     next_check = []
     # §21 discipline: once the verdict is hereditary, remaining checks buy
     # nothing — measure/verify cures are offered only while the claim is
     # still open or riding credit; document cures always accompany credit
-    if disposition in ("OPEN", "ON CREDIT"):
+    # IF STABLE is settled by verification too (verifying a repeated atom
+    # removes the condition), so it earns the same measure/verify cures
+    if disposition in ("OPEN", "ON CREDIT", "EARNED IF STABLE", "REFUTED IF STABLE"):
         for n in natoms:
             if numeric[n]["verdict"] == "Z" and n in core["unverified"]:
                 for q in numeric[n]["used"]:
@@ -767,6 +774,22 @@ if __name__ == "__main__":
     print("   Intent is invisible in a single claim and perfectly visible")
     print("   in the distribution — which is the only handle this corpus")
     print("   has on it, and it is enough to name a source.")
+    print()
+    print("-" * 72)
+    print("IF STABLE ON A SHEET (2026-10-31) — the cap and the cures reach it")
+    for f, sheet, want_disp, want_pol, want_cure in [
+            ("ok -> ok", "x=[1,5] credit, ok=Z", "EARNED IF STABLE", None, "verify ok"),
+            ("x <= 10 & (ok -> ok)", "x=[1,5] credit, ok=Z", "ON CREDIT", "toward T", "document x"),
+            ("x <= 10 & (ok -> ok)", "x=[1,5] earned:m1, ok=Z", "EARNED IF STABLE", None, "verify ok"),
+            ("x >= 10 | (ok & ~ok)", "x=[1,5] credit, ok=Z", "ON CREDIT", "toward F", "document x")]:
+        q, m = parse_quantities(sheet)
+        r = judge_sheet_claim(f, q, m)
+        print(f"   {f:24} | {sheet:24} -> {r['disposition']:17} {r['polarity'] or ''}  {r['next_check']}")
+        assert r["disposition"] == want_disp and r["polarity"] == want_pol, (f, sheet, r["disposition"])
+        assert want_cure in r["next_check"], (f, sheet, r["next_check"])
+    print("   a verdict that rides credit stays ON CREDIT whatever its stability;")
+    print("   a stable-only verdict names the atom whose verification removes the")
+    print("   condition.")
     print()
     print("=" * 72)
     print("ZNUMJUDGE GREEN — mixed formulas judged by the unchanged core;")

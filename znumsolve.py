@@ -1699,7 +1699,11 @@ def solve_claim(formula, quantities, marks):
                                         discrete=qs[other]["discrete"],
                                         unit=qs[other]["unit"], sample=False)
                         qs[other]["grounds"] = sorted(g)
-            rank = {"EARNED": 3, "ON CREDIT": 2, "OPEN": 1}
+            # EARNED IF STABLE sits between EARNED and ON CREDIT (2026-10-31; the
+            # judge gained it 2026-10-29). REFUTED IF STABLE is left out on
+            # purpose: a root that is false-if-stable beside a root that is true
+            # is not "weaker" on one scale — it stays with `odd`, as before
+            rank = {"EARNED": 4, "EARNED IF STABLE": 3, "ON CREDIT": 2, "OPEN": 1}
             odd = [w for _, w in alive if w["disposition"] not in rank]
             r = odd[0] if odd else min(
                 (w for _, w in alive), key=lambda w: rank[w["disposition"]])

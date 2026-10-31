@@ -26,3 +26,10 @@ theorems. Status: LEAN = theorems exist (named), STAND = only an executable stan
 
 Each case also gets a literature check (a Sonnet fork) before its paragraph is rewritten: what is known, what the
 theorems add, the first objection to answer.
+
+## Reader findings on unchanged text (Sonnet, 2026-10-31, during v1.2.1) — to settle in v1.3
+- Lottery: "dies on the LAST stamp" is measured on five tickets but stated for the thousand; "closure over CREDIT" generalised from one example.
+- Berry: "ends in E when every number has been named" — say how a march that never repeats ends (finite book).
+- "§§21-23" does not match the paper's section numbering; "the eighth, acquitting verdict" is never defined.
+- §7 "holds this paper's entire collection" — the no-loop cases (sorites, surprise, lottery, Moore, Berry) are not in the studio list; qualify.
+- Moore: the 1-of-27 past-tense count and the Wittgenstein–Shoemaker–Heal attribution want a reference line.

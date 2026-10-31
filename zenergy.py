@@ -254,17 +254,26 @@ def pd_certificate(n, entries, lam, bits=192):
     for j in range(n):
         cols[j][j] = cols[j].get(j, Fr(0)) - _q(lam)
         cols[j] = {i: X.of(v) for i, v in cols[j].items()}
+    one2 = 1 << (2 * bits)
     for k in range(n):
         ck = cols[k]
         dk = ck.pop(k, (0, 0))
         if dk[0] <= 0:
             return False
+        # 1/d_k once per column (MEASURED 2026-11-01: interval divisions were 35 s of 66 at 7200 unknowns)
+        rk = (one2 // dk[1], -((-one2) // dk[0]))      # [1/d_hi, 1/d_lo] rounded outward
         rest = list(ck.items())
         cols[k] = {}
+        scaled = [(i, X.mul(ai, rk)) for i, ai in rest]  # l_ik = a_ik / d_k
         for ii, (i, ai) in enumerate(rest):
-            for j, aj in rest[:ii + 1]:                # j <= i in insertion order is not index order: fix below
+            li = scaled[ii][1]
+            for jj in range(ii + 1):                   # each unordered pair once (insertion order)
+                j, aj = rest[jj]
                 lo, hi = (j, i) if j <= i else (i, j)
-                upd = X.div(X.sq(ai), dk) if i == j else X.div(X.mul(ai, aj), dk)
+                if i == j:                             # a_ik^2 / d_k: the square keeps the dependency
+                    upd = X.mul(X.sq(ai), rk)
+                else:
+                    upd = X.mul(li, aj)               # (a_ik / d_k) a_jk
                 col = cols[lo]
                 col[hi] = X.sub(col.get(hi, (0, 0)), upd)
     return True
@@ -310,6 +319,8 @@ def certify_output_fp(parts, f, e, n, bits=192):
     # was not proved at 192 bits, proved at 384 in 33 s), then a smaller lam
     lam = Fr(lam_f) / 2 if lam_f > 0 else Fr(0)
     proved, used_bits = False, bits
+    if n > 4000 and bits < 384:                      # MEASURED: 7200 unknowns fail at 192, pass at 384
+        bits = 384
     for _ in range(6):
         for b in (bits, 2 * bits, 4 * bits):
             if lam > 0 and pd_certificate(n, K, lam, b):

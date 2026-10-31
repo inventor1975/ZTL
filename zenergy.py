@@ -202,8 +202,10 @@ def value_at(parts, f, e, n, ps):
 #      e.u0 = e.u~ + y~.r_u + eps_y.r_u, |eps_y.r_u| = |eps_y^T K0 eps_u| <= ||eps_y|| ||eps_u||;
 #      the first order's change from (y~, u~) to (y0, u0) is at most T (||eps_y|| ||u0|| + ||y~|| ||eps_u||)
 #      (sum_P |x^T K_P z| <= ||x|| ||z|| by Cauchy-Schwarz over the PSD parts); the rest with ||u0|| <= ||u~|| + ||eps_u||.
-# The derivation is on paper here; ZNet's step 3 (energy_bound, cs_weighted) carries its pieces in Lean, the
-# assembly is to be written there.
+# PROVED IN LEAN (lean/ZFloatPath.lean, 2026-11-01, zero axioms): `residual_energy` (lam B(eps,eps) <= |r|^2),
+# `centre_identity` (e.u0 = e.u~ + y~.r_u + B(eps_y, eps_u), exact) and `centre_bound` (|B(eps_y, eps_u)| <= ey eu),
+# `minkowski` (||u0|| <= ||u~|| + ||eps_u||), `first_order_fp` (the D1 above), `rest_fp` (the rest from ZNet's
+# target_second). With ZRound's `pd_lower` for lam, the floating path cites only Higham 10.3 and the machine.
 
 class _FX:
     """Integer fixed-point intervals: a value v is the pair (lo, hi) of integers with lo/2^b <= v <= hi/2^b."""

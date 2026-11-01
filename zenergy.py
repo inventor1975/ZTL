@@ -444,9 +444,11 @@ def certify_output_fp(parts, f, e, n, bits=192, pd="ieee"):
         c = sum(_q(w) * _dot(g, yt) * _dot(g, ut) for w, g in p["terms"])
         signed.append(c)
         D1 += _q(p["t"]) * abs(c)
-    D1 += T * (ey * nu + ny_t * eu)
+    slope_err = T * (ey * nu + ny_t * eu)               # >= sum_i t_i |slope_i(true) - slope_i(approx)|
+    D1 += slope_err
     rest = T * T / (1 - T) * ny * nu if T else Fr(0)
-    return {"nominal": centre, "nominal_err": cerr, "lo": centre - cerr - D1 - rest, "hi": centre + cerr + D1 + rest,
+    return {"nominal": centre, "nominal_err": cerr, "slope_err": slope_err,
+            "lo": centre - cerr - D1 - rest, "hi": centre + cerr + D1 + rest,
             "first": D1, "rest": rest, "T": T, "slopes": [-c for c in signed], "lam": lam, "bits": used_bits}
 
 
@@ -455,6 +457,25 @@ def value_enclosure_fp(parts, f, e, n, ps, bits=192):
     scaled = [{"t": 0, "terms": [(_q(w) * _q(pi), g) for w, g in p["terms"]]} for p, pi in zip(parts, ps)]
     r = certify_output_fp(scaled, f, e, n, bits)
     return r["lo"], r["hi"]
+
+
+def certify_scaled(parts, f, e, n, k, exact_up_to=600):
+    """A proved range of p_k * (e . u(p)) — an output scaled by ONE part's own factor (a stress: E p_k D0 B u), with
+    that factor merged into the exact first order instead of multiplied as an interval (2026-11-01):
+        p_k w = w0 + [sum_i (s_i + w0 [i = k]) d_i] + d_k L + Sec (1 + d_k),   L = sum_i s_i d_i, |Sec| <= rest
+    so  p_k w in centre +- (cerr + sum_i t_i |s~_i + centre [i = k]| + slope_err + t_k cerr + t_k first
+    + rest (1 + t_k)), with s~ the (approximate) slopes, `first` >= |L| — every piece already proved (ZNet step 4,
+    ZFloatPath's centre and first-order bounds)."""
+    r = certify(parts, f, e, n, exact_up_to)
+    centre = r["nominal"]
+    cerr = r.get("nominal_err", Fr(0))
+    serr = r.get("slope_err", Fr(0))
+    tk = _q(parts[k]["t"])
+    D1p = Fr(0)
+    for i, (p, sl) in enumerate(zip(parts, r["slopes"])):
+        D1p += _q(p["t"]) * abs(sl + (centre if i == k else 0))
+    half = cerr + D1p + serr + tk * cerr + tk * r["first"] + r["rest"] * (1 + tk)
+    return {"nominal": centre, "lo": centre - half, "hi": centre + half, "base": r}
 
 
 def certify(parts, f, e, n, exact_up_to=600):
@@ -509,6 +530,22 @@ def _selftest():
         assert b2["lo"] <= a["lo"] and a["hi"] <= b2["hi"], (trial, a, b2)
         fp_cases += 1
     print(f"   floating path: {fp_cases} random systems, its proved range contains the exact path's every time")
+    sc_pts = 0
+    for trial in range(15):                             # p_k * (e.u) inside certify_scaled's range, everywhere tried
+        n, m = rng.randint(2, 5), rng.randint(1, 4)
+        parts, f, e = _random_case(rng, n, m, Fr(rng.choice([1, 5, 20]), 100))
+        k = rng.randrange(len(parts))
+        r = certify_scaled(parts, f, e, n, k)
+        rf = certify_scaled(parts, f, e, n, k, exact_up_to=0)     # the floating path forced, on a small system
+        assert rf["lo"] <= r["lo"] and r["hi"] <= rf["hi"], (trial, r, rf)
+        pts = list(itertools.product(*[[1 - p["t"], 1 + p["t"]] for p in parts])) if len(parts) <= 8 else []
+        pts += [[1 + p["t"] * Fr(rng.randint(-100, 100), 100) for p in parts] for _ in range(15)]
+        for ps in pts:
+            v = _q(ps[k]) * value_at(parts, f, e, n, ps)
+            assert r["lo"] <= v <= r["hi"], (trial, v, r["lo"], r["hi"])
+            sc_pts += 1
+    print(f"   scaled outputs: {sc_pts} points, p_k (e.u) inside certify_scaled's range every time "
+          f"(and the floating path's range contains the exact one's)")
     # the IEEE certificate agrees with the exact interval one, and is sharp: proves lam*0.9, refuses lam*1.01
     parts, f, e, n = _cantilever_demo(40)
     K = matrix(parts, n)

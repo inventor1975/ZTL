@@ -485,6 +485,29 @@ def judge_sheet_claim(formula, quantities, marks, fixed=None):
             wide[q] = _degrade(quantities[q])
             _bear[(n, q)] = compare(kind, e1, e2, wide)[0] != _base[n]
         return _bear[(n, q)]
+    def _measurable(n):
+        """The quantities whose measurement can resolve Z atom n (2026-11-02, the materials judge: with Ea
+        unknown, "measure kB" and "measure T_rt" were offered — no value of either decides the atom). Probe =
+        an IDEAL measurement of q alone: q pinned to a point (its lower end, upper end, middle), the rest as
+        declared; q is a cure if some pin gives T or F. An unbounded q cannot be pinned at its ends and is kept.
+        If no single quantity cures (the atom needs several narrowed together), every non-point quantity is
+        offered, as before — never an empty list for an open atom."""
+        kind, e1, e2 = natoms[n][:3]
+        wide = [q for q in numeric[n]["used"] if quantities[q]["lo"] != quantities[q]["hi"]]
+        cures = []
+        for q in wide:
+            lo, hi = quantities[q]["lo"], quantities[q]["hi"]
+            if lo == -INF or hi == INF:
+                cures.append(q)
+                continue
+            for pt in (lo, hi, (lo + hi) / 2):
+                pinned = dict(quantities)
+                pinned[q] = dict(quantities[q], lo=pt, hi=pt)
+                v = compare(kind, e1, e2, pinned)[0]       # a pin off the type's lattice reads E: not a cure
+                if v in ("T", "F"):
+                    cures.append(q)
+                    break
+        return cures or wide
     bearing_credit = sorted({q for n in bearing
                              for q in numeric[n]["pedigree"]
                              if _bears(n, q)})
@@ -504,12 +527,16 @@ def judge_sheet_claim(formula, quantities, marks, fixed=None):
     # still open or riding credit; document cures always accompany credit
     # IF STABLE is settled by verification too (verifying a repeated atom
     # removes the condition), so it earns the same measure/verify cures
-    if disposition in ("OPEN", "ON CREDIT", "EARNED IF STABLE", "REFUTED IF STABLE"):
+    # ... but NOT when the core verdict is forced and only the provenance cap
+    # holds it at ON CREDIT (2026-11-02, the materials judge: `(p == 0) |
+    # (nc == 0)` with nc = 0 on credit was told "measure p" — a forced verdict
+    # is hereditary, resolving p cannot move it; only documenting nc lifts the
+    # cap). The test is the CORE disposition, before the cap.
+    if core["disposition"] in ("OPEN", "EARNED IF STABLE", "REFUTED IF STABLE"):
         for n in natoms:
             if numeric[n]["verdict"] == "Z" and n in core["unverified"]:
-                for q in numeric[n]["used"]:
-                    if quantities[q]["lo"] != quantities[q]["hi"]:
-                        next_check.append(f"measure {q}")
+                for q in _measurable(n):
+                    next_check.append(f"measure {q}")
                 # the witness falls due the moment the measurement lands:
                 # a Z atom can show nothing non-bearing yet (re-marking it Z
                 # is a no-op, so it never enters `bearing`), and surprising
@@ -787,6 +814,18 @@ if __name__ == "__main__":
         print(f"   {f:24} | {sheet:24} -> {r['disposition']:17} {r['polarity'] or ''}  {r['next_check']}")
         assert r["disposition"] == want_disp and r["polarity"] == want_pol, (f, sheet, r["disposition"])
         assert want_cure in r["next_check"], (f, sheet, r["next_check"])
+    # a cure must be able to cure (2026-11-02, the materials judge): a forced verdict held at ON CREDIT is lifted by
+    # documenting, never by measuring an atom it does not rest on; and an open atom is cured only by a quantity
+    # whose exact value can decide it — not by sharpening an already sharp constant beside an unknown one
+    for f, sheet, want in [
+            ("(p == 0) | (nc == 0)", "p=[0,1] int credit, nc=0 int credit", ["document nc"]),
+            ("x * exp(e / k) >= 1", "x=[1,2] earned:m, e=? credit, k=[99/100,101/100] earned:c", ["measure e", "document e"]),
+            ("a + b >= 10", "a=[0,20] credit, b=[0,1] credit", ["measure a", "document a", "document b"]),
+            ("a + b >= 10", "a=[0,6] credit, b=[0,6] credit", ["measure a", "measure b", "document a", "document b"])]:
+        q, m = parse_quantities(sheet)
+        r = judge_sheet_claim(f, q, m)
+        print(f"   {f:24} | {sheet:40} -> {r['disposition']:10} {r['next_check']}")
+        assert r["next_check"] == want, (f, sheet, r["next_check"])
     print("   a verdict that rides credit stays ON CREDIT whatever its stability;")
     print("   a stable-only verdict names the atom whose verification removes the")
     print("   condition.")

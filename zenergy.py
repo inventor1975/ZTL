@@ -401,13 +401,15 @@ def _kmul(K, x, n):
     return r
 
 
-def _fp_prepare(parts, f, n, bits=192, pd="ieee"):
+def _fp_prepare(parts, f, n, bits=192, pd="ieee", K=None, T=None):
     """The floating path's SHARED work, done once for any number of outputs (2026-11-01): the float factor, a
-    proved lam, u~ with its exact residual and energy, and every term's g.u~."""
+    proved lam, u~ with its exact residual and energy, and every term's g.u~. K, T given (certify_general): the base
+    matrix A0 and the proved theta instead of sum(parts) and max t."""
     import numpy as np
     import scipy.sparse.linalg as sla
-    T = _check_parts(parts)
-    K = matrix(parts, n)
+    if K is None:
+        T = _check_parts(parts)
+        K = matrix(parts, n)
     A = _float_matrix(K, n)
     lu = sla.splu(A)
     uf = lu.solve(np.array([float(x) for x in f]))
@@ -540,7 +542,7 @@ def _fp_output(ctx, parts, e, k=None):
     slope_err = T * (ey * nu + ny_t * eu)
     D1 += slope_err
     rest = T * T / (1 - T) * ny * nu if T else Fr(0)
-    out = {"nominal": centre, "nominal_err": cerr, "slope_err": slope_err,
+    out = {"nominal": centre, "nominal_err": cerr, "slope_err": slope_err, "ey": ey, "ny_t": ny_t,
            "lo": centre - cerr - D1 - rest, "hi": centre + cerr + D1 + rest,
            "first": D1, "rest": rest, "T": T, "slopes": [-c for c in signed] if k is None else None, "lam": lam,
            "bits": ctx["bits"]}
@@ -572,7 +574,7 @@ def _fp_output_ref(ctx, parts, e):
     slope_err = T * (ey * nu + ny_t * eu)               # >= sum_i t_i |slope_i(true) - slope_i(approx)|
     D1 += slope_err
     rest = T * T / (1 - T) * ny * nu if T else Fr(0)
-    return {"nominal": centre, "nominal_err": cerr, "slope_err": slope_err,
+    return {"nominal": centre, "nominal_err": cerr, "slope_err": slope_err, "ey": ey, "ny_t": ny_t,
             "lo": centre - cerr - D1 - rest, "hi": centre + cerr + D1 + rest,
             "first": D1, "rest": rest, "T": T, "slopes": [-c for c in signed], "lam": lam, "bits": ctx["bits"]}
 
@@ -663,6 +665,77 @@ def scaled_from(r, parts, k):
             D1p += _q(p["t"]) * abs(sl + (centre if i == k else 0))
     half = cerr + D1p + serr + tk * cerr + tk * r["first"] + r["rest"] * (1 + tk)
     return {"nominal": centre, "lo": centre - half, "hi": centre + half, "base": r}
+
+
+def prove_theta(A0, M, n, guess=None):
+    """A proved theta < 1 with theta A0 - M positive definite (pd_ieee), M = sum r_i P_i + C — or None. The float
+    estimate: the largest eigenvalue of M v = theta A0 v; then up by 1 %, 5 %, ... until the certificate holds."""
+    import numpy as np
+    import scipy.sparse.linalg as sla
+    A = _float_matrix(A0, n)
+    Mf = _float_matrix(M, n)
+    try:
+        th = float(sla.eigsh(Mf, k=1, M=A, which="LA", return_eigenvectors=False, v0=np.ones(n))[0])
+    except Exception:
+        th = guess or 0.5
+    th = max(th, 1e-12)
+    for grow in (Fr(101, 100), Fr(105, 100), Fr(115, 100), Fr(140, 100), Fr(2)):
+        theta = Fr(th) * grow
+        if theta >= 1:
+            return None
+        X = {key: theta * v for key, v in A0.items()}
+        for key, v in M.items():
+            X[key] = X.get(key, Fr(0)) - v
+        try:
+            mu = float(sla.eigsh(_float_matrix(X, n), k=1, sigma=0, which="LM", return_eigenvectors=False,
+                                 v0=np.ones(n))[0])
+        except Exception:
+            continue
+        if mu > 0 and pd_ieee(n, X, Fr(mu) * Fr(1, 2)) is not None:
+            return theta
+    return None
+
+
+def certify_general(A0, parts, Cterms, f, e, n, theta=None):
+    """THE SECOND-ORDER CASE (2026-11-01, ztl-stand frames, the curator's "(а)"): A(delta) = A0 + sum_i delta_i P_i - D,
+    P_i = sum w g g^T PSD with |delta_i| <= r_i (part["t"] = r_i, any size), D unknown with 0 <= D <= C = sum Cterms.
+    With M = sum r_i P_i + C <= theta A0 (theta proved, < 1), for every such A: e.u in [lo, hi],
+        first order  sum_i r_i |y~' P_i u~| + slope error theta (e_y |u| + |y~| e_u) + (|y~|_C + sqrt(theta) e_y)
+                     (|u~|_C + sqrt(theta) e_u)        (|y' D u| <= |y|_D |u|_D <= |y|_C |u|_C),
+        rest         theta^2/(1 - theta) |y| |u|        (|x' Delta y| <= |x|_M |y|_M <= theta |x|_A0 |y|_A0),
+    zenergy's own bound with T replaced by the proved theta and the D term added. A0 need not be a sum of the parts
+    (here K0 + K_G(N_mid), indefinite pieces, positive definite in total)."""
+    return certify_general_many(A0, parts, Cterms, f, [e], n, theta)[0]
+
+
+def certify_general_many(A0, parts, Cterms, f, es, n, theta=None):
+    """certify_general for many outputs of one system: theta proved once, the factor and u~ once (2026-11-01)."""
+    for p in parts:
+        if _q(p["t"]) < 0 or any(_q(w) < 0 for w, _ in p["terms"]):
+            raise ValueError("a part's radius or a term's weight is negative")
+    M = matrix([{"t": 0, "terms": [(_q(p["t"]) * _q(w), g) for w, g in p["terms"]]} for p in parts]
+               + [{"t": 0, "terms": list(Cterms)}], n)
+    if theta is None:
+        theta = prove_theta(A0, M, n)
+    if theta is None:
+        raise ArithmeticError("theta < 1 not proved: the perturbations are not small against A0")
+    ctx = _fp_prepare(parts, f, n, K=A0, T=theta)
+    import numpy as np
+    cn = lambda v: _sqrt_up(sum(_q(w) * _dot(g, v) ** 2 for w, g in Cterms)) if Cterms else Fr(0)
+    st = _sqrt_up(theta)
+    cu = cn(ctx["ut"]) + st * ctx["eu"]
+    out = []
+    for e in es:
+        r = _fp_output(ctx, parts, e)
+        yt = [Fr(float(x)) for x in ctx["lu"].solve(np.array([float(x) for x in e]))]
+        extra = (cn(yt) + st * r["ey"]) * cu if Cterms else Fr(0)
+        r["lo"] -= extra
+        r["hi"] += extra
+        r["first"] += extra
+        r["theta"] = theta
+        r["d_term"] = extra
+        out.append(r)
+    return out
 
 
 def enclose_linear(parts, f, n, As, exact_up_to=None):
@@ -802,6 +875,57 @@ def _selftest():
             assert v == w and lo <= v <= hi, (trial, v, lo, hi)
             el_n += 1
     print(f"   enclose_linear: {el_n} functionals, the floating enclosure contains the exact value every time")
+    import itertools
+    g_cases = g_pts = g_esc_rest = g_esc_d = 0
+    for trial in range(40):                             # certify_general: second-order systems, D in [0, C]
+        n = rng.randint(3, 6)
+        def rpart(m):
+            out = []
+            for _ in range(m):
+                idx = rng.sample(range(n), rng.randint(1, min(3, n)))
+                out.append((Fr(rng.randint(1, 9), rng.randint(1, 4)), {i: Fr(rng.randint(-3, 3) or 1) for i in idx}))
+            return out
+        Kp = [rpart(2) for _ in range(rng.randint(2, 4))]
+        Gp = [rpart(1) for _ in range(rng.randint(1, 3))]
+        A0 = matrix([{"t": 0, "terms": t} for t in Kp], n)
+        for t_ in Gp:
+            n0 = Fr(-rng.randint(0, 3), 10)
+            for key, v in matrix([{"t": 0, "terms": t_}], n).items():
+                A0[key] = A0.get(key, Fr(0)) + n0 * v
+        parts = [{"t": Fr(rng.choice([1, 3, 5]), 100), "terms": t} for t in Kp] + \
+                [{"t": Fr(rng.randint(0, 3), 100), "terms": t} for t in Gp]
+        Ct = [(w / 50, g) for w, g in rpart(1)]
+        f = [Fr(rng.randint(-5, 5)) for _ in range(n)]
+        e = [Fr(rng.randint(-3, 3)) for _ in range(n)]
+        try:
+            r = certify_general(A0, parts, Ct, f, e, n)
+        except ArithmeticError:
+            continue
+        g_cases += 1
+        Cm = matrix([{"t": 0, "terms": Ct}], n)
+        Pm = [matrix([{"t": 0, "terms": p["terms"]}], n) for p in parts]
+        pts = [([s_ * p["t"] for s_, p in zip(sg, parts)], df) for sg in itertools.islice(
+            itertools.product((-1, 1), repeat=len(parts)), 32) for df in (Fr(0), Fr(1))]
+        pts += [([p["t"] * Fr(rng.randint(-100, 100), 100) for p in parts], Fr(rng.randint(0, 100), 100))
+                for _ in range(10)]
+        for ds, df in pts:
+            A = dict(A0)
+            for d, P in zip(ds, Pm):
+                for key, v in P.items():
+                    A[key] = A.get(key, Fr(0)) + d * v
+            for key, v in Cm.items():
+                A[key] = A.get(key, Fr(0)) - df * v
+            L, dd = ldl(n, A)
+            val = sum(a * b for a, b in zip(e, solve(L, dd, f)))
+            assert r["lo"] <= val <= r["hi"], (trial, val)
+            g_pts += 1
+            if not (r["lo"] + r["rest"] + r["d_term"] <= val <= r["hi"] - r["rest"] - r["d_term"]):
+                g_esc_rest += 1
+            if not (r["lo"] + r["d_term"] <= val <= r["hi"] - r["d_term"]):
+                g_esc_d += 1
+    assert g_cases >= 5 and g_esc_rest > 0 and g_esc_d > 0, (g_cases, g_esc_rest, g_esc_d)
+    print(f"   certify_general (second order, D in [0, C]): {g_cases} systems, {g_pts} points inside [lo, hi]; "
+          f"dropping the rest and the D term lets {g_esc_rest} escape, the D term alone {g_esc_d} (both needed)")
     ii = 0
     for trial in range(20):                             # integer outputs == the Fraction reference, bit for bit
         n, m = rng.randint(3, 9), rng.randint(2, 7)

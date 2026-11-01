@@ -549,6 +549,33 @@ def scaled_from(r, parts, k):
     return {"nominal": centre, "lo": centre - half, "hi": centre + half, "base": r}
 
 
+def enclose_linear(parts, f, n, As, exact_up_to=None):
+    """[lo, hi] containing a.u0 (u0 = K0^-1 f, the NOMINAL solution) for every sparse functional a = {i: v} in As,
+    from ONE solve (2026-11-01, for ztl-stand's proved upper bound on the critical load factor). Exact path: u0
+    solved exactly, residual checked, radius 0. Floating path: u~ in dyadics, exact residual r = f - K0 u~,
+    ||u0 - u~||_K0 <= eu = sqrt(|r|^2 / lam) (lam <= lambda_min(K0) proved by pd_ieee), and
+    |a.(u0 - u~)| <= ||a||_K0^-1 eu <= sqrt(|a|^2 / lam) eu (Cauchy-Schwarz in the K0 inner product)."""
+    lim = EXACT_UP_TO if exact_up_to is None else exact_up_to
+    if n <= lim:
+        K = matrix(parts, n)
+        L, d = ldl(n, K)
+        u = solve(L, d, f)
+        _check_solution(K, u, f)
+        out = []
+        for a in As:
+            v = sum(_q(c) * u[i] for i, c in a.items())
+            out.append((v, v))
+        return out
+    ctx = _fp_prepare(parts, f, n)
+    ut, eu, lam = ctx["ut"], ctx["eu"], ctx["lam"]
+    out = []
+    for a in As:
+        v = sum(_q(c) * ut[i] for i, c in a.items())
+        rad = _sqrt_up(sum(_q(c) * _q(c) for c in a.values()) / lam) * eu
+        out.append((v - rad, v + rad))
+    return out
+
+
 def value_enclosure_fp(parts, f, e, n, ps, bits=192):
     """[lo, hi] containing e^T u at the point p (the floating path at that point: every part fixed, t = 0)."""
     scaled = [{"t": 0, "terms": [(_q(w) * _q(pi), g) for w, g in p["terms"]]} for p, pi in zip(parts, ps)]
@@ -648,6 +675,17 @@ def _selftest():
             one = [certify(parts, f, e, n, exact_up_to=path) for e in es]
             assert [(a["lo"], a["hi"]) for a in many] == [(b["lo"], b["hi"]) for b in one], (trial, path)
     print("   certify_many: equal to certify output by output, exact and floating paths, 2 processes")
+    el_n = 0
+    for trial in range(10):                             # enclose_linear: the floating enclosure holds the exact value
+        n, m = rng.randint(3, 8), rng.randint(2, 6)
+        parts, f, _ = _random_case(rng, n, m, Fr(1, 100))
+        As = [{i: Fr(rng.randint(-5, 5), rng.randint(1, 4)) for i in range(n) if rng.random() < 0.6} for _ in range(4)]
+        ex = enclose_linear(parts, f, n, As)
+        fp = enclose_linear(parts, f, n, As, exact_up_to=0)
+        for (v, w), (lo, hi) in zip(ex, fp):
+            assert v == w and lo <= v <= hi, (trial, v, lo, hi)
+            el_n += 1
+    print(f"   enclose_linear: {el_n} functionals, the floating enclosure contains the exact value every time")
     print(f"   scaled outputs: {sc_pts} points, p_k (e.u) inside certify_scaled's range every time "
           f"(and the floating path's range contains the exact one's)")
     # the IEEE certificate agrees with the exact interval one, and is sharp: proves lam*0.9, refuses lam*1.01

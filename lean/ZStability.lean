@@ -13,6 +13,9 @@ indices (ZNet's sums, ZRound's `qf`):
   `geo_lower`    `G_e ⪰ 0`, `N_e ≥ N_lo,e`, `λ ≥ 0`: `λ Σ N_lo,e xᵀG_e x ≤ λ Σ N_e xᵀG_e x`;
   `stability_lower`  together: `xᵀ((1−T)K0 + λΣ N_lo G)x ≤ xᵀ(K(p) + λ K_G(N(p)))x` for every `x` — so if the left
                  matrix is positive definite, so is the right one at every `p` in the box: no buckling below `λ`.
+  `witness_upper` the other side, by a WITNESS: a vector `x` with `xᵀK x + λ Σ N_hi,e xᵀG_e x ≤ 0` (`N_e ≤ N_hi,e`,
+                 `G_e ⪰ 0`, `λ ≥ 0`) gives `xᵀ(K + λ K_G(N))x ≤ 0` at the true forces: `K + λK_G` is not positive
+                 definite, so the critical factor is at most `λ` (ztl-stand's `stability_upper`).
 What stays a premise: that `N_e(p) ≥ N_lo,e` (each a proved output range — ZNet step 4, ZFloatPath) and that the
 left matrix is positive definite (ZRound's `pd_lower` from a floating Cholesky). VR discipline: the empty axiom list.
 -/
@@ -79,9 +82,19 @@ theorem stability_lower (F : OF α) (l ps es : List Nat) (KP G : Nat → Nat →
   exact F.add_le_add (stiff_lower F ps (fun P => qf F l (KP P) x) p m hK hp)
     (geo_lower F es (fun e => qf F l (G e) x) N Nlo lam hl hG hN)
 
+/-- THE UPPER SIDE BY A WITNESS. `qK = xᵀKx`, `g_e = xᵀG_e x ≥ 0`, `N_e ≤ N_hi,e`, `0 ≤ λ`: if
+`qK + λ Σ N_hi,e g_e ≤ 0` then `qK + λ Σ N_e g_e ≤ 0` — the form is not positive at `x`, whatever the forces are
+inside their proved ranges. -/
+theorem witness_upper (F : OF α) (es : List Nat) (g N Nhi : Nat → α) (qK lam : α) (hl : F.le F.zero lam)
+    (hg : ∀ e, List.Mem e es → F.le F.zero (g e)) (hN : ∀ e, List.Mem e es → F.le (N e) (Nhi e))
+    (hW : F.le (F.add qK (F.mul lam (S F es (fun e => F.mul (Nhi e) (g e))))) F.zero) :
+    F.le (F.add qK (F.mul lam (S F es (fun e => F.mul (N e) (g e))))) F.zero :=
+  F.le_trans (F.add_le_add (F.le_refl qK) (geo_lower F es g Nhi N lam hl hg hN)) hW
+
 end ZStability
 
 #print axioms ZStability.qf_combo
 #print axioms ZStability.stiff_lower
 #print axioms ZStability.geo_lower
 #print axioms ZStability.stability_lower
+#print axioms ZStability.witness_upper

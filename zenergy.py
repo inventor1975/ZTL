@@ -450,11 +450,109 @@ def _fp_prepare(parts, f, n, bits=192, pd="ieee"):
     nu_t = _sqrt_up(sum(a * b for a, b in zip(ut, Ku)))   # ||u~||_K0
     gu = [[_dot(g, ut) for _, g in p["terms"]] for p in parts]
     return {"T": T, "K": K, "lu": lu, "n": n, "lam": lam, "bits": used_bits, "ut": ut, "ru": ru, "eu": eu,
-            "nu_t": nu_t, "nu": nu_t + eu, "gu": gu}
+            "nu_t": nu_t, "nu": nu_t + eu, "gu": gu, "int": _int_tables(K, n, parts, gu, ru)}
 
 
-def _fp_output(ctx, parts, e):
-    """One output on a prepared floating path (see certify_output_fp)."""
+def _lcm_den(xs):
+    d = 1
+    for x in xs:
+        d = d * x.denominator // math.gcd(d, x.denominator)
+    return d
+
+
+def _int_tables(K, n, parts, gu, ru):
+    """The same exact numbers as integers over shared denominators (2026-11-01, MEASURED: Fraction's gcd on every
+    operation was the whole cost of an output — 0.5 s each on a 7500-unknown frame). Rows of K0 with one denominator
+    per row; every part's c_P = sum_terms w (g.y)(g.u~) as (sum_terms qn (gi.Y)) / (qd 2^E); r_u over its own
+    denominators. Nothing is rounded: _fp_output gives bit-identical results to _fp_output_ref (self-test)."""
+    rows = [[] for _ in range(n)]
+    for (i, j), v in K.items():
+        rows[i].append((j, v))
+        if i != j:
+            rows[j].append((i, v))
+    krows = []
+    for r in rows:
+        d = _lcm_den([v for _, v in r])
+        krows.append((d, [(j, v.numerator * (d // v.denominator)) for j, v in r]))
+    pt = []
+    for p, gus in zip(parts, gu):
+        ts, qs = [], []
+        for (w, g), gv in zip(p["terms"], gus):
+            gq = [(i, _q(c)) for i, c in g.items()]
+            dg = _lcm_den([c for _, c in gq])
+            ts.append([(i, c.numerator * (dg // c.denominator)) for i, c in gq])
+            qs.append(_q(w) * gv / dg)
+        qd = _lcm_den(qs)
+        pt.append((qd, [(gi, q.numerator * (qd // q.denominator)) for gi, q in zip(ts, qs)]))
+    return {"krows": krows, "parts": pt, "ru": [(x.numerator, x.denominator) for x in ru]}
+
+
+def _grouped(pairs):
+    """sum of num/den over (num, den) pairs, adding integers per denominator first."""
+    acc = {}
+    for a, d in pairs:
+        if a:
+            acc[d] = acc.get(d, 0) + a
+    return sum((Fr(a, d) for d, a in acc.items()), Fr(0))
+
+
+def _fp_output(ctx, parts, e, k=None):
+    """One output on a prepared floating path (see certify_output_fp) — in integers over shared denominators;
+    the same exact rationals as _fp_output_ref, bit for bit (self-test). With `k` (a part index) the slopes are not
+    built; instead `D1p`, scaled_from's first order for part k, in O(1): D1 - t_k|c_k| + t_k|nominal - c_k|."""
+    import numpy as np
+    n, lam, T = ctx["n"], ctx["lam"], ctx["T"]
+    ut, eu, nu_t, nu = ctx["ut"], ctx["eu"], ctx["nu_t"], ctx["nu"]
+    it = ctx["int"]
+    yf = ctx["lu"].solve(np.array([float(x) for x in e]))
+    rat = [float(x).as_integer_ratio() for x in yf]
+    E = max((d.bit_length() - 1 for _, d in rat), default=0)
+    Y = [a << (E - (d.bit_length() - 1)) for a, d in rat]         # y~_i = Y_i / 2^E, exactly
+    P2 = 1 << E
+    KY = [sum(k * Y[j] for j, k in row) for _, row in it["krows"]]  # (K0 y~)_i = KY_i / (D_i 2^E)
+    eq = [_q(x) for x in e]
+    # r_y = e - K0 y~, |r_y|^2, y~.K0 y~ and the centre, grouped by denominator
+    sq, cross = [], []
+    for i, (D, _) in enumerate(it["krows"]):
+        en, ed = eq[i].numerator, eq[i].denominator
+        num = en * D * P2 - ed * KY[i]                            # r_y,i = num / (ed D 2^E)
+        den = ed * D * P2
+        sq.append((num * num, den * den))
+        cross.append((Y[i] * KY[i], D))
+    ey = _sqrt_up(_grouped(sq) / lam)
+    ny_t = _sqrt_up(_grouped(cross) / (P2 * P2))
+    ny = ny_t + ey
+    centre = sum((x * ut[i] for i, x in enumerate(eq) if x), Fr(0)) + \
+        _grouped((Y[i] * rn, rd) for i, (rn, rd) in enumerate(it["ru"])) / P2
+    cerr = ey * eu
+    signed, acc, ck = [], {}, None
+    for P, (p, (qd, ts)) in enumerate(zip(parts, it["parts"])):
+        cn = sum(q * sum(c * Y[i] for i, c in gi) for gi, q in ts)   # c_P = cn / (qd 2^E)
+        if k is None:
+            signed.append(Fr(cn, qd * P2))
+        elif P == k:
+            ck = Fr(cn, qd * P2)
+        if cn:
+            key = (qd, _q(p["t"]))
+            acc[key] = acc.get(key, 0) + abs(cn)
+    D1 = sum((t * Fr(a, qd) for (qd, t), a in acc.items()), Fr(0)) / P2
+    D1raw = D1
+    slope_err = T * (ey * nu + ny_t * eu)
+    D1 += slope_err
+    rest = T * T / (1 - T) * ny * nu if T else Fr(0)
+    out = {"nominal": centre, "nominal_err": cerr, "slope_err": slope_err,
+           "lo": centre - cerr - D1 - rest, "hi": centre + cerr + D1 + rest,
+           "first": D1, "rest": rest, "T": T, "slopes": [-c for c in signed] if k is None else None, "lam": lam,
+           "bits": ctx["bits"]}
+    if k is not None:                                   # slope_k = -c_k; scaled_from adds the nominal to it
+        tk = _q(parts[k]["t"])
+        out["D1p"] = D1raw - tk * abs(ck) + tk * abs(centre - ck)
+    return out
+
+
+def _fp_output_ref(ctx, parts, e):
+    """One output on a prepared floating path (see certify_output_fp) — the Fraction reference _fp_output must
+    reproduce exactly."""
     import numpy as np
     n, K, lam, T = ctx["n"], ctx["K"], ctx["lam"], ctx["T"]
     ut, ru, eu, nu_t, nu = ctx["ut"], ctx["ru"], ctx["eu"], ctx["nu_t"], ctx["nu"]
@@ -488,25 +586,40 @@ def certify_output_fp(parts, f, e, n, bits=192, pd="ieee"):
 _MANY = {}
 
 
+def _finish(r, parts, scale, idx):
+    """certify_many's per-output tail: scaled_from by part scale[idx] (when given), WITHOUT the per-part slopes —
+    m outputs times m slopes was the whole cost on large systems (MEASURED 2026-11-01: 7500-unknown frame, 4900
+    outputs, slopes pickled back and re-summed in the parent)."""
+    if scale is None:
+        return r
+    sc = scaled_from(r, parts, scale[idx])
+    return {"nominal": sc["nominal"], "lo": sc["lo"], "hi": sc["hi"], "unscaled": [r["lo"], r["hi"]]}
+
+
 def _many_worker(idx):
     c = _MANY
-    return idx, _fp_output(c["ctx"], c["parts"], c["es"][idx])
+    k = None if c["scale"] is None else c["scale"][idx]
+    return idx, _finish(_fp_output(c["ctx"], c["parts"], c["es"][idx], k), c["parts"], c["scale"], idx)
 
 
-def certify_many(parts, f, es, n, jobs=1, exact_up_to=None):
+def certify_many(parts, f, es, n, jobs=1, exact_up_to=None, scale=None):
     """Many outputs of ONE system (2026-11-01): the shared work once — the exact path's LDL^T and u0, or the floating
     path's factor, proved lam and u~ — and each output's own work (its y, residual, first order) per output, in
-    `jobs` processes on the floating path. Results equal certify's, output by output."""
+    `jobs` processes on the floating path. Results equal certify's, output by output. With `scale` (a part index
+    per output) each result is scaled_from(r, parts, scale[i])'s nominal/lo/hi instead, computed where r is and
+    returned without slopes."""
     if n <= (EXACT_UP_TO if exact_up_to is None else exact_up_to):
-        return [certify_output(parts, f, e, n) for e in es] if len(es) <= 1 else _exact_many(parts, f, es, n)
+        rs = [certify_output(parts, f, e, n) for e in es] if len(es) <= 1 else _exact_many(parts, f, es, n)
+        return [_finish(r, parts, scale, i) for i, r in enumerate(rs)]
     ctx = _fp_prepare(parts, f, n)
     if jobs <= 1 or len(es) <= 1:
-        return [_fp_output(ctx, parts, e) for e in es]
+        return [_finish(_fp_output(ctx, parts, e, None if scale is None else scale[i]), parts, scale, i)
+                for i, e in enumerate(es)]
     import multiprocessing as mp
     _MANY.clear()
-    _MANY.update({"ctx": ctx, "parts": parts, "es": es})
+    _MANY.update({"ctx": ctx, "parts": parts, "es": es, "scale": scale})
     with mp.get_context("fork").Pool(min(jobs, len(es))) as pool:
-        out = dict(pool.map(_many_worker, range(len(es))))
+        out = dict(pool.map(_many_worker, range(len(es)), chunksize=max(1, len(es) // (8 * jobs))))
     _MANY.clear()
     return [out[i] for i in range(len(es))]
 
@@ -542,9 +655,12 @@ def scaled_from(r, parts, k):
     cerr = r.get("nominal_err", Fr(0))
     serr = r.get("slope_err", Fr(0))
     tk = _q(parts[k]["t"])
-    D1p = Fr(0)
-    for i, (p, sl) in enumerate(zip(parts, r["slopes"])):
-        D1p += _q(p["t"]) * abs(sl + (centre if i == k else 0))
+    if r.get("D1p") is not None:
+        D1p = r["D1p"]                                  # computed with the output (_fp_output's k)
+    else:
+        D1p = Fr(0)
+        for i, (p, sl) in enumerate(zip(parts, r["slopes"])):
+            D1p += _q(p["t"]) * abs(sl + (centre if i == k else 0))
     half = cerr + D1p + serr + tk * cerr + tk * r["first"] + r["rest"] * (1 + tk)
     return {"nominal": centre, "lo": centre - half, "hi": centre + half, "base": r}
 
@@ -686,6 +802,20 @@ def _selftest():
             assert v == w and lo <= v <= hi, (trial, v, lo, hi)
             el_n += 1
     print(f"   enclose_linear: {el_n} functionals, the floating enclosure contains the exact value every time")
+    ii = 0
+    for trial in range(20):                             # integer outputs == the Fraction reference, bit for bit
+        n, m = rng.randint(3, 9), rng.randint(2, 7)
+        parts, f, _ = _random_case(rng, n, m, Fr(rng.choice([1, 5, 20]), 100))
+        ctx = _fp_prepare(parts, f, n)
+        for k in range(m):
+            e = [Fr(rng.randint(-4, 4), rng.randint(1, 3)) for _ in range(n)]
+            full = _fp_output(ctx, parts, e)
+            assert full == _fp_output_ref(ctx, parts, e), trial
+            a, b = scaled_from(full, parts, k), scaled_from(_fp_output(ctx, parts, e, k), parts, k)
+            assert (a["lo"], a["hi"], a["nominal"]) == (b["lo"], b["hi"], b["nominal"]), trial
+            ii += 1
+    print(f"   integer path: {ii} outputs bit-identical to the Fraction reference; O(1) scaled first order == "
+          f"scaled_from over all slopes")
     print(f"   scaled outputs: {sc_pts} points, p_k (e.u) inside certify_scaled's range every time "
           f"(and the floating path's range contains the exact one's)")
     # the IEEE certificate agrees with the exact interval one, and is sharp: proves lam*0.9, refuses lam*1.01

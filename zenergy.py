@@ -672,6 +672,8 @@ def prove_theta(A0, M, n, guess=None):
     estimate: the largest eigenvalue of M v = theta A0 v; then up by 1 %, 5 %, ... until the certificate holds."""
     import numpy as np
     import scipy.sparse.linalg as sla
+    if not any(M.values()):
+        return Fr(0)                                    # no perturbation at all: 0 <= 0 A0 exactly
     A = _float_matrix(A0, n)
     Mf = _float_matrix(M, n)
     try:

@@ -232,6 +232,10 @@ unknowns `zenergy.certify_output_fp` proves `lambda_min(K0) > 0` by a floating C
 binary64 with rounding to nearest and LAPACK's banded Cholesky, and uses Higham's backward-error theorem (Accuracy and
 Stability of Numerical Algorithms, 2nd ed., Thm 10.3); what follows from that theorem — the lower bound on
 `lambda_min`, Weyl's step for the rounding of the entries — is proved in `lean/ZRound.lean` (`pd_lower`, zero axioms,
-2026-11-01), so the citation is exactly Higham 10.3 and the machine (the corpus's Lean has no floating-point semantics). Every other step of that path is exact: the residuals, the rounding of the
+2026-11-01), so the citation is exactly Higham 10.3 and the machine (the corpus's Lean has no floating-point semantics).
+Higham 10.3 itself, entry by entry, is now proved from the rounding model in `lean/ZHigham.lean` (`gamma_prod`,
+`telescope`, `cholesky_entry`; zero axioms) — for SEQUENTIAL accumulation. What remains a premise: the machine obeys
+the rounding model (IEEE 754), and the library accumulates sequentially; LAPACK's blocked `dpbtrf` (used by scipy
+when the bandwidth exceeds its block size) sums in other orders, and the any-order proof is not written. Every other step of that path is exact: the residuals, the rounding of the
 entries (`||E||_F`), the bounds. The exact alternative stays in the module (`pd="exact"`: an interval LDL^T in integer
 fixed point, no premise beyond integer arithmetic) and the self-test checks that the two agree.

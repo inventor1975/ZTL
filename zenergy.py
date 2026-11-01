@@ -296,8 +296,14 @@ def pd_ieee(n, entries, mu):
     PROVED IN LEAN (lean/ZRound.lean, 2026-11-01, zero axioms): everything AFTER Higham's theorem — `pd_lower`:
       A_f + E = K - mu I, A_f + D = R^T R with |D_ij| <= g (|R|^T|R|)_ij, m + g = 1, sum E_ij^2 <= s^2 ==>
       0 <= m x^T(K - mu I)x + g tr(A_f)|x|^2 + m s |x|^2, i.e. x^T K x >= (mu - s - (g/m) tr A_f)|x|^2 — the lam
-      returned (`chol_lower`: the Cholesky step; `weyl_frob`: the rounding of the entries). What stays CITED: Higham
-      10.3 itself (the backward error of a floating Cholesky under the rounding model) and IEEE 754 / LAPACK.
+      returned (`chol_lower`: the Cholesky step; `weyl_frob`: the rounding of the entries). And Higham 10.3 itself,
+      entry by entry, from the rounding model: lean/ZHigham.lean (2026-11-01, zero axioms) — `gamma_prod` (Lemma
+      3.1), `telescope` (an accumulated sum, sequential), `cholesky_entry` (|(sum_k p_k + q) - a| <= g (sum |p_k|
+      + |q|), g = gamma_N, the pivot's division or square root with its own factors). What stays a PREMISE: (1) the
+      machine obeys the rounding model (IEEE 754 binary64, |delta| <= 2^-53, both forms (1+d) and 1/(1+d)); (2) the
+      library accumulates every entry SEQUENTIALLY (LAPACK's unblocked dpbtf2 does; the blocked dpbtrf, which
+      scipy calls when the bandwidth exceeds its block size, uses other summation orders — the proof for any
+      order (a summation tree) is not written yet).
     Returns None if the Cholesky fails or the bound is not positive."""
     import numpy as np
     import scipy.sparse as sp

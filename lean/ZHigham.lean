@@ -393,6 +393,269 @@ theorem cholesky_entry (F : OF α) (s p ε δ : Nat → α) (q u M g : α) (n N 
   rw [split, F.mul_add g (S F (idx n) (fun k => F.abs (p k))) (F.abs q)]
   exact F.le_trans (F.abs_add _ _) (F.add_le_add hbk hq)
 
+/-! ## Any order: a summation TREE (blocked BLAS, FMA, vector lanes — every order is some tree) -/
+
+/-- A summation tree: a leaf is a term `x` read with its own rounding `1 + ε` (`ε = 0` when exact); a node adds its
+children and rounds the sum, `(l + r)(1 + δ)`. -/
+inductive Tr (α : Type) where
+  | leaf (x ε : α) : Tr α
+  | node (l r : Tr α) (δ : α) : Tr α
+
+/-- What the machine computes (the rounding model, first form, at every operation). -/
+def val (F : OF α) : Tr α → α
+  | .leaf x ε => F.mul x (F.add F.one ε)
+  | .node l r δ => F.mul (F.add (val F l) (val F r)) (F.add F.one δ)
+
+/-- The exact sum of the leaves. -/
+def ex (F : OF α) : Tr α → α
+  | .leaf x _ => x
+  | .node l r _ => F.add (ex F l) (ex F r)
+
+/-- `Σ |leaf|`. -/
+def absum (F : OF α) : Tr α → α
+  | .leaf x _ => F.abs x
+  | .node l r _ => F.add (absum F l) (absum F r)
+
+/-- The number of leaves. -/
+def nleaves : Tr α → Nat
+  | .leaf _ _ => 1
+  | .node l r _ => nleaves l + nleaves r
+
+/-- Every rounding of the tree is at most `u`. -/
+def small (F : OF α) (u : α) : Tr α → Prop
+  | .leaf _ ε => F.le (F.abs ε) u
+  | .node l r δ => small F u l ∧ small F u r ∧ F.le (F.abs δ) u
+
+theorem nleaves_pos : ∀ T : Tr α, 1 ≤ nleaves T
+  | .leaf _ _ => Nat.le_refl 1
+  | .node l _ _ => Nat.le_trans (nleaves_pos l) (Nat.le_add_right _ _)
+
+theorem absum_nonneg (F : OF α) : ∀ T : Tr α, F.le F.zero (absum F T)
+  | .leaf x _ => F.abs_nonneg x
+  | .node l r _ => by
+    have := F.add_le_add (absum_nonneg F l) (absum_nonneg F r); rw [F.add_zero] at this; exact this
+
+theorem abs_ex_le (F : OF α) : ∀ T : Tr α, F.le (F.abs (ex F T)) (absum F T)
+  | .leaf x _ => F.le_refl _
+  | .node l r _ => F.le_trans (F.abs_add _ _) (F.add_le_add (abs_ex_le F l) (abs_ex_le F r))
+
+/-- `m_H = 1 − H u` as an element: `M + natu H = 1`. Monotone: a smaller count has a larger `m`. -/
+theorem m_mono (F : OF α) {u M M' : α} {h H : Nat} (hu : F.le F.zero u) (hh : h ≤ H)
+    (hM : F.add M (natu F u H) = F.one) (hM' : F.add M' (natu F u h) = F.one) : F.le M M' := by
+  have hn := natu_mono F hu h H hh
+  -- M = 1 − natu H ≤ 1 − natu h = M'
+  have e1 : M = F.add F.one (F.neg (natu F u H)) := by
+    rw [← hM, F.add_assoc, F.add_neg, F.add_zero]
+  have e2 : M' = F.add F.one (F.neg (natu F u h)) := by
+    rw [← hM', F.add_assoc, F.add_neg, F.add_zero]
+  rw [e1, e2]
+  apply F.add_le_add (F.le_refl _)
+  -- −natu H ≤ −natu h
+  have := F.add_le_add (F.add_le_add hn (F.le_refl (F.neg (natu F u h)))) (F.le_refl (F.neg (natu F u H)))
+  rw [F.add_neg, zero_add, F.add_comm (natu F u H) _, F.add_assoc, F.add_neg, F.add_zero] at this
+  exact this
+
+/-- THE TREE'S ERROR. `small u T`, `nleaves T ≤ H`, `M + H u = 1`, `0 ≤ M`: `M·|val T − ex T| ≤ H u·Σ|leaves|` —
+any order of summation, `γ_H` in the multiplied form. -/
+theorem tree_err (F : OF α) {u : α} (hu : F.le F.zero u) :
+    ∀ (T : Tr α) (H : Nat) (M : α), small F u T → nleaves T ≤ H → F.le F.zero M →
+      F.add M (natu F u H) = F.one →
+      F.le (F.mul M (F.abs (F.add (val F T) (F.neg (ex F T))))) (F.mul (natu F u H) (absum F T))
+  | .leaf x ε, H, M, hs, hH, hM, hMH => by
+    show F.le (F.mul M (F.abs (F.add (F.mul x (F.add F.one ε)) (F.neg x)))) (F.mul (natu F u H) (F.abs x))
+    have e : F.add (F.mul x (F.add F.one ε)) (F.neg x) = F.mul x ε := by
+      rw [F.mul_add, F.mul_one, F.add_comm x _, F.add_assoc, F.add_neg, F.add_zero]
+    rw [e, F.abs_mul]
+    -- M |x| |ε| ≤ |x| u ≤ (H u)|x|  (M ≤ 1, |ε| ≤ u, u ≤ H u)
+    have hM1 : F.le M F.one := by
+      have := F.add_le_add (F.le_refl M) (natu_mono F hu 0 H (Nat.zero_le H)); rw [hMH] at this
+      show F.le M F.one; rw [show natu F u 0 = F.zero from rfl, F.add_zero] at this; exact this
+    have huH : F.le u (natu F u H) := by
+      have h1 := natu_mono F hu 1 H hH
+      have : natu F u 1 = u := by show F.add u F.zero = u; rw [F.add_zero]
+      rw [this] at h1; exact h1
+    have s1 : F.le (F.mul M (F.mul (F.abs x) (F.abs ε))) (F.mul (F.abs x) (F.abs ε)) := by
+      rw [F.mul_comm M _]; have := F.mul_le_mul_left (F.mul_nonneg (F.abs_nonneg x) (F.abs_nonneg ε)) hM1
+      rw [F.mul_one] at this; exact this
+    have s2 : F.le (F.mul (F.abs x) (F.abs ε)) (F.mul (natu F u H) (F.abs x)) := by
+      rw [F.mul_comm (natu F u H) _]
+      exact F.mul_le_mul_left (F.abs_nonneg x) (F.le_trans hs huH)
+    exact F.le_trans s1 s2
+  | .node l r δ, H, M, hs, hH, hM, hMH => by
+    obtain ⟨hsl, hsr, hδ⟩ := hs
+    -- H = H' + 1 (a node has at least two leaves)
+    cases H with
+    | zero =>
+      have := Nat.le_trans (Nat.add_le_add (nleaves_pos l) (nleaves_pos r)) hH
+      exact absurd this (by decide)
+    | succ H' =>
+    let M' := F.add M u
+    have hM'H : F.add M' (natu F u H') = F.one := by
+      show F.add (F.add M u) (natu F u H') = F.one; rw [F.add_assoc]; exact hMH
+    have hM' : F.le F.zero M' := by have := F.add_le_add hM hu; rw [F.add_zero] at this; exact this
+    have hl : nleaves l ≤ H' := Nat.le_of_succ_le_succ
+      (Nat.le_trans (Nat.add_le_add_left (nleaves_pos r) (nleaves l)) hH)
+    have hr1 : nleaves r + 1 ≤ nleaves l + nleaves r := by
+      rw [Nat.add_comm (nleaves l) (nleaves r)]; exact Nat.add_le_add_left (nleaves_pos l) (nleaves r)
+    have hr : nleaves r ≤ H' := Nat.le_of_succ_le_succ (Nat.le_trans hr1 hH)
+    have ihl := tree_err F hu l H' M' hsl hl hM' hM'H
+    have ihr := tree_err F hu r H' M' hsr hr hM' hM'H
+    let El := F.add (val F l) (F.neg (ex F l))
+    let Er := F.add (val F r) (F.neg (ex F r))
+    let A := F.add (absum F l) (absum F r)
+    -- val − ex = (El + Er)(1 + δ) + (ex_l + ex_r) δ
+    have e : F.add (val F (.node l r δ)) (F.neg (ex F (.node l r δ))) =
+        F.add (F.mul (F.add El Er) (F.add F.one δ)) (F.mul (F.add (ex F l) (ex F r)) δ) := by
+      show F.add (F.mul (F.add (val F l) (val F r)) (F.add F.one δ)) (F.neg (F.add (ex F l) (ex F r))) = _
+      -- both sides equal (val_l + val_r)(1+δ) − (ex_l + ex_r)
+      have cancel : ∀ v e : α, F.add (F.add v (F.neg e)) e = v := fun v e => by
+        rw [F.add_assoc, F.add_comm (F.neg e) e, F.add_neg, F.add_zero]
+      have hv : F.add (val F l) (val F r) = F.add (F.add El Er) (F.add (ex F l) (ex F r)) := by
+        show _ = F.add (F.add (F.add (val F l) (F.neg (ex F l))) (F.add (val F r) (F.neg (ex F r))))
+          (F.add (ex F l) (ex F r))
+        rw [add4 F, cancel, cancel]
+      have ealg : ∀ A X d : α, F.add (F.mul (F.add A X) (F.add F.one d)) (F.neg X) =
+          F.add (F.mul A (F.add F.one d)) (F.mul X d) := by
+        intro A X d
+        rw [add_mul F A X (F.add F.one d), F.mul_add X F.one d, F.mul_one,
+          F.add_assoc (F.mul A (F.add F.one d)) (F.add X (F.mul X d)) (F.neg X), F.add_comm X (F.mul X d),
+          F.add_assoc (F.mul X d) X (F.neg X), F.add_neg, F.add_zero]
+      rw [hv]
+      exact ealg (F.add El Er) (F.add (ex F l) (ex F r)) δ
+    rw [e]
+    have hE : F.le (F.abs (F.add (F.mul (F.add El Er) (F.add F.one δ)) (F.mul (F.add (ex F l) (ex F r)) δ)))
+        (F.add (F.mul (F.add (F.abs El) (F.abs Er)) (F.add F.one u)) (F.mul A u)) := by
+      apply F.le_trans (F.abs_add _ _)
+      rw [F.abs_mul, F.abs_mul]
+      apply F.add_le_add
+      · rw [F.mul_comm (F.abs (F.add El Er)) _, F.mul_comm _ (F.add F.one u)]
+        apply F.le_trans (F.mul_le_mul_left (F.abs_nonneg _) (F.abs_add El Er))
+        rw [F.mul_comm (F.abs (F.add F.one δ)) _, F.mul_comm (F.add F.one u) _]
+        exact F.mul_le_mul_left (F.add_le_add (F.abs_nonneg El) (F.abs_nonneg Er) |> fun h => by
+          rw [F.add_zero] at h; exact h) (abs_one_add F hδ)
+      · apply F.le_trans (F.mul_le_mul_left (F.abs_nonneg _) hδ)
+        rw [F.mul_comm (F.abs _) u, F.mul_comm A u]
+        exact F.mul_le_mul_left hu (F.le_trans (F.abs_add _ _) (F.add_le_add (abs_ex_le F l) (abs_ex_le F r)))
+    apply F.le_trans (F.mul_le_mul_left hM hE)
+    rw [F.mul_add]
+    -- M(1+u) ≤ M'  (key identity with c = natu H'),  M ≤ 1
+    have hk := key_identity F hM'H rfl
+    have hcu : F.le F.zero (F.add (F.mul (natu F u H') u) (F.mul u u)) := by
+      have := F.add_le_add (F.mul_nonneg (natu_mono F hu 0 H' (Nat.zero_le H') |> fun h => by
+        exact h) hu) (F.sq_nonneg u)
+      rw [F.add_zero] at this; exact this
+    have hA : F.le (F.mul M (F.add F.one u)) M' := by
+      have := F.add_le_add (F.le_refl (F.mul M (F.add F.one u))) hcu; rw [F.add_zero, hk] at this; exact this
+    have s1 : F.le (F.mul M (F.mul (F.add (F.abs El) (F.abs Er)) (F.add F.one u)))
+        (F.mul M' (F.add (F.abs El) (F.abs Er))) := by
+      rw [F.mul_comm (F.add (F.abs El) (F.abs Er)) _, ← F.mul_assoc, F.mul_comm M' _]
+      rw [F.mul_comm (F.mul M (F.add F.one u)) _]
+      exact F.mul_le_mul_left (by have := F.add_le_add (F.abs_nonneg El) (F.abs_nonneg Er); rw [F.add_zero] at this; exact this) hA
+    have s2 : F.le (F.mul M' (F.add (F.abs El) (F.abs Er))) (F.mul (natu F u H') A) := by
+      rw [F.mul_add, F.mul_add]; exact F.add_le_add ihl ihr
+    have hM1 : F.le M F.one := by
+      have := F.add_le_add (F.le_refl M) (natu_mono F hu 0 (H' + 1) (Nat.zero_le _)); rw [hMH] at this
+      rw [show natu F u 0 = F.zero from rfl, F.add_zero] at this; exact this
+    have hA0 : F.le F.zero A := by
+      have := F.add_le_add (absum_nonneg F l) (absum_nonneg F r); rw [F.add_zero] at this; exact this
+    have s3 : F.le (F.mul M (F.mul A u)) (F.mul u A) := by
+      have hAu : F.le F.zero (F.mul A u) := F.mul_nonneg hA0 hu
+      have := F.mul_le_mul_left hAu hM1
+      rw [F.mul_one, F.mul_comm (F.mul A u) M] at this
+      rw [F.mul_comm u A]; exact this
+    have fin := F.add_le_add (F.le_trans s1 s2) s3
+    show F.le _ (F.mul (F.add u (natu F u H')) A)
+    rw [add_mul F u (natu F u H') A, F.add_comm (F.mul u A) (F.mul (natu F u H') A)]
+    exact fin
+
+theorem neg_add2 (F : OF α) (a b : α) : F.neg (F.add a b) = F.add (F.neg a) (F.neg b) := by
+  have h0 : F.add (F.add (F.neg a) (F.neg b)) (F.add a b) = F.zero := by
+    rw [F.add_assoc (F.neg a) (F.neg b) (F.add a b), F.add_comm a b, ← F.add_assoc (F.neg b) b a,
+      F.add_comm (F.neg b) b, F.add_neg, zero_add, F.add_comm (F.neg a) a, F.add_neg]
+  exact (eq_neg_of_add F h0).symm
+
+/-- The closing algebra: `Dn ≤ g2·qv + G·((Sv + Dn) + Pv)`, `qv, Pv ≤ Sv`, `MG + G = 1`, `g·MG = g2 + 2G` ⇒
+`Dn ≤ g·Sv` (the `|D|` on the right absorbed). -/
+theorem final_alg (F : OF α) {Dn Sv qv Pv g2 G MG g : α} (hg2 : F.le F.zero g2) (hG0 : F.le F.zero G)
+    (hMG0 : F.le F.zero MG) (hneG : MG ≠ F.zero) (hMG : F.add MG G = F.one)
+    (hg : F.mul g MG = F.add g2 (F.add G G)) (hq : F.le qv Sv) (hP : F.le Pv Sv)
+    (h : F.le Dn (F.add (F.mul g2 qv) (F.mul G (F.add (F.add Sv Dn) Pv)))) : F.le Dn (F.mul g Sv) := by
+  have h1 : F.le Dn (F.add (F.mul g2 Sv) (F.mul G (F.add (F.add Sv Dn) Sv))) :=
+    F.le_trans h (F.add_le_add (F.mul_le_mul_left hg2 hq)
+      (F.mul_le_mul_left hG0 (F.add_le_add (F.le_refl _) hP)))
+  have e : F.add (F.mul g2 Sv) (F.mul G (F.add (F.add Sv Dn) Sv)) =
+      F.add (F.mul G Dn) (F.mul (F.add g2 (F.add G G)) Sv) := by
+    rw [F.mul_add G (F.add Sv Dn) Sv, F.mul_add G Sv Dn, add_mul F g2 (F.add G G) Sv, add_mul F G G Sv]
+    -- g2S + ((GS + GD) + GS)  =  GD + (g2S + (GS + GS))
+    rw [F.add_assoc (F.mul G Sv) (F.mul G Dn) (F.mul G Sv), F.add_comm (F.mul G Dn) (F.mul G Sv),
+      ← F.add_assoc (F.mul G Sv) (F.mul G Sv) (F.mul G Dn), ← F.add_assoc (F.mul g2 Sv),
+      F.add_comm (F.add (F.mul g2 Sv) (F.add (F.mul G Sv) (F.mul G Sv))) (F.mul G Dn)]
+  rw [e] at h1
+  have e1 : F.add (F.mul G Dn) (F.mul MG Dn) = Dn := by
+    rw [← add_mul F G MG Dn, F.add_comm G MG, hMG, ZRound.one_mul]
+  have h2 : F.le (F.add (F.mul G Dn) (F.mul MG Dn)) (F.add (F.mul G Dn) (F.mul (F.add g2 (F.add G G)) Sv)) := by
+    rw [e1]; exact h1
+  have h3 := add_le_cancel F h2
+  rw [← hg, F.mul_comm g MG, F.mul_assoc] at h3
+  exact cancel_pos F hMG0 hneG h3
+
+/-- ONE ENTRY OF A FLOATING CHOLESKY, ANY ORDER (closes the gap of `cholesky_entry`: blocked BLAS, FMA, vector lanes).
+The entry's accumulator is a summation tree `T` over the leaves `a` and `−p_k` (`ex T = a − P`, `absum T = |a| + Pa`
+with `P = Σ p_k`, `|P| ≤ Pa = Σ|p_k|`), `small u T`, `nleaves T ≤ H`; the pivot step gives `val T = q·prod1 pf` with
+`|prod1 pf − 1| ≤ g2` (`list_gamma`); `G M = H u`, `M + H u = 1`; `MG + G = 1`, `MG ≠ 0`, `g·MG = g2 + 2G`:
+`|(P + q) − a| ≤ g (Pa + |q|)` — Higham's componentwise bound with `g = (g2 + 2γ_H)/(1 − γ_H)` for ANY order. -/
+theorem cholesky_entry_tree (F : OF α) (T : Tr α) (a P Pa q u M G MG g g2 : α) (H : Nat) (pf : List α)
+    (hu : F.le F.zero u) (hs : small F u T) (hH : nleaves T ≤ H)
+    (hex : ex F T = F.add a (F.neg P)) (habs : absum F T = F.add (F.abs a) Pa)
+    (hPa : F.le (F.abs P) Pa)
+    (hpiv : val F T = F.mul q (prod1 F pf)) (hpf : F.le (F.abs (F.add (prod1 F pf) (F.neg F.one))) g2)
+    (hM : F.le F.zero M) (hMH : F.add M (natu F u H) = F.one) (hne : M ≠ F.zero) (hG : F.mul G M = natu F u H)
+    (hMG0 : F.le F.zero MG) (hMG : F.add MG G = F.one) (hneG : MG ≠ F.zero)
+    (hg : F.mul g MG = F.add g2 (F.add G G)) (hg2 : F.le F.zero g2) (hG0 : F.le F.zero G) :
+    F.le (F.abs (F.add (F.add P q) (F.neg a))) (F.mul g (F.add Pa (F.abs q))) := by
+  -- |val − ex| ≤ G (|a| + Pa)
+  have herr : F.le (F.abs (F.add (val F T) (F.neg (ex F T)))) (F.mul G (F.add (F.abs a) Pa)) := by
+    have h := tree_err F hu T H M hs hH hM hMH
+    rw [habs, ← hG, F.mul_comm G M, F.mul_assoc] at h
+    exact cancel_pos F hM hne h
+  -- |q − val| ≤ g2 |q|
+  have hq : F.le (F.abs (F.add q (F.neg (val F T)))) (F.mul g2 (F.abs q)) := by
+    have e : F.add q (F.neg (val F T)) = F.neg (F.mul q (F.add (prod1 F pf) (F.neg F.one))) := by
+      rw [hpiv, F.mul_add q (prod1 F pf) (F.neg F.one), mul_neg, F.mul_one, neg_add2, F.neg_neg,
+        F.add_comm (F.neg (F.mul q (prod1 F pf))) q]
+    rw [e, F.abs_neg, F.abs_mul, F.mul_comm g2 _]
+    exact F.mul_le_mul_left (F.abs_nonneg q) hpf
+  -- D = (q − val) + (val − ex)
+  have hD : F.add (F.add P q) (F.neg a) =
+      F.add (F.add q (F.neg (val F T))) (F.add (val F T) (F.neg (ex F T))) := by
+    rw [F.add_assoc q (F.neg (val F T)), ← F.add_assoc (F.neg (val F T)) (val F T),
+      F.add_comm (F.neg (val F T)) (val F T), F.add_neg, zero_add, hex, neg_add2, F.neg_neg,
+      F.add_assoc P q (F.neg a), F.add_comm P (F.add q (F.neg a)), F.add_assoc q (F.neg a) P]
+  -- |a| ≤ (Pa + |q|) + |D|
+  have ha : F.le (F.abs a) (F.add (F.add Pa (F.abs q)) (F.abs (F.add (F.add P q) (F.neg a)))) := by
+    have e : a = F.add (F.add P q) (F.neg (F.add (F.add P q) (F.neg a))) := by
+      rw [neg_add2, F.neg_neg, ← F.add_assoc, F.add_neg, zero_add]
+    have hae : F.abs a = F.abs (F.add (F.add P q) (F.neg (F.add (F.add P q) (F.neg a)))) := congrArg F.abs e
+    rw [hae]
+    apply F.le_trans (F.abs_add _ _)
+    rw [F.abs_neg]
+    exact F.add_le_add (F.le_trans (F.abs_add P q) (F.add_le_add hPa (F.le_refl _))) (F.le_refl _)
+  -- |D| ≤ g2|q| + G((S + |D|) + Pa), then the closing algebra
+  have hDb : F.le (F.abs (F.add (F.add P q) (F.neg a)))
+      (F.add (F.mul g2 (F.abs q)) (F.mul G (F.add (F.add (F.add Pa (F.abs q)) (F.abs (F.add (F.add P q) (F.neg a)))) Pa))) := by
+    rw [hD]
+    apply F.le_trans (F.abs_add _ _)
+    apply F.add_le_add hq
+    apply F.le_trans herr
+    rw [← hD]
+    exact F.mul_le_mul_left hG0 (F.add_le_add ha (F.le_refl Pa))
+  have hPa0 : F.le F.zero Pa := F.le_trans (F.abs_nonneg P) hPa
+  have q_le : F.le (F.abs q) (F.add Pa (F.abs q)) := by
+    have := F.add_le_add hPa0 (F.le_refl (F.abs q)); rw [zero_add] at this; exact this
+  have Pa_le : F.le Pa (F.add Pa (F.abs q)) := by
+    have := F.add_le_add (F.le_refl Pa) (F.abs_nonneg q); rw [F.add_zero] at this; exact this
+  exact final_alg F hg2 hG0 hMG0 hneG hMG hg q_le Pa_le hDb
+
 end ZHigham
 
 #print axioms ZHigham.abs_one
@@ -418,3 +681,11 @@ end ZHigham
 #print axioms ZHigham.mem_dl
 #print axioms ZHigham.Sm_eq
 #print axioms ZHigham.cholesky_entry
+#print axioms ZHigham.nleaves_pos
+#print axioms ZHigham.absum_nonneg
+#print axioms ZHigham.abs_ex_le
+#print axioms ZHigham.m_mono
+#print axioms ZHigham.tree_err
+#print axioms ZHigham.cholesky_entry_tree
+#print axioms ZHigham.neg_add2
+#print axioms ZHigham.final_alg

@@ -300,10 +300,9 @@ def pd_ieee(n, entries, mu):
       entry by entry, from the rounding model: lean/ZHigham.lean (2026-11-01, zero axioms) — `gamma_prod` (Lemma
       3.1), `telescope` (an accumulated sum, sequential), `cholesky_entry` (|(sum_k p_k + q) - a| <= g (sum |p_k|
       + |q|), g = gamma_N, the pivot's division or square root with its own factors). What stays a PREMISE: (1) the
-      machine obeys the rounding model (IEEE 754 binary64, |delta| <= 2^-53, both forms (1+d) and 1/(1+d)); (2) the
-      library accumulates every entry SEQUENTIALLY (LAPACK's unblocked dpbtf2 does; the blocked dpbtrf, which
-      scipy calls when the bandwidth exceeds its block size, uses other summation orders — the proof for any
-      order (a summation tree) is not written yet).
+      machine obeys the rounding model (IEEE 754 binary64, |delta| <= 2^-53, both forms (1+d) and 1/(1+d)); and that is
+      all: ANY summation order is covered by `cholesky_entry_tree` (a summation tree — blocked dpbtrf, FMA and
+      vector lanes included), and the coefficient used below is that theorem's g = (gamma_2 + 2 gamma_H)/(1 - gamma_H).
     Returns None if the Cholesky fails or the bound is not positive."""
     import numpy as np
     import scipy.sparse as sp
@@ -345,8 +344,14 @@ def pd_ieee(n, entries, mu):
     # exact zeros, never computed), so Higham's gamma_{n+1} sharpens to gamma_{bw+2} (MEASURED 2026-11-01: with
     # gamma_{n+1} a 27900-unknown frame failed — the correction ~120 exceeded lambda_min ~40)
     u = Fr(1, 2 ** 53)
-    m = min(n, bw + 1) + 1
-    g = m * u / (1 - m * u)
+    # ANY summation order (lean/ZHigham.lean `cholesky_entry_tree`, 2026-11-01): an entry's accumulator is a tree
+    # over at most H = bw + 2 leaves (the entry and the products in the band), the pivot's division or root two more
+    # factors: the backward coefficient is g = (gamma_2 + 2 gamma_H)/(1 - gamma_H), a little over twice the
+    # sequential gamma — the price of not trusting the library's order
+    H = min(n, bw + 1) + 1
+    gH = H * u / (1 - H * u)
+    g2 = 2 * u / (1 - 2 * u)
+    g = (g2 + 2 * gH) / (1 - gH)
     lam = mu - g / (1 - g) * max(tr, Fr(0)) - _sqrt_up(E2)
     return lam if lam > 0 else None
 

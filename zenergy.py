@@ -493,11 +493,11 @@ def _many_worker(idx):
     return idx, _fp_output(c["ctx"], c["parts"], c["es"][idx])
 
 
-def certify_many(parts, f, es, n, jobs=1, exact_up_to=600):
+def certify_many(parts, f, es, n, jobs=1, exact_up_to=None):
     """Many outputs of ONE system (2026-11-01): the shared work once — the exact path's LDL^T and u0, or the floating
     path's factor, proved lam and u~ — and each output's own work (its y, residual, first order) per output, in
     `jobs` processes on the floating path. Results equal certify's, output by output."""
-    if n <= exact_up_to:
+    if n <= (EXACT_UP_TO if exact_up_to is None else exact_up_to):
         return [certify_output(parts, f, e, n) for e in es] if len(es) <= 1 else _exact_many(parts, f, es, n)
     ctx = _fp_prepare(parts, f, n)
     if jobs <= 1 or len(es) <= 1:
@@ -556,19 +556,26 @@ def value_enclosure_fp(parts, f, e, n, ps, bits=192):
     return r["lo"], r["hi"]
 
 
-def certify_scaled(parts, f, e, n, k, exact_up_to=600):
+# Exact solves up to this many unknowns, the floating path above. MEASURED 2026-11-01: the floating path gives the
+# same widths to 4 digits and is faster from ~100 unknowns (plate 448: 0.05 s vs 28.6 s exact; frame 450: 0.03 s vs
+# 4.2 s); it was 600 until the plates showed exact fractions growing faster than on frames (576 unknowns: 71 s).
+EXACT_UP_TO = 120
+
+
+def certify_scaled(parts, f, e, n, k, exact_up_to=None):
     """A proved range of p_k * (e . u(p)) — an output scaled by ONE part's own factor (a stress: E p_k D0 B u), with
     that factor merged into the exact first order instead of multiplied as an interval (2026-11-01):
         p_k w = w0 + [sum_i (s_i + w0 [i = k]) d_i] + d_k L + Sec (1 + d_k),   L = sum_i s_i d_i, |Sec| <= rest
     so  p_k w in centre +- (cerr + sum_i t_i |s~_i + centre [i = k]| + slope_err + t_k cerr + t_k first
     + rest (1 + t_k)), with s~ the (approximate) slopes, `first` >= |L| — every piece already proved (ZNet step 4,
     ZFloatPath's centre and first-order bounds)."""
-    return scaled_from(certify(parts, f, e, n, exact_up_to), parts, k)
+    return scaled_from(certify(parts, f, e, n, EXACT_UP_TO if exact_up_to is None else exact_up_to), parts, k)
 
 
-def certify(parts, f, e, n, exact_up_to=600):
-    """The kernel's choice: exact solves up to `exact_up_to` unknowns, the floating path above (both proved)."""
-    return certify_output(parts, f, e, n) if n <= exact_up_to else certify_output_fp(parts, f, e, n)
+def certify(parts, f, e, n, exact_up_to=None):
+    """The kernel's choice: exact solves up to EXACT_UP_TO unknowns, the floating path above (both proved)."""
+    lim = EXACT_UP_TO if exact_up_to is None else exact_up_to
+    return certify_output(parts, f, e, n) if n <= lim else certify_output_fp(parts, f, e, n)
 
 
 # ----------------------------------------------------------------------------------------------------------------

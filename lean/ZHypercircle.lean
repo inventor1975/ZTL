@@ -17,7 +17,9 @@ inner-product space, proved here:
   `perturb_identity`  an output under the box, exactly: `J(u_E) − J(u_0) = −d(u_E, z_0)` (`a_E = a_0 + d`);
   `perturb_split`     `|d(u_E, z_0)| ≤ |d(u_0, z_0)| + |d(u_E − u_0, z_0)|` — first order + rest;
   `form_cs`      Cauchy–Schwarz for a perturbation bounded by the energy (`−t·a ≤ d ≤ t·a`): `d(x,y)² ≤ t²a(x,x)a(y,y)`;
-  `rest_bound`   the rest: `(1 − t)²·d(u_E − u_0, z_0)² ≤ t⁴·a(u_0,u_0)·a(z_0,z_0)`.
+  `rest_bound`   the rest: `(1 − t)²·d(u_E − u_0, z_0)² ≤ t⁴·a(u_0,u_0)·a(z_0,z_0)`;
+  `beam_correction`  ztl-stand's frame buckling for the CONTINUUM member (not its Hermite model): the inner energy
+                 `EI‖η''‖² − P‖η'‖² − 2P(g,η') ≥ −P²k/(1 − Pk)‖g‖²` from the Poincaré premise `‖η'‖² ≤ (L/2π)²‖η''‖²`.
   The first-order term `|d(u_0, z_0)| ≤ t·∫|σ(u_0) : C⁻¹σ(z_0)|` and its bound through the hypercircle centres are
   inequalities between INTEGRALS (pointwise triangle, Cauchy–Schwarz) — named premises, as Green's formula.
 PREMISES, named and NOT proved here: linear elasticity is the model (the weak form `a(u,v) = f(v)` for every
@@ -401,6 +403,50 @@ theorem rest_bound (F : OF α) (E : ESpace F V) (D : BForm F E) (f : V → α) (
   have hZ0 : F.le F.zero (F.mul t (E.a z0 z0)) := F.mul_nonneg ht (E.nonneg z0)
   exact F.le_trans s1 (F.mul_le_mul_left hZ0 (F.mul_le_mul_left ht key))
 
+/-- THE BEAM'S CONTINUUM CORRECTION (ztl-stand `frame.stability_lower`, 2026-11-01), its algebra. Inside a member
+`w = w_H + η`; `B = ‖η'‖²`, `A = ‖η''‖²`, `X = (g, η')`, `G = ‖g‖²` with `g = w_H' − mean`; the PREMISE (Poincaré,
+the clamped member's Euler load) `B ≤ k0·A`, `k0 = (L/2π)²`; `s = EI − P·k0 ≥ 0`, `EI ≥ 0`:
+`0 ≤ s·(k0·(EI·A − P·B − 2P·X)) + (P·k0)²·G` — i.e. the inner energy `EI·A − P·B − 2P·X ≥ −P²k/(1 − Pk)·G`
+(`k = k0/EI`): `K_exact(−P) ⪰ K_E − P·G_e − P²k/(1 − Pk)·Q`. Via `‖s·η' − P·k0·g‖² ≥ 0`. -/
+theorem beam_correction (F : OF α) (E : ESpace F V) (eta g : V) (A EI P k0 s : α)
+    (hEI : F.le F.zero EI) (hs : F.le F.zero s)
+    (hsdef : F.add s (F.mul P k0) = EI) (hPoinc : F.le (E.a eta eta) (F.mul k0 A)) :
+    F.le F.zero (F.add (F.mul s (F.mul k0 (F.add (F.add (F.mul EI A) (F.neg (F.mul P (E.a eta eta))))
+                                                  (F.neg (F.mul (F.add P P) (E.a g eta))))))
+                       (F.mul (F.mul P k0) (F.mul (F.mul P k0) (E.a g g)))) := by
+  generalize hB : E.a eta eta = B at hPoinc
+  -- k0·(EI·A − P·B) ≥ s·B :  k0·EI·A ≥ EI·B  and  EI·B − P·k0·B = s·B
+  have h1 : F.le (F.mul EI B) (F.mul k0 (F.mul EI A)) := by
+    rw [lcomm F k0 EI A]; exact F.mul_le_mul_left hEI hPoinc
+  have e1 : F.add (F.mul EI B) (F.neg (F.mul k0 (F.mul P B))) = F.mul s B := by
+    rw [← hsdef, add_mul, lcomm F k0 P B, ← F.mul_assoc P k0 B, F.add_assoc, F.add_neg, F.add_zero]
+  have h2 : F.le (F.mul s B) (F.mul k0 (F.add (F.mul EI A) (F.neg (F.mul P B)))) := by
+    rw [← e1, F.mul_add, neg_mul']
+    exact F.add_le_add h1 (F.le_refl _)
+  -- the square: ‖s·η + (−P·k0)·g‖² = s·(s·B) + (s·(−Pk0·X) + (−Pk0)·(s·X)) + (−Pk0)·(−Pk0·G)
+  have sq := E.nonneg (E.add (E.smul s eta) (E.smul (F.neg (F.mul P k0)) g))
+  rw [expand, hB, E.symm eta g] at sq
+  generalize hX : E.a g eta = X at sq ⊢
+  generalize hY : F.add (F.mul EI A) (F.neg (F.mul P B)) = Y at h2 ⊢
+  rw [F.neg_mul, F.neg_mul, neg_mul'] at sq
+  rw [F.neg_mul (F.mul P k0) (F.mul (F.neg (F.mul P k0)) (E.a g g)), F.neg_mul (F.mul P k0) (E.a g g), neg_mul',
+    F.neg_neg] at sq
+  rw [lcomm F (F.mul P k0) s X] at sq
+  generalize hZ : F.mul s (F.mul (F.mul P k0) X) = Z at sq
+  generalize hW : F.mul (F.mul P k0) (F.mul (F.mul P k0) (E.a g g)) = W at sq ⊢
+  -- the goal's left: s·(k0·(Y + −((P+P)·X))) = s·(k0·Y) + −(Z + Z)
+  have e2 : F.mul s (F.mul k0 (F.add Y (F.neg (F.mul (F.add P P) X)))) = F.add (F.mul s (F.mul k0 Y)) (F.neg (F.add Z Z)) := by
+    rw [← hZ, add_mul, F.mul_add k0 Y, neg_add, F.mul_add k0, neg_mul', lcomm F k0 P X,
+      ← F.mul_assoc P k0 X, ← neg_add, F.mul_add s, neg_mul', F.mul_add s (F.mul (F.mul P k0) X)]
+  rw [e2]
+  -- sq : 0 ≤ (s·(s·B) + −Z) + (−Z + W)
+  have e3 : F.add (F.add (F.mul s (F.mul s B)) (F.neg Z)) (F.add (F.neg Z) W) =
+      F.add (F.add (F.mul s (F.mul s B)) (F.neg (F.add Z Z))) W := by
+    rw [neg_add, F.add_assoc (F.mul s (F.mul s B)) (F.neg Z) (F.add (F.neg Z) W), ← F.add_assoc (F.neg Z) (F.neg Z) W,
+      ← F.add_assoc (F.mul s (F.mul s B)) (F.add (F.neg Z) (F.neg Z)) W]
+  rw [e3] at sq
+  exact F.le_trans sq (F.add_le_add (F.add_le_add (F.mul_le_mul_left hs h2) (F.le_refl _)) (F.le_refl _))
+
 end ZHypercircle
 
 #print axioms ZHypercircle.cs_weak
@@ -417,3 +463,4 @@ end ZHypercircle
 #print axioms ZHypercircle.bpol
 #print axioms ZHypercircle.form_cs
 #print axioms ZHypercircle.rest_bound
+#print axioms ZHypercircle.beam_correction

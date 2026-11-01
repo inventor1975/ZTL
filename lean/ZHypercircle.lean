@@ -1,6 +1,7 @@
 -- SPDX-License-Identifier: Apache-2.0 OR MIT
 -- Formalised in Lean by Claude (Anthropic, an AI model) under the curation of Vitaly Reznik, 2026-11-01.
 import ZNet
+import ZRound
 /-!
 # ZHypercircle — the skeleton of ztl-stand's continuum bounds (Prager–Synge), in an abstract energy space. Zero axioms.
 
@@ -12,7 +13,13 @@ inner-product space, proved here:
   `upper`        `(τ,σ) = f(u)` (Green, `τ` equilibrated), `(σ,σ) = f(u)`: `f(u) ≤ (τ,τ)` — any admissible `τ`;
   `polarise`     `w± = s·u ± r·z`, `s·r = 1`: `a(w+,w+) − a(w−,w−) = 4·a(u,z)` — so brackets on the two compliances
                  bracket the output `a(u,z) = J(u)`;
-  `lower_box`, `upper_box`  a modulus anywhere in `E(1 ± t)`: the bounds carry over with `1 + t` and `1 − t`.
+  `lower_box`, `upper_box`  a modulus anywhere in `E(1 ± t)`: the bounds carry over with `1 + t` and `1 − t`;
+  `perturb_identity`  an output under the box, exactly: `J(u_E) − J(u_0) = −d(u_E, z_0)` (`a_E = a_0 + d`);
+  `perturb_split`     `|d(u_E, z_0)| ≤ |d(u_0, z_0)| + |d(u_E − u_0, z_0)|` — first order + rest;
+  `form_cs`      Cauchy–Schwarz for a perturbation bounded by the energy (`−t·a ≤ d ≤ t·a`): `d(x,y)² ≤ t²a(x,x)a(y,y)`;
+  `rest_bound`   the rest: `(1 − t)²·d(u_E − u_0, z_0)² ≤ t⁴·a(u_0,u_0)·a(z_0,z_0)`.
+  The first-order term `|d(u_0, z_0)| ≤ t·∫|σ(u_0) : C⁻¹σ(z_0)|` and its bound through the hypercircle centres are
+  inequalities between INTEGRALS (pointwise triangle, Cauchy–Schwarz) — named premises, as Green's formula.
 PREMISES, named and NOT proved here: linear elasticity is the model (the weak form `a(u,v) = f(v)` for every
 admissible `v`), and Green's formula (`(τ, σ) = f(u)` for an equilibrated `τ`). VR discipline: the empty axiom list.
 -/
@@ -179,6 +186,221 @@ theorem upper_box (F : OF α) {fu tE t0 m : α} (h : F.le fu tE) (hm0 : F.le F.z
     F.le (F.mul m fu) t0 :=
   F.le_trans (F.mul_le_mul_left hm0 h) hm
 
+/-- THE BOX FOR AN OUTPUT, EXACTLY: `a_E = a_0 + d` (the modulus field's energy), `u_E`, `u_0` the weak solutions
+under the same load `f`, `z_0` the nominal dual (`J(v) = a_0(z_0, v)`): `J(u_E) − J(u_0) = −d(u_E, z_0)`.
+`w = u_E − u_0` is written `u_E + (−1)·u_0`. -/
+theorem perturb_identity (F : OF α) (E : ESpace F V) (aE d : V → V → α) (f J : V → α) (uE u0 z0 : V)
+    (hd : ∀ x y, aE x y = F.add (E.a x y) (d x y)) (huE : ∀ v, aE uE v = f v) (hu0 : ∀ v, E.a u0 v = f v)
+    (hJ : ∀ v, J v = E.a z0 v) :
+    F.add (J uE) (F.neg (J u0)) = F.neg (d uE z0) := by
+  rw [hJ, hJ, E.symm z0 uE, E.symm z0 u0, hu0]
+  have h := huE z0
+  rw [hd] at h
+  -- a0(uE,z0) + d(uE,z0) = f(z0)  =>  a0(uE,z0) − f(z0) = −d(uE,z0)
+  rw [← h, F.add_comm (E.a uE z0) (d uE z0), neg_add, ← F.add_assoc, F.add_comm (E.a uE z0) (F.neg (d uE z0)),
+    F.add_assoc, F.add_neg, F.add_zero]
+
+/-- The split, for a `d` additive in its first argument: `d(u_E, z) = d(u_0, z) + d(u_E − u_0, z)` — so
+`|J(u_E) − J(u_0)| ≤ |d(u_0, z_0)| + |d(u_E − u_0, z_0)|` (first order + rest). -/
+theorem perturb_split (F : OF α) (E : ESpace F V) (d : V → V → α) (uE u0 z0 : V)
+    (hadd : ∀ x y z, d (E.add x y) z = F.add (d x z) (d y z))
+    (hrecon : E.add u0 (E.add uE (E.smul (F.neg F.one) u0)) = uE) :
+    F.le (F.abs (d uE z0)) (F.add (F.abs (d u0 z0)) (F.abs (d (E.add uE (E.smul (F.neg F.one) u0)) z0))) := by
+  have e : d uE z0 = F.add (d u0 z0) (d (E.add uE (E.smul (F.neg F.one) u0)) z0) := by
+    rw [← hadd, hrecon]
+  rw [e]
+  exact F.abs_add _ _
+
+/-- A symmetric bilinear form on the same vectors (the energy's perturbation `d`; not signed). -/
+structure BForm (F : OF α) (E : ESpace F V) where
+  b : V → V → α
+  symm : ∀ x y, b x y = b y x
+  add_left : ∀ x y z, b (E.add x y) z = F.add (b x z) (b y z)
+  smul_left : ∀ c x y, b (E.smul c x) y = F.mul c (b x y)
+
+theorem bexpand (F : OF α) (E : ESpace F V) (D : BForm F E) (p q : α) (x y : V) :
+    D.b (E.add (E.smul p x) (E.smul q y)) (E.add (E.smul p x) (E.smul q y)) =
+      F.add (F.add (F.mul p (F.mul p (D.b x x))) (F.mul p (F.mul q (D.b x y))))
+            (F.add (F.mul q (F.mul p (D.b x y))) (F.mul q (F.mul q (D.b y y)))) := by
+  have ar : ∀ x y z, D.b z (E.add x y) = F.add (D.b z x) (D.b z y) := fun x y z => by
+    rw [D.symm, D.add_left, D.symm x z, D.symm y z]
+  have sr : ∀ c x y, D.b y (E.smul c x) = F.mul c (D.b y x) := fun c x y => by
+    rw [D.symm, D.smul_left, D.symm x y]
+  rw [D.add_left, ar, ar, D.smul_left, D.smul_left, D.smul_left, D.smul_left, sr, sr, sr, sr, D.symm y x]
+
+/-- The energy itself as a `BForm`. -/
+def ofE (F : OF α) (E : ESpace F V) : BForm F E := ⟨E.a, E.symm, E.add_left, E.smul_left⟩
+
+theorem lcomm (F : OF α) (a b c : α) : F.mul a (F.mul b c) = F.mul b (F.mul a c) := by
+  rw [← F.mul_assoc, F.mul_comm a b, F.mul_assoc]
+
+theorem addlc (F : OF α) (a b c : α) : F.add a (F.add b c) = F.add b (F.add a c) := by
+  rw [← F.add_assoc, F.add_comm a b, F.add_assoc]
+
+/-- The two expansions at `±q`, in four atoms: `b(px+qy) = (P + M) + (M + Q)`, `b(px−qy) = (P + −M) + (−M + Q)`. -/
+theorem bexpand_pm (F : OF α) (E : ESpace F V) (D : BForm F E) (p q : α) (x y : V) :
+    D.b (E.add (E.smul p x) (E.smul q y)) (E.add (E.smul p x) (E.smul q y)) =
+      F.add (F.add (F.mul p (F.mul p (D.b x x))) (F.mul p (F.mul q (D.b x y))))
+            (F.add (F.mul p (F.mul q (D.b x y))) (F.mul q (F.mul q (D.b y y)))) ∧
+    D.b (E.add (E.smul p x) (E.smul (F.neg q) y)) (E.add (E.smul p x) (E.smul (F.neg q) y)) =
+      F.add (F.add (F.mul p (F.mul p (D.b x x))) (F.neg (F.mul p (F.mul q (D.b x y)))))
+            (F.add (F.neg (F.mul p (F.mul q (D.b x y)))) (F.mul q (F.mul q (D.b y y)))) := by
+  constructor
+  · rw [bexpand, lcomm F q p]
+  · rw [bexpand, lcomm F (F.neg q) p, F.neg_mul, neg_mul', F.neg_mul, F.neg_mul, neg_mul', F.neg_neg]
+
+/-- PARALLELOGRAM: `b(px+qy) + b(px−qy) = (P + P) + (Q + Q)`. -/
+theorem para (F : OF α) (E : ESpace F V) (D : BForm F E) (p q : α) (x y : V) :
+    F.add (D.b (E.add (E.smul p x) (E.smul q y)) (E.add (E.smul p x) (E.smul q y)))
+          (D.b (E.add (E.smul p x) (E.smul (F.neg q) y)) (E.add (E.smul p x) (E.smul (F.neg q) y))) =
+      F.add (F.add (F.mul p (F.mul p (D.b x x))) (F.mul p (F.mul p (D.b x x))))
+            (F.add (F.mul q (F.mul q (D.b y y))) (F.mul q (F.mul q (D.b y y)))) := by
+  obtain ⟨e1, e2⟩ := bexpand_pm F E D p q x y
+  rw [e1, e2]
+  generalize F.mul p (F.mul p (D.b x x)) = P
+  generalize F.mul p (F.mul q (D.b x y)) = M
+  generalize F.mul q (F.mul q (D.b y y)) = Q
+  have cm : ∀ Y, F.add M (F.add (F.neg M) Y) = Y := fun Y => by
+    rw [← F.add_assoc, F.add_neg, zero_add]
+  -- ((P+M)+(M+Q)) + ((P+−M)+(−M+Q))
+  rw [add4 F (F.add P M) (F.add M Q) (F.add P (F.neg M)) (F.add (F.neg M) Q)]
+  rw [add4 F P M P (F.neg M), F.add_neg, F.add_zero, add4 F M Q (F.neg M) Q, F.add_neg, zero_add]
+
+/-- POLARISATION, general: `b(px+qy) = b(px−qy) + ((M + M) + (M + M))`, `M = p·q·b(x,y)`. -/
+theorem bpol (F : OF α) (E : ESpace F V) (D : BForm F E) (p q : α) (x y : V) :
+    D.b (E.add (E.smul p x) (E.smul q y)) (E.add (E.smul p x) (E.smul q y)) =
+      F.add (D.b (E.add (E.smul p x) (E.smul (F.neg q) y)) (E.add (E.smul p x) (E.smul (F.neg q) y)))
+            (F.add (F.add (F.mul p (F.mul q (D.b x y))) (F.mul p (F.mul q (D.b x y))))
+                   (F.add (F.mul p (F.mul q (D.b x y))) (F.mul p (F.mul q (D.b x y))))) := by
+  obtain ⟨e1, e2⟩ := bexpand_pm F E D p q x y
+  rw [e1, e2]
+  generalize F.mul p (F.mul p (D.b x x)) = P
+  generalize F.mul p (F.mul q (D.b x y)) = M
+  generalize F.mul q (F.mul q (D.b y y)) = Q
+  -- (P + −M) + (−M + Q) + ((M+M)+(M+M)) = (P+M)+(M+Q)
+  have cx : ∀ Y, F.add (F.neg M) (F.add M Y) = Y := fun Y => by
+    rw [← F.add_assoc, F.add_comm (F.neg M) M, F.add_neg, zero_add]
+  rw [F.add_assoc P (F.neg M) (F.add (F.neg M) Q)]
+  rw [F.add_assoc P (F.add (F.neg M) (F.add (F.neg M) Q)), F.add_assoc (F.neg M) (F.add (F.neg M) Q),
+    F.add_assoc (F.neg M) Q, F.add_assoc M M (F.add M M), addlc F Q M, cx, addlc F (F.neg M) Q, cx]
+  rw [F.add_assoc P M, ← F.add_assoc M M Q, F.add_comm (F.add M M) Q]
+
+/-- CAUCHY–SCHWARZ FOR A BOUNDED PERTURBATION. `d` symmetric bilinear with `−t·a(w,w) ≤ d(w,w) ≤ t·a(w,w)` for every
+`w` (the modulus field within `E0(1 ± t)`), `t·a(x,x) ≠ 0`: `d(x,y)² ≤ (t·a(x,x))·(t·a(y,y))`. With `K = d(x,y)`,
+`c = t·a(x,x)`, `w± = Kx ± cy`: `0 ≤ (t·a(w−) + d(w−)) + (t·a(w+) − d(w+)) = 2(c·(c·(t·a(y,y))) − c·K²)`. -/
+theorem form_cs (F : OF α) (E : ESpace F V) (D : BForm F E) (t : α) (x y : V) (ht : F.le F.zero t)
+    (hne : F.mul t (E.a x x) ≠ F.zero)
+    (hP : ∀ w, F.le F.zero (F.add (F.mul t (E.a w w)) (D.b w w)))
+    (hM : ∀ w, F.le F.zero (F.add (F.mul t (E.a w w)) (F.neg (D.b w w)))) :
+    F.le (F.mul (D.b x y) (D.b x y)) (F.mul (F.mul t (E.a x x)) (F.mul t (E.a y y))) := by
+  have hc0 : F.le F.zero (F.mul t (E.a x x)) := F.mul_nonneg ht (E.nonneg x)
+  generalize hK : D.b x y = K
+  generalize hc : F.mul t (E.a x x) = c at hne hc0
+  have h := F.add_le_add (hP (E.add (E.smul K x) (E.smul (F.neg c) y))) (hM (E.add (E.smul K x) (E.smul c y)))
+  rw [F.add_zero] at h
+  have pa : F.add (E.a (E.add (E.smul K x) (E.smul c y)) (E.add (E.smul K x) (E.smul c y)))
+      (E.a (E.add (E.smul K x) (E.smul (F.neg c) y)) (E.add (E.smul K x) (E.smul (F.neg c) y))) =
+      F.add (F.add (F.mul K (F.mul K (E.a x x))) (F.mul K (F.mul K (E.a x x))))
+            (F.add (F.mul c (F.mul c (E.a y y))) (F.mul c (F.mul c (E.a y y)))) := para F E (ofE F E) K c x y
+  have po := bpol F E D K c x y
+  rw [hK] at po
+  rw [po] at h
+  generalize E.a (E.add (E.smul K x) (E.smul c y)) (E.add (E.smul K x) (E.smul c y)) = ap at h pa
+  generalize E.a (E.add (E.smul K x) (E.smul (F.neg c) y)) (E.add (E.smul K x) (E.smul (F.neg c) y)) = am at h pa
+  generalize D.b (E.add (E.smul K x) (E.smul (F.neg c) y)) (E.add (E.smul K x) (E.smul (F.neg c) y)) = dm at h
+  rw [lcomm F K c K] at h
+  -- h : 0 ≤ (t·am + dm) + (t·ap + −(dm + 4G)), G = c·K²   ==>   0 ≤ t·(ap + am) + −4G
+  have e1 : ∀ G, F.add (F.add (F.mul t am) dm) (F.add (F.mul t ap) (F.neg (F.add dm (F.add (F.add G G) (F.add G G))))) =
+      F.add (F.mul t (F.add ap am)) (F.neg (F.add (F.add G G) (F.add G G))) := fun G => by
+    rw [neg_add, F.mul_add, add4, F.add_comm (F.mul t am) (F.mul t ap), F.add_assoc, ← F.add_assoc dm (F.neg dm),
+      F.add_neg, zero_add, ← F.add_assoc]
+  rw [e1, pa, F.mul_add, F.mul_add, F.mul_add] at h
+  have tK : F.mul t (F.mul K (F.mul K (E.a x x))) = F.mul c (F.mul K K) := by
+    rw [lcomm F t K, lcomm F t K, hc, ← F.mul_assoc K K c, F.mul_comm (F.mul K K) c]
+  have tc : F.mul t (F.mul c (F.mul c (E.a y y))) = F.mul c (F.mul c (F.mul t (E.a y y))) := by
+    rw [lcomm F t c, lcomm F t c]
+  rw [tK, tc] at h
+  have h2 := le_of_sub_nonneg F h
+  have h3 := add_le_cancel F h2
+  have h4 := F.le_of_double h3
+  exact cancel_pos F hc0 hne h4
+
+/-- `0 ≤ W`, `0 ≤ Y`, `W·(m·W) ≤ W·Y`, `0 ≤ m`: `m·W ≤ Y` (`W = 0` decided by `mul_eq_zero`, no case split). -/
+theorem cancel_W (F : OF α) {W m Y : α} (hW : F.le F.zero W) (hY : F.le F.zero Y) (_hm : F.le F.zero m)
+    (h : F.le (F.mul W (F.mul m W)) (F.mul W Y)) : F.le (F.mul m W) Y := by
+  cases F.le_total (F.mul m W) Y with
+  | inl h' => exact h'
+  | inr hYm =>
+    have h2 := F.le_antisymm h (F.mul_le_mul_left hW hYm)
+    have h3 : F.mul W (F.add (F.mul m W) (F.neg Y)) = F.zero := by rw [F.mul_add, neg_mul', h2, F.add_neg]
+    cases F.mul_eq_zero h3 with
+    | inl e => rw [e, F.mul_zero]; exact hY
+    | inr e =>
+      have := eq_neg_of_add F e
+      rw [F.neg_neg] at this
+      rw [this]; exact F.le_refl Y
+
+/-- THE REST, PROVED. `a_E = a_0 + d` with `−t·a_0 ≤ d ≤ t·a_0` on the diagonal, `u_E`, `u_0` the weak solutions,
+`w = u_E − u_0` (`u_0 + w = u_E`), `s = 1 − t ≥ 0`, `t·a_0(u_0,u_0) ≠ 0`, `t·a_0(z_0,z_0) ≠ 0`:
+`s²·d(z_0,w)² ≤ (t·a_0(z_0,z_0))·(t·(t·(t·a_0(u_0,u_0))))` — `|d(u_E − u_0, z_0)| ≤ t²/(1−t)·‖u_0‖‖z_0‖`, the stand's rest. -/
+theorem rest_bound (F : OF α) (E : ESpace F V) (D : BForm F E) (f : V → α) (t s : α) (uE u0 z0 : V)
+    (ht : F.le F.zero t) (hs : F.le F.zero s) (hst : F.add s t = F.one)
+    (hP : ∀ w, F.le F.zero (F.add (F.mul t (E.a w w)) (D.b w w)))
+    (hM : ∀ w, F.le F.zero (F.add (F.mul t (E.a w w)) (F.neg (D.b w w))))
+    (huE : ∀ v, F.add (E.a uE v) (D.b uE v) = f v) (hu0 : ∀ v, E.a u0 v = f v)
+    (hrecon : E.add u0 (E.add uE (E.smul (F.neg F.one) u0)) = uE)
+    (hU : F.mul t (E.a u0 u0) ≠ F.zero) (hZ : F.mul t (E.a z0 z0) ≠ F.zero) :
+    F.le (F.mul (F.mul s s) (F.mul (D.b z0 (E.add uE (E.smul (F.neg F.one) u0)))
+                                    (D.b z0 (E.add uE (E.smul (F.neg F.one) u0)))))
+         (F.mul (F.mul t (E.a z0 z0)) (F.mul t (F.mul t (F.mul t (E.a u0 u0))))) := by
+  generalize hw : E.add uE (E.smul (F.neg F.one) u0) = w at hrecon ⊢
+  -- a0(w, v) = −d(uE, v)
+  have om : ∀ a, F.mul F.one a = a := fun a => by rw [F.mul_comm, F.mul_one]
+  have aw : ∀ v, E.a w v = F.neg (D.b uE v) := fun v => by
+    rw [← hw, E.add_left, E.smul_left, F.neg_mul, om, hu0, ← huE v, neg_add, ← F.add_assoc, F.add_neg, zero_add]
+  -- d(uE, v) = d(u0, v) + d(w, v)
+  have dsplit : ∀ v, D.b uE v = F.add (D.b u0 v) (D.b w v) := fun v => by rw [← D.add_left, hrecon]
+  have hW0 : F.le F.zero (E.a w w) := E.nonneg w
+  have hdw : F.le (F.neg (D.b w w)) (F.mul t (E.a w w)) := by
+    have h2 := F.add_le_add (hP w) (F.le_refl (F.neg (D.b w w)))
+    rwa [zero_add, F.add_assoc, F.add_neg, F.add_zero] at h2
+  have e : E.a w w = F.add (F.neg (D.b u0 w)) (F.neg (D.b w w)) := by rw [aw, dsplit, neg_add]
+  generalize hW : E.a w w = W at hW0 hdw e
+  -- s·W ≤ −d(u0, w)
+  have h1 := F.add_le_add (F.le_refl (F.neg (D.b u0 w))) hdw
+  rw [← e] at h1
+  have h2 := F.add_le_add h1 (F.le_refl (F.neg (F.mul t W)))
+  rw [F.add_assoc (F.neg (D.b u0 w)), F.add_neg, F.add_zero] at h2
+  have hW1 : F.add (F.mul s W) (F.mul t W) = W := by rw [← add_mul, hst, om]
+  have hx : F.add W (F.neg (F.mul t W)) = F.mul s W := by
+    conv => lhs; arg 2; rw [← hW1]
+    rw [F.add_assoc, F.add_neg, F.add_zero]
+  rw [hx] at h2
+  have hsW0 : F.le F.zero (F.mul s W) := F.mul_nonneg hs hW0
+  have habs : F.le (F.neg (D.b u0 w)) (F.abs (D.b u0 w)) := by
+    have := ZRound.le_abs F (F.neg (D.b u0 w)); rwa [F.abs_neg] at this
+  have sq1 := sq_le_sq F hsW0 (F.le_trans h2 habs)
+  rw [ZRound.abs_sq] at sq1
+  have fcs1 := form_cs F E D t u0 w ht hU hP hM
+  rw [hW] at fcs1
+  have c1 := F.le_trans sq1 fcs1
+  -- (sW)(sW) = W·((s s)W),  (t U0)(t W) = W·(t (t U0))
+  have r1 : F.mul (F.mul s W) (F.mul s W) = F.mul W (F.mul (F.mul s s) W) := by
+    rw [F.mul_assoc s s W, ← F.mul_assoc W s (F.mul s W), F.mul_comm W s]
+  have r2 : F.mul (F.mul t (E.a u0 u0)) (F.mul t W) = F.mul W (F.mul t (F.mul t (E.a u0 u0))) := by
+    rw [F.mul_comm (F.mul t (E.a u0 u0)) (F.mul t W), F.mul_assoc t W, lcomm F t W]
+  have c2 : F.le (F.mul W (F.mul (F.mul s s) W)) (F.mul W (F.mul t (F.mul t (E.a u0 u0)))) := by
+    rw [← r1, ← r2]; exact c1
+  have hY : F.le F.zero (F.mul t (F.mul t (E.a u0 u0))) := F.mul_nonneg ht (F.mul_nonneg ht (E.nonneg u0))
+  have hm : F.le F.zero (F.mul s s) := F.mul_nonneg hs hs
+  have key := cancel_W F hW0 hY hm c2
+  have fcs2 := form_cs F E D t z0 w ht hZ hP hM
+  rw [hW] at fcs2
+  have s1 := F.mul_le_mul_left hm fcs2
+  rw [lcomm F (F.mul s s) (F.mul t (E.a z0 z0)), lcomm F (F.mul s s) t] at s1
+  have hZ0 : F.le F.zero (F.mul t (E.a z0 z0)) := F.mul_nonneg ht (E.nonneg z0)
+  exact F.le_trans s1 (F.mul_le_mul_left hZ0 (F.mul_le_mul_left ht key))
+
 end ZHypercircle
 
 #print axioms ZHypercircle.cs_weak
@@ -189,3 +411,9 @@ end ZHypercircle
 #print axioms ZHypercircle.output_bracket
 #print axioms ZHypercircle.lower_box
 #print axioms ZHypercircle.upper_box
+#print axioms ZHypercircle.perturb_identity
+#print axioms ZHypercircle.perturb_split
+#print axioms ZHypercircle.para
+#print axioms ZHypercircle.bpol
+#print axioms ZHypercircle.form_cs
+#print axioms ZHypercircle.rest_bound

@@ -356,30 +356,7 @@ def pd_ieee(n, entries, mu):
     return lam if lam > 0 else None
 
 
-def _float_search(parts, f, e, n):
-    import numpy as np
-    import scipy.sparse as sp
-    import scipy.sparse.linalg as sla
-    K = matrix(parts, n)
-    rows, cols_, vals = [], [], []
-    for (i, j), v in K.items():
-        rows.append(i); cols_.append(j); vals.append(float(v))
-        if i != j:
-            rows.append(j); cols_.append(i); vals.append(float(v))
-    A = sp.csc_matrix((vals, (rows, cols_)), shape=(n, n))
-    lu = sla.splu(A)
-    u = lu.solve(np.array([float(x) for x in f]))
-    y = lu.solve(np.array([float(x) for x in e]))
-    try:
-        lam = float(sla.eigsh(A, k=1, sigma=0, which="LM", return_eigenvectors=False)[0])
-    except Exception:
-        lam = float(min(A.diagonal())) * 1e-12
-    return K, u, y, lam
-
-
-def certify_output_fp(parts, f, e, n, bits=192, pd="ieee"):
-    """As certify_output, without exact solves: floats searched, everything CHECKED exactly (see above).
-    Returns the same keys (lo, hi, nominal as an interval midpoint, first, rest, T, slopes) plus 'lam'."""
+def _check_parts(parts):
     for p in parts:
         t = _q(p["t"])
         if not (0 <= t < 1):
@@ -387,12 +364,58 @@ def certify_output_fp(parts, f, e, n, bits=192, pd="ieee"):
         for w, g in p["terms"]:
             if _q(w) < 0:
                 raise ValueError("a part's term has a negative weight: the part is not PSD as given")
-    T = max((_q(p["t"]) for p in parts), default=Fr(0))
-    K, uf, yf, lam_f = _float_search(parts, f, e, n)
-    ut = [Fr(float(x)) for x in uf]                     # dyadic: exact, short
-    yt = [Fr(float(x)) for x in yf]
-    # 2. lam: a dyadic below the float estimate, proved; halve until proved (at most a few tries)
-    if pd == "ieee":                                   # the floating Cholesky (named premise: IEEE 754, LAPACK)
+    return max((_q(p["t"]) for p in parts), default=Fr(0))
+
+
+def _float_matrix(K, n):
+    import scipy.sparse as sp
+    rows, cols_, vals = [], [], []
+    for (i, j), v in K.items():
+        rows.append(i); cols_.append(j); vals.append(float(v))
+        if i != j:
+            rows.append(j); cols_.append(i); vals.append(float(v))
+    return sp.csc_matrix((vals, (rows, cols_)), shape=(n, n))
+
+
+def _float_search(parts, f, e, n):
+    import numpy as np
+    import scipy.sparse.linalg as sla
+    K = matrix(parts, n)
+    A = _float_matrix(K, n)
+    lu = sla.splu(A)
+    u = lu.solve(np.array([float(x) for x in f]))
+    y = lu.solve(np.array([float(x) for x in e]))
+    try:
+        lam = float(sla.eigsh(A, k=1, sigma=0, which="LM", return_eigenvectors=False, v0=np.ones(n))[0])
+    except Exception:
+        lam = float(min(A.diagonal())) * 1e-12
+    return K, u, y, lam
+
+
+def _kmul(K, x, n):
+    r = [Fr(0)] * n
+    for (i, j), v in K.items():
+        r[i] += v * x[j]
+        if i != j:
+            r[j] += v * x[i]
+    return r
+
+
+def _fp_prepare(parts, f, n, bits=192, pd="ieee"):
+    """The floating path's SHARED work, done once for any number of outputs (2026-11-01): the float factor, a
+    proved lam, u~ with its exact residual and energy, and every term's g.u~."""
+    import numpy as np
+    import scipy.sparse.linalg as sla
+    T = _check_parts(parts)
+    K = matrix(parts, n)
+    A = _float_matrix(K, n)
+    lu = sla.splu(A)
+    uf = lu.solve(np.array([float(x) for x in f]))
+    try:
+        lam_f = float(sla.eigsh(A, k=1, sigma=0, which="LM", return_eigenvectors=False, v0=np.ones(n))[0])
+    except Exception:
+        lam_f = float(min(A.diagonal())) * 1e-12
+    if pd == "ieee":                                   # the floating Cholesky (named premise: IEEE 754's rounding)
         lam, used_bits = None, 0
         mu = Fr(lam_f) * Fr(9, 10) if lam_f > 0 else Fr(0)
         for _ in range(6):
@@ -403,7 +426,6 @@ def certify_output_fp(parts, f, e, n, bits=192, pd="ieee"):
             mu /= 4
         if not lam:
             raise ArithmeticError("lambda_min(K0) not proved positive by the floating Cholesky")
-        proved = True
     # the interval widths grow along the elimination: more bits first (MEASURED 2026-11-01: a 7200-unknown frame
     # was not proved at 192 bits, proved at 384 in 33 s), then a smaller lam
     else:
@@ -421,27 +443,32 @@ def certify_output_fp(parts, f, e, n, bits=192, pd="ieee"):
             lam /= 4
         if not proved:
             raise ArithmeticError("lambda_min(K0) not proved positive: K0 may not be positive definite")
-    # 1. residuals, exact
-    def kmul(x):
-        r = [Fr(0)] * n
-        for (i, j), v in K.items():
-            r[i] += v * x[j]
-            if i != j:
-                r[j] += v * x[i]
-        return r
-    Ku, Ky = kmul(ut), kmul(yt)
+    ut = [Fr(float(x)) for x in uf]                     # dyadic: exact, short
+    Ku = _kmul(K, ut, n)
     ru = [_q(f[i]) - Ku[i] for i in range(n)]
-    ry = [_q(e[i]) - Ky[i] for i in range(n)]
     eu = _sqrt_up(sum(x * x for x in ru) / lam)          # ||u0 - u~||_K0
-    ey = _sqrt_up(sum(x * x for x in ry) / lam)
     nu_t = _sqrt_up(sum(a * b for a, b in zip(ut, Ku)))   # ||u~||_K0
+    gu = [[_dot(g, ut) for _, g in p["terms"]] for p in parts]
+    return {"T": T, "K": K, "lu": lu, "n": n, "lam": lam, "bits": used_bits, "ut": ut, "ru": ru, "eu": eu,
+            "nu_t": nu_t, "nu": nu_t + eu, "gu": gu}
+
+
+def _fp_output(ctx, parts, e):
+    """One output on a prepared floating path (see certify_output_fp)."""
+    import numpy as np
+    n, K, lam, T = ctx["n"], ctx["K"], ctx["lam"], ctx["T"]
+    ut, ru, eu, nu_t, nu = ctx["ut"], ctx["ru"], ctx["eu"], ctx["nu_t"], ctx["nu"]
+    yt = [Fr(float(x)) for x in ctx["lu"].solve(np.array([float(x) for x in e]))]
+    Ky = _kmul(K, yt, n)
+    ry = [_q(e[i]) - Ky[i] for i in range(n)]
+    ey = _sqrt_up(sum(x * x for x in ry) / lam)
     ny_t = _sqrt_up(sum(a * b for a, b in zip(yt, Ky)))
-    nu, ny = nu_t + eu, ny_t + ey
+    ny = ny_t + ey
     centre = sum(_q(a) * b for a, b in zip(e, ut)) + sum(a * b for a, b in zip(yt, ru))
     cerr = ey * eu
     signed, D1 = [], Fr(0)
-    for p in parts:
-        c = sum(_q(w) * _dot(g, yt) * _dot(g, ut) for w, g in p["terms"])
+    for p, gus in zip(parts, ctx["gu"]):
+        c = sum(_q(w) * _dot(g, yt) * gv for (w, g), gv in zip(p["terms"], gus))
         signed.append(c)
         D1 += _q(p["t"]) * abs(c)
     slope_err = T * (ey * nu + ny_t * eu)               # >= sum_i t_i |slope_i(true) - slope_i(approx)|
@@ -449,7 +476,77 @@ def certify_output_fp(parts, f, e, n, bits=192, pd="ieee"):
     rest = T * T / (1 - T) * ny * nu if T else Fr(0)
     return {"nominal": centre, "nominal_err": cerr, "slope_err": slope_err,
             "lo": centre - cerr - D1 - rest, "hi": centre + cerr + D1 + rest,
-            "first": D1, "rest": rest, "T": T, "slopes": [-c for c in signed], "lam": lam, "bits": used_bits}
+            "first": D1, "rest": rest, "T": T, "slopes": [-c for c in signed], "lam": lam, "bits": ctx["bits"]}
+
+
+def certify_output_fp(parts, f, e, n, bits=192, pd="ieee"):
+    """As certify_output, without exact solves: floats searched, everything CHECKED exactly (see above).
+    Returns the same keys (lo, hi, nominal as an interval midpoint, first, rest, T, slopes) plus 'lam'."""
+    return _fp_output(_fp_prepare(parts, f, n, bits, pd), parts, e)
+
+
+_MANY = {}
+
+
+def _many_worker(idx):
+    c = _MANY
+    return idx, _fp_output(c["ctx"], c["parts"], c["es"][idx])
+
+
+def certify_many(parts, f, es, n, jobs=1, exact_up_to=600):
+    """Many outputs of ONE system (2026-11-01): the shared work once — the exact path's LDL^T and u0, or the floating
+    path's factor, proved lam and u~ — and each output's own work (its y, residual, first order) per output, in
+    `jobs` processes on the floating path. Results equal certify's, output by output."""
+    if n <= exact_up_to:
+        return [certify_output(parts, f, e, n) for e in es] if len(es) <= 1 else _exact_many(parts, f, es, n)
+    ctx = _fp_prepare(parts, f, n)
+    if jobs <= 1 or len(es) <= 1:
+        return [_fp_output(ctx, parts, e) for e in es]
+    import multiprocessing as mp
+    _MANY.clear()
+    _MANY.update({"ctx": ctx, "parts": parts, "es": es})
+    with mp.get_context("fork").Pool(min(jobs, len(es))) as pool:
+        out = dict(pool.map(_many_worker, range(len(es))))
+    _MANY.clear()
+    return [out[i] for i in range(len(es))]
+
+
+def _exact_many(parts, f, es, n):
+    T = _check_parts(parts)
+    K0 = matrix(parts, n)
+    L, d = ldl(n, K0)
+    u0 = solve(L, d, f)
+    _check_solution(K0, u0, f)
+    fu = sum(_q(a) * b for a, b in zip(f, u0))
+    gu = [[_dot(g, u0) for _, g in p["terms"]] for p in parts]
+    res = []
+    for e in es:
+        y0 = solve(L, d, e)
+        _check_solution(K0, y0, e)
+        nominal = sum(_q(ei) * ui for ei, ui in zip(e, u0))
+        signed, D1 = [], Fr(0)
+        for p, gus in zip(parts, gu):
+            c = sum(_q(w) * _dot(g, y0) * gv for (w, g), gv in zip(p["terms"], gus))
+            signed.append(c)
+            D1 += _q(p["t"]) * abs(c)
+        ey = sum(_q(a) * b for a, b in zip(e, y0))
+        rest = T * T / (1 - T) * _sqrt_up(ey * fu) if T else Fr(0)
+        res.append({"nominal": nominal, "lo": nominal - D1 - rest, "hi": nominal + D1 + rest,
+                    "first": D1, "rest": rest, "T": T, "slopes": [-c for c in signed]})
+    return res
+
+
+def scaled_from(r, parts, k):
+    """certify_scaled's range from an already certified output r (certify or certify_many)."""
+    centre = r["nominal"]
+    cerr = r.get("nominal_err", Fr(0))
+    serr = r.get("slope_err", Fr(0))
+    tk = _q(parts[k]["t"])
+    D1p = Fr(0)
+    for i, (p, sl) in enumerate(zip(parts, r["slopes"])):
+        D1p += _q(p["t"]) * abs(sl + (centre if i == k else 0))
+    half = cerr + D1p + serr + tk * cerr + tk * r["first"] + r["rest"] * (1 + tk)
+    return {"nominal": centre, "lo": centre - half, "hi": centre + half, "base": r}
 
 
 def value_enclosure_fp(parts, f, e, n, ps, bits=192):
@@ -466,16 +563,7 @@ def certify_scaled(parts, f, e, n, k, exact_up_to=600):
     so  p_k w in centre +- (cerr + sum_i t_i |s~_i + centre [i = k]| + slope_err + t_k cerr + t_k first
     + rest (1 + t_k)), with s~ the (approximate) slopes, `first` >= |L| — every piece already proved (ZNet step 4,
     ZFloatPath's centre and first-order bounds)."""
-    r = certify(parts, f, e, n, exact_up_to)
-    centre = r["nominal"]
-    cerr = r.get("nominal_err", Fr(0))
-    serr = r.get("slope_err", Fr(0))
-    tk = _q(parts[k]["t"])
-    D1p = Fr(0)
-    for i, (p, sl) in enumerate(zip(parts, r["slopes"])):
-        D1p += _q(p["t"]) * abs(sl + (centre if i == k else 0))
-    half = cerr + D1p + serr + tk * cerr + tk * r["first"] + r["rest"] * (1 + tk)
-    return {"nominal": centre, "lo": centre - half, "hi": centre + half, "base": r}
+    return scaled_from(certify(parts, f, e, n, exact_up_to), parts, k)
 
 
 def certify(parts, f, e, n, exact_up_to=600):
@@ -544,6 +632,15 @@ def _selftest():
             v = _q(ps[k]) * value_at(parts, f, e, n, ps)
             assert r["lo"] <= v <= r["hi"], (trial, v, r["lo"], r["hi"])
             sc_pts += 1
+    for trial in range(6):                              # certify_many == certify, output by output, both paths
+        n, m = rng.randint(3, 6), rng.randint(2, 5)
+        parts, f, _ = _random_case(rng, n, m, Fr(rng.choice([1, 5, 20]), 100))
+        es = [[Fr(1) if i == j else Fr(0) for i in range(n)] for j in range(n)]
+        for path in (600, 0):
+            many = certify_many(parts, f, es, n, jobs=2, exact_up_to=path)
+            one = [certify(parts, f, e, n, exact_up_to=path) for e in es]
+            assert [(a["lo"], a["hi"]) for a in many] == [(b["lo"], b["hi"]) for b in one], (trial, path)
+    print("   certify_many: equal to certify output by output, exact and floating paths, 2 processes")
     print(f"   scaled outputs: {sc_pts} points, p_k (e.u) inside certify_scaled's range every time "
           f"(and the floating path's range contains the exact one's)")
     # the IEEE certificate agrees with the exact interval one, and is sharp: proves lam*0.9, refuses lam*1.01

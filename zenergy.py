@@ -294,7 +294,7 @@ def _have_cholmod():
 
 def _chol_sparse(n, hi, lo, vals):
     """The floating Cholesky by CHOLMOD (scikit-sparse; SUPERNODAL LL^T — LAPACK dpotrf / BLAS dtrsm, dsyrk, dgemm
-    inside), fill-reducing order (AMD / METIS): returns H, the longest inner product + 1 (the entry's own leaf), or
+    inside), in the caller's reverse Cuthill-McKee order: returns H, the longest inner product + 1 (the entry's own leaf), or
     None if it fails (not positive definite) or CHOLMOD is not installed. (2026-11-02, the space frames' size: a
     banded Cholesky costs n bw^2 and a 3D frame's band is a whole floor.) The theorem used is pd_ieee's: Higham's
     entry bound over ANY summation tree (lean/ZHigham `cholesky_entry_tree`) with H leaves; a symmetric permutation
@@ -312,7 +312,11 @@ def _chol_sparse(n, hi, lo, vals):
         import warnings
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            L, _perm = cholesky(A, lower=True, supernodal_mode="supernodal")
+            # order NATURAL: the input is already in reverse Cuthill-McKee order, so the factor's rows are at most the
+            # band — H as the banded path's. MEASURED 2026-11-02 (a 21780-unknown space frame): fill-reducing orders
+            # are faster still (1.3 s) but their longest row is 3846, not 733, and Higham's term grows with it (79 vs
+            # 15 against a lambda_min ~ 79: the stability bound 2.7 % weaker); natural 2.3 s, banded dpbtrf 18.7 s
+            L, _perm = cholesky(A, lower=True, order="natural", supernodal_mode="supernodal")
     except (CholmodNotPositiveDefiniteError, ArithmeticError, ValueError):
         return None
     except Exception:

@@ -552,6 +552,100 @@ def _fp_output(ctx, parts, e, k=None):
     return out
 
 
+def _fp_outputs_batch(ctx, parts, es, ks):
+    """MANY outputs of one prepared floating path at once (2026-11-02, the curator's "лечить"): the night battery's
+    250x48 frame spent 40 min in 24250 one-at-a-time _fp_output calls (its stability proof needs every member's
+    force) — each a Python pass over the whole system in big integers, ~N^2. Here a batch of outputs is solved with
+    ONE matrix right-hand side and every per-output vector quantity is computed in IEEE floats, each with a
+    RIGOROUS rounding bound added (Higham, Accuracy and Stability, 2nd ed., eq. 3.5: a computed sum of m products,
+    ANY order, FMA allowed, errs by at most gamma_m times the sum of the absolute products; lean/ZHigham.lean
+    `cholesky_entry_tree` is that statement for a summation tree). Same PREMISE as pd_ieee: IEEE 754 binary64,
+    round to nearest. One gamma = gamma_N, N = n + the widest row/term/part + 64, covers every chain; every computed
+    sum of nonnegative bounds is raised by (1 + 2 gamma) (S <= fl(S)/(1 - gamma)); a slack of N 2^-1000 absorbs
+    underflow. The scalars of each output are then combined EXACTLY as in _fp_output; the centre is the float one
+    (a dyadic), its rounding bound joins nominal_err, so an interval here CONTAINS the exact path's (self-test).
+    ks[i] (a part index) as in _fp_output's k: D1p = (upper bound of the whole first-order sum) - (LOWER bound of
+    part k's term) + (upper bound of t_k |centre - c_k|). Slopes are not returned (callers with `scale` only)."""
+    import numpy as np
+    import scipy.sparse as sp
+    n, lam, T = ctx["n"], ctx["lam"], ctx["T"]
+    eu, nu_t, nu = ctx["eu"], ctx["nu_t"], ctx["nu"]
+    fb = ctx.get("_batch")
+    if fb is None:
+        rows, cols, vals = [], [], []
+        for (i, j), v in ctx["K"].items():
+            rows.append(i); cols.append(j); vals.append(float(v))
+            if i != j:
+                rows.append(j); cols.append(i); vals.append(float(v))
+        A = sp.csr_matrix((vals, (rows, cols)), shape=(n, n))
+        trow, tcol, tval, wgu, tpart = [], [], [], [], []
+        widest = int(np.diff(A.indptr).max()) if n else 1
+        for P, (p, gus) in enumerate(zip(parts, ctx["gu"])):
+            widest = max(widest, len(p["terms"]))
+            for (w, g), gv in zip(p["terms"], gus):
+                t_ = len(wgu)
+                for i, c in g.items():
+                    trow.append(t_); tcol.append(i); tval.append(float(c))
+                widest = max(widest, len(g))
+                wgu.append(float(_q(w) * gv))
+                tpart.append(P)
+        nt = len(wgu)
+        Gm = sp.csr_matrix((tval, (trow, tcol)), shape=(nt, n))
+        Pm = sp.csr_matrix((np.ones(nt), (tpart, list(range(nt)))), shape=(len(parts), nt))
+        N = n + widest + 64
+        u = Fr(1, 2 ** 53)
+        g_ = N * u / (1 - N * u)
+        fb = {"A": A, "Aabs": abs(A), "Gm": Gm, "Gabs": abs(Gm), "Pm": Pm, "wgu": np.array(wgu),
+              "awgu": np.abs(np.array(wgu)), "tP": np.array([float(_q(p["t"])) for p in parts]),
+              "ut": np.array([float(x) for x in ctx["ut"]]), "ru": np.array([float(x) for x in ctx["ru"]]),
+              "g": g_, "gf": float(g_) * 1.0000001, "up": 1 + 2 * g_, "slack": Fr(N, 2 ** 1000)}
+        ctx["_batch"] = fb
+    A, Aabs, g, gf, up, slack = fb["A"], fb["Aabs"], fb["g"], fb["gf"], fb["up"], fb["slack"]
+    ut, ru = fb["ut"], fb["ru"]
+    E = np.zeros((n, len(es)))                                          # n x b (each entry rounded: inside gamma)
+    for col, e in enumerate(es):                                        # a sparse output {i: v} is read as given
+        for i, x in (e.items() if isinstance(e, dict) else ((i, x) for i, x in enumerate(e) if x)):
+            E[i, col] = float(x)
+    Y = ctx["lu"].solve(E)                                             # y~: these floats ARE the trial vectors
+    if Y.ndim == 1:
+        Y = Y[:, None]
+    KY, aKY = A @ Y, Aabs @ np.abs(Y)
+    R = E - KY
+    Rb = np.abs(R) + 2 * gf * (np.abs(E) + aKY)                        # |r_i| <= |fl r_i| + gamma(|e_i| + sum|K||y|)
+    s_ey = (Rb * Rb).sum(axis=0)
+    s_ny = (Y * KY).sum(axis=0)
+    s_ny_abs = (np.abs(Y) * aKY).sum(axis=0)
+    c_f = (E * ut[:, None]).sum(axis=0) + (Y * ru[:, None]).sum(axis=0)
+    c_abs = (np.abs(E) * np.abs(ut)[:, None]).sum(axis=0) + (np.abs(Y) * np.abs(ru)[:, None]).sum(axis=0)
+    Gy = fb["Gm"] @ Y
+    C = fb["Pm"] @ (fb["wgu"][:, None] * Gy)                            # c_P (parts x b)
+    Cerr = 3 * gf * (fb["Pm"] @ (fb["awgu"][:, None] * (fb["Gabs"] @ np.abs(Y))))
+    D1s = (fb["tP"][:, None] * (np.abs(C) + Cerr)).sum(axis=0)
+    out = []
+    for i in range(Y.shape[1]):
+        ey = _sqrt_up((Fr(float(s_ey[i])) * up + slack) / lam)
+        ny_t = _sqrt_up(max(Fr(float(s_ny[i])) + 3 * g * Fr(float(s_ny_abs[i])) * up + slack, Fr(0)))
+        ny = ny_t + ey
+        centre = Fr(float(c_f[i]))
+        c_err = 3 * g * Fr(float(c_abs[i])) * up + slack
+        cerr = ey * eu + c_err
+        D1raw = Fr(float(D1s[i])) * up * (1 + 2 * g) + slack            # the t_P rounding inside one more gamma
+        slope_err = T * (ey * nu + ny_t * eu)
+        D1 = D1raw + slope_err
+        rest = T * T / (1 - T) * ny * nu if T else Fr(0)
+        r = {"nominal": centre, "nominal_err": cerr, "slope_err": slope_err, "ey": ey, "ny_t": ny_t,
+             "lo": centre - cerr - D1 - rest, "hi": centre + cerr + D1 + rest, "first": D1, "rest": rest, "T": T,
+             "slopes": None, "lam": lam, "bits": ctx["bits"]}
+        k = ks[i] if ks is not None else None
+        if k is not None:
+            tk = _q(parts[k]["t"])
+            ck = Fr(float(C[k, i]))
+            ce = Fr(float(Cerr[k, i])) * up + slack
+            r["D1p"] = D1raw - tk * max(abs(ck) - ce, Fr(0)) + tk * (abs(centre - ck) + ce)
+        out.append(r)
+    return out
+
+
 def _fp_output_ref(ctx, parts, e):
     """One output on a prepared floating path (see certify_output_fp) — the Fraction reference _fp_output must
     reproduce exactly."""
@@ -598,6 +692,15 @@ def _finish(r, parts, scale, idx):
     return {"nominal": sc["nominal"], "lo": sc["lo"], "hi": sc["hi"], "unscaled": [r["lo"], r["hi"]]}
 
 
+def _dense(e, n):
+    if not isinstance(e, dict):
+        return e
+    out = [Fr(0)] * n
+    for i, v in e.items():
+        out[i] = _q(v)
+    return out
+
+
 def _many_worker(idx):
     c = _MANY
     k = None if c["scale"] is None else c["scale"][idx]
@@ -609,11 +712,19 @@ def certify_many(parts, f, es, n, jobs=1, exact_up_to=None, scale=None):
     path's factor, proved lam and u~ — and each output's own work (its y, residual, first order) per output, in
     `jobs` processes on the floating path. Results equal certify's, output by output. With `scale` (a part index
     per output) each result is scaled_from(r, parts, scale[i])'s nominal/lo/hi instead, computed where r is and
-    returned without slopes."""
+    returned without slopes. An output may be a sparse dict {i: v} (2026-11-02: a 7500-unknown frame's 4900 dense
+    outputs cost 36 M float(Fraction) calls of zeros); the batch reads it as is, every other path densifies it."""
+    if scale is None or len(es) < BATCH_FROM or n <= (EXACT_UP_TO if exact_up_to is None else exact_up_to):
+        es = [_dense(e, n) for e in es]
     if n <= (EXACT_UP_TO if exact_up_to is None else exact_up_to):
         rs = [certify_output(parts, f, e, n) for e in es] if len(es) <= 1 else _exact_many(parts, f, es, n)
         return [_finish(r, parts, scale, i) for i, r in enumerate(rs)]
     ctx = _fp_prepare(parts, f, n)
+    if scale is not None and len(es) >= BATCH_FROM:     # the batch: floats with rigorous rounding bounds (2026-11-02)
+        rs = []
+        for a in range(0, len(es), BATCH):
+            rs += _fp_outputs_batch(ctx, parts, es[a:a + BATCH], scale[a:a + BATCH])
+        return [_finish(r, parts, scale, i) for i, r in enumerate(rs)]
     if jobs <= 1 or len(es) <= 1:
         return [_finish(_fp_output(ctx, parts, e, None if scale is None else scale[i]), parts, scale, i)
                 for i, e in enumerate(es)]
@@ -778,6 +889,8 @@ def value_enclosure_fp(parts, f, e, n, ps, bits=192):
 # same widths to 4 digits and is faster from ~100 unknowns (plate 448: 0.05 s vs 28.6 s exact; frame 450: 0.03 s vs
 # 4.2 s); it was 600 until the plates showed exact fractions growing faster than on frames (576 unknowns: 71 s).
 EXACT_UP_TO = 120
+# certify_many's batch (scaled outputs): from this many outputs, this many per matrix right-hand side
+BATCH_FROM, BATCH = 32, 256
 
 
 def certify_scaled(parts, f, e, n, k, exact_up_to=None):
@@ -942,6 +1055,33 @@ def _selftest():
             ii += 1
     print(f"   integer path: {ii} outputs bit-identical to the Fraction reference; O(1) scaled first order == "
           f"scaled_from over all slopes")
+    # the BATCH (floats + rigorous rounding bounds) CONTAINS the exact path's scaled interval, within 1e-9 of it;
+    # with the rounding bounds switched off it must stop containing it somewhere (the bounds are load-bearing)
+    bb, worst, esc = 0, Fr(0), 0
+    for trial in range(25):
+        n, m = rng.randint(3, 12), rng.randint(2, 8)
+        parts, f, _ = _random_case(rng, n, m, Fr(rng.choice([1, 5, 20]), 100))
+        ctx = _fp_prepare(parts, f, n)
+        es = [[Fr(rng.randint(-4, 4), rng.randint(1, 3)) for _ in range(n)] for _ in range(m)]
+        ks = list(range(m))
+        bat = _fp_outputs_batch(ctx, parts, es, ks)
+        for e, k, rb in zip(es, ks, bat):
+            a, b = scaled_from(_fp_output(ctx, parts, e, k), parts, k), scaled_from(rb, parts, k)
+            assert b["lo"] <= a["lo"] and a["hi"] <= b["hi"], (trial, k)
+            assert a["hi"] - a["lo"] >= 0
+            worst = max(worst, ((b["hi"] - b["lo"]) - (a["hi"] - a["lo"])) / (abs(a["hi"]) + abs(a["lo"]) + 1))
+            bb += 1
+        ctx2 = dict(ctx)
+        ctx2.pop("_batch", None)
+        _fp_prepare_batch_mut = _fp_outputs_batch(ctx2, parts, es, ks)   # warm the cache, then switch bounds off
+        ctx2["_batch"] = dict(ctx2["_batch"], g=Fr(0), gf=0.0, up=Fr(1), slack=Fr(0))
+        for e, k, rb in zip(es, ks, _fp_outputs_batch(ctx2, parts, es, ks)):
+            a, b = scaled_from(_fp_output(ctx, parts, e, k), parts, k), scaled_from(rb, parts, k)
+            if b["lo"] > a["lo"] or a["hi"] > b["hi"]:
+                esc += 1
+    assert worst < Fr(1, 10 ** 9) and esc > 0, (worst, esc)
+    print(f"   batch path: {bb} scaled outputs, each CONTAINS the exact interval (widened by <= {float(worst):.1e} "
+          f"relative); rounding bounds off: {esc} stop containing it (the bounds are load-bearing)")
     print(f"   scaled outputs: {sc_pts} points, p_k (e.u) inside certify_scaled's range every time "
           f"(and the floating path's range contains the exact one's)")
     # the IEEE certificate agrees with the exact interval one, and is sharp: proves lam*0.9, refuses lam*1.01

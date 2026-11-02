@@ -943,8 +943,11 @@ def certify_general(A0, parts, Cterms, f, e, n, theta=None):
     return certify_general_many(A0, parts, Cterms, f, [e], n, theta)[0]
 
 
-def certify_general_many(A0, parts, Cterms, f, es, n, theta=None):
-    """certify_general for many outputs of one system: theta proved once, the factor and u~ once (2026-11-01)."""
+def certify_general_many(A0, parts, Cterms, f, es, n, theta=None, cgroups=None):
+    """certify_general for many outputs of one system: theta proved once, the factor and u~ once (2026-11-01).
+    cgroups (2026-11-02): a list of term lists (pieces of C, e.g. one member's); each output then carries
+    r["c_groups"] = [|y~|_G upper bounds] (y~ the output's floating adjoint, exactly) — a caller bounding a sum of
+    LOCAL terms sum_g |y|_G r_g can use them with |y - y~|_C <= sqrt(theta) (ey + theta/(1 - theta) |y0|_A0)."""
     for p in parts:
         if _q(p["t"]) < 0 or any(_q(w) < 0 for w, _ in p["terms"]):
             raise ValueError("a part's radius or a term's weight is negative")
@@ -964,6 +967,8 @@ def certify_general_many(A0, parts, Cterms, f, es, n, theta=None):
         r = _fp_output(ctx, parts, e)
         yt = [Fr(float(x)) for x in ctx["lu"].solve(np.array([float(x) for x in e]))]
         extra = (cn(yt) + st * r["ey"]) * cu if Cterms else Fr(0)
+        if cgroups is not None:
+            r["c_groups"] = [_sqrt_up(sum(_q(w) * _dot(g, yt) ** 2 for w, g in grp)) for grp in cgroups]
         r["lo"] -= extra
         r["hi"] += extra
         r["first"] += extra
@@ -1116,7 +1121,7 @@ def _selftest():
             el_n += 1
     print(f"   enclose_linear: {el_n} functionals, the floating enclosure contains the exact value every time")
     import itertools
-    g_cases = g_pts = g_esc_rest = g_esc_d = 0
+    g_cases = g_pts = g_esc_rest = g_esc_d = g_cg = 0
     for trial in range(40):                             # certify_general: second-order systems, D in [0, C]
         n = rng.randint(3, 6)
         def rpart(m):
@@ -1142,6 +1147,12 @@ def _selftest():
         except ArithmeticError:
             continue
         g_cases += 1
+        # c_groups (2026-11-02): |y|_G <= c_G + sqrt(theta) (e_y + theta/(1 - theta) |y0|_A0) for the EXACT y = A^-1 e
+        # of every A below, each piece G of C — the bound ztl-stand's frames use for the member loads
+        grp = [Ct[:len(Ct) // 2], Ct[len(Ct) // 2:]]
+        rg = certify_general_many(A0, parts, Ct, f, [e], n, cgroups=grp)[0]
+        th_ = rg["theta"]
+        slack_ = _sqrt_up(th_) * (rg["ey"] + th_ / (1 - th_) * (rg["ny_t"] + rg["ey"]))
         Cm = matrix([{"t": 0, "terms": Ct}], n)
         Pm = [matrix([{"t": 0, "terms": p["terms"]}], n) for p in parts]
         pts = [([s_ * p["t"] for s_, p in zip(sg, parts)], df) for sg in itertools.islice(
@@ -1158,14 +1169,19 @@ def _selftest():
             L, dd = ldl(n, A)
             val = sum(a * b for a, b in zip(e, solve(L, dd, f)))
             assert r["lo"] <= val <= r["hi"], (trial, val)
+            y_ = solve(L, dd, e)
+            for G_, c_ in zip(grp, rg["c_groups"]):
+                assert sum(_q(w) * _dot(g, y_) ** 2 for w, g in G_) <= (c_ + slack_) ** 2, (trial, "c_groups")
+                g_cg += 1
             g_pts += 1
             if not (r["lo"] + r["rest"] + r["d_term"] <= val <= r["hi"] - r["rest"] - r["d_term"]):
                 g_esc_rest += 1
             if not (r["lo"] + r["d_term"] <= val <= r["hi"] - r["d_term"]):
                 g_esc_d += 1
-    assert g_cases >= 5 and g_esc_rest > 0 and g_esc_d > 0, (g_cases, g_esc_rest, g_esc_d)
+    assert g_cases >= 5 and g_esc_rest > 0 and g_esc_d > 0 and g_cg > 0, (g_cases, g_esc_rest, g_esc_d, g_cg)
     print(f"   certify_general (second order, D in [0, C]): {g_cases} systems, {g_pts} points inside [lo, hi]; "
-          f"dropping the rest and the D term lets {g_esc_rest} escape, the D term alone {g_esc_d} (both needed)")
+          f"dropping the rest and the D term lets {g_esc_rest} escape, the D term alone {g_esc_d} (both needed); "
+          f"c_groups: {g_cg} piece norms of the exact adjoint inside their bound")
     ii = 0
     for trial in range(20):                             # integer outputs == the Fraction reference, bit for bit
         n, m = rng.randint(3, 9), rng.randint(2, 7)

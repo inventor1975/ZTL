@@ -356,6 +356,61 @@ def pd_ieee(n, entries, mu):
     return lam if lam > 0 else None
 
 
+def pd_ieee_float(n, rows, cols, vals, d2, mu):
+    """pd_ieee for a matrix GIVEN IN FLOATS with a proved distance to the exact one (2026-11-02, ztl-stand's stability
+    bisection built every step's matrix in exact fractions — 7.5 s a step on 36750 unknowns — only to have it rounded
+    here). Input: the lower triangle (rows[i] >= cols[i]) of A0 in float64 (these numbers ARE A0), and d2 >= the
+    squared Frobenius distance ||K - A0||_F^2 (both triangles) to the exact K the caller means. Then A_f = A0 - mu I
+    with the diagonal rounded (its own errors bounded exactly here), ||E||_F <= sqrt(d2) + sqrt(sum of the diagonal
+    roundings^2) (the triangle inequality), and the rest is pd_ieee's: lambda_min(K) >= mu - g/(1 - g) tr(A_f) - ||E||_F.
+    Lean: ZRound `pd_lower` needs only sum E_ij^2 <= s^2 — s here is that bound. Returns the rational or None."""
+    import numpy as np
+    import scipy.sparse as sp
+    from scipy.sparse.csgraph import reverse_cuthill_mckee
+    from scipy.linalg import cholesky_banded, LinAlgError
+    mu = _q(mu)
+    rows, cols, vals = np.asarray(rows), np.asarray(cols), np.asarray(vals, dtype=float)
+    if not np.all(np.isfinite(vals)):
+        return None
+    pat = sp.csr_matrix((np.ones(2 * len(rows)), (np.concatenate([rows, cols]), np.concatenate([cols, rows]))),
+                        shape=(n, n))
+    perm = reverse_cuthill_mckee(pat, symmetric_mode=True)
+    inv = np.empty(n, dtype=np.int64)
+    inv[perm] = np.arange(n)
+    a, b = inv[rows], inv[cols]
+    hi, lo = np.maximum(a, b), np.minimum(a, b)
+    bw = int((hi - lo).max()) if len(hi) else 0
+    if len(np.unique(hi * (n + 1) + lo)) != len(hi):
+        raise ValueError("pd_ieee_float: duplicate entries — sum them first")
+    ab = np.zeros((bw + 1, n))
+    off = hi != lo
+    ab[(hi - lo)[off], lo[off]] = vals[off]               # off-diagonal: exact floats, no new error
+    diag0 = np.zeros(n)
+    dmask = ~off
+    diag0[hi[dmask]] = vals[dmask]
+    E2d, tr = Fr(0), Fr(0)
+    mf = float(mu)
+    dv = diag0 - mf
+    for d in range(n):                                    # the diagonal: exact a - mu, its rounding bounded exactly
+        ex = Fr(float(diag0[d])) - mu
+        fv = float(dv[d])
+        err = ex - Fr(fv)
+        E2d += err * err
+        tr += Fr(fv)
+        ab[0, d] = fv
+    try:
+        cholesky_banded(ab, lower=True, overwrite_ab=True, check_finite=True)
+    except (LinAlgError, ValueError):
+        return None
+    u = Fr(1, 2 ** 53)
+    H = min(n, bw + 1) + 1
+    gH = H * u / (1 - H * u)
+    g2 = 2 * u / (1 - 2 * u)
+    g = (g2 + 2 * gH) / (1 - gH)
+    lam = mu - g / (1 - g) * max(tr, Fr(0)) - _sqrt_up(_q(d2)) - _sqrt_up(E2d)
+    return lam if lam > 0 else None
+
+
 def _check_parts(parts):
     for p in parts:
         t = _q(p["t"])
@@ -701,6 +756,26 @@ def _dense(e, n):
     return out
 
 
+def _cores():
+    """The cores this process may use (~/bin/heavy --cores sets the affinity), at least 1."""
+    import os
+    try:
+        return max(1, len(os.sched_getaffinity(0)))
+    except AttributeError:
+        return max(1, os.cpu_count() or 1)
+
+
+def _batch_worker(ab):
+    a, b = ab
+    try:                                                # one BLAS thread per process: N processes x 32 threads thrash
+        from threadpoolctl import threadpool_limits    # (MEASURED 2026-11-02: 100x24 frame 16 s serial -> 86 s)
+        threadpool_limits(1)
+    except ImportError:
+        pass
+    c = _MANY
+    return _fp_outputs_batch(c["ctx"], c["parts"], c["es"][a:b], c["scale"][a:b])
+
+
 def _many_worker(idx):
     c = _MANY
     k = None if c["scale"] is None else c["scale"][idx]
@@ -721,9 +796,30 @@ def certify_many(parts, f, es, n, jobs=1, exact_up_to=None, scale=None):
         return [_finish(r, parts, scale, i) for i, r in enumerate(rs)]
     ctx = _fp_prepare(parts, f, n)
     if scale is not None and len(es) >= BATCH_FROM:     # the batch: floats with rigorous rounding bounds (2026-11-02)
-        rs = []
-        for a in range(0, len(es), BATCH):
-            rs += _fp_outputs_batch(ctx, parts, es[a:a + BATCH], scale[a:a + BATCH])
+        par = len(es) >= PARALLEL_FROM and _cores() > 1
+        bs = 64 if par else BATCH                       # a worker holds ~12 n x bs float arrays: keep them small
+        chunks = [(a, min(a + bs, len(es))) for a in range(0, len(es), bs)]
+        # MEASURED 2026-11-02: 24 workers x 12 arrays of 36750 x 256 floats hit the 18 GB cap (killed); budget ~6 GB
+        procs = min(len(chunks), _cores(), max(1, int(6e9 // (12 * 8 * n * bs)))) if par else 1
+        if procs > 1:                                   # batches are independent: one process each (fork: ctx shared)
+            import multiprocessing as mp
+            _fp_outputs_batch(ctx, parts, es[:1], scale[:1])          # build the float tables once, before forking
+            _MANY.clear()
+            _MANY.update({"ctx": ctx, "parts": parts, "es": es, "scale": scale})
+            pool = mp.get_context("fork").Pool(procs)
+            try:
+                got = pool.map(_batch_worker, chunks, chunksize=1)
+                pool.close()                            # close + join: terminate() waited 17 s on a large result pipe
+                pool.join()
+            except BaseException:
+                pool.terminate()
+                raise
+            _MANY.clear()
+            rs = [r for part in got for r in part]
+        else:
+            rs = []
+            for a, b in chunks:
+                rs += _fp_outputs_batch(ctx, parts, es[a:b], scale[a:b])
         return [_finish(r, parts, scale, i) for i, r in enumerate(rs)]
     if jobs <= 1 or len(es) <= 1:
         return [_finish(_fp_output(ctx, parts, e, None if scale is None else scale[i]), parts, scale, i)
@@ -891,6 +987,9 @@ def value_enclosure_fp(parts, f, e, n, ps, bits=192):
 EXACT_UP_TO = 120
 # certify_many's batch (scaled outputs): from this many outputs, this many per matrix right-hand side
 BATCH_FROM, BATCH = 32, 256
+# ... and from this many outputs the batches run in parallel processes (below it a pool costs more than it saves,
+# and the stand's own 24-shard test runs must not fan out 24 x 24)
+PARALLEL_FROM = 2000
 
 
 def certify_scaled(parts, f, e, n, k, exact_up_to=None):
@@ -1096,6 +1195,24 @@ def _selftest():
         agree += 1
     print(f"   IEEE certificate (premise: IEEE 754 + LAPACK, Higham Thm 10.3): agrees with the exact interval one "
           f"{agree}/4, proves 0.9 lambda_min, refuses 1.01")
+    # pd_ieee_float (a float matrix + its proved distance) agrees with pd_ieee on the exact matrix (2026-11-02)
+    fl_ok = 0
+    for trial in range(30):
+        nn = rng.randint(3, 25)
+        Km = {}
+        for i in range(nn):
+            Km[(i, i)] = Fr(rng.randint(20, 60))
+            for j in range(i):
+                if rng.random() < 0.3:
+                    Km[(i, j)] = Fr(rng.randint(-9, 9), rng.randint(1, 7))
+        mu_ = Fr(rng.randint(1, 30))
+        a_ = pd_ieee(nn, Km, mu_)
+        kk_ = list(Km)
+        d2_ = sum((Km[k_] - Fr(float(Km[k_]))) ** 2 * (1 if k_[0] == k_[1] else 2) for k_ in kk_)
+        b_ = pd_ieee_float(nn, [i for i, _ in kk_], [j for _, j in kk_], [float(Km[k_]) for k_ in kk_], d2_, mu_)
+        assert (a_ is None) == (b_ is None) and (a_ is None or abs(a_ - b_) <= mu_ / 10 ** 9), (trial, a_, b_)
+        fl_ok += 1
+    print(f"   pd_ieee_float: {fl_ok} random matrices, the same verdict and bound as pd_ieee on the exact matrix")
     print(f"   {cases} random systems, {checked} points (every vertex where <= 9 parts, plus 20 interior each):")
     print("   every value inside [lo, hi]; dropping the second-order rest lets a point escape (mutation caught)")
 

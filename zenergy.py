@@ -456,10 +456,10 @@ def _kmul(K, x, n):
     return r
 
 
-def _fp_prepare(parts, f, n, bits=192, pd="ieee", K=None, T=None):
-    """The floating path's SHARED work, done once for any number of outputs (2026-11-01): the float factor, a
-    proved lam, u~ with its exact residual and energy, and every term's g.u~. K, T given (certify_general): the base
-    matrix A0 and the proved theta instead of sum(parts) and max t."""
+def fp_prepare_K(parts, n, bits=192, pd="ieee", K=None, T=None):
+    """The LOAD-INDEPENDENT half of _fp_prepare (2026-11-02, many load combinations in one run): the float factor
+    and the proved lam_min(K0) — 70 % of a 7500-unknown frame's preparation (MEASURED: 5.1 of 7.4 s). Pass the result
+    as `kctx` to _fp_prepare for every load case of the same structure."""
     import numpy as np
     import scipy.sparse.linalg as sla
     if K is None:
@@ -467,7 +467,6 @@ def _fp_prepare(parts, f, n, bits=192, pd="ieee", K=None, T=None):
         K = matrix(parts, n)
     A = _float_matrix(K, n)
     lu = sla.splu(A)
-    uf = lu.solve(np.array([float(x) for x in f]))
     try:
         lam_f = float(sla.eigsh(A, k=1, sigma=0, which="LM", return_eigenvectors=False, v0=np.ones(n))[0])
     except Exception:
@@ -500,6 +499,21 @@ def _fp_prepare(parts, f, n, bits=192, pd="ieee", K=None, T=None):
             lam /= 4
         if not proved:
             raise ArithmeticError("lambda_min(K0) not proved positive: K0 may not be positive definite")
+    return {"K": K, "T": T, "lu": lu, "lam": lam, "bits": used_bits, "parts_id": id(parts)}
+
+
+def _fp_prepare(parts, f, n, bits=192, pd="ieee", K=None, T=None, kctx=None):
+    """The floating path's SHARED work, done once for any number of outputs (2026-11-01): the float factor, a
+    proved lam, u~ with its exact residual and energy, and every term's g.u~. K, T given (certify_general): the base
+    matrix A0 and the proved theta instead of sum(parts) and max t. kctx (fp_prepare_K of the SAME parts / K):
+    the factor and lam are reused — only the load's half is computed here."""
+    import numpy as np
+    if kctx is None:
+        kctx = fp_prepare_K(parts, n, bits, pd, K, T)
+    elif kctx.get("parts_id") != id(parts):
+        raise ValueError("kctx was prepared for other parts")
+    K, T, lu, lam, used_bits = kctx["K"], kctx["T"], kctx["lu"], kctx["lam"], kctx["bits"]
+    uf = lu.solve(np.array([float(x) for x in f]))
     ut = [Fr(float(x)) for x in uf]                     # dyadic: exact, short
     Ku = _kmul(K, ut, n)
     ru = [_q(f[i]) - Ku[i] for i in range(n)]
@@ -782,7 +796,19 @@ def _many_worker(idx):
     return idx, _finish(_fp_output(c["ctx"], c["parts"], c["es"][idx], k), c["parts"], c["scale"], idx)
 
 
-def certify_many(parts, f, es, n, jobs=1, exact_up_to=None, scale=None):
+def certify_cases(parts, fs, es, n, jobs=1, exact_up_to=None, scale=None):
+    """certify_many for SEVERAL LOAD CASES of one structure (2026-11-02): the outputs es (the same for every case)
+    certified for every load vector in fs; on the floating path the factor and the proved lam_min(K0) are prepared
+    ONCE (fp_prepare_K) and only each case's u~, residual and outputs are computed per case. Returns one list of
+    results per case, each equal to certify_many(parts, f, es, n, ...) for that f."""
+    lim = EXACT_UP_TO if exact_up_to is None else exact_up_to
+    if n <= lim:
+        return [certify_many(parts, f, es, n, jobs, exact_up_to, scale) for f in fs]
+    kctx = fp_prepare_K(parts, n)
+    return [certify_many(parts, f, es, n, jobs, exact_up_to, scale, kctx=kctx) for f in fs]
+
+
+def certify_many(parts, f, es, n, jobs=1, exact_up_to=None, scale=None, kctx=None):
     """Many outputs of ONE system (2026-11-01): the shared work once — the exact path's LDL^T and u0, or the floating
     path's factor, proved lam and u~ — and each output's own work (its y, residual, first order) per output, in
     `jobs` processes on the floating path. Results equal certify's, output by output. With `scale` (a part index
@@ -794,7 +820,7 @@ def certify_many(parts, f, es, n, jobs=1, exact_up_to=None, scale=None):
     if n <= (EXACT_UP_TO if exact_up_to is None else exact_up_to):
         rs = [certify_output(parts, f, e, n) for e in es] if len(es) <= 1 else _exact_many(parts, f, es, n)
         return [_finish(r, parts, scale, i) for i, r in enumerate(rs)]
-    ctx = _fp_prepare(parts, f, n)
+    ctx = _fp_prepare(parts, f, n, kctx=kctx)
     if scale is not None and len(es) >= BATCH_FROM:     # the batch: floats with rigorous rounding bounds (2026-11-02)
         par = len(es) >= PARALLEL_FROM and _cores() > 1
         bs = 64 if par else BATCH                       # a worker holds ~12 n x bs float arrays: keep them small
@@ -1213,6 +1239,15 @@ def _selftest():
         assert (a_ is None) == (b_ is None) and (a_ is None or abs(a_ - b_) <= mu_ / 10 ** 9), (trial, a_, b_)
         fl_ok += 1
     print(f"   pd_ieee_float: {fl_ok} random matrices, the same verdict and bound as pd_ieee on the exact matrix")
+    # certify_cases (one factor and one proved lam for every load case) == certify_many case by case
+    parts, f, e, n = _cantilever_demo(40)
+    fs = [f, [x * 2 for x in f], [Fr(0)] * (n - 1) + [Fr(1)]]
+    es_ = [e, [Fr(1)] + [Fr(0)] * (n - 1)]
+    a_ = certify_cases(parts, fs, es_, n)
+    b_ = [certify_many(parts, ff, es_, n) for ff in fs]
+    assert all((x["lo"], x["hi"]) == (y["lo"], y["hi"]) for ra, rb in zip(a_, b_) for x, y in zip(ra, rb))
+    print(f"   certify_cases: {len(fs)} load cases x {len(es_)} outputs, equal to certify_many case by case "
+          f"(one factor, one proved lam)")
     print(f"   {cases} random systems, {checked} points (every vertex where <= 9 parts, plus 20 interior each):")
     print("   every value inside [lo, hi]; dropping the second-order rest lets a point escape (mutation caught)")
 

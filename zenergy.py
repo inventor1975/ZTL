@@ -281,6 +281,49 @@ def pd_certificate(n, entries, lam, bits=192):
     return True
 
 
+SPARSE_CHOL_FROM = 1500      # unknowns from which pd_ieee / pd_ieee_float use CHOLMOD when it is installed
+
+
+def _have_cholmod():
+    try:
+        import sksparse.cholmod  # noqa: F401
+        return True
+    except ImportError:
+        return False
+
+
+def _chol_sparse(n, hi, lo, vals):
+    """The floating Cholesky by CHOLMOD (scikit-sparse; SUPERNODAL LL^T — LAPACK dpotrf / BLAS dtrsm, dsyrk, dgemm
+    inside), fill-reducing order (AMD / METIS): returns H, the longest inner product + 1 (the entry's own leaf), or
+    None if it fails (not positive definite) or CHOLMOD is not installed. (2026-11-02, the space frames' size: a
+    banded Cholesky costs n bw^2 and a 3D frame's band is a whole floor.) The theorem used is pd_ieee's: Higham's
+    entry bound over ANY summation tree (lean/ZHigham `cholesky_entry_tree`) with H leaves; a symmetric permutation
+    changes nothing (P A P^T has the same eigenvalues); an entry of L is (a_ij - sum_k l_ik l_jk) / l_jj over the k
+    where row i AND row j of L are nonzero — at most (row count of L) - 1 products; supernodal padding adds products
+    with an exact 0.0 factor, exact, no rounding. Returns (H, None) on success."""
+    try:
+        from sksparse.cholmod import cholesky, CholmodNotPositiveDefiniteError
+    except ImportError:
+        return "absent"
+    import numpy as np
+    import scipy.sparse as sp
+    A = sp.csc_array((vals, (hi, lo)), shape=(n, n))     # the lower triangle (row >= column)
+    try:
+        import warnings
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            L, _perm = cholesky(A, lower=True, supernodal_mode="supernodal")
+    except (CholmodNotPositiveDefiniteError, ArithmeticError, ValueError):
+        return None
+    except Exception:
+        return None
+    L = sp.csr_array(L)
+    if not np.all(np.isfinite(L.data)) or np.any(L.diagonal() <= 0):
+        return None
+    rowcount = np.diff(L.indptr)
+    return int(rowcount.max()) + 1
+
+
 def pd_ieee(n, entries, mu):
     """lambda_min(K) >= the returned rational, by a FLOATING Cholesky (LAPACK, banded after reverse Cuthill-McKee)
     of A_f = fl(K - mu I) and Higham's backward-error theorem (2026-11-01, the curator's "Берем" to IEEE arithmetic
@@ -327,19 +370,29 @@ def pd_ieee(n, entries, mu):
         bw = max(bw, a - b)
     for d in range(n):
         exact[(d, d)] = exact.get((d, d), Fr(0)) - mu
-    ab = np.zeros((bw + 1, n))
+    use_sp = n >= SPARSE_CHOL_FROM and _have_cholmod()
+    ab = np.zeros((1 if use_sp else bw + 1, n))
     E2, tr = Fr(0), Fr(0)
     for (a, b), v in exact.items():
         fv = float(v)
-        ab[a - b, b] = fv
+        if not use_sp:
+            ab[a - b, b] = fv
         err = v - Fr(fv)
         E2 += err * err * (1 if a == b else 2)
         if a == b:
             tr += Fr(fv)
-    try:
-        cholesky_banded(ab, lower=True, overwrite_ab=True, check_finite=True)
-    except (LinAlgError, ValueError):
-        return None
+    Hs = "absent"
+    if use_sp:
+        ks = list(exact)
+        Hs = _chol_sparse(n, np.array([a for a, b in ks]), np.array([b for a, b in ks]),
+                          np.array([float(exact[k]) for k in ks]))
+        if Hs is None:
+            return None
+    if Hs == "absent":
+        try:
+            cholesky_banded(ab, lower=True, overwrite_ab=True, check_finite=True)
+        except (LinAlgError, ValueError):
+            return None
     # gamma by the BAND, not by n: in a banded Cholesky every inner product has at most bw + 1 terms (the rest are
     # exact zeros, never computed), so Higham's gamma_{n+1} sharpens to gamma_{bw+2} (MEASURED 2026-11-01: with
     # gamma_{n+1} a 27900-unknown frame failed — the correction ~120 exceeded lambda_min ~40)
@@ -348,7 +401,7 @@ def pd_ieee(n, entries, mu):
     # over at most H = bw + 2 leaves (the entry and the products in the band), the pivot's division or root two more
     # factors: the backward coefficient is g = (gamma_2 + 2 gamma_H)/(1 - gamma_H), a little over twice the
     # sequential gamma — the price of not trusting the library's order
-    H = min(n, bw + 1) + 1
+    H = min(n, bw + 1) + 1 if Hs == "absent" else min(n + 1, Hs)
     gH = H * u / (1 - H * u)
     g2 = 2 * u / (1 - 2 * u)
     g = (g2 + 2 * gH) / (1 - gH)
@@ -382,9 +435,11 @@ def pd_ieee_float(n, rows, cols, vals, d2, mu):
     bw = int((hi - lo).max()) if len(hi) else 0
     if len(np.unique(hi * (n + 1) + lo)) != len(hi):
         raise ValueError("pd_ieee_float: duplicate entries — sum them first")
-    ab = np.zeros((bw + 1, n))
+    use_sp = n >= SPARSE_CHOL_FROM and _have_cholmod()
+    ab = np.zeros((1 if use_sp else bw + 1, n))
     off = hi != lo
-    ab[(hi - lo)[off], lo[off]] = vals[off]               # off-diagonal: exact floats, no new error
+    if not use_sp:
+        ab[(hi - lo)[off], lo[off]] = vals[off]           # off-diagonal: exact floats, no new error
     diag0 = np.zeros(n)
     dmask = ~off
     diag0[hi[dmask]] = vals[dmask]
@@ -398,12 +453,20 @@ def pd_ieee_float(n, rows, cols, vals, d2, mu):
         E2d += err * err
         tr += Fr(fv)
         ab[0, d] = fv
-    try:
-        cholesky_banded(ab, lower=True, overwrite_ab=True, check_finite=True)
-    except (LinAlgError, ValueError):
-        return None
+    Hs = "absent"
+    if use_sp:
+        hs = np.concatenate([hi[off], np.arange(n)])
+        ls = np.concatenate([lo[off], np.arange(n)])
+        Hs = _chol_sparse(n, hs, ls, np.concatenate([vals[off], ab[0]]))
+        if Hs is None:
+            return None
+    if Hs == "absent":
+        try:
+            cholesky_banded(ab, lower=True, overwrite_ab=True, check_finite=True)
+        except (LinAlgError, ValueError):
+            return None
     u = Fr(1, 2 ** 53)
-    H = min(n, bw + 1) + 1
+    H = min(n, bw + 1) + 1 if Hs == "absent" else min(n + 1, Hs)
     gH = H * u / (1 - H * u)
     g2 = 2 * u / (1 - 2 * u)
     g = (g2 + 2 * gH) / (1 - gH)
@@ -1255,6 +1318,35 @@ def _selftest():
         assert (a_ is None) == (b_ is None) and (a_ is None or abs(a_ - b_) <= mu_ / 10 ** 9), (trial, a_, b_)
         fl_ok += 1
     print(f"   pd_ieee_float: {fl_ok} random matrices, the same verdict and bound as pd_ieee on the exact matrix")
+    # the SPARSE Cholesky (CHOLMOD supernodal, 2026-11-02): the same verdicts as the banded one, both ways, and a
+    # bound within a hair (H differs: the band vs the factor's longest row); a matrix with a negative eigenvalue refused
+    global SPARSE_CHOL_FROM
+    if _have_cholmod():
+        keep_, sp_ok = SPARSE_CHOL_FROM, 0
+        for trial in range(30):
+            nn = rng.randint(5, 40)
+            Km = {}
+            for i in range(nn):
+                Km[(i, i)] = Fr(rng.randint(20, 60))
+                for j in range(i):
+                    if rng.random() < 0.3:
+                        Km[(i, j)] = Fr(rng.randint(-9, 9), rng.randint(1, 7))
+            for mu_ in (Fr(rng.randint(1, 30)), Fr(200)):          # 200: above every diagonal -> not PD
+                kk_ = list(Km)
+                args = (nn, [i for i, _ in kk_], [j for _, j in kk_], [float(Km[k_]) for k_ in kk_],
+                        sum((Km[k_] - Fr(float(Km[k_]))) ** 2 * (1 if k_[0] == k_[1] else 2) for k_ in kk_), mu_)
+                SPARSE_CHOL_FROM = 10 ** 9
+                a_, af_ = pd_ieee(nn, Km, mu_), pd_ieee_float(*args)
+                SPARSE_CHOL_FROM = 1
+                b_, bf_ = pd_ieee(nn, Km, mu_), pd_ieee_float(*args)
+                SPARSE_CHOL_FROM = keep_
+                assert (a_ is None) == (b_ is None) and (af_ is None) == (bf_ is None), (trial, a_, b_, af_, bf_)
+                assert a_ is None or abs(a_ - b_) <= mu_ / 10 ** 9, (trial, a_, b_)
+                assert mu_ != 200 or (b_ is None and bf_ is None), (trial, "not PD accepted")
+                sp_ok += 1
+        print(f"   sparse Cholesky (CHOLMOD supernodal): {sp_ok} cases, the banded verdicts and bounds; not-PD refused")
+    else:
+        print("   sparse Cholesky: CHOLMOD (scikit-sparse) not installed — the banded path only")
     # certify_cases (one factor and one proved lam for every load case) == certify_many case by case
     parts, f, e, n = _cantilever_demo(40)
     fs = [f, [x * 2 for x in f], [Fr(0)] * (n - 1) + [Fr(1)]]

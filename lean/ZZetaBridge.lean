@@ -3,7 +3,7 @@
 /-!
 # ZZetaBridge — a dirty atom's STABILITY = a summation method's INVARIANCE (zero axioms, Lean core)
 
-The bridge GPT and Gemini asked for (2026-11-02), between ZTL's notion and the analyst's.
+The bridge between ZTL's notion and the analyst's (2026-11-02).
 
 ZTL (ZDirty.lean): a dirty atom's occurrences are read each on its own; a verdict EARNED IF STABLE is true in every
 COMPLETION — every assignment of ONE value to the atom at all its occurrences.

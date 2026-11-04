@@ -447,7 +447,20 @@ def judge_sheet_claim(formula, quantities, marks, fixed=None):
         marking[name] = v
         numeric[name] = {"comparison": chunk, "verdict": v,
                          "pedigree": sorted(ped), "used": sorted(used)}
+        if v == "Z" and isinstance(why, str) and why.startswith("ZERO-DIVISOR: "):
+            numeric[name]["no_subject"] = why[len("ZERO-DIVISOR: "):]
     core = judge(core_formula, marking)
+    # A DIVISOR 0 IN EVERY READING (2026-11-05; ZTL 2.1 §25 on the numeric floor): the atom's value stays Z — no
+    # verdict changes — but where the claim's outcome RESTS on it (pinning the atom to T or F would change the
+    # disposition), no "measure" order is issued that is known to be unfillable: the claim is E, with the order named.
+    # Where the claim stands on other grounds, the bill is empty and nothing changes ("a missing subject halts its own
+    # predicate, never the proceeding").
+    no_subject = []
+    for name in natoms:
+        if numeric.get(name, {}).get("no_subject"):
+            if any(judge(core_formula, dict(marking, **{name: t}))["disposition"] != core["disposition"]
+                   for t in ("T", "F")):
+                no_subject.append(name)
 
     # which comparison atoms are load-bearing for the core disposition?
     bearing = []
@@ -571,6 +584,10 @@ def judge_sheet_claim(formula, quantities, marks, fixed=None):
     # into the comparisons a reader of the sheet actually wrote
     def _say(a):
         return natoms[a][3] if a in natoms else a
+    if no_subject:
+        disposition, polarity = "E", None
+        next_check = ([f"repair the claim: {numeric[n]['comparison']}: {numeric[n]['no_subject']}" for n in no_subject]
+                      + [c for c in next_check if not any(c.split(" ", 1)[-1] in numeric[n]["used"] for n in no_subject)])
     return {"formula": formula, "core_formula": core_formula.strip(),
             "numeric_atoms": numeric, "core": core,
             "lazy": core["lazy"],
@@ -829,6 +846,27 @@ if __name__ == "__main__":
     print("   a verdict that rides credit stays ON CREDIT whatever its stability;")
     print("   a stable-only verdict names the atom whose verification removes the")
     print("   condition.")
+    # (2026-11-05) A DIVISOR 0 IN EVERY READING: E with the order named where the claim rests on it, the value Z as
+    # before (a disjunction standing on another ground stays EARNED); a divisor that only MAY be 0 stays OPEN "measure"
+    import znum as _zn
+    _dz = [("x / y >= 1", "x=[2,2] earned:a, y=[0,0] earned:b", "E", "nothing to check"),
+           ("x / y >= 1", "x=[0,0] earned:a, y=[0,0] earned:b", "E", "stipulated"),
+           ("x / y >= 1", "x=[2,2] earned:a, y=[-1,1] earned:b", "OPEN", "measure y"),
+           ("x / y >= 1", "x=[2,2] earned:a, y=[1,2] earned:b", "EARNED", None),
+           ("(x / y >= 1) | (x >= 1)", "x=[2,2] earned:a, y=[0,0] earned:b", "EARNED", None),
+           ("(x / y >= 1) & (x >= 1)", "x=[2,2] earned:a, y=[0,0] earned:b", "E", "nothing to check")]
+    for f, sheet, want, order in _dz:
+        qs, mk = parse_quantities(sheet)
+        r = judge_sheet_claim(f, qs, mk)
+        assert r["disposition"] == want and (order is None or any(order in c for c in r["next_check"])), (f, sheet, r)
+    _zn.ZERO_DIV_AS_Z[0] = True       # the pre-2026-11-05 reading, as a sabotage: 2/0 >= 1 was OPEN "measure ..."
+    try:
+        qs, mk = parse_quantities(_dz[0][1])
+        assert judge_sheet_claim(_dz[0][0], qs, mk)["disposition"] == "OPEN"
+    finally:
+        _zn.ZERO_DIV_AS_Z[0] = False
+    print("   a divisor 0 in every reading: E with the order named ('nothing to check, ever' for x/0, 'a value")
+    print("   must be stipulated' for 0/0) where the claim rests on it; a divisor that may be 0: OPEN, measure it.")
     print()
     print("=" * 72)
     print("ZNUMJUDGE GREEN — mixed formulas judged by the unchanged core;")

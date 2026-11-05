@@ -26,9 +26,10 @@
      least 2^d lying leaves), 2^d · weight(the tree says F) ≤ Σ weight · (lying leaves): P(capture) ≤
      E[lies]/2^d = 3^d·p/2^d for EVERY joint of the liars — about 5·p at 81 seats.
 
-  NOT PROVED HERE: that seats drawn at random make the tree much safer than 3: that depends on the joint and is
-  MEASURED (ztl-stand / ZTL `dilemmas`-side simulation, see the commit); and the linearity of expectation for the
-  tree's leaves (proved here for the flag encoding; for the tree it is the same sum, stated, not re-proved).
+  NOT PROVED HERE: that the tree bound is ATTAINED (computed, at depth 3, in `zswarm_bounds.py`); how much seats
+  drawn at random improve on it — that depends on the liars' joint and on the adversary NOT seeing the draw, and is
+  computed exactly in `zswarm_bounds.py` (0.16 against 0.506 at p = 0.1, 81 seats); and the linearity of
+  expectation for the tree's leaves (proved here for the flag encoding; for the tree it is the same sum, stated).
 
   FORM. Arithmetic by hand: `Nat.add_mul` and `Nat.mul_assoc` carry propext on this toolchain (probed), so only
   `Nat.mul_add`, `Nat.mul_comm`, `Nat.add_assoc`, `Nat.add_left_comm`, `Nat.add_comm`, `Nat.add_le_add`,

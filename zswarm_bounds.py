@@ -13,10 +13,14 @@ i.e. <= 3^d p / 2^d when each seat lies with probability p. Three regimes, compu
   (b) SEATS DRAWN AT RANDOM (public randomness, OURS, so its independence of the liars is earned by construction),
       the liars' joint still unknown: given k liars, the tree sees a uniformly random k-set of seats; with c(k)
       the share of k-sets that capture (exact count by dynamic programming over the tree), the worst case over
-      every distribution of k with mean 3^d p is the concave envelope of c at 3^d p — a two-point LP;
+      every distribution of k with mean 3^d p is the concave envelope of c at 3^d p — a two-point LP. This
+      assumes the liars are fixed BEFORE the draw (a non-adaptive adversary); one who corrupts seats after seeing
+      the draw is back in (a) (2026-11-06, Logik2's review);
   (c) independence of the liars STIPULATED: q_{j+1} = 3 q_j^2 - 2 q_j^3 from q_0 = p.
 MEASURED HERE: c(k) by DP is checked against brute force over all 512 liar sets of the 9-seat tree; (a) >= (b) >= (c)
 in every row; (a) is attained by an explicit symmetric mixture (each seat's marginal checked to be p).
+
+The bound (a) is a theorem in Lean; that it is ATTAINED for the tree is computed here (depth 3), not proved.
 
 WHAT IT SAYS: the proved bound is the truth for FIXED seats — an adversary who knows the seats and correlates its
 liars gets exactly it. Random seats are what make it loose; how much they buy, with the liars' correlation still

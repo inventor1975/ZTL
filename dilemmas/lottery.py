@@ -26,7 +26,12 @@ MEASURED HERE:
   3. and the closure that actually fails is closure over CREDIT. Conjoin
      earned claims and the warranty survives; conjoin credit and it does
      not. Rational belief is not one thing being closed or not closed —
-     it is two things with different arithmetic.
+     it is two things with different arithmetic;
+  4. (2026-11-05, ZTL degrees) what section 4 declines without them: each
+     loss at degree 4/5, the joint NOT assumed, the threshold declared
+     (0.75) — each loss EARNED, the conjunction OPEN (lower end 0, and
+     that end is the real lottery), with the rule REFUTED; independence,
+     stipulated, gives 1024/3125, a joint that is false here.
 
 Prior art, named rather than discovered: this is the credit reading of
 Kyburg's case, and it sits beside the standard treatments (Kyburg's
@@ -147,7 +152,56 @@ def sec4_what_this_does_not_settle():
     print("   content: this corpus grades warrants, and 'probable enough'")
     print("   is a decision rule, not a warrant. Anyone who needs one will")
     print("   need §16's probability floor and a threshold declared out")
-    print("   loud, which is a stipulation like any other.")
+    print("   loud, which is a stipulation like any other — section 5.")
+
+
+def sec5_degrees_and_a_declared_threshold():
+    """(2026-11-05, ZTL degrees) What section 4 declined, given what it asked for: each 'ticket i loses' carries its
+    degree (n-1)/n, the joint of the tickets is NOT assumed (the Fréchet interval over every joint), and the
+    threshold is declared (`need`). Computed by the language (zfl: the degree section), not by hand."""
+    import zfl
+    from fractions import Fraction as Fr
+    import zdegree
+    print("-" * 72)
+    print("5. DEGREES AND A DECLARED THRESHOLD (ZTL degrees, 2026-11-05)")
+    n, need = 5, "0.75"
+    rows = [{"name": f"l{i}", "status": "verified", "ground": "the_rules", "degree": f"{n - 1}/{n}",
+             "means": f"ticket {i} loses"} for i in range(1, n + 1)]
+    names = [r["name"] for r in rows]
+    conj = " & ".join(names)
+    rule = "(" + " | ".join("~" + x for x in names) + ")"
+
+    def deg(claim, **doc):
+        r = zfl.run(dict({"rows": rows, "claim": claim, "need": need}, **doc))
+        assert r["ok"], r.get("issues")
+        return r["report"]["degree"]
+    one, all_, ruled = deg("l1"), deg(conj), deg(conj + " & " + rule)
+    ind = deg(conj, independent=True)
+    for label, d in (("'ticket 1 loses'", one), ("all five lose", all_), ("all lose AND some wins", ruled),
+                     ("all five lose, independence stipulated", ind)):
+        iv = d.get("independent") or d["interval"]
+        print(f"   {label:40s}: degree {iv[0]}..{iv[1]}  at need {need}: {d['verdict']}")
+    assert one["interval"] == ["4/5", "4/5"] and one["verdict"] == "EARNED"
+    assert all_["interval"] == ["0", "4/5"] and all_["verdict"] == "OPEN"
+    assert ruled["interval"] == ["0", "0"] and ruled["verdict"] == "REFUTED"
+    assert ind["independent"] == ["1024/3125", "1024/3125"] and ind["verdict"] == "REFUTED"
+    # the lower end 0 is not a pessimist's artefact: the REAL lottery is one of the joints. Exactly one winner, each
+    # ticket equally likely: every ticket loses with 4/5 — the degrees hold — and 'all lose' has probability 0
+    worlds = [tuple(j != w for j in range(n)) for w in range(n)]           # world w: ticket w wins, the rest lose
+    marg = [sum(Fr(1, n) for wd in worlds if wd[i]) for i in range(n)]
+    p_all = sum(Fr(1, n) for wd in worlds if all(wd))
+    assert marg == [Fr(n - 1, n)] * n and p_all == 0
+    print(f"   the actual lottery (one winner, uniform) keeps every degree at {n - 1}/{n} and gives 'all lose' 0:")
+    print("   the lower end IS the lottery. Independence, stipulated, gives 1024/3125 — a joint that is false here")
+    print("   (the tickets are not independent: one win excludes the others), which is why it is never a default.")
+    # both sides: a closure that conjoined the thresholds (fuzzy min = 4/5) would have EARNED the conjunction
+    fuzzy_min = min(Fr(n - 1, n) for _ in names)
+    assert fuzzy_min >= Fr(3, 4) and all_["verdict"] != "EARNED"
+    assert zdegree.degree(conj, {x: (Fr(n - 1, n), Fr(n - 1, n)) for x in names})["lo"] == 0
+    print("   So Kyburg's rule 'believe what is probable enough', with the threshold DECLARED: each loss passes it")
+    print("   (EARNED at 0.75), the conjunction does not (OPEN — not refuted, not earned: its lower end is 0), and")
+    print("   with the lottery's own rule it is REFUTED. Closure under conjunction fails for a threshold on degrees")
+    print("   — the known probabilistic reading (Kyburg 1961; Fréchet's bound) — and the judge says where: the joint.")
 
 
 if __name__ == "__main__":
@@ -158,6 +212,7 @@ if __name__ == "__main__":
     sec2_the_stamp_and_where_it_breaks()
     sec3_two_closures_not_one()
     sec4_what_this_does_not_settle()
+    sec5_degrees_and_a_declared_threshold()
     print("=" * 72)
     print("LOTTERY GREEN — the conjunction was never the problem. With the")
     print("thousand losses left unverified, no contradiction arises,")

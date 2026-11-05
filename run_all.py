@@ -586,7 +586,7 @@ STANDS = [
                            "'raining, and I do not believe it', asserted: 0 of 9",
                            "omissive, over all 9 markings   : ['REFUTED', 'REFUTED IF STABLE']",
                            "the surviving marking(s): [{'p': 'T', 'bp': 'T', 'bt': 'F'}]"]),
-    ("dilemmas/lottery.py", ["LOTTERY GREEN",
+    ("dilemmas/lottery.py", ["LOTTERY GREEN", "the lower end IS the lottery",
                              "5 losses believed: 'some ticket wins' -> REFUTED",
                              "credit & credit : OPEN"]),
     ("dilemmas/berry.py", ["BERRY GREEN",

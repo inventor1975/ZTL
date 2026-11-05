@@ -516,6 +516,8 @@ STANDS = [
         "MONTY HALL: all measurements hold."]),
     ("dilemmas/simpson.py", [
         "SIMPSON: all measurements hold."]),
+    ("dilemmas/zeno.py", [
+        "ZENO AND THE HORN: all measurements hold."]),
     ("dilemmas/sleeping_beauty.py", [
         "SLEEPING BEAUTY: all measurements hold.",
         "   the unit unnamed (P a convention)             OPEN      OPEN      EARNED    EARNED    ['stipulate P']"]),

@@ -43,6 +43,7 @@ each on a run; the closing statement; the aphorism if one was earned).
 | 0.999... = 1 — the value named against the process of writing it | `point_nine.py` | measured 2026-11-05 |
 | Monty Hall — the host's protocol, unnamed | `monty_hall.py` | measured 2026-11-05 |
 | Simpson's paradox — a causal premise the table does not contain | `simpson.py` | measured 2026-11-05 |
+| Zeno's Achilles, Gabriel's horn — the stages against the motion; a coat with no room | `zeno.py` | measured 2026-11-05 |
 | the quantum stones made runnable (emulator qemu.py) | `quantum.py` | demos |
 
 *AI participation: designed and written in a dialogue between the curator

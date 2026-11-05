@@ -2,8 +2,8 @@
 """
 Peace on credit: René Girard's scapegoat, judged.
 
-The essay "Мир в кредит" (vitalyreznik.com/posts/all/mir-v-kredit/, 2026-07-15) makes eight claims a machine can
-check and several it cannot. This stand checks the first kind against the kernel as it is today (2026-11-05), so the
+The essay "Мир в кредит" (vitalyreznik.com/posts/all/mir-v-kredit/, 2026-07-15; English, revised, ztljudge.com
+/articles/philosophy/girard/) makes nine claims a machine can check and several it cannot. This stand checks the first kind against the kernel as it is today (2026-11-05), so the
 essay can say "the machine says" only where the machine does say it.
 
 THE FORMALISATION, IN WORDS FIRST — a bad skeleton refutes a straw man:
@@ -42,7 +42,11 @@ and what does not — not observations of any crowd:
      forced; it is required only by the demand that the crisis END NOW;
   8. the envy of the strong: "I would have done better" names an act that was never performed — a deed with no act
      defined over it (the premise of the model). The claim "I am owed" resting on it is OPEN, its stamp Z_PERMANENT; stamped T it reads EARNED.
-     A borrower who believes he is the creditor.
+     A borrower who believes he is the creditor;
+  9. the court instead of the crowd: a trial is an ACT over the question of guilt. Convict only on EARNED: evidence
+     found -> EARNED, conviction; evidence against -> REFUTED, acquittal; nothing established -> OPEN, no conviction
+     ("not proven") — and not a finding of innocence either. Where proof is had, the proof pays, not a person, and
+     (section 6) nothing is owed again; where it is not, the case stays open and nobody is stamped.
 
 NOT MEASURED HERE, and the machine has no say on them: what Girard described (his texts), that he took the Gospels
 to side with the victim, who read him and how (biography), and whether a crowd's refusal to stamp ends the mechanism
@@ -217,10 +221,30 @@ def sec8_the_envy_of_the_strong():
     print("   The envious collects on a bill that cannot be presented.")
 
 
+def sec9_the_court_instead_of_the_crowd():
+    print("-" * 72)
+    print("9. THE COURT INSTEAD OF THE CROWD")
+    convict = lambda d: d == "EARNED"                          # the rule: sentence only on an earned verdict
+    cases = (("the evidence establishes it", "T", "EARNED", True),
+             ("the evidence refutes it", "F", "REFUTED", False),
+             ("nothing is established", "Z", "OPEN", False))
+    for label, ev, want, conv in cases:
+        d = judge("guilty", {"guilty": ev})["disposition"]
+        assert d == want and convict(d) == conv
+        print(f"   {label:28s} -> {d:8s} conviction: {'yes' if conv else 'no'}")
+    innocent = judge("~guilty", {"guilty": "Z"})["disposition"]
+    assert innocent == "OPEN"
+    print(f"   and 'not proven' is not 'innocent': not-guilty on an open case is {innocent} too")
+    # the trial is an act: while the accused can be tried, the open question is redeemable — not carried forever
+    assert stamp("guilty", {"guilty": Z}, repertoire={"guilty"}) == "Z_REDEEMABLE_STABLE"
+    print("   a trial puts an act over the question: the open case is redeemable, not a permanent debt")
+
+
 if __name__ == "__main__":
     for sec in (sec1_the_crisis_has_no_culprit, sec2_the_choice_is_arbitrary, sec3_unanimity_is_not_verification,
                 sec4_not_with_us_is_against_us, sec5_peace_on_permanent_credit, sec6_the_debt_comes_back,
-                sec7_the_necessary_is_only_the_chosen, sec8_the_envy_of_the_strong):
+                sec7_the_necessary_is_only_the_chosen, sec8_the_envy_of_the_strong,
+                sec9_the_court_instead_of_the_crowd):
         sec()
     print("-" * 72)
-    print("all eight claims of the essay that a machine can check: the kernel says the same")
+    print("all nine claims of the essay that a machine can check: the kernel says the same")

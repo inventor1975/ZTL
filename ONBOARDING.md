@@ -438,6 +438,27 @@ bench prices both and chooses neither.
 
 ---
 
+### 1.8 Degrees — the same logic, read finer (2026-11-05)
+
+A statement may carry a degree (read as a probability, point or interval).
+T, F, Z are the degrees [1,1], [0,0], [0,1]; how statements are joined is
+unknown, so a compound's degree is a Fréchet interval. The points that are
+easy to get wrong — details, scope and evidence in SPEC.md, "Degrees":
+
+1. **Each table is the threshold of its degrees** — a connective answers T
+   iff the lower end is 1, else F. Proved for every one- and two-argument
+   connective under the probability reading, zero axioms
+   (`lean/ZDegrees.lean`); none of the published cells differs from it.
+2. **Per connective, not per formula.** Tables are read node by node; the
+   judge's EARNED / REFUTED matches the WHOLE formula's interval (measured on
+   400 random 3-atom formulas × 27 markings — expected, not a theorem). ¬(a∧b) at Z, Z: table T, whole-
+   formula lower end 0 — different questions.
+3. **Two maps.** Output: F means "not earned" (¬a at a = 0.3 answers F,
+   degree 0.7). Input: a degree enters the judge as T (=1), F (=0), else Z.
+   Where a claim "tends" is said only against a DECLARED `need`; no 0.5.
+4. **Independence is a stipulation; the dirty rule is not independence;
+   chance is not a weak link** — no document settles an outcome.
+
 ## 2. VR — what it is
 
 A separate cycle in `../VR/VRCycle` (its own git root). Ten published works;

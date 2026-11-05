@@ -479,6 +479,105 @@ contradiction.
   embodies the logic: the LLM's output is a dirty input; the
   core is the customs.
 
+## Degrees (draft for ZTL 2.2, 2026-11-05)
+
+The same ZTL, read at a finer grain; optional. A statement may carry a
+**degree** — read here as the probability that it is true (a modelling
+choice), a point or an interval inside [0, 1]. The three values are three
+degrees: T = [1, 1], F = [0, 0], Z = the whole [0, 1] — not a middle
+degree but no constraint at all, which is why Tomova's criterion (3)
+above, which needs a middle degree on a linear order, has no subject.
+How two statements are joined is **not known**, so a compound's degree is
+the interval over every joint distribution that keeps each part's own
+degree (the Fréchet bounds; for two parts P(a ∧ b) ∈
+[max(0, a+b−1), min(a, b)]). This is the classical probability-logic
+construction of Boole (1854), Fréchet (1935), Hailperin and Nilsson
+(1986); its ends are the lower and upper probabilities of this credal
+set in Walley's sense.
+
+**Two maps, not one — keep them apart:**
+
+* **A connective's answer** (output): T when the lower end of its degree
+  is 1 — every admissible joint puts all its weight where the connective
+  holds — and F otherwise. F here means "not earned" (the principle at
+  the top: T only if forced, otherwise F), not "degree 0":
+  ¬a at a = 0.3 has degree 0.7 and the connective answers F.
+* **A degree as an input value**: [1, 1] → T, [0, 0] → F, anything else →
+  Z, the smallest of the three degrees that contains it. Lossy by design:
+  the judge works on T, F, Z, and the degree itself is kept beside it.
+
+**What is proved and what is measured:**
+
+* **Each table is the output map of its degrees.** For EVERY one- and
+  two-argument connective and every input among T, F, Z: PROVED, zero
+  axioms (`lean/ZDegrees.lean`: `projection`, `projection1`). Checked
+  against the PUBLISHED tables too — the site's 4 one-argument and 16
+  two-argument tables (4·3 + 16·9 = 156 cells), the curator's file
+  (2 + 16), the code's six connectives: 0 cells differ
+  (`zfrechet_tables.py`; flipping any one of the 156 site cells is
+  caught).
+* **This holds per connective, not per formula.** ZTL reads a compound
+  node by node, each connective reading the T or F below it. ¬(a ∧ b) at
+  Z, Z: the inner ∧ answers F, ¬F answers T — yet a joint keeping both
+  degrees gives ¬(a ∧ b) degree 0
+  (`ZDegrees.compound_is_node_by_node`). The two readings answer
+  different questions: the node-by-node value is what each connective
+  answers about its own inputs (the greedy register); the judge's
+  disposition answers whether the whole claim is forced. MEASURED: on
+  400 random formulas over 3 atoms × all 27 markings (10 800 judgments,
+  `zfrechet.py`) the judge's EARNED is exactly "lower end of the whole
+  formula's degree = 1", REFUTED exactly "upper end = 0", and EARNED /
+  REFUTED IF STABLE the same with a dirty atom's occurrences read as one.
+  The judge is computed separately (`ztljudge`, all classical
+  readings), but the agreement is EXPECTED, not a discovery: the extreme
+  joints of the Fréchet set are exactly the classical readings, so
+  "lower end 1" and "true in every reading" coincide. The measurement
+  checks the two implementations against each other; it is not a
+  theorem for larger formulas.
+* **It extends §16.** E9 proved an atom's verdict to be the
+  Dempster–Shafer threshold (T ⟺ Bel = 1, F ⟺ Pl = 0; `ZDempster.lean`,
+  zero axioms) — Bel and Pl being the lower and upper probability of the
+  credal set. That is the INPUT map; the new step is the connectives.
+
+**Working rules:**
+
+* **The dirty rule is not independence.** A Z atom read at two places is
+  two events whose joint is unknown (any joint is allowed) — its owner
+  may change it between the two reads — not two independent events;
+  `stable=True` reads them as one (the judge's "IF STABLE").
+* **Independence is a stipulation**, never a default. Declared, it fixes
+  the joint: a point when the degrees are points, an interval otherwise
+  (computed exactly at the corners, the function being multilinear).
+  All or nothing in this version; partial independence waits for a case
+  that needs it.
+* **Exact degrees** — `zdegree.py`: two linear programs over the worlds
+  of the formula in exact fractions (Bland's rule, no third-party
+  solver); each end is certified twice on every computation — a joint
+  that attains it and a dual that bounds it, both checked over all
+  worlds (a run-time certificate, not a Lean proof). Above 10 events
+  (2^10 worlds) it refuses, with the reason. The cheap
+  "Fréchet at the corners" is exact on the tables' inputs 0, 1, [0, 1]
+  and WRONG on interval inputs in general: for exclusive or, x ∈ [0, 1],
+  y = 1/2, the corners give [1/2, 1/2] while the exact interval is
+  [0, 1] (computed). The language therefore uses the LP.
+* **A threshold is declared, never built in.** In ZFL a row may carry
+  `degree`; the document may carry `need` (the threshold) and
+  `independent`. The degree section then answers EARNED (lower end ≥
+  need), REFUTED (upper end < need), OPEN (between); an EARNED or REFUTED
+  becomes ON CREDIT when it rests on a degree that was told rather than
+  checked (widening that degree to [0, 1] would move the interval).
+  These verdicts are relative to the declared `need` and are not the
+  judge's: at need = 1, EARNED here is the judge's EARNED, while REFUTED
+  here (upper end below need) is weaker than the judge's (upper end 0). Without `need` it reports the interval only:
+  there is no default 0.5.
+* **Chance is not a weak link.** A row whose degree is strictly inside
+  (0, 1) enters the judge as Z (the input map). Its degree may be
+  documented; its truth is settled by no document, only by the observed
+  outcome — after which it is a verified or refuted row without a
+  degree. Such a row is Z in a second sense — chance, not an unverified
+  input — and the report keeps the two apart: the judge names such rows
+  as chance, and "what to check" never offers them.
+
 ## The road ahead (not started)
 
 * The lazy mode (Z flows, collapse at the boundary) as the second

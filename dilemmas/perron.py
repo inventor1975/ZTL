@@ -2,7 +2,7 @@
 """
 Perron's paradox, judged: "the largest natural number" names nothing.
 
-Oskar Perron's example (Jahresbericht der DMV, 1911, as it is usually cited; the point he made against assuming that an
+Oskar Perron's example ("Zur Existenzfrage eines Maximums oder Minimums", Jahresbericht der DMV 22, 1913, 140-144; the point he made against assuming that an
 extremum exists before proving it, in the calculus of variations): "Let N be the largest natural number. If N > 1,
 then N^2 > N, so N was not the largest. Hence N = 1." Every step is valid; the conclusion is absurd.
 

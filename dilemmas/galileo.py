@@ -9,18 +9,19 @@ Galileo's squares and Hilbert's hotel, judged: "fewer" names three different rel
            many more (move n to 2n).
 
 THE FORMALISATION, IN WORDS FIRST:
-  three relations all called "fewer" for finite sets, and they agree there:
+  three relations all called "fewer":
     INCLUSION    A is a proper part of B;
-    DENSITY      A's share of {1..N} tends to a smaller limit than B's;
-    CARDINALITY  no one-to-one map of B into A exists (Cantor's "fewer").
-  For infinite sets they come apart. "Fewer", with the relation unnamed, is a CONVENTION; each relation, named,
+    CARDINALITY  no one-to-one map of B into A exists (Cantor's "fewer");
+    DENSITY      A's share of {1..N} tends to a smaller limit than B's — defined for infinite sets of naturals only
+                 (every finite set has density 0, so density says nothing about finite sets).
+  On finite sets inclusion and cardinality agree (a proper part has fewer elements — a theorem, illustrated below
+  on all 4096 pairs of subsets of {1..6}, not proved by them). For infinite sets the three come apart. "Fewer", with the relation unnamed, is a CONVENTION; each relation, named,
   gives an earned verdict. Galileo's refusal to compare was the judge's refusal with the cure unnamed; Cantor's
   choice of cardinality was a stipulation, and a fruitful one.
 
 MEASURED HERE:
-  1. for all pairs of subsets of {1..6}, the three relations agree on "A has fewer elements than B" except where
-     inclusion is silent (incomparable sets): whenever A is a proper part of B, A has fewer elements — checked
-     exhaustively (4096 pairs);
+  1. for all 4096 pairs of subsets of {1..6}: whenever A is a proper part of B, A has fewer elements (inclusion and
+     cardinality agree; an illustration of the finite theorem, not its proof);
   2. squares against naturals: proper part (EARNED: 2 is not a square); density of squares in {1..N} for
      N = 10^2..10^8 is exactly 1/sqrt(N) -> 0 (fewer); the map n -> n^2 is one-to-one and onto the squares on
      every initial segment (checked to 10^6) — the same number, as cardinality counts;
@@ -48,7 +49,7 @@ def subsets(n):
 
 def sec1_finite_agree():
     print("-" * 72)
-    print("1. FOR FINITE SETS THE THREE 'FEWER'S AGREE")
+    print("1. FOR FINITE SETS INCLUSION AND CARDINALITY AGREE")
     S = subsets(6)
     checked = 0
     for A in S:

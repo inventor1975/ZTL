@@ -11,7 +11,8 @@ THE FORMALISATION, IN WORDS FIRST:
   "each with probability 1/2, whatever a is" needs a prior that is uniform over all amounts — there is no such
   probability distribution: the description names nothing (E). With a PROPER prior, three cases, all computed
   exactly here: (a) a finite mean — always switching gains exactly 0, and the conditional gain is positive for some
-  observed a and negative for others; (b) Broome's prior (the smaller amount 2^k with probability (1/3)(2/3)^k) —
+  observed a and negative for others; (b) Broome's prior (J. Broome, "The Two-Envelope Paradox", Analysis 55, 1995, p. 7: the smaller amount 2^k with
+  probability (1/3)(2/3)^k) —
   switching gains at EVERY observed a, yet the two envelopes are symmetric, because the mean is infinite and "the
   expected gain" is infinity minus infinity: no value, E. St. Petersburg is case (b) without the envelopes: "the
   fair price" is an expectation with no value — E; name the bank (the casino's limit) and the price is a number.

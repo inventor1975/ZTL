@@ -9,14 +9,21 @@ THE FORMALISATION, IN WORDS FIRST:
   two readings of "A is better", both computed from the same counts:
     POOLED      compare the overall success rates;
     STRATIFIED  compare within each stone size (and weight the strata alike).
-  They disagree because A was given mostly to large (harder) stones. Which reading answers "is A better for a
-  patient?" depends on whether stone size influences both the choice of treatment and the outcome — a causal
-  premise, not in the table. Named, the verdict is earned; unnamed, it is OPEN, and the cure is to stipulate the
-  causal model — or to measure: a randomised trial makes the pooled comparison the causal one.
+  They disagree because A was given mostly to large (harder) stones. Two things are mixed in "is A better?", and
+  only one of them is a convention (corrected 2026-11-05 after an outside review: the first version declared the
+  causal premise itself a convention, which it is not):
+    the QUESTION   which quantity is asked for — the pooled ASSOCIATION (who did better in this hospital's records)
+                   or the causal EFFECT of the treatment on a patient. That is a choice: stipulate it.
+    the ANSWER     the value of the chosen quantity. The association is read off the counts (earned). The effect is a
+                   fact about the world: from these observational counts it follows only under a causal model
+                   (stone size drives both the choice of treatment and the outcome) — a premise that is TOLD, not
+                   verified: ON CREDIT, document the model; a randomised trial would MEASURE it.
+  So the cure is two-step, as the reviewer put it: stipulate what is asked, then measure (or document) its value.
 
-MEASURED HERE: the rates exactly (fractions); A better in each stratum, worse pooled; the judge with the premise
-unnamed (D = success difference A - B, a convention between the pooled and the stratified value): "D > 0" OPEN,
-"stipulate D"; stratified stipulated: EARNED; pooled stipulated: REFUTED; a randomised trial, to be run: "measure D".
+MEASURED HERE: the rates exactly (fractions); A better in each stratum, worse pooled; the judge: the question
+unnamed (Q = 1 for the effect, 0 for the association, a convention): "Q == 1" OPEN, "stipulate Q"; the association
+asked: "D > 0" REFUTED, earned from the counts; the effect asked, the causal model only told: "D > 0" ON CREDIT,
+"document D"; the effect asked, a randomised trial still to run: OPEN, "measure D".
 Run:  python3 dilemmas/simpson.py
 """
 import os
@@ -56,15 +63,17 @@ if __name__ == "__main__":
     assert sa > sb
     print(f"   stratified (same mix of stones): A {float(sa):.3f}  B {float(sb):.3f}  -> A better")
     print("-" * 72)
-    print("2. THE JUDGE ON 'A IS BETTER' (D = success rate A - B)")
+    print("2. THE JUDGE: FIRST WHAT IS ASKED (a convention), THEN ITS VALUE (a fact)")
+    q = judge_sheet_claim("Q == 1", *parse_quantities("Q=[0,1] int earned:two-questions convention"))
+    assert q["disposition"] == "OPEN" and q["next_check"] == ["stipulate Q"]
+    print(f"   which quantity is asked (Q = 1 effect, 0 association), unnamed: {q['disposition']} {q['next_check']}")
     lo, hi = pa - pb, sa - sb
-    rows = [("the causal premise unnamed", f"D=[{lo},{hi}] earned:two-readings convention", "OPEN", ["stipulate D"]),
-            ("stratified (size drives choice and outcome)", f"D={hi} earned:stratified convention", "EARNED", []),
-            ("pooled (size irrelevant)", f"D={lo} earned:pooled convention", "REFUTED", []),
-            ("a randomised trial, to be run", f"D=[{lo},{hi}] earned:two-readings", "OPEN", ["measure D"])]
+    rows = [("the association asked (read off the counts)", f"D={lo} earned:counts", "REFUTED", []),
+            ("the effect asked, the causal model only told", f"D={hi} credit", "ON CREDIT", ["document D"]),
+            ("the effect asked, a randomised trial to run", f"D=[{lo},{hi}] earned:two-readings", "OPEN", ["measure D"])]
     for label, sheet, disp, cure in rows:
         r = judge_sheet_claim("D > 0", *parse_quantities(sheet))
         assert r["disposition"] == disp and r["next_check"] == cure, (label, r)
-        print(f"   {label:44s}: {r['disposition']:8s} {cure}")
+        print(f"   {label:44s}: 'D > 0' {r['disposition']:9s} {cure}")
     print("-" * 72)
     print("SIMPSON: all measurements hold.")

@@ -4,7 +4,7 @@ Zeno's Achilles and Gabriel's horn, judged: a process with infinitely many stage
 
   ACHILLES  (Aristotle, Physics VI.9) Achilles runs ten times faster than the tortoise, which starts 1 ahead. When
             he reaches where it was, it has moved on; and so on forever — so he never catches it.
-  GABRIEL'S HORN  (Torricelli, 1643) y = 1/x for x >= 1, turned about the axis: finite volume (pi), infinite
+  GABRIEL'S HORN  (Torricelli: found 1641-43, published in Opera geometrica, 1644) y = 1/x for x >= 1, turned about the axis: finite volume (pi), infinite
             surface. "You can fill it with paint but never paint it."
 
 THE FORMALISATION, IN WORDS FIRST — the same two objects as 0.999... (dilemmas/point_nine.py):
@@ -24,6 +24,11 @@ MEASURED HERE:
   3. "a coat of thickness t over the whole inner surface": for t = 0.1, 0.01, 0.001 the radius drops below t at
      x = 1/t — the coat has no room there; the claim is E (computed: the room vanishes), not "true but needs
      infinite paint".
+WHAT E MEANS HERE (stated because a reviewer read it as "there is nothing to discuss"): E is the verdict on a claim
+whose description has NO ADMISSIBLE READING — nothing answers to "the limit" or "the coat". It is the presupposition
+failure of Frege and Strawson, and the empty-specification genre of the paradox docket (§5.1). It always comes with
+its pair: the existence claim, which is not E but REFUTED. The question is real and answered (no limit; no coat);
+what has no subject is the predication about the thing that is not there.
 Run:  python3 dilemmas/zeno.py
 """
 import math
@@ -72,9 +77,11 @@ if __name__ == "__main__":
         x_out = 1 / t                                        # radius 1/x < t beyond here: no room for the coat
         assert 1 / (x_out * 1.0001) < t
         room = "E" if 1 / (x_out * 1.0001) < t else "T"     # computed: the coat has no room past x = 1/t
-        r = judge("coat_of_thickness_t", {"coat_of_thickness_t": room})
-        assert r["disposition"] == "E"
-        print(f"   t = {t}: the radius falls below t at x = {x_out:.0f}; the coat: {r['disposition']} (no room — no subject)")
+        fits = judge("a_coat_of_thickness_t_fits", {"a_coat_of_thickness_t_fits": "F" if room == "E" else "T"})
+        r = judge("the_coat_needs_infinite_paint", {"the_coat_needs_infinite_paint": room})
+        assert fits["disposition"] == "REFUTED" and r["disposition"] == "E"
+        print(f"   t = {t}: the radius falls below t at x = {x_out:.0f}; 'such a coat fits' {fits['disposition']};"
+              f" 'the coat needs infinite paint' {r['disposition']}")
     print("   Filling the horn is not painting it at any positive thickness.")
     print("-" * 72)
     print("ZENO AND THE HORN: all measurements hold.")

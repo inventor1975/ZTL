@@ -20,7 +20,8 @@ MEASURED HERE:
   1. Grandi: partial sums alternate 1, 0 (no limit: the limit-sum is E); the Cesàro mean of the first 2*10^5
      partial sums is 1/2 exactly; Abel's sum at x = 1 - 1e-9 is 1/2 within 1e-9;
   2. why 1/2 is forced once two properties are required: any method that is LINEAR and STABLE (dropping the first
-     term subtracts it) assigns S = 1 - S, so S = 1/2 — checked as a linear equation, exactly;
+     term subtracts it) and assigns Grandi's series a value at all, assigns S = 1 - S, so S = 1/2 (ordinary
+     convergence assigns none) — checked as a linear equation, exactly;
   3. Riemann: the alternating harmonic series in four orders (p : q = 1:1, 2:1, 1:2, 4:1), summed to 3*10^5
      terms, matches ln 2 + (1/2) ln(p/q) within 1e-4; the absolutely convergent sum (-1)^(n+1)/n^2 gives the same
      value pi^2/12 in all four orders;
@@ -68,7 +69,7 @@ def sec2_linear_and_stable():
     # so S = 1 + S(-1, 1, -1, ...) = 1 - S  ->  2S = 1
     S = Fraction(1, 2)
     assert S == 1 - S
-    print("   S = 1 - S under any linear, stable method: S = 1/2 — the properties are stipulated, the value follows")
+    print("   S = 1 - S under any linear, stable method that gives a value: S = 1/2 — properties stipulated, value follows")
 
 
 def rearranged(p, q, terms):

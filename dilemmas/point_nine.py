@@ -8,16 +8,18 @@ THE FORMALISATION, IN WORDS FIRST:
   the TERMS    0.9, 0.99, 0.999, ...: every one of them is less than 1 (the process — VR's register of becoming);
   the VALUE    what the infinite decimal NAMES: by the definition of decimal notation, the least number not below
                any term (the supremum, the limit) — and that is 1 (the done object).
-  Which object "0.999..." refers to is fixed by the notation's definition; no inspection of finitely many digits can
-  decide "= 1" against "< 1". The numeric judge shows exactly that: after k digits the value is only known to lie in
-  [1 - 10^-k, 1], and "value < 1" stays OPEN for every k; the definition (stipulated) makes "value == 1" EARNED.
+  Which object "0.999..." refers to is fixed by the definition of decimal notation — standard mathematics, an earned
+  ground, not a convention left open (a reviewer's correction, 2026-11-05). What the judge shows is that no inspection
+  of finitely many DIGITS reaches it: after k digits the value is only known to lie in [1 - 10^-k, 1], "value < 1"
+  stays OPEN for every k, and the cure the numeric floor names ("measure") cannot be filled by more digits — only the
+  definition closes it, and with the definition "value == 1" is EARNED.
 
 MEASURED HERE:
   1. every term 1 - 10^-k (k = 1..60) is below 1, exactly — "the terms never reach 1": EARNED;
   2. for every bound 10^-j (j = 1..60) a term is closer to 1 than that — no number below 1 bounds the terms above,
      so the least upper bound is 1, exactly in rationals;
-  3. the judge after k = 1, 10, 50 digits: "value < 1" OPEN, cure "stipulate value" (the notation's definition),
-     "value >= 0.9" EARNED; with the definition stipulated (value = 1): "value == 1" EARNED, "value < 1" REFUTED;
+  3. the judge after k = 1, 10, 50 digits: "value < 1" OPEN, "value >= 0.9" EARNED; on the definition of decimal
+     notation (earned, value = 1): "value == 1" EARNED, "value < 1" REFUTED;
   4. the classical check, 3 x 0.333... : the terms 3 x (1/3 - 10^-k/3) = 1 - 10^-k — the same terms, the same value.
 Run:  python3 dilemmas/point_nine.py
 """
@@ -48,16 +50,16 @@ if __name__ == "__main__":
     print("-" * 72)
     print("3. THE JUDGE: FINITELY MANY DIGITS DECIDE NOTHING; THE DEFINITION DOES")
     for k in (1, 10, 50):
-        sheet = f"value=[{1 - Fr(1, 10 ** k)},1] earned:digits convention"
+        sheet = f"value=[{1 - Fr(1, 10 ** k)},1] earned:digits"
         lt = judge_sheet_claim("value < 1", *parse_quantities(sheet))
         ge = judge_sheet_claim("value >= 9/10", *parse_quantities(sheet))
-        assert lt["disposition"] == "OPEN" and lt["next_check"] == ["stipulate value"]
-        assert ge["disposition"] == "EARNED"
-        print(f"   after {k:2d} digits: 'value < 1' {lt['disposition']} {lt['next_check']}; 'value >= 0.9' {ge['disposition']}")
-    d = parse_quantities("value=1 earned:decimal-notation convention")
+        assert lt["disposition"] == "OPEN" and ge["disposition"] == "EARNED"
+        print(f"   after {k:2d} digits: 'value < 1' {lt['disposition']}; 'value >= 0.9' {ge['disposition']}")
+    print("   the floor names 'measure value', and no number of further digits fills it: the definition is the ground")
+    d = parse_quantities("value=1 earned:decimal-notation")
     assert judge_sheet_claim("value == 1", *d)["disposition"] == "EARNED"
     assert judge_sheet_claim("value < 1", *d)["disposition"] == "REFUTED"
-    print("   the notation's definition stipulated: 'value == 1' EARNED, 'value < 1' REFUTED")
+    print("   on the definition of decimal notation: 'value == 1' EARNED, 'value < 1' REFUTED")
     print("-" * 72)
     print("4. 3 x 0.333...")
     assert all(3 * (Fr(1, 3) - Fr(1, 3 * 10 ** k)) == term(k) for k in range(1, 61))

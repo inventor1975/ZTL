@@ -23,6 +23,11 @@ MEASURED HERE:
      the count of maps from an empty set to an empty set (exactly one: the empty map) — the convention is the one
      that keeps the laws; another value breaks one of them (checked: V = 0 breaks the binomial expansion of
      (0 + 1)^2 written as sum C(2,k) 0^k 1^(2-k)).
+WHAT E MEANS HERE (stated because a reviewer read it as "there is nothing to discuss"): E is the verdict on a claim
+whose description has NO ADMISSIBLE READING — nothing answers to "the limit" or "the coat". It is the presupposition
+failure of Frege and Strawson, and the empty-specification genre of the paradox docket (§5.1). It always comes with
+its pair: the existence claim, which is not E but REFUTED. The question is real and answered (no limit; no coat);
+what has no subject is the predication about the thing that is not there.
 Run:  python3 dilemmas/zero_power_zero.py
 """
 import math
@@ -67,14 +72,17 @@ def sec2_value_is_a_convention():
 
 def sec3_the_limit_has_no_subject():
     print("-" * 72)
-    print("3. 'THE LIMIT IS 1' — NO SUBJECT")
+    print("3. 'THE LIMIT EXISTS' — REFUTED; 'THE LIMIT IS 1' — NO SUBJECT")
     # computed, not set by hand: the paths of section 1 disagree, so there is no limit to speak of
     vals = list(PATH_LIMITS.values())
     mark = "E" if max(vals) - min(vals) > 1e-6 else "T"
+    ex = judge("limit_exists", {"limit_exists": "F" if mark == "E" else "T"})
+    assert ex["disposition"] == "REFUTED"
+    print(f"   limit_exists: {ex['disposition']} — the question is real, and answered: the paths disagree")
     for claim in ("limit_is_1", "limit_is_0"):
         r = judge(claim, {claim: mark})
         assert r["disposition"] == "E"
-        print(f"   {claim}: {r['disposition']} — the description 'the limit' names nothing")
+        print(f"   {claim}: {r['disposition']} — nothing answers to 'the limit' (presupposition failure)")
 
 
 def sec4_the_laws_force_one():

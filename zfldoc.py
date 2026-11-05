@@ -93,6 +93,8 @@ CODE_HELP = {
                         "claim is not read across the clock",
                         "часы рядом с утверждением, сравнивающим числа: слой времени читает только высказывания, "
                         "поэтому утверждение через срок не прочитано"),
+    "E_COMPARE_ROW": ("a comparison row that leads back to itself, or a statement definition leaning on a comparison row",
+                      "строка-сравнение, ведущая сама к себе, или определение-высказывание, опирающееся на строку-сравнение"),
     "E_TYPE_EQ": ("a statement set equal to a number with `=` — no reading makes a truth value equal to a number",
                   "утверждение приравнено к числу знаком `=` — никакое прочтение не делает истинностное значение числом"),
     "E_CONVENTION": ("a convention also marked as separate measurements, or on a row with no value",

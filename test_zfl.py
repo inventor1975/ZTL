@@ -570,7 +570,7 @@ def sec16_a_lone_equals_is_read_by_the_types_of_its_sides():
     finally:
         zfl.eq_kinds = real
     # whitespace inside a value is layout: "[0, 1]" reads as "[0,1]" (a blind formalization died three rounds on it)
-    for v in ("[0, 1]", " [0 ,1] ", "[ 1/4 , 1/2 ]"):
+    for v in ("[0, 1]", " [0 ,1] ", "[ 1/4 , 1/2 ]", [0, "inf"], ["1/4", "1/2"], [0, 10]):
         assert zfl.run({"rows": [{"name": "w", "status": "unverified", "value": v, "means": "m"}],
                         "claim": "w >= 0"})["ok"], v
     print("   numbers = numbers -> ==; statements = statements -> the biconditional, beside a quantity too;")
@@ -601,6 +601,40 @@ def sec17_a_clock_beside_a_numeric_claim_never_crashes():
     print("   numeric claim + clock: no crash, the time layer named as not reading it; statements: the time layer reads")
 
 
+def sec18_a_comparison_can_be_named():
+    """(2026-11-05) A defined row whose ground compares numbers names that comparison: the claim reads it where the
+    name stands. Both sides: named or written out, the same verdict; a loop and a self-reference definition leaning on
+    a comparison row are refused (E_COMPARE_ROW); a liar with no comparison is still the passport office's. Sabotage:
+    without the expansion the named form is refused again."""
+    print("-" * 72)
+    print("§18 a comparison can be named")
+    base = [{"name": "x", "status": "verified", "ground": "m", "value": "2", "means": "a"},
+            {"name": "y", "status": "verified", "ground": "m", "value": "5", "means": "b"},
+            {"name": "p", "status": "unverified", "means": "p"}]
+    big = {"name": "big", "status": "defined", "ground": "x > 1", "means": "x exceeds 1"}
+    both = {"name": "both", "status": "defined", "ground": "big & (y > 4)", "means": "both hold"}
+    for named, written in (("big", "x > 1"), ("p = big", "p = (x > 1)"), ("both & p", "((x > 1) & (y > 4)) & p")):
+        a = zfl.run({"rows": base + [big, both], "claim": named})
+        b = zfl.run({"rows": base, "claim": written})
+        assert a["ok"] and b["ok"], (named, a.get("issues"))
+        assert a["report"]["numeric"]["disposition"] == b["report"]["numeric"]["disposition"], (named, written)
+    loop = [{"name": "u", "status": "defined", "ground": "v & (x > 1)", "means": "m"},
+            {"name": "v", "status": "defined", "ground": "u & (y > 1)", "means": "m"}]
+    assert any(i["code"] == "E_COMPARE_ROW" for i in zfl.validate({"rows": base + loop, "claim": "u"}))
+    mix = [big, {"name": "L", "status": "defined", "ground": "~Tr(L) & big", "means": "m"}]
+    assert any(i["code"] == "E_COMPARE_ROW" for i in zfl.validate({"rows": base + mix, "claim": "L"}))
+    liar = zfl.run({"rows": [{"name": "L", "status": "defined", "ground": "~Tr(L)", "means": "m"}], "claim": ""})
+    assert liar["ok"] and liar["report"]["passport"][0]["kind"] == "PARADOX"
+    real = zfl.expand_compares
+    zfl.expand_compares = lambda text, rows: (text, False)                     # sabotage
+    try:
+        assert not zfl.run({"rows": base + [big], "claim": "big & (y > 4)"})["ok"] or \
+            zfl.run({"rows": base + [big], "claim": "big & (y > 4)"})["report"]["numeric"]["disposition"] != "EARNED"
+    finally:
+        zfl.expand_compares = real
+    print("   named or written out, one verdict; a loop or a liar leaning on a comparison: E_COMPARE_ROW; sabotage caught")
+
+
 if __name__ == "__main__":
     print("=" * 72)
     print("ZFL v2 — the table, headless")
@@ -619,6 +653,7 @@ if __name__ == "__main__":
     sec15_a_convention_changes_the_order_never_the_verdict()
     sec16_a_lone_equals_is_read_by_the_types_of_its_sides()
     sec17_a_clock_beside_a_numeric_claim_never_crashes()
+    sec18_a_comparison_can_be_named()
     sec4b_every_example_runs_and_json_types_are_taken_as_they_come()
     sec5_the_spec_can_build_the_form_and_the_page()
     print("=" * 72)

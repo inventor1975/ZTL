@@ -678,6 +678,11 @@ def coerce(doc):
         for k, v in r.items():
             if k in ("sample", "convention"):
                 row[k] = bool(v)
+            elif k == "value" and isinstance(v, (list, tuple)) and len(v) == 2 \
+                    and all(isinstance(e, (int, float, str)) and not isinstance(e, bool) for e in v):
+                # AN INTERVAL WRITTEN AS A JSON ARRAY (2026-11-05: models write [0, "inf"] as often as "[0,inf]";
+                # str() of the list put quotes into the sheet and the row died as unreadable) — the same interval
+                row[k] = "[" + ",".join(str(e).strip() for e in v) + "]"
             elif k == "status" and isinstance(v, str) and v.strip() in STATUS_ALIASES:
                 row[k] = STATUS_ALIASES[v.strip()]
             elif v is None:
@@ -735,6 +740,7 @@ def validate(doc):
     looking at a table."""
     doc = coerce(doc)
     issues, rows = [], doc["rows"]
+    _cmp_rows = compare_rows(rows)            # ONCE: per row it was O(rows^2) (the robustness check F5 caught it)
     if doc.get("sets_refused"):
         issues.append(_issue("error", "E_SETS", "sets", doc["sets_refused"]))
     if not rows:
@@ -956,12 +962,23 @@ def validate(doc):
         if kind not in GROUND_KINDS:
             issues.append(_issue("error", "E_KIND", f"{at} / kind of ground",
                                  f"kind must be one of {GROUND_KINDS}"))
-        if status == "defined":
+        if status == "defined" and r.get("name") in _cmp_rows:
+            if expand_compares(r.get("name") or "", rows)[1]:
+                issues.append(_issue("error", "E_COMPARE_ROW", f"{at} / ground",
+                                     "this comparison leads back to itself through its own name: a comparison is "
+                                     "read where its name stands, and here there is nothing to read"))
+        elif status == "defined":
             try:
                 _formula_prop(ground)
             except Exception as exc:
                 issues.append(_issue("error", "E_FORMULA",
                                      f"{at} / ground", str(exc)))
+            _leans = (names_in(ground) & set(_cmp_rows)) if _cmp_rows else set()
+            if _leans:
+                issues.append(_issue("error", "E_COMPARE_ROW", f"{at} / ground",
+                                     f"this definition leans on the comparison row(s) {sorted(_leans)}: definitions are "
+                                     f"read by the passport office, which reads statements; use the comparison in "
+                                     f"the claim instead"))
         # THE SHAPE OF A VALUE, answered at the cell rather than by a parse
         # error. `(0,10)` and `{0,10}` are the two a person reaches for
         # next after `[0,10]`, and the floor accepts neither — but
@@ -1327,11 +1344,52 @@ def eq_kinds(text, rows):
     return out
 
 
+# A COMPARISON CAN BE NAMED (2026-11-05, the curator's "да"; a blind formalization wanted
+# `A_better_small` defined as `sA/nA > sB/nB` and the language refused it — a defined row was propositional only).
+# A `defined` row whose ground compares numbers is a NAME for that comparison: wherever the claim says the name, the
+# comparison is read, exactly as if it had been written there. Nothing else changes — a document that names no
+# comparison reads as before, and such a document used to be refused (E_FORMULA), so no earlier verdict moves.
+# Limits, refused by form (E_COMPARE_ROW): a comparison row that leads back to itself (no reading — nothing to expand
+# into), and a propositional definition (the self-reference system) that leans on a comparison row (the passport
+# office reads statements; the numbers are the numeric floor's).
+def _spelt_ground(text):
+    t = _spell(text or "")
+    for pat, sym in _WORDS:
+        t = re.sub(pat, sym, t)
+    return t
+
+
+def compare_rows(rows):
+    """{name: ground} for every defined row whose ground compares numbers"""
+    return {r["name"]: r.get("ground") or "" for r in rows
+            if r.get("name") and (r.get("status") or "") == "defined" and _COMPARES.search(_spelt_ground(r.get("ground")))}
+
+
+def _name_re(name):
+    return re.compile(r"(?<![A-Za-z_0-9])" + re.escape(name) + r"(?![A-Za-z_0-9])")
+
+
+def expand_compares(text, rows):
+    """the text with every comparison row's name replaced by its comparison, bracketed; -> (text, looped?)"""
+    cmp = compare_rows(rows)
+    if not cmp:
+        return text, False
+    for _ in range(len(cmp) + 1):
+        hit = False
+        for name, ground in cmp.items():
+            if _name_re(name).search(text):
+                text = _name_re(name).sub(lambda _m, g=ground: f"({g})", text)
+                hit = True
+        if not hit:
+            return text, False
+    return text, True                                        # still names after len+1 rounds: a loop
+
+
 def normalise(claim, rows):
     """`x - 10 = 20` is what a person writes, and it is not wrong; nor is `p = q`. Each lone `=` is read by the types
     of its two sides (see above); only an undecidable one falls back to the old rule — numeric where the document
-    has quantities, the biconditional elsewhere."""
-    out = _spell(claim)
+    has quantities, the biconditional elsewhere. A named comparison is read where its name stands."""
+    out = _spell(expand_compares(claim, rows)[0])
     for pat, sym in _WORDS:
         out = re.sub(pat, sym, out)
     legacy_numeric = bool(numeric_rows(rows))
@@ -1427,7 +1485,8 @@ def to_system(rows):
     on that are NOT themselves defined enter as inputs carrying their own
     status — a dirty input imported into the system, exactly as v1
     did it, but without anyone having to declare a genre to get there."""
-    defined = {r["name"]: r for r in rows if r.get("status") == "defined"}
+    _cmp = compare_rows(rows)
+    defined = {r["name"]: r for r in rows if r.get("status") == "defined" and r["name"] not in _cmp}
     if not defined:
         return {}
     system = {}

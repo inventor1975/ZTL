@@ -25,6 +25,10 @@ core (ztljudge) judge the formula. Diagnostics merge both floors:
                 is no carrier — the probe is widening it to full ignorance
                 and seeing whether the verdict survives):
                   measure <quantity>   — interval too wide (numeric Z);
+                  stipulate <quantity> — the same, for a quantity declared a
+                                         CONVENTION: no fact to measure, a
+                                         value is fixed only by declaring one
+                                         (2026-11-05, Bertrand's chord);
                   document <quantity>  — bounds unearned AND load-bearing;
                   contest type <q>:<t> — the LATTICE is what forces the
                                          verdict; a type is a formalization
@@ -48,6 +52,13 @@ Sheet line format (extends ztljudge's ledger format):
                 optional `sample` token (each occurrence of the name is a
                 separate act of measurement; without it the name denotes
                 ONE THING and repeated occurrences co-refer, so m - m is 0),
+                and an optional `convention` token (the quantity has no value
+                to measure until one is declared — a probability over an
+                unnamed measure, a unit, a summation method: the cure for its
+                width is "stipulate", never "measure"; verdicts are unchanged —
+                the token decides only which order is issued. `convention`
+                with `sample` is refused: a convention has one value, `sample`
+                says each occurrence is its own measurement),
                 optional unit token read as EXPONENTS (m2, RUB/m2, km/h:
                 m·m unifies with m2, m2·RUB/m2 with RUB, m/m with a bare
                 number — but km never with m, since a conversion factor is
@@ -121,6 +132,7 @@ def parse_quantities(text):
                 lo, hi = _num(m.group("lo")), _num(m.group("hi"))
             # trailing tokens: discreteness | provenance | unit (free order)
             prov, wit, discrete, unit, sample = CREDIT, None, None, None, False
+            convention = False
             for tok in part.split()[1:]:
                 if tok == "int":
                     discrete = "int"
@@ -136,11 +148,17 @@ def parse_quantities(text):
                     prov = CREDIT
                 elif tok == "sample":
                     sample = True          # each occurrence is its own act
+                elif tok == "convention":
+                    convention = True      # no fact to measure: a value is declared
                 else:
                     unit = tok
+            if convention and sample:
+                raise ValueError(f"{m.group('name')}: 'convention' and 'sample' cannot both hold — a convention has "
+                                 f"one value, 'sample' makes each occurrence its own measurement")
             quantities[m.group("name")] = qty(lo, hi, prov, wit,
                                               discrete=discrete, unit=unit,
                                               sample=sample)
+            quantities[m.group("name")]["convention"] = convention
         else:
             name, _, val = part.partition("=")
             if val.strip().upper() in ("T", "F", "Z"):
@@ -549,7 +567,8 @@ def judge_sheet_claim(formula, quantities, marks, fixed=None):
         for n in natoms:
             if numeric[n]["verdict"] == "Z" and n in core["unverified"]:
                 for q in _measurable(n):
-                    next_check.append(f"measure {q}")
+                    # a convention has no value to find: the order that can fill it is a declaration
+                    next_check.append(f"{'stipulate' if quantities[q].get('convention') else 'measure'} {q}")
                 # the witness falls due the moment the measurement lands:
                 # a Z atom can show nothing non-bearing yet (re-marking it Z
                 # is a no-op, so it never enters `bearing`), and surprising
@@ -867,6 +886,38 @@ if __name__ == "__main__":
         _zn.ZERO_DIV_AS_Z[0] = False
     print("   a divisor 0 in every reading: E with the order named ('nothing to check, ever' for x/0, 'a value")
     print("   must be stipulated' for 0/0) where the claim rests on it; a divisor that may be 0: OPEN, measure it.")
+    # (2026-11-05) A CONVENTION: the cure for its width is "stipulate", never "measure" — and NOTHING else moves.
+    # Both sides: (1) every claim gets the same disposition and polarity with and without the token, on a battery of
+    # sheets — the token cannot buy or cost a verdict; (2) the only difference in the cures is measure <-> stipulate
+    # for the convention quantity itself; an empirical quantity beside it keeps "measure"; (3) convention + sample is
+    # refused by form. Sabotage: issuing "stipulate" for every quantity must break (2).
+    _conv_cases = [("P == 1/2", "P=[1/4,1/2] earned:three"), ("P >= 1/4", "P=[1/4,1/2] earned:three"),
+                   ("P > 1/2", "P=[1/4,1/2] credit"), ("P == 1/2", "P=[1/4,1/2] credit"),
+                   ("P * n >= 10", "P=[1/4,1/2] earned:three, n=[10,40] earned:c"),
+                   ("(P >= 1/3) & ok", "P=[1/4,1/2] earned:three, ok=Z"),
+                   ("(P >= 1/3) | (n > 5)", "P=[1/4,1/2] earned:three, n=[0,9] credit"),
+                   ("P * n >= 10", "P=[1/4,1/2] earned:three, n=[0,100] credit")]
+
+    def _conv(sheet):
+        return sheet.replace("P=[1/4,1/2] earned:three", "P=[1/4,1/2] earned:three convention") \
+                    .replace("P=[1/4,1/2] credit", "P=[1/4,1/2] credit convention")
+    for f, sheet in _conv_cases:
+        a = judge_sheet_claim(f, *parse_quantities(sheet))
+        b = judge_sheet_claim(f, *parse_quantities(_conv(sheet)))
+        assert (a["disposition"], a["polarity"]) == (b["disposition"], b["polarity"]), (f, sheet, a, b)
+        assert [c.replace("measure P", "stipulate P") for c in a["next_check"]] == b["next_check"], (f, a, b)
+        assert not any(c.startswith("measure P") for c in b["next_check"])
+        assert not any(c.startswith("stipulate") and c != "stipulate P" for c in b["next_check"])
+    # P pinned to 1/2 decides it (n >= 30), n pinned to 50 decides it (P >= 1/4): both are cures, of two kinds
+    _b = judge_sheet_claim("P * n >= 10", *parse_quantities(_conv("P=[1/4,1/2] earned:three, n=[30,50] credit")))
+    assert "stipulate P" in _b["next_check"] and "measure n" in _b["next_check"], _b
+    try:
+        parse_quantities("P=[0,1] convention sample")
+        raise AssertionError("convention + sample was accepted")
+    except ValueError:
+        pass
+    print("   a convention: the same verdict with and without the token on every case; its cure reads 'stipulate',")
+    print("   an empirical quantity beside it keeps 'measure'; 'convention' with 'sample' is refused by form.")
     print()
     print("=" * 72)
     print("ZNUMJUDGE GREEN — mixed formulas judged by the unchanged core;")

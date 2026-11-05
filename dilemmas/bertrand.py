@@ -30,10 +30,12 @@ MEASURED HERE (each section asserts what it prints):
        Jaynes's invariance principle stipulated (rotation, scale, translation; P = 1/2): EARNED / EARNED / REFUTED;
      and the same hull taken on the story alone, not computed (credit): every forced verdict capped at ON CREDIT.
      The whole of Bertrand's dispute is which ground is laid; the judge's answer moves with it and names it;
-  4. the cure the judge names for the open claim is "measure P". For Bertrand that reads: name a procedure. A
-     convention narrows P by stipulation; a PHYSICAL procedure can be measured instead — Jaynes reported straws
-     tossed onto a circle agreeing with 1/2 (E. T. Jaynes, "The well-posed problem", Found. Phys. 3, 1973). A
-     stipulation and a measurement are two different grounds; the word "measure" covers only the second.
+  4. the cure the judge names depends on WHAT P IS, and the sheet has to say it: declared a `convention` (a
+     probability over a measure nobody has named), the open claim's cure is "stipulate P"; declared the frequency
+     of a named physical procedure, it is "measure P" — Jaynes reported straws tossed onto a circle agreeing with
+     1/2 (E. T. Jaynes, "The well-posed problem", Found. Phys. 3, 1973). The verdicts are the same either way; only
+     the order differs. (Before 2026-11-05 the numeric floor knew only "measure"; the `convention` token was added
+     to znumjudge for this case, with a both-sides test that no verdict moves.)
 
 NOT CLAIMED: that 1/2 is "the" answer (it is the answer on Jaynes's stated premise); anything about which
 premise is right. The judge prices the answers by their grounds; choosing the ground is not its job.
@@ -134,13 +136,14 @@ def sec3_the_ground_decides():
 
 def sec4_measure_or_stipulate():
     print("-" * 72)
-    print("4. 'MEASURE P' — OR STIPULATE A METHOD")
-    qs, marks = parse_quantities("P=[1/4,1/2] earned:three-methods")
-    r = judge_sheet_claim("P == 1/2", qs, marks)
-    assert r["disposition"] == "OPEN" and r["next_check"] == ["measure P"]
-    print(f"   'P == 1/2' with no method: {r['disposition']}, cure named: {r['next_check']}")
-    print("   A convention narrows P by stipulation; a physical procedure can be measured instead (Jaynes,")
-    print("   1973: straws tossed onto a circle agreed with 1/2). Two different grounds; 'measure' names one.")
+    print("4. 'STIPULATE P' — OR, FOR A PHYSICAL PROCEDURE, 'MEASURE P'")
+    conv = judge_sheet_claim("P == 1/2", *parse_quantities("P=[1/4,1/2] earned:three-methods convention"))
+    phys = judge_sheet_claim("P == 1/2", *parse_quantities("P=[1/4,1/2] earned:three-methods"))
+    assert conv["disposition"] == phys["disposition"] == "OPEN"
+    assert conv["next_check"] == ["stipulate P"] and phys["next_check"] == ["measure P"]
+    print(f"   P a convention (no measure named):       {conv['disposition']}, cure {conv['next_check']}")
+    print(f"   P the frequency of a physical procedure: {phys['disposition']}, cure {phys['next_check']}")
+    print("   The same verdict; the order follows what P is (Jaynes, 1973: straws on a circle agreed with 1/2).")
 
 
 if __name__ == "__main__":

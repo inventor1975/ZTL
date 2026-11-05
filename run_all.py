@@ -30,6 +30,7 @@ STANDS = [
     ("zarith.py",      ["EARNED zero"]),
     ("zprob.py",       ["ZTL verdict: Z"]),
     ("ztlnetwork.py",  ["ZTLNETWORK GREEN", "joint unknown: 1 − N·p/(f+1), attained"]),
+    ("inventory/py311_fstrings.py", ["PY311 FSTRINGS GREEN"]),
     ("zfrechet.py",    ["144 cells, 0 differ", "ZFRECHET: interval logic sits on ZTL with no verdict moved."]),
     ("zdegree.py",     ["6480 formula-marking-mode cases equal the enumeration",
                         "ZDEGREE GREEN — every end proved twice: a distribution that attains it, a dual that bounds it"]),

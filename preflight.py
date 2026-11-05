@@ -55,6 +55,8 @@ def main():
         ok &= step(f, [sys.executable, f])
     ok &= step("inventory/paper_claims.py (paper counts + CI floor)", [sys.executable, "inventory/paper_claims.py"])
     ok &= step("inventory/axiom_audit.py", [sys.executable, "inventory/axiom_audit.py"])
+    # CI runs Python 3.11; this machine 3.12 — f-string forms only 3.12 parses (2026-11-05: remote red, local green)
+    ok &= step("inventory/py311_fstrings.py (CI's Python 3.11)", [sys.executable, "inventory/py311_fstrings.py"])
     print("PREFLIGHT GREEN — now ONE full run_all.py" if ok else "PREFLIGHT RED — fix before the full run")
     return 0 if ok else 1
 

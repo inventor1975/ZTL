@@ -1516,7 +1516,8 @@ def to_sheet(rows):
                 else "credit")
         # whitespace inside a value is layout, not content: "[0, 1]" is how people and models write an interval, and the
         # sheet reader takes "[0,1]" only (2026-11-05: a blind formalization died three rounds on "[0, 1]")
-        bits = [f"{r['name']}={re.sub(r'\s+', '', r['value'])}", prov]
+        value = re.sub(r"\s+", "", r["value"])           # outside the f-string: Python 3.11 (CI) forbids a backslash there
+        bits = [f"{r['name']}={value}", prov]
         if (r.get("scale") or "").strip():
             bits.append(r["scale"].strip())
         if (r.get("unit") or "").strip():

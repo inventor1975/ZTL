@@ -63,7 +63,43 @@ def self_test():
     assert scan_source("x = f\"{d['k']}\" + f'{v!r:>10}'\nvalue = re.sub(r'\\s+', '', v)\n") == []
 
 
+def main_compile():
+    """Python < 3.12 (the CI itself): an f-string is one token there, so the 3.12-only forms cannot be found by
+    tokens — but this Python refuses them outright, so compiling every file IS the check. Self-tested the same way:
+    each bad sample must fail to compile, the clean one must compile."""
+    bad = ["x = f\"{re.sub(r'\\s+', '', v)}\"\n", "x = f\"{d[\"k\"]}\"\n", "x = f\"{(1  # c\n)}\"\n"]
+    for src in bad:
+        try:
+            compile(src, "<sample>", "exec")
+        except SyntaxError:
+            continue
+        raise AssertionError(f"this Python compiled a 3.12-only sample: {src!r}")
+    compile("x = f\"{d['k']}\" + f'{v!r:>10}'\n", "<sample>", "exec")
+    found = []
+    for f in sorted(ROOT.rglob("*.py")):
+        if SKIP & set(f.relative_to(ROOT).parts):
+            continue
+        try:
+            src = f.read_text(encoding="utf-8")
+        except (UnicodeDecodeError, OSError):
+            continue
+        try:
+            compile(src, str(f), "exec")
+        except SyntaxError as e:
+            if "f-string" in str(e):
+                found.append((f.relative_to(ROOT), e.lineno, str(e.msg)))
+    for path, line, what in found:
+        print(f"   {path}:{line}: {what}")
+    if found:
+        print(f"PY311 FSTRINGS RED — {len(found)} f-string(s) this Python cannot parse")
+        sys.exit(1)
+    print(f"PY311 FSTRINGS GREEN — every file compiles under Python {sys.version_info[0]}.{sys.version_info[1]}; "
+          "the self-test's 3.12-only samples were refused")
+
+
 def main():
+    if not hasattr(tokenize, "FSTRING_START"):
+        return main_compile()
     self_test()
     found = []
     for f in sorted(ROOT.rglob("*.py")):

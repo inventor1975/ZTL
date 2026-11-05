@@ -74,8 +74,10 @@ jobs:
           pdfinfo -v
       # test_zfunc.py checks the function brackets against mpmath (60 digits): a reference
       # implementation the brackets do not share code with (2026-10-10)
+      # cryptography: ztlnetwork.py signs real Ed25519 attestations (ztljudgenode); the stand joined run_all on
+      # 2026-11-05 and went red here for want of it
       - name: reference library for the function brackets
-        run: pip install mpmath scipy
+        run: pip install mpmath scipy cryptography
       - name: all stands + Lean
         run: python3 run_all.py
       # The papers are claims too. Until 2026-07-20 nothing checked that

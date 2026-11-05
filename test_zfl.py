@@ -686,6 +686,26 @@ def sec19_ztl_i_degrees():
         zfl.degree_report = real
     print("   no degree -> no section; Fréchet intervals; EARNED / REFUTED / OPEN at a threshold; a told degree")
     print("   that bears -> ON CREDIT, one that does not -> no cap; independence 21/100; refusals; sabotage caught")
+    # THE JUDGE READS A DEGREE BY ITS PROJECTION (2026-11-05, the curator: "да, делай Z"): a verified row with a degree
+    # strictly inside (0, 1) enters as Z; 1 -> T, 0 -> F; no degree -> its status as before; a told degree stays Z.
+    def jd(doc):
+        return zfl.run(doc)["report"]["judge"]["disposition"]
+    assert jd({"rows": [A, B], "claim": "a & b"}) == "OPEN"                 # was EARNED: probability <= 3/10
+    assert jd({"rows": [A, B], "claim": "a | b"}) == "OPEN"
+    assert jd({"rows": [dict(A, degree="1"), B], "claim": "a"}) == "EARNED"
+    assert jd({"rows": [dict(A, degree="0"), B], "claim": "a"}) == "REFUTED"
+    assert jd({"rows": [dict(A, degree="[0.2, 1]"), B], "claim": "a"}) == "OPEN"
+    assert jd({"rows": [dict(A, degree=""), B], "claim": "a & b"}) == "OPEN"   # b still 0.7
+    assert jd({"rows": [dict(A, degree=""), dict(B, degree="")], "claim": "a & b"}) == "EARNED"
+    assert zfl.to_marking([dict(A, status="unverified", ground="", degree="1")]) == {"a": "Z"}
+    real_mark = zfl._row_mark
+    zfl._row_mark = lambda r: zfl._MARK.get(r.get("status"), "Z")         # sabotage: the status read as truth
+    try:
+        assert jd({"rows": [A, B], "claim": "a & b"}) == "EARNED"           # the false EARNED comes back
+    finally:
+        zfl._row_mark = real_mark
+    print("   the judge reads a degree by its projection: 0.3 & 0.7 -> OPEN (was a false EARNED), 1 -> T, 0 -> F;")
+    print("   no degree -> the status as before; a told degree stays Z; sabotage (status read as truth) caught")
 
 
 if __name__ == "__main__":

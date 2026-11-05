@@ -1529,10 +1529,26 @@ def to_sheet(rows):
     return ", ".join(parts)
 
 
+def _row_mark(r):
+    """A row's value for the judge. A VERIFIED row that carries a DEGREE was checked for its degree, not for its truth
+    (2026-11-05, the curator: "да, делай Z"): it enters by the projection of that degree — [1,1] -> T, [0,0] -> F,
+    anything between -> Z, the input value ZTL already has. The connectives are untouched and still answer only T or
+    F; before this, 'a & b' at degrees 0.3 and 0.7 was EARNED while its probability is at most 3/10. A told degree
+    (an unverified row) stays Z whatever it says."""
+    m = _MARK.get(r.get("status"), "Z")
+    if m == "T" and (r.get("degree") or "").strip():
+        try:
+            lo, hi = parse_degree(r["degree"])
+        except ValueError:
+            return m                                                    # E_DEGREE refuses the document already
+        return "T" if lo == 1 else "F" if hi == 0 else "Z"
+    return m
+
+
 def to_marking(rows):
     """Statuses as the propositional judge reads them. A `defined` row is
     not a marking entry — it is a sentence, and belongs to the system."""
-    return {r["name"]: _MARK[r["status"]] for r in rows
+    return {r["name"]: _row_mark(r) for r in rows
             if r.get("status") in _MARK and not (r.get("value") or "").strip()}
 
 
@@ -1558,7 +1574,7 @@ def to_system(rows):
         if r["name"] in defined:
             continue
         if r["name"] in mentioned:
-            system[r["name"]] = _MARK.get(r.get("status"), "Z")
+            system[r["name"]] = _row_mark(r)
     return system
 
 

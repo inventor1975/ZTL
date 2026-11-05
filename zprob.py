@@ -75,7 +75,13 @@ def ellsberg():
     ev_U = (Fraction(0), Fraction(100))                     # [0,100]
     print(f"  EV(K) ∈ [{ev_K[0]},{ev_K[1]}] — an earned number")
     print(f"  EV(U) ∈ [{ev_U[0]},{ev_U[1]}] — an interval of ignorance")
-    atom = Z if not (ev_U[0] >= ev_K[1] or ev_U[1] < ev_K[0]) else T
+    # forced no worse -> T, forced worse -> F, else Z (2026-11-05: the old line gave T when U is forced WORSE — the
+    # branch was never reached on these numbers, but the rule was wrong)
+    def no_worse(u, k):
+        return T if u[0] >= k[1] else F if u[1] < k[0] else Z
+    assert no_worse((60, 70), (50, 50)) == T and no_worse((10, 40), (50, 50)) == F
+    assert no_worse((0, 100), (50, 50)) == Z
+    atom = no_worse(ev_U, ev_K)
     print(f"  Atom \"U is no worse than K\": {atom} — not forced ⇒ default deny ⇒")
     print("  choose K. The subjects of Ellsberg's experiment (1961) choose K and")
     print("  are declared \"irrational\" relative to the Bayesian norm —")

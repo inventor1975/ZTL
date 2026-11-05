@@ -33,7 +33,7 @@ STANDS = [
     ("zdegree.py",     ["6480 formula-marking-mode cases equal the enumeration",
                         "ZDEGREE GREEN — every end proved twice: a distribution that attains it, a dual that bounds it"]),
     ("zfrechet_tables.py", ["156 of 156 single-cell flips caught",
-                            "ZFRECHET TABLES: every published table of ZTL is ZTL-I's projection, the composed ones node by node."]),
+                            "ZFRECHET TABLES: every published table of ZTL is the projection of the degrees, the composed ones node by node."]),
     ("zmodal.py",      ["threshold coincided"]),
     ("zrussell.py",    ["facts grounded: 8 of 9"]),
     ("zverify.py",     ["hereditary without sound: 0", "THE GRADES SEPARATE",

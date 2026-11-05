@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-zfrechet_tables — ZTL-I against the PUBLISHED tables of ZTL, cell by cell (2026-11-05, the curator: "у нас таблицы ЗТЛ
+zfrechet_tables — ZTL degrees against the PUBLISHED tables of ZTL, cell by cell (2026-11-05, the curator: "у нас таблицы ЗТЛ
 очень не однородные и не интуитивные, ты точно все проверил на генерацию. Проверь все 16 плюс операнд").
 
 zfrechet.py section 1 compared the interval projection with tables it LIFTED ITSELF — circular for any table that is
@@ -9,10 +9,10 @@ not a plain lift. Here the yardstick is what ZTL publishes, read from three inde
          COMPOSED tables ¬(a∧b), ¬(a∨b), ¬(a⊕b), ¬(a→b) set against the one-connective ↑ ↓ ↔ ↛;
   FILE   the curator's ~/Dropbox/Epic World/ZTL/ZTL-ALL-TABLES-16plus2.txt — 2 one-argument + 16 two-argument;
   CODE   ztl.py's NOT/AND/OR/IMP/XOR/XNOR.
-The classical kernel of each table is read off its own T/F cells; ZTL-I gives every cell an interval (T = [1,1],
+The classical kernel of each table is read off its own T/F cells; ZTL with degrees gives every cell an interval (T = [1,1],
 F = [0,0], Z = [0,1], every joint of the two arguments allowed); the projection "T iff lo = 1" must equal the
 published cell. A composed table is a formula of two connectives: ZTL reads it node by node (each connective answers
-T or F), so ZTL-I must project at EACH node — and must then reproduce exactly the cells where ¬(a∧b) differs from ↑.
+T or F), so the degrees must project at EACH node — and must then reproduce exactly the cells where ¬(a∧b) differs from ↑.
 """
 import os
 import re
@@ -107,7 +107,7 @@ def kernel2(t):
 
 
 def check_table(name, t):
-    """every cell of a published table against ZTL-I's projection; -> (cells, differing cells)"""
+    """every cell of a published table against the projection of the degrees; -> (cells, differing cells)"""
     bad = []
     if isinstance(next(iter(t)), str):
         f = kernel1(t)
@@ -142,7 +142,7 @@ def main():
         n, bad = check_table(name, t)
         total += n
         assert not bad, (name, bad)
-    print(f"   {len(plain)} tables, {total} cells, 0 differ from ZTL-I's projection")
+    print(f"   {len(plain)} tables, {total} cells, 0 differ from the projection of the degrees")
     print("-" * 72)
     print("2. THE CURATOR'S FILE: 2 ONE-ARGUMENT + 16 TWO-ARGUMENT TABLES, EVERY CELL")
     total = 0
@@ -171,7 +171,7 @@ def main():
                 assert code[name](x, y) == proj(iv2(k, DEG[x], DEG[y])), (name, x, y)
     print("   6 connectives, 3 + 45 cells: 0 differ")
     print("-" * 72)
-    print("4. THE COMPOSED TABLES: ZTL-I PROJECTED AT EACH NODE")
+    print("4. THE COMPOSED TABLES: THE DEGREES PROJECTED AT EACH NODE")
     inner = {"¬(a ∧ b)": lambda x, y: x & y, "¬(a ∨ b)": lambda x, y: x | y,
              "¬(a ⊕ b)": lambda x, y: x ^ y, "¬(a → b)": lambda x, y: (1 - x) | y}
     for name, t in composed.items():
@@ -209,7 +209,7 @@ def main():
     print(f"   {caught} of {total} single-cell flips caught")
     assert caught == total, (caught, total)
     print("-" * 72)
-    print("ZFRECHET TABLES: every published table of ZTL is ZTL-I's projection, the composed ones node by node.")
+    print("ZFRECHET TABLES: every published table of ZTL is the projection of the degrees, the composed ones node by node.")
 
 
 if __name__ == "__main__":

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-zdegree — ZTL-I: the degree of a formula, exactly (2026-11-05, the curator: "да, делай").
+zdegree — ZTL degrees: the degree of a formula, exactly (2026-11-05, the curator: "да, делай").
 
 THE QUESTION. Each atom has a degree — an interval [lo, hi] of [0, 1]: T = [1, 1], F = [0, 0], Z = [0, 1], a measured
 0.3 = [3/10, 3/10]. Nobody said how the atoms are joined. The degree of a formula is the range of P(formula) over EVERY

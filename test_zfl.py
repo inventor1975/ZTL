@@ -637,12 +637,12 @@ def sec18_a_comparison_can_be_named():
 
 
 def sec19_ztl_i_degrees():
-    """(2026-11-05) ZTL-I in the language: a row's degree, the document's threshold and independence. Both sides:
+    """(2026-11-05) ZTL degrees in the language: a row's degree, the document's threshold and independence. Both sides:
     documents without a degree get no degree section and keep their verdicts; the Fréchet intervals; the three
     threshold outcomes; a told degree that the answer rests on holds the verdict ON CREDIT, one it does not rest on
     does not; independence lands inside; clean and dirty; refusals. Sabotage: dropping the credit cap is caught."""
     print("-" * 72)
-    print("§19 ZTL-I: degrees, thresholds, independence")
+    print("§19 ZTL degrees: a row's degree, thresholds, independence")
     A = {"name": "a", "status": "verified", "ground": "m", "degree": "0.3", "means": "a"}
     B = {"name": "b", "status": "verified", "ground": "m", "degree": "0.7", "means": "b"}
 

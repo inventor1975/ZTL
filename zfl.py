@@ -374,7 +374,7 @@ COLUMNS = [
         "he": ("מוסכמה", "אין ערך למצוא עד שקובעים אחד (מידה שלא נקבעה, יחידה)"),
     },
     {
-        # ZTL-I (2026-11-05, the curator's plan): the DEGREE of a statement — the probability that it is true, as a
+        # ZTL degrees (2026-11-05, the curator's plan): the DEGREE of a statement — the probability that it is true, as a
         # point or an interval in [0, 1]. Not 'value' (a quantity): a statement has a degree, a quantity a value, and
         # the two are kept apart as '==' and '<->' are. A degree needs a ground like anything else: on a verified
         # row it is earned, on an unverified row it is told and whatever rests on it is on credit.
@@ -456,7 +456,7 @@ DOC_FIELDS = [
         "eg": ['{"a": {"list": []}, "R": {"abs": ["not", ["in", "x", "x"]]}}'],
     },
     {
-        # ZTL-I: the threshold a claim's degree must clear (zdegree.py)
+        # ZTL degrees: the threshold a claim's degree must clear (zdegree.py)
         "key": "need", "type": "text", "required": False, "advanced": True,
         "en": ("need", "the probability the claim must have at least, e.g. 0.95: EARNED when its whole degree is at "
                        "or above it, REFUTED when its whole degree is below, OPEN with what to narrow otherwise"),
@@ -465,7 +465,7 @@ DOC_FIELDS = [
         "eg": ["0.95"],
     },
     {
-        # ZTL-I: independence is a STIPULATION (a convention), never a default; all-or-nothing in this version
+        # ZTL degrees: independence is a STIPULATION (a convention), never a default; all-or-nothing in this version
         "key": "independent", "type": "bool", "required": False, "advanced": True,
         "en": ("independent", "stipulate that the claim's statements are independent of one another (all of them): "
                               "the degree narrows by the product rule; without it every joint is allowed"),
@@ -706,7 +706,7 @@ def coerce(doc):
     out = {"claim": str(doc.get("claim") or ""),
            "grounds": str(doc.get("grounds") or ""),
            "ask": doc.get("ask") or [], "rows": []}
-    # ZTL-I's two document fields pass the door here, or they are lost in it (the `grounds` lesson above)
+    # The degrees' two document fields pass the door here, or they are lost in it (the `grounds` lesson above)
     if doc.get("need") not in (None, ""):
         out["need"] = str(doc.get("need")).strip()
     if "independent" in doc:
@@ -1584,7 +1584,7 @@ def to_book(rows):
 
 _COMPARES = re.compile(r"<=|>=|==|!=|<|(?<!-)>")
 
-import zdegree                                                   # noqa: E402 (ZTL-I, 2026-11-05)
+import zdegree                                                   # noqa: E402 (ZTL degrees, 2026-11-05)
 
 
 def parse_degree(text):
@@ -1606,7 +1606,7 @@ def _fmt(x):
 
 
 def degree_report(doc, rows, claim):
-    """ZTL-I: the claim's degree — the least and greatest probability that it is true, over every joint of its
+    """ZTL degrees: the claim's degree — the least and greatest probability that it is true, over every joint of its
     statements that keeps each one's own degree (zdegree.py: exact, each end proved by a witness and a dual).
     Rows without a degree count as verified [1,1], refuted [0,0], unverified [0,1] (a dirty atom, read anew at each
     occurrence); a comparison counts by the numeric floor's verdict. A degree on an UNVERIFIED row was told, not

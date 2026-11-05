@@ -36,6 +36,13 @@ each on a run; the closing statement; the aphorism if one was earned).
 | Bertrand's chord — one question, three right answers | `bertrand.py` | measured 2026-11-05 |
 | Perron — 'the largest natural number is 1' (a description with no subject) | `perron.py` | measured 2026-11-05 |
 | Sleeping Beauty — two ledgers, the unit unnamed | `sleeping_beauty.py` | measured 2026-11-05 |
+| 0^0 — a value (convention) and a limit (no subject) | `zero_power_zero.py` | measured 2026-11-05 |
+| Grandi's series and Riemann's rearrangement — 'the sum' names a method | `series.py` | measured 2026-11-05 |
+| two envelopes and St. Petersburg — an expectation with no value | `expectations.py` | measured 2026-11-05 |
+| Galileo's squares, Hilbert's hotel — three relations called 'fewer' | `galileo.py` | measured 2026-11-05 |
+| 0.999... = 1 — the value named against the process of writing it | `point_nine.py` | measured 2026-11-05 |
+| Monty Hall — the host's protocol, unnamed | `monty_hall.py` | measured 2026-11-05 |
+| Simpson's paradox — a causal premise the table does not contain | `simpson.py` | measured 2026-11-05 |
 | the quantum stones made runnable (emulator qemu.py) | `quantum.py` | demos |
 
 *AI participation: designed and written in a dialogue between the curator

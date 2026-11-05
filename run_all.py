@@ -502,6 +502,20 @@ STANDS = [
     ("dilemmas/hardy.py", [
         "HARDY: all measurements hold.",
         "ok  13 possible runs x 3 laws: refuted 0, earned 17, the rest open"]),
+    ("dilemmas/zero_power_zero.py", [
+        "ZERO TO THE ZERO: all measurements hold."]),
+    ("dilemmas/series.py", [
+        "SERIES: all measurements hold."]),
+    ("dilemmas/expectations.py", [
+        "EXPECTATIONS: all measurements hold."]),
+    ("dilemmas/galileo.py", [
+        "GALILEO AND HILBERT: all measurements hold."]),
+    ("dilemmas/point_nine.py", [
+        "POINT NINE: all measurements hold."]),
+    ("dilemmas/monty_hall.py", [
+        "MONTY HALL: all measurements hold."]),
+    ("dilemmas/simpson.py", [
+        "SIMPSON: all measurements hold."]),
     ("dilemmas/sleeping_beauty.py", [
         "SLEEPING BEAUTY: all measurements hold.",
         "   the unit unnamed (P a convention)             OPEN      OPEN      EARNED    EARNED    ['stipulate P']"]),

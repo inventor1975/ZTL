@@ -578,6 +578,16 @@ set in Walley's sense.
   input — and the report keeps the two apart: the judge names such rows
   as chance, and "what to check" never offers them.
 
+**Where degrees do not apply.** The Fréchet set ranges over joint
+distributions, so it presumes that one EXISTS. For statements about
+incompatible quantum observables it does not (Bell, Hardy,
+Kochen–Specker): the corpus marks an unasked, non-commuting answer
+Z_PERMANENT (`dilemmas/hardy.py`, `wigner_friends.py`), and a degree
+computed over it would be an answer about a distribution that is not
+there. Likewise a probability got by counting what no act witnesses
+(branches, `many_worlds.py`) is not a degree. Degrees are for
+statements that share one sample space.
+
 ## The road ahead (not started)
 
 * The lazy mode (Z flows, collapse at the boundary) as the second

@@ -284,6 +284,85 @@ def closed_world(sysm, lfp):
     return sorted(c for c in sysm if j[c] != cwa[c])
 
 
+# ----------------------------------------------------------- independent oracle
+def _rand_formula(rng, names, vars_, depth):
+    terms = list(names) + list(vars_)
+    if depth == 0 or rng.random() < 0.3:
+        return ["in", rng.choice(terms), rng.choice(terms)]
+    op = rng.choice(["not", "and", "or", "imp", "iff", "all", "ex"])
+    if op == "not":
+        return ["not", _rand_formula(rng, names, vars_, depth - 1)]
+    if op in ("all", "ex"):
+        v = f"v{depth}"
+        return [op, v, _rand_formula(rng, names, vars_ + [v], depth - 1)]
+    return [op, _rand_formula(rng, names, vars_, depth - 1), _rand_formula(rng, names, vars_, depth - 1)]
+
+
+def _rand_universe(rng):
+    names = [f"n{i}" for i in range(rng.choice([2, 3]))]
+    sets = {}
+    for n in names:
+        k = rng.random()
+        if k < 0.25:
+            sets[n] = {"list": [m for m in names if rng.random() < 0.5]}
+        elif k < 0.4:
+            sets[n] = {"data": {m: rng.choice([T, F, Z]) for m in names if rng.random() < 0.6}}
+        else:
+            sets[n] = {"abs": _rand_formula(rng, names, ["x"], 2)}
+    return {"sets": sets}
+
+
+def full_models(sysm, lfp, cap=10):
+    """Every classical (two-valued) valuation that is a fixed point of the system, with the
+    unverified inputs (cells given as Z) read freely. None if too many free cells."""
+    free = sorted(c for c, v in lfp.items() if v == Z)
+    if len(free) > cap:
+        return None
+    models = []
+    for bits in itertools.product((T, F), repeat=len(free)):
+        v = {**lfp, **dict(zip(free, bits))}
+        if all((sysm[c] == Z) or ev_reg(sysm[c], v, LAZY) == v[c] for c in sysm):
+            models.append(v)
+    return models
+
+
+def oracle_check(trials=300, seed=20261105):
+    import random
+    rng = random.Random(seed)
+    checked = paradox_seen = stable_seen = 0
+    for _ in range(trials):
+        spec = _rand_universe(rng)
+        try:
+            a = analyse(spec)
+        except UniverseError:
+            continue
+        u, sysm, lfp, kind = a
+        assert jump(sysm, lfp, LAZY) == lfp, "I1: the lfp is a fixed point"
+        models = full_models(sysm, lfp)
+        if models is None:
+            continue
+        checked += 1
+        for m in models:
+            for c, v in lfp.items():
+                if v in (T, F):
+                    assert m[c] == v, "I2: a full model disagrees with a grounded cell"
+        if any(k == "PARADOX" for k in kind.values()):
+            paradox_seen += 1
+            assert models == [], "I3: a PARADOX cell, yet a full classical model exists"
+        claim = _rand_formula(rng, u.names, [], 2)
+        r = judge_claim(a, claim)
+        g = u.ground(claim, {})
+        for m in models:
+            val = g if g in VALUES else ev_reg(g, m, LAZY)
+            if r["disposition"] in ("EARNED", "EARNED IF STABLE"):
+                assert val == T, ("I4: EARNED but false in a full model", claim, r)
+            if r["disposition"] in ("REFUTED", "REFUTED IF STABLE"):
+                assert val == F, ("I4: REFUTED but true in a full model", claim, r)
+        if r["disposition"].endswith("IF STABLE"):
+            stable_seen += 1
+    return checked, paradox_seen, stable_seen
+
+
 # ------------------------------------------------------------------ self-test
 RUSSELL = {"sets": {
     "a": {"list": []},
@@ -407,6 +486,41 @@ def _selftest():
             pass
         else:
             raise AssertionError("an unknown name must be refused (no subject)")
+    # grounded cells keep their own label inside a mixed component
+    _u, _s, lfp_t, kind_t = analyse(TRUST)
+    assert kind_t["root∈Trusted"] == "GROUNDED" and kind_t["carol∈Trusted"] == "GROUNDED"
+
+    # the independent oracle: brute-force classical models of random universes
+    checked, paradox_seen, stable_seen = oracle_check()
+    assert checked >= 150 and paradox_seen >= 10 and stable_seen >= 5, (checked, paradox_seen, stable_seen)
+    print(f"  oracle: {checked} random universes checked against brute-force classical models "
+          f"(lfp fixed; grounded cells absolute; PARADOX ⇒ no model, seen {paradox_seen}; "
+          f"EARNED/REFUTED [IF STABLE] hold in every model, IF STABLE seen {stable_seen})")
+    # the oracle has teeth: two sabotages it must catch
+    g = globals()
+    honest_judge, honest_analyse = g["judge_claim"], g["analyse"]
+
+    def open_as_stable(an, claim):
+        r = honest_judge(an, claim)
+        if r["disposition"] == "OPEN":
+            r["disposition"] = "EARNED IF STABLE"
+        return r
+
+    def all_paradox(spec):
+        uu, ss, ll, kk = honest_analyse(spec)
+        return uu, ss, ll, {c: (k if k == "GROUNDED" else "PARADOX") for c, k in kk.items()}
+
+    for label, key, bad in (("OPEN read as EARNED IF STABLE", "judge_claim", open_as_stable),
+                            ("every dirty cell PARADOX", "analyse", all_paradox)):
+        g[key] = bad
+        try:
+            oracle_check()
+        except AssertionError:
+            print(f"  sabotage caught: {label}")
+        else:
+            raise AssertionError(f"the oracle missed the sabotage: {label}")
+        finally:
+            g["judge_claim"], g["analyse"] = honest_judge, honest_analyse
     print("ZNAIVE GREEN")
 
 

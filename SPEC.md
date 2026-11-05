@@ -548,8 +548,18 @@ set in Walley's sense.
 * **Independence is a stipulation**, never a default. Declared, it fixes
   the joint: a point when the degrees are points, an interval otherwise
   (computed exactly at the corners, the function being multilinear).
-  All or nothing in this version; partial independence waits for a case
-  that needs it.
+  It may be declared between GROUPS (2026-11-06): `independent:
+  [["a", "b"], ["c"]]` — the groups independent of one another, the joint
+  inside a group still unknown; every statement of the claim in exactly
+  one group (an atom in none is refused, not guessed). Exact
+  (`zdegree.degree_groups`): the probability is multilinear in the
+  groups' distributions, so its ends sit at products of vertices of the
+  groups' polytopes — enumerated for the smaller groups (at most 3
+  events each), an LP for the largest. Example: a, b, c at 1/2, a ∧ b ∧ c
+  is [0, 1/2] with the joint unknown, 1/8 with all independent, and
+  [0, 1/4] with {a, b} | {c}. The case that asked for it: a swarm whose
+  seat lottery is independent of the liars by construction, while the
+  liars' own joint is unknown (`zswarm_bounds.py`).
 * **Exact degrees** — `zdegree.py`: two linear programs over the worlds
   of the formula in exact fractions (Bland's rule, no third-party
   solver); each end is certified twice on every computation — a joint

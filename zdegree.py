@@ -242,6 +242,153 @@ def degree_independent(formula, degrees, dirty=None, stable=False):
     return {"lo": min(vals), "hi": max(vals), "events": events}
 
 
+MAX_VERTEX_GROUP = 3          # a group whose vertices are enumerated has at most this many events (2^3 worlds)
+MAX_COMBOS = 20000            # products of vertices tried, at most
+
+
+def _solve(A, b):
+    """the unique solution of the square system A x = b in Fractions, or None if A is singular"""
+    n = len(A)
+    M = [list(map(Fr, row)) + [Fr(v)] for row, v in zip(A, b)]
+    for c in range(n):
+        piv = next((r for r in range(c, n) if M[r][c] != 0), None)
+        if piv is None:
+            return None
+        M[c], M[piv] = M[piv], M[c]
+        for r in range(n):
+            if r != c and M[r][c] != 0:
+                f = M[r][c] / M[c][c]
+                M[r] = [x - f * y for x, y in zip(M[r], M[c])]
+    return [M[i][n] / M[i][i] for i in range(n)]
+
+
+def _group_vertices(events, ivs):
+    """the vertices of {p over the group's worlds: p >= 0, sum 1, lo_e <= P(e) <= hi_e} — exactly. A vertex has a
+    support S with |S| = 1 + |T| for some set T of marginal constraints held tight (each at lo or at hi), and is the
+    unique solution of 'sum = 1, the T marginals at their values' on S; every such solution that is >= 0 and keeps
+    the other marginals in range is a vertex, and every vertex arises so (its active rows have full rank on S, and
+    the all-ones row extends to a basis of them)."""
+    m = len(events)
+    worlds = list(itertools.product((0, 1), repeat=m))
+    ends = [ivs[e.split("#")[0]] for e in events]
+    found = set()
+    for choice in itertools.product(*[([("lo", lo)] if lo == hi else [("lo", lo), ("hi", hi)]) + [None]
+                                      for lo, hi in ends]):
+        tight = [(k, c[1]) for k, c in enumerate(choice) if c is not None]
+        for S in itertools.combinations(range(len(worlds)), 1 + len(tight)):
+            A = [[1] * len(S)] + [[worlds[j][k] for j in S] for k, _v in tight]
+            x = _solve(A, [1] + [v for _k, v in tight])
+            if x is None or any(v < 0 for v in x):
+                continue
+            p = [ZERO] * len(worlds)
+            for j, v in zip(S, x):
+                p[j] = v
+            if all(lo <= sum(p[j] for j, w in enumerate(worlds) if w[k]) <= hi for k, (lo, hi) in enumerate(ends)):
+                found.add(tuple(p))
+    return worlds, sorted(found)
+
+
+def degree_groups(formula, degrees, groups, dirty=None, stable=False):
+    """PARTIAL INDEPENDENCE, STIPULATED (2026-11-06, the curator: "да, делай частичную независимость"): the atoms
+    are split into GROUPS; the groups are independent of one another, and inside a group the joint is unknown (any
+    joint keeping each event's degree — Fréchet). A dirty atom's occurrences are events of its atom's group, free
+    of each other. Every atom must be in exactly one group (an atom in none has an unknown joint with everything —
+    a mixed case this version refuses, by form).
+
+    EXACT: the joint is a product of one distribution per group, each in its group's polytope; P(formula) is
+    multilinear in them, so its extremes sit at products of VERTICES. The vertices of every group but the largest
+    are enumerated (`_group_vertices`); for each product of them P(formula) is linear in the largest group's
+    distribution, solved by the LP (and certified by weak duality, `_certify`). The witness — a product
+    distribution — is checked directly: each event's degree kept, P(formula) equal to the end.
+    -> {"lo", "hi", "events", "groups", "witness_lo", "witness_hi"}"""
+    phi = formalize(formula) if isinstance(formula, str) else formula
+    ivs = {a: as_interval(d) for a, d in degrees.items()}
+    if dirty is None:
+        dirty = {a for a, d in degrees.items() if d == "Z"}
+    psi = phi if stable else _split(phi, set(dirty), {})
+    events = sorted(set(_events(psi, [])))
+    if len(events) > MAX_EVENTS:
+        raise DegreeError(f"{len(events)} events: at most {MAX_EVENTS} (2^n worlds), refused by form")
+    where = {}
+    for g, names in enumerate(groups):
+        for a in names:
+            if a in where:
+                raise DegreeError(f"{a!r} is in two groups: a statement belongs to one group")
+            where[a] = g
+    for e in events:
+        a = e.split("#")[0]
+        if a not in ivs:
+            raise DegreeError(f"no degree for {a!r}")
+        if a not in where:
+            raise DegreeError(f"{a!r} is in no group: its joint with the others is then unknown, and that mixed case is "
+                              "not computed in this version — put it in a group (alone, if it is independent of all)")
+    gev = [[e for e in events if where[e.split("#")[0]] == g] for g in range(len(groups))]
+    gev = [ev for ev in gev if ev]
+    L = max(range(len(gev)), key=lambda g: len(gev[g]))
+    others = [g for g in range(len(gev)) if g != L]
+    verts = {}
+    for g in others:
+        if len(gev[g]) > MAX_VERTEX_GROUP:
+            raise DegreeError(f"a group of {len(gev[g])} events beside a larger one: at most {MAX_VERTEX_GROUP} events "
+                              "in every group but the largest, refused by form")
+        verts[g] = _group_vertices(gev[g], ivs)
+    n_combos = _prod([Fr(len(verts[g][1])) for g in others])
+    if n_combos > MAX_COMBOS:
+        raise DegreeError(f"{n_combos} products of vertices: at most {MAX_COMBOS}, refused by form")
+    Lworlds = list(itertools.product((0, 1), repeat=len(gev[L])))
+    rows = [([1] * len(Lworlds), "=", 1)]
+    for k, e in enumerate(gev[L]):
+        lo, hi = ivs[e.split("#")[0]]
+        coeff = [w[k] for w in Lworlds]
+        rows.append((coeff, "<=", hi))
+        rows.append((coeff, ">=", lo))
+    best = {True: None, False: None}
+    for combo in itertools.product(*[range(len(verts[g][1])) for g in others]):
+        # c(wL) = sum over the other groups' worlds of their product weight times the formula's truth
+        parts = [[(w, pw) for w, pw in zip(verts[g][0], verts[g][1][ci]) if pw] for g, ci in zip(others, combo)]
+        c = [ZERO] * len(Lworlds)
+        for pick in itertools.product(*parts):
+            weight = _prod([pw for _w, pw in pick])
+            assign = {}
+            for (w, _pw), g in zip(pick, others):
+                assign.update(zip(gev[g], w))
+            for j, wl in enumerate(Lworlds):
+                assign.update(zip(gev[L], wl))
+                if _value(psi, assign):
+                    c[j] += weight
+        for maximise in (True, False):
+            val, x = lp_max(c if maximise else [-v for v in c], rows)
+            duals = lp_max.last_duals
+            val = val if maximise else -val
+            assert _certify(c, rows, Lworlds, gev[L], ivs, val, duals, maximise)
+            cur = best[maximise]
+            if cur is None or (val > cur[0] if maximise else val < cur[0]):
+                best[maximise] = (val, combo, x)
+    out = {"events": events, "groups": [list(ev) for ev in gev]}
+    for maximise, key in ((True, "hi"), (False, "lo")):
+        val, combo, x = best[maximise]
+        # the witness, checked directly: the product of the chosen vertices and the LP's distribution
+        dists = {g: dict(zip(verts[g][0], verts[g][1][ci])) for g, ci in zip(others, combo)}
+        dists[L] = dict(zip(Lworlds, x))
+        total = ZERO
+        marg = {e: ZERO for e in events}
+        for pick in itertools.product(*[list(dists[g].items()) for g in range(len(gev))]):
+            weight = _prod([pw for _w, pw in pick])
+            if not weight:
+                continue
+            assign = {}
+            for (w, _pw), g in zip(pick, range(len(gev))):
+                assign.update(zip(gev[g], w))
+            total += weight * _value(psi, assign)
+            for e in events:
+                marg[e] += weight * assign[e]
+        assert total == val, (total, val)
+        assert all(ivs[e.split("#")[0]][0] <= marg[e] <= ivs[e.split("#")[0]][1] for e in events)
+        out[key] = val
+        out["witness_" + key] = {tuple(gev[g]): {w: p for w, p in dists[g].items() if p} for g in range(len(gev))}
+    return out
+
+
 def _prod(xs):
     out = ONE
     for x in xs:
@@ -373,7 +520,85 @@ def _selftest():
     assert not _certify(truth, rows, worlds, events, ivs, val - Fr(1, 100), duals, True)
     assert not _certify(truth, rows, worlds, events, ivs, val + Fr(1, 100), duals, True)
     print(f"  7. the certificate passes the true greatest end {val} and refuses it nudged by 1/100 either way")
+    _selftest_groups(rng, ZF)
     print("ZDEGREE GREEN — every end proved twice: a distribution that attains it, a dual that bounds it")
+
+
+def _random_vertex(events, ivs, rng):
+    """a vertex of a group's polytope found by the LP with a random objective — independent of _group_vertices"""
+    worlds = list(itertools.product((0, 1), repeat=len(events)))
+    rows = [([1] * len(worlds), "=", 1)]
+    for k, e in enumerate(events):
+        lo, hi = ivs[e.split("#")[0]]
+        coeff = [w[k] for w in worlds]
+        rows += [(coeff, "<=", hi), (coeff, ">=", lo)]
+    _v, x = lp_max([Fr(rng.randint(-9, 9)) for _ in worlds], rows)
+    return dict(zip(worlds, x))
+
+
+def _selftest_groups(rng, ZF):
+    """8. partial independence (degree_groups), both sides and a sabotage"""
+    h = Fr(1, 2)
+    d = {"a": h, "b": h, "c": h}
+    r = degree_groups("a & b & c", d, [["a", "b"], ["c"]])
+    assert (r["lo"], r["hi"]) == (0, Fr(1, 4))                    # P(a&b) in [0, 1/2], times P(c) = 1/2
+    n = 0
+    for _ in range(40):
+        phi = ZF.rand_formula(rng, ["a", "b", "c"], 3)
+        dg = {k: rng.choice([Fr(rng.randint(0, 10), 10), (Fr(rng.randint(0, 5), 10), Fr(rng.randint(5, 10), 10))])
+              for k in ("a", "b", "c")}
+        free, ind = degree(phi, dg, dirty=set()), degree_independent(phi, dg, dirty=set())
+        single = degree_groups(phi, dg, [["a"], ["b"], ["c"]], dirty=set())
+        whole = degree_groups(phi, dg, [["a", "b", "c"]], dirty=set())
+        assert (single["lo"], single["hi"]) == (ind["lo"], ind["hi"]), (phi, dg)          # every atom alone = full independence
+        assert (whole["lo"], whole["hi"]) == (free["lo"], free["hi"]), (phi, dg)          # one group = Fréchet
+        for grp in ([["a", "b"], ["c"]], [["a"], ["b", "c"]], [["a", "c"], ["b"]]):
+            g = degree_groups(phi, dg, grp, dirty=set())
+            assert free["lo"] <= g["lo"] <= ind["lo"] and ind["hi"] <= g["hi"] <= free["hi"], (phi, dg, grp)
+            # an independent check: products of LP-found vertices (random objectives) never leave [lo, hi]
+            ivs = {k: as_interval(v) for k, v in dg.items()}
+            evs = [[e for e in sorted(set(_events(formalize(phi) if isinstance(phi, str) else phi, []))) if e in names]
+                   for names in grp]
+            for _ in range(3):
+                dists = [_random_vertex(ev, ivs, rng) for ev in evs if ev]
+                tot = ZERO
+                for pick in itertools.product(*[list(dd.items()) for dd in dists]):
+                    wgt = _prod([pw for _w, pw in pick])
+                    if wgt:
+                        assign = {}
+                        for (w, _pw), ev in zip(pick, [ev for ev in evs if ev]):
+                            assign.update(zip(ev, w))
+                        tot += wgt * _value(phi if not isinstance(phi, str) else formalize(phi), assign)
+                assert g["lo"] <= tot <= g["hi"], (phi, dg, grp, tot)
+            n += 1
+    # refusals by form
+    for bad in ([["a"], ["b"]], [["a", "b"], ["b", "c"]]):
+        try:
+            degree_groups("a & b & c", d, bad)
+            raise AssertionError(f"not refused: {bad}")
+        except DegreeError:
+            pass
+    # SABOTAGE: a vertex enumeration that keeps only one vertex per group must be caught by the checks above
+    real = _group_vertices
+    globals()["_group_vertices"] = lambda events, ivs: (lambda w, v: (w, v[:1]))(*real(events, ivs))
+    try:
+        caught = False
+        for _ in range(40):
+            phi = ZF.rand_formula(rng, ["a", "b", "c"], 3)
+            # the enumerated group must have more than one vertex: c gets an interval degree
+            dg = {"a": Fr(rng.randint(1, 9), 10), "b": Fr(rng.randint(1, 9), 10),
+                  "c": (Fr(rng.randint(0, 4), 10), Fr(rng.randint(6, 10), 10))}
+            g = degree_groups(phi, dg, [["a", "b"], ["c"]], dirty=set())
+            free, ind = degree(phi, dg, dirty=set()), degree_independent(phi, dg, dirty=set())
+            if not (free["lo"] <= g["lo"] <= ind["lo"] and ind["hi"] <= g["hi"] <= free["hi"]):
+                caught = True
+                break
+    finally:
+        globals()["_group_vertices"] = real
+    assert caught, "a one-vertex enumeration was not caught"
+    print(f"  8. partial independence: alone = full independence, one group = Fréchet (40 formulas, points and"
+          f" intervals); {n} grouped cases lie between them and contain every product of LP-found vertices;"
+          " an atom in no group or in two refused; a one-vertex sabotage caught")
 
 
 if __name__ == "__main__":

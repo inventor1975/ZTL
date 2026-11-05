@@ -465,13 +465,20 @@ DOC_FIELDS = [
         "eg": ["0.95"],
     },
     {
-        # ZTL degrees: independence is a STIPULATION (a convention), never a default; all-or-nothing in this version
-        "key": "independent", "type": "bool", "required": False, "advanced": True,
-        "en": ("independent", "stipulate that the claim's statements are independent of one another (all of them): "
-                              "the degree narrows by the product rule; without it every joint is allowed"),
-        "ru": ("независимы", "договориться, что утверждения в формуле независимы друг от друга (все): степень "
-                             "сужается по правилу произведения; без этого допускается любая совместность"),
-        "eg": ["true"],
+        # ZTL degrees: independence is a STIPULATION (a convention), never a default. All of it (true) or between
+        # GROUPS (2026-11-06, the curator: "да, делай частичную независимость")
+        "key": "independent", "type": "object", "required": False, "advanced": True,
+        "en": ("independent", "stipulate independence — a convention, never a default. true: the claim's statements "
+                              "are all independent of one another. Groups, JSON [[\"a\", \"b\"], [\"c\"]]: the "
+                              "groups are independent of one another, the joint inside a group stays unknown; every "
+                              "statement of the claim in exactly one group (alone, if it is independent of all). "
+                              "Without it every joint is allowed"),
+        "ru": ("независимы", "договориться о независимости — договорённость, не умолчание. true: все утверждения "
+                             "формулы независимы друг от друга. Группы, JSON [[\"a\", \"b\"], [\"c\"]]: группы "
+                             "независимы между собой, связь внутри группы остаётся неизвестной; каждое утверждение "
+                             "формулы — ровно в одной группе (одно, если оно независимо от всех). Без этого "
+                             "допускается любая совместность"),
+        "eg": ["true", "[[\"a\", \"b\"], [\"c\"]]"],
     },
     {
         "key": "ask", "type": "multi", "required": False,
@@ -711,7 +718,17 @@ def coerce(doc):
         out["need"] = str(doc.get("need")).strip()
     if "independent" in doc:
         iv = doc.get("independent")
-        out["independent"] = iv is True or (isinstance(iv, str) and iv.strip().lower() in ("true", "yes", "1"))
+        if isinstance(iv, str) and iv.strip().startswith("["):
+            try:
+                iv = json.loads(iv)
+            except ValueError:
+                pass                                       # left as text: E_INDEPENDENT names it below
+        if isinstance(iv, list):
+            out["independent"] = iv                        # groups, checked by validate (E_INDEPENDENT)
+        elif isinstance(iv, str) and iv.strip().lower() not in ("true", "yes", "1", "false", "no", "0", ""):
+            out["independent"] = iv                        # unreadable: E_INDEPENDENT, not a silent "no"
+        else:
+            out["independent"] = iv is True or (isinstance(iv, str) and iv.strip().lower() in ("true", "yes", "1"))
     for r in (doc.get("rows") or []):
         if not isinstance(r, dict) or r.get("from_sets"):
             continue                          # membership rows are re-made below, never carried over
@@ -1097,6 +1114,25 @@ def validate(doc):
             parse_degree(doc["need"])
         except ValueError as exc:
             issues.append(_issue("error", "E_NEED", "need", str(exc)))
+    _ig = doc.get("independent")
+    if isinstance(_ig, list):
+        _names = {r.get("name") for r in rows}
+        _seen = set()
+        for _g in _ig:
+            if not (isinstance(_g, list) and _g and all(isinstance(x, str) for x in _g)):
+                issues.append(_issue("error", "E_INDEPENDENT", "independent",
+                                     "groups are a list of non-empty lists of row names, e.g. [[\"a\", \"b\"], [\"c\"]]"))
+                break
+            for x in _g:
+                if x not in _names:
+                    issues.append(_issue("error", "E_INDEPENDENT", "independent", f"no row is called {x!r}"))
+                elif x in _seen:
+                    issues.append(_issue("error", "E_INDEPENDENT", "independent",
+                                         f"{x!r} is in two groups: a statement belongs to one group"))
+                _seen.add(x)
+    elif isinstance(_ig, str) and _ig.strip():
+        issues.append(_issue("error", "E_INDEPENDENT", "independent",
+                             "write true, or groups as JSON: [[\"a\", \"b\"], [\"c\"]]"))
     _spelt = _spell((doc.get("claim") or "").strip())
     for pat, sym in _WORDS:
         _spelt = re.sub(pat, sym, _spelt)
@@ -1660,7 +1696,11 @@ def degree_report(doc, rows, claim):
     try:
         sep = zdegree.degree(core, degrees)
         stab = zdegree.degree(core, degrees, stable=True)
-        ind = zdegree.degree_independent(core, degrees) if doc.get("independent") else None
+        groups = doc.get("independent") if isinstance(doc.get("independent"), list) else None
+        if groups:
+            ind = zdegree.degree_groups(core, degrees, groups)
+        else:
+            ind = zdegree.degree_independent(core, degrees) if doc.get("independent") else None
     except zdegree.DegreeError as exc:
         return {"refused": str(exc)}
     use = ind or sep
@@ -1668,13 +1708,16 @@ def degree_report(doc, rows, claim):
            "events": len(sep["events"]), "proved": "each end attained by a joint and bounded by a dual (zdegree)"}
     if ind:
         out["independent"] = [_fmt(ind["lo"]), _fmt(ind["hi"])]
-        out["stipulated"] = "independence of the claim's statements (a convention, not a finding)"
+        out["stipulated"] = ("independence between the groups " + " | ".join(", ".join(g) for g in groups) +
+                             "; the joint inside each group unknown (a convention, not a finding)" if groups else
+                             "independence of the claim's statements (a convention, not a finding)")
     # which told degrees does the answer rest on? widen each to [0, 1] and see whether the interval moves
     bearing = []
     for name in told:
         wide = dict(degrees, **{name: (zdegree.ZERO, zdegree.ONE)})
         try:
-            w = (zdegree.degree_independent if ind else zdegree.degree)(core, wide)
+            w = (zdegree.degree_groups(core, wide, groups) if groups else
+                 zdegree.degree_independent(core, wide) if ind else zdegree.degree(core, wide))
         except zdegree.DegreeError:
             continue
         if (w["lo"], w["hi"]) != (use["lo"], use["hi"]):
@@ -1694,7 +1737,9 @@ def degree_report(doc, rows, claim):
             if verdict == "OPEN":
                 cures = [f"narrow {nm}" for nm, d in sorted(degrees.items())
                          if d == "Z" or (isinstance(d, tuple) and d[0] != d[1])] + \
-                        ([] if ind else ["stipulate independence (only if it is true)"])
+                        ([] if ind else ["stipulate independence (only if it is true)"]) + \
+                        [f"the joint inside the group {', '.join(g)} (still unknown)" for g in (groups or [])
+                         if len(g) > 1]
             if verdict != "OPEN" and bearing:
                 out["polarity"] = "toward T" if verdict == "EARNED" else "toward F"
                 verdict = "ON CREDIT"

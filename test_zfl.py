@@ -724,6 +724,28 @@ def sec19_ztl_i_degrees():
     finally:
         zfl.what_to_check = real_wtc
     print("   chance apart: named, never offered to check, held Z in the reverse pass; sabotage (hold ignored) caught")
+    # PARTIAL INDEPENDENCE (2026-11-06): groups independent of one another, the joint inside a group unknown
+    H = [dict(A, name=x, degree="0.5", means=x) for x in ("a", "b", "c")]
+    gdoc = {"rows": H, "claim": "a & b & c", "independent": [["a", "b"], ["c"]], "need": "0.2"}
+    d = deg(zfl.coerce(gdoc))
+    assert d["interval"] == ["0", "1/2"] and d["independent"] == ["0", "1/4"], d          # between Fréchet and 1/8
+    assert d["verdict"] == "OPEN" and d["next_check"] == ["the joint inside the group a, b (still unknown)"], d
+    assert deg(zfl.coerce(dict(gdoc, independent='[["a", "b"], ["c"]]')))["independent"] == ["0", "1/4"]
+    assert deg(zfl.coerce(dict(gdoc, independent=[["a"], ["b"], ["c"]])))["independent"] == ["1/8", "1/8"]
+    assert deg(zfl.coerce(dict(gdoc, independent=True)))["independent"] == ["1/8", "1/8"]      # true unchanged
+    assert "independent" not in deg(zfl.coerce(dict(gdoc, independent=False)))
+    for bad in ([["a"], ["zz"]], [["a", "b"], ["b", "c"]], "maybe", [[]]):
+        r = zfl.run(zfl.coerce(dict(gdoc, independent=bad)))
+        assert not r["ok"] and any(i["code"] == "E_INDEPENDENT" for i in r["issues"]), (bad, r.get("issues"))
+    assert "in no group" in deg(zfl.coerce(dict(gdoc, independent=[["a"], ["b"]])))["refused"]
+    real_g = zfl.zdegree.degree_groups
+    zfl.zdegree.degree_groups = lambda f, dg, groups, **k: zfl.zdegree.degree_independent(f, dg)  # sabotage: groups ignored
+    try:
+        assert deg(zfl.coerce(gdoc))["independent"] != ["0", "1/4"]
+    finally:
+        zfl.zdegree.degree_groups = real_g
+    print("   partial independence: groups [a, b] | [c] give a & b & c in [0, 1/4] (Fréchet [0, 1/2], all independent")
+    print("   1/8); JSON text accepted; true unchanged; bad groups E_INDEPENDENT; an atom in no group refused; sabotage")
     try:
         import backread
     except ImportError:                                                     # the mirror lives in the studio only

@@ -29,6 +29,7 @@ STANDS = [
     ("zfuncs.py",      ["even id is not certified"]),
     ("zarith.py",      ["EARNED zero"]),
     ("zprob.py",       ["ZTL verdict: Z"]),
+    ("zfrechet.py",    ["144 cells, 0 differ", "ZFRECHET: interval logic sits on ZTL with no verdict moved."]),
     ("zmodal.py",      ["threshold coincided"]),
     ("zrussell.py",    ["facts grounded: 8 of 9"]),
     ("zverify.py",     ["hereditary without sound: 0", "THE GRADES SEPARATE",

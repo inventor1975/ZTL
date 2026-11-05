@@ -273,6 +273,7 @@ STANDS = [
                         "soundness cross-check on the core: 0 violations",
                         "the first measured"]),
     ("zsteps.py",      ["ZSTEPS GREEN", "x = 0 lost", "x = 1 gained", "caught"]),
+    ("znaive.py",      ["ZNAIVE GREEN", "Het∈Het PARADOX", "mallorys UNDERDETERMINED", "u2 PARADOX"]),
     ("dilemmas/quantum_pair.py",
                        ["EVERY local address is empty",
                         "SINGLET REACHED (round 3)",

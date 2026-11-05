@@ -502,6 +502,9 @@ STANDS = [
     ("dilemmas/hardy.py", [
         "HARDY: all measurements hold.",
         "ok  13 possible runs x 3 laws: refuted 0, earned 17, the rest open"]),
+    ("dilemmas/girard.py", [
+        "N = 6: least fixed point all Z; UNDERDETERMINED — 6 classical models; oscillation period 2; refusal until stipulation",
+        "all eight claims of the essay that a machine can check: the kernel says the same"]),
     ("dilemmas/wigner_friends.py", [
         "WIGNER'S FRIENDS: all measurements hold.",
         "ok  at F's own time, 'F-bar saw tails' from 'F saw up' and the rule: OPEN (an inference, not a witnessing)"]),

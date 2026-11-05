@@ -27,7 +27,9 @@ and what does not — not observations of any crowd:
   2. which one is chosen is arbitrary: stipulating g_k = T settles the system for every k, and the N settled worlds
      are permutations of one another — no k is preferred by anything in the system;
   3. unanimity is not verification: "the victim is guilty" from N copied accusations is OPEN for N = 1..50, and the
-     weak link named is the same single one, the copied step — the number of accusers never touches it. Stamp that
+     weak link named is the same single one, the copied step — the number of accusers never touches it. And in ANY
+     composition (random formulas, seed fixed) where guilt depends on the copied step, never EARNED: OPEN, or
+     ON CREDIT with the step named. Stamp that
      link T and the same formula is EARNED: the only difference between "guilty" and "not established" is the stamp;
   4. "who is not with us is against us": against := NOT with_us on an unestablished with_us is OPEN, not EARNED —
      NOT Z is Z; silence is not consent and not dissent;
@@ -140,6 +142,33 @@ def sec3_unanimity_is_not_verification():
     assert ind["disposition"] == "EARNED"
     print(f"   control: three accusers, each with his OWN evidence, one of them checked: {ind['disposition']}")
     print("   The count of accusers never reaches the step they all copied; the stamp alone makes 'guilty'.")
+    # ANY COMPOSITION (a reader's question, 2026-11-05: can some way of combining copied accusations turn OPEN into
+    # EARNED?). Random formulas over a1..a4 (T) and the copied step (Z), seed fixed: wherever guilt DEPENDS on the
+    # step (its two completions differ), the kernel never says EARNED or EARNED IF STABLE. It may say ON CREDIT —
+    # a T verdict that names the step a check can kill — which is the essay's word for it.
+    import random
+    rng = random.Random(5)
+    atoms = ["a1", "a2", "a3", "a4", "link"]
+
+    def rnd(d):
+        if d == 0 or rng.random() < .25:
+            return rng.choice(atoms)
+        op = rng.choice(["&", "|", "->", "~"])
+        return f"~({rnd(d - 1)})" if op == "~" else f"({rnd(d - 1)} {op} {rnd(d - 1)})"
+    base = {a: "T" for a in atoms[:4]}
+    seen, dep = {}, 0
+    for _ in range(1500):
+        f = rnd(4)
+        if "link" not in f:
+            continue
+        if judge(f, {**base, "link": "T"})["disposition"] == judge(f, {**base, "link": "F"})["disposition"]:
+            continue
+        dep += 1
+        d = judge(f, {**base, "link": "Z"})["disposition"]
+        seen[d] = seen.get(d, 0) + 1
+    assert dep > 100 and not seen.get("EARNED") and not seen.get("EARNED IF STABLE"), seen
+    print(f"   any composition: {dep} random formulas whose guilt depends on the copied step — EARNED 0; "
+          + ", ".join(f"{k} {v}" for k, v in sorted(seen.items())))
 
 
 def sec4_not_with_us_is_against_us():

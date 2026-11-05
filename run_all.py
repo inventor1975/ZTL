@@ -504,6 +504,7 @@ STANDS = [
         "ok  13 possible runs x 3 laws: refuted 0, earned 17, the rest open"]),
     ("dilemmas/girard.py", [
         "N = 6: least fixed point all Z; UNDERDETERMINED — 6 classical models; oscillation period 2; refusal until stipulation",
+        "any composition: 267 random formulas whose guilt depends on the copied step — EARNED 0; ON CREDIT 69, OPEN 198",
         "all nine claims of the essay that a machine can check: the kernel says the same"]),
     ("dilemmas/wigner_friends.py", [
         "WIGNER'S FRIENDS: all measurements hold.",

@@ -706,6 +706,38 @@ def sec19_ztl_i_degrees():
         zfl._row_mark = real_mark
     print("   the judge reads a degree by its projection: 0.3 & 0.7 -> OPEN (was a false EARNED), 1 -> T, 0 -> F;")
     print("   no degree -> the status as before; a told degree stays Z; sabotage (status read as truth) caught")
+    # CHANCE APART (2026-11-05): a degree row is named as chance, never offered to check; the reverse pass holds it Z
+    U = {"name": "c", "status": "unverified", "means": "c"}
+    j = zfl.run({"rows": [A, B], "claim": "a & b"})["report"]
+    assert j["judge"]["chance"] == ["a", "b"] and "what_to_check" not in j
+    assert "verify" not in j["judge"]["why"] and "no check settles it" in j["judge"]["why"], j["judge"]["why"]
+    j = zfl.run({"rows": [A, U], "claim": "a | c"})["report"]
+    w = j["what_to_check"]
+    assert j["judge"]["chance"] == ["a"] and "verify ['c']" in j["judge"]["why"], j["judge"]["why"]
+    assert w["EARNED"]["possible"] == [["c"]] and w["REFUTED"]["possible"] == [] and w["REFUTED"]["no_possible_set"], w
+    j = zfl.run({"rows": [U, dict(U, name="d")], "claim": "c & d"})["report"]          # the other side: no chance
+    assert "chance" not in j["judge"] and j["what_to_check"]["EARNED"]["possible"] == [["c", "d"]]
+    real_wtc = zfl.what_to_check
+    zfl.what_to_check = lambda claim, m, unv, hold=(): real_wtc(claim, m, unv)       # sabotage: hold ignored
+    try:
+        assert zfl.run({"rows": [A, U], "claim": "a | c"})["report"]["what_to_check"]["EARNED"]["possible"] != [["c"]]
+    finally:
+        zfl.what_to_check = real_wtc
+    print("   chance apart: named, never offered to check, held Z in the reverse pass; sabotage (hold ignored) caught")
+    try:
+        import backread
+    except ImportError:                                                     # the mirror lives in the studio only
+        return
+    # THE MIRROR'S CLAIM NOTE, NARROWED (2026-11-05): not for numeric or degree claims; the original a ^ b case stays
+    assert backread.факты({"rows": [U, dict(U, name="d")], "claim": "c ^ d"})["claim_bypassed_passport"] is True
+    assert backread.факты({"rows": [A, B], "claim": "a & b"})["claim_bypassed_passport"] is False
+    import zflexamples as X
+    hits = {}
+    for e in X.EXAMPLES:
+        if backread.факты(e["doc"])["claim_bypassed_passport"]:
+            hits[e.get("kind")] = hits.get(e.get("kind"), 0) + 1
+    assert not hits.get("numbers") and not hits.get("audit") and not hits.get("paradox"), hits
+    print(f"   the mirror's claim note: a ^ b on unverified rows yes, degrees no; over the catalogue {hits}")
 
 
 if __name__ == "__main__":

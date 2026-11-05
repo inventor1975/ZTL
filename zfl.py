@@ -1899,9 +1899,11 @@ def unredeemable(comp_kind):
 BACKWARD_CAP = 3
 
 
-def what_to_check(claim, marking, unverified):
+def what_to_check(claim, marking, unverified, hold=()):
     """Minimal sets of the claim's own dirty inputs: for EARNED, for REFUTED,
-    and to SETTLE the matter either way."""
+    and to SETTLE the matter either way. `hold` (2026-11-05): inputs no check can settle — chance rows, Z by a
+    degree. They stay Z in the marking, and every set that would check one of them is dropped; a minimal set free of
+    them stays minimal (each of its subsets is free of them too), so nothing a real check could do is lost."""
     phi = formalize(claim)
     atoms = _formula_atoms(phi)
     own = sorted(a for a in unverified if a in atoms)
@@ -1926,6 +1928,13 @@ def what_to_check(claim, marking, unverified):
                        "no_possible_set": bool(b["possible_none"]) and not b["already"]}
         if "не_искал_дальше" in b:
             out[key]["searched_up_to"] = zbackward.MAX_K
+        if hold:
+            o = out[key]
+            for fam, flag in (("guaranteed", "no_guaranteed_set"), ("possible", "no_possible_set")):
+                kept = [x for x in o[fam] if not set(x) & set(hold)]
+                if o[fam] and not kept:
+                    o[flag] = True
+                o[fam] = kept
     return out
 
 
@@ -2146,9 +2155,30 @@ def run(doc, ground_registry=None):
             if _ud:
                 _why += f"; {_ud} is underdetermined: no check settles it, only a stipulation"
             report["judge"]["why"] = _why
-        if r["unverified"]:
-            report["what_to_check"] = what_to_check(claim, resolved_marking(rows),
-                                                    sorted(r["unverified"]))
+        # CHANCE IS NOT A WEAK LINK TO CHECK (2026-11-05, the curator: "да, делай оба"): a verified row whose degree
+        # lies strictly inside (0, 1) enters the judge as Z (_row_mark), but no document settles it — only its
+        # outcome, once observed, and then the row is verified or refuted without a degree. The core's list stays as
+        # computed (as for defined rows above); the report names these apart, the reason says where the answer is,
+        # and the reverse pass offers only rows a check can settle, holding the chance ones at Z.
+        _byn = {x.get("name"): x for x in rows}
+        _chance = sorted(n for n in r["unverified"] if n in _byn and _byn[n].get("status") == "verified"
+                         and _row_mark(_byn[n]) == "Z")
+        if _chance:
+            report["judge"]["chance"] = _chance
+            report["judge"]["why"] = ((report["judge"].get("why") or "") + ("; " if report["judge"].get("why")
+                                      else "") + f"{_chance} carry a degree between 0 and 1: chance — no document "
+                                      "settles it; the probability is in the degree section, and only the observed "
+                                      "outcome (the row then verified or refuted, without a degree) makes it T or F")
+        _checkable = sorted(set(r["unverified"]) - set(_chance))
+        if _chance:
+            # the core's reason names every Z input to verify; a chance row is not one to verify
+            _w = report["judge"].get("why") or ""
+            _w = _w.replace(f"verify {sorted(r['unverified'])} (it could still turn either way)",
+                            f"verify {_checkable} (it could still turn either way)" if _checkable
+                            else "no check settles it")
+            report["judge"]["why"] = _w.replace(f"check {sorted(r['unverified'])} (", f"check {_checkable} (")
+        if _checkable:
+            report["what_to_check"] = what_to_check(claim, resolved_marking(rows), _checkable, hold=_chance)
         # The grade stands as the core computed it; what the marking could
         # not say is added beside it rather than folded into it.
         touched = sorted(dead & names_in(claim))

@@ -33,6 +33,7 @@ each on a run; the closing statement; the aphorism if one was earned).
 | binary chaos — the self-test: memory, territory, the ordering gradient | `chaos.py` | open |
 | the paradox of the court (Protagoras v. Euathlus) | `court.py` | open |
 | the scapegoat — peace on credit (René Girard) | `girard.py` | measured 2026-11-05 |
+| Bertrand's chord — one question, three right answers | `bertrand.py` | measured 2026-11-05 |
 | the quantum stones made runnable (emulator qemu.py) | `quantum.py` | demos |
 
 *AI participation: designed and written in a dialogue between the curator

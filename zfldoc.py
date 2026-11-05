@@ -96,6 +96,10 @@ CODE_HELP = {
     "E_DEGREE": ("a degree that is not a point or interval inside [0, 1], or on a refuted, defined or valued row",
                  "степень вне [0, 1] или не число/интервал, либо на опровергнутой, определённой строке или строке-величине"),
     "E_NEED": ("a threshold that is not a degree inside [0, 1]", "порог — не степень внутри [0, 1]"),
+    "E_INDEPENDENT": ("independence groups that are not a list of lists of row names, a statement in two groups, "
+                      "or text that is neither true nor groups",
+                      "группы независимости — не список списков имён строк, утверждение в двух группах, "
+                      "или текст — ни true, ни группы"),
     "E_COMPARE_ROW": ("a comparison row that leads back to itself, or a statement definition leaning on a comparison row",
                       "строка-сравнение, ведущая сама к себе, или определение-высказывание, опирающееся на строку-сравнение"),
     "E_TYPE_EQ": ("a statement set equal to a number with `=` — no reading makes a truth value equal to a number",

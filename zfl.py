@@ -400,6 +400,27 @@ DOC_FIELDS = [
         # claim is a perfectly good question — it asks for passports.
     },
     {
+        # NAIVE SETS (2026-11-05, ZTL znaive.py): sugar over defined rows — see expand_sets() below.
+        "key": "sets", "type": "object", "required": False, "advanced": True,
+        "en": ("sets",
+               "sets by name, JSON: {\"S\": {\"list\": [names]} | {\"data\": {name: \"T\"|\"F\"|\"Z\"}} | "
+               "{\"abs\": property of x}}. A property is a JSON formula: [\"in\", a, S], [\"not\", f], "
+               "[\"and\"|\"or\"|\"imp\"|\"iff\", f, g], [\"all\"|\"ex\", \"y\", f], [\"eq\", S, T]; it may "
+               "mention any set, itself included. Every set name is also a possible member. Each cell a ∈ S becomes "
+               "a row a_in_S (a property's cell is a defined row), so the claim can say bob_in_Trusted or "
+               "in(bob, Trusted). Claims over the whole universe (all, ex): give {\"sets\": {...}, \"claims\": "
+               "[...]} — judged in the report's sets section"),
+        "ru": ("множества",
+               "множества по именам, JSON: {\"S\": {\"list\": [имена]} | {\"data\": {имя: \"T\"|\"F\"|\"Z\"}} | "
+               "{\"abs\": свойство x}}. Свойство — формула JSON: [\"in\", a, S], [\"not\", f], "
+               "[\"and\"|\"or\"|\"imp\"|\"iff\", f, g], [\"all\"|\"ex\", \"y\", f], [\"eq\", S, T]; оно может "
+               "упоминать любое множество, в том числе само себя. Каждое имя множества — ещё и возможный элемент. "
+               "Каждая клетка a ∈ S становится строкой a_in_S (клетка свойства — определённая строка), и в "
+               "утверждении можно писать bob_in_Trusted или in(bob, Trusted). Утверждения обо всём универсуме "
+               "(all, ex): {\"sets\": {...}, \"claims\": [...]} — их судит раздел отчёта «множества»"),
+        "eg": ['{"a": {"list": []}, "R": {"abs": ["not", ["in", "x", "x"]]}}'],
+    },
+    {
         "key": "ask", "type": "multi", "required": False,
         "options": ["verdict", "warranty", "passport", "stipulations",
                     "blast", "brackets"],
@@ -458,6 +479,7 @@ def form_spec(lang="en"):
 
 
 # ------------------------------------------------------- validation
+import json
 import os
 import re
 from collections import Counter
@@ -470,6 +492,7 @@ from znumjudge import parse_quantities, judge_sheet_claim        # noqa: E402
 from znumjudge import extract_comparisons                       # noqa: E402
 from znumsolve import solve_claim                                # noqa: E402
 import zpassport                                                 # noqa: E402
+import znaive                                                    # noqa: E402 (naive sets, 2026-11-05)
 import zbook                                                     # noqa: E402
 import zbackward                                                 # noqa: E402
 
@@ -524,6 +547,94 @@ def _issue(level, code, where, hint):
     return {"level": level, "code": code, "where": where, "hint": hint}
 
 
+# ------------------------------------------------ naive sets (2026-11-05)
+#
+# THE CURATOR'S WORD, 2026-11-05: "we will forget; if it is not in the language we will not use it even when it is
+# needed". So naive sets are IN the language, as sugar over what ZFL already judges: a document may carry `sets`,
+# each a list, a table cell by cell, or a property of x that may mention any set, itself included (ZTL znaive.py,
+# the finite twin of VR/SetsNaive). Every membership cell `a ∈ S` becomes an ordinary row named `a_in_S`:
+#   * a cell of a property set  -> a `defined` row whose ground is the property instantiated at a, constants folded
+#     (the same grounding znaive does) — so the passport office, the judge, the validator and the back-reading treat
+#     it exactly as any self-referential row: Russell's R ∈ R is a PARADOX the same way the Liar is;
+#   * a given cell (list, or data T/F) -> verified / refuted on the ground `set-S` (the document's own list);
+#   * a data cell left Z -> unverified.
+# The claim and the grounds of the person's own defined rows may name a cell as `a_in_S` or `in(a, S)`.
+# The rows are added at the door (coerce), marked `from_sets`, and re-made on every pass, so coercing twice adds
+# nothing twice. What the language does NOT get: a quantifier in the claim — "every key is trusted or not" is a
+# claim over the universe and is judged by znaive itself, in the report's `sets` section (claims given inside
+# `sets` as {"sets": {...}, "claims": [...]}). The universe is finite and the public limits are znaive's own.
+_IN_CALL = re.compile(r"\bin\s*\(\s*([A-Za-zА-Яа-яЁё_][\wА-Яа-яЁё]*)\s*,\s*([A-Za-zА-Яа-яЁё_][\wА-Яа-яЁё]*)\s*\)")
+_SET_NAME = re.compile(r"^[A-Za-zА-Яа-яЁё_][\wА-Яа-яЁё]*$")
+
+
+def in_calls(text):
+    """`in(a, S)` -> `a_in_S`: the readable spelling of a membership cell."""
+    return _IN_CALL.sub(lambda m: f"{m.group(1)}_in_{m.group(2)}", text or "")
+
+
+def sets_universe(field):
+    """The `sets` field as a znaive universe: {name: definition} or {"sets": {...}, "claims": [...]}."""
+    if isinstance(field, dict) and isinstance(field.get("sets"), dict):
+        return {"sets": field["sets"], "claims": field.get("claims") or []}
+    return {"sets": field, "claims": []}
+
+
+def _cell_row_name(cell):
+    a, _, s = cell.partition("∈")
+    return f"{a}_in_{s}"
+
+
+def _ground_text(g):
+    if isinstance(g, str):
+        return g if g in ("T", "F", "Z") else _cell_row_name(g)
+    if g[0] == "not":
+        return "~" + _ground_text(g[1])
+    sym = {"and": "&", "or": "|", "xnor": "<->"}[g[0]]
+    return f"({_ground_text(g[1])} {sym} {_ground_text(g[2])})"
+
+
+def expand_sets(field, own_rows, claim):
+    """The `sets` field -> (rows, refusal). Never raises."""
+    spec = sets_universe(field)
+    if not isinstance(spec["sets"], dict) or not spec["sets"]:
+        return [], "'sets' must be an object {name: {\"list\"|\"data\"|\"abs\": ...}}"
+    bad = [n for n in spec["sets"] if not (isinstance(n, str) and _SET_NAME.match(n)) or n in _SERVICE_WORDS
+           or n in ("sets", "claims", "in") or "_in_" in n]
+    if bad:
+        return [], (f"set names must be plain names (letters, digits, _; not T, F, Z, an operator word, "
+                    f"'in', or containing '_in_'): {bad[:5]}")
+    checked = znaive.check(spec)                  # the door's limits and every unreadable definition, refused
+    if not checked.get("ok"):
+        return [], checked.get("refused") or "the sets cannot be read"
+    u = znaive.Universe(spec)
+    sysm = u.system()
+    rows, want = [], set()
+    for c, g in sysm.items():
+        a, _, s_ = c.partition("∈")
+        if "abs" in spec["sets"][s_]:
+            text = _ground_text(g)
+            rows.append({"name": _cell_row_name(c), "means": f"{a} ∈ {s_} (by the definition of {s_})",
+                         "status": "defined", "ground": text, "from_sets": True})
+            want |= set(re.findall(r"[^\s()~&|<>-]+_in_[^\s()~&|<>-]+", text))
+    for r in own_rows:
+        if r.get("status") == "defined":
+            want |= names_in(r.get("ground") or "")
+    want |= names_in(claim)
+    have = {r["name"] for r in rows}
+    for c, g in sysm.items():
+        n = _cell_row_name(c)
+        a, _, s_ = c.partition("∈")
+        if n in have or n not in want or "abs" in spec["sets"][s_]:
+            continue
+        status = {"T": "verified", "F": "refuted"}.get(g, "unverified")
+        rows.append({"name": n, "means": f"{a} ∈ {s_} (given)", "status": status,
+                     "ground": "" if status == "unverified" else f"set-{s_}", "from_sets": True})
+    clash = sorted({r["name"] for r in rows} & {r.get("name") for r in own_rows})
+    if clash:
+        return [], f"a row of the table has the name of a membership cell: {clash[:5]} — rename the row"
+    return rows, None
+
+
 def coerce(doc):
     """A document arriving as JSON has JSON's types, not ours: a model that
     writes `"value": 3000` is not wrong, and neither is a caller who does.
@@ -543,8 +654,8 @@ def coerce(doc):
            "grounds": str(doc.get("grounds") or ""),
            "ask": doc.get("ask") or [], "rows": []}
     for r in (doc.get("rows") or []):
-        if not isinstance(r, dict):
-            continue
+        if not isinstance(r, dict) or r.get("from_sets"):
+            continue                          # membership rows are re-made below, never carried over
         row = {}
         for k, v in r.items():
             if k == "sample":
@@ -558,6 +669,25 @@ def coerce(doc):
             else:
                 row[k] = str(v)
         out["rows"].append(row)
+    # NAIVE SETS: membership cells become rows here, at the one door every reader passes (run, validate, backread).
+    sets = doc.get("sets")
+    if sets:
+        out["sets"] = sets                    # kept as given: coerce runs more than once, the refusal must recur
+    if isinstance(sets, str) and sets.strip():
+        try:
+            sets = json.loads(sets)
+        except (ValueError, RecursionError):
+            out["sets_refused"] = "'sets' is not valid JSON"
+            sets = None
+    if sets:
+        out["claim"] = in_calls(out["claim"])
+        for row in out["rows"]:
+            if row.get("status") == "defined":
+                row["ground"] = in_calls(row.get("ground") or "")
+        made, refused = expand_sets(sets, out["rows"], out["claim"])
+        if refused:
+            out["sets_refused"] = refused
+        out["rows"].extend(made)
     return out
 
 
@@ -587,6 +717,8 @@ def validate(doc):
     looking at a table."""
     doc = coerce(doc)
     issues, rows = [], doc["rows"]
+    if doc.get("sets_refused"):
+        issues.append(_issue("error", "E_SETS", "sets", doc["sets_refused"]))
     if not rows:
         issues.append(_issue("error", "E_EMPTY", "table",
                              "the table has no rows"))
@@ -1775,4 +1907,8 @@ def run(doc, ground_registry=None):
         # на непредъявленных основаниях, — иначе понижение неотличимо от
         # честного «не проверено», и ворота работают молча.
         report["demoted_grounds"] = sorted(demoted)
+    if doc.get("sets") and not doc.get("sets_refused"):
+        # THE NAIVE VIEW of the same universe (znaive.check): each set's earned members and non-members, a passport
+        # for every cell left undecided, and the quantified claims the table's claim cannot state.
+        report["sets"] = znaive.check(sets_universe(doc["sets"]))
     return {"ok": True, "issues": issues, "applies": what, "report": report}

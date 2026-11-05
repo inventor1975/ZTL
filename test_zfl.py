@@ -155,6 +155,63 @@ def sec4_an_unknown_is_a_question_not_a_gap():
     print("   type `==` would be the machine's convenience charged to them.")
 
 
+def sec13_naive_sets_are_in_the_language():
+    print("-" * 72)
+    print("13. NAIVE SETS IN THE LANGUAGE (2026-11-05): cells become rows, the passport reads them")
+    import time
+    import znaive
+    russell = {"rows": [], "sets": {"a": {"list": []}, "b": {"list": ["b"]},
+                                    "R": {"abs": ["not", ["in", "x", "x"]]}}}
+    r = zfl.run(dict(russell, claim="in(a, R) & ~in(b, R)"))
+    assert r["ok"] and r["report"]["judge"]["disposition"] == "EARNED", r
+    assert [(p["component"], p["kind"]) for p in r["report"]["passport"]] == [(["R_in_R"], "PARADOX")], r
+    r = zfl.run(dict(russell, claim="R_in_R"))
+    assert r["ok"] and r["report"]["judge"]["disposition"] == "OPEN", r["report"]["judge"]
+    # the same verdicts as the kernel's own naive judge, on every cell of its four universes
+    for name, ex in znaive.EXAMPLES.items():
+        nv = znaive.check(ex)
+        for st in nv["sets"]:
+            for m in st["in"] + st["out"] + [q["member"] for q in st["quarantined"]]:
+                cl = f"{m}_in_{st['set']}"
+                rz = zfl.run({"rows": [], "sets": ex, "claim": cl})
+                assert rz["ok"], (name, cl, rz["issues"])
+                v = rz["report"]["judge"]["verdict"]
+                want = "T" if m in st["in"] else "F" if m in st["out"] else "Z"
+                assert v == want, (name, cl, v, want)
+                if want == "Z":
+                    kinds = {c: p["kind"] for p in rz["report"]["passport"] for c in p["component"]}
+                    want_kind = next(q["passport"] for q in st["quarantined"] if q["member"] == m)
+                    # an INPUT cell no definition reads is, in ZFL, simply an unverified row (no system to join)
+                    plain_input = (want_kind == "INPUT" and cl not in kinds and any(
+                        r_["name"] == cl and r_["status"] == "unverified" for r_ in zfl.coerce(
+                            {"rows": [], "sets": ex, "claim": cl})["rows"]))
+                    assert plain_input or kinds.get(cl) == want_kind or want_kind == "DOWNSTREAM", \
+                        (name, cl, kinds.get(cl), want_kind)
+    # the door: refusals are issues on `sets`, at once; coerce twice adds nothing twice
+    deep = ["in", "x", "x"]
+    for v in "abcdef":
+        deep = ["all", v, ["or", ["in", v, "x"], deep]]
+    t0 = time.time()
+    for bad in ({"T": {"list": []}}, {"A": {"abs": ["in", "x", "ghost"]}}, "{not json",
+                {f"s{i}": {"abs": deep} for i in range(8)}, {"abs": {"list": []}}):
+        r = zfl.run({"rows": [], "sets": bad, "claim": "p"})
+        assert not r["ok"] and "E_SETS" in [i["code"] for i in r["issues"]], (bad, r["issues"])
+    assert time.time() - t0 < 2
+    r = zfl.run({"rows": [{"name": "A_in_A", "means": "m", "status": "unverified"}],
+                 "sets": {"A": {"list": []}}, "claim": "A_in_A"})
+    assert not r["ok"] and "E_SETS" in [i["code"] for i in r["issues"]]
+    d = zfl.coerce(dict(russell, claim="R_in_R"))
+    assert len(zfl.coerce(d)["rows"]) == len(d["rows"]) == 3, d["rows"]
+    # a person's own defined row may lean on a cell
+    r = zfl.run({"rows": [{"name": "ok", "means": "a is in R and paid", "status": "defined",
+                           "ground": "in(a, R) & paid"},
+                          {"name": "paid", "means": "paid", "status": "verified", "ground": "inv-1"}],
+                 "sets": russell["sets"], "claim": "ok"})
+    assert r["ok"] and r["report"]["judge"]["verdict"] == "T", r
+    print("   Russell's set: a ∈ R and b ∉ R EARNED, R ∈ R a PARADOX through the same passport as the Liar;")
+    print("   every cell of znaive's four example universes reads the same in ZFL (T/F/Z and the passport);")
+    print("   bad names, unknown names, broken JSON, an oversized universe, a name clash: E_SETS, at once.")
+
 def sec4b_every_example_runs_and_json_types_are_taken_as_they_come():
     print("-" * 72)
     print("4b. THE CATALOGUE, AND WHAT ARRIVES FROM A MODEL")
@@ -458,6 +515,7 @@ if __name__ == "__main__":
     sec9_the_world_has_a_clock_too()
     sec10_what_the_ground_holds_and_what_to_check()
     sec11_a_public_service_cannot_be_made_to_raise_or_to_stall()
+    sec13_naive_sets_are_in_the_language()
     sec4b_every_example_runs_and_json_types_are_taken_as_they_come()
     sec5_the_spec_can_build_the_form_and_the_page()
     print("=" * 72)

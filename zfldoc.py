@@ -93,6 +93,9 @@ CODE_HELP = {
                         "claim is not read across the clock",
                         "часы рядом с утверждением, сравнивающим числа: слой времени читает только высказывания, "
                         "поэтому утверждение через срок не прочитано"),
+    "E_DEGREE": ("a degree that is not a point or interval inside [0, 1], or on a refuted, defined or valued row",
+                 "степень вне [0, 1] или не число/интервал, либо на опровергнутой, определённой строке или строке-величине"),
+    "E_NEED": ("a threshold that is not a degree inside [0, 1]", "порог — не степень внутри [0, 1]"),
     "E_COMPARE_ROW": ("a comparison row that leads back to itself, or a statement definition leaning on a comparison row",
                       "строка-сравнение, ведущая сама к себе, или определение-высказывание, опирающееся на строку-сравнение"),
     "E_TYPE_EQ": ("a statement set equal to a number with `=` — no reading makes a truth value equal to a number",

@@ -39,7 +39,8 @@ def sec1_one_table_three_instruments():
     assert r["ok"], r["issues"]
     print(f"   applies: {r['applies']}")
     assert r["applies"] == {"numeric": True, "passport": True,
-                            "ledger": True, "epoch": False, "judge": True}
+                            "ledger": True, "epoch": False, "judge": True,
+                            "degree": False}
     rep = r["report"]
     print(f"   assembled sheet    : {rep['numeric']['sheet']}")
     print(f"   the invoice claim  : {rep['numeric']['disposition']}")
@@ -635,6 +636,58 @@ def sec18_a_comparison_can_be_named():
     print("   named or written out, one verdict; a loop or a liar leaning on a comparison: E_COMPARE_ROW; sabotage caught")
 
 
+def sec19_ztl_i_degrees():
+    """(2026-11-05) ZTL-I in the language: a row's degree, the document's threshold and independence. Both sides:
+    documents without a degree get no degree section and keep their verdicts; the Fréchet intervals; the three
+    threshold outcomes; a told degree that the answer rests on holds the verdict ON CREDIT, one it does not rest on
+    does not; independence lands inside; clean and dirty; refusals. Sabotage: dropping the credit cap is caught."""
+    print("-" * 72)
+    print("§19 ZTL-I: degrees, thresholds, independence")
+    A = {"name": "a", "status": "verified", "ground": "m", "degree": "0.3", "means": "a"}
+    B = {"name": "b", "status": "verified", "ground": "m", "degree": "0.7", "means": "b"}
+
+    def deg(doc):
+        r = zfl.run(doc)
+        assert r["ok"], r.get("issues")
+        return r["report"].get("degree")
+    assert deg({"rows": [dict(A, degree="")], "claim": "a"}) is None
+    assert deg({"rows": [A, B], "claim": "a & b"})["interval"] == ["0", "3/10"]
+    assert deg({"rows": [A, B], "claim": "a | b"})["interval"] == ["7/10", "1"]
+    assert deg({"rows": [A, B], "claim": "a | b", "need": "0.6"})["verdict"] == "EARNED"
+    assert deg({"rows": [A, B], "claim": "a & b", "need": "0.5"})["verdict"] == "REFUTED"
+    d = deg({"rows": [A, B], "claim": "a & b", "need": "0.2"})
+    assert d["verdict"] == "OPEN" and any("independence" in c for c in d["next_check"])
+    d = deg({"rows": [A, B], "claim": "a & b", "independent": True, "need": "0.2"})
+    assert d["independent"] == ["21/100", "21/100"] and d["verdict"] == "EARNED"
+    # a told degree the answer rests on -> ON CREDIT; one it does not rest on -> no cap
+    told = dict(A, status="unverified", ground="", degree="0.9")
+    d = deg({"rows": [told, dict(B, degree="0.9")], "claim": "a & b", "need": "0.75"})
+    assert d["verdict"] == "ON CREDIT" and d["polarity"] == "toward T" and d["rests_on_told"] == ["a"], d
+    d = deg({"rows": [dict(A, status="unverified", ground=""), B], "claim": "a | b", "need": "0.6"})
+    assert d["verdict"] == "EARNED" and "rests_on_told" not in d, d
+    assert deg({"rows": [A], "claim": "a & ~a"})["interval"] == ["0", "0"]
+    d = deg({"rows": [{"name": "z", "status": "unverified", "means": "z"}], "claim": "z | ~z", "need": "0.5"})
+    assert d["interval"] == ["0", "1"] and d["if_stable"] == ["1", "1"]
+    for bad in ({"rows": [dict(A, degree="1.5")], "claim": "a"}, {"rows": [dict(A, status="refuted")], "claim": "a"},
+                {"rows": [A], "claim": "a", "need": "2"}):
+        assert not zfl.run(bad)["ok"], bad
+    real = zfl.degree_report
+
+    def no_cap(doc, rows, claim):                                         # sabotage: the told degree goes uncapped
+        out = real(doc, rows, claim)
+        if out and out.get("verdict") == "ON CREDIT":
+            out["verdict"] = "EARNED" if out.get("polarity") == "toward T" else "REFUTED"
+        return out
+    zfl.degree_report = no_cap
+    try:
+        d = deg({"rows": [told, dict(B, degree="0.9")], "claim": "a & b", "need": "0.75"})
+        assert d["verdict"] != "ON CREDIT"
+    finally:
+        zfl.degree_report = real
+    print("   no degree -> no section; Fréchet intervals; EARNED / REFUTED / OPEN at a threshold; a told degree")
+    print("   that bears -> ON CREDIT, one that does not -> no cap; independence 21/100; refusals; sabotage caught")
+
+
 if __name__ == "__main__":
     print("=" * 72)
     print("ZFL v2 — the table, headless")
@@ -654,6 +707,7 @@ if __name__ == "__main__":
     sec16_a_lone_equals_is_read_by_the_types_of_its_sides()
     sec17_a_clock_beside_a_numeric_claim_never_crashes()
     sec18_a_comparison_can_be_named()
+    sec19_ztl_i_degrees()
     sec4b_every_example_runs_and_json_types_are_taken_as_they_come()
     sec5_the_spec_can_build_the_form_and_the_page()
     print("=" * 72)

@@ -373,6 +373,23 @@ COLUMNS = [
         "uk": ("домовленість", "значення немає, доки його не домовились (неназвана міра, одиниця)"),
         "he": ("מוסכמה", "אין ערך למצוא עד שקובעים אחד (מידה שלא נקבעה, יחידה)"),
     },
+    {
+        # ZTL-I (2026-11-05, the curator's plan): the DEGREE of a statement — the probability that it is true, as a
+        # point or an interval in [0, 1]. Not 'value' (a quantity): a statement has a degree, a quantity a value, and
+        # the two are kept apart as '==' and '<->' are. A degree needs a ground like anything else: on a verified
+        # row it is earned, on an unverified row it is told and whatever rests on it is on credit.
+        "key": "degree", "type": "text", "required": False, "advanced": True,
+        "en": ("degree", "the probability that this statement is true: 0.3, or an interval [0.2, 0.4] when it is "
+                         "only known within bounds; verified = measured, unverified = told"),
+        "ru": ("степень", "вероятность, что это утверждение истинно: 0.3 или интервал [0.2, 0.4], если известна "
+                          "лишь в пределах; проверено — измерена, не проверено — сообщена"),
+        "de": ("Grad", "die Wahrscheinlichkeit, dass diese Aussage wahr ist: 0.3 oder ein Intervall [0.2, 0.4]"),
+        "fr": ("degré", "la probabilité que cet énoncé soit vrai : 0.3, ou un intervalle [0.2, 0.4]"),
+        "es": ("grado", "la probabilidad de que este enunciado sea verdadero: 0.3, o un intervalo [0.2, 0.4]"),
+        "uk": ("ступінь", "ймовірність, що це твердження істинне: 0.3 або інтервал [0.2, 0.4]"),
+        "he": ("דרגה", "ההסתברות שהטענה נכונה: 0.3, או מרווח [0.2, 0.4]"),
+        "eg": ["0.3", "[0.2, 0.4]", "1/3"],
+    },
 ]
 
 DOC_FIELDS = [
@@ -437,6 +454,24 @@ DOC_FIELDS = [
                "утверждении можно писать bob_in_Trusted или in(bob, Trusted). Утверждения обо всём универсуме "
                "(all, ex): {\"sets\": {...}, \"claims\": [...]} — их судит раздел отчёта «множества»"),
         "eg": ['{"a": {"list": []}, "R": {"abs": ["not", ["in", "x", "x"]]}}'],
+    },
+    {
+        # ZTL-I: the threshold a claim's degree must clear (zdegree.py)
+        "key": "need", "type": "text", "required": False, "advanced": True,
+        "en": ("need", "the probability the claim must have at least, e.g. 0.95: EARNED when its whole degree is at "
+                       "or above it, REFUTED when its whole degree is below, OPEN with what to narrow otherwise"),
+        "ru": ("порог", "вероятность, которую утверждение должно иметь не меньше, например 0.95: заработано, если вся "
+                        "степень не ниже порога, опровергнуто — если вся ниже, иначе открыто и названо, что сузить"),
+        "eg": ["0.95"],
+    },
+    {
+        # ZTL-I: independence is a STIPULATION (a convention), never a default; all-or-nothing in this version
+        "key": "independent", "type": "bool", "required": False, "advanced": True,
+        "en": ("independent", "stipulate that the claim's statements are independent of one another (all of them): "
+                              "the degree narrows by the product rule; without it every joint is allowed"),
+        "ru": ("независимы", "договориться, что утверждения в формуле независимы друг от друга (все): степень "
+                             "сужается по правилу произведения; без этого допускается любая совместность"),
+        "eg": ["true"],
     },
     {
         "key": "ask", "type": "multi", "required": False,
@@ -671,6 +706,12 @@ def coerce(doc):
     out = {"claim": str(doc.get("claim") or ""),
            "grounds": str(doc.get("grounds") or ""),
            "ask": doc.get("ask") or [], "rows": []}
+    # ZTL-I's two document fields pass the door here, or they are lost in it (the `grounds` lesson above)
+    if doc.get("need") not in (None, ""):
+        out["need"] = str(doc.get("need")).strip()
+    if "independent" in doc:
+        iv = doc.get("independent")
+        out["independent"] = iv is True or (isinstance(iv, str) and iv.strip().lower() in ("true", "yes", "1"))
     for r in (doc.get("rows") or []):
         if not isinstance(r, dict) or r.get("from_sets"):
             continue                          # membership rows are re-made below, never carried over
@@ -678,7 +719,7 @@ def coerce(doc):
         for k, v in r.items():
             if k in ("sample", "convention"):
                 row[k] = bool(v)
-            elif k == "value" and isinstance(v, (list, tuple)) and len(v) == 2 \
+            elif k in ("value", "degree") and isinstance(v, (list, tuple)) and len(v) == 2 \
                     and all(isinstance(e, (int, float, str)) and not isinstance(e, bool) for e in v):
                 # AN INTERVAL WRITTEN AS A JSON ARRAY (2026-11-05: models write [0, "inf"] as often as "[0,inf]";
                 # str() of the list put quotes into the sheet and the row died as unreadable) — the same interval
@@ -962,6 +1003,16 @@ def validate(doc):
         if kind not in GROUND_KINDS:
             issues.append(_issue("error", "E_KIND", f"{at} / kind of ground",
                                  f"kind must be one of {GROUND_KINDS}"))
+        if (r.get("degree") or "").strip():
+            try:
+                parse_degree(r["degree"])
+                if status in ("refuted", "defined"):
+                    raise ValueError("a degree belongs on a verified (measured) or unverified (told) statement — "
+                                     f"not on a {status} row")
+                if (r.get("value") or "").strip():
+                    raise ValueError("a row with a value is a quantity; a degree belongs to a statement")
+            except ValueError as exc:
+                issues.append(_issue("error", "E_DEGREE", f"{at} / degree", str(exc)))
         if status == "defined" and r.get("name") in _cmp_rows:
             if expand_compares(r.get("name") or "", rows)[1]:
                 issues.append(_issue("error", "E_COMPARE_ROW", f"{at} / ground",
@@ -1041,6 +1092,11 @@ def validate(doc):
                 issues.append(_issue(
                     "error", "E_UNKNOWN_NAME", f"row {i} / ground",
                     f"no row is called {sorted(unknown)}"))
+    if (doc.get("need") or "").strip():
+        try:
+            parse_degree(doc["need"])
+        except ValueError as exc:
+            issues.append(_issue("error", "E_NEED", "need", str(exc)))
     _spelt = _spell((doc.get("claim") or "").strip())
     for pat, sym in _WORDS:
         _spelt = re.sub(pat, sym, _spelt)
@@ -1528,6 +1584,108 @@ def to_book(rows):
 
 _COMPARES = re.compile(r"<=|>=|==|!=|<|(?<!-)>")
 
+import zdegree                                                   # noqa: E402 (ZTL-I, 2026-11-05)
+
+
+def parse_degree(text):
+    """'0.3' | '3/10' | '[0.2, 0.4]' -> (lo, hi) Fractions inside [0, 1], or raise ValueError with the reason"""
+    from fractions import Fraction as _Fr
+    t = re.sub(r"\s+", "", str(text or ""))
+    m = re.fullmatch(r"\[([^,\[\]]+),([^,\[\]]+)\]", t)
+    try:
+        lo, hi = (_Fr(m.group(1)), _Fr(m.group(2))) if m else (_Fr(t), _Fr(t))
+    except (ValueError, ZeroDivisionError):
+        raise ValueError(f"'{text}' is not a degree: write 0.3, 3/10 or [0.2, 0.4]")
+    if not (0 <= lo <= hi <= 1):
+        raise ValueError(f"a degree lies in [0, 1] with its lower end first: got [{lo}, {hi}]")
+    return lo, hi
+
+
+def _fmt(x):
+    return str(x) if x.denominator != 1 else str(x.numerator)
+
+
+def degree_report(doc, rows, claim):
+    """ZTL-I: the claim's degree — the least and greatest probability that it is true, over every joint of its
+    statements that keeps each one's own degree (zdegree.py: exact, each end proved by a witness and a dual).
+    Rows without a degree count as verified [1,1], refuted [0,0], unverified [0,1] (a dirty atom, read anew at each
+    occurrence); a comparison counts by the numeric floor's verdict. A degree on an UNVERIFIED row was told, not
+    checked: where the result rests on it, a threshold verdict is held at ON CREDIT."""
+    if not claim:
+        return None
+    by = {r["name"]: r for r in rows if r.get("name")}
+    selfref = {n for n, r in by.items() if r.get("status") == "defined"} - set(compare_rows(rows))
+    if names_in(claim) & selfref:
+        return {"refused": "the claim leans on a self-reference definition: degrees are not read across the "
+                           "passport office (the liar has no probability here)"}
+    degrees, core = {}, claim
+    if _COMPARES.search(claim):
+        try:
+            q, marks = parse_quantities(to_sheet(rows))
+            marks.update({n: m for n, m in to_marking(rows).items() if n not in q})
+            num = judge_sheet_claim(claim, q, marks)
+        except Exception as exc:
+            return {"refused": f"the comparisons could not be read for a degree ({type(exc).__name__})"}
+        core = num["core_formula"]
+        for nc, a in (num.get("numeric_atoms") or {}).items():
+            degrees[nc] = {"T": "T", "F": "F"}.get(a.get("verdict"), "Z")
+    told, notes = [], []
+    for name in sorted(names_in(core) - set(degrees)):
+        r = by.get(name)
+        if r is None:
+            continue
+        if (r.get("degree") or "").strip():
+            degrees[name] = parse_degree(r["degree"])
+            if r.get("status") == "unverified":
+                told.append(name)
+        else:
+            degrees[name] = {"verified": "T", "refuted": "F"}.get(r.get("status"), "Z")
+    try:
+        sep = zdegree.degree(core, degrees)
+        stab = zdegree.degree(core, degrees, stable=True)
+        ind = zdegree.degree_independent(core, degrees) if doc.get("independent") else None
+    except zdegree.DegreeError as exc:
+        return {"refused": str(exc)}
+    use = ind or sep
+    out = {"interval": [_fmt(sep["lo"]), _fmt(sep["hi"])], "if_stable": [_fmt(stab["lo"]), _fmt(stab["hi"])],
+           "events": len(sep["events"]), "proved": "each end attained by a joint and bounded by a dual (zdegree)"}
+    if ind:
+        out["independent"] = [_fmt(ind["lo"]), _fmt(ind["hi"])]
+        out["stipulated"] = "independence of the claim's statements (a convention, not a finding)"
+    # which told degrees does the answer rest on? widen each to [0, 1] and see whether the interval moves
+    bearing = []
+    for name in told:
+        wide = dict(degrees, **{name: (zdegree.ZERO, zdegree.ONE)})
+        try:
+            w = (zdegree.degree_independent if ind else zdegree.degree)(core, wide)
+        except zdegree.DegreeError:
+            continue
+        if (w["lo"], w["hi"]) != (use["lo"], use["hi"]):
+            bearing.append(name)
+    if bearing:
+        out["rests_on_told"] = bearing
+    need = (doc.get("need") or "").strip()
+    if need:
+        try:
+            n = parse_degree(need)[0]
+        except ValueError:
+            n = None
+        if n is not None:
+            verdict = "EARNED" if use["lo"] >= n else "REFUTED" if use["hi"] < n else "OPEN"
+            out["need"] = _fmt(n)
+            cures = []
+            if verdict == "OPEN":
+                cures = [f"narrow {nm}" for nm, d in sorted(degrees.items())
+                         if d == "Z" or (isinstance(d, tuple) and d[0] != d[1])] + \
+                        ([] if ind else ["stipulate independence (only if it is true)"])
+            if verdict != "OPEN" and bearing:
+                out["polarity"] = "toward T" if verdict == "EARNED" else "toward F"
+                verdict = "ON CREDIT"
+                cures = [f"document {nm}" for nm in bearing]
+            out["verdict"] = verdict
+            out["next_check"] = cures
+    return out
+
 
 def applies(doc):
     """Which instruments have something to say. The report shows these and
@@ -1558,6 +1716,9 @@ def applies(doc):
             (r.get("expires_on") or "").strip() for r in rows)
             and not _COMPARES.search(normalise((doc.get("claim") or "").strip(), rows)),
         "judge": bool((doc.get("claim") or "").strip()),
+        "degree": bool((doc.get("claim") or "").strip()) and (
+            any((r.get("degree") or "").strip() for r in rows) or bool((doc.get("need") or "").strip())
+            or bool(doc.get("independent"))),
     }
 
 
@@ -2100,4 +2261,11 @@ def run(doc, ground_registry=None):
         # THE NAIVE VIEW of the same universe (znaive.check): each set's earned members and non-members, a passport
         # for every cell left undecided, and the quantified claims the table's claim cannot state.
         report["sets"] = znaive.check(sets_universe(doc["sets"]))
+    if what.get("degree"):
+        try:
+            d = degree_report(doc, rows, normalise((doc.get("claim") or "").strip(), rows))
+        except Exception as exc:                          # the invariant: a validated document never raises
+            d = {"refused": f"the degree could not be computed ({type(exc).__name__})"}
+        if d is not None:
+            report["degree"] = d
     return {"ok": True, "issues": issues, "applies": what, "report": report}

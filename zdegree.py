@@ -221,6 +221,34 @@ def degree(formula, degrees, dirty=None, stable=False):
             "witness_hi": {w: v for w, v in zip(worlds, x_hi) if v}, "witness_lo": {w: v for w, v in zip(worlds, x_lo) if v}}
 
 
+def degree_independent(formula, degrees, dirty=None, stable=False):
+    """INDEPENDENCE, STIPULATED (a convention, never a default): every event independent of every other. Then
+    P(formula) is multilinear in the events' probabilities, so over the box of their degrees its least and greatest
+    values sit at CORNERS — enumerated exactly (2^k corners for the k events whose degree is not a point).
+    -> {"lo", "hi", "events"}"""
+    phi = formalize(formula) if isinstance(formula, str) else formula
+    ivs = {a: as_interval(d) for a, d in degrees.items()}
+    if dirty is None:
+        dirty = {a for a, d in degrees.items() if d == "Z"}
+    psi = phi if stable else _split(phi, set(dirty), {})
+    events = sorted(set(_events(psi, [])))
+    if len(events) > MAX_EVENTS:
+        raise DegreeError(f"{len(events)} events: at most {MAX_EVENTS} (2^n worlds), refused by form")
+    worlds = [w for w in itertools.product((0, 1), repeat=len(events)) if _value(psi, dict(zip(events, w)))]
+    ends = [ivs[e.split("#")[0]] for e in events]
+    vals = []
+    for corner in itertools.product(*[sorted({lo, hi}) for lo, hi in ends]):
+        vals.append(sum(_prod(corner[k] if w[k] else 1 - corner[k] for k in range(len(events))) for w in worlds))
+    return {"lo": min(vals), "hi": max(vals), "events": events}
+
+
+def _prod(xs):
+    out = ONE
+    for x in xs:
+        out *= x
+    return out
+
+
 def _certify(truth, rows, worlds, events, ivs, value, duals, maximise):
     """WEAK DUALITY, checked: from the final tableau's duals u_i (the '<= hi' rows) and v_i (the '>= lo' rows) build
     d_i = u_i - v_i and the least y0 that keeps EVERY world's constraint y0 + d.w >= t(w) (t = truth for the greatest
@@ -309,6 +337,11 @@ def _selftest():
         assert r["lo"] <= ind <= r["hi"]
         wide = degree(phi, {"a": (max(ZERO, pa - Fr(1, 10)), min(ONE, pa + Fr(1, 10))), "b": pb})
         assert wide["lo"] <= r["lo"] and r["hi"] <= wide["hi"]
+    for _ in range(40):
+        phi = ZF.rand_formula(rng, ["a", "b", "c"], 3)
+        dg = {k: (Fr(rng.randint(0, 5), 10), Fr(rng.randint(5, 10), 10)) for k in ("a", "b", "c")}
+        free, ind = degree(phi, dg), degree_independent(phi, dg)
+        assert free["lo"] <= ind["lo"] <= ind["hi"] <= free["hi"], (phi, dg)
     print("  5. independence lands inside every interval; widening a degree never narrows the result (60 formulas)")
     # 6. refusals by form
     for bad in ({"x": Fr(3, 2)}, {"x": (Fr(1, 2), Fr(1, 4))}):

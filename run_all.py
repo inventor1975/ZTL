@@ -502,6 +502,9 @@ STANDS = [
     ("dilemmas/hardy.py", [
         "HARDY: all measurements hold.",
         "ok  13 possible runs x 3 laws: refuted 0, earned 17, the rest open"]),
+    ("dilemmas/sleeping_beauty.py", [
+        "SLEEPING BEAUTY: all measurements hold.",
+        "   the unit unnamed (P a convention)             OPEN      OPEN      EARNED    EARNED    ['stipulate P']"]),
     ("dilemmas/perron.py", [
         "PERRON: all measurements hold.",
         "   Frege/Strawson (presupposes existence): E — the subject is absent, nothing to check"]),

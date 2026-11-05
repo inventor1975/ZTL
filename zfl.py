@@ -355,6 +355,24 @@ COLUMNS = [
         "uk": ("окремі виміри", "число з вибірки, а не одне вимірювання"),
         "he": ("מדידות נפרדות", "מספר מתוך מדגם, לא מדידה אחת"),
     },
+    {
+        # A CONVENTION (2026-11-05, Bertrand's chord, Sleeping Beauty, an outside review): a quantity with no value to
+        # find until one is DECLARED — a probability over a measure nobody named, a unit, a summation method, which
+        # quantity a study asks for. The numeric floor then names the cure "stipulate", never "measure"; NO verdict
+        # changes (ZTL znumjudge, tested both sides). An empirical quantity is never a convention: its value is
+        # measured, and declaring it would be whitewashing.
+        "key": "convention", "type": "bool", "required": False, "advanced": True,
+        "default": False,
+        "en": ("a convention",
+               "no value to find until one is declared (a measure nobody named, a unit, a summation method)"),
+        "ru": ("договорённость",
+               "значения нет, пока его не договорили (неназванная мера, единица, метод суммирования)"),
+        "de": ("eine Konvention", "kein Wert zu finden, bis einer festgelegt wird (ein ungenanntes Maß, eine Einheit)"),
+        "fr": ("une convention", "pas de valeur à trouver tant qu'on n'en fixe pas une (une mesure non nommée, une unité)"),
+        "es": ("una convención", "no hay valor que hallar hasta que se fija uno (una medida sin nombrar, una unidad)"),
+        "uk": ("домовленість", "значення немає, доки його не домовились (неназвана міра, одиниця)"),
+        "he": ("מוסכמה", "אין ערך למצוא עד שקובעים אחד (מידה שלא נקבעה, יחידה)"),
+    },
 ]
 
 DOC_FIELDS = [
@@ -658,7 +676,7 @@ def coerce(doc):
             continue                          # membership rows are re-made below, never carried over
         row = {}
         for k, v in r.items():
-            if k == "sample":
+            if k in ("sample", "convention"):
                 row[k] = bool(v)
             elif k == "status" and isinstance(v, str) and v.strip() in STATUS_ALIASES:
                 row[k] = STATUS_ALIASES[v.strip()]
@@ -841,6 +859,14 @@ def validate(doc):
                                  f"'{name}' is already used above"))
         seen.add(name)
 
+        if r.get("convention") and r.get("sample"):
+            issues.append(_issue("error", "E_CONVENTION", f"{at} / convention",
+                                 "a convention has one value, and 'separate measurements' makes each occurrence its "
+                                 "own measurement: the two cannot both hold"))
+        elif r.get("convention") and not (r.get("value") or "").strip():
+            issues.append(_issue("error", "E_CONVENTION", f"{at} / convention",
+                                 "'a convention' marks a quantity: give the row a value (an interval for what the "
+                                 "convention could fix), or it changes nothing"))
         status = (r.get("status") or "").strip()
         if status not in STATUSES:
             issues.append(_issue("error", "E_STATUS", f"{at} / status",
@@ -998,7 +1024,19 @@ def validate(doc):
                 issues.append(_issue(
                     "error", "E_UNKNOWN_NAME", f"row {i} / ground",
                     f"no row is called {sorted(unknown)}"))
+    _spelt = _spell((doc.get("claim") or "").strip())
+    for pat, sym in _WORDS:
+        _spelt = re.sub(pat, sym, _spelt)
+    if any(k == "mixed" for _p, k in eq_kinds(_spelt, rows)):
+        issues.append(_issue("error", "E_TYPE_EQ", "claim",
+                             "a statement is set equal to a number with `=`: no reading makes a truth value equal to a "
+                             "number. If the statement's row is a quantity, give it a value; if you meant 'the same "
+                             "truth value as', compare it with a statement (p = (x > 1)); for numbers write =="))
     claim = normalise((doc.get("claim") or "").strip(), rows)
+    if claim and _COMPARES.search(claim) and any((r.get("expires_on") or "").strip() for r in rows):
+        issues.append(_issue("warn", "W_EPOCH_NUMERIC", "claim",
+                             "the time layer reads statements only: this claim compares numbers, so whether it "
+                             "survives a clock running out is not judged here — the rest of the report stands"))
     if claim:
         try:
             phi = _formula(claim, {r.get("name"): r for r in rows})
@@ -1207,19 +1245,100 @@ def _spell(text):
     return (text or "").replace("<->", "↔")
 
 
-def normalise(claim, rows):
-    """`x - 10 = 20` is what a person writes, and it is not wrong.
+# A LONE `=` IS READ BY THE TYPES OF ITS TWO SIDES (2026-11-05, the curator's "по типам сторон").
+#
+# `=` means "the same value": between two numbers, numeric equality (`x - 10 = 20`); between two statements, the same
+# TRUTH value — the biconditional, which IS equality of truth values (`p = q`, `p = (x > 1)`). The kind of value is
+# known from the rows: a row with a value is a number, a row without one is a statement, a comparison or a connective
+# makes a statement. Before, the reading was chosen per DOCUMENT: any row with a value turned every lone `=` numeric,
+# so `p = q` between two statements died with "p is read as a number" the moment an unrelated quantity was added —
+# the meaning of a symbol changed with a row it does not mention (two of six documents of a blind formalization
+# audit died on it). `==` and `<->` stay the explicit forms; the mathematical and the logical equality stay apart —
+# the TYPES decide which one is meant, not the neighbourhood.
+#   both sides numeric      -> `==`  (binds as an equation: `x - 10 = 20 & ok` is `(x - 10 == 20) & ok`)
+#   both sides statements   -> `=`   (the core's biconditional, the weakest binding)
+#   a statement = a number  -> refused by form, E_TYPE_EQ: no reading equates a truth value with a number
+#   anything not decidable  -> the old per-document rule (an unknown name, arithmetic on a statement such as an
+#                              equation over value-less rows — whose own error already says which row needs a value)
+_EQ_TOK = re.compile(r"\s*(->|↔|<=|>=|==|!=|[&|~^=<>+\-*/(),\[\]]|\d+(?:\.\d+)?|[A-Za-z_][A-Za-z_0-9]*|\S)")
+_EQ_LOGIC = {"&", "|", "~", "^", "↔", "->", "=", "==", "!=", "<", ">", "<=", ">="}
+_EQ_ARITH = {"+", "-", "*", "/", ",", "[", "]"}
+_EQ_NUMFUN = set(FUNCTION_WORDS) | {"sum", "sqrt", "min", "max", "abs"}
 
-    A single `=` is the biconditional in the propositional parser and
-    equality in the numeric one, which is fine as long as nobody has to
-    know that. Where the document has quantities, a lone `=` is read as
-    equality — the reading anyone typing an equation intends. Elsewhere it
-    keeps its propositional sense."""
+
+def _eq_tokens(text):
+    toks, i = [], 0
+    while i < len(text):
+        m = _EQ_TOK.match(text, i)
+        if not m or m.end() == i:
+            break
+        toks.append((m.group(1), m.start(1)))
+        i = m.end()
+    return toks
+
+
+def _eq_side(toks, i, step, rows):
+    """the operand of the `=` at token i, scanned leftward (step -1) or rightward (+1) up to an unmatched bracket or a
+    top-level connective/comparison; -> 'numeric' | 'statement' | 'unknown'"""
+    open_, close = ("(", ")") if step > 0 else (")", "(")
+    side, depth, j = [], 0, i + step
+    while 0 <= j < len(toks):
+        t = toks[j][0]
+        if t == open_:
+            depth += 1
+        elif t == close:
+            if depth == 0:
+                break
+            depth -= 1
+        elif depth == 0 and t in _EQ_LOGIC:
+            break
+        side.append(t)
+        j += step
+    if not side:
+        return "unknown"
+    names = [t for t in side if re.match(r"[A-Za-z_]", t)]
+    if any(t in _EQ_LOGIC for t in side) or any(n in RESERVED_NAMES for n in names):
+        return "statement"                          # a comparison or a connective inside brackets, or T/F/Z
+    valued = {r.get("name") for r in rows if (r.get("value") or "").strip()}
+    plain = {r.get("name") for r in rows if r.get("name") and not (r.get("value") or "").strip()}
+    arith = any(t in _EQ_ARITH or re.match(r"\d", t) for t in side)
+    stmt = [n for n in names if n in plain]
+    if any(n not in valued and n not in plain and n not in _EQ_NUMFUN for n in names):
+        return "unknown"                            # a name the table does not have: its own error says so
+    if stmt:
+        return "statement" if not arith and len(names) == len(stmt) else "unknown"
+    return "numeric" if (arith or names) else "unknown"
+
+
+def eq_kinds(text, rows):
+    """[(position in text, 'numeric' | 'statement' | 'mixed' | 'unknown')] for every lone `=` in a SPELLED claim"""
+    toks = _eq_tokens(text)
+    out = []
+    for i, (t, pos) in enumerate(toks):
+        if t != "=":
+            continue
+        a, b = _eq_side(toks, i, -1, rows), _eq_side(toks, i, +1, rows)
+        if a == b and a in ("numeric", "statement"):
+            out.append((pos, a))
+        elif {a, b} == {"numeric", "statement"}:
+            out.append((pos, "mixed"))
+        else:
+            out.append((pos, "unknown"))
+    return out
+
+
+def normalise(claim, rows):
+    """`x - 10 = 20` is what a person writes, and it is not wrong; nor is `p = q`. Each lone `=` is read by the types
+    of its two sides (see above); only an undecidable one falls back to the old rule — numeric where the document
+    has quantities, the biconditional elsewhere."""
     out = _spell(claim)
     for pat, sym in _WORDS:
         out = re.sub(pat, sym, out)
-    if numeric_rows(rows) and _LONE_EQ.search(out):
-        out = _LONE_EQ.sub("==", out)
+    legacy_numeric = bool(numeric_rows(rows))
+    kinds = eq_kinds(out, rows)
+    for pos, kind in sorted(kinds, reverse=True):          # right to left: earlier positions stay valid
+        if kind == "numeric" or (kind in ("mixed", "unknown") and legacy_numeric):
+            out = out[:pos] + "==" + out[pos + 1:]
     return out
 
 
@@ -1281,13 +1400,17 @@ def to_sheet(rows):
         prov = (f"earned:{_witness(r)}"
                 if (r.get("status") == "verified" and r.get("ground"))
                 else "credit")
-        bits = [f"{r['name']}={r['value'].strip()}", prov]
+        # whitespace inside a value is layout, not content: "[0, 1]" is how people and models write an interval, and the
+        # sheet reader takes "[0,1]" only (2026-11-05: a blind formalization died three rounds on "[0, 1]")
+        bits = [f"{r['name']}={re.sub(r'\s+', '', r['value'])}", prov]
         if (r.get("scale") or "").strip():
             bits.append(r["scale"].strip())
         if (r.get("unit") or "").strip():
             bits.append(r["unit"].strip())
         if r.get("sample"):
             bits.append("sample")
+        if r.get("convention"):
+            bits.append("convention")
         parts.append(" ".join(bits))
     return ", ".join(parts)
 
@@ -1344,6 +1467,9 @@ def to_book(rows):
     return book
 
 
+_COMPARES = re.compile(r"<=|>=|==|!=|<|(?<!-)>")
+
+
 def applies(doc):
     """Which instruments have something to say. The report shows these and
     no more; nobody chooses a tab."""
@@ -1366,8 +1492,12 @@ def applies(doc):
         # claim too: what it measures is whether the CONCLUSION survives the
         # world changing, which is `EpochBoundary.epoch_boundary_iff` read
         # over one document instead of over every formula at once.
+        # ...and it reads STATEMENTS: a claim that compares numbers is not read across the clock (2026-11-05: such a
+        # claim beside a clock crashed the floor — "stray character '>'" — on a document that had passed validation;
+        # an A/B of the translator found it). Not silent: validate says so (W_EPOCH_NUMERIC).
         "epoch": bool((doc.get("claim") or "").strip()) and any(
-            (r.get("expires_on") or "").strip() for r in rows),
+            (r.get("expires_on") or "").strip() for r in rows)
+            and not _COMPARES.search(normalise((doc.get("claim") or "").strip(), rows)),
         "judge": bool((doc.get("claim") or "").strip()),
     }
 

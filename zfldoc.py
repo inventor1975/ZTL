@@ -89,6 +89,14 @@ CODE_HELP = {
     "E_NOGROUND": ("verified, refuted or defined, with nothing backing it",
                    "проверено, опровергнуто или определено — но без основания"),
     "E_KIND": ("a kind of ground outside the list", "вид основания вне списка"),
+    "W_EPOCH_NUMERIC": ("a clock beside a claim that compares numbers: the time layer reads statements only, so the "
+                        "claim is not read across the clock",
+                        "часы рядом с утверждением, сравнивающим числа: слой времени читает только высказывания, "
+                        "поэтому утверждение через срок не прочитано"),
+    "E_TYPE_EQ": ("a statement set equal to a number with `=` — no reading makes a truth value equal to a number",
+                  "утверждение приравнено к числу знаком `=` — никакое прочтение не делает истинностное значение числом"),
+    "E_CONVENTION": ("a convention also marked as separate measurements, or on a row with no value",
+                     "договорённость, помеченная ещё и как отдельные измерения, или на строке без значения"),
     "E_SETS": ("the sets cannot be read, or are over the public limits, or a row has a membership cell's name",
                "множества не читаются, или превышают публичные пределы, или строка носит имя клетки a_in_S"),
     "E_EXPIRY_NO_GROUND": (
@@ -415,7 +423,13 @@ PRECEDENCE = {
 OP_HELP = {
     "&": ("and", "и"), "|": ("or", "или"), "->": ("if … then", "если … то"),
     "^": ("exactly one of", "ровно одно из"),
-    "=": ("biconditional between rows: the same TRUTH value as", "равносильность между строками: то же ИСТИННОСТНОЕ значение"),
+    # (2026-11-05) `=` is read by the TYPES of its two sides (zfl.eq_kinds): numbers -> numeric equality, statements
+    # -> the biconditional, a statement against a number -> E_TYPE_EQ. Before, the reading depended on whether ANY row
+    # had a value, and two of six documents of a blind formalization audit died on `p = (x > 1)`.
+    "=": ("the same value: between numbers numeric equality (x - 10 = 20), between statements the same TRUTH value "
+          "(p = q, p = (x > 1)); a statement set equal to a number is refused",
+          "то же значение: между числами — числовое равенство (x - 10 = 20), между утверждениями — то же ИСТИННОСТНОЕ "
+          "значение (p = q, p = (x > 1)); утверждение, приравненное к числу, — отказ"),
     "~": ("not", "не"),
     "Tr(x)": ("the value of the row x — this is how self-reference is "
               "written", "значение строки x — так пишется самоссылка"),

@@ -30,6 +30,8 @@ STANDS = [
     ("zarith.py",      ["EARNED zero"]),
     ("zprob.py",       ["ZTL verdict: Z"]),
     ("zfrechet.py",    ["144 cells, 0 differ", "ZFRECHET: interval logic sits on ZTL with no verdict moved."]),
+    ("zdegree.py",     ["6480 formula-marking-mode cases equal the enumeration",
+                        "ZDEGREE GREEN — every end proved twice: a distribution that attains it, a dual that bounds it"]),
     ("zfrechet_tables.py", ["156 of 156 single-cell flips caught",
                             "ZFRECHET TABLES: every published table of ZTL is ZTL-I's projection, the composed ones node by node."]),
     ("zmodal.py",      ["threshold coincided"]),

@@ -35,6 +35,15 @@ import znum as ZN
 
 MUTANT = {}       # TEST-ONLY sabotage switches; empty = the real check
 MAX_DEGREE = 24
+MAX_DIGITS = 60            # a number's length in characters (refused by form above it)
+# THE DOOR's limits (check(): the studio, the API, the Engineer — a public 2-core server). Refusals by the FORM of
+# the request, never by time: the same request always gets the same answer. The cost is the Sturm sequences on
+# exact Fractions and grows with degree x digits — MEASURED 2026-11-05 on this machine, one step (two equations):
+# deg 8/12/16 with 12-digit numbers 0.17/0.58/1.77 s; with 20 digits 0.37/1.47/4.82 s; deg 12 with 60 digits 15 s.
+DOOR_EQUATIONS = 10        # equations in one chain (9 steps; MEASURED worst inside the door: 11 steps 7.0 s)
+DOOR_CHARS = 400           # characters in one equation (the parser recurses on parentheses)
+DOOR_DIGITS = 12           # characters in one number
+DOOR_DEGREE = 12           # degree of an equation's numerator and of the product of its denominators
 
 
 # ------------------------------------------------------------------ polynomials (coefficients low -> high, Fractions)
@@ -148,6 +157,10 @@ def _parse(s, var, consts):
         k, v = peek()
         if k == "num":
             take()
+            if len(v) > MAX_DIGITS:
+                # refused by FORM: the root isolation bisects down to the number's scale and recursed past
+                # Python's limit at 400 digits (MEASURED 2026-11-05: 250 digits fine, 400 RecursionError)
+                raise StepError(f"a number longer than {MAX_DIGITS} characters")
             return _const(Fraction(v))
         if k == "name":
             take()
@@ -179,6 +192,10 @@ def _parse(s, var, consts):
             if k != "num" or "." in v:
                 raise StepError("v1: only integer powers")
             n = int(v)
+            if n > MAX_DEGREE:
+                # refused by FORM, before any work: 1^100000000 has degree 0 and would loop 10^8 times (MEASURED
+                # 2026-11-05: no answer in 20 s) — the degree check after each product never fires on a constant
+                raise StepError(f"a power above {MAX_DEGREE}")
             r = _const(1)
             for _ in range(n):
                 r = _mul(r, base)
@@ -346,6 +363,89 @@ def check_chain(eqs, var="x", consts=None, domain=(None, None), domain_earned=Tr
     return {"verdict": worst, "steps": steps}
 
 
+# ------------------------------------------------------------------ the door for the studio, the API and the Engineer
+_DEC = re.compile(r"-?(?:\d+(?:\.\d*)?|\.\d+)")
+
+
+def _end(v, side):
+    if v is None or v == "" or v == side:
+        return None
+    s = str(v).strip()
+    if not _DEC.fullmatch(s) or len(s) > MAX_DIGITS:
+        raise StepError(f"a domain end must be a plain decimal of at most {MAX_DIGITS} characters, or null: {s[:40]!r}")
+    return Fraction(s)
+
+
+# The examples the studio and the API show — one source; the self-test judges each.
+EXAMPLES = {
+    "cancel a factor (loses x = 0)": {"equations": ["x^2 = x", "x = 1"]},
+    "clear a denominator (gains x = 1)": {"equations": ["(x^2-1)/(x-1) = 2", "x^2-1 = 2*(x-1)", "x = 1"]},
+    "an honest derivation": {"equations": ["2*x + 3 = 7", "2*x = 4", "x = 2"]},
+    "cancel x - 5, on [0, 4] only": {"equations": ["x*(x-5) = 3*(x-5)", "x = 3"], "domain": ["0", "4"]},
+    "the '1 = 2' proof (divides by x - x)": {"equations": ["(x+x)*(x-x) = x*(x-x)", "x+x = x*(x-x)/(x-x)"]},
+}
+_EXPECT = ["REFUTED", "REFUTED", "EARNED", "EARNED", "E"]
+
+
+def check(payload):
+    """One JSON request -> one JSON answer; never raises on input. A request the checker cannot read, or one larger
+    than the limits above, is REFUSED with the reason — it is never given a verdict (a refusal by the form of the
+    input, not by time: no budget, the same request always gets the same answer).
+
+        {"equations": ["x^2 = x", "x = 1"], "var": "x", "domain": [lo, hi] or null, "domain_verified": true}
+    """
+    if not isinstance(payload, dict):
+        return {"ok": False, "refused": "the request must be a JSON object"}
+    eqs = payload.get("equations")
+    if isinstance(eqs, str):
+        eqs = [e for e in eqs.splitlines() if e.strip()]
+    if not isinstance(eqs, list) or len(eqs) < 2 or not all(isinstance(e, str) for e in eqs):
+        return {"ok": False, "refused": "give 'equations': a list of at least two equations (strings), "
+                                        "each the next step of the derivation"}
+    if len(eqs) > DOOR_EQUATIONS or any(len(e) > DOOR_CHARS for e in eqs):
+        return {"ok": False, "refused": f"at most {DOOR_EQUATIONS} equations of at most {DOOR_CHARS} characters each"}
+    var = payload.get("var") or "x"
+    if not isinstance(var, str) or not re.fullmatch(r"[A-Za-z_][A-Za-z_0-9]{0,15}", var):
+        return {"ok": False, "refused": "'var' must be a name, such as x"}
+    dom = payload.get("domain")
+    try:
+        if dom is None:
+            domain = (None, None)
+        elif isinstance(dom, list) and len(dom) == 2:
+            domain = (_end(dom[0], "-inf"), _end(dom[1], "inf"))
+            if domain[0] is not None and domain[1] is not None and domain[0] > domain[1]:
+                raise StepError("the domain's lower end is above its upper end")
+        else:
+            raise StepError("'domain' must be [lo, hi] (either may be null) or null for the whole line")
+        for e in eqs:
+            if any(k == "num" and len(v) > DOOR_DIGITS for side in re.split(r"==|=", e) for k, v in _tokens(side)):
+                raise StepError(f"{e[:60]!r}: a number longer than {DOOR_DIGITS} characters (the public limit)")
+            try:
+                f = equation(e, var)
+            except _NoSubject:
+                continue                     # check_chain names it E, with the reason
+            if max(_deg(f.n), _deg(_undef(f))) > DOOR_DEGREE:
+                raise StepError(f"{e[:60]!r}: degree above {DOOR_DEGREE} (the public limit)")
+        r = check_chain([e.strip() for e in eqs], var=var, domain=domain,
+                        domain_earned=payload.get("domain_verified", True) is not False)
+    except StepError as e:
+        return {"ok": False, "refused": str(e)}
+    except RecursionError:
+        return {"ok": False, "refused": "an expression nested too deeply to read"}
+    steps = []
+    for s in r["steps"]:
+        out = {k: s[k] for k in ("from", "to", "verdict", "why", "domain") if k in s}
+        out["lost"] = [{"x": w, "cause": c} for w, c in s.get("lost", [])]
+        out["gained"] = [{"x": w, "cause": c} for w, c in s.get("gained", [])]
+        steps.append(out)
+    return {"ok": True, "verdict": r["verdict"], "steps": steps, "var": var,
+            "domain": [None if d is None else str(d) for d in domain],
+            "legend": {"EARNED": "every step keeps exactly the same solutions on the domain",
+                       "ON CREDIT": "the same, but the domain itself is not verified",
+                       "REFUTED": "a step loses or gains a solution — the witness and the cause are named",
+                       "E": "a step divides by an expression that is 0 for every value: nothing to check, ever"}}
+
+
 # ------------------------------------------------------------------ self-test (both sides + a sabotage)
 def _selftest():
     H = Fraction
@@ -378,6 +478,25 @@ def _selftest():
         assert v(["(x^2-1)/(x-1) = 2", "x^2-1 = 2*(x-1)"])["verdict"] == "EARNED"
     finally:
         MUTANT.clear()
+    # the JSON door: the same verdicts, and every unreadable or oversized request refused by its form, at once
+    assert [check(e)["verdict"] for e in EXAMPLES.values()] == _EXPECT
+    c = check({"equations": ["x^2 = x", "x = 1"]})
+    assert c["ok"] and c["verdict"] == "REFUTED" and c["steps"][0]["lost"][0]["x"] == "0", c
+    c = check({"equations": "x*(x-5) = 3*(x-5)\nx = 3", "domain": [0, "4"], "domain_verified": False})
+    assert c["ok"] and c["verdict"] == "ON CREDIT", c
+    for bad in ({"equations": ["1^100000000 = 1", "x = 1"]}, {"equations": ["x = " + "9" * 400, "x = 1"]},
+                {"equations": ["(" * 300 + "x" + ")" * 300 + " = 1", "x = 1"]}, {"equations": ["x = 1"]},
+                {"equations": ["x = 1", "x = 1"], "domain": ["1e99999", None]}, [1, 2],
+                {"equations": ["x = 1", "y = 1"]}, {"equations": ["x = 1", "x = 1"], "domain": [2, 1]}):
+        c = check(bad)
+        assert c["ok"] is False and c["refused"], (bad, c)
+    big = "(x-98765432.1)^6*(x+2.3)^6"                       # degree 12 with 10-digit numbers: inside the door
+    assert check({"equations": [big + " = 1", big + " = 2"]})["ok"]
+    for bad in ("(x-1)^7*(x+2)^6 = 1",                       # degree 13
+                "x = 1234567890123",                         # 13 characters
+                "x" + "*(x-1)/(x-1)" * 13 + " = 1"):         # 13 denominators that cancel: still evaluated
+        c = check({"equations": [bad, "x = 1"]})
+        assert c["ok"] is False and "public limit" in c["refused"], (bad, c)
     print("  x^2 = x -> x = 1: REFUTED, x = 0 lost (the step cancelled the factor x from both sides, which is 0 there)")
     print("  (x^2-1)/(x-1) = 2 -> x^2-1 = 2(x-1): REFUTED, x = 1 gained (the original is undefined there)")
     print("  2x+3 = 7 -> 2x = 4 -> x = 2: EARNED;  x(x^2+1) = 2(x^2+1) -> x = 2: EARNED (x^2+1 is never 0)")

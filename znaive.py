@@ -57,7 +57,21 @@ from fixedpoint import LAZY, ev_reg, least_fp_lazy, jump
 from zpassport import passports, sccs, deps
 
 CAP_COMPONENT = 16   # a quarantined component larger than this is not searched
-CAP_STABLE = 12      # at most 2^12 completions per claim
+CAP_STABLE = 12      # at most 2^12 completions per claim; over it the claim stays OPEN WITH THE NOTE "stability not
+                     # searched" (as ztljudge's _STABLE_CAP) — OPEN is then the lazy reading only, never "not stable"
+# THE DOOR's limits (check(): the studio, the API, the Engineer — a public 2-core server). Refusals by the FORM of the
+# request, before any work, never by time. Grounding unfolds every quantifier over every name: the cost is read off
+# the formula's shape (size()). MEASURED 2026-11-05: 8 names, six nested quantifiers -> 64 cells x 8^6 nodes, 41 s of
+# grounding before the component cap refused it.
+DOOR_NAMES = 12
+DOOR_NODES = 200_000     # grounded formula nodes, all cells and claims together, computed from the shape
+DOOR_CLAIMS = 20
+# The passport office enumerates 2^|component| classical assignments of each quarantined component, and a claim's
+# completions 2^(its dirty cells, at most CAP_STABLE); each assignment evaluates the component's (claim's) grounded
+# formulas. The door bounds the SUM of 2^k x nodes over both, computed from the grounded system before any search.
+# MEASURED 2026-11-05 on this machine: one 16-cell component of 400 nodes (2^16 x 400 = 2.6e7) took 0.73 s; of 1,872
+# nodes 3.3 s; of 7,760 nodes 13.9 s.
+DOOR_SEARCH = 30_000_000
 
 
 class UniverseError(ValueError):
@@ -229,6 +243,7 @@ def judge_claim(analysis, claim):
     u, _sysm, lfp, kind = analysis
     g = u.ground(claim, {})
     lv = ev_reg(g, lfp, LAZY) if g not in VALUES else g
+    note = None
     dirty = sorted(d for d in deps(g) if lfp.get(d) == Z) if g not in VALUES else []
     bearing = {d: kind[d] for d in dirty}
     if lv == T:
@@ -237,6 +252,8 @@ def judge_claim(analysis, claim):
         disp = "REFUTED"
     elif len(dirty) > CAP_STABLE:
         disp = "OPEN"
+        note = (f"stability not searched: {len(dirty)} dirty cells exceed the cap of {CAP_STABLE} "
+                f"(2^{len(dirty)} completions) — OPEN here is the lazy reading only")
     else:
         seen = set()
         for bits in itertools.product((T, F), repeat=len(dirty)):
@@ -254,7 +271,89 @@ def judge_claim(analysis, claim):
             vi = gi if gi in VALUES else ev_reg(gi, lfp, LAZY)
             if vi == Z:
                 residue.append(n)
-    return {"lazy": lv, "disposition": disp, "rests_on": bearing, "residue": residue}
+    out = {"lazy": lv, "disposition": disp, "rests_on": bearing, "residue": residue}
+    if note:
+        out["note"] = note
+    return out
+
+
+def size(phi, n):
+    """Grounded nodes of phi over n names, read off its shape (no grounding done)."""
+    if not isinstance(phi, list) or not phi:
+        raise UniverseError(f"malformed formula {phi!r}")
+    op = phi[0]
+    if op in ("all", "ex"):
+        if len(phi) != 3:
+            raise UniverseError(f"{op} takes a variable and a formula")
+        return 1 + n * size(phi[2], n)
+    if op == "eq":
+        return 1 + 3 * n
+    if op in ("in", "true", "false"):
+        return 1
+    return 1 + sum(size(a, n) for a in phi[1:] if isinstance(a, list))
+
+
+def _nodes(g):
+    return 1 if isinstance(g, str) else 1 + sum(_nodes(a) for a in g[1:])
+
+
+def check(spec):
+    """One JSON universe (with optional claims) -> one JSON answer; never raises on input. Oversized or unreadable
+    requests are REFUSED with the reason — never given a verdict."""
+    if not isinstance(spec, dict) or not isinstance(spec.get("sets"), dict) or not spec["sets"]:
+        return {"ok": False, "refused": "give {'sets': {name: {'list'|'data'|'abs': ...}}, 'claims': [...]}"}
+    sets, claims = spec["sets"], spec.get("claims", [])
+    if not isinstance(claims, list):
+        return {"ok": False, "refused": "'claims' must be a list of formulas"}
+    n = len(sets)
+    if n > DOOR_NAMES or len(claims) > DOOR_CLAIMS:
+        return {"ok": False, "refused": f"at most {DOOR_NAMES} names and {DOOR_CLAIMS} claims (the public limit)"}
+    try:
+        nodes = sum(n * size(d["abs"], n) for d in sets.values() if isinstance(d, dict) and "abs" in d)
+        nodes += sum(size(c, n) for c in claims)
+        if nodes > DOOR_NODES:
+            return {"ok": False, "refused": f"the definitions unfold to {nodes} grounded nodes over {n} names, above "
+                                            f"{DOOR_NODES} (the public limit): fewer names or fewer nested quantifiers"}
+        u0 = Universe(spec)
+        sysm0 = u0.system()
+        lfp0 = least_fp_lazy(sysm0)
+        search = 0
+        for comp in sccs(sysm0):
+            if len(comp) <= CAP_COMPONENT and any(lfp0[c_] == Z for c_ in comp):
+                search += 2 ** len(comp) * sum(_nodes(sysm0[c_]) for c_ in comp)
+        for c in claims:
+            g = u0.ground(c, {})
+            k = sum(1 for d in deps(g) if lfp0.get(d) == Z) if g not in VALUES else 0
+            search += 2 ** min(k, CAP_STABLE) * _nodes(g)
+        if search > DOOR_SEARCH:
+            return {"ok": False, "refused": f"the quarantined cells need about {search:.2e} formula evaluations "
+                                            f"(2^cells x nodes), above {DOOR_SEARCH:.0e} (the public limit): split "
+                                            f"the universe, or run znaive.py on your own machine"}
+        an = analyse(spec)
+        u, _sysm, lfp, kind = an
+        out_sets = []
+        for s_ in u.names:
+            out_sets.append({"set": s_,
+                             "in": [a for a in u.names if lfp[cell(a, s_)] == T],
+                             "out": [a for a in u.names if lfp[cell(a, s_)] == F],
+                             "quarantined": [{"member": a, "passport": kind[cell(a, s_)]}
+                                             for a in u.names if lfp[cell(a, s_)] == Z]})
+        out_claims = []
+        for c in claims:
+            r = judge_claim(an, c)
+            out_claims.append({"claim": c, **r})
+    except UniverseError as e:
+        return {"ok": False, "refused": str(e)}
+    except (RecursionError, KeyError, TypeError, ValueError, IndexError, AttributeError) as e:
+        return {"ok": False, "refused": f"the universe cannot be read ({type(e).__name__})"}
+    return {"ok": True, "sets": out_sets, "claims": out_claims,
+            "legend": {"PARADOX": "no stipulation can repair it: every classical reading contradicts the definition",
+                       "UNDERDETERMINED": "consistent, but a stipulation is owed: the definition does not decide it",
+                       "INTRINSIC": "decided by consistency alone, though not grounded",
+                       "INPUT": "a given cell left unknown: verify it",
+                       "DOWNSTREAM": "inherits a quarantine from the cells it depends on",
+                       "EARNED IF STABLE": "true in every completion of the dirty cells it rests on",
+                       "OPEN": "not established: the completions disagree (or, with a note, were not searched)"}}
 
 
 def report(spec):
@@ -420,6 +519,15 @@ POLICY = {"sets": {
 }}
 
 
+# The examples the studio and the API show — one source, the same objects the self-test judges.
+EXAMPLES = {
+    "Russell and the truth-teller set": {**RUSSELL, "claims": [["in", "a", "R"], ["in", "R", "R"], ["in", "S", "S"]]},
+    "Grelling: adjectives that describe themselves": {**GRELLING, "claims": [["in", "long", "Het"], ["in", "Het", "Het"]]},
+    "a web of trust (keys that sign each other)": TRUST,
+    "a policy: admin unless a flagged admin": {**POLICY, "claims": [["in", "u1", "Admin"], ["in", "u2", "Admin"]]},
+}
+
+
 def _selftest():
     # Russell / truth-teller
     u, sysm, lfp, kind = analyse(RUSSELL)
@@ -486,6 +594,38 @@ def _selftest():
             pass
         else:
             raise AssertionError("an unknown name must be refused (no subject)")
+    # the JSON door: the same verdicts; oversized or unreadable requests refused by their form, at once
+    for name_, ex_ in EXAMPLES.items():
+        assert check(ex_)["ok"], name_
+    c = check(RUSSELL)
+    assert c["ok"] and {"member": "R", "passport": "PARADOX"} in next(x for x in c["sets"] if x["set"] == "R")["quarantined"]
+    c = check(TRUST)
+    assert c["ok"] and c["claims"][1]["disposition"] == "EARNED IF STABLE", c["claims"][1]
+    deep = ["in", "x", "x"]
+    for v_ in "abcdef":
+        deep = ["all", v_, ["or", ["in", v_, "x"], deep]]
+    import time as _t
+    t0 = _t.time()
+    for bad in ({"sets": {f"s{i}": {"abs": deep} for i in range(8)}},          # 41 s of grounding before the door
+                {"sets": {f"s{i}": {"list": []} for i in range(13)}},
+                {"sets": {"A": {"abs": ["in", "x", "ghost"]}}}, {"sets": {"A": {"abs": "x"}}},
+                {"sets": {"A": {"abs": ["all", "y"]}}}, {"sets": {}}, [1], {"sets": {"A": {"list": []}}, "claims": 5}):
+        c = check(bad)
+        assert c["ok"] is False and c["refused"], (bad, c)
+    names4 = [f"S{i}" for i in range(4)]                                       # one 16-cell component, 1,872 nodes:
+    def body4(k):                                                              # 3.3 s of model search
+        phi = ["not", ["in", "x", names4[(k + 1) % 4]]]
+        for v_ in "ab":
+            phi = ["ex", v_, ["and", ["in", v_, "x"], ["or", ["in", "x", v_], phi]]]
+        return phi
+    c = check({"sets": {names4[k]: {"abs": body4(k)} for k in range(4)}})
+    assert c["ok"] is False and "evaluations" in c["refused"], c
+    assert _t.time() - t0 < 2, "the door refuses by form, before the work"
+    many = {"sets": {**{f"k{i}": {"list": []} for i in range(7)},
+                     "D": {"data": {f"k{i}": "Z" for i in range(7)}}, "E": {"data": {f"k{i}": "Z" for i in range(7)}}},
+            "claims": [["all", "y", ["or", ["in", "y", "D"], ["not", ["in", "y", "E"]]]]]}
+    c = check(many)                                                             # 14 dirty cells > CAP_STABLE
+    assert c["ok"] and c["claims"][0]["disposition"] == "OPEN" and "not searched" in c["claims"][0]["note"], c
     # grounded cells keep their own label inside a mixed component
     _u, _s, lfp_t, kind_t = analyse(TRUST)
     assert kind_t["root∈Trusted"] == "GROUNDED" and kind_t["carol∈Trusted"] == "GROUNDED"

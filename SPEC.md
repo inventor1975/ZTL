@@ -498,6 +498,13 @@ and holds on clean ones — `lean/ZAxiomsRead.lean`, zero axioms:
   choice function on finitely many non-empty lists is built, with no axiom. Reading, not proved: a pick no one can
   exhibit is an unchecked value used stably, so the axiom, whose content is infinite families, is the judge's IF
   STABLE stipulated for infinitely many picks at once.
+* Its ancestor, Hilbert's ε (introduced in the early 1920s; the epsilon theorems in Hilbert–Bernays 1939).
+  Proved (`lean/ZEpsilon.lean`, a non-empty finite list, a computable property): with picks constrained by the
+  critical axiom, "P(ε)" holds for every admissible pick exactly when a witness exists, found by search with no
+  excluded middle (for non-computable P the critical axiom brings the excluded middle); which element ε is stays
+  undetermined; two admissible picks can differ. Reading: a finite, semantic counterpart for P(ε) of the epsilon
+  theorems, which are about proofs; ZTL's addition is to make explicit, and judge, the two readings of an unchecked
+  value — read anew (dirty) or the same everywhere (stable).
 
 So the analogues are usable where no dirty parameter is involved. This does NOT make the axioms false in Lean: they
 are consistent there and hold in the usual set-theoretic model. It makes them stipulations whose ZTL readings break

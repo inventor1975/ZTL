@@ -492,6 +492,12 @@ and holds on clean ones — `lean/ZAxiomsRead.lean`, zero axioms:
 * Quot.sound / funext by observation: x and x ∧ x agree on T and on F and differ at Z; for ONE connective, agreeing on
   the clean inputs is agreeing everywhere. The boundary is per connective, not per formula, as for degrees.
 * Excluded middle: A ∨ ¬A is not T at A = Z, and is T on every clean A.
+* The axiom of choice (`lean/ZChoiceRead.lean`, finite lists). Proved: what holds for every element holds of a pick
+  under any reading of its uses; "two uses denote the same element" holds at every stable reading and fails at some
+  independent one (two elements); "the pick is this element" holds at one stable reading and fails at another; a
+  choice function on finitely many non-empty lists is built, with no axiom. Reading, not proved: a pick no one can
+  exhibit is an unchecked value used stably, so the axiom, whose content is infinite families, is the judge's IF
+  STABLE stipulated for infinitely many picks at once.
 
 So the analogues are usable where no dirty parameter is involved. This does NOT make the axioms false in Lean: they
 are consistent there and hold in the usual set-theoretic model. It makes them stipulations whose ZTL readings break

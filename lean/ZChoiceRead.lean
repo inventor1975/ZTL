@@ -11,13 +11,16 @@
     EARNED IF STABLE      true whenever every occurrence is read as the SAME element (the stable reading);
     neither               true for some picks and false for others — OPEN.
 
-  So the axiom of choice, read in ZTL, is the stipulation of stability on an unknown pick. Proved here, finite X:
+  READING, not proved: the axiom of choice — whose content is infinite families; one pick from a non-empty set needs no
+  axiom — is then the stipulation of stability on unknown picks, infinitely many at once. Proved here, finite lists X:
   1. `earned_stable` — earned implies earned if stable;
-  2. `invariant_earned` — a property true of every element of X is earned of the pick, under every reading;
+  2. `invariant_earned` — a property true of every element of X is earned of the pick, under every reading (a sanity
+     check of the encoding);
   3. `same_pick` — "both uses denote the same element" is earned if stable and NOT earned, once X has two elements:
-     what a construction like Banach–Tarski needs (the same representatives in every piece) is exactly this kind;
+     a construction like Banach–Tarski uses one set of representatives in every piece, which is this kind (a reading);
   4. `which_pick` — "the pick is this element" is not earned even if stable, and not refuted: OPEN;
-  5. `finite_choice` — choosing from finitely many non-empty lists needs no axiom: take each list's first element.
+  5. `finite_choice` — choosing from finitely many non-empty lists needs no axiom: take each list's first element (the
+     list's order does the choosing; an unordered finite set needs an enumeration first).
   What is NOT here: infinite families (there the axiom is needed, and Banach–Tarski is its cost — `dilemmas/
   banach_tarski.py`). The link to the judge's IF STABLE is the definition (`ZDirty`'s stable completion: one value at
   every occurrence), mirrored, not imported.

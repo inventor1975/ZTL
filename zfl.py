@@ -244,7 +244,9 @@ COLUMNS = [
     {
         "key": "ground_kind", "type": "choice", "required": False,
         "advanced": False, "default": "document",
-        "options": ["document", "act", "certificate", "row"],
+        # `search` (2026-11-06, the curator: "берём все пункты"): a search that found NOTHING grounds no "none" and no
+        # "for all" — Pell's x² − 61y² = 1 has no root with y <= 10^6 and still has one (dilemmas/diophantine.py)
+        "options": ["document", "act", "certificate", "row", "search"],
         "en": ("kind of ground", "a document unless you say otherwise"),
         "ru": ("вид основания", "документ, если не сказано иное"),
         "de": ("Art der Grundlage", "ein Dokument, sofern nicht anders gesagt"),
@@ -255,15 +257,15 @@ COLUMNS = [
         "labels": {
             "en": {"document": "document", "act": "act (nothing to withdraw)",
                    "certificate": "certificate (expires)",
-                   "row": "another row"},
+                   "row": "another row", "search": "search that found nothing (proves no 'none')"},
             "ru": {"document": "документ", "act": "акт (отзывать нечего)",
                    "certificate": "сертификат (истекает)",
-                   "row": "другая строка"},
-            "de": {"document": "Dokument", "act": "Handlung (nichts zurückzunehmen)", "certificate": "Zertifikat (läuft ab)", "row": "andere Zeile"},
-            "fr": {"document": "document", "act": "acte (rien à retirer)", "certificate": "certificat (expire)", "row": "autre ligne"},
-            "es": {"document": "documento", "act": "acto (nada que retirar)", "certificate": "certificado (caduca)", "row": "otra fila"},
-            "uk": {"document": "документ", "act": "акт (відкликати нічого)", "certificate": "сертифікат (спливає)", "row": "інший рядок"},
-            "he": {"document": "מסמך", "act": "מעשה (אין מה לבטל)", "certificate": "אישור (פג תוקף)", "row": "שורה אחרת"},
+                   "row": "другая строка", "search": "поиск, ничего не нашедший (не доказывает «нет»)"},
+            "de": {"document": "Dokument", "act": "Handlung (nichts zurückzunehmen)", "certificate": "Zertifikat (läuft ab)", "row": "andere Zeile", "search": "Suche ohne Fund (beweist kein „keins“)"},
+            "fr": {"document": "document", "act": "acte (rien à retirer)", "certificate": "certificat (expire)", "row": "autre ligne", "search": "recherche sans résultat (ne prouve aucun « aucun »)"},
+            "es": {"document": "documento", "act": "acto (nada que retirar)", "certificate": "certificado (caduca)", "row": "otra fila", "search": "búsqueda sin hallazgo (no prueba un «ninguno»)"},
+            "uk": {"document": "документ", "act": "акт (відкликати нічого)", "certificate": "сертифікат (спливає)", "row": "інший рядок", "search": "пошук, що нічого не знайшов (не доводить «немає»)"},
+            "he": {"document": "מסמך", "act": "מעשה (אין מה לבטל)", "certificate": "אישור (פג תוקף)", "row": "שורה אחרת", "search": "חיפוש שלא מצא דבר (אינו מוכיח „אין“)"},
         },
     },
     {
@@ -600,7 +602,7 @@ _MARK = {"verified": "T", "refuted": "F", "unverified": "Z"}
 _PROV = {"verified": "earned", "refuted": "earned", "unverified": "credit"}
 # kind of ground -> the prefix the ledger reads
 _KIND_PREFIX = {"document": "", "act": "performed/",
-                "certificate": "expiring/", "row": "claim/"}
+                "certificate": "expiring/", "row": "claim/", "search": "search/"}
 
 
 def _issue(level, code, where, hint):
@@ -1020,6 +1022,12 @@ def validate(doc):
         if kind not in GROUND_KINDS:
             issues.append(_issue("error", "E_KIND", f"{at} / kind of ground",
                                  f"kind must be one of {GROUND_KINDS}"))
+        if status == "verified" and kind == "search":
+            issues.append(_issue(
+                "warn", "W_SEARCH_NOT_PROOF", f"{at} / kind of ground",
+                "a search that found nothing proves no 'none' and no 'for all': the row is read as not verified. "
+                "Prove it (a document or a proof as ground), or write the bound the search covered into the row "
+                "('no root with y <= 10^6') and ground THAT"))
         if (r.get("degree") or "").strip():
             try:
                 parse_degree(r["degree"])
@@ -1573,6 +1581,9 @@ def _row_mark(r):
     F; before this, 'a & b' at degrees 0.3 and 0.7 was EARNED while its probability is at most 3/10. A told degree
     (an unverified row) stays Z whatever it says."""
     m = _MARK.get(r.get("status"), "Z")
+    # A SEARCH THAT FOUND NOTHING is no proof of "none" (2026-11-06): the row enters as Z, as unchecked
+    if m == "T" and (r.get("ground_kind") or "").strip() == "search":
+        return "Z"
     if m == "T" and (r.get("degree") or "").strip():
         try:
             lo, hi = parse_degree(r["degree"])
@@ -2207,8 +2218,15 @@ def run(doc, ground_registry=None):
         # computed (as for defined rows above); the report names these apart, the reason says where the answer is,
         # and the reverse pass offers only rows a check can settle, holding the chance ones at Z.
         _byn = {x.get("name"): x for x in rows}
+        _searched = sorted(n for n in r["unverified"] if n in _byn and _byn[n].get("status") == "verified"
+                           and (_byn[n].get("ground_kind") or "").strip() == "search")
+        if _searched:
+            report["judge"]["search_not_proof"] = _searched
+            report["judge"]["why"] = ((report["judge"].get("why") or "") + ("; " if report["judge"].get("why")
+                                      else "") + f"{_searched} rest on a search that found nothing — a search proves "
+                                      "no 'none' and no 'for all': prove it, or ground the bound the search covered")
         _chance = sorted(n for n in r["unverified"] if n in _byn and _byn[n].get("status") == "verified"
-                         and _row_mark(_byn[n]) == "Z")
+                         and (_byn[n].get("degree") or "").strip() and _row_mark(_byn[n]) == "Z")
         if _chance:
             report["judge"]["chance"] = _chance
             report["judge"]["why"] = ((report["judge"].get("why") or "") + ("; " if report["judge"].get("why")

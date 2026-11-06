@@ -746,6 +746,27 @@ def sec19_ztl_i_degrees():
         zfl.zdegree.degree_groups = real_g
     print("   partial independence: groups [a, b] | [c] give a & b & c in [0, 1/4] (Fréchet [0, 1/2], all independent")
     print("   1/8); JSON text accepted; true unchanged; bad groups E_INDEPENDENT; an atom in no group refused; sabotage")
+    # A SEARCH THAT FOUND NOTHING PROVES NO "NONE" (2026-11-06; Pell 61: no root with y <= 10^6, and one exists)
+    S = lambda kind: {"name": "no_root", "status": "verified", "ground": "search_y_le_1e6", "ground_kind": kind,
+                      "means": "x^2 - 61 y^2 = 1 has no root"}
+    r = zfl.run(zfl.coerce({"rows": [S("search")], "claim": "no_root"}))
+    j = r["report"]["judge"]
+    assert r["ok"] and j["disposition"] == "OPEN" and j["search_not_proof"] == ["no_root"], j
+    assert "chance" not in j and r["report"]["what_to_check"]["EARNED"]["possible"] == [["no_root"]]
+    assert any(i["code"] == "W_SEARCH_NOT_PROOF" for i in r["issues"])
+    r = zfl.run(zfl.coerce({"rows": [S("document")], "claim": "no_root"}))                 # the other side
+    assert r["report"]["judge"]["disposition"] == "EARNED" and "search_not_proof" not in r["report"]["judge"]
+    assert not any(i["code"] == "W_SEARCH_NOT_PROOF" for i in r["issues"])
+    r = zfl.run(zfl.coerce({"rows": [dict(S("search"), status="unverified", ground="")], "claim": "no_root"}))
+    assert not any(i["code"] == "W_SEARCH_NOT_PROOF" for i in r["issues"])                  # only verified rows
+    real_m = zfl._row_mark
+    zfl._row_mark = lambda row: zfl._MARK.get(row.get("status"), "Z")                   # sabotage: search read as proof
+    try:
+        assert zfl.run(zfl.coerce({"rows": [S("search")], "claim": "no_root"}))["report"]["judge"]["disposition"] == "EARNED"
+    finally:
+        zfl._row_mark = real_m
+    print("   a search that found nothing: the row is read as not verified (OPEN, W_SEARCH_NOT_PROOF, offered to")
+    print("   prove); the same row on a document EARNED; sabotage (search read as proof) caught")
     try:
         import backread
     except ImportError:                                                     # the mirror lives in the studio only

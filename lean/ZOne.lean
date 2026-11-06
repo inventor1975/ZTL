@@ -1,30 +1,34 @@
 import ZTL
 import ZOrigin
 /-!
-# ZOne — everything from one Z: one occurrence mutates, the reading makes two, one is a stipulation. Zero axioms.
+# ZOne — everything from one Z: one occurrence gives a chain; under doubt one atom gives every value; two readings. Zero axioms.
 (2026-11-06)
 
 WHY. The curator: "это всё один параметр, который мутирует. А для построения нужны два, отсюда два Z" — and,
 when the file was first named ZTwo: "разве смысл не в том, что всё из одного?". The source is one; the two is
 how the logic reads it. `ZOrigin` showed Z, F, T born from ONE atom (¬p = F, ¬¬p = T). Here:
 
-  1. ONE OCCURRENCE ONLY MUTATES. A formula of atoms and connectives (no constants) with exactly one atom
+  1. ONE OCCURRENCE GIVES A CHAIN. A formula of atoms and connectives (no constants) with exactly one atom
      occurrence is a chain of negations ¬…¬p (`single_is_chain`); under doubt its values run Z, F, T, F, T, …
      (`chain_alternates`). Every binary connective reads two occurrences (`bin_two`).
-  2. ONE ATOM IS ENOUGH. Under pure doubt every formula, over any atoms, has the value of the same formula with
-     every atom replaced by one atom (`all_from_one`): a second atom adds nothing that the first, read again,
-     does not give. In particular p ⋆ p has the value of p ⋆ q for each binary connective (`table_reads_two`):
-     the table reads the one atom used twice as two independent Z. The two is made by reading, not given.
-  3. ONE Z HELD AS ONE IS A STIPULATION. Read stably — one value at both occurrences (`liftS`) — p ⋆ p can differ
-     from the table: over all sixteen binary Boolean functions, exactly for those true on the diagonal and not
-     everywhere (`one_vs_two`); of the five, exactly → and ↔ (`five_split`): p → p and p ↔ p, the laws of
-     identity, are F as two reads and T as one. The stable reading never refutes what the table earns
-     (`two_earned_one_earned`). This is `ZChoiceRead.same_pick` at the level of the connectives: holding the
-     reads together is the stability that choice stipulates.
+  2. UNDER PURE DOUBT THE VALUES DO NOT DEPEND ON WHICH ATOMS. With every atom Z, every formula, over any atoms,
+     has the value of the same formula with every atom replaced by one atom (`all_from_one`). In particular p ⋆ p
+     has the value of p ⋆ q for each binary connective (`table_reads_two`): the table reads one dirty atom used
+     twice exactly as two different dirty atoms. Values under pure doubt only: with p clean and q dirty, p ∧ p = T
+     and p ∧ q = F.
+  3. TWO READINGS OF p ⋆ p. The table reads the two occurrences independently — a rule of ZTL, the dirty rule (a
+     value nobody checked may change between two reads), not a discovery. The stable reading (`liftS`: one value at
+     both occurrences) differs from it, over all sixteen binary Boolean functions, exactly for those true on the
+     diagonal and false somewhere off it (`one_vs_two`); of the five, exactly → and ↔ (`five_split`): p → p and
+     p ↔ p are F read independently and T read stably. The stable reading earns whatever the independent one earns
+     (`two_earned_one_earned`): the independent reading is the cautious one. On clean values the two coincide
+     (`clean_coincide`). Beyond p ⋆ p they part too: p ∨ ¬p is F independently and T stably (`beyond_pp`).
+     The judge's IF STABLE is this kind of reading (one value at every occurrence, `ZDirty`), mirrored, not imported;
+     the link to `ZChoiceRead.same_pick` is an analogy.
 
-On classical logic: it is not silent — it answers p ↔ p = T — but by presupposing that every occurrence of a
-variable takes the same value (uniform substitution): the stable reading built in. The question "is the second
-read the same as the first?" cannot be asked in it. ZTL asks it, and its tables answer "not earned".
+READING, not proved: classical logic never has to choose between the two readings — its values are clean, and on
+clean values they coincide. With an unchecked value they come apart; ZTL picks the cautious one and treats "the same
+value both times" as an extra assumption, as it treats a choice used consistently.
 -/
 namespace ZOne
 open V
@@ -189,6 +193,16 @@ theorem two_earned_one_earned : ∀ a b c d : Bool, ∀ x : V,
     lift2 (tbl a b c d) x x = T → liftS (tbl a b c d) x = T := by
   decide
 
+/-- On clean values the two readings coincide. -/
+theorem clean_coincide : ∀ a b c d : Bool, ∀ x : V, x ≠ Z →
+    liftS (tbl a b c d) x = lift2 (tbl a b c d) x x := by
+  decide
+
+/-- Beyond p ⋆ p: p ∨ ¬p at Z is F read independently, and true at each stable reading. -/
+theorem beyond_pp : zor Z (znot Z) = F ∧ ∀ a : Bool, (a || !a) = true := by
+  refine ⟨by decide, ?_⟩
+  intro a; cases a <;> rfl
+
 end ZOne
 
 #print axioms ZOne.occ_pos
@@ -200,3 +214,5 @@ end ZOne
 #print axioms ZOne.one_vs_two
 #print axioms ZOne.five_split
 #print axioms ZOne.two_earned_one_earned
+#print axioms ZOne.clean_coincide
+#print axioms ZOne.beyond_pp

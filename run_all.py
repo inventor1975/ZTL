@@ -527,6 +527,8 @@ STANDS = [
     ("dilemmas/banach_tarski.py", ["BANACH-TARSKI: all measurements hold",
                                    "INFEASIBLE — no invariant finitely additive probability",
                                    "CONSERVE (the pieces' volumes add up): E"]),
+    ("dilemmas/skolem.py", ["SKOLEM: all measurements hold",
+                            "is true in 12 (a bijection in stock) and false in 4"]),
     ("dilemmas/zeno.py", [
         "ZENO AND THE HORN: all measurements hold."]),
     ("dilemmas/sleeping_beauty.py", [

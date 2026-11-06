@@ -23,6 +23,25 @@ theorems. Status: LEAN = theorems exist (named), STAND = only an executable stan
 | Berry | STAND | `dilemmas/berry.py` |
 | Moore | STAND | `dilemmas/moore.py` |
 | Omnipotence stone (§5.1) | STAND | `dilemmas/omnipotence.py` |
+| §5.2 mathematical docket (2026-11-06): | | |
+| Bertrand's chord | STAND | `dilemmas/bertrand.py` |
+| Sleeping Beauty | STAND | `dilemmas/sleeping_beauty.py` |
+| 1 + 2 + 3 + … = −1/12 | LEAN | `lean/ZZeta.lean`, `lean/ZZetaBridge.lean` |
+| Grandi's series, Riemann's rearrangement | STAND | `dilemmas/series.py` |
+| 0⁰ | STAND | `dilemmas/zero_power_zero.py` |
+| Galileo's squares, Hilbert's hotel | STAND | `dilemmas/galileo.py` |
+| Monty Hall | STAND | `dilemmas/monty_hall.py` |
+| Simpson's paradox | STAND | `dilemmas/simpson.py` |
+| 0.999… = 1 | STAND | `dilemmas/point_nine.py` |
+| Skolem | STAND | `dilemmas/skolem.py` |
+| Perron's "largest natural" | STAND | `dilemmas/perron.py` |
+| Two envelopes, St. Petersburg | STAND | `dilemmas/expectations.py` |
+| Zeno's Achilles, Gabriel's horn | STAND | `dilemmas/zeno.py` |
+| Banach–Tarski | STAND | `dilemmas/banach_tarski.py` |
+| Cantor's set of all sets | LEAN | `VR/SetsNaive/Cantor.lean` (VRCycle) |
+| Burali-Forti | STAND | `dilemmas/burali_forti.py` |
+| A theory's consistency polynomial (ground) | LEAN (finite face) | `lean/ZDiophantine.lean`, `dilemmas/diophantine.py` |
+| Lottery: degrees and a declared threshold (§5) | STAND | `dilemmas/lottery.py` §5 (2026-11-05) |
 
 Each case also gets a literature check (a Sonnet fork) before its paragraph is rewritten: what is known, what the
 theorems add, the first objection to answer.

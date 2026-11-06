@@ -4,7 +4,7 @@
 machine-checked account (the curator's decision, 2026-10-28: publish once, when the whole docket is through);
 see ROADMAP-v1.3.md for the cases and their status.
 *Changes in v1.3 so far:* the corrections of v1.2.1 (the judge's IF STABLE verdicts: Moore and the sorites in §5, §2.2, the glossary) are carried; the surprise examination moves from a stand to theorems (§5, `lean/Surprise.lean`,
-eleven theorems on the empty axiom list, on ZTL's existing temporal layer): three kinds of knower, three outcomes.
+eleven theorems on the empty axiom list, on ZTL's existing temporal layer): three kinds of knower, three outcomes. A new §5.2 takes the mathematical paradoxes (2026-11-06): sixteen cases sorted by what was left unnamed — a hidden convention, an empty description, a loop — and one case of ground, each from an executable stand.
 
 **v1.2 — 2026-10-26. English edition.** Version DOI 10.5281/zenodo.23663274. Supersedes v1.1 (2026-08-13, DOI
 10.5281/zenodo.21916017) and v1.0 (2026-08-09, DOI 10.5281/zenodo.21864082); the
@@ -203,6 +203,121 @@ There is a second way for a claim to resist judgment, and this table contains no
 The discriminator is exactly "does the expression name something?", and it sorts the two genres cleanly. The stone an omnipotent being cannot lift is the instructive case, because it lands in **both** depending on how the word is read (`dilemmas/omnipotence.py`): read omnipotence as power over the logically possible and the STONE is refuted — a request with no instance, no limit on anyone's power; read it as power over anything whatever and the BEING is unjudgeable, E, charged to the definition, since nothing consistent answers to the term. No machine picks the reading; that is a stipulation about a word, and it is what the dispute was always about.
 
 That all twenty-one classical cases fall on the loop side is itself a finding, and a mildly surprising one: the canonical paradoxes are not failures of reference but failures of settlement. The empty-description genre is populated mostly by definitions people write on purpose — impossible norms, unfulfillable clauses, contradictory specifications — which is why its instrument grew out of an audit ledger rather than out of the theory of truth.
+
+### 5.2. The mathematical docket: the same genres, outside the theory of truth
+
+Mathematics has its own collection of paradoxes, and it was taken through the same court in November 2026. Each case
+has an executable stand in `dilemmas/`: the judge's verdicts are its output on stated marks, and each is asserted. Some
+marks are computed by the stand; others are premises it cites (the consistency of ZFC, the axiom of choice), and the
+text says which. Lean theorems exist where named. The mathematics of every case was settled long ago, and nothing below
+improves on it. What is added is one form: the judge asks first **what was left unnamed**, and the cases fall into four
+genres.
+
+- **A hidden convention.** The question needs a parameter (a measure, a method, a unit, a relation) that the statement
+  does not name. Each value of it gives its own earned answer. With none named the judge answers OPEN, and its cure is
+  to **stipulate** (the numeric floor's `convention` token, added for this docket: the cure for a convention's width is
+  to stipulate it, never to measure it).
+- **An empty description.** The statement presupposes an object that does not exist or a value that is undefined, so
+  the status is **E**, charged to the definition, as in §5.1. Each such case comes paired with a plain REFUTED, that of
+  the existence claim.
+- **A loop.** A naive definition refers to itself, and the passport office counts its models, as for the liar.
+- **A ground.** Not a paradox: a claim whose verdict depends on the theory it is earned in.
+
+| Case | Genre | What was unnamed, or empty | The judged claims and their verdicts | Where |
+|---|---|---|---|---|
+| Bertrand's chord | convention | the measure on chords | "P = 1/2": measure unnamed OPEN (cure: stipulate P); endpoints REFUTED; Jaynes's invariance EARNED | `bertrand.py` |
+| Sleeping Beauty | convention | the counting unit | "P = 1/2", "P = 1/3": unit unnamed OPEN, "1/3 ≤ P ≤ 1/2" EARNED; per experiment and per waking: one EARNED, one REFUTED | `sleeping_beauty.py` |
+| 1 + 2 + 3 + … = −1/12 | convention | the summation method | "S = −1/12": method unnamed OPEN; Cauchy sum REFUTED; ζ-continuation EARNED | `lean/ZZeta.lean`, `ZZetaBridge.lean` |
+| Grandi's series, Riemann's rearrangement | convention | the method; the order of terms | "S = 1/2": method unnamed OPEN, Cesàro EARNED; "the limit of the partial sums is 1/2": E (they have none) | `series.py` |
+| 0⁰ | convention + empty | the law chosen; "the limit" | "0⁰ = 1": OPEN, EARNED on the empty-product convention; "the limit of x^y at (0,0) exists": REFUTED; "the limit is 1": E | `zero_power_zero.py` |
+| Galileo's squares, Hilbert's hotel | convention | which relation "fewer" names | "the squares are fewer": unnamed OPEN; inclusion, density EARNED; cardinality REFUTED | `galileo.py` |
+| Monty Hall | convention | the host's protocol | "switching wins with probability 2/3": unnamed OPEN; standard host EARNED; ignorant host REFUTED (1/2); two adversarial hosts give 0 and 1 | `monty_hall.py` |
+| Simpson's paradox | convention, then fact | which quantity is asked; the causal model | "A beats B": question unnamed OPEN; the pooled association REFUTED; the effect, on a causal model only told, ON CREDIT | `simpson.py` |
+| 0.999… = 1 | — | nothing: the definition settles it | "the value of the whole expansion is < 1": OPEN after any number of digits; on the definition, "= 1" EARNED | `point_nine.py` |
+| Skolem | convention | the universe of functions in "countable" | "the reals of M are countable": unnamed OPEN; inside M REFUTED; outside EARNED, given Con(ZFC) | `skolem.py` |
+| Perron's "largest natural" | empty | the largest natural number | "a largest natural exists": REFUTED; "if it exists, it is 1": EARNED, vacuously; "the largest is 1": REFUTED (Russell's reading), E (Frege–Strawson) | `perron.py` |
+| Two envelopes, St. Petersburg | empty | a uniform prior over all amounts; the expectation | E; "the price ≤ 41" with a bank only told: ON CREDIT | `expectations.py` |
+| Zeno's Achilles, Gabriel's horn | empty + process | "the last stage"; a coat of positive thickness | "behind at every stage" EARNED, "never catches him" REFUTED; "the coat fits" REFUTED, "the paint the coat needs" E | `zeno.py` |
+| Banach–Tarski | convention + empty | the axiom of choice; the pieces' volumes | "the ball decomposes": OPEN, EARNED on stipulated choice; "the pieces' volumes add up": E | `banach_tarski.py` |
+| Cantor's set of all sets | loop | — | the diagonal step refutes on clean cells, is silent on the dirty one; with the identity map, neither refuted nor earned: the Russell cell | `VR/SetsNaive/Cantor.lean` |
+| Burali-Forti | loop + empty | the set of all ordinals | "Ω is a set of V_k": REFUTED for k = 1, …, 5; the naive one-negation definition: PARADOX | `burali_forti.py` |
+| A theory's consistency polynomial | ground | the theory the "no root" is earned in | "it has no root": on ZFC OPEN; on ZFC with an inaccessible EARNED; a root would REFUTE it | `diophantine.py`, `lean/ZDiophantine.lean` |
+
+**The hidden conventions.** *Bertrand's chord* (Bertrand 1889) has three classical answers, each right for its
+measure, and the stand computes a family of measures reaching every value strictly between 0 and 1, so "a natural
+method" fixes nothing by itself. Jaynes's invariance requirements (1973) pick out one measure, and adopting them is the
+stipulation; his straws tossed on a circle are a physical procedure, and there the cure becomes *measure*.
+*Sleeping Beauty* (Elga 2000; Lewis 2001) counts the same runs in two ledgers, per waking (1/3) and per experiment
+(1/2). Bets make the unit physical: paid at every waking, a bet breaks even at 1/3; settled once, at 1/2. Once the
+payment protocol is named the two camps agree on the fair price; what Beauty's credence is remains the live dispute,
+and the stand does not settle it. What holds on either ledger, 1/3 ≤ P ≤ 1/2, is earned on the two computed values.
+*−1/12* is treated at length elsewhere (the article "1 + 2 + 3 + … = −1/12: one S, or two?" on ztljudge.com): the
+summation method is the parameter. *Grandi and Riemann*: "the sum" names a method or an order, and by Riemann's
+rearrangement theorem the alternating harmonic series reaches any target in a suitable order (the stand checks a
+family of orders, p positive terms for every q negative ones, against ln 2 + ½ ln(p/q)). *0⁰* is 1 by convention (the empty product, argued by Knuth 1992), while x^y has no limit at (0, 0): the
+convention is answered, the existence of the limit refuted, "the limit is 1" left without a subject. *Galileo* (1638)
+concluded that "equal", "greater" and "less" do not apply to infinite collections; the stand names the three relations
+that "fewer" can mean (inclusion, density, cardinality), and Cantor's choice of cardinality was a fruitful
+stipulation. *Hilbert's hotel* (Hilbert's 1924 lectures, popularised by Gamow) is the same relativity told with rooms.
+*Monty Hall* (Selvin 1975; vos Savant 1990) depends on the host: four protocols, from a host who offers the switch only
+to losers to one who offers it only to winners, give the four answers 2/3, 1/2, 1 and 0. *Simpson's paradox* (Pearson
+1899, Yule 1903; Simpson 1951; named by Blyth 1972) mixes a convention, which quantity is asked, with a fact, the
+causal effect, which counts alone cannot give without a causal model (Pearl 2014). *0.999…* is not a paradox: after any
+number of digits the value of the whole expansion lies in an interval that contains 1, so "< 1" stays open, and the
+definition of decimal notation settles "= 1". *Skolem* (1922): by Löwenheim–Skolem, if ZFC has a model it has a
+countable one, M, and M satisfies "the reals are uncountable", because "countable" ranges over the functions M has. So
+"the reals of M are countable" is refuted inside M and earned outside it, given Con(ZFC), which ZFC cannot prove. A
+finite stand-in shows the relativity: for two-element sets, "equinumerous" holds in exactly the 12 of the 16 possible
+stocks of functions that contain a bijection.
+
+**The empty descriptions.** *Perron's* classic argument that the largest natural number is 1 is refuted at its premise:
+the numeric floor refutes that any natural is at least every natural, and the conditional "if a largest exists, it is
+1" is then earned only vacuously. The conclusion "the largest is 1" is refuted on Russell's reading and has no subject on
+Frege's and Strawson's; which theory of descriptions applies is itself a choice, and the judge reports both. *The two
+envelopes* (Broome 1995) need a prior uniform over all amounts, and no probability distribution is that, so E; with
+Broome's proper prior the expected gain of always switching is infinity minus infinity, a value that is undefined, so
+"the expected gain" has no subject, E. *St. Petersburg* (posed by Nicolaus Bernoulli 1713, Daniel Bernoulli 1738) asks
+for an expectation that is infinite until the bank is named; with the bank named only on someone's word, the claimed
+price is ON CREDIT. *Zeno's Achilles* (Aristotle, *Physics* VI.9): with the stand's speeds, "behind at every stage" is
+earned and "never catches him", said of the motion, is refuted, since the stage times sum to 1/9. *Gabriel's horn*
+(Torricelli 1641) has finite volume and infinite surface; a coat of positive thickness t has no room where the radius
+falls below t, so "the coat fits" is refuted and "the paint the coat needs" has no subject. *Banach–Tarski* (1924;
+Wagon 1985) splits in two. The decomposition is a theorem of ZFC that ZF with dependent choice does not prove: in
+Solovay's model (relative to an inaccessible cardinal) every set of reals is measurable and the decomposition fails.
+With choice unstipulated the judge says OPEN; stipulated, EARNED. "The volumes of the pieces add up" has no subject.
+The stand computes the heart of that: the free group on two letters is checked to split into pieces that rebuild it
+twice (on all words up to length 10), and from those identities an exact linear program shows that no invariant finitely
+additive probability can exist on the group. That the pieces in space are then non-measurable is the standard transfer,
+cited.
+
+**The loops.** *Cantor's* set of all sets is Russell's cell: the diagonal step refutes on every clean cell, is silent on
+the one dirty cell, and with the identity map lands on the Russell cell, neither refuted nor earned
+(`VR/SetsNaive/Cantor.lean`, the empty axiom list). *Burali-Forti* (1897) is illustrated on the finite von Neumann
+universes: in each V_k, checked for k up to 5 (the 65 536 sets of V₅), the ordinals are exactly 0, …, k − 1, and their
+collection is the ordinal k, never in V_k and always in V_{k+1}; for every k this follows by the rank argument, cited.
+Its naive definition is put through the passport office in a simplified one-negation form ("Ω is an ordinal exactly
+when it is not its own member"), closer to Russell's shape than to Burali-Forti's own, and the office reads PARADOX.
+In both cases what has no model is the naive definition; set theory avoids it by restricting comprehension.
+
+**The ground.** By Matiyasevich's theorem (1970), for any theory whose theorems a program can list there is a
+polynomial that has no whole-number root exactly when that theory is consistent; by Gödel's second theorem a consistent
+theory of this kind with enough arithmetic does not prove it. So the judge's verdict on "it has no root" depends on the
+theory named: on ZFC, OPEN; on ZFC with an inaccessible cardinal, EARNED; a root, if one were found, would refute it and
+show ZFC inconsistent. Its finite face is proved: the smallest nontrivial root of Pell's equation `x² − 61y² = 1` lies
+far past every `y` up to a million (`ZDiophantine.pell61_witness`), so a search that found nothing earns no "no", while
+`x² = 3y + 2` has no whole-number solution, by a proof over three remainders (`ZDiophantine.no_root_three`).
+
+**Where the paradox lives, if anywhere.** In the conventions there is no paradox. There is a parameter left unnamed,
+and each value of it gives its own earned answer, so disagreements between "right answers" are disagreements between
+values of the parameter (Simpson adds a fact the table cannot give, and Sleeping Beauty leaves a dispute about credence).
+In the empty descriptions there is a mistake: an object or a value is presupposed that does not exist, and it is charged
+to the definition. Only the naive loops carry what §4 calls a paradox, a definition with no model, and among the
+mathematical names only two are loops, Cantor's and Burali-Forti's, both met here as Russell's cell. *What is new:* none
+of the mathematics. What is added is one form for all of it: the judge names the missing parameter, the absent subject,
+the loop or the ground, and does not answer without it.
+
+*Status for v1.3:* every case has a stand. −1/12 (`ZZeta`, `ZZetaBridge`), Cantor (`VR/SetsNaive/Cantor.lean`) and the
+finite face of the ground (`ZDiophantine`) have Lean; the rest are STAND in the roadmap, waiting for theirs.
 
 ## 6. The honest frame
 

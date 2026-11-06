@@ -479,6 +479,24 @@ contradiction.
   embodies the logic: the LLM's output is a dirty input; the
   core is the customs.
 
+## Lean's three axioms, read in ZTL (2026-11-06)
+
+The Lean corpus uses none of Lean's three standard axioms; the reason is operational (the curator's principle), and
+ZTL gives it content. Each axiom says "this need not be checked": propext ("what is equivalent need not be told
+apart"), Quot.sound and the funext it yields ("what agrees on every observation is the same"), Classical.choice and
+the excluded middle it yields ("A or not A is decided"). Read with ZTL's values, each fails exactly on a dirty input
+and holds on clean ones — `lean/ZAxiomsRead.lean`, zero axioms:
+
+* propext: p and p ∧ p are interderivable, yet ¬(p ∧ p) is T and ¬p is not, at p = Z; without "clean", "T exactly
+  together" is not equality (F and Z); on clean values it is, so they are interchangeable in every context.
+* Quot.sound / funext by observation: x and x ∧ x agree on T and on F and differ at Z; for ONE connective, agreeing on
+  the clean inputs is agreeing everywhere. The boundary is per connective, not per formula, as for degrees.
+* Excluded middle: A ∨ ¬A is not T at A = Z, and is T on every clean A.
+
+So the analogues are usable where no dirty parameter is involved. This does NOT make the axioms false in Lean: they
+are consistent there and hold in the usual set-theoretic model. It makes them stipulations whose ZTL readings break
+on unchecked data — the reason to keep them out by default; a proof on the empty list stays valid whoever adds them.
+
 ## Degrees (draft for ZTL 2.2, 2026-11-05)
 
 The same ZTL, read at a finer grain; optional. A statement may carry a

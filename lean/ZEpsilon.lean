@@ -2,17 +2,19 @@
   ZEpsilon.lean — Hilbert's ε read in ZTL: an ideal element is a stable unchecked pick, and what is earned of it is
   exactly what an ε-free statement says. Zero axioms.
 
-  WHY (2026-11-06, the curator: "сопоставь"). Hilbert's ε-calculus (Hilbert and Bernays, Grundlagen der Mathematik II,
-  1939) adds a term εx.P(x), "some x with P, if there is one", governed by the critical axiom P(t) → P(εx.P(x)). It is
-  the axiom of choice as a term. Their epsilon theorems show that ε-free statements derivable with ε are derivable
-  without it: the ideal elements can be eliminated. Read in ZTL (ZChoiceRead), the ε-term is a pick no one exhibits,
+  WHY (2026-11-06, the curator: "сопоставь"). Hilbert's ε-term (introduced in the early 1920s; Ackermann and von Neumann
+  on its elimination in the 1920s) is a choice principle in the logic: εx.P(x), some x with P if there is one, governed
+  by the critical axiom P(t) → P(εx.P(x)). The epsilon theorems (Hilbert and Bernays, Grundlagen der Mathematik II,
+  1939) show, under conditions (an ε-free conclusion and ε-free non-logical axioms), that what is derivable with ε-terms
+  is derivable without them: the ideal elements can be eliminated from proofs. Read in ZTL (ZChoiceRead), the ε-term is a pick no one exhibits,
   an unchecked value, used stably and constrained by the critical axiom. What can be earned of it?
 
   The finite face, proved here on a list X (a finite domain given in some order):
   * `Admissible X P e` — e is in X and obeys the critical axiom: if some element of X has P, so does e.
   * `eps_iff_exists` — "P(ε) holds for every admissible ε" exactly when some element of X has P: the classical
-    definition ∃x P(x) ≡ P(εx.P(x)), and in ZTL's terms, P(ε) is earned exactly when the existential is earned by a
-    witness. The witness is FOUND by a search of the list, not posited — no excluded middle is used.
+    definition ∃x P(x) ≡ P(εx.P(x)), read semantically; for a non-empty list and a COMPUTABLE P (Bool-valued) the
+    witness is FOUND by a search, not posited — no excluded middle is used (for non-computable P the critical axiom
+    is known to bring the excluded middle with it).
   * `eps_which_open` — what the ε-term is, beyond what P fixes, is not earned: for X = [0, 1] and P true of both, "ε is
     0" holds at one admissible pick and fails at the other.
   * `eps_needs_stable` — two uses of one ε-term denote the same element only if the pick is read stably (the judge's

@@ -34,15 +34,20 @@ how the logic reads it. `ZOrigin` showed Z, F, T born from ONE atom (¬p = F, ¬
      and the flipping readings earn (`dirty_is_both`, at Z): two reads of a Boolean value are either equal or
      opposite, and it allows both — so flipping is one of its two cases, not a new option.
   5. THE BOUNDARIES OF 4, CLOSED (the curator: "почему бы не попытаться их закрыть?").
-     * Only Z can flip (`flip_needs_dirty`): the clause "clean values do not flip" is forced, not chosen.
-     * n reads (`DirtyN`, `StableN`, `FlipN` over lists of reads): the dirty reading earns only what both earn, for
+     * Only Z can flip (`flip_needs_dirty`): given the readings of the values (`subs`), the clause "clean values do
+       not flip" follows; it is not a separate choice.
+     * n reads, in a MODEL (`DirtyN`, `StableN`, `FlipN`: reads as a list, a claim as a test on it; that the model
+       matches ZTL's own evaluation is proved here only for one connective on two reads): the dirty reading earns only what both earn, for
        every n (`dirtyN_both`); with two reads the converse holds for every claim (`two_reads`); from three reads on
-       it fails (`three_reads`): (r₁ = r₂) ∨ (r₂ ≠ r₃) holds at every same-value and every flipping pattern and
+       it fails (`three_reads`): (r₁ = r₂) ∨ (r₂ ≠ r₃), on the first three reads, holds at every same-value and every flipping pattern and
        fails at (T, F, F) — an owner who is neither, against whom the dirty reading still guards.
-     * Self-reference, minimally — the revision theory of truth (Gupta and Belnap 1993) is the predecessor: a
+     * Self-reference, minimally — the revision theory of truth (Gupta and Belnap 1993) in miniature (the full
+       theory revises the whole extension of the truth predicate through transfinite stages; here one sentence,
+       finitely many steps): a
        sentence is a map from the value it is read to have to its value, read again by revising. The liar's
        revisions are exactly the flipping pattern (`liar_flips`), the truth-teller's exactly the same-value one
-       (`truthteller_stable`); the liar has no stable value, the truth-teller two (`liar_no_fixed`).
+       (`truthteller_stable`); the liar has no stable value, the truth-teller two (`liar_no_fixed`). Reading the
+       liar's revisions as a flipping owner is our link, not part of that theory.
 
 READING, not proved: classical logic never has to choose between the two readings — its values are clean, and on
 clean values they coincide. With an unchecked value they come apart; ZTL picks the cautious one and treats "the same
@@ -253,8 +258,8 @@ theorem flip_table :
 
 /-! ### 5. Closing the boundaries of section 4 -/
 
-/-- Only Z can flip: a value with both a reading and its negation is Z. (The clause "clean values do not flip"
-in `liftA` is forced, not chosen.) -/
+/-- Only Z can flip: a value with both a reading and its negation is Z. (Given `subs`, the clause "clean values
+do not flip" in `liftA` follows.) -/
 theorem flip_needs_dirty : ∀ (x : V) (a : Bool),
     (subs x).contains a = true → (subs x).contains (!a) = true → x = Z := by
   decide

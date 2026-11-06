@@ -21,16 +21,18 @@ and `F` in the information order). The judge's verdict is the strong Kleene valu
    and on an unchecked `p` the judge leaves it OPEN.
 5. `lens_no_new_truth` — CEILING. A formula earned when NOTHING is checked is a classical tautology.
 
-Hence the two halves of the slogan, as theorems:
-* "level with classical": by 2 and 5 every verdict the judge gives is a classical fact; the judge
-  cannot prove anything classical logic does not. This is a consequence of soundness, not a
-  shortfall to be fixed.
-* "beyond classical": by 1 and 3 the extra axis — which verdicts are already settled by what was
-  checked — is tracked exactly and monotonically. Classical logic has no place to say it.
+Hence, as theorems (scope: propositional formulas, independent atoms, checked values taken as given,
+the STRICT verdict only — EARNED IF STABLE is not covered):
+* "never ahead of classical": by 2 a strict verdict is a classical consequence of the checked atoms
+  taken as premises, never more; by 5, with nothing checked, it is a classical tautology. By 4 it is
+  sometimes LESS decisive (the stable reading grants `p → p`; the loss belongs to the strict verdict).
+* "what it adds": by 1 and 3 the record of which claims the checks so far already settle, a record
+  that only grows under refinement (a correction of an earlier check is not a refinement).
 
-Prior art: Kleene (1938, 1952), strong three-valued logic; Belnap, "How a computer should think"
-(1977); Cousot & Cousot (1977), abstract interpretation (see `ZAbsInt`). The lens is this
-tradition applied; the novelty claimed is none.
+Prior art: Kleene (1938, 1952), strong three-valued logic read as an information order; close to
+Belnap, "How a computer should think" (1977, four values) and to the abstract interpretation of
+Cousot & Cousot (1977, see `ZAbsInt`). No novelty claimed. Wording fixed after an outside reading
+(prose gate, 2026-11-06).
 -/
 
 namespace V

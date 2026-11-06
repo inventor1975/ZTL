@@ -746,7 +746,7 @@ def sec19_ztl_i_degrees():
         zfl.zdegree.degree_groups = real_g
     print("   partial independence: groups [a, b] | [c] give a & b & c in [0, 1/4] (Fréchet [0, 1/2], all independent")
     print("   1/8); JSON text accepted; true unchanged; bad groups E_INDEPENDENT; an atom in no group refused; sabotage")
-    # A SEARCH THAT FOUND NOTHING PROVES NO "NONE" (2026-11-06; Pell 61: no root with y <= 10^6, and one exists)
+    # A SEARCH THAT FOUND NOTHING PROVES NO "NONE" (2026-11-06; Pell 61: no root with 1 <= y <= 10^6, and one exists)
     S = lambda kind: {"name": "no_root", "status": "verified", "ground": "search_y_le_1e6", "ground_kind": kind,
                       "means": "x^2 - 61 y^2 = 1 has no root"}
     r = zfl.run(zfl.coerce({"rows": [S("search")], "claim": "no_root"}))

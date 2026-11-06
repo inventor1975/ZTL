@@ -17,8 +17,8 @@ THE FORMALISATION, IN WORDS FIRST — three kinds of claim about a polynomial P:
   So the two directions are not symmetric: a root is shown, an absence is proved.
 
 MEASURED HERE (each section asserts what it prints):
-  1. Pell's equation x² − 61y² = 1: a search over every y ≤ 10⁶ finds no root; the continued fraction of √61 gives the
-     smallest root, x = 1 766 319 049, y = 226 153 980 — checked by substitution, and in Lean (`ZDiophantine.
+  1. Pell's equation x² − 61y² = 1: besides the trivial root x = 1, y = 0, a search over every 1 ≤ y ≤ 10⁶ finds no
+     root; the continued fraction of √61 gives the smallest nontrivial root, x = 1 766 319 049, y = 226 153 980 — checked by substitution, and in Lean (`ZDiophantine.
      pell61_witness`, zero axioms). The inference "searched far, so no root" is false here;
   2. x² = 3y + 2: a search to 10⁶ finds no root, and that earns nothing; the proof does (squares are 0 or 1 modulo 3:
      `ZDiophantine.no_root_three`, zero axioms) — checked here on every x < 10⁶ for the residues it uses;
@@ -70,7 +70,8 @@ def sec1():
     assert (x, y) == (1766319049, 226153980) and x * x - 61 * y * y == 1 and y > BOUND
     # both sides: the same search finds D = 2's root at once (3² − 2·2² = 1)
     assert [y for y in range(1, 10) if isqrt(2 * y * y + 1) ** 2 == 2 * y * y + 1][0] == 2
-    print(f"   x² − 61y² = 1: no root with y <= {BOUND:,} (searched); the smallest root is x = {x:,}, y = {y:,}")
+    print(f"   x² − 61y² = 1: besides x = 1, y = 0, no root with 1 <= y <= {BOUND:,} (searched); the smallest nontrivial")
+    print(f"   root is x = {x:,}, y = {y:,}")
     print("   (continued fraction of √61), checked by substitution and in Lean (ZDiophantine.pell61_witness);")
     print("   control: the same search finds x² − 2y² = 1 at y = 2 at once")
     return {"searched_no_root": True, "witness": True}

@@ -533,7 +533,7 @@ STANDS = [
                                   "V_5: 65536 sets; its ordinals are 0..4; their collection is the ordinal 5 — in V_5: False",
                                   "PARADOX, the claim's credit UNREDEEMABLE"]),
     ("dilemmas/diophantine.py", ["DIOPHANTINE: all measurements hold",
-                                 "the smallest root is x = 1,766,319,049, y = 226,153,980",
+                                 "root is x = 1,766,319,049, y = 226,153,980",
                                  "a naive 'searched, so no root' gives EARNED — and is wrong"]),
     ("dilemmas/zeno.py", [
         "ZENO AND THE HORN: all measurements hold."]),

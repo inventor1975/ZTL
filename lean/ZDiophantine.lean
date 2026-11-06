@@ -5,7 +5,7 @@
   * "it HAS a root" is earned by one finite witness, checked by substitution — `pell61_witness`: x² − 61·y² = 1 at
     x = 1 766 319 049, y = 226 153 980, the kernel multiplies the numbers out;
   * "it has NO root" is never earned by a search — a search up to any bound leaves the claim open (Pell 61 has no root
-    with y ≤ 10⁶, measured in `dilemmas/diophantine.py`, and still has one) — it is earned only by a PROOF: here
+    with 1 ≤ y ≤ 10⁶ besides the trivial x = 1, y = 0, measured in `dilemmas/diophantine.py`, and still has one) — it is earned only by a PROOF: here
     `no_root_three`, x·x ≠ 3·y + 2 for all x, y, by the residues of squares modulo 3;
   * and for some polynomials neither a witness nor a proof in a given theory exists: MRDP gives one whose having no
     root is equivalent to that theory's consistency (not formalised here; see the stand).

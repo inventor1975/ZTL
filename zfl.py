@@ -245,7 +245,7 @@ COLUMNS = [
         "key": "ground_kind", "type": "choice", "required": False,
         "advanced": False, "default": "document",
         # `search` (2026-11-06, the curator: "берём все пункты"): a search that found NOTHING grounds no "none" and no
-        # "for all" — Pell's x² − 61y² = 1 has no root with y <= 10^6 and still has one (dilemmas/diophantine.py)
+        # "for all" — Pell's x² − 61y² = 1 has no root with 1 <= y <= 10^6 (besides x = 1, y = 0) and still has one (dilemmas/diophantine.py)
         "options": ["document", "act", "certificate", "row", "search"],
         "en": ("kind of ground", "a document unless you say otherwise"),
         "ru": ("вид основания", "документ, если не сказано иное"),

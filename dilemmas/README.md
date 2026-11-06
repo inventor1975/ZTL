@@ -47,6 +47,7 @@ each on a run; the closing statement; the aphorism if one was earned).
 | Banach–Tarski — the decomposition earned on the stipulated choice; the pieces' volumes have no subject (E) | `banach_tarski.py` | measured 2026-11-06 |
 | Skolem — 'countable' names no universe of functions: inside the model REFUTED, outside EARNED on Con(ZFC) | `skolem.py` | measured 2026-11-06 |
 | Burali-Forti — the set of all ordinals is missing from every universe V_k; the naive definition a PARADOX loop | `burali_forti.py` | measured 2026-11-06 |
+| Diophantine equations — a root is shown (Pell 61, smallest x = 1 766 319 049), an absence is proved (x² = 3y + 2); a theory's consistency polynomial is OPEN on its own ground | `diophantine.py` | measured 2026-11-06 |
 | the quantum stones made runnable (emulator qemu.py) | `quantum.py` | demos |
 
 *AI participation: designed and written in a dialogue between the curator

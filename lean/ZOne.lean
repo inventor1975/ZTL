@@ -32,9 +32,17 @@ how the logic reads it. `ZOrigin` showed Z, F, T born from ONE atom (¬p = F, ¬
      negation of the first is one way to read p ⋆ p (`liftA`; clean values do not flip, by definition): it makes
      p ∨ p and p ⊕ p true and p ↔ p false (`flip_table`). The dirty reading earns exactly what both the same-value
      and the flipping readings earn (`dirty_is_both`, at Z): two reads of a Boolean value are either equal or
-     opposite, and it allows both — so flipping is one of its two cases, not a new option. Two reads only; three
-     or more reads of one value are not covered. READING: a value that turns false when read as true resembles the
-     liar; nothing here formalizes self-reference.
+     opposite, and it allows both — so flipping is one of its two cases, not a new option.
+  5. THE BOUNDARIES OF 4, CLOSED (the curator: "почему бы не попытаться их закрыть?").
+     * Only Z can flip (`flip_needs_dirty`): the clause "clean values do not flip" is forced, not chosen.
+     * n reads (`DirtyN`, `StableN`, `FlipN` over lists of reads): the dirty reading earns only what both earn, for
+       every n (`dirtyN_both`); with two reads the converse holds for every claim (`two_reads`); from three reads on
+       it fails (`three_reads`): (r₁ = r₂) ∨ (r₂ ≠ r₃) holds at every same-value and every flipping pattern and
+       fails at (T, F, F) — an owner who is neither, against whom the dirty reading still guards.
+     * Self-reference, minimally — the revision theory of truth (Gupta and Belnap 1993) is the predecessor: a
+       sentence is a map from the value it is read to have to its value, read again by revising. The liar's
+       revisions are exactly the flipping pattern (`liar_flips`), the truth-teller's exactly the same-value one
+       (`truthteller_stable`); the liar has no stable value, the truth-teller two (`liar_no_fixed`).
 
 READING, not proved: classical logic never has to choose between the two readings — its values are clean, and on
 clean values they coincide. With an unchecked value they come apart; ZTL picks the cautious one and treats "the same
@@ -234,7 +242,7 @@ theorem dirty_is_both : ∀ a b c d : Bool,
     lift2 (tbl a b c d) Z Z = T ↔ (liftS (tbl a b c d) Z = T ∧ liftA (tbl a b c d) Z = T) := by
   decide
 
-/-- The flipping reading makes p ∨ p and p ⊕ p true and p ↔ p false; the dirty
+/-- The flipping reading (the liar's revisions, `liar_flips`) makes p ∨ p and p ⊕ p true and p ↔ p false; the dirty
 reading earns none of the three. -/
 theorem flip_table :
     liftA (fun a b => a || b) Z = T ∧ liftA (fun a b => a != b) Z = T ∧
@@ -242,6 +250,106 @@ theorem flip_table :
     liftA (fun a b => !a || b) Z = F ∧
     zor Z Z = F ∧ zxor Z Z = F ∧ zxnor Z Z = F := by
   decide
+
+/-! ### 5. Closing the boundaries of section 4 -/
+
+/-- Only Z can flip: a value with both a reading and its negation is Z. (The clause "clean values do not flip"
+in `liftA` is forced, not chosen.) -/
+theorem flip_needs_dirty : ∀ (x : V) (a : Bool),
+    (subs x).contains a = true → (subs x).contains (!a) = true → x = Z := by
+  decide
+
+/-- n reads, all the same. -/
+def rep : Nat → Bool → List Bool
+  | 0, _ => []
+  | n + 1, a => a :: rep n a
+
+/-- n reads, each the negation of the one before. -/
+def alt : Nat → Bool → List Bool
+  | 0, _ => []
+  | n + 1, a => a :: alt n (!a)
+
+theorem rep_length : ∀ (n : Nat) (a : Bool), (rep n a).length = n
+  | 0, _ => rfl
+  | n + 1, a => by show (rep n a).length + 1 = n + 1; rw [rep_length n a]
+
+/-- A claim about n reads of one value, as a test on the reads. Earned by the dirty reading: true at every
+pattern of reads. -/
+def DirtyN (n : Nat) (f : List Bool → Bool) : Prop := ∀ s : List Bool, s.length = n → f s = true
+def StableN (n : Nat) (f : List Bool → Bool) : Prop := ∀ a, f (rep n a) = true
+def FlipN (n : Nat) (f : List Bool → Bool) : Prop := ∀ a, f (alt n a) = true
+
+theorem alt_length : ∀ (n : Nat) (a : Bool), (alt n a).length = n
+  | 0, _ => rfl
+  | n + 1, a => by show (alt n (!a)).length + 1 = n + 1; rw [alt_length n (!a)]
+
+theorem dirtyN_both (n : Nat) (f : List Bool → Bool) (h : DirtyN n f) : StableN n f ∧ FlipN n f :=
+  ⟨fun a => h (rep n a) (rep_length n a), fun a => h (alt n a) (alt_length n a)⟩
+
+/-- With two reads, "the same" and "the opposite" are all there is: the two readings together are the dirty one,
+for every claim about the two reads. -/
+theorem two_reads (f : List Bool → Bool) : DirtyN 2 f ↔ StableN 2 f ∧ FlipN 2 f := by
+  refine ⟨dirtyN_both 2 f, fun ⟨hs, hf⟩ s hl => ?_⟩
+  cases s with
+  | nil => exact absurd hl (by decide)
+  | cons x t =>
+    cases t with
+    | nil => exact Nat.noConfusion (Nat.succ.inj hl)
+    | cons y t =>
+      cases t with
+      | nil =>
+        cases x <;> cases y
+        · exact hs false
+        · exact hf false
+        · exact hf true
+        · exact hs true
+      | cons z t => exact Nat.noConfusion (Nat.succ.inj (Nat.succ.inj hl))
+
+/-- From three reads on, they are not: some claim holds at every same-value and every flipping pattern and fails
+at another — an owner who is neither. -/
+def three (s : List Bool) : Bool :=
+  match s with
+  | [] => true
+  | [_] => true
+  | [_, _] => true
+  | x :: y :: z :: _ => (x == y) || (y != z)
+
+theorem three_reads (m : Nat) :
+    StableN (m + 3) three ∧ FlipN (m + 3) three ∧ ¬ DirtyN (m + 3) three := by
+  refine ⟨fun a => ?_, fun a => ?_, fun h => ?_⟩
+  · show ((a == a) || (a != a)) = true
+    cases a <;> rfl
+  · show ((a == !a) || ((!a) != (!!a))) = true
+    cases a <;> rfl
+  · have hl : (true :: false :: false :: rep m false).length = m + 3 := by
+      show (rep m false).length + 1 + 1 + 1 = m + 3
+      rw [rep_length m false]
+    have h2 : ((true == false) || (false != false)) = true := h _ hl
+    exact Bool.noConfusion h2
+
+/-! Self-reference, minimally (revision theory of truth: Gupta and Belnap, *The Revision Theory of Truth*, 1993).
+A sentence that speaks of its own value is a map `L : Bool → Bool` (its value, given the value it is read to have);
+reading it again means revising: r₀ = a, r₍ₖ₊₁₎ = L rₖ. -/
+
+/-- n revisions of a self-referential sentence from the start value a. -/
+def revise (L : Bool → Bool) : Nat → Bool → List Bool
+  | 0, _ => []
+  | n + 1, a => a :: revise L n (L a)
+
+/-- The liar ("I am false", L = not): its revisions are exactly the flipping pattern, from either start. -/
+theorem liar_flips : ∀ (n : Nat) (a : Bool), revise (fun v => !v) n a = alt n a
+  | 0, _ => rfl
+  | n + 1, a => by show a :: revise (fun v => !v) n (!a) = a :: alt n (!a); rw [liar_flips n (!a)]
+
+/-- The truth-teller ("I am true", L = id): its revisions are exactly the same-value pattern. -/
+theorem truthteller_stable : ∀ (n : Nat) (a : Bool), revise (fun v => v) n a = rep n a
+  | 0, _ => rfl
+  | n + 1, a => by show a :: revise (fun v => v) n a = a :: rep n a; rw [truthteller_stable n a]
+
+/-- The liar has no stable value; the truth-teller has two, and nothing picks between them. -/
+theorem liar_no_fixed : (∀ a : Bool, (!a) ≠ a) ∧ (∀ a : Bool, (fun v : Bool => v) a = a) := by
+  refine ⟨fun a => ?_, fun _ => rfl⟩
+  cases a <;> decide
 
 end ZOne
 
@@ -259,3 +367,12 @@ end ZOne
 #print axioms ZOne.dirty_earned_flip_earned
 #print axioms ZOne.dirty_is_both
 #print axioms ZOne.flip_table
+#print axioms ZOne.flip_needs_dirty
+#print axioms ZOne.rep_length
+#print axioms ZOne.alt_length
+#print axioms ZOne.dirtyN_both
+#print axioms ZOne.two_reads
+#print axioms ZOne.three_reads
+#print axioms ZOne.liar_flips
+#print axioms ZOne.truthteller_stable
+#print axioms ZOne.liar_no_fixed

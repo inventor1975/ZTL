@@ -26,12 +26,15 @@ how the logic reads it. `ZOrigin` showed Z, F, T born from ONE atom (¬p = F, ¬
      The judge's IF STABLE is this kind of reading (one value at every occurrence, `ZDirty`), mirrored, not imported;
      the link to `ZChoiceRead.same_pick` is an analogy.
 
-  4. A THIRD READING: THE VALUE FLIPS (2026-11-06, the curator: "а если грязный параметр будет стремить значение к
+  4. THE VALUE FLIPS — A CASE THE DIRTY READING ALREADY CONTAINS (2026-11-06, the curator: "а если грязный параметр будет стремить значение к
      противоположному?"). Two cases. An owner who sets each read to defeat the verdict is the adversary of `ZGames`
-     — ZTL's own semantics (`check_scope_is_ztl`). A value that flips at every read by a fixed rule is a third
-     reading of p ⋆ p (`liftA`), the liar's mechanism: it makes p ∨ p and p ⊕ p true and p ↔ p false
-     (`flip_table`). The dirty reading earns only what both the same-value and the flipping readings earn
-     (`dirty_is_both`, at Z): two reads of a Boolean value are either equal or opposite, and it allows both.
+     — ZTL's own semantics (`check_scope_is_ztl`, proved there, not here). A dirty value whose second read is the
+     negation of the first is one way to read p ⋆ p (`liftA`; clean values do not flip, by definition): it makes
+     p ∨ p and p ⊕ p true and p ↔ p false (`flip_table`). The dirty reading earns exactly what both the same-value
+     and the flipping readings earn (`dirty_is_both`, at Z): two reads of a Boolean value are either equal or
+     opposite, and it allows both — so flipping is one of its two cases, not a new option. Two reads only; three
+     or more reads of one value are not covered. READING: a value that turns false when read as true resembles the
+     liar; nothing here formalizes self-reference.
 
 READING, not proved: classical logic never has to choose between the two readings — its values are clean, and on
 clean values they coincide. With an unchecked value they come apart; ZTL picks the cautious one and treats "the same
@@ -210,7 +213,7 @@ theorem beyond_pp : zor Z (znot Z) = F ∧ ∀ a : Bool, (a || !a) = true := by
   refine ⟨by decide, ?_⟩
   intro a; cases a <;> rfl
 
-/-! ### 4. A third reading: the value flips at the second read -/
+/-! ### 4. The value flips at the second read: a case of the dirty reading -/
 
 /-- The flipping reading of x ⋆ x: at a dirty x the second read is the negation of the first (a clean value
 cannot flip, and is read as it is). -/
@@ -231,7 +234,7 @@ theorem dirty_is_both : ∀ a b c d : Bool,
     lift2 (tbl a b c d) Z Z = T ↔ (liftS (tbl a b c d) Z = T ∧ liftA (tbl a b c d) Z = T) := by
   decide
 
-/-- The flipping reading — the liar's mechanism — makes p ∨ p and p ⊕ p true and p ↔ p false; the dirty
+/-- The flipping reading makes p ∨ p and p ⊕ p true and p ↔ p false; the dirty
 reading earns none of the three. -/
 theorem flip_table :
     liftA (fun a b => a || b) Z = T ∧ liftA (fun a b => a != b) Z = T ∧

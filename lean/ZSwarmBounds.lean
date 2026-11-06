@@ -25,6 +25,9 @@
   5. `tree_bound` — the tree of triples (`ZMajority`): with `lie_needs` (a depth-d tree says F only with at
      least 2^d lying leaves), 2^d · weight(the tree says F) ≤ Σ weight · (lying leaves): P(capture) ≤
      E[lies]/2^d = 3^d·p/2^d for EVERY joint of the liars — about 5·p at 81 seats.
+  6. `unanimous_bound` (2026-11-06, Logik2's note) — admitting only on every judge's T: P(all N wrong together) ≤
+     P(judge i wrong) for each i, for EVERY joint — falsely admitted with probability at most the least p_i. More
+     judges never make that worse; they cost only availability (a majority rule has no such floor: 1 − N·p/(f+1)).
 
   NOT PROVED HERE: that the tree bound is ATTAINED (computed, at depth 3, in `zswarm_bounds.py`); how much seats
   drawn at random improve on it — that depends on the liars' joint and on the adversary NOT seeing the draw, and is
@@ -133,6 +136,35 @@ theorem network_bound (N f : Nat) (ws : List (List Bool × Nat)) :
     (f + 1) * wsumP (broken N f) ws ≤ sumMarg ws N := by
   exact (expected_count ws N) ▸ markov (broken N f) (cnt N) (f + 1) (fun _ h => Nat.le_of_ble_eq_true h) ws
 
+/-! ### Unanimity: admitting only on every judge's T (Logik2's note, 2026-11-06) -/
+
+/-- "All of the first `n` judges are compromised". -/
+def allF : Nat → List Bool → Bool
+  | 0, _ => true
+  | n + 1, w => allF n w && nth w n
+
+theorem allF_nth : ∀ (n : Nat) (w : List Bool) (i : Nat), i < n → allF n w = true → nth w i = true
+  | 0, _, i, h, _ => absurd h (Nat.not_lt_zero i)
+  | n + 1, w, i, h, ha => by
+      have split : ∀ x y : Bool, (x && y) = true → x = true ∧ y = true := by decide
+      have hn : allF n w = true ∧ nth w n = true := split _ _ ha
+      cases Nat.lt_or_ge i n with
+      | inl hlt => exact allF_nth n w i hlt hn.1
+      | inr hge =>
+          have hi : i = n := Nat.le_antisymm (Nat.le_of_lt_succ h) hge
+          rw [hi]; exact hn.2
+
+/-- For EVERY joint: P(all N judges wrong together) ≤ P(judge i wrong), for each i < N — so a verdict admitted only
+on unanimity is falsely admitted with probability at most the least p_i, whatever the judges' correlation. More
+judges never make it worse; they cost only availability. -/
+theorem unanimous_bound (N : Nat) (ws : List (List Bool × Nat)) (i : Nat) (hi : i < N) :
+    wsumP (allF N) ws ≤ marg ws i := by
+  have h := markov (allF N) (fun w => flag w i) 1 (fun w hw => by
+    show 1 ≤ bit (nth w i)
+    rw [allF_nth N w i hi hw]; exact Nat.le_refl 1) ws
+  rw [Nat.one_mul] at h
+  exact h
+
 /-! ### Attained: f+1 consecutive judges, cyclically -/
 
 /-- World "judges k, k+1, ..., k+f (mod N) compromised". -/
@@ -203,3 +235,5 @@ end ZSwarmBounds
 #print axioms ZSwarmBounds.attained_30
 #print axioms ZSwarmBounds.attained_90
 #print axioms ZSwarmBounds.tree_bound
+#print axioms ZSwarmBounds.allF_nth
+#print axioms ZSwarmBounds.unanimous_bound

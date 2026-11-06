@@ -46,6 +46,7 @@ each on a run; the closing statement; the aphorism if one was earned).
 | Zeno's Achilles, Gabriel's horn — the stages against the motion; a coat with no room | `zeno.py` | measured 2026-11-05 |
 | Banach–Tarski — the decomposition earned on the stipulated choice; the pieces' volumes have no subject (E) | `banach_tarski.py` | measured 2026-11-06 |
 | Skolem — 'countable' names no universe of functions: inside the model REFUTED, outside EARNED on Con(ZFC) | `skolem.py` | measured 2026-11-06 |
+| Burali-Forti — the set of all ordinals is missing from every universe V_k; the naive definition a PARADOX loop | `burali_forti.py` | measured 2026-11-06 |
 | the quantum stones made runnable (emulator qemu.py) | `quantum.py` | demos |
 
 *AI participation: designed and written in a dialogue between the curator

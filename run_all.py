@@ -529,6 +529,9 @@ STANDS = [
                                    "CONSERVE (the pieces' volumes add up): E"]),
     ("dilemmas/skolem.py", ["SKOLEM: all measurements hold",
                             "is true in 12 (a bijection in stock) and false in 4"]),
+    ("dilemmas/burali_forti.py", ["BURALI-FORTI: all measurements hold",
+                                  "V_5: 65536 sets; its ordinals are 0..4; their collection is the ordinal 5 — in V_5: False",
+                                  "PARADOX, the claim's credit UNREDEEMABLE"]),
     ("dilemmas/zeno.py", [
         "ZENO AND THE HORN: all measurements hold."]),
     ("dilemmas/sleeping_beauty.py", [

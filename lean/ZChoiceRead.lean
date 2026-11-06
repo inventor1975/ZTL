@@ -23,9 +23,10 @@
      list's order does the choosing; an unordered finite set needs an enumeration first).
   6. `choice_by_rule`, `choice_sequence` — choosing from ANY family of non-empty lists, infinite or uncountable index
      set included, needs no axiom either: the line is not finite/infinite but GIVEN/ONLY-ASSERTED. The axiom is needed
-     where only "each set is non-empty" is known and no member is in hand (Lean: `Classical.choice`); that it cannot
-     be dropped there is Cohen's independence (1963), cited.
-  What is NOT here: families known only to be non-empty (there the axiom is needed, and Banach–Tarski is its cost —
+     where no rule picks from every member (Russell's socks); for arbitrary families it is unprovable — ZF: Cohen
+     1963; Lean's `Classical.choice`: a separate result about type theory — cited. Close to trivial: a list's
+     order does the choosing.
+  What is NOT here: families with no rule picking from them (there the axiom is needed, and Banach–Tarski is its cost —
   `dilemmas/banach_tarski.py`). The link to the judge's IF STABLE is the definition (`ZDirty`'s stable completion: one value at
   every occurrence), mirrored, not imported.
 -/
@@ -95,22 +96,30 @@ theorem finite_choice {α : Type} (d : α) (Ls : List (List α)) (h : ∀ L, Lis
     ∃ f : List α → α, ∀ L, List.Mem L Ls → List.Mem (f L) L :=
   ⟨firstOr d, fun L hL => firstOr_mem d L (h L hL)⟩
 
-/-- Choice from ANY family of lists given by a rule — infinite, even uncountable, index sets included — needs no
-axiom: the lists themselves do the choosing. (2026-11-06, the curator: "на бесконечных мы только намекаем?") The
-line is not finite against infinite: it is a family whose members are GIVEN (here, as lists) against a family of
-which only "each member is non-empty" is known. For the second, Lean needs `Classical.choice` (∀ i, Nonempty (β i)
-→ Nonempty (∀ i, β i)); that the axiom cannot be dropped there is the independence of choice from ZF (Cohen 1963),
-cited, not proved here. -/
-theorem choice_by_rule {ι α : Type} (L : ι → List α) (i0 : ι) (h : ∀ i, L i ≠ []) :
-    ∃ f : ι → α, ∀ i, List.Mem (f i) (L i) := by
-  cases h0 : L i0 with
-  | nil => exact absurd h0 (h i0)
-  | cons d _ => exact ⟨fun i => firstOr d (L i), fun i => firstOr_mem d (L i) (h i)⟩
+/-- The head of a non-empty list. -/
+def pick {α : Type} : (l : List α) → l ≠ [] → α
+  | [], h => absurd rfl h
+  | a :: _, _ => a
+
+theorem pick_mem {α : Type} : ∀ (l : List α) (h : l ≠ []), List.Mem (pick l h) l
+  | [], h => absurd rfl h
+  | _ :: t, _ => List.Mem.head t
+
+/-- Choice from ANY family of lists given as a function — infinite, even uncountable, index sets included — needs no
+axiom: a list carries an order, and the order does the choosing, so no choice principle is involved (close to
+trivial). (2026-11-06, the curator: "на бесконечных мы только намекаем?") The point is Russell's shoes and socks:
+what decides is whether a rule picks from every member, given with the family or definable from it, not finite
+against infinite. Where no rule exists the axiom supplies the picks; that it cannot be proved there is, for ZF,
+Cohen 1963 (with Gödel 1938 for consistency), and for Lean's `Classical.choice` a separate known result about type
+theory — both cited, not proved here. -/
+theorem choice_by_rule {ι α : Type} (L : ι → List α) (h : ∀ i, L i ≠ []) :
+    ∃ f : ι → α, ∀ i, List.Mem (f i) (L i) :=
+  ⟨fun i => pick (L i) (h i), fun i => pick_mem (L i) (h i)⟩
 
 /-- The infinite case written out: a choice function for a sequence of non-empty lists, no axiom. -/
 theorem choice_sequence {α : Type} (L : Nat → List α) (h : ∀ n, L n ≠ []) :
     ∃ f : Nat → α, ∀ n, List.Mem (f n) (L n) :=
-  choice_by_rule L 0 h
+  choice_by_rule L h
 
 end ZChoiceRead
 
@@ -119,5 +128,6 @@ end ZChoiceRead
 #print axioms ZChoiceRead.same_pick
 #print axioms ZChoiceRead.which_pick
 #print axioms ZChoiceRead.finite_choice
+#print axioms ZChoiceRead.pick_mem
 #print axioms ZChoiceRead.choice_by_rule
 #print axioms ZChoiceRead.choice_sequence

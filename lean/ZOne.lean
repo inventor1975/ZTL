@@ -50,7 +50,10 @@ how the logic reads it. `ZOrigin` showed Z, F, T born from ONE atom (¬p = F, ¬
        (`truthteller_stable`); the liar has no stable value, the truth-teller two (`liar_no_fixed`). Reading the
        liar's revisions as a flipping owner is our link, not part of that theory.
 
-  6. THE MODEL IS ZTL'S CAUTIOUS REGISTER (the curator: "Да, пробуй закрыть"). Reading a formula's occurrences left
+  6. THE MODEL IS ZTL'S CAUTIOUS REGISTER (the curator: "Да, пробуй закрыть"). PRIOR ART: the core equivalence
+     (occurrence-wise reading = strong Kleene) is Spector 2025 (Sinn und Bedeutung 29), in Lean in Linglib
+     (`Trivalent.Formula.eval_strongKleene_eq_supervaluation`); the two-versus-three count (4 patterns vs 2^n) is
+     elementary. What is ZTL's own here is the comparison with the decisive table ((p ∧ p) → p). Reading a formula's occurrences left
      to right (`rval`), the values it takes over all lists of reads are exactly its dirty readings (`reads_exact`,
      against `ZDirty.rd`). Hence under pure doubt "true at every list of reads" is exactly the strong Kleene T
      (`model_is_kleene`) — the whole-formula adversary of `ZGames` — and implies the decisive table's T

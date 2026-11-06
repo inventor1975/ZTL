@@ -6,6 +6,10 @@ import NoGift
 Z is a dirty parameter: not ours, its owner may change it between two reads, so each occurrence
 is read on its own. What is proved here (2026-10-28):
   * `rd_is_kleene`     — the dirty reading, taken as a semantics, IS strong Kleene logic;
+                          PRIOR ART (found 2026-11-06 through an outside reviewer, checked): the same equivalence —
+                          strong Kleene = supervaluation over the variants that read each occurrence of an atom
+                          independently — is in B. Spector, Proc. Sinn und Bedeutung 29 (2025), §5, and formalized in
+                          Lean 4 in Linglib (`Trivalent.Formula.eval_strongKleene_eq_supervaluation`). Not new here;
   * `*_is_up_kleene`   — each ZTL connective is strong Kleene followed by the assertion ↑;
   * `covers_rd`, `refusal_witnessed`, `never_stricter` — every F of ZTL is witnessed by a reading;
   * `nand_lift` …      — the lifts of the negated connectives are the argument-side De Morgan forms

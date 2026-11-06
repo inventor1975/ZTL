@@ -26,6 +26,13 @@ how the logic reads it. `ZOrigin` showed Z, F, T born from ONE atom (¬p = F, ¬
      The judge's IF STABLE is this kind of reading (one value at every occurrence, `ZDirty`), mirrored, not imported;
      the link to `ZChoiceRead.same_pick` is an analogy.
 
+  4. A THIRD READING: THE VALUE FLIPS (2026-11-06, the curator: "а если грязный параметр будет стремить значение к
+     противоположному?"). Two cases. An owner who sets each read to defeat the verdict is the adversary of `ZGames`
+     — ZTL's own semantics (`check_scope_is_ztl`). A value that flips at every read by a fixed rule is a third
+     reading of p ⋆ p (`liftA`), the liar's mechanism: it makes p ∨ p and p ⊕ p true and p ↔ p false
+     (`flip_table`). The dirty reading earns only what both the same-value and the flipping readings earn
+     (`dirty_is_both`, at Z): two reads of a Boolean value are either equal or opposite, and it allows both.
+
 READING, not proved: classical logic never has to choose between the two readings — its values are clean, and on
 clean values they coincide. With an unchecked value they come apart; ZTL picks the cautious one and treats "the same
 value both times" as an extra assumption, as it treats a choice used consistently.
@@ -203,6 +210,36 @@ theorem beyond_pp : zor Z (znot Z) = F ∧ ∀ a : Bool, (a || !a) = true := by
   refine ⟨by decide, ?_⟩
   intro a; cases a <;> rfl
 
+/-! ### 4. A third reading: the value flips at the second read -/
+
+/-- The flipping reading of x ⋆ x: at a dirty x the second read is the negation of the first (a clean value
+cannot flip, and is read as it is). -/
+def liftA (f : Bool → Bool → Bool) (x : V) : V :=
+  match x with
+  | Z => if [true, false].all (fun a => f a (!a)) then T else F
+  | T => lift2 f T T
+  | F => lift2 f F F
+
+/-- What the dirty reading earns, the flipping reading earns too. -/
+theorem dirty_earned_flip_earned : ∀ a b c d : Bool, ∀ x : V,
+    lift2 (tbl a b c d) x x = T → liftA (tbl a b c d) x = T := by
+  decide
+
+/-- At Z, for p ⋆ p, the dirty reading earns exactly what both the same-value and the flipping reading earn:
+two reads of a Boolean value are either equal or opposite, and the dirty reading allows both. -/
+theorem dirty_is_both : ∀ a b c d : Bool,
+    lift2 (tbl a b c d) Z Z = T ↔ (liftS (tbl a b c d) Z = T ∧ liftA (tbl a b c d) Z = T) := by
+  decide
+
+/-- The flipping reading — the liar's mechanism — makes p ∨ p and p ⊕ p true and p ↔ p false; the dirty
+reading earns none of the three. -/
+theorem flip_table :
+    liftA (fun a b => a || b) Z = T ∧ liftA (fun a b => a != b) Z = T ∧
+    liftA (fun a b => a == b) Z = F ∧ liftA (fun a b => a && b) Z = F ∧
+    liftA (fun a b => !a || b) Z = F ∧
+    zor Z Z = F ∧ zxor Z Z = F ∧ zxnor Z Z = F := by
+  decide
+
 end ZOne
 
 #print axioms ZOne.occ_pos
@@ -216,3 +253,6 @@ end ZOne
 #print axioms ZOne.two_earned_one_earned
 #print axioms ZOne.clean_coincide
 #print axioms ZOne.beyond_pp
+#print axioms ZOne.dirty_earned_flip_earned
+#print axioms ZOne.dirty_is_both
+#print axioms ZOne.flip_table

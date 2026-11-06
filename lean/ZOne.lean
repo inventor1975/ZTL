@@ -1,5 +1,6 @@
 import ZTL
 import ZOrigin
+import ZDirty
 /-!
 # ZOne — everything from one Z: one occurrence gives a chain; under doubt one atom gives every value; two readings. Zero axioms.
 (2026-11-06)
@@ -36,8 +37,8 @@ how the logic reads it. `ZOrigin` showed Z, F, T born from ONE atom (¬p = F, ¬
   5. THE BOUNDARIES OF 4, CLOSED (the curator: "почему бы не попытаться их закрыть?").
      * Only Z can flip (`flip_needs_dirty`): given the readings of the values (`subs`), the clause "clean values do
        not flip" follows; it is not a separate choice.
-     * n reads, in a MODEL (`DirtyN`, `StableN`, `FlipN`: reads as a list, a claim as a test on it; that the model
-       matches ZTL's own evaluation is proved here only for one connective on two reads): the dirty reading earns only what both earn, for
+     * n reads, in a MODEL (`DirtyN`, `StableN`, `FlipN`: reads as a list, a claim as a test on it; tied to ZTL's
+       own evaluation in 6): the dirty reading earns only what both earn, for
        every n (`dirtyN_both`); with two reads the converse holds for every claim (`two_reads`); from three reads on
        it fails (`three_reads`): (r₁ = r₂) ∨ (r₂ ≠ r₃), on the first three reads, holds at every same-value and every flipping pattern and
        fails at (T, F, F) — an owner who is neither, against whom the dirty reading still guards.
@@ -48,6 +49,14 @@ how the logic reads it. `ZOrigin` showed Z, F, T born from ONE atom (¬p = F, ¬
        revisions are exactly the flipping pattern (`liar_flips`), the truth-teller's exactly the same-value one
        (`truthteller_stable`); the liar has no stable value, the truth-teller two (`liar_no_fixed`). Reading the
        liar's revisions as a flipping owner is our link, not part of that theory.
+
+  6. THE MODEL IS ZTL'S CAUTIOUS REGISTER (the curator: "Да, пробуй закрыть"). Reading a formula's occurrences left
+     to right (`rval`), the values it takes over all lists of reads are exactly its dirty readings (`reads_exact`,
+     against `ZDirty.rd`). Hence under pure doubt "true at every list of reads" is exactly the strong Kleene T
+     (`model_is_kleene`) — the whole-formula adversary of `ZGames` — and implies the decisive table's T
+     (`model_implies_decisive`), not conversely: (p ∧ p) → p holds at every same-value and every flipping list of
+     three reads, fails at (T, T, F), is not Kleene-T, and the decisive table grants it (`three_reads_in_ztl`):
+     the table records p ∧ p as checked-false and then grants F → p.
 
 READING, not proved: classical logic never has to choose between the two readings — its values are clean, and on
 clean values they coincide. With an unchecked value they come apart; ZTL picks the cautious one and treats "the same
@@ -356,6 +365,222 @@ theorem liar_no_fixed : (∀ a : Bool, (!a) ≠ a) ∧ (∀ a : Bool, (fun v : B
   refine ⟨fun a => ?_, fun _ => rfl⟩
   cases a <;> decide
 
+/-! ### 6. The model of reads is ZTL's cautious register
+
+Section 5 counts reads in a model: a list of T/F, a claim as a test on it. Here the model is tied to ZTL's own
+evaluation. A formula's occurrences are read left to right (`rval`: the first `occ φ` reads go to φ, the rest to
+ψ). Under pure doubt, "true at every list of reads" is exactly the strong Kleene value T (`model_is_kleene`) — the
+cautious register, ZTL's whole-formula adversary (`ZGames.formula_scope_is_kleene`) — and it implies the decisive
+table's T (`model_implies_decisive`), not conversely: (p ∧ p) → p holds at every same-value and every flipping list
+of three reads, fails at (T, T, F), and the decisive table grants it (`three_reads_in_ztl`). -/
+
+def tk : Nat → List Bool → List Bool
+  | 0, _ => []
+  | _ + 1, [] => []
+  | n + 1, a :: l => a :: tk n l
+
+def dp : Nat → List Bool → List Bool
+  | 0, l => l
+  | _ + 1, [] => []
+  | n + 1, _ :: l => dp n l
+
+theorem len_app : ∀ s t : List Bool, (s ++ t).length = s.length + t.length
+  | [], t => (Nat.zero_add t.length).symm
+  | a :: s, t => by
+      show (s ++ t).length + 1 = (s.length + 1) + t.length
+      rw [len_app s t, Nat.add_right_comm]
+
+theorem tk_app : ∀ s t : List Bool, tk s.length (s ++ t) = s
+  | [], _ => rfl
+  | a :: s, t => by show a :: tk s.length (s ++ t) = a :: s; rw [tk_app s t]
+
+theorem dp_app : ∀ s t : List Bool, dp s.length (s ++ t) = t
+  | [], _ => rfl
+  | _ :: s, t => dp_app s t
+
+theorem tk_len : ∀ (a b : Nat) (s : List Bool), s.length = a + b → (tk a s).length = a
+  | 0, _, _, _ => rfl
+  | a + 1, b, [], h => by
+      have h' : 0 = (a + b) + 1 := by rw [Nat.add_right_comm] at h; exact h
+      exact Nat.noConfusion h'
+  | a + 1, b, x :: l, h => by
+      have h' : l.length + 1 = (a + b) + 1 := by rw [Nat.add_right_comm] at h; exact h
+      show (tk a l).length + 1 = a + 1
+      rw [tk_len a b l (Nat.succ.inj h')]
+
+theorem dp_len : ∀ (a b : Nat) (s : List Bool), s.length = a + b → (dp a s).length = b
+  | 0, b, s, h => by show s.length = b; rw [h, Nat.zero_add]
+  | a + 1, b, [], h => by
+      have h' : 0 = (a + b) + 1 := by rw [Nat.add_right_comm] at h; exact h
+      exact Nat.noConfusion h'
+  | a + 1, b, x :: l, h => by
+      have h' : l.length + 1 = (a + b) + 1 := by rw [Nat.add_right_comm] at h; exact h
+      exact dp_len a b l (Nat.succ.inj h')
+
+/-- The classical value of φ when its occurrences are read, left to right, as the list s. -/
+def rval : Fm → List Bool → Bool
+  | .atom _, [] => false
+  | .atom _, r :: _ => r
+  | .top, _ => true
+  | .bot, _ => false
+  | .neg φ, s => !rval φ s
+  | .conj φ ψ, s => rval φ (tk (occ φ) s) && rval ψ (dp (occ φ) s)
+  | .disj φ ψ, s => rval φ (tk (occ φ) s) || rval ψ (dp (occ φ) s)
+  | .imp φ ψ, s => !rval φ (tk (occ φ) s) || rval ψ (dp (occ φ) s)
+  | .xor φ ψ, s => rval φ (tk (occ φ) s) != rval ψ (dp (occ φ) s)
+  | .xnor φ ψ, s => rval φ (tk (occ φ) s) == rval ψ (dp (occ φ) s)
+
+theorem any2 (h : Bool → Bool) : ([true, false].any h = true) ↔ ∃ a, h a = true := by
+  constructor
+  · intro e
+    cases ht : h true
+    · cases hf : h false
+      · have e' : (h true || (h false || false)) = true := e
+        rw [ht, hf] at e'; exact Bool.noConfusion e'
+      · exact ⟨false, hf⟩
+    · exact ⟨true, ht⟩
+  · intro ⟨a, ha⟩
+    show (h true || (h false || false)) = true
+    cases a
+    · rw [ha]; cases h true <;> rfl
+    · rw [ha]; rfl
+
+theorem and3 (x y z : Bool) : (x && y && z) = true ↔ (x = true ∧ y = true ∧ z = true) := by
+  cases x <;> cases y <;> cases z <;> exact ⟨fun h => by first | exact Bool.noConfusion h | exact ⟨rfl, rfl, rfl⟩,
+    fun ⟨a, b, c⟩ => by first | exact Bool.noConfusion a | exact Bool.noConfusion b | exact Bool.noConfusion c | rfl⟩
+
+theorem not_eq (x : Bool) : ((!x) = true) ↔ (x = false) := by
+  cases x <;> exact ⟨fun h => by first | rfl | exact Bool.noConfusion h, fun h => by first | rfl | exact Bool.noConfusion h⟩
+
+/-- The binary step: the readings of φ ⋆ ψ are exactly the pairs of readings of φ and ψ, split by position. -/
+theorem bin_reads (g : Bool → Bool → Bool) (φ ψ : Fm) (p q : Bool × Bool)
+    (ihφ : ∀ b, ok b p = true ↔ ∃ s : List Bool, s.length = occ φ ∧ rval φ s = b)
+    (ihψ : ∀ b, ok b q = true ↔ ∃ s : List Bool, s.length = occ ψ ∧ rval ψ s = b) (b : Bool) :
+    (∃ a c, ok a p = true ∧ ok c q = true ∧ g a c = b) ↔
+    ∃ s : List Bool, s.length = occ φ + occ ψ ∧ g (rval φ (tk (occ φ) s)) (rval ψ (dp (occ φ) s)) = b := by
+  constructor
+  · intro ⟨a, c, ha, hc, hg⟩
+    obtain ⟨s1, l1, v1⟩ := (ihφ a).1 ha
+    obtain ⟨s2, l2, v2⟩ := (ihψ c).1 hc
+    refine ⟨s1 ++ s2, by rw [len_app, l1, l2], ?_⟩
+    rw [← l1, tk_app, dp_app, v1, v2]; exact hg
+  · intro ⟨s, l, hg⟩
+    exact ⟨_, _, (ihφ _).2 ⟨_, tk_len _ _ s l, rfl⟩, (ihψ _).2 ⟨_, dp_len _ _ s l, rfl⟩, hg⟩
+
+theorem comb_true (g : Bool → Bool → Bool) (p q : Bool × Bool) :
+    ok true (comb g p q) = true ↔ ∃ a c, ok a p = true ∧ ok c q = true ∧ g a c = true := by
+  show ([true, false].any (fun a => [true, false].any (fun c => ok a p && ok c q && g a c))) = true ↔ _
+  constructor
+  · intro h
+    obtain ⟨a, h⟩ := (any2 _).1 h; obtain ⟨c, h⟩ := (any2 _).1 h; obtain ⟨x, y, z⟩ := (and3 _ _ _).1 h
+    exact ⟨a, c, x, y, z⟩
+  · intro ⟨a, c, x, y, z⟩; exact (any2 _).2 ⟨a, (any2 _).2 ⟨c, (and3 _ _ _).2 ⟨x, y, z⟩⟩⟩
+
+theorem comb_false (g : Bool → Bool → Bool) (p q : Bool × Bool) :
+    ok false (comb g p q) = true ↔ ∃ a c, ok a p = true ∧ ok c q = true ∧ g a c = false := by
+  show ([true, false].any (fun a => [true, false].any (fun c => ok a p && ok c q && !(g a c)))) = true ↔ _
+  constructor
+  · intro h
+    obtain ⟨a, h⟩ := (any2 _).1 h; obtain ⟨c, h⟩ := (any2 _).1 h; obtain ⟨x, y, z⟩ := (and3 _ _ _).1 h
+    exact ⟨a, c, x, y, (not_eq _).1 z⟩
+  · intro ⟨a, c, x, y, z⟩; exact (any2 _).2 ⟨a, (any2 _).2 ⟨c, (and3 _ _ _).2 ⟨x, y, (not_eq _).2 z⟩⟩⟩
+
+theorem comb_ok (g : Bool → Bool → Bool) (p q : Bool × Bool) (b : Bool) :
+    ok b (comb g p q) = true ↔ ∃ a c, ok a p = true ∧ ok c q = true ∧ g a c = b := by
+  cases b
+  · exact comb_false g p q
+  · exact comb_true g p q
+
+/-- Under pure doubt, the readings of φ (`rd`, the dirty reading of ZDirty) are exactly the values `rval φ` takes
+over all lists of `occ φ` reads. -/
+theorem reads_exact (v : Nat → V) (hz : ZOrigin.AllZ v) :
+    ∀ (φ : Fm) (b : Bool), ok b (rd v φ) = true ↔ ∃ s : List Bool, s.length = occ φ ∧ rval φ s = b
+  | .atom n, b => by
+      have e : rd v (.atom n) = (true, true) := by
+        show ((subs (v n)).contains true, (subs (v n)).contains false) = (true, true); rw [hz n]; rfl
+      rw [e]
+      exact ⟨fun _ => ⟨[b], rfl, rfl⟩, fun _ => by cases b <;> rfl⟩
+  | .top, b => by
+      cases b
+      · exact ⟨fun h => Bool.noConfusion h, fun ⟨_, _, h⟩ => Bool.noConfusion h⟩
+      · exact ⟨fun _ => ⟨[], rfl, rfl⟩, fun _ => rfl⟩
+  | .bot, b => by
+      cases b
+      · exact ⟨fun _ => ⟨[], rfl, rfl⟩, fun _ => rfl⟩
+      · exact ⟨fun h => Bool.noConfusion h, fun ⟨_, _, h⟩ => Bool.noConfusion h⟩
+  | .neg φ, b => by
+      have ih := reads_exact v hz φ (!b)
+      have sw : ok b (rd v (.neg φ)) = ok (!b) (rd v φ) := by
+        show ok b ((rd v φ).2, (rd v φ).1) = ok (!b) (rd v φ); cases b <;> rfl
+      rw [sw]
+      refine ih.trans ⟨?_, ?_⟩
+      · intro ⟨s, l, h⟩; exact ⟨s, l, by show (!rval φ s) = b; rw [h]; cases b <;> rfl⟩
+      · intro ⟨s, l, h⟩
+        have h' : (!rval φ s) = b := h
+        exact ⟨s, l, by rw [← h']; cases rval φ s <;> rfl⟩
+  | .conj φ ψ, b => by
+      show ok b (comb _ (rd v φ) (rd v ψ)) = true ↔ _
+      exact (comb_ok _ _ _ b).trans (bin_reads _ φ ψ _ _ (reads_exact v hz φ) (reads_exact v hz ψ) b)
+  | .disj φ ψ, b => by
+      show ok b (comb _ (rd v φ) (rd v ψ)) = true ↔ _
+      exact (comb_ok _ _ _ b).trans (bin_reads _ φ ψ _ _ (reads_exact v hz φ) (reads_exact v hz ψ) b)
+  | .imp φ ψ, b => by
+      show ok b (comb _ (rd v φ) (rd v ψ)) = true ↔ _
+      exact (comb_ok _ _ _ b).trans (bin_reads (fun a c => !a || c) φ ψ _ _ (reads_exact v hz φ) (reads_exact v hz ψ) b)
+  | .xor φ ψ, b => by
+      show ok b (comb _ (rd v φ) (rd v ψ)) = true ↔ _
+      exact (comb_ok _ _ _ b).trans (bin_reads _ φ ψ _ _ (reads_exact v hz φ) (reads_exact v hz ψ) b)
+  | .xnor φ ψ, b => by
+      show ok b (comb _ (rd v φ) (rd v ψ)) = true ↔ _
+      exact (comb_ok _ _ _ b).trans (bin_reads _ φ ψ _ _ (reads_exact v hz φ) (reads_exact v hz ψ) b)
+
+theorem enc_T : ∀ x : V, enc x = (true, false) → x = T := by decide
+
+/-- **The model of reads is the cautious register.** Under pure doubt, φ is true at every list of reads exactly
+when its strong Kleene value is T. -/
+theorem model_is_kleene (v : Nat → V) (hz : ZOrigin.AllZ v) (φ : Fm) :
+    kev v φ = T ↔ DirtyN (occ φ) (rval φ) := by
+  have hr := reads_exact v hz φ
+  have k := rd_is_kleene v φ
+  constructor
+  · intro h s l
+    cases e : rval φ s
+    · have w := (hr false).2 ⟨s, l, e⟩
+      rw [k, h] at w; exact Bool.noConfusion w
+    · rfl
+  · intro hd
+    apply enc_T
+    rw [← k]
+    have h1 : ok true (rd v φ) = true := (hr true).2 ⟨rep (occ φ) true, rep_length _ _, hd _ (rep_length _ _)⟩
+    have h2 : ok false (rd v φ) = false := by
+      cases e : ok false (rd v φ)
+      · rfl
+      · obtain ⟨s, l, hs⟩ := (hr false).1 e
+        rw [hd s l] at hs; exact Bool.noConfusion hs
+    revert h1 h2; cases rd v φ with
+    | mk t f => intro h1 h2; have h1' : t = true := h1; have h2' : f = false := h2; rw [h1', h2']
+
+/-- True at every list of reads ⇒ the decisive table grants T. -/
+theorem model_implies_decisive (v : Nat → V) (hz : ZOrigin.AllZ v) (φ : Fm) (h : DirtyN (occ φ) (rval φ)) :
+    evalF v φ = T := by
+  apply never_stricter
+  cases e : (rd v φ).2
+  · rfl
+  · have e' : ok false (rd v φ) = true := e
+    obtain ⟨s, l, hs⟩ := (reads_exact v hz φ false).1 e'
+    rw [h s l] at hs; exact Bool.noConfusion hs
+
+/-- (p ∧ p) → p: three reads; true at every same-value and every flipping list, false at (T, T, F); its strong
+Kleene value is not T; the decisive table grants it. -/
+def p3 : Fm := .imp (.conj (.atom 0) (.atom 0)) (.atom 0)
+
+theorem three_reads_in_ztl :
+    occ p3 = 3 ∧ StableN 3 (rval p3) ∧ FlipN 3 (rval p3) ∧ rval p3 [true, true, false] = false ∧
+    kev (fun _ => Z) p3 ≠ T ∧ evalF (fun _ => Z) p3 = T := by
+  refine ⟨rfl, fun a => ?_, fun a => ?_, rfl, by decide, by decide⟩
+  · cases a <;> rfl
+  · cases a <;> rfl
+
 end ZOne
 
 #print axioms ZOne.occ_pos
@@ -381,3 +606,20 @@ end ZOne
 #print axioms ZOne.liar_flips
 #print axioms ZOne.truthteller_stable
 #print axioms ZOne.liar_no_fixed
+#print axioms ZOne.len_app
+#print axioms ZOne.tk_app
+#print axioms ZOne.dp_app
+#print axioms ZOne.tk_len
+#print axioms ZOne.dp_len
+#print axioms ZOne.any2
+#print axioms ZOne.and3
+#print axioms ZOne.not_eq
+#print axioms ZOne.bin_reads
+#print axioms ZOne.comb_true
+#print axioms ZOne.comb_false
+#print axioms ZOne.comb_ok
+#print axioms ZOne.reads_exact
+#print axioms ZOne.enc_T
+#print axioms ZOne.model_is_kleene
+#print axioms ZOne.model_implies_decisive
+#print axioms ZOne.three_reads_in_ztl

@@ -2218,6 +2218,14 @@ def run(doc, ground_registry=None):
         # computed (as for defined rows above); the report names these apart, the reason says where the answer is,
         # and the reverse pass offers only rows a check can settle, holding the chance ones at Z.
         _byn = {x.get("name"): x for x in rows}
+        # CLASSICAL REASONING IS SAFE HERE (2026-11-06, lean/ZAxiomsRead.lean, ClassicalAgreement.lean): when every
+        # statement the claim reads is clean (T or F to the judge — no dirty, chance or searched row), the classical
+        # laws, the substitution of equivalents and the excluded middle hold for it; said, so a reader or an agent
+        # knows where classical shortcuts are licensed and where they are not
+        _atoms = sorted(names_in(claim) & set(_byn))
+        _rm = resolved_marking(rows)
+        if _atoms and all(_rm.get(a) in ("T", "F") for a in _atoms):
+            report["judge"]["classical_safe"] = True
         _searched = sorted(n for n in r["unverified"] if n in _byn and _byn[n].get("status") == "verified"
                            and (_byn[n].get("ground_kind") or "").strip() == "search")
         if _searched:

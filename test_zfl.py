@@ -767,6 +767,13 @@ def sec19_ztl_i_degrees():
         zfl._row_mark = real_m
     print("   a search that found nothing: the row is read as not verified (OPEN, W_SEARCH_NOT_PROOF, offered to")
     print("   prove); the same row on a document EARNED; sabotage (search read as proof) caught")
+    # CLASSICAL REASONING IS SAFE only where every statement read is clean (2026-11-06, ZAxiomsRead)
+    C = lambda n, **k: dict({"name": n, "status": "verified", "ground": "m", "means": n}, **k)
+    cs = lambda rows, claim: zfl.run(zfl.coerce({"rows": rows, "claim": claim}))["report"]["judge"].get("classical_safe")
+    assert cs([C("a"), C("b", status="refuted")], "a | b") is True
+    assert cs([C("a"), {"name": "c", "status": "unverified", "means": "c"}], "a & c") is None    # a dirty input
+    assert cs([C("a", degree="0.5")], "a") is None and cs([C("a", ground_kind="search")], "a") is None
+    print("   classical_safe: set when every statement read is T or F; not with a dirty, chance or searched input")
     try:
         import backread
     except ImportError:                                                     # the mirror lives in the studio only

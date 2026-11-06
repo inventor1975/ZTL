@@ -44,6 +44,7 @@ each on a run; the closing statement; the aphorism if one was earned).
 | Monty Hall — the host's protocol, unnamed | `monty_hall.py` | measured 2026-11-05 |
 | Simpson's paradox — a causal premise the table does not contain | `simpson.py` | measured 2026-11-05 |
 | Zeno's Achilles, Gabriel's horn — the stages against the motion; a coat with no room | `zeno.py` | measured 2026-11-05 |
+| Banach–Tarski — the decomposition earned on the stipulated choice; the pieces' volumes have no subject (E) | `banach_tarski.py` | measured 2026-11-06 |
 | the quantum stones made runnable (emulator qemu.py) | `quantum.py` | demos |
 
 *AI participation: designed and written in a dialogue between the curator

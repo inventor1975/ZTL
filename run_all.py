@@ -524,6 +524,9 @@ STANDS = [
         "MONTY HALL: all measurements hold."]),
     ("dilemmas/simpson.py", [
         "SIMPSON: all measurements hold."]),
+    ("dilemmas/banach_tarski.py", ["BANACH-TARSKI: all measurements hold",
+                                   "INFEASIBLE — no invariant finitely additive probability",
+                                   "CONSERVE (the pieces' volumes add up): E"]),
     ("dilemmas/zeno.py", [
         "ZENO AND THE HORN: all measurements hold."]),
     ("dilemmas/sleeping_beauty.py", [

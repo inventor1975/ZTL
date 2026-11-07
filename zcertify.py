@@ -1277,6 +1277,11 @@ def check_none(exprs, quantities, cert, neqs=()):
         k = node.get("which")
         if not isinstance(k, int) or isinstance(k, bool) or not (0 <= k < len(exprs)):
             return False, f"{path}: 'which' must name one of the {len(exprs)} equations"
+        # the plain reading first (both readings enclose; the affine one only narrows, and costs ~6x more —
+        # MEASURED 2026-11-07 on the KS-23 systems): a plain reading that excludes 0 settles the leaf already
+        r = _reading(exprs[k], qs, piece, affine=False)
+        if r is not None and (r[0] > 0 or r[1] < 0):
+            return True, None
         r = _reading(exprs[k], qs, piece)
         if r is None:
             return False, f"{path}: equation {k} has no interval reading on the piece"

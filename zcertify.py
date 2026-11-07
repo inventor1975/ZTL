@@ -1131,7 +1131,9 @@ def check_system(target, laws, unknowns, quantities, op, bound, cert):
 #         {"names": [r, s], "eqs": [G_k], "pows": [m_k], "neqs": [H_j], "npows": [q_j], "tree": tree}: the kernel
 #         expands E_k(φ) - r^m_k G_k and N_j(φ) - r^q_j H_j into exact polynomials and asks both to be 0; then, as
 #         r != 0, a solution near p is a solution of (G, H) in the chart box — which the sub-tree excludes (over the
-#         whole chart box, r = 0 included: a stronger claim, so still sound).
+#         whole chart box, r = 0 included: a stronger claim, so still sound). Optional "keep": [k, ...] — the sub
+#         carries only those equations (G and pows for them alone): a solution of the whole system solves any part
+#         of it, so excluding a part's solutions is a stronger claim (2026-11-07).
 # The search (which equation, where to cut, where to blow up and how far) is outside; the kernel only reads and
 # expands. Lean: ks23 (ztl-private) proves this rule's ℝ-version for the KS graphs.
 
@@ -1222,6 +1224,22 @@ def _rpow(r, m):
     return out
 
 
+def node_of(j, names):
+    """A JSON expression node -> a reader node: "p/q" or an int is a number, a known name is itself,
+    [op, a, b] with op in add/sub/mul is that operation. Anything else is refused (ValueError)."""
+    if isinstance(j, bool):
+        raise ValueError("a truth value is not an expression")
+    if isinstance(j, int):
+        return Fraction(j)
+    if isinstance(j, str):
+        if j in names:
+            return j
+        return Fraction(j)                      # raises ValueError if not a number
+    if isinstance(j, list) and len(j) == 3 and j[0] in ("add", "sub", "mul"):
+        return (j[0], node_of(j[1], names), node_of(j[2], names))
+    raise ValueError(f"not an expression node: {str(j)[:40]}")
+
+
 def check_none(exprs, quantities, cert, neqs=()):
     """Does NO point of the quantities' box satisfy every `exprs[k] == 0` with every `neqs[j] != 0`?
     Returns (True, pieces) or (False, reason). Nodes from znumjudge._parse_arith; chart sub-systems are text,
@@ -1301,16 +1319,21 @@ def check_none(exprs, quantities, cert, neqs=()):
             q2[rn] = dict(qs[u], lo=-rho, hi=rho)
             q2[sn] = dict(qs[u], lo=-ONE, hi=ONE)
             try:
-                G = [_parse_arith(t, q2) for t in S.get("eqs", [])]
-                H = [_parse_arith(t, q2) for t in S.get("neqs", [])]
+                rd = lambda t: _parse_arith(t, q2) if isinstance(t, str) else node_of(t, q2)
+                G = [rd(t) for t in S.get("eqs", [])]
+                H = [rd(t) for t in S.get("neqs", [])]
             except Exception as why:                       # noqa: BLE001 — an unreadable sub-system is refused
                 return False, f"{path}/{side}: unreadable sub-system ({why})"
             pows, npows = S.get("pows", []), S.get("npows", [])
-            if len(G) != len(exprs) or len(pows) != len(exprs) or len(H) != len(neqs) or len(npows) != len(neqs):
-                return False, f"{path}/{side}: one G and one power per equation, one H and one power per condition"
+            keep = S.get("keep", list(range(len(exprs))))
+            if not isinstance(keep, list) or not keep or any(not isinstance(k, int) or isinstance(k, bool)
+                                                             or not (0 <= k < len(exprs)) for k in keep):
+                return False, f"{path}/{side}: 'keep' must list equations of the system"
+            if len(G) != len(keep) or len(pows) != len(keep) or len(H) != len(neqs) or len(npows) != len(neqs):
+                return False, f"{path}/{side}: one G and one power per kept equation, one H and one power per condition"
             mp = phi(rn, sn)
             try:
-                for k, (e, g, m) in enumerate(zip(exprs, G, pows)):
+                for k, e, g, m in zip(keep, [exprs[k] for k in keep], G, pows):
                     if not isinstance(m, int) or m < 0 or poly(("sub", subst(e, mp), ("mul", _rpow(rn, m), g))):
                         return False, f"{path}/{side}: E_{k}(φ) is not {rn}^{m}·G_{k}"
                 for j, (n, h, q) in enumerate(zip(neqs, H, npows)):

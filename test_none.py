@@ -168,6 +168,12 @@ bad = {"chart": dict(c6["chart"], Y=dict(c6["chart"]["Y"], eqs=["s", "s + 1"]))}
 check("a wrong G is refused", not ZC.check_none(E6, Q6, bad, N6)[0])
 bad = {"chart": dict(c6["chart"], rho="1/2")}
 check("a square smaller than the piece is refused", not ZC.check_none(E6, Q6, bad, N6)[0])
+sub = {"chart": dict(c6["chart"], X=dict(c6["chart"]["X"], keep=[0, 1]), Y=dict(c6["chart"]["Y"], keep=[0, 1]))}
+check("an explicit full 'keep' is accepted", ZC.check_none(E6, Q6, sub, N6)[0])
+one = dict(c6["chart"]["X"], keep=[1], eqs=[c6["chart"]["X"]["eqs"][1]], pows=[c6["chart"]["X"]["pows"][1]])
+check("a 'keep' whose part has solutions in the chart is refused", not ZC.check_none(E6, Q6, {"chart": dict(c6["chart"], X=one)}, N6)[0])
+check("a 'keep' naming a missing equation is refused",
+      not ZC.check_none(E6, Q6, {"chart": dict(c6["chart"], X=dict(c6["chart"]["X"], keep=[0, 7]))}, N6)[0])
 E7, Q7 = sys_of(["x - y", "(x - 1/2)*(x + y)"], "x=[-1,1] credit, y=[-1,1] credit")
 N7 = [_parse_arith("x", Q7)]
 c7 = chart_cert(E7, N7, Q7, "x", "y", 0, 0, 1)

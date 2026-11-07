@@ -1116,3 +1116,222 @@ def check_system(target, laws, unknowns, quantities, op, bound, cert):
     if _names(e) & set(unknowns):
         return False, "system: an unknown is left in the target"
     return check(e, quantities, op, bound, cert)
+
+
+# ── NO SOLUTION (2026-11-07, the curator's "делаем — улучшение приборов в приоритете"; blow-ups by his "А") ─────
+# The claim: NO point of the box makes every equation E_k == 0 while every condition N_j != 0 holds — a system with
+# no admissible solution there (the Kochen–Specker non-embeddability shape: some orthogonality fails everywhere;
+# the N_j are the "distinct rays / nonzero vector" conditions). The certificate is a bisection tree:
+#     {"split": name, "at": "p/q", "lo": tree, "hi": tree}
+#     {"leaf": "nonzero", "which": k}     E_k's interval reading on the piece excludes 0 (strictly)
+#     {"chart": {"vars": [u, v], "at": ["a", "b"], "rho": "ρ", "X": sub, "Y": sub}}
+#         a BLOW-UP at the point p = (a, b): the piece must lie in |u-a| <= ρ, |v-b| <= ρ. At p itself some N_j is
+#         identically 0 or some E_k a nonzero constant (checked exactly). Every other point of the square is
+#         (u, v) = (a + r, b + r s) [X] or (a + r s, b + r) [Y] with r != 0, r in [-ρ, ρ], s in [-1, 1]. A sub is
+#         {"names": [r, s], "eqs": [G_k], "pows": [m_k], "neqs": [H_j], "npows": [q_j], "tree": tree}: the kernel
+#         expands E_k(φ) - r^m_k G_k and N_j(φ) - r^q_j H_j into exact polynomials and asks both to be 0; then, as
+#         r != 0, a solution near p is a solution of (G, H) in the chart box — which the sub-tree excludes (over the
+#         whole chart box, r = 0 included: a stronger claim, so still sound).
+# The search (which equation, where to cut, where to blow up and how far) is outside; the kernel only reads and
+# expands. Lean: ks23 (ztl-private) proves this rule's ℝ-version for the KS graphs.
+
+class NotPolynomial(ValueError):
+    pass
+
+
+def _pmul(p, q):
+    out = {}
+    for m1, c1 in p.items():
+        for m2, c2 in q.items():
+            d = dict(m1)
+            for n, k in m2:
+                d[n] = d.get(n, 0) + k
+            key = tuple(sorted(d.items()))
+            v = out.get(key, ZERO) + c1 * c2
+            if v:
+                out[key] = v
+            else:
+                out.pop(key, None)
+    return out
+
+
+def _padd(p, q, sign=1):
+    out = dict(p)
+    for m, c in q.items():
+        v = out.get(m, ZERO) + sign * c
+        if v:
+            out[m] = v
+        else:
+            out.pop(m, None)
+    return out
+
+
+def poly(e):
+    """E as an exact polynomial {monomial: Fraction}, monomial = sorted ((name, power), ...); refuses what is not one."""
+    if isinstance(e, bool):
+        raise NotPolynomial("a truth value")
+    if isinstance(e, (int, Fraction)):
+        return {(): Fraction(e)} if e else {}
+    if isinstance(e, str):
+        return {((e, 1),): ONE}
+    op, *args = e
+    if op == "sum":
+        out = {}
+        for a in args[0]:
+            out = _padd(out, poly(a))
+        return out
+    if op == "pow":
+        u, v = args
+        if not (isinstance(v, (int, Fraction)) and Fraction(v).denominator == 1 and v >= 0):
+            raise NotPolynomial("a power that is not a natural number")
+        out, base = {(): ONE}, poly(u)
+        for _ in range(int(v)):
+            out = _pmul(out, base)
+        return out
+    if op in ("add", "sub", "mul", "div") and len(args) == 2:
+        a, b = poly(args[0]), poly(args[1])
+        if op == "add":
+            return _padd(a, b)
+        if op == "sub":
+            return _padd(a, b, -1)
+        if op == "mul":
+            return _pmul(a, b)
+        if set(b) == {()} :                       # division by a nonzero constant only
+            c = b[()]
+            return {m: v / c for m, v in a.items()}
+        raise NotPolynomial("division by a non-constant")
+    raise NotPolynomial(f"{op!r} is not polynomial")
+
+
+def subst(e, mapping):
+    """E with each name in mapping replaced by its node."""
+    if isinstance(e, str):
+        return mapping.get(e, e)
+    if isinstance(e, (int, Fraction)) or not isinstance(e, tuple):
+        return e
+    op, *args = e
+    if op == "sum":
+        return ("sum", [subst(a, mapping) for a in args[0]])
+    return (op,) + tuple(subst(a, mapping) for a in args)
+
+
+def _rpow(r, m):
+    out = ONE
+    for _ in range(m):
+        out = ("mul", r, out) if out != ONE else r
+    return out
+
+
+def check_none(exprs, quantities, cert, neqs=()):
+    """Does NO point of the quantities' box satisfy every `exprs[k] == 0` with every `neqs[j] != 0`?
+    Returns (True, pieces) or (False, reason). Nodes from znumjudge._parse_arith; chart sub-systems are text,
+    read with the chart's names added to the quantities."""
+    if not exprs:
+        return False, "no equations: the empty system holds everywhere"
+    from znumjudge import _parse_arith
+    count = [0]
+
+    def run(exprs, neqs, qs, node, piece, path):
+        if not isinstance(node, dict):
+            return False, f"{path}: not a tree node"
+        if "split" in node:
+            n = node["split"]
+            if n not in piece:
+                return False, f"{path}: split on {n!r}, not a quantity of the system"
+            try:
+                at = Fraction(str(node["at"]))
+            except (ValueError, ZeroDivisionError, KeyError):
+                return False, f"{path}: split point unreadable"
+            lo, hi = piece[n]
+            if not (lo < at < hi):
+                return False, f"{path}: split {n} at {at} is not inside [{lo}, {hi}]"
+            left, right = dict(piece), dict(piece)
+            left[n], right[n] = (lo, at), (at, hi)
+            ok, why = run(exprs, neqs, qs, node.get("lo"), left, path + f"/{n}<={at}")
+            if not ok:
+                return ok, why
+            return run(exprs, neqs, qs, node.get("hi"), right, path + f"/{n}>={at}")
+        if "chart" in node:
+            return chart(exprs, neqs, qs, node["chart"], piece, path)
+        count[0] += 1
+        if node.get("leaf") != "nonzero":
+            return False, f"{path}: unknown leaf {node.get('leaf')!r} (a no-solution tree has 'nonzero' leaves)"
+        k = node.get("which")
+        if not isinstance(k, int) or isinstance(k, bool) or not (0 <= k < len(exprs)):
+            return False, f"{path}: 'which' must name one of the {len(exprs)} equations"
+        r = _reading(exprs[k], qs, piece)
+        if r is None:
+            return False, f"{path}: equation {k} has no interval reading on the piece"
+        if r[0] > 0 or r[1] < 0:
+            return True, None
+        return False, f"{path}: equation {k} reads [{r[0]}, {r[1]}] on the piece — 0 not excluded"
+
+    def chart(exprs, neqs, qs, C, piece, path):
+        try:
+            u, v = C["vars"]
+            a, b = Fraction(str(C["at"][0])), Fraction(str(C["at"][1]))
+            rho = Fraction(str(C["rho"]))
+        except (KeyError, ValueError, TypeError, ZeroDivisionError):
+            return False, f"{path}: a chart needs vars, at and rho"
+        if u not in piece or v not in piece or u == v or rho <= 0:
+            return False, f"{path}: chart vars must be two quantities of the piece, rho > 0"
+        if not (a - rho <= piece[u][0] and piece[u][1] <= a + rho and b - rho <= piece[v][0] and piece[v][1] <= b + rho):
+            return False, f"{path}: the piece is not inside the chart square at ({a}, {b}) of radius {rho}"
+        # the centre itself
+        try:
+            at_p = {u: a, v: b}
+            centre_ok = any(not poly(subst(n, at_p)) for n in neqs) or \
+                any(set(pe) == {()} for pe in (poly(subst(e, at_p)) for e in exprs))
+        except NotPolynomial as why:
+            return False, f"{path}: {why}"
+        if not centre_ok:
+            return False, f"{path}: at the centre ({a}, {b}) no condition vanishes identically and no equation is a nonzero constant"
+        for side, phi in (("X", lambda r, s: {u: ("add", a, r), v: ("add", b, ("mul", r, s))}),
+                          ("Y", lambda r, s: {u: ("add", a, ("mul", r, s)), v: ("add", b, r)})):
+            S = C.get(side)
+            if not isinstance(S, dict):
+                return False, f"{path}: chart side {side} missing"
+            try:
+                rn, sn = S["names"]
+            except (KeyError, ValueError, TypeError):
+                return False, f"{path}/{side}: names [r, s] missing"
+            if rn in qs or sn in qs or rn == sn:
+                return False, f"{path}/{side}: chart names must be new"
+            q2 = dict(qs)
+            q2[rn] = dict(qs[u], lo=-rho, hi=rho)
+            q2[sn] = dict(qs[u], lo=-ONE, hi=ONE)
+            try:
+                G = [_parse_arith(t, q2) for t in S.get("eqs", [])]
+                H = [_parse_arith(t, q2) for t in S.get("neqs", [])]
+            except Exception as why:                       # noqa: BLE001 — an unreadable sub-system is refused
+                return False, f"{path}/{side}: unreadable sub-system ({why})"
+            pows, npows = S.get("pows", []), S.get("npows", [])
+            if len(G) != len(exprs) or len(pows) != len(exprs) or len(H) != len(neqs) or len(npows) != len(neqs):
+                return False, f"{path}/{side}: one G and one power per equation, one H and one power per condition"
+            mp = phi(rn, sn)
+            try:
+                for k, (e, g, m) in enumerate(zip(exprs, G, pows)):
+                    if not isinstance(m, int) or m < 0 or poly(("sub", subst(e, mp), ("mul", _rpow(rn, m), g))):
+                        return False, f"{path}/{side}: E_{k}(φ) is not {rn}^{m}·G_{k}"
+                for j, (n, h, q) in enumerate(zip(neqs, H, npows)):
+                    if not isinstance(q, int) or q < 0 or poly(("sub", subst(n, mp), ("mul", _rpow(rn, q), h))):
+                        return False, f"{path}/{side}: N_{j}(φ) is not {rn}^{q}·H_{j}"
+            except NotPolynomial as why:
+                return False, f"{path}/{side}: {why}"
+            p2 = {n: iv for n, iv in piece.items() if n not in (u, v)}
+            p2[rn], p2[sn] = (-rho, rho), (-ONE, ONE)
+            ok, why = run(G, H, q2, S.get("tree"), p2, path + f"/chart{side}({a},{b})")
+            if not ok:
+                return ok, why
+        return True, None
+
+    used = set()
+    for e in list(exprs) + list(neqs):
+        used |= _names(e)
+    names = sorted(n for n in used if n in quantities)
+    box = {n: (quantities[n]["lo"], quantities[n]["hi"]) for n in names}
+    for n, (lo, hi) in box.items():
+        if isinstance(lo, float) or isinstance(hi, float):
+            return False, f"{n} is unbounded: no certificate covers an infinite box"
+    ok, why = run(list(exprs), list(neqs), quantities, cert, box, "")
+    return (True, count[0]) if ok else (False, why)

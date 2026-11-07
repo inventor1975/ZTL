@@ -163,6 +163,7 @@ STANDS = [
     ("test_mlin_eq.py", ["MLIN EQ GREEN"]),
     ("test_backward_tree.py", ["BACKWARD TREE GREEN"]),
     ("test_certify.py", ["CERTIFY GREEN"]),
+    ("test_none.py", ["NONE GREEN"]),
     ("test_zlin.py", ["ZLIN GREEN"]),
     ("zenergy.py", ["ZENERGY GREEN", "bit-identical to the Fraction reference", "batch path:", "pd_ieee_float:", "certify_cases:", "certify_general (second order", "mutation caught", "floating path: 15 random systems", "agrees with the exact interval one 4/4"]),     # 2026-10-31: energy-norm bound, PSD-sum stiffness
     ("test_zintegral.py", ["ZINTEGRAL GREEN"]),

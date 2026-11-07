@@ -174,6 +174,12 @@ one = dict(c6["chart"]["X"], keep=[1], eqs=[c6["chart"]["X"]["eqs"][1]], pows=[c
 check("a 'keep' whose part has solutions in the chart is refused", not ZC.check_none(E6, Q6, {"chart": dict(c6["chart"], X=one)}, N6)[0])
 check("a 'keep' naming a missing equation is refused",
       not ZC.check_none(E6, Q6, {"chart": dict(c6["chart"], X=dict(c6["chart"]["X"], keep=[0, 7]))}, N6)[0])
+E8, Q8 = sys_of(["x - y"], "x=[-1,1] credit, y=[-1,1] credit")
+N8z = [_parse_arith("x*y - y*x", Q8)]
+check("an identically-zero condition excludes the whole box", ZC.check_none(E8, Q8, {"leaf": "excluded", "cond": 0}, N8z)[0])
+N8 = [_parse_arith("x*y - 1", Q8)]
+check("a condition that is not identically zero is refused as 'excluded'", not ZC.check_none(E8, Q8, {"leaf": "excluded", "cond": 0}, N8)[0])
+check("'excluded' naming no condition is refused", not ZC.check_none(E8, Q8, {"leaf": "excluded", "cond": 3}, N8z)[0])
 E7, Q7 = sys_of(["x - y", "(x - 1/2)*(x + y)"], "x=[-1,1] credit, y=[-1,1] credit")
 N7 = [_parse_arith("x", Q7)]
 c7 = chart_cert(E7, N7, Q7, "x", "y", 0, 0, 1)

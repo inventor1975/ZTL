@@ -1124,6 +1124,8 @@ def check_system(target, laws, unknowns, quantities, op, bound, cert):
 # the N_j are the "distinct rays / nonzero vector" conditions). The certificate is a bisection tree:
 #     {"split": name, "at": "p/q", "lo": tree, "hi": tree}
 #     {"leaf": "nonzero", "which": k}     E_k's interval reading on the piece excludes 0 (strictly)
+#     {"leaf": "excluded", "cond": j}     N_j expands to the zero polynomial: no point anywhere satisfies N_j != 0
+#                                         (a forced coincidence — two vertices identically on one ray)
 #     {"chart": {"vars": [u, v], "at": ["a", "b"], "rho": "ρ", "X": sub, "Y": sub}}
 #         a BLOW-UP at the point p = (a, b): the piece must lie in |u-a| <= ρ, |v-b| <= ρ. At p itself some N_j is
 #         identically 0 or some E_k a nonzero constant (checked exactly). Every other point of the square is
@@ -1272,6 +1274,15 @@ def check_none(exprs, quantities, cert, neqs=()):
         if "chart" in node:
             return chart(exprs, neqs, qs, node["chart"], piece, path)
         count[0] += 1
+        if node.get("leaf") == "excluded":
+            j = node.get("cond")
+            if not isinstance(j, int) or isinstance(j, bool) or not (0 <= j < len(neqs)):
+                return False, f"{path}: 'cond' must name one of the {len(neqs)} conditions"
+            try:
+                zero = not poly(neqs[j])
+            except NotPolynomial as why:
+                return False, f"{path}: {why}"
+            return (True, None) if zero else (False, f"{path}: condition {j} is not identically zero")
         if node.get("leaf") != "nonzero":
             return False, f"{path}: unknown leaf {node.get('leaf')!r} (a no-solution tree has 'nonzero' leaves)"
         k = node.get("which")

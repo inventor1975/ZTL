@@ -11,6 +11,7 @@ The curator, 2026-11-08: the stand should give proofs, not only certificates. He
     it — none;
   * a datum in both N and D (a TCR divider): the cleared form on one Horner polynomial, carried by `identX`;
   * a mortgage, pow(1 + r, 360) inside a division: a theorem on a 400 MB kernel stack; on 8 MB a "kernel limit";
+  * no laws at all (a pinned zero before a table), and a 7-unknown ladder by Bareiss (Cramer refuses > 6);
   * NEGATIVE CONTROL: the divider's accepted tree under a false bound (Vout <= 2.5, the true maximum 2.525) — the
     kernel must refuse it.
 """
@@ -91,6 +92,22 @@ finally:
     ZB.TSTACK_KB = _ts
 check("on the default 8 MB stack the same check is a KERNEL LIMIT, said as such — never reported as refused",
       st13["status"] == "kernel limit", st13)
+print("9. no unknowns, and MORE than 6 (ztl-stand real3/s07; the trusses t6/t7 and real4/k05 — Cramer's n! refused)")
+st14 = ZB.bound_to_lean([], [], "P=0 credit, OD=[0.0125,0.0128] credit, w=[0.0015,0.0018] credit",
+                        "w - P*OD/(2*w)", [(">=", "0.0015")], "ZGenNoLaws")
+check("no laws, P = 0 pinned: w - P*OD/(2w) >= 0.0015 — a theorem (0/u = 0 read exactly)", st14["status"] == "theorem",
+      st14)
+LAD = (["Vin - V1 == I*R1", "V1 - V2 == I*R2", "V2 - V3 == I*R3", "V3 - V4 == I*R4", "V4 - V5 == I*R5",
+        "V5 - V6 == I*R6", "V6 == I*R7"], ["I", "V1", "V2", "V3", "V4", "V5", "V6"],
+       "Vin=7 credit, R1=[990,1010] credit, R2=1000 credit, R3=1000 credit, R4=1000 credit, R5=1000 credit, "
+       "R6=1000 credit, R7=[990,1010] credit, I=? credit, V1=? credit, V2=? credit, V3=? credit, V4=? credit, "
+       "V5=? credit, V6=? credit")
+# V6 = 7·R7/(R1 + 5000 + R7): the extremes at the corners, 7·990/7000 = 0.99 and 7·1010/7000 = 1.01
+st15 = ZB.bound_to_lean(*LAD, "V6", [(">=", "0.99"), ("<=", "1.01")], "ZGenLadder")
+check("a 7-unknown ladder: V6 in [0.99, 1.01] (both attained) — a theorem, BAREISS (Cramer refuses > 6)",
+      st15["status"] == "theorem", st15)
+st16 = ZB.bound_to_lean(*LAD, "V6", [("<=", "1.009")], "ZGenLadderBad")
+check("the other side: V6 <= 1.009 — no theorem", st16["status"] != "theorem", st16)
 print(f"\n{ok} ok, {fail} fail")
 print("ZBOUND LEAN BRIDGE GREEN" if fail == 0 else "ZBOUND LEAN BRIDGE RED")
 sys.exit(1 if fail else 0)

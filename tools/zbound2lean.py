@@ -4,8 +4,10 @@ The curator, 2026-11-08: "важно, если стенд будет дават�
 `q op c` on a derived quantity q of a LINEAR system of laws (the stand's divider, a network's currents), for every
 parameter vector in the box:
 
-  1. q's expression from the laws — ZTL's own Cramer solution (zcertify.solve_system): `q = det_q / det` (said, not
-     hidden: this elimination is Python's exact algebra, not proved in Lean; the theorem is about the expression);
+  1. q's expression from the laws — ZTL's own Cramer solution (zcertify.solve_system): `q = det_q / det`; beyond
+     ZC.MAX_SYSTEM unknowns the same determinants by Bareiss (`_solve_big`, exact polynomial division); no laws — q
+     an expression of the data (said, not hidden: this elimination is Python's exact algebra, not proved in Lean;
+     the theorem is about the expression);
   2. pinned quantities substituted; when q's numerator and denominator are POLYNOMIALS (a linear system's Cramer
      solution always is), EXACT: each parameter p in [lo, hi] read as x/s (s the common denominator of its ends, x in
      an INTEGER box) and N, D multiplied by one positive factor into integer polynomials in x (`_scaled`) — the
@@ -148,6 +150,14 @@ def _rat0(node, idx):
                 return None
             acc = (_padd(_pmul(acc[0], r[1]), _pmul(r[0], acc[1])), _pmul(acc[1], r[1]))
         return acc
+    if op in ("mul", "div"):    # 0 · u = 0 and 0 / u = 0 whatever u is (VR's total law: 0 · u⁻¹ = 0) — a pinned zero
+        x = _rat(node[1], idx)  # before a table the reader lacks (ztl-stand real3/s07: P = 0 times an `ifpos` table)
+        if x is not None and not x[0]:
+            return {}, one
+    if op == "mul":
+        y = _rat(node[2], idx)
+        if y is not None and not y[0]:
+            return {}, one
     if op in ("add", "sub", "mul", "div"):
         x, y = _rat(node[1], idx), _rat(node[2], idx)
         if x is None or y is None:
@@ -245,6 +255,109 @@ def _scaled(node, params, qs):
     return N2, D2, box, dict(zip(params, s))
 
 
+def _pdivexact(a, b):
+    """a / b for multivariate polynomials when b divides a (Bareiss guarantees it): lex-leading terms; a remainder
+    is an error, never rounded away."""
+    lb = max(b)
+    cb = b[lb]
+    q, r = {}, dict(a)
+    while r:
+        lr = max(r)
+        if any(x < y for x, y in zip(lr, lb)):
+            raise ValueError("Bareiss: a division that is not exact")
+        m = tuple(x - y for x, y in zip(lr, lb))
+        c = r[lr] / cb
+        q[m] = q.get(m, F(0)) + c
+        r = _padd(r, _pmul({m: c}, b), -1)
+    return q
+
+
+def _bareiss(M, n_vars):
+    """The determinant of a square matrix of polynomials, fraction-free (Bareiss), exact."""
+    n = len(M)
+    if n == 0:
+        return {(0,) * n_vars: F(1)}
+    M = [row[:] for row in M]
+    prev, sign = {(0,) * n_vars: F(1)}, 1
+    for k in range(n - 1):
+        if not M[k][k]:
+            for i in range(k + 1, n):
+                if M[i][k]:
+                    M[k], M[i] = M[i], M[k]
+                    sign = -sign
+                    break
+            else:
+                return {}
+        for i in range(k + 1, n):
+            for j in range(k + 1, n):
+                M[i][j] = _pdivexact(_padd(_pmul(M[i][j], M[k][k]), _pmul(M[i][k], M[k][j]), -1), prev)
+        prev = M[k][k]
+    d = M[n - 1][n - 1]
+    return d if sign > 0 else {m: -c for m, c in d.items()}
+
+
+def _pnode(P, names):
+    """A polynomial back as a node over the parameters' names."""
+    terms = []
+    for m, c in sorted(P.items()):
+        t = c
+        for i, e in enumerate(m):
+            if e:
+                v = names[i] if e == 1 else ("pow", names[i], F(e))
+                t = ("mul", t, v)
+        terms.append(t)
+    return ("sum", terms) if terms else F(0)
+
+
+def _solve_big(laws, unknowns, qs, pinned):
+    """A linear system of MORE than ZC.MAX_SYSTEM unknowns (2026-11-08: ztl-stand had 20 requirements on systems
+    of 7–10 unknowns, refused by Cramer's n! terms): the coefficients read as rational functions of the box's
+    parameters (`_rat`), each row cleared of its denominators, and u_j = det_j / det by BAREISS — exact polynomial
+    arithmetic, the divisions checked exact. Python's algebra, like Cramer's: said, not proved in Lean."""
+    import znumjudge as ZJ
+    import zcertify as ZC
+    us = sorted(set(unknowns))
+    rows = []
+    for law in laws:
+        if law.count("==") != 1:
+            raise ValueError(f"not one equality: {law!r}")
+        l, r = law.split("==")
+        a = ZC._lin(ZJ._parse_arith(l, qs), set(us))
+        b = ZC._lin(ZJ._parse_arith(r, qs), set(us))
+        row = dict(a)
+        for k, v in b.items():
+            row[k] = ("sub", row[k], v) if k in row else ("sub", F(0), v)
+        rows.append({k: _subst(v, pinned) for k, v in row.items()})
+    if len(rows) != len(us):
+        raise ValueError(f"{len(rows)} equalities for {len(us)} unknowns: not a square system")
+    names = sorted({n for row in rows for v in row.values() for n in _names(v, set())
+                    if n in qs and n not in pinned and n not in us})
+    idx = {n: i for i, n in enumerate(names)}
+    nv = len(names)
+    A, rhs = [], []
+    for row in rows:
+        ents = {}
+        for k, v in row.items():
+            rv = _rat(v, idx)
+            if rv is None:
+                raise ValueError("a coefficient is not a rational function of the data")
+            ents[k] = rv
+        Dprod = {(0,) * nv: F(1)}
+        for (_, Dk) in ents.values():
+            Dprod = _pmul(Dprod, Dk)
+        cleared = {k: _pdivexact(_pmul(Nk, Dprod), Dk) for k, (Nk, Dk) in ents.items()}
+        A.append([cleared.get(u, {}) for u in us])
+        rhs.append({m: -c for m, c in cleared.get(1, {}).items()})
+    det = _bareiss(A, nv)
+    if not det:
+        raise ValueError("the determinant is identically zero")
+    sol = {}
+    for j, u in enumerate(us):
+        Aj = [r[:j] + [rhs[i]] + r[j + 1:] for i, r in enumerate(A)]
+        sol[u] = ("div", _pnode(_bareiss(Aj, nv), names), _pnode(det, names))
+    return sol
+
+
 def _box_lean(params, box):
     """`fun i => cond (Nat.beq i 0) (some (lo, hi)) (cond ... none)`."""
     body = "none"
@@ -261,8 +374,17 @@ def bound_to_lean(laws, unknowns, qtext, target, reqs, name, depth=14, trees=Non
     import znumjudge as ZJ
     import zcertify as ZC
     qs = ZJ.parse_quantities(qtext)[0]
+    pinned = {n: F(q["lo"]) for n, q in qs.items() if n not in unknowns and q["lo"] == q["hi"]
+              and not isinstance(q["lo"], float)}
     try:
-        sol = ZC.solve_system(laws, unknowns, qs)
+        # no unknowns: the target is an expression of the data alone (ztl-stand real3/s07 — Cramer on an empty
+        # system said "the determinant is identically zero"); more than ZC.MAX_SYSTEM unknowns: Bareiss (_solve_big)
+        if not (unknowns or laws):
+            sol = {}
+        elif len(set(unknowns)) > ZC.MAX_SYSTEM:
+            sol = _solve_big(laws, unknowns, qs, pinned)
+        else:
+            sol = ZC.solve_system(laws, unknowns, qs)
     except Exception as ex:
         return {"status": "not translated", "why": f"not a linear square system: {ex}"}
     if target in sol:
@@ -272,8 +394,6 @@ def bound_to_lean(laws, unknowns, qtext, target, reqs, name, depth=14, trees=Non
             node = ZC._subst(ZJ._parse_arith(target, qs), sol)
         except Exception as ex:
             return {"status": "not translated", "why": f"the target {target!r}: {ex}"}
-    pinned = {n: F(q["lo"]) for n, q in qs.items() if n not in unknowns and q["lo"] == q["hi"]
-              and not isinstance(q["lo"], float)}
     node = _subst(node, pinned)
     params = sorted(n for n in _names(node, set()) if n in qs and n not in pinned)
     for n in params:

@@ -25,6 +25,61 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT); sys.path.insert(0, os.path.join(ROOT, "tools"))
 import zbound2lean as ZB  # noqa: E402
 
+DIV = (["Vin - Vout == I*R1", "Vout == I*R2"], ["I", "Vout"],
+       "Vin=5 credit, R1=[990,1010] credit, R2=[990,1010] credit, I=? credit, Vout=? credit")
+TIGHT = (["Vin - Vout == I*R1", "Vout == I*R2"], ["I", "Vout"],
+         "Vin=3.3 credit, R1=[26.73,27.27] credit, R2=[26.73,27.27] credit, I=? credit, Vout=? credit")
+PW = (["Vin - Vout == I*R1", "Vout == I*R2"], ["I", "Vout"],
+      "Vin=5 credit, R1=[26.73,27.27] credit, R2=[26.73,27.27] credit, I=? credit, Vout=? credit")
+TCR = (["Vin - Vout == I*(R1*(1 + a1*(T - 25)))", "Vout == I*(R2*(1 + a2*(T - 25)))"], ["I", "Vout"],
+       "Vin=5 credit, T=[0,85] credit, R1=[9900,10100] credit, a1=[-1/40000,1/40000] credit, "
+       "R2=[9900,10100] credit, a2=[-1/40000,1/40000] credit, I=? credit, Vout=? credit")
+ML = (["S == Inc"], ["S"], "Inc=[5200,5800] credit, P=[275000,290000] credit, c=7/1500 credit, S=? credit")
+MT = "35/100*Inc - P*(min(c, 1/12)*pow(1 + min(c, 1/12), 360))/(pow(1 + min(c, 1/12), 360) - 1)"
+LAD = (["Vin - V1 == I*R1", "V1 - V2 == I*R2", "V2 - V3 == I*R3", "V3 - V4 == I*R4", "V4 - V5 == I*R5",
+        "V5 - V6 == I*R6", "V6 == I*R7"], ["I", "V1", "V2", "V3", "V4", "V5", "V6"],
+       "Vin=7 credit, R1=[990,1010] credit, R2=1000 credit, R3=1000 credit, R4=1000 credit, R5=1000 credit, "
+       "R6=1000 credit, R7=[990,1010] credit, I=? credit, V1=? credit, V2=? credit, V3=? credit, V4=? credit, "
+       "V5=? credit, V6=? credit")
+TB = ("ifpos(T - 100, ifpos(T - 200, ifpos(T - 400, ifpos(T - 600, 58/100, 68/100 + (58/100 - 68/100)*(T - 400)/(600 - 400)), "
+      "82/100 + (68/100 - 82/100)*(T - 200)/(400 - 200)), 1 + (82/100 - 1)*(T - 100)/(200 - 100)), 1)")
+
+# the independent cases in PARALLEL (the curator 2026-11-09: "он на одном ядре считает?" — it did: ~30 lean
+# processes one after another, 45 s); each is its own `lean` process. The cases that switch a global (the 8 MB
+# stack, the sabotaged certificate) pass it per call (thread-local); the one that reuses a tree runs after the pool.
+from concurrent.futures import ProcessPoolExecutor  # noqa: E402 — PROCESSES: zimplicit is not thread-safe
+# (2026-11-09 MEASURED: with threads sin/tan read 'no verdict' at random — 4 fails, then 2; a shared mutable state)
+with ProcessPoolExecutor(max_workers=max(2, min(16, (os.cpu_count() or 4) // 2))) as pool:
+    _F = {
+    "ZGenDivider": pool.submit(ZB.bound_to_lean, *DIV, "Vout", [(">=", "2.475"), ("<=", "2.525")], "ZGenDivider"),
+    "ZGenNet3": pool.submit(ZB.bound_to_lean, ["Vin - V1 == I*R1", "V1 - Vout == I*R3", "Vout == I*R2"], ["I", "V1", "Vout"],
+                       "Vin=12 credit, R1=[1980,2020] credit, R2=[990,1010] credit, R3=[990,1010] credit, "
+                       "I=? credit, V1=? credit, Vout=? credit", "Vout", [(">=", "2.9"), ("<=", "3.1")], "ZGenNet3"),
+    "ZGenNL": pool.submit(ZB.bound_to_lean, ["V == I*I*R"], ["I", "V"], "R=[1,2] credit, I=? credit, V=? credit", "V", [("<=", "1")], "ZGenNL"),
+    "ZGenTight": pool.submit(ZB.bound_to_lean, *TIGHT, "Vout", [(">=", "1.6335"), ("<=", "1.6665")], "ZGenTight"),
+    "ZGenTightBad": pool.submit(ZB.bound_to_lean, *TIGHT, "Vout", [("<=", "1.6664")], "ZGenTightBad"),
+    "ZGenPow": pool.submit(ZB.bound_to_lean, *PW, "I*I*R1", [("<=", "625/2673")], "ZGenPow"),
+    "ZGenPowBad": pool.submit(ZB.bound_to_lean, *PW, "I*I*R1", [("<=", "624/2673")], "ZGenPowBad"),
+    "ZGenTCR": pool.submit(ZB.bound_to_lean, *TCR, "Vout", [(">=", "2.47"), ("<=", "2.53")], "ZGenTCR"),
+    "ZGenTCRBad": pool.submit(ZB.bound_to_lean, *TCR, "Vout", [(">=", "2.472")], "ZGenTCRBad"),
+    "ZGenMort": pool.submit(ZB.bound_to_lean, *ML, MT, [(">=", "0")], "ZGenMort"),
+    "ZGenMortBad": pool.submit(ZB.bound_to_lean, *ML, MT.replace("min(c, 1/12)", "c"), [(">=", "160")], "ZGenMortBad"),
+    "ZGenNoLaws": pool.submit(ZB.bound_to_lean, [], [], "P=0 credit, OD=[0.0125,0.0128] credit, w=[0.0015,0.0018] credit",
+                        "w - P*OD/(2*w)", [(">=", "0.0015")], "ZGenNoLaws"),
+    "ZGenLadder": pool.submit(ZB.bound_to_lean, *LAD, "V6", [(">=", "0.99"), ("<=", "1.01")], "ZGenLadder"),
+    "ZGenLadderBad": pool.submit(ZB.bound_to_lean, *LAD, "V6", [("<=", "1.009")], "ZGenLadderBad"),
+    "ZGenSqrt": pool.submit(ZB.bound_to_lean, [], [], "s=[90,110] credit, t=[30,40] credit", "sqrt(s*s + 3*t*t)", [("<=", "131")], "ZGenSqrt"),
+    "ZGenSqrtB": pool.submit(ZB.bound_to_lean, [], [], "s=[90,110] credit, t=[30,40] credit", "sqrt(s*s + 3*t*t)", [("<=", "129")], "ZGenSqrtB"),
+    "ZGenTwoUnk": pool.submit(ZB.bound_to_lean, *PW, "Vout*Vout + I", [("<=", "6.47")], "ZGenTwoUnk"),
+    "ZGenTwoUnkB": pool.submit(ZB.bound_to_lean, *PW, "Vout*Vout + I", [("<=", "6.46")], "ZGenTwoUnkB"),
+    "ZGenTable": pool.submit(ZB.bound_to_lean, [], [], "T=[150,450] credit, S=[100,110] credit", f"S*{TB}", [(">=", "65.2")], "ZGenTable"),
+    "ZGenTableB": pool.submit(ZB.bound_to_lean, [], [], "T=[150,450] credit, S=[100,110] credit", f"S*{TB}", [(">=", "65.6")], "ZGenTableB"),
+    }
+    _F["ZGenMort8"] = pool.submit(ZB.bound_to_lean, *ML, MT, [(">=", "0")], "ZGenMort8", tstack_kb=8000)
+    _F["ZGenDividerMut"] = pool.submit(ZB.bound_to_lean, *DIV, "Vout", [(">=", "2.475"), ("<=", "2.525")],
+                                       "ZGenDividerMut", mutant={"cert": True})
+    R = {k: f.result() for k, f in _F.items()}
+
 ok = fail = 0
 
 
@@ -36,18 +91,14 @@ def check(name, cond, why=""):
         fail += 1; print(f"  FAIL {name} — {why}")
 
 
-DIV = (["Vin - Vout == I*R1", "Vout == I*R2"], ["I", "Vout"],
-       "Vin=5 credit, R1=[990,1010] credit, R2=[990,1010] credit, I=? credit, Vout=? credit")
 print("1. the stand's divider")
-st = ZB.bound_to_lean(*DIV, "Vout", [(">=", "2.475"), ("<=", "2.525")], "ZGenDivider")
+st = R["ZGenDivider"]
 check("Vout in [2.475, 2.525] for every R1, R2 in [990, 1010]: a theorem", st["status"] == "theorem", st)
 print("2. a network with a margin")
-st2 = ZB.bound_to_lean(["Vin - V1 == I*R1", "V1 - Vout == I*R3", "Vout == I*R2"], ["I", "V1", "Vout"],
-                       "Vin=12 credit, R1=[1980,2020] credit, R2=[990,1010] credit, R3=[990,1010] credit, "
-                       "I=? credit, V1=? credit, Vout=? credit", "Vout", [(">=", "2.9"), ("<=", "3.1")], "ZGenNet3")
+st2 = R["ZGenNet3"]
 check("three resistors: Vout in [2.9, 3.1]: a theorem", st2["status"] == "theorem", st2)
 print("3. not linear in the unknowns")
-st3 = ZB.bound_to_lean(["V == I*I*R"], ["I", "V"], "R=[1,2] credit, I=? credit, V=? credit", "V", [("<=", "1")], "ZGenNL")
+st3 = R["ZGenNL"]
 check("V == I*I*R: not translated", st3["status"] == "not translated", st3)
 print("4. negative control")
 if st.get("trees"):
@@ -56,67 +107,48 @@ if st.get("trees"):
 else:
     check("negative control ran", False, "no trees")
 print("5. not dyadic, met exactly at the corners (ztl-stand power-16thW-or-quarterW: 27 ohm +-1 % read `no tree`)")
-TIGHT = (["Vin - Vout == I*R1", "Vout == I*R2"], ["I", "Vout"],
-         "Vin=3.3 credit, R1=[26.73,27.27] credit, R2=[26.73,27.27] credit, I=? credit, Vout=? credit")
-st5 = ZB.bound_to_lean(*TIGHT, "Vout", [(">=", "1.6335"), ("<=", "1.6665")], "ZGenTight")
+st5 = R["ZGenTight"]
 check("Vin = 3.3, R = 27 +-1 %: Vout in [1.6335, 1.6665] (both ends attained) — a theorem, exact integer box",
       st5["status"] == "theorem" and st5.get("scale") == {"R1": 100, "R2": 100}, st5)
-st6 = ZB.bound_to_lean(*TIGHT, "Vout", [("<=", "1.6664")], "ZGenTightBad")
+st6 = R["ZGenTightBad"]
 check("the other side: Vout <= 1.6664 (below the attained 1.6665) — no theorem", st6["status"] != "theorem", st6)
 print("6. a target that is an EXPRESSION of the unknowns: the power P1 = I*I*R1 (ztl-stand power-16thW-or-quarterW)")
-PW = (["Vin - Vout == I*R1", "Vout == I*R2"], ["I", "Vout"],
-      "Vin=5 credit, R1=[26.73,27.27] credit, R2=[26.73,27.27] credit, I=? credit, Vout=? credit")
 # max of 25·R1/(R1+R2)^2 over the box: 625/2673, on the diagonal R1 = R2 = 26.73 (the slope in R1 changes sign there)
-st7 = ZB.bound_to_lean(*PW, "I*I*R1", [("<=", "625/2673")], "ZGenPow")
+st7 = R["ZGenPow"]
 check("P1 = I*I*R1 <= 625/2673 (attained, not monotone in R1): a theorem", st7["status"] == "theorem", st7)
-st8 = ZB.bound_to_lean(*PW, "I*I*R1", [("<=", "624/2673")], "ZGenPowBad")
+st8 = R["ZGenPowBad"]
 check("the other side: P1 <= 624/2673 — no theorem", st8["status"] != "theorem", st8)
 print("7. a datum in BOTH N and D (ztl-stand tasks/t5: a divider with temperature coefficients, 5 variables)")
-TCR = (["Vin - Vout == I*(R1*(1 + a1*(T - 25)))", "Vout == I*(R2*(1 + a2*(T - 25)))"], ["I", "Vout"],
-       "Vin=5 credit, T=[0,85] credit, R1=[9900,10100] credit, a1=[-1/40000,1/40000] credit, "
-       "R2=[9900,10100] credit, a2=[-1/40000,1/40000] credit, I=? credit, Vout=? credit")
-st9 = ZB.bound_to_lean(*TCR, "Vout", [(">=", "2.47"), ("<=", "2.53")], "ZGenTCR")
+st9 = R["ZGenTCR"]
 check("Vout in [2.47, 2.53] over R, a, T: a theorem — the cleared form proved on ONE Horner polynomial, moved by "
       "the kernel's identity test (identX)", st9["status"] == "theorem", st9)
-st10 = ZB.bound_to_lean(*TCR, "Vout", [(">=", "2.472")], "ZGenTCRBad")
+st10 = R["ZGenTCRBad"]
 check("the other side: Vout >= 2.472 (the attained minimum 988515/400006 ~ 2.47125) — no theorem",
       st10["status"] != "theorem", st10)
 print("8. a mortgage: pow(1 + r, 360) inside a division (ztl-stand tasks/t14 overflowed the kernel's stack)")
-ML = (["S == Inc"], ["S"], "Inc=[5200,5800] credit, P=[275000,290000] credit, c=7/1500 credit, S=? credit")
-MT = "35/100*Inc - P*(min(c, 1/12)*pow(1 + min(c, 1/12), 360))/(pow(1 + min(c, 1/12), 360) - 1)"
-st11 = ZB.bound_to_lean(*ML, MT, [(">=", "0")], "ZGenMort")
+st11 = R["ZGenMort"]
 check("slack = 35 % of income − the payment >= 0 (min ~155.17): a theorem (the kernel on a 400 MB stack)",
       st11["status"] == "theorem", st11)
-st12 = ZB.bound_to_lean(*ML, MT.replace("min(c, 1/12)", "c"), [(">=", "160")], "ZGenMortBad")
+st12 = R["ZGenMortBad"]
 check("the other side: slack >= 160 — no theorem", st12["status"] != "theorem", st12)
-_ts, ZB.TSTACK_KB = ZB.TSTACK_KB, 8000
-try:
-    st13 = ZB.bound_to_lean(*ML, MT, [(">=", "0")], "ZGenMort8")
-finally:
-    ZB.TSTACK_KB = _ts
+st13 = R["ZGenMort8"]
 check("on the default 8 MB stack the same check is a KERNEL LIMIT, said as such — never reported as refused",
       st13["status"] == "kernel limit", st13)
 print("9. no unknowns, and MORE than 6 (ztl-stand real3/s07; the trusses t6/t7 and real4/k05 — Cramer's n! refused)")
-st14 = ZB.bound_to_lean([], [], "P=0 credit, OD=[0.0125,0.0128] credit, w=[0.0015,0.0018] credit",
-                        "w - P*OD/(2*w)", [(">=", "0.0015")], "ZGenNoLaws")
+st14 = R["ZGenNoLaws"]
 check("no laws, P = 0 pinned: w - P*OD/(2w) >= 0.0015 — a theorem (0/u = 0 read exactly)", st14["status"] == "theorem",
       st14)
-LAD = (["Vin - V1 == I*R1", "V1 - V2 == I*R2", "V2 - V3 == I*R3", "V3 - V4 == I*R4", "V4 - V5 == I*R5",
-        "V5 - V6 == I*R6", "V6 == I*R7"], ["I", "V1", "V2", "V3", "V4", "V5", "V6"],
-       "Vin=7 credit, R1=[990,1010] credit, R2=1000 credit, R3=1000 credit, R4=1000 credit, R5=1000 credit, "
-       "R6=1000 credit, R7=[990,1010] credit, I=? credit, V1=? credit, V2=? credit, V3=? credit, V4=? credit, "
-       "V5=? credit, V6=? credit")
 # V6 = 7·R7/(R1 + 5000 + R7): the extremes at the corners, 7·990/7000 = 0.99 and 7·1010/7000 = 1.01
-st15 = ZB.bound_to_lean(*LAD, "V6", [(">=", "0.99"), ("<=", "1.01")], "ZGenLadder")
+st15 = R["ZGenLadder"]
 check("a 7-unknown ladder: V6 in [0.99, 1.01] (both attained) — a theorem, BAREISS (Cramer refuses > 6)",
       st15["status"] == "theorem", st15)
-st16 = ZB.bound_to_lean(*LAD, "V6", [("<=", "1.009")], "ZGenLadderBad")
+st16 = R["ZGenLadderBad"]
 check("the other side: V6 <= 1.009 — no theorem", st16["status"] != "theorem", st16)
 print("10. a square root (ztl-stand real2/s02: the reduced stress sqrt(s^2 + 3 t^2))")
-st17 = ZB.bound_to_lean([], [], "s=[90,110] credit, t=[30,40] credit", "sqrt(s*s + 3*t*t)", [("<=", "131")], "ZGenSqrt")
+st17 = R["ZGenSqrt"]
 check("sqrt(s^2 + 3 t^2) <= 131 on s in [90, 110], t in [30, 40] (max sqrt(16900) = 130): a theorem",
       st17["status"] == "theorem", st17)
-st18 = ZB.bound_to_lean([], [], "s=[90,110] credit, t=[30,40] credit", "sqrt(s*s + 3*t*t)", [("<=", "129")], "ZGenSqrtB")
+st18 = R["ZGenSqrtB"]
 check("the other side: <= 129 — no theorem", st18["status"] != "theorem", st18)
 print("11. ON THE LAWS (the curator 2026-11-09, B/C): the requirement for EVERY value of the unknowns satisfying them")
 check("the divider, the 3-resistor net, the TCR divider, the 7-unknown ladder: each theorem is on the LAWS (rows + a "
@@ -125,27 +157,21 @@ check("the divider, the 3-resistor net, the TCR divider, the 7-unknown ladder: e
 check("an expression target (the power I*I*R1, not monotone, attained) is ALSO on the laws: D·I = N from the "
       "certificate, the telescoping identity checked, D² > 0", st7.get("about") == "laws" and st7["status"] == "theorem",
       st7.get("about"))
-st19 = ZB.bound_to_lean(*PW, "Vout*Vout + I", [("<=", "6.47")], "ZGenTwoUnk")
+st19 = R["ZGenTwoUnk"]
 check("an expression of TWO unknowns, Vout² + I <= 6.47 (max ~6.4682 at a corner), on the laws: a theorem",
       st19["status"] == "theorem" and st19.get("about") == "laws", st19)
-st20 = ZB.bound_to_lean(*PW, "Vout*Vout + I", [("<=", "6.46")], "ZGenTwoUnkB")
+st20 = R["ZGenTwoUnkB"]
 check("the other side: Vout² + I <= 6.46 — no theorem", st20["status"] != "theorem", st20)
-ZB._MUTANT["cert"] = True
-try:
-    stm = ZB.bound_to_lean(*DIV, "Vout", [(">=", "2.475"), ("<=", "2.525")], "ZGenDividerMut")
-finally:
-    ZB._MUTANT.clear()
+stm = R["ZGenDividerMut"]
 check("SABOTAGE: a cofactor certificate off by 1 — the kernel refuses it (the elimination is checked, not trusted)",
       stm["status"] == "refused" and "proved that the proposition" in stm.get("out", ""),
       stm.get("out", "")[:300])
 print("12. a TABLE (ztl-stand's table(...) compiles to nested ifpos): read exactly as hinges")
-TB = ("ifpos(T - 100, ifpos(T - 200, ifpos(T - 400, ifpos(T - 600, 58/100, 68/100 + (58/100 - 68/100)*(T - 400)/(600 - 400)), "
-      "82/100 + (68/100 - 82/100)*(T - 200)/(400 - 200)), 1 + (82/100 - 1)*(T - 100)/(200 - 100)), 1)")
-st21 = ZB.bound_to_lean([], [], "T=[150,450] credit, S=[100,110] credit", f"S*{TB}", [(">=", "65.2")], "ZGenTable")
+st21 = R["ZGenTable"]
 # min over the box: S = 100 at T = 450: 100·(0.68 − 0.1·50/200) = 65.5; >= 65.2 holds
 check("S·table(T) >= 65.2 over T in [150, 450] (three knots inside; min 65.5): a theorem through the hinges",
       st21["status"] == "theorem", st21)
-st22 = ZB.bound_to_lean([], [], "T=[150,450] credit, S=[100,110] credit", f"S*{TB}", [(">=", "65.6")], "ZGenTableB")
+st22 = R["ZGenTableB"]
 check("the other side: >= 65.6 — no theorem", st22["status"] != "theorem", st22)
 print(f"\n{ok} ok, {fail} fail")
 print("ZBOUND LEAN BRIDGE GREEN" if fail == 0 else "ZBOUND LEAN BRIDGE RED")

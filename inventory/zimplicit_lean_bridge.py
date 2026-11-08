@@ -35,14 +35,10 @@ def check(name, cond, why=""):
 FAN = ("pmax=[44.16,51.84] credit, Qmax=[0.038,0.042] credit, K=[27200,36800] credit, Q=? credit",
        "pmax*(1 - Q/Qmax) - K*Q*Q", "Q", ["0", "0.06"])
 
-print("1. the fan and the pump")
-st = B.verdict_to_lean(*FAN, "ZBridgeFan")
-check("fan: a theorem", st["status"] == "theorem", st)
-pump = Z.LAWS["pump"]
-st2 = B.verdict_to_lean(pump["qt"], pump["ex"], "Q", ["0.001", "0.06"], "ZBridgePump")
-check("pump: a theorem", st2["status"] == "theorem", st2)
-
-print("2. random laws of the zimplicit stand (seed 20261010)")
+# the cases in PARALLEL (2026-11-09: this bridge was run_all's long pole — 278 s, the whole pool waited for it;
+# each case is its own `lean` processes, named files, no shared state)
+from concurrent.futures import ThreadPoolExecutor  # noqa: E402 — THREADS on purpose: they test znum._MEMO's
+# per-thread slot (2026-11-09: with the old global memo, sin/tan read 'no verdict' at random — 4 fails, then 2)
 rnd = random.Random(20261010)
 SHAPES = ["a*q*q*q + b*q - p", "a*q + c*exp(d*q) - p", "a*q - p/(1 + q*q) - b", "atan(a*q) + b*q - p", "q*q - p*q + b"]
 laws = []
@@ -55,23 +51,44 @@ for i in range(6):
         box[n] = (round(c - w, 3), round(c + w, 3))
     laws.append((", ".join(f"{n}=[{lo},{hi}] credit" for n, (lo, hi) in box.items()) + ", q=? credit", text))
 expect = {0: "theorem", 1: "theorem", 2: "no verdict", 3: "theorem", 5: "theorem"}
-for i, want in expect.items():
-    qt, text = laws[i]
-    s = B.verdict_to_lean(qt, text, "q", ["-4", "4"], f"ZBridgeRand{i}")
-    check(f"rand{i} ({text}): {want}", s["status"] == want, s)
+pump = Z.LAWS["pump"]
+ABP = "a=[0.98,1.02] credit, b=[1.8,2.2] credit, p=[1.96,2.04] credit, q=? credit"
+JOBS = {"fan": (*FAN, "ZBridgeFan"),
+        "pump": (pump["qt"], pump["ex"], "Q", ["0.001", "0.06"], "ZBridgePump"),
+        "sin": (ABP, "sin(a*q) + b*q - p", "q", ["-4", "4"], "ZBridgeSin"),
+        "cos": ("a=[0.95,1.05] credit, b=[0.95,1.05] credit, p=[-0.05,0.05] credit, q=? credit",
+                "q - a*cos(b*q) - p", "q", ["-2", "2"], "ZBridgeCos"),
+        "tan": (ABP, "tan(a*q/4) + b*q - p", "q", ["-4", "4"], "ZBridgeTan"),
+        "min": (ABP, "min(a*q, 10) + b*q - p", "q", ["-4", "4"], "ZBridgeMin")}
+for i in expect:
+    JOBS[f"rand{i}"] = (laws[i][0], laws[i][1], "q", ["-4", "4"], f"ZBridgeRand{i}")
+with ThreadPoolExecutor(max_workers=max(2, min(12, (os.cpu_count() or 4) // 2))) as pool:
+    import time as _time
+    _T = {}
 
-s = B.verdict_to_lean("a=[0.98,1.02] credit, b=[1.8,2.2] credit, p=[1.96,2.04] credit, q=? credit",
-                      "sin(a*q) + b*q - p", "q", ["-4", "4"], "ZBridgeSin")
-check("sin(a*q) + b*q - p: a theorem", s["status"] == "theorem", s)
-s = B.verdict_to_lean("a=[0.95,1.05] credit, b=[0.95,1.05] credit, p=[-0.05,0.05] credit, q=? credit",
-                      "q - a*cos(b*q) - p", "q", ["-2", "2"], "ZBridgeCos")
-check("q - a*cos(b*q) - p: a theorem", s["status"] == "theorem", s)
-s = B.verdict_to_lean("a=[0.98,1.02] credit, b=[1.8,2.2] credit, p=[1.96,2.04] credit, q=? credit",
-                      "tan(a*q/4) + b*q - p", "q", ["-4", "4"], "ZBridgeTan")
-check("tan(a*q/4) + b*q - p: a theorem", s["status"] == "theorem", s)
-s = B.verdict_to_lean("a=[0.98,1.02] credit, b=[1.8,2.2] credit, p=[1.96,2.04] credit, q=? credit",
-                      "min(a*q, 10) + b*q - p", "q", ["-4", "4"], "ZBridgeMin")
-check("min(a*q, 10) + b*q - p: no verdict", s["status"] == "no verdict", s)
+    def _timed(k, v):
+        t0 = _time.time()
+        r = B.verdict_to_lean(*v)
+        _T[k] = _time.time() - t0
+        return r
+    _F = {k: pool.submit(_timed, k, v) for k, v in JOBS.items()}
+    R = {k: f.result() for k, f in _F.items()}
+print("  times: " + ", ".join(f"{k} {v:.0f} s" for k, v in sorted(_T.items(), key=lambda kv: -kv[1])))
+
+print("1. the fan and the pump")
+st = R["fan"]
+check("fan: a theorem", st["status"] == "theorem", st)
+st2 = R["pump"]
+check("pump: a theorem", st2["status"] == "theorem", st2)
+
+print("2. random laws of the zimplicit stand (seed 20261010)")
+for i, want in expect.items():
+    s = R[f"rand{i}"]
+    check(f"rand{i} ({laws[i][1]}): {want}", s["status"] == want, s)
+check("sin(a*q) + b*q - p: a theorem", R["sin"]["status"] == "theorem", R["sin"])
+check("q - a*cos(b*q) - p: a theorem", R["cos"]["status"] == "theorem", R["cos"])
+check("tan(a*q/4) + b*q - p: a theorem", R["tan"]["status"] == "theorem", R["tan"])
+check("min(a*q, 10) + b*q - p: no verdict", R["min"]["status"] == "no verdict", R["min"])
 
 print("3. negative control")
 fan_file = st.get("file")

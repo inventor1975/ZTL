@@ -96,18 +96,35 @@ def ps_of_box(names, idx, box):
 
 def probe_leaves(e, names, idx, boxes, a, b, tag):
     """Lean's readings on every leaf box: slope in q, Lipschitz in the parameters, ends, posOK."""
-    t = HEADER + f"def E : XE := {e}\ndef A : D := {Z.dy(a)}\ndef B : D := {Z.dy(b)}\n"
+    head = HEADER + f"def E : XE := {e}\ndef A : D := {Z.dy(a)}\ndef B : D := {Z.dy(b)}\n"
+    evals = []
     for bx in boxes:
         P = ps_of_box(names, idx, bx)
-        t += (f"#eval (posOK (BoxOf A B {P}) E, (slX (BoxOf A B {P}) Vx E), (slX (BoxOf A B {P}) Vp E), "
-              f"(ivX (BoxOf A A {P}) E), (ivX (BoxOf B B {P}) E))\n")
-    out = run_lean(t, "ZBridgeProbe_" + tag)
+        evals.append(f"#eval (posOK (BoxOf A B {P}) E, (slX (BoxOf A B {P}) Vx E), (slX (BoxOf A B {P}) Vp E), "
+                     f"(ivX (BoxOf A A {P}) E), (ivX (BoxOf B B {P}) E))\n")
+    # the leaves in PARALLEL lean processes, in order (2026-11-09 MEASURED: the pump's 40 leaves in one process,
+    # ~4 s each in the interpreter, were 164 s — run_all's long pole); the readings are the same, only split
+    k = max(1, min(len(evals), 8, (os.cpu_count() or 2) // 2))
+    chunks = [evals[i::k] for i in range(k)]
+    from concurrent.futures import ThreadPoolExecutor
+    with ThreadPoolExecutor(max_workers=k) as pool:
+        outs = list(pool.map(lambda ic: run_lean(head + "".join(ic[1]), f"ZBridgeProbe_{tag}" + (f"_{ic[0]}" if k > 1
+                                                                                             else "")),
+                             enumerate(chunks)))
+    parsed = []
+    for o in outs:
+        rr = []
+        for line in re.split(r"\n(?=\(true|\(false)", o.strip()):
+            ok = line.startswith("(true")
+            v = [F(int(p) - int(n), 1 << int(ee)) for p, n, ee in
+                 re.findall(r"p := (\d+), n := (\d+) \}, e := (\d+)", line)]
+            rr.append((ok, v, "none" in line))
+        parsed.append(rr)
     rows = []
-    for line in out.split("\n(") if False else re.split(r"\n(?=\(true|\(false)", out.strip()):
-        ok = line.startswith("(true")
-        v = [F(int(p) - int(n), 1 << int(ee)) for p, n, ee in re.findall(r"p := (\d+), n := (\d+) \}, e := (\d+)", line)]
-        rows.append((ok, v, "none" in line))
-    return rows, out
+    for j in range(len(evals)):                 # back to the leaves' order: chunk j % k, place j // k
+        c, pos = j % k, j // k
+        rows.append(parsed[c][pos] if pos < len(parsed[c]) else (False, [], True))
+    return rows, "\n".join(outs)
 
 
 def consts_from(rows, a, b):

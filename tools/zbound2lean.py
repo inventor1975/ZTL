@@ -48,6 +48,9 @@ import zkraw2lean as K  # noqa: E402
 
 TSTACK_KB = 400000
 _MUTANT = {}            # sabotage switches for the bridge's negative controls (never set on the real path)
+import threading as _threading  # noqa: E402
+_CTX = _threading.local()   # per-call (per-thread) overrides: bound_to_lean(..., tstack_kb=, mutant=) — so the bridge
+                            # runs its cases in parallel without a global switch leaking into a neighbour
 
 
 def _subst(node, pinned):
@@ -172,7 +175,8 @@ def _run(text, path):
     # a thread stack of 400 MB (2026-11-08, ztl-stand tasks/t14: `1/((1 + r/12)^360 − 1)` — the kernel forcing 360
     # nested interval products overflowed the default stack from n ≈ 300 on; MEASURED: with --tstack it reads in 0.7 s).
     # The check is the same; only the stack the kernel runs on is larger.
-    r = subprocess.run(["lake", "env", "lean", f"--tstack={TSTACK_KB}", path], cwd=LEAN, capture_output=True,
+    r = subprocess.run(["lake", "env", "lean", f"--tstack={getattr(_CTX, 'tstack', None) or TSTACK_KB}", path],
+                       cwd=LEAN, capture_output=True,
                        text=True, timeout=3000)
     return r.stdout + r.stderr
 
@@ -540,7 +544,7 @@ def _law_cert(laws, unknowns, qs, pinned, target):
     assert _padd(lhs, rhs, -1) == {}, "the cofactor identity fails"
     for P in [D, N] + cert + rows:
         assert all(c.denominator == 1 for c in P.values())
-    if _MUTANT.get("cert"):             # SABOTAGE (the bridge's other side): a certificate the kernel must refuse
+    if _MUTANT.get("cert") or (getattr(_CTX, "mutant", None) or {}).get("cert"):   # SABOTAGE (the bridge's other side): a certificate the kernel must refuse
         cert = [_padd(cert[0], {(0,) * m: F(1)})] + cert[1:]
     return {"params": params, "box": box, "scale": dict(zip(params, sc)), "D": D, "N": N, "cert": cert,
             "rows": rows, "m": m, "n": n, "j": j, "unknowns": us}
@@ -745,7 +749,18 @@ def _box_lean(params, box):
     return f"fun i => {body}"
 
 
-def bound_to_lean(laws, unknowns, qtext, target, reqs, name, depth=14, trees=None, laws_mode=True):
+def bound_to_lean(laws, unknowns, qtext, target, reqs, name, depth=14, trees=None, laws_mode=True, tstack_kb=None,
+                  mutant=None):
+    """See _bound_to_lean; `tstack_kb` / `mutant` override the kernel's stack and the sabotage switches for THIS
+    call only (thread-local)."""
+    _CTX.tstack, _CTX.mutant = tstack_kb, mutant
+    try:
+        return _bound_to_lean(laws, unknowns, qtext, target, reqs, name, depth, trees, laws_mode)
+    finally:
+        _CTX.tstack, _CTX.mutant = None, None
+
+
+def _bound_to_lean(laws, unknowns, qtext, target, reqs, name, depth=14, trees=None, laws_mode=True):
     """laws: "lhs == rhs" strings; unknowns: the derived quantities; qtext: the sheet ("R1=[990,1010] credit, ...");
     target: the derived quantity, or an expression of the unknowns and the data ("I*I*R1"); reqs: [(">=", c) | ("<=", c)]; name: the Lean namespace. `trees`: given trees
     (the search skipped) — the negative control pastes an accepted tree under a false bound."""

@@ -1512,7 +1512,29 @@ def _int_refine(kind, e1, e2, quantities):
     return "F"
 
 
-_MEMO = [None]          # {node: result} while ONE reading runs (zcertify._reading_one), else None
+class _ThreadSlot:
+    """`_MEMO[0]` read and set PER THREAD (2026-11-09). The memory belongs to ONE reading — one box, one piece — and
+    was a module-global list: two threads reading at once (the studio is a ThreadingHTTPServer; a bridge run on a
+    thread pool) swapped it under each other, and a reading could take an interval computed for ANOTHER box.
+    MEASURED: the zimplicit bridge on 12 threads read sin/tan cases 'no verdict' at random (4 fails, then 2);
+    sequential — green. A wrong interval could in principle also accept a piece wrongly. Same API: `_MEMO[0]`."""
+
+    def __init__(self):
+        import threading
+        self._t = threading.local()
+
+    def __getitem__(self, i):
+        if i != 0:
+            raise IndexError(i)
+        return getattr(self._t, "v", None)
+
+    def __setitem__(self, i, v):
+        if i != 0:
+            raise IndexError(i)
+        self._t.v = v
+
+
+_MEMO = _ThreadSlot()   # {node: result} while ONE reading runs (zcertify._reading_one), else None — per thread
 
 
 def _ev(expr, quantities):

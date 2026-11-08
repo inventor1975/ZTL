@@ -2103,6 +2103,10 @@ def _implicit_answer(claim, q, x, region):
         g = _pa(f"({eqs[0][0]}) - ({eqs[0][1]})", q)
         if x not in _ZC._names(g):
             return None
+        params = sorted(n for n in _ZC._names(g) if n in q and n != x and q[n]["lo"] < q[n]["hi"])
+        if not params:
+            return None    # no parameters: the region search answers completely — and BEFORE the search (MEASURED
+            #               2026-11-08: cos x = 0.99 spent 2.3 s of 4.5 in a search whose answer was thrown away)
         a, b = region
         cert = _ZI.search_certificate(g, x, q, [a, b])
         if cert is None:
@@ -2112,9 +2116,6 @@ def _implicit_answer(claim, q, x, region):
             return None
         from fractions import Fraction as _F
         lo, hi = _F(res[1][0]), _F(res[1][1])
-        params = sorted(n for n in _ZC._names(g) if n in q and n != x and q[n]["lo"] < q[n]["hi"])
-        if not params:
-            return None                    # no parameters: the region search answers completely, many roots included
         box = {n: (q[n]["lo"], q[n]["hi"]) for n in params}
         pieces = [(_F(str(pc["lo"])), _F(str(pc["hi"])), pc["kind"]) for pc in cert["pieces"]]
         kept = [i for i, pc in enumerate(pieces) if pc[2] == "kept"]

@@ -210,7 +210,7 @@ def lnNewton (x : D) : Nat → D → D
 
 def lnGuess (x : D) : D :=
   let z := znorm x.m
-  lnNewton x 8 (rdnA (dmul ⟨⟨z.p.log2, x.e⟩, 0⟩ ln2))
+  lnNewton x 8 (rdnA (dmul ⟨⟨lg2 z.p, x.e⟩, 0⟩ ln2))
 
 def tiny : D := ⟨⟨1, 0⟩, 40⟩
 

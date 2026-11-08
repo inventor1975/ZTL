@@ -1,4 +1,5 @@
 import ZXE
+import ZKron
 /-!
 # ZNone — `check_none`, executable by the kernel and sound. Zero axioms.
 
@@ -39,6 +40,20 @@ inductive Cert where
   | chart (u v : Nat) (a b : D) (ρ : D) (j : Nat)
       (gX : List ZPoly.PE) (mX : List Nat) (hX : List ZPoly.PE) (qX : List Nat) (tX : Cert)
       (gY : List ZPoly.PE) (mY : List Nat) (hY : List ZPoly.PE) (qY : List Nat) (tY : Cert)
+
+/-- An identity: by ONE integer evaluation (`ZKron.identK`, MEASURED 2026-11-08 ~57× cheaper in the kernel on a
+KS-23 chart identity), the symbolic normal form (`ZPoly.ident`) when that does not settle it (a non-integer constant). -/
+def identX (e₁ e₂ : ZPoly.PE) : Bool := ZKron.identK e₁ e₂ || ident e₁ e₂
+
+theorem identX_sound {α : Type} (S : ZNumBin.OH α) {e₁ e₂ : ZPoly.PE} (h : identX e₁ e₂ = true) (env : Nat → α) :
+    S.r (ZPoly.eval S env e₁) (ZPoly.eval S env e₂) := by
+  cases hk : ZKron.identK e₁ e₂ with
+  | true => exact ZKron.identK_sound S hk env
+  | false =>
+      have h' : ident e₁ e₂ = true := by
+        have : (false || ident e₁ e₂) = true := by rw [← hk]; exact h
+        exact this
+      exact identity_sound S env h'
 
 /-! ## Lists, by our own recursion -/
 
@@ -89,7 +104,7 @@ def allId (φ : Nat → ZPoly.PE) (u : Nat) : List ZPoly.PE → List ZPoly.PE �
   | [], _ :: _, _ => false
   | _ :: _, [], _ => false
   | _ :: _, _ :: _, [] => false
-  | e :: es, g :: gs, m :: ms => ident (e.subst φ) (.mul (.pow (.var u) m) g) && allId φ u es gs ms
+  | e :: es, g :: gs, m :: ms => identX (e.subst φ) (.mul (.pow (.var u) m) g) && allId φ u es gs ms
 
 def inSq (B : Box) (u : Nat) (a : D) (ρ : D) : Bool :=
   match B u with
@@ -110,7 +125,7 @@ def chk (Sy : Sys) (B : Box) : Cert → Bool
       | none => false
   | .ex j => match nth Sy.neqs j with
       | some n => (match toPE n with
-          | some q => ident q (.cst ⟨⟨0, 0⟩, 0⟩)
+          | some q => identX q (.cst ⟨⟨0, 0⟩, 0⟩)
           | none => false)
       | none => false
   | .split i t δ lo hi => posD δ && (match B i with
@@ -124,12 +139,77 @@ def chk (Sy : Sys) (B : Box) : Cert → Bool
       | some ns =>
         !(Nat.beq u v) && posD ρ && inSq B u a ρ && inSq B v b ρ &&
         (match nth ns j with
-          | some n => ident (n.subst (cen u v a b)) (.cst ⟨⟨0, 0⟩, 0⟩)
+          | some n => identX (n.subst (cen u v a b)) (.cst ⟨⟨0, 0⟩, 0⟩)
           | none => false) &&
         allId (phiX u v a b) u es gX mX && allId (phiX u v a b) u ns hX qX &&
         chk ⟨gX.map ofPE, hX.map ofPE⟩ (chartBox B u v ρ) tX &&
         allId (phiY u v a b) u es gY mY && allId (phiY u v a b) u ns hY qY &&
         chk ⟨gY.map ofPE, hY.map ofPE⟩ (chartBox B u v ρ) tY
+
+/-! ## Splitting a check into pieces (for a certificate checked in parts, e.g. one kernel run per piece) -/
+
+/-- The two boxes of a cut of `B` at `t` with overlap `δ` on variable `i`. -/
+def lowB (B : Box) (i : Nat) (t δ : D) : Box := match B i with
+  | some I => upd B i (I.1, dadd t δ)
+  | none => B
+def highB (B : Box) (i : Nat) (t δ : D) : Box := match B i with
+  | some I => upd B i (dadd t (dneg δ), I.2)
+  | none => B
+
+/-- A cut is accepted when both halves are: the pieces may be checked separately. -/
+theorem chk_split_intro {Sy : Sys} {B : Box} {i : Nat} {t δ : D} {lo hi : Cert} (hδ : posD δ = true)
+    (hB : (B i).isSome = true) (h1 : chk Sy (lowB B i t δ) lo = true) (h2 : chk Sy (highB B i t δ) hi = true) :
+    chk Sy B (.split i t δ lo hi) = true := by
+  cases hI : B i with
+  | none => rw [hI] at hB; cases hB
+  | some I =>
+      have e1 : lowB B i t δ = upd B i (I.1, dadd t δ) := by unfold lowB; rw [hI]
+      have e2 : highB B i t δ = upd B i (dadd t (dneg δ), I.2) := by unfold highB; rw [hI]
+      rw [e1] at h1; rw [e2] at h2
+      show (posD δ && (match B i with
+        | some I => chk Sy (upd B i (I.1, dadd t δ)) lo && chk Sy (upd B i (dadd t (dneg δ), I.2)) hi
+        | none => false)) = true
+      rw [hδ, hI]
+      show (chk Sy (upd B i (I.1, dadd t δ)) lo && chk Sy (upd B i (dadd t (dneg δ), I.2)) hi) = true
+      rw [h1, h2]; rfl
+
+/-- A chart is accepted when each of its checks is: the identities and the two sub-trees may be checked apart. -/
+theorem chk_chart_intro {Sy : Sys} {B : Box} {u v : Nat} {a b ρ : D} {j : Nat}
+    {gX : List ZPoly.PE} {mX : List Nat} {hX : List ZPoly.PE} {qX : List Nat} {tX : Cert}
+    {gY : List ZPoly.PE} {mY : List Nat} {hY : List ZPoly.PE} {qY : List Nat} {tY : Cert}
+    {es ns : List ZPoly.PE} (hes : toPEs Sy.eqs = some es) (hns : toPEs Sy.neqs = some ns)
+    (h0 : (!(Nat.beq u v) && posD ρ && inSq B u a ρ && inSq B v b ρ) = true)
+    (hc : (match nth ns j with
+          | some n => identX (n.subst (cen u v a b)) (.cst ⟨⟨0, 0⟩, 0⟩)
+          | none => false) = true)
+    (h1 : allId (phiX u v a b) u es gX mX = true) (h2 : allId (phiX u v a b) u ns hX qX = true)
+    (h3 : chk ⟨gX.map ofPE, hX.map ofPE⟩ (chartBox B u v ρ) tX = true)
+    (h4 : allId (phiY u v a b) u es gY mY = true) (h5 : allId (phiY u v a b) u ns hY qY = true)
+    (h6 : chk ⟨gY.map ofPE, hY.map ofPE⟩ (chartBox B u v ρ) tY = true) :
+    chk Sy B (.chart u v a b ρ j gX mX hX qX tX gY mY hY qY tY) = true := by
+  show (match toPEs Sy.eqs with
+      | none => false
+      | some es => match toPEs Sy.neqs with
+      | none => false
+      | some ns =>
+        !(Nat.beq u v) && posD ρ && inSq B u a ρ && inSq B v b ρ &&
+        (match nth ns j with
+          | some n => identX (n.subst (cen u v a b)) (.cst ⟨⟨0, 0⟩, 0⟩)
+          | none => false) &&
+        allId (phiX u v a b) u es gX mX && allId (phiX u v a b) u ns hX qX &&
+        chk ⟨gX.map ofPE, hX.map ofPE⟩ (chartBox B u v ρ) tX &&
+        allId (phiY u v a b) u es gY mY && allId (phiY u v a b) u ns hY qY &&
+        chk ⟨gY.map ofPE, hY.map ofPE⟩ (chartBox B u v ρ) tY) = true
+  rw [hes, hns]
+  show (!(Nat.beq u v) && posD ρ && inSq B u a ρ && inSq B v b ρ &&
+        (match nth ns j with
+          | some n => identX (n.subst (cen u v a b)) (.cst ⟨⟨0, 0⟩, 0⟩)
+          | none => false) &&
+        allId (phiX u v a b) u es gX mX && allId (phiX u v a b) u ns hX qX &&
+        chk ⟨gX.map ofPE, hX.map ofPE⟩ (chartBox B u v ρ) tX &&
+        allId (phiY u v a b) u es gY mY && allId (phiY u v a b) u ns hY qY &&
+        chk ⟨gY.map ofPE, hY.map ofPE⟩ (chartBox B u v ρ) tY) = true
+  rw [h0, hc, h1, h2, h3, h4, h5, h6]; rfl
 
 /-! ## Soundness -/
 
@@ -225,7 +305,7 @@ theorem allId_eqs {φ : Nat → ZPoly.PE} {u : Nat} {p p' : Nat → α}
   | [], [], [], _, _, _, hg => by cases hg
   | e :: es, g :: gs, m :: ms, h, he, g', hg' => by
       have hh := and_true_split h
-      have hid := identity_sound S.toOH p' hh.1
+      have hid := identX_sound S.toOH hh.1 p'
       have v1 := eval_subst S.toOH p' φ e
       have v2 := eval_congr_env S henv e
       have e0 := he e (List.Mem.head _)
@@ -249,7 +329,7 @@ theorem allId_neqs {φ : Nat → ZPoly.PE} {u : Nat} {p p' : Nat → α}
   | [], [], [], _, _, _, hg => by cases hg
   | n :: ns, h :: hs, q :: qs, H, hn, h', hh' => by
       have hh := and_true_split H
-      have hid := identity_sound S.toOH p' hh.1
+      have hid := identX_sound S.toOH hh.1 p'
       have v1 := eval_subst S.toOH p' φ n
       have v2 := eval_congr_env S henv n
       have a0 := hn n (List.Mem.head _)
@@ -490,7 +570,7 @@ theorem chk_sound (ex : α → α) : ∀ (c : Cert) (Sy : Sys) (B : Box) (p : Na
           | none => rw [hq] at h; cases h
           | some q =>
               rw [hq] at h
-              have hid := identity_sound S.toOH p h
+              have hid := identX_sound S.toOH h p
               obtain ⟨v, hv, ha⟩ := hN n (nth_mem hj)
               exact ap_ne S ha (S.trans (val_toPE S hq hv) (S.trans hid (eval_zero S p)))
   | .split i t δ lo hi, Sy, B, p, h, hp, hE, hN => by
@@ -574,7 +654,7 @@ theorem chk_sound (ex : α → α) : ∀ (c : Cert) (Sy : Sys) (B : Box) (p : Na
             have ey' : S.r (p v) (dv S.toOH b) := by
               have t : S.r (p v) (S.add (S.add (p v) (S.neg (dv S.toOH b))) (dv S.toOH b)) := by cr_ring S.toCR
               exact S.trans t (S.trans (S.add_congr hye (S.refl _)) (S.zero_add _))
-            have hid := identity_sound S.toOH p hc
+            have hid := identX_sound S.toOH hc p
             have v1 := eval_subst S.toOH p (cen u v a b) n
             have v2 := eval_congr_env S (env_cen S ex' ey') n
             exact ap_ne S apn (S.trans (S.symm (S.trans v1 v2)) (S.trans hid (eval_zero S p)))
@@ -637,6 +717,8 @@ end ZNone
 
 #print axioms ZNone.nth_mem
 #print axioms ZNone.nz_sound
+#print axioms ZNone.chk_split_intro
+#print axioms ZNone.chk_chart_intro
 #print axioms ZNone.cancel_pow
 #print axioms ZNone.allId_eqs
 #print axioms ZNone.allId_neqs

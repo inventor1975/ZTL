@@ -288,8 +288,24 @@ theorem and_true_split {a b : Bool} (h : (a && b) = true) : a = true ∧ b = tru
   · exact ⟨rfl, rfl⟩
 
 def P : Nat := 62
+
+/-! `⌊log₂ n⌋` for the kernel. `Nat.log2` is defined by well-founded recursion, which the kernel unfolds step by
+step: MEASURED 2026-11-08, ~0.8 ms per call on a 120-bit number, more than half of a rounding and ~30% of an
+interval product. Here: double an upper bound, then halve the range — structural recursion on fuel, every step
+one kernel-accelerated power and comparison. Only the AMOUNT of rounding depends on it; every rounding is checked. -/
+def lgUp : Nat → Nat → Nat → Nat
+  | 0, _, hi => hi
+  | f + 1, n, hi => cond (Nat.blt n (2 ^ hi)) hi (lgUp f n (2 * hi))
+def lgBin : Nat → Nat → Nat → Nat → Nat
+  | 0, _, _, hi => hi
+  | f + 1, n, lo, hi => cond (Nat.ble hi (lo + 1)) hi
+      (cond (Nat.blt n (2 ^ ((lo + hi) / 2))) (lgBin f n lo ((lo + hi) / 2)) (lgBin f n ((lo + hi) / 2) hi))
+/-- `⌊log₂ n⌋` (`0` for `n = 0`): the bit length minus one. -/
+def lg2 (n : Nat) : Nat :=
+  let hi := lgUp 24 n 64
+  lgBin 40 n (cond (Nat.beq hi 64) 0 (hi / 2)) hi - 1
 /-- How many bits to drop: never more than the exponent, never below `P` significant bits. -/
-def dropK (d : D) : Nat := Nat.min d.e ((Nat.max d.m.p d.m.n).log2 - P)
+def dropK (d : D) : Nat := Nat.min d.e (lg2 (Nat.max d.m.p d.m.n) - P)
 /-- `⌊m / 2ᵏ⌋` and `⌈m / 2ᵏ⌉` for a normalised `m` (computed any way; checked below). -/
 def qdn (z : BZ) (k : Nat) : BZ := if z.n == 0 then ⟨z.p / 2 ^ k, 0⟩ else ⟨0, (z.n + 2 ^ k - 1) / 2 ^ k⟩
 def qup (z : BZ) (k : Nat) : BZ := if z.n == 0 then ⟨(z.p + 2 ^ k - 1) / 2 ^ k, 0⟩ else ⟨0, z.n / 2 ^ k⟩
@@ -343,7 +359,7 @@ theorem le_rup (d : D) : S.le (dv S d) (dv S (rup d)) := by
 
 /-! ## Rounding at a chosen precision (for long chains of squarings, where errors double each step) -/
 
-def dropKP (q : Nat) (d : D) : Nat := Nat.min d.e ((Nat.max d.m.p d.m.n).log2 - q)
+def dropKP (q : Nat) (d : D) : Nat := Nat.min d.e (lg2 (Nat.max d.m.p d.m.n) - q)
 def rdnP (q : Nat) (d : D) : D :=
   let z := znorm d.m
   let k := dropKP q ⟨z, d.e⟩
@@ -383,7 +399,7 @@ theorem le_rupP (q : Nat) (d : D) : S.le (dv S d) (dv S (rupP q d)) := by
 
 /-! ## Rounding to 62 significant bits AND at most 80 fractional bits (tiny values snap to a coarse grid) -/
 
-def dropKA (d : D) : Nat := Nat.min d.e (Nat.max ((Nat.max d.m.p d.m.n).log2 - 62) (d.e - 80))
+def dropKA (d : D) : Nat := Nat.min d.e (Nat.max (lg2 (Nat.max d.m.p d.m.n) - 62) (d.e - 80))
 def rdnA (d : D) : D :=
   let z := znorm d.m
   let k := dropKA ⟨z, d.e⟩

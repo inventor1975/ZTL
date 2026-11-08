@@ -548,6 +548,53 @@ theorem bound_identX {lo : Bool} {G H : XE} {c : D} {vs : List Nat} {T : VT} {B 
   | true => exact rCF.le_respects (rCF.refl _) e hb
   | false => exact rCF.le_respects e (rCF.refl _) hb
 
+/-! ## A requirement on the LAWS, not on an expression (B/C, the curator 2026-11-09: "делаем")
+
+The stand's unknowns `u` (variables past the box's parameters, unconstrained by the box) satisfy the laws, read as
+polynomial ROWS `R_i = Σ_k A_ik·u_k − b_i`. A cofactor certificate `c` (a row of the adjugate, found by Python) with
+the identity `Σ_i c_i·R_i ≡ D·u_j − N_j` — checked by the kernel (`identX`) — gives `D·u_j = N_j` for EVERY `u`
+satisfying the laws: the elimination is no longer trusted, and with `D > 0` on the box the solution is unique. -/
+
+section Rows
+variable {α : Type} {S : CF α}
+theorem mul_zero_of {a b : α} (h : S.r b S.zero) : S.r (S.mul a b) S.zero :=
+  S.trans (S.mul_congr (S.refl _) h) (by cr_ring S.toCR)
+theorem add_zero_of {a b : α} (ha : S.r a S.zero) (hb : S.r b S.zero) : S.r (S.add a b) S.zero :=
+  S.trans (S.add_congr ha hb) (by cr_ring S.toCR)
+theorem eq_of_sub_zero {a b : α} (h : S.r (S.add a (S.neg b)) S.zero) : S.r a b := by
+  have e : S.r a (S.add (S.add a (S.neg b)) b) := by cr_ring S.toCR
+  exact S.trans e (S.trans (S.add_congr h (S.refl _)) (by cr_ring S.toCR))
+end Rows
+
+/-- `Σ cᵢ·Rᵢ` as an expression (the certificate `cs`, the rows `rs`). -/
+def linC : List XE → List XE → XE
+  | [], [] => .cst dz0
+  | [], _r :: _rs => .cst dz0
+  | _c :: _cs, [] => .cst dz0
+  | c :: cs, r :: rs => .add (.mul c r) (linC cs rs)
+
+/-- Every row zero ⟹ any combination of them zero. -/
+theorem linC_zero {y : Nat → RExpr} : ∀ cs rs : List XE, (∀ r, List.Mem r rs → rCF.r (evR y r) rCF.zero) →
+    rCF.r (evR y (linC cs rs)) rCF.zero
+  | [], [], _ => zv_isZ rOH (c := dz0) rfl
+  | [], _r :: _rs, _ => zv_isZ rOH (c := dz0) rfl
+  | _c :: _cs, [], _ => zv_isZ rOH (c := dz0) rfl
+  | c :: cs, r :: rs, h => by
+    have h0 : rCF.r (evR y r) rCF.zero := h r (List.Mem.head rs)
+    have ht := linC_zero cs rs (fun q hq => h q (List.Mem.tail r hq))
+    show rCF.r (rCF.add (rCF.mul (evR y c) (evR y r)) (evR y (linC cs rs))) rCF.zero
+    exact add_zero_of (mul_zero_of h0) ht
+
+/-- **The laws give the value**: `D·u = N` for every point of the box and EVERY `u` satisfying the rows. -/
+theorem law_value {B : Box} {y : Nat → RExpr} (hy : InBox rCF B y) {cs rs : List XE} {Dx Nx U : XE}
+    (hl : ∀ r, List.Mem r rs → rCF.r (evR y r) rCF.zero)
+    (hid : identX (linC cs rs) (.sub (.mul Dx U) Nx) = true) (pg : posOK B (linC cs rs) = true)
+    (ph : posOK B (.sub (.mul Dx U) Nx) = true) : rCF.r (rCF.mul (evR y Dx) (evR y U)) (evR y Nx) := by
+  have e := evR_identX hy hid pg ph
+  have z : rCF.r (rCF.add (rCF.mul (evR y Dx) (evR y U)) (rCF.neg (evR y Nx))) rCF.zero :=
+    rCF.trans (rCF.symm e) (linC_zero cs rs hl)
+  exact eq_of_sub_zero z
+
 end ZBound
 
 #print axioms ZBound.boxSet
@@ -572,4 +619,11 @@ end ZBound
 #print axioms ZBound.identX.eq_def
 #print axioms ZBound.evR_identX
 #print axioms ZBound.bound_identX
+#print axioms ZBound.mul_zero_of
+#print axioms ZBound.add_zero_of
+#print axioms ZBound.eq_of_sub_zero
+#print axioms ZBound.linC
+#print axioms ZBound.linC.eq_def
+#print axioms ZBound.linC_zero
+#print axioms ZBound.law_value
 #print axioms ZBound.div_value

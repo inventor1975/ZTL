@@ -4,6 +4,10 @@ The curator, 2026-11-08: "важно, если стенд будет дават�
 `q op c` on a derived quantity q of a LINEAR system of laws (the stand's divider, a network's currents), for every
 parameter vector in the box:
 
+  0. ON THE LAWS (2026-11-09, the curator's "B/C — делаем"), when q is an unknown of a system with rational
+     coefficients: the laws as polynomial ROWS and a cofactor certificate (`_law_cert`); the kernel checks
+     `Σ cᵢ·Rᵢ ≡ D·q − N` (`ZBound.law_value`) and the file proves `lawreq{k}`: the requirement for EVERY value of the
+     unknowns satisfying the laws — the elimination below is then only the search, not trusted;
   1. q's expression from the laws — ZTL's own Cramer solution (zcertify.solve_system): `q = det_q / det`; beyond
      ZC.MAX_SYSTEM unknowns the same determinants by Bareiss (`_solve_big`, exact polynomial division); no laws — q
      an expression of the data (said, not hidden: this elimination is Python's exact algebra, not proved in Lean;
@@ -42,6 +46,7 @@ import zkraw2lean as K  # noqa: E402
 
 
 TSTACK_KB = 400000
+_MUTANT = {}            # sabotage switches for the bridge's negative controls (never set on the real path)
 
 
 def _subst(node, pinned):
@@ -371,6 +376,102 @@ def _solve_big(laws, unknowns, qs, pinned):
     return sol
 
 
+def _law_cert(laws, unknowns, qs, pinned, target):
+    """THE LAWS AS ROWS, AND A COFACTOR CERTIFICATE (2026-11-09, the curator's "B/C — делаем").
+
+    Each law read as a polynomial row `R_i = Σ_k A_ik(x)·u_k − b_i(x)` over the box's parameters x (each scaled to
+    an integer box, x = s·p) and the unknowns u (variables past the parameters): the law's sides by ZC._lin, every
+    coefficient a rational function (`_rat`), the row multiplied by its denominators and one positive constant —
+    a LOCAL reading of each law (Python, said). The certificate c is the adjugate's row j: c_i = det(A with row i
+    replaced by e_j) — so that Σ_i c_i·R_i ≡ D·u_j − N_j, D = det A, as polynomials: the kernel checks THIS
+    (`ZBound.identX`), and no elimination is trusted. None: a coefficient not rational, or not a square system."""
+    import znumjudge as ZJ
+    import zcertify as ZC
+    us = sorted(set(unknowns))
+    if target not in us or len(laws) != len(us) or not us:
+        return None
+    raw = []
+    for law in laws:
+        if law.count("==") != 1:
+            return None
+        l, r = law.split("==")
+        a = ZC._lin(ZJ._parse_arith(l, qs), set(us))
+        b = ZC._lin(ZJ._parse_arith(r, qs), set(us))
+        row = dict(a)
+        for k, v in b.items():
+            row[k] = ("sub", row[k], v) if k in row else ("sub", F(0), v)
+        raw.append({k: _sqrt2exp(_subst(v, pinned)) for k, v in row.items()})
+    params = sorted({n for row in raw for v in row.values() for n in _names(v, set())
+                     if n in qs and n not in pinned and n not in us})
+    for n in params:
+        if isinstance(qs[n]["lo"], float) or isinstance(qs[n]["hi"], float):
+            return None
+    m, n = len(params), len(us)
+    idx = {p: i for i, p in enumerate(params)}
+    sc = [math.lcm(F(qs[p]["lo"]).denominator, F(qs[p]["hi"]).denominator) for p in params]
+
+    def scale(P):                       # p_i = x_i / s_i
+        out = {}
+        for mo, c in P.items():
+            f = c
+            for i, e in enumerate(mo):
+                f /= F(sc[i]) ** e
+            out[mo] = f
+        return out
+    A, bvec = [], []
+    for row in raw:
+        ents = {}
+        for k, v in row.items():
+            rv = _rat(v, idx)
+            if rv is None or not rv[1]:
+                return None
+            ents[k] = (scale(rv[0]), scale(rv[1]))
+        Dp = {(0,) * m: F(1)}
+        for (_, Dk) in ents.values():
+            Dp = _pmul(Dp, Dk)
+        cl = {k: _pdivexact(_pmul(Nk, Dp), Dk) for k, (Nk, Dk) in ents.items()}
+        L = 1
+        for P in cl.values():
+            for c in P.values():
+                L = math.lcm(L, c.denominator)
+        cl = {k: {mo: c * L for mo, c in P.items()} for k, P in cl.items()}
+        A.append([cl.get(u, {}) for u in us])
+        bvec.append({mo: -c for mo, c in cl.get(1, {}).items()})
+    j = us.index(target)
+    D = _bareiss(A, m)
+    if not D:
+        return None
+    unit = [({(0,) * m: F(1)} if k == j else {}) for k in range(n)]
+    cert = [_bareiss(A[:i] + [unit] + A[i + 1:], m) for i in range(n)]
+    N = {}
+    for i in range(n):
+        N = _padd(N, _pmul(cert[i], bvec[i]))
+    box = {p: (F(qs[p]["lo"]) * sc[i], F(qs[p]["hi"]) * sc[i]) for i, p in enumerate(params)}
+    x0 = [(box[p][0] + box[p][1]) / 2 for p in params]
+    if _peval(D, x0) < 0:
+        cert = [{mo: -c for mo, c in P.items()} for P in cert]
+        D, N = {mo: -c for mo, c in D.items()}, {mo: -c for mo, c in N.items()}
+    # rows over m + n variables; the identity checked here too (the kernel checks it again)
+    ext = lambda P: {mo + (0,) * n: c for mo, c in P.items()}
+    rows = []
+    for i in range(n):
+        R = {}
+        for k in range(n):
+            R = _padd(R, {mo + tuple(1 if t == k else 0 for t in range(n)): c for mo, c in A[i][k].items()})
+        rows.append(_padd(R, ext(bvec[i]), -1))
+    lhs = {}
+    for i in range(n):
+        lhs = _padd(lhs, _pmul(ext(cert[i]), rows[i]))
+    rhs = _padd(_pmul(ext(D), {(0,) * m + tuple(1 if t == j else 0 for t in range(n)): F(1)}), ext(N), -1)
+    assert _padd(lhs, rhs, -1) == {}, "the cofactor identity fails"
+    for P in [D, N] + cert + rows:
+        assert all(c.denominator == 1 for c in P.values())
+    if _MUTANT.get("cert"):             # SABOTAGE (the bridge's other side): a certificate the kernel must refuse
+        cert = [_padd(cert[0], {(0,) * m: F(1)})] + cert[1:]
+    return {"params": params, "box": box, "scale": dict(zip(params, sc)), "D": D, "N": N, "cert": cert,
+            "rows": rows, "m": m, "n": n, "j": j, "unknowns": us}
+
+
 def _box_lean(params, box):
     """`fun i => cond (Nat.beq i 0) (some (lo, hi)) (cond ... none)`."""
     body = "none"
@@ -380,7 +481,7 @@ def _box_lean(params, box):
     return f"fun i => {body}"
 
 
-def bound_to_lean(laws, unknowns, qtext, target, reqs, name, depth=14, trees=None):
+def bound_to_lean(laws, unknowns, qtext, target, reqs, name, depth=14, trees=None, laws_mode=True):
     """laws: "lhs == rhs" strings; unknowns: the derived quantities; qtext: the sheet ("R1=[990,1010] credit, ...");
     target: the derived quantity, or an expression of the unknowns and the data ("I*I*R1"); reqs: [(">=", c) | ("<=", c)]; name: the Lean namespace. `trees`: given trees
     (the search skipped) — the negative control pastes an accepted tree under a false bound."""
@@ -415,7 +516,13 @@ def bound_to_lean(laws, unknowns, qtext, target, reqs, name, depth=14, trees=Non
     idx = {n: i for i, n in enumerate(params)}
     quotient = isinstance(node, tuple) and node[0] == "div"
     Nn, Dn = (node[1], node[2]) if quotient else (node, F(1))
-    sc = _scaled(node, params, qs)
+    law = _law_cert(laws, unknowns, qs, pinned, target) if laws_mode else None
+    if law is not None:                              # the theorem on the LAWS: D, N from the rows, the box over all
+        params, box, scale = law["params"], law["box"], law["scale"]     # the rows' parameters
+        N2, D2 = law["N"], law["D"]
+        sc = (N2, D2, box, scale)
+    else:
+        sc = _scaled(node, params, qs)
     scale = None
     if sc is not None:                               # exact: integer box, integer polynomials (see _scaled)
         N2, D2, box, scale = sc
@@ -513,20 +620,53 @@ theorem cleared{k} : ∀ x : Nat → RExpr, InBox rCF B x → rCF.le (dv rOH {Z.
 theorem req{k} (x : Nat → RExpr) (hx : InBox rCF B x) : {stmt} := by
 {pf}
 """
+    nlaw = 0
+    if law is not None:
+        mm, nn = law["m"], law["n"]
+        rows_xe = [_poly_xe(R, mm + nn) for R in law["rows"]]
+        cert_xe = [_poly_xe(C, mm) for C in law["cert"]]
+        U = f"(.var {mm + law['j']})"
+        body += f"""/-! ## On the LAWS: every value of the unknowns satisfying them (vars {mm}..{mm + nn - 1}: {", ".join(law["unknowns"])}) -/
+/-- The laws as rows `Σ A·u − b` (each law multiplied by its denominators, parameters scaled). -/
+def rows : List XE := [{", ".join(rows_xe)}]
+/-- The cofactor certificate: `Σ cᵢ·Rᵢ ≡ D·u − N`, checked by the kernel (`identX`). -/
+def cert : List XE := [{", ".join(cert_xe)}]
+theorem law_val (y : Nat → RExpr) (hy : InBox rCF B y) (hl : ∀ r, List.Mem r rows → rCF.r (evR y r) rCF.zero) :
+    rCF.r (rCF.mul (evR y xD) (evR y {U})) (evR y xN) :=
+  law_value hy (cs := cert) hl (by decide +kernel) (by decide +kernel) (by decide +kernel)
+"""
+        for k, (op, c, form, G) in enumerate(forms):
+            p_, r_ = c.numerator, c.denominator
+            R, P = f"(evR y (XE.cst {Z.dy(r_)}))", f"(evR y (XE.cst {Z.dy(p_)}))"
+            stmt = (f"rCF.le (rCF.mul {R} (evR y {U})) {P}" if op == "<=" else
+                    f"rCF.le {P} (rCF.mul {R} (evR y {U}))")
+            body += f"""/-- **The requirement on the laws**: `{target} {op} {p_}/{r_}` for EVERY point of the box and EVERY value of
+the unknowns satisfying the laws. -/
+theorem lawreq{k} (y : Nat → RExpr) (hy : InBox rCF B y) (hl : ∀ r, List.Mem r rows → rCF.r (evR y r) rCF.zero) :
+    {stmt} :=
+  {"le_of_quotR" if op == "<=" else "ge_of_quotR"} (q_pos y hy).1 (law_val y hy hl)
+    (rCF.le_respects (zv_isZ rOH (c := {Z.dy(0)}) rfl) (rCF.refl _) (cleared{k} y hy))
+"""
+        nlaw = 1 + len(forms)
     body += f"end {name}\n" + "".join(f"#print axioms {name}.cleared{k}\n#print axioms {name}.req{k}\n"
                                          for k in range(len(forms)))
     if quotient:
         body += f"#print axioms {name}.q_pos\n"
+    if law is not None:
+        body += f"#print axioms {name}.law_val\n" + "".join(f"#print axioms {name}.lawreq{k}\n"
+                                                              for k in range(len(forms)))
     path = os.path.join(gen, name + ".lean")
     out = _run(body, path)
-    ok = "error" not in out and out.count("does not depend on any axioms") == 2 * len(forms) + (1 if quotient else 0)
+    ok = "error" not in out and out.count("does not depend on any axioms") == 2 * len(forms) + (1 if quotient else 0) + nlaw
     # "refused" only when the kernel's check said FALSE; a resource limit is not a verdict (2026-11-08: ztl-stand
     # tasks/t14, maxRecDepth inside `decide +kernel`, was first reported as "refused")
     limit = any(w in out for w in ("maximum recursion depth", "deterministic timeout", "heartbeats", "Stack overflow"))
     res = {"status": "theorem" if ok else ("kernel limit" if limit else "refused"), "file": path, "params": params, "box": box,
            "quotient": quotient, "trees": trees, "out": out[:600],
            # var i of the theorem is scale[p] · p (an integer box) when exact; else p itself over a dyadic box
-           "scale": scale}
+           "scale": scale,
+           # on the LAWS (the requirement for every value of the unknowns satisfying them), or on the expression
+           "about": "laws" if law is not None else "expression"}
     return res
 
 

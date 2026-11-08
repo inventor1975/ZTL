@@ -13,6 +13,8 @@ The curator, 2026-11-08: the stand should give proofs, not only certificates. He
   * a mortgage, pow(1 + r, 360) inside a division: a theorem on a 400 MB kernel stack; on 8 MB a "kernel limit";
   * no laws at all (a pinned zero before a table), and a 7-unknown ladder by Bareiss (Cramer refuses > 6);
   * a square root, as exp(½·ln u);
+  * ON THE LAWS: the theorem for every value of the unknowns satisfying the laws (rows + a cofactor certificate
+    checked by the kernel); a certificate off by one is refused;
   * NEGATIVE CONTROL: the divider's accepted tree under a false bound (Vout <= 2.5, the true maximum 2.525) — the
     kernel must refuse it.
 """
@@ -115,6 +117,20 @@ check("sqrt(s^2 + 3 t^2) <= 131 on s in [90, 110], t in [30, 40] (max sqrt(16900
       st17["status"] == "theorem", st17)
 st18 = ZB.bound_to_lean([], [], "s=[90,110] credit, t=[30,40] credit", "sqrt(s*s + 3*t*t)", [("<=", "129")], "ZGenSqrtB")
 check("the other side: <= 129 — no theorem", st18["status"] != "theorem", st18)
+print("11. ON THE LAWS (the curator 2026-11-09, B/C): the requirement for EVERY value of the unknowns satisfying them")
+check("the divider, the 3-resistor net, the TCR divider, the 7-unknown ladder: each theorem is on the LAWS (rows + a "
+      "cofactor certificate checked by identX), not on an eliminated expression",
+      all(x.get("about") == "laws" for x in (st, st2, st9, st15)), [x.get("about") for x in (st, st2, st9, st15)])
+check("an expression target (the power I*I*R1) stays on the expression, said as such", st7.get("about") == "expression",
+      st7.get("about"))
+ZB._MUTANT["cert"] = True
+try:
+    stm = ZB.bound_to_lean(*DIV, "Vout", [(">=", "2.475"), ("<=", "2.525")], "ZGenDividerMut")
+finally:
+    ZB._MUTANT.clear()
+check("SABOTAGE: a cofactor certificate off by 1 — the kernel refuses it (the elimination is checked, not trusted)",
+      stm["status"] == "refused" and "proved that the proposition" in stm.get("out", ""),
+      stm.get("out", "")[:300])
 print(f"\n{ok} ok, {fail} fail")
 print("ZBOUND LEAN BRIDGE GREEN" if fail == 0 else "ZBOUND LEAN BRIDGE RED")
 sys.exit(1 if fail else 0)

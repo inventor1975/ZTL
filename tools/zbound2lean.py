@@ -74,6 +74,74 @@ def _sqrt2exp(node):
     return node
 
 
+def _ifpos_nodes(node, acc):
+    if isinstance(node, tuple):
+        if node[0] == "ifpos":
+            acc.append(node)
+        for a in (node[1] if node[0] == "sum" else node[1:]):
+            _ifpos_nodes(a, acc)
+    return acc
+
+
+def _ifpos2hinge(node):
+    """A TABLE as hinges (2026-11-09: ztl-stand's 22 requirements on `ifpos` tables — real3/s07, s10, tasks/t22).
+    `ifpos(c, a, b)` = a where c > 0, else b. When every condition is affine in ONE variable t, the whole expression
+    is a polynomial p_j on each interval between the breakpoints t_1 < … < t_K (the branches decided at a sample
+    point — an affine sign is constant on an open interval); CONTINUOUS (each (p_j − p_{j−1})/(t − t_j) an exact
+    division, checked) it equals p_0 + Σ_j max(t − t_j, 0)·q_j exactly — no ifpos left, max is in XE. Python's
+    exact algebra, said; None when not this case (the node is returned unchanged)."""
+    ifs = _ifpos_nodes(node, [])
+    if not ifs:
+        return node
+    names = sorted(_names(node, set()))
+    idx = {n: i for i, n in enumerate(names)}
+    nv = len(names)
+    conds = []
+    t = None
+    for nd in ifs:
+        rc = _rat(nd[1], idx)
+        if rc is None or len(rc[1]) != 1 or any(any(mo) for mo in rc[1]):
+            return node
+        cpoly = {mo: c / rc[1][(0,) * nv] for mo, c in rc[0].items()}
+        lin = [mo for mo in cpoly if any(mo)]
+        if len(lin) != 1 or sum(lin[0]) != 1:
+            return node
+        ti = lin[0].index(1)
+        if t is not None and ti != t:
+            return node
+        t = ti
+        conds.append(-cpoly.get((0,) * nv, F(0)) / cpoly[lin[0]])
+    bps = sorted(set(conds))
+    samples = ([bps[0] - 1] + [(bps[i] + bps[i + 1]) / 2 for i in range(len(bps) - 1)] + [bps[-1] + 1])
+
+    def decide(nd, tv):
+        if isinstance(nd, tuple):
+            if nd[0] == "ifpos":
+                rc = _rat(nd[1], idx)
+                cval = _peval(rc[0], [tv if i == t else F(0) for i in range(nv)]) / rc[1][(0,) * nv]
+                return decide(nd[2] if cval > 0 else nd[3], tv)
+            if nd[0] == "sum":
+                return ("sum", [decide(a, tv) for a in nd[1]])
+            return (nd[0], *[decide(a, tv) for a in nd[1:]])
+        return nd
+    pieces = []
+    for sv in samples:
+        rp = _rat(decide(node, sv), idx)
+        if rp is None or len(rp[1]) != 1 or any(any(mo) for mo in rp[1]):
+            return node
+        pieces.append({mo: c / rp[1][(0,) * nv] for mo, c in rp[0].items()})
+    out = _pnode(pieces[0], names)
+    for j, tj in enumerate(bps):
+        lin = {tuple(1 if i == t else 0 for i in range(nv)): F(1), (0,) * nv: -tj}
+        try:
+            q = _pdivexact(_padd(pieces[j + 1], pieces[j], -1), lin) if _padd(pieces[j + 1], pieces[j], -1) else {}
+        except ValueError:
+            return node                 # not continuous at t_j: not a hinge
+        if q:
+            out = ("add", out, ("mul", ("max", ("sub", names[t], tj), F(0)), _pnode(q, names)))
+    return out
+
+
 def _names(node, acc):
     if isinstance(node, str):
         acc.add(node)
@@ -325,7 +393,12 @@ def _pnode(P, names):
                 v = names[i] if e == 1 else ("pow", names[i], F(e))
                 t = ("mul", t, v)
         terms.append(t)
-    return ("sum", terms) if terms else F(0)
+    if not terms:
+        return F(0)
+    out = terms[0]
+    for t in terms[1:]:             # a chain of adds (zlaw2lean.to_xe has no `sum`; the inexact path reads it)
+        out = ("add", out, t)
+    return out
 
 
 def _solve_big(laws, unknowns, qs, pinned):
@@ -707,7 +780,7 @@ def bound_to_lean(laws, unknowns, qtext, target, reqs, name, depth=14, trees=Non
             node = ZC._subst(ZJ._parse_arith(target, qs), sol)
         except Exception as ex:
             return {"status": "not translated", "why": f"the target {target!r}: {ex}"}
-    node = _sqrt2exp(_subst(node, pinned))
+    node = _ifpos2hinge(_sqrt2exp(_subst(node, pinned)))
     params = sorted(n for n in _names(node, set()) if n in qs and n not in pinned)
     for n in params:
         if isinstance(qs[n]["lo"], float) or isinstance(qs[n]["hi"], float):

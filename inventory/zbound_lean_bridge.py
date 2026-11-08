@@ -15,6 +15,7 @@ The curator, 2026-11-08: the stand should give proofs, not only certificates. He
   * a square root, as exp(½·ln u);
   * ON THE LAWS: the theorem for every value of the unknowns satisfying the laws (rows + a cofactor certificate
     checked by the kernel); a certificate off by one is refused;
+  * a table (nested ifpos in one variable) read exactly as hinges p0 + sum max(t - t_j, 0)·q_j;
   * NEGATIVE CONTROL: the divider's accepted tree under a false bound (Vout <= 2.5, the true maximum 2.525) — the
     kernel must refuse it.
 """
@@ -137,6 +138,15 @@ finally:
 check("SABOTAGE: a cofactor certificate off by 1 — the kernel refuses it (the elimination is checked, not trusted)",
       stm["status"] == "refused" and "proved that the proposition" in stm.get("out", ""),
       stm.get("out", "")[:300])
+print("12. a TABLE (ztl-stand's table(...) compiles to nested ifpos): read exactly as hinges")
+TB = ("ifpos(T - 100, ifpos(T - 200, ifpos(T - 400, ifpos(T - 600, 58/100, 68/100 + (58/100 - 68/100)*(T - 400)/(600 - 400)), "
+      "82/100 + (68/100 - 82/100)*(T - 200)/(400 - 200)), 1 + (82/100 - 1)*(T - 100)/(200 - 100)), 1)")
+st21 = ZB.bound_to_lean([], [], "T=[150,450] credit, S=[100,110] credit", f"S*{TB}", [(">=", "65.2")], "ZGenTable")
+# min over the box: S = 100 at T = 450: 100·(0.68 − 0.1·50/200) = 65.5; >= 65.2 holds
+check("S·table(T) >= 65.2 over T in [150, 450] (three knots inside; min 65.5): a theorem through the hinges",
+      st21["status"] == "theorem", st21)
+st22 = ZB.bound_to_lean([], [], "T=[150,450] credit, S=[100,110] credit", f"S*{TB}", [(">=", "65.6")], "ZGenTableB")
+check("the other side: >= 65.6 — no theorem", st22["status"] != "theorem", st22)
 print(f"\n{ok} ok, {fail} fail")
 print("ZBOUND LEAN BRIDGE GREEN" if fail == 0 else "ZBOUND LEAN BRIDGE RED")
 sys.exit(1 if fail else 0)

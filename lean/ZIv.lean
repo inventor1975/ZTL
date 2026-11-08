@@ -276,8 +276,8 @@ open ZNumBin
 private def B1 : Box := fun i => if i == 0 then some (⟨⟨1, 0⟩, 0⟩, ⟨⟨3, 0⟩, 1⟩) else none
 private def B2 : Box := fun i => if i == 0 then some (⟨⟨3, 0⟩, 1⟩, ⟨⟨2, 0⟩, 0⟩) else none
 private def f : ZPoly.PE := .sub (.mul (.var 0) (.var 0)) (.cst ⟨⟨2, 0⟩, 0⟩)
-example : (match ivE B1 f with | some K => dle K.1 ⟨⟨0, 0⟩, 0⟩ && dle ⟨⟨0, 0⟩, 0⟩ K.2 | none => false) = true := by decide
-example : (match ivE B2 f with | some K => dle ⟨⟨1, 0⟩, 2⟩ K.1 | none => false) = true := by decide
+example : (match ivE B1 f with | some K => dle K.1 ⟨⟨0, 0⟩, 0⟩ && dle ⟨⟨0, 0⟩, 0⟩ K.2 | none => false) = true := by decide +kernel
+example : (match ivE B2 f with | some K => dle ⟨⟨1, 0⟩, 2⟩ K.1 | none => false) = true := by decide +kernel
 end ZIv
 
 #print axioms ZIv.mul_lower

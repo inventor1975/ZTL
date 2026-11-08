@@ -103,8 +103,8 @@ theorem mul_swap {α : Type} (S : CF α) (a b c : α) : S.r (S.mul a (S.mul b c)
   cr_ring S.toCR
 
 /-- The law on VR's continuum (division and `ln` through the clamp). -/
-def evR (x : RExpr) : XE → RExpr
-  | .var _ => x
+def evR (x : Nat → RExpr) : XE → RExpr
+  | .var i => x i
   | .cst c => dv rOH c
   | .add a b => radd (evR x a) (evR x b)
   | .sub a b => radd (evR x a) (rneg (evR x b))
@@ -126,15 +126,15 @@ def posOK (B : Box) : XE → Bool
   | .div a b => posOK B a && posOK B b && optB (ivX B b) (fun V => dle δD V.1)
   | .ln a => posOK B a && optB (ivX B a) (fun V => dle δD V.1)
 
-theorem above_clamp {B : Box} {x : RExpr} {e : XE} {v : RExpr} (hx : InBox rCF B (fun _ => x))
-    (hv : Val rCF rexpR (fun _ => x) e v) (h : optB (ivX B e) (fun V => dle δD V.1) = true) :
+theorem above_clamp {B : Box} {x : Nat → RExpr} {e : XE} {v : RExpr} (hx : InBox rCF B x)
+    (hv : Val rCF rexpR x e v) (h : optB (ivX B e) (fun V => dle δD V.1) = true) :
     rle (dv rOH δD) v := by
   obtain ⟨V, hV, hδ⟩ := optB_some h
   exact rCF.le_trans (dle_sound rOH hδ) (ivX_sound rCF hx hv V hV).1
 
 /-- **THE TOTAL LAW HAS THE LAW'S VALUES** on the box. -/
-theorem val_evR {B : Box} {x : RExpr} (hx : InBox rCF B (fun _ => x)) :
-    ∀ e : XE, posOK B e = true → Val rCF rexpR (fun _ => x) e (evR x e)
+theorem val_evR {B : Box} {x : Nat → RExpr} (hx : InBox rCF B x) :
+    ∀ e : XE, posOK B e = true → Val rCF rexpR x e (evR x e)
   | .var _, _ => .var (rCF.refl _)
   | .cst _, _ => .cst (rCF.refl _)
   | .add a b, h => .add (val_evR hx a (and2 h).1) (val_evR hx b (and2 h).2) (rCF.refl _)
@@ -180,8 +180,8 @@ theorem lnseq_congr {y y' : QExpr} (h : qEq y y') (n : Nat) : qEq (lnseq y n) (l
   unfold lnseq; rw [cnt_congr h n]; exact qEq_refl _
 
 /-- The `n`-th rational reading, division and `ln` through the clamp. -/
-def evqD (n : Nat) (q : QExpr) : XE → QExpr
-  | .var _ => q
+def evqD (n : Nat) (q : Nat → QExpr) : XE → QExpr
+  | .var i => q i
   | .cst c => qD c
   | .add a b => qadd (evqD n q a) (evqD n q b)
   | .sub a b => qadd (evqD n q a) (qneg (evqD n q b))
@@ -191,8 +191,9 @@ def evqD (n : Nat) (q : QExpr) : XE → QExpr
   | .div a b => qmul (evqD n q a) (qinv' (qmax (evqD n q b) (qeps 64)))
   | .ln a => lnseq (qmax (evqD n q a) (qeps 64)) n
 
-theorem evqD_respects (n : Nat) {q q' : QExpr} (h : qEq q q') : ∀ e : XE, qEq (evqD n q e) (evqD n q' e)
-  | .var _ => h
+theorem evqD_respects (n : Nat) {q q' : Nat → QExpr} (h : ∀ i, qEq (q i) (q' i)) :
+    ∀ e : XE, qEq (evqD n q e) (evqD n q' e)
+  | .var i => h i
   | .cst _ => qEq_refl _
   | .add a b => qadd_respects (evqD_respects n h a) (evqD_respects n h b)
   | .sub a b => qadd_respects (evqD_respects n h a) (qneg_respects (evqD_respects n h b))
@@ -203,7 +204,7 @@ theorem evqD_respects (n : Nat) {q q' : QExpr} (h : qEq q q') : ∀ e : XE, qEq 
   | .ln a => lnseq_congr (qmax_congr (evqD_respects n h a) (qEq_refl _)) n
 
 /-- The total law's `n`-th term IS the rational reading at the argument's `n`-th term. -/
-theorem evR_seq (x : RExpr) (n : Nat) : ∀ e : XE, qEq ((evR x e).seq n) (evqD n (x.seq n) e)
+theorem evR_seq (x : Nat → RExpr) (n : Nat) : ∀ e : XE, qEq ((evR x e).seq n) (evqD n (fun i => (x i).seq n) e)
   | .var _ => qEq_refl _
   | .cst c => dv_seq c n
   | .add a b => qadd_respects (evR_seq x n a) (evR_seq x n b)
@@ -262,7 +263,7 @@ theorem inv_close {u v : QExpr} {k j : Nat} (hu : qle (qeps k) u) (hv : qle (qep
       unfold qsub; rat_ring
     constructor <;> rat_linarith
 
-theorem uc_inv {f : Nat → QExpr → QExpr} (hf : UCo f) : UCo (fun n q => qinv' (qmax (f n q) (qeps 64))) := by
+theorem uc_inv {f : Nat → (Nat → QExpr) → QExpr} (hf : UCo f) : UCo (fun n q => qinv' (qmax (f n q) (qeps 64))) := by
   intro R R0
   obtain ⟨_, _, _, cf⟩ := hf R R0
   refine ⟨64, 0, fun n q _ _ => ?_, fun k => ?_⟩
@@ -275,7 +276,7 @@ theorem uc_inv {f : Nat → QExpr → QExpr} (hf : UCo f) : UCo (fun n q => qinv
 
 /-- `ln`'s grid answers converge UNIFORMLY over a family with a common modulus and common bounds (a copy of
 `ZLn.ln_cauchy` with the family's index carried through — every constant there depends only on the bounds). -/
-theorem ln_unif {P : QExpr → Prop} {y : QExpr → Nat → QExpr} {hu : QExpr} {Na : Nat}
+theorem ln_unif {Q : Type} {P : Q → Prop} {y : Q → Nat → QExpr} {hu : QExpr} {Na : Nat}
     (hNa : ∀ q n, Na ≤ n → P q → qle (qeps 64) (y q n) ∧ qle (y q n) hu)
     (hc : ∀ k, ∃ N, ∀ q m n, N ≤ m → N ≤ n → P q → qclose (y q m) (y q n) (qeps k)) (k : Nat) :
     ∃ N, ∀ q m n, N ≤ m → N ≤ n → P q → qclose (lnseq (y q m) m) (lnseq (y q n) n) (qeps k) := by
@@ -370,7 +371,7 @@ theorem two_of {X p : Nat} (hp : X + 2 ≤ p) : ∃ p', p = p' + 2 ∧ X ≤ p' 
       | succ p' => exact ⟨p', rfl, Nat.le_of_succ_le_succ (Nat.le_of_succ_le_succ hp)⟩
 
 /-- The grid answers of a family in `[2⁻⁶⁴, hu]` are bounded from some index on. -/
-theorem ln_bound {P : QExpr → Prop} {y : QExpr → Nat → QExpr} {hu : QExpr} {Na : Nat}
+theorem ln_bound {Q : Type} {P : Q → Prop} {y : Q → Nat → QExpr} {hu : QExpr} {Na : Nat}
     (hNa : ∀ q n, Na ≤ n → P q → qle (qeps 64) (y q n) ∧ qle (y q n) hu) :
     ∃ Rb B1, ∀ q n, B1 ≤ n → P q → qclose (lnseq (y q n) n) qzero Rb := by
   have ylo0 := qeps_pos 64
@@ -386,32 +387,32 @@ theorem ln_bound {P : QExpr → Prop} {y : QExpr → Nat → QExpr} {hu : QExpr}
   have e0 := qeps_nonneg 64
   constructor <;> (unfold qsub; rat_linarith)
 
-theorem uc_ln {f : Nat → QExpr → QExpr} (hf : UCo f) : UCo (fun n q => lnseq (qmax (f n q) (qeps 64)) n) := by
+theorem uc_ln {f : Nat → (Nat → QExpr) → QExpr} (hf : UCo f) : UCo (fun n q => lnseq (qmax (f n q) (qeps 64)) n) := by
   intro R R0
   obtain ⟨Cf, Bf, bf, cf⟩ := hf R R0
   have p0 : qle qzero (qofInt (pow2 Cf)) := qofInt_le (pow2_nonneg Cf)
   have e1 := ZSlopeExp.eps_le_one 64
   have o1 := qle_of_qlt qone_pos
-  have hb : ∀ q n, Bf ≤ n → qclose q qzero R →
+  have hb : ∀ (q : Nat → QExpr) n, Bf ≤ n → (∀ i, qclose (q i) qzero R) →
       qle (qeps 64) (qmax (f n q) (qeps 64)) ∧ qle (qmax (f n q) (qeps 64)) (qadd (qofInt (pow2 Cf)) qone) := by
     intro q n hn hq
     obtain ⟨f1, _⟩ := bf n q hn hq
     unfold qsub at f1
     exact ⟨qmax_ge_r _ _, qmax_le (by rat_linarith) (by rat_linarith)⟩
-  have hc : ∀ k, ∃ N, ∀ q m n, N ≤ m → N ≤ n → qclose q qzero R →
+  have hc : ∀ k, ∃ N, ∀ (q : Nat → QExpr) m n, N ≤ m → N ≤ n → (∀ i, qclose (q i) qzero R) →
       qclose (qmax (f m q) (qeps 64)) (qmax (f n q) (qeps 64)) (qeps k) := by
     intro k
     obtain ⟨N, _, h⟩ := cf k
     exact ⟨N, fun q m n hm hn hq => qmax_close (h m n q hm hn hq) (qclose_refl _ _ (qeps_nonneg k))⟩
-  obtain ⟨Rb, B1, hB⟩ := ln_bound (P := fun q => qclose q qzero R) (y := fun q n => qmax (f n q) (qeps 64)) hb
+  obtain ⟨Rb, B1, hB⟩ := ln_bound (P := fun (q : Nat → QExpr) => ∀ i, qclose (q i) qzero R) (y := fun q n => qmax (f n q) (qeps 64)) hb
   obtain ⟨C, hC⟩ := qexpr_bound Rb
   refine ⟨C, B1, fun n q hn hq => close_up (hB q n hn hq) hC, fun k => ?_⟩
-  obtain ⟨N, hN⟩ := ln_unif (P := fun q => qclose q qzero R) (y := fun q n => qmax (f n q) (qeps 64)) hb hc k
+  obtain ⟨N, hN⟩ := ln_unif (P := fun (q : Nat → QExpr) => ∀ i, qclose (q i) qzero R) (y := fun q n => qmax (f n q) (qeps 64)) hb hc k
   exact ⟨N + B1, Nat.le_add_left _ _, fun m n q hm hn hq => hN q m n (lA hm) (lA hn) hq⟩
 
 /-- **THE ORACLE CONVERGES UNIFORMLY** on bounded sets — for every law, division and `ln` included. -/
 theorem uc_evqD : ∀ e : XE, UCo (fun n q => evqD n q e)
-  | .var _ => uc_var
+  | .var i => uc_var i
   | .cst c => uc_const (qD c)
   | .add a b => uc_add (uc_evqD a) (uc_evqD b)
   | .sub a b => uc_add (uc_evqD a) (uc_neg (uc_evqD b))
@@ -424,11 +425,11 @@ theorem uc_evqD : ∀ e : XE, UCo (fun n q => evqD n q e)
 /-! ## The root -/
 
 /-- The law as a function on VR's continuum. -/
-def FR (e : XE) (x : RExpr) : RExpr := evR x e
+def FR (e : XE) (x : RExpr) : RExpr := evR (fun _ => x) e
 
 theorem orac_D (e : XE) (a b : D) : ∀ j, ∃ N, ∀ n, N ≤ n → ∀ t : D,
     rle (dv rOH a) (dv rOH t) → rle (dv rOH t) (dv rOH b) →
-    ZKron.Bd rCF.toOH (radd (FR e (dv rOH t)) (rneg (rofQ (evqD n (qD t) e)))) (hp rOH j) := by
+    ZKron.Bd rCF.toOH (radd (FR e (dv rOH t)) (rneg (rofQ (evqD n (fun _ => qD t) e)))) (hp rOH j) := by
   intro j
   obtain ⟨Ca, hCa⟩ := qexpr_bound (qD a)
   obtain ⟨Cb, hCb⟩ := qexpr_bound (qD b)
@@ -452,23 +453,24 @@ theorem orac_D (e : XE) (a b : D) : ∀ j, ∃ N, ∀ n, N ≤ n → ∀ t : D,
     obtain ⟨cb1, cb2⟩ := hCb
     unfold qsub at a1 a2 ca1 ca2 cb1 cb2
     constructor <;> (unfold qsub; rat_linarith)
-  have key : ∀ m, N ≤ m → qclose (evqD m (qD t) e) (evqD n (qD t) e) (qeps j) := fun m hm => hN m n (qD t) hm hn tq
+  have key : ∀ m, N ≤ m → qclose (evqD m (fun _ => qD t) e) (evqD n (fun _ => qD t) e) (qeps j) :=
+    fun m hm => hN m n (fun _ => qD t) hm hn (fun _ => tq)
   show rle (rneg (hp rOH j)) _ ∧ rle _ (hp rOH j)
   constructor
   · refine rle_of_eventually N fun m hm => ?_
-    have s1 := evR_seq (dv rOH t) m e
-    have s2 := evqD_respects m (dv_seq t m) e
+    have s1 := evR_seq (fun _ => dv rOH t) m e
+    have s2 := evqD_respects m (fun _ => dv_seq t m) e
     have s3 := hp_seq j m
     obtain ⟨k1, k2⟩ := key m hm
-    change qle (qneg ((hp rOH j).seq m)) (qadd ((evR (dv rOH t) e).seq m) (qneg (evqD n (qD t) e)))
+    change qle (qneg ((hp rOH j).seq m)) (qadd ((evR (fun _ => dv rOH t) e).seq m) (qneg (evqD n (fun _ => qD t) e)))
     unfold qsub at k1 k2
     rat_linarith
   · refine rle_of_eventually N fun m hm => ?_
-    have s1 := evR_seq (dv rOH t) m e
-    have s2 := evqD_respects m (dv_seq t m) e
+    have s1 := evR_seq (fun _ => dv rOH t) m e
+    have s2 := evqD_respects m (fun _ => dv_seq t m) e
     have s3 := hp_seq j m
     obtain ⟨k1, k2⟩ := key m hm
-    change qle (qadd ((evR (dv rOH t) e).seq m) (qneg (evqD n (qD t) e))) ((hp rOH j).seq m)
+    change qle (qadd ((evR (fun _ => dv rOH t) e).seq m) (qneg (evqD n (fun _ => qD t) e))) ((hp rOH j).seq m)
     unfold qsub at k1 k2
     rat_linarith
 
@@ -476,7 +478,7 @@ theorem orac_D (e : XE) (a b : D) : ∀ j, ∃ N, ∀ n, N ≤ n → ∀ t : D,
 `F(a) ≤ 0 ≤ F(b)` read; width `≤ 2ᴮ`. Checked by the kernel. -/
 def chkD (e : XE) (a b : D) (s C B : Nat) : Bool :=
   dle a b && posOK (cB a b) e &&
-    optB (slX (cB a b) e) (fun K => dle ⟨⟨1, 0⟩, s⟩ K.1 && dle K.2 ⟨⟨2 ^ C, 0⟩, 0⟩) &&
+    optB (slX (cB a b) (fun _ => ZIv.one) e) (fun K => dle ⟨⟨1, 0⟩, s⟩ K.1 && dle K.2 ⟨⟨2 ^ C, 0⟩, 0⟩) &&
     optB (ivX (cB a a) e) (fun K => dle K.2 dz0) &&
     optB (ivX (cB b b) e) (fun K => dle dz0 K.1) &&
     dle (dadd b (dneg a)) ⟨⟨2 ^ B, 0⟩, 0⟩
@@ -502,7 +504,7 @@ theorem law_root (e : XE) (a b : D) (s C B : Nat) (h : chkD e a b s C B = true) 
     mono_of_val rExpLaws r_slope hV hK
       (rCF.le_respects (ZRootPVR.dv_hp s) (rCF.refl _) (dle_sound rOH hc))
       (rCF.le_respects (rCF.refl _) (ZRoot.dv_nat rCF (2 ^ C)) (dle_sound rOH hL))
-  have H : ZRootAbs.Fam (fun _ => FR e) (FR e) (fun n q => evqD n q e) a b s C B 0 := {
+  have H : ZRootAbs.Fam (fun _ => FR e) (FR e) (fun n q => evqD n (fun _ => q) e) a b s C B 0 := {
     hab := hab
     mono := fun _ _ => hM
     monoP := hM

@@ -208,33 +208,33 @@ def slPow (Ka Va : Iv) : Nat → Option Iv
 /-- THE SLOPE READING over a box: `p'q' − pq = (p' − p)·q' + p·(q' − q)`; `e^{u'} − e^{u} = σ·(u' − u)` with `σ`
 in the value interval of `exp u`. Division: `v' − v = w'·((a' − a) − v·(b' − b))`, `b'w' = 1`; `ln`: `v' − v = w·(a' − a)`, `w` in the
 reciprocal of `a`'s reading. -/
-def slX (B : Box) : XE → Option Iv
-  | .var _ => some ZIv.one
+def slX (B : Box) (V : Nat → Iv) : XE → Option Iv
+  | .var i => some (V i)
   | .cst _ => some zI
-  | .add p q => lift2 ivAdd (slX B p) (slX B q)
-  | .sub p q => lift2 ivSub (slX B p) (slX B q)
-  | .mul p q => match slX B p with
+  | .add p q => lift2 ivAdd (slX B V p) (slX B V q)
+  | .sub p q => lift2 ivSub (slX B V p) (slX B V q)
+  | .mul p q => match slX B V p with
       | none => none
-      | some Kp => match slX B q with
+      | some Kp => match slX B V q with
         | none => none
         | some Kq => match ivX B p with
           | none => none
           | some Vp => match ivX B q with
             | none => none
             | some Vq => lift2 ivAdd (ivMul Kp Vq) (ivMul Vp Kq)
-  | .pow p n => match slX B p with
+  | .pow p n => match slX B V p with
       | none => none
       | some Kp => match ivX B p with
         | none => none
         | some Vp => slPow Kp Vp n
-  | .exp p => match slX B p with
+  | .exp p => match slX B V p with
       | none => none
       | some Kp => match ivX B (.exp p) with
         | none => none
         | some V => ivMul V Kp
-  | .div p q => match slX B p with
+  | .div p q => match slX B V p with
       | none => none
-      | some Kp => match slX B q with
+      | some Kp => match slX B V q with
         | none => none
         | some Kq => match ivX B (.div p q) with
           | none => none
@@ -247,7 +247,7 @@ def slX (B : Box) : XE → Option Iv
                 | some M => match ivSub Kp M with
                   | none => none
                   | some T => ivMul W T
-  | .ln p => match slX B p with
+  | .ln p => match slX B V p with
       | none => none
       | some Kp => match ivX B p with
         | none => none
@@ -282,11 +282,12 @@ theorem sl_pow {d va va' : α} {Ka Va : Iv} (ha : SlIn S (S.add va' (S.neg va)) 
           show S.r (S.add (S.mul va' (powS S.toOH va' n)) (S.neg (S.mul va (powS S.toOH va n)))) _
           cr_ring S.toCR
 
-/-- **THE SLOPE READING IS SOUND**: at two points of the box `d` apart in every coordinate, the values `v, v'` of
-`e` satisfy `v' − v = s·d` for some `s` in the reading — not refuted. -/
-theorem slX_sound {ex : α → α} (H : ExpLaws S ex) (Hs : ExpSlope S ex) {B : Box} {p q : Nat → α} {d : α}
-    (hp : InBox S B p) (hq : InBox S B q) (hd : ∀ i, S.r (S.add (q i) (S.neg (p i))) d) :
-    ∀ (e : XE) {v v' : α} {K : Iv}, Val S ex p e v → Val S ex q e v' → slX B e = some K →
+/-- **THE SLOPE READING IS SOUND**: at two points of the box whose coordinates differ by `sᵢ·d`, `sᵢ ∈ Vᵢ`, the values
+`v, v'` of `e` satisfy `v' − v = s·d` for some `s` in the reading — not refuted. -/
+theorem slX_sound {ex : α → α} (H : ExpLaws S ex) (Hs : ExpSlope S ex) {B : Box} {V : Nat → Iv}
+    {p q : Nat → α} {d : α}
+    (hp : InBox S B p) (hq : InBox S B q) (hd : ∀ i, SlIn S (S.add (q i) (S.neg (p i))) d (V i)) :
+    ∀ (e : XE) {v v' : α} {K : Iv}, Val S ex p e v → Val S ex q e v' → slX B V e = some K →
       SlIn S (S.add v' (S.neg v)) d K
   | .var i, v, v', K, hv, hv', h => by
       cases hv with
@@ -294,7 +295,7 @@ theorem slX_sound {ex : α → α} (H : ExpLaws S ex) (Hs : ExpSlope S ex) {B : 
       cases hv' with
       | var e2 =>
       cases h
-      exact sl_ret (mem_one S) (S.trans (S.add_congr e2 (S.neg_congr e1)) (S.trans (hd i) (S.symm (S.one_mul _))))
+      exact sl_congr (S.add_congr e2 (S.neg_congr e1)) (hd i)
   | .cst c, v, v', K, hv, hv', h => by
       cases hv with
       | cst e1 =>
@@ -324,10 +325,10 @@ theorem slX_sound {ex : α → α} (H : ExpLaws S ex) (Hs : ExpSlope S ex) {B : 
       cases hv' with
       | @mul _ _ va' vb' _ ha' hb' e2 =>
       unfold slX at h
-      cases h1 : slX B a with
+      cases h1 : slX B V a with
       | none => rw [h1] at h; cases h
       | some Ka =>
-      cases h2 : slX B b with
+      cases h2 : slX B V b with
       | none => rw [h1, h2] at h; cases h
       | some Kb =>
       cases h3 : ivX B a with
@@ -348,7 +349,7 @@ theorem slX_sound {ex : α → α} (H : ExpLaws S ex) (Hs : ExpSlope S ex) {B : 
       cases hv' with
       | @pow _ va' _ _ ha' e2 =>
       unfold slX at h
-      cases h1 : slX B a with
+      cases h1 : slX B V a with
       | none => rw [h1] at h; cases h
       | some Ka =>
       cases h3 : ivX B a with
@@ -363,7 +364,7 @@ theorem slX_sound {ex : α → α} (H : ExpLaws S ex) (Hs : ExpSlope S ex) {B : 
       cases hv' with
       | @exp _ va' _ H2 ha' e2 =>
       unfold slX at h
-      cases h1 : slX B a with
+      cases h1 : slX B V a with
       | none => rw [h1] at h; cases h
       | some Ka =>
       cases h3 : ivX B (.exp a) with
@@ -380,11 +381,11 @@ theorem slX_sound {ex : α → α} (H : ExpLaws S ex) (Hs : ExpSlope S ex) {B : 
       cases hv' with
       | @div _ _ va' vb' _ ha' hb' hap' e2 =>
       unfold slX at h
-      cases h1 : slX B a with
+      cases h1 : slX B V a with
       | none => rw [h1] at h; cases h
       | some Ka =>
       rw [h1] at h; dsimp only at h
-      cases h2 : slX B b with
+      cases h2 : slX B V b with
       | none => rw [h2] at h; cases h
       | some Kb =>
       rw [h2] at h; dsimp only at h
@@ -416,7 +417,7 @@ theorem slX_sound {ex : α → α} (H : ExpLaws S ex) (Hs : ExpSlope S ex) {B : 
       cases hv' with
       | @ln _ va' _ H2 ha' _ e2 =>
       unfold slX at h
-      cases h1 : slX B a with
+      cases h1 : slX B V a with
       | none => rw [h1] at h; cases h
       | some Ka =>
       rw [h1] at h; dsimp only at h
@@ -486,12 +487,12 @@ theorem inbox_c {a b : D} {x : α} (h1 : S.le (dv S.toOH a) x) (h2 : S.le x (dv 
 
 /-- **MONOTONE WITH THE READ SLOPES**: `c ≤ K.lo`, `K.hi ≤ L` give `c·(y−x) ≤ F y − F x ≤ L·(y−x)` on `[a, b]`. -/
 theorem mono_of_slX {ex : α → α} (H : ExpLaws S ex) (Hs : ExpSlope S ex) {e : XE} (hE : isE e = true)
-    {a b : D} {K : Iv} (hK : slX (cB a b) e = some K) {c L : α}
+    {a b : D} {K : Iv} (hK : slX (cB a b) (fun _ => ZIv.one) e = some K) {c L : α}
     (hc : S.le c (dv S.toOH K.1)) (hL : S.le (dv S.toOH K.2) L) :
     ZRootAbs.Mono S (fun x => evX S ex (fun _ => x) e) (dv S.toOH a) (dv S.toOH b) c L := by
   intro x y hax hxy hyb
   have sl := slX_sound H Hs (inbox_c hax (S.le_trans hxy hyb)) (inbox_c (S.le_trans hax hxy) hyb)
-    (fun _ => S.refl (S.add y (S.neg x))) e (val_evX H _ e hE) (val_evX H _ e hE) hK
+    (fun _ => sl_ret (mem_one S) (S.symm (S.one_mul _))) e (val_evX H _ e hE) (val_evX H _ e hE) hK
   have d0 : S.le S.zero (S.add y (S.neg x)) := by cr_linarith S.toOCR [hxy]
   constructor
   · apply S.le_of_not_pos
@@ -512,14 +513,14 @@ theorem mono_of_slX {ex : α → α} (H : ExpLaws S ex) (Hs : ExpSlope S ex) {e 
 /-- The same for any function whose values are values of `e` on `[a, b]` (division and `ln` included). -/
 theorem mono_of_val {ex : α → α} (H : ExpLaws S ex) (Hs : ExpSlope S ex) {e : XE} {F : α → α} {a b : D}
     (hF : ∀ x, S.le (dv S.toOH a) x → S.le x (dv S.toOH b) → Val S ex (fun _ => x) e (F x))
-    {K : Iv} (hK : slX (cB a b) e = some K) {c L : α}
+    {K : Iv} (hK : slX (cB a b) (fun _ => ZIv.one) e = some K) {c L : α}
     (hc : S.le c (dv S.toOH K.1)) (hL : S.le (dv S.toOH K.2) L) :
     ZRootAbs.Mono S F (dv S.toOH a) (dv S.toOH b) c L := by
   intro x y hax hxy hyb
   have hxb := S.le_trans hxy hyb
   have hay := S.le_trans hax hxy
   have sl := slX_sound H Hs (inbox_c hax hxb) (inbox_c hay hyb)
-    (fun _ => S.refl (S.add y (S.neg x))) e (hF x hax hxb) (hF y hay hyb) hK
+    (fun _ => sl_ret (mem_one S) (S.symm (S.one_mul _))) e (hF x hax hxb) (hF y hay hyb) hK
   have d0 : S.le S.zero (S.add y (S.neg x)) := by cr_linarith S.toOCR [hxy]
   constructor
   · apply S.le_of_not_pos
@@ -741,11 +742,13 @@ theorem le_b {A B m : Nat} (h : A + B + 1 ≤ m) : B ≤ m :=
   Nat.le_trans (Nat.le_trans (Nat.le_add_left B A) (Nat.le_add_right _ 1)) h
 theorem le_1 {A B m : Nat} (h : A + B + 1 ≤ m) : 1 ≤ m := Nat.le_trans (Nat.le_add_left 1 _) h
 
-/-- Uniformly bounded (from some index on) and uniformly Cauchy on every bounded set. -/
-def UCo (f : Nat → QExpr → QExpr) : Prop :=
+/-- Uniformly bounded (from some index on) and uniformly Cauchy on every bounded set of ENVIRONMENTS
+(rational values of the variables, all within `R`). -/
+def UCo (f : Nat → (Nat → QExpr) → QExpr) : Prop :=
   ∀ R, qle qzero R → ∃ C B0 : Nat,
-    (∀ n q, B0 ≤ n → qclose q qzero R → qclose (f n q) qzero (qofInt (pow2 C))) ∧
-    ∀ k, ∃ N, B0 ≤ N ∧ ∀ m n q, N ≤ m → N ≤ n → qclose q qzero R → qclose (f m q) (f n q) (qeps k)
+    (∀ n (q : Nat → QExpr), B0 ≤ n → (∀ i, qclose (q i) qzero R) → qclose (f n q) qzero (qofInt (pow2 C))) ∧
+    ∀ k, ∃ N, B0 ≤ N ∧ ∀ m n (q : Nat → QExpr), N ≤ m → N ≤ n → (∀ i, qclose (q i) qzero R) →
+      qclose (f m q) (f n q) (qeps k)
 
 theorem lA {A B m : Nat} (h : A + B ≤ m) : A ≤ m := Nat.le_trans (Nat.le_add_right A B) h
 theorem lB {A B m : Nat} (h : A + B ≤ m) : B ≤ m := Nat.le_trans (Nat.le_add_left B A) h
@@ -761,14 +764,14 @@ theorem uc_const (c : QExpr) : UCo (fun _ _ => c) := by
   obtain ⟨C, hC⟩ := qexpr_bound c
   exact ⟨C, 0, fun _ _ _ _ => hC, fun k => ⟨0, Nat.le_refl _, fun _ _ _ _ _ _ => qclose_refl _ _ (qeps_nonneg k)⟩⟩
 
-theorem uc_var : UCo (fun _ q => q) := by
+theorem uc_var (j : Nat) : UCo (fun _ q => q j) := by
   intro R R0
   obtain ⟨C, hC⟩ := qexpr_bound R
-  exact ⟨C, 0, fun _ q _ hq => close_up hq (by
+  exact ⟨C, 0, fun _ q _ hq => close_up (hq j) (by
       obtain ⟨c1, c2⟩ := hC; unfold qsub at c1 c2; constructor <;> (unfold qsub; rat_linarith)),
     fun k => ⟨0, Nat.le_refl _, fun _ _ _ _ _ _ => qclose_refl _ _ (qeps_nonneg k)⟩⟩
 
-theorem uc_add {f g : Nat → QExpr → QExpr} (hf : UCo f) (hg : UCo g) : UCo (fun n q => qadd (f n q) (g n q)) := by
+theorem uc_add {f g : Nat → (Nat → QExpr) → QExpr} (hf : UCo f) (hg : UCo g) : UCo (fun n q => qadd (f n q) (g n q)) := by
   intro R R0
   obtain ⟨Cf, Bf, bf, cf⟩ := hf R R0
   obtain ⟨Cg, Bg, bg, cg⟩ := hg R R0
@@ -792,7 +795,7 @@ theorem uc_add {f g : Nat → QExpr → QExpr} (hf : UCo f) (hg : UCo g) : UCo (
     show qclose (qadd (f m q) (g m q)) (qadd (f n q) (g n q)) _
     constructor <;> (unfold qsub; rat_linarith)
 
-theorem uc_neg {f : Nat → QExpr → QExpr} (hf : UCo f) : UCo (fun n q => qneg (f n q)) := by
+theorem uc_neg {f : Nat → (Nat → QExpr) → QExpr} (hf : UCo f) : UCo (fun n q => qneg (f n q)) := by
   intro R R0
   obtain ⟨C, Bf, bf, cf⟩ := hf R R0
   refine ⟨C, Bf, fun n q hn hq => ?_, fun k => ?_⟩
@@ -807,7 +810,7 @@ theorem uc_neg {f : Nat → QExpr → QExpr} (hf : UCo f) : UCo (fun n q => qneg
     show qclose (qneg (f m q)) (qneg (f n q)) _
     constructor <;> (unfold qsub; rat_linarith)
 
-theorem uc_mul {f g : Nat → QExpr → QExpr} (hf : UCo f) (hg : UCo g) : UCo (fun n q => qmul (f n q) (g n q)) := by
+theorem uc_mul {f g : Nat → (Nat → QExpr) → QExpr} (hf : UCo f) (hg : UCo g) : UCo (fun n q => qmul (f n q) (g n q)) := by
   intro R R0
   obtain ⟨Cf, Bf, bf, cf⟩ := hf R R0
   obtain ⟨Cg, Bg, bg, cg⟩ := hg R R0
@@ -843,11 +846,11 @@ theorem uc_mul {f g : Nat → QExpr → QExpr} (hf : UCo f) (hg : UCo g) : UCo (
     unfold qsub; rat_ring
   constructor <;> rat_linarith
 
-theorem uc_pow {f : Nat → QExpr → QExpr} (hf : UCo f) : ∀ k, UCo (fun n q => qpw (f n q) k)
+theorem uc_pow {f : Nat → (Nat → QExpr) → QExpr} (hf : UCo f) : ∀ k, UCo (fun n q => qpw (f n q) k)
   | 0 => uc_const qone
   | k + 1 => uc_mul hf (uc_pow hf k)
 
-theorem uc_exp {f : Nat → QExpr → QExpr} (hf : UCo f) : UCo (fun n q => eseq (f n q) n) := by
+theorem uc_exp {f : Nat → (Nat → QExpr) → QExpr} (hf : UCo f) : UCo (fun n q => eseq (f n q) n) := by
   intro R R0
   obtain ⟨Cf, Bf, bf, cf⟩ := hf R R0
   have Rf0 : qle qzero (qofInt (pow2 Cf)) := qofInt_le (pow2_nonneg Cf)
@@ -882,8 +885,8 @@ theorem uc_exp {f : Nat → QExpr → QExpr} (hf : UCo f) : UCo (fun n q => eseq
     constructor <;> (unfold qsub; rat_linarith)
 
 /-- **THE ORACLE CONVERGES UNIFORMLY** on bounded sets, for every `exp`-law. -/
-theorem uc_evq : ∀ e : XE, isE e = true → UCo (fun n q => evq n q e)
-  | .var _, _ => uc_var
+theorem uc_evq : ∀ e : XE, isE e = true → UCo (fun n q => evq n (q 0) e)
+  | .var _, _ => uc_var 0
   | .cst c, _ => uc_const (qD c)
   | .add a b, h => uc_add (uc_evq a (and2 h).1) (uc_evq b (and2 h).2)
   | .sub a b, h => uc_add (uc_evq a (and2 h).1) (uc_neg (uc_evq b (and2 h).2))
@@ -930,7 +933,7 @@ theorem orac_of (e : XE) (hE : isE e = true) (a b : D) : ∀ j, ∃ N, ∀ n, N 
     obtain ⟨cb1, cb2⟩ := hCb
     unfold qsub at a1 a2 ca1 ca2 cb1 cb2
     constructor <;> (unfold qsub; rat_linarith)
-  have key : ∀ m, N ≤ m → qclose (evq m (qD t) e) (evq n (qD t) e) (qeps j) := fun m hm => hN m n (qD t) hm hn tq
+  have key : ∀ m, N ≤ m → qclose (evq m (qD t) e) (evq n (qD t) e) (qeps j) := fun m hm => hN m n (fun _ => qD t) hm hn (fun _ => tq)
   show rle (rneg (hp rOH j)) _ ∧ rle _ (hp rOH j)
   constructor
   · refine rle_of_eventually N fun m hm => ?_
@@ -965,7 +968,7 @@ theorem optB_some {o : Option Iv} {f : Iv → Bool} (h : optB o f = true) : ∃ 
 read, width `≤ 2ᴮ`. Checked by the kernel. -/
 def chkE (e : XE) (a b : D) (s C B : Nat) : Bool :=
   isE e && dle a b &&
-    optB (slX (cB a b) e) (fun K => dle ⟨⟨1, 0⟩, s⟩ K.1 && dle K.2 ⟨⟨2 ^ C, 0⟩, 0⟩) &&
+    optB (slX (cB a b) (fun _ => ZIv.one) e) (fun K => dle ⟨⟨1, 0⟩, s⟩ K.1 && dle K.2 ⟨⟨2 ^ C, 0⟩, 0⟩) &&
     optB (ivX (cB a a) e) (fun K => dle K.2 dz0) &&
     optB (ivX (cB b b) e) (fun K => dle dz0 K.1) &&
     dle (dadd b (dneg a)) ⟨⟨2 ^ B, 0⟩, 0⟩

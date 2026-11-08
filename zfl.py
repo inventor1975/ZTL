@@ -2149,7 +2149,7 @@ def _implicit_answer(claim, q, x, region):
     return {"solved": solved, "disposition": disp, "how": how, "unique": unique, "exists": exists}
 
 
-def _system_answer(claim, q, unknowns, regions=None):
+def _system_answer(claim, q, unknowns, regions=None, budget=6000, search_budget=None):
     """A SYSTEM (2026-11-08, the curator's "Синтаксис систем в ZFL — принято. Делай."): several unknowns `x = ?` and
     a claim of as many equations. zsystem finds certificates and checks them exactly (Krawczyk, the contraction form,
     the kernel's readings).
@@ -2198,7 +2198,8 @@ def _system_answer(claim, q, unknowns, regions=None):
     found = []
     if region_ok:
         try:
-            res = _ZS.solve_all(laws, list(unknowns), q, {n: regions[n] for n in unknowns})
+            res = _ZS.solve_all(laws, list(unknowns), q, {n: regions[n] for n in unknowns}, budget=budget,
+                                search_budget=search_budget)
         except Exception:
             res = None
         if res is not None and res["complete"]:
@@ -2332,7 +2333,11 @@ def run(doc, ground_registry=None):
                     r = dict(r, disposition=implicit["disposition"])
                 elif (len(unk) >= 2 and not any(solved.get(n, {}).get("pinned") or solved.get(n, {}).get("roots")
                                                 for n in unk)) or one:
-                    system = _system_answer(claim, q, unk, regions)
+                    # one unknown beside parameter INTERVALS: a root that moves with the parameters is rarely caught
+                    # in one cube; a small budget (MEASURED 2026-11-08: the oil cooler spent 18 s to end OPEN)
+                    par = one and any(n != unk[0] and q[n]["lo"] < q[n]["hi"] for n in q)
+                    system = _system_answer(claim, q, unk, regions, budget=800 if par else 6000,
+                                            search_budget=8 if par else None)
                     searched = all(regions.get(n) for n in unk)
                     if system is not None:
                         solved.update(system["solved"])

@@ -302,12 +302,15 @@ def _in_region(sols, unknowns, region):
     return sorted(keep, key=lambda ch: [F(v) for v in ch[0]["centre"]])
 
 
-def solve_all(laws, unknowns, qs, region, budget=6000):
+def solve_all(laws, unknowns, qs, region, budget=6000, search_budget=None):
     """B (the curator's "Делай Б", 2026-11-08): ALL the solutions in the search region. The region is split into
     boxes; each box is EXCLUDED (some law's reading there excludes 0, for every parameter in the box) or lies inside
     the cube of a CERTIFIED solution (unique there, `check`), or is split again. When nothing is left the answer is
     complete: every solution in the region is one of the certified ones (each unique in its cube; a cube may reach
-    out of the region). Returns {"complete": bool, "solutions": [(cert, how)], "boxes": n}."""
+    out of the region). Returns {"complete": bool, "solutions": [(cert, how)], "boxes": n}.
+    `search_budget`: at most that many certificate searches (each tries up to nine cube radii); past it boxes are only
+    excluded or split — deterministic, unlike a time limit (MEASURED 2026-11-08: the oil cooler, a root moving with
+    its parameters, spent 18 s in 68 searches to end OPEN)."""
     region = {n: (F(region[n][0]), F(region[n][1])) for n in unknowns}
     sols, cubes = [], []
     todo, seen = [region], 0
@@ -321,7 +324,11 @@ def solve_all(laws, unknowns, qs, region, budget=6000):
         if any(_inside(box, c) for c in cubes):
             continue
         guess = [float((box[n][0] + box[n][1]) / 2) for n in unknowns]
-        found = search(laws, unknowns, qs, guesses=[guess], radii=(4, 6, 8, 10, 12, 14, 16, 18, 20))
+        found = None
+        if search_budget is None or search_budget > 0:
+            if search_budget is not None:
+                search_budget -= 1
+            found = search(laws, unknowns, qs, guesses=[guess], radii=(4, 6, 8, 10, 12, 14, 16, 18, 20))
         if found is not None:
             cert, how = found
             c = [F(v) for v in cert["centre"]]

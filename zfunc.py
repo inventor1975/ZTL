@@ -44,7 +44,10 @@ def _down(x: Fraction, bits=BITS) -> Fraction:
     # rounded e^-100 to [0, 5e-20] — sound, and useless; caught by the width check 2026-10-10)
     e = max(0, bits - (abs(x).numerator.bit_length() - abs(x).denominator.bit_length()))
     s = 1 << e
-    return Fraction(math.floor(x * s), s)
+    # floor(x·2^e) in integers: Python's // floors for negatives too — the same number as math.floor(x * s), without
+    # the Fraction product's gcd (2026-11-08, the pump's shakedown: 1.9 s of 8 here)
+    x = Fraction(x)
+    return Fraction((x.numerator * s) // x.denominator, s)
 
 
 def _up(x: Fraction, bits=BITS) -> Fraction:

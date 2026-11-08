@@ -6,25 +6,29 @@ import ZKrawSys
     x*x + y*y - 1 = 0
     x - exp(y) = 0
 
-Variables: x = var 0, y = var 1. The cube: centre ≈ (0.399891274287, -0.916562583106), radius 2⁻²⁰. The kernel checks the
-Krawczyk certificate for `G = x − Y·F` and the invertibility of `Y` (`ZKrawSys.sys_root`).
+Variables: x = var 0, y = var 1. The cube: centre ≈ (0.399891274287, -0.916562583106), radius 2⁻20; (no parameters). The kernel
+checks the Krawczyk certificate for `G = x − Y·F` and the invertibility of `Y` (`ZKrawSys.sys_root`).
 -/
 
 namespace ZSysCircleExp
-open ZNumBin ZIv ZXE ZRootExp ZRootDiv ZKraw ZKrawSys VR.Numbers ZRealCF
+open ZNumBin ZIv ZXE ZRootExp ZRootDiv ZRootPVR ZKraw ZKrawSys VR.Numbers ZRealCF
 
 def Fs : Nat → XE := nthX [(.add (.mul (.var 0) (.var 0)) (.sub (.mul (.var 1) (.var 1)) (.cst (⟨⟨1, 0⟩, 0⟩ : D)))), (.sub (.var 0) (.exp (.var 1)))]
-def ys : List D := [(⟨⟨109921276481, 0⟩, 38⟩ : D), (⟨⟨0, 503885608855⟩, 39⟩ : D)]
+def ys : List D := [(⟨⟨14069923389579, 0⟩, 45⟩ : D), (⟨⟨0, 8062169741673⟩, 43⟩ : D)]
+def PS0 : PS := []
 def Y : Nat → Nat → D := mat [[(⟨⟨0, 283737687⟩, 30⟩ : D), (⟨⟨1300670273, 0⟩, 30⟩ : D)], [(⟨⟨0, 709537079⟩, 30⟩ : D), (⟨⟨141868843, 0⟩, 28⟩ : D)]]
 def Zm : Nat → Nat → D := mat [[(⟨⟨214689993, 0⟩, 28⟩ : D), (⟨⟨0, 1968303159⟩, 30⟩ : D)], [(⟨⟨1, 0⟩, 0⟩ : D), (⟨⟨0, 214689993⟩, 29⟩ : D)]]
 
-/-- **THE SYSTEM HAS ITS SOLUTION, AND ONLY ONE IN THE CUBE.** -/
-theorem solution : ∃ x : ZBanach.Vec, InC 2 ys (⟨⟨1, 0⟩, 20⟩ : D) x ∧ (∀ i, i < 2 → rEq (evR (trunc 2 x) (Fs i)) rzero) ∧
-    ∀ u, InC 2 ys (⟨⟨1, 0⟩, 20⟩ : D) u → (∀ i, i < 2 → rEq (evR (trunc 2 u) (Fs i)) rzero) → ∀ i, i < 2 → rEq (u i) (x i) :=
-  sys_root (d := 2) (Y := Y) (Fs := Fs) (ys := ys) (r := (⟨⟨1, 0⟩, 20⟩ : D)) (rh := (⟨⟨1, 0⟩, 21⟩ : D)) (R := 30) (E := 0) (Z := Zm) (by decide +kernel) (by decide +kernel)
+/-- **THE SYSTEM HAS ITS SOLUTION, AND ONLY ONE IN THE CUBE**. -/
+theorem solution (p : ZBanach.Vec) (hin : InnerIn 80 p PS0) :
+    ∃ x : ZBanach.Vec, InC 2 ys (⟨⟨1, 0⟩, 20⟩ : D) x ∧ (∀ i, i < 2 → rEq (evR (envK 2 (peOf PS0 p) x) (Fs i)) rzero) ∧
+      ∀ u, InC 2 ys (⟨⟨1, 0⟩, 20⟩ : D) u → (∀ i, i < 2 → rEq (evR (envK 2 (peOf PS0 p) u) (Fs i)) rzero) →
+        ∀ i, i < 2 → rEq (u i) (x i) :=
+  sys_root (d := 2) (Y := Y) (Fs := Fs) (ys := ys) (r := (⟨⟨1, 0⟩, 20⟩ : D)) (rh := (⟨⟨1, 0⟩, 21⟩ : D)) (R := 40) (E := 0) (L := 60)
+    (ps := PS0) (Z := Zm) (by decide +kernel) (by decide +kernel) p hin
 
-/-- The fork's other side: a cube displaced by 2⁻¹⁰ (no solution inside) is refused. -/
-example : chkK 2 [(⟨⟨110189711937, 0⟩, 38⟩ : D), (⟨⟨0, 503348737943⟩, 39⟩ : D)] (⟨⟨1, 0⟩, 20⟩ : D) (⟨⟨1, 0⟩, 21⟩ : D) 30 0 (Gsys 2 Y Fs) = false := by decide +kernel
+/-- The fork's other side: a cube displaced by 4r (no solution inside) is refused. -/
+example : chkK 2 [(⟨⟨14070057607307, 0⟩, 45⟩ : D), (⟨⟨0, 8062136187241⟩, 43⟩ : D)] (⟨⟨1, 0⟩, 20⟩ : D) (⟨⟨1, 0⟩, 21⟩ : D) 40 0 60 PS0 (Gsys 2 Y Fs) = false := by decide +kernel
 
 end ZSysCircleExp
 

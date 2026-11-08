@@ -7,25 +7,29 @@ import ZKrawSys
     x*exp(y) - 2 = 0
     ln(z) + x*y - 1/2 = 0
 
-Variables: x = var 0, y = var 1, z = var 2. The cube: centre ≈ (1.61798783219, 0.211963882232, 1.17004828558), radius 2⁻²⁰. The kernel checks the
-Krawczyk certificate for `G = x − Y·F` and the invertibility of `Y` (`ZKrawSys.sys_root`).
+Variables: x = var 0, y = var 1, z = var 2. The cube: centre ≈ (1.61798783219, 0.211963882232, 1.17004828558), radius 2⁻20; (no parameters). The kernel
+checks the Krawczyk certificate for `G = x − Y·F` and the invertibility of `Y` (`ZKrawSys.sys_root`).
 -/
 
 namespace ZSysChem3
-open ZNumBin ZIv ZXE ZRootExp ZRootDiv ZKraw ZKrawSys VR.Numbers ZRealCF
+open ZNumBin ZIv ZXE ZRootExp ZRootDiv ZRootPVR ZKraw ZKrawSys VR.Numbers ZRealCF
 
 def Fs : Nat → XE := nthX [(.add (.add (.var 0) (.var 1)) (.sub (.var 2) (.cst (⟨⟨3, 0⟩, 0⟩ : D)))), (.sub (.mul (.var 0) (.exp (.var 1))) (.cst (⟨⟨2, 0⟩, 0⟩ : D))), (.add (.ln (.var 2)) (.sub (.mul (.var 0) (.var 1)) (.div (.cst (⟨⟨1, 0⟩, 0⟩ : D)) (.cst (⟨⟨2, 0⟩, 0⟩ : D)))))]
-def ys : List D := [(⟨⟨1778996435089, 0⟩, 40⟩ : D), (⟨⟨116528376591, 0⟩, 39⟩ : D), (⟨⟨1286481695055, 0⟩, 40⟩ : D)]
+def ys : List D := [(⟨⟨455423087382925, 0⟩, 48⟩ : D), (⟨⟨59662528814745, 0⟩, 48⟩ : D), (⟨⟨329339313934297, 0⟩, 48⟩ : D)]
+def PS0 : PS := []
 def Y : Nat → Nat → D := mat [[(⟨⟨411714393, 0⟩, 29⟩ : D), (⟨⟨367711959, 0⟩, 30⟩ : D), (⟨⟨0, 60215715⟩, 26⟩ : D)], [(⟨⟨0, 508921495⟩, 30⟩ : D), (⟨⟨309605939, 0⟩, 30⟩ : D), (⟨⟨297731361, 0⟩, 29⟩ : D)], [(⟨⟨759234531, 0⟩, 30⟩ : D), (⟨⟨0, 169329475⟩, 28⟩ : D), (⟨⟨367988717, 0⟩, 30⟩ : D)]]
 def Zm : Nat → Nat → D := mat [[(⟨⟨1, 0⟩, 0⟩ : D), (⟨⟨1, 0⟩, 0⟩ : D), (⟨⟨1, 0⟩, 0⟩ : D)], [(⟨⟨663627873, 0⟩, 29⟩ : D), (⟨⟨2, 0⟩, 0⟩ : D), (⟨⟨0, 0⟩, 0⟩ : D)], [(⟨⟨227594485, 0⟩, 30⟩ : D), (⟨⟨868650603, 0⟩, 29⟩ : D), (⟨⟨458845091, 0⟩, 29⟩ : D)]]
 
-/-- **THE SYSTEM HAS ITS SOLUTION, AND ONLY ONE IN THE CUBE.** -/
-theorem solution : ∃ x : ZBanach.Vec, InC 3 ys (⟨⟨1, 0⟩, 20⟩ : D) x ∧ (∀ i, i < 3 → rEq (evR (trunc 3 x) (Fs i)) rzero) ∧
-    ∀ u, InC 3 ys (⟨⟨1, 0⟩, 20⟩ : D) u → (∀ i, i < 3 → rEq (evR (trunc 3 u) (Fs i)) rzero) → ∀ i, i < 3 → rEq (u i) (x i) :=
-  sys_root (d := 3) (Y := Y) (Fs := Fs) (ys := ys) (r := (⟨⟨1, 0⟩, 20⟩ : D)) (rh := (⟨⟨1, 0⟩, 21⟩ : D)) (R := 30) (E := 0) (Z := Zm) (by decide +kernel) (by decide +kernel)
+/-- **THE SYSTEM HAS ITS SOLUTION, AND ONLY ONE IN THE CUBE**. -/
+theorem solution (p : ZBanach.Vec) (hin : InnerIn 80 p PS0) :
+    ∃ x : ZBanach.Vec, InC 3 ys (⟨⟨1, 0⟩, 20⟩ : D) x ∧ (∀ i, i < 3 → rEq (evR (envK 3 (peOf PS0 p) x) (Fs i)) rzero) ∧
+      ∀ u, InC 3 ys (⟨⟨1, 0⟩, 20⟩ : D) u → (∀ i, i < 3 → rEq (evR (envK 3 (peOf PS0 p) u) (Fs i)) rzero) →
+        ∀ i, i < 3 → rEq (u i) (x i) :=
+  sys_root (d := 3) (Y := Y) (Fs := Fs) (ys := ys) (r := (⟨⟨1, 0⟩, 20⟩ : D)) (rh := (⟨⟨1, 0⟩, 21⟩ : D)) (R := 40) (E := 0) (L := 60)
+    (ps := PS0) (Z := Zm) (by decide +kernel) (by decide +kernel) p hin
 
-/-- The fork's other side: a cube displaced by 2⁻¹⁰ (no solution inside) is refused. -/
-example : chkK 3 [(⟨⟨1780070176913, 0⟩, 40⟩ : D), (⟨⟨117065247503, 0⟩, 39⟩ : D), (⟨⟨1287555436879, 0⟩, 40⟩ : D)] (⟨⟨1, 0⟩, 20⟩ : D) (⟨⟨1, 0⟩, 21⟩ : D) 30 0 (Gsys 3 Y Fs) = false := by decide +kernel
+/-- The fork's other side: a cube displaced by 4r (no solution inside) is refused. -/
+example : chkK 3 [(⟨⟨455424161124749, 0⟩, 48⟩ : D), (⟨⟨59663602556569, 0⟩, 48⟩ : D), (⟨⟨329340387676121, 0⟩, 48⟩ : D)] (⟨⟨1, 0⟩, 20⟩ : D) (⟨⟨1, 0⟩, 21⟩ : D) 40 0 60 PS0 (Gsys 3 Y Fs) = false := by decide +kernel
 
 end ZSysChem3
 

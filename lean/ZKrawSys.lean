@@ -261,25 +261,27 @@ theorem evR_sumX (env : Vec) (f : Nat → XE) : ∀ n, rEq (evR env (sumX f n)) 
   | 0 => dv_dz0 (S := rCF)
   | n + 1 => radd_respects (evR_sumX env f n) (rEq_refl _)
 
-theorem G_val {d : Nat} {Y : Nat → Nat → D} {Fs : Nat → XE} (u : Vec) {k : Nat} (hk : k < d) :
-    rEq (evR (trunc d u) (Gsys d Y Fs k)) (radd (u k) (rneg (sumS rCF (fun j => rmul (dv rOH (Y k j)) (evR (trunc d u) (Fs j))) d))) := by
-  show rEq (radd (trunc d u k) (rneg (evR (trunc d u) (sumX (fun j => .mul (.cst (Y k j)) (Fs j)) d)))) _
-  rw [trunc_lt hk]
+theorem G_val {d : Nat} {Y : Nat → Nat → D} {Fs : Nat → XE} (pe u : Vec) {k : Nat} (hk : k < d) :
+    rEq (evR (envK d pe u) (Gsys d Y Fs k))
+      (radd (u k) (rneg (sumS rCF (fun j => rmul (dv rOH (Y k j)) (evR (envK d pe u) (Fs j))) d))) := by
+  show rEq (radd (envK d pe u k) (rneg (evR (envK d pe u) (sumX (fun j => .mul (.cst (Y k j)) (Fs j)) d)))) _
+  rw [envK_lt hk]
   exact radd_respects (rEq_refl _) (rneg_respects (evR_sumX _ _ d))
 
-/-- **A SYSTEM OF LAWS HAS ITS SOLUTION ON VR's CONTINUUM — and only one in the cube**, under the kernel-checked
-certificates `chkK` (Krawczyk, for `G = x − Y·F`) and `chkZ` (`Y` invertible). -/
-theorem sys_root {d : Nat} {ys : List D} {r rh : D} {R E : Nat} {Y Z : Nat → Nat → D} {Fs : Nat → XE}
-    (h : chkK d ys r rh R E (Gsys d Y Fs) = true) (hz : chkZ d Y Z = true) :
-    ∃ x : Vec, InC d ys r x ∧ (∀ i, i < d → rEq (evR (trunc d x) (Fs i)) rzero) ∧
-      ∀ u, InC d ys r u → (∀ i, i < d → rEq (evR (trunc d u) (Fs i)) rzero) → ∀ i, i < d → rEq (u i) (x i) := by
-  obtain ⟨x, hx, hf, hu⟩ := krawczyk h
+/-- **A SYSTEM OF LAWS HAS ITS SOLUTION ON VR's CONTINUUM — and only one in the cube — FOR EVERY REAL PARAMETER VECTOR
+IN THE INNER BOX**, under the kernel-checked certificates `chkK` (Krawczyk, for `G = x − Y·F`) and `chkZ` (`Y`
+invertible). Without parameters: `ps = []`. -/
+theorem sys_root {d : Nat} {ys : List D} {r rh : D} {R E L μ : Nat} {ps : PS} {Y Z : Nat → Nat → D} {Fs : Nat → XE}
+    (h : chkK d ys r rh R E L ps (Gsys d Y Fs) = true) (hz : chkZ d Y Z = true) (p : Vec) (hin : InnerIn μ p ps) :
+    ∃ x : Vec, InC d ys r x ∧ (∀ i, i < d → rEq (evR (envK d (peOf ps p) x) (Fs i)) rzero) ∧
+      ∀ u, InC d ys r u → (∀ i, i < d → rEq (evR (envK d (peOf ps p) u) (Fs i)) rzero) → ∀ i, i < d → rEq (u i) (x i) := by
+  obtain ⟨x, hx, hf, hu⟩ := krawczyk h p hin
   refine ⟨x, hx, ?_, fun u hu' hF => hu u hu' (fun k hk => ?_)⟩
   · apply lin_inj hz
     intro k hk
-    exact sub_self_zero rCF (rEq_trans (rEq_symm (G_val x hk)) (hf k hk))
-  · refine rEq_trans (G_val u hk) ?_
-    have z : rEq (sumS rCF (fun j => rmul (dv rOH (Y k j)) (evR (trunc d u) (Fs j))) d) rzero :=
+    exact sub_self_zero rCF (rEq_trans (rEq_symm (G_val _ x hk)) (hf k hk))
+  · refine rEq_trans (G_val _ u hk) ?_
+    have z : rEq (sumS rCF (fun j => rmul (dv rOH (Y k j)) (evR (envK d (peOf ps p) u) (Fs j))) d) rzero :=
       sumS_zero (S := rCF) (fun j hj => rEq_trans (rmul_respects (rEq_refl _) (hF j hj)) (rmul_zero _))
     exact rEq_trans (radd_respects (rEq_refl _) (rneg_respects z)) (rEq_trans (radd_respects (rEq_refl _)
       (rEq_of_seq fun _ => qEq_refl _)) (radd_zero _))

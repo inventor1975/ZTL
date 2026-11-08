@@ -9,8 +9,11 @@ built by `tools/zkraw2lean.py`) on the cube `|xᵢ − yᵢ| ≤ r`. The kernel 
 * CONTRACTION: each row of the slope readings `Sₖⱼ` (direction `eⱼ`: one variable moves at a time — a staircase, so
   `x − Y·F(x)` keeps its cancellation) has `Σⱼ max|Sₖⱼ| ≤ ½`;
 * INTO: the reading of `Gₖ` at the centre, widened by `rh ≥ r/2`, lies in the cube shrunk by `2⁻ᴿ`;
-* the cube's diameter `2r ≤ 2ᴱ`.
-Then `ZBanach.banach`: `G` has a fixed point in the cube, and only one (`krawczyk`).
+* the cube's diameter `2r ≤ 2ᴱ`;
+* PARAMETERS (`ps`, variables `≥ d`, on dyadic intervals): the slope reading with the parameters moving
+  (`Vpar`) lies in `[−2ᴸ, 2ᴸ]` — the oracle's approximants of the parameters converge uniformly.
+Then `ZBanach.banach`: for every real parameter vector in the inner box, `G` has a fixed point in the cube, and only
+one (`krawczyk`).
 -/
 
 namespace ZKraw
@@ -149,20 +152,34 @@ end G
 /-! ## The cube, the truncated vectors, the map and its oracle -/
 
 section Def
-variable (d : Nat) (ys : List D) (r : D) (Gs : Nat → XE)
+variable (d : Nat) (ys : List D) (r : D) (ps : PS) (Gs : Nat → XE)
 
 def lo (i : Nat) : D := dadd (nthD ys i) (dneg r)
 def hi (i : Nat) : D := dadd (nthD ys i) r
+/-- The cube (the unknowns only). -/
 def Bc : Box := fun i => cond (Nat.blt i d) (some (lo ys r i, hi ys r i)) none
-def Bp : Box := fun i => cond (Nat.blt i d) (some (nthD ys i, nthD ys i)) none
-def trunc (u : Vec) : Vec := fun i => cond (Nat.blt i d) (u i) rzero
-def truncQ (z : Nat → QExpr) : Nat → QExpr := fun i => cond (Nat.blt i d) (z i) qzero
-def Gv (u : Vec) : Vec := fun k => cond (Nat.blt k d) (evR (trunc d u) (Gs k)) rzero
-def gv (n : Nat) (z : Nat → QExpr) : Nat → QExpr := fun k => cond (Nat.blt k d) (evqD n (truncQ d z) (Gs k)) qzero
+/-- The reading box: the cube for the unknowns, the parameters on their intervals. -/
+def BcP : Box := fun i => cond (Nat.blt i d) (some (lo ys r i, hi ys r i)) (lookI i ps)
+/-- The centre for the unknowns, the parameters on their intervals. -/
+def BpP : Box := fun i => cond (Nat.blt i d) (some (nthD ys i, nthD ys i)) (lookI i ps)
+/-- The environment: the unknowns `u` first, then the parameters `pe`. -/
+def envK (pe u : Vec) : Vec := fun i => cond (Nat.blt i d) (u i) (pe i)
+def envKQ (pq z : Nat → QExpr) : Nat → QExpr := fun i => cond (Nat.blt i d) (z i) (pq i)
+/-- The parameters' values (zero off the list). -/
+def peOf (p : Vec) : Vec := fun i => cond (isP i ps) (p i) rzero
+/-- Their `n`-th rational terms. -/
+def pqOf (p : Vec) (n : Nat) : Nat → QExpr := fun i => cond (isP i ps) ((p i).seq n) qzero
+def Gv (pe : Vec) (u : Vec) : Vec := fun k => cond (Nat.blt k d) (evR (envK d pe u) (Gs k)) rzero
+def gv (pq : Nat → Nat → QExpr) (n : Nat) (z : Nat → QExpr) : Nat → QExpr :=
+  fun k => cond (Nat.blt k d) (evqD n (envKQ d (pq n) z) (Gs k)) qzero
 def y0 : Nat → QExpr := fun i => qD (nthD ys i)
 def InC (u : Vec) : Prop := InBox rCF (Bc d ys r) u
 /-- The centre, as reals. -/
-def cen : Vec := fun i => cond (Nat.blt i d) (dv rOH (nthD ys i)) rzero
+def cenX : Vec := fun i => dv rOH (nthD ys i)
+/-- The parameters move, the unknowns do not. -/
+def Vpar : Nat → Iv := fun i => cond (Nat.blt i d) zI pm1
+/-- The parameters are in their intervals. -/
+def PIn (pe : Vec) : Prop := ∀ i I, lookI i ps = some I → rle (dv rOH I.1) (pe i) ∧ rle (pe i) (dv rOH I.2)
 
 end Def
 
@@ -193,26 +210,28 @@ theorem optD_some {o : Option D} {f : D → Bool} (h : optD o f = true) : ∃ s,
   | some s => exact ⟨s, rfl, h⟩
 
 /-- **THE CERTIFICATE.** -/
-def chkK (d : Nat) (ys : List D) (r rh : D) (R E : Nat) (Gs : Nat → XE) : Bool :=
+def chkK (d : Nat) (ys : List D) (r rh : D) (R E L : Nat) (ps : PS) (Gs : Nat → XE) : Bool :=
   posX r && dle r (dadd rh rh) && dle (dadd r r) ⟨⟨2 ^ E, 0⟩, 0⟩ &&
   allB d (fun k =>
-    posOK (Bc d ys r) (Gs k) &&
-    optD (rowS (Bc d ys r) (Gs k) d) (fun s => dle s hD) &&
-    optB (ivX (Bp d ys) (Gs k)) (fun V =>
+    posOK (BcP d ys r ps) (Gs k) &&
+    optD (rowS (BcP d ys r ps) (Gs k) d) (fun s => dle s hD) &&
+    optB (slX (BcP d ys r ps) (Vpar d) (Gs k)) (fun K => dle (dneg ⟨⟨2 ^ L, 0⟩, 0⟩) K.1 && dle K.2 ⟨⟨2 ^ L, 0⟩, 0⟩) &&
+    optB (ivX (BpP d ys ps) (Gs k)) (fun V =>
       dle (dadd (dadd (lo ys r k) (mR R)) rh) V.1 && dle (dadd (dadd V.2 rh) (mR R)) (hi ys r k)))
 
 section L
-variable {d : Nat} {ys : List D} {r : D} {Gs : Nat → XE}
+variable {d : Nat} {ys : List D} {r : D} {ps : PS} {Gs : Nat → XE}
 
-theorem trunc_lt {u : Vec} {i : Nat} (h : i < d) : trunc d u i = u i := by
-  show cond (Nat.blt i d) (u i) rzero = u i; rw [blt_t h]; rfl
-theorem trunc_ge {u : Vec} {i : Nat} (h : d ≤ i) : trunc d u i = rzero := by
-  show cond (Nat.blt i d) (u i) rzero = rzero; rw [blt_f h]; rfl
-theorem Gv_lt {u : Vec} {k : Nat} (h : k < d) : Gv d Gs u k = evR (trunc d u) (Gs k) := by
+theorem envK_lt {pe u : Vec} {i : Nat} (h : i < d) : envK d pe u i = u i := by
+  show cond (Nat.blt i d) (u i) (pe i) = u i; rw [blt_t h]; rfl
+theorem envK_ge {pe u : Vec} {i : Nat} (h : d ≤ i) : envK d pe u i = pe i := by
+  show cond (Nat.blt i d) (u i) (pe i) = pe i; rw [blt_f h]; rfl
+theorem Gv_lt {pe u : Vec} {k : Nat} (h : k < d) : Gv d Gs pe u k = evR (envK d pe u) (Gs k) := by
   show cond (Nat.blt k d) _ rzero = _; rw [blt_t h]; rfl
-theorem gv_lt {n : Nat} {z : Nat → QExpr} {k : Nat} (h : k < d) : gv d Gs n z k = evqD n (truncQ d z) (Gs k) := by
+theorem gv_lt {pq : Nat → Nat → QExpr} {n : Nat} {z : Nat → QExpr} {k : Nat} (h : k < d) :
+    gv d Gs pq n z k = evqD n (envKQ d (pq n) z) (Gs k) := by
   show cond (Nat.blt k d) _ qzero = _; rw [blt_t h]; rfl
-theorem gv_ge {n : Nat} {z : Nat → QExpr} {k : Nat} (h : d ≤ k) : gv d Gs n z k = qzero := by
+theorem gv_ge {pq : Nat → Nat → QExpr} {n : Nat} {z : Nat → QExpr} {k : Nat} (h : d ≤ k) : gv d Gs pq n z k = qzero := by
   show cond (Nat.blt k d) _ qzero = _; rw [blt_f h]; rfl
 
 theorem inC_get {u : Vec} (hu : InC d ys r u) {i : Nat} (h : i < d) :
@@ -231,8 +250,35 @@ theorem inC_of {u : Vec} (h : ∀ i, i < d → rle (dv rOH (lo ys r i)) (u i) �
       have e : Bc d ys r i = none := by show cond (Nat.blt i d) _ none = _; rw [blt_f hge]; rfl
       rw [e] at hI; cases hI
 
-theorem inC_trunc {u : Vec} (hu : InC d ys r u) : InBox rCF (Bc d ys r) (trunc d u) :=
-  inC_of (fun i hi => by rw [trunc_lt hi]; exact inC_get hu hi)
+/-- The environment of a cube point with parameters in their intervals is in the reading box. -/
+theorem inbox_envK {pe u : Vec} (hp' : PIn ps pe)
+    (hu : ∀ i, i < d → rle (dv rOH (lo ys r i)) (u i) ∧ rle (u i) (dv rOH (hi ys r i))) :
+    InBox rCF (BcP d ys r ps) (envK d pe u) := by
+  intro i I hI
+  cases Nat.lt_or_ge i d with
+  | inl hlt =>
+      have e : BcP d ys r ps i = some (lo ys r i, hi ys r i) := by
+        show cond (Nat.blt i d) _ _ = _; rw [blt_t hlt]; rfl
+      rw [e] at hI; cases hI; rw [envK_lt hlt]; exact hu i hlt
+  | inr hge =>
+      have e : BcP d ys r ps i = lookI i ps := by show cond (Nat.blt i d) _ _ = _; rw [blt_f hge]; rfl
+      rw [e] at hI; rw [envK_ge hge]; exact hp' i I hI
+
+theorem inboxP_envK {pe : Vec} (hp' : PIn ps pe) : InBox rCF (BpP d ys ps) (envK d pe (cenX ys)) := by
+  intro i I hI
+  cases Nat.lt_or_ge i d with
+  | inl hlt =>
+      have e : BpP d ys ps i = some (nthD ys i, nthD ys i) := by
+        show cond (Nat.blt i d) _ _ = _; rw [blt_t hlt]; rfl
+      rw [e] at hI; cases hI; rw [envK_lt hlt]; exact ⟨rle_refl _, rle_refl _⟩
+  | inr hge =>
+      have e : BpP d ys ps i = lookI i ps := by show cond (Nat.blt i d) _ _ = _; rw [blt_f hge]; rfl
+      rw [e] at hI; rw [envK_ge hge]; exact hp' i I hI
+
+theorem pin_of_parIn {q : Vec} (h : ParIn q ps) : PIn ps (peOf ps q) := by
+  intro i I hI
+  show rle _ (cond (isP i ps) (q i) rzero) ∧ rle (cond (isP i ps) (q i) rzero) _
+  rw [isP_of_lookI hI]; exact lookI_mem h hI
 
 theorem dv_lo (i : Nat) : rEq (dv rOH (lo ys r i)) (radd (dv rOH (nthD ys i)) (rneg (dv rOH r))) :=
   rEq_trans (dv_add rOH _ _) (radd_respects (rEq_refl _) (dv_neg rOH _))
@@ -283,10 +329,10 @@ theorem stair_step_hd (p q : Vec) (t : Nat) : ∀ i,
           exact sl_ret mem_zI (rCF.trans (rCF.add_neg _) (rCF.symm (rCF.zero_mul _)))
 
 /-- **THE STAIRCASE LIPSCHITZ READING**: `|G(q) − G(p)| ≤ (Σⱼ max|Sⱼ|)·δ` when `|qⱼ − pⱼ| ≤ δ`. -/
-theorem lip_stair {p q : Vec} (hp' : InBox rCF (Bc d ys r) p) (hq : InBox rCF (Bc d ys r) q) {δ : RExpr}
+theorem lip_stair {B : Box} {p q : Vec} (hp' : InBox rCF B p) (hq : InBox rCF B q) {δ : RExpr}
     (hcl : ∀ i, i < d → ZKron.Bd rCF.toOH (radd (q i) (rneg (p i))) δ) {G : XE}
-    (hpos : posOK (Bc d ys r) G = true) :
-    ∀ t, t ≤ d → ∀ sv, rowS (Bc d ys r) G t = some sv →
+    (hpos : posOK B G = true) :
+    ∀ t, t ≤ d → ∀ sv, rowS B G t = some sv →
       ZKron.Bd rCF.toOH (radd (evR (stair p q t) G) (rneg (evR p G))) (rmul (dv rOH sv) δ)
   | 0, _, sv, h => by
       cases h
@@ -296,11 +342,11 @@ theorem lip_stair {p q : Vec} (hp' : InBox rCF (Bc d ys r) p) (hq : InBox rCF (B
       exact ZKron.bd_congr rCF.toOH (rCF.refl _) (rEq_symm z) (bd_refl rCF (rle_refl _))
   | t + 1, ht, sv, h => by
       unfold rowS at h
-      cases h1 : rowS (Bc d ys r) G t with
+      cases h1 : rowS B G t with
       | none => rw [h1] at h; cases h
       | some s0 =>
       rw [h1] at h; dsimp only at h
-      cases h2 : slX (Bc d ys r) (ej t) G with
+      cases h2 : slX B (ej t) G with
       | none => rw [h2] at h; cases h
       | some K =>
       rw [h2] at h; dsimp only at h
@@ -325,60 +371,66 @@ theorem stair_end {p q : Vec} (hout : ∀ i, d ≤ i → p i = q i) (G : XE) : e
     | inr hge => rw [blt_f hge]; exact hout i hge) G
 
 /-- The data the certificate gives for one law. -/
-theorem chk_k {rh : D} {R E : Nat} (h : chkK d ys r rh R E Gs = true) {k : Nat} (hk : k < d) :
-    posOK (Bc d ys r) (Gs k) = true ∧
-    (∃ sv, rowS (Bc d ys r) (Gs k) d = some sv ∧ dle sv hD = true) ∧
-    (∃ V, ivX (Bp d ys) (Gs k) = some V ∧ dle (dadd (dadd (lo ys r k) (mR R)) rh) V.1 = true ∧
+theorem chk_k {rh : D} {R E L : Nat} (h : chkK d ys r rh R E L ps Gs = true) {k : Nat} (hk : k < d) :
+    posOK (BcP d ys r ps) (Gs k) = true ∧
+    (∃ sv, rowS (BcP d ys r ps) (Gs k) d = some sv ∧ dle sv hD = true) ∧
+    (∃ K, slX (BcP d ys r ps) (Vpar d) (Gs k) = some K ∧ dle (dneg ⟨⟨2 ^ L, 0⟩, 0⟩) K.1 = true ∧
+      dle K.2 ⟨⟨2 ^ L, 0⟩, 0⟩ = true) ∧
+    (∃ V, ivX (BpP d ys ps) (Gs k) = some V ∧ dle (dadd (dadd (lo ys r k) (mR R)) rh) V.1 = true ∧
       dle (dadd (dadd V.2 rh) (mR R)) (hi ys r k) = true) := by
   obtain ⟨_, hall⟩ := and2 h
-  obtain ⟨h12, h3⟩ := and2 (allB_sound hall k hk)
+  obtain ⟨h123, h4⟩ := and2 (allB_sound hall k hk)
+  obtain ⟨h12, h3⟩ := and2 h123
   obtain ⟨h1, h2⟩ := and2 h12
   obtain ⟨sv, hsv, hsc⟩ := optD_some h2
-  obtain ⟨V, hV, hVc⟩ := optB_some h3
-  exact ⟨h1, ⟨sv, hsv, hsc⟩, ⟨V, hV, (and2 hVc).1, (and2 hVc).2⟩⟩
+  obtain ⟨K, hK, hKc⟩ := optB_some h3
+  obtain ⟨V, hV, hVc⟩ := optB_some h4
+  exact ⟨h1, ⟨sv, hsv, hsc⟩, ⟨K, hK, (and2 hKc).1, (and2 hKc).2⟩, ⟨V, hV, (and2 hVc).1, (and2 hVc).2⟩⟩
 
 /-- The contraction bound from a row sum `≤ ½`. -/
-theorem lip_half {p q : Vec} (hp' : InBox rCF (Bc d ys r) p) (hq : InBox rCF (Bc d ys r) q)
+theorem lip_half {B : Box} {p q : Vec} (hp' : InBox rCF B p) (hq : InBox rCF B q)
     (hout : ∀ i, d ≤ i → p i = q i) {δ : RExpr} (hδ0 : rle rzero δ)
     (hcl : ∀ i, i < d → ZKron.Bd rCF.toOH (radd (q i) (rneg (p i))) δ) {G : XE}
-    (hpos : posOK (Bc d ys r) G = true) {sv : D} (hsv : rowS (Bc d ys r) G d = some sv) (hs : dle sv hD = true) :
+    (hpos : posOK B G = true) {sv : D} (hsv : rowS B G d = some sv) (hs : dle sv hD = true) :
     ZKron.Bd rCF.toOH (radd (evR q G) (rneg (evR p G))) (rmul (hp rOH 1) δ) := by
   have b := lip_stair hp' hq hcl hpos d (Nat.le_refl _) sv hsv
   rw [stair_end hout] at b
   exact bd_widen rCF b (le_mul_right rOH (rCF.le_respects (rCF.refl _) (ZRootPVR.dv_hp 1) (dle_sound rOH hs)) hδ0)
 
-theorem chk_g {rh : D} {R E : Nat} (h : chkK d ys r rh R E Gs = true) :
+/-- **THE LIPSCHITZ READING IN THE PARAMETERS**: the unknowns fixed, the parameters `δ`-apart. -/
+theorem lip_par {pe pe' u : Vec} (hp1 : InBox rCF (BcP d ys r ps) (envK d pe u))
+    (hp2 : InBox rCF (BcP d ys r ps) (envK d pe' u)) {δ : RExpr} (hδ : rlt rzero δ)
+    (hpar : ∀ i, d ≤ i → ZKron.Bd rCF.toOH (radd (pe' i) (rneg (pe i))) δ) {G : XE}
+    (hpos : posOK (BcP d ys r ps) G = true) {K : Iv} {L : Nat} (hK : slX (BcP d ys r ps) (Vpar d) G = some K)
+    (h1 : dle (dneg ⟨⟨2 ^ L, 0⟩, 0⟩) K.1 = true) (h2 : dle K.2 ⟨⟨2 ^ L, 0⟩, 0⟩ = true) :
+    ZKron.Bd rCF.toOH (radd (evR (envK d pe' u) G) (rneg (evR (envK d pe u) G))) (rmul (nI rOH (2 ^ L)) δ) := by
+  have hd : ∀ i, SlIn rCF (rCF.add (envK d pe' u i) (rCF.neg (envK d pe u i))) δ (Vpar d i) := by
+    intro i
+    show SlIn rCF _ δ (cond (Nat.blt i d) zI pm1)
+    cases Nat.lt_or_ge i d with
+    | inl hlt =>
+        rw [envK_lt hlt, envK_lt hlt, blt_t hlt]
+        exact sl_ret mem_zI (rCF.trans (rCF.add_neg _) (rCF.symm (rCF.zero_mul _)))
+    | inr hge =>
+        rw [envK_ge hge, envK_ge hge, blt_f hge]
+        exact sl_of_bd rCF (hpar i hge) hδ
+  have sl := slX_sound rExpLaws r_slope hp1 hp2 hd G (val_evR hp1 G hpos) (val_evR hp2 G hpos) hK
+  have e1 : rCF.r (dv rOH (dneg ⟨⟨2 ^ L, 0⟩, 0⟩)) (rCF.neg (nI rOH (2 ^ L))) :=
+    rCF.trans (dv_neg rOH _) (rCF.neg_congr (ZRoot.dv_nat rCF (2 ^ L)))
+  exact bd_of_sl rCF sl (rCF.pos_nonneg hδ) (rCF.le_respects e1 (rCF.refl _) (dle_sound rOH h1))
+    (rCF.le_respects (rCF.refl _) (ZRoot.dv_nat rCF (2 ^ L)) (dle_sound rOH h2))
+
+theorem chk_g {rh : D} {R E L : Nat} (h : chkK d ys r rh R E L ps Gs = true) :
     posX r = true ∧ dle r (dadd rh rh) = true ∧ dle (dadd r r) ⟨⟨2 ^ E, 0⟩, 0⟩ = true := by
   obtain ⟨h1, _⟩ := and2 h
   obtain ⟨h12, h3⟩ := and2 h1
   obtain ⟨h1', h2⟩ := and2 h12
   exact ⟨h1', h2, h3⟩
 
-theorem cen_lt {i : Nat} (h : i < d) : cen d ys i = dv rOH (nthD ys i) := by
-  show cond (Nat.blt i d) _ rzero = _; rw [blt_t h]; rfl
-theorem cen_ge {i : Nat} (h : d ≤ i) : cen d ys i = rzero := by
-  show cond (Nat.blt i d) _ rzero = _; rw [blt_f h]; rfl
-
 theorem cen_bounds (hr0 : rle rzero (dv rOH r)) {i : Nat} :
     rle (dv rOH (lo ys r i)) (dv rOH (nthD ys i)) ∧ rle (dv rOH (nthD ys i)) (dv rOH (hi ys r i)) := by
   obtain ⟨c1, c2⟩ := cen_core rCF (y := dv rOH (nthD ys i)) hr0
   exact ⟨rCF.le_respects (rEq_symm (dv_lo i)) (rCF.refl _) c1, rCF.le_respects (rCF.refl _) (rEq_symm (dv_hi i)) c2⟩
-
-theorem cen_inC (hr0 : rle rzero (dv rOH r)) : InBox rCF (Bc d ys r) (cen d ys) :=
-  inC_of (fun i hi => by rw [cen_lt hi]; exact cen_bounds hr0)
-
-theorem cen_inP : InBox rCF (Bp d ys) (cen d ys) := by
-  intro i I hI
-  cases Nat.lt_or_ge i d with
-  | inl hlt =>
-      have e : Bp d ys i = some (nthD ys i, nthD ys i) := by
-        show cond (Nat.blt i d) _ none = _; rw [blt_t hlt]; rfl
-      rw [e] at hI; cases hI
-      show rle _ (cen d ys i) ∧ rle (cen d ys i) _
-      rw [cen_lt hlt]; exact ⟨rle_refl _, rle_refl _⟩
-  | inr hge =>
-      have e : Bp d ys i = none := by show cond (Nat.blt i d) _ none = _; rw [blt_f hge]; rfl
-      rw [e] at hI; cases hI
 
 /-- A rational vector of the cube is bounded. -/
 theorem cube_bound : ∀ (d : Nat), ∃ R0, qle qzero R0 ∧ ∀ i, i < d → ∀ (z : RExpr) (y : QExpr), (∀ m, qEq (z.seq m) y) →
@@ -395,25 +447,43 @@ theorem cube_bound : ∀ (d : Nat), ∃ R0, qle qzero R0 ∧ ∀ i, i < d → �
           subst e
           exact qclose_mono (h2 z y hz l1 l2) (by rat_linarith)
 
-/-- **THE CERTIFICATE GIVES THE HYPOTHESES OF `ZBanach`.** -/
-theorem ks_of_chk {rh : D} {R E : Nat} (h : chkK d ys r rh R E Gs = true) :
-    KS d (Gv d Gs) (gv d Gs) (InC d ys r) (y0 ys) R E := by
+/-- The parameters' rational terms are bounded once the approximants are in the box. -/
+theorem par_bound (p : Vec) : ∃ Rp, qle qzero Rp ∧ ∀ n, ParIn (pn p n) ps → ∀ i, qclose (pqOf ps p n i) qzero Rp := by
+  obtain ⟨Rp, rp, hRp⟩ := ps_bound ps
+  refine ⟨Rp, rp, fun n pin i => ?_⟩
+  show qclose (cond (isP i ps) ((p i).seq n) qzero) qzero Rp
+  cases hP : isP i ps with
+  | false => exact qclose_refl _ _ rp
+  | true =>
+      obtain ⟨c, hc, hci⟩ := mem_of_isP hP
+      subst hci
+      obtain ⟨l1, l2⟩ := parIn_mem pin hc
+      exact hRp c hc _ ((p c.1).seq n) (fun _ => qEq_refl _) l1 l2
+
+/-- **THE CERTIFICATE GIVES THE HYPOTHESES OF `ZBanach`**, for every real parameter vector in the inner box. -/
+theorem ks_of_chk {rh : D} {R E L μ : Nat} (h : chkK d ys r rh R E L ps Gs = true) (p : Vec) (hin : InnerIn μ p ps) :
+    KS d (Gv d Gs (peOf ps p)) (gv d Gs (pqOf ps p)) (InC d ys r) (y0 ys) R E := by
   obtain ⟨hr, hrh, hE⟩ := chk_g h
   have rpos : rCF.pos (dv rOH r) := pos_of_posX rCF hr
   have hr0 : rle rzero (dv rOH r) := rCF.pos_nonneg rpos
   have hrh' : rle (dv rOH r) (radd (dv rOH rh) (dv rOH rh)) := rCF.le_respects (rCF.refl _) (dv_add rOH _ _) (dle_sound rOH hrh)
   have ehR : rEq (dv rOH (mR R)) (hp rOH R) := ZRootPVR.dv_hp R
+  have pin := pin_of_parIn (parIn_inner p hin)
+  obtain ⟨N0, hN0⟩ := approx_in ps p hin
+  have cin : InBox rCF (BcP d ys r ps) (envK d (peOf ps p) (cenX ys)) := inbox_envK pin (fun i _ => cen_bounds hr0)
   exact {
     into := fun u w hu hcl => inC_of (fun i hI => by
-      obtain ⟨hpos, ⟨sv, hsv, hs⟩, ⟨V, hV, c1, c2⟩⟩ := chk_k h hI
-      have vc := ivX_sound rCF cen_inP (val_evR (cen_inC hr0) _ hpos) V hV
-      have hcl' : ∀ j, j < d → ZKron.Bd rCF.toOH (radd (trunc d u j) (rneg (cen d ys j))) (dv rOH r) := by
+      obtain ⟨hpos, ⟨sv, hsv, hs⟩, _, ⟨V, hV, c1, c2⟩⟩ := chk_k h hI
+      have vc := ivX_sound rCF (inboxP_envK pin) (val_evR cin _ hpos) V hV
+      have hcl' : ∀ j, j < d → ZKron.Bd rCF.toOH (radd (envK d (peOf ps p) u j) (rneg (envK d (peOf ps p) (cenX ys) j)))
+          (dv rOH r) := by
         intro j hj
-        rw [trunc_lt hj, cen_lt hj]
+        rw [envK_lt hj, envK_lt hj]
         obtain ⟨l1, l2⟩ := inC_get hu hj
         exact cube_core rCF (rCF.le_respects (dv_lo j) (rCF.refl _) l1) (rCF.le_respects (rCF.refl _) (dv_hi j) l2)
-      have hout : ∀ j, d ≤ j → cen d ys j = trunc d u j := fun j hj => by rw [cen_ge hj, trunc_ge hj]
-      have L := lip_half (cen_inC hr0) (inC_trunc hu) hout hr0 hcl' hpos hsv hs
+      have hout : ∀ j, d ≤ j → envK d (peOf ps p) (cenX ys) j = envK d (peOf ps p) u j :=
+        fun j hj => by rw [envK_ge hj, envK_ge hj]
+      have L' := lip_half cin (inbox_envK pin (fun j hj => inC_get hu hj)) hout hr0 hcl' hpos hsv hs
       have hw := hcl i hI
       rw [Gv_lt hI] at hw
       have c1' : rle (radd (radd (dv rOH (lo ys r i)) (hp rOH R)) (dv rOH rh)) (dv rOH V.1) :=
@@ -421,62 +491,92 @@ theorem ks_of_chk {rh : D} {R E : Nat} (h : chkK d ys r rh R E Gs = true) :
           (radd_respects (rEq_refl _) ehR)) (rEq_refl _))) (rCF.refl _) (dle_sound rOH c1)
       have c2' : rle (radd (radd (dv rOH V.2) (dv rOH rh)) (hp rOH R)) (dv rOH (hi ys r i)) :=
         rCF.le_respects (rEq_trans (dv_add rOH _ _) (radd_respects (dv_add rOH _ _) ehR)) (rCF.refl _) (dle_sound rOH c2)
-      exact into_core rCF vc.1 vc.2 L (half_of_two rCF hrh') hw c1' c2')
+      exact into_core rCF vc.1 vc.2 L' (half_of_two rCF hrh') hw c1' c2')
     contr := fun u v δ hu hv hδ hcl k hk => by
-      obtain ⟨hpos, ⟨sv, hsv, hs⟩, _⟩ := chk_k h hk
-      have hcl' : ∀ i, i < d → ZKron.Bd rCF.toOH (radd (trunc d u i) (rneg (trunc d v i))) δ := by
-        intro i hi; rw [trunc_lt hi, trunc_lt hi]; exact hcl i hi
-      have hout : ∀ i, d ≤ i → trunc d v i = trunc d u i := fun i hi => by rw [trunc_ge hi, trunc_ge hi]
+      obtain ⟨hpos, ⟨sv, hsv, hs⟩, _, _⟩ := chk_k h hk
+      have hcl' : ∀ i, i < d → ZKron.Bd rCF.toOH (radd (envK d (peOf ps p) u i) (rneg (envK d (peOf ps p) v i))) δ := by
+        intro i hi; rw [envK_lt hi, envK_lt hi]; exact hcl i hi
+      have hout : ∀ i, d ≤ i → envK d (peOf ps p) v i = envK d (peOf ps p) u i := fun i hi => by rw [envK_ge hi, envK_ge hi]
       rw [Gv_lt hk, Gv_lt hk]
-      exact lip_half (inC_trunc hv) (inC_trunc hu) hout (rCF.pos_nonneg hδ) hcl' hpos hsv hs
+      exact lip_half (inbox_envK pin (fun i hi => inC_get hv hi)) (inbox_envK pin (fun i hi => inC_get hu hi)) hout
+        (rCF.pos_nonneg hδ) hcl' hpos hsv hs
     orac := fun j => by
       obtain ⟨R0, r0, hR0⟩ := cube_bound (ys := ys) (r := r) d
-      have hz : ∀ (z : Nat → QExpr), InC d ys r (fun i => rofQ (z i)) → ∀ i, qclose (truncQ d z i) qzero R0 := by
-        intro z hz i
+      obtain ⟨Rp, rp, hRp⟩ := par_bound (ps := ps) p
+      have R00 : qle qzero (qadd R0 Rp) := by rat_linarith
+      have hz : ∀ (z : Nat → QExpr) n, N0 ≤ n → InC d ys r (fun i => rofQ (z i)) →
+          ∀ i, qclose (envKQ d (pqOf ps p n) z i) qzero (qadd R0 Rp) := by
+        intro z n hn hz i
+        show qclose (cond (Nat.blt i d) (z i) (pqOf ps p n i)) qzero (qadd R0 Rp)
         cases Nat.lt_or_ge i d with
         | inl hi =>
-            show qclose (cond (Nat.blt i d) (z i) qzero) qzero R0
             rw [blt_t hi]
             obtain ⟨l1, l2⟩ := inC_get hz hi
-            exact hR0 i hi _ (z i) (fun _ => qEq_refl _) l1 l2
-        | inr hi =>
-            show qclose (cond (Nat.blt i d) (z i) qzero) qzero R0
-            rw [blt_f hi]; exact qclose_refl _ _ r0
-      obtain ⟨N, hN⟩ := common_d (P := fun k n => ∀ m (z : Nat → QExpr), n ≤ m → (∀ i, qclose (z i) qzero R0) →
-          qclose (evqD m z (Gs k)) (evqD n z (Gs k)) (qeps j)) d (fun k _ => by
-        obtain ⟨_, _, _, cau⟩ := uc_evqD (Gs k) R0 r0
-        obtain ⟨Nk, _, hNk⟩ := cau j
+            exact qclose_mono (hR0 i hi _ (z i) (fun _ => qEq_refl _) l1 l2) (by rat_linarith)
+        | inr hi => rw [blt_f hi]; exact qclose_mono (hRp n (hN0 n hn) i) (by rat_linarith)
+      obtain ⟨Nu, hNu⟩ := common_d (P := fun k n => ∀ m (z : Nat → QExpr), n ≤ m → (∀ i, qclose (z i) qzero (qadd R0 Rp)) →
+          qclose (evqD m z (Gs k)) (evqD n z (Gs k)) (qeps (j + 1))) d (fun k _ => by
+        obtain ⟨_, _, _, cau⟩ := uc_evqD (Gs k) (qadd R0 Rp) R00
+        obtain ⟨Nk, _, hNk⟩ := cau (j + 1)
         exact ⟨Nk, fun n hn m z hm hzz => hNk m n z (Nat.le_trans hn hm) hn hzz⟩)
-      refine ⟨N, fun n hn z hzin k hk => ?_⟩
-      show ZKron.Bd rCF.toOH (radd (rofQ (gv d Gs n z k)) (rneg (Gv d Gs (fun i => rofQ (z i)) k))) (hp rOH j)
+      obtain ⟨Nc, hNc⟩ := common_N (P := fun i n => ZKron.Bd rCF.toOH (radd (p i) (rneg (rofQ ((p i).seq n))))
+        (hp rOH (j + 1 + L))) ps (fun c _ => approx_close (p c.1) (j + 1 + L))
+      refine ⟨Nu + Nc + N0, fun n hn z hzin k hk => ?_⟩
+      have hn0 : N0 ≤ n := ZRootExp.lB hn
+      have hnu : Nu ≤ n := ZRootExp.lA (ZRootExp.lA hn)
+      have hnc : Nc ≤ n := ZRootExp.lB (ZRootExp.lA hn)
+      obtain ⟨hpos, _, ⟨K, hK, h1, h2⟩, _⟩ := chk_k h hk
+      show ZKron.Bd rCF.toOH (radd (rofQ (gv d Gs (pqOf ps p) n z k)) (rneg (Gv d Gs (peOf ps p) (fun i => rofQ (z i)) k)))
+        (hp rOH j)
       rw [gv_lt hk, Gv_lt hk]
-      have key := hN n hn k hk
-      have sq : ∀ m i, qEq ((trunc d (fun i => rofQ (z i)) i).seq m) (truncQ d z i) := by
+      -- the rational reading against the law with the approximants
+      have key := hNu n hnu k hk
+      have sq : ∀ m i, qEq ((envK d (peOf ps (pn p n)) (fun i => rofQ (z i)) i).seq m) (envKQ d (pqOf ps p n) z i) := by
         intro m i
-        show qEq ((cond (Nat.blt i d) (rofQ (z i)) rzero).seq m) (cond (Nat.blt i d) (z i) qzero)
+        show qEq ((cond (Nat.blt i d) (rofQ (z i)) (cond (isP i ps) (rofQ ((p i).seq n)) rzero)).seq m)
+          (cond (Nat.blt i d) (z i) (cond (isP i ps) ((p i).seq n) qzero))
         cases Nat.blt i d with
         | true => exact qEq_refl _
-        | false => exact qEq_refl _
-      show rle (rneg (hp rOH j)) _ ∧ rle _ (hp rOH j)
-      constructor
-      · refine rle_of_eventually n fun m hm => ?_
-        have s1 := evR_seq (trunc d (fun i => rofQ (z i))) m (Gs k)
-        have s2 := evqD_respects m (sq m) (Gs k)
-        have s3 := hp_seq j m
-        obtain ⟨k1, k2⟩ := key m (truncQ d z) hm (hz z hzin)
-        change qle (qneg ((hp rOH j).seq m))
-          (qadd (evqD n (truncQ d z) (Gs k)) (qneg ((evR (trunc d (fun i => rofQ (z i))) (Gs k)).seq m)))
-        unfold qsub at k1 k2
-        rat_linarith
-      · refine rle_of_eventually n fun m hm => ?_
-        have s1 := evR_seq (trunc d (fun i => rofQ (z i))) m (Gs k)
-        have s2 := evqD_respects m (sq m) (Gs k)
-        have s3 := hp_seq j m
-        obtain ⟨k1, k2⟩ := key m (truncQ d z) hm (hz z hzin)
-        change qle (qadd (evqD n (truncQ d z) (Gs k)) (qneg ((evR (trunc d (fun i => rofQ (z i))) (Gs k)).seq m)))
-          ((hp rOH j).seq m)
-        unfold qsub at k1 k2
-        rat_linarith
+        | false => cases isP i ps with
+          | true => exact qEq_refl _
+          | false => exact qEq_refl _
+      have A : ZKron.Bd rCF.toOH (radd (rofQ (evqD n (envKQ d (pqOf ps p n) z) (Gs k)))
+          (rneg (evR (envK d (peOf ps (pn p n)) (fun i => rofQ (z i))) (Gs k)))) (hp rOH (j + 1)) := by
+        show rle (rneg (hp rOH (j + 1))) _ ∧ rle _ (hp rOH (j + 1))
+        constructor
+        · refine rle_of_eventually n fun m hm => ?_
+          have s1 := evR_seq (envK d (peOf ps (pn p n)) (fun i => rofQ (z i))) m (Gs k)
+          have s2 := evqD_respects m (sq m) (Gs k)
+          have s3 := hp_seq (j + 1) m
+          obtain ⟨k1, k2⟩ := key m (envKQ d (pqOf ps p n) z) hm (hz z n hn0 hzin)
+          change qle (qneg ((hp rOH (j + 1)).seq m))
+            (qadd (evqD n (envKQ d (pqOf ps p n) z) (Gs k)) (qneg ((evR (envK d (peOf ps (pn p n)) (fun i => rofQ (z i))) (Gs k)).seq m)))
+          unfold qsub at k1 k2
+          rat_linarith
+        · refine rle_of_eventually n fun m hm => ?_
+          have s1 := evR_seq (envK d (peOf ps (pn p n)) (fun i => rofQ (z i))) m (Gs k)
+          have s2 := evqD_respects m (sq m) (Gs k)
+          have s3 := hp_seq (j + 1) m
+          obtain ⟨k1, k2⟩ := key m (envKQ d (pqOf ps p n) z) hm (hz z n hn0 hzin)
+          change qle (qadd (evqD n (envKQ d (pqOf ps p n) z) (Gs k)) (qneg ((evR (envK d (peOf ps (pn p n)) (fun i => rofQ (z i))) (Gs k)).seq m)))
+            ((hp rOH (j + 1)).seq m)
+          unfold qsub at k1 k2
+          rat_linarith
+      -- the approximants against the parameters
+      have hpar : ∀ i, d ≤ i → ZKron.Bd rCF.toOH (radd (peOf ps (pn p n) i) (rneg (peOf ps p i))) (hp rOH (j + 1 + L)) := by
+        intro i _
+        show ZKron.Bd rCF.toOH (radd (cond (isP i ps) (rofQ ((p i).seq n)) rzero) (rneg (cond (isP i ps) (p i) rzero))) _
+        cases hP : isP i ps with
+        | false => exact bd_refl rCF (hp_nonneg rOH _)
+        | true =>
+            obtain ⟨c, hc, hci⟩ := mem_of_isP hP
+            subst hci
+            exact ZRootPar.bd_swap rCF (hNc n hnc c hc)
+      have zin : ∀ i, i < d → rle (dv rOH (lo ys r i)) (rofQ (z i)) ∧ rle (rofQ (z i)) (dv rOH (hi ys r i)) :=
+        fun i hi => inC_get hzin hi
+      have B := lip_par (inbox_envK pin zin) (inbox_envK (pin_of_parIn (hN0 n hn0)) zin) (ZNone.pos_hp rCF _) hpar hpos hK h1 h2
+      have B' := ZKron.bd_congr rCF.toOH (rCF.refl _) (ZRootPar.twoL (j + 1) L) B
+      exact ZKron.bd_congr rCF.toOH (rCF.refl _) (ZRoot.hp_succ_half rCF j) (bd_tri rCF A B')
     center := inC_of (fun i hi => by
       obtain ⟨c1, c2⟩ := cen_bounds (ys := ys) hr0 (i := i)
       have e := ZRootPVR.dv_rofQ (nthD ys i)
@@ -494,12 +594,12 @@ theorem ks_of_chk {rh : D} {R E : Nat} (h : chkK d ys r rh R E Gs = true) :
           obtain ⟨w, hw, hc⟩ := hcl J; exact ⟨w i, (inC_get hw hi).2, hc i hi⟩)⟩)
     out := fun _ _ _ hi => gv_ge hi }
 
-/-- **KRAWCZYK ON VR's CONTINUUM**: under the kernel-checked certificate, the system `x = G(x)` has a solution in the
-cube, and only one there. -/
-theorem krawczyk {rh : D} {R E : Nat} (h : chkK d ys r rh R E Gs = true) :
-    ∃ x : Vec, InC d ys r x ∧ (∀ k, k < d → rEq (evR (trunc d x) (Gs k)) (x k)) ∧
-      ∀ u, InC d ys r u → (∀ k, k < d → rEq (evR (trunc d u) (Gs k)) (u k)) → ∀ i, i < d → rEq (u i) (x i) := by
-  obtain ⟨x, hx, hf, hu⟩ := banach (ks_of_chk h)
+/-- **KRAWCZYK ON VR's CONTINUUM, WITH PARAMETERS**: under the kernel-checked certificate, for EVERY real parameter
+vector in the inner box, `x = G(x, p)` has a solution in the cube, and only one there. -/
+theorem krawczyk {rh : D} {R E L μ : Nat} (h : chkK d ys r rh R E L ps Gs = true) (p : Vec) (hin : InnerIn μ p ps) :
+    ∃ x : Vec, InC d ys r x ∧ (∀ k, k < d → rEq (evR (envK d (peOf ps p) x) (Gs k)) (x k)) ∧
+      ∀ u, InC d ys r u → (∀ k, k < d → rEq (evR (envK d (peOf ps p) u) (Gs k)) (u k)) → ∀ i, i < d → rEq (u i) (x i) := by
+  obtain ⟨x, hx, hf, hu⟩ := banach (ks_of_chk h p hin)
   refine ⟨x, hx, fun k hk => ?_, fun u hu' hfu => hu u hu' (fun k hk => ?_)⟩
   · have := hf k hk; rw [Gv_lt hk] at this; exact this
   · rw [Gv_lt hk]; exact hfu k hk
@@ -508,7 +608,7 @@ end L
 
 end ZKraw
 
-#print axioms ZKraw.inC_trunc
+#print axioms ZKraw.inbox_envK
 #print axioms ZKraw.allB_sound
 #print axioms ZKraw.lip_stair
 #print axioms ZKraw.ks_of_chk

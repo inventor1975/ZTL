@@ -7,7 +7,8 @@ The law g(q, p) = 0 is read by znumjudge._parse_arith (the same reader zimplicit
 into ZXE.XE:
   * a rational constant: a dyadic `.cst`, or `.div (.cst num) (.cst den)`;
   * `pow(y, k)`, k a natural number: `.pow y k`; `pow(y, r)`, r not natural: `exp(r·ln y)`;
-  * `log10 y = ln y / ln 10`; `exp`, `ln`, `atan`, `sin`, `cos` as they are.
+  * `log10 y = ln y / ln 10`; `tan u = sin u / cos u` (the kernel checks `cos u ≥ 2⁻⁶⁴` on the box, as for every
+    denominator); `exp`, `ln`, `atan`, `sin`, `cos` as they are.
 No algebra is done here (the translation is the tree), so NOTHING is trusted beyond the reader: every reading — signs,
 slopes in q, the Lipschitz reading in the parameters, the positivity of every denominator and ln argument — is
 computed and checked by the Lean kernel (`decide +kernel` on `chkP`).
@@ -74,6 +75,9 @@ def to_xe(node, idx):
         return f"(.exp (.mul {to_xe(k, idx)} (.ln {to_xe(base, idx)})))"
     if op == "log10":
         return f"(.div (.ln {to_xe(node[1], idx)}) (.ln {cst(10)}))"
+    if op == "tan":
+        u = to_xe(node[1], idx)
+        return f"(.div (.sin {u}) (.cos {u}))"
     if op in ("exp", "ln", "atan", "sin", "cos"):
         return f"(.{op} {to_xe(node[1], idx)})"
     raise ValueError(f"not translated (yet): {op}")

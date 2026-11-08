@@ -52,6 +52,8 @@ def fl(node, env):
         return math.sin(a)
     if op == "cos":
         return math.cos(a)
+    if op == "tan":
+        return math.tan(a)
     b = fl(node[2], env)
     if op == "add":
         return a + b

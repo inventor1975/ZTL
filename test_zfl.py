@@ -318,6 +318,46 @@ def sec23_one_unknown_in_a_search_region():
           "x*x = 2 in [0, 10]: only √2 (was: ±√2, the region ignored)")
 
 
+def sec24_an_implicit_law_with_parameters_and_scientific_numbers():
+    """(2026-11-08, the curator's shakedown: "Правь и выкатывай") Two gaps the live studio showed. THE IMPLICIT LAW: one
+    unknown with its region and REAL PARAMETERS — the fan of the blind test — was OPEN; the kernel's implicit judge
+    answers it: for every parameter value in the box, exactly one solution, within [lo, hi] (existence by the law's
+    opposite signs on both sides of the kept run). Both sides: the fan's operating point, every sampled parameter's
+    float root inside the interval; x + x³ = a with a in [−0.5, 0.5] and x in [0, 1] — no root for a < 0, so only the
+    enclosure is said (OPEN, existence not shown). SCIENTIFIC NOTATION: `4.5e-05` in a value or the claim was accepted
+    by the validator and died in the reader (E_UNREADABLE at the claim); now read exactly."""
+    import math
+    import random
+    from fractions import Fraction
+    print("-" * 72)
+    print("§24 an implicit law with parameters; scientific numbers")
+    U = lambda n, v="?": {"name": n, "means": n, "status": "unverified", "value": v}
+    rows = [U("pmax", "[44.16, 51.84]"), U("Qmax", "[0.038, 0.042]"), U("K", "[27200, 36800]"), U("Q", "? in [0, 0.06]")]
+    r = zfl.run({"rows": rows, "claim": "pmax*(1 - Q/Qmax) - K*Q*Q = 0"})
+    n = r["report"]["numeric"]
+    assert n["disposition"] == "ON CREDIT" and n["verdict"] == "T", n
+    assert n["implicit"]["unique"] and n["implicit"]["exists"], n["implicit"]
+    assert any(i["code"] == "W_IMPLICIT" for i in r["issues"])
+    lo, hi = Fraction(n["solved"]["Q"]["lo"]), Fraction(n["solved"]["Q"]["hi"])
+    rnd = random.Random(20261108)
+    for _ in range(40):
+        pm, qm, k = rnd.uniform(44.16, 51.84), rnd.uniform(0.038, 0.042), rnd.uniform(27200, 36800)
+        # pmax − pmax·Q/Qmax − K·Q² = 0: the positive root
+        a, b, c = -k, -pm / qm, pm
+        q0 = (-b - math.sqrt(b * b - 4 * a * c)) / (2 * a)
+        assert float(lo) - 1e-12 <= q0 <= float(hi) + 1e-12, (q0, float(lo), float(hi))
+    print(f"   the fan: exactly one Q for every parameter, within [{float(lo):.6f}, {float(hi):.6f}]; 40 sampled roots inside")
+    r = zfl.run({"rows": [U("x", "? in [0, 1]"), U("a", "[-0.5, 0.5]")], "claim": "x + x*x*x = a"})
+    n = r["report"]["numeric"]
+    assert n["disposition"] == "OPEN" and not n["implicit"]["exists"], n
+    print("   x + x³ = a, a in [−0.5, 0.5], x in [0, 1]: OPEN, only the enclosure (no root for a < 0)")
+    r = zfl.run({"rows": [U("a", "[4.5e-05, 5.5e-05]"), U("x")], "claim": "x = a*2e3"})
+    assert r["ok"] and r["report"]["numeric"]["solved"]["x"]["lo"] == "9/100", r
+    r = zfl.run({"rows": [U("x2e3", "?")], "claim": "x2e3 = 1.5E2"})
+    assert r["ok"] and r["report"]["numeric"]["solved"]["x2e3"]["lo"] == "150", r
+    print("   4.5e-05 in a value and 2e3 in the claim read exactly; the name x2e3 stays a name")
+
+
 def sec4b_every_example_runs_and_json_types_are_taken_as_they_come():
     print("-" * 72)
     print("4b. THE CATALOGUE, AND WHAT ARRIVES FROM A MODEL")
@@ -1024,6 +1064,7 @@ if __name__ == "__main__":
     sec21_a_system_in_a_search_region_is_answered_completely()
     sec22_a_system_with_sin_cos_tan_in_a_search_region()
     sec23_one_unknown_in_a_search_region()
+    sec24_an_implicit_law_with_parameters_and_scientific_numbers()
     sec4b_every_example_runs_and_json_types_are_taken_as_they_come()
     sec5_the_spec_can_build_the_form_and_the_page()
     print("=" * 72)

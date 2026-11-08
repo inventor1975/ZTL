@@ -190,6 +190,14 @@ CODE_HELP = {
                      "у каждой неизвестной (системы или единственной) была область поиска (? in [a, b]), и область исчерпана: ответ "
                      "перечисляет ВСЕ решения в ней, каждое единственное в своём кубе (ни одного — утверждение "
                      "опровергнуто в области); куб может выходить за область"),
+    "W_IMPLICIT": ("one unknown with its search region and real parameters, judged by the implicit judge (every "
+                   "reading checked exactly): for every parameter value in the box, exactly one solution in the region "
+                   "within the interval given; or, when existence or uniqueness is not shown, only that every solution "
+                   "lies in it",
+                   "одна неизвестная с областью поиска и вещественными параметрами, судья неявных законов (каждое "
+                   "чтение проверено точно): при каждом значении параметров из коробки ровно одно решение в области "
+                   "внутри данного отрезка; или, если существование либо единственность не показаны, только что все "
+                   "решения лежат в нём"),
     "W_REGION_FILTERED": ("one unknown with a search region (? in [a, b]) and an EXACT answer over all the reals: only "
                           "its values in the region are kept; none — the claim is refuted in the region",
                           "одна неизвестная с областью поиска (? in [a, b]) и ТОЧНЫЙ ответ на всей прямой: оставлены "

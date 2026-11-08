@@ -712,7 +712,7 @@ def coerce(doc):
     # дверях: coerce строит новый словарь, и всё, что не перечислено, не
     # доезжает. Ровно так первая редакция реестра-в-документе молча ничего
     # не делала (промерено 2026-08-28).
-    out = {"claim": str(doc.get("claim") or ""),
+    out = {"claim": _plain_numbers(str(doc.get("claim") or "")),        # 4.5e-05 -> 0.000045, at the door (08.11)
            "grounds": str(doc.get("grounds") or ""),
            "ask": doc.get("ask") or [], "rows": []}
     # The degrees' two document fields pass the door here, or they are lost in it (the `grounds` lesson above)
@@ -1575,6 +1575,22 @@ def question_region(value):
     return (lo, hi) if lo < hi else None
 
 
+_SCI = re.compile(r"(?<![A-Za-z_0-9.])(\d+(?:\.\d*)?|\.\d+)[eE]([-+]?\d+)")
+
+
+def _plain_numbers(text):
+    """`4.5e-05` -> `0.000045`, exactly (Decimal). The validator took scientific notation and the numeric floor's reader
+    did not: the pump of the blind test, typed with its 4.5e-05, died at the claim with E_UNREADABLE (the curator's
+    shakedown, 2026-11-08). A name never starts with a digit, and the look-behind keeps `x2e3` a name."""
+    from decimal import Decimal
+
+    def one(m):
+        d = Decimal(m.group(0))
+        t = format(d, "f")
+        return t.rstrip("0").rstrip(".") if "." in t else t
+    return _SCI.sub(one, text)
+
+
 def to_sheet(rows):
     """The numeric floor's own line, assembled from the cells so that nobody
     has to write it. `x=1500 earned:inv-17 RUB` was always a good language —
@@ -1586,7 +1602,7 @@ def to_sheet(rows):
                 else "credit")
         # whitespace inside a value is layout, not content: "[0, 1]" is how people and models write an interval, and the
         # sheet reader takes "[0,1]" only (2026-11-05: a blind formalization died three rounds on "[0, 1]")
-        value = re.sub(r"\s+", "", r["value"])           # outside the f-string: Python 3.11 (CI) forbids a backslash there
+        value = _plain_numbers(re.sub(r"\s+", "", r["value"]))   # outside the f-string: Python 3.11 (CI) forbids a backslash
         if is_question(value):
             value = "?"                                   # a search region is the system solver's, not the sheet's
         bits = [f"{r['name']}={value}", prov]
@@ -2068,6 +2084,71 @@ def _system_equations(text):
     return eqs
 
 
+def _implicit_answer(claim, q, x, region):
+    """ONE unknown with its region and REAL PARAMETERS, where the solver and the system path proved nothing (the
+    curator's shakedown, 2026-11-08: the pump of the blind test was OPEN in ZFL while the kernel's implicit judge
+    answers it). zimplicit searches a certificate and the kernel checks it (zimplicit.check_implicit): every solution
+    in the region, for every parameter in the box, lies in [lo, hi]; with "unique", at most one per parameter.
+    EXISTENCE for every parameter is read here: the excluded pieces on both sides of the kept run have readings of
+    strictly opposite signs over the whole box, so each parameter's law changes sign across [lo, hi] (the
+    intermediate values; the Lean bridge proves the same, tools/zimplicit_lean.py). No tightening on the service:
+    MEASURED, the oil cooler's tightening took 30 s (its plain hull is the whole region — OPEN, said)."""
+    eqs = _system_equations(claim)
+    if eqs is None or len(eqs) != 1:
+        return None
+    try:
+        from znumjudge import _parse_arith as _pa
+        import zimplicit as _ZI
+        import zcertify as _ZC
+        g = _pa(f"({eqs[0][0]}) - ({eqs[0][1]})", q)
+        if x not in _ZC._names(g):
+            return None
+        a, b = region
+        cert = _ZI.search_certificate(g, x, q, [a, b])
+        if cert is None:
+            return None
+        res = _ZI.check_implicit(g, x, q, cert)
+        if not res[0] or res[1] is None:
+            return None
+        from fractions import Fraction as _F
+        lo, hi = _F(res[1][0]), _F(res[1][1])
+        params = sorted(n for n in _ZC._names(g) if n in q and n != x and q[n]["lo"] < q[n]["hi"])
+        if not params:
+            return None                    # no parameters: the region search answers completely, many roots included
+        box = {n: (q[n]["lo"], q[n]["hi"]) for n in params}
+        pieces = [(_F(str(pc["lo"])), _F(str(pc["hi"])), pc["kind"]) for pc in cert["pieces"]]
+        kept = [i for i, pc in enumerate(pieces) if pc[2] == "kept"]
+        exists = False
+        if kept and kept[0] > 0 and kept[-1] + 1 < len(pieces):
+            def rd(pc):
+                piece = dict(box)
+                piece[x] = (pc[0], pc[1])
+                return _ZC._reading(g, q, piece)
+            L, R = rd(pieces[kept[0] - 1]), rd(pieces[kept[-1] + 1])
+            exists = (L[0] > 0 and R[1] < 0) or (L[1] < 0 and R[0] > 0)
+    except Exception:
+        return None
+    unique = bool(cert.get("unique"))
+    weak = [n for n in params if q[n].get("prov") != "earned"]
+    if unique and exists:
+        disp = "EARNED" if not weak else "ON CREDIT"
+        how = (f"for every parameter value in the box, exactly one solution in the search region, within [{lo}, {hi}] "
+               f"(the implicit judge: every reading checked exactly; the existence by the law's opposite signs read "
+               f"on both sides)")
+        roots = [f"[{lo}, {hi}]"]
+    elif lo > a or hi < b:
+        disp = "OPEN"
+        how = (f"every solution in the search region, for every parameter value in the box, lies in [{lo}, {hi}] "
+               f"(the implicit judge, checked exactly); that one exists for each "
+               f"{'and that it is the only one ' if not unique else ''}is not shown")
+        roots = []
+    else:
+        return None
+    solved = {x: {"lo": str(lo), "hi": str(hi), "pinned": False, "prov": "earned" if not weak else "credit",
+                  "from": params, "weak": weak, **({"roots": roots} if roots else {}), "implicit": True}}
+    return {"solved": solved, "disposition": disp, "how": how, "unique": unique, "exists": exists}
+
+
 def _system_answer(claim, q, unknowns, regions=None):
     """A SYSTEM (2026-11-08, the curator's "Синтаксис систем в ZFL — принято. Делай."): several unknowns `x = ?` and
     a claim of as many equations. zsystem finds certificates and checks them exactly (Krawczyk, the contraction form,
@@ -2230,6 +2311,7 @@ def run(doc, ground_registry=None):
                 r = judge_sheet_claim(claim, q, m)
                 solved = {}
             system = None
+            implicit = None
             searched = False                      # the system's region was searched (and not exhausted)
             if unknown:
                 unk = [x["name"] for x in numeric_rows(rows) if is_question(x.get("value"))]
@@ -2240,14 +2322,26 @@ def run(doc, ground_registry=None):
                 # (test_quadratic caught the first version overwriting them, 2026-11-08)
                 # ONE unknown with its region (08.11): only where the solver PROVED nothing (OPEN; its `≈` roots
                 # are approximations, replaced by certified intervals); an exact answer (x*x = 2 -> ±√2) stays
-                if (len(unk) >= 2 and not any(solved.get(n, {}).get("pinned") or solved.get(n, {}).get("roots")
-                                              for n in unk)) or \
-                        (len(unk) == 1 and regions.get(unk[0]) and r["disposition"] == "OPEN"):
+                # ONE unknown: the implicit judge FIRST (MEASURED 2026-11-08: the pump took 16 s with the region
+                # search tried before it, 7 s without); the region search only when it gives no full answer
+                one = len(unk) == 1 and regions.get(unk[0]) and r["disposition"] == "OPEN"
+                if one:
+                    implicit = _implicit_answer(claim, q, unk[0], regions[unk[0]])
+                if one and implicit is not None and implicit["disposition"] != "OPEN":
+                    solved.update(implicit["solved"])
+                    r = dict(r, disposition=implicit["disposition"])
+                elif (len(unk) >= 2 and not any(solved.get(n, {}).get("pinned") or solved.get(n, {}).get("roots")
+                                                for n in unk)) or one:
                     system = _system_answer(claim, q, unk, regions)
                     searched = all(regions.get(n) for n in unk)
                     if system is not None:
                         solved.update(system["solved"])
                         r = dict(r, disposition=system["disposition"])
+            if implicit is not None and implicit["disposition"] == "OPEN":
+                if system is None:                         # the region search found nothing: the enclosure is said
+                    solved.update(implicit["solved"])
+                else:
+                    implicit = None                        # the region search answered; the enclosure is not needed
             # ONE unknown with its region and an EXACT answer over all the reals (the curator's shakedown,
             # 2026-11-08: `x*x = 2` with `x = ? in [5, 6]` answered ±√2, outside the region): only the roots in the
             # region are kept; none — refuted there
@@ -2296,6 +2390,14 @@ def run(doc, ground_registry=None):
                 pass
             if filtered is not None and filtered[0] == 0:
                 report["numeric"]["verdict"] = "F"          # the exact answer has no value in the region
+            if implicit is not None:
+                report["numeric"]["implicit"] = {"unique": implicit["unique"], "exists": implicit["exists"],
+                                                 "how": implicit["how"]}
+                if implicit["disposition"] in ("EARNED", "ON CREDIT"):
+                    report["numeric"]["verdict"] = "T"
+                    report["numeric"]["grade"] = ("hereditary" if implicit["disposition"] == "EARNED"
+                                                  else "until-verification")
+                issues.append(_issue("warning", "W_IMPLICIT", unk[0], implicit["how"]))
             if system is not None:
                 report["numeric"]["verdict"] = "F" if system["disposition"] == "REFUTED" else "T"
                 report["numeric"]["grade"] = ("hereditary" if system["disposition"] in ("EARNED", "REFUTED")
@@ -2317,7 +2419,7 @@ def run(doc, ground_registry=None):
                         "(Krawczyk's test, checked exactly); solutions OUTSIDE the cube are not excluded"
                         + ("" if system["how"].startswith("a solution") else f" ({system['how']})")
                         + ". Give each unknown a search region (x = ? in [a, b]) for the complete answer."))
-            if searched and system is None:
+            if searched and system is None and implicit is None:
                 issues.append(_issue(
                     "warning", "W_REGION_UNUSED", "value",
                     "the search region was searched but not exhausted within the budget, and no solution was "
@@ -2328,7 +2430,8 @@ def run(doc, ground_registry=None):
                     "warning", "W_REGION_FILTERED", "value",
                     f"the exact answer holds over all the reals; of its {filtered[1]} value(s), {filtered[0]} lie in "
                     f"the search region and are kept" + ("" if filtered[0] else " — none: the claim is refuted there")))
-            elif unknown and not searched and any(question_region(x.get("value")) for x in numeric_rows(rows)) and \
+            elif unknown and not searched and implicit is None and \
+                    any(question_region(x.get("value")) for x in numeric_rows(rows)) and \
                     not (system is not None and system["complete"]):
                 issues.append(_issue(
                     "warning", "W_REGION_UNUSED", "value",

@@ -254,6 +254,7 @@ def slX (B : Box) (V : Nat → Iv) : XE → Option Iv
         | some Vp => match ivInv Vp with
           | none => none
           | some W => ivMul W Kp
+  | .atan _ => none
 
 section Sound
 variable {α : Type} {S : CF α}
@@ -284,10 +285,10 @@ theorem sl_pow {d va va' : α} {Ka Va : Iv} (ha : SlIn S (S.add va' (S.neg va)) 
 
 /-- **THE SLOPE READING IS SOUND**: at two points of the box whose coordinates differ by `sᵢ·d`, `sᵢ ∈ Vᵢ`, the values
 `v, v'` of `e` satisfy `v' − v = s·d` for some `s` in the reading — not refuted. -/
-theorem slX_sound {ex : α → α} (H : ExpLaws S ex) (Hs : ExpSlope S ex) {B : Box} {V : Nat → Iv}
+theorem slX_sound {ex atn : α → α} (H : ExpLaws S ex) (Hs : ExpSlope S ex) {B : Box} {V : Nat → Iv}
     {p q : Nat → α} {d : α}
     (hp : InBox S B p) (hq : InBox S B q) (hd : ∀ i, SlIn S (S.add (q i) (S.neg (p i))) d (V i)) :
-    ∀ (e : XE) {v v' : α} {K : Iv}, Val S ex p e v → Val S ex q e v' → slX B V e = some K →
+    ∀ (e : XE) {v v' : α} {K : Iv}, Val S ex atn p e v → Val S ex atn q e v' → slX B V e = some K →
       SlIn S (S.add v' (S.neg v)) d K
   | .var i, v, v', K, hv, hv', h => by
       cases hv with
@@ -431,6 +432,7 @@ theorem slX_sound {ex : α → α} (H : ExpLaws S ex) (Hs : ExpSlope S ex) {B : 
       rw [h3] at h; dsimp only at h
       exact sl_ln H Hs (slX_sound H Hs hp hq hd a ha ha' h1) (ivX_sound S hp ha Va h2) (ivX_sound S hq ha' Va h2)
         e1 e2 h3 h
+  | .atan _, _, _, _, _, _, h => by cases h
 
 end Sound
 
@@ -446,6 +448,7 @@ def isE : XE → Bool
   | .exp a => isE a
   | .div _ _ => false
   | .ln _ => false
+  | .atan _ => false
 
 theorem and2 {a b : Bool} (h : (a && b) = true) : a = true ∧ b = true := by
   cases a <;> cases b <;> first | exact ⟨rfl, rfl⟩ | cases h
@@ -464,20 +467,22 @@ def evX (ex : α → α) (p : Nat → α) : XE → α
   | .exp a => ex (evX ex p a)
   | .div _ _ => S.zero
   | .ln _ => S.zero
+  | .atan _ => S.zero
 
 variable {S}
 
-theorem val_evX {ex : α → α} (H : ExpLaws S ex) (p : Nat → α) :
-    ∀ e : XE, isE e = true → Val S ex p e (evX S ex p e)
+theorem val_evX {ex atn : α → α} (H : ExpLaws S ex) (p : Nat → α) :
+    ∀ e : XE, isE e = true → Val S ex atn p e (evX S ex p e)
   | .var _, _ => .var (S.refl _)
   | .cst _, _ => .cst (S.refl _)
-  | .add a b, h => .add (val_evX H p a (and2 h).1) (val_evX H p b (and2 h).2) (S.refl _)
-  | .sub a b, h => .sub (val_evX H p a (and2 h).1) (val_evX H p b (and2 h).2) (S.refl _)
-  | .mul a b, h => .mul (val_evX H p a (and2 h).1) (val_evX H p b (and2 h).2) (S.refl _)
-  | .pow a n, h => .pow n (val_evX H p a h) (S.refl _)
-  | .exp a, h => .exp H (val_evX H p a h) (S.refl _)
+  | .add a b, h => .add (val_evX (atn := atn) H p a (and2 h).1) (val_evX (atn := atn) H p b (and2 h).2) (S.refl _)
+  | .sub a b, h => .sub (val_evX (atn := atn) H p a (and2 h).1) (val_evX (atn := atn) H p b (and2 h).2) (S.refl _)
+  | .mul a b, h => .mul (val_evX (atn := atn) H p a (and2 h).1) (val_evX (atn := atn) H p b (and2 h).2) (S.refl _)
+  | .pow a n, h => .pow n (val_evX (atn := atn) H p a h) (S.refl _)
+  | .exp a, h => .exp H (val_evX (atn := atn) H p a h) (S.refl _)
   | .div _ _, h => by cases h
   | .ln _, h => by cases h
+  | .atan _, h => by cases h
 
 /-- The one-variable box `[a, b]` (every variable is `x`). -/
 def cB (a b : D) : Box := fun _ => some (a, b)
@@ -492,7 +497,7 @@ theorem mono_of_slX {ex : α → α} (H : ExpLaws S ex) (Hs : ExpSlope S ex) {e 
     ZRootAbs.Mono S (fun x => evX S ex (fun _ => x) e) (dv S.toOH a) (dv S.toOH b) c L := by
   intro x y hax hxy hyb
   have sl := slX_sound H Hs (inbox_c hax (S.le_trans hxy hyb)) (inbox_c (S.le_trans hax hxy) hyb)
-    (fun _ => sl_ret (mem_one S) (S.symm (S.one_mul _))) e (val_evX H _ e hE) (val_evX H _ e hE) hK
+    (fun _ => sl_ret (mem_one S) (S.symm (S.one_mul _))) e (val_evX (atn := fun x => x) H _ e hE) (val_evX (atn := fun x => x) H _ e hE) hK
   have d0 : S.le S.zero (S.add y (S.neg x)) := by cr_linarith S.toOCR [hxy]
   constructor
   · apply S.le_of_not_pos
@@ -511,8 +516,8 @@ theorem mono_of_slX {ex : α → α} (H : ExpLaws S ex) (Hs : ExpSlope S ex) {e 
     exact S.pos_not_le hpos (by cr_linarith S.toOCR [l'])
 
 /-- The same for any function whose values are values of `e` on `[a, b]` (division and `ln` included). -/
-theorem mono_of_val {ex : α → α} (H : ExpLaws S ex) (Hs : ExpSlope S ex) {e : XE} {F : α → α} {a b : D}
-    (hF : ∀ x, S.le (dv S.toOH a) x → S.le x (dv S.toOH b) → Val S ex (fun _ => x) e (F x))
+theorem mono_of_val {ex atn : α → α} (H : ExpLaws S ex) (Hs : ExpSlope S ex) {e : XE} {F : α → α} {a b : D}
+    (hF : ∀ x, S.le (dv S.toOH a) x → S.le x (dv S.toOH b) → Val S ex atn (fun _ => x) e (F x))
     {K : Iv} (hK : slX (cB a b) (fun _ => ZIv.one) e = some K) {c L : α}
     (hc : S.le c (dv S.toOH K.1)) (hL : S.le (dv S.toOH K.2) L) :
     ZRootAbs.Mono S F (dv S.toOH a) (dv S.toOH b) c L := by
@@ -544,7 +549,7 @@ theorem dv_dz0 : S.r (dv S.toOH dz0) S.zero := zv_isZ S.toOH (c := dz0) rfl
 theorem lo_end {ex : α → α} (H : ExpLaws S ex) {e : XE} (hE : isE e = true) {a : D} {K : Iv}
     (hK : ivX (cB a a) e = some K) (h : dle K.2 dz0 = true) :
     S.le (evX S ex (fun _ => dv S.toOH a) e) S.zero :=
-  S.le_trans (ivX_sound S (inbox_c (S.le_refl _) (S.le_refl _)) (val_evX H _ e hE) K hK).2
+  S.le_trans (ivX_sound S (inbox_c (S.le_refl _) (S.le_refl _)) (val_evX (atn := fun x => x) H _ e hE) K hK).2
     (S.le_respects (S.refl _) dv_dz0 (dle_sound S.toOH h))
 
 /-- The value reading at the right end above zero gives `0 ≤ F(b)`. -/
@@ -552,14 +557,14 @@ theorem hi_end {ex : α → α} (H : ExpLaws S ex) {e : XE} (hE : isE e = true) 
     (hK : ivX (cB b b) e = some K) (h : dle dz0 K.1 = true) :
     S.le S.zero (evX S ex (fun _ => dv S.toOH b) e) :=
   S.le_trans (S.le_respects dv_dz0 (S.refl _) (dle_sound S.toOH h))
-    (ivX_sound S (inbox_c (S.le_refl _) (S.le_refl _)) (val_evX H _ e hE) K hK).1
+    (ivX_sound S (inbox_c (S.le_refl _) (S.le_refl _)) (val_evX (atn := fun x => x) H _ e hE) K hK).1
 
-theorem lo_val {ex : α → α} {e : XE} {a : D} {v : α} (hv : Val S ex (fun _ => dv S.toOH a) e v) {K : Iv}
+theorem lo_val {ex atn : α → α} {e : XE} {a : D} {v : α} (hv : Val S ex atn (fun _ => dv S.toOH a) e v) {K : Iv}
     (hK : ivX (cB a a) e = some K) (h : dle K.2 dz0 = true) : S.le v S.zero :=
   S.le_trans (ivX_sound S (inbox_c (S.le_refl _) (S.le_refl _)) hv K hK).2
     (S.le_respects (S.refl _) dv_dz0 (dle_sound S.toOH h))
 
-theorem hi_val {ex : α → α} {e : XE} {b : D} {v : α} (hv : Val S ex (fun _ => dv S.toOH b) e v) {K : Iv}
+theorem hi_val {ex atn : α → α} {e : XE} {b : D} {v : α} (hv : Val S ex atn (fun _ => dv S.toOH b) e v) {K : Iv}
     (hK : ivX (cB b b) e = some K) (h : dle dz0 K.1 = true) : S.le S.zero v :=
   S.le_trans (S.le_respects dv_dz0 (S.refl _) (dle_sound S.toOH h))
     (ivX_sound S (inbox_c (S.le_refl _) (S.le_refl _)) hv K hK).1
@@ -703,6 +708,7 @@ def evq (n : Nat) (q : QExpr) : XE → QExpr
   | .exp a => eseq (evq n q a) n
   | .div _ _ => qzero
   | .ln _ => qzero
+  | .atan _ => qzero
 
 theorem qpw_respects {x y : QExpr} (h : qEq x y) : ∀ k, qEq (qpw x k) (qpw y k)
   | 0 => qEq_refl _
@@ -718,6 +724,7 @@ theorem evq_respects (n : Nat) {q q' : QExpr} (h : qEq q q') : ∀ e : XE, qEq (
   | .exp a => eseq_respects (evq_respects n h a) n
   | .div _ _ => qEq_refl _
   | .ln _ => qEq_refl _
+  | .atan _ => qEq_refl _
 
 theorem powS_seq (x : RExpr) (n : Nat) : ∀ k, qEq ((powS rCF.toOH x k).seq n) (qpw (x.seq n) k)
   | 0 => qEq_refl _
@@ -735,6 +742,7 @@ theorem evX_seq (x : RExpr) (n : Nat) : ∀ e : XE,
   | .exp a => eseq_respects (evX_seq x n a) n
   | .div _ _ => qEq_refl _
   | .ln _ => qEq_refl _
+  | .atan _ => qEq_refl _
 
 theorem le_a {A B m : Nat} (h : A + B + 1 ≤ m) : A ≤ m :=
   Nat.le_trans (Nat.le_trans (Nat.le_add_right A B) (Nat.le_add_right _ 1)) h
@@ -895,6 +903,7 @@ theorem uc_evq : ∀ e : XE, isE e = true → UCo (fun n q => evq n (q 0) e)
   | .exp a, h => uc_exp (uc_evq a h)
   | .div _ _, h => by cases h
   | .ln _, h => by cases h
+  | .atan _, h => by cases h
 
 end Oracle
 

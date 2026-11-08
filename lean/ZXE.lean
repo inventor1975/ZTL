@@ -29,21 +29,35 @@ inductive XE where
   | div : XE → XE → XE
   | exp : XE → XE
   | ln : XE → XE
+  | atan : XE → XE
 
 variable {α : Type} (S : CF α)
 
+/-- What `atan` MEANS here: `atan 0 = 0`, congruent, and its chord lies between the bounds of `ψ(t) = 1/(1 + t²)` on
+the chord's interval (stated without division: `L·(1 + t²) ≤ 1 ≤ U·(1 + t²)` for every `t` there). `ℝ`'s `arctan`
+is one; VR's `ratan` (the grid sums of `ZAtan`) is one (`ZRootAtan.r_atanLaws`). -/
+structure AtanLaws (atn : α → α) : Prop where
+  zero : S.r (atn S.zero) S.zero
+  congr : ∀ {a b}, S.r a b → S.r (atn a) (atn b)
+  chord : ∀ x y L U, S.le x y →
+    (∀ t, S.le x t → S.le t y →
+      S.le (S.mul L (S.add S.one (S.mul t t))) S.one ∧ S.le S.one (S.mul U (S.add S.one (S.mul t t)))) →
+    S.le (S.mul (S.add y (S.neg x)) L) (S.add (atn y) (S.neg (atn x))) ∧
+    S.le (S.add (atn y) (S.neg (atn x))) (S.mul (S.add y (S.neg x)) U)
+
 /-- `v` is a value of `e` at `p`, `ex` standing for the exponential: its nodes have values only for an `ex`
 satisfying `ExpLaws` (that IS what "exp" means here; ℝ's `Real.exp` is one), and `ln a` needs `a > 0`. -/
-inductive Val (ex : α → α) (p : Nat → α) : XE → α → Prop where
-  | var {i v} : S.r v (p i) → Val ex p (.var i) v
-  | cst {c v} : S.r v (dv S.toOH c) → Val ex p (.cst c) v
-  | add {a b va vb v} : Val ex p a va → Val ex p b vb → S.r v (S.add va vb) → Val ex p (.add a b) v
-  | sub {a b va vb v} : Val ex p a va → Val ex p b vb → S.r v (S.add va (S.neg vb)) → Val ex p (.sub a b) v
-  | mul {a b va vb v} : Val ex p a va → Val ex p b vb → S.r v (S.mul va vb) → Val ex p (.mul a b) v
-  | pow {a va v} (n : Nat) : Val ex p a va → S.r v (powS S.toOH va n) → Val ex p (.pow a n) v
-  | div {a b va vb v} : Val ex p a va → Val ex p b vb → ap S vb → S.r (S.mul vb v) va → Val ex p (.div a b) v
-  | exp {a va v} : ExpLaws S ex → Val ex p a va → S.r v (ex va) → Val ex p (.exp a) v
-  | ln {a va v} : ExpLaws S ex → Val ex p a va → S.pos va → S.r (ex v) va → Val ex p (.ln a) v
+inductive Val (ex atn : α → α) (p : Nat → α) : XE → α → Prop where
+  | var {i v} : S.r v (p i) → Val ex atn p (.var i) v
+  | cst {c v} : S.r v (dv S.toOH c) → Val ex atn p (.cst c) v
+  | add {a b va vb v} : Val ex atn p a va → Val ex atn p b vb → S.r v (S.add va vb) → Val ex atn p (.add a b) v
+  | sub {a b va vb v} : Val ex atn p a va → Val ex atn p b vb → S.r v (S.add va (S.neg vb)) → Val ex atn p (.sub a b) v
+  | mul {a b va vb v} : Val ex atn p a va → Val ex atn p b vb → S.r v (S.mul va vb) → Val ex atn p (.mul a b) v
+  | pow {a va v} (n : Nat) : Val ex atn p a va → S.r v (powS S.toOH va n) → Val ex atn p (.pow a n) v
+  | div {a b va vb v} : Val ex atn p a va → Val ex atn p b vb → ap S vb → S.r (S.mul vb v) va → Val ex atn p (.div a b) v
+  | exp {a va v} : ExpLaws S ex → Val ex atn p a va → S.r v (ex va) → Val ex atn p (.exp a) v
+  | ln {a va v} : ExpLaws S ex → Val ex atn p a va → S.pos va → S.r (ex v) va → Val ex atn p (.ln a) v
+  | atan {a va v} : AtanLaws S atn → Val ex atn p a va → S.r v (atn va) → Val ex atn p (.atan a) v
 
 /-- A polynomial expression as an `XE`. -/
 def ofPE : PE → XE
@@ -79,17 +93,18 @@ def toPE : XE → Option PE
   | .div _ _ => none
   | .exp _ => none
   | .ln _ => none
+  | .atan _ => none
 
-theorem val_ofPE (ex : α → α) (p : Nat → α) : ∀ e : PE, Val S ex p (ofPE e) (eval S.toOH p e)
+theorem val_ofPE (ex atn : α → α) (p : Nat → α) : ∀ e : PE, Val S ex atn p (ofPE e) (eval S.toOH p e)
   | .var _ => .var (S.refl _)
   | .cst _ => .cst (S.refl _)
-  | .add a b => .add (val_ofPE ex p a) (val_ofPE ex p b) (S.refl _)
-  | .sub a b => .sub (val_ofPE ex p a) (val_ofPE ex p b) (S.refl _)
-  | .mul a b => .mul (val_ofPE ex p a) (val_ofPE ex p b) (S.refl _)
-  | .pow a n => .pow n (val_ofPE ex p a) (S.refl _)
+  | .add a b => .add (val_ofPE ex atn p a) (val_ofPE ex atn p b) (S.refl _)
+  | .sub a b => .sub (val_ofPE ex atn p a) (val_ofPE ex atn p b) (S.refl _)
+  | .mul a b => .mul (val_ofPE ex atn p a) (val_ofPE ex atn p b) (S.refl _)
+  | .pow a n => .pow n (val_ofPE ex atn p a) (S.refl _)
 
 /-- On a polynomial, the relation is the function. -/
-theorem val_toPE {ex : α → α} {p : Nat → α} : ∀ {e : XE} {q : PE} {v : α}, toPE e = some q → Val S ex p e v →
+theorem val_toPE {ex atn : α → α} {p : Nat → α} : ∀ {e : XE} {q : PE} {v : α}, toPE e = some q → Val S ex atn p e v →
     S.r v (eval S.toOH p q)
   | .var _, q, v, h, hv => by cases h; cases hv with | var e => exact e
   | .cst _, q, v, h, hv => by cases h; cases hv with | cst e => exact e
@@ -140,6 +155,7 @@ theorem val_toPE {ex : α → α} {p : Nat → α} : ∀ {e : XE} {q : PE} {v : 
   | .div _ _, q, v, h, _ => by cases h
   | .exp _, q, v, h, _ => by cases h
   | .ln _, q, v, h, _ => by cases h
+  | .atan _, q, v, h, _ => by cases h
 
 /-! ## The interval reading with division -/
 
@@ -164,6 +180,7 @@ def ivX (B : Box) : XE → Option Iv
   | .ln p => match ivX B p with
       | none => none
       | some I => ivLn I
+  | .atan _ => none
 
 theorem mem_div {x y v : α} {I J K : Iv} (hx : Mem S x I) (hy : Mem S y J) (hap : ap S y)
     (hv : S.r (S.mul y v) x) (h : ivDiv I J = some K) : Mem S v K := by
@@ -177,8 +194,8 @@ theorem mem_div {x y v : α} {I J K : Iv} (hx : Mem S x I) (hy : Mem S y J) (hap
       exact mem_congr S (quot_val S hap hv ht) (mem_mul S hx mt h)
 
 /-- **THE READING ENCLOSES EVERY VALUE**, division included, in every `CF`. -/
-theorem ivX_sound {ex : α → α} {B : Box} {p : Nat → α} (hp : InBox S B p) :
-    ∀ {e : XE} {v : α}, Val S ex p e v → ∀ K, ivX B e = some K → Mem S v K := by
+theorem ivX_sound {ex atn : α → α} {B : Box} {p : Nat → α} (hp : InBox S B p) :
+    ∀ {e : XE} {v : α}, Val S ex atn p e v → ∀ K, ivX B e = some K → Mem S v K := by
   intro e v hv
   induction hv with
   | var e => intro K h; exact mem_congr S e (hp _ K h)
@@ -217,6 +234,7 @@ theorem ivX_sound {ex : α → α} {B : Box} {p : Nat → α} (hp : InBox S B p)
       cases ha : ivX B a with
       | none => rw [ha] at h; cases h
       | some I => rw [ha] at h; exact mem_ln S H (ih I ha) e h
+  | atan _ _ _ _ => intro K h; cases h
 
 /-! ## The affine reading with division -/
 
@@ -249,6 +267,7 @@ def afX (B : Box) : XE → Option AF
       | some F => match afIv B F with
           | none => none
           | some I => (ivLn I).map toForm
+  | .atan _ => none
 
 theorem enc_congr {B : Box} {p : Nat → α} {v w : α} {F : AF} (e : S.r v w) (h : Enc S B p w F) : Enc S B p v F :=
   ⟨S.le_respects (S.refl _) (S.add_congr (S.symm e) (S.refl _)) h.1,
@@ -279,8 +298,8 @@ theorem enc_of_mem {B : Box} {p : Nat → α} {v : α} {K : Iv} (hv : Mem S v K)
     cr_linarith S.toOCR [q2, p2a, p2b]
 
 /-- **THE AFFINE READING ENCLOSES EVERY VALUE**, division included, in every `CF`. -/
-theorem afX_sound {ex : α → α} {B : Box} {p : Nat → α} (hp : InBox S B p) :
-    ∀ {e : XE} {v : α}, Val S ex p e v → ∀ F, afX B e = some F → Enc S B p v F := by
+theorem afX_sound {ex atn : α → α} {B : Box} {p : Nat → α} (hp : InBox S B p) :
+    ∀ {e : XE} {v : α}, Val S ex atn p e v → ∀ F, afX B e = some F → Enc S B p v F := by
   intro e v hv
   induction hv with
   | @var i v e =>
@@ -368,6 +387,7 @@ theorem afX_sound {ex : α → α} {B : Box} {p : Nat → α} (hp : InBox S B p)
                   rw [hq] at h
                   cases h
                   exact enc_of_mem S (mem_ln S H (afIv_sound S hp (ih G ha) hI) e hq)
+  | atan _ _ _ _ => intro F h; cases h
 
 /-- The affine reading as an interval. -/
 def afIvX (B : Box) (e : XE) : Option Iv :=
@@ -375,7 +395,7 @@ def afIvX (B : Box) (e : XE) : Option Iv :=
   | none => none
   | some F => afIv B F
 
-theorem afIvX_sound {ex : α → α} {B : Box} {p : Nat → α} (hp : InBox S B p) {e : XE} {v : α} (hv : Val S ex p e v) (K : Iv)
+theorem afIvX_sound {ex atn : α → α} {B : Box} {p : Nat → α} (hp : InBox S B p) {e : XE} {v : α} (hv : Val S ex atn p e v) (K : Iv)
     (h : afIvX B e = some K) : Mem S v K := by
   unfold afIvX at h
   cases hF : afX B e with

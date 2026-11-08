@@ -457,12 +457,12 @@ def rCF : ZField.CF RExpr := { rOH with
 reals, and no values of the expressions there (a quotient's value needs its divisor apart from 0 — the
 reciprocal is a partial operation on the continuum), where every equation is 0 and every condition apart from 0.
 Zero axioms. -/
-theorem vr_no_solution (ex : RExpr → RExpr) (c : ZNone.Cert) (Sy : ZNone.Sys) (B : ZIv.Box) (h : ZNone.chk Sy B c = true)
+theorem vr_no_solution (ex atn : RExpr → RExpr) (c : ZNone.Cert) (Sy : ZNone.Sys) (B : ZIv.Box) (h : ZNone.chk Sy B c = true)
     (p : Nat → RExpr) (hp : ZIv.InBox rCF B p)
-    (hE : ∀ e ∈ Sy.eqs, ∃ v, ZXE.Val rCF ex p e v ∧ rEq v rzero)
-    (hN : ∀ n ∈ Sy.neqs, ∃ v, ZXE.Val rCF ex p n v ∧ (rlt rzero v ∨ rlt rzero (rneg v))) :
+    (hE : ∀ e ∈ Sy.eqs, ∃ v, ZXE.Val rCF ex atn p e v ∧ rEq v rzero)
+    (hN : ∀ n ∈ Sy.neqs, ∃ v, ZXE.Val rCF ex atn p n v ∧ (rlt rzero v ∨ rlt rzero (rneg v))) :
     False :=
-  ZNone.chk_sound rCF ex c Sy B p h hp hE hN
+  ZNone.chk_sound rCF ex atn c Sy B p h hp hE hN
 
 #print axioms rCF
 #print axioms vr_no_solution

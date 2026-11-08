@@ -2,6 +2,7 @@ import ZRootExp
 import ZRAtan
 import ZRootAtan
 import ZRootSin
+import ZRootMin
 /-!
 # ZRootDiv — roots of laws WITH DIVISION AND `ln` (so fractional powers `xᵏ = exp(k·ln x)`) on VR's continuum.
 Zero axioms.
@@ -77,6 +78,7 @@ def evR (x : Nat → RExpr) : XE → RExpr
   | .atan a => ratan (evR x a)
   | .sin a => ZRSin.rsin (evR x a)
   | .cos a => ZRSin.rcos (evR x a)
+  | .min a b => rmin (evR x a) (evR x b)
 
 /-- Every denominator and every `ln` argument reads `≥ 2⁻⁶⁴` on the box. -/
 def posOK (B : Box) : XE → Bool
@@ -92,16 +94,17 @@ def posOK (B : Box) : XE → Bool
   | .atan a => posOK B a
   | .sin a => posOK B a
   | .cos a => posOK B a
+  | .min a b => posOK B a && posOK B b
 
 theorem above_clamp {B : Box} {x : Nat → RExpr} {e : XE} {v : RExpr} (hx : InBox rCF B x)
-    (hv : Val rCF rexpR ratan ZRSin.rsin ZRSin.rcos x e v) (h : optB (ivX B e) (fun V => dle δD V.1) = true) :
+    (hv : Val rCF rexpR ratan ZRSin.rsin ZRSin.rcos rmin x e v) (h : optB (ivX B e) (fun V => dle δD V.1) = true) :
     rle (dv rOH δD) v := by
   obtain ⟨V, hV, hδ⟩ := optB_some h
   exact rCF.le_trans (dle_sound rOH hδ) (ivX_sound rCF hx hv V hV).1
 
 /-- **THE TOTAL LAW HAS THE LAW'S VALUES** on the box. -/
 theorem val_evR {B : Box} {x : Nat → RExpr} (hx : InBox rCF B x) :
-    ∀ e : XE, posOK B e = true → Val rCF rexpR ratan ZRSin.rsin ZRSin.rcos x e (evR x e)
+    ∀ e : XE, posOK B e = true → Val rCF rexpR ratan ZRSin.rsin ZRSin.rcos rmin x e (evR x e)
   | .var _, _ => .var (rCF.refl _)
   | .cst _, _ => .cst (rCF.refl _)
   | .add a b, h => .add (val_evR hx a (and2 h).1) (val_evR hx b (and2 h).2) (rCF.refl _)
@@ -132,6 +135,7 @@ theorem val_evR {B : Box} {x : Nat → RExpr} (hx : InBox rCF B x) :
   | .atan a, h => .atan ZRootAtan.r_atanLaws (val_evR hx a h) (rCF.refl _)
   | .sin a, h => .sin ZRootSin.r_trigLaws (val_evR hx a h) (rCF.refl _)
   | .cos a, h => .cos ZRootSin.r_trigLaws (val_evR hx a h) (rCF.refl _)
+  | .min a b, h => .min ZRootMin.r_minLaws (val_evR hx a (and2 h).1) (val_evR hx b (and2 h).2) (rCF.refl _)
 
 
 /-! ## The oracle -/
@@ -163,6 +167,7 @@ def evqD (n : Nat) (q : Nat → QExpr) : XE → QExpr
   | .atan a => ZAtan.atseq (evqD n q a) n
   | .sin a => ZTrig.Sn (evqD n q a) n
   | .cos a => ZTrig.Cn (evqD n q a) n
+  | .min a b => qmin (evqD n q a) (evqD n q b)
 
 theorem evqD_respects (n : Nat) {q q' : Nat → QExpr} (h : ∀ i, qEq (q i) (q' i)) :
     ∀ e : XE, qEq (evqD n q e) (evqD n q' e)
@@ -178,6 +183,7 @@ theorem evqD_respects (n : Nat) {q q' : Nat → QExpr} (h : ∀ i, qEq (q i) (q'
   | .atan a => ZAtan.atseq_respects (evqD_respects n h a) n
   | .sin a => ZTrig.Sn_respects (evqD_respects n h a) n
   | .cos a => ZTrig.Cn_respects (evqD_respects n h a) n
+  | .min a b => ZRootMin.qmin_congr (evqD_respects n h a) (evqD_respects n h b)
 
 /-- The total law's `n`-th term IS the rational reading at the argument's `n`-th term. -/
 theorem evR_seq (x : Nat → RExpr) (n : Nat) : ∀ e : XE, qEq ((evR x e).seq n) (evqD n (fun i => (x i).seq n) e)
@@ -193,6 +199,7 @@ theorem evR_seq (x : Nat → RExpr) (n : Nat) : ∀ e : XE, qEq ((evR x e).seq n
   | .atan a => ZAtan.atseq_respects (evR_seq x n a) n
   | .sin a => ZTrig.Sn_respects (evR_seq x n a) n
   | .cos a => ZTrig.Cn_respects (evR_seq x n a) n
+  | .min a b => ZRootMin.qmin_congr (evR_seq x n a) (evR_seq x n b)
 
 theorem inv_close {u v : QExpr} {k j : Nat} (hu : qle (qeps k) u) (hv : qle (qeps k) v)
     (h : qclose u v (qeps (j + (k + k)))) : qclose (qinv' u) (qinv' v) (qeps j) := by
@@ -403,6 +410,7 @@ theorem uc_evqD : ∀ e : XE, UCo (fun n q => evqD n q e)
   | .atan a => ZRootAtan.uc_atan (uc_evqD a)
   | .sin a => (ZRootSin.uc_sc (uc_evqD a)).1
   | .cos a => (ZRootSin.uc_sc (uc_evqD a)).2
+  | .min a b => ZRootMin.uc_min (uc_evqD a) (uc_evqD b)
 
 /-! ## The root -/
 
@@ -480,7 +488,7 @@ theorem law_root (e : XE) (a b : D) (s C B : Nat) (h : chkD e a b s C B = true) 
   obtain ⟨Ka, hKa, ha⟩ := optB_some ha'
   obtain ⟨Kb, hKb, hb⟩ := optB_some hb'
   have hab' := dle_sound rOH hab
-  have hV : ∀ x, rle (dv rOH a) x → rle x (dv rOH b) → Val rCF rexpR ratan ZRSin.rsin ZRSin.rcos (fun _ => x) e (FR e x) :=
+  have hV : ∀ x, rle (dv rOH a) x → rle x (dv rOH b) → Val rCF rexpR ratan ZRSin.rsin ZRSin.rcos rmin (fun _ => x) e (FR e x) :=
     fun x h1 h2 => val_evR (inbox_c h1 h2) e hP
   have hM : ZRootAbs.Mono rCF (FR e) (dv rOH a) (dv rOH b) (hp rOH s) (nI rOH (2 ^ C)) :=
     mono_of_val rExpLaws r_slope hV hK
@@ -501,7 +509,7 @@ theorem law_root (e : XE) (a b : D) (s C B : Nat) (h : chkD e a b s C B = true) 
 /-- **THE CLAMP IS NOT A SUBSTITUTE**: under the certificate, on `[a, b]` the total law's value IS a value of the law
 in the sense of `ZXE.Val` — each quotient `v` with `b·v = a`, `b` apart from 0; each `ln` with `exp v = a`, `a > 0`. -/
 theorem FR_is_value (e : XE) (a b : D) (s C B : Nat) (h : chkD e a b s C B = true) :
-    ∀ x, rle (dv rOH a) x → rle x (dv rOH b) → Val rCF rexpR ratan ZRSin.rsin ZRSin.rcos (fun _ => x) e (FR e x) := by
+    ∀ x, rle (dv rOH a) x → rle x (dv rOH b) → Val rCF rexpR ratan ZRSin.rsin ZRSin.rcos rmin (fun _ => x) e (FR e x) := by
   obtain ⟨h5, _⟩ := and2 h
   obtain ⟨h4, _⟩ := and2 h5
   obtain ⟨h3, _⟩ := and2 h4

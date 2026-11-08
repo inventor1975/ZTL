@@ -9,7 +9,12 @@ solution's shift over the parameter box, a cover when the box is wide); the kern
   * a system with atan (y = atan x, x + y = 1) — a THEOREM; with sin (y = sin x, x + y = 1) — a THEOREM; the circle of
     radius R meets y = a·cos x, R ∈ [0.999, 1.001], a ∈ [0.499, 0.501] — a THEOREM (sin/cos: lean/ZSinIv.lean);
   * the circle TOUCHES y = cos 3x at (0, 1) (the Jacobian is singular there) — REFUSED: the kernel accepts no cube;
-  * a system with tan (`sin/cos` through division) — a THEOREM; a system with min — NOT TRANSLATED;
+  * a system with tan (`sin/cos` through division) — a THEOREM;
+  * min and max (ZXE.min, lean/ZMinIv.lean; max = −min(−u, −v)): y = min(x, 3), y = max(x, 0) on the line — THEOREMS
+    (the reading sees one argument below the other on the box: the chord is that argument's); AT THE KINK
+    (min(x, 1) = y): crossed steeply by x + y = 2 — a THEOREM, crossed flatly by x − 3y + 2 = 0 — REFUSED (the hull of
+    the chords [0, 1] is too wide to contract; the solution is unique — the kernel does not claim it, nothing false);
+  * a system with sqrt — NOT TRANSLATED;
   * NEGATIVE CONTROL: the circle's theorem with the cube moved by 4r — the kernel must refuse it.
 The 64-leaf cover of `chem3p` (kernel 66 s) is in lean/ZSysChem3p.lean, built by CI's lean job.
 """
@@ -51,7 +56,15 @@ CASES = [
     ("ZJudgeTan", dict(vars=["x", "y"], laws=["tan(x) - y", "x + y - 1"], guess=[0.5, 0.5],
                        title="the line meets tan"), "theorem"),
     ("ZJudgeMin", dict(vars=["x", "y"], laws=["min(x, 3) - y", "x + y - 1"], guess=[0.5, 0.5],
-                       title="min is not in ZXE"), "not translated"),
+                       title="the line meets min(x, 3)"), "theorem"),
+    ("ZJudgeMax", dict(vars=["x", "y"], laws=["max(x, 0) - y", "x + y - 1"], guess=[0.5, 0.5],
+                       title="the line meets max(x, 0)"), "theorem"),
+    ("ZJudgeKink", dict(vars=["x", "y"], laws=["min(x, 1) - y", "x + y - 2"], guess=[0.9, 1.1],
+                        title="the kink of min crossed steeply"), "theorem"),
+    ("ZJudgeKinkFlat", dict(vars=["x", "y"], laws=["min(x, 1) - y", "x - 3*y + 2"], guess=[0.9, 1.1],
+                            title="the kink of min crossed flatly: the hull of the chords is too wide"), "refused"),
+    ("ZJudgeSqrt", dict(vars=["x", "y"], laws=["sqrt(x) - y", "x + y - 1"], guess=[0.5, 0.5],
+                        title="sqrt is not in ZXE"), "not translated"),
 ]
 print("1. the judge on systems")
 first = None

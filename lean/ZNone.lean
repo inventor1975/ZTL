@@ -465,8 +465,8 @@ theorem env_cen {p : Nat → α} {u v : Nat} {a b : D}
 theorem eval_zero (p : Nat → α) : S.r (eval S.toOH p (.cst ⟨⟨0, 0⟩, 0⟩)) S.zero := by
   show S.r (S.mul (S.add S.zero (S.neg S.zero)) S.one) S.zero; cr_ring S.toCR
 
-theorem toPEs_eqs {ex atn sn cs : α → α} {p : Nat → α} : ∀ {xs : List XE} {qs : List ZPoly.PE}, toPEs xs = some qs →
-    (∀ x ∈ xs, ∃ v, Val S ex atn sn cs p x v ∧ S.r v S.zero) → ∀ q ∈ qs, S.r (eval S.toOH p q) S.zero
+theorem toPEs_eqs {ex atn sn cs : α → α} {mn : α → α → α} {p : Nat → α} : ∀ {xs : List XE} {qs : List ZPoly.PE}, toPEs xs = some qs →
+    (∀ x ∈ xs, ∃ v, Val S ex atn sn cs mn p x v ∧ S.r v S.zero) → ∀ q ∈ qs, S.r (eval S.toOH p q) S.zero
   | [], qs, h, _, q, hq => by cases h; cases hq
   | x :: xs, qs, h, hx, q, hq => by
       unfold toPEs at h
@@ -486,8 +486,8 @@ theorem toPEs_eqs {ex atn sn cs : α → α} {p : Nat → α} : ∀ {xs : List X
                   exact S.trans (S.symm (val_toPE S h1 hv)) h0
               | tail _ hm => exact toPEs_eqs h2 (fun y hy => hx y (List.Mem.tail _ hy)) q hm
 
-theorem toPEs_neqs {ex atn sn cs : α → α} {p : Nat → α} : ∀ {xs : List XE} {qs : List ZPoly.PE}, toPEs xs = some qs →
-    (∀ x ∈ xs, ∃ v, Val S ex atn sn cs p x v ∧ ap S v) → ∀ q ∈ qs, ap S (eval S.toOH p q)
+theorem toPEs_neqs {ex atn sn cs : α → α} {mn : α → α → α} {p : Nat → α} : ∀ {xs : List XE} {qs : List ZPoly.PE}, toPEs xs = some qs →
+    (∀ x ∈ xs, ∃ v, Val S ex atn sn cs mn p x v ∧ ap S v) → ∀ q ∈ qs, ap S (eval S.toOH p q)
   | [], qs, h, _, q, hq => by cases h; cases hq
   | x :: xs, qs, h, hx, q, hq => by
       unfold toPEs at h
@@ -516,23 +516,23 @@ theorem mem_map_ofPE : ∀ {gs : List ZPoly.PE} {x : XE}, x ∈ gs.map ofPE → 
           obtain ⟨g', hg', e⟩ := mem_map_ofPE hm
           exact ⟨g', List.Mem.tail _ hg', e⟩
 
-theorem sub_eqs {ex atn sn cs : α → α} {p : Nat → α} {gs : List ZPoly.PE} (h : ∀ g ∈ gs, S.r (eval S.toOH p g) S.zero) :
-    ∀ x ∈ gs.map ofPE, ∃ v, Val S ex atn sn cs p x v ∧ S.r v S.zero := by
+theorem sub_eqs {ex atn sn cs : α → α} {mn : α → α → α} {p : Nat → α} {gs : List ZPoly.PE} (h : ∀ g ∈ gs, S.r (eval S.toOH p g) S.zero) :
+    ∀ x ∈ gs.map ofPE, ∃ v, Val S ex atn sn cs mn p x v ∧ S.r v S.zero := by
   intro x hx
   obtain ⟨g, hg, e⟩ := mem_map_ofPE hx
-  rw [e]; exact ⟨_, val_ofPE S ex atn sn cs p g, h g hg⟩
+  rw [e]; exact ⟨_, val_ofPE S ex atn sn cs mn p g, h g hg⟩
 
-theorem sub_neqs {ex atn sn cs : α → α} {p : Nat → α} {hs : List ZPoly.PE} (h : ∀ g ∈ hs, ap S (eval S.toOH p g)) :
-    ∀ x ∈ hs.map ofPE, ∃ v, Val S ex atn sn cs p x v ∧ ap S v := by
+theorem sub_neqs {ex atn sn cs : α → α} {mn : α → α → α} {p : Nat → α} {hs : List ZPoly.PE} (h : ∀ g ∈ hs, ap S (eval S.toOH p g)) :
+    ∀ x ∈ hs.map ofPE, ∃ v, Val S ex atn sn cs mn p x v ∧ ap S v := by
   intro x hx
   obtain ⟨g, hg, e⟩ := mem_map_ofPE hx
-  rw [e]; exact ⟨_, val_ofPE S ex atn sn cs p g, h g hg⟩
+  rw [e]; exact ⟨_, val_ofPE S ex atn sn cs mn p g, h g hg⟩
 
 /-- **`check_none` IS SOUND.** An accepted certificate leaves no point of the box, and no values of the
 expressions there (division included: a quotient's value needs its divisor apart from 0), where every equation
 is 0 and every condition apart from 0 — in every constructive ordered field. -/
-theorem chk_sound (ex atn sn cs : α → α) : ∀ (c : Cert) (Sy : Sys) (B : Box) (p : Nat → α), chk Sy B c = true → InBox S B p →
-    (∀ e ∈ Sy.eqs, ∃ v, Val S ex atn sn cs p e v ∧ S.r v S.zero) → (∀ n ∈ Sy.neqs, ∃ v, Val S ex atn sn cs p n v ∧ ap S v) → False
+theorem chk_sound (ex atn sn cs : α → α) (mn : α → α → α) : ∀ (c : Cert) (Sy : Sys) (B : Box) (p : Nat → α), chk Sy B c = true → InBox S B p →
+    (∀ e ∈ Sy.eqs, ∃ v, Val S ex atn sn cs mn p e v ∧ S.r v S.zero) → (∀ n ∈ Sy.neqs, ∃ v, Val S ex atn sn cs mn p n v ∧ ap S v) → False
   | .nz k, Sy, B, p, h, hp, hE, _ => by
       unfold chk at h
       cases hk : nth Sy.eqs k with
@@ -589,10 +589,10 @@ theorem chk_sound (ex atn sn cs : α → α) : ∀ (c : Cert) (Sy : Sys) (B : Bo
           have a2 := S.trans (dv_add S.toOH t (dneg δ)) (S.add_congr (S.refl _) (dv_neg S.toOH δ))
           cases split_cover S (t := dv S.toOH t) pδ m.1 m.2 with
           | inl hl =>
-              exact chk_sound ex atn sn cs lo Sy _ p hc.1
+              exact chk_sound ex atn sn cs mn lo Sy _ p hc.1
                 (inBox_upd S hp ⟨hl.1, S.le_respects (S.refl _) (S.symm a1) hl.2⟩) hE hN
           | inr hr =>
-              exact chk_sound ex atn sn cs hi Sy _ p hc.2
+              exact chk_sound ex atn sn cs mn hi Sy _ p hc.2
                 (inBox_upd S hp ⟨S.le_respects (S.symm a2) (S.refl _) hr.1, hr.2⟩) hE hN
   | .chart u v a b ρ j gX mX hX qX tX gY mY hY qY tY, Sy, B, p, h, hp, hE, hN => by
       unfold chk at h
@@ -638,13 +638,13 @@ theorem chk_sound (ex atn sn cs : α → α) : ∀ (c : Cert) (Sy : Sys) (B : Bo
                 obtain ⟨r, s, apr, r1, r2, sl, sh, hxe, hye⟩ := hX'
                 have henv := env_X S huv hxe hye
                 have hu : ap S (cpt p u v r s u) := by rw [cpt_u]; exact apr
-                exact chk_sound ex atn sn cs tX ⟨gX.map ofPE, hX.map ofPE⟩ _ (cpt p u v r s) s4.2 (inBox_chart S hp huv r1 r2 sl sh)
+                exact chk_sound ex atn sn cs mn tX ⟨gX.map ofPE, hX.map ofPE⟩ _ (cpt p u v r s) s4.2 (inBox_chart S hp huv r1 r2 sl sh)
                   (sub_eqs S (allId_eqs S henv hu es gX mX s6.2 hE')) (sub_neqs S (allId_neqs S henv ns hX qX s5.2 hN'))
             | inr hY' =>
                 obtain ⟨r, s, apr, r1, r2, sl, sh, hxe, hye⟩ := hY'
                 have henv := env_Y S huv hxe hye
                 have hu : ap S (cpt p u v r s u) := by rw [cpt_u]; exact apr
-                exact chk_sound ex atn sn cs tY ⟨gY.map ofPE, hY.map ofPE⟩ _ (cpt p u v r s) s1.2 (inBox_chart S hp huv r1 r2 sl sh)
+                exact chk_sound ex atn sn cs mn tY ⟨gY.map ofPE, hY.map ofPE⟩ _ (cpt p u v r s) s1.2 (inBox_chart S hp huv r1 r2 sl sh)
                   (sub_eqs S (allId_eqs S henv hu es gY mY s3.2 hE')) (sub_neqs S (allId_neqs S henv ns hY qY s2.2 hN'))
           · have hxe := S.ap_tight (fun h' => hno (Or.inl h'))
             have hye := S.ap_tight (fun h' => hno (Or.inr h'))

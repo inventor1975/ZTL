@@ -13,7 +13,7 @@ that verdict into `∀ p in the inner box, ∃! q ∈ [a, b], g(q, p) = 0` on VR
   5. the constants (s, C, B, L) are read off the readings; the kernel checks everything (`decide +kernel`).
 Python proposes, Lean disposes: a wrong proposal is a refusal, never a theorem. Status values: "theorem", "refused"
 (the kernel did not accept any proposal), "no verdict" (zimplicit gave no unique range), "not translated" (a function
-ZXE does not have, e.g. min), with the reason.
+ZXE does not have, e.g. sqrt), with the reason.
 """
 import itertools, math, os, re, subprocess, sys
 from fractions import Fraction as F
@@ -59,6 +59,10 @@ def fl(node, env):
     if op == "tan":
         return math.tan(a)
     b = fl(node[2], env)
+    if op == "min":
+        return min(a, b)
+    if op == "max":
+        return max(a, b)
     return {"add": lambda: a + b, "sub": lambda: a - b, "mul": lambda: a * b, "div": lambda: a / b,
             "pow": lambda: a ** b}[op]()
 

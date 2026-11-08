@@ -55,6 +55,10 @@ def fl(node, env):
     if op == "tan":
         return math.tan(a)
     b = fl(node[2], env)
+    if op == "min":
+        return min(a, b)
+    if op == "max":
+        return max(a, b)
     if op == "add":
         return a + b
     if op == "sub":

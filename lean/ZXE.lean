@@ -1,4 +1,5 @@
 import ZSinIv
+import ZMinIv
 /-!
 # ZXE — expressions with DIVISION, their values as a RELATION, and their readings. Zero axioms.
 
@@ -17,7 +18,7 @@ Part 1: the expressions, the relation, the reciprocal interval.
 -/
 
 namespace ZXE
-open VR.CSR ZNumBin ZField ZPoly ZIv ZAff ZDivIv ZExpLaw ZExpIv ZSinIv
+open VR.CSR ZNumBin ZField ZPoly ZIv ZAff ZDivIv ZExpLaw ZExpIv ZSinIv ZMinIv
 
 inductive XE where
   | var : Nat → XE
@@ -32,6 +33,7 @@ inductive XE where
   | atan : XE → XE
   | sin : XE → XE
   | cos : XE → XE
+  | min : XE → XE → XE
 
 variable {α : Type} (S : CF α)
 
@@ -51,19 +53,21 @@ structure AtanLaws (atn : α → α) : Prop where
     S.le (S.mul (S.add y (S.neg x)) (dv S.toOH W.1)) (S.add (atn y) (S.neg (atn x))) ∧
     S.le (S.add (atn y) (S.neg (atn x))) (S.mul (S.add y (S.neg x)) (dv S.toOH W.2))
 
-inductive Val (ex atn sn cs : α → α) (p : Nat → α) : XE → α → Prop where
-  | var {i v} : S.r v (p i) → Val ex atn sn cs p (.var i) v
-  | cst {c v} : S.r v (dv S.toOH c) → Val ex atn sn cs p (.cst c) v
-  | add {a b va vb v} : Val ex atn sn cs p a va → Val ex atn sn cs p b vb → S.r v (S.add va vb) → Val ex atn sn cs p (.add a b) v
-  | sub {a b va vb v} : Val ex atn sn cs p a va → Val ex atn sn cs p b vb → S.r v (S.add va (S.neg vb)) → Val ex atn sn cs p (.sub a b) v
-  | mul {a b va vb v} : Val ex atn sn cs p a va → Val ex atn sn cs p b vb → S.r v (S.mul va vb) → Val ex atn sn cs p (.mul a b) v
-  | pow {a va v} (n : Nat) : Val ex atn sn cs p a va → S.r v (powS S.toOH va n) → Val ex atn sn cs p (.pow a n) v
-  | div {a b va vb v} : Val ex atn sn cs p a va → Val ex atn sn cs p b vb → ap S vb → S.r (S.mul vb v) va → Val ex atn sn cs p (.div a b) v
-  | exp {a va v} : ExpLaws S ex → Val ex atn sn cs p a va → S.r v (ex va) → Val ex atn sn cs p (.exp a) v
-  | ln {a va v} : ExpLaws S ex → Val ex atn sn cs p a va → S.pos va → S.r (ex v) va → Val ex atn sn cs p (.ln a) v
-  | atan {a va v} : AtanLaws S atn → Val ex atn sn cs p a va → S.r v (atn va) → Val ex atn sn cs p (.atan a) v
-  | sin {a va v} : TrigLaws S sn cs → Val ex atn sn cs p a va → S.r v (sn va) → Val ex atn sn cs p (.sin a) v
-  | cos {a va v} : TrigLaws S sn cs → Val ex atn sn cs p a va → S.r v (cs va) → Val ex atn sn cs p (.cos a) v
+inductive Val (ex atn sn cs : α → α) (mn : α → α → α) (p : Nat → α) : XE → α → Prop where
+  | var {i v} : S.r v (p i) → Val ex atn sn cs mn p (.var i) v
+  | cst {c v} : S.r v (dv S.toOH c) → Val ex atn sn cs mn p (.cst c) v
+  | add {a b va vb v} : Val ex atn sn cs mn p a va → Val ex atn sn cs mn p b vb → S.r v (S.add va vb) → Val ex atn sn cs mn p (.add a b) v
+  | sub {a b va vb v} : Val ex atn sn cs mn p a va → Val ex atn sn cs mn p b vb → S.r v (S.add va (S.neg vb)) → Val ex atn sn cs mn p (.sub a b) v
+  | mul {a b va vb v} : Val ex atn sn cs mn p a va → Val ex atn sn cs mn p b vb → S.r v (S.mul va vb) → Val ex atn sn cs mn p (.mul a b) v
+  | pow {a va v} (n : Nat) : Val ex atn sn cs mn p a va → S.r v (powS S.toOH va n) → Val ex atn sn cs mn p (.pow a n) v
+  | div {a b va vb v} : Val ex atn sn cs mn p a va → Val ex atn sn cs mn p b vb → ap S vb → S.r (S.mul vb v) va → Val ex atn sn cs mn p (.div a b) v
+  | exp {a va v} : ExpLaws S ex → Val ex atn sn cs mn p a va → S.r v (ex va) → Val ex atn sn cs mn p (.exp a) v
+  | ln {a va v} : ExpLaws S ex → Val ex atn sn cs mn p a va → S.pos va → S.r (ex v) va → Val ex atn sn cs mn p (.ln a) v
+  | atan {a va v} : AtanLaws S atn → Val ex atn sn cs mn p a va → S.r v (atn va) → Val ex atn sn cs mn p (.atan a) v
+  | sin {a va v} : TrigLaws S sn cs → Val ex atn sn cs mn p a va → S.r v (sn va) → Val ex atn sn cs mn p (.sin a) v
+  | cos {a va v} : TrigLaws S sn cs → Val ex atn sn cs mn p a va → S.r v (cs va) → Val ex atn sn cs mn p (.cos a) v
+  | min {a b va vb v} : MinLaws S mn → Val ex atn sn cs mn p a va → Val ex atn sn cs mn p b vb → S.r v (mn va vb) →
+      Val ex atn sn cs mn p (.min a b) v
 
 /-- A polynomial expression as an `XE`. -/
 def ofPE : PE → XE
@@ -102,17 +106,18 @@ def toPE : XE → Option PE
   | .atan _ => none
   | .sin _ => none
   | .cos _ => none
+  | .min _ _ => none
 
-theorem val_ofPE (ex atn sn cs : α → α) (p : Nat → α) : ∀ e : PE, Val S ex atn sn cs p (ofPE e) (eval S.toOH p e)
+theorem val_ofPE (ex atn sn cs : α → α) (mn : α → α → α) (p : Nat → α) : ∀ e : PE, Val S ex atn sn cs mn p (ofPE e) (eval S.toOH p e)
   | .var _ => .var (S.refl _)
   | .cst _ => .cst (S.refl _)
-  | .add a b => .add (val_ofPE ex atn sn cs p a) (val_ofPE ex atn sn cs p b) (S.refl _)
-  | .sub a b => .sub (val_ofPE ex atn sn cs p a) (val_ofPE ex atn sn cs p b) (S.refl _)
-  | .mul a b => .mul (val_ofPE ex atn sn cs p a) (val_ofPE ex atn sn cs p b) (S.refl _)
-  | .pow a n => .pow n (val_ofPE ex atn sn cs p a) (S.refl _)
+  | .add a b => .add (val_ofPE ex atn sn cs mn p a) (val_ofPE ex atn sn cs mn p b) (S.refl _)
+  | .sub a b => .sub (val_ofPE ex atn sn cs mn p a) (val_ofPE ex atn sn cs mn p b) (S.refl _)
+  | .mul a b => .mul (val_ofPE ex atn sn cs mn p a) (val_ofPE ex atn sn cs mn p b) (S.refl _)
+  | .pow a n => .pow n (val_ofPE ex atn sn cs mn p a) (S.refl _)
 
 /-- On a polynomial, the relation is the function. -/
-theorem val_toPE {ex atn sn cs : α → α} {p : Nat → α} : ∀ {e : XE} {q : PE} {v : α}, toPE e = some q → Val S ex atn sn cs p e v →
+theorem val_toPE {ex atn sn cs : α → α} {mn : α → α → α} {p : Nat → α} : ∀ {e : XE} {q : PE} {v : α}, toPE e = some q → Val S ex atn sn cs mn p e v →
     S.r v (eval S.toOH p q)
   | .var _, q, v, h, hv => by cases h; cases hv with | var e => exact e
   | .cst _, q, v, h, hv => by cases h; cases hv with | cst e => exact e
@@ -166,6 +171,7 @@ theorem val_toPE {ex atn sn cs : α → α} {p : Nat → α} : ∀ {e : XE} {q :
   | .atan _, q, v, h, _ => by cases h
   | .sin _, q, v, h, _ => by cases h
   | .cos _, q, v, h, _ => by cases h
+  | .min _ _, q, v, h, _ => by cases h
 
 /-! ## The reading of `atan`: `ψ` on an interval, and the values at dyadic points by a Riemann enclosure from `0` -/
 
@@ -367,6 +373,7 @@ def ivX (B : Box) : XE → Option Iv
   | .cos p => match ivX B p with
       | none => none
       | some I => ivCos I
+  | .min p q => lift2 (fun I J => some (ivMin I J)) (ivX B p) (ivX B q)
 
 theorem mem_div {x y v : α} {I J K : Iv} (hx : Mem S x I) (hy : Mem S y J) (hap : ap S y)
     (hv : S.r (S.mul y v) x) (h : ivDiv I J = some K) : Mem S v K := by
@@ -380,8 +387,8 @@ theorem mem_div {x y v : α} {I J K : Iv} (hx : Mem S x I) (hy : Mem S y J) (hap
       exact mem_congr S (quot_val S hap hv ht) (mem_mul S hx mt h)
 
 /-- **THE READING ENCLOSES EVERY VALUE**, division included, in every `CF`. -/
-theorem ivX_sound {ex atn sn cs : α → α} {B : Box} {p : Nat → α} (hp : InBox S B p) :
-    ∀ {e : XE} {v : α}, Val S ex atn sn cs p e v → ∀ K, ivX B e = some K → Mem S v K := by
+theorem ivX_sound {ex atn sn cs : α → α} {mn : α → α → α} {B : Box} {p : Nat → α} (hp : InBox S B p) :
+    ∀ {e : XE} {v : α}, Val S ex atn sn cs mn p e v → ∀ K, ivX B e = some K → Mem S v K := by
   intro e v hv
   induction hv with
   | var e => intro K h; exact mem_congr S e (hp _ K h)
@@ -438,6 +445,11 @@ theorem ivX_sound {ex atn sn cs : α → α} {B : Box} {p : Nat → α} (hp : In
       cases ha : ivX B a with
       | none => rw [ha] at h; cases h
       | some I => rw [ha] at h; exact mem_congr S e (mem_cos H (ih I ha) h)
+  | @min a b va vb v H _ _ e ih1 ih2 =>
+      intro K h
+      obtain ⟨x, y, ex, ey, hk⟩ := lift2_some h
+      cases hk
+      exact mem_congr S e (mem_min H (ih1 x ex) (ih2 y ey))
 
 /-! ## The affine reading with division -/
 
@@ -481,6 +493,15 @@ def afX (B : Box) : XE → Option AF
       | some F => match afIv B F with
           | none => none
           | some I => (ivCos I).map toForm
+  | .min p q => match afX B p with
+      | none => none
+      | some F => match afX B q with
+        | none => none
+        | some G => match afIv B F with
+          | none => none
+          | some I => match afIv B G with
+            | none => none
+            | some J => some (toForm (ivMin I J))
 
 theorem enc_congr {B : Box} {p : Nat → α} {v w : α} {F : AF} (e : S.r v w) (h : Enc S B p w F) : Enc S B p v F :=
   ⟨S.le_respects (S.refl _) (S.add_congr (S.symm e) (S.refl _)) h.1,
@@ -511,8 +532,8 @@ theorem enc_of_mem {B : Box} {p : Nat → α} {v : α} {K : Iv} (hv : Mem S v K)
     cr_linarith S.toOCR [q2, p2a, p2b]
 
 /-- **THE AFFINE READING ENCLOSES EVERY VALUE**, division included, in every `CF`. -/
-theorem afX_sound {ex atn sn cs : α → α} {B : Box} {p : Nat → α} (hp : InBox S B p) :
-    ∀ {e : XE} {v : α}, Val S ex atn sn cs p e v → ∀ F, afX B e = some F → Enc S B p v F := by
+theorem afX_sound {ex atn sn cs : α → α} {mn : α → α → α} {B : Box} {p : Nat → α} (hp : InBox S B p) :
+    ∀ {e : XE} {v : α}, Val S ex atn sn cs mn p e v → ∀ F, afX B e = some F → Enc S B p v F := by
   intro e v hv
   induction hv with
   | @var i v e =>
@@ -639,6 +660,27 @@ theorem afX_sound {ex atn sn cs : α → α} {B : Box} {p : Nat → α} (hp : In
                   rw [hq] at h
                   cases h
                   exact enc_of_mem S (mem_congr S e (mem_cos H (afIv_sound S hp (ih G ha) hI) hq))
+  | @min a b va vb v H _ _ e ih1 ih2 =>
+      intro F h
+      unfold afX at h
+      cases ha : afX B a with
+      | none => rw [ha] at h; cases h
+      | some G =>
+      rw [ha] at h; dsimp only at h
+      cases hb : afX B b with
+      | none => rw [hb] at h; cases h
+      | some G' =>
+      rw [hb] at h; dsimp only at h
+      cases hI : afIv B G with
+      | none => rw [hI] at h; cases h
+      | some I =>
+      rw [hI] at h; dsimp only at h
+      cases hJ : afIv B G' with
+      | none => rw [hJ] at h; cases h
+      | some J =>
+      rw [hJ] at h; dsimp only at h
+      cases h
+      exact enc_of_mem S (mem_congr S e (mem_min H (afIv_sound S hp (ih1 G ha) hI) (afIv_sound S hp (ih2 G' hb) hJ)))
 
 /-- The affine reading as an interval. -/
 def afIvX (B : Box) (e : XE) : Option Iv :=
@@ -646,7 +688,7 @@ def afIvX (B : Box) (e : XE) : Option Iv :=
   | none => none
   | some F => afIv B F
 
-theorem afIvX_sound {ex atn sn cs : α → α} {B : Box} {p : Nat → α} (hp : InBox S B p) {e : XE} {v : α} (hv : Val S ex atn sn cs p e v) (K : Iv)
+theorem afIvX_sound {ex atn sn cs : α → α} {mn : α → α → α} {B : Box} {p : Nat → α} (hp : InBox S B p) {e : XE} {v : α} (hv : Val S ex atn sn cs mn p e v) (K : Iv)
     (h : afIvX B e = some K) : Mem S v K := by
   unfold afIvX at h
   cases hF : afX B e with

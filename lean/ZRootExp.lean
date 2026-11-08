@@ -137,6 +137,58 @@ theorem sl_comp {Δ δ d : α} {V Kp K : Iv} (h1 : SlIn S Δ δ V) (h2 : SlIn S 
   fun hn => h1 (fun ⟨σ, hσ, e1⟩ => h2 (fun ⟨s, hs, e2⟩ => hn ⟨S.mul σ s, mem_mul S hσ hs hK,
     S.trans e1 (S.trans (S.mul_congr (S.refl _) e2) (by cr_ring S.toCR))⟩))
 
+/-- A reading with a reciprocal is apart from zero. -/
+theorem ap_of_inv {x : α} {I J : Iv} (hx : Mem S x I) (h : ivInv I = some J) : ap S x := by
+  unfold ivInv at h
+  cases hp : posX I.1 with
+  | true => exact Or.inl (S.pos_mono (pos_of_posX S hp) hx.1)
+  | false =>
+      rw [hp] at h
+      cases hn : negX I.2 with
+      | false => rw [hn] at h; cases h
+      | true =>
+          have p2 : S.pos (dv S.toOH (dneg I.2)) := pos_of_posX S (d := dneg I.2) hn
+          have e := dv_neg S.toOH I.2
+          have l : S.le (dv S.toOH (dneg I.2)) (S.neg x) :=
+            S.le_respects (S.symm e) (S.refl _) (by cr_linarith S.toOCR [hx.2])
+          exact Or.inr (S.pos_mono p2 l)
+
+/-- **THE SLOPE OF A QUOTIENT**: `v' − v = w'·((a' − a) − v·(b' − b))` with `b'·w' = 1`. -/
+theorem sl_div {va va' vb vb' v v' d : α} {Ka Kb Vv Vq W M T K : Iv}
+    (ha : SlIn S (S.add va' (S.neg va)) d Ka) (hb : SlIn S (S.add vb' (S.neg vb)) d Kb)
+    (hv : Mem S v Vv) (hq' : Mem S vb' Vq) (hap' : ap S vb')
+    (e1 : S.r (S.mul vb v) va) (e2 : S.r (S.mul vb' v') va')
+    (hW : ivInv Vq = some W) (hM : ivMul Vv Kb = some M) (hT : ivSub Ka M = some T) (hK : ivMul W T = some K) :
+    SlIn S (S.add v' (S.neg v)) d K := by
+  obtain ⟨w, hw⟩ := S.inv hap'
+  have mw := mem_inv S hq' hW hw
+  have hK' := sl_mulL mw (sl_sub ha (sl_mulL hv hb hM) hT) hK
+  refine sl_congr (S.symm ?_) hK'
+  refine S.trans (S.mul_congr (S.refl _) (S.add_congr (S.add_congr (S.symm e2) (S.neg_congr (S.symm e1))) (S.refl _))) ?_
+  refine S.trans (by cr_ring S.toCR : S.r _ (S.mul (S.mul vb' w) (S.add v' (S.neg v)))) ?_
+  exact S.trans (S.mul_congr hw (S.refl _)) (S.one_mul _)
+
+/-- **THE SLOPE OF `ln`**: `a' − a = τ·(v' − v)` with `τ` in `a`'s reading (the chord of `exp`), so
+`v' − v = w·(a' − a)` with `τ·w = 1`. -/
+theorem sl_ln {ex : α → α} (H : ExpLaws S ex) (Hs : ExpSlope S ex) {va va' v v' d : α} {Ka Va W K : Iv}
+    (ha : SlIn S (S.add va' (S.neg va)) d Ka) (hm : Mem S va Va) (hm' : Mem S va' Va)
+    (e1 : S.r (ex v) va) (e2 : S.r (ex v') va') (hW : ivInv Va = some W) (hK : ivMul W Ka = some K) :
+    SlIn S (S.add v' (S.neg v)) d K := by
+  have ch := exp_chord H Hs (mem_congr S e1 hm) (mem_congr S e2 hm')
+  intro hn
+  apply ch
+  intro ⟨τ, hτ, eτ⟩
+  apply ha
+  intro ⟨s, hs, es⟩
+  obtain ⟨w, hw⟩ := S.inv (ap_of_inv hτ hW)
+  have mw := mem_inv S hτ hW hw
+  refine hn ⟨S.mul w s, mem_mul S mw hs hK, ?_⟩
+  refine S.trans (S.symm (S.one_mul _)) (S.trans (S.mul_congr (S.symm hw) (S.refl _)) ?_)
+  refine S.trans (by cr_ring S.toCR : S.r _ (S.mul w (S.mul τ (S.add v' (S.neg v))))) ?_
+  refine S.trans (S.mul_congr (S.refl _) (S.symm eτ)) ?_
+  refine S.trans (S.mul_congr (S.refl _) (S.add_congr e2 (S.neg_congr e1))) ?_
+  exact S.trans (S.mul_congr (S.refl _) es) (by cr_ring S.toCR)
+
 end Slope
 
 /-! ## The slope reading -/
@@ -154,7 +206,8 @@ def slPow (Ka Va : Iv) : Nat → Option Iv
         | some Pn => lift2 ivAdd (ivMul Ka Pn) (ivMul Va Kn)
 
 /-- THE SLOPE READING over a box: `p'q' − pq = (p' − p)·q' + p·(q' − q)`; `e^{u'} − e^{u} = σ·(u' − u)` with `σ`
-in the value interval of `exp u`. Division and `ln` are not read (yet). -/
+in the value interval of `exp u`. Division: `v' − v = w'·((a' − a) − v·(b' − b))`, `b'w' = 1`; `ln`: `v' − v = w·(a' − a)`, `w` in the
+reciprocal of `a`'s reading. -/
 def slX (B : Box) : XE → Option Iv
   | .var _ => some ZIv.one
   | .cst _ => some zI
@@ -179,8 +232,28 @@ def slX (B : Box) : XE → Option Iv
       | some Kp => match ivX B (.exp p) with
         | none => none
         | some V => ivMul V Kp
-  | .div _ _ => none
-  | .ln _ => none
+  | .div p q => match slX B p with
+      | none => none
+      | some Kp => match slX B q with
+        | none => none
+        | some Kq => match ivX B (.div p q) with
+          | none => none
+          | some Vv => match ivX B q with
+            | none => none
+            | some Vq => match ivInv Vq with
+              | none => none
+              | some W => match ivMul Vv Kq with
+                | none => none
+                | some M => match ivSub Kp M with
+                  | none => none
+                  | some T => ivMul W T
+  | .ln p => match slX B p with
+      | none => none
+      | some Kp => match ivX B p with
+        | none => none
+        | some Vp => match ivInv Vp with
+          | none => none
+          | some W => ivMul W Kp
 
 section Sound
 variable {α : Type} {S : CF α}
@@ -301,8 +374,62 @@ theorem slX_sound {ex : α → α} (H : ExpLaws S ex) (Hs : ExpSlope S ex) {B : 
       have m' := ivX_sound S hq (Val.exp H ha' (S.refl _)) V h3
       exact sl_congr (S.add_congr e2 (S.neg_congr e1))
         (sl_comp (exp_chord H Hs m m') (slX_sound H Hs hp hq hd a ha ha' h1) h)
-  | .div _ _, _, _, _, _, _, h => by cases h
-  | .ln _, _, _, _, _, _, h => by cases h
+  | .div a b, v, v', K, hv, hv', h => by
+      cases hv with
+      | @div _ _ va vb _ ha hb hap e1 =>
+      cases hv' with
+      | @div _ _ va' vb' _ ha' hb' hap' e2 =>
+      unfold slX at h
+      cases h1 : slX B a with
+      | none => rw [h1] at h; cases h
+      | some Ka =>
+      rw [h1] at h; dsimp only at h
+      cases h2 : slX B b with
+      | none => rw [h2] at h; cases h
+      | some Kb =>
+      rw [h2] at h; dsimp only at h
+      cases h3 : ivX B (.div a b) with
+      | none => rw [h3] at h; cases h
+      | some Vv =>
+      rw [h3] at h; dsimp only at h
+      cases h4 : ivX B b with
+      | none => rw [h4] at h; cases h
+      | some Vq =>
+      rw [h4] at h; dsimp only at h
+      cases h5 : ivInv Vq with
+      | none => rw [h5] at h; cases h
+      | some W =>
+      rw [h5] at h; dsimp only at h
+      cases h6 : ivMul Vv Kb with
+      | none => rw [h6] at h; cases h
+      | some M =>
+      rw [h6] at h; dsimp only at h
+      cases h7 : ivSub Ka M with
+      | none => rw [h7] at h; cases h
+      | some T =>
+      rw [h7] at h; dsimp only at h
+      exact sl_div (slX_sound H Hs hp hq hd a ha ha' h1) (slX_sound H Hs hp hq hd b hb hb' h2)
+        (ivX_sound S hp (Val.div ha hb hap e1) Vv h3) (ivX_sound S hq hb' Vq h4) hap' e1 e2 h5 h6 h7 h
+  | .ln a, v, v', K, hv, hv', h => by
+      cases hv with
+      | @ln _ va _ H1 ha _ e1 =>
+      cases hv' with
+      | @ln _ va' _ H2 ha' _ e2 =>
+      unfold slX at h
+      cases h1 : slX B a with
+      | none => rw [h1] at h; cases h
+      | some Ka =>
+      rw [h1] at h; dsimp only at h
+      cases h2 : ivX B a with
+      | none => rw [h2] at h; cases h
+      | some Va =>
+      rw [h2] at h; dsimp only at h
+      cases h3 : ivInv Va with
+      | none => rw [h3] at h; cases h
+      | some W =>
+      rw [h3] at h; dsimp only at h
+      exact sl_ln H Hs (slX_sound H Hs hp hq hd a ha ha' h1) (ivX_sound S hp ha Va h2) (ivX_sound S hq ha' Va h2)
+        e1 e2 h3 h
 
 end Sound
 
@@ -382,6 +509,34 @@ theorem mono_of_slX {ex : α → α} (H : ExpLaws S ex) (Hs : ExpSlope S ex) {e 
     have l' := S.le_respects (S.trans (S.mul_comm _ _) (S.symm he)) (S.mul_comm _ _) l
     exact S.pos_not_le hpos (by cr_linarith S.toOCR [l'])
 
+/-- The same for any function whose values are values of `e` on `[a, b]` (division and `ln` included). -/
+theorem mono_of_val {ex : α → α} (H : ExpLaws S ex) (Hs : ExpSlope S ex) {e : XE} {F : α → α} {a b : D}
+    (hF : ∀ x, S.le (dv S.toOH a) x → S.le x (dv S.toOH b) → Val S ex (fun _ => x) e (F x))
+    {K : Iv} (hK : slX (cB a b) e = some K) {c L : α}
+    (hc : S.le c (dv S.toOH K.1)) (hL : S.le (dv S.toOH K.2) L) :
+    ZRootAbs.Mono S F (dv S.toOH a) (dv S.toOH b) c L := by
+  intro x y hax hxy hyb
+  have hxb := S.le_trans hxy hyb
+  have hay := S.le_trans hax hxy
+  have sl := slX_sound H Hs (inbox_c hax hxb) (inbox_c hay hyb)
+    (fun _ => S.refl (S.add y (S.neg x))) e (hF x hax hxb) (hF y hay hyb) hK
+  have d0 : S.le S.zero (S.add y (S.neg x)) := by cr_linarith S.toOCR [hxy]
+  constructor
+  · apply S.le_of_not_pos
+    intro hpos
+    apply sl
+    intro ⟨s, hs, he⟩
+    have l := le_mul_left' S (S.le_trans hc hs.1) d0
+    have l' := S.le_respects (S.mul_comm _ _) (S.trans (S.mul_comm _ _) (S.symm he)) l
+    exact S.pos_not_le hpos (by cr_linarith S.toOCR [l'])
+  · apply S.le_of_not_pos
+    intro hpos
+    apply sl
+    intro ⟨s, hs, he⟩
+    have l := le_mul_left' S (S.le_trans hs.2 hL) d0
+    have l' := S.le_respects (S.trans (S.mul_comm _ _) (S.symm he)) (S.mul_comm _ _) l
+    exact S.pos_not_le hpos (by cr_linarith S.toOCR [l'])
+
 theorem dv_dz0 : S.r (dv S.toOH dz0) S.zero := zv_isZ S.toOH (c := dz0) rfl
 
 /-- The value reading at the left end below zero gives `F(a) ≤ 0`. -/
@@ -397,6 +552,16 @@ theorem hi_end {ex : α → α} (H : ExpLaws S ex) {e : XE} (hE : isE e = true) 
     S.le S.zero (evX S ex (fun _ => dv S.toOH b) e) :=
   S.le_trans (S.le_respects dv_dz0 (S.refl _) (dle_sound S.toOH h))
     (ivX_sound S (inbox_c (S.le_refl _) (S.le_refl _)) (val_evX H _ e hE) K hK).1
+
+theorem lo_val {ex : α → α} {e : XE} {a : D} {v : α} (hv : Val S ex (fun _ => dv S.toOH a) e v) {K : Iv}
+    (hK : ivX (cB a a) e = some K) (h : dle K.2 dz0 = true) : S.le v S.zero :=
+  S.le_trans (ivX_sound S (inbox_c (S.le_refl _) (S.le_refl _)) hv K hK).2
+    (S.le_respects (S.refl _) dv_dz0 (dle_sound S.toOH h))
+
+theorem hi_val {ex : α → α} {e : XE} {b : D} {v : α} (hv : Val S ex (fun _ => dv S.toOH b) e v) {K : Iv}
+    (hK : ivX (cB b b) e = some K) (h : dle dz0 K.1 = true) : S.le S.zero v :=
+  S.le_trans (S.le_respects dv_dz0 (S.refl _) (dle_sound S.toOH h))
+    (ivX_sound S (inbox_c (S.le_refl _) (S.le_refl _)) hv K hK).1
 
 end Law
 
@@ -576,11 +741,14 @@ theorem le_b {A B m : Nat} (h : A + B + 1 ≤ m) : B ≤ m :=
   Nat.le_trans (Nat.le_trans (Nat.le_add_left B A) (Nat.le_add_right _ 1)) h
 theorem le_1 {A B m : Nat} (h : A + B + 1 ≤ m) : 1 ≤ m := Nat.le_trans (Nat.le_add_left 1 _) h
 
-/-- Uniformly bounded (from index 1) and uniformly Cauchy on every bounded set. -/
+/-- Uniformly bounded (from some index on) and uniformly Cauchy on every bounded set. -/
 def UCo (f : Nat → QExpr → QExpr) : Prop :=
-  ∀ R, qle qzero R → ∃ C : Nat,
-    (∀ n q, 1 ≤ n → qclose q qzero R → qclose (f n q) qzero (qofInt (pow2 C))) ∧
-    ∀ k, ∃ N, 1 ≤ N ∧ ∀ m n q, N ≤ m → N ≤ n → qclose q qzero R → qclose (f m q) (f n q) (qeps k)
+  ∀ R, qle qzero R → ∃ C B0 : Nat,
+    (∀ n q, B0 ≤ n → qclose q qzero R → qclose (f n q) qzero (qofInt (pow2 C))) ∧
+    ∀ k, ∃ N, B0 ≤ N ∧ ∀ m n q, N ≤ m → N ≤ n → qclose q qzero R → qclose (f m q) (f n q) (qeps k)
+
+theorem lA {A B m : Nat} (h : A + B ≤ m) : A ≤ m := Nat.le_trans (Nat.le_add_right A B) h
+theorem lB {A B m : Nat} (h : A + B ≤ m) : B ≤ m := Nat.le_trans (Nat.le_add_left B A) h
 
 theorem close_up {x B : QExpr} {C : Nat} (h : qclose x qzero B) (hB : qclose B qzero (qofInt (pow2 C))) :
     qclose x qzero (qofInt (pow2 C)) := by
@@ -591,36 +759,34 @@ theorem close_up {x B : QExpr} {C : Nat} (h : qclose x qzero B) (hB : qclose B q
 theorem uc_const (c : QExpr) : UCo (fun _ _ => c) := by
   intro R _
   obtain ⟨C, hC⟩ := qexpr_bound c
-  exact ⟨C, fun _ _ _ _ => hC, fun k => ⟨1, Nat.le_refl _, fun _ _ _ _ _ _ => qclose_refl _ _ (qeps_nonneg k)⟩⟩
+  exact ⟨C, 0, fun _ _ _ _ => hC, fun k => ⟨0, Nat.le_refl _, fun _ _ _ _ _ _ => qclose_refl _ _ (qeps_nonneg k)⟩⟩
 
 theorem uc_var : UCo (fun _ q => q) := by
   intro R R0
   obtain ⟨C, hC⟩ := qexpr_bound R
-  have hR : qclose R qzero R := by constructor <;> (unfold qsub; rat_linarith)
-  exact ⟨C, fun _ q _ hq => close_up hq (by
+  exact ⟨C, 0, fun _ q _ hq => close_up hq (by
       obtain ⟨c1, c2⟩ := hC; unfold qsub at c1 c2; constructor <;> (unfold qsub; rat_linarith)),
-    fun k => ⟨1, Nat.le_refl _, fun _ _ _ _ _ _ => qclose_refl _ _ (qeps_nonneg k)⟩⟩
+    fun k => ⟨0, Nat.le_refl _, fun _ _ _ _ _ _ => qclose_refl _ _ (qeps_nonneg k)⟩⟩
 
 theorem uc_add {f g : Nat → QExpr → QExpr} (hf : UCo f) (hg : UCo g) : UCo (fun n q => qadd (f n q) (g n q)) := by
   intro R R0
-  obtain ⟨Cf, bf, cf⟩ := hf R R0
-  obtain ⟨Cg, bg, cg⟩ := hg R R0
+  obtain ⟨Cf, Bf, bf, cf⟩ := hf R R0
+  obtain ⟨Cg, Bg, bg, cg⟩ := hg R R0
   obtain ⟨C, hC⟩ := qexpr_bound (qadd (qofInt (pow2 Cf)) (qofInt (pow2 Cg)))
-  refine ⟨C, fun n q hn hq => ?_, fun k => ?_⟩
-  · obtain ⟨f1, f2⟩ := bf n q hn hq
-    obtain ⟨g1, g2⟩ := bg n q hn hq
+  refine ⟨C, Bf + Bg, fun n q hn hq => ?_, fun k => ?_⟩
+  · obtain ⟨f1, f2⟩ := bf n q (lA hn) hq
+    obtain ⟨g1, g2⟩ := bg n q (lB hn) hq
     obtain ⟨c1, _⟩ := hC
     have p1 : qle qzero (qofInt (pow2 Cf)) := qofInt_le (pow2_nonneg Cf)
     have p2 : qle qzero (qofInt (pow2 Cg)) := qofInt_le (pow2_nonneg Cg)
     unfold qsub at f1 f2 g1 g2 c1
     show qclose (qadd (f n q) (g n q)) qzero _
     constructor <;> (unfold qsub; rat_linarith)
-  · obtain ⟨N1, _, h1⟩ := cf (k + 1)
-    obtain ⟨N2, _, h2⟩ := cg (k + 1)
-    refine ⟨N1 + N2 + 1, Nat.le_add_left _ _, fun m n q hm hn hq => ?_⟩
-    have a := h1 m n q (le_a hm) (le_a hn) hq
-    have b := h2 m n q (le_b hm) (le_b hn) hq
-    obtain ⟨a1, a2⟩ := a; obtain ⟨b1, b2⟩ := b
+  · obtain ⟨N1, hN1, h1⟩ := cf (k + 1)
+    obtain ⟨N2, hN2, h2⟩ := cg (k + 1)
+    refine ⟨N1 + N2, Nat.add_le_add hN1 hN2, fun m n q hm hn hq => ?_⟩
+    obtain ⟨a1, a2⟩ := h1 m n q (lA hm) (lA hn) hq
+    obtain ⟨b1, b2⟩ := h2 m n q (lB hm) (lB hn) hq
     have e := qeps_succ_add k
     unfold qsub at a1 a2 b1 b2
     show qclose (qadd (f m q) (g m q)) (qadd (f n q) (g n q)) _
@@ -628,8 +794,8 @@ theorem uc_add {f g : Nat → QExpr → QExpr} (hf : UCo f) (hg : UCo g) : UCo (
 
 theorem uc_neg {f : Nat → QExpr → QExpr} (hf : UCo f) : UCo (fun n q => qneg (f n q)) := by
   intro R R0
-  obtain ⟨C, bf, cf⟩ := hf R R0
-  refine ⟨C, fun n q hn hq => ?_, fun k => ?_⟩
+  obtain ⟨C, Bf, bf, cf⟩ := hf R R0
+  refine ⟨C, Bf, fun n q hn hq => ?_, fun k => ?_⟩
   · obtain ⟨f1, f2⟩ := bf n q hn hq
     unfold qsub at f1 f2
     show qclose (qneg (f n q)) qzero _
@@ -643,17 +809,18 @@ theorem uc_neg {f : Nat → QExpr → QExpr} (hf : UCo f) : UCo (fun n q => qneg
 
 theorem uc_mul {f g : Nat → QExpr → QExpr} (hf : UCo f) (hg : UCo g) : UCo (fun n q => qmul (f n q) (g n q)) := by
   intro R R0
-  obtain ⟨Cf, bf, cf⟩ := hf R R0
-  obtain ⟨Cg, bg, cg⟩ := hg R R0
+  obtain ⟨Cf, Bf, bf, cf⟩ := hf R R0
+  obtain ⟨Cg, Bg, bg, cg⟩ := hg R R0
   obtain ⟨C, hC⟩ := qexpr_bound (qmul (qofInt (pow2 Cf)) (qofInt (pow2 Cg)))
-  refine ⟨C, fun n q hn hq => close_up (qmul_abs_bound (bf n q hn hq) (bg n q hn hq)) hC, fun k => ?_⟩
-  obtain ⟨N1, _, h1⟩ := cf (k + 1 + Cg)
-  obtain ⟨N2, _, h2⟩ := cg (k + 1 + Cf)
-  refine ⟨N1 + N2 + 1, Nat.le_add_left _ _, fun m n q hm hn hq => ?_⟩
-  have hfm := bf m q (le_1 hm) hq
-  have hgn := bg n q (le_1 hn) hq
-  have hxc := h1 m n q (le_a hm) (le_a hn) hq
-  have hyc := h2 m n q (le_b hm) (le_b hn) hq
+  refine ⟨C, Bf + Bg, fun n q hn hq => close_up (qmul_abs_bound (bf n q (lA hn) hq) (bg n q (lB hn) hq)) hC,
+    fun k => ?_⟩
+  obtain ⟨N1, hN1, h1⟩ := cf (k + 1 + Cg)
+  obtain ⟨N2, hN2, h2⟩ := cg (k + 1 + Cf)
+  refine ⟨N1 + N2, Nat.add_le_add hN1 hN2, fun m n q hm hn hq => ?_⟩
+  have hfm := bf m q (Nat.le_trans hN1 (lA hm)) hq
+  have hgn := bg n q (Nat.le_trans hN2 (lB hn)) hq
+  have hxc := h1 m n q (lA hm) (lA hn) hq
+  have hyc := h2 m n q (lB hm) (lB hn) hq
   have p1 := qmul_abs_bound hfm (show qclose (qsub (g m q) (g n q)) qzero (qeps (k + 1 + Cf)) from by
     obtain ⟨a1, a2⟩ := hyc
     have hz : qEq (qsub (qsub (g m q) (g n q)) qzero) (qsub (g m q) (g n q)) := by unfold qsub; rat_ring
@@ -682,29 +849,28 @@ theorem uc_pow {f : Nat → QExpr → QExpr} (hf : UCo f) : ∀ k, UCo (fun n q 
 
 theorem uc_exp {f : Nat → QExpr → QExpr} (hf : UCo f) : UCo (fun n q => eseq (f n q) n) := by
   intro R R0
-  obtain ⟨Cf, bf, cf⟩ := hf R R0
+  obtain ⟨Cf, Bf, bf, cf⟩ := hf R R0
   have Rf0 : qle qzero (qofInt (pow2 Cf)) := qofInt_le (pow2_nonneg Cf)
   obtain ⟨H, hH⟩ := S_bounded Rf0
   obtain ⟨Ch, hCh⟩ := qexpr_bound H
   have HC : qle H (qofInt (pow2 Ch)) := by obtain ⟨c1, _⟩ := hCh; unfold qsub at c1; rat_linarith
-  have P0 : qle qzero (qofInt (pow2 Ch)) := qofInt_le (pow2_nonneg Ch)
-  refine ⟨Ch, fun n q hn hq => ?_, fun k => ?_⟩
+  refine ⟨Ch, Bf + 1, fun n q hn hq => ?_, fun k => ?_⟩
   · cases n with
     | zero => exact absurd hn (Nat.not_succ_le_zero _)
     | succ n' =>
-    have b := bf (n' + 1) q hn hq
+    have b := bf (n' + 1) q (lA hn) hq
     have u := E_le_SR b n'
     have l := E_nonneg (f (n' + 1) q) n'
     have hh := hH (n' + 1)
     constructor <;> (unfold qsub; rat_linarith)
   · obtain ⟨N1, h1⟩ := E_unif Rf0 (k + 1)
-    obtain ⟨N2, _, h2⟩ := cf (k + 1 + Ch)
-    refine ⟨N1 + N2 + 1, Nat.le_add_left _ _, fun m n q hm hn hq => ?_⟩
+    obtain ⟨N2, hN2, h2⟩ := cf (k + 1 + Ch)
+    refine ⟨N1 + N2 + 1, Nat.succ_le_succ (Nat.le_trans hN2 (Nat.le_add_left _ _)), fun m n q hm hn hq => ?_⟩
     cases n with
     | zero => exact absurd hn (Nat.not_succ_le_zero _)
     | succ n' =>
-    have am := bf m q (le_1 hm) hq
-    have an := bf (n' + 1) q (le_1 hn) hq
+    have am := bf m q (Nat.le_trans hN2 (le_b hm)) hq
+    have an := bf (n' + 1) q (Nat.le_trans hN2 (le_b hn)) hq
     obtain ⟨u1, u2⟩ := h1 (f m q) am m (n' + 1) (le_a hm) (le_a hn)
     obtain ⟨l1, l2⟩ := E_lip am an (h2 m (n' + 1) q (le_b hm) (le_b hn) hq) n'
     have s1 := scale_l (qle_trans (hH (n' + 1)) HC) (qeps_nonneg (k + 1 + Ch))
@@ -748,7 +914,7 @@ theorem orac_of (e : XE) (hE : isE e = true) (a b : D) : ∀ j, ∃ N, ∀ n, N 
   have pb : qle qzero (qofInt (pow2 Cb)) := qofInt_le (pow2_nonneg Cb)
   have p1 := qle_of_qlt qone_pos
   have R00 : qle qzero (qadd (qadd (qofInt (pow2 Ca)) (qofInt (pow2 Cb))) qone) := by rat_linarith
-  obtain ⟨_, _, cau⟩ := uc_evq e hE _ R00
+  obtain ⟨_, _, _, cau⟩ := uc_evq e hE _ R00
   obtain ⟨N, _, hN⟩ := cau j
   refine ⟨N, fun n hn t hat htb => ?_⟩
   have tq : qclose (qD t) qzero (qadd (qadd (qofInt (pow2 Ca)) (qofInt (pow2 Cb))) qone) := by

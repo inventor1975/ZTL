@@ -1,5 +1,5 @@
 name = "ztl"
-defaultTargets = ["ZTL", "TableauCert", "TableauCertN", "ZSets", "Facts", "ZAlgebra", "ZSequent", "ZQuant", "ZGround", "ZExped", "ZClone", "ZTime", "Contextuality", "EpochBoundary", "JunctionWitness", "QuantumWitness", "Frame", "Signature", "ZEq", "ZDesc", "ZIndisc", "ZFreeUI", "ZEqGeneric", "ZFreeUIGeneric", "ZFenceDepth", "ZProv", "ZDempster", "ZYablo", "ZAbsInt", "ZParamSound", "ZCombine", "ZTaint", "ZNoAxiom", "ZIgnorance", "ZParamSyntax", "ZParamTableau", "ZParamClosure", "ZParamProp", "ZParamSearch", "ZParamEngine", "ZParamHintikka", "ZNaN", "ZNull", "ZFlow", "ZEps", "Plato_Equality", "Plato_Conservativity", "Hume_Guillotine", "Cogito_Conservativity", "ZNum", "ClassicalAgreement", "ZNumCoherent", "Layering", "ContextClosure", "Receipt", "Linear", "LabelExact", "NoGift", "RelianceBridge", "ZCutElim", "ZHeredTaut", "ZWidthHard", "ZReceiptHard", "LabelExactDefinite", "ZReconverge", "ZNumPrice", "ZNumNames", "ZParabola", "ZIntExtremes", "ZOnly", "ZOrigin", "ZTopology", "ZMajority", "ZQuasi", "Hardy", "ZComposition", "KochenSpecker", "ZRuntimeGate", "ZLegion", "ZCertify", "ZImplicit", "ZLP", "ZSlope", "ZExp", "ZSlopeExp", "ZRecip", "ZLn", "ZSlopeDiv", "ZCases", "ZMin", "ZNet", "ZIntegral", "ZIntegralR", "ZSqrt", "ZSlopeSqrt", "ZTaylor2", "ZIntegralT", "ZExp2", "ZTransfer", "ZPow", "ZTrig", "ZTrig2", "ZTrig3", "ZTrig4", "ZTrig5", "ZTrig6", "ZTrig7", "ZTrig8", "ZTrig9", "ZTrig10", "ZTrig11", "ZTrig12", "ZTrig13", "ZTrig14", "ZTrig15", "ZAtan", "ZLnStep", "ZDeriv", "ZTaylorN", "ZTaylorLeaf", "ZJet", "ZJetRead", "ZJetClose", "ZAffine", "ZAffine2", "ZMonoStep", "ZTaylorPt", "ZAtanCert", "ZAffineAtan", "ZRangePin", "ZLimits", "ZLeibniz", "ZRangeTaylor", "ZConflict", "ZContract", "ZFrauchiger", "Agrippa", "ZSuperpose", "ZDescent", "ZClock", "AgrippaNet", "AgrippaZ", "Surprise", "ZDirty", "ZGames", "ZEvidence", "ZComplete", "ZSpeaks", "ZBochvar", "ZEnergy", "ZRound", "ZFloatPath", "ZHigham", "ZStability", "ZChi", "ZHypercircle", "ZZeta", "ZZetaBridge", "ZDegrees", "ZSwarmBounds", "ZDiophantine", "ZAxiomsRead", "ZChoiceRead", "ZEpsilon", "ZOne", "ZLens", "ZLrat", "ZLratVdw", "ZNumBin", "ZField", "ZPoly", "ZIv", "ZAff", "ZDivIv", "ZExpLaw", "ZExpIv", "ZXE", "ZNone", "ZRealCF", "ZRealExp", "ZKron", "ZGrade", "ZRoot", "ZRootVR", "ZRootP", "ZRootPVR", "ZImplicitFan", "ZRootAbs", "ZRootExp", "ZRootDiv", "ZRootPar", "ZPumpRoot", "ZOilRoot"]
+defaultTargets = ["ZTL", "TableauCert", "TableauCertN", "ZSets", "Facts", "ZAlgebra", "ZSequent", "ZQuant", "ZGround", "ZExped", "ZClone", "ZTime", "Contextuality", "EpochBoundary", "JunctionWitness", "QuantumWitness", "Frame", "Signature", "ZEq", "ZDesc", "ZIndisc", "ZFreeUI", "ZEqGeneric", "ZFreeUIGeneric", "ZFenceDepth", "ZProv", "ZDempster", "ZYablo", "ZAbsInt", "ZParamSound", "ZCombine", "ZTaint", "ZNoAxiom", "ZIgnorance", "ZParamSyntax", "ZParamTableau", "ZParamClosure", "ZParamProp", "ZParamSearch", "ZParamEngine", "ZParamHintikka", "ZNaN", "ZNull", "ZFlow", "ZEps", "Plato_Equality", "Plato_Conservativity", "Hume_Guillotine", "Cogito_Conservativity", "ZNum", "ClassicalAgreement", "ZNumCoherent", "Layering", "ContextClosure", "Receipt", "Linear", "LabelExact", "NoGift", "RelianceBridge", "ZCutElim", "ZHeredTaut", "ZWidthHard", "ZReceiptHard", "LabelExactDefinite", "ZReconverge", "ZNumPrice", "ZNumNames", "ZParabola", "ZIntExtremes", "ZOnly", "ZOrigin", "ZTopology", "ZMajority", "ZQuasi", "Hardy", "ZComposition", "KochenSpecker", "ZRuntimeGate", "ZLegion", "ZCertify", "ZImplicit", "ZLP", "ZSlope", "ZExp", "ZSlopeExp", "ZRecip", "ZLn", "ZSlopeDiv", "ZCases", "ZMin", "ZNet", "ZIntegral", "ZIntegralR", "ZSqrt", "ZSlopeSqrt", "ZTaylor2", "ZIntegralT", "ZExp2", "ZTransfer", "ZPow", "ZTrig", "ZTrig2", "ZTrig3", "ZTrig4", "ZTrig5", "ZTrig6", "ZTrig7", "ZTrig8", "ZTrig9", "ZTrig10", "ZTrig11", "ZTrig12", "ZTrig13", "ZTrig14", "ZTrig15", "ZAtan", "ZLnStep", "ZDeriv", "ZTaylorN", "ZTaylorLeaf", "ZJet", "ZJetRead", "ZJetClose", "ZAffine", "ZAffine2", "ZMonoStep", "ZTaylorPt", "ZAtanCert", "ZAffineAtan", "ZRangePin", "ZLimits", "ZLeibniz", "ZRangeTaylor", "ZConflict", "ZContract", "ZFrauchiger", "Agrippa", "ZSuperpose", "ZDescent", "ZClock", "AgrippaNet", "AgrippaZ", "Surprise", "ZDirty", "ZGames", "ZEvidence", "ZComplete", "ZSpeaks", "ZBochvar", "ZEnergy", "ZRound", "ZFloatPath", "ZHigham", "ZStability", "ZChi", "ZHypercircle", "ZZeta", "ZZetaBridge", "ZDegrees", "ZSwarmBounds", "ZDiophantine", "ZAxiomsRead", "ZChoiceRead", "ZEpsilon", "ZOne", "ZLens", "ZLrat", "ZLratVdw", "ZNumBin", "ZField", "ZPoly", "ZIv", "ZAff", "ZDivIv", "ZExpLaw", "ZExpIv", "ZXE", "ZNone", "ZRealCF", "ZRealExp", "ZKron", "ZGrade", "ZRoot", "ZRootVR", "ZRootP", "ZRootPVR", "ZImplicitFan", "ZRootAbs", "ZRootExp", "ZRootDiv", "ZRootPar", "ZPumpRoot", "ZOilRoot", "ZBanach", "ZKraw", "ZKrawSys", "ZSysCircleExp", "ZSysChem3"]
 
 [[lean_lib]]
 name = "ZTL"
@@ -591,3 +591,18 @@ name = "ZPumpRoot"
 
 [[lean_lib]]
 name = "ZOilRoot"
+
+[[lean_lib]]
+name = "ZBanach"
+
+[[lean_lib]]
+name = "ZKraw"
+
+[[lean_lib]]
+name = "ZKrawSys"
+
+[[lean_lib]]
+name = "ZSysCircleExp"
+
+[[lean_lib]]
+name = "ZSysChem3"

@@ -55,6 +55,19 @@ def _subst(node, pinned):
     return (op, *[_subst(a, pinned) for a in args])
 
 
+def _sqrt2exp(node):
+    """√u as exp(½·ln u) — HERE only (the bound path): `posOK` makes the kernel check ln's argument ≥ δ > 0 on the
+    whole box, so the two agree wherever the theorem speaks (ztl-stand real2/s02, the reduced stress). Not in the
+    shared zlaw2lean.to_xe: the systems' path has no such check (its bridge keeps sqrt "not translated")."""
+    if isinstance(node, tuple):
+        if node[0] == "sqrt":
+            return ("exp", ("mul", F(1, 2), ("ln", _sqrt2exp(node[1]))))
+        if node[0] == "sum":
+            return ("sum", [_sqrt2exp(a) for a in node[1]])
+        return (node[0], *[_sqrt2exp(a) for a in node[1:]])
+    return node
+
+
 def _names(node, acc):
     if isinstance(node, str):
         acc.add(node)
@@ -394,7 +407,7 @@ def bound_to_lean(laws, unknowns, qtext, target, reqs, name, depth=14, trees=Non
             node = ZC._subst(ZJ._parse_arith(target, qs), sol)
         except Exception as ex:
             return {"status": "not translated", "why": f"the target {target!r}: {ex}"}
-    node = _subst(node, pinned)
+    node = _sqrt2exp(_subst(node, pinned))
     params = sorted(n for n in _names(node, set()) if n in qs and n not in pinned)
     for n in params:
         if isinstance(qs[n]["lo"], float) or isinstance(qs[n]["hi"], float):

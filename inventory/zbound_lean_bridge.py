@@ -12,6 +12,7 @@ The curator, 2026-11-08: the stand should give proofs, not only certificates. He
   * a datum in both N and D (a TCR divider): the cleared form on one Horner polynomial, carried by `identX`;
   * a mortgage, pow(1 + r, 360) inside a division: a theorem on a 400 MB kernel stack; on 8 MB a "kernel limit";
   * no laws at all (a pinned zero before a table), and a 7-unknown ladder by Bareiss (Cramer refuses > 6);
+  * a square root, as exp(½·ln u);
   * NEGATIVE CONTROL: the divider's accepted tree under a false bound (Vout <= 2.5, the true maximum 2.525) — the
     kernel must refuse it.
 """
@@ -108,6 +109,12 @@ check("a 7-unknown ladder: V6 in [0.99, 1.01] (both attained) — a theorem, BAR
       st15["status"] == "theorem", st15)
 st16 = ZB.bound_to_lean(*LAD, "V6", [("<=", "1.009")], "ZGenLadderBad")
 check("the other side: V6 <= 1.009 — no theorem", st16["status"] != "theorem", st16)
+print("10. a square root (ztl-stand real2/s02: the reduced stress sqrt(s^2 + 3 t^2))")
+st17 = ZB.bound_to_lean([], [], "s=[90,110] credit, t=[30,40] credit", "sqrt(s*s + 3*t*t)", [("<=", "131")], "ZGenSqrt")
+check("sqrt(s^2 + 3 t^2) <= 131 on s in [90, 110], t in [30, 40] (max sqrt(16900) = 130): a theorem",
+      st17["status"] == "theorem", st17)
+st18 = ZB.bound_to_lean([], [], "s=[90,110] credit, t=[30,40] credit", "sqrt(s*s + 3*t*t)", [("<=", "129")], "ZGenSqrtB")
+check("the other side: <= 129 — no theorem", st18["status"] != "theorem", st18)
 print(f"\n{ok} ok, {fail} fail")
 print("ZBOUND LEAN BRIDGE GREEN" if fail == 0 else "ZBOUND LEAN BRIDGE RED")
 sys.exit(1 if fail else 0)

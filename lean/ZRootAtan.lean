@@ -1,5 +1,6 @@
 import ZRootExp
 import ZRAtan
+import ZAtanTrap
 /-!
 # ZRootAtan — VR's `atan` satisfies `ZXE.AtanLaws`, and its grid answers converge uniformly on bounded sets. Zero
 axioms.
@@ -365,6 +366,65 @@ theorem chord_core {I W : Iv} (hW : psiI I = some W) {x y : RExpr} (hord : ∀ n
     unfold qsub at c m1 ⊢
     rat_linarith
 
+/-! ## The trapezoid on VR -/
+
+/-- `ψ(x)` of an operational real: `n ↦ ψ(xₙ)`, Cauchy as `ψ` is 1-Lipschitz. -/
+def rpsi (x : RExpr) : RExpr := ⟨fun n => psi (x.seq n), fun k => by
+  obtain ⟨N, h⟩ := x.cauchy k
+  exact ⟨N, fun m n hm hn => by
+    obtain ⟨a, b⟩ := h m n hm hn
+    obtain ⟨c, d⟩ := psi_lip (t := x.seq m) (z := x.seq n) (d := qeps k) a (by unfold qsub at *; rat_linarith)
+    exact ⟨d, c⟩⟩⟩
+
+theorem rpsi_inv (x : RExpr) : rCF.r (rCF.mul (rCF.add rCF.one (rCF.mul x x)) (rpsi x)) rCF.one :=
+  rEq_of_seq (fun n => (psi_facts (x.seq n)).2.2)
+
+/-- A reciprocal is unique (any `CF`). -/
+theorem inv_unique {α : Type} (S : CF α) {a w v : α} (hw : S.r (S.mul a w) S.one) (hv : S.r (S.mul a v) S.one) :
+    S.r w v := by
+  refine S.trans (by cr_ring S.toCR : S.r w (S.mul w S.one)) ?_
+  refine S.trans (S.mul_congr (S.refl _) (S.symm hv)) ?_
+  refine S.trans (by cr_ring S.toCR : S.r _ (S.mul (S.mul a w) v)) ?_
+  exact S.trans (S.mul_congr hw (S.refl _)) (S.one_mul _)
+
+theorem trapR_congr {α : Type} (S : CF α) {atn : α → α} (hc : ∀ {a b}, S.r a b → S.r (atn a) (atn b))
+    {x x' y y' wx wx' wy wy' : α} (ex : S.r x x') (ey : S.r y y') (ewx : S.r wx wx') (ewy : S.r wy wy') :
+    S.r (trapR S atn x y wx wy) (trapR S atn x' y' wx' wy') :=
+  S.add_congr (S.mul_congr (S.refl _) (S.add_congr (hc ey) (S.neg_congr (hc ex))))
+    (S.neg_congr (S.mul_congr (S.mul_congr (S.refl _) (S.add_congr ey (S.neg_congr ex))) (S.add_congr ewx ewy)))
+
+theorem cub_congr {α : Type} (S : CF α) {x x' y y' : α} (ex : S.r x x') (ey : S.r y y') :
+    S.r (cub S x y) (cub S x' y') :=
+  have e := S.add_congr ey (S.neg_congr ex)
+  S.mul_congr (S.mul_congr e e) e
+
+/-- The core, termwise ordered, with `w = ψ`. -/
+theorem trap_core {x y : RExpr} (hord : ∀ n, qle (x.seq n) (y.seq n)) :
+    rCF.le (rCF.neg (cub rCF x y)) (trapR rCF ratan x y (rpsi x) (rpsi y)) ∧
+    rCF.le (trapR rCF ratan x y (rpsi x) (rpsi y)) (cub rCF x y) := by
+  constructor
+  · intro k
+    obtain ⟨N, hN⟩ := ZAtanTrap.trap_seq x y hord k
+    exact ⟨N, fun n hn => (hN n hn).1⟩
+  · intro k
+    obtain ⟨N, hN⟩ := ZAtanTrap.trap_seq x y hord k
+    exact ⟨N, fun n hn => (hN n hn).2⟩
+
+/-- **THE TRAPEZOID LAW OF VR's `atan`.** -/
+theorem r_trap (x y wx wy : RExpr) (hxy : rCF.le x y)
+    (hwx : rCF.r (rCF.mul (rCF.add rCF.one (rCF.mul x x)) wx) rCF.one)
+    (hwy : rCF.r (rCF.mul (rCF.add rCF.one (rCF.mul y y)) wy) rCF.one) :
+    rCF.le (rCF.neg (cub rCF x y)) (trapR rCF ratan x y wx wy) ∧ rCF.le (trapR rCF ratan x y wx wy) (cub rCF x y) := by
+  have e : rCF.r (rmin x y) x := rmin_eq hxy
+  have hwx' : rCF.r (rCF.mul (rCF.add rCF.one (rCF.mul (rmin x y) (rmin x y))) wx) rCF.one :=
+    rCF.trans (rCF.mul_congr (rCF.add_congr (rCF.refl _) (rCF.mul_congr e e)) (rCF.refl _)) hwx
+  have u1 := inv_unique rCF hwx' (rpsi_inv (rmin x y))
+  have u2 := inv_unique rCF hwy (rpsi_inv y)
+  obtain ⟨c1, c2⟩ := trap_core (x := rmin x y) (y := y) (fun n => qmin_le_r _ _)
+  have et := trapR_congr rCF (atn := ratan) (fun h => ratan_congr h) e (rCF.refl y) (rCF.symm u1) (rCF.symm u2)
+  have ec := cub_congr rCF e (rCF.refl y)
+  exact ⟨rCF.le_respects (rCF.neg_congr ec) et c1, rCF.le_respects et ec c2⟩
+
 /-- **VR's `atan` IS A LAWFUL `atan`.** -/
 theorem r_atanLaws : AtanLaws rCF ratan where
   zero := ratan_zero
@@ -378,6 +438,7 @@ theorem r_atanLaws : AtanLaws rCF ratan where
     have eA : rCF.r (rCF.add (ratan y) (rCF.neg (ratan (rmin x y)))) (rCF.add (ratan y) (rCF.neg (ratan x))) :=
       rCF.add_congr (rCF.refl _) (rCF.neg_congr ea)
     exact ⟨rCF.le_respects (rCF.mul_congr ed (rCF.refl _)) eA l, rCF.le_respects eA (rCF.mul_congr ed (rCF.refl _)) u⟩
+  trap := fun x y wx wy hxy hwx hwy => r_trap x y wx wy hxy hwx hwy
 
 end ZRootAtan
 
@@ -386,4 +447,8 @@ end ZRootAtan
 #print axioms ZRootAtan.ratan_congr
 #print axioms ZRootAtan.psi_near
 #print axioms ZRootAtan.chord_core
+#print axioms ZRootAtan.rpsi
+#print axioms ZRootAtan.inv_unique
+#print axioms ZRootAtan.trap_core
+#print axioms ZRootAtan.r_trap
 #print axioms ZRootAtan.r_atanLaws

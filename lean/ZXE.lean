@@ -43,6 +43,12 @@ def psiI (I : Iv) : Option Iv :=
   | none => none
   | some J => ivInvPos J
 
+/-- The trapezoid defect `4(atan y − atan x) − 2(y − x)(w_x + w_y)` and the cube `(y − x)³`. -/
+def trapR (atn : α → α) (x y wx wy : α) : α :=
+  S.add (S.mul (S.add (S.add S.one S.one) (S.add S.one S.one)) (S.add (atn y) (S.neg (atn x))))
+    (S.neg (S.mul (S.mul (S.add S.one S.one) (S.add y (S.neg x))) (S.add wx wy)))
+def cub (x y : α) : α := S.mul (S.mul (S.add y (S.neg x)) (S.add y (S.neg x))) (S.add y (S.neg x))
+
 /-- What `atan` MEANS here: `atan 0 = 0`, congruent, and its chord over two points of a dyadic interval `I` lies
 between the bounds of the reading of `ψ(t) = 1/(1 + t²)` on `I` (the derivative). `ℝ`'s `arctan` is one (the mean
 value theorem); VR's `ratan` (the grid sums of `ZAtan`) is one (`ZRootAtan.r_atanLaws`). -/
@@ -52,6 +58,11 @@ structure AtanLaws (atn : α → α) : Prop where
   chord : ∀ (I W : Iv), psiI I = some W → ∀ x y, Mem S x I → Mem S y I → S.le x y →
     S.le (S.mul (S.add y (S.neg x)) (dv S.toOH W.1)) (S.add (atn y) (S.neg (atn x))) ∧
     S.le (S.add (atn y) (S.neg (atn x))) (S.mul (S.add y (S.neg x)) (dv S.toOH W.2))
+  /-- THE TRAPEZOID (2026-11-08): `|4(atan y − atan x) − 2h(ψ(x) + ψ(y))| ≤ h³` for `x ≤ y`, `w` the reciprocals of
+  `1 + t²` (`ZAtanTrap.trap_seq` on VR). -/
+  trap : ∀ x y wx wy, S.le x y → S.r (S.mul (S.add S.one (S.mul x x)) wx) S.one →
+    S.r (S.mul (S.add S.one (S.mul y y)) wy) S.one →
+    S.le (S.neg (cub S x y)) (trapR S atn x y wx wy) ∧ S.le (trapR S atn x y wx wy) (cub S x y)
 
 inductive Val (ex atn sn cs : α → α) (mn : α → α → α) (p : Nat → α) : XE → α → Prop where
   | var {i v} : S.r v (p i) → Val ex atn sn cs mn p (.var i) v
@@ -200,13 +211,23 @@ theorem psi_lo_nonneg {I W : Iv} (hW : psiI I = some W) : S.le S.zero (dv S.toOH
 /-- The grid `d·i/2ᵏ`. -/
 def gridA (d : D) (k i : Nat) : D := dmul d ⟨⟨i, 0⟩, k⟩
 
-/-- One segment's contribution `atan(aᵢ₊₁) − atan(aᵢ) ∈ (aᵢ₊₁ − aᵢ)·ψ([aᵢ, aᵢ₊₁])`. -/
+/-- `|h|³/4`. -/
+def qcube (h : D) : D := ZSinIv.hlf (ZSinIv.hlf (dabs (dmul h (dmul h h))))
+
+/-- One segment by THE TRAPEZOID: `atan(aᵢ₊₁) − atan(aᵢ) ∈ (h/2)·(ψ(aᵢ) + ψ(aᵢ₊₁)) ± |h|³/4`, `h = aᵢ₊₁ − aᵢ`
+(until 2026-11-08 the chord `h·ψ([aᵢ, aᵢ₊₁])`: width `~h²` per segment, now `~h³`). -/
 def segC (d : D) (k i : Nat) : Option Iv :=
-  match psiI (dmin (gridA d k i) (gridA d k (i + 1)), dmax (gridA d k i) (gridA d k (i + 1))) with
+  match psiI (gridA d k i, gridA d k i) with
   | none => none
-  | some W => some (cond (dle (gridA d k i) (gridA d k (i + 1)))
-      (dmul (dadd (gridA d k (i + 1)) (dneg (gridA d k i))) W.1, dmul (dadd (gridA d k (i + 1)) (dneg (gridA d k i))) W.2)
-      (dmul (dadd (gridA d k (i + 1)) (dneg (gridA d k i))) W.2, dmul (dadd (gridA d k (i + 1)) (dneg (gridA d k i))) W.1))
+  | some Wa => match psiI (gridA d k (i + 1), gridA d k (i + 1)) with
+    | none => none
+    | some Wb => match ivAdd Wa Wb with
+      | none => none
+      | some Wab => match ivMul (ZSinIv.hlf (dadd (gridA d k (i + 1)) (dneg (gridA d k i))),
+            ZSinIv.hlf (dadd (gridA d k (i + 1)) (dneg (gridA d k i)))) Wab with
+        | none => none
+        | some M => ivAdd M (dneg (qcube (dadd (gridA d k (i + 1)) (dneg (gridA d k i)))),
+            qcube (dadd (gridA d k (i + 1)) (dneg (gridA d k i))))
 
 def encS (d : D) (k : Nat) : Nat → Option Iv
   | 0 => some (zeroD, zeroD)
@@ -216,7 +237,10 @@ def encS (d : D) (k : Nat) : Nat → Option Iv
       | none => none
       | some C => ivAdd E C
 
-/-- The number of grid steps' exponent for the value of `atan`: `2⁸` segments. -/
+/-- The number of grid steps' exponent for the value of `atan`: `2⁸` trapezoids. MEASURED 2026-11-08: `atan 1` within
+`8e−6` (the Riemann chords before: `2e−3`), `atan 3` within `2e−4`; the system `y = atan x, x + y = 1` is now a theorem
+at the cube `2⁻²⁰` (before: only at `2⁻¹²`). `2¹⁰` gives `atan 1` within `1e−6`, but the kernel's `decide` on a
+system's checks then did not finish (refused at every radius, 81 s) — kept at `2⁸`. -/
 def atK : Nat := 8
 
 /-- **THE VALUE OF `atan` AT A DYADIC**, enclosed. -/
@@ -234,43 +258,137 @@ def ivAtan (I : Iv) : Option Iv :=
 
 variable {S}
 
+/-- `−A ≤ 4R ≤ A` gives `−A/4 ≤ R ≤ A/4`. -/
+theorem quarter_bound {R A : α} (l : S.le (S.neg A) (S.add (S.add R R) (S.add R R)))
+    (u : S.le (S.add (S.add R R) (S.add R R)) A) :
+    S.le (S.neg (S.mul S.half (S.mul S.half A))) R ∧ S.le R (S.mul S.half (S.mul S.half A)) := by
+  obtain ⟨a, b⟩ := ZSinIv.half_bound l u
+  exact ZSinIv.half_bound a b
+
+/-- The reciprocal of `1 + t²` exists (it is positive). -/
+theorem psi_exists (t : α) : ∃ w, S.r (S.mul (S.add S.one (S.mul t t)) w) S.one := by
+  have p1 : S.pos (S.add S.one (S.mul t t)) :=
+    S.pos_mono (pos_one S) (by have := sq_nonneg S t; cr_linarith S.toOCR [this])
+  exact S.inv (Or.inl p1)
+
+/-- `4·(Δ − (h/2)·w) = 4Δ − 2h·w`, through `half + half = 1`. -/
+theorem four_half {atn : α → α} (a b wa wb : α) :
+    S.r (S.add (S.add (S.add (S.add (atn b) (S.neg (atn a))) (S.neg (S.mul (S.mul S.half (S.add b (S.neg a))) (S.add wa wb))))
+        (S.add (S.add (atn b) (S.neg (atn a))) (S.neg (S.mul (S.mul S.half (S.add b (S.neg a))) (S.add wa wb)))))
+      (S.add (S.add (S.add (atn b) (S.neg (atn a))) (S.neg (S.mul (S.mul S.half (S.add b (S.neg a))) (S.add wa wb))))
+        (S.add (S.add (atn b) (S.neg (atn a))) (S.neg (S.mul (S.mul S.half (S.add b (S.neg a))) (S.add wa wb))))))
+      (trapR S atn a b wa wb) := by
+  have hs := S.half_spec
+  unfold trapR
+  refine S.trans (by cr_ring S.toCR : S.r _ (S.add (S.mul (S.add (S.add S.one S.one) (S.add S.one S.one))
+    (S.add (atn b) (S.neg (atn a)))) (S.neg (S.mul (S.mul (S.add S.one S.one) (S.add S.half S.half))
+      (S.mul (S.add b (S.neg a)) (S.add wa wb)))))) ?_
+  refine S.trans (S.add_congr (S.refl _) (S.neg_congr (S.mul_congr (S.mul_congr (S.refl _) hs) (S.refl _)))) ?_
+  cr_ring S.toCR
+
+/-- The trapezoid upward (`a ≤ b`): the remainder `R = Δ − (h/2)·w` within `cub/4`. -/
+theorem trap_up {atn : α → α} (H : AtanLaws S atn) {a b wa wb : α} (hab : S.le a b)
+    (hwa : S.r (S.mul (S.add S.one (S.mul a a)) wa) S.one) (hwb : S.r (S.mul (S.add S.one (S.mul b b)) wb) S.one) :
+    S.le (S.neg (S.mul S.half (S.mul S.half (cub S a b))))
+        (S.add (S.add (atn b) (S.neg (atn a))) (S.neg (S.mul (S.mul S.half (S.add b (S.neg a))) (S.add wa wb)))) ∧
+    S.le (S.add (S.add (atn b) (S.neg (atn a))) (S.neg (S.mul (S.mul S.half (S.add b (S.neg a))) (S.add wa wb))))
+        (S.mul S.half (S.mul S.half (cub S a b))) := by
+  obtain ⟨l, u⟩ := H.trap a b wa wb hab hwa hwb
+  have e := four_half (S := S) (atn := atn) a b wa wb
+  exact quarter_bound (S.le_respects (S.refl _) (S.symm e) l) (S.le_respects (S.symm e) (S.refl _) u)
+
+/-- The trapezoid downward (`b ≤ a`): the same remainder within `cub(b, a)/4`. -/
+theorem trap_down {atn : α → α} (H : AtanLaws S atn) {a b wa wb : α} (hba : S.le b a)
+    (hwa : S.r (S.mul (S.add S.one (S.mul a a)) wa) S.one) (hwb : S.r (S.mul (S.add S.one (S.mul b b)) wb) S.one) :
+    S.le (S.neg (S.mul S.half (S.mul S.half (cub S b a))))
+        (S.add (S.add (atn b) (S.neg (atn a))) (S.neg (S.mul (S.mul S.half (S.add b (S.neg a))) (S.add wa wb)))) ∧
+    S.le (S.add (S.add (atn b) (S.neg (atn a))) (S.neg (S.mul (S.mul S.half (S.add b (S.neg a))) (S.add wa wb))))
+        (S.mul S.half (S.mul S.half (cub S b a))) := by
+  obtain ⟨l, u⟩ := H.trap b a wb wa hba hwb hwa
+  have e := four_half (S := S) (atn := atn) b a wb wa
+  obtain ⟨q1, q2⟩ := quarter_bound (S.le_respects (S.refl _) (S.symm e) l) (S.le_respects (S.symm e) (S.refl _) u)
+  -- the remainder downward is minus the remainder upward from b
+  have r : S.r (S.add (S.add (atn b) (S.neg (atn a))) (S.neg (S.mul (S.mul S.half (S.add b (S.neg a))) (S.add wa wb))))
+      (S.neg (S.add (S.add (atn a) (S.neg (atn b))) (S.neg (S.mul (S.mul S.half (S.add a (S.neg b))) (S.add wb wa))))) := by
+    cr_ring S.toCR
+  constructor
+  · exact S.le_respects (S.refl _) (S.symm r) (by cr_linarith S.toOCR [q2])
+  · exact S.le_respects (S.symm r) (S.refl _) (by cr_linarith S.toOCR [q1])
+
 theorem seg_mem {atn : α → α} (H : AtanLaws S atn) (d : D) (k i : Nat) {C : Iv} (h : segC d k i = some C) :
     Mem S (S.add (atn (dv S.toOH (gridA d k (i + 1)))) (S.neg (atn (dv S.toOH (gridA d k i))))) C := by
   unfold segC at h
-  cases hW : psiI (dmin (gridA d k i) (gridA d k (i + 1)), dmax (gridA d k i) (gridA d k (i + 1))) with
-  | none => rw [hW] at h; cases h
-  | some W =>
-  rw [hW] at h; dsimp only at h
-  cases h
-  have mx : Mem S (dv S.toOH (gridA d k i)) (dmin (gridA d k i) (gridA d k (i + 1)), dmax (gridA d k i) (gridA d k (i + 1))) :=
-    ⟨dmin_l S _ _, dmax_l S _ _⟩
-  have my : Mem S (dv S.toOH (gridA d k (i + 1))) (dmin (gridA d k i) (gridA d k (i + 1)), dmax (gridA d k i) (gridA d k (i + 1))) :=
-    ⟨dmin_r S _ _, dmax_r S _ _⟩
-  have eh : S.r (dv S.toOH (dadd (gridA d k (i + 1)) (dneg (gridA d k i))))
-      (S.add (dv S.toOH (gridA d k (i + 1))) (S.neg (dv S.toOH (gridA d k i)))) :=
-    S.trans (dv_add S.toOH _ _) (S.add_congr (S.refl _) (dv_neg S.toOH _))
-  have m1 := S.trans (dv_mul S.toOH (dadd (gridA d k (i + 1)) (dneg (gridA d k i))) W.1) (S.mul_congr eh (S.refl _))
-  have m2 := S.trans (dv_mul S.toOH (dadd (gridA d k (i + 1)) (dneg (gridA d k i))) W.2) (S.mul_congr eh (S.refl _))
-  show Mem S _ (cond (dle (gridA d k i) (gridA d k (i + 1))) _ _)
-  cases hb : dle (gridA d k i) (gridA d k (i + 1)) with
-  | true =>
-      obtain ⟨c1, c2⟩ := H.chord _ W hW _ _ mx my (dle_sound S.toOH hb)
-      exact ⟨S.le_respects (S.symm m1) (S.refl _) c1, S.le_respects (S.refl _) (S.symm m2) c2⟩
-  | false =>
-      obtain ⟨c1, c2⟩ := H.chord _ W hW _ _ my mx (dle_sound S.toOH (dle_swap hb))
-      have e1 : S.r (S.mul (S.add (dv S.toOH (gridA d k i)) (S.neg (dv S.toOH (gridA d k (i + 1))))) (dv S.toOH W.1))
-          (S.neg (S.mul (S.add (dv S.toOH (gridA d k (i + 1))) (S.neg (dv S.toOH (gridA d k i)))) (dv S.toOH W.1))) := by
-        cr_ring S.toCR
-      have e2 : S.r (S.mul (S.add (dv S.toOH (gridA d k i)) (S.neg (dv S.toOH (gridA d k (i + 1))))) (dv S.toOH W.2))
-          (S.neg (S.mul (S.add (dv S.toOH (gridA d k (i + 1))) (S.neg (dv S.toOH (gridA d k i)))) (dv S.toOH W.2))) := by
-        cr_ring S.toCR
-      have c1' := S.le_respects e1 (S.refl _) c1
-      have c2' := S.le_respects (S.refl _) e2 c2
-      constructor
-      · have := S.le_respects (S.symm m2) (S.refl _) (S.le_refl (S.mul (S.add (dv S.toOH (gridA d k (i + 1)))
-          (S.neg (dv S.toOH (gridA d k i)))) (dv S.toOH W.2)))
-        exact S.le_respects (S.symm m2) (S.refl _) (by cr_linarith S.toOCR [c2'])
-      · exact S.le_respects (S.refl _) (S.symm m1) (by cr_linarith S.toOCR [c1'])
+  cases hWa : psiI (gridA d k i, gridA d k i) with
+  | none => rw [hWa] at h; cases h
+  | some Wa =>
+  rw [hWa] at h; dsimp only at h
+  cases hWb : psiI (gridA d k (i + 1), gridA d k (i + 1)) with
+  | none => rw [hWb] at h; cases h
+  | some Wb =>
+  rw [hWb] at h; dsimp only at h
+  cases hWab : ivAdd Wa Wb with
+  | none => rw [hWab] at h; cases h
+  | some Wab =>
+  rw [hWab] at h; dsimp only at h
+  generalize hhd : dadd (gridA d k (i + 1)) (dneg (gridA d k i)) = hd at h
+  cases hM : ivMul (ZSinIv.hlf hd, ZSinIv.hlf hd) Wab with
+  | none => rw [hM] at h; cases h
+  | some M =>
+  rw [hM] at h; dsimp only at h
+  obtain ⟨wa, hwa⟩ := psi_exists (S := S) (dv S.toOH (gridA d k i))
+  obtain ⟨wb, hwb⟩ := psi_exists (S := S) (dv S.toOH (gridA d k (i + 1)))
+  have mwa := psi_mem S (mem_cst S (gridA d k i)) hWa hwa
+  have mwb := psi_mem S (mem_cst S (gridA d k (i + 1))) hWb hwb
+  have mw := mem_add S mwa mwb hWab
+  have mM := mem_mul S (mem_cst S (ZSinIv.hlf hd)) mw hM
+  have eh : S.r (dv S.toOH hd) (S.add (dv S.toOH (gridA d k (i + 1))) (S.neg (dv S.toOH (gridA d k i)))) := by
+    rw [← hhd]; exact S.trans (dv_add S.toOH _ _) (S.add_congr (S.refl _) (dv_neg S.toOH _))
+  have eh2 : S.r (dv S.toOH (ZSinIv.hlf hd))
+      (S.mul S.half (S.add (dv S.toOH (gridA d k (i + 1))) (S.neg (dv S.toOH (gridA d k i))))) :=
+    S.trans (ZAff.dv_succ S hd.m hd.e) (S.mul_congr (S.refl _) eh)
+  -- |h|³/4
+  have eX : S.r (dv S.toOH (dmul hd (dmul hd hd))) (cub S (dv S.toOH (gridA d k i)) (dv S.toOH (gridA d k (i + 1)))) := by
+    refine S.trans (dv_mul S.toOH _ _) (S.trans (S.mul_congr (S.refl _) (dv_mul S.toOH _ _)) ?_)
+    refine S.trans (S.mul_congr eh (S.mul_congr eh eh)) ?_
+    unfold cub; cr_ring S.toCR
+  have eq : S.r (dv S.toOH (qcube hd)) (S.mul S.half (S.mul S.half (dv S.toOH (dabs (dmul hd (dmul hd hd)))))) :=
+    S.trans (ZAff.dv_succ S _ _) (S.mul_congr (S.refl _) (ZAff.dv_succ S _ _))
+  obtain ⟨_, ab1, ab2⟩ := ZAff.dabs_sound S (dmul hd (dmul hd hd))
+  have hh0 := half_nonneg S.toOH
+  have cubs : S.r (cub S (dv S.toOH (gridA d k (i + 1))) (dv S.toOH (gridA d k i)))
+      (S.neg (cub S (dv S.toOH (gridA d k i)) (dv S.toOH (gridA d k (i + 1))))) := by unfold cub; cr_ring S.toCR
+  -- the remainder within ±|h|³/4, whichever way the grid runs
+  have hR : S.le (S.neg (S.mul S.half (S.mul S.half (dv S.toOH (dabs (dmul hd (dmul hd hd)))))))
+        (S.add (S.add (atn (dv S.toOH (gridA d k (i + 1)))) (S.neg (atn (dv S.toOH (gridA d k i)))))
+          (S.neg (S.mul (S.mul S.half (S.add (dv S.toOH (gridA d k (i + 1))) (S.neg (dv S.toOH (gridA d k i)))))
+            (S.add wa wb)))) ∧
+      S.le (S.add (S.add (atn (dv S.toOH (gridA d k (i + 1)))) (S.neg (atn (dv S.toOH (gridA d k i)))))
+          (S.neg (S.mul (S.mul S.half (S.add (dv S.toOH (gridA d k (i + 1))) (S.neg (dv S.toOH (gridA d k i)))))
+            (S.add wa wb))))
+        (S.mul S.half (S.mul S.half (dv S.toOH (dabs (dmul hd (dmul hd hd)))))) := by
+    cases hb : dle (gridA d k i) (gridA d k (i + 1)) with
+    | true =>
+        obtain ⟨r1, r2⟩ := trap_up H (dle_sound S.toOH hb) hwa hwb
+        have c1 := S.le_respects eX (S.refl _) ab2
+        have s := le_mul_left' S (le_mul_left' S c1 hh0) hh0
+        exact ⟨by cr_linarith S.toOCR [r1, s], by cr_linarith S.toOCR [r2, s]⟩
+    | false =>
+        obtain ⟨r1, r2⟩ := trap_down H (dle_sound S.toOH (dle_swap hb)) hwa hwb
+        have c1 : S.le (cub S (dv S.toOH (gridA d k (i + 1))) (dv S.toOH (gridA d k i)))
+            (dv S.toOH (dabs (dmul hd (dmul hd hd)))) := by
+          have := S.le_respects (S.refl _) eX ab1
+          exact S.le_respects (S.symm cubs) (S.refl _) (by cr_linarith S.toOCR [this])
+        have s := le_mul_left' S (le_mul_left' S c1 hh0) hh0
+        exact ⟨by cr_linarith S.toOCR [r1, s], by cr_linarith S.toOCR [r2, s]⟩
+  have mR : Mem S (S.add (S.add (atn (dv S.toOH (gridA d k (i + 1)))) (S.neg (atn (dv S.toOH (gridA d k i)))))
+      (S.neg (S.mul (S.mul S.half (S.add (dv S.toOH (gridA d k (i + 1))) (S.neg (dv S.toOH (gridA d k i)))))
+        (S.add wa wb)))) (dneg (qcube hd), qcube hd) :=
+    ⟨S.le_respects (S.trans (S.neg_congr (S.symm eq)) (S.symm (dv_neg S.toOH _))) (S.refl _) hR.1,
+     S.le_respects (S.refl _) (S.symm eq) hR.2⟩
+  have m := mem_add S mM mR h
+  refine mem_congr S ?_ m
+  refine S.symm (S.trans (S.add_congr (S.mul_congr eh2 (S.refl _)) (S.refl _)) ?_)
+  cr_ring S.toCR
 
 theorem dv_grid0 (d : D) (k : Nat) : S.r (dv S.toOH (gridA d k 0)) S.zero :=
   S.trans (dv_mul S.toOH _ _) (S.trans (S.mul_congr (S.refl _) (zv_isZ S.toOH (c := ⟨⟨0, 0⟩, k⟩) rfl))

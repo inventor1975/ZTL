@@ -6,7 +6,8 @@ solution's shift over the parameter box, a cover when the box is wide); the kern
   * the circle meets the exponential; a 3×3 system with exp and ln; the circle with a real radius parameter
     R ∈ [0.999, 1.001] — THEOREMS (a solution in the cube, unique there, for every parameter in the inner box);
   * x² + y² + 1 = 0 (no real solution) — NO VERDICT (Newton finds none; nothing is claimed);
-  * a system with atan (y = atan x, x + y = 1) — a THEOREM; with sin (y = sin x, x + y = 1) — a THEOREM; the circle of
+  * a system with atan (y = atan x, x + y = 1) — a THEOREM (at the cube 2⁻²⁰ since the trapezoid reading of atan,
+    2026-11-08; the Riemann reading needed 2⁻¹²); with sin (y = sin x, x + y = 1) — a THEOREM; the circle of
     radius R meets y = a·cos x, R ∈ [0.999, 1.001], a ∈ [0.499, 0.501] — a THEOREM (sin/cos: lean/ZSinIv.lean);
   * the circle TOUCHES y = cos 3x at (0, 1) (the Jacobian is singular there) — REFUSED: the kernel accepts no cube;
   * a system with tan (`sin/cos` through division) — a THEOREM;

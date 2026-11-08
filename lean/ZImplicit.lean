@@ -16,6 +16,10 @@ kernel checks it. Two parts are proved here, for any orders:
     corner is below every root. The upper bound is the same theorem in the dual orders; together they give
     the tight range `[root at the min corner, root at the max corner]` the kernel reports.
 
+EXISTENCE, since 2026-11-08 a theorem for polynomial (and rational) laws on VR's continuum: a sign change gives a
+root at every real parameter point, unique under the slope (`ZRootPVR.root_is_root`, `root_unique`;
+`tools/zimplicit2lean.py` turns a law into such a theorem — the fan, `ZImplicitFan.law_root`).
+
 PREMISES, said rather than hidden (as in ZCertify): that a reading which excludes zero on a part means no root
 there (`excl_sound`: interval arithmetic, here also the affine reading), and the two monotonicity facts
 (derivative signs and the mean value theorem). What is proved is that the way the kernel combines them — the

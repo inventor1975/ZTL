@@ -358,6 +358,34 @@ def sec24_an_implicit_law_with_parameters_and_scientific_numbers():
     print("   4.5e-05 in a value and 2e3 in the claim read exactly; the name x2e3 stays a name")
 
 
+def sec25_the_red_team_on_regions():
+    """(2026-11-08, the shakedown's red team) Four answers that were wrong or empty, now right. x + y = 3 & x·y = 2 in
+    [-1e9, 1e9]² — every default Newton start had x = y, where this Jacobian is singular, and an elimination raised
+    ZeroDivisionError and took the region search down: now COMPLETE, (1, 2) and (2, 1). exp(x) = 1e300 in [0, 1000] —
+    an OverflowError in exp(1000) took it down, and Y = 1/J ~ 1e-300 was rounded to 0 on an absolute grid: now
+    COMPLETE, x ≈ 690.7755. cos(x) = 0.99 in [-1e6, 1e6] — not exhausted (honestly), every listed root in the region."""
+    import math
+    from fractions import Fraction
+    print("-" * 72)
+    print("§25 the red team on search regions")
+    U = lambda n, v="?": {"name": n, "means": n, "status": "unverified", "value": v}
+    cs = lambda b: float(sum(Fraction(t) for t in b.strip("[]").split(", ")) / 2)
+    r = zfl.run({"rows": [U("x", "? in [-1e9, 1e9]"), U("y", "? in [-1e9, 1e9]")], "claim": "x + y = 3 & x*y = 2"})
+    n = r["report"]["numeric"]
+    assert n["disposition"] == "EARNED" and n["system"]["complete"] and n["system"]["solutions"] == 2, n
+    pts = sorted(zip(map(cs, n["solved"]["x"]["roots"]), map(cs, n["solved"]["y"]["roots"])))
+    assert all(abs(a - b) < 1e-9 for p, q in zip(pts, [(1, 2), (2, 1)]) for a, b in zip(p, q)), pts
+    r = zfl.run({"rows": [U("x", "? in [0, 1000]")], "claim": "exp(x) = 1e300"})
+    n = r["report"]["numeric"]
+    assert n["disposition"] == "EARNED" and n["system"]["complete"] and n["system"]["solutions"] == 1, n
+    assert abs(cs(n["solved"]["x"]["roots"][0]) - 300 * math.log(10)) < 1e-6, n["solved"]
+    r = zfl.run({"rows": [U("x", "? in [-1000000, 1000000]")], "claim": "cos(x) = 0.99"})
+    n = r["report"]["numeric"]
+    assert not n["system"]["complete"] and all(abs(cs(b)) <= 1e6 for b in n["solved"]["x"]["roots"]), n["system"]
+    print("   x + y = 3 & x·y = 2 in [-1e9, 1e9]²: both solutions; exp(x) = 1e300: x ≈ 690.7755; cos x = 0.99 in "
+          "[-1e6, 1e6]: not exhausted, said")
+
+
 def sec4b_every_example_runs_and_json_types_are_taken_as_they_come():
     print("-" * 72)
     print("4b. THE CATALOGUE, AND WHAT ARRIVES FROM A MODEL")
@@ -1065,6 +1093,7 @@ if __name__ == "__main__":
     sec22_a_system_with_sin_cos_tan_in_a_search_region()
     sec23_one_unknown_in_a_search_region()
     sec24_an_implicit_law_with_parameters_and_scientific_numbers()
+    sec25_the_red_team_on_regions()
     sec4b_every_example_runs_and_json_types_are_taken_as_they_come()
     sec5_the_spec_can_build_the_form_and_the_page()
     print("=" * 72)

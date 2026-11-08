@@ -2150,7 +2150,7 @@ def _implicit_answer(claim, q, x, region):
     return {"solved": solved, "disposition": disp, "how": how, "unique": unique, "exists": exists}
 
 
-def _system_answer(claim, q, unknowns, regions=None, budget=6000, search_budget=None):
+def _system_answer(claim, q, unknowns, regions=None, budget=6000, search_budget=None, seconds=20):
     """A SYSTEM (2026-11-08, the curator's "Синтаксис систем в ZFL — принято. Делай."): several unknowns `x = ?` and
     a claim of as many equations. zsystem finds certificates and checks them exactly (Krawczyk, the contraction form,
     the kernel's readings).
@@ -2200,7 +2200,7 @@ def _system_answer(claim, q, unknowns, regions=None, budget=6000, search_budget=
     if region_ok:
         try:
             res = _ZS.solve_all(laws, list(unknowns), q, {n: regions[n] for n in unknowns}, budget=budget,
-                                search_budget=search_budget)
+                                search_budget=search_budget, seconds=seconds)   # 20 s: a public service (08.11)
         except Exception:
             res = None
         if res is not None and res["complete"]:

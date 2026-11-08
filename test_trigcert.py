@@ -255,6 +255,12 @@ check(f"400 random arguments: ztrigcert.cert (integers) == cert_fr (Fractions) �
 check(f"400 random arguments: zfunc._sc_series (integers) == _sc_series_fr (Fractions) — {_bad_s} disagree",
       _bad_s == 0)
 
+# LARGE ARGUMENTS (2026-11-08, the red team): with MMAX = 2000 every sin/cos reading past |x| ~ 700 found no witness and
+# widened to [-1, 1] (sin(1000x) = 0 stuck at the box [1 - δ, 1]); MMAX = 20000 covers them
+_r = zfunc.iv_sin((F(9999, 10), F(1000)))
+check(f"sin over [999.9, 1000]: a real reading (width {float(_r[1] - _r[0]):.3g}), sin(1000) inside, not [-1, 1]",
+      _r[1] - _r[0] < F(1, 5) and _r[0] <= F(math.sin(1000)) <= _r[1], [float(v) for v in _r])
+
 print(f"\n{ok} ok, {fail} fail")
 print("TRIGCERT GREEN" if fail == 0 else "TRIGCERT RED")
 sys.exit(1 if fail else 0)

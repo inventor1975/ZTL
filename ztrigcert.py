@@ -22,7 +22,11 @@ from fractions import Fraction as F
 
 import zfunc
 
-MMAX = 2000
+# 2000 until 2026-11-08: the plain partial sums need M past e·|x|, so |x| > ~700 found no witness and every sin/cos
+# reading there widened to [-1, 1] (the red team: sin(1000x) = 0 in [0, 1] stuck at the box [1 - δ, 1]). MEASURED: x = 1000
+# needs M = 2729 (0.01 s, in integers), x = 5000 M = 13601 (0.28 s) — sound for any M (the theorem holds at every M)
+MMAX = 20000
+TMAX = 2000     # tan's ends: |q| <= 1.5, 2000 terms are plenty; tan_end has no early stop, so not MMAX (08.11)
 
 
 def cert(x, which, need_lo=None, need_hi=None):
@@ -42,6 +46,8 @@ def cert(x, which, need_lo=None, need_hi=None):
 def _cert_int(x, which, need_lo, need_hi):
     n, d = x.numerator, x.denominator
     A = abs(n)
+    if 2 * A > (MMAX + 1) * d:
+        return None                    # no index up to MMAX is good (2|x| <= M + 1): nothing to certify, nothing to sum
     pr, pi = 1, 0                 # (i·n)^m
     Am = 1                        # |n|^m
     Q = 1                         # d^m·m!
@@ -144,7 +150,7 @@ def tan_end(q, T, low):
     q = F(q)
     a = abs(q)
     cr, ci, C, S, t = F(1), F(0), F(0), F(0), F(1)
-    for m in range(MMAX + 1):
+    for m in range(TMAX + 1):
         if 2 * a <= m + 1:
             cl, ch, sl, sh = C - 2 * t, C + 2 * t, S - 2 * t, S + 2 * t
             if cl > 0 and ((low and T * cl <= sl and T * ch <= sl) or

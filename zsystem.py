@@ -35,8 +35,20 @@ def _rd(e, qs, piece):
         return None
 
 
+def _short(v, bits):
+    """`v` to `bits` significant bits, as a dyadic Fraction. Until 2026-11-08 `limit_denominator(2^40)`, which is an
+    ABSOLUTE grid: exp(x) = 1e300 had Y = 1/J ~ 1e-300 rounded to 0 and every certificate refused (the red team)."""
+    if v == 0 or not math.isfinite(v):
+        return F(0)
+    m, e = math.frexp(v)
+    return F(round(math.ldexp(m, bits))) * (F(2) ** (e - bits))
+
+
 def _mid(iv):
-    return float((iv[0] + iv[1]) / 2)
+    try:
+        return float((iv[0] + iv[1]) / 2)
+    except OverflowError:                 # exp(1000) exactly: past float range — no Newton step there (red team, 08.11)
+        return math.inf
 
 
 def _point(qs, unknowns, x):
@@ -135,7 +147,12 @@ def _solve(A, b):
             if r != c:
                 f = M[r][c] / M[c][c]
                 M[r] = [x - f * y for x, y in zip(M[r], M[c])]
-    return [M[i][n] / M[i][i] for i in range(n)]
+    # a pivot that passed the threshold can still come back zero after elimination (the red team, 2026-11-08: a box of
+    # [-1e9, 1e9]² raised ZeroDivisionError and took the whole region search down) — no step, not an exception
+    if any(not (abs(M[i][i]) > 1e-300) for i in range(n)):
+        return None
+    out = [M[i][n] / M[i][i] for i in range(n)]
+    return out if all(math.isfinite(v) for v in out) else None
 
 
 def _inv(A):
@@ -236,7 +253,11 @@ def search(laws, unknowns, qs, guesses=None, radii=None):
     params_mid = {n: (F(qs[n]["lo"] + qs[n]["hi"]) / 2,) * 2 for n in params
                   if not isinstance(qs[n]["lo"], float) and not isinstance(qs[n]["hi"], float)}
     dlaws = [[ZC.derivative(g, n) for n in unknowns] for g in laws]
-    starts = guesses or [[0.5] * d, [1.0] * d, [-0.5] * d, [0.1] * d, [2.0] * d, [-1.0] * d]
+    # the symmetric starts sit where a symmetric system's Jacobian is singular (x + y = 3, x·y = 2: every start had
+    # x = y, the red team, 2026-11-08) — staggered starts besides them
+    starts = guesses or ([[0.5] * d, [1.0] * d, [-0.5] * d, [0.1] * d, [2.0] * d, [-1.0] * d] +
+                         [[0.5 + 0.7 * i for i in range(d)], [1.5 - 0.6 * i for i in range(d)],
+                          [-0.3 + 0.9 * i for i in range(d)]])
     for x0 in starts:
         x = list(x0)
         ok = False
@@ -261,9 +282,9 @@ def search(laws, unknowns, qs, guesses=None, radii=None):
         if Yf is None:
             continue
         for e in (radii or (20, 16, 12, 8, 6, 4)):
-            cert = {"centre": [str(F(v).limit_denominator(1 << 60)) for v in x], "radius": str(F(1, 1 << e)),
-                    "Y": [[str(F(v).limit_denominator(1 << 40)) for v in row] for row in Yf],
-                    "Z": [[str(F(v).limit_denominator(1 << 40)) for v in row] for row in Jv]}
+            cert = {"centre": [str(_short(v, 60)) for v in x], "radius": str(F(1, 1 << e)),
+                    "Y": [[str(_short(v, 40)) for v in row] for row in Yf],
+                    "Z": [[str(_short(v, 40)) for v in row] for row in Jv]}
             res = check(laws, unknowns, qs, cert)
             if res[0]:
                 return cert, res
@@ -302,7 +323,7 @@ def _in_region(sols, unknowns, region):
     return sorted(keep, key=lambda ch: [F(v) for v in ch[0]["centre"]])
 
 
-def solve_all(laws, unknowns, qs, region, budget=6000, search_budget=None):
+def solve_all(laws, unknowns, qs, region, budget=6000, search_budget=None, seconds=None):
     """B (the curator's "Делай Б", 2026-11-08): ALL the solutions in the search region. The region is split into
     boxes; each box is EXCLUDED (some law's reading there excludes 0, for every parameter in the box) or lies inside
     the cube of a CERTIFIED solution (unique there, `check`), or is split again. When nothing is left the answer is
@@ -310,14 +331,18 @@ def solve_all(laws, unknowns, qs, region, budget=6000, search_budget=None):
     out of the region). Returns {"complete": bool, "solutions": [(cert, how)], "boxes": n}.
     `search_budget`: at most that many certificate searches (each tries up to nine cube radii); past it boxes are only
     excluded or split — deterministic, unlike a time limit (MEASURED 2026-11-08: the oil cooler, a root moving with
-    its parameters, spent 18 s in 68 searches to end OPEN)."""
+    its parameters, spent 18 s in 68 searches to end OPEN). `seconds`: a wall-clock cap for a public service (the red
+    team, 2026-11-08: sin(1000x) = 0 in [0, 1] — 319 roots, all found, 68 s here, ~5 min on the server); past it the
+    answer is "not exhausted within the budget", never a false one."""
     region = {n: (F(region[n][0]), F(region[n][1])) for n in unknowns}
     sols, cubes = [], []
     todo, seen = [region], 0
+    import time as _time
+    t0 = _time.monotonic()
     while todo:
         box = todo.pop()
         seen += 1
-        if seen > budget:
+        if seen > budget or (seconds is not None and _time.monotonic() - t0 > seconds):
             return {"complete": False, "solutions": _in_region(sols, unknowns, region), "boxes": seen}
         if _excluded(laws, qs, box):
             continue
@@ -328,7 +353,11 @@ def solve_all(laws, unknowns, qs, region, budget=6000, search_budget=None):
         if search_budget is None or search_budget > 0:
             if search_budget is not None:
                 search_budget -= 1
-            found = search(laws, unknowns, qs, guesses=[guess], radii=(4, 6, 8, 10, 12, 14, 16, 18, 20))
+            try:
+                found = search(laws, unknowns, qs, guesses=[guess], radii=(4, 6, 8, 10, 12, 14, 16, 18, 20))
+            except (ArithmeticError, ValueError):
+                found = None       # one failed proposal is not the end of the region search (the red team, 2026-11-08:
+                #                    an OverflowError in exp(1000) took exp(x) = 1e300 in [0, 1000] to OPEN)
         if found is not None:
             cert, how = found
             c = [F(v) for v in cert["centre"]]

@@ -16,7 +16,8 @@ checked by the Lean kernel and becomes a theorem on VR's continuum:
   * `bound_vr`: on VR's continuum, the total law (`ZRootDiv.evR`, every denominator checked positive on the box by
     `posOK`) at EVERY real point of the box.
 
-Monotone leaves (the slope reading's sign) are the next step; interval leaves only, here.
+Monotone leaves (`VT`, `chkV`, `bound_vrM` below): the slope reading's sign takes a point to the corner it points to,
+where the reading is exact — a requirement met exactly at a corner stays provable.
 -/
 
 namespace ZBound
@@ -189,12 +190,34 @@ def chkV (lo : Bool) (e : XE) (c : D) (vs : List Nat) : VT → Box → Bool
     | none => false
     | some I => dle I.1 a && dle a I.2 && chkV lo e c vs l (boxSet B i (I.1, a)) && chkV lo e c vs r (boxSet B i (a, I.2))
 
+/-- The variables whose slope reading STRADDLES 0 (they block the corner walk), with the score
+`(slope span)·(width)` — the search's choice only: the kernel checks the tree, never how it was found. -/
+def straddle (B : Box) (e : XE) : List Nat → Option (Nat × Iv × D)
+  | [] => none
+  | i :: vs => match B i with
+    | none => straddle B e vs
+    | some I => match slX B (unitV i) e with
+      | none => straddle B e vs
+      | some K => cond (dle dz0 K.1 || dle K.2 dz0) (straddle B e vs)
+          (match straddle B e vs with
+           | none => some (i, I, dmul (dadd K.2 (dneg K.1)) (dadd I.2 (dneg I.1)))
+           | some (j, J, t) => cond (dle t (dmul (dadd K.2 (dneg K.1)) (dadd I.2 (dneg I.1))))
+               (some (i, I, dmul (dadd K.2 (dneg K.1)) (dadd I.2 (dneg I.1)))) (some (j, J, t)))
+
+/-- The variable to cut: the straddling one with the largest score, else the widest. (2026-11-08, ztl-stand
+tasks/t5-divider-tcr: the widest — a resistor 200 Ω wide — was cut 14 times while the temperature's sign `T − 25`
+blocked every monotone leaf: no tree.) -/
+def pickCut (B : Box) (e : XE) (vs : List Nat) : Option (Nat × Iv) :=
+  match straddle B e vs with
+  | some (i, I, _) => some (i, I)
+  | none => widest B vs
+
 /-- The search with monotone leaves (a PROPOSAL; the kernel checks only `chkV`): a monotone leaf, else an interval
-leaf, else a cut of the widest variable at its middle. -/
+leaf, else a cut of `pickCut`'s variable at its middle. -/
 def findV (lo : Bool) (e : XE) (c : D) (vs : List Nat) : Nat → Box → Option VT
   | 0 => fun B => cond (chkV lo e c vs .mono B) (some .mono) (cond (chkV lo e c vs .leaf B) (some .leaf) none)
   | n + 1 => fun B => cond (chkV lo e c vs .mono B) (some .mono) (cond (chkV lo e c vs .leaf B) (some .leaf)
-    (match widest B vs with
+    (match pickCut B e vs with
     | none => none
     | some (i, I) => match findV lo e c vs n (boxSet B i (I.1, ZAff.mid I)) with
       | none => none
@@ -448,6 +471,19 @@ theorem ge_of_quot {Dn N v c : α} (hD : S.pos Dn) (hv : S.r (S.mul Dn v) N)
   have m' := S.pos_congr (S.trans e (S.add_congr (S.refl _) (S.neg_congr hv))) m
   exact S.pos_not_le m' (by cr_linarith S.toOCR [h])
 
+/-- A RATIONAL bound without division: `P·D − R·N ≥ 0`, `D > 0`, `D·v = N` ⟹ `R·v ≤ P` (that is `v ≤ P/R` for
+`R > 0`). The stand's requirement `q ≤ 247/100` is proved as `100·q ≤ 247`. -/
+theorem le_of_quotR {Dn N v P R : α} (hD : S.pos Dn) (hv : S.r (S.mul Dn v) N)
+    (h : S.le S.zero (S.add (S.mul P Dn) (S.neg (S.mul R N)))) : S.le (S.mul R v) P := by
+  have e : S.r (S.mul Dn (S.mul R v)) (S.mul R (S.mul Dn v)) := by cr_ring S.toCR
+  exact le_of_quot hD (S.trans e (S.mul_congr (S.refl _) hv)) h
+
+/-- `R·N − P·D ≥ 0`, `D > 0`, `D·v = N` ⟹ `P ≤ R·v`. -/
+theorem ge_of_quotR {Dn N v P R : α} (hD : S.pos Dn) (hv : S.r (S.mul Dn v) N)
+    (h : S.le S.zero (S.add (S.mul R N) (S.neg (S.mul P Dn)))) : S.le P (S.mul R v) := by
+  have e : S.r (S.mul Dn (S.mul R v)) (S.mul R (S.mul Dn v)) := by cr_ring S.toCR
+  exact ge_of_quot hD (S.trans e (S.mul_congr (S.refl _) hv)) h
+
 end Quot
 
 /-- On a box where the denominator reads `≥ 2⁻⁶⁴`: `evR b · evR (a / b) = evR a`, and `evR b > 0`. -/
@@ -490,4 +526,6 @@ end ZBound
 #print axioms ZBound.bound_vrM
 #print axioms ZBound.le_of_quot
 #print axioms ZBound.ge_of_quot
+#print axioms ZBound.le_of_quotR
+#print axioms ZBound.ge_of_quotR
 #print axioms ZBound.div_value

@@ -6,8 +6,10 @@ parameter vector in the box:
 
   1. q's expression from the laws — ZTL's own Cramer solution (zcertify.solve_system): `q = det_q / det` (said, not
      hidden: this elimination is Python's exact algebra, not proved in Lean; the theorem is about the expression);
-  2. pinned quantities substituted; the box of the parameters rounded OUTWARD to dyadics (the theorem over the dyadic
-     box covers the user's box — checked here in exact fractions);
+  2. pinned quantities substituted; when q's numerator and denominator are POLYNOMIALS (a linear system's Cramer
+     solution always is), EXACT: each parameter p in [lo, hi] read as x/s (s the common denominator of its ends, x in
+     an INTEGER box) and N, D multiplied by one positive factor into integer polynomials in x (`_scaled`) — the
+     quotient unchanged, every corner exact; otherwise the box rounded OUTWARD to dyadics (checked in fractions);
   3. a bound `N/D <= p/r` CLEARED to `p·D − r·N >= 0` (`D > 0` on the box, checked by the kernel through `posOK`):
      a tight requirement (met exactly at a corner) stays provable — the corners of a polynomial read exactly;
   4. ZBound.findV (Lean, compiled `#eval`) PROPOSES a cover tree — monotone leaves, interval leaves, cuts — printed
@@ -17,6 +19,7 @@ parameter vector in the box:
 Status: "theorem" (the kernel accepted), "no tree" (the search found none within its depth), "refused" (the kernel
 did not accept), "not translated" (not a linear system, or a function ZXE lacks).
 """
+import math
 import os
 import re
 import subprocess
@@ -65,10 +68,171 @@ def _dy_out(x, up):
 
 
 def _run(text, path):
-    with open(path, "w") as f:
+    # atomic: two stands proving the same requirement at once (the same content hash, the same file) never read a
+    # half-written file (ztl-stand --prove over many bricks in parallel, 2026-11-08)
+    tmp = f"{path}.{os.getpid()}.tmp"
+    with open(tmp, "w") as f:
         f.write(text)
+    os.replace(tmp, path)
     r = subprocess.run(["lake", "env", "lean", path], cwd=LEAN, capture_output=True, text=True, timeout=3000)
     return r.stdout + r.stderr
+
+
+def _padd(a, b, sg=1):
+    out = dict(a)
+    for m, c in b.items():
+        out[m] = out.get(m, F(0)) + sg * c
+        if out[m] == 0:
+            del out[m]
+    return out
+
+
+def _pmul(a, b):
+    out = {}
+    for m1, c1 in a.items():
+        for m2, c2 in b.items():
+            m = tuple(x + y for x, y in zip(m1, m2))
+            out[m] = out.get(m, F(0)) + c1 * c2
+            if out[m] == 0:
+                del out[m]
+    return out
+
+
+def _rnorm(N, D, n):
+    """A zero numerator drops its denominator; a constant denominator folds into the numerator. (2026-11-08, ztl-stand
+    blind/b01: Cramer's zero cofactor terms `0 · (G·d⁴/(8·Dm³·n))` multiplied every term's denominator into D —
+    gap = (Lins − lift) − (n + 2)·d became a quotient of degree-20 polynomials and no tree was found.)"""
+    one = {(0,) * n: F(1)}
+    if not N:
+        return {}, one
+    if len(D) == 1 and (0,) * n in D:
+        c = D[(0,) * n]
+        return {m: v / c for m, v in N.items()}, one
+    return N, D
+
+
+def _rat(node, idx):
+    r = _rat0(node, idx)
+    return None if r is None else _rnorm(r[0], r[1], len(idx))
+
+
+def _rat0(node, idx):
+    """A RATIONAL node -> (numerator, denominator) polynomials {exponent tuple: Fraction}, or None (a function:
+    exp, ln, a fractional power — not a quotient of polynomials). A linear system's Cramer solution, and any
+    rational expression of it (P = I*I*R), is one."""
+    n = len(idx)
+    one = {(0,) * n: F(1)}
+    if isinstance(node, (F, int)):
+        return ({(0,) * n: F(node)} if node else {}), one
+    if isinstance(node, str):
+        if node not in idx:
+            return None
+        e = [0] * n; e[idx[node]] = 1
+        return {tuple(e): F(1)}, one
+    op = node[0]
+    if op == "sum":
+        acc = ({}, one)
+        for x in node[1]:
+            r = _rat(x, idx)
+            if r is None:
+                return None
+            acc = (_padd(_pmul(acc[0], r[1]), _pmul(r[0], acc[1])), _pmul(acc[1], r[1]))
+        return acc
+    if op in ("add", "sub", "mul", "div"):
+        x, y = _rat(node[1], idx), _rat(node[2], idx)
+        if x is None or y is None:
+            return None
+        (a, b), (c, d) = x, y
+        if op == "mul":
+            return _pmul(a, c), _pmul(b, d)
+        if op == "div":
+            return (_pmul(a, d), _pmul(b, c)) if c else None
+        return _padd(_pmul(a, d), _pmul(c, b), 1 if op == "add" else -1), _pmul(b, d)
+    if op == "neg":
+        x = _rat(node[1], idx)
+        return None if x is None else ({m: -c for m, c in x[0].items()}, x[1])
+    if op == "pow" and isinstance(node[2], (F, int)) and F(node[2]).denominator == 1 and node[2] >= 0:
+        x = _rat(node[1], idx)
+        if x is None:
+            return None
+        N, D = one, one
+        for _ in range(int(node[2])):
+            N, D = _pmul(N, x[0]), _pmul(D, x[1])
+        return N, D
+    return None
+
+
+def _poly_xe(P, n):
+    """An integer polynomial as XE text in a greedy multivariate HORNER form: the variable in the most monomials
+    factored out first, recursively. (2026-11-08, ztl-stand tasks/t5-divider-tcr: the expanded monomials read
+    R1·(40000·T − 10⁶)·a1 as two terms in R1, the slope in a1 straddled 0 on every box and no monotone leaf passed;
+    factored, the slope reads R1·(40000·T − 10⁶) and has one sign on each side of T = 25.)"""
+    for c in P.values():
+        assert c.denominator == 1
+    return _horner({m: c for m, c in P.items() if c}, n)
+
+
+def _horner(P, n):
+    if not P:
+        return Z.cst(0)
+    cnt = [sum(1 for m in P if m[i] > 0) for i in range(n)]
+    i = max(range(n), key=lambda j: (cnt[j], -j)) if n else 0
+    if not n or cnt[i] == 0:
+        return Z.cst(P.get((0,) * n, F(0)))
+    has = {tuple(e - (1 if j == i else 0) for j, e in enumerate(m)): c for m, c in P.items() if m[i] > 0}
+    rest = {m: c for m, c in P.items() if m[i] == 0}
+    t = f"(.mul (.var {i}) {_horner(has, n)})"
+    return t if not rest else f"(.add {_horner(rest, n)} {t})"
+
+
+def _peval(P, x):
+    tot = F(0)
+    for m, c in P.items():
+        t = c
+        for xi, e in zip(x, m):
+            t *= F(xi) ** e
+        tot += t
+    return tot
+
+
+def _scaled(node, params, qs):
+    """EXACT, no rounding (2026-11-08: a 27 ohm ±1 % box [26.73, 27.27] rounded outward to dyadics broke a
+    requirement met exactly at a corner — ztl-stand examples/power-16thW-or-quarterW.json, `no tree`). Each
+    parameter p_i in [lo_i, hi_i] is read as x_i / s_i with s_i the common denominator of its ends, so x_i lies in
+    an INTEGER box; N and D are multiplied by the same positive factor Π s_i^k_i · L, turning both into integer
+    polynomials in x — the quotient is unchanged and every corner reads exactly. None: not polynomials."""
+    idx = {p: i for i, p in enumerate(params)}
+    r = _rat(node, idx)
+    if r is None or not r[1]:
+        return None
+    PN, PD = r
+    n = len(params)
+    s = [math.lcm(F(qs[p]["lo"]).denominator, F(qs[p]["hi"]).denominator) for p in params]
+    k = [max([m[i] for m in list(PN) + list(PD)] or [0]) for i in range(n)]
+
+    def sub(P):
+        out = {}
+        for m, c in P.items():
+            f = c
+            for i in range(n):
+                f *= F(s[i]) ** (k[i] - m[i])
+            out[m] = f
+        return out
+    N2, D2 = sub(PN), sub(PD)
+    L = 1
+    for c in list(N2.values()) + list(D2.values()):
+        L = math.lcm(L, c.denominator)
+    N2 = {m: c * L for m, c in N2.items()}
+    D2 = {m: c * L for m, c in D2.items()}
+    box = {p: (F(qs[p]["lo"]) * s[i], F(qs[p]["hi"]) * s[i]) for i, p in enumerate(params)}
+    assert all(a.denominator == 1 and b.denominator == 1 for a, b in box.values())
+    # the identity N2(x)/D2(x) = N(p)/D(p), x_i = s_i p_i, at two points (exact algebra, said: Python, not Lean)
+    for t in (F(1, 3), F(5, 7)):
+        p = [F(qs[q]["lo"]) + t * (F(qs[q]["hi"]) - F(qs[q]["lo"])) for q in params]
+        x = [p[i] * s[i] for i in range(n)]
+        if _peval(PD, p) != 0:
+            assert _peval(N2, x) * _peval(PD, p) == _peval(PN, p) * _peval(D2, x)
+    return N2, D2, box, dict(zip(params, s))
 
 
 def _box_lean(params, box):
@@ -82,7 +246,7 @@ def _box_lean(params, box):
 
 def bound_to_lean(laws, unknowns, qtext, target, reqs, name, depth=14, trees=None):
     """laws: "lhs == rhs" strings; unknowns: the derived quantities; qtext: the sheet ("R1=[990,1010] credit, ...");
-    target: the derived quantity; reqs: [(">=", c) | ("<=", c)]; name: the Lean namespace. `trees`: given trees
+    target: the derived quantity, or an expression of the unknowns and the data ("I*I*R1"); reqs: [(">=", c) | ("<=", c)]; name: the Lean namespace. `trees`: given trees
     (the search skipped) — the negative control pastes an accepted tree under a false bound."""
     import znumjudge as ZJ
     import zcertify as ZC
@@ -91,7 +255,13 @@ def bound_to_lean(laws, unknowns, qtext, target, reqs, name, depth=14, trees=Non
         sol = ZC.solve_system(laws, unknowns, qs)
     except Exception as ex:
         return {"status": "not translated", "why": f"not a linear square system: {ex}"}
-    node = sol[target]
+    if target in sol:
+        node = sol[target]
+    else:                   # an EXPRESSION of the unknowns and the data (P = I*I*R): the solutions substituted
+        try:
+            node = ZC._subst(ZJ._parse_arith(target, qs), sol)
+        except Exception as ex:
+            return {"status": "not translated", "why": f"the target {target!r}: {ex}"}
     pinned = {n: F(q["lo"]) for n, q in qs.items() if n not in unknowns and q["lo"] == q["hi"]
               and not isinstance(q["lo"], float)}
     node = _subst(node, pinned)
@@ -100,20 +270,30 @@ def bound_to_lean(laws, unknowns, qtext, target, reqs, name, depth=14, trees=Non
         if isinstance(qs[n]["lo"], float) or isinstance(qs[n]["hi"], float):
             return {"status": "not translated", "why": f"{n} is unbounded"}
     idx = {n: i for i, n in enumerate(params)}
-    box = {n: (_dy_out(qs[n]["lo"], False), _dy_out(qs[n]["hi"], True)) for n in params}
-    assert all(box[n][0] <= F(qs[n]["lo"]) and F(qs[n]["hi"]) <= box[n][1] for n in params)
-    env = {n: float((box[n][0] + box[n][1]) / 2) for n in params}
     quotient = isinstance(node, tuple) and node[0] == "div"
-    if quotient:
-        Nn, Dn = node[1], node[2]
-        if K.fl(Dn, env) < 0:                        # a negative determinant: both signs turned
+    Nn, Dn = (node[1], node[2]) if quotient else (node, F(1))
+    sc = _scaled(node, params, qs)
+    scale = None
+    if sc is not None:                               # exact: integer box, integer polynomials (see _scaled)
+        N2, D2, box, scale = sc
+        x0 = [(box[p][0] + box[p][1]) / 2 for p in params]
+        if _peval(D2, x0) < 0:                       # a negative determinant: both signs turned
+            N2, D2 = {m: -c for m, c in N2.items()}, {m: -c for m, c in D2.items()}
+        quotient = True
+        xe_N, xe_D = _poly_xe(N2, len(params)), _poly_xe(D2, len(params))
+        xe_q = f"(.div {xe_N} {xe_D})"
+    else:
+        box = {n: (_dy_out(qs[n]["lo"], False), _dy_out(qs[n]["hi"], True)) for n in params}
+        assert all(box[n][0] <= F(qs[n]["lo"]) and F(qs[n]["hi"]) <= box[n][1] for n in params)
+        env = {n: float((box[n][0] + box[n][1]) / 2) for n in params}
+        if quotient and K.fl(Dn, env) < 0:          # a negative determinant: both signs turned
             Nn, Dn = ("sub", F(0), Nn), ("sub", F(0), Dn)
-    try:
-        xe_q = Z.to_xe(("div", Nn, Dn) if quotient else node, idx)
-        xe_N = Z.to_xe(Nn, idx) if quotient else None
-        xe_D = Z.to_xe(Dn, idx) if quotient else None
-    except ValueError as ex:
-        return {"status": "not translated", "why": str(ex)}
+        try:
+            xe_q = Z.to_xe(("div", Nn, Dn) if quotient else node, idx)
+            xe_N = Z.to_xe(Nn, idx) if quotient else None
+            xe_D = Z.to_xe(Dn, idx) if quotient else None
+        except ValueError as ex:
+            return {"status": "not translated", "why": str(ex)}
     forms = []          # (label, XE text of the cleared form >= 0, c, side)
     for op, c in reqs:
         c = F(c)
@@ -149,25 +329,42 @@ def xQ : XE := {xe_q}
                     "out": out[:400]}
         trees[k] = m.group(1)
     body = head
+    if quotient:
+        body += f"""theorem q_pos (x : Nat → RExpr) (hx : InBox rCF B x) :
+    rCF.pos (evR x xD) ∧ rCF.r (rCF.mul (evR x xD) (evR x xQ)) (evR x xN) :=
+  div_value hx (a := xN) (b := xD) (by decide +kernel)
+"""
     for k, (op, c, form) in enumerate(forms):
         body += f"""def F{k} : XE := {form}
 def T{k} : VT := {trees[k]}
 theorem cleared{k} : ∀ x : Nat → RExpr, InBox rCF B x → rCF.le (dv rOH {Z.dy(0)}) (evR x F{k}) :=
   bound_vrM (lo := true) (vs := {vs}) (T := T{k}) (by decide +kernel) (by decide +kernel)
 """
-    if quotient:
-        body += f"""theorem q_pos (x : Nat → RExpr) (hx : InBox rCF B x) :
-    rCF.pos (evR x xD) ∧ rCF.r (rCF.mul (evR x xD) (evR x xQ)) (evR x xN) :=
-  div_value hx (a := xN) (b := xD) (by decide +kernel)
+        # THE REQUIREMENT ITSELF, as `r·q ≤ p` / `p ≤ r·q` (q ≤ p/r without division): the cleared form, the
+        # quotient's value and `ZBound.le_of_quotR` — the reading's glue is a theorem, not prose
+        p, r = c.numerator, c.denominator
+        R, P = f"(evR x (XE.cst {Z.dy(r)}))", f"(evR x (XE.cst {Z.dy(p)}))"
+        stmt = (f"rCF.le (rCF.mul {R} (evR x xQ)) {P}" if op == "<=" else f"rCF.le {P} (rCF.mul {R} (evR x xQ))")
+        if quotient:
+            pf = (f"""  obtain ⟨hpos, hv⟩ := q_pos x hx
+  exact {"le_of_quotR" if op == "<=" else "ge_of_quotR"} hpos hv (rCF.le_respects (zv_isZ rOH (c := {Z.dy(0)}) rfl) (rCF.refl _) (cleared{k} x hx))""")
+        else:
+            pf = (f"""  exact le_of_sub_nonneg (rCF.le_respects (zv_isZ rOH (c := {Z.dy(0)}) rfl) (rCF.refl _) (cleared{k} x hx))""")
+        body += f"""/-- **The requirement** `q {op} {p}/{r}` for every point of the box. -/
+theorem req{k} (x : Nat → RExpr) (hx : InBox rCF B x) : {stmt} := by
+{pf}
 """
-    body += f"end {name}\n" + "".join(f"#print axioms {name}.cleared{k}\n" for k in range(len(forms)))
+    body += f"end {name}\n" + "".join(f"#print axioms {name}.cleared{k}\n#print axioms {name}.req{k}\n"
+                                         for k in range(len(forms)))
     if quotient:
         body += f"#print axioms {name}.q_pos\n"
     path = os.path.join(gen, name + ".lean")
     out = _run(body, path)
-    ok = "error" not in out and out.count("does not depend on any axioms") == len(forms) + (1 if quotient else 0)
+    ok = "error" not in out and out.count("does not depend on any axioms") == 2 * len(forms) + (1 if quotient else 0)
     res = {"status": "theorem" if ok else "refused", "file": path, "params": params, "box": box,
-           "quotient": quotient, "trees": trees, "out": out[:600]}
+           "quotient": quotient, "trees": trees, "out": out[:600],
+           # var i of the theorem is scale[p] · p (an integer box) when exact; else p itself over a dyadic box
+           "scale": scale}
     return res
 
 

@@ -5,6 +5,10 @@ The curator, 2026-11-08: the stand should give proofs, not only certificates. He
     its laws, for every real R1, R2 in the box — a THEOREM (met exactly at the corners: monotone leaves);
   * a requirement with a margin on a three-resistor network (R3 in series) — a THEOREM;
   * a law that is not linear in the unknowns — NOT TRANSLATED (said, not hidden);
+  * not dyadic and met exactly at the corners (Vin = 3.3 V, 27 ohm +-1 %): EXACT through the integer box (x = 100·R),
+    and 1/10000 past the attained end — no theorem;
+  * a target that is an EXPRESSION of the unknowns (the power I*I*R1), attained inside a face — a theorem; past
+    it — none;
   * NEGATIVE CONTROL: the divider's accepted tree under a false bound (Vout <= 2.5, the true maximum 2.525) — the
     kernel must refuse it.
 """
@@ -44,6 +48,22 @@ if st.get("trees"):
     check("the accepted tree under Vout <= 2.5 (the maximum is 2.525): the kernel refuses", bad["status"] == "refused", bad)
 else:
     check("negative control ran", False, "no trees")
+print("5. not dyadic, met exactly at the corners (ztl-stand power-16thW-or-quarterW: 27 ohm +-1 % read `no tree`)")
+TIGHT = (["Vin - Vout == I*R1", "Vout == I*R2"], ["I", "Vout"],
+         "Vin=3.3 credit, R1=[26.73,27.27] credit, R2=[26.73,27.27] credit, I=? credit, Vout=? credit")
+st5 = ZB.bound_to_lean(*TIGHT, "Vout", [(">=", "1.6335"), ("<=", "1.6665")], "ZGenTight")
+check("Vin = 3.3, R = 27 +-1 %: Vout in [1.6335, 1.6665] (both ends attained) — a theorem, exact integer box",
+      st5["status"] == "theorem" and st5.get("scale") == {"R1": 100, "R2": 100}, st5)
+st6 = ZB.bound_to_lean(*TIGHT, "Vout", [("<=", "1.6664")], "ZGenTightBad")
+check("the other side: Vout <= 1.6664 (below the attained 1.6665) — no theorem", st6["status"] != "theorem", st6)
+print("6. a target that is an EXPRESSION of the unknowns: the power P1 = I*I*R1 (ztl-stand power-16thW-or-quarterW)")
+PW = (["Vin - Vout == I*R1", "Vout == I*R2"], ["I", "Vout"],
+      "Vin=5 credit, R1=[26.73,27.27] credit, R2=[26.73,27.27] credit, I=? credit, Vout=? credit")
+# max of 25·R1/(R1+R2)^2 over the box: 625/2673, on the diagonal R1 = R2 = 26.73 (the slope in R1 changes sign there)
+st7 = ZB.bound_to_lean(*PW, "I*I*R1", [("<=", "625/2673")], "ZGenPow")
+check("P1 = I*I*R1 <= 625/2673 (attained, not monotone in R1): a theorem", st7["status"] == "theorem", st7)
+st8 = ZB.bound_to_lean(*PW, "I*I*R1", [("<=", "624/2673")], "ZGenPowBad")
+check("the other side: P1 <= 624/2673 — no theorem", st8["status"] != "theorem", st8)
 print(f"\n{ok} ok, {fail} fail")
 print("ZBOUND LEAN BRIDGE GREEN" if fail == 0 else "ZBOUND LEAN BRIDGE RED")
 sys.exit(1 if fail else 0)

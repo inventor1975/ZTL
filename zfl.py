@@ -302,14 +302,14 @@ COLUMNS = [
         # "? FOR UNKNOWN" WAS FALSE (29.09, blind cloud test): `?` is the
         # quantity the question asks for and is SOLVED for; an unknown input
         # written as `?` came back T EARNED. An unknown input is an interval.
-        "en": ("value", "a number, an interval [0,10], or ? for the quantity the question asks for (it is solved for, not measured); an unknown input is an interval, e.g. [0,inf]"),
-        "ru": ("величина", "число, интервал [0,10] или ? для искомой величины (её решают, а не измеряют); неизвестное входное значение — интервал, например [0,inf]"),
-        "de": ("Wert", "Zahl, Intervall [0,10] oder ? für die gesuchte Größe (sie wird gelöst, nicht gemessen); ein unbekannter Eingabewert ist ein Intervall, z. B. [0,inf]"),
-        "fr": ("valeur", "nombre, intervalle [0,10] ou ? pour la grandeur cherchée (elle est résolue, pas mesurée) ; une entrée inconnue est un intervalle, p. ex. [0,inf]"),
-        "es": ("valor", "número, intervalo [0,10] o ? para la magnitud buscada (se resuelve, no se mide); un dato desconocido es un intervalo, p. ej. [0,inf]"),
-        "uk": ("величина", "число, інтервал [0,10] або ? для шуканої величини (її розв'язують, а не вимірюють); невідоме вхідне значення — інтервал, напр. [0,inf]"),
-        "he": ("ערך", "מספר, תחום [0,10] או ? לגודל המבוקש (פותרים אותו, לא מודדים); ערך קלט לא ידוע הוא תחום, למשל [0,inf]"),
-        "eg": ["1500", "[0,10]", "?"],
+        "en": ("value", "a number, an interval [0,10], or ? for the quantity the question asks for (it is solved for, not measured); ? in [0,2] searches it in [0,2] (for a system: the complete answer there); an unknown input is an interval, e.g. [0,inf]"),
+        "ru": ("величина", "число, интервал [0,10] или ? для искомой величины (её решают, а не измеряют); ? in [0,2] ищет её в [0,2] (для системы — полный ответ там); неизвестное входное значение — интервал, например [0,inf]"),
+        "de": ("Wert", "Zahl, Intervall [0,10] oder ? für die gesuchte Größe (sie wird gelöst, nicht gemessen); ? in [0,2] sucht sie in [0,2] (bei einem System: die vollständige Antwort dort); ein unbekannter Eingabewert ist ein Intervall, z. B. [0,inf]"),
+        "fr": ("valeur", "nombre, intervalle [0,10] ou ? pour la grandeur cherchée (elle est résolue, pas mesurée) ; ? in [0,2] la cherche dans [0,2] (pour un système : la réponse complète là) ; une entrée inconnue est un intervalle, p. ex. [0,inf]"),
+        "es": ("valor", "número, intervalo [0,10] o ? para la magnitud buscada (se resuelve, no se mide); ? in [0,2] la busca en [0,2] (en un sistema: la respuesta completa allí); un dato desconocido es un intervalo, p. ej. [0,inf]"),
+        "uk": ("величина", "число, інтервал [0,10] або ? для шуканої величини (її розв'язують, а не вимірюють); ? in [0,2] шукає її в [0,2] (для системи — повна відповідь там); невідоме вхідне значення — інтервал, напр. [0,inf]"),
+        "he": ("ערך", "מספר, תחום [0,10] או ? לגודל המבוקש (פותרים אותו, לא מודדים); ? in [0,2] מחפש אותו ב-[0,2] (במערכת: התשובה המלאה שם); ערך קלט לא ידוע הוא תחום, למשל [0,inf]"),
+        "eg": ["1500", "[0,10]", "?", "? in [0,2]"],
     },
     {
         "key": "unit", "type": "text", "required": False, "advanced": False,
@@ -1074,10 +1074,14 @@ def validate(doc):
                     "a choice between separate values is not a quantity: "
                     "give each its own row, or write the interval that "
                     "covers them"))
-            elif not re.match(r"^(\?|\[[^\]]+\]|[-\d][\d.,/eE+-]*)$", val):
+            elif is_question(val) and val != "?" and question_region(val) is None:
                 issues.append(_issue(
                     "error", "E_VALUE_FORM", f"{at} / value",
-                    "a value is a number, an interval [0,10], or ? — "
+                    f"a search region is `? in [a, b]` with two numbers, a < b — '{val}' is not one"))
+            elif not is_question(val) and not re.match(r"^(\?|\[[^\]]+\]|[-\d][\d.,/eE+-]*)$", val):
+                issues.append(_issue(
+                    "error", "E_VALUE_FORM", f"{at} / value",
+                    "a value is a number, an interval [0,10], ?, or ? in [a, b] — "
                     f"'{val}' is none of them"))
         # an unreadable unit is an answer at the cell, not an exception
         # thrown from three modules down
@@ -1549,6 +1553,28 @@ def numeric_rows(rows):
     return [r for r in rows if (r.get("value") or "").strip()]
 
 
+_QUESTION_RE = re.compile(r"^\?\s*(?:in\s*(\[[^\]]+\]))?$")
+
+
+def is_question(value):
+    """`?` — the quantity the question asks for; `? in [a, b]` — the same, searched in [a, b] (2026-11-08, B)."""
+    return bool(_QUESTION_RE.match((value or "").strip()))
+
+
+def question_region(value):
+    """The search region of `? in [a, b]` as two Fractions, or None (a bare `?`, or ends that are not numbers)."""
+    m = _QUESTION_RE.match((value or "").strip())
+    if not m or not m.group(1):
+        return None
+    from fractions import Fraction as _F
+    try:
+        lo, hi = (x.strip() for x in m.group(1)[1:-1].split(","))
+        lo, hi = _F(lo), _F(hi)
+    except (ValueError, ZeroDivisionError):
+        return None
+    return (lo, hi) if lo < hi else None
+
+
 def to_sheet(rows):
     """The numeric floor's own line, assembled from the cells so that nobody
     has to write it. `x=1500 earned:inv-17 RUB` was always a good language —
@@ -1561,6 +1587,8 @@ def to_sheet(rows):
         # whitespace inside a value is layout, not content: "[0, 1]" is how people and models write an interval, and the
         # sheet reader takes "[0,1]" only (2026-11-05: a blind formalization died three rounds on "[0, 1]")
         value = re.sub(r"\s+", "", r["value"])           # outside the f-string: Python 3.11 (CI) forbids a backslash there
+        if is_question(value):
+            value = "?"                                   # a search region is the system solver's, not the sheet's
         bits = [f"{r['name']}={value}", prov]
         if (r.get("scale") or "").strip():
             bits.append(r["scale"].strip())
@@ -1636,7 +1664,7 @@ def to_book(rows):
         # for the ledger to hold, and building `b == ?` crashed the sheet
         # parser outright (found by running every catalogue example, which
         # is the whole reason they are run rather than merely stored)
-        if (r.get("value") or "").strip() == "?":
+        if is_question(r.get("value")):
             continue
         prov = (f"earned:{_witness(r)}"
                 if (r.get("status") == "verified" and r.get("ground"))
@@ -2040,12 +2068,16 @@ def _system_equations(text):
     return eqs
 
 
-def _system_answer(claim, q, unknowns):
-    """A SYSTEM (2026-11-08, the curator's "Синтаксис систем в ZFL — принято. Делай."; answer A first): several
-    unknowns `x = ?` and a claim of as many equations. zsystem finds a certificate and checks it exactly (Krawczyk,
-    the contraction form, the kernel's readings): a solution in a cube, the ONLY one there; solutions elsewhere are
-    NOT excluded, and the answer says so (W_SYSTEM_LOCAL). None when the claim is not such a system or nothing is
-    proved — then the answer stays the solver's."""
+def _system_answer(claim, q, unknowns, regions=None):
+    """A SYSTEM (2026-11-08, the curator's "Синтаксис систем в ZFL — принято. Делай."): several unknowns `x = ?` and
+    a claim of as many equations. zsystem finds certificates and checks them exactly (Krawczyk, the contraction form,
+    the kernel's readings).
+      B — every unknown carries a search region (`x = ? in [0, 2]`): the region is exhausted (each box excluded by a
+          reading or inside a certified solution's cube) and the answer is COMPLETE: all the solutions in the region,
+          each unique in its cube (none: the claim is refuted there);
+      A — otherwise (or when the region is not exhausted within the budget): one solution in a cube, the only one
+          there; solutions elsewhere NOT excluded (W_SYSTEM_LOCAL).
+    None when the claim is not such a system or nothing is proved — then the answer stays the solver's."""
     eqs = _system_equations(claim)
     if eqs is None or len(eqs) != len(unknowns) or len(unknowns) < 2:
         return None
@@ -2057,24 +2089,52 @@ def _system_answer(claim, q, unknowns):
         used = set().union(*[_ZC._names(g) for g in laws])
         if not set(unknowns) <= used:
             return None
+    except Exception:
+        return None
+    from fractions import Fraction as _F
+    params = sorted(n for n in used if n in q and n not in unknowns)
+    weak = [n for n in params if q[n].get("prov") != "earned"]
+    prov = "earned" if not weak else "credit"
+
+    def answer(sols, complete, how):
+        solved = {}
+        for i, n in enumerate(unknowns):
+            boxes = []
+            for cert, _h in sols:
+                c, rad = _F(cert["centre"][i]), _F(cert["radius"])
+                boxes.append((c - rad, c + rad))
+            if boxes:
+                solved[n] = {"lo": str(min(b[0] for b in boxes)), "hi": str(max(b[1] for b in boxes)),
+                             "pinned": False, "prov": prov, "from": params, "weak": weak,
+                             "roots": [f"[{lo}, {hi}]" for lo, hi in boxes], "system": True, "complete": complete}
+        disp = ("REFUTED" if complete and not sols else "EARNED" if prov == "earned" else "ON CREDIT")
+        return {"solved": solved, "disposition": disp, "complete": complete, "count": len(sols),
+                "certs": [c for c, _h in sols], "how": how}
+
+    region_ok = bool(regions) and all(regions.get(n) for n in unknowns)
+    found = []
+    if region_ok:
+        try:
+            res = _ZS.solve_all(laws, list(unknowns), q, {n: regions[n] for n in unknowns})
+        except Exception:
+            res = None
+        if res is not None and res["complete"]:
+            k = len(res["solutions"])
+            return answer(res["solutions"], True,
+                          f"all the solutions in the search region: {k}" + (", each the only one in its cube"
+                                                                          if k else " (the claim is refuted there)"))
+        found = res["solutions"] if res else []
+    if found:
+        return answer(found, False, "the search region was not exhausted within the budget")
+    try:
         res = _ZS.search(laws, list(unknowns), q)
     except Exception:
         return None
     if res is None:
         return None
     cert, (_ok, how) = res
-    from fractions import Fraction as _F
-    rad = _F(cert["radius"])
-    params = sorted(n for n in used if n in q and n not in unknowns)
-    weak = [n for n in params if q[n].get("prov") != "earned"]
-    prov = "earned" if not weak else "credit"
-    solved = {}
-    for n, c in zip(unknowns, cert["centre"]):
-        c = _F(c)
-        solved[n] = {"lo": str(c - rad), "hi": str(c + rad), "pinned": False, "prov": prov,
-                     "from": params, "weak": weak, "roots": [f"[{c - rad}, {c + rad}]"], "system": True}
-    return {"solved": solved, "disposition": "EARNED" if prov == "earned" else "ON CREDIT", "cert": cert,
-            "how": how}
+    return answer([(cert, how)], False, how)
+
 
 def run(doc, ground_registry=None):
     """Validate, then ask whichever instruments apply.
@@ -2149,7 +2209,7 @@ def run(doc, ground_registry=None):
             # with the provenance the answer inherited from the derivation.
             # Judging alone would have said "measure x", which is true and
             # useless when the sheet already determines it.
-            unknown = any((r.get("value") or "").strip() == "?"
+            unknown = any(is_question(r.get("value"))
                           for r in numeric_rows(rows))
             if unknown:
                 r = solve_claim(claim, q, m)
@@ -2169,13 +2229,15 @@ def run(doc, ground_registry=None):
                 solved = {}
             system = None
             if unknown:
-                unk = [x["name"] for x in numeric_rows(rows) if (x.get("value") or "").strip() == "?"]
+                unk = [x["name"] for x in numeric_rows(rows) if is_question(x.get("value"))]
+                regions = {x["name"]: question_region(x.get("value")) for x in numeric_rows(rows)
+                           if is_question(x.get("value"))}
                 # only where the exact solver gave NO answer: its pinned values and its paired roots
                 # (`area == s*s & area - 5*s + 6 == 0` -> s in {2, 3}) are complete and stay
                 # (test_quadratic caught the first version overwriting them, 2026-11-08)
                 if len(unk) >= 2 and not any(solved.get(n, {}).get("pinned") or solved.get(n, {}).get("roots")
                                              for n in unk):
-                    system = _system_answer(claim, q, unk)
+                    system = _system_answer(claim, q, unk, regions)
                     if system is not None:
                         solved.update(system["solved"])
                         r = dict(r, disposition=system["disposition"])
@@ -2205,14 +2267,30 @@ def run(doc, ground_registry=None):
             except Exception:
                 pass
             if system is not None:
-                report["numeric"]["verdict"] = "T"
-                report["numeric"]["grade"] = ("hereditary" if system["disposition"] == "EARNED"
+                report["numeric"]["verdict"] = "F" if system["disposition"] == "REFUTED" else "T"
+                report["numeric"]["grade"] = ("hereditary" if system["disposition"] in ("EARNED", "REFUTED")
                                               else "until-verification")
-                report["numeric"]["system"] = {"certificate": system["cert"], "how": system["how"]}
+                report["numeric"]["system"] = {"complete": system["complete"], "solutions": system["count"],
+                                               "certificates": system["certs"], "how": system["how"]}
+                where = ", ".join(sorted(system["solved"])) or "claim"
+                if system["complete"]:
+                    issues.append(_issue(
+                        "warning", "W_SYSTEM_ALL", where,
+                        f"the system was solved in the whole search region: {system['how']} (Krawczyk's test and "
+                        f"the readings' exclusion of the rest, checked exactly); a cube may reach out of the region"))
+                else:
+                    issues.append(_issue(
+                        "warning", "W_SYSTEM_LOCAL", where,
+                        "the system has a solution in the cube given for each unknown, and it is the only one there "
+                        "(Krawczyk's test, checked exactly); solutions OUTSIDE the cube are not excluded"
+                        + ("" if system["how"].startswith("a solution") else f" ({system['how']})")
+                        + ". Give each unknown a search region (x = ? in [a, b]) for the complete answer."))
+            if unknown and any(question_region(x.get("value")) for x in numeric_rows(rows)) and \
+                    not (system is not None and system["complete"]):
                 issues.append(_issue(
-                    "warning", "W_SYSTEM_LOCAL", ", ".join(sorted(system["solved"])),
-                    "the system has a solution in the cube given for each unknown, and it is the only one there "
-                    "(Krawczyk's test, checked exactly); solutions OUTSIDE the cube are not excluded."))
+                    "warning", "W_REGION_UNUSED", "value",
+                    "a search region `? in [a, b]` is read for a SYSTEM (two or more `?` values and as many "
+                    "equations, every unknown with its region); here it was not used"))
             # REFUTED WITH NO LETTER (29.09): a `?` no value can satisfy came
             # back disposition REFUTED, verdict null. Refuted is F.
             if report["numeric"]["verdict"] is None and r["disposition"] == "REFUTED":
@@ -2242,7 +2320,7 @@ def run(doc, ground_registry=None):
             # (it said "needs 1 fact: x" beside REFUTED until 2026-09-24)
             if unknown and not solved and r["disposition"] != "REFUTED":
                 names = [x["name"] for x in numeric_rows(rows)
-                         if (x.get("value") or "").strip() == "?"]
+                         if is_question(x.get("value"))]
                 report["numeric"]["missing"] = missing_facts(claim, sheet,
                                                              names)
         except Exception as exc:

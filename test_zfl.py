@@ -846,6 +846,54 @@ def sec20_a_system_of_equations_is_a_question_too():
     print("   forged certificates refused: the cube moved off the solution, a radius 1 (no contraction), Z = 0")
 
 
+def sec21_a_system_in_a_search_region_is_answered_completely():
+    """(2026-11-08, the curator's "Делай Б") Every unknown with a search region `x = ? in [a, b]`: the region is
+    exhausted (each box excluded by the kernel's readings or inside a certified solution's cube) and the answer is
+    COMPLETE (W_SYSTEM_ALL). Both sides: the circle meets the exponential twice in [-2, 2]² — both found, each checked
+    against the equations in floats; x² + y² = −1 has none — REFUTED; without regions the answer stays local
+    (W_SYSTEM_LOCAL); a region on a single unknown is said to be unused (W_REGION_UNUSED); a malformed region is
+    an error at the cell (E_VALUE_FORM). Sabotage: with the exclusion switched off the region is never exhausted —
+    no complete answer is claimed."""
+    import math
+    import zsystem
+    from fractions import Fraction
+    print("-" * 72)
+    print("§21 a system in a search region is answered completely")
+    U = lambda n, v="?": {"name": n, "means": n, "status": "unverified", "value": v}
+    r = zfl.run({"rows": [U("x", "? in [-2, 2]"), U("y", "? in [-2, 2]")], "claim": "x*x + y*y = 1 & x = exp(y)"})
+    n = r["report"]["numeric"]
+    assert n["disposition"] == "EARNED" and n["system"]["complete"] and n["system"]["solutions"] == 2, n
+    assert any(i["code"] == "W_SYSTEM_ALL" for i in r["issues"])
+    pts = []
+    for bx, by in zip(n["solved"]["x"]["roots"], n["solved"]["y"]["roots"]):
+        x = float(sum(Fraction(t) for t in bx.strip("[]").split(","))) / 2
+        y = float(sum(Fraction(t) for t in by.strip("[]").split(","))) / 2
+        assert abs(x * x + y * y - 1) < 1e-5 and abs(x - math.exp(y)) < 1e-5, (x, y)
+        pts.append((round(x, 6), round(y, 6)))
+    print(f"   the circle meets the exponential in [-2,2]²: ALL the solutions, {sorted(pts)}")
+    r = zfl.run({"rows": [U("x", "? in [-2, 2]"), U("y", "? in [-2, 2]")], "claim": "x*x + y*y = -1 & x = y"})
+    assert r["report"]["numeric"]["disposition"] == "REFUTED" and r["report"]["numeric"]["verdict"] == "F"
+    r = zfl.run({"rows": [U("x"), U("y")], "claim": "x*x + y*y = 1 & x = exp(y)"})
+    assert any(i["code"] == "W_SYSTEM_LOCAL" for i in r["issues"]) and not r["report"]["numeric"]["system"]["complete"]
+    r = zfl.run({"rows": [U("x", "? in [0, 10]")], "claim": "x*x = 2"})
+    assert any(i["code"] == "W_REGION_UNUSED" for i in r["issues"])
+    r = zfl.run({"rows": [U("x", "? in [a, b]")], "claim": "x*x = 2"})
+    assert not r["ok"] and any(i["code"] == "E_VALUE_FORM" for i in r["issues"])
+    print("   none in the region: REFUTED; no regions: local; one unknown: unused, said; a malformed region: refused")
+    import znumjudge as ZJ
+    qs = ZJ.parse_quantities("x=? credit, y=? credit")[0]
+    laws = [ZJ._parse_arith("(x*x + y*y) - (1)", qs), ZJ._parse_arith("(x) - (exp(y))", qs)]
+    keep = zsystem._excluded
+    zsystem._excluded = lambda laws, qs, box: False
+    try:
+        res = zsystem.solve_all(laws, ["x", "y"], qs, {"x": (Fraction(-2), Fraction(2)), "y": (Fraction(-2), Fraction(2))},
+                                budget=400)
+    finally:
+        zsystem._excluded = keep
+    assert not res["complete"], res
+    print("   sabotage: with the exclusion off the region is never exhausted — no complete answer")
+
+
 if __name__ == "__main__":
     print("=" * 72)
     print("ZFL v2 — the table, headless")
@@ -867,6 +915,7 @@ if __name__ == "__main__":
     sec18_a_comparison_can_be_named()
     sec19_ztl_i_degrees()
     sec20_a_system_of_equations_is_a_question_too()
+    sec21_a_system_in_a_search_region_is_answered_completely()
     sec4b_every_example_runs_and_json_types_are_taken_as_they_come()
     sec5_the_spec_can_build_the_form_and_the_page()
     print("=" * 72)

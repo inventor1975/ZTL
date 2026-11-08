@@ -24,6 +24,17 @@ from fractions import Fraction as F
 import zcertify as ZC
 
 
+def _rd(e, qs, piece):
+    """The kernel's reading, or None; ("never", None) when the law has NO value anywhere on the piece (an `ln` of a
+    quantity never positive there, zfunc's NoReadings) — no solution can lie there."""
+    try:
+        return ZC._reading(e, qs, piece)
+    except Exception as ex:                       # znum._NoReadings and its kin
+        if "never" in str(ex):
+            return "never"
+        return None
+
+
 def _mid(iv):
     return float((iv[0] + iv[1]) / 2)
 
@@ -37,8 +48,8 @@ def _fvals(laws, qs, unknowns, x, params_mid):
     piece.update(params_mid)
     out = []
     for g in laws:
-        r = ZC._reading(g, qs, piece)
-        if r is None:
+        r = _rd(g, qs, piece)
+        if r is None or r == "never":
             return None
         out.append(_mid(r))
     return out
@@ -51,8 +62,8 @@ def _jac(dlaws, qs, unknowns, x, params_mid):
     for row in dlaws:
         rr = []
         for dg in row:
-            r = ZC._reading(dg, qs, piece)
-            if r is None:
+            r = _rd(dg, qs, piece)
+            if r is None or r == "never":
                 return None
             rr.append(_mid(r))
         J.append(rr)
@@ -119,8 +130,8 @@ def check(laws, unknowns, qs, cert):
     for g in laws:
         row = []
         for n in unknowns:
-            iv = ZC._reading(ZC.derivative(g, n), qs, cube)
-            if iv is None:
+            iv = _rd(ZC.derivative(g, n), qs, cube)
+            if iv is None or iv == "never":
                 return False, f"no reading of d/d{n} of a law over the cube"
             row.append(iv)
         J.append(row)
@@ -141,8 +152,8 @@ def check(laws, unknowns, qs, cert):
     centre = {n: (y[i], y[i]) for i, n in enumerate(unknowns)}
     Gc = []
     for g in laws:
-        iv = ZC._reading(g, qs, centre)
-        if iv is None:
+        iv = _rd(g, qs, centre)
+        if iv is None or iv == "never":
             return False, "no reading of a law at the centre"
         Gc.append(iv)
     for k in range(d):
@@ -204,3 +215,70 @@ def search(laws, unknowns, qs, guesses=None, radii=None):
             if res[0]:
                 return cert, res
     return None
+
+
+def _excluded(laws, qs, box):
+    """Some law's reading over the box (× the parameter box) excludes 0."""
+    for g in laws:
+        r = _rd(g, qs, box)
+        if r == "never" or (r is not None and (r[0] > 0 or r[1] < 0)):
+            return True
+    return False
+
+
+def _cube_of(cert, unknowns):
+    c = [F(v) for v in cert["centre"]]
+    r = F(cert["radius"])
+    return {n: (c[i] - r, c[i] + r) for i, n in enumerate(unknowns)}
+
+
+def _inside(box, cube):
+    return all(cube[n][0] <= box[n][0] and box[n][1] <= cube[n][1] for n in box)
+
+
+def solve_all(laws, unknowns, qs, region, budget=6000):
+    """B (the curator's "Делай Б", 2026-11-08): ALL the solutions in the search region. The region is split into
+    boxes; each box is EXCLUDED (some law's reading there excludes 0, for every parameter in the box) or lies inside
+    the cube of a CERTIFIED solution (unique there, `check`), or is split again. When nothing is left the answer is
+    complete: every solution in the region is one of the certified ones (each unique in its cube; a cube may reach
+    out of the region). Returns {"complete": bool, "solutions": [(cert, how)], "boxes": n}."""
+    region = {n: (F(region[n][0]), F(region[n][1])) for n in unknowns}
+    sols, cubes = [], []
+    todo, seen = [region], 0
+    while todo:
+        box = todo.pop()
+        seen += 1
+        if seen > budget:
+            return {"complete": False, "solutions": sols, "boxes": seen}
+        if _excluded(laws, qs, box):
+            continue
+        if any(_inside(box, c) for c in cubes):
+            continue
+        guess = [float((box[n][0] + box[n][1]) / 2) for n in unknowns]
+        found = search(laws, unknowns, qs, guesses=[guess], radii=(4, 6, 8, 10, 12, 14, 16, 18, 20))
+        if found is not None:
+            cert, how = found
+            c = [F(v) for v in cert["centre"]]
+            if not any(all(cb[n][0] <= c[i] <= cb[n][1] for i, n in enumerate(unknowns)) for cb in cubes):
+                sols.append((cert, how[1]))
+                cubes.append(_cube_of(cert, unknowns))
+            if any(_inside(box, cb) for cb in cubes):
+                continue
+        n = max(unknowns, key=lambda m: box[m][1] - box[m][0])
+        lo, hi = box[n]
+        if hi - lo <= F(1, 1 << 60):
+            return {"complete": False, "solutions": sols, "boxes": seen}
+        mid = (lo + hi) / 2
+        todo.append(dict(box, **{n: (lo, mid)}))
+        todo.append(dict(box, **{n: (mid, hi)}))
+    # the cubes that EXHAUST the region are as large as the check allows; the ANSWER is each solution in the
+    # smallest cube the check accepts (a sub-cube of a cube with one solution has that one solution only)
+    fine = []
+    for cert, how in sols:
+        g = [float(F(v)) for v in cert["centre"]]
+        f2 = search(laws, unknowns, qs, guesses=[g], radii=(20, 16, 12, 8))
+        if f2 is not None and _inside(_cube_of(f2[0], unknowns), _cube_of(cert, unknowns)):
+            fine.append((f2[0], f2[1][1]))
+        else:
+            fine.append((cert, how))
+    return {"complete": True, "solutions": fine, "boxes": seen}

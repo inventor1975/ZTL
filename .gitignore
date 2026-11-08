@@ -68,3 +68,4 @@ inventory/tau_airline/db_*.json
 # of ZTL. Corpora/ is large calibration data that never belonged in the repo.
 tool/
 Corpora/
+lean/gen/

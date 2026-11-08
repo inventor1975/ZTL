@@ -31,6 +31,7 @@ STANDS = [
     ("zprob.py",       ["ZTL verdict: Z"]),
     ("ztlnetwork.py",  ["ZTLNETWORK GREEN", "joint unknown: 1 − N·p/(f+1), attained"]),
     ("inventory/py311_fstrings.py", ["PY311 FSTRINGS GREEN"]),
+    ("inventory/zgrade_bridge.py", ["ZGRADE BRIDGE GREEN", "a wrong one refused"]),
     ("zswarm_bounds.py", ["SWARM BOUNDS GREEN", "c(k) BY DYNAMIC PROGRAMMING = BRUTE FORCE"]),
     ("zfrechet.py",    ["144 cells, 0 differ", "ZFRECHET: interval logic sits on ZTL with no verdict moved."]),
     ("zdegree.py",     ["6480 formula-marking-mode cases equal the enumeration",

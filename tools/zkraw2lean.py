@@ -29,7 +29,7 @@ SYSTEMS = {
     "chem3p": dict(vars=["x", "y", "z"], laws=["x + y + z - 3", "x*exp(y) - a", "ln(z) + x*y - b"],
                    params={"a": ("1.95", "2.05"), "b": ("0.45", "0.55")}, guess=[1.6, 0.2, 1.2],
                    title="the 3×3 system with REAL PARAMETERS: x + y + z = 3, x·eʸ = a, ln z + x·y = b, "
-                         "a ∈ [1.95, 2.05], b ∈ [0.45, 0.55]", cover={"a": 8, "b": 8}),
+                         "a ∈ [1.95, 2.05], b ∈ [0.45, 0.55]", cover={"a": 5, "b": 5}),
 }
 
 

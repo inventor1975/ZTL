@@ -242,6 +242,89 @@ theorem atan_chord {atn : α → α} (H : AtanLaws S atn) {u u' : α} {I W : Iv}
     refine S.trans (S.add_congr (H.congr huu) (S.refl _)) (S.trans (S.add_neg _) ?_)
     exact S.symm (S.trans (S.mul_congr (S.refl _) hz) (by cr_ring S.toCR))
 
+def negI (I : Iv) : Iv := (dneg I.2, dneg I.1)
+
+/-- `±w/2` for `w` the width of `U`. -/
+def Qh (U : Iv) : Iv := (dneg (ZSinIv.hlf (dadd U.2 (dneg U.1))), ZSinIv.hlf (dadd U.2 (dneg U.1)))
+
+/-- **A CHORD FROM A SECOND-ORDER STEP**: `F(u') − F(u) = (u' − u)·D(u) + R`, `|2R| ≤ (u' − u)²`, both points in
+`U`: the chord is `D(u) + R/(u' − u)`, within `|u' − u|/2 ≤ width(U)/2` of `D(u)`. -/
+theorem taylor_slope {F D : α → α} {u u' : α} {U C W : Iv}
+    (hR : S.le (S.neg (ZSinIv.Sq S u u')) (S.add (S.add (S.add (F u') (S.neg (F u))) (S.neg (S.mul (S.add u' (S.neg u)) (D u))))
+        (S.add (S.add (F u') (S.neg (F u))) (S.neg (S.mul (S.add u' (S.neg u)) (D u))))) ∧
+      S.le (S.add (S.add (S.add (F u') (S.neg (F u))) (S.neg (S.mul (S.add u' (S.neg u)) (D u))))
+        (S.add (S.add (F u') (S.neg (F u))) (S.neg (S.mul (S.add u' (S.neg u)) (D u))))) (ZSinIv.Sq S u u'))
+    (hF : S.r u' u → S.r (F u') (F u)) (hD : Mem S (D u) C) (hu : Mem S u U) (hu' : Mem S u' U)
+    (hW : ivAdd C (Qh U) = some W) : SlIn S (S.add (F u') (S.neg (F u))) (S.add u' (S.neg u)) W := by
+  have b1 := (ZSinIv.half_bound hR.1 hR.2).1
+  have b2 := (ZSinIv.half_bound hR.1 hR.2).2
+  unfold ZSinIv.Sq at b1 b2
+  generalize hRd : S.add (S.add (F u') (S.neg (F u))) (S.neg (S.mul (S.add u' (S.neg u)) (D u))) = R at b1 b2
+  have eΔ : S.r (S.add (F u') (S.neg (F u))) (S.add (S.mul (S.add u' (S.neg u)) (D u)) R) := by
+    rw [← hRd]; cr_ring S.toCR
+  have ew : S.r (dv S.toOH (ZSinIv.hlf (dadd U.2 (dneg U.1))))
+      (S.mul S.half (S.add (dv S.toOH U.2) (S.neg (dv S.toOH U.1)))) :=
+    S.trans (ZAff.dv_succ S _ _) (S.mul_congr (S.refl _) (S.trans (dv_add S.toOH _ _) (S.add_congr (S.refl _) (dv_neg S.toOH _))))
+  have mQ : ∀ y, S.le (S.neg (S.mul S.half (S.add (dv S.toOH U.2) (S.neg (dv S.toOH U.1))))) y →
+      S.le y (S.mul S.half (S.add (dv S.toOH U.2) (S.neg (dv S.toOH U.1)))) → Mem S y (Qh U) := fun y l u =>
+    ⟨S.le_respects (S.trans (S.neg_congr (S.symm ew)) (S.symm (dv_neg S.toOH _))) (S.refl _) l,
+     S.le_respects (S.refl _) (S.symm ew) u⟩
+  have d1 : S.le (S.add u' (S.neg u)) (S.add (dv S.toOH U.2) (S.neg (dv S.toOH U.1))) := by
+    cr_linarith S.toOCR [hu'.2, hu.1]
+  have d2 : S.le (S.neg (S.add (dv S.toOH U.2) (S.neg (dv S.toOH U.1)))) (S.add u' (S.neg u)) := by
+    cr_linarith S.toOCR [hu.2, hu'.1]
+  have w0 : S.le S.zero (S.add (dv S.toOH U.2) (S.neg (dv S.toOH U.1))) := by cr_linarith S.toOCR [hu.1, hu.2]
+  have hF' : S.r (S.add u' (S.neg u)) S.zero → S.r (S.add (F u') (S.neg (F u))) S.zero := fun hz => by
+    have huu : S.r u' u := S.trans (by cr_ring S.toCR : S.r u' (S.add u (S.add u' (S.neg u))))
+      (S.trans (S.add_congr (S.refl _) hz) (S.trans (S.add_comm _ _) (S.zero_add _)))
+    exact S.trans (S.add_congr (hF huu) (S.refl _)) (S.add_neg _)
+  generalize S.add (dv S.toOH U.2) (S.neg (dv S.toOH U.1)) = wv at mQ d1 d2 w0
+  generalize S.add (F u') (S.neg (F u)) = Δ at eΔ hF' ⊢
+  generalize S.add u' (S.neg u) = δ at eΔ hF' d1 d2 b1 b2 ⊢
+  generalize D u = c at eΔ hD
+  intro hn
+  apply nn_case (ap S δ)
+  · intro hap
+    obtain ⟨t, ht⟩ := S.inv hap
+    have h1 := le_mul_left' S d1 (half_nonneg S.toOH)
+    have h2 := le_mul_left' S d2 (half_nonneg S.toOH)
+    have e1 : S.r (S.mul (S.mul S.half (S.mul δ δ)) t) (S.mul S.half δ) :=
+      S.trans (by cr_ring S.toCR : S.r _ (S.mul (S.mul S.half δ) (S.mul δ t)))
+        (S.trans (S.mul_congr (S.refl _) ht) (by cr_ring S.toCR))
+    have f1 := ZSinIv.le_of_r e1
+    have f2 := ZSinIv.ge_of_r e1
+    have key : Mem S (S.mul R t) (Qh U) := by
+      cases hap with
+      | inl hpos =>
+          have t0 := inv_nonneg hpos ht
+          have a1 := le_mul_right S.toOH b1 t0
+          have a2 := le_mul_right S.toOH b2 t0
+          exact mQ _ (by cr_linarith S.toOCR [a1, f1, f2, h2]) (by cr_linarith S.toOCR [a2, f1, f2, h1])
+      | inr hneg =>
+          have ht' : S.r (S.mul (S.neg δ) (S.neg t)) S.one :=
+            S.trans (by cr_ring S.toCR : S.r _ (S.mul δ t)) ht
+          have t0 := inv_nonneg hneg ht'
+          have a1 := le_mul_right S.toOH b1 t0
+          have a2 := le_mul_right S.toOH b2 t0
+          exact mQ _ (by cr_linarith S.toOCR [a2, f1, f2, h2]) (by cr_linarith S.toOCR [a1, f1, f2, h1])
+    have m := mem_add S hD key hW
+    refine hn ⟨S.add c (S.mul R t), m, ?_⟩
+    refine S.trans eΔ ?_
+    refine S.symm (S.trans (by cr_ring S.toCR : S.r _ (S.add (S.mul δ c) (S.mul R (S.mul δ t)))) ?_)
+    exact S.add_congr (S.refl _) (S.trans (S.mul_congr (S.refl _) ht) (by cr_ring S.toCR))
+  · intro hna
+    have hz := S.ap_tight hna
+    have p0 := S.mul_nonneg (half_nonneg S.toOH) w0
+    have m0 : Mem S S.zero (Qh U) := mQ _ (by cr_linarith S.toOCR [p0]) p0
+    have m := mem_add S hD m0 hW
+    refine hn ⟨S.add c S.zero, m, ?_⟩
+    refine S.trans (hF' hz) ?_
+    exact S.symm (S.trans (S.mul_congr (S.refl _) hz) (by cr_ring S.toCR))
+
+theorem mem_negI {x : α} {I : Iv} (h : Mem S x I) : Mem S (S.neg x) (negI I) :=
+  ⟨S.le_respects (S.symm (dv_neg S.toOH _)) (S.refl _) (by cr_linarith S.toOCR [h.2]),
+   S.le_respects (S.refl _) (S.symm (dv_neg S.toOH _)) (by cr_linarith S.toOCR [h.1])⟩
+
 end Slope
 
 /-! ## The slope reading -/
@@ -257,6 +340,14 @@ def slPow (Ka Va : Iv) : Nat → Option Iv
       | some Kn => match ivPow Va n with
         | none => none
         | some Pn => lift2 ivAdd (ivMul Ka Pn) (ivMul Va Kn)
+
+/-- The chord of `sin` on `U`: `cos(U) ± width(U)/2`; of `cos`: `−sin(U) ± width(U)/2`. -/
+def sinSl (U : Iv) : Option Iv := match ZSinIv.ivCos U with
+  | none => none
+  | some C => ivAdd C (Qh U)
+def cosSl (U : Iv) : Option Iv := match ZSinIv.ivSin U with
+  | none => none
+  | some Sv => ivAdd (negI Sv) (Qh U)
 
 /-- THE SLOPE READING over a box: `p'q' − pq = (p' − p)·q' + p·(q' − q)`; `e^{u'} − e^{u} = σ·(u' − u)` with `σ`
 in the value interval of `exp u`. Division: `v' − v = w'·((a' − a) − v·(b' − b))`, `b'w' = 1`; `ln`: `v' − v = w·(a' − a)`, `w` in the
@@ -314,6 +405,20 @@ def slX (B : Box) (V : Nat → Iv) : XE → Option Iv
         | some Va => match psiI Va with
           | none => none
           | some W => ivMul W Kp
+  | .sin p => match slX B V p with
+      | none => none
+      | some Kp => match ivX B p with
+        | none => none
+        | some Vu => match sinSl Vu with
+          | none => none
+          | some W => ivMul W Kp
+  | .cos p => match slX B V p with
+      | none => none
+      | some Kp => match ivX B p with
+        | none => none
+        | some Vu => match cosSl Vu with
+          | none => none
+          | some W => ivMul W Kp
 
 section Sound
 variable {α : Type} {S : CF α}
@@ -344,10 +449,10 @@ theorem sl_pow {d va va' : α} {Ka Va : Iv} (ha : SlIn S (S.add va' (S.neg va)) 
 
 /-- **THE SLOPE READING IS SOUND**: at two points of the box whose coordinates differ by `sᵢ·d`, `sᵢ ∈ Vᵢ`, the values
 `v, v'` of `e` satisfy `v' − v = s·d` for some `s` in the reading — not refuted. -/
-theorem slX_sound {ex atn : α → α} (H : ExpLaws S ex) (Hs : ExpSlope S ex) {B : Box} {V : Nat → Iv}
+theorem slX_sound {ex atn sn cs : α → α} (H : ExpLaws S ex) (Hs : ExpSlope S ex) {B : Box} {V : Nat → Iv}
     {p q : Nat → α} {d : α}
     (hp : InBox S B p) (hq : InBox S B q) (hd : ∀ i, SlIn S (S.add (q i) (S.neg (p i))) d (V i)) :
-    ∀ (e : XE) {v v' : α} {K : Iv}, Val S ex atn p e v → Val S ex atn q e v' → slX B V e = some K →
+    ∀ (e : XE) {v v' : α} {K : Iv}, Val S ex atn sn cs p e v → Val S ex atn sn cs q e v' → slX B V e = some K →
       SlIn S (S.add v' (S.neg v)) d K
   | .var i, v, v', K, hv, hv', h => by
       cases hv with
@@ -512,6 +617,68 @@ theorem slX_sound {ex atn : α → α} (H : ExpLaws S ex) (Hs : ExpSlope S ex) {
       exact sl_congr (S.add_congr e2 (S.neg_congr e1))
         (sl_comp (atan_chord H1 (ivX_sound S hp ha Va h2) (ivX_sound S hq ha' Va h2) h3)
           (slX_sound H Hs hp hq hd a ha ha' h1) h)
+  | .sin a, v, v', K, hv, hv', h => by
+      cases hv with
+      | @sin _ va _ H1 ha e1 =>
+      cases hv' with
+      | @sin _ va' _ H2 ha' e2 =>
+      unfold slX at h
+      cases h1 : slX B V a with
+      | none => rw [h1] at h; cases h
+      | some Ka =>
+      rw [h1] at h; dsimp only at h
+      cases h2 : ivX B a with
+      | none => rw [h2] at h; cases h
+      | some Va =>
+      rw [h2] at h; dsimp only at h
+      cases h3 : sinSl Va with
+      | none => rw [h3] at h; cases h
+      | some W =>
+      rw [h3] at h; dsimp only at h
+      unfold sinSl at h3
+      cases h4 : ZSinIv.ivCos Va with
+      | none => rw [h4] at h3; cases h3
+      | some C =>
+      rw [h4] at h3; dsimp only at h3
+      have mu := ivX_sound S hp ha Va h2
+      have mu' := ivX_sound S hq ha' Va h2
+      exact sl_congr (S.add_congr e2 (S.neg_congr e1))
+        (sl_comp (taylor_slope (F := sn) (D := cs) (H1.s2 va va') H1.congr_s (ZSinIv.mem_cos H1 mu h4) mu mu' h3)
+          (slX_sound H Hs hp hq hd a ha ha' h1) h)
+  | .cos a, v, v', K, hv, hv', h => by
+      cases hv with
+      | @cos _ va _ H1 ha e1 =>
+      cases hv' with
+      | @cos _ va' _ H2 ha' e2 =>
+      unfold slX at h
+      cases h1 : slX B V a with
+      | none => rw [h1] at h; cases h
+      | some Ka =>
+      rw [h1] at h; dsimp only at h
+      cases h2 : ivX B a with
+      | none => rw [h2] at h; cases h
+      | some Va =>
+      rw [h2] at h; dsimp only at h
+      cases h3 : cosSl Va with
+      | none => rw [h3] at h; cases h
+      | some W =>
+      rw [h3] at h; dsimp only at h
+      unfold cosSl at h3
+      cases h4 : ZSinIv.ivSin Va with
+      | none => rw [h4] at h3; cases h3
+      | some Sv =>
+      rw [h4] at h3; dsimp only at h3
+      have mu := ivX_sound S hp ha Va h2
+      have mu' := ivX_sound S hq ha' Va h2
+      have er : S.r (S.add (S.add (cs va') (S.neg (cs va))) (S.neg (S.mul (S.add va' (S.neg va)) (S.neg (sn va)))))
+          (ZSinIv.Rc S sn cs va va') := by unfold ZSinIv.Rc; cr_ring S.toCR
+      have hc := H1.c2 va va'
+      have hR := And.intro (S.le_respects (S.refl _) (S.add_congr (S.symm er) (S.symm er)) hc.1)
+        (S.le_respects (S.add_congr (S.symm er) (S.symm er)) (S.refl _) hc.2)
+      exact sl_congr (S.add_congr e2 (S.neg_congr e1))
+        (sl_comp (taylor_slope (F := cs) (D := fun x => S.neg (sn x)) hR H1.congr_c
+            (mem_negI (ZSinIv.mem_sin H1 mu h4)) mu mu' h3)
+          (slX_sound H Hs hp hq hd a ha ha' h1) h)
 
 end Sound
 
@@ -528,6 +695,8 @@ def isE : XE → Bool
   | .div _ _ => false
   | .ln _ => false
   | .atan _ => false
+  | .sin _ => false
+  | .cos _ => false
 
 theorem and2 {a b : Bool} (h : (a && b) = true) : a = true ∧ b = true := by
   cases a <;> cases b <;> first | exact ⟨rfl, rfl⟩ | cases h
@@ -547,21 +716,25 @@ def evX (ex : α → α) (p : Nat → α) : XE → α
   | .div _ _ => S.zero
   | .ln _ => S.zero
   | .atan _ => S.zero
+  | .sin _ => S.zero
+  | .cos _ => S.zero
 
 variable {S}
 
-theorem val_evX {ex atn : α → α} (H : ExpLaws S ex) (p : Nat → α) :
-    ∀ e : XE, isE e = true → Val S ex atn p e (evX S ex p e)
+theorem val_evX {ex atn sn cs : α → α} (H : ExpLaws S ex) (p : Nat → α) :
+    ∀ e : XE, isE e = true → Val S ex atn sn cs p e (evX S ex p e)
   | .var _, _ => .var (S.refl _)
   | .cst _, _ => .cst (S.refl _)
-  | .add a b, h => .add (val_evX (atn := atn) H p a (and2 h).1) (val_evX (atn := atn) H p b (and2 h).2) (S.refl _)
-  | .sub a b, h => .sub (val_evX (atn := atn) H p a (and2 h).1) (val_evX (atn := atn) H p b (and2 h).2) (S.refl _)
-  | .mul a b, h => .mul (val_evX (atn := atn) H p a (and2 h).1) (val_evX (atn := atn) H p b (and2 h).2) (S.refl _)
-  | .pow a n, h => .pow n (val_evX (atn := atn) H p a h) (S.refl _)
-  | .exp a, h => .exp H (val_evX (atn := atn) H p a h) (S.refl _)
+  | .add a b, h => .add (val_evX (atn := atn) (sn := sn) (cs := cs) H p a (and2 h).1) (val_evX (atn := atn) (sn := sn) (cs := cs) H p b (and2 h).2) (S.refl _)
+  | .sub a b, h => .sub (val_evX (atn := atn) (sn := sn) (cs := cs) H p a (and2 h).1) (val_evX (atn := atn) (sn := sn) (cs := cs) H p b (and2 h).2) (S.refl _)
+  | .mul a b, h => .mul (val_evX (atn := atn) (sn := sn) (cs := cs) H p a (and2 h).1) (val_evX (atn := atn) (sn := sn) (cs := cs) H p b (and2 h).2) (S.refl _)
+  | .pow a n, h => .pow n (val_evX (atn := atn) (sn := sn) (cs := cs) H p a h) (S.refl _)
+  | .exp a, h => .exp H (val_evX (atn := atn) (sn := sn) (cs := cs) H p a h) (S.refl _)
   | .div _ _, h => by cases h
   | .ln _, h => by cases h
   | .atan _, h => by cases h
+  | .sin _, h => by cases h
+  | .cos _, h => by cases h
 
 /-- The one-variable box `[a, b]` (every variable is `x`). -/
 def cB (a b : D) : Box := fun _ => some (a, b)
@@ -576,7 +749,7 @@ theorem mono_of_slX {ex : α → α} (H : ExpLaws S ex) (Hs : ExpSlope S ex) {e 
     ZRootAbs.Mono S (fun x => evX S ex (fun _ => x) e) (dv S.toOH a) (dv S.toOH b) c L := by
   intro x y hax hxy hyb
   have sl := slX_sound H Hs (inbox_c hax (S.le_trans hxy hyb)) (inbox_c (S.le_trans hax hxy) hyb)
-    (fun _ => sl_ret (mem_one S) (S.symm (S.one_mul _))) e (val_evX (atn := fun x => x) H _ e hE) (val_evX (atn := fun x => x) H _ e hE) hK
+    (fun _ => sl_ret (mem_one S) (S.symm (S.one_mul _))) e (val_evX (atn := fun x => x) (sn := fun x => x) (cs := fun x => x) H _ e hE) (val_evX (atn := fun x => x) (sn := fun x => x) (cs := fun x => x) H _ e hE) hK
   have d0 : S.le S.zero (S.add y (S.neg x)) := by cr_linarith S.toOCR [hxy]
   constructor
   · apply S.le_of_not_pos
@@ -595,8 +768,8 @@ theorem mono_of_slX {ex : α → α} (H : ExpLaws S ex) (Hs : ExpSlope S ex) {e 
     exact S.pos_not_le hpos (by cr_linarith S.toOCR [l'])
 
 /-- The same for any function whose values are values of `e` on `[a, b]` (division and `ln` included). -/
-theorem mono_of_val {ex atn : α → α} (H : ExpLaws S ex) (Hs : ExpSlope S ex) {e : XE} {F : α → α} {a b : D}
-    (hF : ∀ x, S.le (dv S.toOH a) x → S.le x (dv S.toOH b) → Val S ex atn (fun _ => x) e (F x))
+theorem mono_of_val {ex atn sn cs : α → α} (H : ExpLaws S ex) (Hs : ExpSlope S ex) {e : XE} {F : α → α} {a b : D}
+    (hF : ∀ x, S.le (dv S.toOH a) x → S.le x (dv S.toOH b) → Val S ex atn sn cs (fun _ => x) e (F x))
     {K : Iv} (hK : slX (cB a b) (fun _ => ZIv.one) e = some K) {c L : α}
     (hc : S.le c (dv S.toOH K.1)) (hL : S.le (dv S.toOH K.2) L) :
     ZRootAbs.Mono S F (dv S.toOH a) (dv S.toOH b) c L := by
@@ -628,7 +801,7 @@ theorem dv_dz0 : S.r (dv S.toOH dz0) S.zero := zv_isZ S.toOH (c := dz0) rfl
 theorem lo_end {ex : α → α} (H : ExpLaws S ex) {e : XE} (hE : isE e = true) {a : D} {K : Iv}
     (hK : ivX (cB a a) e = some K) (h : dle K.2 dz0 = true) :
     S.le (evX S ex (fun _ => dv S.toOH a) e) S.zero :=
-  S.le_trans (ivX_sound S (inbox_c (S.le_refl _) (S.le_refl _)) (val_evX (atn := fun x => x) H _ e hE) K hK).2
+  S.le_trans (ivX_sound S (inbox_c (S.le_refl _) (S.le_refl _)) (val_evX (atn := fun x => x) (sn := fun x => x) (cs := fun x => x) H _ e hE) K hK).2
     (S.le_respects (S.refl _) dv_dz0 (dle_sound S.toOH h))
 
 /-- The value reading at the right end above zero gives `0 ≤ F(b)`. -/
@@ -636,14 +809,14 @@ theorem hi_end {ex : α → α} (H : ExpLaws S ex) {e : XE} (hE : isE e = true) 
     (hK : ivX (cB b b) e = some K) (h : dle dz0 K.1 = true) :
     S.le S.zero (evX S ex (fun _ => dv S.toOH b) e) :=
   S.le_trans (S.le_respects dv_dz0 (S.refl _) (dle_sound S.toOH h))
-    (ivX_sound S (inbox_c (S.le_refl _) (S.le_refl _)) (val_evX (atn := fun x => x) H _ e hE) K hK).1
+    (ivX_sound S (inbox_c (S.le_refl _) (S.le_refl _)) (val_evX (atn := fun x => x) (sn := fun x => x) (cs := fun x => x) H _ e hE) K hK).1
 
-theorem lo_val {ex atn : α → α} {e : XE} {a : D} {v : α} (hv : Val S ex atn (fun _ => dv S.toOH a) e v) {K : Iv}
+theorem lo_val {ex atn sn cs : α → α} {e : XE} {a : D} {v : α} (hv : Val S ex atn sn cs (fun _ => dv S.toOH a) e v) {K : Iv}
     (hK : ivX (cB a a) e = some K) (h : dle K.2 dz0 = true) : S.le v S.zero :=
   S.le_trans (ivX_sound S (inbox_c (S.le_refl _) (S.le_refl _)) hv K hK).2
     (S.le_respects (S.refl _) dv_dz0 (dle_sound S.toOH h))
 
-theorem hi_val {ex atn : α → α} {e : XE} {b : D} {v : α} (hv : Val S ex atn (fun _ => dv S.toOH b) e v) {K : Iv}
+theorem hi_val {ex atn sn cs : α → α} {e : XE} {b : D} {v : α} (hv : Val S ex atn sn cs (fun _ => dv S.toOH b) e v) {K : Iv}
     (hK : ivX (cB b b) e = some K) (h : dle dz0 K.1 = true) : S.le S.zero v :=
   S.le_trans (S.le_respects dv_dz0 (S.refl _) (dle_sound S.toOH h))
     (ivX_sound S (inbox_c (S.le_refl _) (S.le_refl _)) hv K hK).1
@@ -854,6 +1027,8 @@ def evq (n : Nat) (q : QExpr) : XE → QExpr
   | .div _ _ => qzero
   | .ln _ => qzero
   | .atan _ => qzero
+  | .sin _ => qzero
+  | .cos _ => qzero
 
 theorem qpw_respects {x y : QExpr} (h : qEq x y) : ∀ k, qEq (qpw x k) (qpw y k)
   | 0 => qEq_refl _
@@ -870,6 +1045,8 @@ theorem evq_respects (n : Nat) {q q' : QExpr} (h : qEq q q') : ∀ e : XE, qEq (
   | .div _ _ => qEq_refl _
   | .ln _ => qEq_refl _
   | .atan _ => qEq_refl _
+  | .sin _ => qEq_refl _
+  | .cos _ => qEq_refl _
 
 theorem powS_seq (x : RExpr) (n : Nat) : ∀ k, qEq ((powS rCF.toOH x k).seq n) (qpw (x.seq n) k)
   | 0 => qEq_refl _
@@ -888,6 +1065,8 @@ theorem evX_seq (x : RExpr) (n : Nat) : ∀ e : XE,
   | .div _ _ => qEq_refl _
   | .ln _ => qEq_refl _
   | .atan _ => qEq_refl _
+  | .sin _ => qEq_refl _
+  | .cos _ => qEq_refl _
 
 theorem le_a {A B m : Nat} (h : A + B + 1 ≤ m) : A ≤ m :=
   Nat.le_trans (Nat.le_trans (Nat.le_add_right A B) (Nat.le_add_right _ 1)) h
@@ -1049,6 +1228,8 @@ theorem uc_evq : ∀ e : XE, isE e = true → UCo (fun n q => evq n (q 0) e)
   | .div _ _, h => by cases h
   | .ln _, h => by cases h
   | .atan _, h => by cases h
+  | .sin _, h => by cases h
+  | .cos _, h => by cases h
 
 end Oracle
 

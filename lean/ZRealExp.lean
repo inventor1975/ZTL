@@ -388,15 +388,15 @@ theorem rExpLaws : ExpLaws rCF rexpR where
 
 /-- **`check_none` ON VR'S CONTINUUM, with `exp` and `ln`.** The exponential is VR's own `rexpR`; the reading's
 `exp`/`ln` nodes take its laws from `rExpLaws`, so their values exist and are VR's. Zero axioms. -/
-theorem vr_no_solution_exp {atn : RExpr → RExpr} (c : ZNone.Cert) (Sy : ZNone.Sys) (B : ZIv.Box) (h : ZNone.chk Sy B c = true)
+theorem vr_no_solution_exp {atn sn cs : RExpr → RExpr} (c : ZNone.Cert) (Sy : ZNone.Sys) (B : ZIv.Box) (h : ZNone.chk Sy B c = true)
     (p : Nat → RExpr) (hp : ZIv.InBox rCF B p)
-    (hE : ∀ e ∈ Sy.eqs, ∃ v, ZXE.Val rCF rexpR atn p e v ∧ rEq v rzero)
-    (hN : ∀ n ∈ Sy.neqs, ∃ v, ZXE.Val rCF rexpR atn p n v ∧ (rlt rzero v ∨ rlt rzero (rneg v))) :
+    (hE : ∀ e ∈ Sy.eqs, ∃ v, ZXE.Val rCF rexpR atn sn cs p e v ∧ rEq v rzero)
+    (hN : ∀ n ∈ Sy.neqs, ∃ v, ZXE.Val rCF rexpR atn sn cs p n v ∧ (rlt rzero v ∨ rlt rzero (rneg v))) :
     False :=
-  vr_no_solution rexpR atn c Sy B h p hp hE hN
+  vr_no_solution rexpR atn sn cs c Sy B h p hp hE hN
 
 /-- Nonvacuity of the `exp` node: for any point, `exp x₀` HAS a value on VR's continuum — `rexpR (p 0)`. -/
-example (atn : RExpr → RExpr) (p : Nat → RExpr) : ZXE.Val rCF rexpR atn p (.exp (.var 0)) (rexpR (p 0)) :=
+example (atn sn cs : RExpr → RExpr) (p : Nat → RExpr) : ZXE.Val rCF rexpR atn sn cs p (.exp (.var 0)) (rexpR (p 0)) :=
   .exp rExpLaws (.var (rEq_refl _)) (rEq_refl _)
 
 #print axioms rExpLaws
@@ -481,7 +481,7 @@ theorem rexp_rln (y : RExpr) (hy : rlt rzero y) : rEq (rexpR (rln y hy)) y := by
   constructor <;> (unfold qsub; rat_linarith)
 
 /-- Nonvacuity of the `ln` node: at a point with `x₀ > 0`, `ln x₀` HAS a value on VR's continuum — `rln`. -/
-example (atn : RExpr → RExpr) (p : Nat → RExpr) (h : rlt rzero (p 0)) : ZXE.Val rCF rexpR atn p (.ln (.var 0)) (rln (p 0) h) :=
+example (atn sn cs : RExpr → RExpr) (p : Nat → RExpr) (h : rlt rzero (p 0)) : ZXE.Val rCF rexpR atn sn cs p (.ln (.var 0)) (rln (p 0) h) :=
   .ln rExpLaws (.var (rEq_refl _)) h (rexp_rln _ h)
 
 #print axioms rexp_rln

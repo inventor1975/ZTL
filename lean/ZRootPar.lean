@@ -81,10 +81,10 @@ theorem bd_neg {u δ : α} (h : ZKron.Bd S.toOH u δ) : ZKron.Bd S.toOH (S.neg u
   exact ⟨by cr_linarith S.toOCR [h2], by cr_linarith S.toOCR [h1]⟩
 
 /-- **MONOTONE WITH THE READ SLOPES**, for a family of environments `env x` moving along `x`. -/
-theorem mono_gen {ex atn : α → α} (H : ExpLaws S ex) (Hs : ExpSlope S ex) {e : XE} {F : α → α}
+theorem mono_gen {ex atn sn cs : α → α} (H : ExpLaws S ex) (Hs : ExpSlope S ex) {e : XE} {F : α → α}
     {env : α → Nat → α} {B : Box} {V : Nat → Iv} {a b c L : α}
     (hin : ∀ x, S.le a x → S.le x b → InBox S B (env x))
-    (hval : ∀ x, S.le a x → S.le x b → Val S ex atn (env x) e (F x))
+    (hval : ∀ x, S.le a x → S.le x b → Val S ex atn sn cs (env x) e (F x))
     (hd : ∀ x y, ∀ i, SlIn S (S.add (env y i) (S.neg (env x i))) (S.add y (S.neg x)) (V i))
     {K : Iv} (hK : slX B V e = some K) (hc : S.le c (dv S.toOH K.1)) (hL : S.le (dv S.toOH K.2) L) :
     ZRootAbs.Mono S F a b c L := by
@@ -109,12 +109,12 @@ theorem mono_gen {ex atn : α → α} (H : ExpLaws S ex) (Hs : ExpSlope S ex) {e
     have l' := S.le_respects (S.trans (S.mul_comm _ _) (S.symm he)) (S.mul_comm _ _) l
     exact S.pos_not_le hpos (by cr_linarith S.toOCR [l'])
 
-theorem lo_gen {ex atn : α → α} {e : XE} {B : Box} {env : Nat → α} {v : α} (hb : InBox S B env)
-    (hv : Val S ex atn env e v) {K : Iv} (hK : ivX B e = some K) (h : dle K.2 dz0 = true) : S.le v S.zero :=
+theorem lo_gen {ex atn sn cs : α → α} {e : XE} {B : Box} {env : Nat → α} {v : α} (hb : InBox S B env)
+    (hv : Val S ex atn sn cs env e v) {K : Iv} (hK : ivX B e = some K) (h : dle K.2 dz0 = true) : S.le v S.zero :=
   S.le_trans (ivX_sound S hb hv K hK).2 (S.le_respects (S.refl _) dv_dz0 (dle_sound S.toOH h))
 
-theorem hi_gen {ex atn : α → α} {e : XE} {B : Box} {env : Nat → α} {v : α} (hb : InBox S B env)
-    (hv : Val S ex atn env e v) {K : Iv} (hK : ivX B e = some K) (h : dle dz0 K.1 = true) : S.le S.zero v :=
+theorem hi_gen {ex atn sn cs : α → α} {e : XE} {B : Box} {env : Nat → α} {v : α} (hb : InBox S B env)
+    (hv : Val S ex atn sn cs env e v) {K : Iv} (hK : ivX B e = some K) (h : dle dz0 K.1 = true) : S.le S.zero v :=
   S.le_trans (S.le_respects dv_dz0 (S.refl _) (dle_sound S.toOH h)) (ivX_sound S hb hv K hK).1
 
 /-- `Bd (u − w)` gives `Bd (w − u)`. -/
@@ -441,6 +441,8 @@ theorem evR_congr {x y : Nat → RExpr} (h : ∀ i, x i = y i) : ∀ e : XE, evR
   | .div a b => by show rmul _ (rinvT _) = rmul _ (rinvT _); rw [evR_congr h a, evR_congr h b]
   | .ln a => by show rlnT _ = rlnT _; rw [evR_congr h a]
   | .atan a => by show ZRAtan.ratan _ = ZRAtan.ratan _; rw [evR_congr h a]
+  | .sin a => by show ZRSin.rsin _ = ZRSin.rsin _; rw [evR_congr h a]
+  | .cos a => by show ZRSin.rcos _ = ZRSin.rcos _; rw [evR_congr h a]
 
 /-- The law does not see the intervals, only which variables are parameters. -/
 theorem FP_setI (e : XE) (a : D) (ps : PS) (i : Nat) (I : Iv) (q : Nat → RExpr) (x : RExpr) :

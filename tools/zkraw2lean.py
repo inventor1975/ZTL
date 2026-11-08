@@ -1,4 +1,4 @@
-"""zkraw2lean — a SYSTEM of laws F(x) = 0 (exp / ln / log10 / division / powers) as a Lean theorem on VR's continuum:
+"""zkraw2lean — a SYSTEM of laws F(x) = 0 (exp / ln / log10 / atan / sin / cos / division / powers) as a Lean theorem on VR's continuum:
 a solution in a cube, and only one there (lean/ZKrawSys.lean, `sys_root`).
 
     python3 tools/zkraw2lean.py circle_exp      (writes lean/ZSysCircleExp.lean)
@@ -48,6 +48,10 @@ def fl(node, env):
         return math.log(a)
     if op == "atan":
         return math.atan(a)
+    if op == "sin":
+        return math.sin(a)
+    if op == "cos":
+        return math.cos(a)
     b = fl(node[2], env)
     if op == "add":
         return a + b

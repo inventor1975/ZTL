@@ -4,7 +4,9 @@ tools/zimplicit_lean.py takes zimplicit's verdict on an implicit law ("q has a u
 and turns it into `∀ p in the inner box, ∃! q ∈ [a, b], g(q, p) = 0` on VR's continuum, checked by the Lean kernel
 (lean/ZRootPar.lean: par_root, or tree_root with a cover it searches). Here, on the laws of the zimplicit stand:
   * the FAN and the PUMP (blind tests) and four random laws (the stand's seed, one with atan) — THEOREMS;
-  * a law with sin — NOT TRANSLATED (ZXE has no sin; said, not hidden);
+  * a law with sin and one with cos (`q = a·cos(b·q) + p`, Dottie's number moved by parameters) — THEOREMS
+    (ZXE.sin/cos since 2026-11-08: lean/ZSinIv.lean, VR's laws in lean/ZRootSin.lean);
+  * a law with tan — NOT TRANSLATED (ZXE has no tan; said, not hidden);
   * a random law whose range touches the search end (a root is unique where it exists, but not every parameter has
     one) — NO VERDICT on existence;
   * NEGATIVE CONTROL: the fan's theorem with a bracket below every root — the kernel must refuse it.
@@ -59,7 +61,13 @@ for i, want in expect.items():
 
 s = B.verdict_to_lean("a=[0.98,1.02] credit, b=[1.8,2.2] credit, p=[1.96,2.04] credit, q=? credit",
                       "sin(a*q) + b*q - p", "q", ["-4", "4"], "ZBridgeSin")
-check("sin(a*q) + b*q - p: not translated", s["status"] == "not translated", s)
+check("sin(a*q) + b*q - p: a theorem", s["status"] == "theorem", s)
+s = B.verdict_to_lean("a=[0.95,1.05] credit, b=[0.95,1.05] credit, p=[-0.05,0.05] credit, q=? credit",
+                      "q - a*cos(b*q) - p", "q", ["-2", "2"], "ZBridgeCos")
+check("q - a*cos(b*q) - p: a theorem", s["status"] == "theorem", s)
+s = B.verdict_to_lean("a=[0.98,1.02] credit, b=[1.8,2.2] credit, p=[1.96,2.04] credit, q=? credit",
+                      "tan(a*q/4) + b*q - p", "q", ["-4", "4"], "ZBridgeTan")
+check("tan(a*q/4) + b*q - p: not translated", s["status"] == "not translated", s)
 
 print("3. negative control")
 fan_file = st.get("file")

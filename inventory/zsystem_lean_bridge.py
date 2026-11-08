@@ -6,7 +6,10 @@ solution's shift over the parameter box, a cover when the box is wide); the kern
   * the circle meets the exponential; a 3×3 system with exp and ln; the circle with a real radius parameter
     R ∈ [0.999, 1.001] — THEOREMS (a solution in the cube, unique there, for every parameter in the inner box);
   * x² + y² + 1 = 0 (no real solution) — NO VERDICT (Newton finds none; nothing is claimed);
-  * a system with atan (y = atan x, x + y = 1) — a THEOREM; a system with sin — NOT TRANSLATED;
+  * a system with atan (y = atan x, x + y = 1) — a THEOREM; with sin (y = sin x, x + y = 1) — a THEOREM; the circle of
+    radius R meets y = a·cos x, R ∈ [0.999, 1.001], a ∈ [0.499, 0.501] — a THEOREM (sin/cos: lean/ZSinIv.lean);
+  * the circle TOUCHES y = cos 3x at (0, 1) (the Jacobian is singular there) — REFUSED: the kernel accepts no cube;
+  * a system with tan — NOT TRANSLATED;
   * NEGATIVE CONTROL: the circle's theorem with the cube moved by 4r — the kernel must refuse it.
 The 64-leaf cover of `chem3p` (kernel 66 s) is in lean/ZSysChem3p.lean, built by CI's lean job.
 """
@@ -39,7 +42,14 @@ CASES = [
     ("ZJudgeAtan", dict(vars=["x", "y"], laws=["atan(x) - y", "x + y - 1"], guess=[0.5, 0.5],
                         title="the line meets atan"), "theorem"),
     ("ZJudgeSin", dict(vars=["x", "y"], laws=["sin(x) - y", "x + y - 1"], guess=[0.5, 0.5],
-                       title="sin is not in ZXE"), "not translated"),
+                       title="the line meets sin"), "theorem"),
+    ("ZJudgeCircleCosP", dict(vars=["x", "y"], laws=["x*x + y*y - R*R", "y - a*cos(x)"],
+                              params={"R": ("0.999", "1.001"), "a": ("0.499", "0.501")}, guess=[0.9, 0.4],
+                              title="the circle of a real radius R meets y = a·cos x"), "theorem"),
+    ("ZJudgeTouch", dict(vars=["x", "y"], laws=["x*x + y*y - 1", "y - cos(3*x)"], guess=[0.5, 0.5],
+                         title="the circle touches y = cos 3x at (0, 1): a singular Jacobian"), "refused"),
+    ("ZJudgeTan", dict(vars=["x", "y"], laws=["tan(x) - y", "x + y - 1"], guess=[0.5, 0.5],
+                       title="tan is not in ZXE"), "not translated"),
 ]
 print("1. the judge on systems")
 first = None

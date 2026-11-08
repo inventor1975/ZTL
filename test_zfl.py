@@ -213,6 +213,44 @@ def sec13_naive_sets_are_in_the_language():
     print("   every cell of znaive's four example universes reads the same in ZFL (T/F/Z and the passport);")
     print("   bad names, unknown names, broken JSON, an oversized universe, a name clash: E_SETS, at once.")
 
+def sec22_a_system_with_sin_cos_tan_in_a_search_region():
+    """(2026-11-08, the curator: "sin/cos в ZFL — не забудь"; "если знаешь как улучшить — делай") Systems with the
+    trigonometric functions, judged by the same exact readings (zfunc's sin/cos with ztrigcert's Lean witnesses).
+    Both sides: the circle meets y = sin 2x twice in [-2, 2]² — COMPLETE, both checked in floats; y = tan x,
+    x + y = 1 over a region holding pi/2 (where cos = 0) — not exhausted, the solution found stays LOCAL; the circle
+    only TOUCHES y = cos x at (0, 1) (a singular Jacobian: no cube can be certified, no box near it excluded) —
+    OPEN, nothing claimed, said as searched (W_REGION_UNUSED's second meaning). MEASURED 2026-11-08: the sin system
+    took 30 s (exact sin/cos readings in Newton's steps, Fraction's gcd); with Newton in floats (zsystem._ff, a
+    proposal only) and the series in integers (zfunc._sc_series, ztrigcert.cert) 0.12 s; the touching case > 10 min
+    before, 1.8 s now."""
+    import math
+    from fractions import Fraction
+    print("-" * 72)
+    print("§22 a system with sin, cos, tan in a search region")
+    U = lambda n, v="?": {"name": n, "means": n, "status": "unverified", "value": v}
+    R = lambda: [U("x", "? in [-2, 2]"), U("y", "? in [-2, 2]")]
+    r = zfl.run({"rows": R(), "claim": "x*x + y*y = 1 & y = sin(2*x)"})
+    n = r["report"]["numeric"]
+    assert n["disposition"] == "EARNED" and n["system"]["complete"] and n["system"]["solutions"] == 2, n
+    assert any(i["code"] == "W_SYSTEM_ALL" for i in r["issues"])
+    for c in n["system"]["certificates"]:
+        x, y = (float(Fraction(v)) for v in c["centre"])
+        assert abs(x * x + y * y - 1) < 1e-6 and abs(y - math.sin(2 * x)) < 1e-6, (x, y)
+    print("   the circle meets y = sin 2x in [-2,2]²: COMPLETE, 2 solutions, each checked in floats")
+    r = zfl.run({"rows": R(), "claim": "y = tan(x) & x + y = 1"})
+    n = r["report"]["numeric"]
+    assert n["disposition"] == "EARNED" and not n["system"]["complete"], n
+    assert any(i["code"] == "W_SYSTEM_LOCAL" for i in r["issues"])
+    assert not any(i["code"] == "W_SYSTEM_ALL" for i in r["issues"])
+    print("   y = tan x, x + y = 1 over a region holding pi/2: a LOCAL answer, no complete claim")
+    r = zfl.run({"rows": R(), "claim": "x*x + y*y = 1 & y = cos(x)"})
+    n = r["report"]["numeric"]
+    assert n["disposition"] == "OPEN", n
+    w = [i for i in r["issues"] if i["code"] == "W_REGION_UNUSED"]
+    assert w and "searched but not exhausted" in w[0]["hint"], r["issues"]
+    print("   the circle touching y = cos x at (0, 1): OPEN, said as searched, nothing claimed")
+
+
 def sec4b_every_example_runs_and_json_types_are_taken_as_they_come():
     print("-" * 72)
     print("4b. THE CATALOGUE, AND WHAT ARRIVES FROM A MODEL")
@@ -916,6 +954,7 @@ if __name__ == "__main__":
     sec19_ztl_i_degrees()
     sec20_a_system_of_equations_is_a_question_too()
     sec21_a_system_in_a_search_region_is_answered_completely()
+    sec22_a_system_with_sin_cos_tan_in_a_search_region()
     sec4b_every_example_runs_and_json_types_are_taken_as_they_come()
     sec5_the_spec_can_build_the_form_and_the_page()
     print("=" * 72)

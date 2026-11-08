@@ -16,6 +16,7 @@ The kernel computes by argument reduction and its own series (zfunc._sc_pt); the
 partial sums. A reading that passes here is covered, however the kernel computed it. zfunc calls these on every
 reading: a side without witnesses is widened to +-1 (tan: no reading) — never sent out uncovered.
 """
+import functools
 import math
 from fractions import Fraction as F
 
@@ -27,7 +28,45 @@ MMAX = 2000
 def cert(x, which, need_lo=None, need_hi=None):
     """The index M of a CosCert / SinCert at x whose bracket meets the needs (lo >= need_lo, hi <= need_hi),
     or None. The partial sums run incrementally; once M is good the bracket contains the true value, so a need
-    beyond the current bracket's far side can never be met (stop)."""
+    beyond the current bracket's far side can never be met (stop).
+
+    IN INTEGERS (2026-11-08, the curator: "если знаешь как улучшить — делай"): with x = n/d every quantity at step
+    m has the denominator Q_m = d^m·m!: cr_m + i·ci_m = (i·n)^m / Q_m, t_m = |n|^m / Q_m, the sums C_m, S_m carried
+    as numerators over Q_m; a need p/q is compared by cross-multiplying. The same exact numbers as `cert_fr` (the
+    Fractions version, kept as the reference; test_trigcert.py checks both agree), with no gcd. MEASURED: Fraction's
+    gcd was 25 s of a 38 s ZFL system with sin (cProfile)."""
+    return _cert_int(F(x), which, None if need_lo is None else F(need_lo), None if need_hi is None else F(need_hi))
+
+
+@functools.lru_cache(maxsize=1 << 16)
+def _cert_int(x, which, need_lo, need_hi):
+    n, d = x.numerator, x.denominator
+    A = abs(n)
+    pr, pi = 1, 0                 # (i·n)^m
+    Am = 1                        # |n|^m
+    Q = 1                         # d^m·m!
+    Cn = Sn = 0                   # the sums' numerators over Q
+    for m in range(MMAX + 1):
+        if 2 * A <= (m + 1) * d:                       # 2|x| <= m + 1
+            v = Cn if which == "cos" else Sn
+            lo_n, hi_n = v - 2 * Am, v + 2 * Am       # over Q
+            ok_lo = need_lo is None or need_lo.numerator * Q <= lo_n * need_lo.denominator
+            ok_hi = need_hi is None or hi_n * need_hi.denominator <= need_hi.numerator * Q
+            if ok_lo and ok_hi:
+                return m
+            if (need_lo is not None and need_lo.numerator * Q > hi_n * need_lo.denominator) or \
+                    (need_hi is not None and need_hi.numerator * Q < lo_n * need_hi.denominator):
+                return None
+        Cn += pr; Sn += pi
+        k = d * (m + 1)
+        Cn *= k; Sn *= k; Q *= k
+        pr, pi = -pi * n, pr * n
+        Am *= A
+    return None
+
+
+def cert_fr(x, which, need_lo=None, need_hi=None):
+    """The reference: `cert` in Fractions (the version before 2026-11-08)."""
     x = F(x)
     a = abs(x)
     cr, ci, C, S, t = F(1), F(0), F(0), F(0), F(1)     # cr_m, ci_m, C_m, S_m, a^m/m!

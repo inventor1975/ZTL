@@ -43,7 +43,56 @@ def _point(qs, unknowns, x):
     return {n: (F(v), F(v)) for n, v in zip(unknowns, x)}
 
 
+_FOPS1 = {"exp": math.exp, "ln": math.log, "log10": math.log10, "atan": math.atan, "tan": math.tan, "sin": math.sin,
+          "cos": math.cos, "sqrt": math.sqrt}
+
+
+def _ff(e, env):
+    """The law in FLOATS — for the PROPOSAL only (Newton's steps). Nothing it says is trusted: every certificate is
+    checked exactly by `check`. MEASURED 2026-11-08: the exact readings of sin/cos at points made the search of a
+    2×2 system with sin take 37 s of 38 (zfunc's exact trigonometry); in floats it is microseconds. Any node it does
+    not know, a domain error, an overflow — the caller falls back to the exact reading."""
+    if isinstance(e, (int, F)):
+        return float(e)
+    if isinstance(e, str):
+        return env[e]
+    op, *args = e
+    if op in _FOPS1:
+        return _FOPS1[op](_ff(args[0], env))
+    if op == "sum":
+        return math.fsum(_ff(a, env) for a in args[0])
+    if op in ("add", "sub", "mul", "div", "pow"):
+        a, b = _ff(args[0], env), _ff(args[1], env)
+        return {"add": a + b, "sub": a - b, "mul": a * b}[op] if op in ("add", "sub", "mul") else (
+            a / b if op == "div" else a ** b)
+    raise KeyError(op)
+
+
+def _fenv(qs, unknowns, x, params_mid):
+    env = {}
+    for n, q in qs.items():
+        try:
+            env[n] = (float(q["lo"]) + float(q["hi"])) / 2
+        except (KeyError, TypeError, ValueError):
+            pass
+    for n, (lo, hi) in params_mid.items():
+        env[n] = float((lo + hi) / 2)
+    env.update(zip(unknowns, (float(v) for v in x)))
+    return env
+
+
+def _fast(exprs, env):
+    try:
+        out = [_ff(g, env) for g in exprs]
+    except (KeyError, ValueError, OverflowError, ZeroDivisionError, TypeError):
+        return None
+    return out if all(isinstance(v, float) and math.isfinite(v) for v in out) else None
+
+
 def _fvals(laws, qs, unknowns, x, params_mid):
+    fv = _fast(laws, _fenv(qs, unknowns, x, params_mid))
+    if fv is not None:
+        return fv
     piece = _point(qs, unknowns, x)
     piece.update(params_mid)
     out = []
@@ -56,6 +105,10 @@ def _fvals(laws, qs, unknowns, x, params_mid):
 
 
 def _jac(dlaws, qs, unknowns, x, params_mid):
+    env = _fenv(qs, unknowns, x, params_mid)
+    rows = [_fast(row, env) for row in dlaws]
+    if all(r is not None for r in rows):
+        return rows
     piece = _point(qs, unknowns, x)
     piece.update(params_mid)
     J = []

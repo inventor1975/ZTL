@@ -26,6 +26,7 @@ from fractions import Fraction as F
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import zfunc                       # noqa: E402
+import ztrigcert                   # noqa: E402
 
 ok = fail = 0
 
@@ -235,6 +236,24 @@ check("a kernel tan bracket shifted 0.01 above the truth over [0.5, 1]: no readi
       r is None and zfunc.TRIG_UNCOVERED["tan"] > before)
 r = zfunc.iv_cos((F(1, 2), F(1)))
 check("after the mutations are undone, the same reading is covered again (not widened)", r[1] < 1 and r[0] > -1)
+
+# THE INTEGER REWRITES (2026-11-08): the same exact numbers as the Fractions references, on random arguments
+import random as _random
+_rnd = _random.Random(20261108)
+_bad_c = _bad_s = 0
+for _ in range(400):
+    _x = F(_rnd.randint(-4 * 10 ** 9, 4 * 10 ** 9), _rnd.choice([10 ** 9, 2 ** 30, 2 ** 64, 3 ** 40, 7]))
+    while abs(_x) > 4:
+        _x /= 2
+    _w = _rnd.choice(["cos", "sin"])
+    _v = math.cos(float(_x)) if _w == "cos" else math.sin(float(_x))
+    _nl = None if _rnd.random() < 0.3 else F(_v - _rnd.choice([1e-3, 1e-9, 1e-15, 0, -1e-6]))
+    _nh = None if _rnd.random() < 0.3 else F(_v + _rnd.choice([1e-3, 1e-9, 1e-15, 0, -1e-6]))
+    _bad_c += ztrigcert.cert(_x, _w, _nl, _nh) != ztrigcert.cert_fr(_x, _w, _nl, _nh)
+    _bad_s += zfunc._sc_series(_x) != zfunc._sc_series_fr(_x)
+check(f"400 random arguments: ztrigcert.cert (integers) == cert_fr (Fractions) — {_bad_c} disagree", _bad_c == 0)
+check(f"400 random arguments: zfunc._sc_series (integers) == _sc_series_fr (Fractions) — {_bad_s} disagree",
+      _bad_s == 0)
 
 print(f"\n{ok} ok, {fail} fail")
 print("TRIGCERT GREEN" if fail == 0 else "TRIGCERT RED")

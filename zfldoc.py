@@ -191,9 +191,13 @@ CODE_HELP = {
                      "перечисляет ВСЕ решения в ней, каждое единственное в своём кубе (ни одного — утверждение "
                      "опровергнуто в области); куб может выходить за область"),
     "W_REGION_UNUSED": ("a search region (? in [a, b]) is read for a system — two or more ? values and as many "
-                        "equations, every unknown with its region; here it was not used",
+                        "equations, every unknown with its region; here it was not used — or it was searched but "
+                        "not exhausted and no solution was certified in it (curves that only touch: nothing is "
+                        "claimed)",
                         "область поиска (? in [a, b]) читается для системы — двух и более величин ? и стольких же "
-                        "уравнений, у каждой неизвестной своя область; здесь она не использована"),
+                        "уравнений, у каждой неизвестной своя область; здесь она не использована — или обыскана, "
+                        "но не исчерпана, и решения в ней не заверено (кривые лишь касаются: ничего не "
+                        "утверждается)"),
 }
 
 PROSE = {

@@ -24,6 +24,7 @@ work is a fixed number of series terms for it, and the answer is always a sound 
 """
 
 from fractions import Fraction
+import functools
 import math
 
 BITS = 64                      # bracket grid 2^-64 relative-ish; every series sized for it
@@ -227,9 +228,45 @@ def sincos_pt(x: Fraction):
     return _sc_series(x)
 
 
+_F80 = [1] * 81                       # 80!/j!
+for _j in range(80, 0, -1):
+    _F80[_j - 1] = _F80[_j] * _j
+_FACT81 = math.factorial(81)
+
+
+@functools.lru_cache(maxsize=1 << 15)
 def _sc_series(x: Fraction):
     """The Taylor sums for |x| <= 4 (40 terms: the next term below 4^81/81! ~ 1e-72); alternating with terms
-    falling from the first one past |x|, so the remainder is below the next term's size."""
+    falling from the first one past |x|, so the remainder is below the next term's size.
+
+    IN INTEGERS (2026-11-08, the curator: "если знаешь как улучшить — делай"): with x = n/d, x^j/j! =
+    n^j·d^(80−j)·(80!/j!) / (d^80·80!) — the forty terms summed as integers over one denominator, then ONE
+    Fraction. The same exact sums as `_sc_series_fr` (the reference, test_trigcert.py checks they agree), with no
+    gcd per term. MEASURED: Fraction's gcd was ~60% of a ZFL system with cos (cProfile, 9.7 s of 11.8)."""
+    x = Fraction(x)
+    if abs(x) > 4:
+        raise NoReadings("sin/cos series only for |x| <= 4")
+    n, d = x.numerator, x.denominator
+    npow = [1] * 82
+    for j in range(1, 82):
+        npow[j] = npow[j - 1] * n
+    dpow = [1] * 82
+    for j in range(1, 82):
+        dpow[j] = dpow[j - 1] * d
+    sn = cn = 0
+    for k in range(40):
+        sg = -1 if k % 2 else 1
+        cn += sg * npow[2 * k] * dpow[80 - 2 * k] * _F80[2 * k]
+        sn += sg * npow[2 * k + 1] * dpow[79 - 2 * k] * _F80[2 * k + 1]
+    D = dpow[80] * _F80[0]
+    s, c = Fraction(sn, D), Fraction(cn, D)
+    rs = Fraction(abs(npow[81]), dpow[81] * _FACT81)
+    rc = Fraction(abs(npow[80]), D)
+    return (_down(s - rs), _up(s + rs)), (_down(c - rc), _up(c + rc))
+
+
+def _sc_series_fr(x: Fraction):
+    """The reference: `_sc_series` in Fractions (the version before 2026-11-08)."""
     x = Fraction(x)
     if abs(x) > 4:
         raise NoReadings("sin/cos series only for |x| <= 4")

@@ -2228,6 +2228,7 @@ def run(doc, ground_registry=None):
                 r = judge_sheet_claim(claim, q, m)
                 solved = {}
             system = None
+            searched = False                      # the system's region was searched (and not exhausted)
             if unknown:
                 unk = [x["name"] for x in numeric_rows(rows) if is_question(x.get("value"))]
                 regions = {x["name"]: question_region(x.get("value")) for x in numeric_rows(rows)
@@ -2238,6 +2239,7 @@ def run(doc, ground_registry=None):
                 if len(unk) >= 2 and not any(solved.get(n, {}).get("pinned") or solved.get(n, {}).get("roots")
                                              for n in unk):
                     system = _system_answer(claim, q, unk, regions)
+                    searched = all(regions.get(n) for n in unk)
                     if system is not None:
                         solved.update(system["solved"])
                         r = dict(r, disposition=system["disposition"])
@@ -2285,7 +2287,13 @@ def run(doc, ground_registry=None):
                         "(Krawczyk's test, checked exactly); solutions OUTSIDE the cube are not excluded"
                         + ("" if system["how"].startswith("a solution") else f" ({system['how']})")
                         + ". Give each unknown a search region (x = ? in [a, b]) for the complete answer."))
-            if unknown and any(question_region(x.get("value")) for x in numeric_rows(rows)) and \
+            if searched and system is None:
+                issues.append(_issue(
+                    "warning", "W_REGION_UNUSED", "value",
+                    "the search region was searched but not exhausted within the budget, and no solution was "
+                    "certified in it: where two curves only touch (or the Jacobian is singular) no cube can be "
+                    "certified and no box excluded; nothing is claimed"))
+            elif unknown and not searched and any(question_region(x.get("value")) for x in numeric_rows(rows)) and \
                     not (system is not None and system["complete"]):
                 issues.append(_issue(
                     "warning", "W_REGION_UNUSED", "value",

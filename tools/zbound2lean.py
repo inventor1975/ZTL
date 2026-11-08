@@ -87,6 +87,22 @@ def _ifpos_nodes(node, acc):
     return acc
 
 
+def _ifpos_const(node):
+    """An `ifpos` whose condition is a CONSTANT after the pinned values (a catalog field: ztl-stand tasks/t25,
+    `if(e_B1 <= 1, 1, 0)` with the bond's maturity pinned) decided exactly — its branch, nothing else."""
+    if not isinstance(node, tuple):
+        return node
+    if node[0] == "sum":
+        return ("sum", [_ifpos_const(a) for a in node[1]])
+    node = (node[0], *[_ifpos_const(a) for a in node[1:]])
+    if node[0] == "ifpos":
+        r = _rat(node[1], {})
+        if r is not None and r[1] and set(r[0]) <= {()} and set(r[1]) <= {()}:
+            c = (r[0].get((), F(0))) / r[1][()]
+            return node[2] if c > 0 else node[3]
+    return node
+
+
 def _ifpos2hinge(node):
     """A TABLE as hinges (2026-11-09: ztl-stand's 22 requirements on `ifpos` tables — real3/s07, s10, tasks/t22).
     `ifpos(c, a, b)` = a where c > 0, else b. When every condition is affine in ONE variable t, the whole expression
@@ -94,6 +110,7 @@ def _ifpos2hinge(node):
     point — an affine sign is constant on an open interval); CONTINUOUS (each (p_j − p_{j−1})/(t − t_j) an exact
     division, checked) it equals p_0 + Σ_j max(t − t_j, 0)·q_j exactly — no ifpos left, max is in XE. Python's
     exact algebra, said; None when not this case (the node is returned unchanged)."""
+    node = _ifpos_const(node)
     ifs = _ifpos_nodes(node, [])
     if not ifs:
         return node

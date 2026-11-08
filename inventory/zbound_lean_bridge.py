@@ -85,6 +85,8 @@ with ProcessPoolExecutor(max_workers=max(2, min(16, (os.cpu_count() or 4) // 2))
                                   "k=[9,11] credit, x=[1,2] credit, G=[78,80] credit, d=[3,4] credit, D=[20,30] credit, "
                                   "n=[5,7] credit, y=[1,2] credit, F1=? credit, F2=? credit", "F1", [("<=", "22")],
                                   "ZGenBlock")
+    _F["ZGenIfConst"] = pool.submit(ZB.bound_to_lean, [], [], "e=5 credit, x=[1,2] credit",
+                                    "x*ifpos(e - 3, 2, 100)", [("<=", "4")], "ZGenIfConst")
     R = {k: f.result() for k, f in _F.items()}
 
 ok = fail = 0
@@ -188,6 +190,9 @@ bk = R["ZGenBlock"]
 check("F1 = k·x <= 22 next to an unrelated law with denominators: a theorem on the laws of F1's OWN block "
       "(blind/b01's Finst regressed when every row's denominators went into D)",
       bk["status"] == "theorem" and bk.get("about") == "laws" and bk.get("params") == ["k", "x"], bk.get("params"))
+ic = R["ZGenIfConst"]
+check("ifpos with a condition CONSTANT after the pinned values (e = 5: x·ifpos(e − 3, 2, 100) = 2x <= 4): decided "
+      "exactly, a theorem (ztl-stand tasks/t25: a bond's maturity pinned)", ic["status"] == "theorem", ic)
 print(f"\n{ok} ok, {fail} fail")
 print("ZBOUND LEAN BRIDGE GREEN" if fail == 0 else "ZBOUND LEAN BRIDGE RED")
 sys.exit(1 if fail else 0)

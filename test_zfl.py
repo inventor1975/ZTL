@@ -251,6 +251,56 @@ def sec22_a_system_with_sin_cos_tan_in_a_search_region():
     print("   the circle touching y = cos x at (0, 1): OPEN, said as searched, nothing claimed")
 
 
+def sec23_one_unknown_in_a_search_region():
+    """(2026-11-08, the curator's order: the weaknesses first) ONE unknown with its region `x = ? in [a, b]` and one
+    equation, where the exact solver PROVED nothing: the region is exhausted the same way as a system's (zsystem,
+    d = 1) and the answer is COMPLETE. Both sides: x = cos x in [0, 2] — the one root (Dottie's number), checked in
+    floats; x·eˣ = 1 in [0, 3] — the omega constant; x³ − 2x = 0.1 in [−4, 4] — THREE certified intervals where the
+    solver had only `≈` approximations; x = cos x in [2, 3] — none, REFUTED; an exact answer (x² = 2 -> ±√2) is kept
+    and the region said unused; without a region x = cos x stays OPEN (nothing claimed). Sabotage: a forged interval
+    that misses the root is refused by the exact check."""
+    import math
+    from fractions import Fraction
+    import zsystem
+    print("-" * 72)
+    print("§23 one unknown in a search region")
+    U = lambda n, v="?": {"name": n, "means": n, "status": "unverified", "value": v}
+
+    def roots(v, claim):
+        r = zfl.run({"rows": [U("x", v)], "claim": claim})
+        n = r["report"]["numeric"]
+        bx = [tuple(Fraction(t) for t in b.strip("[]").split(", ")) for b in ((n.get("solved") or {}).get("x") or {})
+              .get("roots", []) if b.startswith("[")]
+        return r, n, bx
+    r, n, bx = roots("? in [0, 2]", "x = cos(x)")
+    assert n["disposition"] == "EARNED" and n["system"]["complete"] and len(bx) == 1, n
+    assert any(i["code"] == "W_SYSTEM_ALL" for i in r["issues"])
+    c = float(sum(bx[0]) / 2)
+    assert abs(c - math.cos(c)) < 1e-9 and bx[0][1] - bx[0][0] < Fraction(1, 10 ** 5), bx
+    r, n, bx = roots("? in [0, 3]", "x*exp(x) = 1")
+    assert n["disposition"] == "EARNED" and len(bx) == 1 and abs(float(sum(bx[0]) / 2) - 0.5671432904) < 1e-8, n
+    r, n, bx = roots("? in [-4, 4]", "x*x*x - 2*x = 0.1")
+    assert n["disposition"] == "EARNED" and n["system"]["complete"] and len(bx) == 3, n
+    for b in bx:
+        c = float(sum(b) / 2)
+        assert abs(c ** 3 - 2 * c - 0.1) < 1e-9, bx
+    print("   x = cos x in [0,2]: one root ~0.739085; x·eˣ = 1: omega; x³ − 2x = 0.1: three certified intervals")
+    r, n, bx = roots("? in [2, 3]", "x = cos(x)")
+    assert n["disposition"] == "REFUTED" and n["verdict"] == "F", n
+    r, n, bx = roots("? in [0, 10]", "x*x = 2")
+    assert n["disposition"] == "EARNED" and n["solved"]["x"]["roots"] == ["-√2", "√2"], n
+    assert any(i["code"] == "W_REGION_UNUSED" for i in r["issues"])
+    r, n, bx = roots("?", "x = cos(x)")
+    assert n["disposition"] == "OPEN" and not bx, n
+    print("   none in [2,3]: REFUTED; the exact ±√2 kept (region unused, said); no region: OPEN")
+    import znumjudge as ZJ
+    qs = ZJ.parse_quantities("x=? credit")[0]
+    law = [ZJ._parse_arith("(x) - (cos(x))", qs)]
+    forged = {"centre": ["1"], "radius": "1/1024", "Y": [["1/2"]], "Z": [["2"]]}
+    assert not zsystem.check(law, ["x"], qs, forged)[0]
+    print("   sabotage: a forged interval around 1 (the root is ~0.739) is refused by the exact check")
+
+
 def sec4b_every_example_runs_and_json_types_are_taken_as_they_come():
     print("-" * 72)
     print("4b. THE CATALOGUE, AND WHAT ARRIVES FROM A MODEL")
@@ -917,7 +967,8 @@ def sec21_a_system_in_a_search_region_is_answered_completely():
     assert any(i["code"] == "W_REGION_UNUSED" for i in r["issues"])
     r = zfl.run({"rows": [U("x", "? in [a, b]")], "claim": "x*x = 2"})
     assert not r["ok"] and any(i["code"] == "E_VALUE_FORM" for i in r["issues"])
-    print("   none in the region: REFUTED; no regions: local; one unknown: unused, said; a malformed region: refused")
+    print("   none in the region: REFUTED; no regions: local; one unknown with an exact answer: unused, said; "
+          "a malformed region: refused")
     import znumjudge as ZJ
     qs = ZJ.parse_quantities("x=? credit, y=? credit")[0]
     laws = [ZJ._parse_arith("(x*x + y*y) - (1)", qs), ZJ._parse_arith("(x) - (exp(y))", qs)]
@@ -955,6 +1006,7 @@ if __name__ == "__main__":
     sec20_a_system_of_equations_is_a_question_too()
     sec21_a_system_in_a_search_region_is_answered_completely()
     sec22_a_system_with_sin_cos_tan_in_a_search_region()
+    sec23_one_unknown_in_a_search_region()
     sec4b_every_example_runs_and_json_types_are_taken_as_they_come()
     sec5_the_spec_can_build_the_form_and_the_page()
     print("=" * 72)

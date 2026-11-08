@@ -302,13 +302,13 @@ COLUMNS = [
         # "? FOR UNKNOWN" WAS FALSE (29.09, blind cloud test): `?` is the
         # quantity the question asks for and is SOLVED for; an unknown input
         # written as `?` came back T EARNED. An unknown input is an interval.
-        "en": ("value", "a number, an interval [0,10], or ? for the quantity the question asks for (it is solved for, not measured); ? in [0,2] searches it in [0,2] (for a system: the complete answer there); an unknown input is an interval, e.g. [0,inf]"),
-        "ru": ("величина", "число, интервал [0,10] или ? для искомой величины (её решают, а не измеряют); ? in [0,2] ищет её в [0,2] (для системы — полный ответ там); неизвестное входное значение — интервал, например [0,inf]"),
-        "de": ("Wert", "Zahl, Intervall [0,10] oder ? für die gesuchte Größe (sie wird gelöst, nicht gemessen); ? in [0,2] sucht sie in [0,2] (bei einem System: die vollständige Antwort dort); ein unbekannter Eingabewert ist ein Intervall, z. B. [0,inf]"),
-        "fr": ("valeur", "nombre, intervalle [0,10] ou ? pour la grandeur cherchée (elle est résolue, pas mesurée) ; ? in [0,2] la cherche dans [0,2] (pour un système : la réponse complète là) ; une entrée inconnue est un intervalle, p. ex. [0,inf]"),
-        "es": ("valor", "número, intervalo [0,10] o ? para la magnitud buscada (se resuelve, no se mide); ? in [0,2] la busca en [0,2] (en un sistema: la respuesta completa allí); un dato desconocido es un intervalo, p. ej. [0,inf]"),
-        "uk": ("величина", "число, інтервал [0,10] або ? для шуканої величини (її розв'язують, а не вимірюють); ? in [0,2] шукає її в [0,2] (для системи — повна відповідь там); невідоме вхідне значення — інтервал, напр. [0,inf]"),
-        "he": ("ערך", "מספר, תחום [0,10] או ? לגודל המבוקש (פותרים אותו, לא מודדים); ? in [0,2] מחפש אותו ב-[0,2] (במערכת: התשובה המלאה שם); ערך קלט לא ידוע הוא תחום, למשל [0,inf]"),
+        "en": ("value", "a number, an interval [0,10], or ? for the quantity the question asks for (it is solved for, not measured); ? in [0,2] searches it in [0,2] (the complete answer there); an unknown input is an interval, e.g. [0,inf]"),
+        "ru": ("величина", "число, интервал [0,10] или ? для искомой величины (её решают, а не измеряют); ? in [0,2] ищет её в [0,2] (полный ответ там); неизвестное входное значение — интервал, например [0,inf]"),
+        "de": ("Wert", "Zahl, Intervall [0,10] oder ? für die gesuchte Größe (sie wird gelöst, nicht gemessen); ? in [0,2] sucht sie in [0,2] (die vollständige Antwort dort); ein unbekannter Eingabewert ist ein Intervall, z. B. [0,inf]"),
+        "fr": ("valeur", "nombre, intervalle [0,10] ou ? pour la grandeur cherchée (elle est résolue, pas mesurée) ; ? in [0,2] la cherche dans [0,2] (la réponse complète là) ; une entrée inconnue est un intervalle, p. ex. [0,inf]"),
+        "es": ("valor", "número, intervalo [0,10] o ? para la magnitud buscada (se resuelve, no se mide); ? in [0,2] la busca en [0,2] (la respuesta completa allí); un dato desconocido es un intervalo, p. ej. [0,inf]"),
+        "uk": ("величина", "число, інтервал [0,10] або ? для шуканої величини (її розв'язують, а не вимірюють); ? in [0,2] шукає її в [0,2] (повна відповідь там); невідоме вхідне значення — інтервал, напр. [0,inf]"),
+        "he": ("ערך", "מספר, תחום [0,10] או ? לגודל המבוקש (פותרים אותו, לא מודדים); ? in [0,2] מחפש אותו ב-[0,2] (התשובה המלאה שם); ערך קלט לא ידוע הוא תחום, למשל [0,inf]"),
         "eg": ["1500", "[0,10]", "?", "? in [0,2]"],
     },
     {
@@ -2079,7 +2079,9 @@ def _system_answer(claim, q, unknowns, regions=None):
           there; solutions elsewhere NOT excluded (W_SYSTEM_LOCAL).
     None when the claim is not such a system or nothing is proved — then the answer stays the solver's."""
     eqs = _system_equations(claim)
-    if eqs is None or len(eqs) != len(unknowns) or len(unknowns) < 2:
+    one = len(unknowns) == 1                      # ONE unknown: only with its region (the curator's order, 08.11 17:28)
+    if eqs is None or len(eqs) != len(unknowns) or not unknowns or \
+            (one and not (regions and regions.get(unknowns[0]))):
         return None
     try:
         from znumjudge import _parse_arith as _pa
@@ -2236,8 +2238,11 @@ def run(doc, ground_registry=None):
                 # only where the exact solver gave NO answer: its pinned values and its paired roots
                 # (`area == s*s & area - 5*s + 6 == 0` -> s in {2, 3}) are complete and stay
                 # (test_quadratic caught the first version overwriting them, 2026-11-08)
-                if len(unk) >= 2 and not any(solved.get(n, {}).get("pinned") or solved.get(n, {}).get("roots")
-                                             for n in unk):
+                # ONE unknown with its region (08.11): only where the solver PROVED nothing (OPEN; its `≈` roots
+                # are approximations, replaced by certified intervals); an exact answer (x*x = 2 -> ±√2) stays
+                if (len(unk) >= 2 and not any(solved.get(n, {}).get("pinned") or solved.get(n, {}).get("roots")
+                                              for n in unk)) or \
+                        (len(unk) == 1 and regions.get(unk[0]) and r["disposition"] == "OPEN"):
                     system = _system_answer(claim, q, unk, regions)
                     searched = all(regions.get(n) for n in unk)
                     if system is not None:
@@ -2278,12 +2283,14 @@ def run(doc, ground_registry=None):
                 if system["complete"]:
                     issues.append(_issue(
                         "warning", "W_SYSTEM_ALL", where,
-                        f"the system was solved in the whole search region: {system['how']} (Krawczyk's test and "
+                        f"the {'system' if len(unk) > 1 else 'equation'} was solved in the whole search region: "
+                        f"{system['how']} (Krawczyk's test and "
                         f"the readings' exclusion of the rest, checked exactly); a cube may reach out of the region"))
                 else:
                     issues.append(_issue(
                         "warning", "W_SYSTEM_LOCAL", where,
-                        "the system has a solution in the cube given for each unknown, and it is the only one there "
+                        f"the {'system' if len(unk) > 1 else 'equation'} has a solution in the cube given for each "
+                        "unknown, and it is the only one there "
                         "(Krawczyk's test, checked exactly); solutions OUTSIDE the cube are not excluded"
                         + ("" if system["how"].startswith("a solution") else f" ({system['how']})")
                         + ". Give each unknown a search region (x = ? in [a, b]) for the complete answer."))
@@ -2297,8 +2304,9 @@ def run(doc, ground_registry=None):
                     not (system is not None and system["complete"]):
                 issues.append(_issue(
                     "warning", "W_REGION_UNUSED", "value",
-                    "a search region `? in [a, b]` is read for a SYSTEM (two or more `?` values and as many "
-                    "equations, every unknown with its region); here it was not used"))
+                    "a search region `? in [a, b]` is read where the exact solver proved nothing, for as many "
+                    "equations as `?` values, every unknown with its region; here it was not used (the exact answer "
+                    "holds over all the reals, or the claim is not such equations)"))
             # REFUTED WITH NO LETTER (29.09): a `?` no value can satisfy came
             # back disposition REFUTED, verdict null. Refuted is F.
             if report["numeric"]["verdict"] is None and r["disposition"] == "REFUTED":

@@ -1,5 +1,6 @@
 import ZRootExp
 import ZRAtan
+import ZRootAtan
 /-!
 # ZRootDiv — roots of laws WITH DIVISION AND `ln` (so fractional powers `xᵏ = exp(k·ln x)`) on VR's continuum.
 Zero axioms.
@@ -20,48 +21,6 @@ namespace ZRootDiv
 open VR VR.Numbers VR.CSR ZNumBin ZField ZPoly ZIv ZDivIv ZExpLaw ZExpIv ZXE ZRealCF ZExp ZRealExp ZLn ZRootExp ZRAtan
 
 /-! ## The clamp -/
-
-/-- The larger of two rationals (decided by `qle`). -/
-def qmax (a b : QExpr) : QExpr :=
-  match qle.decidable a b with
-  | .isTrue _ => b
-  | .isFalse _ => a
-
-theorem qmax_cases (a b : QExpr) : (qmax a b = b ∧ qle a b) ∨ (qmax a b = a ∧ qle b a) := by
-  unfold qmax
-  cases qle.decidable a b with
-  | isTrue h => exact Or.inl ⟨rfl, h⟩
-  | isFalse h =>
-      cases qle_total a b with
-      | inl h' => exact absurd h' h
-      | inr h' => exact Or.inr ⟨rfl, h'⟩
-
-theorem qmax_ge_l (a b : QExpr) : qle a (qmax a b) := by
-  rcases qmax_cases a b with ⟨e, h⟩ | ⟨e, _⟩ <;> rw [e]
-  · exact h
-  · exact qle_refl _
-
-theorem qmax_ge_r (a b : QExpr) : qle b (qmax a b) := by
-  rcases qmax_cases a b with ⟨e, _⟩ | ⟨e, h⟩ <;> rw [e]
-  · exact qle_refl _
-  · exact h
-
-theorem qmax_close {a a' b b' e : QExpr} (ha : qclose a a' e) (hb : qclose b b' e) :
-    qclose (qmax a b) (qmax a' b') e := by
-  obtain ⟨a1, a2⟩ := ha
-  obtain ⟨b1, b2⟩ := hb
-  unfold qsub at a1 a2 b1 b2
-  rcases qmax_cases a b with ⟨e1, h1⟩ | ⟨e1, h1⟩ <;> rcases qmax_cases a' b' with ⟨e2, h2⟩ | ⟨e2, h2⟩ <;>
-    rw [e1, e2] <;> (constructor <;> (unfold qsub; rat_linarith))
-
-theorem qmax_congr {a a' b b' : QExpr} (ha : qEq a a') (hb : qEq b b') : qEq (qmax a b) (qmax a' b') := by
-  rcases qmax_cases a b with ⟨e1, h1⟩ | ⟨e1, h1⟩ <;> rcases qmax_cases a' b' with ⟨e2, h2⟩ | ⟨e2, h2⟩ <;>
-    rw [e1, e2] <;> exact qle_antisymm (by rat_linarith) (by rat_linarith)
-
-theorem qmax_le {a b c : QExpr} (ha : qle a c) (hb : qle b c) : qle (qmax a b) c := by
-  rcases qmax_cases a b with ⟨e, _⟩ | ⟨e, _⟩ <;> rw [e]
-  · exact hb
-  · exact ha
 
 /-- The clamp level `2⁻⁶⁴` as a dyadic. -/
 def δD : D := ⟨⟨1, 0⟩, 64⟩
@@ -114,7 +73,7 @@ def evR (x : Nat → RExpr) : XE → RExpr
   | .exp a => rexpR (evR x a)
   | .div a b => rmul (evR x a) (rinvT (evR x b))
   | .ln a => rlnT (evR x a)
-  | .atan _ => rzero
+  | .atan a => ratan (evR x a)
 
 /-- Every denominator and every `ln` argument reads `≥ 2⁻⁶⁴` on the box. -/
 def posOK (B : Box) : XE → Bool
@@ -127,7 +86,7 @@ def posOK (B : Box) : XE → Bool
   | .exp a => posOK B a
   | .div a b => posOK B a && posOK B b && optB (ivX B b) (fun V => dle δD V.1)
   | .ln a => posOK B a && optB (ivX B a) (fun V => dle δD V.1)
-  | .atan _ => false
+  | .atan a => posOK B a
 
 theorem above_clamp {B : Box} {x : Nat → RExpr} {e : XE} {v : RExpr} (hx : InBox rCF B x)
     (hv : Val rCF rexpR ratan x e v) (h : optB (ivX B e) (fun V => dle δD V.1) = true) :
@@ -165,7 +124,7 @@ theorem val_evR {B : Box} {x : Nat → RExpr} (hx : InBox rCF B x) :
       have Va := val_evR hx a h1
       have ceq := rcl_eq (above_clamp hx Va h3)
       exact .ln rExpLaws Va (rCF.pos_congr ceq (rcl_pos _)) (rCF.trans (rexp_rln (rcl (evR x a)) (rcl_pos _)) ceq)
-  | .atan _, h => by cases h
+  | .atan a, h => .atan ZRootAtan.r_atanLaws (val_evR hx a h) (rCF.refl _)
 
 
 /-! ## The oracle -/
@@ -194,7 +153,7 @@ def evqD (n : Nat) (q : Nat → QExpr) : XE → QExpr
   | .exp a => eseq (evqD n q a) n
   | .div a b => qmul (evqD n q a) (qinv' (qmax (evqD n q b) (qeps 64)))
   | .ln a => lnseq (qmax (evqD n q a) (qeps 64)) n
-  | .atan _ => qzero
+  | .atan a => ZAtan.atseq (evqD n q a) n
 
 theorem evqD_respects (n : Nat) {q q' : Nat → QExpr} (h : ∀ i, qEq (q i) (q' i)) :
     ∀ e : XE, qEq (evqD n q e) (evqD n q' e)
@@ -207,7 +166,7 @@ theorem evqD_respects (n : Nat) {q q' : Nat → QExpr} (h : ∀ i, qEq (q i) (q'
   | .exp a => ZLn.eseq_respects (evqD_respects n h a) n
   | .div a b => qmul_respects (evqD_respects n h a) (qinv'_respects (qmax_congr (evqD_respects n h b) (qEq_refl _)))
   | .ln a => lnseq_congr (qmax_congr (evqD_respects n h a) (qEq_refl _)) n
-  | .atan _ => qEq_refl _
+  | .atan a => ZAtan.atseq_respects (evqD_respects n h a) n
 
 /-- The total law's `n`-th term IS the rational reading at the argument's `n`-th term. -/
 theorem evR_seq (x : Nat → RExpr) (n : Nat) : ∀ e : XE, qEq ((evR x e).seq n) (evqD n (fun i => (x i).seq n) e)
@@ -220,7 +179,7 @@ theorem evR_seq (x : Nat → RExpr) (n : Nat) : ∀ e : XE, qEq ((evR x e).seq n
   | .exp a => ZLn.eseq_respects (evR_seq x n a) n
   | .div a b => qmul_respects (evR_seq x n a) (qinv'_respects (qmax_congr (evR_seq x n b) (qEq_refl _)))
   | .ln a => lnseq_congr (qmax_congr (evR_seq x n a) (qEq_refl _)) n
-  | .atan _ => qEq_refl _
+  | .atan a => ZAtan.atseq_respects (evR_seq x n a) n
 
 theorem inv_close {u v : QExpr} {k j : Nat} (hu : qle (qeps k) u) (hv : qle (qeps k) v)
     (h : qclose u v (qeps (j + (k + k)))) : qclose (qinv' u) (qinv' v) (qeps j) := by
@@ -428,7 +387,7 @@ theorem uc_evqD : ∀ e : XE, UCo (fun n q => evqD n q e)
   | .exp a => uc_exp (uc_evqD a)
   | .div a b => uc_mul (uc_evqD a) (uc_inv (uc_evqD b))
   | .ln a => uc_ln (uc_evqD a)
-  | .atan _ => uc_const qzero
+  | .atan a => ZRootAtan.uc_atan (uc_evqD a)
 
 /-! ## The root -/
 

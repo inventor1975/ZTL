@@ -143,30 +143,6 @@ theorem common_d {P : Nat → Nat → Prop} : ∀ d : Nat, (∀ i, i < d → ∃
 
 /-! ## From a real bound between constants to a rational one -/
 
-theorem q_nonpos {x : QExpr} (h : ∀ k, qle x (qeps k)) : qle x qzero := by
-  cases qle.decidable x qzero with
-  | isTrue t => exact t
-  | isFalse t =>
-      have xp : qlt qzero x := by
-        cases qle_total x qzero with
-        | inl h' => exact absurd h' t
-        | inr h' => exact qlt_iff_le_not_le.mpr ⟨h', t⟩
-      have c0 := qmul_inv'_cancel (ZRecip.ne_zero_of_lt xp)
-      obtain ⟨B, hB⟩ := ZRecip.lv_floor xp (show qle qone (qmul (qinv' x) x) by
-        have := qmul_comm (qinv' x) x; rat_linarith)
-      have h1 := h (B + 1)
-      have e := qeps_succ_add B
-      have p := qeps_pos (B + 1)
-      obtain ⟨_, np⟩ := qlt_iff_le_not_le.mp p
-      exact absurd (by rat_linarith) np
-
-theorem q_of_rle {a b : QExpr} (h : rle (rofQ a) (rofQ b)) : qle a b := by
-  have k : ∀ k, qle (qsub a b) (qeps k) := fun k => by
-    obtain ⟨N, hN⟩ := h k
-    exact hN N (Nat.le_refl _)
-  have := q_nonpos k
-  unfold qsub at this; rat_linarith
-
 theorem qclose_of_bd {a b : QExpr} {j : Nat} (h : ZKron.Bd rCF.toOH (radd (rofQ a) (rneg (rofQ b))) (hp rOH j)) :
     qclose a b (qeps j) := by
   obtain ⟨h1, h2⟩ := h
@@ -174,7 +150,7 @@ theorem qclose_of_bd {a b : QExpr} {j : Nat} (h : ZKron.Bd rCF.toOH (radd (rofQ 
   have l1 : rle (rofQ (qneg (qeps j))) (rofQ (qsub a b)) :=
     rle_respects (rEq_trans (rneg_respects e1) (rEq_of_seq fun _ => qEq_refl _)) (rEq_of_seq fun _ => qEq_refl _) h1
   have l2 : rle (rofQ (qsub a b)) (rofQ (qeps j)) := rle_respects (rEq_of_seq fun _ => qEq_refl _) e1 h2
-  exact ⟨q_of_rle l2, q_of_rle l1⟩
+  exact ⟨ZRootExp.q_of_rle l2, ZRootExp.q_of_rle l1⟩
 
 /-! ## The contraction with an oracle -/
 

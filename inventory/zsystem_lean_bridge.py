@@ -6,7 +6,7 @@ solution's shift over the parameter box, a cover when the box is wide); the kern
   * the circle meets the exponential; a 3×3 system with exp and ln; the circle with a real radius parameter
     R ∈ [0.999, 1.001] — THEOREMS (a solution in the cube, unique there, for every parameter in the inner box);
   * x² + y² + 1 = 0 (no real solution) — NO VERDICT (Newton finds none; nothing is claimed);
-  * a system with atan — NOT TRANSLATED;
+  * a system with atan (y = atan x, x + y = 1) — a THEOREM; a system with sin — NOT TRANSLATED;
   * NEGATIVE CONTROL: the circle's theorem with the cube moved by 4r — the kernel must refuse it.
 The 64-leaf cover of `chem3p` (kernel 66 s) is in lean/ZSysChem3p.lean, built by CI's lean job.
 """
@@ -37,7 +37,9 @@ CASES = [
     ("ZJudgeNone", dict(vars=["x", "y"], laws=["x*x + y*y + 1", "x - y"], guess=[0.5, 0.3],
                         title="no real solution"), "no verdict"),
     ("ZJudgeAtan", dict(vars=["x", "y"], laws=["atan(x) - y", "x + y - 1"], guess=[0.5, 0.5],
-                        title="atan is not in ZXE"), "not translated"),
+                        title="the line meets atan"), "theorem"),
+    ("ZJudgeSin", dict(vars=["x", "y"], laws=["sin(x) - y", "x + y - 1"], guess=[0.5, 0.5],
+                       title="sin is not in ZXE"), "not translated"),
 ]
 print("1. the judge on systems")
 first = None

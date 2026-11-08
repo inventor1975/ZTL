@@ -33,20 +33,26 @@ inductive XE where
 
 variable {α : Type} (S : CF α)
 
-/-- What `atan` MEANS here: `atan 0 = 0`, congruent, and its chord lies between the bounds of `ψ(t) = 1/(1 + t²)` on
-the chord's interval (stated without division: `L·(1 + t²) ≤ 1 ≤ U·(1 + t²)` for every `t` there). `ℝ`'s `arctan`
-is one; VR's `ratan` (the grid sums of `ZAtan`) is one (`ZRootAtan.r_atanLaws`). -/
+/-- The square of `t ∈ I`, read with its sign: `[0, max(l², h²)]` when `I` straddles `0`. Exact dyadics. -/
+def ivSq (I : Iv) : Iv :=
+  (cond (dle zeroD I.1) (dmul I.1 I.1) (cond (dle I.2 zeroD) (dmul I.2 I.2) zeroD), dmax (dmul I.1 I.1) (dmul I.2 I.2))
+
+/-- The reading of `ψ(t) = 1/(1 + t²)` for `t ∈ I`. -/
+def psiI (I : Iv) : Option Iv :=
+  match ivAdd ZIv.one (ivSq I) with
+  | none => none
+  | some J => ivInvPos J
+
+/-- What `atan` MEANS here: `atan 0 = 0`, congruent, and its chord over two points of a dyadic interval `I` lies
+between the bounds of the reading of `ψ(t) = 1/(1 + t²)` on `I` (the derivative). `ℝ`'s `arctan` is one (the mean
+value theorem); VR's `ratan` (the grid sums of `ZAtan`) is one (`ZRootAtan.r_atanLaws`). -/
 structure AtanLaws (atn : α → α) : Prop where
   zero : S.r (atn S.zero) S.zero
   congr : ∀ {a b}, S.r a b → S.r (atn a) (atn b)
-  chord : ∀ x y L U, S.le x y →
-    (∀ t, S.le x t → S.le t y →
-      S.le (S.mul L (S.add S.one (S.mul t t))) S.one ∧ S.le S.one (S.mul U (S.add S.one (S.mul t t)))) →
-    S.le (S.mul (S.add y (S.neg x)) L) (S.add (atn y) (S.neg (atn x))) ∧
-    S.le (S.add (atn y) (S.neg (atn x))) (S.mul (S.add y (S.neg x)) U)
+  chord : ∀ (I W : Iv), psiI I = some W → ∀ x y, Mem S x I → Mem S y I → S.le x y →
+    S.le (S.mul (S.add y (S.neg x)) (dv S.toOH W.1)) (S.add (atn y) (S.neg (atn x))) ∧
+    S.le (S.add (atn y) (S.neg (atn x))) (S.mul (S.add y (S.neg x)) (dv S.toOH W.2))
 
-/-- `v` is a value of `e` at `p`, `ex` standing for the exponential: its nodes have values only for an `ex`
-satisfying `ExpLaws` (that IS what "exp" means here; ℝ's `Real.exp` is one), and `ln a` needs `a > 0`. -/
 inductive Val (ex atn : α → α) (p : Nat → α) : XE → α → Prop where
   | var {i v} : S.r v (p i) → Val ex atn p (.var i) v
   | cst {c v} : S.r v (dv S.toOH c) → Val ex atn p (.cst c) v
@@ -157,6 +163,209 @@ theorem val_toPE {ex atn : α → α} {p : Nat → α} : ∀ {e : XE} {q : PE} {
   | .ln _, q, v, h, _ => by cases h
   | .atan _, q, v, h, _ => by cases h
 
+/-! ## The reading of `atan`: `ψ` on an interval, and the values at dyadic points by a Riemann enclosure from `0` -/
+
+theorem mem_sq {t : α} {I : Iv} (h : Mem S t I) : Mem S (S.mul t t) (ivSq I) := by
+  obtain ⟨h1, h2⟩ := h
+  have el := dv_mul S.toOH I.1 I.1
+  have eh := dv_mul S.toOH I.2 I.2
+  have ml := S.le_respects el (S.refl _) (dmax_l S (dmul I.1 I.1) (dmul I.2 I.2))
+  have mh := S.le_respects eh (S.refl _) (dmax_r S (dmul I.1 I.1) (dmul I.2 I.2))
+  have sq := sq_nonneg S (S.add (dv S.toOH I.1) (S.neg (dv S.toOH I.2)))
+  have mlh : S.le (S.mul (dv S.toOH I.1) (dv S.toOH I.2)) (dv S.toOH (dmax (dmul I.1 I.1) (dmul I.2 I.2))) := by
+    cr_linarith S.toOCR [ml, mh, sq]
+  have mhl : S.le (S.mul (dv S.toOH I.2) (dv S.toOH I.1)) (dv S.toOH (dmax (dmul I.1 I.1) (dmul I.2 I.2))) :=
+    S.le_respects (S.mul_comm _ _) (S.refl _) mlh
+  refine ⟨?_, mul_upper S h1 h2 h1 h2 ml mlh mhl mh⟩
+  show S.le (dv S.toOH (cond (dle zeroD I.1) (dmul I.1 I.1) (cond (dle I.2 zeroD) (dmul I.2 I.2) zeroD))) (S.mul t t)
+  cases c1 : dle zeroD I.1 with
+  | true =>
+      have z := S.le_respects (dv_zeroD S) (S.refl _) (dle_sound S.toOH c1)
+      have t0 := S.le_trans z h1
+      have a := le_mul_left' S h1 z
+      have b := le_mul_right S.toOH h1 t0
+      exact S.le_respects (S.symm el) (S.refl _) (S.le_trans a b)
+  | false =>
+      cases c2 : dle I.2 zeroD with
+      | true =>
+          have z := S.le_respects (S.refl _) (dv_zeroD S) (dle_sound S.toOH c2)
+          have n1 : S.le (S.neg (dv S.toOH I.2)) (S.neg t) := by cr_linarith S.toOCR [h2]
+          have n0 : S.le S.zero (S.neg (dv S.toOH I.2)) := by cr_linarith S.toOCR [z]
+          have a := le_mul_left' S n1 n0
+          have b := le_mul_right S.toOH n1 (S.le_trans n0 n1)
+          have e1 : S.r (S.mul (S.neg (dv S.toOH I.2)) (S.neg (dv S.toOH I.2))) (S.mul (dv S.toOH I.2) (dv S.toOH I.2)) := by
+            cr_ring S.toCR
+          have e2 : S.r (S.mul (S.neg t) (S.neg t)) (S.mul t t) := by cr_ring S.toCR
+          exact S.le_respects (S.trans e1 (S.symm eh)) e2 (S.le_trans a b)
+      | false =>
+          exact S.le_respects (S.symm (dv_zeroD S)) (S.refl _) (sq_nonneg S t)
+
+/-- **THE READING OF `ψ`**: for `t ∈ I`, `1/(1 + t²)` is in `psiI I`. -/
+theorem psi_mem {t w : α} {I W : Iv} (h : Mem S t I) (hW : psiI I = some W)
+    (hw : S.r (S.mul (S.add S.one (S.mul t t)) w) S.one) : Mem S w W := by
+  unfold psiI at hW
+  cases hJ : ivAdd ZIv.one (ivSq I) with
+  | none => rw [hJ] at hW; cases hW
+  | some J =>
+      rw [hJ] at hW
+      exact mem_inv_pos S (mem_add S (mem_one S) (mem_sq S h) hJ) hW hw
+
+theorem psi_lo_nonneg {I W : Iv} (hW : psiI I = some W) : S.le S.zero (dv S.toOH W.1) := by
+  unfold psiI at hW
+  cases hJ : ivAdd ZIv.one (ivSq I) with
+  | none => rw [hJ] at hW; cases hW
+  | some J =>
+      rw [hJ] at hW
+      unfold ivInvPos at hW
+      obtain ⟨hb, hK⟩ := cond_some hW
+      cases hK
+      obtain ⟨_, c2, _, _, _⟩ := and5 hb
+      exact S.le_respects (dv_zeroD S) (S.refl _) (dle_sound S.toOH c2)
+
+/-- The grid `d·i/2ᵏ`. -/
+def gridA (d : D) (k i : Nat) : D := dmul d ⟨⟨i, 0⟩, k⟩
+
+/-- One segment's contribution `atan(aᵢ₊₁) − atan(aᵢ) ∈ (aᵢ₊₁ − aᵢ)·ψ([aᵢ, aᵢ₊₁])`. -/
+def segC (d : D) (k i : Nat) : Option Iv :=
+  match psiI (dmin (gridA d k i) (gridA d k (i + 1)), dmax (gridA d k i) (gridA d k (i + 1))) with
+  | none => none
+  | some W => some (cond (dle (gridA d k i) (gridA d k (i + 1)))
+      (dmul (dadd (gridA d k (i + 1)) (dneg (gridA d k i))) W.1, dmul (dadd (gridA d k (i + 1)) (dneg (gridA d k i))) W.2)
+      (dmul (dadd (gridA d k (i + 1)) (dneg (gridA d k i))) W.2, dmul (dadd (gridA d k (i + 1)) (dneg (gridA d k i))) W.1))
+
+def encS (d : D) (k : Nat) : Nat → Option Iv
+  | 0 => some (zeroD, zeroD)
+  | i + 1 => match encS d k i with
+    | none => none
+    | some E => match segC d k i with
+      | none => none
+      | some C => ivAdd E C
+
+/-- The number of grid steps' exponent for the value of `atan`: `2⁸` segments. -/
+def atK : Nat := 8
+
+/-- **THE VALUE OF `atan` AT A DYADIC**, enclosed. -/
+def atEnc (d : D) : Option Iv := encS d atK (2 ^ atK)
+
+/-- **THE READING OF `atan`** on `I`: monotone, so the enclosures of the values at the ends. -/
+def ivAtan (I : Iv) : Option Iv :=
+  match psiI I with
+  | none => none
+  | some _ => match atEnc I.1 with
+    | none => none
+    | some E1 => match atEnc I.2 with
+      | none => none
+      | some E2 => some (E1.1, E2.2)
+
+variable {S}
+
+theorem seg_mem {atn : α → α} (H : AtanLaws S atn) (d : D) (k i : Nat) {C : Iv} (h : segC d k i = some C) :
+    Mem S (S.add (atn (dv S.toOH (gridA d k (i + 1)))) (S.neg (atn (dv S.toOH (gridA d k i))))) C := by
+  unfold segC at h
+  cases hW : psiI (dmin (gridA d k i) (gridA d k (i + 1)), dmax (gridA d k i) (gridA d k (i + 1))) with
+  | none => rw [hW] at h; cases h
+  | some W =>
+  rw [hW] at h; dsimp only at h
+  cases h
+  have mx : Mem S (dv S.toOH (gridA d k i)) (dmin (gridA d k i) (gridA d k (i + 1)), dmax (gridA d k i) (gridA d k (i + 1))) :=
+    ⟨dmin_l S _ _, dmax_l S _ _⟩
+  have my : Mem S (dv S.toOH (gridA d k (i + 1))) (dmin (gridA d k i) (gridA d k (i + 1)), dmax (gridA d k i) (gridA d k (i + 1))) :=
+    ⟨dmin_r S _ _, dmax_r S _ _⟩
+  have eh : S.r (dv S.toOH (dadd (gridA d k (i + 1)) (dneg (gridA d k i))))
+      (S.add (dv S.toOH (gridA d k (i + 1))) (S.neg (dv S.toOH (gridA d k i)))) :=
+    S.trans (dv_add S.toOH _ _) (S.add_congr (S.refl _) (dv_neg S.toOH _))
+  have m1 := S.trans (dv_mul S.toOH (dadd (gridA d k (i + 1)) (dneg (gridA d k i))) W.1) (S.mul_congr eh (S.refl _))
+  have m2 := S.trans (dv_mul S.toOH (dadd (gridA d k (i + 1)) (dneg (gridA d k i))) W.2) (S.mul_congr eh (S.refl _))
+  show Mem S _ (cond (dle (gridA d k i) (gridA d k (i + 1))) _ _)
+  cases hb : dle (gridA d k i) (gridA d k (i + 1)) with
+  | true =>
+      obtain ⟨c1, c2⟩ := H.chord _ W hW _ _ mx my (dle_sound S.toOH hb)
+      exact ⟨S.le_respects (S.symm m1) (S.refl _) c1, S.le_respects (S.refl _) (S.symm m2) c2⟩
+  | false =>
+      obtain ⟨c1, c2⟩ := H.chord _ W hW _ _ my mx (dle_sound S.toOH (dle_swap hb))
+      have e1 : S.r (S.mul (S.add (dv S.toOH (gridA d k i)) (S.neg (dv S.toOH (gridA d k (i + 1))))) (dv S.toOH W.1))
+          (S.neg (S.mul (S.add (dv S.toOH (gridA d k (i + 1))) (S.neg (dv S.toOH (gridA d k i)))) (dv S.toOH W.1))) := by
+        cr_ring S.toCR
+      have e2 : S.r (S.mul (S.add (dv S.toOH (gridA d k i)) (S.neg (dv S.toOH (gridA d k (i + 1))))) (dv S.toOH W.2))
+          (S.neg (S.mul (S.add (dv S.toOH (gridA d k (i + 1))) (S.neg (dv S.toOH (gridA d k i)))) (dv S.toOH W.2))) := by
+        cr_ring S.toCR
+      have c1' := S.le_respects e1 (S.refl _) c1
+      have c2' := S.le_respects (S.refl _) e2 c2
+      constructor
+      · have := S.le_respects (S.symm m2) (S.refl _) (S.le_refl (S.mul (S.add (dv S.toOH (gridA d k (i + 1)))
+          (S.neg (dv S.toOH (gridA d k i)))) (dv S.toOH W.2)))
+        exact S.le_respects (S.symm m2) (S.refl _) (by cr_linarith S.toOCR [c2'])
+      · exact S.le_respects (S.refl _) (S.symm m1) (by cr_linarith S.toOCR [c1'])
+
+theorem dv_grid0 (d : D) (k : Nat) : S.r (dv S.toOH (gridA d k 0)) S.zero :=
+  S.trans (dv_mul S.toOH _ _) (S.trans (S.mul_congr (S.refl _) (zv_isZ S.toOH (c := ⟨⟨0, 0⟩, k⟩) rfl))
+    (by cr_ring S.toCR))
+
+theorem enc_mem {atn : α → α} (H : AtanLaws S atn) (d : D) (k : Nat) :
+    ∀ i E, encS d k i = some E → Mem S (atn (dv S.toOH (gridA d k i))) E
+  | 0, E, h => by
+      cases h
+      have e := S.trans (H.congr (dv_grid0 d k)) H.zero
+      exact ⟨S.le_respects (S.symm (dv_zeroD S)) (S.symm e) (S.le_refl S.zero),
+        S.le_respects (S.symm e) (S.symm (dv_zeroD S)) (S.le_refl S.zero)⟩
+  | i + 1, E, h => by
+      unfold encS at h
+      cases h1 : encS d k i with
+      | none => rw [h1] at h; cases h
+      | some E0 =>
+      rw [h1] at h; dsimp only at h
+      cases h2 : segC d k i with
+      | none => rw [h2] at h; cases h
+      | some C =>
+      rw [h2] at h; dsimp only at h
+      have m := mem_add S (enc_mem H d k i E0 h1) (seg_mem H d k i h2) h
+      exact mem_congr S (by cr_ring S.toCR) m
+
+theorem dv_gridN (d : D) (k : Nat) : S.r (dv S.toOH (gridA d k (2 ^ k))) (dv S.toOH d) := by
+  refine S.trans (dv_mul S.toOH _ _) ?_
+  have e : S.r (dv S.toOH (⟨⟨2 ^ k, 0⟩, k⟩ : D)) S.one := by
+    show S.r (S.mul (S.add (nI S.toOH (2 ^ k)) (S.neg (nI S.toOH 0))) (hp S.toOH k)) S.one
+    have z := nI_zero S.toOH
+    refine S.trans (S.mul_congr (S.trans (S.add_congr (S.refl _) (S.neg_congr z))
+      (by cr_ring S.toCR : S.r (S.add (nI S.toOH (2 ^ k)) (S.neg S.zero)) (nI S.toOH (2 ^ k)))) (S.refl _)) ?_
+    exact two_hp S.toOH k
+  exact S.trans (S.mul_congr (S.refl _) e) (by cr_ring S.toCR)
+
+/-- **THE ENCLOSURE OF `atan` AT A DYADIC IS SOUND.** -/
+theorem atEnc_mem {atn : α → α} (H : AtanLaws S atn) {d : D} {E : Iv} (h : atEnc d = some E) :
+    Mem S (atn (dv S.toOH d)) E :=
+  mem_congr S (H.congr (S.symm (dv_gridN d atK))) (enc_mem H d atK (2 ^ atK) E h)
+
+/-- **THE READING OF `atan` IS SOUND.** -/
+theorem mem_atan {atn : α → α} (H : AtanLaws S atn) {x : α} {I K : Iv} (hx : Mem S x I) (h : ivAtan I = some K) :
+    Mem S (atn x) K := by
+  unfold ivAtan at h
+  cases hW : psiI I with
+  | none => rw [hW] at h; cases h
+  | some W =>
+  rw [hW] at h; dsimp only at h
+  cases h1 : atEnc I.1 with
+  | none => rw [h1] at h; cases h
+  | some E1 =>
+  rw [h1] at h; dsimp only at h
+  cases h2 : atEnc I.2 with
+  | none => rw [h2] at h; cases h
+  | some E2 =>
+  rw [h2] at h; dsimp only at h
+  cases h
+  have lo : Mem S (dv S.toOH I.1) I := ⟨S.le_refl _, S.le_trans hx.1 hx.2⟩
+  have hi : Mem S (dv S.toOH I.2) I := ⟨S.le_trans hx.1 hx.2, S.le_refl _⟩
+  have w0 := psi_lo_nonneg S hW
+  obtain ⟨a1, _⟩ := H.chord I W hW _ _ lo hx hx.1
+  obtain ⟨b1, _⟩ := H.chord I W hW _ _ hx hi hx.2
+  have p1 := S.mul_nonneg (by cr_linarith S.toOCR [hx.1] : S.le S.zero (S.add x (S.neg (dv S.toOH I.1)))) w0
+  have p2 := S.mul_nonneg (by cr_linarith S.toOCR [hx.2] : S.le S.zero (S.add (dv S.toOH I.2) (S.neg x))) w0
+  have e1 := atEnc_mem H h1
+  have e2 := atEnc_mem H h2
+  exact ⟨by cr_linarith S.toOCR [a1, p1, e1.1], by cr_linarith S.toOCR [b1, p2, e2.2]⟩
+
+variable (S)
+
 /-! ## The interval reading with division -/
 
 def ivDiv (I J : Iv) : Option Iv :=
@@ -180,7 +389,9 @@ def ivX (B : Box) : XE → Option Iv
   | .ln p => match ivX B p with
       | none => none
       | some I => ivLn I
-  | .atan _ => none
+  | .atan p => match ivX B p with
+      | none => none
+      | some I => ivAtan I
 
 theorem mem_div {x y v : α} {I J K : Iv} (hx : Mem S x I) (hy : Mem S y J) (hap : ap S y)
     (hv : S.r (S.mul y v) x) (h : ivDiv I J = some K) : Mem S v K := by
@@ -234,7 +445,12 @@ theorem ivX_sound {ex atn : α → α} {B : Box} {p : Nat → α} (hp : InBox S 
       cases ha : ivX B a with
       | none => rw [ha] at h; cases h
       | some I => rw [ha] at h; exact mem_ln S H (ih I ha) e h
-  | atan _ _ _ _ => intro K h; cases h
+  | @atan a va v H _ e ih =>
+      intro K h
+      unfold ivX at h
+      cases ha : ivX B a with
+      | none => rw [ha] at h; cases h
+      | some I => rw [ha] at h; exact mem_congr S e (mem_atan H (ih I ha) h)
 
 /-! ## The affine reading with division -/
 
@@ -403,3 +619,7 @@ theorem afIvX_sound {ex atn : α → α} {B : Box} {p : Nat → α} (hp : InBox 
   | some F => rw [hF] at h; exact afIv_sound S hp (afX_sound S hp hv F hF) h
 
 end ZXE
+#print axioms ZXE.mem_sq
+#print axioms ZXE.psi_mem
+#print axioms ZXE.atEnc_mem
+#print axioms ZXE.mem_atan

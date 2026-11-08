@@ -440,7 +440,7 @@ theorem evR_congr {x y : Nat → RExpr} (h : ∀ i, x i = y i) : ∀ e : XE, evR
   | .exp a => by show rexpR _ = rexpR _; rw [evR_congr h a]
   | .div a b => by show rmul _ (rinvT _) = rmul _ (rinvT _); rw [evR_congr h a, evR_congr h b]
   | .ln a => by show rlnT _ = rlnT _; rw [evR_congr h a]
-  | .atan _ => rfl
+  | .atan a => by show ZRAtan.ratan _ = ZRAtan.ratan _; rw [evR_congr h a]
 
 /-- The law does not see the intervals, only which variables are parameters. -/
 theorem FP_setI (e : XE) (a : D) (ps : PS) (i : Nat) (I : Iv) (q : Nat → RExpr) (x : RExpr) :

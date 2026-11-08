@@ -50,6 +50,8 @@ def fl(node, env):
         return math.exp(a)
     if op == "ln":
         return math.log(a)
+    if op == "atan":
+        return math.atan(a)
     b = fl(node[2], env)
     return {"add": lambda: a + b, "sub": lambda: a - b, "mul": lambda: a * b, "div": lambda: a / b,
             "pow": lambda: a ** b}[op]()

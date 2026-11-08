@@ -46,6 +46,8 @@ def fl(node, env):
         return math.exp(a)
     if op == "ln":
         return math.log(a)
+    if op == "atan":
+        return math.atan(a)
     b = fl(node[2], env)
     if op == "add":
         return a + b
@@ -85,7 +87,7 @@ class NoVerdict(Exception):
     pass
 
 
-def build(name, spec, out_dir=LEAN, nm=None):
+def build(name, spec, out_dir=LEAN, nm=None, ex_force=None):
     """Write the Lean module for the system; returns (module name, path). Raises NoVerdict (Newton found no simple
     solution) or ValueError (a law not translated)."""
     import itertools
@@ -133,6 +135,8 @@ def build(name, spec, out_dir=LEAN, nm=None):
         xc = newton(x, dict(zip(pnames, corner)))
         shift = max(shift, max(abs(a - b) for a, b in zip(xc, x)))
     ex = min(20, math.floor(-math.log2(4 * shift))) if shift > 0 else 20
+    if ex_force is not None:
+        ex = min(ex, ex_force)
     r, rh = F(1, 1 << ex), F(1, 1 << (ex + 1))
     R, L = 40, 60
     E = max(0, math.ceil(math.log2(float(2 * r))))
@@ -213,6 +217,8 @@ def emit_cover(name, spec, vs, d, pnames, idx, qs, Fs, ps, newton, J, x0, Fn, ou
             xs = newton(xc, dict(zip(pnames, corner)))
             shift = max(shift, max(abs(a - b) for a, b in zip(xs, xc)))
         ex = min(20, math.floor(-math.log2(4 * shift))) if shift > 0 else 20
+    if ex_force is not None:
+        ex = min(ex, ex_force)
         r, rh = F(1, 1 << ex), F(1, 1 << (ex + 1))
         Jx = J(xc, midp); Yf = inv(Jx)
         ys = [Z.floor_dy(F(v), 48) for v in xc]
@@ -300,21 +306,26 @@ end {nm}
 def system_to_lean(spec, nm):
     """THE SYSTEM JUDGE: Python proposes (Newton, Y, Z, cube, cover), the Lean kernel disposes. Status: "theorem"
     (the kernel accepted: a solution in the cube, unique there — for every parameter vector in the inner box),
-    "refused" (the kernel did not accept the proposal), "no verdict" (Newton found no simple solution), "not
+    "refused" (the kernel accepted none of the proposals — the cube radius is tried at 2⁻²⁰ (or the parameters'
+    shift), then 2⁻¹⁶, 2⁻¹², 2⁻⁸, 2⁻⁶: a coarse reading, e.g. atan's value, needs a larger cube), "no verdict" (Newton found no simple solution), "not
     translated" (a function ZXE does not have)."""
     import subprocess
     gen = os.path.join(LEAN, "gen"); os.makedirs(gen, exist_ok=True)
-    try:
-        nm, path = build(nm, spec, out_dir=gen, nm=nm)
-    except NoVerdict as ex:
-        return {"status": "no verdict", "why": str(ex)}
-    except ValueError as ex:
-        return {"status": "not translated", "why": str(ex)}
-    r = subprocess.run(["lake", "env", "lean", path], cwd=LEAN, capture_output=True, text=True, timeout=3000)
-    out = r.stdout + r.stderr
-    if f"'{nm}.solution' does not depend on any axioms" in out and "error" not in out:
-        return {"status": "theorem", "file": path}
-    return {"status": "refused", "why": out[:400], "file": path}
+    tried = []
+    out, path = "", None
+    for exf in (None, 16, 12, 8, 6):
+        try:
+            nm2, path = build(nm, spec, out_dir=gen, nm=nm, ex_force=exf)
+        except NoVerdict as ex:
+            return {"status": "no verdict", "why": str(ex)}
+        except ValueError as ex:
+            return {"status": "not translated", "why": str(ex)}
+        r = subprocess.run(["lake", "env", "lean", path], cwd=LEAN, capture_output=True, text=True, timeout=3000)
+        out = r.stdout + r.stderr
+        tried.append(exf)
+        if f"'{nm}.solution' does not depend on any axioms" in out and "error" not in out:
+            return {"status": "theorem", "file": path, "radius_exp_cap": exf, "tried": tried}
+    return {"status": "refused", "why": out[:400], "file": path, "tried": tried}
 
 
 def main():

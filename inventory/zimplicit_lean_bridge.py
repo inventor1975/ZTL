@@ -3,8 +3,8 @@
 tools/zimplicit_lean.py takes zimplicit's verdict on an implicit law ("q has a unique root in [lo, hi] over the box")
 and turns it into `∀ p in the inner box, ∃! q ∈ [a, b], g(q, p) = 0` on VR's continuum, checked by the Lean kernel
 (lean/ZRootPar.lean: par_root, or tree_root with a cover it searches). Here, on the laws of the zimplicit stand:
-  * the FAN and the PUMP (blind tests) and three random laws (the stand's seed) — THEOREMS;
-  * a law with atan — NOT TRANSLATED (ZXE has no atan; said, not hidden);
+  * the FAN and the PUMP (blind tests) and four random laws (the stand's seed, one with atan) — THEOREMS;
+  * a law with sin — NOT TRANSLATED (ZXE has no sin; said, not hidden);
   * a random law whose range touches the search end (a root is unique where it exists, but not every parameter has
     one) — NO VERDICT on existence;
   * NEGATIVE CONTROL: the fan's theorem with a bracket below every root — the kernel must refuse it.
@@ -51,11 +51,15 @@ for i in range(6):
         c = rnd.choice([0.5, 1, 2, 3]); w = c * rnd.choice([0.02, 0.1, 0.3])
         box[n] = (round(c - w, 3), round(c + w, 3))
     laws.append((", ".join(f"{n}=[{lo},{hi}] credit" for n, (lo, hi) in box.items()) + ", q=? credit", text))
-expect = {0: "theorem", 1: "theorem", 2: "no verdict", 3: "not translated", 5: "theorem"}
+expect = {0: "theorem", 1: "theorem", 2: "no verdict", 3: "theorem", 5: "theorem"}
 for i, want in expect.items():
     qt, text = laws[i]
     s = B.verdict_to_lean(qt, text, "q", ["-4", "4"], f"ZBridgeRand{i}")
     check(f"rand{i} ({text}): {want}", s["status"] == want, s)
+
+s = B.verdict_to_lean("a=[0.98,1.02] credit, b=[1.8,2.2] credit, p=[1.96,2.04] credit, q=? credit",
+                      "sin(a*q) + b*q - p", "q", ["-4", "4"], "ZBridgeSin")
+check("sin(a*q) + b*q - p: not translated", s["status"] == "not translated", s)
 
 print("3. negative control")
 fan_file = st.get("file")

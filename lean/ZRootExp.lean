@@ -189,6 +189,59 @@ theorem sl_ln {ex : α → α} (H : ExpLaws S ex) (Hs : ExpSlope S ex) {va va' v
   refine S.trans (S.mul_congr (S.refl _) (S.add_congr e2 (S.neg_congr e1))) ?_
   exact S.trans (S.mul_congr (S.refl _) es) (by cr_ring S.toCR)
 
+/-- The chord quotient between its bounds. -/
+theorem quot_mem {x y Δ L U t : α} (h1 : S.le (S.mul (S.add y (S.neg x)) L) Δ) (h2 : S.le Δ (S.mul (S.add y (S.neg x)) U))
+    (ht : S.r (S.mul (S.add y (S.neg x)) t) S.one) (t0 : S.le S.zero t) : S.le L (S.mul Δ t) ∧ S.le (S.mul Δ t) U := by
+  have l1 := le_mul_left' S h1 t0
+  have l2 := le_mul_left' S h2 t0
+  have e1 : S.r (S.mul t (S.mul (S.add y (S.neg x)) L)) L :=
+    S.trans (by cr_ring S.toCR : S.r _ (S.mul (S.mul (S.add y (S.neg x)) t) L)) (S.trans (S.mul_congr ht (S.refl _)) (S.one_mul _))
+  have e2 : S.r (S.mul t (S.mul (S.add y (S.neg x)) U)) U :=
+    S.trans (by cr_ring S.toCR : S.r _ (S.mul (S.mul (S.add y (S.neg x)) t) U)) (S.trans (S.mul_congr ht (S.refl _)) (S.one_mul _))
+  exact ⟨S.le_respects e1 (S.mul_comm _ _) l1, S.le_respects (S.mul_comm _ _) e2 l2⟩
+
+/-- **THE CHORD OF `atan`**: `atan u' − atan u = σ·(u' − u)` with `σ` in the reading of `ψ` on an interval holding
+both points. -/
+theorem atan_chord {atn : α → α} (H : AtanLaws S atn) {u u' : α} {I W : Iv} (hu : Mem S u I) (hu' : Mem S u' I)
+    (hW : psiI I = some W) : SlIn S (S.add (atn u') (S.neg (atn u))) (S.add u' (S.neg u)) W := by
+  intro hn
+  apply nn_case (ap S (S.add u' (S.neg u)))
+  · intro hap
+    obtain ⟨t, ht⟩ := S.inv hap
+    cases hap with
+    | inl hpos =>
+        have hle : S.le u u' := by have := S.pos_nonneg hpos; cr_linarith S.toOCR [this]
+        obtain ⟨c1, c2⟩ := H.chord I W hW u u' hu hu' hle
+        obtain ⟨q1, q2⟩ := quot_mem c1 c2 ht (inv_nonneg hpos ht)
+        refine hn ⟨S.mul (S.add (atn u') (S.neg (atn u))) t, ⟨q1, q2⟩, ?_⟩
+        refine S.symm (S.trans (by cr_ring S.toCR : S.r _ (S.mul (S.add (atn u') (S.neg (atn u)))
+          (S.mul (S.add u' (S.neg u)) t))) ?_)
+        exact S.trans (S.mul_congr (S.refl _) ht) (S.trans (S.mul_comm _ _) (S.one_mul _))
+    | inr hneg =>
+        have hle : S.le u' u := by have := S.pos_nonneg hneg; cr_linarith S.toOCR [this]
+        have hpos' : S.pos (S.add u (S.neg u')) := S.pos_congr (by cr_ring S.toCR) hneg
+        have ht' : S.r (S.mul (S.add u (S.neg u')) (S.neg t)) S.one :=
+          S.trans (by cr_ring S.toCR : S.r _ (S.mul (S.add u' (S.neg u)) t)) ht
+        obtain ⟨c1, c2⟩ := H.chord I W hW u' u hu' hu hle
+        obtain ⟨q1, q2⟩ := quot_mem c1 c2 ht' (inv_nonneg hpos' ht')
+        have eσ : S.r (S.mul (S.add (atn u) (S.neg (atn u'))) (S.neg t)) (S.mul (S.add (atn u') (S.neg (atn u))) t) := by
+          cr_ring S.toCR
+        refine hn ⟨S.mul (S.add (atn u') (S.neg (atn u))) t,
+          ⟨S.le_respects (S.refl _) eσ q1, S.le_respects eσ (S.refl _) q2⟩, ?_⟩
+        refine S.symm (S.trans (by cr_ring S.toCR : S.r _ (S.mul (S.add (atn u') (S.neg (atn u)))
+          (S.mul (S.add u' (S.neg u)) t))) ?_)
+        exact S.trans (S.mul_congr (S.refl _) ht) (S.trans (S.mul_comm _ _) (S.one_mul _))
+  · intro hna
+    have hz := S.ap_tight hna
+    have huu : S.r u' u := S.trans (by cr_ring S.toCR : S.r u' (S.add u (S.add u' (S.neg u))))
+      (S.trans (S.add_congr (S.refl _) hz) (S.trans (S.add_comm _ _) (S.zero_add _)))
+    have p1 : S.pos (S.add S.one (S.mul u u)) :=
+      S.pos_mono (pos_one S) (by have := sq_nonneg S u; cr_linarith S.toOCR [this])
+    obtain ⟨w, hw⟩ := S.inv (Or.inl p1)
+    refine hn ⟨w, psi_mem S hu hW hw, ?_⟩
+    refine S.trans (S.add_congr (H.congr huu) (S.refl _)) (S.trans (S.add_neg _) ?_)
+    exact S.symm (S.trans (S.mul_congr (S.refl _) hz) (by cr_ring S.toCR))
+
 end Slope
 
 /-! ## The slope reading -/
@@ -254,7 +307,13 @@ def slX (B : Box) (V : Nat → Iv) : XE → Option Iv
         | some Vp => match ivInv Vp with
           | none => none
           | some W => ivMul W Kp
-  | .atan _ => none
+  | .atan p => match slX B V p with
+      | none => none
+      | some Kp => match ivX B p with
+        | none => none
+        | some Va => match psiI Va with
+          | none => none
+          | some W => ivMul W Kp
 
 section Sound
 variable {α : Type} {S : CF α}
@@ -432,7 +491,27 @@ theorem slX_sound {ex atn : α → α} (H : ExpLaws S ex) (Hs : ExpSlope S ex) {
       rw [h3] at h; dsimp only at h
       exact sl_ln H Hs (slX_sound H Hs hp hq hd a ha ha' h1) (ivX_sound S hp ha Va h2) (ivX_sound S hq ha' Va h2)
         e1 e2 h3 h
-  | .atan _, _, _, _, _, _, h => by cases h
+  | .atan a, v, v', K, hv, hv', h => by
+      cases hv with
+      | @atan _ va _ H1 ha e1 =>
+      cases hv' with
+      | @atan _ va' _ H2 ha' e2 =>
+      unfold slX at h
+      cases h1 : slX B V a with
+      | none => rw [h1] at h; cases h
+      | some Ka =>
+      rw [h1] at h; dsimp only at h
+      cases h2 : ivX B a with
+      | none => rw [h2] at h; cases h
+      | some Va =>
+      rw [h2] at h; dsimp only at h
+      cases h3 : psiI Va with
+      | none => rw [h3] at h; cases h
+      | some W =>
+      rw [h3] at h; dsimp only at h
+      exact sl_congr (S.add_congr e2 (S.neg_congr e1))
+        (sl_comp (atan_chord H1 (ivX_sound S hp ha Va h2) (ivX_sound S hq ha' Va h2) h3)
+          (slX_sound H Hs hp hq hd a ha ha' h1) h)
 
 end Sound
 
@@ -609,6 +688,72 @@ theorem qmin_close {a a' b b' e : QExpr} (ha : qclose a a' e) (hb : qclose b b' 
   unfold qsub at a1 a2 b1 b2
   rcases qmin_cases a b with ⟨e1, h1⟩ | ⟨e1, h1⟩ <;> rcases qmin_cases a' b' with ⟨e2, h2⟩ | ⟨e2, h2⟩ <;>
     rw [e1, e2] <;> (constructor <;> (unfold qsub; rat_linarith))
+
+/-- The larger of two rationals (decided by `qle`). -/
+def qmax (a b : QExpr) : QExpr :=
+  match qle.decidable a b with
+  | .isTrue _ => b
+  | .isFalse _ => a
+
+theorem qmax_cases (a b : QExpr) : (qmax a b = b ∧ qle a b) ∨ (qmax a b = a ∧ qle b a) := by
+  unfold qmax
+  cases qle.decidable a b with
+  | isTrue h => exact Or.inl ⟨rfl, h⟩
+  | isFalse h =>
+      cases qle_total a b with
+      | inl h' => exact absurd h' h
+      | inr h' => exact Or.inr ⟨rfl, h'⟩
+
+theorem qmax_ge_l (a b : QExpr) : qle a (qmax a b) := by
+  rcases qmax_cases a b with ⟨e, h⟩ | ⟨e, _⟩ <;> rw [e]
+  · exact h
+  · exact qle_refl _
+
+theorem qmax_ge_r (a b : QExpr) : qle b (qmax a b) := by
+  rcases qmax_cases a b with ⟨e, _⟩ | ⟨e, h⟩ <;> rw [e]
+  · exact qle_refl _
+  · exact h
+
+theorem qmax_close {a a' b b' e : QExpr} (ha : qclose a a' e) (hb : qclose b b' e) :
+    qclose (qmax a b) (qmax a' b') e := by
+  obtain ⟨a1, a2⟩ := ha
+  obtain ⟨b1, b2⟩ := hb
+  unfold qsub at a1 a2 b1 b2
+  rcases qmax_cases a b with ⟨e1, h1⟩ | ⟨e1, h1⟩ <;> rcases qmax_cases a' b' with ⟨e2, h2⟩ | ⟨e2, h2⟩ <;>
+    rw [e1, e2] <;> (constructor <;> (unfold qsub; rat_linarith))
+
+theorem qmax_congr {a a' b b' : QExpr} (ha : qEq a a') (hb : qEq b b') : qEq (qmax a b) (qmax a' b') := by
+  rcases qmax_cases a b with ⟨e1, h1⟩ | ⟨e1, h1⟩ <;> rcases qmax_cases a' b' with ⟨e2, h2⟩ | ⟨e2, h2⟩ <;>
+    rw [e1, e2] <;> exact qle_antisymm (by rat_linarith) (by rat_linarith)
+
+theorem qmax_le {a b c : QExpr} (ha : qle a c) (hb : qle b c) : qle (qmax a b) c := by
+  rcases qmax_cases a b with ⟨e, _⟩ | ⟨e, _⟩ <;> rw [e]
+  · exact hb
+  · exact ha
+
+theorem q_nonpos {x : QExpr} (h : ∀ k, qle x (qeps k)) : qle x qzero := by
+  cases qle.decidable x qzero with
+  | isTrue t => exact t
+  | isFalse t =>
+      have xp : qlt qzero x := by
+        cases qle_total x qzero with
+        | inl h' => exact absurd h' t
+        | inr h' => exact qlt_iff_le_not_le.mpr ⟨h', t⟩
+      have c0 := qmul_inv'_cancel (ZRecip.ne_zero_of_lt xp)
+      obtain ⟨B, hB⟩ := ZRecip.lv_floor xp (show qle qone (qmul (qinv' x) x) by
+        have := qmul_comm (qinv' x) x; rat_linarith)
+      have h1 := h (B + 1)
+      have e := qeps_succ_add B
+      have p := qeps_pos (B + 1)
+      obtain ⟨_, np⟩ := qlt_iff_le_not_le.mp p
+      exact absurd (by rat_linarith) np
+
+theorem q_of_rle {a b : QExpr} (h : rle (rofQ a) (rofQ b)) : qle a b := by
+  have k : ∀ k, qle (qsub a b) (qeps k) := fun k => by
+    obtain ⟨N, hN⟩ := h k
+    exact hN N (Nat.le_refl _)
+  have := q_nonpos k
+  unfold qsub at this; rat_linarith
 
 /-- The termwise minimum of two reals. -/
 def rmin (x y : RExpr) : RExpr := ⟨fun n => qmin (x.seq n) (y.seq n), fun k => by

@@ -837,19 +837,36 @@ def main():
     first = [item for item in STANDS if item[0] not in AFTER_POOL]
     after = [item for item in STANDS if item[0] in AFTER_POOL]
     done = 0
+    # TIMES (the curator, 2026-11-09: "так долго идут прогоны — реже или ускорить?"): each stand's wall time,
+    # the slowest printed at the end — the long pole is measured, not guessed
+    import time as _time
+    times = {}
+    t_pool = _time.time()
+
+    def _timed(item):
+        t0 = _time.time()
+        r = _run_one(item)
+        times[item[0]] = _time.time() - t0
+        return r
     with ThreadPoolExecutor(max_workers=workers) as pool:
-        futures = [pool.submit(_run_one, item) for item in first]
+        futures = [pool.submit(_timed, item) for item in first]
         for fut in as_completed(futures):
             script, ok, missing, rc, why = fut.result()
             results[script] = (ok, missing, rc, why)
             done += 1
             print(f"\r    {done}/{total} stands finished…", end="", flush=True)
+    t_pool = _time.time() - t_pool
+    t_after = _time.time()
     for item in after:                          # they read the cache the pool just wrote
-        script, ok, missing, rc, why = _run_one(item)
+        script, ok, missing, rc, why = _timed(item)
         results[script] = (ok, missing, rc, why)
         done += 1
         print(f"\r    {done}/{total} stands finished…", end="", flush=True)
     print()
+    t_after = _time.time() - t_after
+    slow = sorted(times.items(), key=lambda kv: -kv[1])[:10]
+    print(f"  times: the pool {t_pool:.0f} s ({len(first)} stands, {workers} at a time), after it {t_after:.0f} s "
+          f"({len(after)}); the slowest: " + ", ".join(f"{k} {v:.0f} s" for k, v in slow))
     import shutil
     shutil.rmtree(os.environ.pop("ZTL_SUITE_OUT"), ignore_errors=True)
     skipped = []
@@ -881,6 +898,7 @@ def main():
         print("  [skip] lean (not asked for — nothing claimed for it here)")
     else:
         print(f"  [....] lean: lake build ...  ({workers} stands ran in parallel)")
+        t_lean = _time.time()
         r = subprocess.run(["lake", "build"], cwd="lean",
                            capture_output=True, text=True, timeout=900)
         # A SUBSTRING CHECK THAT CANNOT FAIL IS NOT A CHECK. This used to be
@@ -901,7 +919,7 @@ def main():
             print(f"  [FAIL] lean: {len(leaked)} object(s) carry axioms, "
                   f"first: {leaked[0].strip()[:90]}")
         print(f"  [{'OK ' if lean_ok else 'FAIL'}] lean (zero axioms: "
-              f"{'confirmed' if lean_ok else 'NOT CONFIRMED'})")
+              f"{'confirmed' if lean_ok else 'NOT CONFIRMED'}; build + audit {_time.time() - t_lean:.0f} s)")
         if not lean_ok:
             failures.append("lean")
 

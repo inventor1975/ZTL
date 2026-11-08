@@ -9,6 +9,7 @@ The curator, 2026-11-08: the stand should give proofs, not only certificates. He
     and 1/10000 past the attained end — no theorem;
   * a target that is an EXPRESSION of the unknowns (the power I*I*R1), attained inside a face — a theorem; past
     it — none;
+  * a datum in both N and D (a TCR divider): the cleared form on one Horner polynomial, carried by `identX`;
   * NEGATIVE CONTROL: the divider's accepted tree under a false bound (Vout <= 2.5, the true maximum 2.525) — the
     kernel must refuse it.
 """
@@ -64,6 +65,16 @@ st7 = ZB.bound_to_lean(*PW, "I*I*R1", [("<=", "625/2673")], "ZGenPow")
 check("P1 = I*I*R1 <= 625/2673 (attained, not monotone in R1): a theorem", st7["status"] == "theorem", st7)
 st8 = ZB.bound_to_lean(*PW, "I*I*R1", [("<=", "624/2673")], "ZGenPowBad")
 check("the other side: P1 <= 624/2673 — no theorem", st8["status"] != "theorem", st8)
+print("7. a datum in BOTH N and D (ztl-stand tasks/t5: a divider with temperature coefficients, 5 variables)")
+TCR = (["Vin - Vout == I*(R1*(1 + a1*(T - 25)))", "Vout == I*(R2*(1 + a2*(T - 25)))"], ["I", "Vout"],
+       "Vin=5 credit, T=[0,85] credit, R1=[9900,10100] credit, a1=[-1/40000,1/40000] credit, "
+       "R2=[9900,10100] credit, a2=[-1/40000,1/40000] credit, I=? credit, Vout=? credit")
+st9 = ZB.bound_to_lean(*TCR, "Vout", [(">=", "2.47"), ("<=", "2.53")], "ZGenTCR")
+check("Vout in [2.47, 2.53] over R, a, T: a theorem — the cleared form proved on ONE Horner polynomial, moved by "
+      "the kernel's identity test (identX)", st9["status"] == "theorem", st9)
+st10 = ZB.bound_to_lean(*TCR, "Vout", [(">=", "2.472")], "ZGenTCRBad")
+check("the other side: Vout >= 2.472 (the attained minimum 988515/400006 ~ 2.47125) — no theorem",
+      st10["status"] != "theorem", st10)
 print(f"\n{ok} ok, {fail} fail")
 print("ZBOUND LEAN BRIDGE GREEN" if fail == 0 else "ZBOUND LEAN BRIDGE RED")
 sys.exit(1 if fail else 0)

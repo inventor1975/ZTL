@@ -508,6 +508,46 @@ theorem bound_vrM {lo : Bool} {e : XE} {c : D} {vs : List Nat} {T : VT} {B : Box
     ∀ x : Nat → RExpr, InBox rCF B x → Holds rCF lo c (evR x e) :=
   fun x hx => chkV_sound hpos T B x h hx hx
 
+/-! ## One polynomial, two writings: the kernel's identity test carries a bound across
+
+The cleared form `r·N − p·D` read as two polynomials loses their shared factors (ztl-stand tasks/t5, a resistor
+divider with temperature coefficients: the coefficient of `a2` sits in both N and D, and the slope in `a2` straddled
+0 on every box). The bound is proved on ONE polynomial `G` (Horner, factors kept), and `ZPoly.ident` — the normal
+form of `G − H` is empty — moves it to `H`, the form the requirement's glue reads. -/
+
+/-- Both are polynomials and their normal forms agree. -/
+def identX (G H : XE) : Bool := match toPE G with
+  | none => false
+  | some g => match toPE H with
+    | none => false
+    | some h => ident g h
+
+/-- **Equal at every point of the box**, VR's continuum. -/
+theorem evR_identX {B : Box} {x : Nat → RExpr} (hx : InBox rCF B x) {G H : XE} (hid : identX G H = true)
+    (pg : posOK B G = true) (ph : posOK B H = true) : rCF.r (evR x G) (evR x H) := by
+  unfold identX at hid
+  cases hG : toPE G with
+  | none => rw [hG] at hid; exact Bool.noConfusion hid
+  | some g =>
+    rw [hG] at hid
+    cases hH : toPE H with
+    | none => rw [hH] at hid; exact Bool.noConfusion hid
+    | some h =>
+      rw [hH] at hid
+      exact rCF.trans (val_toPE rCF hG (val_evR hx G pg))
+        (rCF.trans (identity_sound rCF.toOH x hid) (rCF.symm (val_toPE rCF hH (val_evR hx H ph))))
+
+/-- The bound proved on `G` holds for `H`. -/
+theorem bound_identX {lo : Bool} {G H : XE} {c : D} {vs : List Nat} {T : VT} {B : Box}
+    (h : chkV lo G c vs T B = true) (pg : posOK B G = true) (hid : identX G H = true) (ph : posOK B H = true) :
+    ∀ x : Nat → RExpr, InBox rCF B x → Holds rCF lo c (evR x H) := by
+  intro x hx
+  have hb := bound_vrM h pg x hx
+  have e := evR_identX hx hid pg ph
+  cases lo with
+  | true => exact rCF.le_respects (rCF.refl _) e hb
+  | false => exact rCF.le_respects e (rCF.refl _) hb
+
 end ZBound
 
 #print axioms ZBound.boxSet
@@ -528,4 +568,8 @@ end ZBound
 #print axioms ZBound.ge_of_quot
 #print axioms ZBound.le_of_quotR
 #print axioms ZBound.ge_of_quotR
+#print axioms ZBound.identX
+#print axioms ZBound.identX.eq_def
+#print axioms ZBound.evR_identX
+#print axioms ZBound.bound_identX
 #print axioms ZBound.div_value

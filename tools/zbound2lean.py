@@ -12,12 +12,15 @@ parameter vector in the box:
      quotient unchanged, every corner exact; otherwise the box rounded OUTWARD to dyadics (checked in fractions);
   3. a bound `N/D <= p/r` CLEARED to `p·D − r·N >= 0` (`D > 0` on the box, checked by the kernel through `posOK`):
      a tight requirement (met exactly at a corner) stays provable — the corners of a polynomial read exactly;
+  3b. on the exact path the cleared form is ALSO written as ONE polynomial in Horner form (`G`): the tree is found and
+     checked on G, and `ZBound.bound_identX` carries the bound to `r·N − p·D` through the kernel's identity test
+     (`identX`: ZPoly's normal forms agree) — a datum shared by N and D keeps its factor (ztl-stand tasks/t5);
   4. ZBound.findV (Lean, compiled `#eval`) PROPOSES a cover tree — monotone leaves, interval leaves, cuts — printed
      and pasted as a literal; the kernel checks only `chkV` (`decide +kernel`) and `bound_vrM` gives the theorem;
   5. a NEGATIVE CONTROL: the same tree against a bound tightened past the attained value must be refused.
 
 Status: "theorem" (the kernel accepted), "no tree" (the search found none within its depth), "refused" (the kernel
-did not accept), "not translated" (not a linear system, or a function ZXE lacks).
+did not accept), "kernel limit" (recursion / time limit inside the check — not a verdict), "not translated" (not a linear system, or a function ZXE lacks).
 """
 import math
 import os
@@ -304,10 +307,16 @@ def bound_to_lean(laws, unknowns, qtext, target, reqs, name, depth=14, trees=Non
         else:
             form = (f"(.sub {Z.cst(p)} (.mul {Z.cst(r)} xQ))" if op == "<=" else
                     f"(.sub (.mul {Z.cst(r)} xQ) {Z.cst(p)})")
-        forms.append((op, c, form))
+        G = None
+        if sc is not None:          # ONE polynomial, Horner (the factors N and D share kept); identX carries it to `form`
+            Gp = (_padd({m: v * p for m, v in D2.items()}, {m: v * r for m, v in N2.items()}, -1) if op == "<=" else
+                  _padd({m: v * r for m, v in N2.items()}, {m: v * p for m, v in D2.items()}, -1))
+            G = _poly_xe(Gp, len(params))
+        forms.append((op, c, form, G))
     gen = os.path.join(LEAN, "gen"); os.makedirs(gen, exist_ok=True)
     head = f"""import ZBound
 open VR VR.Numbers ZNumBin ZField ZPoly ZIv ZXE ZRealCF ZRootDiv ZBound
+set_option maxRecDepth 100000
 namespace {name}
 def B : Box := {_box_lean(params, box)}
 def xQ : XE := {xe_q}
@@ -316,9 +325,9 @@ def xQ : XE := {xe_q}
 """
     vs = "[" + ", ".join(str(i) for i in range(len(params))) + "]"
     probe = head + "".join(
-        f'def F{k} : XE := {form}\n#eval IO.println (match findV true F{k} {Z.dy(0)} {vs} {depth} B with '
+        f'def F{k} : XE := {G or form}\n#eval IO.println (match findV true F{k} {Z.dy(0)} {vs} {depth} B with '
         f'| some t => "TREE" ++ toString {k} ++ " " ++ t.txt | none => "NOTREE" ++ toString {k})\n'
-        for k, (_, _, form) in enumerate(forms)) + f"end {name}\n"
+        for k, (_, _, form, G) in enumerate(forms)) + f"end {name}\n"
     given = trees
     out = _run(probe, os.path.join(gen, name + "_probe.lean")) if given is None else ""
     trees = dict(given) if given is not None else {}
@@ -334,11 +343,21 @@ def xQ : XE := {xe_q}
     rCF.pos (evR x xD) ∧ rCF.r (rCF.mul (evR x xD) (evR x xQ)) (evR x xN) :=
   div_value hx (a := xN) (b := xD) (by decide +kernel)
 """
-    for k, (op, c, form) in enumerate(forms):
-        body += f"""def F{k} : XE := {form}
+    for k, (op, c, form, G) in enumerate(forms):
+        if G is None:
+            body += f"""def F{k} : XE := {form}
 def T{k} : VT := {trees[k]}
 theorem cleared{k} : ∀ x : Nat → RExpr, InBox rCF B x → rCF.le (dv rOH {Z.dy(0)}) (evR x F{k}) :=
   bound_vrM (lo := true) (vs := {vs}) (T := T{k}) (by decide +kernel) (by decide +kernel)
+"""
+        else:
+            body += f"""def F{k} : XE := {form}
+/-- The same polynomial as `F{k}`, one Horner form (`identX`, checked by the kernel). -/
+def G{k} : XE := {G}
+def T{k} : VT := {trees[k]}
+theorem cleared{k} : ∀ x : Nat → RExpr, InBox rCF B x → rCF.le (dv rOH {Z.dy(0)}) (evR x F{k}) :=
+  bound_identX (lo := true) (G := G{k}) (vs := {vs}) (T := T{k}) (by decide +kernel) (by decide +kernel)
+    (by decide +kernel) (by decide +kernel)
 """
         # THE REQUIREMENT ITSELF, as `r·q ≤ p` / `p ≤ r·q` (q ≤ p/r without division): the cleared form, the
         # quotient's value and `ZBound.le_of_quotR` — the reading's glue is a theorem, not prose
@@ -361,7 +380,10 @@ theorem req{k} (x : Nat → RExpr) (hx : InBox rCF B x) : {stmt} := by
     path = os.path.join(gen, name + ".lean")
     out = _run(body, path)
     ok = "error" not in out and out.count("does not depend on any axioms") == 2 * len(forms) + (1 if quotient else 0)
-    res = {"status": "theorem" if ok else "refused", "file": path, "params": params, "box": box,
+    # "refused" only when the kernel's check said FALSE; a resource limit is not a verdict (2026-11-08: ztl-stand
+    # tasks/t14, maxRecDepth inside `decide +kernel`, was first reported as "refused")
+    limit = any(w in out for w in ("maximum recursion depth", "deterministic timeout", "heartbeats", "Stack overflow"))
+    res = {"status": "theorem" if ok else ("kernel limit" if limit else "refused"), "file": path, "params": params, "box": box,
            "quotient": quotient, "trees": trees, "out": out[:600],
            # var i of the theorem is scale[p] · p (an integer box) when exact; else p itself over a dyadic box
            "scale": scale}

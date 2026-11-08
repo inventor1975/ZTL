@@ -81,11 +81,15 @@ def lst(xs):
     return "[" + ", ".join(xs) + "]"
 
 
-def main():
+class NoVerdict(Exception):
+    pass
+
+
+def build(name, spec, out_dir=LEAN, nm=None):
+    """Write the Lean module for the system; returns (module name, path). Raises NoVerdict (Newton found no simple
+    solution) or ValueError (a law not translated)."""
     import itertools
     import znumjudge as ZJ
-    name = sys.argv[1] if len(sys.argv) > 1 else "circle_exp"
-    spec = SYSTEMS[name]
     vs = spec["vars"]; d = len(vs)
     pars = spec.get("params", {})
     qt = ", ".join([f"{v}=? credit" for v in vs] + [f"{n}=[{lo},{hi}] credit" for n, (lo, hi) in pars.items()])
@@ -116,8 +120,14 @@ def main():
             dx = solve(J(x, pv), Fn(x, pv))
             x = [a - b for a, b in zip(x, dx)]
         return x
-    x = newton(spec["guess"], mid)
-    print("root", x, "residual", max(abs(v) for v in Fn(x, mid)))
+    try:
+        x = newton(spec["guess"], mid)
+        res = max(abs(v) for v in Fn(x, mid))
+    except (ValueError, ZeroDivisionError, OverflowError) as ex:
+        raise NoVerdict(f"Newton failed: {ex}")
+    if not (res < 1e-9):
+        raise NoVerdict(f"Newton did not converge (residual {res})")
+    print("root", x, "residual", res)
     shift = 0.0
     for corner in itertools.product(*[(float(F(qs[n]["lo"])), float(F(qs[n]["hi"]))) for n in pnames]):
         xc = newton(x, dict(zip(pnames, corner)))
@@ -128,12 +138,12 @@ def main():
     E = max(0, math.ceil(math.log2(float(2 * r))))
     print("parameter shift", shift, "cube radius 2^-%d" % ex)
     if "cover" in spec:
-        return emit_cover(name, spec, vs, d, pnames, idx, qs, Fs, ps, newton, J, x, Fn)
+        return emit_cover(name, spec, vs, d, pnames, idx, qs, Fs, ps, newton, J, x, Fn, out_dir, nm)
     Jx = J(x, mid); Yf = inv(Jx)
     ys = [Z.floor_dy(F(v), 48) for v in x]
     Yd = [[Z.floor_dy(F(v), 30) for v in row] for row in Yf]
     Zd = [[Z.floor_dy(F(v), 30) for v in row] for row in Jx]
-    nm = "ZSys" + "".join(q.capitalize() for q in name.split("_"))
+    nm = nm or "ZSys" + "".join(q.capitalize() for q in name.split("_"))
     vnames = ", ".join([f"{v} = var {i}" for i, v in enumerate(vs)] + [f"{n} = var {idx[n]}" for n in pnames])
     laws = "\n".join(f"    {t} = 0" for t in spec["laws"])
     pdoc = ("**for EVERY real parameter vector in the inner box** (each parameter 2⁻⁸⁰ inside its outer interval; the "
@@ -174,15 +184,17 @@ end {nm}
 
 #print axioms {nm}.solution
 """
-    with open(os.path.join(LEAN, nm + ".lean"), "w") as f:
+    path = os.path.join(out_dir, nm + ".lean")
+    with open(path, "w") as f:
         f.write(text)
     print("wrote", nm)
+    return nm, path
 
 
 W_OVERLAP = F(1, 1 << 70)
 
 
-def emit_cover(name, spec, vs, d, pnames, idx, qs, Fs, ps, newton, J, x0, Fn):
+def emit_cover(name, spec, vs, d, pnames, idx, qs, Fs, ps, newton, J, x0, Fn, out_dir=LEAN, nm=None):
     import itertools
     MU = Z.MU
     outer = {}
@@ -239,7 +251,7 @@ def emit_cover(name, spec, vs, d, pnames, idx, qs, Fs, ps, newton, J, x0, Fn):
     while r0 < half:
         r0 *= 2
     E = max(0, math.ceil(math.log2(float(2 * max(r for _, r in leaves) ))) + 1)
-    nm = "ZSys" + "".join(q.capitalize() for q in name.split("_"))
+    nm = nm or "ZSys" + "".join(q.capitalize() for q in name.split("_"))
     vnames = ", ".join([f"{v} = var {i}" for i, v in enumerate(vs)] + [f"{n} = var {idx[n]}" for n in pnames])
     laws = "\n".join(f"    {t} = 0" for t in spec["laws"])
     nleaf = len(leaves)
@@ -278,9 +290,36 @@ end {nm}
 
 #print axioms {nm}.solution
 """
-    with open(os.path.join(LEAN, nm + ".lean"), "w") as f:
+    path = os.path.join(out_dir, nm + ".lean")
+    with open(path, "w") as f:
         f.write(text)
     print("wrote", nm, "leaves", nleaf, "r0", float(r0), "leaf radii", sorted(set(float(r) for _, r in leaves)))
+    return nm, path
+
+
+def system_to_lean(spec, nm):
+    """THE SYSTEM JUDGE: Python proposes (Newton, Y, Z, cube, cover), the Lean kernel disposes. Status: "theorem"
+    (the kernel accepted: a solution in the cube, unique there — for every parameter vector in the inner box),
+    "refused" (the kernel did not accept the proposal), "no verdict" (Newton found no simple solution), "not
+    translated" (a function ZXE does not have)."""
+    import subprocess
+    gen = os.path.join(LEAN, "gen"); os.makedirs(gen, exist_ok=True)
+    try:
+        nm, path = build(nm, spec, out_dir=gen, nm=nm)
+    except NoVerdict as ex:
+        return {"status": "no verdict", "why": str(ex)}
+    except ValueError as ex:
+        return {"status": "not translated", "why": str(ex)}
+    r = subprocess.run(["lake", "env", "lean", path], cwd=LEAN, capture_output=True, text=True, timeout=3000)
+    out = r.stdout + r.stderr
+    if f"'{nm}.solution' does not depend on any axioms" in out and "error" not in out:
+        return {"status": "theorem", "file": path}
+    return {"status": "refused", "why": out[:400], "file": path}
+
+
+def main():
+    name = sys.argv[1] if len(sys.argv) > 1 else "circle_exp"
+    build(name, SYSTEMS[name])
 
 
 if __name__ == "__main__":

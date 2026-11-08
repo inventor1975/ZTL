@@ -33,6 +33,7 @@ STANDS = [
     ("inventory/py311_fstrings.py", ["PY311 FSTRINGS GREEN"]),
     ("inventory/zgrade_bridge.py", ["ZGRADE BRIDGE GREEN", "a wrong one refused"]),
     ("inventory/zimplicit_lean_bridge.py", ["ZIMPLICIT LEAN BRIDGE GREEN", "the kernel refuses"]),
+    ("inventory/zsystem_lean_bridge.py", ["ZSYSTEM LEAN BRIDGE GREEN", "the kernel refuses"]),
     ("zswarm_bounds.py", ["SWARM BOUNDS GREEN", "c(k) BY DYNAMIC PROGRAMMING = BRUTE FORCE"]),
     ("zfrechet.py",    ["144 cells, 0 differ", "ZFRECHET: interval logic sits on ZTL with no verdict moved."]),
     ("zdegree.py",     ["6480 formula-marking-mode cases equal the enumeration",

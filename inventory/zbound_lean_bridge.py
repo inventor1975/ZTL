@@ -10,6 +10,7 @@ The curator, 2026-11-08: the stand should give proofs, not only certificates. He
   * a target that is an EXPRESSION of the unknowns (the power I*I*R1), attained inside a face — a theorem; past
     it — none;
   * a datum in both N and D (a TCR divider): the cleared form on one Horner polynomial, carried by `identX`;
+  * a mortgage, pow(1 + r, 360) inside a division: a theorem on a 400 MB kernel stack; on 8 MB a "kernel limit";
   * NEGATIVE CONTROL: the divider's accepted tree under a false bound (Vout <= 2.5, the true maximum 2.525) — the
     kernel must refuse it.
 """
@@ -75,6 +76,21 @@ check("Vout in [2.47, 2.53] over R, a, T: a theorem — the cleared form proved 
 st10 = ZB.bound_to_lean(*TCR, "Vout", [(">=", "2.472")], "ZGenTCRBad")
 check("the other side: Vout >= 2.472 (the attained minimum 988515/400006 ~ 2.47125) — no theorem",
       st10["status"] != "theorem", st10)
+print("8. a mortgage: pow(1 + r, 360) inside a division (ztl-stand tasks/t14 overflowed the kernel's stack)")
+ML = (["S == Inc"], ["S"], "Inc=[5200,5800] credit, P=[275000,290000] credit, c=7/1500 credit, S=? credit")
+MT = "35/100*Inc - P*(min(c, 1/12)*pow(1 + min(c, 1/12), 360))/(pow(1 + min(c, 1/12), 360) - 1)"
+st11 = ZB.bound_to_lean(*ML, MT, [(">=", "0")], "ZGenMort")
+check("slack = 35 % of income − the payment >= 0 (min ~155.17): a theorem (the kernel on a 400 MB stack)",
+      st11["status"] == "theorem", st11)
+st12 = ZB.bound_to_lean(*ML, MT.replace("min(c, 1/12)", "c"), [(">=", "160")], "ZGenMortBad")
+check("the other side: slack >= 160 — no theorem", st12["status"] != "theorem", st12)
+_ts, ZB.TSTACK_KB = ZB.TSTACK_KB, 8000
+try:
+    st13 = ZB.bound_to_lean(*ML, MT, [(">=", "0")], "ZGenMort8")
+finally:
+    ZB.TSTACK_KB = _ts
+check("on the default 8 MB stack the same check is a KERNEL LIMIT, said as such — never reported as refused",
+      st13["status"] == "kernel limit", st13)
 print(f"\n{ok} ok, {fail} fail")
 print("ZBOUND LEAN BRIDGE GREEN" if fail == 0 else "ZBOUND LEAN BRIDGE RED")
 sys.exit(1 if fail else 0)

@@ -39,6 +39,9 @@ import zlaw2lean as Z  # noqa: E402
 import zkraw2lean as K  # noqa: E402
 
 
+TSTACK_KB = 400000
+
+
 def _subst(node, pinned):
     if isinstance(node, str):
         return pinned.get(node, node)
@@ -77,7 +80,11 @@ def _run(text, path):
     with open(tmp, "w") as f:
         f.write(text)
     os.replace(tmp, path)
-    r = subprocess.run(["lake", "env", "lean", path], cwd=LEAN, capture_output=True, text=True, timeout=3000)
+    # a thread stack of 400 MB (2026-11-08, ztl-stand tasks/t14: `1/((1 + r/12)^360 − 1)` — the kernel forcing 360
+    # nested interval products overflowed the default stack from n ≈ 300 on; MEASURED: with --tstack it reads in 0.7 s).
+    # The check is the same; only the stack the kernel runs on is larger.
+    r = subprocess.run(["lake", "env", "lean", f"--tstack={TSTACK_KB}", path], cwd=LEAN, capture_output=True,
+                       text=True, timeout=3000)
     return r.stdout + r.stderr
 
 

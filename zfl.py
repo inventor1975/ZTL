@@ -2326,7 +2326,17 @@ def run(doc, ground_registry=None):
                 # are approximations, replaced by certified intervals); an exact answer (x*x = 2 -> ±√2) stays
                 # ONE unknown: the implicit judge FIRST (MEASURED 2026-11-08: the pump took 16 s with the region
                 # search tried before it, 7 s without); the region search only when it gives no full answer
-                one = len(unk) == 1 and regions.get(unk[0]) and r["disposition"] == "OPEN"
+                # ... or where the solver's answer is an INTERVAL (x = a, a in a box) reaching out of the region (the
+                # shakedown, 2026-11-08: x = a, a in [-0.5, 0.5], x = ? in [0, 1] answered x in [-1/2, 1/2])
+                _sv = solved.get(unk[0]) if len(unk) == 1 else None
+                _out = False
+                if _sv and not _sv.get("pinned") and not _sv.get("roots") and regions.get(unk[0]):
+                    try:
+                        from fractions import Fraction as _Fr
+                        _out = _Fr(_sv["lo"]) < regions[unk[0]][0] or _Fr(_sv["hi"]) > regions[unk[0]][1]
+                    except (ValueError, ZeroDivisionError, TypeError):
+                        _out = False
+                one = len(unk) == 1 and regions.get(unk[0]) and (r["disposition"] == "OPEN" or _out)
                 if one:
                     implicit = _implicit_answer(claim, q, unk[0], regions[unk[0]])
                 if one and implicit is not None and implicit["disposition"] != "OPEN":
@@ -2346,6 +2356,7 @@ def run(doc, ground_registry=None):
             if implicit is not None and implicit["disposition"] == "OPEN":
                 if system is None:                         # the region search found nothing: the enclosure is said
                     solved.update(implicit["solved"])
+                    r = dict(r, disposition="OPEN")         # the solver's interval reached out of the region: not T
                 else:
                     implicit = None                        # the region search answered; the enclosure is not needed
             # ONE unknown with its region and an EXACT answer over all the reals (the curator's shakedown,
@@ -2399,6 +2410,9 @@ def run(doc, ground_registry=None):
             if implicit is not None:
                 report["numeric"]["implicit"] = {"unique": implicit["unique"], "exists": implicit["exists"],
                                                  "how": implicit["how"]}
+                if implicit["disposition"] == "OPEN":
+                    report["numeric"]["verdict"] = "Z"      # an enclosure, nothing established
+                    report["numeric"]["grade"] = "until-verification"
                 if implicit["disposition"] in ("EARNED", "ON CREDIT"):
                     report["numeric"]["verdict"] = "T"
                     report["numeric"]["grade"] = ("hereditary" if implicit["disposition"] == "EARNED"

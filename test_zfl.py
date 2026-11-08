@@ -351,6 +351,11 @@ def sec24_an_implicit_law_with_parameters_and_scientific_numbers():
     n = r["report"]["numeric"]
     assert n["disposition"] == "OPEN" and not n["implicit"]["exists"], n
     print("   x + x³ = a, a in [−0.5, 0.5], x in [0, 1]: OPEN, only the enclosure (no root for a < 0)")
+    r = zfl.run({"rows": [U("x", "? in [0, 1]"), U("a", "[-0.5, 0.5]")], "claim": "x = a"})
+    n = r["report"]["numeric"]
+    assert n["disposition"] == "OPEN" and n["verdict"] == "Z", n                  # was ON CREDIT, x in [-1/2, 1/2]
+    assert Fraction(n["solved"]["x"]["lo"]) >= 0 and Fraction(n["solved"]["x"]["hi"]) <= Fraction(1, 2) + Fraction(1, 10 ** 9)
+    print("   x = a, a in [−0.5, 0.5], x in [0, 1]: OPEN within [0, 1/2] (was ON CREDIT with x in [−1/2, 1/2], outside)")
     r = zfl.run({"rows": [U("a", "[4.5e-05, 5.5e-05]"), U("x")], "claim": "x = a*2e3"})
     assert r["ok"] and r["report"]["numeric"]["solved"]["x"]["lo"] == "9/100", r
     r = zfl.run({"rows": [U("x2e3", "?")], "claim": "x2e3 = 1.5E2"})

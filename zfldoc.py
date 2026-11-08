@@ -176,6 +176,14 @@ CODE_HELP = {
                  "ответ на «какие значения подходят», а не утверждение о настоящем "
                  "значении — чтобы спросить, выполняется ли утверждение для реального "
                  "неизвестного входа, дайте его интервал, например [0,inf]"),
+    "W_SYSTEM_LOCAL": ("several `?` values and a claim of as many equations were read as a SYSTEM and solved: "
+                       "each unknown's interval is a cube holding a solution, the only one there (Krawczyk's "
+                       "test, checked exactly); solutions outside the cube are not excluded — a system may have "
+                       "more than one",
+                       "несколько величин `?` и утверждение из стольких же уравнений прочитаны как СИСТЕМА и "
+                       "решены: интервалы неизвестных — куб, в котором есть решение, и оно там единственное "
+                       "(тест Кравчика, проверен точно); решения вне куба не исключены — у системы их может быть "
+                       "несколько"),
 }
 
 PROSE = {

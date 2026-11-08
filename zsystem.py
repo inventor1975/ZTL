@@ -1,0 +1,206 @@
+"""
+zsystem — a SYSTEM of laws F(x, p) = 0: a solution in a cube, the only one there, for every parameter in its box.
+
+The question `x = ?, y = ?` with a claim made of equations (`x*x + y*y = 1 & x = exp(y)`) is a system. Its answer
+here is LOCAL and says so (curator's choice 2026-11-08, "first A, then B"): a cube C around a solution, the solution
+exists in C and is unique there; solutions elsewhere are NOT excluded (that needs a search region and an exclusion of
+the rest — the planned B).
+
+THE CERTIFICATE (Krawczyk's test, the contraction form; the same three conditions the Lean kernel checks in
+lean/ZKraw.lean and lean/ZKrawSys.lean): G(x) = x − Y·F(x) with a preconditioner Y,
+  1. CONTRACTION: every row of I − Y·J(C × P) — J read entry by entry from the kernel's derivative
+     (zcertify.derivative) over the cube and the parameter box — sums in absolute value to ≤ ½;
+  2. INTO: G at the centre, read over the parameter box, widened by r/2, lies strictly inside C;
+  3. Y INVERTIBLE: a second matrix Z with every row of |I − Z·Y| summing to ≤ ½ (exact rationals).
+Then G maps C into itself and halves distances (a staircase of mean values, one coordinate at a time), so it has a
+fixed point in C and only one (Banach); the fixed point is a zero of F (Y·F = 0 and Y invertible). All readings are
+the kernel's (zcertify._reading), all arithmetic exact; the floats only PROPOSE (Newton, Y ≈ J⁻¹, Z ≈ J).
+Lean: tools/zkraw2lean.py turns a system into a theorem of lean/ZKrawSys.lean (`sys_root`), checked by Lean's
+kernel — a second, independent check (not run on the public server).
+"""
+import math
+from fractions import Fraction as F
+
+import zcertify as ZC
+
+
+def _mid(iv):
+    return float((iv[0] + iv[1]) / 2)
+
+
+def _point(qs, unknowns, x):
+    return {n: (F(v), F(v)) for n, v in zip(unknowns, x)}
+
+
+def _fvals(laws, qs, unknowns, x, params_mid):
+    piece = _point(qs, unknowns, x)
+    piece.update(params_mid)
+    out = []
+    for g in laws:
+        r = ZC._reading(g, qs, piece)
+        if r is None:
+            return None
+        out.append(_mid(r))
+    return out
+
+
+def _jac(dlaws, qs, unknowns, x, params_mid):
+    piece = _point(qs, unknowns, x)
+    piece.update(params_mid)
+    J = []
+    for row in dlaws:
+        rr = []
+        for dg in row:
+            r = ZC._reading(dg, qs, piece)
+            if r is None:
+                return None
+            rr.append(_mid(r))
+        J.append(rr)
+    return J
+
+
+def _solve(A, b):
+    n = len(A)
+    M = [list(map(float, row)) + [float(b[i])] for i, row in enumerate(A)]
+    for c in range(n):
+        p = max(range(c, n), key=lambda r: abs(M[r][c]))
+        if abs(M[p][c]) < 1e-300:
+            return None
+        M[c], M[p] = M[p], M[c]
+        for r in range(n):
+            if r != c:
+                f = M[r][c] / M[c][c]
+                M[r] = [x - f * y for x, y in zip(M[r], M[c])]
+    return [M[i][n] / M[i][i] for i in range(n)]
+
+
+def _inv(A):
+    n = len(A)
+    cols = []
+    for j in range(n):
+        c = _solve(A, [1.0 if i == j else 0.0 for i in range(n)])
+        if c is None:
+            return None
+        cols.append(c)
+    return [[cols[j][i] for j in range(n)] for i in range(n)]
+
+
+def _iv_scale(c, iv):
+    a, b = c * iv[0], c * iv[1]
+    return (min(a, b), max(a, b))
+
+
+def _iv_add(a, b):
+    return (a[0] + b[0], a[1] + b[1])
+
+
+def _amax(iv):
+    return max(abs(iv[0]), abs(iv[1]))
+
+
+def check(laws, unknowns, qs, cert):
+    """(True, how) when the certificate {"centre": [...], "radius": r, "Y": [[...]], "Z": [[...]]} proves a unique
+    solution in the cube, for every parameter vector in the sheet's boxes; else (False, reason). Exact."""
+    d = len(unknowns)
+    try:
+        y = [F(str(v)) for v in cert["centre"]]
+        r = F(str(cert["radius"]))
+        Y = [[F(str(v)) for v in row] for row in cert["Y"]]
+        Zm = [[F(str(v)) for v in row] for row in cert["Z"]]
+    except (KeyError, ValueError, TypeError, ZeroDivisionError):
+        return False, "certificate unreadable"
+    if len(y) != d or len(Y) != d or len(Zm) != d or any(len(row) != d for row in Y + Zm) or len(laws) != d:
+        return False, "the certificate does not have the system's size"
+    if r <= 0:
+        return False, "the radius is not positive"
+    cube = {n: (y[i] - r, y[i] + r) for i, n in enumerate(unknowns)}
+    # 1. contraction: the rows of I − Y·J over the cube × the parameter box
+    J = []
+    for g in laws:
+        row = []
+        for n in unknowns:
+            iv = ZC._reading(ZC.derivative(g, n), qs, cube)
+            if iv is None:
+                return False, f"no reading of d/d{n} of a law over the cube"
+            row.append(iv)
+        J.append(row)
+    rows = []
+    for k in range(d):
+        s = F(0)
+        for j in range(d):
+            m = (F(1 if k == j else 0), F(1 if k == j else 0))
+            acc = (F(0), F(0))
+            for i in range(d):
+                acc = _iv_add(acc, _iv_scale(Y[k][i], J[i][j]))
+            m = (m[0] - acc[1], m[1] - acc[0])
+            s += _amax(m)
+        rows.append(s)
+        if s > F(1, 2):
+            return False, f"row {k} of I − Y·J sums to {float(s):.3g} > 1/2: no contraction proved"
+    # 2. into: G(centre) ± r/2 inside the cube
+    centre = {n: (y[i], y[i]) for i, n in enumerate(unknowns)}
+    Gc = []
+    for g in laws:
+        iv = ZC._reading(g, qs, centre)
+        if iv is None:
+            return False, "no reading of a law at the centre"
+        Gc.append(iv)
+    for k in range(d):
+        acc = (F(0), F(0))
+        for i in range(d):
+            acc = _iv_add(acc, _iv_scale(Y[k][i], Gc[i]))
+        lo, hi = y[k] - acc[1], y[k] - acc[0]
+        if not (y[k] - r < lo - r / 2 and hi + r / 2 < y[k] + r):
+            return False, f"G maps the cube out of itself at coordinate {unknowns[k]}"
+    # 3. Y invertible: the rows of |I − Z·Y|
+    for k in range(d):
+        s = F(0)
+        for j in range(d):
+            p = sum((Zm[k][i] * Y[i][j] for i in range(d)), F(0))
+            s += abs(F(1 if k == j else 0) - p)
+        if s > F(1, 2):
+            return False, f"row {k} of I − Z·Y sums to {float(s):.3g} > 1/2: Y not shown invertible"
+    return True, (f"a solution in the cube of radius {r} around the centre, the only one there "
+                  f"(contraction rows ≤ {float(max(rows)):.3g}); solutions elsewhere are not excluded")
+
+
+def search(laws, unknowns, qs, guesses=None, radii=None):
+    """Propose a certificate (Newton from several starts, Y ≈ J⁻¹, Z ≈ J, radii 2⁻²⁰ .. 2⁻⁴) and return the first the
+    exact check accepts, with its result; or None."""
+    d = len(unknowns)
+    params = sorted(n for n in set().union(*[ZC._names(g) for g in laws]) if n in qs and n not in unknowns)
+    params_mid = {n: (F(qs[n]["lo"] + qs[n]["hi"]) / 2,) * 2 for n in params
+                  if not isinstance(qs[n]["lo"], float) and not isinstance(qs[n]["hi"], float)}
+    dlaws = [[ZC.derivative(g, n) for n in unknowns] for g in laws]
+    starts = guesses or [[0.5] * d, [1.0] * d, [-0.5] * d, [0.1] * d, [2.0] * d, [-1.0] * d]
+    for x0 in starts:
+        x = list(x0)
+        ok = False
+        for _ in range(60):
+            fv = _fvals(laws, qs, unknowns, x, params_mid)
+            Jv = _jac(dlaws, qs, unknowns, x, params_mid)
+            if fv is None or Jv is None:
+                break
+            dx = _solve(Jv, fv)
+            if dx is None:
+                break
+            x = [a - b for a, b in zip(x, dx)]
+            if not all(math.isfinite(v) for v in x):
+                break
+            if max(abs(v) for v in dx) < 1e-14 * (1 + max(abs(v) for v in x)):
+                ok = True
+                break
+        if not ok:
+            continue
+        Jv = _jac(dlaws, qs, unknowns, x, params_mid)
+        Yf = _inv(Jv) if Jv else None
+        if Yf is None:
+            continue
+        for e in (radii or (20, 16, 12, 8, 6, 4)):
+            cert = {"centre": [str(F(v).limit_denominator(1 << 60)) for v in x], "radius": str(F(1, 1 << e)),
+                    "Y": [[str(F(v).limit_denominator(1 << 40)) for v in row] for row in Yf],
+                    "Z": [[str(F(v).limit_denominator(1 << 40)) for v in row] for row in Jv]}
+            res = check(laws, unknowns, qs, cert)
+            if res[0]:
+                return cert, res
+    return None

@@ -2001,6 +2001,81 @@ def _formula_atoms(phi):
     return set().union(*(_formula_atoms(x) for x in phi[1:])) if phi else set()
 
 
+
+def _system_equations(text):
+    """A claim made only of equations joined by `&` (top level): [(lhs, rhs), ...] or None."""
+    parts, depth, start = [], 0, 0
+    for i, c in enumerate(text):
+        if c in "([":
+            depth += 1
+        elif c in ")]":
+            depth -= 1
+        elif c == "&" and depth == 0:
+            parts.append(text[start:i]); start = i + 1
+    parts.append(text[start:])
+    eqs = []
+    for part in parts:
+        depth, at, width = 0, None, 0
+        for i, c in enumerate(part):
+            if c in "([":
+                depth += 1
+            elif c in ")]":
+                depth -= 1
+            elif c == "=" and depth == 0:
+                prev = part[i - 1] if i > 0 else ""
+                nxt = part[i + 1] if i + 1 < len(part) else ""
+                if prev in "<>!=":
+                    continue
+                if at is not None:
+                    return None                    # two equalities in one part
+                at, width = i, (2 if nxt == "=" else 1)
+                if nxt == "=":
+                    continue
+        if at is None:
+            return None
+        lhs, rhs = part[:at].strip(), part[at + width:].strip()
+        if not lhs or not rhs or any(op in part for op in ("<", ">", "|", "->", "~")):
+            return None
+        eqs.append((lhs, rhs))
+    return eqs
+
+
+def _system_answer(claim, q, unknowns):
+    """A SYSTEM (2026-11-08, the curator's "Синтаксис систем в ZFL — принято. Делай."; answer A first): several
+    unknowns `x = ?` and a claim of as many equations. zsystem finds a certificate and checks it exactly (Krawczyk,
+    the contraction form, the kernel's readings): a solution in a cube, the ONLY one there; solutions elsewhere are
+    NOT excluded, and the answer says so (W_SYSTEM_LOCAL). None when the claim is not such a system or nothing is
+    proved — then the answer stays the solver's."""
+    eqs = _system_equations(claim)
+    if eqs is None or len(eqs) != len(unknowns) or len(unknowns) < 2:
+        return None
+    try:
+        from znumjudge import _parse_arith as _pa
+        laws = [_pa(f"({lhs}) - ({rhs})", q) for lhs, rhs in eqs]
+        import zsystem as _ZS
+        import zcertify as _ZC
+        used = set().union(*[_ZC._names(g) for g in laws])
+        if not set(unknowns) <= used:
+            return None
+        res = _ZS.search(laws, list(unknowns), q)
+    except Exception:
+        return None
+    if res is None:
+        return None
+    cert, (_ok, how) = res
+    from fractions import Fraction as _F
+    rad = _F(cert["radius"])
+    params = sorted(n for n in used if n in q and n not in unknowns)
+    weak = [n for n in params if q[n].get("prov") != "earned"]
+    prov = "earned" if not weak else "credit"
+    solved = {}
+    for n, c in zip(unknowns, cert["centre"]):
+        c = _F(c)
+        solved[n] = {"lo": str(c - rad), "hi": str(c + rad), "pinned": False, "prov": prov,
+                     "from": params, "weak": weak, "roots": [f"[{c - rad}, {c + rad}]"], "system": True}
+    return {"solved": solved, "disposition": "EARNED" if prov == "earned" else "ON CREDIT", "cert": cert,
+            "how": how}
+
 def run(doc, ground_registry=None):
     """Validate, then ask whichever instruments apply.
 
@@ -2092,6 +2167,14 @@ def run(doc, ground_registry=None):
             else:
                 r = judge_sheet_claim(claim, q, m)
                 solved = {}
+            system = None
+            if unknown:
+                unk = [x["name"] for x in numeric_rows(rows) if (x.get("value") or "").strip() == "?"]
+                if len(unk) >= 2 and not all(solved.get(n, {}).get("pinned") for n in unk):
+                    system = _system_answer(claim, q, unk)
+                    if system is not None:
+                        solved.update(system["solved"])
+                        r = dict(r, disposition=system["disposition"])
             report["numeric"] = {"disposition": r["disposition"],
                                  "lazy": r.get("lazy"),
                                  "next_check": r.get("next_check", []),
@@ -2117,6 +2200,15 @@ def run(doc, ground_registry=None):
                     report["numeric"]["comparisons"] = {k: v[3].strip() for k, v in _nc.items()}
             except Exception:
                 pass
+            if system is not None:
+                report["numeric"]["verdict"] = "T"
+                report["numeric"]["grade"] = ("hereditary" if system["disposition"] == "EARNED"
+                                              else "until-verification")
+                report["numeric"]["system"] = {"certificate": system["cert"], "how": system["how"]}
+                issues.append(_issue(
+                    "warning", "W_SYSTEM_LOCAL", ", ".join(sorted(system["solved"])),
+                    "the system has a solution in the cube given for each unknown, and it is the only one there "
+                    "(Krawczyk's test, checked exactly); solutions OUTSIDE the cube are not excluded."))
             # REFUTED WITH NO LETTER (29.09): a `?` no value can satisfy came
             # back disposition REFUTED, verdict null. Refuted is F.
             if report["numeric"]["verdict"] is None and r["disposition"] == "REFUTED":

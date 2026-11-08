@@ -190,14 +190,18 @@ CODE_HELP = {
                      "у каждой неизвестной (системы или единственной) была область поиска (? in [a, b]), и область исчерпана: ответ "
                      "перечисляет ВСЕ решения в ней, каждое единственное в своём кубе (ни одного — утверждение "
                      "опровергнуто в области); куб может выходить за область"),
+    "W_REGION_FILTERED": ("one unknown with a search region (? in [a, b]) and an EXACT answer over all the reals: only "
+                          "its values in the region are kept; none — the claim is refuted in the region",
+                          "одна неизвестная с областью поиска (? in [a, b]) и ТОЧНЫЙ ответ на всей прямой: оставлены "
+                          "только его значения в области; ни одного — утверждение опровергнуто в области"),
     "W_REGION_UNUSED": ("a search region (? in [a, b]) is read where the exact solver proved nothing — as many "
                         "equations as ? values, every unknown with its region; here it was not used — or it was searched but "
-                        "not exhausted and no solution was certified in it (curves that only touch: nothing is "
-                        "claimed)",
+                        "not exhausted and no solution was certified in it (curves that only touch, or a whole curve "
+                        "of solutions: nothing is claimed)",
                         "область поиска (? in [a, b]) читается там, где точный решатель ничего не доказал, — столько "
                         "же уравнений, сколько величин ?, у каждой своя область; здесь она не использована — или обыскана, "
-                        "но не исчерпана, и решения в ней не заверено (кривые лишь касаются: ничего не "
-                        "утверждается)"),
+                        "но не исчерпана, и решения в ней не заверено (кривые лишь касаются или решений целая "
+                        "кривая: ничего не утверждается)"),
 }
 
 PROSE = {

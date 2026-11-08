@@ -289,6 +289,19 @@ def _inside(box, cube):
     return all(cube[n][0] <= box[n][0] and box[n][1] <= cube[n][1] for n in box)
 
 
+def _meets(cube, region):
+    return all(cube[n][0] <= region[n][1] and region[n][0] <= cube[n][1] for n in region)
+
+
+def _in_region(sols, unknowns, region):
+    """Only the solutions whose cube meets the region, in the order of their centres. Found by the curator's
+    shakedown, 2026-11-08: cos x = 0.99 in [-100, 100] was answered "64 solutions" — 62 are there; Newton from a box
+    at the edge walked out and certified the true roots ±119.52 OUTSIDE the region (a cube outside covers no box of
+    the region, so the exhaustion was right; the LIST was not)."""
+    keep = [(c, h) for c, h in sols if _meets(_cube_of(c, unknowns), region)]
+    return sorted(keep, key=lambda ch: [F(v) for v in ch[0]["centre"]])
+
+
 def solve_all(laws, unknowns, qs, region, budget=6000):
     """B (the curator's "Делай Б", 2026-11-08): ALL the solutions in the search region. The region is split into
     boxes; each box is EXCLUDED (some law's reading there excludes 0, for every parameter in the box) or lies inside
@@ -302,7 +315,7 @@ def solve_all(laws, unknowns, qs, region, budget=6000):
         box = todo.pop()
         seen += 1
         if seen > budget:
-            return {"complete": False, "solutions": sols, "boxes": seen}
+            return {"complete": False, "solutions": _in_region(sols, unknowns, region), "boxes": seen}
         if _excluded(laws, qs, box):
             continue
         if any(_inside(box, c) for c in cubes):
@@ -320,7 +333,7 @@ def solve_all(laws, unknowns, qs, region, budget=6000):
         n = max(unknowns, key=lambda m: box[m][1] - box[m][0])
         lo, hi = box[n]
         if hi - lo <= F(1, 1 << 60):
-            return {"complete": False, "solutions": sols, "boxes": seen}
+            return {"complete": False, "solutions": _in_region(sols, unknowns, region), "boxes": seen}
         mid = (lo + hi) / 2
         todo.append(dict(box, **{n: (lo, mid)}))
         todo.append(dict(box, **{n: (mid, hi)}))
@@ -334,4 +347,4 @@ def solve_all(laws, unknowns, qs, region, budget=6000):
             fine.append((f2[0], f2[1][1]))
         else:
             fine.append((cert, how))
-    return {"complete": True, "solutions": fine, "boxes": seen}
+    return {"complete": True, "solutions": _in_region(fine, unknowns, region), "boxes": seen}

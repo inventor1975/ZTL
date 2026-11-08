@@ -256,8 +256,8 @@ def sec23_one_unknown_in_a_search_region():
     equation, where the exact solver PROVED nothing: the region is exhausted the same way as a system's (zsystem,
     d = 1) and the answer is COMPLETE. Both sides: x = cos x in [0, 2] — the one root (Dottie's number), checked in
     floats; x·eˣ = 1 in [0, 3] — the omega constant; x³ − 2x = 0.1 in [−4, 4] — THREE certified intervals where the
-    solver had only `≈` approximations; x = cos x in [2, 3] — none, REFUTED; an exact answer (x² = 2 -> ±√2) is kept
-    and the region said unused; without a region x = cos x stays OPEN (nothing claimed). Sabotage: a forged interval
+    solver had only `≈` approximations; x = cos x in [2, 3] — none, REFUTED; an exact answer is kept to its values IN
+    the region (x² = 2 in [0, 10] -> √2; in [5, 6] -> REFUTED, W_REGION_FILTERED); without a region x = cos x stays OPEN (nothing claimed). Sabotage: a forged interval
     that misses the root is refused by the exact check."""
     import math
     from fractions import Fraction
@@ -287,18 +287,35 @@ def sec23_one_unknown_in_a_search_region():
     print("   x = cos x in [0,2]: one root ~0.739085; x·eˣ = 1: omega; x³ − 2x = 0.1: three certified intervals")
     r, n, bx = roots("? in [2, 3]", "x = cos(x)")
     assert n["disposition"] == "REFUTED" and n["verdict"] == "F", n
-    r, n, bx = roots("? in [0, 10]", "x*x = 2")
+    r, n, bx = roots("? in [-10, 10]", "x*x = 2")
     assert n["disposition"] == "EARNED" and n["solved"]["x"]["roots"] == ["-√2", "√2"], n
-    assert any(i["code"] == "W_REGION_UNUSED" for i in r["issues"])
+    assert any(i["code"] == "W_REGION_FILTERED" for i in r["issues"])
     r, n, bx = roots("?", "x = cos(x)")
     assert n["disposition"] == "OPEN" and not bx, n
-    print("   none in [2,3]: REFUTED; the exact ±√2 kept (region unused, said); no region: OPEN")
+    print("   none in [2,3]: REFUTED; the exact ±√2 kept in [-10, 10] (W_REGION_FILTERED); no region: OPEN")
     import znumjudge as ZJ
     qs = ZJ.parse_quantities("x=? credit")[0]
     law = [ZJ._parse_arith("(x) - (cos(x))", qs)]
     forged = {"centre": ["1"], "radius": "1/1024", "Y": [["1/2"]], "Z": [["2"]]}
     assert not zsystem.check(law, ["x"], qs, forged)[0]
     print("   sabotage: a forged interval around 1 (the root is ~0.739) is refused by the exact check")
+    # THE SHAKEDOWN (2026-11-08): two answers that were wrong
+    r, n, bx = roots("? in [-100, 100]", "cos(x) = 0.99")
+    a = math.acos(0.99)
+    true = sorted(s * a + 2 * math.pi * k for k in range(-20, 21) for s in (1, -1) if abs(s * a + 2 * math.pi * k) <= 100)
+    cs = [float(sum(b) / 2) for b in bx]
+    assert n["system"]["complete"] and len(bx) == len(true) == 62, (len(bx), len(true))
+    assert cs == sorted(cs) and all(abs(c - t) < 1e-6 for c, t in zip(cs, true)), cs[:3]
+    print("   cos x = 0.99 in [-100, 100]: 62 solutions, as there are (was: 64 — two certified OUTSIDE the region), sorted")
+    r, n, bx = roots("? in [5, 6]", "x*x = 2")
+    assert n["disposition"] == "REFUTED" and n["verdict"] == "F", n
+    assert any(i["code"] == "W_REGION_FILTERED" for i in r["issues"])
+    r, n, bx = roots("? in [0, 10]", "x*x = 2")
+    assert n["disposition"] == "EARNED" and n["solved"]["x"]["roots"] == ["√2"], n
+    r, n, bx = roots("? in [0, 10]", "x - 10 = 20")
+    assert n["disposition"] == "REFUTED" and n["verdict"] == "F", n
+    print("   an exact answer outside the region (x*x = 2 in [5, 6], x - 10 = 20 in [0, 10]): REFUTED there; "
+          "x*x = 2 in [0, 10]: only √2 (was: ±√2, the region ignored)")
 
 
 def sec4b_every_example_runs_and_json_types_are_taken_as_they_come():
@@ -939,7 +956,7 @@ def sec21_a_system_in_a_search_region_is_answered_completely():
     exhausted (each box excluded by the kernel's readings or inside a certified solution's cube) and the answer is
     COMPLETE (W_SYSTEM_ALL). Both sides: the circle meets the exponential twice in [-2, 2]² — both found, each checked
     against the equations in floats; x² + y² = −1 has none — REFUTED; without regions the answer stays local
-    (W_SYSTEM_LOCAL); a region on a single unknown is said to be unused (W_REGION_UNUSED); a malformed region is
+    (W_SYSTEM_LOCAL); a region beside an exact answer to a system is said to be unused (W_REGION_UNUSED); a malformed region is
     an error at the cell (E_VALUE_FORM). Sabotage: with the exclusion switched off the region is never exhausted —
     no complete answer is claimed."""
     import math
@@ -963,11 +980,11 @@ def sec21_a_system_in_a_search_region_is_answered_completely():
     assert r["report"]["numeric"]["disposition"] == "REFUTED" and r["report"]["numeric"]["verdict"] == "F"
     r = zfl.run({"rows": [U("x"), U("y")], "claim": "x*x + y*y = 1 & x = exp(y)"})
     assert any(i["code"] == "W_SYSTEM_LOCAL" for i in r["issues"]) and not r["report"]["numeric"]["system"]["complete"]
-    r = zfl.run({"rows": [U("x", "? in [0, 10]")], "claim": "x*x = 2"})
-    assert any(i["code"] == "W_REGION_UNUSED" for i in r["issues"])
+    r = zfl.run({"rows": [U("x", "? in [-5, 5]"), U("y", "? in [-5, 5]")], "claim": "x + y = 3 & x - y = 1"})
+    assert any(i["code"] == "W_REGION_UNUSED" for i in r["issues"])   # the exact solver answered the system itself
     r = zfl.run({"rows": [U("x", "? in [a, b]")], "claim": "x*x = 2"})
     assert not r["ok"] and any(i["code"] == "E_VALUE_FORM" for i in r["issues"])
-    print("   none in the region: REFUTED; no regions: local; one unknown with an exact answer: unused, said; "
+    print("   none in the region: REFUTED; no regions: local; an exact answer to a system: unused, said; "
           "a malformed region: refused")
     import znumjudge as ZJ
     qs = ZJ.parse_quantities("x=? credit, y=? credit")[0]

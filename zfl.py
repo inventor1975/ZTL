@@ -2248,6 +2248,27 @@ def run(doc, ground_registry=None):
                     if system is not None:
                         solved.update(system["solved"])
                         r = dict(r, disposition=system["disposition"])
+            # ONE unknown with its region and an EXACT answer over all the reals (the curator's shakedown,
+            # 2026-11-08: `x*x = 2` with `x = ? in [5, 6]` answered ±√2, outside the region): only the roots in the
+            # region are kept; none — refuted there
+            filtered = None
+            if unknown and len(unk) == 1 and system is None and regions.get(unk[0]) and \
+                    r["disposition"] in ("EARNED", "ON CREDIT"):
+                n0 = unk[0]
+                v0 = (r.get("solved") or {}).get(n0) or {}
+                ra, rb = regions[n0]
+                if v0.get("roots") and n0 in solved:
+                    idx = [i for i, (lo, hi) in enumerate(v0["roots"]) if lo <= rb and ra <= hi]
+                    filtered = (len(idx), len(v0["roots"]))
+                    solved[n0]["roots"] = [solved[n0]["roots"][i] for i in idx]
+                    if idx:
+                        solved[n0]["lo"] = str(min(v0["roots"][i][0] for i in idx))
+                        solved[n0]["hi"] = str(max(v0["roots"][i][1] for i in idx))
+                elif v0.get("pinned") and n0 in solved:
+                    inside = ra <= v0["lo"] and v0["hi"] <= rb
+                    filtered = (1 if inside else 0, 1)
+                if filtered is not None and filtered[0] == 0:
+                    r = dict(r, disposition="REFUTED")
             report["numeric"] = {"disposition": r["disposition"],
                                  "lazy": r.get("lazy"),
                                  "next_check": r.get("next_check", []),
@@ -2273,6 +2294,8 @@ def run(doc, ground_registry=None):
                     report["numeric"]["comparisons"] = {k: v[3].strip() for k, v in _nc.items()}
             except Exception:
                 pass
+            if filtered is not None and filtered[0] == 0:
+                report["numeric"]["verdict"] = "F"          # the exact answer has no value in the region
             if system is not None:
                 report["numeric"]["verdict"] = "F" if system["disposition"] == "REFUTED" else "T"
                 report["numeric"]["grade"] = ("hereditary" if system["disposition"] in ("EARNED", "REFUTED")
@@ -2298,8 +2321,13 @@ def run(doc, ground_registry=None):
                 issues.append(_issue(
                     "warning", "W_REGION_UNUSED", "value",
                     "the search region was searched but not exhausted within the budget, and no solution was "
-                    "certified in it: where two curves only touch (or the Jacobian is singular) no cube can be "
-                    "certified and no box excluded; nothing is claimed"))
+                    "certified in it: where two curves only touch, the Jacobian is singular, or the solutions are not "
+                    "isolated (a whole curve of them), no cube can be certified and no box excluded; nothing is claimed"))
+            elif filtered is not None:
+                issues.append(_issue(
+                    "warning", "W_REGION_FILTERED", "value",
+                    f"the exact answer holds over all the reals; of its {filtered[1]} value(s), {filtered[0]} lie in "
+                    f"the search region and are kept" + ("" if filtered[0] else " — none: the claim is refuted there")))
             elif unknown and not searched and any(question_region(x.get("value")) for x in numeric_rows(rows)) and \
                     not (system is not None and system["complete"]):
                 issues.append(_issue(

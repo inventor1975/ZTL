@@ -2170,7 +2170,11 @@ def run(doc, ground_registry=None):
             system = None
             if unknown:
                 unk = [x["name"] for x in numeric_rows(rows) if (x.get("value") or "").strip() == "?"]
-                if len(unk) >= 2 and not all(solved.get(n, {}).get("pinned") for n in unk):
+                # only where the exact solver gave NO answer: its pinned values and its paired roots
+                # (`area == s*s & area - 5*s + 6 == 0` -> s in {2, 3}) are complete and stay
+                # (test_quadratic caught the first version overwriting them, 2026-11-08)
+                if len(unk) >= 2 and not any(solved.get(n, {}).get("pinned") or solved.get(n, {}).get("roots")
+                                             for n in unk):
                     system = _system_answer(claim, q, unk)
                     if system is not None:
                         solved.update(system["solved"])

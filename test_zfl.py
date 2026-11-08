@@ -826,7 +826,11 @@ def sec20_a_system_of_equations_is_a_question_too():
     r = zfl.run({"rows": [U("x"), U("y")], "claim": "x + y = 3 & x - y = 1"})
     n = r["report"]["numeric"]
     assert n["solved"]["x"]["pinned"] and n["solved"]["x"]["lo"] == "2", n
-    print("   no real solution: not solved; an inequality: not a system; a linear system: the exact solver")
+    r = zfl.run({"rows": [U("s"), U("area")], "claim": "area == s*s & area - 5*s + 6 == 0"})
+    n = r["report"]["numeric"]
+    assert n["solved"]["s"].get("roots") == ["2", "3"] and not n["solved"]["s"].get("system"), n
+    print("   no real solution: not solved; an inequality: not a system; a linear system and paired exact roots:")
+    print("   the exact solver's answer stays (it is complete; the system's is local)")
     # forgeries of the certificate
     import znumjudge as ZJ
     qs = ZJ.parse_quantities("x=? credit, y=? credit")[0]

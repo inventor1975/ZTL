@@ -29,6 +29,7 @@ parameter vector in the box:
 Status: "theorem" (the kernel accepted), "no tree" (the search found none within its depth), "refused" (the kernel
 did not accept), "kernel limit" (recursion / time limit inside the check — not a verdict), "not translated" (not a linear system, or a function ZXE lacks).
 """
+import itertools
 import math
 import os
 import re
@@ -479,6 +480,21 @@ def _law_cert(laws, unknowns, qs, pinned, target):
         for k, v in b.items():
             row[k] = ("sub", row[k], v) if k in row else ("sub", F(0), v)
         raw.append({k: _sqrt2exp(_subst(v, pinned)) for k, v in row.items()})
+    # ONLY THE TARGET'S BLOCK (2026-11-09, ztl-stand blind/b01: Finst <= 240 regressed to `no tree` — every row's
+    # denominators, 8·Dm³·n of the other laws, went into D): the laws and unknowns connected to the target through
+    # shared unknowns. Valid: the other rows hold no unknown of this block; the theorem's hypothesis is these laws.
+    comp, grew = {target}, True
+    while grew:
+        grew = False
+        for row in raw:
+            ks = {k for k in row if k != 1}
+            if ks & comp and not ks <= comp:
+                comp |= ks
+                grew = True
+    keep = [row for row in raw if {k for k in row if k != 1} & comp]
+    if len(keep) != len(comp):
+        return None
+    raw, us = keep, sorted(comp)
     params = sorted({n for row in raw for v in row.values() for n in _names(v, set())
                      if n in qs and n not in pinned and n not in us})
     for n in params:
@@ -752,15 +768,32 @@ def _box_lean(params, box):
 def bound_to_lean(laws, unknowns, qtext, target, reqs, name, depth=14, trees=None, laws_mode=True, tstack_kb=None,
                   mutant=None):
     """See _bound_to_lean; `tstack_kb` / `mutant` override the kernel's stack and the sabotage switches for THIS
-    call only (thread-local)."""
+    call only (thread-local). The theorem on the LAWS first; when that finds no tree (its cleared form carries the
+    whole block's determinant) or hits a kernel limit, the theorem on the EXPRESSION — said in `about`, and
+    `laws_tried` keeps why."""
     _CTX.tstack, _CTX.mutant = tstack_kb, mutant
     try:
-        return _bound_to_lean(laws, unknowns, qtext, target, reqs, name, depth, trees, laws_mode)
+        st = _bound_to_lean(laws, unknowns, qtext, target, reqs, name, depth, trees, laws_mode)
+        if st.get("tight"):
+            return st                   # false or met at a corner: the fallbacks cannot help (see _bound_to_lean)
+        if laws_mode and trees is None and st.get("status") in ("no tree", "kernel limit") and laws:
+            st2 = _bound_to_lean(laws, unknowns, qtext, target, reqs, name + "E", depth, None, False)
+            if st2.get("status") == "theorem":
+                st2["laws_tried"] = f"on the laws: {st['status']} ({(st.get('why') or '')[:120]})"
+                return st2
+        if trees is None and st.get("status") in ("no tree", "kernel limit"):
+            # the expression in its OWN shape (not expanded): the exact path's polynomial cancels badly under an
+            # interval reading when the bound has a margin (blind/b01: tau, the Wahl factor, 8 parameters)
+            st3 = _bound_to_lean(laws, unknowns, qtext, target, reqs, name + "S", depth, None, False, exact=False)
+            if st3.get("status") == "theorem":
+                st3["laws_tried"] = f"on the laws / exact: {st['status']}; read in its own shape"
+                return st3
+        return st
     finally:
         _CTX.tstack, _CTX.mutant = None, None
 
 
-def _bound_to_lean(laws, unknowns, qtext, target, reqs, name, depth=14, trees=None, laws_mode=True):
+def _bound_to_lean(laws, unknowns, qtext, target, reqs, name, depth=14, trees=None, laws_mode=True, exact=True):
     """laws: "lhs == rhs" strings; unknowns: the derived quantities; qtext: the sheet ("R1=[990,1010] credit, ...");
     target: the derived quantity, or an expression of the unknowns and the data ("I*I*R1"); reqs: [(">=", c) | ("<=", c)]; name: the Lean namespace. `trees`: given trees
     (the search skipped) — the negative control pastes an accepted tree under a false bound."""
@@ -801,6 +834,26 @@ def _bound_to_lean(laws, unknowns, qtext, target, reqs, name, depth=14, trees=No
         if isinstance(qs[n]["lo"], float) or isinstance(qs[n]["hi"], float):
             return {"status": "not translated", "why": f"{n} is unbounded"}
     idx = {n: i for i, n in enumerate(params)}
+    # TIGHT OR FALSE AT A CORNER (floats, a search aid only): the fallbacks of bound_to_lean are skipped then — no
+    # theorem exists for a false bound, and a bound met at a corner needs the exact path (2026-11-09: the bridge's
+    # "other side" cases ran all three paths to depth 14 for nothing — 18 s → 2 m 33 s)
+    tight = False
+    try:
+        corners = itertools.product(*[(float(qs[n]["lo"]), float(qs[n]["hi"])) for n in params[:12]])
+        for cv in corners:
+            env = dict(zip(params, cv))
+            for n in params[12:]:
+                env[n] = float((F(qs[n]["lo"]) + F(qs[n]["hi"])) / 2)
+            v = K.fl(node, env)
+            for op, c in reqs:
+                c = float(F(c))
+                gap = (c - v) if op == "<=" else (v - c)
+                if gap <= 1e-9 * max(1.0, abs(c)):
+                    tight = True
+            if tight:
+                break
+    except Exception:
+        pass
     quotient = isinstance(node, tuple) and node[0] == "div"
     Nn, Dn = (node[1], node[2]) if quotient else (node, F(1))
     law = _law_cert(laws, unknowns, qs, pinned, target) if laws_mode else None
@@ -809,7 +862,7 @@ def _bound_to_lean(laws, unknowns, qtext, target, reqs, name, depth=14, trees=No
         N2, D2 = law["N"], law["D"]
         sc = (N2, D2, box, scale)
     else:
-        sc = _scaled(node, params, qs)
+        sc = _scaled(node, params, qs) if exact else None
     scale = None
     if sc is not None:                               # exact: integer box, integer polynomials (see _scaled)
         N2, D2, box, scale = sc
@@ -861,15 +914,26 @@ def xQ : XE := {xe_q}
     probe = head + "".join(
         f'def F{k} : XE := {G or form}\n#eval IO.println (match findV true F{k} {Z.dy(0)} {vs} {depth} B with '
         f'| some t => "TREE" ++ toString {k} ++ " " ++ t.txt | none => "NOTREE" ++ toString {k})\n'
-        for k, (_, _, form, G) in enumerate(forms)) + f"end {name}\n"
+        for k, (_, _, form, G) in enumerate(forms)) + "".join(
+        f'#eval IO.println ("POSOK{k} " ++ toString (posOK B F{k}))\n' for k in range(len(forms))) + (
+        '#eval IO.println ("POSOKQ " ++ toString (posOK B (.div xN xD)))\n' if quotient else "") + f"end {name}\n"
     given = trees
     out = _run(probe, os.path.join(gen, name + "_probe.lean")) if given is None else ""
     trees = dict(given) if given is not None else {}
+    # A DENOMINATOR NOT POSITIVE ON THE BOX is a refusal, said as one — the kernel's `decide` on a false posOK
+    # overflows its stack instead of answering (2026-11-09: ztl-stand tasks/t16b, a brick WITHOUT its domain law,
+    # mu − lam/N < 0 on the whole box, read "kernel limit")
+    bad = [w for w in re.findall(r"^POSOK(\w+) false$", out, re.M)]
+    if given is None and bad:
+        return {"status": "refused", "why": ("a denominator (or a logarithm's argument) is NOT PROVED positive on the "
+                                             f"box (posOK false: {', '.join(bad)}) — negative somewhere (a missing "
+                                             "domain law?) or the interval reading too wide to show it"),
+                "out": out[:400]}
     for k in range(len(forms) if given is None else 0):
         m = re.search(rf"^TREE{k} (.*)$", out, re.M)
         if not m:
             return {"status": "no tree", "why": f"requirement {forms[k][0]} {forms[k][1]}: no tree within depth {depth}",
-                    "out": out[:400]}
+                    "out": out[:400], "tight": tight}
         trees[k] = m.group(1)
     body = head
     if quotient:

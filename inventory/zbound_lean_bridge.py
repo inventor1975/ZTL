@@ -78,6 +78,13 @@ with ProcessPoolExecutor(max_workers=max(2, min(16, (os.cpu_count() or 4) // 2))
     _F["ZGenMort8"] = pool.submit(ZB.bound_to_lean, *ML, MT, [(">=", "0")], "ZGenMort8", tstack_kb=8000)
     _F["ZGenDividerMut"] = pool.submit(ZB.bound_to_lean, *DIV, "Vout", [(">=", "2.475"), ("<=", "2.525")],
                                        "ZGenDividerMut", mutant={"cert": True})
+    _F["ZGenNoDomain"] = pool.submit(ZB.bound_to_lean, ["T == g + ln(100)/(mu - lam/2)"], ["T"],
+                                     "g=[0.005,0.012] credit, mu=[198,242] credit, lam=[1620,1980] credit, T=? credit",
+                                     "T", [("<=", "0.15")], "ZGenNoDomain")
+    _F["ZGenBlock"] = pool.submit(ZB.bound_to_lean, ["F1 == k*x", "F2 == G*d*d*d*d/(8*D*D*D*n)*y"], ["F1", "F2"],
+                                  "k=[9,11] credit, x=[1,2] credit, G=[78,80] credit, d=[3,4] credit, D=[20,30] credit, "
+                                  "n=[5,7] credit, y=[1,2] credit, F1=? credit, F2=? credit", "F1", [("<=", "22")],
+                                  "ZGenBlock")
     R = {k: f.result() for k, f in _F.items()}
 
 ok = fail = 0
@@ -173,6 +180,14 @@ check("S·table(T) >= 65.2 over T in [150, 450] (three knots inside; min 65.5): 
       st21["status"] == "theorem", st21)
 st22 = R["ZGenTableB"]
 check("the other side: >= 65.6 — no theorem", st22["status"] != "theorem", st22)
+print("13. a missing domain law, and the target's own block of laws")
+nd = R["ZGenNoDomain"]
+check("ln(100)/(mu − lam/2) with mu − lam/2 < 0 on the WHOLE box (ztl-stand tasks/t16b, no domain law): REFUSED, "
+      "posOK false said — not a kernel limit", nd["status"] == "refused" and "posOK false" in nd.get("why", ""), nd)
+bk = R["ZGenBlock"]
+check("F1 = k·x <= 22 next to an unrelated law with denominators: a theorem on the laws of F1's OWN block "
+      "(blind/b01's Finst regressed when every row's denominators went into D)",
+      bk["status"] == "theorem" and bk.get("about") == "laws" and bk.get("params") == ["k", "x"], bk.get("params"))
 print(f"\n{ok} ok, {fail} fail")
 print("ZBOUND LEAN BRIDGE GREEN" if fail == 0 else "ZBOUND LEAN BRIDGE RED")
 sys.exit(1 if fail else 0)

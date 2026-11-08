@@ -121,8 +121,14 @@ print("11. ON THE LAWS (the curator 2026-11-09, B/C): the requirement for EVERY 
 check("the divider, the 3-resistor net, the TCR divider, the 7-unknown ladder: each theorem is on the LAWS (rows + a "
       "cofactor certificate checked by identX), not on an eliminated expression",
       all(x.get("about") == "laws" for x in (st, st2, st9, st15)), [x.get("about") for x in (st, st2, st9, st15)])
-check("an expression target (the power I*I*R1) stays on the expression, said as such", st7.get("about") == "expression",
+check("an expression target (the power I*I*R1, not monotone, attained) is ALSO on the laws: D·I = N from the "
+      "certificate, the telescoping identity checked, D² > 0", st7.get("about") == "laws" and st7["status"] == "theorem",
       st7.get("about"))
+st19 = ZB.bound_to_lean(*PW, "Vout*Vout + I", [("<=", "6.47")], "ZGenTwoUnk")
+check("an expression of TWO unknowns, Vout² + I <= 6.47 (max ~6.4682 at a corner), on the laws: a theorem",
+      st19["status"] == "theorem" and st19.get("about") == "laws", st19)
+st20 = ZB.bound_to_lean(*PW, "Vout*Vout + I", [("<=", "6.46")], "ZGenTwoUnkB")
+check("the other side: Vout² + I <= 6.46 — no theorem", st20["status"] != "theorem", st20)
 ZB._MUTANT["cert"] = True
 try:
     stm = ZB.bound_to_lean(*DIV, "Vout", [(">=", "2.475"), ("<=", "2.525")], "ZGenDividerMut")

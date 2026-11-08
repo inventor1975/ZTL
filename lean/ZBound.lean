@@ -564,6 +564,14 @@ theorem add_zero_of {a b : α} (ha : S.r a S.zero) (hb : S.r b S.zero) : S.r (S.
 theorem eq_of_sub_zero {a b : α} (h : S.r (S.add a (S.neg b)) S.zero) : S.r a b := by
   have e : S.r a (S.add (S.add a (S.neg b)) b) := by cr_ring S.toCR
   exact S.trans e (S.trans (S.add_congr h (S.refl _)) (by cr_ring S.toCR))
+theorem sub_zero_of_eq {a b : α} (h : S.r a b) : S.r (S.add a (S.neg b)) S.zero :=
+  S.trans (S.add_congr h (S.refl _)) (by cr_ring S.toCR)
+theorem nonneg_of_mul_pos {d w : α} (hd : S.pos d) (h : S.le S.zero (S.mul d w)) : S.le S.zero w := by
+  apply S.le_of_not_pos
+  intro hp
+  have m := S.pos_mul hd hp
+  have e : S.r (S.mul d (S.add S.zero (S.neg w))) (S.add S.zero (S.neg (S.mul d w))) := by cr_ring S.toCR
+  exact S.pos_not_le (S.pos_congr e m) (by cr_linarith S.toOCR [h])
 end Rows
 
 /-- `Σ cᵢ·Rᵢ` as an expression (the certificate `cs`, the rows `rs`). -/
@@ -584,6 +592,13 @@ theorem linC_zero {y : Nat → RExpr} : ∀ cs rs : List XE, (∀ r, List.Mem r 
     have ht := linC_zero cs rs (fun q hq => h q (List.Mem.tail r hq))
     show rCF.r (rCF.add (rCF.mul (evR y c) (evR y r)) (evR y (linC cs rs))) rCF.zero
     exact add_zero_of (mul_zero_of h0) ht
+
+/-- Every row zero and `Σ cᵢ·Rᵢ ≡ H` (the kernel's identity test) ⟹ `H` is zero. -/
+theorem combo_zero {B : Box} {y : Nat → RExpr} (hy : InBox rCF B y) {cs rs : List XE} {H : XE}
+    (hl : ∀ r, List.Mem r rs → rCF.r (evR y r) rCF.zero)
+    (hid : identX (linC cs rs) H = true) (pg : posOK B (linC cs rs) = true) (ph : posOK B H = true) :
+    rCF.r (evR y H) rCF.zero :=
+  rCF.trans (rCF.symm (evR_identX hy hid pg ph)) (linC_zero cs rs hl)
 
 /-- **The laws give the value**: `D·u = N` for every point of the box and EVERY `u` satisfying the rows. -/
 theorem law_value {B : Box} {y : Nat → RExpr} (hy : InBox rCF B y) {cs rs : List XE} {Dx Nx U : XE}
@@ -622,6 +637,9 @@ end ZBound
 #print axioms ZBound.mul_zero_of
 #print axioms ZBound.add_zero_of
 #print axioms ZBound.eq_of_sub_zero
+#print axioms ZBound.sub_zero_of_eq
+#print axioms ZBound.nonneg_of_mul_pos
+#print axioms ZBound.combo_zero
 #print axioms ZBound.linC
 #print axioms ZBound.linC.eq_def
 #print axioms ZBound.linC_zero

@@ -4,7 +4,8 @@ The curator, 2026-11-08: "важно, если стенд будет дават�
 `q op c` on a derived quantity q of a LINEAR system of laws (the stand's divider, a network's currents), for every
 parameter vector in the box:
 
-  0. ON THE LAWS (2026-11-09, the curator's "B/C — делаем"), when q is an unknown of a system with rational
+  0. ON THE LAWS (2026-11-09, the curator's "B/C — делаем"), when q is an unknown — or a polynomial expression
+     of unknowns, `_expr_on_laws` (a power I*I*R) — of a system with rational
      coefficients: the laws as polynomial ROWS and a cofactor certificate (`_law_cert`); the kernel checks
      `Σ cᵢ·Rᵢ ≡ D·q − N` (`ZBound.law_value`) and the file proves `lawreq{k}`: the requirement for EVERY value of the
      unknowns satisfying the laws — the elimination below is then only the search, not trusted;
@@ -472,6 +473,196 @@ def _law_cert(laws, unknowns, qs, pinned, target):
             "rows": rows, "m": m, "n": n, "j": j, "unknowns": us}
 
 
+def _expr_on_laws(laws, unknowns, qs, pinned, target, reqs, name, depth):
+    """An EXPRESSION of the unknowns (a power P = I*I*R) on the LAWS (2026-11-09, B/C, second step).
+
+    For every unknown u_k the expression uses: its cofactor certificate (`_law_cert`) — the kernel proves
+    D·u_k = N_k for every solution. E is read as a polynomial E'(x, u) = L·E (parameters scaled, L > 0 clearing the
+    constants: said). With d its degree in u, Ê(x) = Σ_α e_α(x)·D^(d−|α|)·N^α, and for `r·E ≤ p`:
+    Cl(x) = L·p·D^d − r·Ê(x) ≥ 0 on the box (a cover tree, the kernel), and the identity
+    D^d·(L·p − r·E') − Cl ≡ Σ_k M_k·(D·u_k − N_k)   (M_k by telescoping D^a·u^α − N^α — no division)
+    checked by `identX`; with D^d > 0, `r·E' ≤ L·p` for every point and EVERY solution of the laws.
+    None: not this case (a division or a function in E, a coefficient not rational)."""
+    import znumjudge as ZJ
+    us = sorted(set(unknowns))
+    try:
+        enode = _sqrt2exp(_subst(ZJ._parse_arith(target, qs), pinned))
+    except Exception:
+        return None
+    used = sorted(n for n in _names(enode, set()) if n in us)
+    if not used:
+        return None
+    certs = {}
+    for k in used:
+        lc = _law_cert(laws, us, qs, pinned, k)
+        if lc is None:
+            return None
+        certs[k] = lc
+    base = certs[used[0]]
+    params, m, n = base["params"], base["m"], base["n"]
+    sc = [base["scale"][p] for p in params]
+    if any(nm in qs and nm not in pinned and nm not in us and nm not in params for nm in _names(enode, set())):
+        return None                     # E names a datum the laws do not: not handled here
+    idx = {p_: i for i, p_ in enumerate(params)}
+    idx.update({u: m + i for i, u in enumerate(us)})
+    r_ = _rat(enode, idx)
+    if r_ is None or not r_[1] or any(any(mo) for mo in r_[1]):
+        return None                     # E must be a polynomial (a constant denominator)
+    c0 = r_[1][(0,) * (m + n)]
+    E = {}
+    for mo, c in r_[0].items():         # p_i = x_i / s_i in E
+        f = c / c0
+        for i in range(m):
+            f /= F(sc[i]) ** mo[i]
+        E[mo] = f
+    L = 1
+    for c in E.values():
+        L = math.lcm(L, c.denominator)
+    E = {mo: c * L for mo, c in E.items()}
+    d = max(sum(mo[m:]) for mo in E)
+    D = base["D"]
+    one_x = {(0,) * m: F(1)}
+
+    def ppow(P, k):
+        out = one_x
+        for _ in range(k):
+            out = _pmul(out, P)
+        return out
+    Nk = {us.index(k): certs[k]["N"] for k in used}
+    ext = lambda P: {mo + (0,) * n: c for mo, c in P.items()}
+    Ehat = {}
+    terms = []                          # (e_alpha(x), alpha) per monomial of E
+    for mo, c in E.items():
+        ex = {mo[:m]: c}
+        al = mo[m:]
+        terms.append((ex, al))
+        t = _pmul(ex, ppow(D, d - sum(al)))
+        for k, a in enumerate(al):
+            if a:
+                t = _pmul(t, ppow(Nk[k], a))
+        Ehat = _padd(Ehat, t)
+    Dd = ppow(D, d)
+    forms = []
+    for op, cval in reqs:
+        cval = F(cval)
+        p_, rr = cval.numerator, cval.denominator
+        P = p_ * L
+        if op == "<=":
+            Cl = _padd({mo: c * P for mo, c in Dd.items()}, {mo: c * rr for mo, c in Ehat.items()}, -1)
+            sign = -1
+        else:
+            Cl = _padd({mo: c * rr for mo, c in Ehat.items()}, {mo: c * P for mo, c in Dd.items()}, -1)
+            sign = 1
+        # M_k by telescoping: D^a u^α − N^α = Σ_t [Π_{s<t} N_{k_s}]·(D u_{k_t} − N_{k_t})·[Π_{s>t} D u_{k_s}]
+        M = {k: {} for k in range(n)}
+        for ex, al in terms:
+            seq = [k for k, a in enumerate(al) for _ in range(a)]
+            pre = _pmul(ext(ex), ext(ppow(D, d - len(seq))))
+            pre = {mo: c * sign * rr for mo, c in pre.items()}
+            for t, k in enumerate(seq):
+                f = pre
+                for s_ in seq[:t]:
+                    f = _pmul(f, ext(Nk[s_]))
+                for s_ in seq[t + 1:]:
+                    f = _pmul(f, _pmul(ext(D), {(0,) * m + tuple(1 if q == s_ else 0 for q in range(n)): F(1)}))
+                M[k] = _padd(M[k], f)
+        uvar = lambda k: {(0,) * m + tuple(1 if q == k else 0 for q in range(n)): F(1)}
+        Z = {k: _padd(_pmul(ext(D), uvar(k)), ext(Nk[k]), -1) for k in Nk}
+        W = (_padd({(0,) * (m + n): F(P)}, {mo: c * rr for mo, c in E.items()}, -1) if op == "<=" else
+             _padd({mo: c * rr for mo, c in E.items()}, {(0,) * (m + n): F(P)}, -1))
+        H = _padd(_pmul(ext(Dd), W), ext(Cl), -1)
+        lhs = {}
+        for k in Nk:
+            lhs = _padd(lhs, _pmul(M[k], Z[k]))
+        assert _padd(lhs, H, -1) == {}, "the telescoping identity fails"
+        forms.append((op, P, rr, Cl, [M[k] for k in sorted(Nk)]))
+    return {"params": params, "m": m, "n": n, "us": us, "box": base["box"], "scale": base["scale"], "D": D,
+            "Nk": Nk, "certs": {us.index(k): certs[k]["cert"] for k in used}, "rows": base["rows"], "E": E, "d": d,
+            "L": L, "forms": forms}
+
+
+def _expr_lean(ex, target, name, depth):
+    """The Lean file of `_expr_on_laws`; returns (status, file, out, trees)."""
+    m, n, d = ex["m"], ex["n"], ex["d"]
+    params = ex["params"]
+    gen = os.path.join(LEAN, "gen"); os.makedirs(gen, exist_ok=True)
+    ks = sorted(ex["Nk"])
+    U = lambda k: f"(.var {m + k})"
+    head = f"""import ZBound
+open VR VR.Numbers ZNumBin ZField ZPoly ZIv ZXE ZRealCF ZRootDiv ZBound
+set_option maxRecDepth 100000
+namespace {name}
+def B : Box := {_box_lean(params, ex["box"])}
+def xD : XE := {_poly_xe(ex["D"], m)}
+"""
+    vs = "[" + ", ".join(str(i) for i in range(m)) + "]"
+    probe = head + "".join(
+        f'def Cl{i} : XE := {_poly_xe(f[3], m)}\n#eval IO.println (match findV true Cl{i} {Z.dy(0)} {vs} {depth} B with '
+        f'| some t => "TREE" ++ toString {i} ++ " " ++ t.txt | none => "NOTREE" ++ toString {i})\n'
+        for i, f in enumerate(ex["forms"])) + f"end {name}\n"
+    out = _run(probe, os.path.join(gen, name + "_probe.lean"))
+    trees = {}
+    for i in range(len(ex["forms"])):
+        mt = re.search(rf"^TREE{i} (.*)$", out, re.M)
+        if not mt:
+            return "no tree", None, out[:400], {}
+        trees[i] = mt.group(1)
+    body = head + f"""/-- The laws as rows (vars {m}..{m + n - 1}: {", ".join(ex["us"])}). -/
+def rows : List XE := [{", ".join(_poly_xe(R, m + n) for R in ex["rows"])}]
+/-- `{target}`, read as a polynomial times {ex["L"]} (parameters scaled). -/
+def E : XE := {_poly_xe(ex["E"], m + n)}
+"""
+    for k in ks:
+        body += f"""def xN{k} : XE := {_poly_xe(ex["Nk"][k], m)}
+def cert{k} : List XE := [{", ".join(_poly_xe(C, m) for C in ex["certs"][k])}]
+theorem law_val{k} (y : Nat → RExpr) (hy : InBox rCF B y) (hl : ∀ r, List.Mem r rows → rCF.r (evR y r) rCF.zero) :
+    rCF.r (rCF.mul (evR y xD) (evR y {U(k)})) (evR y xN{k}) :=
+  law_value hy (cs := cert{k}) hl (by decide +kernel) (by decide +kernel) (by decide +kernel)
+"""
+    zs = [f"(.sub (.mul xD {U(k)}) xN{k})" for k in ks]
+    body += f"def Zs : List XE := [{', '.join(zs)}]\n"
+    # the membership proof: one case per element
+    mem = "intro z hz\n"
+    ind = "    "
+    for j, k in enumerate(ks):
+        mem += f"{ind}cases hz with\n{ind}| head => exact sub_zero_of_eq (law_val{k} y hy hl)\n{ind}| tail _ hz =>\n"
+        ind += "  "
+    mem += f"{ind}cases hz\n"
+    for i, (op, P, rr, Cl, Ms) in enumerate(ex["forms"]):
+        R_, P_ = f"(XE.cst {Z.dy(rr)})", f"(XE.cst {Z.dy(P)})"
+        W = f"(.sub {P_} (.mul {R_} E))" if op == "<=" else f"(.sub (.mul {R_} E) {P_})"
+        stmt = (f"rCF.le (rCF.mul (evR y {R_}) (evR y E)) (evR y {P_})" if op == "<=" else
+                f"rCF.le (evR y {P_}) (rCF.mul (evR y {R_}) (evR y E))")
+        body += f"""def Cl{i} : XE := {_poly_xe(Cl, m)}
+def T{i} : VT := {trees[i]}
+theorem cl{i} : ∀ x : Nat → RExpr, InBox rCF B x → rCF.le (dv rOH {Z.dy(0)}) (evR x Cl{i}) :=
+  bound_vrM (lo := true) (vs := {vs}) (T := T{i}) (by decide +kernel) (by decide +kernel)
+def W{i} : XE := {W}
+def H{i} : XE := .sub (.mul (.pow xD {d}) W{i}) Cl{i}
+def Ms{i} : List XE := [{", ".join(_poly_xe(Mk, m + n) for Mk in Ms)}]
+/-- **On the laws**: `{ex["L"]}·({target}) {op} {P}/{rr}` for EVERY point of the box and EVERY value of the unknowns
+satisfying the laws. -/
+theorem lawreq{i} (y : Nat → RExpr) (hy : InBox rCF B y) (hl : ∀ r, List.Mem r rows → rCF.r (evR y r) rCF.zero) :
+    {stmt} := by
+  have hz : ∀ z, List.Mem z Zs → rCF.r (evR y z) rCF.zero := by
+    {mem}  have h0 : rCF.r (evR y H{i}) rCF.zero := combo_zero hy (cs := Ms{i}) hz (by decide +kernel) (by decide +kernel)
+    (by decide +kernel)
+  have h1 : rCF.r (rCF.add (rCF.mul (evR y (.pow xD {d})) (evR y W{i})) (rCF.neg (evR y Cl{i}))) rCF.zero := h0
+  have hpos : rCF.pos (evR y (.pow xD {d})) := (div_value hy (a := XE.cst (⟨⟨1, 0⟩, 0⟩ : D)) (b := .pow xD {d})
+    (by decide +kernel)).1
+  have hc : rCF.le rCF.zero (rCF.mul (evR y (.pow xD {d})) (evR y W{i})) :=
+    rCF.le_respects (zv_isZ rOH (c := {Z.dy(0)}) rfl) (rCF.symm (eq_of_sub_zero h1)) (cl{i} y hy)
+  exact le_of_sub_nonneg (nonneg_of_mul_pos hpos hc)
+"""
+    body += f"end {name}\n" + "".join(f"#print axioms {name}.law_val{k}\n" for k in ks) + "".join(
+        f"#print axioms {name}.cl{i}\n#print axioms {name}.lawreq{i}\n" for i in range(len(ex["forms"])))
+    path = os.path.join(gen, name + ".lean")
+    out = _run(body, path)
+    ok = "error" not in out and out.count("does not depend on any axioms") == len(ks) + 2 * len(ex["forms"])
+    limit = any(w in out for w in ("maximum recursion depth", "deterministic timeout", "heartbeats", "Stack overflow"))
+    return ("theorem" if ok else ("kernel limit" if limit else "refused")), path, out[:600], trees
+
+
 def _box_lean(params, box):
     """`fun i => cond (Nat.beq i 0) (some (lo, hi)) (cond ... none)`."""
     body = "none"
@@ -501,6 +692,14 @@ def bound_to_lean(laws, unknowns, qtext, target, reqs, name, depth=14, trees=Non
             sol = ZC.solve_system(laws, unknowns, qs)
     except Exception as ex:
         return {"status": "not translated", "why": f"not a linear square system: {ex}"}
+    if laws_mode and target not in sol and laws:
+        ex = _expr_on_laws(laws, unknowns, qs, pinned, target, reqs, name, depth)
+        if ex is not None:
+            stt, path, out, trs = _expr_lean(ex, target, name, depth)
+            if stt == "theorem" or stt == "refused":
+                return {"status": stt, "file": path, "params": ex["params"], "box": ex["box"], "quotient": True,
+                        "trees": trs, "out": out, "scale": ex["scale"], "about": "laws", "factor": ex["L"]}
+            # no tree / a kernel limit on the laws: the expression path below is still tried
     if target in sol:
         node = sol[target]
     else:                   # an EXPRESSION of the unknowns and the data (P = I*I*R): the solutions substituted

@@ -115,6 +115,23 @@ def derivative(e, name):
         if name in _names(e):
             raise NoDerivative(f"{op} has no derivative where its arguments cross")
         return ZERO
+    if op == "integral":                      # ∫_a^b f dt (2026-11-09): d/dname = ∫_a^b ∂f/∂name dt, limits constant in name
+        I, a, b, *params = args
+        if name in _names(a) or name in _names(b):
+            raise NoDerivative("an integral whose limits move with the variable (Leibniz's boundary terms): not read")
+        if name not in params:
+            return ZERO
+        df = derivative(I.f, name)
+        if _is0(df):
+            return ZERO
+        return ("integral", type(I)(df, I.x), a, b, *params)
+    import zseries as _ZS
+    if _ZS.is_series(op):                     # Bessel / Kelvin (2026-11-09): the derivative is the next series
+        u = args[0]
+        du = derivative(u, name)
+        if _is0(du):
+            return ZERO
+        return _mul((_ZS.derivative_name(op), u), du)
     if op in ("exp", "ln", "log10", "atan", "tan", "sin", "cos"):
         u = args[0]
         du = derivative(u, name)
@@ -1026,7 +1043,8 @@ def _lin(node, unknowns):
             for k, v in _lin(a, unknowns).items():
                 out[k] = _add(out[k], v) if k in out else v
         return out
-    if op == "sqrt" or op in ("exp", "ln", "log10", "atan", "tan", "sin", "cos", "pow", "min", "max"):
+    import zseries as _ZS
+    if op == "sqrt" or op in ("exp", "ln", "log10", "atan", "tan", "sin", "cos", "pow", "min", "max") or _ZS.is_series(op):
         if _names(node) & unknowns:
             raise SystemError_(f"an unknown inside {op}(...): not a linear system")
         return {1: node}

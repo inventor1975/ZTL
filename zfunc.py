@@ -608,4 +608,13 @@ def iv_ifpos_d(x, a, b):
 UNARY = {"exp": iv_exp, "ln": iv_ln, "log10": iv_log10, "atan": iv_atan, "tan": iv_tan, "sin": iv_sin, "cos": iv_cos}
 BINARY = {"pow": iv_pow, "min": iv_min, "max": iv_max}
 TERNARY = {"ifpos": iv_ifpos, "ifpos_d": iv_ifpos_d}
+# BESSEL AND KELVIN (2026-11-09, zseries): besselj0 besselj1 ber bei berp beip and their derivatives to order 8,
+# each a proved bracket from its alternating series (zseries.py; no Lean witnesses yet, said there).
+import zseries as _ZS                                                               # noqa: E402
+for _b in _ZS.FAMILIES:
+    for _n in range(9):
+        _nm = _b if _n == 0 else f"{_b}_d{_n}"
+        UNARY[_nm] = _ZS.unary(_nm)
+for _a in _ZS.ALIASES:
+    UNARY[_a] = _ZS.unary(_a)
 FUNC_OPS = set(UNARY) | set(BINARY) | set(TERNARY)

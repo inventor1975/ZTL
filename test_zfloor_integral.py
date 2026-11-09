@@ -61,7 +61,11 @@ try:
     _parse_arith("integral(integral(y, y, 0, x), x, 0, 1)", {})
     check(False, "a nested integral should be refused")
 except ValueError as e:
-    check("inside an integrand" in str(e), "an integral inside an integrand is refused (name it as its own row)")
+    check("limits move with" in str(e), "a nested integral whose inner LIMITS move with the outer variable is refused "
+          "(Leibniz's boundary terms not read; since 2026-11-09 constant inner limits are read)")
+check(disp("integral(integral(s*u, s, 0, 1), u, 0, 1) >= 0.2499") == "EARNED"
+      and disp("integral(integral(s*u, s, 0, 1), u, 0, 1) >= 0.2501") == "REFUTED",
+      "a nested integral with constant inner limits (2026-11-09): ∫∫ s·u = 1/4 — both sides")
 check(disp("integral(1/x, x, 0 - 1, 1) > 0") == "OPEN", "1/x across 0: no certificate — the mark, never a guess")
 
 print("5. units: f's unit times x's")

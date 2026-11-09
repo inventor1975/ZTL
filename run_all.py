@@ -171,6 +171,8 @@ STANDS = [
     ("test_zlin.py", ["ZLIN GREEN"]),
     ("zenergy.py", ["ZENERGY GREEN", "bit-identical to the Fraction reference", "batch path:", "pd_ieee_float:", "certify_cases:", "certify_general (second order", "mutation caught", "floating path: 15 random systems", "agrees with the exact interval one 4/4"]),     # 2026-10-31: energy-norm bound, PSD-sum stiffness
     ("test_zintegral.py", ["ZINTEGRAL GREEN"]),
+    ("test_zseries.py", ["ZSERIES GREEN", "interval enclosures (31 samples each), misses 0",
+                         "the other side: >= 0.167 not earned", "moving inner limits: refused, said"]),
     ("test_zfloor_integral.py", ["ZFLOOR INTEGRAL GREEN"]),
     ("test_zsuperpose.py", ["ZSUPERPOSE GREEN"]),
     ("test_zfunc.py", ["ZFUNC GREEN"]),

@@ -193,6 +193,15 @@ def _split_top(inner):
     return parts
 
 
+def _inner_integrals(e):
+    """Every integral node inside e (not into an integrand — those are the inner node's own business)."""
+    if not isinstance(e, tuple) or not e:
+        return []
+    if e[0] == "integral":
+        return [e] + [n for a in e[2:] for n in _inner_integrals(a)]
+    return [n for a in (e[1] if e[0] == "sum" else e[1:]) for n in _inner_integrals(a)]
+
+
 def _holds_integral(e):
     return isinstance(e, tuple) and bool(e) and (e[0] == "integral" or any(
         _holds_integral(a) for a in (e[1] if e[0] == "sum" else e[1:])))
@@ -260,9 +269,14 @@ def _parse_arith(s, quantities):
         for k, v in q2.items():                 # interval literals inside f join the sheet as usual
             if k != x and k not in quantities:
                 quantities[k] = v
-        if _holds_integral(f):
-            raise ValueError("integral: an integral inside an integrand is not read (yet) — name the inner one "
-                             "as a row of its own")
+        # A NESTED integral (2026-11-09): read when every inner integral's LIMITS are free of this variable — on an
+        # outer piece the inner one is read with x as a parameter of the box (zintegral reads parameters already),
+        # and its derivative in x is the integral of the derivative (zcertify.derivative). Limits that move with x
+        # (Leibniz's boundary terms) are not read yet.
+        for inner in _inner_integrals(f):
+            if x in names_in(inner[2]) or x in names_in(inner[3]):
+                raise ValueError(f"integral: an inner integral whose limits move with {x!r} is not read (yet) — "
+                                 f"its limits must be free of the outer variable")
         a = _parse_arith(parts[2], quantities)
         b = _parse_arith(parts[3], quantities)
         params = tuple(sorted(n for n in names_in(f) if n != x and n in quantities))
@@ -272,7 +286,7 @@ def _parse_arith(s, quantities):
         if "_pi" not in quantities:
             quantities["_pi"] = qty(_zfunc.PI[0], _zfunc.PI[1], EARNED, "zfunc.PI: a proved bracket of pi")
         return "_pi"
-    m = re.match(r"^(exp|ln|log10|atan|tan|sin|cos|pow|min|max|ifpos_d|ifpos)\(", s)
+    m = re.match(r"^(exp|ln|log10|atan|tan|sin|cos|pow|min|max|ifpos_d|ifpos|besselj0|besselj1|berp|beip|ber|bei)\(", s)
     if m and s.endswith(")") and _closes_last(s, len(m.group(1))):
         inner = s[len(m.group(1)) + 1:-1]
         parts, depth, start = [], 0, 0

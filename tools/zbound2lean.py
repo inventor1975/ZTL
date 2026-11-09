@@ -773,6 +773,33 @@ theorem lawreq{i} (y : Nat → RExpr) (hy : InBox rCF B y) (hl : ∀ r, List.Mem
     return ("theorem" if ok else ("kernel limit" if limit else "refused")), path, out[:600], trees
 
 
+def _posden(sol, qs, pinned):
+    """Each solution u = N/D with a POSITIVE denominator (2026-11-09, ztl-stand real4/k06: Cramer's det was −1, the
+    solutions sat inside a larger target, and `posOK` — which asks every denominator > 0 on the box — refused them;
+    only a top-level quotient had its signs turned). A constant D folds into a factor 1/D; else, negative at the
+    box's middle (floats, a search aid — the kernel's posOK decides), both signs turned."""
+    out = {}
+    for u, nd in sol.items():
+        if isinstance(nd, tuple) and nd[0] == "div":
+            Nn, Dn = nd[1], _subst(nd[2], pinned)
+            rd = _rat(Dn, {})
+            if rd is not None and rd[1] and set(rd[0]) <= {()} and set(rd[1]) <= {()}:
+                dval = rd[0].get((), F(0)) / rd[1][()]
+                if dval != 0:
+                    out[u] = ("mul", Nn, F(1) / dval)
+                    continue
+            try:
+                env = {n: float((F(q["lo"]) + F(q["hi"])) / 2) for n, q in qs.items()
+                       if not isinstance(q["lo"], float) and not isinstance(q["hi"], float)}
+                if K.fl(Dn, env) < 0:
+                    out[u] = ("div", ("sub", F(0), Nn), ("sub", F(0), Dn))
+                    continue
+            except Exception:
+                pass
+        out[u] = nd
+    return out
+
+
 def _box_lean(params, box):
     """`fun i => cond (Nat.beq i 0) (some (lo, hi)) (cond ... none)`."""
     body = "none"
@@ -830,6 +857,7 @@ def _bound_to_lean(laws, unknowns, qtext, target, reqs, name, depth=14, trees=No
             sol = ZC.solve_system(laws, unknowns, qs)
     except Exception as ex:
         return {"status": "not translated", "why": f"not a linear square system: {ex}"}
+    sol = _posden(sol, qs, pinned)
     if laws_mode and target not in sol and laws:
         ex = _expr_on_laws(laws, unknowns, qs, pinned, target, reqs, name, depth)
         if ex is not None:

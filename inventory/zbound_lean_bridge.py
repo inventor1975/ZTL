@@ -96,6 +96,10 @@ with ProcessPoolExecutor(max_workers=max(2, min(16, (os.cpu_count() or 4) // 2))
                                   ["0", "0.06"], [(">=", "0.0222"), ("<=", "0.0266")], "ZImplSide")
     _F["ZImplSideB"] = pool.submit(ZB.implicit_bound_to_lean, [], [], _FQ, "Q", "Q", "pmax*(1 - Q/Qmax) - K*Q*Q",
                                    ["0", "0.06"], [(">=", "0.023")], "ZImplSideB")
+    # the laws in the order Hb, Ha — the unknowns sorted Ha, Hb: a permuted matrix, Cramer's det = −1 (real4/k06)
+    _F["ZGenNegDet"] = pool.submit(ZB.bound_to_lean, ["Hb == a + b", "Ha == c*c/(2*g)"], ["Ha", "Hb"],
+                                   "a=[1,2] credit, b=[3,4] credit, c=[1,2] credit, g=9.81 credit, Ha=? credit, Hb=? credit",
+                                   "pow(Ha + Hb, 1.5)", [("<=", "20")], "ZGenNegDet")
     R = {k: f.result() for k, f in _F.items()}
 
 ok = fail = 0
@@ -214,6 +218,10 @@ check("the ROOT's own side from the law's sign (ZBoundPar.root_ge / root_le): 0.
       sd["status"] == "theorem" and sd.get("root_side"), sd)
 check("the other side: Q >= 0.023 (the root goes down to ~0.02228) — no theorem", R["ZImplSideB"]["status"] != "theorem",
       R["ZImplSideB"])
+nd2 = R["ZGenNegDet"]
+check("solutions inside a larger, non-rational target (pow(H1 + H2, 1.5) <= 20; Cramer's det is a negative "
+      "constant): the denominators made positive (_posden) — a theorem, not a false 'posOK' refusal (real4/k06)",
+      nd2["status"] == "theorem", nd2)
 print(f"\n{ok} ok, {fail} fail")
 print("ZBOUND LEAN BRIDGE GREEN" if fail == 0 else "ZBOUND LEAN BRIDGE RED")
 sys.exit(1 if fail else 0)

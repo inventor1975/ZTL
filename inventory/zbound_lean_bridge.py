@@ -100,6 +100,13 @@ with ProcessPoolExecutor(max_workers=max(2, min(16, (os.cpu_count() or 4) // 2))
     _F["ZGenNegDet"] = pool.submit(ZB.bound_to_lean, ["Hb == a + b", "Ha == c*c/(2*g)"], ["Ha", "Hb"],
                                    "a=[1,2] credit, b=[3,4] credit, c=[1,2] credit, g=9.81 credit, Ha=? credit, Hb=? credit",
                                    "pow(Ha + Hb, 1.5)", [("<=", "20")], "ZGenNegDet")
+    # A TABLE whose condition is NONLINEAR in two variables (ztl-stand tasks/t22, Euler / Johnson): branch by branch
+    _BRQ = "S=[300,400] credit, K=[0.6,1.2] credit"
+    _BRX = "ifpos(S*K*K/400 - 1, S/(2*(S*K*K/400)), S*(1 - (S*K*K/400)/2))"
+    _F["ZGenBranch"] = pool.submit(ZB.bound_to_lean, [], [], _BRQ, _BRX, [(">=", "138")], "ZGenBranch")
+    _F["ZGenBranchB"] = pool.submit(ZB.bound_to_lean, [], [], _BRQ, _BRX, [(">=", "145")], "ZGenBranchB")
+    _F["ZGenBranchNest"] = pool.submit(ZB.bound_to_lean, [], [], "z=[0.5,1.5] credit, F=[1,4] credit",
+                                       "ifpos(F - ifpos(z - 1, 2, 3), F, 2*F)", [(">=", "1.9")], "ZGenBranchNest")
     R = {k: f.result() for k, f in _F.items()}
 
 ok = fail = 0
@@ -222,6 +229,31 @@ nd2 = R["ZGenNegDet"]
 check("solutions inside a larger, non-rational target (pow(H1 + H2, 1.5) <= 20; Cramer's det is a negative "
       "constant): the denominators made positive (_posden) — a theorem, not a false 'posOK' refusal (real4/k06)",
       nd2["status"] == "theorem", nd2)
+print("15. a TABLE with a NONLINEAR condition, branch by branch (ZBoundIf: proved or excluded on each piece)")
+br = R["ZGenBranch"]
+# x = S·K²/400 in [0.27, 1.44] straddles 1: Johnson S(1 − x/2) >= 150 where x <= 1, Euler S/(2x) = 200/K² >= 138.9
+check("σ = ifpos(x − 1, Euler, Johnson) >= 138, x = S·K²/400 across its switch: a theorem per branch, their "
+      "conjunction req0", br["status"] == "theorem" and br.get("about") == "branches" and br.get("branches") == 2, br)
+trs = " ".join((br.get("trees") or {}).values())
+check("  the trees both PROVE and EXCLUDE (cut, bd and ex nodes all present — not a box decided at once)",
+      ".cut" in trs and ".bd" in trs and ".ex" in trs, trs[:300])
+check("the other side: >= 145 (Euler reaches 138.9) — no theorem", R["ZGenBranchB"]["status"] != "theorem",
+      R["ZGenBranchB"])
+if br.get("file"):
+    src = open(br["file"], encoding="utf-8").read()
+    mut = src.replace("namespace ZGenBranch", "namespace ZGenBranchMut").replace("end ZGenBranch", "end ZGenBranchMut")
+    mut = mut.replace("ZGenBranch.", "ZGenBranchMut.")
+    i = mut.index("def C0 : List (Bool × XE) := [(true,")
+    mut = mut[:i] + mut[i:].replace("[(true,", "[(false,", 1)
+    mo = ZB._run(mut, os.path.join(ZB.LEAN, "gen", "ZGenBranchMut.lean"))
+    check("SABOTAGE: branch 0's condition turned (x − 1 > 0 read as <= 0), the same trees — the kernel refuses",
+          "error" in mo and ("decide" in mo or "proved that the proposition" in mo), mo[:300])
+nb = R["ZGenBranchNest"]
+check("a table IN a condition (ztl-stand real1/r04: F > table(z)): the condition's branches first — 4 branches, a "
+      "theorem", nb["status"] == "theorem" and nb.get("branches") == 4, nb)
+tb = ZB._ifpos_flat(("add", ("ifpos", ("sub", "z", 1), 2, 3), ("ifpos", ("sub", "z", 1), 5, 7)))
+check("the same table read twice: 2 branches, not 4 (contradictory conditions pruned — z > 1 with z <= 1)",
+      tb is not None and len(tb) == 2, tb)
 print(f"\n{ok} ok, {fail} fail")
 print("ZBOUND LEAN BRIDGE GREEN" if fail == 0 else "ZBOUND LEAN BRIDGE RED")
 sys.exit(1 if fail else 0)

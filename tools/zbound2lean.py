@@ -24,7 +24,12 @@ parameter vector in the box:
      (`identX`: ZPoly's normal forms agree) — a datum shared by N and D keeps its factor (ztl-stand tasks/t5);
   4. ZBound.findV (Lean, compiled `#eval`) PROPOSES a cover tree — monotone leaves, interval leaves, cuts — printed
      and pasted as a literal; the kernel checks only `chkV` (`decide +kernel`) and `bound_vrM` gives the theorem;
-  5. a NEGATIVE CONTROL: the same tree against a bound tightened past the attained value must be refused.
+  5. a NEGATIVE CONTROL: the same tree against a bound tightened past the attained value must be refused;
+  6. a TABLE (`ifpos`) not read as hinges (a condition nonlinear or in several variables — Euler / Johnson; a table
+     inside a condition — a bearing's e): BRANCH BY BRANCH (2026-11-09, `_ifpos_lean`, lean/ZBoundIf.lean) — for
+     each branch its conditions → the bound on its expression, `req{k}` their conjunction; the kernel's tree proves
+     each piece or EXCLUDES it by a condition contradicted on it. Branches whose one-variable thresholds contradict
+     each other are pruned (the same table read twice); more than MAX_BRANCHES — not translated (a sum of tables).
 
 Status: "theorem" (the kernel accepted), "no tree" (the search found none within its depth), "refused" (the kernel
 did not accept), "kernel limit" (recursion / time limit inside the check — not a verdict), "not translated" (not a linear system, or a function ZXE lacks).
@@ -161,6 +166,188 @@ def _ifpos2hinge(node):
         if q:
             out = ("add", out, ("mul", ("max", ("sub", names[t], tj), F(0)), _pnode(q, names)))
     return out
+
+
+MAX_BRANCHES = 64
+
+
+def _guard_side(g):
+    """(variable, threshold, upper?) when the condition `g > 0` reads `v > t` (upper False) or `v < t` (upper True)
+    — g affine in ONE variable; else None. For pruning only: a dropped branch is one no point can take."""
+    names = sorted(_names(g, set()))
+    if len(names) != 1:
+        return None
+    rc = _rat(g, {names[0]: 0})
+    if rc is None or len(rc[1]) != 1 or (0,) not in rc[1] and () not in rc[1]:
+        return None
+    den = list(rc[1].values())[0]
+    if set(rc[0]) - {(0,), (1,), ()}:
+        return None
+    a = rc[0].get((1,), F(0)) / den
+    b = (rc[0].get((0,), F(0)) + rc[0].get((), F(0))) / den
+    if a == 0:
+        return None
+    return names[0], -b / a, a < 0
+
+
+def _prune(gs):
+    """The branch's conditions without repeats; None when two of them exclude each other (thresholds on one
+    variable: v > 1 and v <= 1; v > 3 and v <= 2) — the same table read twice multiplies only on paper."""
+    seen, out, iv = set(), [], {}
+    for s, g in gs:
+        key = repr(g)
+        if (not s, key) in seen:
+            return None
+        if (s, key) in seen:
+            continue
+        seen.add((s, key))
+        out.append((s, g))
+        side = _guard_side(g)
+        if side is None:
+            continue
+        v, th, upper = side
+        # g > 0 (s) is v > th, or v < th when upper; g <= 0 the opposite, non-strict
+        lo, hi = iv.get(v, ((None, False), (None, False)))
+        if s != upper:              # v > th (strict when s) — a lower end
+            if lo[0] is None or th > lo[0] or (th == lo[0] and s):
+                lo = (th, s)
+        else:                       # v < th (strict when s) — an upper end
+            if hi[0] is None or th < hi[0] or (th == hi[0] and s):
+                hi = (th, s)
+        iv[v] = (lo, hi)
+        if lo[0] is not None and hi[0] is not None and (lo[0] > hi[0] or (lo[0] == hi[0] and (lo[1] or hi[1]))):
+            return None
+    return out
+
+
+def _ifpos_flat(node):
+    """A table's BRANCHES: [(conditions, expression)] — conditions [(True, g) for g > 0 | (False, g) for g <= 0],
+    the expression with every `ifpos` decided (2026-11-09, ZBoundIf). None: more than MAX_BRANCHES branches (a sum
+    of tables multiplies them: ztl-stand tasks/t23, 25 power curves, is out of reach this way). `ifpos_d(a, b, x, y)` is `ifpos(a − b, x, y)`."""
+    if not isinstance(node, tuple):
+        return [([], node)]
+    if node[0] == "ifpos_d":
+        node = ("ifpos", ("sub", node[1], node[2]), node[3], node[4])
+    if node[0] == "ifpos":
+        # a table IN the condition (ztl-stand real1/r04: the bearing's e looked up from a table, then Fa/Fr > e):
+        # the condition's own branches first, each a condition of its own
+        cs, a, b = _ifpos_flat(node[1]), _ifpos_flat(node[2]), _ifpos_flat(node[3])
+        if cs is None or a is None or b is None:
+            return None
+        out = []
+        for gc, ce in cs:
+            for s, side in ((True, a), (False, b)):
+                for g, e in side:
+                    pg = _prune(gc + [(s, ce)] + g)
+                    if pg is not None:
+                        out.append((pg, e))
+                    if len(out) > MAX_BRANCHES:
+                        return None
+        return out
+    kids = node[1] if node[0] == "sum" else list(node[1:])
+    flats = []
+    for k in kids:
+        f = _ifpos_flat(k)
+        if f is None:
+            return None
+        flats.append(f)
+    out = []
+    for combo in itertools.product(*flats):
+        gs = _prune([g for c in combo for g in c[0]])
+        if gs is None:
+            continue
+        es = [c[1] for c in combo]
+        out.append((gs, ("sum", es) if node[0] == "sum" else (node[0], *es)))
+        if len(out) > MAX_BRANCHES:
+            return None
+    return out
+
+
+def _ifpos_lean(node, qs, reqs, name, depth):
+    """A requirement on a TABLE, branch by branch (ZBoundIf): for every point of the box and each branch, the
+    branch's conditions → the bound on its expression; `req{k}` is their conjunction. The expression read in its own
+    shape over a dyadic box (no clearing: XE's division, posOK checked on every bound leaf)."""
+    br = _ifpos_flat(node)
+    if br is None:
+        return {"status": "not translated", "why": f"a table of more than {MAX_BRANCHES} branches"}
+    params = sorted(n for n in _names(node, set()) if n in qs)
+    for n in params:
+        if isinstance(qs[n]["lo"], float) or isinstance(qs[n]["hi"], float):
+            return {"status": "not translated", "why": f"{n} is unbounded"}
+    idx = {n: i for i, n in enumerate(params)}
+    box = {n: (_dy_out(qs[n]["lo"], False), _dy_out(qs[n]["hi"], True)) for n in params}
+    try:
+        bx = [(Z.to_xe(e, idx), [(s, Z.to_xe(g, idx)) for s, g in gs]) for gs, e in br]
+    except ValueError as ex:
+        return {"status": "not translated", "why": str(ex)}
+    vs = "[" + ", ".join(str(i) for i in range(len(params))) + "]"
+    head = f"""import ZBoundIf
+open VR VR.Numbers ZNumBin ZField ZPoly ZIv ZXE ZRealCF ZRootDiv ZBound ZBoundIf
+set_option maxRecDepth 100000
+namespace {name}
+def B : Box := {_box_lean(params, box)}
+"""
+    for j, (xe, gs) in enumerate(bx):
+        head += (f"def Q{j} : XE := {xe}\n"
+                 f"def C{j} : List (Bool × XE) := [{', '.join(f'({str(s).lower()}, {g})' for s, g in gs)}]\n")
+    forms = []
+    for k, (op, c) in enumerate(reqs):
+        c = F(c)
+        p, r = c.numerator, c.denominator
+        for j in range(len(bx)):
+            form = (f"(.sub {Z.cst(p)} (.mul {Z.cst(r)} Q{j}))" if op == "<=" else
+                    f"(.sub (.mul {Z.cst(r)} Q{j}) {Z.cst(p)})")
+            forms.append((k, j, op, c, form))
+    probe = head + "".join(
+        f'def F{j}_{k} : XE := {form}\n#eval IO.println (match findG true F{j}_{k} {Z.dy(0)} {vs} C{j} {depth} B with '
+        f'| some t => "TREE{j}_{k} " ++ t.txt | none => "NOTREE{j}_{k}")\n'
+        for k, j, _, _, form in forms) + f"end {name}\n"
+    gen = os.path.join(LEAN, "gen"); os.makedirs(gen, exist_ok=True)
+    out = _run(probe, os.path.join(gen, name + "_probe.lean"))
+    trees = {}
+    for k, j, op, c, _ in forms:
+        m = re.search(rf"^TREE{j}_{k} (.*)$", out, re.M)
+        if not m:
+            return {"status": "no tree", "why": f"requirement {op} {c}, branch {j} "
+                                                f"({' ∧ '.join(('>' if s else '<=') + ' 0' for s, _ in br[j][0])}): "
+                                                f"no tree within depth {depth}", "out": out[:400]}
+        trees[(j, k)] = m.group(1)
+    body = head
+    for k, j, op, c, form in forms:
+        p, r = c.numerator, c.denominator
+        R, P = f"(evR x (XE.cst {Z.dy(r)}))", f"(evR x (XE.cst {Z.dy(p)}))"
+        stmt = (f"rCF.le (rCF.mul {R} (evR x Q{j})) {P}" if op == "<=" else f"rCF.le {P} (rCF.mul {R} (evR x Q{j}))")
+        body += f"""def F{j}_{k} : XE := {form}
+def T{j}_{k} : GT := {trees[(j, k)]}
+theorem bcl{j}_{k} : ∀ x : Nat → RExpr, InBox rCF B x → AllG x C{j} → rCF.le (dv rOH {Z.dy(0)}) (evR x F{j}_{k}) :=
+  bound_if (lo := true) (vs := {vs}) (gs := C{j}) (T := T{j}_{k}) (by decide +kernel)
+/-- **Branch {j}** of the table: its conditions → `q {op} {p}/{r}`. -/
+theorem breq{j}_{k} (x : Nat → RExpr) (hx : InBox rCF B x) (hg : AllG x C{j}) : {stmt} :=
+  le_of_sub_nonneg (rCF.le_respects (zv_isZ rOH (c := {Z.dy(0)}) rfl) (rCF.refl _) (bcl{j}_{k} x hx hg))
+"""
+    for k, (op, c) in enumerate(reqs):
+        c = F(c)
+        p, r = c.numerator, c.denominator
+        R, P = f"(evR x (XE.cst {Z.dy(r)}))", f"(evR x (XE.cst {Z.dy(p)}))"
+        conj = " ∧\n    ".join(f"(AllG x C{j} → " + (f"rCF.le (rCF.mul {R} (evR x Q{j})) {P})" if op == "<=" else
+                                                    f"rCF.le {P} (rCF.mul {R} (evR x Q{j})))")
+                                for j in range(len(bx)))
+        body += f"""/-- **The requirement on the table** `q {op} {p}/{r}`: at every point of the box, whichever branch applies. -/
+theorem req{k} (x : Nat → RExpr) (hx : InBox rCF B x) :
+    {conj} :=
+  {"⟨" + ", ".join(f"breq{j}_{k} x hx" for j in range(len(bx))) + "⟩" if len(bx) > 1 else f"breq0_{k} x hx"}
+"""
+    names = ([f"{name}.req{k}" for k in range(len(reqs))] +
+             [f"{name}.breq{j}_{k}" for k, j, *_ in forms] + [f"{name}.bcl{j}_{k}" for k, j, *_ in forms])
+    body += f"end {name}\n" + "".join(f"#print axioms {n}\n" for n in names)
+    path = os.path.join(gen, name + ".lean")
+    out = _run(body, path)
+    ok = "error" not in out and out.count("does not depend on any axioms") == len(names)
+    limit = any(w in out for w in ("maximum recursion depth", "deterministic timeout", "heartbeats", "Stack overflow"))
+    return {"status": "theorem" if ok else ("kernel limit" if limit else "refused"), "file": path, "params": params,
+            "box": box, "quotient": False, "trees": {f"{j}_{k}": v for (j, k), v in trees.items()}, "out": out[:600],
+            "scale": None, "about": "branches", "theorems": names, "branches": len(bx),
+            "conditions": [[("> 0" if s else "<= 0", repr(g)) for s, g in gs] for gs, _ in br]}
 
 
 def _names(node, acc):
@@ -874,6 +1061,10 @@ def _bound_to_lean(laws, unknowns, qtext, target, reqs, name, depth=14, trees=No
         except Exception as ex:
             return {"status": "not translated", "why": f"the target {target!r}: {ex}"}
     node = _ifpos2hinge(_sqrt2exp(_subst(node, pinned)))
+    if _ifpos_nodes(node, []) or "ifpos_d" in repr(node):
+        if trees is not None:
+            return {"status": "not translated", "why": "given trees and a table"}
+        return _ifpos_lean(node, {n: q for n, q in qs.items() if n not in pinned}, reqs, name, depth)
     params = sorted(n for n in _names(node, set()) if n in qs and n not in pinned)
     for n in params:
         if isinstance(qs[n]["lo"], float) or isinstance(qs[n]["hi"], float):

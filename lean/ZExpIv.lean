@@ -251,9 +251,34 @@ theorem mem_lnC (Lb Ub : D) {x v : α} {I K : Iv} (hx : Mem S x I) (hv : S.r (ex
               have hv2 := S.le_respects (S.symm hv) (S.refl _) hx.2
               exact ⟨ex_reflect H (S.le_trans mA.2 (S.le_trans c1 hv1)), ex_reflect H (S.le_trans hv2 (S.le_trans c2 mB.1))⟩
 
-def ivLn (I : Iv) : Option Iv := ivLnC (dadd (lnGuess I.1) (dneg tiny)) (dadd (lnGuess I.2) tiny) I
+def tiny20 : D := ⟨⟨1, 0⟩, 20⟩
+def tiny8 : D := ⟨⟨1, 0⟩, 8⟩
 
-theorem mem_ln {x v : α} {I K : Iv} (hx : Mem S x I) (hv : S.r (ex v) x) (h : ivLn I = some K) : Mem S v K :=
-  mem_lnC S H _ _ hx hv h
+/-- `ln` on `[l, h]`: the candidates `lnGuess ∓ 2⁻⁴⁰` first; when the check refuses them, `∓ 2⁻²⁰`, then `∓ 2⁻⁸`
+(2026-11-09, ztl-stand blind7/c08: ln of `P² ≈ 1.6·10¹¹`, P in watts, was NONE — Newton's guess there is off by more
+than 2⁻⁴⁰, its `x·e^(−c)` step carrying `e^(−c)`'s absolute error times `x`; MEASURED: ln 1e6 read, ln 1e9 none).
+Every candidate is still CHECKED by `ivLnC` (`e^Lb ≤ l`, `h ≤ e^Ub`); where the first one passed, nothing changes. -/
+def ivLn (I : Iv) : Option Iv :=
+  match ivLnC (dadd (lnGuess I.1) (dneg tiny)) (dadd (lnGuess I.2) tiny) I with
+  | some K => some K
+  | none => match ivLnC (dadd (lnGuess I.1) (dneg tiny20)) (dadd (lnGuess I.2) tiny20) I with
+    | some K => some K
+    | none => ivLnC (dadd (lnGuess I.1) (dneg tiny8)) (dadd (lnGuess I.2) tiny8) I
+
+theorem mem_ln {x v : α} {I K : Iv} (hx : Mem S x I) (hv : S.r (ex v) x) (h : ivLn I = some K) : Mem S v K := by
+  unfold ivLn at h
+  cases h1 : ivLnC (dadd (lnGuess I.1) (dneg tiny)) (dadd (lnGuess I.2) tiny) I with
+  | some K1 =>
+    rw [h1] at h; cases h
+    exact mem_lnC S H _ _ hx hv h1
+  | none =>
+    rw [h1] at h
+    cases h2 : ivLnC (dadd (lnGuess I.1) (dneg tiny20)) (dadd (lnGuess I.2) tiny20) I with
+    | some K2 =>
+      rw [h2] at h; cases h
+      exact mem_lnC S H _ _ hx hv h2
+    | none =>
+      rw [h2] at h
+      exact mem_lnC S H _ _ hx hv h
 
 end ZExpIv

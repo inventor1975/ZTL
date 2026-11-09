@@ -600,6 +600,11 @@ STANDS = [
     # a category that already existed. Pinned so the classification
     # cannot drift silently.
     ("dilemmas/avenger.py", ["AVENGER STAND GREEN"]),
+    # 2026-11-09, the curator: "парадоксы какие нибудь новые" — three a scout picked outside the corpus
+    ("dilemmas/knower.py", ["KNOWER GREEN", "designated markings: 0 of 9",
+                            "d=Z kd=Z: EARNED IF STABLE"]),
+    ("dilemmas/newcomb.py", ["NEWCOMB GREEN", "zero at p* = 1001/2000", "ev = Z: OPEN, the check named: ['ev']"]),
+    ("dilemmas/raven.py", ["RAVEN GREEN", "r=T b=Z:  raven->black OPEN        non-black->non-raven ON CREDIT"]),
     ("dilemmas/moore.py", ["MOORE GREEN",
                            "'it is raining but I do not believe it'  : 1 of 9",
                            "'raining, and I do not believe it', asserted: 0 of 9",

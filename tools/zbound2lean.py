@@ -29,7 +29,12 @@ parameter vector in the box:
      inside a condition — a bearing's e): BRANCH BY BRANCH (2026-11-09, `_ifpos_lean`, lean/ZBoundIf.lean) — for
      each branch its conditions → the bound on its expression, `req{k}` their conjunction; the kernel's tree proves
      each piece or EXCLUDES it by a condition contradicted on it. Branches whose one-variable thresholds contradict
-     each other are pruned (the same table read twice); more than MAX_BRANCHES — not translated (a sum of tables).
+     each other are pruned (the same table read twice);
+  7. MANY TABLES (more than MAX_BRANCHES branches — a sum of 25 power curves, ztl-stand tasks/t23): each table's
+     value a VARIABLE with a range [L, U] proved on every branch of that table, the expression in those variables
+     bounded over the box extended by the ranges (`_tables_lean`, ZBoundIf.bound_tabs). Said: the tables' dependence
+     on one another is not used. The searches run PRECOMPILED (`lake lean`, lakefile precompileModules) — the
+     interpreter was ~200× slower on them.
 
 Status: "theorem" (the kernel accepted), "no tree" (the search found none within its depth), "refused" (the kernel
 did not accept), "kernel limit" (recursion / time limit inside the check — not a verdict), "not translated" (not a linear system, or a function ZXE lacks).
@@ -268,8 +273,8 @@ def _ifpos_lean(node, qs, reqs, name, depth):
     branch's conditions → the bound on its expression; `req{k}` is their conjunction. The expression read in its own
     shape over a dyadic box (no clearing: XE's division, posOK checked on every bound leaf)."""
     br = _ifpos_flat(node)
-    if br is None:
-        return {"status": "not translated", "why": f"a table of more than {MAX_BRANCHES} branches"}
+    if br is None:                      # too many branches to list (a sum of tables): each table a variable
+        return _tables_lean(node, qs, reqs, name, depth)
     params = sorted(n for n in _names(node, set()) if n in qs)
     for n in params:
         if isinstance(qs[n]["lo"], float) or isinstance(qs[n]["hi"], float):
@@ -350,6 +355,194 @@ theorem req{k} (x : Nat → RExpr) (hx : InBox rCF B x) :
             "conditions": [[("> 0" if s else "<= 0", repr(g)) for s, g in gs] for gs, _ in br]}
 
 
+def _tables_out(node, tabs):
+    """`node` with each TABLE (a maximal ifpos subtree) replaced by a variable `__u{h}`; equal tables share one."""
+    if not isinstance(node, tuple):
+        return node
+    if node[0] in ("ifpos", "ifpos_d"):
+        key = repr(node)
+        if key not in tabs:
+            tabs[key] = (len(tabs), node)
+        return f"__u{tabs[key][0]}"
+    if node[0] == "sum":
+        return ("sum", [_tables_out(a, tabs) for a in node[1]])
+    return (node[0], *[_tables_out(a, tabs) for a in node[1:]])
+
+
+def _branch_val(br, env):
+    """A table's value at a point (floats, the search only): the branch whose conditions hold."""
+    for gs, e in br:
+        if all((K.fl(g, env) > 0) == s for s, g in gs):
+            return K.fl(e, env)
+    return None
+
+
+def _tables_lean(node, qs, reqs, name, depth):
+    """MANY TABLES in one expression (ZBoundIf.bound_tabs; 2026-11-09, ztl-stand tasks/t23 — 25 power curves, 2²⁵
+    branches): each table's value a variable with a range [L, U] proved on every branch of that table; the
+    expression in those variables bounded over the box extended by the ranges. The tables' mutual dependence is not
+    used (said in `about`). L, U: the sampled range widened by a relative margin (floats propose; the kernel checks),
+    widened ×10 and searched again when a branch finds no tree."""
+    import random
+    tabs = {}
+    outer = _tables_out(node, tabs)
+    tl = sorted(tabs.values())
+    brs = []
+    for h, tnode in tl:
+        br = _ifpos_flat(tnode)
+        if br is None:
+            return {"status": "not translated", "why": f"table {h}: more than {MAX_BRANCHES} branches"}
+        brs.append(br)
+    params = sorted(n for n in _names(node, set()) if n in qs)
+    for n in params:
+        if isinstance(qs[n]["lo"], float) or isinstance(qs[n]["hi"], float):
+            return {"status": "not translated", "why": f"{n} is unbounded"}
+    m = len(params)
+    idx = {n: i for i, n in enumerate(params)}
+    uidx = dict(idx, **{f"__u{h}": m + h for h, _ in tl})
+    box = {n: (_dy_out(qs[n]["lo"], False), _dy_out(qs[n]["hi"], True)) for n in params}
+    rnd = random.Random(20261109)
+    pts = [dict(zip(params, c)) for c in itertools.product(*[(float(box[n][0]), float(box[n][1])) for n in params[:10]])]
+    for _ in range(300):
+        pts.append({n: float(box[n][0] + (box[n][1] - box[n][0]) * F(rnd.random())) for n in params})
+    for pt in pts:
+        for n in params[10:]:
+            pt.setdefault(n, float((box[n][0] + box[n][1]) / 2))
+    rng = []
+    for br in brs:
+        vals = [v for v in (_branch_val(br, pt) for pt in pts) if v is not None]
+        if not vals:
+            return {"status": "not translated", "why": "a table with no branch at the sampled points"}
+        rng.append((min(vals), max(vals)))
+    try:
+        bxe = [[(Z.to_xe(e, idx), [(s, Z.to_xe(g, idx)) for s, g in gs]) for gs, e in br] for br in brs]
+        xe_q = Z.to_xe(outer, uidx)
+    except ValueError as ex:
+        return {"status": "not translated", "why": str(ex)}
+    vsx = "[" + ", ".join(str(i) for i in range(m)) + "]"
+    vs = "[" + ", ".join(str(i) for i in range(m + len(tl))) + "]"
+    gen = os.path.join(LEAN, "gen"); os.makedirs(gen, exist_ok=True)
+    head0 = f"""import ZBoundIf
+open VR VR.Numbers ZNumBin ZField ZPoly ZIv ZXE ZRealCF ZRootDiv ZBound ZBoundIf
+set_option maxRecDepth 100000
+namespace {name}
+def Bx : Box := {_box_lean(params, box)}
+def xQ : XE := {xe_q}
+"""
+    for h, bl in enumerate(bxe):
+        head0 += f"def bs{h} : List (List (Bool × XE) × XE) := [" + ", ".join(
+            "([" + ", ".join(f"({str(s).lower()}, {g})" for s, g in gs) + f"], {xe})" for xe, gs in bl) + "]\n"
+    # EACH SIDE ITS OWN MARGIN (2026-11-09, t23: a ramp meets its rated power at the branch boundary, so the UPPER
+    # end needed 1 % — widening both sides together moved the lower end by 1 % too and ate the requirement's whole
+    # 0.09 % margin). Widened ×10 per round, a side that fails searched again only on its own.
+    widen = {(h, s): F(1, 10 ** 5) for h in range(len(tl)) for s in ("true", "false")}
+    ends = {}
+    got = {}
+    out = ""
+    # WIDEN AT A SHALLOW DEPTH FIRST, then search deeper: a failing search costs its whole depth (MEASURED 2026-11-09,
+    # t23: a last round at depth 14 took 4.5 min of 7) — the margins 1e-5 … 1e-2 at depth 10, then 1e-1 at depth 14
+    for _round, dep in enumerate((10, 10, 10, 10, min(depth, 14))):
+        todo = [(h, s) for h in range(len(tl)) for s in ("true", "false") if (h, s) not in got]
+        if not todo:
+            break
+        lines = []
+        for h, side in todo:
+            lo, hi = rng[h]
+            sc = max(abs(lo), abs(hi), 1.0)
+            c = (_dy_out(F(lo) - widen[(h, side)] * F(sc), False) if side == "true" else
+                 _dy_out(F(hi) + widen[(h, side)] * F(sc), True))
+            ends[(h, side)] = c
+            for b in range(len(bxe[h])):
+                lines.append(f'#eval IO.println (match findG {side} (bs{h}.getD {b} ([], .cst {Z.dy(0)})).2 '
+                             f'{Z.dy(c)} {vsx} (bs{h}.getD {b} ([], .cst {Z.dy(0)})).1 {dep} Bx with '
+                             f'| some t => "TREE{h}_{b}_{side} " ++ t.txt | none => "NOTREE{h}_{b}_{side}")\n')
+        out = _run_split(head0, lines, f"end {name}\n", os.path.join(gen, name + "_probe.lean"))
+        for h, side in todo:
+            trs = [re.search(rf"^TREE{h}_{b}_{side} (.*)$", out, re.M) for b in range(len(bxe[h]))]
+            if all(trs):
+                got[(h, side)] = [mm.group(1) for mm in trs]
+            else:
+                widen[(h, side)] *= 10
+    bad = sorted({h for h in range(len(tl)) for s in ("true", "false") if (h, s) not in got})
+    if bad:
+        return {"status": "no tree", "why": f"table(s) {bad}: no range proved on every branch (widened to "
+                                            f"{float(max(widen.values())):g} of its scale)", "out": out[:400]}
+    LU = [(ends[(h, "true")], ends[(h, "false")]) for h in range(len(tl))]
+    trees = [list(zip(got[(h, "true")], got[(h, "false")])) for h in range(len(tl))]
+    head = head0
+    for h in range(len(tl)):
+        L, U = LU[h]
+        head += (f"def tb{h} : Tab := ⟨{m + h}, {Z.dy(L)}, {Z.dy(U)}, bs{h}, ["
+                 + ", ".join(f"({a}, {b})" for a, b in trees[h]) + "]⟩\n")
+    head += "def tabs : List Tab := [" + ", ".join(f"tb{h}" for h in range(len(tl))) + "]\n"
+    forms = []
+    for op, c in reqs:
+        c = F(c)
+        p, r = c.numerator, c.denominator
+        forms.append((op, c, f"(.sub {Z.cst(p)} (.mul {Z.cst(r)} xQ))" if op == "<=" else
+                      f"(.sub (.mul {Z.cst(r)} xQ) {Z.cst(p)})"))
+    def final(otr):
+        body = head + f"theorem tabs_ok : chkTabs {vsx} Bx tabs = true := by decide +kernel\n"
+        names = [f"{name}.tabs_ok"]
+        for k, (op, c, form) in enumerate(forms):
+            p, r = c.numerator, c.denominator
+            R, P = f"(evR y (XE.cst {Z.dy(r)}))", f"(evR y (XE.cst {Z.dy(p)}))"
+            stmt = (f"rCF.le (rCF.mul {R} (evR y xQ)) {P}" if op == "<=" else f"rCF.le {P} (rCF.mul {R} (evR y xQ))")
+            body += f"""def F{k} : XE := {form}
+def T{k} : VT := {otr[k]}
+theorem cleared{k} : ∀ y : Nat → RExpr, InBox rCF Bx y → AllTab y tabs → rCF.le (dv rOH {Z.dy(0)}) (evR y F{k}) :=
+  bound_tabs (lo := true) (vs := {vs}) (vsx := {vsx}) (T := T{k}) (by decide +kernel) (by decide +kernel) tabs_ok
+/-- **The requirement** `q {op} {p}/{r}` for every point of the box and every value of each table's variable that is
+one of that table's branch values there. -/
+theorem req{k} (y : Nat → RExpr) (hy : InBox rCF Bx y) (ht : AllTab y tabs) : {stmt} :=
+  le_of_sub_nonneg (rCF.le_respects (zv_isZ rOH (c := {Z.dy(0)}) rfl) (rCF.refl _) (cleared{k} y hy ht))
+"""
+            names += [f"{name}.cleared{k}", f"{name}.req{k}"]
+        body += f"end {name}\n" + "".join(f"#print axioms {n}\n" for n in names)
+        out = _run(body, path)
+        return out, names
+    path = os.path.join(gen, name + ".lean")
+    # THE OUTER TREE PROPOSED AS `.mono` FIRST, checked by the kernel in the final file — the interpreter's search
+    # (`#eval findV`, no precompiled modules) took 12 min on t23's 29 variables for the same `.mono` the kernel checks
+    # in 35 s (MEASURED 2026-11-09). The search only when the kernel refuses it.
+    out, names = final({k: ".mono" for k in range(len(forms))})
+    if "error" in out:
+        # THE OUTER SEARCH ON THE EXTENDED BOX AS A LITERAL — not on `extB Bx tabs`: `#eval` would compile every table's
+        # tree literal (MEASURED 2026-11-09, t23: 12.7 min for that probe; the kernel's final check of the same file 35 s)
+        ubox = dict(box, **{f"__u{h}": LU[h] for h in range(len(tl))})
+        probe = head0 + f"def BE : Box := {_box_lean(params + [f'__u{h}' for h in range(len(tl))], ubox)}\n" + "".join(
+            f'def F{k} : XE := {form}\n#eval IO.println (match findV true F{k} {Z.dy(0)} {vs} {depth} BE with '
+            f'| some t => "TREE{k} " ++ toString {k} ++ " " ++ t.txt | none => "NOTREE" ++ toString {k})\n'
+            for k, (_, _, form) in enumerate(forms)) + f"end {name}\n"
+        out = _run(probe, os.path.join(gen, name + "_probe.lean"))
+        otr = {}
+        for k in range(len(forms)):
+            mm = re.search(rf"^TREE{k} {k} (.*)$", out, re.M)
+            if not mm:
+                try:                       # what the ranges allow at the box's corners (floats, said as a diagnosis)
+                    ext = []
+                    for cv in itertools.product(*[(float(box[n][0]), float(box[n][1])) for n in params[:10]]):
+                        for uv in itertools.product(*[(float(L), float(U)) for L, U in LU]) if len(LU) <= 4 else [
+                                tuple(float(L if forms[k][0] == ">=" else U) for L, U in LU)]:
+                            env = dict(zip(params, cv), **{f"__u{h}": uv[h] for h in range(len(LU))})
+                            ext.append(K.fl(outer, env))
+                    at = min(ext) if forms[k][0] == ">=" else max(ext)
+                except Exception:
+                    at = None
+                return {"status": "no tree", "why": f"requirement {forms[k][0]} {forms[k][1]}: no tree over the tables' "
+                                                    f"ranges within depth {depth} (their mutual dependence unused; the "
+                                                    f"ranges reach {at:.6g} at the corners)" if at is not None else
+                                                    f"requirement {forms[k][0]} {forms[k][1]}: no tree over the tables' "
+                                                    f"ranges within depth {depth}", "out": out[:400]}
+            otr[k] = mm.group(1)
+        out, names = final(otr)
+    ok = "error" not in out and out.count("does not depend on any axioms") == len(names)
+    limit = any(w in out for w in ("maximum recursion depth", "deterministic timeout", "heartbeats", "Stack overflow"))
+    return {"status": "theorem" if ok else ("kernel limit" if limit else "refused"), "file": path, "params": params,
+            "box": box, "quotient": False, "out": out[:600], "scale": None, "about": "tables", "theorems": names,
+            "tables": len(tl), "ranges": [[str(L), str(U)] for L, U in LU]}
+
+
 def _names(node, acc):
     if isinstance(node, str):
         acc.add(node)
@@ -380,10 +573,26 @@ def _run(text, path):
     # a thread stack of 400 MB (2026-11-08, ztl-stand tasks/t14: `1/((1 + r/12)^360 − 1)` — the kernel forcing 360
     # nested interval products overflowed the default stack from n ≈ 300 on; MEASURED: with --tstack it reads in 0.7 s).
     # The check is the same; only the stack the kernel runs on is larger.
-    r = subprocess.run(["lake", "env", "lean", f"--tstack={getattr(_CTX, 'tstack', None) or TSTACK_KB}", path],
+    # `lake lean`, not `lake env lean`: it loads the PRECOMPILED search code (lakefile `precompileModules` on ZBound,
+    # ZBoundPar, ZBoundIf). MEASURED 2026-11-09: the interpreter took 12 min on one `#eval findV` (t23, 29 variables)
+    # that the compiled code answers in 3.4 s. The kernel's check is the same either way.
+    r = subprocess.run(["lake", "-q", "--log-level=error", "lean", path, "--", f"--tstack={getattr(_CTX, 'tstack', None) or TSTACK_KB}"],
                        cwd=LEAN, capture_output=True,
                        text=True, timeout=3000)
     return r.stdout + r.stderr
+
+
+def _run_split(head, lines, tail, path, parts=6):
+    """`#eval` proposal lines split over up to `parts` lean processes at once (the search only — each line stands
+    alone; 2026-11-09: ztl-stand tasks/t23's 200 branch searches ran one after another in one process). MEASURED: one
+    process holds ~1.6 GB, so 6 stay under the 18 GB cap."""
+    from concurrent.futures import ThreadPoolExecutor
+    n = max(1, min(parts, len(lines)))
+    chunks = [lines[i::n] for i in range(n)]
+    with ThreadPoolExecutor(n) as ex:
+        outs = list(ex.map(lambda ic: _run(head + "".join(ic[1]) + tail, f"{path[:-5]}_{ic[0]}.lean"),
+                           enumerate(chunks)))
+    return "".join(outs)
 
 
 def _padd(a, b, sg=1):

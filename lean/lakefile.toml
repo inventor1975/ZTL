@@ -639,13 +639,16 @@ name = "ZAtanTrap"
 
 [[lean_lib]]
 name = "ZBound"
+precompileModules = true
 
 [[lean_lib]]
 name = "ZBoundDivider"
 
 [[lean_lib]]
 name = "ZBoundPar"
+precompileModules = true
 
 
 [[lean_lib]]
 name = "ZBoundIf"
+precompileModules = true

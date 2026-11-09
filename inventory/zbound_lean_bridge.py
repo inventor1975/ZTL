@@ -19,7 +19,7 @@ The curator, 2026-11-08: the stand should give proofs, not only certificates. He
   * NEGATIVE CONTROL: the divider's accepted tree under a false bound (Vout <= 2.5, the true maximum 2.525) — the
     kernel must refuse it.
 """
-import os, sys
+import os, re, sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT); sys.path.insert(0, os.path.join(ROOT, "tools"))
@@ -107,6 +107,13 @@ with ProcessPoolExecutor(max_workers=max(2, min(16, (os.cpu_count() or 4) // 2))
     _F["ZGenBranchB"] = pool.submit(ZB.bound_to_lean, [], [], _BRQ, _BRX, [(">=", "145")], "ZGenBranchB")
     _F["ZGenBranchNest"] = pool.submit(ZB.bound_to_lean, [], [], "z=[0.5,1.5] credit, F=[1,4] credit",
                                        "ifpos(F - ifpos(z - 1, 2, 3), F, 2*F)", [(">=", "1.9")], "ZGenBranchNest")
+    # MANY TABLES (ztl-stand tasks/t23, 25 power curves): 7 tables, 2⁷ = 128 branches > MAX_BRANCHES — each a variable
+    # (conditions x·y − i/8: not one variable's threshold, so no branch is pruned — 128 stay, past the cap)
+    _TS = " + ".join(f"ifpos(x*y - {i}/8, 1 + y, y)" for i in range(1, 8))
+    _F["ZGenTabs"] = pool.submit(ZB.bound_to_lean, [], [], "x=[0,1] credit, y=[0,1] credit", _TS, [(">=", "-0.1")],
+                                 "ZGenTabs")
+    _F["ZGenTabsB"] = pool.submit(ZB.bound_to_lean, [], [], "x=[0,1] credit, y=[0,1] credit", _TS, [(">=", "0.1")],
+                                  "ZGenTabsB")
     R = {k: f.result() for k, f in _F.items()}
 
 ok = fail = 0
@@ -254,6 +261,21 @@ check("a table IN a condition (ztl-stand real1/r04: F > table(z)): the condition
 tb = ZB._ifpos_flat(("add", ("ifpos", ("sub", "z", 1), 2, 3), ("ifpos", ("sub", "z", 1), 5, 7)))
 check("the same table read twice: 2 branches, not 4 (contradictory conditions pruned — z > 1 with z <= 1)",
       tb is not None and len(tb) == 2, tb)
+print("16. MANY TABLES in one expression: each table's value a variable with a proved range (ZBoundIf.bound_tabs)")
+ts = R["ZGenTabs"]
+check("Σ of 7 tables (128 branches, past the listing cap) >= −0.1: a theorem — 7 ranges, the sum over them",
+      ts["status"] == "theorem" and ts.get("about") == "tables" and ts.get("tables") == 7, ts)
+check("the other side: >= 0.1 (at x = 0, y = 0 the sum is 0) — no theorem", R["ZGenTabsB"]["status"] != "theorem",
+      R["ZGenTabsB"])
+if ts.get("file"):
+    src = open(ts["file"], encoding="utf-8").read()
+    mut = src.replace("namespace ZGenTabs", "namespace ZGenTabsMut").replace("end ZGenTabs", "end ZGenTabsMut")
+    mut = mut.replace("ZGenTabs.", "ZGenTabsMut.")
+    mm = re.search(r"def tb0 : Tab := ⟨(\d+), (\(⟨⟨[^)]*\)), (\(⟨⟨[^)]*\))", mut)
+    mut = mut.replace(mm.group(0), f"def tb0 : Tab := ⟨{mm.group(1)}, {mm.group(3)}, {mm.group(3)}", 1) if mm else mut
+    mo = ZB._run(mut, os.path.join(ZB.LEAN, "gen", "ZGenTabsMut.lean"))
+    check("SABOTAGE: table 0's range [L, U] narrowed to [U, U], the same trees — the kernel refuses it",
+          mm is not None and "error" in mo, mo[:300])
 print(f"\n{ok} ok, {fail} fail")
 print("ZBOUND LEAN BRIDGE GREEN" if fail == 0 else "ZBOUND LEAN BRIDGE RED")
 sys.exit(1 if fail else 0)

@@ -40,6 +40,12 @@ def brute(phi, marking, vals):
     return frozenset(out)
 
 
+def _consts(phi):
+    if isinstance(phi, str):
+        return [phi] if phi in (T, F, Z) else []
+    return [c for x in phi[1:] for c in _consts(x)]
+
+
 def main():
     rng = random.Random(20261109)
     n = bad = refused = 0
@@ -78,6 +84,34 @@ def main():
     took = time.perf_counter() - t
     assert ans[0] in ("YES", "NO")
     print(f"1000 read-once atoms: {ans[0]} in {took * 1000:.1f} ms")
+    # zverify's two bits through zreach, against their DEFINITIONS (every completion / every refinement)
+    import zverify as V
+    from zmodal import worlds, ztl_eval
+    rng = random.Random(11)
+    nb = bad_b = refused_b = 0
+    for _ in range(3000):
+        names = [f"p{i}" for i in range(rng.randint(1, 5))]
+        phi = rand_phi(rng, names, rng.randint(1, 4))
+        if any(c in (T, F, Z) for c in [phi] if isinstance(phi, str)):
+            continue
+        marking = {a: rng.choice(("M", "M", T, F)) for a in atoms_of(phi, set())}
+        if any(x == Z for x in _consts(phi)):
+            continue                      # a literal Z constant: zverify's old path, not zreach's
+        v = ztl_eval(phi, marking)
+        st = all(ev(phi, w) == v for w in worlds(marking))
+        her = all(ztl_eval(phi, m2) == v for m2 in V.refinements(marking))
+        nb += 1
+        # budget=1: every claim with a mark goes the zreach way (in place of the refusal); None = zreach refused
+        sb, hb = V.stable_bit(phi, marking, budget=1), V.hereditary_bit(phi, marking, budget=1)
+        if sb is None or hb is None:
+            refused_b += 1
+        if (sb is not None and sb != st) or (hb is not None and hb != her) or \
+                V.stable_bit(phi, marking) != st or V.hereditary_bit(phi, marking) != her:
+            bad_b += 1
+            if bad_b <= 5:
+                print("GRADE MISMATCH", phi, marking)
+    print(f"zverify stable/hereditary through zreach: {nb} cases against the definitions, {bad_b} mismatches ({refused_b} refused)")
+    bad += bad_b
     if bad:
         print("ZREACH RED")
         sys.exit(1)

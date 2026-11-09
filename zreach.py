@@ -34,7 +34,10 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from ztl import T, F, Z, VALUES, OPS1, OPS2, ev     # noqa: E402
 
-CAP = 12            # shared atoms open at one node: 2^12 worlds (3^12 over refinements ~ 5e5) — past it, refuse
+CAP = 12            # shared atoms open at one node — past it, refuse
+MAX_WORLDS = 4096   # worlds at one node (2^12 completions, 3^7 refinements) — past it, refuse
+MAX_WORK = 400_000  # node evaluations in one call — past it, refuse (2026-11-09: a grid whose every atom occurs
+                    # 13-14 times took zverify's grade 0.012 -> 0.170 s, the old path stops at the first other value)
 
 
 def _is_atom(phi):
@@ -99,6 +102,7 @@ def reach(phi, marking, mode="completion", cap=CAP):
     tr = _Tree(phi, dirty)
     leaf_vals = (T, F) if mode == "completion" else (T, F, Z)
     memo = {}
+    work = [0]
 
     def go(i, env):
         key = (i, tuple(sorted((a, env[a]) for a in tr.ext[i])))
@@ -120,6 +124,11 @@ def reach(phi, marking, mode="completion", cap=CAP):
         own = tr.own.get(i, [])
         if len(own) + len(tr.ext[i]) > cap:
             raise _Refuse(f"{len(own) + len(tr.ext[i])} shared atoms open at one node (cap {cap})")
+        if len(leaf_vals) ** len(own) > MAX_WORLDS:
+            raise _Refuse(f"{len(leaf_vals)}^{len(own)} worlds at one node (cap {MAX_WORLDS})")
+        work[0] += 1
+        if work[0] > MAX_WORK:
+            raise _Refuse(f"more than {MAX_WORK} node evaluations")
         out = {}
         for world in itertools.product(leaf_vals, repeat=len(own)):
             env2 = dict(env, **dict(zip(own, world))) if own else env

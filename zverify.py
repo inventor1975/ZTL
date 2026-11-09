@@ -51,6 +51,35 @@ def verify(marking, atom, value):
     return m2
 
 
+def _has_z_literal(phi):
+    if isinstance(phi, str):
+        return phi == Z
+    return any(_has_z_literal(c) for c in phi[1:])
+
+
+def _reach_exact(phi, marking, v, mode):
+    """THE EXACT PASS WHERE THE BUDGET WOULD REFUSE (2026-11-09). `zreach` — the set of values over every completion
+    (mode "completion") or every refinement (mode "refinement"), atoms shared by two subtrees enumerated at their
+    lowest common node, past its cap a refusal (None here). `== {v}` is a theorem's consequence, not a measurement:
+    lean/ZReach.lean `only_value` (zero axioms) — the pass never misses a value; a value other than v comes with a
+    witness re-evaluated by `ev`. MEASURED before this: the budget check stood BEFORE `_only`, so a claim of 100
+    atoms answered "undetermined" though one pass decides it in milliseconds (the curator, 2026-11-09: «вниз почему-то
+    медленно»). It stands IN PLACE OF THE REFUSAL, not before the old exact path: on small claims that path is cheaper
+    (MEASURED: zreach first took test_judge_worst's grid 0.012 -> 0.170 s, ~0.1 ms of set-up per call x 1,419 calls).
+    Markings other than T / F / M (a clean Z constant) keep the refusal."""
+    if any(s not in (T, F, "M") for s in marking.values()):
+        return None
+    if any(a not in marking for a in atoms(phi)):
+        return None
+    if _has_z_literal(phi):
+        return None                       # a literal Z: outside lean/ZReach.lean's Fm (top/bot only) — the old path
+    import zreach
+    r = zreach.reach(phi, {a: (s if s in (T, F) else Z) for a, s in marking.items()}, mode)
+    if "refused" in r:
+        return None
+    return r["values"] == frozenset((v,))
+
+
 def stable_bit(phi, marking, budget=None):
     """The SOUND grade (supervaluation): all completions give one
     classical answer equal to the current greedy verdict. Guarantees
@@ -77,7 +106,7 @@ def stable_bit(phi, marking, budget=None):
     # экспоненциальна, и когда она не считается — честнее сказать, что не
     # берёшься, чем молоть или отказывать во всём документе.
     if budget is not None and 2 ** len(marks) > budget:
-        return None
+        return _reach_exact(phi, marking, v, "completion")    # the exact pass instead of a refusal (None if it refuses)
     # EXACT, AND IN NO ORDER — see `_only`. The walk below is the definition;
     # it stays as the fallback and is what `_only` was checked against.
     fixed = {a: s for a, s in marking.items() if s in (T, F)}
@@ -227,7 +256,7 @@ def hereditary_bit(phi, marking, budget=None):
     # ОТКАЗ ВМЕСТО ПОМОЛА — см. stable_bit. Здесь основание перебора 3, а не
     # 2: уточнение может оставить метку меткой, завершение — не может.
     if budget is not None and 3 ** len(marks) > budget:
-        return None
+        return _reach_exact(phi, marking, v, "refinement")    # the exact pass instead of a refusal (None if it refuses)
     # EXACT, AND IN NO ORDER — see `_only`. The walk below is the definition;
     # it stays as the fallback and is what `_only` was checked against.
     fixed = {a: (s if s in (T, F) else Z) for a, s in marking.items() if s != "M"}

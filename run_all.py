@@ -166,6 +166,7 @@ STANDS = [
     ("test_param_system.py", ["PARAM SYSTEM GREEN"]),
     ("test_mlin_eq.py", ["MLIN EQ GREEN"]),
     ("test_backward_tree.py", ["BACKWARD TREE GREEN"]),
+    ("test_zreach.py", ["ZREACH GREEN", "0 mismatches, 0 refused"]),     # 2026-11-09: values reachable, down as fast as up
     ("test_certify.py", ["CERTIFY GREEN"]),
     ("test_none.py", ["NONE GREEN"]),
     ("test_zlin.py", ["ZLIN GREEN"]),

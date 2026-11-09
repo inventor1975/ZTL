@@ -40,6 +40,7 @@ from itertools import product
 
 from ztl import T, F, Z, ev, atoms, NOT, OPS2, VALUES
 from zmodal import worlds, ztl_eval, global_super
+import zpy as _zpy  # a refusal raises here instead of reading as "no" (zpy, 2026-11-09)
 
 # marking: dict atom → T | F | 'M' (mark)
 
@@ -565,10 +566,10 @@ if __name__ == "__main__":
                 for val in (T, F):
                     m2v = verify(m, a, val)
                     changed = ztl_eval(phi, m2v) != ztl_eval(phi, m)
-                    if hereditary_bit(phi, m) and \
-                            (changed or not hereditary_bit(phi, m2v)):
+                    if _zpy.hereditary(phi, m) and \
+                            (changed or not _zpy.hereditary(phi, m2v)):
                         her_bad += 1
-                    if stable_bit(phi, m) and not hereditary_bit(phi, m) \
+                    if _zpy.stable(phi, m) and not _zpy.hereditary(phi, m) \
                             and changed:
                         sound_revoked += 1
     print(f"  hereditary: revocations or grade losses: {her_bad} (must be 0)")
@@ -595,7 +596,7 @@ if __name__ == "__main__":
     print(f"  invariant under EVERY single verification: {one_step}")
     print(f"  killed by the pair b:=F, d:=F → {two_step}")
     assert v4 == T and one_step and two_step != v4 \
-        and not hereditary_bit(phi4, m4)
+        and not _zpy.hereditary(phi4, m4)
     print("  → no depth-1 fence exists for the hereditary grade.")
 
     print("\n### 6. The fence depth is exactly m−1 (no constant-depth fence)")

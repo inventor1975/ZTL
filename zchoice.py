@@ -52,6 +52,7 @@ from itertools import product
 from ztl import T, F, Z, ev
 from zmodal import global_super, ztl_eval
 from zverify import stable_bit
+import zpy as _zpy  # a refusal raises here instead of reading as "no" (zpy, 2026-11-09)
 
 H = 3                              # horizon: atoms a0..a{H-1}, ak = "α(k)=1"
 ATOMS = [f"a{k}" for k in range(H)]
@@ -139,7 +140,7 @@ def run_ladder(pool):
                 raw_t += 1
                 if s != T:
                     raw_over += 1
-                if stable_bit(phi, marking(pre)):
+                if _zpy.stable(phi, marking(pre)):
                     warr_t += 1
                     if s != T:
                         warr_bad += 1

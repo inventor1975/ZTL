@@ -167,6 +167,7 @@ STANDS = [
     ("test_mlin_eq.py", ["MLIN EQ GREEN"]),
     ("test_backward_tree.py", ["BACKWARD TREE GREEN"]),
     ("test_zreach.py", ["ZREACH GREEN", "0 mismatches, 0 refused"]),     # 2026-11-09: values reachable, down as fast as up
+    ("test_zpy.py", ["ZPY GREEN"]),     # 2026-11-09: ZTL as a layer of Python, for code an AI writes (pilot)
     ("test_certify.py", ["CERTIFY GREEN"]),
     ("test_none.py", ["NONE GREEN"]),
     ("test_zlin.py", ["ZLIN GREEN"]),

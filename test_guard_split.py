@@ -19,6 +19,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import ztl                                                     # noqa: E402
 import zverify as Z                                            # noqa: E402
+import zpy as _zpy  # a refusal raises here instead of reading as "no" (zpy, 2026-11-09)
 from zverify import T, F                                       # noqa: E402
 
 BUDGET = 59049          # 3**10 — нынешний предел студии, выраженный в переборе
@@ -37,9 +38,9 @@ def test_default_is_the_old_behaviour():
     def old(phi, marking):
         ats = ztl.atoms(phi)
         m = {a: v for a, v in marking.items() if a in ats}
-        if Z.hereditary_bit(phi, m):
+        if _zpy.hereditary(phi, m):
             return "hereditary"
-        if Z.stable_bit(phi, m):
+        if _zpy.stable(phi, m):
             return "sound"
         return "until-verification"
 

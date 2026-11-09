@@ -44,6 +44,7 @@ sys.path.insert(0, PARENT)                       # import the untouched core
 from ztl import T, F, Z, show, atoms as f_atoms, OPS2   # noqa: E402
 from zmodal import ztl_eval                              # noqa: E402
 from zverify import stable_bit, hereditary_bit, refinements  # noqa: E402
+import zpy as _zpy  # a refusal raises here instead of reading as "no" (zpy, 2026-11-09)
 
 BINOPS = list(OPS2.keys())          # and, or, imp, xor, xnor
 RESULTS = os.path.join(HERE, "results")
@@ -117,10 +118,10 @@ def _shallowest_kill(phi, marking, v):
 def judge(phi, marking):
     """(value, grade, kill, depth) for one candidate — the core's verdict."""
     v = ztl_eval(phi, marking)
-    if hereditary_bit(phi, marking):
+    if _zpy.hereditary(phi, marking):
         return v, "hereditary", None, None
     kill, depth = _shallowest_kill(phi, marking, v)
-    grade = "sound" if stable_bit(phi, marking) else "until-verification"
+    grade = "sound" if _zpy.stable(phi, marking) else "until-verification"
     return v, grade, kill, depth
 
 

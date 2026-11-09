@@ -55,6 +55,12 @@ check(cr.disposition != "EARNED" and not cr.earned(), "a credit is never EARNED 
 check(zpy.decide(c, earned="go", refuted="stop", otherwise="verify") == "verify", "decide: OPEN -> otherwise")
 check(zpy.decide(a, earned="go", refuted="stop", otherwise="verify") == "go", "decide: EARNED -> earned")
 check(raises(lambda: zpy.decide(c, earned=1, refuted=2), TypeError), "decide without `otherwise` does not run")
+p_ = zpy.unknown("p")
+# THE CURATOR, 2026-11-10: «В этом весь ЗТЛ» — p | ~p over an unknown p is EARNED IF STABLE, not EARNED; the layer
+# does not upgrade it (a first draft of the same night did, and was reverted on his word)
+check(zpy.decide(p_ | ~p_, earned="yes", refuted="no", otherwise="check") == "check",
+      "p | ~p over an unknown p goes to `otherwise` (EARNED IF STABLE is not EARNED)")
+check(not (p_ | ~p_).earned(), "p | ~p is not earned()")
 rep = c.report()
 check(rep["grounds"]["a"].startswith("earned:T") and rep["grounds"]["b"].startswith("unknown"),
       "the report names each fact's ground")

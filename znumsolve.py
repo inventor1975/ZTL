@@ -298,6 +298,13 @@ def _rank_one_in(param, A, b, rows, unknowns):
     return True
 
 
+def _axpy(row_i, f, row_p):
+    """row_i - f * row_p, an entry left AS IS where row_p has 0 (a - f*0 = a exactly: the same numbers, fewer
+    Fraction operations). MEASURED 2026-11-09: a 128-link chain's system — bidiagonal, its pivot rows almost all 0 —
+    spent most of ZTL's 3.1 s on products with 0."""
+    return [a - f * b if b else a for a, b in zip(row_i, row_p)]
+
+
 def _solve_exact(Ab, n):
     """Gaussian elimination over Fractions on an n x n system given as rows
     [a_1..a_n, b]. Returns (x, det) or (None, 0) if singular."""
@@ -315,7 +322,7 @@ def _solve_exact(Ab, n):
         for i in range(n):
             if i != c and M[i][c] != 0:
                 f = M[i][c] * inv
-                M[i] = [a - f * bb for a, bb in zip(M[i], M[c])]
+                M[i] = _axpy(M[i], f, M[c])
     return [M[i][n] / M[i][i] for i in range(n)], det
 
 
@@ -336,7 +343,7 @@ def _solve_exact_multi(M, n):
         for i in range(n):
             if i != c and M[i][c] != 0:
                 f = M[i][c] * inv
-                M[i] = [a - f * bb for a, bb in zip(M[i], M[c])]
+                M[i] = _axpy(M[i], f, M[c])
     k = len(M[0]) - n
     return [[M[i][n + j] / M[i][i] for i in range(n)] for j in range(k)], det
 
@@ -753,11 +760,11 @@ def _solve_monomial_system(qs, atoms):
             continue
         mat[r], mat[piv] = mat[piv], mat[r]
         f = mat[r][col]
-        mat[r] = [x / f for x in mat[r]]
+        mat[r] = [x / f if x else x for x in mat[r]]
         for i in range(len(mat)):
             if i != r and mat[i][col] != 0:
                 k = mat[i][col]
-                mat[i] = [a - k * b for a, b in zip(mat[i], mat[r])]
+                mat[i] = _axpy(mat[i], k, mat[r])
         r += 1
     single = []
     for row in mat:
@@ -814,11 +821,11 @@ def _solve_linear_system(qs, atoms):
             continue
         mat[r], mat[piv] = mat[piv], mat[r]
         f = mat[r][col]
-        mat[r] = [x / f for x in mat[r]]
+        mat[r] = [x / f if x else x for x in mat[r]]
         for i in range(len(mat)):
             if i != r and mat[i][col] != 0:
                 k = mat[i][col]
-                mat[i] = [a - k * b for a, b in zip(mat[i], mat[r])]
+                mat[i] = _axpy(mat[i], k, mat[r])
         r += 1
     pinned = {}
     for row in mat:

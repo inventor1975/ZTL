@@ -52,15 +52,26 @@ check((a | b).disposition == "EARNED", "a | unknown b is EARNED (OR carries T vi
 check((~a).disposition == "REFUTED", "~a is REFUTED")
 cr = zpy.credit("k", True, source="the supplier's datasheet")
 check(cr.disposition != "EARNED" and not cr.earned(), "a credit is never EARNED (fail-closed)")
-check(zpy.decide(c, earned="go", refuted="stop", otherwise="verify") == "verify", "decide: OPEN -> otherwise")
-check(zpy.decide(a, earned="go", refuted="stop", otherwise="verify") == "go", "decide: EARNED -> earned")
-check(raises(lambda: zpy.decide(c, earned=1, refuted=2), TypeError), "decide without `otherwise` does not run")
+check(zpy.decide(c, earned="go", refuted="stop", otherwise="verify", if_stable="check") == "verify", "decide: OPEN -> otherwise")
+check(zpy.decide(a, earned="go", refuted="stop", otherwise="verify", if_stable="check") == "go", "decide: EARNED -> earned")
+check(raises(lambda: zpy.decide(c, earned=1, refuted=2, if_stable="check"), TypeError),
+      "decide without `otherwise` does not run")
 p_ = zpy.unknown("p")
 # THE CURATOR, 2026-11-10: «В этом весь ЗТЛ» — p | ~p over an unknown p is EARNED IF STABLE, not EARNED; the layer
 # does not upgrade it (a first draft of the same night did, and was reverted on his word)
-check(zpy.decide(p_ | ~p_, earned="yes", refuted="no", otherwise="check") == "check",
+check(zpy.decide(p_ | ~p_, earned="yes", refuted="no", otherwise="check", if_stable="check") == "check",
       "p | ~p over an unknown p goes to `otherwise` (EARNED IF STABLE is not EARNED)")
 check(not (p_ | ~p_).earned(), "p | ~p is not earned()")
+dc = zpy.decide(p_ | ~p_, earned="yes", refuted="no", otherwise="check", if_stable="classical")
+check(dc == "yes" and dc.path == "classical" and dc.disposition == "EARNED IF STABLE",   # zpy: ok — a test reads it
+      "if_stable='classical': the classical path, NAMED on the result")
+dz = zpy.decide(a, earned="go", refuted="stop", otherwise="verify", if_stable="check")
+check(dz == "go" and dz.path == "ztl", "EARNED: path 'ztl'")
+dr = zpy.decide(p_ & ~p_, earned=1, refuted="no", otherwise=3, if_stable="classical")
+check(dr == "no" and dr.path == "classical", "p & ~p: REFUTED IF STABLE, classical path")
+check(raises(lambda: zpy.decide(a, earned=1, refuted=2, otherwise=3), TypeError), "if_stable is required")
+check(raises(lambda: zpy.decide(a, earned=1, refuted=2, otherwise=3, if_stable="maybe"), ValueError),
+      "if_stable takes only 'classical' / 'check'")
 rep = c.report()
 check(rep["grounds"]["a"].startswith("earned:T") and rep["grounds"]["b"].startswith("unknown"),
       "the report names each fact's ground")
@@ -134,6 +145,8 @@ kinds = sorted(k for _, _, k, _ in found)
 check(kinds.count("NOTNOT") == 2, f"NOTNOT caught twice ({kinds})")
 check(kinds.count("CONFLATE-LIVE") == 1 and kinds.count("CONFLATE-LATENT") == 2, f"CONFLATE live 1, latent 2 ({kinds})")
 check(kinds.count("LAUNDER") == 1, f"LAUNDER caught ({kinds})")
+byp = zpy_lint.lint_source('import zpy\ndef g(c):\n    d = c.disposition\n    return "y" if d in ("EARNED", "EARNED IF STABLE") else "n"\n')
+check([k for _, _, k, _ in byp] == ["BYPASS"], f"BYPASS caught: the IF STABLE label read by hand ({byp})")
 clean = '''
 def f(phi, m, x):
     s = stable_bit(phi, m, 10)

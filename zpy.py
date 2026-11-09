@@ -13,8 +13,8 @@ THE CURATOR (2026-11-09): «Мы, люди, уже не будем писать 
      `None`, never `False`. It replaces the three spellings the kernel grew (`{"refused": ...}` in zreach, `None` /
      "undetermined" in zverify, "отказ" in zbackward) at the layer's surface; the kernel itself is not touched.
   3. NO SILENT DECISION. `bool()` of a claim or a refusal RAISES (`Undecided`): `if claim:` does not run. A decision
-     is written out — `decide(claim, earned=..., refuted=..., otherwise=...)`, three branches — or reads the cautious
-     default by name: `claim.earned()` is True only for EARNED.
+     is written out — `decide(claim, earned=..., refuted=..., otherwise=..., if_stable=...)`, every branch and the
+     path named — or reads the cautious default by name: `claim.earned()` is True only for EARNED.
   4. CONNECTIVES BY ZTL'S TABLES. `&`, `|`, `~`, `.implies()`, `.xor()` build the formula; the verdict is ztljudge's
      (EARNED / ON CREDIT / OPEN / REFUTED / IF STABLE / E), computed by the kernel, not by this file.
 
@@ -109,7 +109,7 @@ class Claim:
 
     def __bool__(self):
         raise Undecided(f"zpy: `if` on the claim {self.text!r} decides silently — use decide(claim, earned=..., "
-                        f"refuted=..., otherwise=...) or claim.earned()")
+                        f"refuted=..., otherwise=..., if_stable=...) or claim.earned()")
 
     def __eq__(self, other):
         raise Undecided("zpy: `==` on a claim compares Python objects, not verdicts — read claim.disposition")
@@ -142,14 +142,53 @@ class Claim:
         return f"Claim({self.text!r})"
 
 
-def decide(claim, *, earned, refuted, otherwise):
-    """THE THREE BRANCHES, all required. Each is a value or a callable; a callable gets the verdict dict.
-    EARNED -> earned; REFUTED -> refuted; everything else (ON CREDIT, OPEN, IF STABLE, E) -> otherwise."""
+class Decision(str):
+    """The outcome a decision returned (a str, so `== "approve"` works) AND the path that decided it:
+    "ztl" — the judge's tables, each occurrence on its own (EARNED / REFUTED); "classical" — every completion of the
+    unverified facts, each one fact at all its occurrences (EARNED / REFUTED IF STABLE, taken by the author's word
+    `if_stable="classical"`); "check" — nothing settled it."""
+    __slots__ = ("path", "disposition")
+
+    def __new__(cls, value, path, disposition):
+        d = super().__new__(cls, value)
+        d.path, d.disposition = path, disposition
+        return d
+
+
+IF_STABLE = ("classical", "check")
+
+
+def decide(claim, *, earned, refuted, otherwise, if_stable):
+    """THE BRANCHES, all required. Each of earned / refuted / otherwise is a value or a callable (it gets the verdict).
+
+    TWO PATHS, NAMED (the curator, 2026-11-10: «если результат A и B EARNED, то атомарный оператор не нужен; а если
+    IF STABLE, то только классический путь»):
+      EARNED / REFUTED            -> earned / refuted, path "ztl": ZTL's own tables settled it;
+      EARNED / REFUTED IF STABLE  -> ZTL did NOT settle it; only the classical path (every completion, each fact one
+                                     fact at all its occurrences) does. `if_stable` says which way the author goes —
+                                     "classical": earned / refuted, path "classical"; "check": otherwise, path "check".
+                                     No default: the path is the author's word, not the layer's guess;
+      ON CREDIT / OPEN / E        -> otherwise, path "check".
+    A str result comes back as a `Decision` carrying `.path` and `.disposition`.
+    WHY (round 2 of the AI experiment, 2026-11-10): both zpy runs needed the classical reading the task asked for and,
+    the layer having no named way to it, routed around it — one read the disposition string itself (zpy_lint BYPASS
+    now), one enumerated the completions by hand."""
     if not isinstance(claim, Claim):
         raise TypeError(f"zpy.decide: a Claim, not {type(claim).__name__}")
+    if if_stable not in IF_STABLE:
+        raise ValueError(f"zpy.decide: if_stable must be one of {IF_STABLE} (the author names the path)")
     v = claim.verdict()
-    branch = {"EARNED": earned, "REFUTED": refuted}.get(v["disposition"], otherwise)
-    return branch(v) if callable(branch) else branch
+    d = v["disposition"]
+    if d == "EARNED":                                        # zpy: ok — the layer's own reading
+        branch, path = earned, "ztl"
+    elif d == "REFUTED":                                     # zpy: ok
+        branch, path = refuted, "ztl"
+    elif d in ("EARNED IF STABLE", "REFUTED IF STABLE") and if_stable == "classical":     # zpy: ok
+        branch, path = (earned if d == "EARNED IF STABLE" else refuted), "classical"      # zpy: ok
+    else:
+        branch, path = otherwise, "check"
+    out = branch(v) if callable(branch) else branch
+    return Decision(out, path, d) if isinstance(out, str) else out
 
 
 # ------------------------------------------------------------------------------------------------ the one refusal

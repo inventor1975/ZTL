@@ -13,6 +13,9 @@ It reads the SOURCE (no run) and reports three kinds of place:
              added argument away from a silent bug).
   LAUNDER    an `except` of a refusal whose handler RETURNS a value that is not a refusal: "could not answer" turned
              into an answer.
+  BYPASS     (in code that imports zpy) a comparison against an "IF STABLE" disposition label — the verdict read by hand and its path decided
+             unnamed (2026-11-10, round 2 of the AI experiment: a model mapped EARNED IF STABLE to its positive
+             outcome this way). The named way is zpy.decide(..., if_stable="classical").
 
 Usage: python3 zpy_lint.py [paths...]   (directories are walked; prints one line per finding, then counts)
 """
@@ -57,6 +60,11 @@ def lint_source(src, path="<src>"):
     except SyntaxError as e:
         return [(path, e.lineno or 0, "PARSE", str(e))]
 
+    # BYPASS is a rule for code written OVER the layer: the kernel reads its own labels by design
+    over_zpy = any(isinstance(x, (ast.Import, ast.ImportFrom)) and (
+        (isinstance(x, ast.ImportFrom) and x.module == "zpy") or
+        (isinstance(x, ast.Import) and any(a.name == "zpy" for a in x.names))) for x in ast.walk(tree))
+
     def ok(node):
         ln = lines[node.lineno - 1] if 0 < node.lineno <= len(lines) else ""
         return "zpy: ok" in ln
@@ -78,6 +86,10 @@ def lint_source(src, path="<src>"):
                     continue
                 kind = "CONFLATE-LIVE" if _has_budget(c) else "CONFLATE-LATENT"
                 out.append((path, c.lineno, kind, ast.unparse(c)[:80]))
+        if over_zpy and isinstance(node, ast.Compare) and not ok(node):
+            consts = [c.value for c in ast.walk(node) if isinstance(c, ast.Constant) and isinstance(c.value, str)]
+            if any("IF STABLE" in c for c in consts):
+                out.append((path, node.lineno, "BYPASS", ast.unparse(node)[:80]))
         if isinstance(node, ast.ExceptHandler) and node.type is not None and "Refus" in ast.unparse(node.type):
             for r in ast.walk(ast.Module(body=node.body, type_ignores=[])):
                 said = ast.unparse(r.value).lower() if isinstance(r, ast.Return) and r.value is not None else ""

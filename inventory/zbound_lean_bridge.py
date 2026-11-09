@@ -87,6 +87,11 @@ with ProcessPoolExecutor(max_workers=max(2, min(16, (os.cpu_count() or 4) // 2))
                                   "ZGenBlock")
     _F["ZGenIfConst"] = pool.submit(ZB.bound_to_lean, [], [], "e=5 credit, x=[1,2] credit",
                                     "x*ifpos(e - 3, 2, 100)", [("<=", "4")], "ZGenIfConst")
+    _FQ = "pmax=[44.16,51.84] credit, Qmax=[0.038,0.042] credit, K=[27200,36800] credit"
+    _F["ZImplFan"] = pool.submit(ZB.implicit_bound_to_lean, [], [], _FQ, "Q", "Q", "pmax*(1 - Q/Qmax) - K*Q*Q",
+                                 ["0", "0.06"], [(">=", "0.02"), ("<=", "0.03")], "ZImplFan")
+    _F["ZImplFanB"] = pool.submit(ZB.implicit_bound_to_lean, [], [], _FQ, "Q", "Q", "pmax*(1 - Q/Qmax) - K*Q*Q",
+                                  ["0", "0.06"], [("<=", "0.022")], "ZImplFanB")
     R = {k: f.result() for k, f in _F.items()}
 
 ok = fail = 0
@@ -193,6 +198,12 @@ check("F1 = k·x <= 22 next to an unrelated law with denominators: a theorem on 
 ic = R["ZGenIfConst"]
 check("ifpos with a condition CONSTANT after the pinned values (e = 5: x·ifpos(e − 3, 2, 100) = 2x <= 4): decided "
       "exactly, a theorem (ztl-stand tasks/t25: a bond's maturity pinned)", ic["status"] == "theorem", ic)
+print("14. a requirement on an IMPLICIT root (the zimplicit judge + ZBound, ZBoundPar.bound_at_root)")
+im = R["ZImplFan"]
+check("the fan's operating point Q (the root of pmax(1 − Q/Qmax) − K·Q² = 0): for every parameter vector the "
+      "unique root exists and 0.02 <= Q <= 0.03 — ONE theorem (law_root + the bound)", im["status"] == "theorem", im)
+check("the other side: Q <= 0.022 (the root reaches ~0.0265) — no theorem", R["ZImplFanB"]["status"] != "theorem",
+      R["ZImplFanB"])
 print(f"\n{ok} ok, {fail} fail")
 print("ZBOUND LEAN BRIDGE GREEN" if fail == 0 else "ZBOUND LEAN BRIDGE RED")
 sys.exit(1 if fail else 0)

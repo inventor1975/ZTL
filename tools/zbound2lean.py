@@ -1048,3 +1048,110 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+def implicit_bound_to_lean(laws, unknowns, qtext, target, ph, gtext, bracket, reqs, name, depth=14):
+    """A requirement on an expression of an IMPLICIT root (2026-11-09; the curator's course item 2, "связка судьи
+    zimplicit с системами → вердикты как теоремы"; ztl-stand's `Q == implicit(_root_Q, g, lo, hi)`).
+
+    1. zimplicit's verdict on `g = 0` as a Lean theorem (tools/zimplicit_lean.py: `law_root` — for every parameter
+       vector inside its box a UNIQUE root in [qa, qb]), its text embedded;
+    2. the target, the root as variable 0 and the data at zimplicit's own indices, bounded over
+       `ZBoundPar.boxPS qa qb lawPS` (ZBound: a cover tree, the kernel);
+    3. `ZBoundPar.bound_at_root`: the theorem — for every parameter vector, the unique root exists AND the
+       requirement holds there. Said: the bound holds over the whole bracket (the root's dependence on the
+       parameters not used) — a requirement with a margin."""
+    import znumjudge as ZJ
+    import zcertify as ZC
+    import zimplicit_lean as ZL
+    qs = ZJ.parse_quantities(qtext + f", {ph}=? credit")[0]
+    try:
+        sol = ZC.solve_system(laws, unknowns, qs) if (laws and unknowns) else {}
+        enode = _subst(ZJ._parse_arith(target, qs), sol)
+        gnode = ZJ._parse_arith(gtext, qs)
+    except Exception as ex:
+        return {"status": "not translated", "why": f"the implicit target: {ex}"}
+    if _names(gnode, set()) & set(unknowns):
+        return {"status": "not translated", "why": "the implicit law leans on another unknown"}
+    parts, dep, st0 = [], 0, 0          # split at the top-level commas (an interval [a, b] holds one)
+    for i, ch in enumerate(qtext):
+        dep += ch in "[(" and 1 or (-1 if ch in "])" else 0)
+        if ch == "," and dep == 0:
+            parts.append(qtext[st0:i]); st0 = i + 1
+    parts.append(qtext[st0:])
+    data = [part.strip() for part in parts if part.strip() and "=?" not in part.replace(" ", "")]
+    qlaw = ", ".join(data + [f"{ph}=? credit"])
+    rt = ZL.verdict_to_lean(qlaw, gtext, ph, [str(bracket[0]), str(bracket[1])], name + "R")
+    if rt.get("status") != "theorem":
+        return {"status": "no root theorem", "why": f"zimplicit -> Lean: {rt.get('status')}: {rt.get('why', '')}"[:300]}
+    qsl = ZJ.parse_quantities(qlaw)[0]
+    names = sorted(n for n in qsl if n != ph)
+    idx = {ph: 0, **{n: i + 1 for i, n in enumerate(names)}}
+    if not _names(enode, set()) <= set(idx):
+        return {"status": "not translated", "why": "the target names a quantity the law's sheet lacks"}
+    enode = _ifpos2hinge(_sqrt2exp(enode))
+    try:
+        xe = Z.to_xe(enode, idx)
+    except ValueError as ex:
+        return {"status": "not translated", "why": str(ex)}
+    vs = [0] + [idx[n] for n in names if F(qsl[n]["lo"]) != F(qsl[n]["hi"])]
+    vs_t = "[" + ", ".join(map(str, vs)) + "]"
+    root_txt = open(rt["file"]).read()
+    root_txt = "\n".join(l for l in root_txt.splitlines() if not l.startswith("import ") and
+                          not l.startswith("#print"))
+    R = name + "R"
+    forms = []
+    for op, c in reqs:
+        c = F(c)
+        p_, r_ = c.numerator, c.denominator
+        forms.append((op, p_, r_, f"(.sub {Z.cst(p_)} (.mul {Z.cst(r_)} xE))" if op == "<=" else
+                      f"(.sub (.mul {Z.cst(r_)} xE) {Z.cst(p_)})"))
+    head = (f"import ZBoundPar\n{root_txt}\nnamespace {name}\nopen VR VR.Numbers ZNumBin ZField ZPoly ZIv ZXE ZRealCF "
+            f"ZRootDiv ZBound ZRootPVR ZRootPar ZBoundPar ZRootExp\nset_option maxRecDepth 100000\n"
+            f"def B : Box := boxPS {R}.qa {R}.qb {R}.lawPS\ndef xE : XE := {xe}\n")
+    gen = os.path.join(LEAN, "gen")
+    probe = head + "".join(
+        f'def F{k} : XE := {f[3]}\n#eval IO.println (match findV true F{k} {Z.dy(0)} {vs_t} {depth} B with '
+        f'| some t => "TREE" ++ toString {k} ++ " " ++ t.txt | none => "NOTREE" ++ toString {k})\n'
+        f'#eval IO.println ("POSOK{k} " ++ toString (posOK B F{k}))\n' for k, f in enumerate(forms)) + f"end {name}\n"
+    out = _run(probe, os.path.join(gen, name + "_probe.lean"))
+    bad = re.findall(r"^POSOK(\w+) false$", out, re.M)
+    if bad:
+        return {"status": "refused", "why": f"a denominator or a logarithm's argument NOT PROVED positive over the "
+                                            f"bracket × the box (posOK false: {', '.join(bad)})", "out": out[:300]}
+    trees = {}
+    for k in range(len(forms)):
+        m = re.search(rf"^TREE{k} (.*)$", out, re.M)
+        if not m:
+            return {"status": "no tree", "why": f"requirement {forms[k][0]} {forms[k][1]}/{forms[k][2]}: no tree "
+                                                f"over the root's bracket × the box (depth {depth})", "out": out[:400]}
+        trees[k] = m.group(1)
+    body = head
+    for k, (op, p_, r_, form) in enumerate(forms):
+        Rc, Pc = f"(evR (envP {R}.qa {R}.lawPS p x) (XE.cst {Z.dy(r_)}))", f"(evR (envP {R}.qa {R}.lawPS p x) (XE.cst {Z.dy(p_)}))"
+        Ev = f"(evR (envP {R}.qa {R}.lawPS p x) xE)"
+        stmt = f"rCF.le (rCF.mul {Rc} {Ev}) {Pc}" if op == "<=" else f"rCF.le {Pc} (rCF.mul {Rc} {Ev})"
+        body += f"""def F{k} : XE := {form}
+def T{k} : VT := {trees[k]}
+/-- **The requirement at the implicit root**: for every parameter vector inside its box, the law's root in the
+bracket exists, is unique, and `{target} {op} {p_}/{r_}` holds there. -/
+theorem implreq{k} (p : Nat → RExpr) (hin : InnerIn {Z.MU} p {R}.lawPS) :
+    ∃ x : RExpr, ((rle (dv rOH {R}.qa) x ∧ rle x (dv rOH {R}.qb)) ∧ rEq (FP {R}.lawE {R}.qa {R}.lawPS p x) rzero ∧
+      ∀ y, rle (dv rOH {R}.qa) y → rle y (dv rOH {R}.qb) → rEq (FP {R}.lawE {R}.qa {R}.lawPS p y) rzero → rEq y x) ∧
+      {stmt} := by
+  obtain ⟨x, hx, hr, hu⟩ := {R}.law_root p hin
+  refine ⟨x, ⟨hx, hr, hu⟩, ?_⟩
+  have h : rCF.le (dv rOH {Z.dy(0)}) (evR (envP {R}.qa {R}.lawPS p x) F{k}) :=
+    bound_at_root (lo := true) (e := F{k}) (c := {Z.dy(0)}) (vs := {vs_t}) (T := T{k}) (a := {R}.qa) (b := {R}.qb)
+      (ps := {R}.lawPS) (by decide +kernel) (by decide +kernel) hin hx.1 hx.2
+  exact le_of_sub_nonneg (rCF.le_respects (zv_isZ rOH (c := {Z.dy(0)}) rfl) (rCF.refl _) h)
+"""
+    body += f"end {name}\n#print axioms {R}.law_root\n" + "".join(f"#print axioms {name}.implreq{k}\n"
+                                                                    for k in range(len(forms)))
+    path = os.path.join(gen, name + ".lean")
+    out = _run(body, path)
+    ok = "error" not in out and out.count("does not depend on any axioms") == 1 + len(forms)
+    limit = any(w in out for w in ("maximum recursion depth", "deterministic timeout", "heartbeats", "Stack overflow"))
+    return {"status": "theorem" if ok else ("kernel limit" if limit else "refused"), "file": path, "out": out[:600],
+            "about": "implicit", "bracket": rt.get("bracket"), "range": rt.get("range"), "params": names,
+            "box": {}, "quotient": False, "trees": trees}

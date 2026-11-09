@@ -1096,6 +1096,8 @@ def implicit_bound_to_lean(laws, unknowns, qtext, target, ph, gtext, bracket, re
         return {"status": "not translated", "why": str(ex)}
     vs = [0] + [idx[n] for n in names if F(qsl[n]["lo"]) != F(qsl[n]["hi"])]
     vs_t = "[" + ", ".join(map(str, vs)) + "]"
+    if enode == ph:                     # the ROOT itself: its side from the law's sign (ZBoundPar.root_ge / root_le)
+        return _root_side(rt, gnode, idx, names, qsl, ph, reqs, name, depth, vs_t, target)
     root_txt = open(rt["file"]).read()
     root_txt = "\n".join(l for l in root_txt.splitlines() if not l.startswith("import ") and
                           not l.startswith("#print"))
@@ -1155,3 +1157,107 @@ theorem implreq{k} (p : Nat → RExpr) (hin : InnerIn {Z.MU} p {R}.lawPS) :
     return {"status": "theorem" if ok else ("kernel limit" if limit else "refused"), "file": path, "out": out[:600],
             "about": "implicit", "bracket": rt.get("bracket"), "range": rt.get("range"), "params": names,
             "box": {}, "quotient": False, "trees": trees}
+
+
+def _root_side(rt, gnode, idx, names, qsl, ph, reqs, name, depth, vs_t, target):
+    """`q ≥ c` / `q ≤ c` on the implicit root: the law strictly signed on [qa, c_d] (or [c_d, qb]) — no root there
+    (ZBoundPar.root_ge / root_le). c_d: c rounded to a dyadic on the requirement's safe side (c_d ≥ c for `≥`),
+    said in the statement. The sign's direction from floats at the middle (a search aid); the kernel proves it."""
+    R = name + "R"
+    a, b = rt["bracket"]
+    root_txt = "\n".join(l for l in open(rt["file"]).read().splitlines()
+                         if not l.startswith("import ") and not l.startswith("#print"))
+    try:
+        xg = Z.to_xe(_sqrt2exp(gnode), idx)
+    except ValueError as ex:
+        return {"status": "not translated", "why": str(ex)}
+    mid = {n: float((F(qsl[n]["lo"]) + F(qsl[n]["hi"])) / 2) for n in names}
+    head = (f"import ZBoundPar\n{root_txt}\nnamespace {name}\nopen VR VR.Numbers ZNumBin ZField ZPoly ZIv ZXE ZRealCF "
+            f"ZRootDiv ZBound ZRootPVR ZRootPar ZBoundPar ZRootExp ZDivIv\nset_option maxRecDepth 100000\n")
+    items = []
+    for k, (op, c) in enumerate(reqs):
+        c = F(c)
+        cd = Z.ceil_dy(c, 40) if op == ">=" else Z.floor_dy(c, 40)
+        if (op == ">=" and c <= a) or (op == "<=" and c >= b):
+            items.append((k, op, c, a if op == ">=" else b, None, None, None, None))    # the bracket itself says it
+            continue
+        if not (a < cd < b):
+            return {"status": "no tree", "why": f"the bound {c} lies beyond the root's bracket on the wrong side"}
+        lo_, hi_ = (a, cd) if op == ">=" else (cd, b)
+        try:
+            sgn = K.fl(gnode, {**mid, ph: float((lo_ + hi_) / 2)})
+        except Exception:
+            return {"status": "not translated", "why": "the law's sign could not be read at the middle"}
+        if rt.get("negated"):                   # zimplicit's lawE is −g then (its orientation)
+            sgn = -sgn
+        lo_flag = sgn > 0                       # lawE >= d > 0 on the side, or lawE <= d < 0
+        d = F(1, 1 << 60) if lo_flag else -F(1, 1 << 60)
+        items.append((k, op, c, cd, lo_, hi_, lo_flag, d))
+    probe = head
+    for k, op, c, cd, lo_, hi_, lo_flag, d in items:
+        if lo_ is None:
+            continue
+        probe += (f'def Bs{k} : Box := boxPS {Z.dy(lo_)} {Z.dy(hi_)} {R}.lawPS\n'
+                  f'#eval IO.println (match findV {"true" if lo_flag else "false"} {R}.lawE {Z.dy(d)} {vs_t} {depth} Bs{k} '
+                  f'with | some t => "TREE" ++ toString {k} ++ " " ++ t.txt | none => "NOTREE" ++ toString {k})\n'
+                  f'#eval IO.println ("POSOK{k} " ++ toString (posOK Bs{k} {R}.lawE))\n')
+    probe += f"end {name}\n"
+    gen = os.path.join(LEAN, "gen")
+    out = _run(probe, os.path.join(gen, name + "_probe.lean"))
+    if re.findall(r"^POSOK(\w+) false$", out, re.M):
+        return {"status": "refused", "why": "the law's reading NOT PROVED defined (posOK false) on the root's side",
+                "out": out[:300]}
+    trees = {}
+    for k, *rest in items:
+        if rest[3] is None:
+            continue
+        m = re.search(rf"^TREE{k} (.*)$", out, re.M)
+        if not m:
+            return {"status": "no tree", "why": f"requirement {items[k][1]} {items[k][2]}: the law not shown strictly "
+                                                f"signed on the root's side (depth {depth})", "out": out[:400]}
+        trees[k] = m.group(1)
+    body = head
+    for k, op, c, cd, lo_, hi_, lo_flag, d in items:
+        if lo_ is None:                     # the requirement's bound lies past the bracket's end: the root's bracket
+            stmt = f"rle (dv rOH {R}.qa) x" if op == ">=" else f"rle x (dv rOH {R}.qb)"
+            body += f"""/-- **The implicit root**: it exists, is unique, and lies in its bracket — `{target} {op} {c}` follows
+(the bracket's end {'≥' if op == '>=' else '≤'} the requirement's {c}). -/
+theorem rootreq{k} (p : Nat → RExpr) (hin : InnerIn {Z.MU} p {R}.lawPS) :
+    ∃ x : RExpr, ((rle (dv rOH {R}.qa) x ∧ rle x (dv rOH {R}.qb)) ∧ rEq (FP {R}.lawE {R}.qa {R}.lawPS p x) rzero ∧
+      ∀ y, rle (dv rOH {R}.qa) y → rle y (dv rOH {R}.qb) → rEq (FP {R}.lawE {R}.qa {R}.lawPS p y) rzero → rEq y x) ∧
+      {stmt} := by
+  obtain ⟨x, hx, hr, hu⟩ := {R}.law_root p hin
+  exact ⟨x, ⟨hx, hr, hu⟩, {"hx.1" if op == ">=" else "hx.2"}⟩
+"""
+            continue
+        sep = (f"(pos_of_posX rCF (d := {Z.dy(d)}) (by decide))" if lo_flag else
+               f"(rCF.pos_congr (dv_neg rOH {Z.dy(d)}) (pos_of_posX rCF (d := ZNumBin.dneg {Z.dy(d)}) (by decide)))")
+        stmt = f"rle (dv rOH {Z.dy(cd)}) x" if op == ">=" else f"rle x (dv rOH {Z.dy(cd)})"
+        lem = (f"root_ge (lo := {'true' if lo_flag else 'false'}) (e := {R}.lawE) (d := {Z.dy(d)}) (vs := {vs_t}) "
+               f"(T := T{k}) (a := {R}.qa) (c := {Z.dy(cd)}) (ps := {R}.lawPS)" if op == ">=" else
+               f"root_le (lo := {'true' if lo_flag else 'false'}) (e := {R}.lawE) (d := {Z.dy(d)}) (vs := {vs_t}) "
+               f"(T := T{k}) (a := {R}.qa) (b := {R}.qb) (c := {Z.dy(cd)}) (ps := {R}.lawPS)")
+        side = "hx.1" if op == ">=" else "hx.2"
+        bx = f"(boxPS {R}.qa {Z.dy(cd)} {R}.lawPS)" if op == ">=" else f"(boxPS {Z.dy(cd)} {R}.qb {R}.lawPS)"
+        lf = "true" if lo_flag else "false"
+        body += f"""def T{k} : VT := {trees[k]}
+/-- **The implicit root, on its side**: for every parameter vector the law's root in the bracket exists, is unique,
+and `{target} {op} {cd}` (`{cd}` {'≥' if op == '>=' else '≤'} the requirement's {c}). -/
+theorem rootreq{k} (p : Nat → RExpr) (hin : InnerIn {Z.MU} p {R}.lawPS) :
+    ∃ x : RExpr, ((rle (dv rOH {R}.qa) x ∧ rle x (dv rOH {R}.qb)) ∧ rEq (FP {R}.lawE {R}.qa {R}.lawPS p x) rzero ∧
+      ∀ y, rle (dv rOH {R}.qa) y → rle y (dv rOH {R}.qb) → rEq (FP {R}.lawE {R}.qa {R}.lawPS p y) rzero → rEq y x) ∧
+      {stmt} := by
+  obtain ⟨x, hx, hr, hu⟩ := {R}.law_root p hin
+  have hc : chkV {lf} {R}.lawE {Z.dy(d)} {vs_t} T{k} {bx} = true := by decide +kernel
+  have hq : posOK {bx} {R}.lawE = true := by decide +kernel
+  exact ⟨x, ⟨hx, hr, hu⟩, {lem} hc hq {sep} hin {side} hr⟩
+"""
+    body += f"end {name}\n#print axioms {R}.law_root\n" + "".join(f"#print axioms {name}.rootreq{k}\n"
+                                                                    for k, *_ in items)
+    path = os.path.join(gen, name + ".lean")
+    out = _run(body, path)
+    ok = "error" not in out and out.count("does not depend on any axioms") == 1 + len(items)
+    limit = any(w in out for w in ("maximum recursion depth", "deterministic timeout", "heartbeats", "Stack overflow"))
+    return {"status": "theorem" if ok else ("kernel limit" if limit else "refused"), "file": path, "out": out[:900],
+            "about": "implicit", "root_side": True, "bracket": rt.get("bracket"), "range": rt.get("range"),
+            "params": names, "box": {}, "quotient": False, "trees": trees}

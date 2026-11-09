@@ -92,6 +92,10 @@ with ProcessPoolExecutor(max_workers=max(2, min(16, (os.cpu_count() or 4) // 2))
                                  ["0", "0.06"], [(">=", "0.02"), ("<=", "0.03")], "ZImplFan")
     _F["ZImplFanB"] = pool.submit(ZB.implicit_bound_to_lean, [], [], _FQ, "Q", "Q", "pmax*(1 - Q/Qmax) - K*Q*Q",
                                   ["0", "0.06"], [("<=", "0.022")], "ZImplFanB")
+    _F["ZImplSide"] = pool.submit(ZB.implicit_bound_to_lean, [], [], _FQ, "Q", "Q", "pmax*(1 - Q/Qmax) - K*Q*Q",
+                                  ["0", "0.06"], [(">=", "0.0222"), ("<=", "0.0266")], "ZImplSide")
+    _F["ZImplSideB"] = pool.submit(ZB.implicit_bound_to_lean, [], [], _FQ, "Q", "Q", "pmax*(1 - Q/Qmax) - K*Q*Q",
+                                   ["0", "0.06"], [(">=", "0.023")], "ZImplSideB")
     R = {k: f.result() for k, f in _F.items()}
 
 ok = fail = 0
@@ -204,6 +208,12 @@ check("the fan's operating point Q (the root of pmax(1 − Q/Qmax) − K·Q² = 
       "unique root exists and 0.02 <= Q <= 0.03 — ONE theorem (law_root + the bound)", im["status"] == "theorem", im)
 check("the other side: Q <= 0.022 (the root reaches ~0.0265) — no theorem", R["ZImplFanB"]["status"] != "theorem",
       R["ZImplFanB"])
+sd = R["ZImplSide"]
+check("the ROOT's own side from the law's sign (ZBoundPar.root_ge / root_le): 0.0222 <= Q <= 0.0266 against the "
+      "root's range [0.02228, 0.02651] — tighter than the bracket allows a bound to see — a theorem",
+      sd["status"] == "theorem" and sd.get("root_side"), sd)
+check("the other side: Q >= 0.023 (the root goes down to ~0.02228) — no theorem", R["ZImplSideB"]["status"] != "theorem",
+      R["ZImplSideB"])
 print(f"\n{ok} ok, {fail} fail")
 print("ZBOUND LEAN BRIDGE GREEN" if fail == 0 else "ZBOUND LEAN BRIDGE RED")
 sys.exit(1 if fail else 0)

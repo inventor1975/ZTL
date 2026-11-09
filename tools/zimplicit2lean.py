@@ -64,7 +64,9 @@ def pe_of_poly(poly, gens, idx):
 
 
 def lean(path):
-    r = subprocess.run(["lake", "env", "lean", path], cwd=LEAN, capture_output=True, text=True, timeout=1800)
+    # `lake lean` loads the PRECOMPILED search code (lakefile precompileModules; 2026-11-09, the curator: "Сделай
+    # компиляцию") — `#eval` ran in the interpreter before. The kernel's check is the same either way.
+    r = subprocess.run(["lake", "-q", "--log-level=error", "lean", path], cwd=LEAN, capture_output=True, text=True, timeout=1800)
     return r.returncode, r.stdout + r.stderr
 
 

@@ -113,7 +113,9 @@ def lean_run(text, name):
     path = os.path.join(LEAN, "gen", name)
     with open(path, "w") as f:
         f.write(text)
-    r = subprocess.run(["lake", "env", "lean", path], cwd=LEAN, capture_output=True, text=True, timeout=3000)
+    # `lake lean` loads the PRECOMPILED search code (lakefile precompileModules; 2026-11-09, the curator: "Сделай
+    # компиляцию") — `#eval` ran in the interpreter before. The kernel's check is the same either way.
+    r = subprocess.run(["lake", "-q", "--log-level=error", "lean", path], cwd=LEAN, capture_output=True, text=True, timeout=3000)
     return r.stdout + r.stderr
 
 

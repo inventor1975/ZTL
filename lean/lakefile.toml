@@ -575,6 +575,7 @@ name = "ZRootP"
 
 [[lean_lib]]
 name = "ZRootPVR"
+precompileModules = true
 
 [[lean_lib]]
 name = "ZImplicitFan"
@@ -591,6 +592,7 @@ name = "ZRootDiv"
 
 [[lean_lib]]
 name = "ZRootPar"
+precompileModules = true
 
 [[lean_lib]]
 name = "ZPumpRoot"

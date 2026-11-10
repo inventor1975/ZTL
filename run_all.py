@@ -166,7 +166,8 @@ STANDS = [
     ("test_param_system.py", ["PARAM SYSTEM GREEN"]),
     ("test_mlin_eq.py", ["MLIN EQ GREEN"]),
     ("test_backward_tree.py", ["BACKWARD TREE GREEN"]),
-    ("test_zreach.py", ["ZREACH GREEN", "0 mismatches, 0 refused"]),     # 2026-11-09: values reachable, down as fast as up
+    ("test_zreach.py", ["ZREACH GREEN", "0 mismatches, 0 refused"]),
+    ("test_zjudge2lean.py", ["ZJUDGE2LEAN GREEN"]),     # 2026-11-10: the judge's verdicts emitted as Lean, decide-proved     # 2026-11-09: values reachable, down as fast as up
     ("test_zpy.py", ["ZPY GREEN"]),     # 2026-11-09: ZTL as a layer of Python, for code an AI writes (pilot)
     ("test_certify.py", ["CERTIFY GREEN"]),
     ("test_none.py", ["NONE GREEN"]),
@@ -506,6 +507,9 @@ STANDS = [
     ("dilemmas/hume_guillotine.py", [
         "ok  F1 is -> ought, fact granted: nothing is delivered       OPEN      F until-verification weak=['o']",
         "ok  F2 bridge in place: bare modus ponens, earned if stable  EARNED IF STABLE T hereditary         weak=['d', 'o']"]),
+    ("dilemmas/trolley.py", [
+        "ok  f -> o, the fact granted                                   OPEN              F until-verification weak=['o']",
+        "TROLLEY: all measurements hold."]),
     ("dilemmas/cogito.py", [
         "ok  F1 t -> i, thinking granted: no delivery                 OPEN      F until-verification weak=['i']",
         "ok  F2 bridge in place: bare modus ponens, earned if stable  EARNED IF STABLE T hereditary         weak=['i', 't']"]),

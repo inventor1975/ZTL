@@ -68,6 +68,18 @@ from znumjudge import judge_sheet_claim, parse_quantities   # noqa: E402
 
 TWO_BRIDGES = "((u & f) -> o) & ((dk & k) -> ~o) & u & dk & f & k"
 
+# the propositional claims of this stand, as (name, formula, marking): `--emit-lean` writes them to
+# lean/TrolleyJudged.lean through zjudge2lean — the judge's verdicts restated in Lean and proved by `decide`
+CLAIMS = [
+    ("F2_no_delivery", "f -> o", {"f": "T"}),
+    ("F3_pair", TWO_BRIDGES, {}),
+    ("F3_pair_facts", TWO_BRIDGES, {"f": "T", "k": "T"}),
+    ("F3_pair_all_granted", TWO_BRIDGES, {"u": "T", "dk": "T", "f": "T", "k": "T"}),
+    ("F3_impossibility", "~((u & f & dk & k) & (((u & f) -> o) & ((dk & k) -> ~o)))", {}),
+    ("F4_count_no_split", "((u & f) -> o_sw) & ((u & f) -> o_fb) & u & f & o_sw & ~o_fb", {"u": "T", "f": "T"}),
+    ("F4_means", "((u & f & ~m) -> o_fb) & u & f & m", {"u": "T", "f": "T", "m": "T"}),
+]
+
 
 def expect(label, formula, marking, disp, verdict, grade, weak):
     r = judge(formula, marking)
@@ -152,5 +164,16 @@ def run():
     return 0
 
 
+def emit_lean():
+    from zjudge2lean import emit_file
+    text, _ = emit_file(CLAIMS, title="dilemmas/trolley.py — the trolley problem's propositional verdicts")
+    path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "lean", "TrolleyJudged.lean")
+    open(path, "w").write(text)
+    print(f"wrote {path}")
+
+
 if __name__ == "__main__":
+    if "--emit-lean" in sys.argv:
+        emit_lean()
+        sys.exit(0)
     sys.exit(run())

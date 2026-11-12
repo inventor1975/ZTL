@@ -155,6 +155,190 @@ def check_implicit(g, q, qs, cert):
         "unique root, monotone in every parameter: its range spans the corner roots (bracketed exactly)"
 
 
+# ---------------------------------------------------------------- EXISTENCE: the root is BUILT
+def _read_or_none(e, qs, piece):
+    """A reading that RAISES (a function read outside its domain, e.g. tan beyond 1.5) is no reading: the
+    existence check refuses on it and never raises on a brought certificate."""
+    try:
+        return _reading(e, qs, piece)
+    except Exception:                                    # noqa: BLE001 — any failure to read proves nothing
+        return None
+
+
+def check_exists(g, q, qs, cert):
+    """A ROOT IS BUILT for every value of the parameter box — the kernel's check of a brought certificate.
+
+    WHY (2026-11-13). `check_implicit` proves an ENCLOSURE: every root lies in the kept pieces. It never said that a
+    root is there, and a stand read the enclosure as the quantity's range: a law that jumps across zero, or has a
+    pole there, with NO root was reported as an earned range around the jump. "The q such that g(q, p) = 0" is a
+    definite description (ZTL v2.1.6, §25): it denotes only a satisfier that exists, and existence is earned.
+
+    THE RULE is the one already proved in Lean with zero axioms, `lean/ZRootPar.lean` — `chkP` / `par_root` for one
+    box, `chkT` / `tree_root` for a cover: on a bracket [qa, qb] of the unknown,
+      * the law reads strictly negative at one end and strictly positive at the other, over the whole part;
+      * its slope in the unknown keeps ONE STRICT SIGN over the bracket x the part (so it is bounded away from zero
+        there, and bounded above: the reading is finite) — the root is unique in the bracket;
+      * its slope in every parameter of the box has a finite reading (the Lipschitz bound `par_root` asks);
+    then for every value of the part the root exists in [qa, qb] and is the only one. A wide box is COVERED by a
+    tree of cuts whose two parts OVERLAP (a real parameter is placed in a part by cotransitivity, not by a
+    decision — `tree_root`): a cut with no overlap is refused.
+
+    This is the OPERATIONAL ground. A sign change with the law merely continuous (the classical intermediate value
+    theorem) builds nothing and is not accepted here.
+
+        {"search": [lo, hi],
+         "exists": {"leaf": true, "qa": "...", "qb": "..."}
+                 | {"param": name, "at": "...", "overlap": "...", "parts": [tree, tree]}}
+
+    -> (True, number of leaves, how) | (False, reason). The kernel reads everything itself (zcertify._reading,
+    zcertify.derivative); the search that proposed the tree is outside (`search_exists`)."""
+    names = sorted(n for n in ZC._names(g) if n in qs and n != q and qs[n]["lo"] < qs[n]["hi"])
+    for n in names:
+        if isinstance(qs[n]["lo"], float) or isinstance(qs[n]["hi"], float):
+            return False, f"{n} is unbounded"
+    box = {n: (qs[n]["lo"], qs[n]["hi"]) for n in names}
+    try:
+        slo, shi = (Fraction(str(x)) for x in cert["search"])
+        tree = cert["exists"]
+    except (KeyError, ValueError, TypeError, ZeroDivisionError):
+        return False, "certificate unreadable"
+    try:
+        dq = ZC.derivative(g, q)
+        dps = {n: ZC.derivative(g, n) for n in names}
+    except ZC.NoDerivative as e:
+        return False, f"the law's slope has no derivative here: {e}"
+    leaves = [0]
+
+    def leaf(part, t):
+        try:
+            qa, qb = Fraction(str(t["qa"])), Fraction(str(t["qb"]))
+        except (KeyError, ValueError, TypeError, ZeroDivisionError):
+            return "a leaf's bracket is unreadable"
+        if not (slo <= qa < qb <= shi):
+            return f"the bracket [{qa}, {qb}] is not inside the search range"
+        s1 = _sign(_read_or_none(g, qs, dict(part, **{q: (qa, qa)})))
+        s2 = _sign(_read_or_none(g, qs, dict(part, **{q: (qb, qb)})))
+        if s1 not in (1, -1) or s2 not in (1, -1) or s1 == s2:
+            return f"no strict sign change of the law across [{qa}, {qb}] over the part"
+        sd = _sign(_read_or_none(dq, qs, dict(part, **{q: (qa, qb)})))
+        if sd not in (1, -1):
+            return f"the slope in {q} does not keep one strict sign over [{qa}, {qb}] x the part"
+        if sd != s2:
+            return "the slope's sign disagrees with the signs at the bracket's ends"
+        for n, dn in dps.items():
+            if _read_or_none(dn, qs, dict(part, **{q: (qa, qb)})) is None:
+                return f"the slope in the parameter {n} has no reading over the bracket x the part"
+        leaves[0] += 1
+        return None
+
+    def walk(part, t, depth):
+        if depth > 200 or not isinstance(t, dict):
+            return "the tree is unreadable or too deep"
+        if t.get("leaf") is True:
+            return leaf(part, t)
+        try:
+            v, at, ov, parts = t["param"], Fraction(str(t["at"])), Fraction(str(t["overlap"])), t["parts"]
+        except (KeyError, ValueError, TypeError, ZeroDivisionError):
+            return "a cut is unreadable"
+        if v not in part or not isinstance(parts, list) or len(parts) != 2:
+            return "a cut names no parameter of the part, or has not two parts"
+        lo, hi = part[v]
+        if not ov > 0:
+            return f"a cut of {v} with no overlap: a real parameter is not decided to one side"
+        if not (lo < at - ov and at + ov < hi):
+            return f"a cut of {v} (with its overlap) is not strictly inside the part"
+        return (walk(dict(part, **{v: (lo, at + ov)}), parts[0], depth + 1)
+                or walk(dict(part, **{v: (at - ov, hi)}), parts[1], depth + 1))
+
+    why = walk(box, tree, 0)
+    if why:
+        return False, why
+    where = "over the whole box" if leaves[0] == 1 else f"on each of {leaves[0]} overlapping parts that cover the box"
+    return True, leaves[0], ("a root is BUILT for every value of the box: a strict sign change with the slope in "
+                             f"{q} bounded away from zero, {where} "
+                             "(the rule of lean/ZRootPar par_root / tree_root)")
+
+
+def search_exists(g, q, qs, search, hull, budget=600):
+    """The SEARCH for an existence certificate (outside the check; the kernel checks whatever it brings). Per part of
+    the box: the root at the part's middle is located by bisection on the signs the reading gives at points, the
+    bracket around it is widened until the law keeps a strict sign at each end over the whole part, and the slope
+    is read once; a part where that fails is cut in two OVERLAPPING halves along its widest parameter.
+    -> the certificate {"search", "exists"} or None."""
+    try:
+        dq = ZC.derivative(g, q)
+    except ZC.NoDerivative:
+        return None
+    names = sorted(n for n in ZC._names(g) if n in qs and n != q and qs[n]["lo"] < qs[n]["hi"])
+    if any(isinstance(qs[n]["lo"], float) or isinstance(qs[n]["hi"], float) for n in names):
+        return None
+    whole = {n: (qs[n]["lo"], qs[n]["hi"]) for n in names}
+    slo, shi = (Fraction(str(x)) for x in search)
+    hlo, hhi = (Fraction(str(x)) for x in hull)
+    w, span = hhi - hlo, shi - slo
+    outs = [w / 8, w / 2, 2 * w, span / 1024, span / 64, span / 8, span]
+    cands = sorted({hlo, hhi} | {max(slo, hlo - d) for d in outs} | {min(shi, hhi + d) for d in outs}
+                   | {hlo + w * Fraction(k, 4) for k in (1, 2, 3)})
+    left = [budget]
+
+    def sg(x, part):
+        return _sign(_read_or_none(g, qs, dict(part, **{q: (x, x)})))
+
+    def bracket(part):
+        mid = {n: ((lo + hi) / 2,) * 2 for n, (lo, hi) in part.items()}
+        pts = [(x, sg(x, mid)) for x in cands]
+        pts = [(x, s) for x, s in pts if s in (1, -1)]
+        pairs = sorted((pts[i + 1][0] - pts[i][0], i) for i in range(len(pts) - 1) if pts[i][1] != pts[i + 1][1])
+        if not pairs:
+            return None
+        (a, sa), (b, _sb) = pts[pairs[0][1]], pts[pairs[0][1] + 1]
+        d = max(w, span / 2 ** 20) / 2 ** 12
+        for _ in range(40):
+            if b - a <= d:
+                break
+            m = (a + b) / 2
+            sm = sg(m, mid)
+            if sm not in (1, -1):
+                break
+            if sm == sa:
+                a = m
+            else:
+                b = m
+        while True:
+            qa, qb = max(slo, a - d), min(shi, b + d)
+            s1, s2 = sg(qa, part), sg(qb, part)
+            if s1 in (1, -1) and s2 in (1, -1) and s1 != s2:
+                return qa, qb
+            if qa == slo and qb == shi:
+                return None
+            d *= 2
+
+    def build(part):
+        left[0] -= 1
+        if left[0] < 0:
+            return None
+        br = bracket(part)
+        if br is not None and _sign(_read_or_none(dq, qs, dict(part, **{q: br}))) in (1, -1):
+            return {"leaf": True, "qa": str(br[0]), "qb": str(br[1])}
+        if not part:
+            return None
+        v = max(part, key=lambda n: (part[n][1] - part[n][0]) / (whole[n][1] - whole[n][0]))
+        lo, hi = part[v]
+        if (hi - lo) * 2 ** 40 < whole[v][1] - whole[v][0]:
+            return None
+        at, ov = (lo + hi) / 2, (hi - lo) / 64
+        left_t = build(dict(part, **{v: (lo, at + ov)}))
+        if left_t is None:
+            return None
+        right_t = build(dict(part, **{v: (at - ov, hi)}))
+        if right_t is None:
+            return None
+        return {"param": v, "at": str(at), "overlap": str(ov), "parts": [left_t, right_t]}
+
+    tree = build(dict(whole))
+    return None if tree is None else {"search": [str(slo), str(shi)], "exists": tree}
+
+
 # ---------------------------------------------------------------- the SEARCH (outside the check)
 def _split_tree(g, q, qs, whole, box, piece, budget):
     """A partition of the parameter box on which every part's reading excludes a root for q in piece —

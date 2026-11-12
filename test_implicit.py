@@ -21,6 +21,12 @@ Checks:
   6. MUTATION of the kernel: with every reading collapsed to its midpoint, a forged "none" piece
      slips through — the stand sees a lying kernel.
 
+  7. EXISTENCE (2026-11-13): check_exists — a root is BUILT for every value of the box by the rule of
+     lean/ZRootPar (strict sign change + slope bounded away from zero, on a cover of overlapping parts); the fan,
+     the pump, 40 seeded cubics and a two-root law are built and one float root sits in every bracket; a jump, a
+     pole and a law undecided in its parameter are refused; forged brackets and cuts are refused; a lying kernel
+     passes a forged bracket.
+
 Run:  python3 test_implicit.py   -> IMPLICIT GREEN
 """
 import math
@@ -234,6 +240,178 @@ lied = ZI.check_implicit(g, "Q", qs, forged)
 ZI._reading = lambda e, q_, pc: real(e, q_, pc)
 check("the lying kernel passes the forged 'no root anywhere'", lied[0], lied)
 check("the true kernel refuses it", not ZI.check_implicit(g, "Q", qs, forged)[0])
+
+# ------------------------------------------------------------------ 7. EXISTENCE: the root is BUILT
+print("7. existence: a root is BUILT (the rule of lean/ZRootPar), not only enclosed")
+
+
+def leaf_of(tree, part, point):
+    """The leaf of the cover a parameter point falls in (either side inside an overlap), with its part."""
+    while not tree.get("leaf"):
+        v, at, ov = tree["param"], F(tree["at"]), F(tree["overlap"])
+        lo, hi = part[v]
+        if point[v] <= float(at):
+            tree, part = tree["parts"][0], dict(part, **{v: (lo, at + ov)})
+        else:
+            tree, part = tree["parts"][1], dict(part, **{v: (at - ov, hi)})
+    return tree
+
+
+def leaves_of(tree):
+    return 1 if tree.get("leaf") else sum(leaves_of(t) for t in tree["parts"])
+
+
+def built(qs_, g_, q, search, hull):
+    c = ZI.search_exists(g_, q, qs_, search, hull)
+    return c, (ZI.check_exists(g_, q, qs_, c) if c else (False, "the search built no certificate"))
+
+
+def one_root_in_every_leaf(qs_, c, fn, names, n=40, seed=3):
+    """The other route: at sampled parameter points the float roots inside the leaf's bracket — exactly one."""
+    rnd_, box_ = random.Random(seed), {m: (qs_[m]["lo"], qs_[m]["hi"]) for m in names}
+    for _ in range(n):
+        pt = {m: rnd_.uniform(float(qs_[m]["lo"]), float(qs_[m]["hi"])) for m in names}
+        lf = leaf_of(c["exists"], box_, pt)
+        if len(float_roots(lambda x, pt=pt: fn(pt, x), float(F(lf["qa"])), float(F(lf["qb"])))) != 1:
+            return False
+    return True
+
+
+# the fan: one bracket over the whole box
+qs, g = law("pmax=[44.16,51.84] credit, Qmax=[0.038,0.042] credit, K=[27200,36800] credit, Q=? credit",
+            "pmax*(1 - Q/Qmax) - K*Q*Q")
+cert_f = ZI.search_certificate(g, "Q", qs, ["0", "0.06"])
+hull_f = ZI.check_implicit(g, "Q", qs, cert_f)[1]
+ce, re_ = built(qs, g, "Q", ["0", "0.06"], hull_f)
+check("fan: the root is built over the whole box", re_[0] and re_[1] == 1 and "BUILT" in re_[2], re_)
+check("fan: one float root in the bracket at 40 sampled points",
+      bool(ce) and one_root_in_every_leaf(qs, ce, lambda v, x: v["pmax"] * (1 - x / v["Qmax"]) - v["K"] * x * x,
+                                          ("pmax", "Qmax", "K")))
+check("fan: the bracket holds the closed-form corner roots",
+      bool(ce) and F(ce["exists"]["qa"]) < min(truth) and max(truth) < F(ce["exists"]["qb"]) if ce and ce["exists"].get("leaf") else False)
+
+# the pump: Swamee-Jain friction, 8 parameters with width — one bracket, one slope reading
+qs_p, g_p = law("H0=[38,42] credit, a=[9000,11000] credit, z=[14.5,15.5] credit, L=[118,122] credit, "
+                "D=[0.0495,0.0505] credit, Km=[4.5,5.5] credit, eps=[0.000045,0.000055] credit, "
+                "nu=[0.00000095,0.00000105] credit, pi=[3.14159265358979,3.14159265358980] credit, "
+                "g0=[9.80665,9.80665] credit, Q=? credit",
+                "H0 - a*Q*Q - z - (0.25/pow(log10(eps/(3.7*D) + 5.74/pow(4*Q/(pi*D*nu), 0.9)), 2)*L/D + Km)"
+                "*8*Q*Q/(pi*pi*g0*pow(D, 4))")
+cp_, rp_ = built(qs_p, g_p, "Q", ["0.001", "0.06"], ["0.005167", "0.006313"])
+check("pump: the root is built over the whole box", rp_[0] and rp_[1] == 1, rp_)
+
+# a law with TWO roots whose slope changes sign between them: one bracket cannot do, a cover of overlapping parts does
+qs2, g2 = law("p=[1,4] credit, q=? credit", "(q - p)*(q - p) - 1")
+c2, r2e = built(qs2, g2, "q", ["0.5", "6"], ["2", "5"])
+check("two roots, the slope turns between them: built on a cover of several overlapping parts",
+      r2e[0] and r2e[1] > 1 and leaves_of(c2["exists"]) == r2e[1], r2e)
+check("  one float root in each leaf's bracket at 40 sampled points",
+      bool(c2) and one_root_in_every_leaf(qs2, c2, lambda v, x: (x - v["p"]) ** 2 - 1, ("p",)))
+
+# 40 seeded laws with one root
+rnd = random.Random(20261113)
+n_built = n_checked = 0
+for i in range(40):
+    a_, b_ = rnd.uniform(0.5, 3), rnd.uniform(0.5, 3)
+    plo = rnd.uniform(-4, 3); phi = plo + rnd.uniform(0.1, 2)
+    qs_r, g_r = law(f"a=[{a_:.4f},{a_ * 1.05:.4f}] credit, b=[{b_:.4f},{b_ * 1.05:.4f}] credit, "
+                    f"p=[{plo:.4f},{phi:.4f}] credit, q=? credit", "a*q*q*q + b*q - p")
+    cr = ZI.search_certificate(g_r, "q", qs_r, ["-5", "5"])
+    rr = ZI.check_implicit(g_r, "q", qs_r, cr) if cr else (False,)
+    if not rr[0]:
+        continue
+    cb, rb = built(qs_r, g_r, "q", ["-5", "5"], rr[1])
+    if rb[0]:
+        n_built += 1
+        n_checked += one_root_in_every_leaf(qs_r, cb, lambda v, x: v["a"] * x ** 3 + v["b"] * x - v["p"],
+                                            ("a", "b", "p"), n=10, seed=i)
+check(f"40 seeded cubics a q^3 + b q = p: the root built in {n_built}, one float root in the bracket in {n_checked}",
+      n_built >= 38 and n_checked == n_built, (n_built, n_checked))
+
+# NO root, and the enclosure alone would not say so
+LEAF = {"leaf": True, "qa": "0.5", "qb": "1.5"}
+
+
+def no_root(name, qtext, expr, tree=LEAF, search=("0", "2"), q="q"):
+    qs_n, g_n = law(qtext, expr)
+    try:
+        r = ZI.check_exists(g_n, q, qs_n, {"search": list(search), "exists": tree})
+    except Exception as e:                                   # noqa: BLE001
+        r = (True, "RAISED", repr(e))
+    check(f"refused: {name}", not r[0], r)
+    if ZI.search_exists(g_n, q, qs_n, list(search), [tree.get("qa", "0.5"), tree.get("qb", "1.5")]) is not None:
+        check(f"  the search builds nothing either: {name}", False)
+
+
+no_root("a JUMP across zero with slope 1 on both sides (-2.5 at 0.5, +1.5 at 1.5, never 0)",
+        "q=? credit", "ifpos(q - 1, q, q - 3)")
+no_root("the same jump with a parameter", "p=[0,0.1] credit, q=? credit", "ifpos(q - 1, q, q - 3) + p")
+no_root("a POLE across zero: 1/(q - 1)", "q=? credit", "1/(q - 1)")
+no_root("tan across its pole (read only below 1.5): refused, not raised", "q=? credit", "tan(q)",
+        {"leaf": True, "qa": "1.2", "qb": "1.9"}, ("1", "2"))
+no_root("a law that jumps in the PARAMETER where it is not decided",
+        "p=[0.9,1.1] credit, q=? credit", "ifpos(p - 1, q - 1, q - 1.2)")
+
+# a root that IS there but is not built by this rule: honest refusal (the caller says OPEN, never 'no root')
+no_root("a triple root (zero slope): the rule builds nothing", "q=? credit", "(q - 1)*(q - 1)*(q - 1)")
+qs_m2, g_m2 = law("a=[1,2] credit, Q=? credit", "min(10 - Q, 20 - 3*Q) - a*Q")
+r_m2 = ZI.check_exists(g_m2, "Q", qs_m2, {"search": ["0", "10"], "exists": {"leaf": True, "qa": "3", "qb": "6"}})
+check("min in the law: no derivative, refused with the reason (not raised)",
+      not r_m2[0] and "derivative" in r_m2[1], r_m2)
+check("min in the law: the search returns no certificate", ZI.search_exists(g_m2, "Q", qs_m2, ["0", "10"], ["3", "5"]) is None)
+
+# FORGERIES of a true certificate
+qs3, g3 = law("p=[0,4] credit, q=? credit", "q*q*q + q - p")
+c3, r3 = built(qs3, g3, "q", ["-1", "3"], ["0", "1.4"])
+check("q^3 + q = p: built", r3[0], r3)
+
+
+def forged(name, tree, qs_=qs3, search=("-1", "3")):
+    try:
+        r = ZI.check_exists(g3, "q", qs_, {"search": list(search), "exists": tree})
+    except Exception as e:                                   # noqa: BLE001
+        r = (True, "RAISED", repr(e))
+    check(f"forged, refused: {name}", not r[0], r)
+
+
+forged("a bracket beside the root (no sign change)", {"leaf": True, "qa": "2", "qb": "3"})
+forged("a bracket with the root at its end for one parameter value (not strict)", {"leaf": True, "qa": "0", "qb": "2"})
+forged("a bracket strict at the middle of the box only", {"leaf": True, "qa": "0.9", "qb": "1.1"})
+forged("a bracket outside the search range", {"leaf": True, "qa": "-2", "qb": "2"})
+forged("an inverted bracket", {"leaf": True, "qa": "2", "qb": "-0.5"})
+good = {"leaf": True, "qa": "-0.01", "qb": "2"}
+check("the honest wide bracket is accepted", ZI.check_exists(g3, "q", qs3, {"search": ["-1", "3"], "exists": good})[0])
+# the kernel's reading takes each occurrence of q on its own: over [-0.5, 2] it reads the slope 3q^2 + 1 as [-2, 13]
+# and builds nothing there, though the slope is positive — a refusal by the reading, sound (MEASURED 2026-11-13)
+forged("a true bracket whose slope the reading cannot sign (q on both sides of 0)", {"leaf": True, "qa": "-0.5", "qb": "2"})
+forged("a cut with NO overlap (a real parameter is not decided to one side)",
+       {"param": "p", "at": "2", "overlap": "0", "parts": [good, good]})
+forged("a cut with a negative overlap (a gap in the cover)",
+       {"param": "p", "at": "2", "overlap": "-0.5", "parts": [good, good]})
+forged("a cut outside the part", {"param": "p", "at": "5", "overlap": "0.1", "parts": [good, good]})
+forged("a cut of a name that is not a parameter", {"param": "q", "at": "1", "overlap": "0.1", "parts": [good, good]})
+forged("a cut with one part", {"param": "p", "at": "2", "overlap": "0.1", "parts": [good]})
+forged("one good part and one bad", {"param": "p", "at": "2", "overlap": "0.1",
+                                    "parts": [good, {"leaf": True, "qa": "2.5", "qb": "3"}]})
+check("the honest cut is accepted",
+      ZI.check_exists(g3, "q", qs3, {"search": ["-1", "3"],
+                                     "exists": {"param": "p", "at": "2", "overlap": "0.1", "parts": [good, good]}})[:2]
+      == (True, 2))
+forged("an unbounded parameter", good, dict(qs3, p=dict(qs3["p"], hi=float("inf"))))
+forged("unreadable", {"leaf": True, "qa": "x", "qb": "1"})
+forged("not a tree", "leaf")
+deep = good
+for _ in range(300):
+    deep = {"param": "p", "at": "2", "overlap": "1.9", "parts": [deep, good]}
+forged("a tree deeper than the kernel walks", deep)
+
+# MUTATION: a kernel whose readings collapse to the midpoint passes a bracket that is strict at the middle only
+narrow = {"search": ["-1", "3"], "exists": {"leaf": True, "qa": "0.9", "qb": "1.1"}}
+ZI._reading = lying
+lied_e = ZI.check_exists(g3, "q", qs3, narrow)
+ZI._reading = lambda e, q_, pc: real(e, q_, pc)
+check("the lying kernel passes 'a root in [0.9, 1.1] for every p in [0, 4]'", lied_e[0], lied_e)
+check("the true kernel refuses it", not ZI.check_exists(g3, "q", qs3, narrow)[0])
 
 print(f"\n{ok} ok, {fail} fail")
 print("IMPLICIT GREEN" if fail == 0 else "IMPLICIT RED")

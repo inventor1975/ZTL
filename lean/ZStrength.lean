@@ -28,6 +28,9 @@ What is proved, for the whole formula language:
 `proper_conservative_extension` puts the five together; `strictly_more_laws` says it as an inclusion: the
 classical laws sit inside the marked laws as one layer, and there is a marked law outside that layer.
 
+THESE ARE LAWS OF THE MATRIX — the tables. How far a T of the matrix may be relied on while its atoms are dirty
+is the judge's question (`ZSpeaks.lean`): non-contradiction on a dirty atom is EARNED IF STABLE there, not EARNED.
+
 WHAT THIS IS NOT. It is not a new theorem about verified data — there is none to be had. "Stronger" here means
 exactly: strictly more laws in the language with the marking, each implying the classical one, and the same laws
 on the classical layer. Whoever reserves the word for an extension that proves more about the OLD domain will

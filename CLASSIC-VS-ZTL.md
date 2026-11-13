@@ -7,7 +7,7 @@ One page, four columns, every number produced by `python3 zledger.py`
 |---|---|
 | **Shared** | On Z-free markings ZTL **is** classical logic. Not sampled — **proved**: `lean/ClassicalAgreement.lean`, `evalF_agrees`, structural induction over the whole formula language, empty axiom list. (The 2906 × 4 measurement that preceded it stands as the sanity check.) |
 | **Nothing lost** | **All 26 classical laws hold here on verified data — not one falls, ever** (measured: on mark-free valuations classical and ZTL have the same 584 validities of the depth-≤2 pool, the same set element for element — 588 counting the pool list's repeated entries; see the erratum below). Of the 26, **12 keep working when an atom carries the mark**; the other **14 do not extend to it** — both De Morgans, contraposition, `¬¬p = p`, excluded middle, `p → p`, idempotence (`audit.py`) — and there ZTL proves the **refutation with a witness** instead, with zero undecided outcomes. The 212 counts validities over the WIDER domain: beside the 584 it is the price of admitting dirty input (fewer formulas hold on every valuation), not a loss on verified data (corrected 2026-09-28). Against the classical default on that wider domain the comparison is external Bochvar's 548. |
-| **Gained (laws)** | **Zero, and now machine-checked:** `ztl_taut_is_classical` — every ZTL tautology is a classical one, for every formula, empty axiom list. And the inclusion is **strict** (`not_conversely`: `p → p` is classically valid and fails here at a mark), so "conservative" never reads as "the same logic". This column can never fill. |
+| **Gained (laws)** | Two statements, kept apart. **About verified data: zero, machine-checked** — `ztl_taut_is_classical`: a formula that holds under every marking is a classical tautology, for every formula, empty axiom list; and the inclusion is **strict** (`not_conversely`: `p → p` is classically valid and fails here at a mark). Nothing can be added there: classical propositional logic is complete on two-valued data, a further law would be false. **In the language where a law carries its marking — which atoms are verified — strictly more** (`lean/ZStrength.lean`, v2.1.7, empty axiom list): with every atom verified the laws are exactly the classical laws, both ways (`law_all_iff_classical`); a law under any marking implies the classical law (`law_implies_classical`); laws exist with no atom verified (`lnc_none`) and they are not the classical laws over again (`layers_differ`); together `proper_conservative_extension`, `strictly_more_laws`. Classical logic has the laws of one marking only. (Until 2026-11-13 this row read "Zero … this column can never fill": true of the first statement, and silent about the second.) |
 | **Gained (sight)** | Classical logic sorts two-variable formulas into **16** equivalence classes; we sort them into **195**, and **all 16** classical classes are split. Twelvefold refinement: same truths, finer eyes. |
 | **Order of birth** | Under pure doubt (every atom Z, no constants) **F is born first and T only through an F** — proved over the whole language: `lean/ZOrigin.lean`, `T_through_F`, `birth_order`, empty axiom list. Classical logic has no such order: its negation is an involution, and the question does not arise. Not a gain in laws (row above) — a fact about where ZTL's values come from. |
 | **Only here** | `¬(p ↔ p)` answers F, F, **T** on T, F, Z — the mark is sayable *inside the object language*. A two-valued logic has no words for the question, not merely no proof. |
@@ -312,40 +312,82 @@ verdict out of ignorance**: `¬Z = T`, `Z→F = T`, `Z↔Z = T`.
 
 ### How to say this without being refuted in one line
 
-"ZTL is stronger than classical logic" invites the standard reading — *proves
-more* — and our own machine-checked `ztl_taut_is_classical` refutes it instantly.
-The wording that survives:
+"ZTL is stronger than classical logic", read as a claim about laws, has two readings,
+and only one of them is true. (Solving is a third matter, taken separately below.)
 
-> **On verified valuations ZTL is classical logic — the two-element Boolean
-> algebra, with T designated, is a submatrix of the ZTL matrix; over a wider
-> input domain it is strictly more expressive and strictly more applicable,
-> and it adds no theorem about the old domain.**
->
-> (Until 2026-09-28 this read "a conservative extension of classical logic".
-> Wrong term: an extension keeps every theorem of the original, and ZTL does
-> not validate `p → p` over its own valuations.)
+*Proves more about verified data* — **false**, and our own machine-checked
+`ztl_taut_is_classical` refutes it instantly. Nothing new is true there.
 
-And the sharper claim, the one the exhibit below actually proves — say this when
-someone asks whether ZTL is *stronger*, because it is the strength without the
-word that invites the wrong reading:
+*Has strictly more laws, each implying the classical one* — **a theorem** since
+v2.1.7 (`lean/ZStrength.lean`, empty axiom list). A law is a formula together with
+a marking — which atoms are verified — as `x == x` and `x === x` are two laws and
+not one. A verified atom carries T or F; an unverified one may carry anything,
+the mark included. Classical logic has the laws of one marking only: every atom verified.
+On that marking ZTL's laws are exactly the classical laws
+(`law_all_iff_classical`); under every other marking a law of ZTL implies the
+classical law and is the stronger statement — verifying more atoms never loses a
+law (`law_weaken`, `law_implies_classical`); such laws
+exist (`lnc_none`), and they are not the classical laws over again
+(`layers_differ`). Together: `proper_conservative_extension`, `strictly_more_laws`.
+The content is not the count of markings — a richer language has more statements
+by bookkeeping alone — but that the new layer is neither empty nor a copy of the
+old one.
+
+So the word may be used, with its sense named. The wording that survives:
+
+> **On verified data ZTL is classical logic — the two-element Boolean algebra,
+> with T designated, is a submatrix of the ZTL matrix (`evalF_agrees`). In the
+> language where a
+> law carries its marking it has strictly more laws than classical logic, each
+> implying the classical one — in that sense, and in no other, it is stronger.
+> It proves nothing new about verified data, where nothing new is true.**
+
+Two cautions belong to the claim (preprint §10). These are laws of the *matrix* —
+the tables; how far a T of the matrix may be relied on while its atoms are dirty
+is the judge's question: for non-contradiction on a dirty `p` the disposition is
+EARNED IF STABLE, not EARNED. And a logician may keep "stronger" for an extension
+that proves more about the *old* domain and call this one "conservative and more
+expressive"; that is a choice of word, the theorems are the same under either.
+
+**"Conservative extension" — in which language.** The term was withdrawn here on
+2026-09-28 and the theorem of v2.1.7 is named `proper_conservative_extension`;
+both are right, about different languages, and the language has to be said:
+
+* *Formulas without markings, valid = T on every valuation, marks included.* ZTL
+  is **not** an extension of classical logic there: an extension keeps every
+  theorem of the original, and `p → p` is not valid over ZTL's own valuations.
+  The withdrawal of 2026-09-28 stands for this language.
+* *Laws with their markings.* The classical laws are one layer — the all-verified
+  marking — kept whole, nothing added to it, and there are laws outside it. There
+  ZTL **is** a proper conservative extension, and that is what the theorem
+  states.
+
+And the claim about solving, separate from both:
 
 > **There are problems ZTL answers correctly that classical logic answers
 > correctly under NO choice of default. There are no problems the other way
-> round. As a decision procedure, ZTL strictly DOMINATES classical logic.**
+> round. As a decision procedure, with the heredity check, ZTL strictly
+> DOMINATES classical logic.**
 
-Both halves are measured, neither is argued: *no problems the other way round* —
-on grounded input the two are identical, 584 and 584, the same sets, zero laws
-lost; *problems ours only* — the `$_GET` exhibit, where both classical defaults
-grant a pass and no conservative default exists at all.
+Neither half is argued. *No problems the other way round*: on verified input the
+two give the same value for every formula — proved (`evalF_agrees`), and measured
+on the depth-≤2 pool (the same 584 validities, the same set). *Problems ours
+only*: the `$_GET` exhibit below, where both classical defaults grant a pass and
+no conservative default exists at all. The general statement is a theorem since
+v2.1.5, and its scope is part of it: it holds for the judge with its hereditary
+grade, under the dirty criterion; the matrix alone is not dominant (preprint §10).
 
-Keep the two relations apart and nothing here can be attacked: **as a system of
-proofs the two are exactly equal on classical's own domain; as a solver ZTL
-dominates.** Saying "stronger" without naming which relation is what loses the
-argument, not the facts.
+Keep the three relations apart: **on verified data the two agree on every
+formula; in the language of marked laws ZTL has strictly more, each implying the
+classical one; as a solver, with the heredity check, ZTL dominates.** Saying
+"stronger" without naming which relation is what loses the argument, not the
+facts.
 
-Every word of that is measured: *extension* (the domain gains the dirty
-state), *conservative* (unique validities: exactly zero, machine-checked), and
-nothing lost (584 = 584, same sets).
+(Corrected 2026-11-13 to preprint 2.1.7. Until then this section said that
+"stronger" is refuted by `ztl_taut_is_classical` — true of the first reading
+only — and ended by calling *extension* and *conservative* "measured" three
+paragraphs after withdrawing the term. The two statements were about two
+languages and the card did not say which.)
 
 ### The operational exhibit: a `$_GET` parameter reaching a SQL sink
 

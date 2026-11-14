@@ -688,7 +688,7 @@ def _fp_output(ctx, parts, e, k=None):
     return out
 
 
-def _fp_outputs_batch(ctx, parts, es, ks):
+def _fp_outputs_batch(ctx, parts, es, ks, trial=True):
     """MANY outputs of one prepared floating path at once (2026-11-02, the curator's "лечить"): the night battery's
     250x48 frame spent 40 min in 24250 one-at-a-time _fp_output calls (its stability proof needs every member's
     force) — each a Python pass over the whole system in big integers, ~N^2. Here a batch of outputs is solved with
@@ -701,7 +701,14 @@ def _fp_outputs_batch(ctx, parts, es, ks):
     underflow. The scalars of each output are then combined EXACTLY as in _fp_output; the centre is the float one
     (a dyadic), its rounding bound joins nominal_err, so an interval here CONTAINS the exact path's (self-test).
     ks[i] (a part index) as in _fp_output's k: D1p = (upper bound of the whole first-order sum) - (LOWER bound of
-    part k's term) + (upper bound of t_k |centre - c_k|). Slopes are not returned (callers with `scale` only)."""
+    part k's term) + (upper bound of t_k |centre - c_k|). Slopes are not returned (callers with `scale` only).
+    trial=False (2026-11-14): the trial vectors y~ are ZERO - no solve per output. Nothing else changes: the same
+    identity and the same bounds hold for ANY trial vector (centre_identity, centre_bound), with y~ = 0 they read
+    e.u0 = e.u~ + B(y0, eps_u), |B| <= ||y0|| ||eps_u||, ||y0||^2 = e.K0^-1 e <= |e|^2 / lam - one residual for all
+    outputs instead of one solve each. The interval CONTAINS the trial=True one and is wider (the error of u~ enters
+    once, not squared): for exact stiffnesses (every t = 0) about 1e-10 relative instead of 1e-18; with tolerances
+    the first order, taken without y~, is far too wide to be of use - this is the path of a structure with exact
+    members and hundreds of outputs (MEASURED: a 672-unknown diaphragm, 971 outputs, 1.14 s -> 0.39 s)."""
     import numpy as np
     import scipy.sparse as sp
     n, lam, T = ctx["n"], ctx["lam"], ctx["T"]
@@ -742,7 +749,7 @@ def _fp_outputs_batch(ctx, parts, es, ks):
     for col, e in enumerate(es):                                        # a sparse output {i: v} is read as given
         for i, x in (e.items() if isinstance(e, dict) else ((i, x) for i, x in enumerate(e) if x)):
             E[i, col] = float(x)
-    Y = ctx["lu"].solve(E)                                             # y~: these floats ARE the trial vectors
+    Y = ctx["lu"].solve(E) if trial else np.zeros_like(E)              # y~: these floats ARE the trial vectors
     if Y.ndim == 1:
         Y = Y[:, None]
     KY, aKY = A @ Y, Aabs @ np.abs(Y)
@@ -854,7 +861,7 @@ def _batch_worker(ab):
     except ImportError:
         pass
     c = _MANY
-    return _fp_outputs_batch(c["ctx"], c["parts"], c["es"][a:b], c["scale"][a:b])
+    return _fp_outputs_batch(c["ctx"], c["parts"], c["es"][a:b], c["scale"][a:b], c.get("trial", True))
 
 
 def _many_worker(idx):
@@ -875,13 +882,15 @@ def certify_cases(parts, fs, es, n, jobs=1, exact_up_to=None, scale=None):
     return [certify_many(parts, f, es, n, jobs, exact_up_to, scale, kctx=kctx) for f in fs]
 
 
-def certify_many(parts, f, es, n, jobs=1, exact_up_to=None, scale=None, kctx=None):
+def certify_many(parts, f, es, n, jobs=1, exact_up_to=None, scale=None, kctx=None, trial=True):
     """Many outputs of ONE system (2026-11-01): the shared work once — the exact path's LDL^T and u0, or the floating
     path's factor, proved lam and u~ — and each output's own work (its y, residual, first order) per output, in
     `jobs` processes on the floating path. Results equal certify's, output by output. With `scale` (a part index
     per output) each result is scaled_from(r, parts, scale[i])'s nominal/lo/hi instead, computed where r is and
     returned without slopes. An output may be a sparse dict {i: v} (2026-11-02: a 7500-unknown frame's 4900 dense
-    outputs cost 36 M float(Fraction) calls of zeros); the batch reads it as is, every other path densifies it."""
+    outputs cost 36 M float(Fraction) calls of zeros); the batch reads it as is, every other path densifies it.
+    trial=False: on the batch path the outputs are bounded without a solve each (_fp_outputs_batch); elsewhere it
+    is ignored (the exact path has no trial vectors; a few outputs gain nothing)."""
     if scale is None or len(es) < BATCH_FROM or n <= (EXACT_UP_TO if exact_up_to is None else exact_up_to):
         es = [_dense(e, n) for e in es]
     if n <= (EXACT_UP_TO if exact_up_to is None else exact_up_to):
@@ -896,9 +905,9 @@ def certify_many(parts, f, es, n, jobs=1, exact_up_to=None, scale=None, kctx=Non
         procs = min(len(chunks), _cores(), max(1, int(6e9 // (12 * 8 * n * bs)))) if par else 1
         if procs > 1:                                   # batches are independent: one process each (fork: ctx shared)
             import multiprocessing as mp
-            _fp_outputs_batch(ctx, parts, es[:1], scale[:1])          # build the float tables once, before forking
+            _fp_outputs_batch(ctx, parts, es[:1], scale[:1], trial)   # build the float tables once, before forking
             _MANY.clear()
-            _MANY.update({"ctx": ctx, "parts": parts, "es": es, "scale": scale})
+            _MANY.update({"ctx": ctx, "parts": parts, "es": es, "scale": scale, "trial": trial})
             pool = mp.get_context("fork").Pool(procs)
             try:
                 got = pool.map(_batch_worker, chunks, chunksize=1)
@@ -912,7 +921,7 @@ def certify_many(parts, f, es, n, jobs=1, exact_up_to=None, scale=None, kctx=Non
         else:
             rs = []
             for a, b in chunks:
-                rs += _fp_outputs_batch(ctx, parts, es[a:b], scale[a:b])
+                rs += _fp_outputs_batch(ctx, parts, es[a:b], scale[a:b], trial)
         return [_finish(r, parts, scale, i) for i, r in enumerate(rs)]
     if jobs <= 1 or len(es) <= 1:
         return [_finish(_fp_output(ctx, parts, e, None if scale is None else scale[i]), parts, scale, i)
@@ -1288,6 +1297,23 @@ def _selftest():
             if b["lo"] > a["lo"] or a["hi"] > b["hi"]:
                 esc += 1
     assert worst < Fr(1, 10 ** 9) and esc > 0, (worst, esc)
+    # trial=False (y~ = 0, no solve per output): CONTAINS the trial=True interval - on exact parts and on toleranced
+    # ones - and is wider somewhere (it is not the same computation under another name)
+    nz, wider = 0, 0
+    for case in range(20):
+        n, m = rng.randint(3, 12), rng.randint(2, 8)
+        parts, f, _ = _random_case(rng, n, m, Fr(0) if case % 2 == 0 else Fr(rng.choice([1, 5]), 100))
+        ctx = _fp_prepare(parts, f, n)
+        es = [[Fr(rng.randint(-4, 4), rng.randint(1, 3)) for _ in range(n)] for _ in range(m)]
+        ks = list(range(m))
+        with_y, without = _fp_outputs_batch(ctx, parts, es, ks), _fp_outputs_batch(ctx, parts, es, ks, trial=False)
+        for k, ra, rb in zip(ks, with_y, without):
+            a, b = scaled_from(ra, parts, k), scaled_from(rb, parts, k)
+            assert b["lo"] <= a["lo"] and a["hi"] <= b["hi"], ("trial=False does not contain trial=True", case, k)
+            wider += (b["hi"] - b["lo"]) > (a["hi"] - a["lo"])
+            nz += 1
+    assert wider > 0, "trial=False gave the same intervals everywhere"
+    print(f"   trial=False (no solve per output): {nz} outputs, each interval contains the trial=True one; wider in {wider}")
     print(f"   batch path: {bb} scaled outputs, each CONTAINS the exact interval (widened by <= {float(worst):.1e} "
           f"relative); rounding bounds off: {esc} stop containing it (the bounds are load-bearing)")
     print(f"   scaled outputs: {sc_pts} points, p_k (e.u) inside certify_scaled's range every time "

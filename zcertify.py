@@ -228,7 +228,7 @@ def _unique_branches(nodes):
     inside S and beside it)."""
     seen, out = set(), []
     for n in nodes:
-        k = repr(n)
+        k = n                                # the node itself, not its text (as zaffine's memo key, 2026-11-14)
         if k not in seen:
             seen.add(k)
             out.append(n)

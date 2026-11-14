@@ -203,7 +203,9 @@ def read(e, qs, piece, rat_sqrt, plain, shared=False):
     def ev(n):
         if memo is None or not isinstance(n, tuple):
             return ev1(n)
-        key = repr(n)
+        key = n          # the node itself (structural hash and equality of the tuple), not its text: MEASURED
+        #                  2026-11-14 on a point brick with one implicit law (a cooling tower, 200.8 s): 1.7 M
+        #                  repr() of whole subtrees were 4 % of the run (192.4 s without them, the same range)
         if key not in memo:
             out = ev1(n)
             if out.e and n[0] not in ("add", "sub"):

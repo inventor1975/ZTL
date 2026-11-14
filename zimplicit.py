@@ -477,8 +477,17 @@ def _search_plain(g, q, qs, search, depth, max_pieces, bracket_steps, split_budg
     lo, hi = (Fraction(str(x)) for x in search)
 
     trees = {}
+    seen = {}          # (a, b) -> its kind: a reading is a function of the piece alone (g, qs and the box are
+    #                    fixed here), and the level loop below asks the SAME pair of ruled-out neighbours again
+    #                    at every level ("do they merge now?" - no, as one level before). MEASURED 2026-11-14,
+    #                    a cooling tower's outlet at one point: 1348 readings for a certificate of 48 pieces.
 
     def kind(a, b):
+        if (a, b) not in seen:
+            seen[(a, b)] = _kind(a, b)
+        return seen[(a, b)]
+
+    def _kind(a, b):
         if _sign(_reading(g, qs, dict(box, **{q: (a, b)}))) in (1, -1):
             return "none"
         if split_budget and names:
@@ -547,6 +556,15 @@ def _search_plain(g, q, qs, search, depth, max_pieces, bracket_steps, split_budg
         mono[n] = {1: "+", -1: "-", 0: "0"}[0 if sp == 0 else -sp * sq]
     cert["monotone"] = mono
     corners = []
+    at_point = {}      # (the corner, x) -> the sign read there: with no parameter of positive width (a law at
+    #                    one point) the two corners are the same point and the second bracket is the first
+
+    def sign_at(corner, env, x):
+        key = (tuple(sorted(corner.items())), x)
+        if key not in at_point:
+            at_point[key] = _sign(_reading(g, qs, dict(env, **{q: (x, x)})))
+        return at_point[key]
+
     for side in ("min", "max"):
         corner = {}
         for n in names:
@@ -555,13 +573,13 @@ def _search_plain(g, q, qs, search, depth, max_pieces, bracket_steps, split_budg
             corner[n] = box[n][1] if (up and d_ != 0) else box[n][0]
         env = {n: (v, v) for n, v in corner.items()}
         a, b = hull
-        sa = _sign(_reading(g, qs, dict(env, **{q: (a, a)})))
-        sb = _sign(_reading(g, qs, dict(env, **{q: (b, b)})))
+        sa = sign_at(corner, env, a)
+        sb = sign_at(corner, env, b)
         if sa in (None, 0) or sb in (None, 0) or sa == sb:
             return cert                                # the root may sit on the hull's edge: no bracket
         for _ in range(bracket_steps):
             m = (a + b) / 2
-            sm = _sign(_reading(g, qs, dict(env, **{q: (m, m)})))
+            sm = sign_at(corner, env, m)
             if sm in (None, 0):
                 break
             if sm == sa:

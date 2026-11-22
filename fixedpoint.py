@@ -119,6 +119,12 @@ def least_fp_stable(system):
         v = w
 
 
+def hardened(v):
+    """After the fixed point a phase that never resolved hardens into the quarantine mark Z (SPEC §N): the
+    view of the point that ZTL's greedy tables may read. N itself never enters a table."""
+    return {k: (Z if x == N else x) for k, x in v.items()}
+
+
 def stable_monotone_witness(system):
     """A pair v ⊑ w (own sentences over N/T/F, inputs Z) with J(v) ⋢ J(w), if one exists."""
     own = sorted(s for s in system if system[s] != Z)
@@ -198,7 +204,7 @@ if __name__ == "__main__":
         # greedy verdict reading on top of the stable point
         for name in sorted(system):
             # after the fixed point a phase that never resolved hardens into the quarantine mark Z (SPEC §N)
-            content = ev_reg(system[name], {k: (Z if x == N else x) for k, x in lfp.items()}, EAGER)
+            content = ev_reg(system[name], hardened(lfp), EAGER)
             if lfp[name] == N:
                 bullet = " ← BULLET: content T, no truth" \
                     if content == T else ""

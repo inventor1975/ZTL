@@ -19,7 +19,7 @@ E3. YABLO: sᵢ = "all subsequent ones are false" (without a single
 from itertools import product
 
 from ztl import T, F, Z, VALUES
-from fixedpoint import (EAGER, N, fixed_points, iterate, least_fp_stable,
+from fixedpoint import (EAGER, N, hardened, fixed_points, iterate, least_fp_stable,
                         jump, ev_reg, fmt_v)
 
 
@@ -35,7 +35,7 @@ def expedition_curry():
     lfp = least_fp_stable(system)
     print(f"  stable grounding: {fmt_v(lfp)} — quarantine: "
           f"{[k for k, v in lfp.items() if v in (Z, N)] or 'empty'}")
-    content = ev_reg(system["c"], lfp, EAGER)
+    content = ev_reg(system["c"], hardened(lfp), EAGER)
     print(f"  greedy verdict on the content of c: {content}")
     print("  Conclusion: Curry is homeless greedily and grounded lazily — the SAME")
     print("  mechanics as the liar, though it contains no negation: quarantine")

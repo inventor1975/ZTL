@@ -14,7 +14,7 @@ the facts x∈x. Questions: models? oscillation? grounding? verdicts?
 """
 
 from ztl import T, F, Z, NOT, OPS2
-from fixedpoint import EAGER, N, fixed_points, iterate, least_fp_stable, \
+from fixedpoint import EAGER, N, hardened, fixed_points, iterate, least_fp_stable, \
     ev_reg, fmt_v
 
 # The universe: a=∅, b={b}, R={x: x∉x}, S={x: x∈x}
@@ -59,7 +59,7 @@ if __name__ == "__main__":
     print("  Russell WORKS as a set for everyone except himself.")
 
     print("\n### Customs verdicts on the sore questions")
-    v_notin = ev_reg(("not", "R∈R"), lfp, EAGER)
+    v_notin = ev_reg(("not", "R∈R"), hardened(lfp), EAGER)
     print(f"  \"R ∈ R?\" — the atom is quarantined ({lfp['R∈R']}): not earned → refusal")
     print(f"  \"R ∉ R?\" — the greedy reading of ¬(R∈R): {v_notin} → also refusal")
     print("  Both questions get a refusal — the NaN signature on sets:")

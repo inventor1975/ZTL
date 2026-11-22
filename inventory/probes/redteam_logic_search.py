@@ -193,7 +193,7 @@ def s_judge(seed, n):
         unv = sorted(a for a in present if full[a] == "Z")
         gone = sorted(a for a in present if full[a] == "E")
         disp = O.disposition(v, g, unv, gone)
-        lv = O.ev_lazy(phi, kern)
+        lv = O.ev_forced(phi, kern)
         problems = []
         if ztljudge.formalize(text) != phi:
             problems.append("parse")
@@ -205,8 +205,8 @@ def s_judge(seed, n):
             problems.append(("unverified/absent", r["unverified"], r["absent"]))
         if r["disposition"] != disp:
             problems.append(("disposition", r["disposition"], disp))
-        if r["lazy"] != lv:
-            problems.append(("lazy", r["lazy"], lv))
+        if r["forced"] != lv:
+            problems.append(("forced", r["forced"], lv))
         # the receipt: every unverified atom NOT pending cannot move ev
         if lv == "Z":
             idle = [a for a in unv + gone if a not in r["pending"]]
@@ -222,7 +222,7 @@ def s_judge(seed, n):
         if problems:
             kinds = {pr if isinstance(pr, str) else pr[0] for pr in problems}
             has_const = bool(O.atoms(phi) != set(_leaves(phi)))
-            if has_const and kinds <= {"lazy", "pending-when-decided", "receipt"}:
+            if has_const and kinds <= {"forced", "pending-when-decided", "receipt"}:
                 l1 += 1                     # finding L1: constants read as marks
                 l1_ex.append((text, marks, problems))
             else:

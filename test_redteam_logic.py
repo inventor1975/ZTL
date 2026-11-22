@@ -71,10 +71,10 @@ t0 = time.time()
 for text, marks in (("F", {}), ("T | p", {}), ("F & p", {"p": "T"}), ("p & F", {})):
     phi = ztljudge.formalize(text)
     kern = {a: marks.get(a, "Z") for a in O.atoms(phi)}
-    want = O.ev_lazy(phi, kern)
+    want = O.ev_forced(phi, kern)
     r = ztljudge.judge(text, marks)
-    check(r["lazy"] == want,
-          f"L1 lazy register of {text!r} {marks}: code {r['lazy']}, strong Kleene {want}")
+    check(r["forced"] == want,
+          f"L1 forced outcome of {text!r} {marks}: code {r['forced']}, oracle {want}")
     check(not set(r["pending"]) & {"T", "F", "Z"},
           f"L1 pending of {text!r} names a CONSTANT as a ground: {r['pending']}")
 try:
@@ -82,8 +82,8 @@ try:
     rep = zfl.run({"claim": "x > 1 | T", "rows": [
         {"name": "x", "means": "x", "status": "unverified", "value": "[0,5]"}]})
     num = rep["report"]["numeric"]
-    check(not (num["disposition"] == "EARNED" and num["lazy"] == "Z"),
-          f"L1 via zfl.run: `x > 1 | T` is {num['disposition']} with lazy {num['lazy']}")
+    check(not (num["disposition"] == "EARNED" and num["forced"] == "N"),
+          f"L1 via zfl.run: `x > 1 | T` is {num['disposition']} with forced {num['forced']}")
 except Exception as e:                                # noqa: BLE001
     check(False, f"L1 via zfl.run raised {e!r}")
 
@@ -212,8 +212,8 @@ for _ in range(8000):
                if d.endswith("IF STABLE") else [])
     if r["if_stable"] != want_if:
         wrong.append("if_stable")
-    if r["lazy"] != O.ev_lazy(phi, kern) and not has_const:
-        wrong.append("lazy")
+    if r["forced"] != O.ev_forced(phi, kern) and not has_const:
+        wrong.append("forced")
     if wrong:
         new.append(("judge", text, marks, wrong))
 

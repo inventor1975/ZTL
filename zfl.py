@@ -2381,7 +2381,7 @@ def run(doc, ground_registry=None):
                 if filtered is not None and filtered[0] == 0:
                     r = dict(r, disposition="REFUTED")
             report["numeric"] = {"disposition": r["disposition"],
-                                 "lazy": r.get("lazy"),
+                                 "forced": r.get("forced"),
                                  "next_check": r.get("next_check", []),
                                  "solved": solved, "claim": claim,
                                  "sheet": sheet}

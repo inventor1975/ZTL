@@ -41,7 +41,8 @@ KERN2 = {"and": lambda a, b: a and b,
          "imp": lambda a, b: (not a) or b,
          "xor": lambda a, b: a != b,
          "xnor": lambda a, b: a == b}
-READ = {T: (True,), F: (False,), Z: (True, False)}   # the classical readings
+N = "N"   # the solver's phase: not forced / own sentence not yet determined (pure branch, 2026-11-22)
+READ = {T: (True,), F: (False,), Z: (True, False), N: (True, False)}   # the classical readings
 
 
 def lift1(op, x):
@@ -181,29 +182,26 @@ def disposition(verdict, grade_, unverified, absent, every_read, stable_):
     return "OPEN"
 
 
-# ------------------------------------------------------------------ lazy
-def k1(x):
-    return {T: F, F: T, Z: Z}[x]
-
-
+# ------------------------------------------------------------------ forced (independent of zread)
 def k2(op, a, b):
-    """Strong Kleene: the classical value if every reading of the Z inputs
-    gives the same one, else Z (the 'Z flows' register)."""
+    """The forced outcome of a connective: the classical value if every reading of the parts gives the same
+    one, else N (not forced). Re-derived here from READ, independently of the judge's code."""
     outs = {KERN2[op](x, y) for x in READ[a] for y in READ[b]}
-    return (T if outs.pop() else F) if len(outs) == 1 else Z
+    return (T if outs.pop() else F) if len(outs) == 1 else N
 
 
 def k1l(x):
     outs = {KERN1["not"](a) for a in READ[x]}
-    return (T if outs.pop() else F) if len(outs) == 1 else Z
+    return (T if outs.pop() else F) if len(outs) == 1 else N
 
 
-def ev_lazy(phi, env):
+def ev_forced(phi, env):
     if isinstance(phi, str):
-        return phi if phi in CONSTS else env[phi]
+        x = phi if phi in CONSTS else env[phi]
+        return x if x in (T, F) else N         # an open atom (the mark Z, or E) is not forced either way
     if phi[0] == "not":
-        return k1l(ev_lazy(phi[1], env))
-    return k2(phi[0], ev_lazy(phi[1], env), ev_lazy(phi[2], env))
+        return k1l(ev_forced(phi[1], env))
+    return k2(phi[0], ev_forced(phi[1], env), ev_forced(phi[2], env))
 
 
 # ------------------------------------------------------------------ passports
@@ -211,10 +209,33 @@ def deps(phi):
     return atoms(phi)
 
 
-def lfp_lazy(system):
-    v = {s: Z for s in system}
+def _cl_set(phi, b):
+    """classical values of phi with every atom fixed by b and every CONSTANT Z read freely at each occurrence"""
+    if isinstance(phi, str):
+        if phi in CONSTS:
+            return {True} if phi == T else {False} if phi == F else {True, False}
+        return {b[phi]}
+    if phi[0] == "not":
+        return {not x for x in _cl_set(phi[1], b)}
+    A, B = _cl_set(phi[1], b), _cl_set(phi[2], b)
+    return {KERN2[phi[0]](x, y) for x in A for y in B}
+
+
+def lfp_stable(system):
+    """The stable grounding, re-implemented independently: an own sentence is determined when its definition
+    is classically the same under every value of every open atom (own at N, input at Z); inputs stay Z."""
+    v = {s: (Z if d == Z else N) for s, d in system.items()}
     while True:
-        w = {s: ev_lazy(d, v) for s, d in system.items()}
+        w = {}
+        for s, d in system.items():
+            if d == Z:
+                w[s] = Z
+                continue
+            opn = sorted(a for a in atoms(d) if v.get(a, Z) in (Z, N))
+            outs = set()
+            for bits in product((True, False), repeat=len(opn)):
+                outs |= _cl_set(d, {**{a: (x == T) for a, x in v.items() if x in (T, F)}, **dict(zip(opn, bits))})
+            w[s] = (T if outs == {True} else F if outs == {False} else N)
         if w == v:
             return v
         v = w
@@ -266,7 +287,7 @@ def greedy_period(comp, system, env, steps=64):
 
 def passports(system):
     """name -> (kind, detail) with detail = period / model count / permanence."""
-    lfp = lfp_lazy(system)
+    lfp = lfp_stable(system)
     kind = {}
     for comp in components(system):
         cs = set(comp)
@@ -278,7 +299,7 @@ def passports(system):
         for s in comp:
             env_names |= (deps(system[s]) & set(system)) - cs
         env = {n: lfp[n] for n in env_names}
-        culprits = sorted(n for n in env_names if lfp[n] == Z)
+        culprits = sorted(n for n in env_names if lfp[n] in (Z, N))
         if culprits:
             perm = any(kind[c][0] == "PARADOX" or kind[c] == ("DOWNSTREAM", "permanent")
                        for c in culprits)

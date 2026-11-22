@@ -33,7 +33,7 @@ import sys
 _HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, _HERE)
 
-from zread import N, _comb, _G, outcome, ph_not
+from zread import N, _comb, _G, outcome, ph_not, stable as zread_stable
 from ztl import T, F, Z, VALUES, NOT, AND, OR, IMP, XOR, XNOR, ev  # noqa: E402
 from zverify import grade                                          # noqa: E402
 
@@ -631,13 +631,8 @@ def judge(text, marking=None, budget=None):
         why = (f"false under every read of every occurrence, whatever {_besides(unv, gone)} turn out to be"
                if unv or gone else "grounded false")
     elif len(repeated) <= _STABLE_CAP:
-        seen = set()
-        for bits in itertools.product((T, F), repeat=len(repeated)):
-            k2 = dict(k); k2.update(zip(repeated, bits))
-            seen.add(_forced(phi, k2)[0])
-            if N in seen or len(seen) > 1:
-                break
-        stable = seen.pop() if len(seen) == 1 else None
+        # classics first, decided in ONE place (zread.stable): one value per atom, every completion
+        stable = zread_stable(phi, k)
         if stable in (T, F):
             if_stable = repeated
             what = "true" if stable == T else "false"

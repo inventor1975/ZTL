@@ -23,8 +23,9 @@ Hypotheses (checked by enumeration, MEASURED; H3 proved in Lean ZGround.evalS_mo
 from itertools import product
 
 from ztl import T, F, Z, VALUES, OPS2, NOT
+from zread import stable
 
-N = "N"          # the solver's phase: an own sentence not yet determined (never a truth value)
+from zread import N  # the solver's phase: an own sentence not yet determined (never a truth value)
 EAGER = {"not": NOT, **OPS2}
 
 
@@ -97,16 +98,10 @@ def _names(phi, acc):
 
 
 def stable_eval(phi, v, system):
-    """The STABLE step for one definition: T (F) if, by ZTL's tables, it is T (F) under every classical value
-    of the own sentences still at N; otherwise N. Foreign inputs (defined as the constant Z) are read as Z."""
-    free = sorted(n for n in _names(phi, set()) if v.get(n) == N)
-    seen = set()
-    for bits in product((T, F), repeat=len(free)):
-        r = ev_reg(phi, {**v, **dict(zip(free, bits))}, EAGER)
-        seen.add(r if r in (T, F) else N)
-        if len(seen) > 1 or N in seen:
-            return N
-    return seen.pop()
+    """The STABLE step for one definition — classics first, decided in ONE place (`zread.stable`): T (F) if
+    the definition is classically true (false) under every classical value of every open atom, own sentence
+    at N or foreign input at Z; otherwise N. ZTL's tables give the verdict, not the grounding."""
+    return stable(phi, v)
 
 
 def jump_stable(system, v):

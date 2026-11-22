@@ -1,4 +1,5 @@
 import TableauCert
+import ZRead
 
 /-!
 # ZGround — the passport's grounding, from ZTL alone (pure branch, 2026-11-22). Zero axioms.
@@ -14,7 +15,9 @@ become determined?" — is ZTL's own rule (curator, 2026-11-22), not a borrowed 
     computed", SPEC §N: present only under self-reference, never a truth value). It is ours: one value at all
     its occurrences. A name becomes determined T (F) when its definition is T (F) under EVERY classical value
     of the still-undetermined names (`comps`: every completion) — the stable test, the judge's IF STABLE;
-  * a FOREIGN input (an atom outside the system) is the mark Z, and is read by ZTL's own tables (`evalF`).
+  * a FOREIGN input (an atom outside the system) is never determined by the system; the step reads it the
+    same way — classically, one value per atom (curator 2026-11-22: "first classics; if classics gives no
+    answer, then Z and ZTL's verdicts"). ZTL's tables give the VERDICT, not the grounding.
 
 No strong Kleene table, no ¬Z = Z (the lazy register of 2026-07-10 is removed). The phase is a separate type
 `Ph` so that `n` can never be confused with the mark Z. Monotone (`evalS_mono`): more determined names only
@@ -218,33 +221,82 @@ theorem allB_first : ∀ (v : PVal) (p : List Bool → Bool), allB (comps v) p =
 
 /-! ## The stable step -/
 
-/-- A completion as a ZTL marking: own names classical, foreign atoms (off the system) the mark Z. -/
-def envOf : List Bool → Nat → V
-  | [], _ => Z
-  | b :: _, 0 => if b then T else F
-  | _ :: c, n + 1 => envOf c n
+/-- the highest atom a formula mentions -/
+def maxAtom : Fm → Nat
+  | .atom n    => n
+  | .top       => 0
+  | .bot       => 0
+  | .neg φ     => maxAtom φ
+  | .conj φ ψ  => Nat.max (maxAtom φ) (maxAtom ψ)
+  | .disj φ ψ  => Nat.max (maxAtom φ) (maxAtom ψ)
+  | .imp φ ψ   => Nat.max (maxAtom φ) (maxAtom ψ)
+  | .xor φ ψ   => Nat.max (maxAtom φ) (maxAtom ψ)
+  | .xnor φ ψ  => Nat.max (maxAtom φ) (maxAtom ψ)
 
-/-- The STEP: t (f) if the definition is T (F) — by ZTL's tables, foreign inputs read as Z — under every
-completion of the undetermined own names; otherwise still n. -/
+/-- extend a phase list with undetermined atoms: a FOREIGN atom (beyond the system) is never determined here;
+the stable test reads it classically, like an own undetermined sentence -/
+def pad (v : PVal) (k : Nat) : PVal := v ++ List.replicate (k - v.length) Ph.n
+
+/-- a completion read as a classical valuation (off the end: never reached, `pad` covers every atom) -/
+def bget : List Bool → Nat → Bool
+  | [], _ => false
+  | b :: _, 0 => b
+  | _ :: c, n + 1 => bget c n
+
+/-- THE STEP — classics first, in one place (curator 2026-11-22): t (f) if the definition is classically true
+(false) under EVERY classical value of every undetermined atom it mentions, own or foreign (one value per atom:
+the stable test, `ZRead.cev`); otherwise still n. ZTL's tables are not used here: they give the VERDICT when
+classics gives no answer, not the grounding. -/
 def evalS (v : PVal) (φ : Fm) : Ph :=
-  if allB (comps v) (fun c => evalF (envOf c) φ == T) = true then .t
-  else if allB (comps v) (fun c => evalF (envOf c) φ == F) = true then .f
+  if allB (comps (pad v (maxAtom φ + 1))) (fun c => cev (bget c) φ) = true then .t
+  else if allB (comps (pad v (maxAtom φ + 1))) (fun c => !cev (bget c) φ) = true then .f
   else .n
 
-theorem vT_ne_vF (x : V) (h1 : (x == T) = true) (h2 : (x == F) = true) : False := by
-  revert h1 h2; cases x <;> decide
+theorem pvLeq_len : ∀ v w : PVal, pvLeq v w = true → v.length = w.length := by
+  intro v
+  induction v with
+  | nil => intro w h; cases w with
+    | nil => rfl
+    | cons b w => exact nomatch h
+  | cons a v ih => intro w h; cases w with
+    | nil => exact nomatch h
+    | cons b w => exact congrArg Nat.succ (ih w ((andEqTrue _ _).mp h).2)
+
+theorem pvLeq_refl : ∀ r : PVal, pvLeq r r = true := by
+  intro r; induction r with
+  | nil => rfl
+  | cons a r ih => exact (andEqTrue _ _).mpr ⟨phLeq_refl a, ih⟩
+
+theorem pvLeq_append : ∀ (v w r : PVal), pvLeq v w = true → pvLeq (v ++ r) (w ++ r) = true := by
+  intro v
+  induction v with
+  | nil => intro w r h; cases w with
+    | nil => exact pvLeq_refl r
+    | cons b w => exact nomatch h
+  | cons a v ih => intro w r h; cases w with
+    | nil => exact nomatch h
+    | cons b w =>
+      have hp := (andEqTrue _ _).mp h
+      exact (andEqTrue _ _).mpr ⟨hp.1, ih w r hp.2⟩
+
+theorem pad_mono {v w : PVal} (h : pvLeq v w = true) (k : Nat) : pvLeq (pad v k) (pad w k) = true := by
+  unfold pad; rw [pvLeq_len v w h]; exact pvLeq_append v w _ h
+
+theorem not_both (b : Bool) (h1 : b = true) (h2 : (!b) = true) : False := by
+  revert h1 h2; cases b <;> decide
 
 theorem evalS_mono {v w : PVal} (h : pvLeq v w = true) (φ : Fm) :
     phLeq (evalS v φ) (evalS w φ) = true := by
+  have hp := pad_mono h (maxAtom φ + 1)
   unfold evalS
-  by_cases hT : allB (comps v) (fun c => evalF (envOf c) φ == T) = true
-  · rw [if_pos hT, if_pos (comps_mono v w h _ hT)]; rfl
+  by_cases hT : allB (comps (pad v (maxAtom φ + 1))) (fun c => cev (bget c) φ) = true
+  · rw [if_pos hT, if_pos (comps_mono _ _ hp _ hT)]; rfl
   · rw [if_neg hT]
-    by_cases hF : allB (comps v) (fun c => evalF (envOf c) φ == F) = true
+    by_cases hF : allB (comps (pad v (maxAtom φ + 1))) (fun c => !cev (bget c) φ) = true
     · rw [if_pos hF]
-      have hFw := comps_mono v w h _ hF
-      have hTw : ¬ allB (comps w) (fun c => evalF (envOf c) φ == T) = true := fun hTw =>
-        vT_ne_vF _ (allB_first w _ hTw) (allB_first w _ hFw)
+      have hFw := comps_mono _ _ hp _ hF
+      have hTw : ¬ allB (comps (pad w (maxAtom φ + 1))) (fun c => cev (bget c) φ) = true := fun hTw =>
+        not_both _ (allB_first _ _ hTw) (allB_first _ _ hFw)
       rw [if_neg hTw, if_pos hFw]; rfl
     · rw [if_neg hF]; exact leqN _
 
@@ -446,9 +498,11 @@ theorem truthteller_lfp : lfp [.atom 0] = [.n] := rfl
 /-- Curry with ⊥ ≡ s ∧ ¬s (γ = 0, ⊥ = 1, s = 2): ⊥ IS determined, F, under every value of s — the hole the
 lazy register left (it called γ's refusal "conditional") is closed: γ ≡ γ → F is the liar in a costume. -/
 theorem curry_lfp : lfp [.imp (.atom 0) (.atom 1), .conj (.atom 2) (.neg (.atom 2)), .atom 2] = [.n, .f, .n] := rfl
-/-- A foreign input (atom 5, outside the system) is the mark Z and is read by ZTL's tables:
-S ≡ ¬J is F now (curator 2026-11-22: "S ≡ ¬J, J only Z, is F"). -/
-theorem foreign_input_lfp : lfp [.neg (.atom 5)] = [.f] := rfl
+/-- A foreign input (atom 5, outside the system): S ≡ ¬J is classically T or F as J is — classics gives no
+answer, so S is NOT grounded (it waits on J); the verdict on it is ZTL's, ¬Z = F (the judge: F, OPEN). -/
+theorem foreign_input_lfp : lfp [.neg (.atom 5)] = [.n] := rfl
+/-- …while a foreign input that cannot matter is grounded: S ≡ J ∨ ¬J is classically T for either J. -/
+theorem foreign_irrelevant_lfp : lfp [.disj (.atom 5) (.neg (.atom 5))] = [.t] := rfl
 /-- The strong liar σ ≡ ¬σ ∧ σ: F under every value of σ — determined by its form. -/
 theorem strong_liar_lfp : lfp [.conj (.neg (.atom 0)) (.atom 0)] = [.f] := rfl
 
@@ -462,6 +516,7 @@ theorem strong_liar_lfp : lfp [.conj (.neg (.atom 0)) (.atom 0)] = [.f] := rfl
 #print axioms truthteller_lfp
 #print axioms curry_lfp
 #print axioms foreign_input_lfp
+#print axioms foreign_irrelevant_lfp
 #print axioms strong_liar_lfp
 
 end V

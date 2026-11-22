@@ -494,6 +494,15 @@ STANDS = [
                                   "... 13 such pairs in all"]),
     ("pssl/E27_instrument.py", ["E27 GREEN", "7 blindnesses reproduced",
                                 "blindnesses that silently changed the answer: 7 of 7"]),
+    # The other solved dilemmas (2026-11-23): never wired here, so the pure branch left three of them asserting the
+    # removed lazy register's Z for an ungrounded name and two importing fixedpoint.LAZY. Marker = the file's last line.
+    ("dilemmas/solved/collective/collective.py", ["per person, down to ten."]),
+    ("dilemmas/solved/conformity/conformity.py", ["own choice, and the chosen ground holds as a fixed point. Выбирай!"]),
+    ("dilemmas/solved/foreknowledge/rambam.py", ["to take that credit."]),
+    ("dilemmas/solved/job/job.py", ["itself grades affirmation-on-credit as the sin."]),
+    ("dilemmas/solved/money/money.py", ["see THE RULING.)"]),
+    ("dilemmas/solved/retribution/retribution.py", ["and the steer-out is the curator's corrected aphorism (see steer)."]),
+    ("dilemmas/solved/truths/truths.py", ["difference between truth and lie is whether '=' has been paid for."]),
     ("dilemmas/solved/sorites/sorites.py", ["SORITES GREEN",
                              "'some grain is a cliff' (H & ~H-) = F",
                              "the same sum against a cited norm: EARNED"]),

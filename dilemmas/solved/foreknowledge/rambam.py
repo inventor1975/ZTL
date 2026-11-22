@@ -47,6 +47,7 @@ from ztl import T, F, Z, ev
 from zchoice import H, ATOMS, completions, stage, LAWLESS, EXACTLY_ONE
 from zhunt import judge
 from pengine import diagnose
+from zread import N   # an ungrounded name is in the solver's phase N (pure branch, 2026-11-22)
 
 WORLDS = list(product((0, 1), repeat=H))
 
@@ -174,7 +175,7 @@ def bullet():
         print(f"  {name}: solutions {d['n']}, ground "
               f"{list(d['ground'].values())[0]}, stipulate T/F fixed? "
               f"{stip[T]}/{stip[F]}, inputs to verify: none")
-        assert d["n"] == 0 and list(d["ground"].values())[0] == Z
+        assert d["n"] == 0 and list(d["ground"].values())[0] == N
         assert not stip[T] and not stip[F]
     tt = diagnose({"S": "S"})
     assert tt["n"] == 2 and ev("S", {"S": T}) == T

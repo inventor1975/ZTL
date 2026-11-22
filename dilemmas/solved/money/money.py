@@ -18,6 +18,7 @@ from itertools import product
 
 from ztl import T, F, Z, ev
 from pengine import diagnose
+from zread import N   # an ungrounded name is in the solver's phase N (pure branch, 2026-11-22)
 from zhunt import judge
 
 
@@ -29,7 +30,7 @@ def truth_teller():
     print(f"  solutions {d['n']}, the world's court: {d['ground']['V']}")
     print(f"  stipulate WORTHY — holds: {hold_T}; stipulate WORTHLESS — "
           f"holds: {hold_F}")
-    assert d["n"] == 2 and d["ground"]["V"] == Z and hold_T and hold_F
+    assert d["n"] == 2 and d["ground"]["V"] == N and hold_T and hold_F
     print("\n  money is a truth-teller net: its value is real but CHOSEN —")
     print("  mankind's largest joint stipulation (the honest common ground")
     print("  of strangers). And it is BISTABLE: confidence and collapse are")
@@ -42,7 +43,7 @@ def mimetic_pair():
     d = diagnose({"V": "A", "A": "V"})
     g = list(d["ground"].values())
     print(f"  solutions {d['n']}, grounds {g}")
-    assert d["n"] == 2 and g == [Z, Z]
+    assert d["n"] == 2 and g == [N, N]
     print("\n  the mutual-valuation chain carries no ground of its own —")
     print("  price as crystallized mimesis (Girard's cell in a wallet).")
 
@@ -110,7 +111,7 @@ def the_stones():
           "earned")
     print(f"     DEFAULT — the root read out as F:   {default} — every floor "
           "dies at once")
-    assert unrooted == [Z, Z, Z] and rooted == [T, T, T] and default == [F, F, F]
+    assert unrooted == [N, N, N] and rooted == [T, T, T] and default == [F, F, F]
     print("\n  as much money as EARNED BITS; credit rooted in a bit is honest")
     print("  investment; default does not break the pyramid — it reads it to")
     print("  the end. Money making money — harm; deeds making money — good.")

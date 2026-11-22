@@ -20,6 +20,7 @@ sys.path.insert(0, os.path.join(_ROOT, "zhunt"))
 
 from ztl import T, F, Z, ev
 from pengine import diagnose
+from zread import N   # an ungrounded name is in the solver's phase N (pure branch, 2026-11-22)
 from zhunt import judge
 
 
@@ -35,9 +36,9 @@ def paths():
           f"{d2['ground']['S']} — determined, but by ANOTHER'S ground")
     print(f"  сам     (S=S)                 → {d3['n']} solutions, the world's "
           f"court: {d3['ground']['S']} — the world will NOT decide")
-    assert g1 == [Z, Z]
+    assert g1 == [N, N]
     assert d2["n"] == 1 and d2["ground"]["S"] == T
-    assert d3["n"] == 2 and d3["ground"]["S"] == Z
+    assert d3["n"] == 2 and d3["ground"]["S"] == N
     print("\n  following the ungrounded carries their emptiness; walking with")
     print("  the grounded gives you a value with no author of your own; your")
     print("  own cell is the one net the world refuses to decide.")

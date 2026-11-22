@@ -9,6 +9,15 @@ eleven theorems on the empty axiom list, on ZTL's existing temporal layer): thre
 **v1.2 — 2026-10-26. English edition.** Version DOI 10.5281/zenodo.23663274. Supersedes v1.1 (2026-08-13, DOI
 10.5281/zenodo.21916017) and v1.0 (2026-08-09, DOI 10.5281/zenodo.21864082); the
 concept DOI 10.5281/zenodo.21864081 always resolves to the current version.
+*Changes in the next version (draft, 2026-11-23 — not yet issued; the curator assigns the number):* the
+passport office now **grounds by ZTL's own rule, classics first**: a sentence whose definition is classically true
+(false) under every value of the sentences and inputs still open is grounded at once; only what classics leaves open
+is counted, and ZTL's tables give the verdict (ZTL corpus, `lean/ZGround.lean`, `zread.py`). The strong Kleene
+("lazy") register the office used before is removed from the instrument. Two results of this paper change, both
+measured and both corrections: the **trio of §4.3** (strong liar, revenge, Henkin-style; rows 13–15) is GROUNDED by
+its own form, no longer INTRINSIC; and **Curry with ⊥ := s∧¬s** (case 7-bis, §4.5) is a PARADOX like the liar, not
+DOWNSTREAM — the old "conditional" refusal could not be lifted by any stipulation of s. Every other row, passport,
+model count and period is unchanged (`inventory/docket_claims.py`, `zclassify.py`).
 *Changes in v1.2:* Z is named for what it is — a **dirty** parameter, following
 ZTL v2.1.3 (DOI 10.5281/zenodo.23648237). §2.1 is rewritten: earlier versions called
 Z an "unverified" tag, one of three statuses of the data, which suggested the wrong
@@ -52,9 +61,10 @@ The first of the two working instruments is the judge (module `ztljudge`). Given
 
 The second instrument is the passport office (module `zpassport`, expedition E18 of the ZTL corpus). Given a *system of definitions* — sentences referring to one another ("L asserts: L is false") — it does three things:
 
+0. **It grounds first, classically.** A sentence whose definition comes out the same — true, or false — under every classical value of whatever is still open is grounded at once, whatever that open part turns out to be. Only what classics leaves open goes on to the count.
 1. **It counts classical solutions.** It enumerates all consistent ways of assigning truth and falsehood to the sentences that agree with their own definitions. Then comes the arithmetic of fate:
    - **0 solutions → PARADOX.** The refusal is permanent: no decree and no discovery can help — every assignment contradicts the sentence's own definition. This is provable, not rhetorical.
-   - **1 solution → INTRINSIC.** The sentence is ungrounded, but the verdict is *forced*: exactly one stipulation is possible.
+   - **1 solution → INTRINSIC.** The sentence is ungrounded, but the verdict is *forced*: exactly one stipulation is possible. (Since grounding reads classics first, this passport is issued only to loops of two or more sentences; a single sentence with one solution is grounded by its form — §4.3.)
    - **2+ solutions → UNDERDETERMINED.** Not a paradox but a blank form: any of the solutions can be legalized by decree, and the system closes up without breaking anything (this is a theorem — the "stipulation theorem").
    - Off the loops there are two more passports: **INPUT** (an ordinary dirty input; refusal until verification) and **DOWNSTREAM** (the refusal is inherited from a culprit below, and the culprit is named).
 2. **It takes the handwriting.** The convicted have a second identifying mark — the oscillation period: how fast the verdict "blinks" under recomputation (the liar — 2; Jourdain's carousel — 4). One passport, different signatures.
@@ -88,9 +98,9 @@ Below is the main table. Every row is a measurement; the full reference run (`zc
 | 10 | Optimistic crocodile (control) | R ≡ M, M ≡ R | UNDERDETERMINED | 2 | 1 | 0 |
 | 11 | Even 2-cycle | A≡¬B, B≡¬A | UNDERDETERMINED | 2 | 2 | 2 |
 | 12 | Even 4-cycle | (4 negations) | UNDERDETERMINED | 2 | 2 | 4 |
-| 13 | Strong liar | σ ≡ ¬σ∧σ | **INTRINSIC (σ=F)** | 1 | 1 | — |
-| 14 | Revenge / avenger | μ ≡ ¬(μ↔μ) | **INTRINSIC (μ=F)** | 1 | 1 | — |
-| 15 | Henkin-style | h ≡ (h→h) | **INTRINSIC (h=T)** | 1 | 1 | — |
+| 13 | Strong liar | σ ≡ ¬σ∧σ | GROUNDED (σ=F) | — | 1 | — |
+| 14 | Revenge / avenger | μ ≡ ¬(μ↔μ) | GROUNDED (μ=F) | — | 1 | — |
+| 15 | Henkin-style | h ≡ (h→h) | GROUNDED (h=T) | — | 1 | — |
 | 16 | Yablo truncated at n=3 | sᵢ ≡ ⋀ⱼ˃ᵢ ¬sⱼ | GROUNDED | — | 1 | — |
 | 17 | Yablo truncated at n=6 | — | GROUNDED | — | 1 | — |
 | 18 | Theseus title contest | theA≡¬theB, theB≡¬theA | UNDERDETERMINED | 2 | 2 | 2 |
@@ -98,7 +108,7 @@ Below is the main table. Every row is a measurement; the full reference run (`zc
 | 20 | "The same person" (all observations match) | S ≡ obs∧S, obs=T | UNDERDETERMINED | 2 | 1 | — |
 | 21 | "The same person" (a mismatch) | S ≡ obs∧S, obs=F | GROUNDED (S=F) | — | 1 | — |
 
-Plus separate systems outside the table: Curry with a suspended ⊥ (case 7-bis, DOWNSTREAM — §4.5), Agrippa's dogma (UNDERDETERMINED + DOWNSTREAM with the culprit named), and the contingent liar in three worlds (§4.7).
+Plus separate systems outside the table: Curry with ⊥ := s∧¬s (case 7-bis, PARADOX — ⊥ is not suspended at all; §4.5), Agrippa's dogma (UNDERDETERMINED + DOWNSTREAM with the culprit named), and the contingent liar in three worlds (§4.7).
 
 Reminder cards, one sentence each: the **liar** — "this sentence is false"; the **barber** — shaves exactly those who do not shave themselves: does he shave himself?; **Grelling** — the word "heterological" means "not applying to itself": is it heterological?; **Russell** — the set of all sets that do not contain themselves: does it contain itself?; **Jourdain** — a postcard: the front reads "the sentence on the back is true", the back reads "the sentence on the front is false"; the **crocodile** — "I will return the child if you guess what I am about to do" — the mother: "you will not return him!"; **Curry** — "if this sentence is true, then ⊥" (its everyday evil version: "if this sentence is true, then Santa Claus exists" — under classical treatment anything follows); the **truth-teller** — "this sentence is true"; **Yablo** — an infinite queue, each member saying "everyone after me lies"; the **strong liar** — "I am lying, and I am right"; **Theseus** — every plank of the ship has been replaced, and a second ship was assembled from the old planks: which one is the real one?
 
@@ -116,7 +126,7 @@ Take any circle of definitions and count the negations in it. **An odd count is 
 
 ### 4.3. Worsening the liar is useless
 
-Intuition is sure that "I am lying AND I am right" is the liar squared. Measurement says the opposite: the strong liar has exactly **one** solution — it is false, forcedly, with no alternatives. No abyss: an ordinary false loudmouth, passport INTRINSIC. Its mirror — "if I am right, then I am right" — is forcedly *true*. Adding a contradiction does not deepen the pit — it fills it in: the more a sentence says about itself, the less freedom it has, and at "exactly one solution" the freedom runs out without ever reaching zero.
+Intuition is sure that "I am lying AND I am right" is the liar squared. Measurement says the opposite: the strong liar is false **whatever it is** — "not-σ and σ" is false on either value of σ — so classics settles it before any counting begins. No abyss: an ordinary false loudmouth, passport GROUNDED. Its mirror — "if I am right, then I am right" — is *true* whatever it is, and grounded the same way. Adding a contradiction does not deepen the pit — it fills it in: the more a sentence says about itself, the less freedom it has, and at "exactly one solution" the freedom runs out without ever reaching zero.
 
 ### 4.4. Yablo's alibi
 
@@ -124,7 +134,7 @@ Yablo's paradox is famous for the claim "a paradox without self-reference": an i
 
 ### 4.5. Curry's two passports
 
-Curry's sentence — "if this sentence is true, then ⊥" — is the subject of an old dispute: is the implication to blame, the self-reference, or something third? Measurement splits the question into two cases. If ⊥ is a **real, grounded falsehood**, then Curry is literally the liar in an implication costume: zero solutions, period 2, the same passport. If instead ⊥ **itself hangs dirty** (defined over an ungrounded base), the passport changes: DOWNSTREAM — the refusal is not its own but inherited, and the culprit is named. The answer to the dispute: *it depends on what is fed to the arrow.* The two Currys now carry different documents, and confusing them is no longer obligatory.
+Curry's sentence — "if this sentence is true, then ⊥" — is the subject of an old dispute: is the implication to blame, the self-reference, or something third? Measurement splits the question into two cases. If ⊥ is a **real, grounded falsehood**, then Curry is literally the liar in an implication costume: zero solutions, period 2, the same passport. If instead ⊥ **itself hangs dirty** — defined over an ungrounded base, ⊥ := s — the passport changes: DOWNSTREAM, the refusal is inherited, the culprit s is named (s = T grounds Curry, s = F leaves the paradox). But the encoding earlier versions of this paper measured, ⊥ := s∧¬s, does **not** hang: "s and not-s" is false on either value of s, so ⊥ is grounded false and Curry is the liar again. (Versions up to 1.2.1 called this case DOWNSTREAM with a "conditional" refusal; no stipulation of s could lift it — the instrument then read the two occurrences of s apart. Corrected.) The answer to the dispute stands, sharpened: *it depends on what is fed to the arrow* — and on whether it is really unsettled.
 
 ### 4.6. The handwriting of the convicted
 
@@ -156,15 +166,15 @@ We foresee the metaphysician's objection: "planks, form, history — those are y
 |---|---|---|
 | "Circularity is vicious" | universal ban on self-reference (Tarski-style) vs. admission (Kripke) | parity is vicious, not the circle: odd — conviction, even — a blank (stipulation theorem) |
 | Yablo: is there a hidden loop? | Priest (circular) vs. Sorensen (not) | every finite segment grounded; all paradoxicality lives in the actual infinity |
-| Curry: who is to blame? | implication vs. self-reference vs. detachment | depends on the status of ⊥: real falsehood → the liar; suspended → inherited refusal, culprit named |
+| Curry: who is to blame? | implication vs. self-reference vs. detachment | depends on the status of ⊥: false (even as s∧¬s) → the liar; genuinely unsettled → inherited refusal, culprit named |
 | Russell: total ban or local repair? | type theory vs. restricted comprehension | the catastrophe = one cell of nine; types also ban the twin S∈S, which is curable by decree |
-| "The worsened liar is scarier" | folklore intuition | the opposite: exactly one forced solution (INTRINSIC) |
+| "The worsened liar is scarier" | folklore intuition | the opposite: false whatever it is — grounded by its own form |
 | The crocodile: what should he do? | the sophists: a trap with no exit | the contract is void — no obligation ever arose: unperformable for the pessimist (0 solutions), non-binding for the optimist (any action "honors" the deal) |
 | Is Theseus a paradox? | 2400 years of "yes" by default | zero paradoxical components: facts plus a blank awaiting a decree |
 | Is the dogmatic horn one thing? | Agrippa, Sextus, Albert: one horn, uniformly fatal | two things by the count: 2 settings — a choice really made; 1 setting — a terminus nobody chose, which the argument does not reach |
 | Is a self-supporting foundation vicious? | Münchhausen: pulling oneself out by one's own hair | UNDERDETERMINED, curable by stipulating a member — the same blank the truth-teller holds, and priced: whatever rests on it falls with it |
 
-> **[FIGURE 3 — here. "The Group Photo: who holds which passport."** Five labeled enclosures with stamp-styled headers: PARADOX (red) — the liar, the barber, Grelling, Russell's cell, Jourdain/crocodile, the odd 3-cycle, Curry-with-a-real-falsum; INTRINSIC (blue) — the strong liar, revenge, the Henkin-style sentence; UNDERDETERMINED (green) — the truth-teller, the twin S∈S, the even cycles, the Theseus title contest, "the same person"; DOWNSTREAM (yellow) — Curry-with-a-suspended-falsum, the claim resting on the dogma; GROUNDED (white) — the truncated Yablos, "the same person" after a mismatch. The characters are recognizable pictograms (Jourdain's postcard, the crocodile, the ship, Yablo's queue running off past the edge of the red enclosure into infinity — only its tail inside the white one). Caption: "The collection's group photo after the document check."**]**
+> **[FIGURE 3 — here. "The Group Photo: who holds which passport."** Five labeled enclosures with stamp-styled headers: PARADOX (red) — the liar, the barber, Grelling, Russell's cell, Jourdain/crocodile, the odd 3-cycle, Curry-with-a-real-falsum, Curry with ⊥ := s∧¬s; GROUNDED BY FORM (blue) — the strong liar, revenge, the Henkin-style sentence; UNDERDETERMINED (green) — the truth-teller, the twin S∈S, the even cycles, the Theseus title contest, "the same person"; DOWNSTREAM (yellow) — Curry with a genuinely suspended falsum (⊥ := s), the claim resting on the dogma; GROUNDED (white) — the truncated Yablos, "the same person" after a mismatch. The characters are recognizable pictograms (Jourdain's postcard, the crocodile, the ship, Yablo's queue running off past the edge of the red enclosure into infinity — only its tail inside the white one). Caption: "The collection's group photo after the document check."**]**
 
 ### 4.9. Agrippa's third horn splits
 
@@ -175,7 +185,7 @@ The third horn is the one this paper's instrument has something new to say about
 | The stopping point | Passport | Settings |
 |---|---|---|
 | `f := f` — it holds because it holds | UNDERDETERMINED | **2** |
-| `f := f xnor f` — it holds because it could not do otherwise | INTRINSIC | **1** |
+| `f := f xnor f` — it holds because it could not do otherwise | GROUNDED (by form) | **1** |
 | `f := not f` — the liar, for contrast | PARADOX | **0** |
 
 The count is the same count the whole paper runs on, turned on a foundation instead of on a sentence, and it separates two situations that the word "dogma" has always kept together. Two settings means the choice was real: someone picked, someone else could have picked differently, and the fifth postulate, the axiom of choice and propositional extensionality are exactly this — each has a coherent rival, and the rival is why we call the stop arbitrary. Agrippa's complaint lands, in full. One setting means there was nothing to pick. The chain stops without anybody deciding to stop it, and "you could have gone otherwise" has no referent.
@@ -321,7 +331,7 @@ finite face of the ground (`ZDiophantine`) have Lean; the rest are STAND in the 
 
 ## 6. The honest frame
 
-The taxonomy's parents are named and not appropriated: the division into grounded / paradoxical / intrinsically forced is Kripke (1975); the oscillation signatures are the revision theory of Gupta and Belnap; the postcard itself is Jourdain (1913); the observation about contingency is Kripke's. The completeness of the axis (0/1/many exhaust a finite component) is an arithmetical fact, recorded in the ZTL corpus (E28).
+The taxonomy's parents are named and not appropriated: the division into grounded / paradoxical / intrinsically forced is Kripke (1975), and the grounding step that reads classics first is the supervaluation scheme (van Fraassen 1966; Kripke 1975 offers it beside strong Kleene) — chosen here because it is ZTL's own "true under every classical reading", applied with one value per sentence; the oscillation signatures are the revision theory of Gupta and Belnap; the postcard itself is Jourdain (1913); the observation about contingency is Kripke's. The completeness of the axis (0/1/many exhaust a finite component) is an arithmetical fact, recorded in the ZTL corpus (E28).
 
 What is ours is **executability and arbitration**: one instrument, one corpus, every row of the table a command, every verdict a run with a control weight. Throughout the paper "legitimate" means exactly one thing: *the version matched the measured passport*. It is a calibrated blessing, not an absolute one: we certify agreement with an instrument whose rules are open and themselves published.
 
@@ -341,7 +351,7 @@ python3 zclassify.py
 
 ## 8. Conclusion: a price list instead of a scare
 
-What has changed after the audit? Of the whole famous collection, few confirmed the title "paradox" once the documents were checked: the liar with his twins, the odd cycles, Jourdain with the crocodile, Curry under a real falsehood — and the infinite Yablo, if the reader is willing to pay for actual infinity. The rest are blanks awaiting a signature (the truth-teller, the even cycles, Theseus's title), forced verdicts (the strong liar and its family), and conditional refusals with named culprits. The word that scared students for twenty-three centuries has received a price list: every "defeat of reason" has its own price tag, and almost all the price tags turned out more modest than the signboard. The document check for one line takes milliseconds. The only expensive thing was the centuries lived without it.
+What has changed after the audit? Of the whole famous collection, few confirmed the title "paradox" once the documents were checked: the liar with his twins, the odd cycles, Jourdain with the crocodile, Curry under a real falsehood — and the infinite Yablo, if the reader is willing to pay for actual infinity. The rest are blanks awaiting a signature (the truth-teller, the even cycles, Theseus's title), verdicts forced by form (the strong liar and its family), and conditional refusals with named culprits. The word that scared students for twenty-three centuries has received a price list: every "defeat of reason" has its own price tag, and almost all the price tags turned out more modest than the signboard. The document check for one line takes milliseconds. The only expensive thing was the centuries lived without it.
 
 The oldest customer left with the most interesting document, and it is the right note to end a version on. Agrippa came to close the office altogether — nothing can be justified, so nothing here can be worth issuing — and the office answered him with the one thing it does: it counted. Two settings under a foundation and he is right, the stop was a choice and the choice was arbitrary; one setting and his complaint has nothing to attach to. He is not refuted. He is *sorted*, which is what this desk was built to do and all it has ever claimed to do. And the visit was not free for us either: two words were missing from our own vocabulary before he arrived, and the second of them cost us a published sentence about where robustness comes from. A classification that can be corrected by its own cases is the only kind worth publishing.
 

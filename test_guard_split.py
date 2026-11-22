@@ -65,11 +65,16 @@ def test_default_is_the_old_behaviour():
 def test_budget_never_lies():
     """ГЛАВНОЕ. Разряд при бюджете либо тот же, либо честное ослабление —
     но НИКОГДА не другой. Перебором, а не обещанием в комментарии."""
-    bad, declined = Z.check_budget_never_lies(trials=3000, seed=11)
+    bad, declined, exact = Z.check_budget_never_lies(trials=3000, seed=11)
     assert not bad, f"бюджет ИЗМЕНИЛ ответ в {len(bad)} случаях: {bad[:2]}"
     # ЗНАМЕНАТЕЛЬ: если отказов ноль, проверка выше ничего не проверила.
+    # Two denominators since 2026-11-23 — past the budget there are two paths (see check_budget_never_lies):
+    # MEASURED declined 658, exact 769. Each was 0 once without anyone noticing (exact before 8ec20e9, declined
+    # after it).
     assert declined > 100, \
         f"путь отказа почти не сработал ({declined}) — проверка вакуумна"
+    assert exact > 100, \
+        f"точный проход за бюджетом почти не сработал ({exact}) — проверка вакуумна"
 
 
 def test_verdict_survives_where_the_guarantee_declines():

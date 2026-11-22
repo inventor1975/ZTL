@@ -455,7 +455,29 @@ def check_budget_never_lies(trials=4000, seed=11):
 
         undetermined     допустимо всегда (отказ)
         sound-or-better  допустимо, если без бюджета вышло hereditary/sound
+
+    TWO PATHS PAST THE BUDGET, and both are counted (2026-11-23). Since 8ec20e9 (2026-11-09) an over-budget bit
+    first runs the exact pass `_reach_exact` and refuses only when that pass refuses. MEASURED on this check
+    (trials=3000, seed=11, the old generator): before 8ec20e9 1,238 refusals; after it 0 — all 1,634 over-budget
+    calls were answered exactly, so `declined` read 0 and the test went vacuous. On formulas of <= 5 atoms
+    zreach's cap is never reached; what still refuses is a literal Z leaf (outside lean/ZReach.lean's Fm, see
+    `_reach_exact`). Hence the generator now puts a literal Z at a leaf with probability 0.15, and the check
+    returns three numbers:
+
+        bad       budgeted grade NOT a weakening of the unbudgeted one (must be empty)
+        declined  budgeted grade was undetermined / sound-or-better (the refusal path)
+        exact     over-budget calls the exact pass answered (the path that gives a DEFINITE answer under the
+                  budget — the one that most needs to agree with the reference)
+
+    MEASURED (trials=3000, seed=11): bad 0, declined 658, exact 769, 0.2 s.
+
+    The markings stay in grade's dialect T / F / M — the one ztljudge sends (`_grade_marking` maps Z to M).
+    A marking value Z is NOT in it: hereditary_bit holds it fixed while stable_bit completes it, so
+    "hereditary => sound" fails and the budget DOES change the answer (measured 2026-11-23: 223 of 15,000
+    budgeted calls, hereditary -> until-verification, e.g. p <-> t at {p: Z, t: M}, budget 2). Open, not fixed
+    here: it is a question of what a Z marking means, the curator's call.
     """
+    global _reach_exact
     import random
     rnd = random.Random(seed)
     ops = ["and", "or", "imp", "xor", "xnor"]
@@ -463,7 +485,7 @@ def check_budget_never_lies(trials=4000, seed=11):
 
     def gen(d):
         if d == 0:
-            return rnd.choice(ats)
+            return Z if rnd.random() < 0.15 else rnd.choice(ats)
         if rnd.random() < 0.25:
             return ("not", gen(d - 1))
         return (rnd.choice(ops), gen(d - 1), gen(d - 1))
@@ -471,18 +493,30 @@ def check_budget_never_lies(trials=4000, seed=11):
     WEAKER = {"hereditary": {"hereditary", "sound-or-better", "undetermined"},
               "sound": {"sound", "sound-or-better", "undetermined"},
               "until-verification": {"until-verification", "undetermined"}}
-    bad, declined = [], 0
-    for _ in range(trials):
-        phi = gen(rnd.choice([1, 2, 3]))
-        mk = {a: rnd.choice(("M", T, F)) for a in ats}
-        full = grade(phi, mk)                       # без бюджета — эталон
-        for b in (1, 2, 4, 9, 27):                  # заведомо тесные потолки
-            got = grade(phi, mk, budget=b)
-            if got in ("undetermined", "sound-or-better"):
-                declined += 1
-            if got not in WEAKER[full]:
-                bad.append((phi, mk, b, full, got))
-    return bad, declined
+    bad, declined, exact = [], 0, 0
+    real = _reach_exact
+
+    def counted(*args):                     # the bits look `_reach_exact` up at call time
+        nonlocal exact
+        r = real(*args)
+        exact += r is not None
+        return r
+
+    _reach_exact = counted
+    try:
+        for _ in range(trials):
+            phi = gen(rnd.choice([1, 2, 3]))
+            mk = {a: rnd.choice(("M", T, F)) for a in ats}
+            full = grade(phi, mk)                       # без бюджета — эталон
+            for b in (1, 2, 4, 9, 27):                  # заведомо тесные потолки
+                got = grade(phi, mk, budget=b)
+                if got in ("undetermined", "sound-or-better"):
+                    declined += 1
+                if got not in WEAKER[full]:
+                    bad.append((phi, mk, b, full, got))
+    finally:
+        _reach_exact = real
+    return bad, declined, exact
 
 
 if __name__ == "__main__":

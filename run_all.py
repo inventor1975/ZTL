@@ -75,6 +75,9 @@ STANDS = [
     ("test_judge_perf.py", ["JUDGE PERF GREEN"]),
     ("test_redteam_logic.py", ["REDTEAM LOGIC GREEN"]),
     ("test_judge_worst.py", ["JUDGE WORST GREEN"]),
+    # 2026-11-23: was outside the gate, and its denominator went to 0 at 8ec20e9 (2026-11-09) unseen for two weeks.
+    # The count of checks is in the marker so a test that silently drops out is also caught.
+    ("test_guard_split.py", ["СТОРОЖ ЗЕЛЁНЫЙ — 8 проверок"]),
     ("test_redteam_uncovered.py", ["GREEN: nothing found"]),
     # Поставлен 2026-09-19: CLASSIC-VS-ZTL.md год носила число «1263 из 2924»
     # без определения и без прогона, и оно занижало результат на двадцать

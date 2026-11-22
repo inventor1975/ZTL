@@ -183,24 +183,24 @@ theorem refutedR_open {v w : Nat → V} {φ : Fm} (hr : refinesR v w) (h : refut
 /-! ## IF STABLE: one value per atom (a completion) — classical truth over every cleaning -/
 
 /-- classical evaluation under one value per atom -/
-def cev (c : Nat → Bool) : Fm → Bool
+def clEval (c : Nat → Bool) : Fm → Bool
   | .atom n    => c n
   | .top       => true
   | .bot       => false
-  | .neg φ     => !(cev c φ)
-  | .conj φ ψ  => cev c φ && cev c ψ
-  | .disj φ ψ  => cev c φ || cev c ψ
-  | .imp φ ψ   => !(cev c φ) || cev c ψ
-  | .xor φ ψ   => cev c φ != cev c ψ
-  | .xnor φ ψ  => cev c φ == cev c ψ
+  | .neg φ     => !(clEval c φ)
+  | .conj φ ψ  => clEval c φ && clEval c ψ
+  | .disj φ ψ  => clEval c φ || clEval c ψ
+  | .imp φ ψ   => !(clEval c φ) || clEval c ψ
+  | .xor φ ψ   => clEval c φ != clEval c ψ
+  | .xnor φ ψ  => clEval c φ == clEval c ψ
 
 /-- `c` cleans `v`: a checked atom keeps its value, a dirty one gets either. -/
 def cleans (v : Nat → V) (c : Nat → Bool) : Prop := ∀ n, (subs (v n)).contains (c n) = true
 
 /-- classically true in every cleaning (the judge's EARNED IF STABLE, when not EARNED) -/
-def stableT (v : Nat → V) (φ : Fm) : Prop := ∀ c, cleans v c → cev c φ = true
+def stableT (v : Nat → V) (φ : Fm) : Prop := ∀ c, cleans v c → clEval c φ = true
 /-- classically false in every cleaning (REFUTED IF STABLE, when not REFUTED) -/
-def stableF (v : Nat → V) (φ : Fm) : Prop := ∀ c, cleans v c → cev c φ = false
+def stableF (v : Nat → V) (φ : Fm) : Prop := ∀ c, cleans v c → clEval c φ = false
 
 theorem ok_atom (x : V) (b : Bool) (h : (subs x).contains b = true) :
     ok b ((subs x).contains true, (subs x).contains false) = true := by
@@ -223,7 +223,7 @@ theorem ok_comb (g : Bool → Bool → Bool) (a c : Bool) (p q : Bool × Bool)
 
 /-- a cleaning is one reading (every occurrence of an atom read alike): its value is reachable -/
 theorem cleaning_is_reading {v : Nat → V} {c : Nat → Bool} (hc : cleans v c) :
-    ∀ φ : Fm, ok (cev c φ) (rd v φ) = true
+    ∀ φ : Fm, ok (clEval c φ) (rd v φ) = true
   | .atom n    => ok_atom (v n) (c n) (hc n)
   | .top       => rfl
   | .bot       => rfl
@@ -238,7 +238,7 @@ theorem cleaning_is_reading {v : Nat → V} {c : Nat → Bool} (hc : cleans v c)
 theorem earnedR_stable {v : Nat → V} {φ : Fm} (h : earnedR v φ) : stableT v φ := by
   intro c hc
   have k := cleaning_is_reading hc φ
-  revert k; unfold earnedR at h; cases e : cev c φ with
+  revert k; unfold earnedR at h; cases e : clEval c φ with
   | true => intro _; rfl
   | false => intro k; change (rd v φ).2 = true at k; rw [h] at k; exact Bool.noConfusion k
 
@@ -246,7 +246,7 @@ theorem earnedR_stable {v : Nat → V} {φ : Fm} (h : earnedR v φ) : stableT v 
 theorem refutedR_stable {v : Nat → V} {φ : Fm} (h : refutedR v φ) : stableF v φ := by
   intro c hc
   have k := cleaning_is_reading hc φ
-  revert k; unfold refutedR at h; cases e : cev c φ with
+  revert k; unfold refutedR at h; cases e : clEval c φ with
   | false => intro _; rfl
   | true => intro k; change (rd v φ).1 = true at k; rw [h] at k; exact Bool.noConfusion k
 

@@ -245,11 +245,11 @@ def bget : List Bool → Nat → Bool
 
 /-- THE STEP — classics first, in one place (curator 2026-11-22): t (f) if the definition is classically true
 (false) under EVERY classical value of every undetermined atom it mentions, own or foreign (one value per atom:
-the stable test, `ZRead.cev`); otherwise still n. ZTL's tables are not used here: they give the VERDICT when
+the stable test, `ZRead.clEval`); otherwise still n. ZTL's tables are not used here: they give the VERDICT when
 classics gives no answer, not the grounding. -/
 def evalS (v : PVal) (φ : Fm) : Ph :=
-  if allB (comps (pad v (maxAtom φ + 1))) (fun c => cev (bget c) φ) = true then .t
-  else if allB (comps (pad v (maxAtom φ + 1))) (fun c => !cev (bget c) φ) = true then .f
+  if allB (comps (pad v (maxAtom φ + 1))) (fun c => clEval (bget c) φ) = true then .t
+  else if allB (comps (pad v (maxAtom φ + 1))) (fun c => !clEval (bget c) φ) = true then .f
   else .n
 
 theorem pvLeq_len : ∀ v w : PVal, pvLeq v w = true → v.length = w.length := by
@@ -289,13 +289,13 @@ theorem evalS_mono {v w : PVal} (h : pvLeq v w = true) (φ : Fm) :
     phLeq (evalS v φ) (evalS w φ) = true := by
   have hp := pad_mono h (maxAtom φ + 1)
   unfold evalS
-  by_cases hT : allB (comps (pad v (maxAtom φ + 1))) (fun c => cev (bget c) φ) = true
+  by_cases hT : allB (comps (pad v (maxAtom φ + 1))) (fun c => clEval (bget c) φ) = true
   · rw [if_pos hT, if_pos (comps_mono _ _ hp _ hT)]; rfl
   · rw [if_neg hT]
-    by_cases hF : allB (comps (pad v (maxAtom φ + 1))) (fun c => !cev (bget c) φ) = true
+    by_cases hF : allB (comps (pad v (maxAtom φ + 1))) (fun c => !clEval (bget c) φ) = true
     · rw [if_pos hF]
       have hFw := comps_mono _ _ hp _ hF
-      have hTw : ¬ allB (comps (pad w (maxAtom φ + 1))) (fun c => cev (bget c) φ) = true := fun hTw =>
+      have hTw : ¬ allB (comps (pad w (maxAtom φ + 1))) (fun c => clEval (bget c) φ) = true := fun hTw =>
         not_both _ (allB_first _ _ hTw) (allB_first _ _ hFw)
       rw [if_neg hTw, if_pos hFw]; rfl
     · rw [if_neg hF]; exact leqN _

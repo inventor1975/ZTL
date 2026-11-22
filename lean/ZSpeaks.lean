@@ -1,14 +1,15 @@
 import ZDirty
+import ZRead
 import ZComplete
 /-! # ZSpeaks — every disposition of the judge is a ZTL formula over the atoms of φ. Zero axioms.
 
 Paper v7 §5.3, preprint 2.1.6 §19 (2026-10-29). Two steps, glued here into one theorem:
-(1) for a fixed φ, each disposition at v is decided by strong Kleene (`kev`) and a finite search over the
+(1) for a fixed φ, each disposition at v is decided by the dirty reading (`rd`, ZRead) and a finite search over the
     completions (cleanings) of the dirty atoms of φ (`allC`), so it is a yes/no function of the values of the
     atoms of φ; (`allR`, the search over refinements, decides the hereditary grade: the judge's EARNED of 2.1.5);
 (2) every such function is a ZTL formula (`Cpl.ztl_expressively_complete`, the J-DNF).
 The six dispositions: EARNED, EARNED IF STABLE, ON CREDIT, OPEN, REFUTED IF STABLE, REFUTED.
-Strong Kleene cannot state even "p is established" (`ZDirty.kleene_cannot_say_established`).
+Pure branch (2026-11-22): EARNED / REFUTED are the forced readings `earnedR` / `refutedR`; no Kleene table.
 Expressible is not cheap: the J-DNF has 3^|atoms| leaves; this is about the language, not the cost.
 -/
 
@@ -29,6 +30,8 @@ theorem toV_iff : ∀ b : Bool, toV b = T ↔ b = true
 theorem decide_iff (p : Prop) [Decidable p] : decide p = true ↔ p := ⟨of_decide_eq_true, decide_eq_true⟩
 theorem and_not_iff : ∀ a b : Bool, (a && !b) = true ↔ (a = true ∧ ¬ b = true) := by decide
 theorem not_and_not_iff : ∀ a b : Bool, (!a && !b) = true ↔ (¬ a = true ∧ ¬ b = true) := by decide
+theorem notb_iff : ∀ b : Bool, (!b) = true ↔ b = false := by decide
+theorem nf_iff : ∀ b : Bool, b = true ↔ ¬ b = false := by decide
 
 /-! ## (1) The finite search over refinements -/
 
@@ -152,33 +155,40 @@ theorem allR_congr (t : V) (φ : Fm) (v w : Nat → V) (h : ∀ n, occurs n φ =
     fun hw => (allR_iff t φ v).mpr (every_refinement_congr t φ w v (fun n ho => (h n ho).symm)
       ((allR_iff t φ w).mp hw))⟩
 
-/-- strong Kleene depends only on the atoms of φ -/
-theorem kev_congr (v w : Nat → V) : ∀ φ : Fm, (∀ n, occurs n φ = true → v n = w n) → kev v φ = kev w φ := by
+/-- the dirty reading depends only on the atoms of φ -/
+theorem rd_congr (v w : Nat → V) : ∀ φ : Fm, (∀ n, occurs n φ = true → v n = w n) → rd v φ = rd w φ := by
   have l : ∀ (φ ψ : Fm) (n : Nat), occurs n φ = true → (occurs n φ || occurs n ψ) = true := by
     intro φ ψ n h; rw [h]; rfl
   have r : ∀ (φ ψ : Fm) (n : Nat), occurs n ψ = true → (occurs n φ || occurs n ψ) = true := by
     intro φ ψ n h; rw [h]; cases occurs n φ <;> rfl
   intro φ
   induction φ with
-  | atom n => intro h; exact h n (by show decide (n = n) = true; exact decide_eq_true rfl)
+  | atom n =>
+      intro h
+      show ((subs (v n)).contains true, (subs (v n)).contains false) = ((subs (w n)).contains true, (subs (w n)).contains false)
+      rw [h n (by show decide (n = n) = true; exact decide_eq_true rfl)]
   | top => intro _; rfl
   | bot => intro _; rfl
-  | neg φ ih => intro h; show k1 _ (kev v φ) = k1 _ (kev w φ); rw [ih h]
+  | neg φ ih => intro h; show ((rd v φ).2, (rd v φ).1) = ((rd w φ).2, (rd w φ).1); rw [ih h]
   | conj φ ψ ihφ ihψ =>
-      intro h; show k2 _ (kev v φ) (kev v ψ) = k2 _ (kev w φ) (kev w ψ)
+      intro h; show comb _ (rd v φ) (rd v ψ) = comb _ (rd w φ) (rd w ψ)
       rw [ihφ (fun n hn => h n (l φ ψ n hn)), ihψ (fun n hn => h n (r φ ψ n hn))]
   | disj φ ψ ihφ ihψ =>
-      intro h; show k2 _ (kev v φ) (kev v ψ) = k2 _ (kev w φ) (kev w ψ)
+      intro h; show comb _ (rd v φ) (rd v ψ) = comb _ (rd w φ) (rd w ψ)
       rw [ihφ (fun n hn => h n (l φ ψ n hn)), ihψ (fun n hn => h n (r φ ψ n hn))]
   | imp φ ψ ihφ ihψ =>
-      intro h; show k2 _ (kev v φ) (kev v ψ) = k2 _ (kev w φ) (kev w ψ)
+      intro h; show comb _ (rd v φ) (rd v ψ) = comb _ (rd w φ) (rd w ψ)
       rw [ihφ (fun n hn => h n (l φ ψ n hn)), ihψ (fun n hn => h n (r φ ψ n hn))]
   | xor φ ψ ihφ ihψ =>
-      intro h; show k2 _ (kev v φ) (kev v ψ) = k2 _ (kev w φ) (kev w ψ)
+      intro h; show comb _ (rd v φ) (rd v ψ) = comb _ (rd w φ) (rd w ψ)
       rw [ihφ (fun n hn => h n (l φ ψ n hn)), ihψ (fun n hn => h n (r φ ψ n hn))]
   | xnor φ ψ ihφ ihψ =>
-      intro h; show k2 _ (kev v φ) (kev v ψ) = k2 _ (kev w φ) (kev w ψ)
+      intro h; show comb _ (rd v φ) (rd v ψ) = comb _ (rd w φ) (rd w ψ)
       rw [ihφ (fun n hn => h n (l φ ψ n hn)), ihψ (fun n hn => h n (r φ ψ n hn))]
+
+/-- EARNED (forced T) is hereditary T. -/
+theorem earned_of_forced (v : Nat → V) (φ : Fm) (h : earnedR v φ) : Earned v φ :=
+  fun w hr => earnedR_verdict (earnedR_open (w := w) hr h)
 
 /-! ## (1') The search over completions (IF STABLE, 2026-10-29 evening)
 
@@ -331,15 +341,15 @@ theorem allC_congr (t : V) (φ : Fm) (v w : Nat → V) (h : ∀ n, occurs n φ =
 
 /-! ## The six dispositions (the judge since 2026-10-29 evening)
 
-EARNED: strong Kleene T. REFUTED: strong Kleene F. Otherwise EARNED IF STABLE: T in every completion (each dirty
+EARNED: T under every reading of every occurrence (`earnedR`). REFUTED: F likewise (`refutedR`). Otherwise EARNED IF STABLE: T in every completion (each dirty
 atom read the same at all its occurrences); REFUTED IF STABLE: F in every completion; ON CREDIT: T now, and the
 completions disagree; OPEN: not T now, and the completions disagree. -/
 
 def StableF (v : Nat → V) (φ : Fm) : Prop := ∀ w, refines v w → total w → evalF w φ = F
-def EarnedIfStable (v : Nat → V) (φ : Fm) : Prop := kev v φ ≠ T ∧ Enum v φ
-def RefutedIfStable (v : Nat → V) (φ : Fm) : Prop := kev v φ ≠ F ∧ StableF v φ
-def OnCredit (v : Nat → V) (φ : Fm) : Prop := evalF v φ = T ∧ kev v φ ≠ T ∧ ¬ Enum v φ ∧ ¬ StableF v φ
-def Open (v : Nat → V) (φ : Fm) : Prop := evalF v φ ≠ T ∧ kev v φ ≠ F ∧ ¬ Enum v φ ∧ ¬ StableF v φ
+def EarnedIfStable (v : Nat → V) (φ : Fm) : Prop := ¬ earnedR v φ ∧ Enum v φ
+def RefutedIfStable (v : Nat → V) (φ : Fm) : Prop := ¬ refutedR v φ ∧ StableF v φ
+def OnCredit (v : Nat → V) (φ : Fm) : Prop := evalF v φ = T ∧ ¬ earnedR v φ ∧ ¬ Enum v φ ∧ ¬ StableF v φ
+def Open (v : Nat → V) (φ : Fm) : Prop := evalF v φ ≠ T ∧ ¬ refutedR v φ ∧ ¬ Enum v φ ∧ ¬ StableF v φ
 
 /-! ## (2) The glue: a decided disposition is a ZTL formula over the atoms of φ -/
 
@@ -359,9 +369,9 @@ abbrev Says (φ : Fm) (P : (Nat → V) → Prop) : Prop :=
 /-- **The judge speaks ZTL.** For every formula φ, each of the six dispositions of φ is the T-value of a ZTL
 formula over the atoms of φ. -/
 theorem judge_speaks_ztl (φ : Fm) :
-    Says φ (fun v => StrictEarned v φ) ∧ Says φ (fun v => EarnedIfStable v φ) ∧
+    Says φ (fun v => earnedR v φ) ∧ Says φ (fun v => EarnedIfStable v φ) ∧
     Says φ (fun v => OnCredit v φ) ∧ Says φ (fun v => Open v φ) ∧
-    Says φ (fun v => RefutedIfStable v φ) ∧ Says φ (fun v => StrictRefuted v φ) := by
+    Says φ (fun v => RefutedIfStable v φ) ∧ Says φ (fun v => refutedR v φ) := by
   have eB := fun v => allC_iff T φ v
   have rB := fun v => allC_iff F φ v
   have eC := fun v w h => allC_congr T φ v w h
@@ -370,54 +380,56 @@ theorem judge_speaks_ztl (φ : Fm) :
   have nb : ∀ b : Bool, (!b) = true ↔ ¬ b = true := by decide
   have a2 : ∀ a b : Bool, (a && b) = true ↔ (a = true ∧ b = true) := by decide
   refine ⟨?_, ?_, ?_, ?_, ?_, ?_⟩
-  · exact speak φ _ (fun v => decide (kev v φ = T))
-      (fun v => (decide_iff _).trans (strict_earned_iff_kleene v φ).symm)
-      (fun v w h => by dsimp only; rw [kev_congr v w φ h])
-  · exact speak φ _ (fun v => !decide (kev v φ = T) && allC T φ (atomsL φ) v)
-      (fun v => (a2 _ _).trans ⟨fun ⟨a, b⟩ => ⟨(nn _).mp a, (eB v).mp b⟩,
-        fun ⟨a, b⟩ => ⟨(nn _).mpr a, (eB v).mpr b⟩⟩)
-      (fun v w h => by dsimp only; rw [eC v w h, kev_congr v w φ h])
-  · exact speak φ _ (fun v => decide (evalF v φ = T) && !decide (kev v φ = T) &&
+  · exact speak φ _ (fun v => !(rd v φ).2)
+      (fun v => notb_iff _)
+      (fun v w h => by dsimp only; rw [rd_congr v w φ h])
+  · exact speak φ _ (fun v => (rd v φ).2 && allC T φ (atomsL φ) v)
+      (fun v => (a2 _ _).trans ⟨fun ⟨a, b⟩ => ⟨(nf_iff _).mp a, (eB v).mp b⟩,
+        fun ⟨a, b⟩ => ⟨(nf_iff _).mpr a, (eB v).mpr b⟩⟩)
+      (fun v w h => by dsimp only; rw [eC v w h, rd_congr v w φ h])
+  · exact speak φ _ (fun v => decide (evalF v φ = T) && (rd v φ).2 &&
         !allC T φ (atomsL φ) v && !allC F φ (atomsL φ) v)
       (fun v => by
         refine ⟨fun h => ?_, fun ⟨a, b, c, d⟩ => ?_⟩
         · obtain ⟨h, d⟩ := (a2 _ _).mp h; obtain ⟨h, c⟩ := (a2 _ _).mp h; obtain ⟨a, b⟩ := (a2 _ _).mp h
-          exact ⟨of_decide_eq_true a, (nn _).mp b, fun k => (nb _).mp c ((eB v).mpr k),
+          exact ⟨of_decide_eq_true a, (nf_iff _).mp b, fun k => (nb _).mp c ((eB v).mpr k),
             fun k => (nb _).mp d ((rB v).mpr k)⟩
-        · exact (a2 _ _).mpr ⟨(a2 _ _).mpr ⟨(a2 _ _).mpr ⟨decide_eq_true a, (nn _).mpr b⟩,
+        · exact (a2 _ _).mpr ⟨(a2 _ _).mpr ⟨(a2 _ _).mpr ⟨decide_eq_true a, (nf_iff _).mpr b⟩,
             (nb _).mpr (fun k => c ((eB v).mp k))⟩, (nb _).mpr (fun k => d ((rB v).mp k))⟩)
-      (fun v w h => by dsimp only; rw [eC v w h, rC v w h, kev_congr v w φ h, evalF_congr v w φ h])
-  · exact speak φ _ (fun v => !decide (evalF v φ = T) && !decide (kev v φ = F) &&
+      (fun v w h => by dsimp only; rw [eC v w h, rC v w h, rd_congr v w φ h, evalF_congr v w φ h])
+  · exact speak φ _ (fun v => !decide (evalF v φ = T) && (rd v φ).1 &&
         !allC T φ (atomsL φ) v && !allC F φ (atomsL φ) v)
       (fun v => by
         refine ⟨fun h => ?_, fun ⟨a, b, c, d⟩ => ?_⟩
         · obtain ⟨h, d⟩ := (a2 _ _).mp h; obtain ⟨h, c⟩ := (a2 _ _).mp h; obtain ⟨a, b⟩ := (a2 _ _).mp h
-          exact ⟨(nn _).mp a, (nn _).mp b, fun k => (nb _).mp c ((eB v).mpr k),
+          exact ⟨(nn _).mp a, (nf_iff _).mp b, fun k => (nb _).mp c ((eB v).mpr k),
             fun k => (nb _).mp d ((rB v).mpr k)⟩
-        · exact (a2 _ _).mpr ⟨(a2 _ _).mpr ⟨(a2 _ _).mpr ⟨(nn _).mpr a, (nn _).mpr b⟩,
+        · exact (a2 _ _).mpr ⟨(a2 _ _).mpr ⟨(a2 _ _).mpr ⟨(nn _).mpr a, (nf_iff _).mpr b⟩,
             (nb _).mpr (fun k => c ((eB v).mp k))⟩, (nb _).mpr (fun k => d ((rB v).mp k))⟩)
-      (fun v w h => by dsimp only; rw [eC v w h, rC v w h, kev_congr v w φ h, evalF_congr v w φ h])
-  · exact speak φ _ (fun v => !decide (kev v φ = F) && allC F φ (atomsL φ) v)
-      (fun v => (a2 _ _).trans ⟨fun ⟨a, b⟩ => ⟨(nn _).mp a, (rB v).mp b⟩,
-        fun ⟨a, b⟩ => ⟨(nn _).mpr a, (rB v).mpr b⟩⟩)
-      (fun v w h => by dsimp only; rw [rC v w h, kev_congr v w φ h])
-  · exact speak φ _ (fun v => decide (kev v φ = F))
-      (fun v => (decide_iff _).trans (strict_refuted_iff_kleene v φ).symm)
-      (fun v w h => by dsimp only; rw [kev_congr v w φ h])
+      (fun v w h => by dsimp only; rw [eC v w h, rC v w h, rd_congr v w φ h, evalF_congr v w φ h])
+  · exact speak φ _ (fun v => (rd v φ).1 && allC F φ (atomsL φ) v)
+      (fun v => (a2 _ _).trans ⟨fun ⟨a, b⟩ => ⟨(nf_iff _).mp a, (rB v).mp b⟩,
+        fun ⟨a, b⟩ => ⟨(nf_iff _).mpr a, (rB v).mpr b⟩⟩)
+      (fun v w h => by dsimp only; rw [rC v w h, rd_congr v w φ h])
+  · exact speak φ _ (fun v => !(rd v φ).1)
+      (fun v => notb_iff _)
+      (fun v w h => by dsimp only; rw [rd_congr v w φ h])
 
 /-- The six dispositions cover every case. Coverage only: this theorem does not prove that they are mutually
 exclusive (the name says partition; the statement is the disjunction). -/
 theorem dispositions_partition (v : Nat → V) (φ : Fm) :
-    StrictEarned v φ ∨ EarnedIfStable v φ ∨ OnCredit v φ ∨ Open v φ ∨ RefutedIfStable v φ ∨
-      StrictRefuted v φ := by
+    earnedR v φ ∨ EarnedIfStable v φ ∨ OnCredit v φ ∨ Open v φ ∨ RefutedIfStable v φ ∨
+      refutedR v φ := by
   have eB := allC_iff T φ v
   have rB := allC_iff F φ v
-  match decEq (kev v φ) T with
-  | isTrue k => exact Or.inl ((strict_earned_iff_kleene v φ).mpr k)
-  | isFalse kT =>
-  match decEq (kev v φ) F with
-  | isTrue k => exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inr ((strict_refuted_iff_kleene v φ).mpr k)))))
-  | isFalse kF =>
+  cases hr2 : (rd v φ).2 with
+  | false => exact Or.inl hr2
+  | true =>
+  have kT : ¬ earnedR v φ := fun e => by unfold earnedR at e; rw [hr2] at e; exact Bool.noConfusion e
+  cases hr1 : (rd v φ).1 with
+  | false => exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inr hr1))))
+  | true =>
+  have kF : ¬ refutedR v φ := fun e => by unfold refutedR at e; rw [hr1] at e; exact Bool.noConfusion e
   cases he : allC T φ (atomsL φ) v with
   | true => exact Or.inr (Or.inl ⟨kT, eB.mp he⟩)
   | false =>
@@ -433,45 +445,46 @@ theorem dispositions_partition (v : Nat → V) (φ : Fm) :
 /-! ## Statements the cloud reviews asked for (2026-10-29) -/
 
 /-- ¬(p ∧ ¬p) on a dirty p is T under every refinement of the marks (the hereditary grade, the judge's EARNED
-of 2.1.5), though strong Kleene does not give it T (`ZDirty.judge_can_err`). -/
+of 2.1.5), though it is not forced: a reading of its two occurrences makes it false. -/
 theorem lnc_earned : Earned (fun _ => Z) (.neg (.conj (.atom 0) (.neg (.atom 0)))) :=
   (allR_iff T _ _).mp (by decide)
 
 /-- The grant is strict too: on a dirty p it grants neither p nor ¬p, while every classical substitution grants
-one of them (`ZDirty.strict_any`). -/
+one of them. -/
 theorem grant_strict : ¬ Enum (fun _ => Z) (.atom 0) ∧ ¬ Enum (fun _ => Z) (.neg (.atom 0)) := by
   have hr : ∀ c : V, refines (fun _ => Z) (fun _ => c) := fun _ _ h => absurd rfl h
   refine ⟨fun h => ?_, fun h => ?_⟩
   · have := h (fun _ => F) (hr F) (fun _ e => nomatch e); exact nomatch this
   · have := h (fun _ => T) (hr T) (fun _ e => nomatch e); exact nomatch this
 
-/-- ¬(p ∧ ¬p) on a dirty p: strong Kleene does not say T, the judge says EARNED IF STABLE, and every completion
+/-- ¬(p ∧ ¬p) on a dirty p: not forced, the judge says EARNED IF STABLE, and every completion
 (every classical substitution of p) grants it. -/
 theorem lnc_if_stable :
-    kev (fun _ => Z) (.neg (.conj (.atom 0) (.neg (.atom 0)))) ≠ T ∧
+    ¬ earnedR (fun _ => Z) (.neg (.conj (.atom 0) (.neg (.atom 0)))) ∧
     EarnedIfStable (fun _ => Z) (.neg (.conj (.atom 0) (.neg (.atom 0)))) :=
-  ⟨by decide, by decide, (allC_iff T _ _).mp (by decide)⟩
+  ⟨by unfold earnedR; decide, by unfold earnedR; decide, (allC_iff T _ _).mp (by decide)⟩
 
 /-- **Dominance, in one statement.** Let w be any classical substitution of the dirty atoms of v (a completion).
-Wherever w answers right — it grants φ exactly when the dirty reading earns φ (strong Kleene T) — the judge's
+Wherever w answers right — it grants φ exactly when the dirty reading earns φ (forced T) — the judge's
 grant (EARNED or EARNED IF STABLE, i.e. T in every completion) is right too. -/
 theorem grant_right_where_substitution_right (v w : Nat → V) (φ : Fm) (hr : refines v w) (ht : total w)
-    (hw : evalF w φ = T ↔ kev v φ = T) : Enum v φ ↔ kev v φ = T :=
-  ⟨fun h => hw.mp (h w hr ht), fun k => enum_of_earned v φ (earned_of_kleene v φ k)⟩
+    (hw : evalF w φ = T ↔ earnedR v φ) : Enum v φ ↔ earnedR v φ :=
+  ⟨fun h => hw.mp (h w hr ht), fun k => enum_of_earned v φ (earned_of_forced v φ k)⟩
 
 /-- The judge's grant is EARNED or EARNED IF STABLE, and that is exactly "T in every completion". -/
-theorem grant_iff_enum (v : Nat → V) (φ : Fm) : (StrictEarned v φ ∨ EarnedIfStable v φ) ↔ Enum v φ :=
-  ⟨fun h => h.elim (fun e => enum_of_earned v φ e.1) (fun e => e.2),
-   fun h => match decEq (kev v φ) T with
-     | isTrue k => Or.inl ((strict_earned_iff_kleene v φ).mpr k)
-     | isFalse k => Or.inr ⟨k, h⟩⟩
+theorem grant_iff_enum (v : Nat → V) (φ : Fm) : (earnedR v φ ∨ EarnedIfStable v φ) ↔ Enum v φ :=
+  ⟨fun h => h.elim (fun e => enum_of_earned v φ (earned_of_forced v φ e)) (fun e => e.2),
+   fun h => by
+     cases hr2 : (rd v φ).2 with
+     | false => exact Or.inl hr2
+     | true => exact Or.inr ⟨fun e => by unfold earnedR at e; rw [hr2] at e; exact Bool.noConfusion e, h⟩⟩
 
 end Speak
 end V
 
 #print axioms V.Speak.allR_iff
 #print axioms V.Speak.allC_iff
-#print axioms V.Speak.kev_congr
+#print axioms V.Speak.rd_congr
 #print axioms V.Speak.speak
 #print axioms V.Speak.judge_speaks_ztl
 #print axioms V.Speak.dispositions_partition

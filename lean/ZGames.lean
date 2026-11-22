@@ -5,7 +5,7 @@ A STRATEGY assigns a classical value to every read; reads are addressed by their
 tree (left child = 0, right child = 1), so different occurrences are different reads.
 
   * Scope = the whole formula: one strategy for all reads, and the formula's final classical value
-    must survive every strategy.                       → strong Kleene logic   (`formula_scope_is_kleene`)
+    must survive every strategy.                       → the forced reading     (`formula_scope_is_forced`)
   * Scope = each check: every connective is a separate check; the adversary sets the reads of THAT
     check's dirty atoms to falsify it, and the check's result is recorded and passed on as a clean
     fact to the next check.                            → ZTL                   (`check_scope_is_ztl`)
@@ -220,9 +220,10 @@ theorem safe_iff_rd (v : Nat → V) (φ : Fm) : SafeFormula v φ ↔ (rd v φ).2
     | true => rfl
     | false => rw [hb] at hs; have : (rd v φ).2 = true := hs; rw [h] at this; exact absurd this (by decide)
 
-/-- **The whole-formula adversary is strong Kleene.** φ survives every strategy iff its strong Kleene value is T. -/
-theorem formula_scope_is_kleene (v : Nat → V) (φ : Fm) : SafeFormula v φ ↔ kev v φ = T :=
-  (safe_iff_rd v φ).trans (earned_iff_kleene_T v φ)
+/-- **The whole-formula adversary is the forced reading.** φ survives every strategy iff it is EARNED: no
+reading of its occurrences is false (ZRead; pure branch — no Kleene table). -/
+theorem formula_scope_is_forced (v : Nat → V) (φ : Fm) : SafeFormula v φ ↔ earnedR v φ :=
+  safe_iff_rd v φ
 
 
 /-! ## The check-scope adversary
@@ -343,4 +344,4 @@ end V
 #print axioms V.scopes_differ
 #print axioms V.play_sound
 #print axioms V.play_complete
-#print axioms V.formula_scope_is_kleene
+#print axioms V.formula_scope_is_forced

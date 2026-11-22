@@ -19,7 +19,7 @@ E3. YABLO: sᵢ = "all subsequent ones are false" (without a single
 from itertools import product
 
 from ztl import T, F, Z, VALUES
-from fixedpoint import (EAGER, LAZY, fixed_points, iterate, least_fp_lazy,
+from fixedpoint import (EAGER, LAZY, fixed_points, iterate, least_fp_stable,
                         jump, ev_reg, fmt_v)
 
 
@@ -34,7 +34,7 @@ def expedition_curry():
     period = len(trace) - loop if loop is not None else None
     cyc = " → ".join(fmt_v(v) for v in trace[loop:]) if period and period > 1 else ""
     print(f"  greedy iteration from Z: {'CYCLE of period ' + str(period) + ': ' + cyc if period and period > 1 else 'converged'}")
-    lfp = least_fp_lazy(system)
+    lfp = least_fp_stable(system)
     print(f"  lazy grounding: {fmt_v(lfp)} — quarantine: "
           f"{[k for k, v in lfp.items() if v == Z] or 'empty'}")
     content = ev_reg(system["c"], lfp, EAGER)
@@ -96,7 +96,7 @@ def expedition_yablo(max_n=6):
     print("\n### E3. YABLO (truncations): s_i = \"all subsequent ones are false\"")
     for n in range(2, max_n + 1):
         system = yablo_system(n)
-        lfp = least_fp_lazy(system)
+        lfp = least_fp_stable(system)
         quarantined = [k for k, v in lfp.items() if v == Z]
         fe = fixed_points(system, EAGER)
         vals = "".join(lfp[f"s{i}"] for i in range(n))

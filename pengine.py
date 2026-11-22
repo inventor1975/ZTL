@@ -8,7 +8,7 @@ operationally.
 
 What the engine MEASURED while cranking (two corrections to the naive story):
 
-  1. The zero-trust GROUNDING (lazy least fixed point) is too COARSE to tell
+  1. The zero-trust GROUNDING (stable least fixed point) is too COARSE to tell
      paradoxes apart: every pure self-reference (Liar, carousel, every cycle,
      Yablo) grounds uniformly to Z. The discriminator is not the grounding — it
      is the set of CLASSICAL SOLUTIONS of the net (assignments in {T,F} that
@@ -37,7 +37,7 @@ Names provisional.
 from itertools import product
 
 from ztl import T, F, Z, ev
-from fixedpoint import least_fp_lazy, LAZY, ev_reg
+from fixedpoint import least_fp_stable, stable_eval, N, ev_reg
 
 HOLE = "S"                                   # the self-reference placeholder
 
@@ -55,24 +55,19 @@ def solutions(net):
 
 
 def ground(net):
-    """The zero-trust verdict: the lazy least fixed point (cautious — pure
-    self-reference lands in Z)."""
-    return least_fp_lazy(net)
+    """The zero-trust verdict: the STABLE least fixed point (pure branch, 2026-11-22: an own sentence is
+    determined when its definition has one value under every classical value of the undetermined ones;
+    pure self-reference stays N, the solver's phase)."""
+    return least_fp_stable(net)
 
 
-def lazy_step(net):
-    """One lazy (Kleene) jump from all-Z — the first step of grounding.
+def stable_step(net):
+    """One stable step from 'nothing determined' — the first step of grounding.
 
-    THEOREM (measured, 0 violations over all 9015 one-sentence nets ≤6 symbols):
-    for a one-sentence net S = f(S), grounding reaches a classical value ⟺ this
-    single step already escapes Z, i.e. f evaluated lazily at S=Z is not Z. Proof
-    sketch: if the lazy jump sends Z to a classical c, monotonicity gives
-    c = jump(Z) ⊑ jump(c), and a classical value is maximal in the information
-    order, so jump(c)=c — c is already a fixed point. Grounding is one step.
-    The 'cautious Z' nets (unique classical model, yet Z) are exactly those with
-    f(Z)=Z: the operator will not propagate a value from ignorance."""
-    z = {n: Z for n in net}
-    return {n: ev_reg(net[n], z, LAZY) for n in net}
+    For a one-sentence net S = f(S) grounding is ONE step, and the reason is now a triviality, not a
+    measurement: the step grounds S to c exactly when f(T) = f(F) = c, and then f(c) = c."""
+    z = {n: N for n in net}
+    return {n: stable_eval(net[n], z, net) for n in net}
 
 
 def periods(net):
@@ -104,15 +99,15 @@ def diagnose(net):
     sols = solutions(net)
     g = ground(net)
     n = len(sols)
-    grounds_to_value = not any(v == Z for v in g.values())
+    grounds_to_value = not any(v in (Z, N) for v in g.values())
     if n == 0:
-        kind = "contradictory   (0 solutions / no kernel → Z)"
+        kind = "contradictory   (0 solutions / no kernel → N)"
     elif n >= 2:
-        kind = f"underdetermined ({n} solutions / many kernels → Z)"
+        kind = f"underdetermined ({n} solutions / many kernels → N)"
     elif grounds_to_value:
         kind = "determined      (1 solution, grounded → its value)"
     else:
-        kind = ("cautious Z      (1 solution exists, but not Kripke-grounded "
+        kind = ("cautious N      (1 solution exists, but not grounded by the stable step "
                 "— ZTL won't grant it)")
     return {"solutions": sols, "ground": g, "n": n,
             "grounds_to_value": grounds_to_value, "kind": kind,
@@ -145,8 +140,8 @@ def containment(max_size=6, verbose=True):
     recomputed here, not quoted. Over every one-sentence net S = f(S) up to
     `max_size` symbols, two measured claims:
 
-    1. One-step criterion (the theorem at lazy_step): grounding reaches a
-       classical value ⟺ one lazy jump from Z escapes Z. Checked per net.
+    1. One-step criterion (stable_step): grounding reaches a
+       classical value ⟺ one stable step from N escapes N. Checked per net.
     2. Containment: grounding reaches a classical value only when the net has
        a UNIQUE classical model that is also reachable from ignorance — the
        cautious-Z nets (unique model, yet Z, e.g. S = S∨¬S) witness that
@@ -158,15 +153,15 @@ def containment(max_size=6, verbose=True):
         net = {HOLE: f}
         n_sols = len(solutions(net))
         g = ground(net)[HOLE]
-        if (g != Z) != (lazy_step(net)[HOLE] != Z):
+        if (g != N) != (stable_step(net)[HOLE] != N):
             violations.append(f)
-        if g != Z and n_sols != 1:
+        if g != N and n_sols != 1:
             leaks.append(f)              # a ground that is not THE model
         if n_sols == 0:
             boom += 1                    # classical explodes, ZTL contains
         elif n_sols >= 2:
             multi += 1                   # underdetermined for both
-        elif g == Z:
+        elif g == N:
             cautious += 1                # unique model, yet ungrounded
         else:
             agree += 1                   # determined: both settle it
@@ -176,13 +171,17 @@ def containment(max_size=6, verbose=True):
         print(f"  one-step grounding criterion:  {len(violations)} violations")
         print(f"  grounded without a unique model: {len(leaks)}")
         print(f"  determined (both settle):      {agree}")
-        print(f"  contradictory (0 models → Z):  {boom}")
-        print(f"  cautious Z (1 model, still Z): {cautious}   ← the witnesses")
-        print(f"  underdetermined (≥2 → Z):      {multi}")
-        print("\n  every grounded net has a unique model — ZTL-settled nets "
-              "are a strict\n  subset of the classically categorical ones; "
-              "the cautious-Z nets (e.g.\n  S=S∨¬S: classically ⊤, here Z) "
-              "are the strictness witnesses.")
+        print(f"  contradictory (0 models → N):  {boom}")
+        print(f"  cautious N (1 model, still N): {cautious}   ← the witnesses")
+        print(f"  underdetermined (≥2 → N):      {multi}")
+        if cautious:
+            print("\n  every grounded net has a unique model — ZTL-settled nets are a strict\n"
+                  "  subset of the classically categorical ones; the cautious nets are the witnesses.")
+        else:
+            print("\n  every grounded net has a unique model, AND every net with a unique model is\n"
+                  "  grounded (cautious = 0): under the stable step (pure branch, 2026-11-22) the\n"
+                  "  ZTL-settled one-sentence nets ARE the classically categorical ones. (Under the\n"
+                  "  removed Kleene register this sweep counted 1068 cautious nets, e.g. S = S∨¬S.)")
     return {"n": len(pool), "agree": agree, "boom": boom,
             "cautious": cautious, "multi": multi,
             "violations": violations, "leaks": leaks}
@@ -226,7 +225,7 @@ def report_zoo():
     print("THE ZOO AS reference nets — solutions discriminate, grounding does not\n")
     for name, net in ZOO.items():
         d = diagnose(net)
-        gz = "Z (quarantine)" if any(v == Z for v in d["ground"].values()) \
+        gz = "N (quarantine)" if any(v == N for v in d["ground"].values()) \
             else ", ".join(f"{k}={v}" for k, v in d["ground"].items())
         print(f"  {name}")
         print(f"      solutions: {d['n']}  →  {d['kind']}")
@@ -238,12 +237,12 @@ def parity_law():
     print(f"  {'k':>2} {'#sol':>5} {'ground':>7}   verdict")
     for k in range(1, 7):
         d = diagnose(neg_cycle(k))
-        g = "Z" if any(v == Z for v in d["ground"].values()) else "value"
+        g = "N" if any(v == N for v in d["ground"].values()) else "value"
         v = "contradictory (odd)" if d["n"] == 0 else \
             f"{d['n']} solutions (even)"
         print(f"  {k:>2} {d['n']:>5} {g:>7}   {v}")
     print("\n  odd k → 0 solutions (Liar-type); even k → 2 (truth-teller-type);"
-          "\n  grounding says Z for all — the STRUCTURE is in the solutions.")
+          "\n  grounding says N for all — the STRUCTURE is in the solutions.")
 
 
 def boundary():

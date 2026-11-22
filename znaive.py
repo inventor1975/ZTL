@@ -53,7 +53,7 @@ import json
 import sys
 
 from ztl import T, F, Z, VALUES
-from fixedpoint import LAZY, ev_reg, least_fp_lazy, jump
+from fixedpoint import LAZY, ev_reg, least_fp_stable, jump
 from zpassport import passports, sccs, deps
 
 CAP_COMPONENT = 16   # a quarantined component larger than this is not searched
@@ -316,7 +316,7 @@ def check(spec):
                                             f"{DOOR_NODES} (the public limit): fewer names or fewer nested quantifiers"}
         u0 = Universe(spec)
         sysm0 = u0.system()
-        lfp0 = least_fp_lazy(sysm0)
+        lfp0 = least_fp_stable(sysm0)
         search = 0
         for comp in sccs(sysm0):
             if len(comp) <= CAP_COMPONENT and any(lfp0[c_] == Z for c_ in comp):

@@ -12,7 +12,7 @@ Two registers, two very different answers (this is the point):
     tracer marks each atom that is Z and the exact operator where that Z
     collapses (⚡).
 
-  * GROUNDING (the solver / lazy register, fixedpoint.least_fp_lazy). Here Z is
+  * GROUNDING (the solver / lazy register, fixedpoint.least_fp_stable). Here Z is
     where a self-referential sentence LANDS when its grounding fixed point does
     not resolve — the Liar and friends. The tracer runs the solver and flags
     which sentences reach quarantine.
@@ -104,11 +104,11 @@ def _atoms(phi, acc=None):
 # ---------------------------------------------------------- GROUNDING tracer
 def trace_system():
     """Ground the paradox zoo; flag which sentences reach quarantine (Z)."""
-    from fixedpoint import ZOO, least_fp_lazy
+    from fixedpoint import ZOO, least_fp_stable
     print("GROUNDING trace (the solver's least fixed point — where sentences "
           "LAND in quarantine):\n")
     for name, system in ZOO.items():
-        fp = least_fp_lazy(system)
+        fp = least_fp_stable(system)
         print(f"  {name}")
         for s, defn in system.items():
             v = fp[s]

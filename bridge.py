@@ -16,7 +16,7 @@ import sys
 import os
 
 from ztl import T, F, Z, VALUES, NOT, OPS2
-from fixedpoint import LAZY, least_fp_lazy
+from fixedpoint import LAZY, least_fp_stable
 from zalgebra import jT, jF, jZ, dEq
 from tableau import prove
 from ztljudge import _lazy
@@ -175,7 +175,7 @@ def build_items():
                          "true" if name in lab else "false"))
     # lazy lfp of the constant-free zoo (ZGround.iter vs fixedpoint)
     for name, system, lean_sys in ZOO:
-        lfp = least_fp_lazy(system)
+        lfp = least_fp_stable(system)
         expected = "[" + ", ".join(
             VNAMES[lfp[f"s{i}"]] for i in range(len(system))) + "]"
         items.append((f"lfp {name}", f"V.lfp {lean_sys}", expected))

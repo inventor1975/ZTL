@@ -16,7 +16,7 @@ grounded point.
 """
 
 from ztl import T, F, Z, VALUES
-from fixedpoint import EAGER, LAZY, fixed_points, iterate, least_fp_lazy, \
+from fixedpoint import EAGER, LAZY, fixed_points, iterate, least_fp_stable, \
     ev_reg, fmt_v
 
 CASES = {
@@ -39,7 +39,7 @@ for title, system in CASES.items():
               + " → ".join(fmt_v(v) for v in trace[loop:]))
     else:
         print(f"  greedy iteration from Z: converged to {fmt_v(trace[-1])}")
-    lfp = least_fp_lazy(system)
+    lfp = least_fp_stable(system)
     q = [k for k, v in lfp.items() if v == Z]
     print(f"  lazy grounding: {fmt_v(lfp)}   quarantine: {q or 'empty'}")
     verdict = ev_reg(DEAL, lfp, EAGER)

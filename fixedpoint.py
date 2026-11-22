@@ -1,61 +1,30 @@
 # -*- coding: utf-8 -*-
 """
-Quarantine as a fixed point (à la Kripke) over ZTL.
+Quarantine as a fixed point (à la Kripke) over ZTL — PURE BRANCH (curator 2026-11-22: only ZTL).
 
-A language with a truth predicate: a system of sentences s_i, each
-defined by a formula over atoms Tr(s_j) (and constants). The "jump" J
-re-evaluates all sentences under the current valuation v. Fixed points
-of J are self-consistent valuations; the Z-set of the least point =
-quarantine.
+A language with a truth predicate: a system of sentences s_i, each defined by a formula over atoms Tr(s_j)
+(and constants). The jump J re-evaluates all sentences under the current valuation v; the least fixed point,
+reached by iterating from "nothing determined", leaves the quarantine undetermined.
 
-Two registers:
-  * GREEDY (ZTL): Z evaporates at every operator — the verdict register;
-  * LAZY (strong Kleene): Z flows (¬Z=Z etc.) — the grounding register.
-Note on the alphabet (preprint §10): the symbol Z is reused
-POSITIONALLY — on an input it is the mark ("dirty"), inside the
-lazy iteration it plays the solver's phase N ("not yet computed"),
-and a phase that never resolves hardens into the quarantine mark.
-ZTL splits the role, not the alphabet; what it forbids is promoting
-the status to a value of assertions — which is exactly what the
-greedy register enforces.
+Two registers, both ZTL:
+  * GREEDY (ZTL's tables): Z evaporates at every operator — the verdict register;
+  * STABLE (the grounding step, Lean ZGround): an OWN sentence not yet determined is in the solver's phase N
+    ("not yet computed", never a truth value); it becomes T (F) when its definition is T (F) — by ZTL's
+    tables, a FOREIGN input read as the mark Z — under EVERY classical value of the still-undetermined own
+    sentences (one value per sentence: IF STABLE). No strong Kleene table, no ¬Z = Z.
 
-Hypotheses (checked by enumeration, MEASURED):
-  H1. The greedy register is non-monotone in the information order
-      (Z ⊑ T, Z ⊑ F);
-  H2. On the liar (and any odd cycle) the greedy jump has NO fixed
-      points — the iteration oscillates (the carousel, formally);
-  H3. The lazy jump is monotone and has a least fixed point everywhere
-      (Knaster–Tarski), paradoxes receive Z;
-  H4. The two-register architecture is mandatory: grounding is lazy,
-      verdicts (including the avenger's bullet "content T, no truth")
-      are greedy.
+Hypotheses (checked by enumeration, MEASURED; H3 proved in Lean ZGround.evalS_mono / kt_fixed):
+  H1. The greedy register is non-monotone in the information order (Z ⊑ T, Z ⊑ F);
+  H2. On the liar (and any odd cycle) the greedy jump has NO fixed points — the iteration oscillates;
+  H3. The stable jump is monotone and has a least fixed point everywhere (Knaster–Tarski); paradoxes stay N;
+  H4. Grounding is the stable step, verdicts are greedy — both from ZTL alone.
 """
 
 from itertools import product
 
 from ztl import T, F, Z, VALUES, OPS2, NOT
 
-# --- the lazy register: strong Kleene ---
-def k_not(a):
-    return {T: F, F: T, Z: Z}[a]
-
-def k_and(a, b):
-    return F if F in (a, b) else (Z if Z in (a, b) else T)
-
-def k_or(a, b):
-    return T if T in (a, b) else (Z if Z in (a, b) else F)
-
-def k_imp(a, b):
-    return k_or(k_not(a), b)
-
-def k_xor(a, b):
-    return Z if Z in (a, b) else (T if a != b else F)
-
-def k_xnor(a, b):
-    return Z if Z in (a, b) else (T if a == b else F)
-
-LAZY = {"not": k_not, "and": k_and, "or": k_or,
-        "imp": k_imp, "xor": k_xor, "xnor": k_xnor}
+N = "N"          # the solver's phase: an own sentence not yet determined (never a truth value)
 EAGER = {"not": NOT, **OPS2}
 
 
@@ -117,11 +86,57 @@ def iterate(system, ops, steps=12):
     return trace, None
 
 
-def least_fp_lazy(system):
-    """Least fixed point of the lazy jump (by iteration from Z)."""
-    trace, loop = iterate(system, LAZY, steps=64)
-    assert loop == len(trace) - 1 or loop is None, "lazy jump cycled?"
-    return trace[-1]
+def _names(phi, acc):
+    if isinstance(phi, str):
+        if phi not in VALUES:
+            acc.add(phi)
+    else:
+        for x in phi[1:]:
+            _names(x, acc)
+    return acc
+
+
+def stable_eval(phi, v, system):
+    """The STABLE step for one definition: T (F) if, by ZTL's tables, it is T (F) under every classical value
+    of the own sentences still at N; otherwise N. Foreign inputs (defined as the constant Z) are read as Z."""
+    free = sorted(n for n in _names(phi, set()) if v.get(n) == N)
+    seen = set()
+    for bits in product((T, F), repeat=len(free)):
+        r = ev_reg(phi, {**v, **dict(zip(free, bits))}, EAGER)
+        seen.add(r if r in (T, F) else N)
+        if len(seen) > 1 or N in seen:
+            return N
+    return seen.pop()
+
+
+def jump_stable(system, v):
+    """Re-evaluate EVERY own definition (as Lean's jumpS does); inputs stay the mark Z."""
+    return {s: (Z if system[s] == Z else stable_eval(system[s], v, system)) for s in system}
+
+
+def least_fp_stable(system):
+    """Least fixed point of the stable jump, from 'nothing determined' (inputs Z, own sentences N)."""
+    v = {s: (Z if system[s] == Z else N) for s in system}
+    while True:
+        w = jump_stable(system, v)
+        if w == v:
+            return v
+        v = w
+
+
+def stable_monotone_witness(system):
+    """A pair v ⊑ w (own sentences over N/T/F, inputs Z) with J(v) ⋢ J(w), if one exists."""
+    own = sorted(s for s in system if system[s] != Z)
+    base = {s: Z for s in system if system[s] == Z}
+    vals = [{**base, **dict(zip(own, c))} for c in product((N, T, F), repeat=len(own))]
+    le = lambda a, b: a == b or a == N
+    for v in vals:
+        for w in vals:
+            if all(le(v[k], w[k]) for k in own):
+                jv, jw = jump_stable(system, v), jump_stable(system, w)
+                if not all(le(jv[k], jw[k]) for k in own):
+                    return v, w
+    return None
 
 
 # --- the zoo of systems ---
@@ -147,28 +162,25 @@ def fmt_v(v):
 
 if __name__ == "__main__":
     print("=" * 74)
-    print("QUARANTINE AS A FIXED POINT: the greedy and lazy jumps")
+    print("QUARANTINE AS A FIXED POINT: the greedy jump and the stable step")
     print("=" * 74)
 
     for title, system in ZOO.items():
         print(f"\n### {title}")
 
         fps_e = fixed_points(system, EAGER)
-        fps_l = fixed_points(system, LAZY)
         print(f"  fixed points of the GREEDY jump: "
               + (", ".join(map(fmt_v, fps_e)) if fps_e else "NONE"))
-        print(f"  fixed points of the LAZY jump: "
-              + (", ".join(map(fmt_v, fps_l)) if fps_l else "NONE"))
 
         mw = monotone_witness(system, EAGER)
-        ml = monotone_witness(system, LAZY)
+        ml = stable_monotone_witness(system)
         if mw:
             v, w = mw
             print(f"  the greedy jump is NON-monotone: {fmt_v(v)} ⊑ {fmt_v(w)}, "
                   f"but J(v)={fmt_v(jump(system, v, EAGER))} ⋢ "
                   f"J(w)={fmt_v(jump(system, w, EAGER))}")
         if ml:
-            print("  !! the lazy jump is non-monotone — contradicts H3")
+            print("  !! the stable step is non-monotone — contradicts H3")
 
         trace, loop = iterate(system, EAGER)
         if loop is None:
@@ -182,16 +194,17 @@ if __name__ == "__main__":
                 print(f"  greedy iteration from Z: CYCLE of period {period}: "
                       + " → ".join(fmt_v(x) for x in cyc))
 
-        lfp = least_fp_lazy(system)
-        quarantine = [k for k, val in lfp.items() if val == Z]
-        print(f"  lazy grounding (least point): {fmt_v(lfp)}"
+        lfp = least_fp_stable(system)
+        quarantine = [k for k, val in lfp.items() if val == N]
+        print(f"  stable grounding (least point): {fmt_v(lfp)}"
               + (f"   quarantine: {{{', '.join(quarantine)}}}" if quarantine
                  else "   quarantine empty"))
 
-        # greedy verdict reading on top of the lazy point
+        # greedy verdict reading on top of the stable point
         for name in sorted(system):
-            content = ev_reg(system[name], lfp, EAGER)
-            if lfp[name] == Z:
+            # after the fixed point a phase that never resolved hardens into the quarantine mark Z (SPEC §N)
+            content = ev_reg(system[name], {k: (Z if x == N else x) for k, x in lfp.items()}, EAGER)
+            if lfp[name] == N:
                 bullet = " ← BULLET: content T, no truth" \
                     if content == T else ""
                 print(f"    ZTL verdict on the content of {name}: {content}"

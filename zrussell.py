@@ -14,7 +14,7 @@ the facts x∈x. Questions: models? oscillation? grounding? verdicts?
 """
 
 from ztl import T, F, Z, NOT, OPS2
-from fixedpoint import EAGER, LAZY, fixed_points, iterate, least_fp_lazy, \
+from fixedpoint import EAGER, LAZY, fixed_points, iterate, least_fp_stable, \
     ev_reg, fmt_v
 
 # The universe: a=∅, b={b}, R={x: x∉x}, S={x: x∈x}
@@ -45,7 +45,7 @@ if __name__ == "__main__":
         print(f"  only these oscillate: {diffs} — the whole storm in two cells")
 
     print("\n### Lazy grounding: the universe stands, quarantine is pointwise")
-    lfp = least_fp_lazy(system)
+    lfp = least_fp_stable(system)
     q = sorted(k for k, v in lfp.items() if v == Z)
     g = sorted(k for k, v in lfp.items() if v != Z)
     print("  facts grounded: %d of %d" % (len(g), len(lfp)))
@@ -67,7 +67,7 @@ if __name__ == "__main__":
 
     print("\n### The twin S = {x : x ∈ x} — the truth-teller of set theory")
     fpS = fixed_points(sysS, EAGER)
-    lfpS = least_fp_lazy(sysS)
+    lfpS = least_fp_stable(sysS)
     print(f"  S∈S: greedy models {len(fpS)} ({', '.join(fmt_v(v) for v in fpS)}),")
     print(f"  lazy grounding: {fmt_v(lfpS)} — underdetermination (the ID loop):")
     print("  classical solutions: TWO (admit/reject itself — both honest),")

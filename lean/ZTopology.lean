@@ -1,4 +1,5 @@
 import ZTL
+import ZRead
 
 /-!
 # ZTopology — hereditary verdicts as the topology of partial information
@@ -17,7 +18,7 @@ closed sets are the open sets of the Alexandrov (= Scott, on this order) topolog
 * `refuted φ v` — the same for F: the hereditary F.
 
 Vocabulary (2026-10-30). The identifiers `earned`/`refuted` predate the judge's vocabulary of
-2026-10-29, in which EARNED / REFUTED mean the strong Kleene T / F (stronger: item 3 below), EARNED IF
+2026-10-29, in which EARNED / REFUTED mean forced T / F — under every reading of every occurrence (stronger: item 3 below), EARNED IF
 STABLE means T in every cleaning, and ON CREDIT a T as written that is not earned. Below, the
 identifiers are kept (they are cited elsewhere); the prose says "hereditary T / F".
 
@@ -25,14 +26,13 @@ Proved, all on the empty axiom list:
 1. `earned_open`, `refuted_open` — hereditary T and hereditary F are open: more data never
    overturns them. This is "exact from partial data".
 2. `earned_sub_super` — hereditary T ⊆ supervaluation-T (true on every total refinement).
-3. `kleene_sub_earned`, `kleene_sub_refuted` — strong Kleene T / F (the judge's EARNED / REFUTED)
-   ⊆ hereditary T / F.
-   The engine is `kleene_agrees`: wherever Kleene decides, the greedy value agrees.
-4. Both inclusions are STRICT: `not_a_and_not_a` is hereditary T where Kleene is silent (the judge:
+3. `forced_sub_earned`, `forced_sub_refuted` — forced T / F (the judge's EARNED / REFUTED: T / F under
+   every reading of every occurrence, `ZRead.rd`) ⊆ hereditary T / F. No Kleene table (pure branch).
+4. Both inclusions are STRICT: `not_a_and_not_a` is hereditary T where it is not forced (the judge:
    EARNED IF STABLE); `excluded_middle` is supervaluation-T and not hereditary T (F as written; the
    judge: EARNED IF STABLE).
 
-So ZTL decides more than Kleene and less than supervaluation, and what it decides
+So hereditary ZTL decides more than the forced reading and less than supervaluation, and what it decides
 is stable under new data. What it does NOT give (measured): its present value
 on the boundary is not a prediction of the outcome.
 -/
@@ -61,7 +61,7 @@ def total (w : Nat → V) : Prop := ∀ n, w n ≠ Z
 
 /-! ## The hereditary verdicts -/
 
-/-- Hereditary T: T now and after any further data. (Not the judge's EARNED, which is the strong Kleene T;
+/-- Hereditary T: T now and after any further data. (Not the judge's EARNED, which is the forced T;
 see the header.) -/
 def earned (φ : Fm) (v : Nat → V) : Prop := ∀ w, refines v w → evalF w φ = T
 
@@ -91,95 +91,19 @@ theorem refuted_open {φ : Fm} {v w : Nat → V} (h : refuted φ v) (hw : refine
 theorem earned_sub_super {φ : Fm} {v : Nat → V} (h : earned φ v) : superT φ v :=
   fun w hw _ => h w hw
 
-/-! ## Strong Kleene, the monotone register -/
+/-! ## The dirty reading (ZRead), the forced register — no Kleene table (pure branch, 2026-11-22) -/
 
-/-- Non-overlapping tables (an overlapping wildcard row pulls propext, measured in ZTL.lean). -/
-def kimp (a b : V) : V := kor (knot a) b
+theorem leqb_refinesR : ∀ a b : V, leqb a b = true → a ≠ Z → b = a := by decide
 
-def kxor : V → V → V
-  | T, T => F | T, F => T | T, Z => Z
-  | F, T => T | F, F => F | F, Z => Z
-  | Z, T => Z | Z, F => Z | Z, Z => Z
+theorem toR {v w : Nat → V} (h : refines v w) : V.refinesR v w := fun n => leqb_refinesR (v n) (w n) (h n)
 
-def kxnor : V → V → V
-  | T, T => T | T, F => F | T, Z => Z
-  | F, T => F | F, F => T | F, Z => Z
-  | Z, T => Z | Z, F => Z | Z, Z => Z
+/-- 3. Forced T (the judge's EARNED: T under every reading of every occurrence) ⊆ hereditary T. -/
+theorem forced_sub_earned {φ : Fm} {v : Nat → V} (h : V.earnedR v φ) : earned φ v :=
+  fun w hw => V.earnedR_verdict (V.earnedR_open (toR hw) h)
 
-def kevalF (v : Nat → V) : Fm → V
-  | .atom n   => v n
-  | .top      => T
-  | .bot      => F
-  | .neg φ    => knot (kevalF v φ)
-  | .conj φ ψ => kand (kevalF v φ) (kevalF v ψ)
-  | .disj φ ψ => kor (kevalF v φ) (kevalF v ψ)
-  | .imp φ ψ  => kimp (kevalF v φ) (kevalF v ψ)
-  | .xor φ ψ  => kxor (kevalF v φ) (kevalF v ψ)
-  | .xnor φ ψ => kxnor (kevalF v φ) (kevalF v ψ)
-
-/-- "Where Kleene decides, the greedy value agrees" — for one input. -/
-def agreesAt (k g : V) : Prop := (k = T → g = T) ∧ (k = F → g = F)
-
-instance (k g : V) : Decidable (agreesAt k g) := by unfold agreesAt; exact inferInstance
-
-theorem agree_neg : ∀ k g : V, agreesAt k g → agreesAt (knot k) (znot g) := by decide
-theorem agree_conj : ∀ k g k' g' : V, agreesAt k g → agreesAt k' g' →
-    agreesAt (kand k k') (zand g g') := by decide
-theorem agree_disj : ∀ k g k' g' : V, agreesAt k g → agreesAt k' g' →
-    agreesAt (kor k k') (zor g g') := by decide
-theorem agree_imp : ∀ k g k' g' : V, agreesAt k g → agreesAt k' g' →
-    agreesAt (kimp k k') (zimp g g') := by decide
-theorem agree_xor : ∀ k g k' g' : V, agreesAt k g → agreesAt k' g' →
-    agreesAt (kxor k k') (zxor g g') := by decide
-theorem agree_xnor : ∀ k g k' g' : V, agreesAt k g → agreesAt k' g' →
-    agreesAt (kxnor k k') (zxnor g g') := by decide
-
-/-- 3, the engine: wherever strong Kleene decides, the greedy ZTL value agrees. -/
-theorem kleene_agrees (v : Nat → V) : ∀ φ : Fm, agreesAt (kevalF v φ) (evalF v φ)
-  | .atom _   => ⟨fun h => h, fun h => h⟩
-  | .top      => ⟨fun _ => rfl, fun h => V.noConfusion h⟩
-  | .bot      => ⟨fun h => V.noConfusion h, fun _ => rfl⟩
-  | .neg φ    => agree_neg _ _ (kleene_agrees v φ)
-  | .conj φ ψ => agree_conj _ _ _ _ (kleene_agrees v φ) (kleene_agrees v ψ)
-  | .disj φ ψ => agree_disj _ _ _ _ (kleene_agrees v φ) (kleene_agrees v ψ)
-  | .imp φ ψ  => agree_imp _ _ _ _ (kleene_agrees v φ) (kleene_agrees v ψ)
-  | .xor φ ψ  => agree_xor _ _ _ _ (kleene_agrees v φ) (kleene_agrees v ψ)
-  | .xnor φ ψ => agree_xnor _ _ _ _ (kleene_agrees v φ) (kleene_agrees v ψ)
-
-theorem kimp_monotone : ∀ a b c d : V, leqb a c = true → leqb b d = true →
-    leqb (kimp a b) (kimp c d) = true := by decide
-theorem kxor_monotone : ∀ a b c d : V, leqb a c = true → leqb b d = true →
-    leqb (kxor a b) (kxor c d) = true := by decide
-theorem kxnor_monotone : ∀ a b c d : V, leqb a c = true → leqb b d = true →
-    leqb (kxnor a b) (kxnor c d) = true := by decide
-
-/-- Strong Kleene is monotone: more data only decides, never flips. -/
-theorem kleene_monotone {v w : Nat → V} (h : refines v w) :
-    ∀ φ : Fm, leqb (kevalF v φ) (kevalF w φ) = true
-  | .atom n   => h n
-  | .top      => rfl
-  | .bot      => rfl
-  | .neg φ    => kleene_not_monotone _ _ (kleene_monotone h φ)
-  | .conj φ ψ => kleene_and_monotone _ _ _ _ (kleene_monotone h φ) (kleene_monotone h ψ)
-  | .disj φ ψ => kleene_or_monotone _ _ _ _ (kleene_monotone h φ) (kleene_monotone h ψ)
-  | .imp φ ψ  => kimp_monotone _ _ _ _ (kleene_monotone h φ) (kleene_monotone h ψ)
-  | .xor φ ψ  => kxor_monotone _ _ _ _ (kleene_monotone h φ) (kleene_monotone h ψ)
-  | .xnor φ ψ => kxnor_monotone _ _ _ _ (kleene_monotone h φ) (kleene_monotone h ψ)
-
-theorem leqb_T : ∀ a : V, leqb T a = true → a = T := by decide
-theorem leqb_F : ∀ a : V, leqb F a = true → a = F := by decide
-
-/-- 3. Strong Kleene T (the judge's EARNED) ⊆ hereditary T. -/
-theorem kleene_sub_earned {φ : Fm} {v : Nat → V} (h : kevalF v φ = T) : earned φ v := by
-  intro w hw
-  have hk : kevalF w φ = T := leqb_T _ (h ▸ kleene_monotone hw φ)
-  exact (kleene_agrees w φ).1 hk
-
-/-- 3'. Strong Kleene F (the judge's REFUTED) ⊆ hereditary F. -/
-theorem kleene_sub_refuted {φ : Fm} {v : Nat → V} (h : kevalF v φ = F) : refuted φ v := by
-  intro w hw
-  have hk : kevalF w φ = F := leqb_F _ (h ▸ kleene_monotone hw φ)
-  exact (kleene_agrees w φ).2 hk
+/-- 3'. Forced F (the judge's REFUTED) ⊆ hereditary F. -/
+theorem forced_sub_refuted {φ : Fm} {v : Nat → V} (h : V.refutedR v φ) : refuted φ v :=
+  fun w hw => V.refutedR_verdict (V.refutedR_open (toR hw) h)
 
 /-! ## 4. Both inclusions are strict -/
 
@@ -198,8 +122,9 @@ theorem nc_value : ∀ a : V, znot (zand a (znot a)) = T := by decide
 theorem not_a_and_not_a_earned : earned nonContradiction blank :=
   fun w _ => nc_value (w 0)
 
-/-- ... while strong Kleene is silent: Kleene T ⊊ hereditary T. -/
-theorem not_a_and_not_a_kleene_silent : kevalF blank nonContradiction = Z := rfl
+/-- ... while it is not forced (a reading of the two occurrences makes it false): forced T ⊊ hereditary T. -/
+theorem not_a_and_not_a_not_forced : ¬ V.earnedR blank nonContradiction := by
+  unfold V.earnedR; intro h; exact absurd h (by decide)
 
 theorem em_total : ∀ a : V, a ≠ Z → zor a (znot a) = T := by decide
 
@@ -220,11 +145,9 @@ end ZTopology
 #print axioms ZTopology.earned_open
 #print axioms ZTopology.refuted_open
 #print axioms ZTopology.earned_sub_super
-#print axioms ZTopology.kleene_agrees
-#print axioms ZTopology.kleene_monotone
-#print axioms ZTopology.kleene_sub_earned
-#print axioms ZTopology.kleene_sub_refuted
+#print axioms ZTopology.forced_sub_earned
+#print axioms ZTopology.forced_sub_refuted
 #print axioms ZTopology.not_a_and_not_a_earned
-#print axioms ZTopology.not_a_and_not_a_kleene_silent
+#print axioms ZTopology.not_a_and_not_a_not_forced
 #print axioms ZTopology.excluded_middle_super
 #print axioms ZTopology.excluded_middle_not_earned

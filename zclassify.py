@@ -47,22 +47,24 @@ THE CERTIFIED VERDICTS (each pinned as an assert below):
       dispute: no finite fragment hides a circle; the infinity is
       doing all the work.
 
-  V4  THE INTRINSIC TRIO — self-reference with a FORCED verdict. The
-      "strong" liar σ ≡ ¬σ∧σ has exactly ONE classical model (σ=F,
-      forced); so does revenge μ ≡ ¬(μ↔μ) (μ=F); and the Henkin-style
-      sentence h ≡ (h→h) is forced TRUE. Worsening the liar TAMES it:
-      intuition refuted by measurement. INTRINSIC (Kripke's intrinsic
-      value) is a genuinely inhabited third kind, on both sides of the
-      truth table.
+  V4  THE TRIO IS GROUNDED BY ITS FORM (pure branch, 2026-11-22). The
+      "strong" liar σ ≡ ¬σ∧σ is classically F whatever σ is; revenge
+      μ ≡ ¬(μ↔μ) is F whatever μ is; the Henkin-style h ≡ (h→h) is T
+      whatever h is. The stable step — classics first — grounds all
+      three at once. Worsening the liar TAMES it, still. Under the removed
+      Kleene register these were INTRINSIC (one classical model, not
+      grounded); that class was an artefact of reading each occurrence
+      apart inside a definition.
 
-  V5  CURRY'S PASSPORT DEPENDS ON THE STATUS OF ⊥ — both versions
-      measured. With a grounded falsum (γ ≡ γ→F) Curry IS the liar:
-      PARADOX, zero models, period 2. With ⊥ carried as a defined
-      sentence over unsettled ground (E28's encoding: ⊥ := s∧¬s,
-      s := s) the refusal is DOWNSTREAM — inherited, culprit named.
-      The literature dispute "is Curry just the liar or something
-      else?" gets a measured answer: it depends on what is fed to the
-      arrow, and each variant now carries its own passport.
+  V5  CURRY IS THE LIAR IN AN ARROW COSTUME — in both encodings (pure
+      branch, 2026-11-22, correcting E28/Docket 7-bis). With a grounded
+      falsum (γ ≡ γ→F): PARADOX, zero models, period 2. With ⊥ := s∧¬s,
+      s := s, ⊥ is NOT suspended: s∧¬s is classically F for any s, so the
+      stable step grounds ⊥ = F and γ is the same PARADOX. The Kleene
+      register read the two occurrences of s apart and called γ's refusal
+      DOWNSTREAM "conditional" — yet every stipulation of s left γ a
+      paradox (measured). A genuinely suspended ⊥ (⊥ := s) does give
+      DOWNSTREAM: s = T grounds γ, s = F leaves the paradox.
 
   V6  PERIOD IS A REAL SECOND AXIS. The liar and the Jourdain/crocodile
       carousel share the PARADOX passport but differ in revision
@@ -148,9 +150,10 @@ DOCKET = [
     ("even 2-cycle    A≡¬B,B≡¬A",    {"A": n("B"), "B": n("A")}, ("UNDERDETERMINED", 2, 2), 2),
     ("even 4-cycle",                 {"a": n("b"), "b": n("c"), "c": n("d"), "d": n("a")},
                                                                  ("UNDERDETERMINED", 2, 2), 4),
-    ("strong liar     σ ≡ ¬σ∧σ",     {"s": ("and", n("s"), "s")}, ("INTRINSIC", 1, 1), None),
-    ("revenge         μ ≡ ¬(μ↔μ)",   {"m": n(("xnor", "m", "m"))}, ("INTRINSIC", 1, 1), None),
-    ("Henkin-style    h ≡ (h→h)",    {"h": ("imp", "h", "h")},   ("INTRINSIC", 1, 1), None),
+    # pure branch 2026-11-22 (classics first): the trio is GROUNDED — was INTRINSIC under the Kleene register
+    ("strong liar     σ ≡ ¬σ∧σ",     {"s": ("and", n("s"), "s")}, ("GROUNDED", None, 1), None),
+    ("revenge         μ ≡ ¬(μ↔μ)",   {"m": n(("xnor", "m", "m"))}, ("GROUNDED", None, 1), None),
+    ("Henkin-style    h ≡ (h→h)",    {"h": ("imp", "h", "h")},   ("GROUNDED", None, 1), None),
     ("Yablo trunc n=3",              yablo(3),                   ("GROUNDED", None, 1), None),
     ("Yablo trunc n=6",              yablo(6),                   ("GROUNDED", None, 1), None),
     # the dilemma series files into the same docket (V7)
@@ -267,22 +270,26 @@ def run():
     print("ok  n=3, n=6 GROUNDED outright — paradoxicality lives only in the")
     print("    actual infinity (measured side in the Priest–Sorensen dispute)")
 
-    print("\n### V4. The intrinsic trio: forced verdicts on both sides")
+    print("\n### V4. The trio: grounded by its form (pure branch; was INTRINSIC)")
     _, _, kinds = passports({"s": ("and", n("s"), "s")})
     ms = component_models(["s"], {"s": ("and", n("s"), "s")}, {})
     assert [dict(m) for m in ms] == [{"s": F}]
     mh = component_models(["h"], {"h": ("imp", "h", "h")}, {})
     assert [dict(m) for m in mh] == [{"h": T}]
-    print("ok  strong liar forced σ=F; revenge forced μ=F; Henkin forced h=T —")
-    print("    'worse' self-reference is TAMER: one model, stipulation forced")
+    for nm, val in (("strong liar     σ ≡ ¬σ∧σ", F), ("revenge         μ ≡ ¬(μ↔μ)", F), ("Henkin-style    h ≡ (h→h)", T)):
+        assert rows[nm][0] == "GROUNDED", nm
+    print("ok  strong liar σ=F, revenge μ=F, Henkin h=T — each GROUNDED by its form")
+    print("    (one classical model each, and now reached by the stable step itself)")
 
     print("\n### V5. Two Currys, two passports — ⊥ decides")
     assert rows["Curry, grounded ⊥: γ≡(γ→F)"][0] == "PARADOX"
     lfp, reports, kinds = passports(CURRY_DOWNSTREAM)
-    assert kinds["γ"][0] == "DOWNSTREAM"
-    culprit_report = [d for c, k, d in reports if "γ" in c][0]
+    assert lfp["⊥"] == F and kinds["γ"][0] == "PARADOX"
+    lfp2, reports2, kinds2 = passports({"γ": ("imp", "γ", "⊥"), "⊥": "s", "s": "s"})
+    assert kinds2["γ"][0] == "DOWNSTREAM"
     print(f"ok  grounded ⊥ ⇒ PARADOX (Curry IS the liar in arrow costume)")
-    print(f"ok  suspended ⊥ ⇒ DOWNSTREAM ({culprit_report[:50]})")
+    print(f"ok  ⊥ := s∧¬s is F for every s ⇒ the same PARADOX (pure branch; was DOWNSTREAM)")
+    print(f"ok  a genuinely suspended ⊥ := s ⇒ DOWNSTREAM, culprit s")
 
     print("\n### V6. Period: the second axis is real")
     assert rows["liar            L ≡ ¬L"][2] == 2

@@ -79,6 +79,8 @@ def settings(system):
     """How many admissible settings the stopping point has — the passport's
     own model count, which is the criterion the objection needs."""
     lfp, reports = passports(system)[0], passports(system)[1]
+    if not reports:          # grounded outright (pure branch: the stable step settles it by its form)
+        return [("GROUNDED", [dict(lfp)])]
     out = []
     for comp, kind, _why in reports:
         env_names = set()
@@ -101,16 +103,18 @@ def sec1_the_criterion_was_already_here():
     (k_fo, m_fo), = settings(FORCED)
     (k_vi, m_vi), = settings(VICIOUS)
     assert (k_ch, len(m_ch)) == ("UNDERDETERMINED", 2)
-    assert (k_fo, len(m_fo)) == ("INTRINSIC", 1)
+    assert (k_fo, len(m_fo)) == ("GROUNDED", 1)     # pure branch 2026-11-22; was INTRINSIC (Kleene register)
     assert (k_vi, len(m_vi)) == ("PARADOX", 0)
     print("   Two settings: the choice was real, and Agrippa is right —")
     print("   this is dogma, and someone else's axiomatisation is waiting.")
     print("   ONE setting: there was nothing to choose. The chain stops")
-    print("   without anybody deciding to stop it.")
+    print("   without anybody deciding to stop it — f xnor f is T whatever f")
+    print("   is, so the stable step grounds it outright.")
     print("   The surprise is that this needed no new machinery. The")
     print("   criterion is the passport's model count, printed by this")
-    print("   corpus since E18 under the names UNDERDETERMINED and")
-    print("   INTRINSIC. The split Agrippa's third horn needs was already")
+    print("   corpus since E18: UNDERDETERMINED, and — once classics is read")
+    print("   first (pure branch) — GROUNDED by form; the old INTRINSIC row")
+    print("   was the Kleene register's. The split Agrippa's third horn needs was already")
     print("   implemented; we had simply never read it as a reply to him.")
 
 

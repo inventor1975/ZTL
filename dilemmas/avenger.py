@@ -96,7 +96,10 @@ GLOSS = {
 # whose expectations are read off its own output proves nothing.
 EXPECT = {
     "liar": "PARADOX", "truth": "UNDERDETERMINED",
-    "A": "INTRINSIC", "B": "INTRINSIC",
+    # pure branch 2026-11-22 (classics first), derived before re-running, not read off the output: isZ(x) is
+    # ¬(x↔x), classically F for every x, so A ≡ isZ(A) is F and B ≡ ¬isZ(B) is T whatever they are — GROUNDED
+    # by form. Under the removed Kleene register both were INTRINSIC.
+    "A": "GROUNDED", "B": "GROUNDED",
     "C": "PARADOX", "D": "PARADOX",
 }
 
@@ -123,8 +126,9 @@ def main():
     assert not bad, f"classification changed for {bad} — the stand is stale"
 
     print("""
-  THE PURE AVENGER DOES NOT BITE. A and B are INTRINSIC, not paradoxical:
-  exactly one classical model each, the value forced rather than chosen.
+  THE PURE AVENGER DOES NOT BITE. A and B are GROUNDED, not paradoxical:
+  A ("my slot is unverified") is F and B ("my slot is verified") is T whatever
+  they are — classics settles both by their form (pure branch; formerly INTRINSIC).
   Saying of a slot that it is unverified does not verify it; saying it is
   verified supplies no witness. Neither inverts, and inversion is what makes
   a liar.

@@ -257,7 +257,7 @@ STANDS = [
     ("pengine.py",     ["all 9015 one-sentence nets",
                         "0 violations",
                         "grounded without a unique model: 0",
-                        "cautious Z (1 model, still Z): 1068",
+                        "cautious N (1 model, still N): 0",
                         "odd k → 0 solutions (Liar-type)",
                         "truncated Yablo is CONSISTENT"]),
     ("ztime.py",       ["ticks leaving an H-state: 0",
@@ -563,7 +563,7 @@ STANDS = [
         "   Jaynes's invariance stipulated                       EARNED     EARNED     REFUTED  ",
         "   P a convention (no measure named):       OPEN, cure ['stipulate P']"]),
     ("dilemmas/girard.py", [
-        "N = 6: least fixed point all Z; UNDERDETERMINED — 6 classical models; oscillation period 2; refusal until stipulation",
+        "N = 6: least fixed point all N; UNDERDETERMINED — 6 classical models; oscillation period 2; refusal until stipulation",
         "any composition: 267 random formulas whose guilt depends on the copied step — EARNED 0; ON CREDIT 69, OPEN 198",
         "all nine claims of the essay that a machine can check: the kernel says the same"]),
     ("dilemmas/wigner_friends.py", [
@@ -586,7 +586,7 @@ STANDS = [
         "17 rows: 10 fail on a measured premise, 2 stand, 5 rest on credit."]),
     ("dilemmas/agrippa_nullary.py", ["AGRIPPA-NULLARY GREEN",
                         "UNDERDETERMINED  settings=2",
-                        "INTRINSIC        settings=1",
+                        "GROUNDED         settings=1",
                         "withdraw the act      : REFUSED",
                         "declared_structural: ['performed/my-favourite-axiom']"]),
     ("dilemmas/agrippa_book.py", ["AGRIPPA-BOOK GREEN",
@@ -673,7 +673,7 @@ STANDS = [
                         "docket complete — every row pinned",
                         "Kripke transported, total",
                         "barber = Grelling = R∈R = liar",
-                        "suspended ⊥ ⇒ DOWNSTREAM"]),
+                        "⊥ := s∧¬s is F for every s ⇒ the same PARADOX"]),
 ]
 
 

@@ -9,7 +9,9 @@
 import os, re, sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 LEAN = os.path.join(os.path.dirname(HERE), "lean")
-PAPER = os.path.join(os.path.dirname(HERE), "publications", "ztl", "ZTL-draft_1.4.md")
+# 2026-11-23 (curator: «v1.4 — старая статья, если после неё есть новые, не важно»): the check reads the CURRENT
+# source, not the frozen v1.4 one — a frozen text documents its own tagged release, not today's corpus.
+PAPER = os.path.join(os.path.dirname(HERE), "publications", "ztl", "ZTL-draft_2.1.7.md")
 
 модули = {f[:-5] for f in os.listdir(LEAN) if f.endswith(".lean")}
 имена = set()
@@ -28,6 +30,17 @@ for m in модули:
             имена.add(d.group(1))
 
 текст = open(PAPER, encoding="utf-8").read()
+# A name the paper cites ON A LINE THAT SAYS IT WAS REMOVED is a record of history, not a claim that it exists:
+# such names are listed separately, and only the paper's own word "removed" on that line admits them.
+удалённые_в_статье = set()
+_тело, _, _история = текст.partition("## Version history")
+# the version history records what EARLIER versions contained; a name there is history by construction
+удалённые_в_статье |= set(re.findall(r"`([a-z_][\w']*)`", _история))
+# in the body: a name cited in a SENTENCE that says it was removed (sentences may run over several lines)
+for _абз in _тело.split("\n\n"):
+    for _фр in re.split(r"(?<=[.;])\s+(?=[A-Z(*])", " ".join(_абз.split("\n"))):
+        if "removed" in _фр:
+            удалённые_в_статье |= set(re.findall(r"`([a-z_][\w']*)`", _фр))
 ссылки_мод = set(re.findall(r"`([A-Z][A-Za-z_]*)\.lean`", текст))
 ссылки_имён = set(re.findall(r"`([a-z_][\w']*)`", текст))
 
@@ -57,8 +70,10 @@ if чужие:
                           for pre in ("", "List.", "Nat.", "Bool.", "V."))
         # надёжнее: имя ядровое, если хоть один префикс НЕ дал unknownIdentifier
         плохие = out.count(f"`{n}`") + sum(out.count(f"`{pre}{n}`") for pre in ("List.", "Nat.", "Bool.", "V."))
-        if плохие >= 5:
+        if плохие >= 5 and n not in удалённые_в_статье:
             нет_имени.append(n)
+        elif плохие >= 5:
+            print(f"   (названо в статье как удалённое: {n})")
 
 print(f"модулей в корпусе: {len(модули)} | имён объявлено: {len(имена)}")
 print(f"ссылок на модули в статье: {len(ссылки_мод)} | snake_case-имён: {len(кандидаты)}")

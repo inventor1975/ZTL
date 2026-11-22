@@ -59,7 +59,11 @@ FROZEN = {
           "publications/pssl/PSSL_EN_v1_0_0.tex": "the published PSSL v1.0.0 (DOI 21452736)",
           "publications/pssl/PSSL_EN_v1_1_0.tex": "the published PSSL v1.1.0 (DOI 21455696), frozen 26.10 when 1.1.1 (dirty Z) began",
           "publications/ztl/ZTL-draft_2.1.0.md": "the source of the published v2.1.3 record (DOI 23648237; v2.1.2 23019513), frozen 25.10",
-          "publications/ztl/ZENODO.md": "the Zenodo sheet of the published v2.1.2 record, frozen 29.09"}
+          "publications/ztl/ZENODO.md": "the Zenodo sheet of the published v2.1.2 record, frozen 29.09",
+          # curator 2026-11-23: «PSSL — давний проект, оставь; вернёмся — сделаем». Its '13 objects in ZTL.lean'
+          # described the corpus before the pure branch removed the Kleene objects (now 11).
+          "publications/pssl/PSSL_EN_v1_1_1.tex": "PSSL v1.1.1, a dormant project, frozen 23.11 (pre-pure-branch counts)",
+          "publications/pssl/PSSL-ZENODO.md": "the PSSL v1.1.1 Zenodo sheet, frozen 23.11 with its source"}
 
 WORDS = {"twelve": 12, "thirteen": 13, "fourteen": 14, "fifteen": 15,
          "sixteen": 16, "seventeen": 17, "eighteen": 18, "nineteen": 19,
@@ -239,12 +243,13 @@ if __name__ == "__main__":
               "lean.yml")
 
     # --- 2. PSSL's verify-from-zero listing -----------------------------
-    print(f"\n### PSSL note ({PSSL_TEX}) — the listing a")
+    _pssl_frozen = PSSL_TEX in FROZEN
+    print(f"\n### PSSL note ({PSSL_TEX}) — " + ("FROZEN, not checked" if _pssl_frozen else "the listing a"))
     print("    reader of THIS paper is instructed to run")
     tex = text(PSSL_TEX)
     cited = re.findall(r"lean lean/(\w+)\.lean\s*#\s*(\d+) objects", tex)
     assert cited, "the verify-from-zero listing was not found — did it move?"
-    for module, claimed in cited:
+    for module, claimed in ([] if _pssl_frozen else cited):
         check(f"{module}.lean objects", claimed, str(lean_objects(module)),
               "PSSL tex listing")
 
@@ -372,7 +377,7 @@ if __name__ == "__main__":
         check("ZTL sheet: stands", claimed, str(stand_count()), "ZENODO.md")
 
     print("\n### Zenodo sheet (publications/pssl/PSSL-ZENODO.md) vs the PDF it ships")
-    sheet = text("publications/pssl/PSSL-ZENODO.md")
+    sheet = "" if "publications/pssl/PSSL-ZENODO.md" in FROZEN else text("publications/pssl/PSSL-ZENODO.md")
     pages = pdf_pages("publications/pssl/PSSL_EN_v1_1_1.pdf")
     for claimed in set(re.findall(r"\((\d+) pages", sheet)):
         check("pages of the uploaded PDF", claimed, str(pages), "sheet")

@@ -8,6 +8,8 @@ Concept DOI:
 
 *Version 2.1.7 states the relation to classical logic as one theorem and, with it, uses a word the earlier versions refused. A law is a formula together with a marking — which atoms are verified — as `x == x` and `x === x` are two laws and not one. Classical logic has the laws of one marking only: every atom verified. On that marking ZTL's laws are exactly the classical laws; under every other marking a law of ZTL implies the classical law and is the stronger statement; such laws exist, and they are not the classical laws over again (`ZStrength.lean`: `law_all_iff_classical`, `law_implies_classical`, `lnc_none`, `layers_differ`, `proper_conservative_extension`, `strictly_more_laws`; empty axiom list). In this sense, and in no other, ZTL is stronger than classical logic: strictly more laws, none lost, and none added about verified data — there classical propositional logic is complete and nothing can be added. Earlier versions said that "stronger" was a word this paper did not use of itself; that sentence is withdrawn. A reader may prefer "a conservative and more expressive extension" for the same theorems; §10 says what that reading still has to account for. No table, verdict or earlier theorem changes.*
 
+*Version 2.1.7 also removes the strong Kleene ("lazy") register from ZTL (curator, 2026-11-22: "only ZTL"). ¬Z = Z contradicts ZTL's own table; the role it played — "not yet computed" — is the solver's phase N, now a separate type that never enters a table. Grounding in the passport (§9) reads **classics first**: a sentence is grounded when its definition is classically true (false) under every value of every open atom, one value per atom; otherwise it is not grounded and the verdict is ZTL's. The judge's EARNED / REFUTED are the forced T / F — every reading of every occurrence (§2, §19) — computed in one pass by rules proved from the readings (`ZRead`, `ZForced`); its output field `lazy` is now `forced`, with N for "not forced". Judge's dispositions: unchanged on 48,384 cells. Results that change, all corrections: the strong liar, revenge and the Henkin-style sentence are grounded by their form (no longer INTRINSIC); Curry with ⊥ := s∧¬s is a PARADOX (no longer a "conditional" DOWNSTREAM); on one-sentence nets grounding now coincides with the unique classical model (the 1068 "cautious" nets were an artefact). Theorems stated through the Kleene register were removed, not re-proved (§8, §27 list them).*
+
 *Version 2.1.6 changes what the judge reports (§10, §19). EARNED and REFUTED are now exactly strong Kleene's T and F; where strong Kleene is silent, EARNED IF STABLE and REFUTED IF STABLE say that every cleaning of the dirty atoms (every completion by T or F) gives T, resp. F — true (false) once every dirty atom is verified, to either value; ON CREDIT and OPEN are the rest. The judge's grant is classical evaluation over all completions; the label says which grants also hold when each occurrence is read on its own. It is right wherever a classical substitution of the dirty atoms is right (`grant_right_where_substitution_right`); under the criterion that a grant is right iff the dirty reading earns it, every EARNED IF STABLE is a wrong grant (2,440 of the 14,530 dirty cells of the regression pool, against 950 wrong grants of the 2.1.5 verdict), and EARNED alone is never one. 2.1.6 also adds Lean proofs (§8): a characterization of the lifted tables (decisive, sound, maximal — the lift's definition restated), expressive completeness and Craig interpolation in the language with constants, the solo-completeness dichotomy of §3.8 with constants, and each disposition of the judge as a ZTL formula. Version 2.1.5 proved a dominance theorem (§10, `ZDirty.lean`) for the verdict "T under every refinement of the marks"; it stands. 2.1.4 withdrew the older claim that the matrix dominates classical logic; for the matrix alone that withdrawal stands (¬¬p). 2.1.5 also proved that the dirty reading, taken as a semantics, is strong Kleene logic (§2). Version 2.1.4 corrected the tables of §2 (the four negated tables are compositions, not lifts) and the form-dependence of the sink. Details, and the notes of every earlier version, are in the Version history at the end.*
 
 The tag MEASURED means "verified by machine enumeration" (code in this
@@ -211,10 +213,10 @@ three part on declassification: Denning never lowers a class, Perl lowers it
 by convention (the regex capture clears a bit whose payload still depends on
 the tainted input), ZTL by proof or not at all (`0 · mark = 0` is earned
 because the value is forced for every reading; no pointwise function clears a
-mark). SQL's NULL is the fifth (`ZNull.lean`, empty axiom list, §27): its three-valued expression layer is a homomorphism onto the lazy register, its comparison with NULL lands on the very atom IEEE's `==` did, and its boundaries are the four signs — WHERE is `SignT`, CHECK is `SignP`, the `<boolean test>` the rest — with WHERE agreeing with ZTL's verdict on every negation-normal search condition and parting exactly on `¬¬Z`. IEEE 754's NaN is the fourth (`ZNaN.lean`, empty axiom list, §27): the four-way comparison and the §6.2.3 propagation rule are formalised as the standard states them; arithmetic infection is a homomorphism into the mark-carrying integers; every ordered predicate is proved to be the T-sign of a ZTL atom, the unordered predicate the mark test, and `!=` — alone — the N-sign, which is exactly where IEEE's `x != x` and ZTL's refusal of `¬(x = x)` part. The algebra of
-semiring provenance is formalised and mapped into the lazy register as a
-homomorphism, with the greedy operations proved to admit no such
-structure at all (`ZProv.lean`, empty axiom list, §27); and
+mark). SQL's NULL is the fifth (`ZNull.lean`, empty axiom list, §27): its comparison with NULL lands on the very atom IEEE's `==` did, and its boundaries are the four signs — WHERE is `SignT`, CHECK is `SignP`, the `<boolean test>` the rest — (its three-valued expression layer is strong Kleene, which ZTL no longer carries; the theorems that mapped it onto a Kleene register were removed with that register, 2026-11-22). IEEE 754's NaN is the fourth (`ZNaN.lean`, empty axiom list, §27): the four-way comparison and the §6.2.3 propagation rule are formalised as the standard states them; arithmetic infection is a homomorphism into the mark-carrying integers; every ordered predicate is proved to be the T-sign of a ZTL atom, the unordered predicate the mark test, and `!=` — alone — the N-sign, which is exactly where IEEE's `x != x` and ZTL's refusal of `¬(x = x)` part. For the algebra of
+semiring provenance, the greedy operations are proved to admit no semiring structure at all — no neutral element
+for `zor`, none for `zand`, the mark being the obstruction (`ZProv.lean`, empty axiom list, §27; the embedding into
+a Kleene register that earlier versions also proved was removed with that register); and
 Dempster–Shafer is formalised as its own theory states it, with our
 verdict proved to be its {0,1}-threshold for every finite frame and every
 proper mass assignment (`ZDempster.lean`, §16); and abstract
@@ -289,13 +291,14 @@ a formula earned iff true under every classical reading of its
 occurrences — the greedy judge is never stricter than the dirty reading:
 in 248,121 marked cells (exhaustive, depth ≤ 2, three atoms) and 14,555
 random formulas (depth ≤ 6, four atoms; 740 longer ones skipped) the judge
-never answers F where every occurrence-reading is T. PROVED since v2.1.5
-(`lean/ZDirty.lean`, empty axiom list): read as a semantics, the dirty reading IS strong
-Kleene logic — the lazy register of §9 — since occurrences in different subformulas are
-independent reads (`rd_is_kleene`); each ZTL connective is that register followed by the
-assertion that sends Z to F (`*_is_up_kleene`); and the matrix never answers F where
-Kleene answers T (`never_stricter`), so every refusal is witnessed by a reading
-(`refusal_witnessed`). Each of the 14,844
+never answers F where every occurrence-reading is T. PROVED (`lean/ZRead.lean`, empty axiom list; the
+reading itself is the definition, `rd`: which classical values the independent reads of the occurrences reach):
+the matrix never answers F where every reading is T (`never_stricter`), never T where every reading is F
+(`never_laxer`), so every refusal is witnessed by a reading (`refusal_witnessed`); and the reading is computed in
+one pass, connective by connective, because the reads of a compound are the products of the reads of its parts
+(`ZForced.foC_eq_fo`). As a semantics this reading coincides with strong Kleene logic — a known equivalence
+(Spector 2025, §5; formalised in Linglib), recorded here as prior art: since the pure branch (2026-11-22) no
+Kleene table is defined or used in ZTL's corpus, and the equivalence is not invoked. Each of the 14,844
 pool cells where it answers F and the global reading T is a cell only the
 stable reading grants. The converse does not hold, and it is named: the
 judge grants 55,176 verdicts the occurrence-reading does not earn — 44,847
@@ -399,29 +402,15 @@ which the matrix refuses, becomes T when rewritten as ¬(tainted ∧ ¬sanitized
 are over-grants of the kind measured above; the judge reports them as ON CREDIT, and
 `no_gift` (§19) fences the fragment where they cannot occur.
 
-**The lazy register** (strong Kleene, §9), in which the mark flows — the
-same primitives as the kernel's `knot`/`kand`/`kor`/`kimp`/`kxor`/`kxnor`:
-
-| x | ¬x |   | ∧ | T | F | Z |   | ∨ | T | F | Z |   | → | T | F | Z |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| T | F  |   | T | T | F | Z |   | T | T | T | T |   | T | T | F | Z |
-| F | T  |   | F | F | F | F |   | F | T | F | Z |   | F | T | T | T |
-| Z | Z  |   | Z | Z | F | Z |   | Z | T | Z | Z |   | Z | T | Z | Z |
-
-| ⊕ | T | F | Z |   | ↔ | T | F | Z |
-|---|---|---|---|---|---|---|---|---|
-| T | F | T | Z |   | T | T | F | Z |
-| F | T | F | Z |   | F | F | T | Z |
-| Z | Z | Z | Z |   | Z | Z | Z | Z |
-
-The two registers are not mirror images of each other either: on the six
-primitives they part in 20 of the 48 cells, and in every one of them the
-greedy side answers F where the lazy side keeps Z — the greedy register
-never returns the mark above the atoms (the greediness theorem, §3), the
-lazy one returns it wherever a reading of the dirty could still
-change the answer. Both are needed (§9): the lazy register is where
-grounding and the receipt live, the greedy one is where a verdict is
-issued.
+**The forced outcome** (the second column of the judge, §19): a claim is forced T (EARNED) when every reading of
+every occurrence of its dirty atoms is true, forced F (REFUTED) when every reading is false, and otherwise *not
+forced*, N. The outcome is computed in one pass by rules that are theorems about the readings, not postulated
+tables (`ZForced.fo_conj`, …; `foC_eq_fo`). It is not a third truth value: N never enters ZTL's tables (the code
+refuses it), and on the six primitives the verdict and the outcome part exactly where a reading of the dirty could
+still change the answer — there the verdict is F (truth is not granted on credit) and the outcome is N. The
+greedy register issues verdicts; the readings, taken per occurrence (EARNED / REFUTED) or with one value per atom
+(IF STABLE, §19; the grounding step of §9), say how firmly. Versions up to 2.1.6 printed strong Kleene's tables
+here as "the lazy register"; they are removed (§9).
 
 **Generating basis (MEASURED):** {¬,∧,∨} generates everything:
 p→q = ¬p∨q, p⊕q = (p∧¬q)∨(¬p∧q), p↔q = (p∧q)∨(¬p∧¬q) are identities
@@ -1292,13 +1281,10 @@ each ZTL table is the only table for its classical function that is decisive (ne
 (T only where every reading of the dirty arguments gives T) and maximal (T wherever that holds)
 (`lift1_characterized`, `lift2_characterized`) — for the lifted tables: the primitives and every
 lift of §2, not the four compositions of §2; this restates the definition of the lift as three
-properties. A compositional semantics whose tables agree with strong Kleene's verdict on
-each connective applied to atoms is ZTL on every formula (`ztl_unique_compositional`; the
-hypothesis fixes every cell), and such a semantics fails De Morgan's law ¬(p ∧ q) = ¬p ∨ ¬q
-(`verdict_everywhere_excludes_de_morgan`; compositional two-valued semantics in general, such
-as the uniform defaults, keep it). Strong Kleene cannot express "p is established", ZTL can
-(`kleene_cannot_say_established`, `ztl_says_evidence`): the monotonicity of strong Kleene,
-known since Kleene, formalised. `ZComplete.lean`: in the language with the constants ⊤ and ⊥,
+properties. ZTL can express "p is established" and "p is marked" inside the language (`ztl_says_evidence`).
+(Earlier versions also proved here three comparisons with strong Kleene — `ztl_unique_compositional`,
+`verdict_everywhere_excludes_de_morgan`, `kleene_cannot_say_established`; they were stated through a Kleene
+evaluator and were removed with it, 2026-11-22.) `ZComplete.lean`: in the language with the constants ⊤ and ⊥,
 every function from the values (T, F or Z) of a finite list of atoms to {T, F} is a ZTL
 formula, its J-DNF (`ztl_expressively_complete`; earlier proved for one atom and measured for
 two), and Craig interpolation holds for every entailment φ ⊨ ψ (`ztl_interpolation`; with no
@@ -1326,11 +1312,9 @@ both on the empty axiom list, both verifiable from zero by a bare
 **Part II** (same file): the entailment rule battery (11 hold here — modus
 ponens is Part I's semantic MP — + 2 refuted on the mark, `rule_dn_elim_needs_ground`
 and `rule_taut_concl_needs_ground`, including the split contraposition-rule vs contraposition-law),
-no-gluts, the lazy Kleene register with proven monotonicity of all
-connectives in the information order, non-monotonicity of the greedy
-register, the liar's home in the lazy register (knot Z = Z — rfl), the
-absence of a greedy carousel model (all 9 pairs), lazy grounding, and
-the computed revenge bullet.
+no-gluts, non-monotonicity of the greedy register in the information order, the absence of a greedy carousel
+model (all 9 pairs), and the computed revenge bullet. (The Kleene register and "the liar's home" in it,
+`knot Z = Z`, were removed from the core, 2026-11-22: ¬Z = Z contradicts ZTL's own table.)
 
 **Part III — the tableau pillars over the whole language.** An
 inductive formula type Fm with evaluation; **pillar 1**: greediness is
@@ -1390,9 +1374,11 @@ semantic cut elimination of §5, kernel-checked. **Quantifier tableaux
 the n-ary signed rules as preimage-coverage theorems, UI/EG in
 membership form, and the battery of eight tableau verdicts as kernel
 evaluations of the certified engine (§6). **General Knaster–Tarski
-(`ZGround`, zero axioms):** the lazy register over the whole language,
-monotonicity, the least fixed point by bounded iteration, and the
-absoluteness of the grounded part (§9). **Expedition twins (`ZExped`,
+(`ZGround`, zero axioms):** the stable step — classics first — over the whole language,
+its monotonicity, the least fixed point by bounded iteration, and the
+absoluteness of the grounded part (§9). **The readings (`ZRead`, `ZForced`, zero axioms):** the dirty reading
+`rd`, EARNED / REFUTED / IF STABLE defined by it, their persistence under new data, and the one-pass count
+proved equal to the reading (§2, §19). **Expedition twins (`ZExped`,
 zero axioms):** streams — the equality atom never earns T, one finite
 witness earns apartness and it persists, Cantor's diagonal earns strict
 non-membership against every registry entry (§13); one marked pair
@@ -1409,134 +1395,105 @@ expedition remainder: **Russell's grounding half is kernel-computed**
 §9: eight membership facts ground, exactly R∈R stays quarantined
 (`russell_grounded`, `russell_verdicts`); ⊢ ⊤, ⊥ ⊢ φ and ⊬ ⊥ run
 through the certified engine. **The receipt trio (`Receipt`, `Linear`, `LabelExact`, zero
-axioms):** the label's completeness in both registers, the
+axioms):** the label's completeness for the forced outcome and for the verdict, the
 no-loss theorem at multiplicity ≤ 1, and the label's exactness on
 linear claims with a proved counterexample showing the hypothesis is
 load-bearing (§19). **The stitch (`bridge.py`):** one questionnaire, two
-engines — 609 kernel-computed answers (both registers cell by cell,
+engines — 611 kernel-computed answers (the greedy tables and the forced-outcome rules cell by cell,
 the label battery of §19,
 the J-operators, E and Δ, certified-engine verdicts on a shared
-propositional and quantified battery with constants, lazy lfp of the
-zoo up to the nine-fact Russell system) compared mechanically against
+propositional and quantified battery with constants, the stable lfp of the
+zoo up to the nine-fact Russell system, Curry and the strong liar included) compared mechanically against
 the Python stands on every regression run: zero divergences. Two further disinfection
 pitfalls surfaced here: an overlapping wildcard row in a match taints
 the DEFINITION itself with propext through the compiled matcher
-(invisible to theorem-level axiom prints — `kand`/`kor` were rewritten
-with explicit cells, and the corpus now prints definition-level axiom
+(invisible to theorem-level axiom prints — the then Kleene tables `kand`/`kor`, and since 2026-11-22 the
+phase order `phLeq`, were rewritten with explicit cells, and the corpus now prints definition-level axiom
 checks too), and core's `List.length_map`/`length_replicate` are
 simp-proved and carry propext — replaced by hand-rolled inductions
 (likewise the core Int order lemmas, omega-proved: general interval
 statements live over Nat, Int stays for computation).
 
-## 9. Quarantine as a fixed point: the two-register architecture (MEASURED + Lean)
+## 9. Quarantine as a fixed point: grounding by classics first (MEASURED + Lean)
 
-The quarantine flag of fork 2 in §3.5 is formalized à la Kripke. A
-system of sentences with a truth predicate (λ: ¬Tr(λ) etc.); the "jump"
-J re-evaluates the sentences under the current valuation; fixed points
-of J are self-consistent valuations. Two registers with DIFFERENT
-negations are put on trial: the greedy one (ZTL tables, verdicts:
-¬Z = F — "not earned") and the lazy one (strong Kleene, the solver:
-¬Z = Z — "do not judge the uncomputed"; Z flows through connectives).
-What follows shows these are not two candidates for one role but two
-mandatory different roles.
+The quarantine flag of fork 2 in §3.5 is formalized à la Kripke. A system of sentences with a truth predicate
+(λ: ¬Tr(λ) etc.); the "jump" J re-evaluates the sentences under the current valuation; fixed points of J are
+self-consistent valuations; the iteration from "nothing determined" reaches the least fixed point, and the
+sentences it never determines are the quarantine. The frame is Kripke's; what this section fixes is the STEP —
+"has this sentence become determined?" — and it is ZTL's own rule, not a borrowed table:
 
-**Enumeration results** (the zoo: liar, truth-teller, Jourdain's
-carousel, the even cycle, a grounded chain, the avenger):
+**Classics first** (curator's decision, 2026-11-22). A sentence becomes determined T (F) when its definition is
+classically true (false) under EVERY classical value of every atom it mentions that is still open — an own
+sentence not yet determined, or a foreign dirty input — one value per atom. This is ZTL's generating principle
+("T only if forced under every classical reading") applied with one value per atom, i.e. the supervaluation
+scheme (van Fraassen 1966; Kripke 1975 offers it beside strong Kleene). If classics gives no answer, the sentence
+is not grounded, and the VERDICT on it is ZTL's greedy table. An own sentence not yet determined is in the
+solver's phase N ("not yet computed" — §10: never a truth value, never an input of a table); a phase that never
+resolves hardens, after the fixed point, into the quarantine mark Z.
 
-1. **The greedy jump is non-monotone** in the information order
-   (witnesses found on every system) — the Knaster–Tarski argument does
-   not apply to it.
-2. **On odd cycles the greedy jump has no fixed points at all**; the
-   iteration oscillates: liar — period 2 (F→T→F...), carousel — period
-   4 (FF→FT→TT→TF), avenger — period 2. The oscillations of revision
-   theory (Gupta–Belnap) arise here not as a postulate but as the
-   behavior of the greedy iteration.
-3. **The lazy jump is monotone** and has a least fixed point
-   everywhere: grounded sentences receive classical values, paradoxical
-   ones — Z. The even cycle: three fixed points ({T,F}, {F,T}, {Z,Z}),
-   the least being mutual quarantine (underdetermination, not paradox).
-4. **Verdicts are greedy, read over the finished point**: the content
-   of the avenger μ at grounded μ=Z evaluates greedily to T, while μ is
-   denied truth — the "bullet" is paid inside the formal construction,
-   not by a disclaimer.
+Versions up to 2.1.6 used strong Kleene's tables for this step ("the lazy register", ¬Z = Z). That register is
+removed from the instrument and from the Lean corpus (`ZTL.lean` no longer defines it). The reason is the
+curator's: ¬Z = Z contradicts ZTL's own table (¬Z = F); the role it played — "not yet computed" — is the phase N,
+for which ¬N = N is unobjectionable, and N is now a separate type (`ZGround.Ph`) that cannot be confused with the
+mark. The replacement also corrected one result (§11: Curry with ⊥ := s∧¬s) and moved three cases from INTRINSIC
+to GROUNDED (below).
 
-**Conclusion (the architectural result of this stage):** the
-two-register design is a necessity, not a convenience. The greedy
-register cannot ground itself (no fixed points on the liar); the lazy
-one cannot pass verdicts ("exactly falsehood"). Quarantine := the Z-set
-of the lazy jump's least fixed point; ZTL := the greedy reading on top.
-The engineering precedent — SQL (Kleene inside expressions, forced
-falsehood at the WHERE boundary) — turns out to be not an analogy but
-the same theorem, found by practice.
+**Enumeration results** (the zoo: liar, truth-teller, Jourdain's carousel, the even cycle, a grounded chain,
+the avenger):
 
-**The quarantine passport (MEASURED).** Z alone is blind: the liar and
-the truth-teller land in quarantine with the same mark. The passport
-cures the blindness without touching the logic — verdicts, tables and
-greediness are intact; it is solver-side metadata computed per strongly
-connected component of the dependency graph. Kinds: **PARADOX** — the
-component has no classical model consistent with its grounded
-environment (odd cycles; the greedy oscillation period is recorded:
-liar 2, carousel 4) — the refusal is *permanent*; **INTRINSIC** — exactly one
-classical model exists (Kripke's intrinsic value): ungrounded, yet
-uniquely consistent — the stipulation is forced, not chosen;
-**UNDERDETERMINED** —
-classical models exist (≥ 2: even cycles, the truth-teller) — the
-refusal stands *until stipulation*; **INPUT** — a plain dirty datum — the
-refusal stands *until verification* (§19); **DOWNSTREAM** — inherited
-quarantine with the culprits listed (the provenance of refusal, §14
-again). The operational content is the **stipulation theorem**
-(MEASURED totally on a mixed zoo carrying every kind at once, with the
-grounded part untouched): a component carries classical models
-(INTRINSIC or UNDERDETERMINED) iff stipulating any of them grounds it
-cleanly — the forced choice and the free one obey the same mechanics —
-and it is PARADOX iff every decree contradicts the component's own
-definitions: the liftable and the permanent, mechanically separated. The
-passport is thereby a *biography* of the mark — there are exactly three
-ways to acquire it, and liftability follows genesis: **born** with the
-datum (INPUT — lifted by verification), **hardened** out of a solver
-phase that completed without resolving (INTRINSIC — lifted by the
-forced stipulation; UNDERDETERMINED — lifted by a chosen one;
-PARADOX — lifted by nothing), or **inherited**
-(DOWNSTREAM — lifted with the culprits). "Completed" is a theorem, not
-a hope: the lazy iteration provably terminates within n+1 steps (§8,
-`ZGround`), so the phase N always dies — the liar is never "still
-computing"; the solver's verdict on it is final, and what is eternal
-is not the process but the refusal. (Contrast revision theory [7],
-where the process itself never settles.) The parity
-theorem of §11 re-derives through the passport (62 of 62 cycles), and
-Russell (§18) reads: R∈R — PARADOX, permanent; the twin S∈S —
-UNDERDETERMINED, awaiting an external decision; eight facts grounded.
-This is Kripke's taxonomy plus revision-theoretic signatures
-[5, 7], packaged as a computable instrument; the refusal classes now
-mirror §19, and quarantine = (Z, passport). The caveat that stood here — "Yablo
-stays invisible: every finite truncation is grounded, so the passport of
-infinite regress needs an infinite instrument" — is now discharged, and
-by a theorem rather than by a passport (`ZYablo.lean`, empty axiom list,
-§11). The instrument for the limit is not a procedure at all; the
-infinite system simply admits no verdict assignment, and that is proved
-in one step. What the caveat got right is that no finite stage could
-show it: every truncation is grounded, at every n, and that too is now a
-theorem rather than a check at n = 3.
+1. **The greedy jump is non-monotone** in the information order (witnesses found on every system) — the
+   Knaster–Tarski argument does not apply to it, and it is not used to ground.
+2. **On odd cycles the greedy jump has no fixed points at all**; the iteration oscillates: liar — period 2
+   (F→T→F...), carousel — period 4 (FF→FT→TT→TF), avenger — period 2. The oscillations of revision theory
+   (Gupta–Belnap) arise here not as a postulate but as the behavior of the greedy iteration; the passport records
+   them as the second axis.
+3. **The stable step is monotone** (more determined sentences only narrow the completions) and has a least fixed
+   point everywhere: grounded sentences receive classical values, paradoxical ones stay N. A sentence that is
+   classically constant is grounded by its FORM in one step: the strong liar σ ≡ ¬σ∧σ is F, the avenger
+   μ ≡ ¬(μ↔μ) is F, the Henkin-style h ≡ (h→h) is T — whatever they are.
+4. **Verdicts are greedy, read over the finished point** (with the unresolved phase hardened to Z): the content of
+   the avenger ¬Tr(μ) ∨ isZ(μ) evaluates greedily to T while μ is denied truth — the "bullet" is paid inside the
+   formal construction, not by a disclaimer.
 
-**The architecture, kernel-checked in general form.** The two-register
-theorem no longer rests on per-instance measurements: the Lean module
-`ZGround` (zero axioms) proves, for EVERY finite system of definitions,
-that lazy evaluation is monotone over the whole language
-(`evalK_mono`), hence the lazy jump is monotone (`jumpL_mono`); the
-iteration from ⊥ ascends and stabilizes within n+1 steps at the least
-fixed point (`kt_fixed`, via an information-measure pigeonhole — no
-classical choice, no well-founded machinery); the least point lies
-below every fixed point (`kt_least`); and a coordinate grounded in the
-least point carries the same classical value in every fixed point
-(`grounded_absolute`) — quarantine is well-defined, machine-checked.
-Together with the greedy register's kernel-checked non-monotonicity
-(§8, Part II), **both halves of the necessity argument are
-machine-checked**: the greedy register cannot ground itself, and the
-lazy one is exactly what grounds. The inference joining them — therefore
-two registers are necessary, not merely convenient — is ours, not the
-kernel's: no Lean object states it. We say so because the distinction is
-the subject of this paper. A composition of theorems is worth what its
-parts are worth; it is not a further theorem.
+**Conclusion of this stage.** Grounding and verdicts are two roles of ONE principle: grounding asks whether
+classics forces a value (two outcomes plus "not forced"), the verdict asks whether ZTL may sign now (two
+outcomes). Both are decided in one place in the code (`zread.stable` / `ZGround.evalS`); neither uses a table
+other than ZTL's.
+
+**The quarantine passport (MEASURED).** The phase alone is blind: the liar and the truth-teller both stay
+undetermined. The passport cures the blindness without touching the logic — verdicts, tables and greediness are
+intact; it is solver-side metadata computed per strongly connected component of the dependency graph. Kinds:
+**PARADOX** — the component has no classical model consistent with its grounded environment (odd cycles; the
+greedy oscillation period is recorded: liar 2, carousel 4) — the refusal is *permanent*; **INTRINSIC** — exactly
+one classical model exists, yet the stable step does not reach it (since grounding reads classics first, this
+occurs only in loops of two or more sentences; a single sentence with one model is grounded by its form);
+**UNDERDETERMINED** — classical models exist (≥ 2: even cycles, the truth-teller) — the refusal stands *until
+stipulation*; **INPUT** — a plain dirty datum — the refusal stands *until verification* (§19); **DOWNSTREAM** —
+inherited quarantine with the culprits listed (the provenance of refusal, §14 again). A sentence over a dirty
+input that classics cannot settle — S ≡ ¬J with J dirty — is DOWNSTREAM, waiting on J, while its verdict is ZTL's
+(¬Z = F; the judge: F, OPEN). The operational content is the **stipulation theorem** (MEASURED totally on a mixed
+zoo carrying every kind at once, with the grounded part untouched): a component carries classical models
+(INTRINSIC or UNDERDETERMINED) iff stipulating any of them grounds it cleanly, and it is PARADOX iff every decree
+contradicts the component's own definitions. The passport is thereby a *biography* of the mark — **born** with
+the datum (INPUT — lifted by verification), **hardened** out of a solver phase that completed without resolving
+(INTRINSIC — lifted by the forced stipulation; UNDERDETERMINED — by a chosen one; PARADOX — by nothing), or
+**inherited** (DOWNSTREAM — lifted with the culprits). "Completed" is a theorem, not a hope: the iteration
+provably terminates within n+1 steps (§8, `ZGround`), so the phase N always dies — the liar is never "still
+computing"; what is eternal is not the process but the refusal. The parity theorem of §11 re-derives through the
+passport, and Russell (§18) reads, unchanged: R∈R — PARADOX, permanent; the twin S∈S — UNDERDETERMINED; eight facts
+grounded. Yablo (§11): every finite truncation is grounded, at every n (`ZYablo.trunc_unique`), the infinite system
+admits no verdict assignment (`yablo_greedy_homeless`), and the stable step never determines any of its sentences
+(`yablo_never_determined`).
+
+**The architecture, kernel-checked in general form.** `ZGround` (zero axioms) proves, for EVERY finite system of
+definitions: the stable step is monotone (`evalS_mono`, from `comps_mono`: fewer open atoms, fewer completions);
+the iteration from "nothing determined" ascends and stabilizes within n+1 steps at the least fixed point
+(`kt_fixed`, via an information-measure pigeonhole — no classical choice, no well-founded machinery); the least
+point lies below every fixed point (`kt_least`); and a sentence grounded in the least point carries the same
+classical value in every fixed point (`grounded_absolute`) — quarantine is well-defined, machine-checked. The
+cases are computed by the kernel: `liar_lfp`, `truthteller_lfp`, `curry_lfp`, `strong_liar_lfp`,
+`foreign_input_lfp` (S ≡ ¬J waits on J), `foreign_irrelevant_lfp` (J ∨ ¬J is grounded T); Russell's nine facts in
+`ZExped`. Python and Lean are asked the same 611 questions by `bridge.py` (zero divergences).
 
 ## 10. The ontological status of Z: the system's passport
 
@@ -1705,23 +1662,23 @@ the grant; on ¬(tainted ∧ ¬sanitized), the sink rule rewritten by the classi
 Morgan and double negation, the matrix grants T with both atoms dirty. So the matrix alone does not dominate. **The checked verdict does, and this is proved
 (v2.1.5, `lean/ZDirty.lean`, empty axiom list).** Take as the criterion of a right
 answer the one this paper adopts: a grant is right iff the dirty reading earns it,
-that is, iff the formula is true under every reading of its occurrences — which is
-exactly its strong Kleene value T (`rd_is_kleene`). Call φ *earned* at v (Lean `Earned`; the
+that is, iff the formula is true under every reading of its occurrences — the forced T, EARNED
+(`ZRead.earnedR`). Call φ *earned* at v (Lean `Earned`; the
 judge's EARNED of v2.1.5) if it is T at v and under every refinement of the marks. Then for every
 valuation v, formula φ and classical substitution σ of the dirty atoms (uniform, like
 "dirty := false", or chosen atom by atom):
 
-> (a) strong Kleene T ⇒ earned (`earned_of_kleene`: Kleene is monotone under
-> refinement, and the matrix never refuses what Kleene earns, `never_stricter`);
+> (a) forced T ⇒ earned (`ZSpeaks.earned_of_forced`: readings only narrow under refinement, `rd_mono`, and the
+> matrix never refuses what every reading grants, `never_stricter`);
 > (b) earned ⇒ σ grants (`substitution_of_earned`: a substitution is a total refinement).
 > So if the right answer is to grant, the judge grants, by (a); if the right answer is
 > to refuse and σ refuses, the judge refuses, since by (b) a grant of the judge would
 > make σ grant. Wherever σ answers right, the judge answers right. Strictly: whatever
 > value σ gives a dirty p, it grants one of p, ¬p, which the judge refuses and the dirty
-> reading does not earn (`strict_any`).
+> reading does not earn (`ZSpeaks.grant_strict`).
 
-The earned verdict is not always right: ¬(p ∧ ¬p) is earned on a dirty p, and strong Kleene
-does not give it T (`judge_can_err`) — and there every substitution grants it too. Since
+The earned verdict is not always right: ¬(p ∧ ¬p) is earned on a dirty p, yet not forced — a reading of its two
+occurrences makes it false (`ZTopology.not_a_and_not_a_not_forced`) — and there every substitution grants it too. Since
 v2.1.6 the judge reports it as EARNED IF STABLE (`ZSpeaks.lnc_if_stable`), below.
 
 MEASURED on the regression pool, 14,530 cells with a dirty atom, against the two
@@ -1735,20 +1692,21 @@ data ZTL is classical logic (`evalF_agrees`); every refusal of the matrix is wit
 (`no_gift`, a sufficient condition), and where it does not, the warranty grade says so:
 not hereditary.
 
-**Since v2.1.6 one label carries both criteria** (`lean/ZSpeaks.lean`, empty axiom list). Strong Kleene's T
-and truth in every cleaning are the compositional and the thorough semantics of three-valued model checking [48, 49];
+**Since v2.1.6 one label carries both criteria** (`lean/ZSpeaks.lean`, empty axiom list). The forced T and
+truth in every cleaning are the compositional and the thorough semantics of three-valued model checking [48, 49];
 ZTL's verdict, which separates ON CREDIT from OPEN, is the third reading:
 EARNED holds by both, EARNED IF STABLE by the stable one only, ON CREDIT and OPEN by neither.
 The stable reading is not ZTL's; EARNED IF STABLE reports what holds under it as a condition
-still to be verified. EARNED is the strong Kleene T (`strict_earned_iff_kleene`). Under the
-criterion above it is never a wrong grant, and by that criterion one strong Kleene pass is
-already the perfect decider: the judge's EARNED is that pass, and ZTL adds nothing to it.
-EARNED IF STABLE: strong Kleene does not give T, but every completion of the dirty atoms does —
+still to be verified. EARNED is the forced T, by definition (`earnedR`). Under the
+criterion above it is never a wrong grant, and by that criterion one pass of the reading is
+already the perfect decider: the judge's EARNED is that pass (`foC_eq_fo`), and ZTL adds nothing to it.
+EARNED IF STABLE: the reading does not force T, but every completion of the dirty atoms does —
 the claim is true once every dirty atom is verified, to either value; for a claim about the world,
 if each dirty atom stands for one fact at all its occurrences. For a formula about the mark itself
 the cleaning decides: on a dirty p, isZ(p) = ¬(p ↔ p) has ZTL's value T and is REFUTED IF STABLE
 (after cleaning, p is not dirty), and p ∨ ¬p ("p is established") has the value F and is EARNED
-IF STABLE. The dispositions read a claim through strong Kleene and the cleanings; ZTL's verdict
+IF STABLE. The dispositions read a claim through the readings and the cleanings — classics first, decided in one place
+(`zread.settle`); ZTL's verdict
 is reported beside them, and on such formulas the two differ by design. The judge names the
 repeated dirty atoms: enough for that, not necessarily the fewest ((r ∨ r) ∨ ¬(p ∧ ¬p) names r
 beside p). REFUTED and REFUTED IF STABLE mirror them; ON CREDIT is T now with the completions
@@ -1758,22 +1716,23 @@ dirty criterion every EARNED IF STABLE is a wrong grant; under the stable criter
 right; the label says which criterion a grant needs. Wherever a classical substitution of the
 dirty atoms answers right by the dirty criterion, so does the judge's grant
 (`grant_right_where_substitution_right`), and strictly (`grant_strict`: on a dirty p the
-judge grants neither p nor ¬p, while every substitution grants one of them, `strict_any`). More
+judge grants neither p nor ¬p, while every substitution grants one of them). More
 exactly, the grant is right iff some classical substitution is right: the best substitution cell
 by cell, never better. The hereditary grade, the judge's EARNED of 2.1.5, does better than that
-and strictly dominates the grant (`earned_dominates_enum`, `enum_strict`; 1,490 cells of the pool
-where the grant is wrong and the grade right); the judge returns it beside the disposition. Unlike the earned verdict, the grant is never right where each
+and strictly dominates the grant (MEASURED: 1,490 cells of the pool where the grant is wrong and the grade right;
+the Lean statements `earned_dominates_enum` / `enum_strict` of earlier versions went through the Kleene evaluator
+and were removed with it — the measurement stands, the proof is to be redone on the readings); the judge returns it beside the disposition. Unlike the earned verdict, the grant is never right where each
 substitution is wrong: where every completion gives T, every substitution grants too. Under the
 dirty criterion it is wrong more often than the earned verdict (2,440 cells against 950); that
 is the price of reporting the stable criterion, and EARNED, its strict part, is never wrong. Bochvar: in the "not true" convention (external negation ∼J₂) his
 external logic is the default "dirty := false" (`bochvar_is_default_false`), one of these
 substitutions; in the J₀ convention used elsewhere in this section (¬Z = F) it is not a default.
 MEASURED on the same 14,530 cells, with 0 disagreements against brute force: EARNED 2,450 and
-REFUTED 1,274, exactly the strong Kleene T and F cells; EARNED IF STABLE 2,440; REFUTED IF STABLE
+REFUTED 1,274, exactly the forced T and F cells; EARNED IF STABLE 2,440; REFUTED IF STABLE
 1,470; ON CREDIT 2,296; OPEN 4,600. Against the uniform substitutions the judge's grant is right
 and "dirty := false" wrong in 2,918 cells, "dirty := true" wrong in 4,148, the reverse zero for
 both. And over the T verdicts of compound formulas on the same cells, ZTL and Bochvar's external connectives in both
-conventions issue the same 2,448 T's that strong Kleene gives; ZTL issues 3,738 that strong Kleene does not give,
+conventions issue the same 2,448 T's that the forced reading gives; ZTL issues 3,738 that it does not give,
 Bochvar's connectives 5,090 (J₀ convention) and 5,358 ("not true" convention): equally complete, and ZTL's basis has
 the fewest wrong T's — by count, not cell by cell.
 
@@ -1838,11 +1797,10 @@ declined: values are not multiplied, non-values are typed. N is the ⊥
 of the fixed-point iteration (§9), the pending of any promise: it
 exists only inside the solver and never returns outward. Read N as
 **Not-yet** — Kleene's undefined *by intent*, at last housed as a
-phase rather than a value. The
-four-valued algebra {T,F,Z,N} with the lazy lift over ZTL is coherent
-and factorizes into our two registers ({T,F,Z} fragment = ZTL, {T,F,N}
-fragment = Kleene), but it packs two phases into one type — a monolith
-instead of modules; it is kept as a possible appendix, not as the core.
+phase rather than a value: since 2026-11-22 it is a separate type in the code (`ZGround.Ph`, `zread.N`), it never
+enters ZTL's tables (the code refuses it), and outward it is shown only as the quarantine mark it hardens into.
+¬N = N is unobjectionable for a phase; ¬Z = Z was not, which is why the Kleene register that wrote the phase as Z
+was removed.
 
 **Kleene, read through this passport.** Kleene's third element was
 epistemic by intent — "undefined, not yet computed" — but his logic
@@ -1911,8 +1869,8 @@ one construction on chosen operators: the liar is paradox(¬S), the truth-teller
 paradox(S), Curry paradox(S→⊥), Russell's propositional shadow again
 paradox(¬S). Three measured layers read a net, coarse to fine:
 
-1. *Grounding* — the zero-trust verdict (§9): every pure self-reference lands in
-   Z. Coarsest; it does not separate paradoxes.
+1. *Grounding* — the stable step, classics first (§9): every pure self-reference stays
+   undetermined (N). Coarsest; it does not separate paradoxes.
 2. *Solutions* — the classical models of the net: 0 = contradictory, ≥2 =
    underdetermined, 1 = determined. This is the content of the parity theorem
    below — an odd ring has no model ⟺ its reference graph is not 2-colourable.
@@ -1921,20 +1879,23 @@ paradox(¬S). Three measured layers read a net, coarse to fine:
    separate what the model count merges — the liar and Curry are the *same*
    2-cycle, the k-ring carries 2k, the crocodile a 4-cycle.
 
-Grounding is strictly the most conservative of the three: measured over all
-9015 one-sentence nets up to six symbols, it reaches a classical value only when
-the net has a *unique* model that is also reachable from ignorance; 1068 of them
-have a unique classical model yet ground to Z (e.g. S = S∨¬S — classically ⊤,
-here Z: zero-trust will not grant a truth it cannot ground). The ZTL-settled
-nets are thus a strict subset of the classically-categorical ones.
+On one-sentence nets grounding and the unique model coincide: measured over all
+9015 one-sentence nets up to six symbols, the stable step reaches a classical value exactly when the net has a
+unique classical model (0 exceptions; for S = f(S) this is a triviality — the step grounds S to c iff f(T) = f(F)
+= c, and then f(c) = c). Versions up to 2.1.6, grounding with strong Kleene's tables, counted 1068 nets with a
+unique model that grounded to Z (e.g. S = S∨¬S): that strictness was an artefact of reading each occurrence of S
+apart inside one definition, and it is gone with the Kleene register (2026-11-22).
 
 **Curry without negation.** c = (Tr(c) → ⊥) is the paradox that breaks
 naive paraconsistent theories (it uses no ¬, so taming negation does
 not help). Measured: no greedy fixed points, iteration of period 2,
-lazy grounding gives Z. **The same mechanics as the liar**: quarantine
+the stable step leaves it undetermined. **The same mechanics as the liar**: quarantine
 does not care which operator a sentence used to invert itself — only
 the non-existence of a fixed point matters. Our construction silences
-Curry for free, where LP must sacrifice contraction.
+Curry for free, where LP must sacrifice contraction. With ⊥ defined as s∧¬s over an undetermined s (the
+encoding of the Paradox Docket's case 7-bis), ⊥ is grounded F by classics — s∧¬s is false for either s — and
+Curry is the same PARADOX; earlier versions, grounding with strong Kleene, reported a "conditional" DOWNSTREAM
+refusal there that no stipulation of s could lift. A genuinely suspended ⊥ (⊥ := s) is DOWNSTREAM, culprit s.
 
 **The parity result — total (MEASURED).** All cycles of length 1–5, all inversion
 patterns (62 systems): classical models exist ⟺ the number of
@@ -1957,7 +1918,7 @@ the second only in the limit.
 do"; the mother: "you will not return it". Formalization: R = Tr(M),
 M = ¬Tr(R) — Jourdain's carousel in disguise (cycle 2, one inversion,
 odd). MEASURED: no greedy models, iteration of period 4, mutual
-quarantine under lazy grounding, and — the key measurement — **the
+quarantine under the stable step, and — the key measurement — **the
 greedy verdict on the deal itself, R↔M, at the grounded point: F**. The
 zero-trust reading of the ancient dilemma: the deal's condition cannot
 be grounded — the contract is void, no obligation ever arose; the
@@ -1973,8 +1934,7 @@ the parties' will".
 
 **Kernel-checked (`Facts.lean`, zero axioms).** Every dynamic fact of this
 section is a theorem, not a battery entry: Curry is homeless in the greedy
-register without any negation (`curry_homeless`) and finds a home in the lazy
-one (`curry_kleene_home`); the liar oscillates with period two
+register without any negation (`curry_homeless`); the liar oscillates with period two
 (`liar_period2`) and Jourdain's carousel has no fixed point and period four
 (`carousel_no_fp`); the Yablo truncation at n = 3 has the unique grounded
 model F, F, T (`yablo3_unique`); and the crocodile's deal is void at the
@@ -1985,10 +1945,10 @@ replace the single truncation check. EVERY finite truncation is grounded,
 for every n, with exactly one model — the last sentence true and all
 earlier ones false — so the finite instrument is not too weak to see a
 paradox; there is nothing at any finite stage to see. The INFINITE system
-admits no verdict assignment whatever (`yablo_greedy_homeless`). And it is
-satisfiable in the lazy register, where everything dirty is admissible
-(`yablo_lazy_home`) — the diagnosis the liar and Curry receive, reached here
-for a system no finite stage could diagnose.
+admits no verdict assignment whatever (`yablo_greedy_homeless`). And the stable step never determines any of
+its sentences: each has two completions of the others on which its definition differs (`yablo_never_determined`)
+— the diagnosis the liar receives, reached here for a system no finite stage could diagnose. (Earlier versions
+stated this as "satisfiable in the lazy register", `yablo_lazy_home`; removed with that register.)
 
 *The classical step is avoided, and that is the point of doing it here.* The
 textbook argument moves from "not every later sentence is false" to "some
@@ -2096,8 +2056,7 @@ remains measured.
 
 ## 14. Functions: taint mode (MEASURED + Lean)
 
-A function is a computation, not a verdict ⇒ by the two-register
-theorem it behaves lazily: **the mark flows through the function** with
+A function is a computation, not a verdict ⇒ **the mark flows through the function** with
 a growing pedigree (f(m) is a new mark "f applied to m"). Measured:
 
 * **Images:** verified collisions *earn* merging (f(1)=f(2) is a proven
@@ -2119,7 +2078,7 @@ a growing pedigree (f(m) is a new mark "f applied to m"). Measured:
 
 **The third engineering twin.** After IEEE NaN and SQL NULL — **taint
 tracking / information flow control** (Denning's lattice 1976, Perl
-taint mode, TaintDroid): the Z-mark is taint, lazy flow through
+taint mode, TaintDroid): the Z-mark is taint, its flow through
 computations is taint propagation, greedy verdicts are sanitizer
 checks, the laundering ban is no-declassification.
 
@@ -2144,7 +2103,7 @@ stays MEASURED for that reason.
 
 Numbers: verified values and marks with an interval of partial
 knowledge [lo,hi] (ignorance = (−∞,∞)). Operations are computations ⇒
-lazy: intervals flow. **A name is one number across the whole claim**
+intervals flow through them. **A name is one number across the whole claim**
 (decided 2026-09-24): its occurrences co-refer, so the floor reads the
 difference of the two sides in one pass — exactly on the linear fragment
 and on sums of parabolas, one per name — and falls back to decorrelated
@@ -2170,7 +2129,7 @@ forced; else Z**. Measured:
   is earned by nothing short of full verification [x,x].
 * **Verification = interval narrowing:** the atom "4 < m" travels
   Z → Z → T along [0,9]→[3,7]→[5,7]; what is earned is never revoked —
-  the monotonicity of the lazy register, now in numbers.
+  the monotonicity of the forced reading, now in numbers.
 * **Census inheritance, split by what a name denotes.** For numbers
   commutativity and the unit are earned: x+y == y+x and x+0 == x are
   forced true, and so is m−m == 0 (`ZNumNames.comm_forced_numbers`,
@@ -2183,10 +2142,10 @@ forced; else Z**. Measured:
   `zarith_instance`).
 
 **The fourth twin: abstract interpretation** (Cousot & Cousot, 1977) —
-interval value analysis (lazy flow of abstract values through
+interval value analysis (abstract values flowing through
 computations) + assertion checking (greedy verdicts). Of the four
 engineering traditions named so far — NaN, NULL, taint tracking, abstract
-interpretation — all four are now embeddings (`ZNaN.lean`, `ZNull.lean`,
+interpretation — all four are now embeddings (`ZNaN.lean`, `ZNull.lean` — its comparisons and boundaries,
 `ZFlow.lean`, §27; and this one, below).
 
 **Kernel-checked embedding** (`ZAbsInt.lean`, empty axiom list). Their Galois
@@ -2336,7 +2295,7 @@ inaccessible to a point prior: zero-trust rationality.
 ignorance is a greedy laundering of Z into a number, the same
 substitution as merging NULLs in DISTINCT, and it is punishable
 (reparametrization). The honest architecture is two-registered:
-ignorance lives in mass intervals (the lazy register — Dempster–Shafer
+ignorance lives in mass intervals (where the mark flows — Dempster–Shafer
 and **the fifth twin: Walley's imprecise probabilities, 1991**), while
 decisions are verdicts by forcedness (the greedy one). Bayes remains
 honest on verified probabilities — his C-extension; only minting
@@ -2423,15 +2382,15 @@ the facts x∈x. Measured:
 
 * **The greedy jump**: zero models, iteration of period 2, and exactly
   one cell oscillates — R∈R; the whole storm is localized.
-* **Lazy grounding**: 8 of 9 facts grounded; a∈R = T (does not contain
+* **Grounding (the stable step)**: 8 of 9 facts grounded; a∈R = T (does not contain
   itself — admitted), b∈R = F (contains itself — rejected). **Russell's
   set works as a set for everyone except itself**; quarantine is one
   cell.
 * **Verdicts**: "R∈R?" — not earned, refusal; "R∉R?" — the greedy
   reading of ¬(R∈R) is F — also refusal. The NaN signature reaches set
   theory: neither membership nor non-membership is earned.
-* **The twin S = {x : x∈x}**: three greedy models (T, F, Z), lazy
-  grounding Z — the truth-teller of set theory, underdetermination.
+* **The twin S = {x : x∈x}**: three greedy models (T, F, Z), never
+  determined by the stable step — the truth-teller of set theory, underdetermination.
   Even and odd, now in sets.
 
 The contrast with the classical outcome is maximal: for Frege one cell
@@ -2577,8 +2536,8 @@ fences lying, not spoiling.
 
 **The judge's report since v2.1.6: six dispositions, and E.** Beside the warranty grade of
 ZTL's verdict, which this section defines and the judge still returns (field `grade`), the
-judge reports a disposition of the claim: EARNED and REFUTED where strong Kleene gives T and F;
-EARNED IF STABLE and REFUTED IF STABLE where it does not, but every completion of the dirty
+judge reports a disposition of the claim: EARNED and REFUTED where every reading of every occurrence gives T,
+resp. F (the forced outcome); EARNED IF STABLE and REFUTED IF STABLE where it does not, but every completion of the dirty
 atoms gives T, resp. F; ON CREDIT and OPEN where the completions disagree, with ZTL's verdict T,
 resp. not T; E for a ground with no subject (§25). The dispositions are not the grades: p → p
 on a dirty p has the verdict F, graded until-verification, and is EARNED IF STABLE. For every
@@ -2587,18 +2546,17 @@ atoms of that formula (`ZSpeaks.judge_speaks_ztl`, empty axiom list) — a corol
 expressive completeness, not a compositional translation: the formula is a J-DNF with 3^n
 leaves. Every case falls under one of the six (`dispositions_partition`; of the definitions — the
 implementation, past its search cap, reports ON CREDIT or OPEN and says the search was skipped). Cost: EARNED and
-REFUTED take one strong Kleene pass. The rest needs the completions, but only of the repeated
-dirty atoms: with those fixed, every other dirty atom occurs once, and on such a formula strong
-Kleene is exact — when each dirty atom occurs once, the readings of the occurrences are exactly
-the completions, so the set of values strong Kleene computes (`rd_is_kleene`) is the set over the
-completions — so 2^r strong Kleene passes decide it, r the number of repeated dirty
-atoms (argued; checked against brute force on the pool, 0 disagreements; the judge skips the
+REFUTED take one pass of the reading (`ZForced.foC_eq_fo`). The rest needs the completions, but only of the repeated
+dirty atoms: with those fixed, every other dirty atom occurs once, and on such a formula the reading is exact —
+when each dirty atom occurs once, the readings of the occurrences are exactly the completions — so 2^r passes
+decide it, r the number of repeated dirty atoms; both the judge and the passport take this decision from ONE
+function (`zread.stable`) (argued; checked against brute force on the pool, 0 disagreements; the judge skips the
 search past r = 16 and says so). That a formula in which each atom occurs once is its own semantic minimization, so
 that its compositional and thorough values coincide, is known [50, 51].
 
 **A verdict carries a warranty; a refusal carries a receipt** (Lean,
-`Receipt.lean` and `LabelExact.lean`, zero axioms). The lazy register
-answers Z together with a label — which dirty atoms the answer is
+`Receipt.lean` and `LabelExact.lean`, zero axioms). The forced outcome
+answers N ("not forced") together with a label — which dirty atoms the answer is
 still waiting on. That label is what makes a refusal accountable rather
 than merely withheld, and it is now bounded from both sides.
 
@@ -2626,7 +2584,7 @@ kernel's `pivotal` lets the reading of the others stay partial, and
 over the partial one rather than by a second induction: a side that
 reads Z is a pending linear claim at a marking of its own, so `drivable`
 pushes it to the value the other side does not have, the definite side
-stays where it was by the monotonicity of the lazy register, and the
+stays where it was by the monotonicity of the forced outcome (`ZForced.foC_def_mono`), and the
 remaining marks inside the claim are filled. (For a day this sentence
 said "definite" with only the partial theorem behind it; E59 found the
 gap, softened the sentence, measured the strong form — 57,969 named
@@ -2665,8 +2623,8 @@ is NP-hard** (E59, `ZReceiptHard.lean`, empty axiom list). Put a formula
 naming exactly when ψ has a classical point (`pivotal_iff_sat`): with
 `a := T` the claim reads ψ, with `a := F` it reads `ψ ∧ ¬ψ`, the two
 differ precisely where ψ reads T, and a partial reading on which ψ
-reads T lies below a classical one by the monotonicity of the lazy
-register. So deciding whether a named atom is idle is deciding SAT(ψ):
+reads T lies below a classical one by the monotonicity of the forced
+outcome. So deciding whether a named atom is idle is deciding SAT(ψ):
 the exact receipt is NP-hard (membership in NP — a pair of readings as
 a certificate — is argued in prose and not formalised, so the claim
 stops at hardness and "NP-complete" is not claimed). The simpler
@@ -2678,7 +2636,7 @@ exact on linear claims, is the forced cut, as `joint` is for the width:
 with E57 and E58, the three grades the judge does not compute are the
 three it cannot compute cheaply unless P = NP — hereditary (coNP-hard), exact width
 (NP-hard), exact receipt (NP-hard). MEASURED (`zreceipthard.py`, the
-judge's own lazy evaluator, and `pivotal` read literally, partial
+judge's own forced outcome, and `pivotal` read literally, partial
 readings included): on all 2906 formulas ψ of depth ≤ 2 over two atoms and 600
 random formulas of depth ≤ 3 over three, `a` is named on every one,
 "pivotal ⟺ satisfiable" holds on every one, and `a ∧ ψ` is pivotal on
@@ -2856,7 +2814,7 @@ semirings already do the cascade, the alternatives and the exposed set, and
 that ProvSQL also carries magnitudes through aggregation — which an earlier
 version of this corpus denied in print. That denial is withdrawn. Anyone
 needing those four things should use ProvSQL; what this paper adds is where
-their algebra sits inside the two registers, and where it provably cannot.
+where their algebra provably cannot sit in ZTL's verdict register.
 
 **Kernel-checked** (`ZCombine.lean`, empty axiom list). Combination is the
 meet of constraints and its members are exactly the values both sources
@@ -3445,7 +3403,7 @@ twin — IEEE 754's NaN, the first tradition of §1 — is embedded in `ZNaN.lea
 four mutually exclusive relations of §5.11, the predicates of Table 5.1, the
 §6.2.3 propagation rule); their Boolean layer proved classical (`!=` is the
 complement of `==` on every relation, the unordered one included); infection
-proved to be the lazy register (`emb` is a homomorphism for `+` and `−`);
+proved to be the mark flowing (`emb` is a homomorphism for `+` and `−` into the mark-carrying integers);
 every ordered predicate proved to be `SignT` of a ZTL atom (`<=` and `>=` of
 the GREEDY disjunction — `zor Z Z = F`, and IEEE's `<=` is false on a NaN too);
 the unordered predicate proved to be `SignT (isZ …)` — quarantine detectable
@@ -3461,10 +3419,7 @@ standard. Every `Int` order lemma measured carries propext, so both sides read
 the order off one three-way comparison and no such lemma is used. The second
 twin — SQL's NULL — is embedded in `ZNull.lean` (E50, empty axiom list): the
 truth values TRUE/FALSE/UNKNOWN with the standard's three tables, the
-comparison predicates, WHERE, CHECK and the `<boolean test>`. Proved: the
-expression layer is a HOMOMORPHISM onto the lazy register `knot/kand/kor`,
-cell for cell — and not onto the greedy one (`NOT NOT UNKNOWN` is UNKNOWN,
-`¬¬Z` is T); the comparison with NULL is the SAME mark atom IEEE's `==`
+comparison predicates, WHERE, CHECK and the `<boolean test>`. Proved: the comparison with NULL is the SAME mark atom IEEE's `==`
 landed on — two traditions, one ZTL atom; the boundaries are the four
 signs — WHERE keeps iff `SignT`, CHECK passes iff `SignP` ("satisfied iff
 not False": UNKNOWN passes), IS TRUE / IS FALSE / IS NOT TRUE / IS NOT FALSE
@@ -3472,11 +3427,9 @@ are `SignT / SignF / SignN / SignP`, IS UNKNOWN is the mark test `isZ`. So
 SQL runs TWO boundaries with opposite defaults — `x < NULL` and `x >= NULL`
 are both dropped by WHERE (§4's "false in both polarities") and both PASS a
 CHECK — while ZTL's collapse is WHERE's alone: the mark falls to F, never to
-T (`collapse_is_where`). At the WHERE boundary SQL and ZTL's greedy verdict
-AGREE on every negation-normal search condition (`where_agrees_nnf`: the two
-registers share their T-cells at every connective) and part exactly where a
-negation stands over a compound — `¬¬Z`, the signature cell; at CHECK they
-part already on `TRUE AND NULL`. And SQL's two equalities: `NULL = NULL` is
+T (`collapse_is_where`). (Earlier versions also proved that at the WHERE boundary SQL and ZTL's greedy verdict agree on every
+negation-normal search condition and part exactly on `¬¬Z` — `where_agrees_nnf`, stated through SQL's Kleene
+expression layer as a ZTL register; removed with that register, 2026-11-22.) And SQL's two equalities: `NULL = NULL` is
 UNKNOWN while `NULL IS NOT DISTINCT FROM NULL` is TRUE (the rule DISTINCT
 and GROUP BY run on) — ZTL has one equality and it withholds (§12's
 "inconsistency not inherited", as `two_equalities`). Not modelled: tables,
@@ -3508,19 +3461,12 @@ their {0,1}-threshold in all three cells, for every finite frame and every
 proper mass assignment — see §16, including the properness condition the
 first draft got wrong. `ZProv.lean` (empty axiom list) formalises the ALGEBRA of
 semiring provenance — the free commutative semiring on sources, `+`
-for an alternative derivation, `·` for a joint requirement — and maps
-it into ZTL: evaluation is a homomorphism into the LAZY register, which
-satisfies every semiring law; withdrawal of a source never raises trust
-along any derivation; a joint requirement dies with any one source
-while an alternative survives; and on mark-free trust the two registers
-coincide, so the Boolean case the 2007 paper starts from is recovered
-exactly. The sharp half is negative and belongs to us: the GREEDY
-operations carry no semiring structure at all — no constant whatever is
-neutral for `zor`, none for `zand`, the obstruction being the mark
-(`zor F Z = F`, `zand T Z = F`). So an algebra of trust in derivations
-lives in the lazy register, and the verdict register is where it is
-CASHED — cashing being provably not a homomorphism. That is why the two
-registers had to be two. What is NOT formalised is their database
+for an alternative derivation, `·` for a joint requirement — and asks where it sits in ZTL. The sharp result is negative and belongs to us: the GREEDY
+operations carry no semiring structure at all — no constant whatever is neutral for `zor`, none for `zand`, the
+obstruction being the mark (`zor F Z = F`, `zand T Z = F`): an algebra of trust in derivations cannot be the
+verdict register, and cashing it into verdicts is provably not a homomorphism. (Earlier versions also mapped the
+semiring homomorphically into the Kleene "lazy" register and proved the semiring laws there; that half was removed
+with the register, 2026-11-22.) What is NOT formalised is their database
 semantics: K-relations and the annotated relational operators. So one
 tradition's algebraic core is mapped, not the tradition;
 a practical zero-trust validation library (verdicts with warranties +
@@ -3776,8 +3722,15 @@ implies the classical law; laws with no atom verified exist, and that layer is n
 one over again. The paper now says that in this sense ZTL is stronger than classical logic and
 withdraws the sentence of the earlier versions that "stronger" is a word it does not use of itself.
 Nothing is claimed about verified data, where `ztl_taut_is_classical` stands; no table, verdict
-or earlier theorem changes. Changed text: the abstract, §1, §7, §8, §10. Corpus: 3,994 theorems
-across 216 modules, all on the empty axiom list.
+or earlier theorem changes. Changed text: the abstract, §1, §7, §8, §10. The same draft then removes the strong
+Kleene ("lazy") register from the instrument and the corpus (2026-11-22/23, the curator's "only ZTL"): grounding
+by classics first, one place in the code (`zread.stable` / `ZGround.evalS`); EARNED / REFUTED as the forced
+reading (`ZRead`, `ZForced`, the one-pass count proved, `foC_eq_fo`); the judge's field `lazy` renamed `forced`
+(N for not forced); the dispositions unchanged on 48,384 cells; three Docket cases grounded by form, Curry 7-bis a
+paradox, the 1068 cautious one-sentence nets gone; Kleene-stated theorems removed (`liar_kleene_home`,
+`curry_kleene_home`, `yablo_lazy_home`, `rd_is_kleene`, `strict_*_iff_kleene`, `where_agrees_nnf`, the semiring
+embedding of `ZProv`, among others). Changed text: §2, §8, §9, §10, §11, §15–19, §27. Corpus: 3,943 theorems
+across 218 modules, all on the empty axiom list; Python and Lean asked the same 611 questions, zero divergences.
 v2.1.6 (2026-10-29) changes what the judge reports. In v2.1.5 its EARNED was "T under every
 refinement of the marks", the verdict the dominance theorem of §10 is stated for; ¬(p ∧ ¬p) on
 a dirty p was EARNED, though strong Kleene does not give it T (`judge_can_err`). Now the judge

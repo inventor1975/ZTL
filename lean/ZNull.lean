@@ -2,7 +2,7 @@
   ZNull.lean — E50: SQL's NULL — THE LAZY REGISTER INSIDE, THE FOUR SIGNS AT
 
   PURE BRANCH (curator 2026-11-22: only ZTL, burn everything else, totally). Items 1 and 5 below — SQL's
-  three-valued expression layer as the LAZY (strong Kleene) register, and WHERE agreeing with it — are
+  three-valued expression layer as the lazy register, and WHERE agreeing with it — are
   REMOVED (`toV_not/and/or`, `where_agrees_nnf`, `where_departs_double_negation`,
   `check_departs_on_conjunction`). What stays relates SQL to ZTL's own atoms and signs only: the comparison
   with NULL is the mark atom, the boundaries are the four signs, the two equalities. The text that follows is

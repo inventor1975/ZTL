@@ -221,7 +221,7 @@ theorem safe_iff_rd (v : Nat → V) (φ : Fm) : SafeFormula v φ ↔ (rd v φ).2
     | false => rw [hb] at hs; have : (rd v φ).2 = true := hs; rw [h] at this; exact absurd this (by decide)
 
 /-- **The whole-formula adversary is the forced reading.** φ survives every strategy iff it is EARNED: no
-reading of its occurrences is false (ZRead; pure branch — no Kleene table). -/
+reading of its occurrences is false (ZRead). -/
 theorem formula_scope_is_forced (v : Nat → V) (φ : Fm) : SafeFormula v φ ↔ earnedR v φ :=
   safe_iff_rd v φ
 

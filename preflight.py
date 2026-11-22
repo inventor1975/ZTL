@@ -25,7 +25,9 @@ ROOT = os.path.dirname(os.path.abspath(__file__))
 
 def changed():
     out = subprocess.run(["git", "status", "--porcelain"], cwd=ROOT, capture_output=True, text=True).stdout
-    return [ln[3:].strip() for ln in out.splitlines() if ln.strip()]
+    # a deleted file is not a module to compile (2026-11-23: removing ZBochvar.lean read as a red "lake env lean")
+    return [ln[3:].strip() for ln in out.splitlines()
+            if ln.strip() and os.path.exists(os.path.join(ROOT, ln[3:].strip()))]
 
 
 def step(name, cmd, cwd=ROOT, bad=None):

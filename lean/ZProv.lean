@@ -2,7 +2,7 @@
   ZProv.lean — E34: PROVENANCE SEMIRINGS EMBED, AND INTO WHICH REGISTER.
 
   PURE BRANCH (curator 2026-11-22: only ZTL, burn everything else, totally). The embedding of the semiring
-  into the LAZY (strong Kleene) register, its semiring laws there, and every theorem stated through that
+  into the lazy register, its semiring laws there, and every theorem stated through that
   register are REMOVED below (`ev`, `kand_*`, `kor_*`, `ev_*`, `requirement_dies`, `alternative_survives`,
   `registers_agree`). What stays is ZTL's own fact: the greedy operations carry NO semiring structure
   (`greedy_no_additive_unit`, `greedy_no_multiplicative_unit`, `greedy_obstruction`). The text that follows

@@ -19,8 +19,7 @@
        asked for, and it is one theorem rather than a procedure.
 
     3. The infinite system is NEVER DETERMINED by the stable step
-       (`yablo_never_determined`, pure branch: one classical value per sentence,
-       no Kleene register): every sentence has two completions on which its
+       (`yablo_never_determined`, pure branch: one classical value per sentence): every sentence has two completions on which its
        definition differs. So Yablo receives the same diagnosis as the liar —
        homeless where signatures are issued, never settled where the solver
        grounds — except that for Yablo this could not be seen at any finite stage.
@@ -116,7 +115,7 @@ theorem beq_self : ∀ n : Nat, Nat.beq n n = true
 /-- **YABLO STAYS IN THE SOLVER'S PHASE.** For every sentence there are two completions of the undetermined
 sentences on which its definition takes different values — all later sentences false (true), or the next one
 true (false) — so the stable step never determines it: the all-undetermined state is where Yablo rests. The
-same diagnosis as the liar, reached for a system no finite stage could diagnose. No Kleene table. -/
+same diagnosis as the liar, reached for a system no finite stage could diagnose. -/
 theorem yablo_never_determined (i : Nat) :
     yabloVal (fun _ => false) i ∧ ¬ yabloVal (fun j => Nat.beq j (i + 1)) i := by
   refine ⟨fun _ _ => rfl, ?_⟩

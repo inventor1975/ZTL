@@ -50,7 +50,7 @@ how the logic reads it. `ZOrigin` showed Z, F, T born from ONE atom (¬p = F, ¬
        (`truthteller_stable`); the liar has no stable value, the truth-teller two (`liar_no_fixed`). Reading the
        liar's revisions as a flipping owner is our link, not part of that theory.
 
-  6. THE MODEL IS ZTL'S CAUTIOUS REGISTER (the curator: "Да, пробуй закрыть"). PRIOR ART: the core equivalence
+  6. THE MODEL IS THE FORCED READING (the curator: "Да, пробуй закрыть"). PRIOR ART: the core equivalence
      (occurrence-wise reading = strong Kleene) is Spector 2025 (Sinn und Bedeutung 29), in Lean in Linglib
      (`Trivalent.Formula.eval_strongKleene_eq_supervaluation`); the two-versus-three count (4 patterns vs 2^n) is
      elementary. What is ZTL's own here is the comparison with the decisive table ((p ∧ p) → p). Reading a formula's occurrences left
@@ -538,7 +538,7 @@ theorem reads_exact (v : Nat → V) (hz : ZOrigin.AllZ v) :
       exact (comb_ok _ _ _ b).trans (bin_reads _ φ ψ _ _ (reads_exact v hz φ) (reads_exact v hz ψ) b)
 
 /-- **The model of reads is the forced reading.** Under pure doubt, φ is true at every list of reads exactly
-when it is EARNED — no reading of its occurrences is false (ZRead; pure branch — no Kleene table). -/
+when it is EARNED — no reading of its occurrences is false (ZRead). -/
 theorem model_is_forced (v : Nat → V) (hz : ZOrigin.AllZ v) (φ : Fm) :
     earnedR v φ ↔ DirtyN (occ φ) (rval φ) := by
   have hr := reads_exact v hz φ

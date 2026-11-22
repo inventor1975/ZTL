@@ -33,7 +33,7 @@ reading by `T` can only preserve a warrant, never destroy one.
 NOT A DISCOVERY OF NON-MONOTONICITY. The greedy register's non-monotonicity is
 already a theorem of this corpus (`eager_and_not_monotone`,
 `eager_not_not_monotone`), and the forced reading is proved monotone
-(`ZRead.rd_mono`; pure branch, 2026-11-22 — the Kleene register is removed) — ZTL carries both and separates
+(`ZRead.rd_mono`) — ZTL carries both and separates
 them by role: verdicts greedy, grounding by readings. What is new below is where that known
 non-monotonicity damages context closure and where it provably does not.
 

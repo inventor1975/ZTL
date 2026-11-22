@@ -9,7 +9,7 @@ Paper v7 §5.3, preprint 2.1.6 §19 (2026-10-29). Two steps, glued here into one
     atoms of φ; (`allR`, the search over refinements, decides the hereditary grade: the judge's EARNED of 2.1.5);
 (2) every such function is a ZTL formula (`Cpl.ztl_expressively_complete`, the J-DNF).
 The six dispositions: EARNED, EARNED IF STABLE, ON CREDIT, OPEN, REFUTED IF STABLE, REFUTED.
-Pure branch (2026-11-22): EARNED / REFUTED are the forced readings `earnedR` / `refutedR`; no Kleene table.
+Pure branch (2026-11-22): EARNED / REFUTED are the forced readings `earnedR` / `refutedR`.
 Expressible is not cheap: the J-DNF has 3^|atoms| leaves; this is about the language, not the cost.
 -/
 

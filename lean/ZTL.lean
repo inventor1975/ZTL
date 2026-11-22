@@ -15,7 +15,7 @@ The mark family, as we see it, ACROSS the tiers (only T/F/Z are core
 truth-values below; the rest live above and are NOT part of `V`):
   * T, F, Z  — verification core (this file): earned / honest-false / on credit.
   * N        — the solver's phase "not yet computed" (`ZGround.Ph.n`, pure branch): only under
-               self-reference, never a truth value; no Kleene register.
+               self-reference, never a truth value.
   * E        — the JUDGE's verdict when a declared world admits nothing
                to read (boundary tier; "смерть суждения").
   * S = СОБЛАЗН / Seduction — the ETHICS tier: a claim that is TRUE yet
@@ -198,8 +198,7 @@ theorem no_gluts : ∀ p, ¬(p = T ∧ znot p = T) := by decide
 /-! ### The information order
 
 Z ⊑ everything, T and F incomparable. Kept: it is an order on ZTL's own values,
-not a table. The strong Kleene register that used to stand here was removed in the
-pure branch (curator 2026-11-22: only ZTL). -/
+not a table. -/
 
 /-- The information order: Z ⊑ everything, T and F incomparable. -/
 def leqb (a b : V) : Bool := a == b || a == Z

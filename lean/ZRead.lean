@@ -1,7 +1,7 @@
 import ZTL
 /-! # ZRead — the dirty reading: EARNED / REFUTED / IF STABLE from ZTL alone. Zero axioms.
 
-Pure branch (curator 2026-11-22: "only ZTL, from the tables"). No Kleene table is used or defined here.
+Pure branch (curator 2026-11-22: "only ZTL, from the tables"). 
 
 Z is a dirty parameter: not ours, its owner may change it between two reads, so EACH OCCURRENCE is read
 on its own. `rd v φ = (t, f)`: under some reading of the occurrences φ is true (t), resp. false (f).

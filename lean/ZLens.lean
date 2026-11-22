@@ -10,7 +10,7 @@ Nothing in it is new mathematics; the point is to say in one place what the lens
 
 Classical logic has one axis: true or false. ZTL adds a second: checked or not (`Z` sits below `T`
 and `F` in the information order). The judge's strict verdicts are EARNED / REFUTED — T / F under every
-reading of every occurrence (`ZRead.earnedR` / `refutedR`; pure branch, no Kleene table). With that:
+reading of every occurrence (`ZRead.earnedR` / `refutedR`). With that:
 
 1. `lens_exact_on_checked` — AGREEMENT. On a valuation with no mark, the verdict IS the classical
    value: never OPEN, never different.

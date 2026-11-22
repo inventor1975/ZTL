@@ -6,7 +6,7 @@ Pure branch (curator 2026-11-22, option 2: "the definition by readings, the fast
 `rd v φ` (ZRead) is which classical values the readings of the occurrences reach. Its outcome as a phase
 (`Ph`, ZGround): `t` — every reading true (EARNED), `f` — every reading false (REFUTED), `n` — not forced.
 The rules below that compute the outcome connective by connective are NOT postulated tables: each is a theorem
-about `rd` (`fo_neg`, `fo_conj`, …). No strong Kleene table is imported; `n` is the phase, never the mark Z. -/
+about `rd` (`fo_neg`, `fo_conj`, …). `n` is the phase, never the mark Z. -/
 
 namespace V
 

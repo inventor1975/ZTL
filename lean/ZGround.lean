@@ -19,7 +19,7 @@ become determined?" — is ZTL's own rule (curator, 2026-11-22), not a borrowed 
     same way — classically, one value per atom (curator 2026-11-22: "first classics; if classics gives no
     answer, then Z and ZTL's verdicts"). ZTL's tables give the VERDICT, not the grounding.
 
-No strong Kleene table, no ¬Z = Z (the lazy register of 2026-07-10 is removed). The phase is a separate type
+The phase is a separate type
 `Ph` so that `n` can never be confused with the mark Z. Monotone (`evalS_mono`): more determined names only
 narrow the completions, so a determined value is never revoked — which is all Knaster–Tarski needs.
 -/

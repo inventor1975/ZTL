@@ -12,7 +12,7 @@ admissibility of a composition at runtime without enumerating all possible world
   in linear time unless P = NP.
 * A SOUND gate is linear: compute once the dirty reading `ZRead.rd` (which classical values the readings of
   the occurrences reach), pass iff no reading is false. A pass is exactly the judge's EARNED (forced T), and
-  `ZTopology.forced_sub_earned` proves that a pass is a hereditary T. No Kleene table (pure branch). This file adds:
+  `ZTopology.forced_sub_earned` proves that a pass is a hereditary T. This file adds:
 
   1. `gate_sound`        — a pass is a hereditary T (no false pass);
   2. `gateC_steps`       — the gate's cost is exactly the formula's size: one step per node, the same for every
@@ -39,8 +39,7 @@ open ZTopology
 
 /-! ## The gate and its cost -/
 
-/-- A node's value is the set of classical values its readings reach (ZRead.rd): (can be true, can be false).
-No third value, no Kleene table (pure branch, 2026-11-22). -/
+/-- A node's value is the set of classical values its readings reach (ZRead.rd): (can be true, can be false). -/
 abbrev PV := Bool × Bool
 def atomP (x : V) : PV := ((subs x).contains true, (subs x).contains false)
 def pneg (p : PV) : PV := (p.2, p.1)

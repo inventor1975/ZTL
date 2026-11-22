@@ -5,8 +5,8 @@ import NoGift
 /-! # ZDirty — the hereditary verdict against classical substitutions; the lifts of the negated connectives.
 Zero axioms.
 
-Pure branch (curator 2026-11-22: "only ZTL, burn everything else, totally"). Removed here: every strong Kleene
-table and every theorem stated through one (`k1`/`k2`/`kev`, `*_is_up_kleene`, `rd_is_kleene`,
+Pure branch (curator 2026-11-22: "only ZTL, burn everything else, totally"). Removed here: every table of the
+lazy register and every theorem stated through one (`k1`/`k2`/`kev`, `*_is_up_kleene`, `rd_is_kleene`,
 `strict_*_iff_kleene`, `kleene_cannot_*`, …). The dirty reading itself (`rd`, `covers_rd`, `never_stricter`)
 moved to ZRead.lean, where EARNED / REFUTED / IF STABLE are defined by the readings. What stays:
   * `nand_lift` …      — the lifts of the negated connectives are the argument-side De Morgan forms

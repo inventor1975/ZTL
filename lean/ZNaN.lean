@@ -215,7 +215,7 @@ def zgt : ZQ → ZQ → V
   | ZQ.mark,  ZQ.val _ => Z
   | ZQ.mark,  ZQ.mark  => Z
 
-/-- The mark flows through `+` and `−` (an arithmetic with a mark of its own; no Kleene table). -/
+/-- The mark flows through `+` and `−` (an arithmetic with a mark of its own). -/
 def zadd : ZQ → ZQ → ZQ
   | ZQ.val a, ZQ.val b => ZQ.val (a + b)
   | ZQ.val _, ZQ.mark  => ZQ.mark

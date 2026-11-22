@@ -27,7 +27,7 @@ Proved, all on the empty axiom list:
    overturns them. This is "exact from partial data".
 2. `earned_sub_super` — hereditary T ⊆ supervaluation-T (true on every total refinement).
 3. `forced_sub_earned`, `forced_sub_refuted` — forced T / F (the judge's EARNED / REFUTED: T / F under
-   every reading of every occurrence, `ZRead.rd`) ⊆ hereditary T / F. No Kleene table (pure branch).
+   every reading of every occurrence, `ZRead.rd`) ⊆ hereditary T / F.
 4. Both inclusions are STRICT: `not_a_and_not_a` is hereditary T where it is not forced (the judge:
    EARNED IF STABLE); `excluded_middle` is supervaluation-T and not hereditary T (F as written; the
    judge: EARNED IF STABLE).
@@ -91,7 +91,7 @@ theorem refuted_open {φ : Fm} {v w : Nat → V} (h : refuted φ v) (hw : refine
 theorem earned_sub_super {φ : Fm} {v : Nat → V} (h : earned φ v) : superT φ v :=
   fun w hw _ => h w hw
 
-/-! ## The dirty reading (ZRead), the forced register — no Kleene table (pure branch, 2026-11-22) -/
+/-! ## The dirty reading (ZRead), the forced register -/
 
 theorem leqb_refinesR : ∀ a b : V, leqb a b = true → a ≠ Z → b = a := by decide
 

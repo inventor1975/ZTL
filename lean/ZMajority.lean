@@ -95,7 +95,7 @@ def mark (a b c : V) : Nat → V
   | _ => c
 
 /-- The triple table is the forced reading of the majority formula: `T` exactly when no reading of the
-occurrences makes it false, `F` exactly when none makes it true (ZRead; no Kleene table). -/
+occurrences makes it false, `F` exactly when none makes it true (ZRead). -/
 theorem maj3_forcedT : ∀ a b c : V, maj3 a b c = T → V.earnedR (mark a b c) majF := by
   intro a b c; cases a <;> cases b <;> cases c <;> intro h <;> first | rfl | (cases h; done)
 theorem maj3_forcedF : ∀ a b c : V, maj3 a b c = F → V.refutedR (mark a b c) majF := by

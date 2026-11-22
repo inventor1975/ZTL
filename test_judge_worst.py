@@ -11,7 +11,7 @@ fast however slow the case is: a case over budget is cut, not waited for.
 RED on master @ 7a432ce — three components the atom cap does not bound, and
 one (W4) that bounds how far the cap may be raised:
 
-  W1  `ztljudge._lazy` evaluates both children of every binary node (line 292)
+  W1  `ztljudge._forced` evaluates both children of every binary node (line 292)
       and then, for `->`, re-reads the node as `~a | b` and evaluates both
       children AGAIN: each nested implication doubles the work. 20 nested `->`
       over ONE atom — 141 characters, atom count 1 — pass the validator and
@@ -33,7 +33,7 @@ GREEN controls (what the cap already bounds): the shapes built to defeat
 `zverify._only` — xor/biconditional cycles, grids, atoms 2-4 times — judge in
 well under 0.5 s at 10 atoms, all dirty. And the proposed W1 fix (the
 `imp` branch computed from the children already in hand) is checked to be the
-same function as `_lazy`, so adopting it cannot move a lazy value or a label.
+same function as `_forced`, so adopting it cannot move a forced value or a label.
 
 Run: python3 test_judge_worst.py   ->  JUDGE WORST GREEN, or RED naming each.
 Not registered in run_all.py (registration changes the counted stands).
@@ -83,7 +83,7 @@ issues, t = run_real(doc_w1)
 check(not issues, f"W1 the 20-deep implication chain passes the validator ({issues})")
 check(t is not None and t < BOUND,
       f"W1 20 nested '->' over one atom ({len(chain)} chars, atom count 1): zfl.run "
-      f"{fmt(t)} — _lazy re-evaluates both children of every implication")
+      f"{fmt(t)} — _forced re-evaluates both children of every implication")
 
 # ---- W2: the reverse pass on the worst grid found (verbatim)
 GRID = ("((((((((((((((((((((a6 <-> a7) | (a0 <-> a3)) & (a1 <-> a2)) & (a5 <-> a6)) | "
@@ -160,7 +160,7 @@ for fam in ("xorcycle", "grid", "repeat", "random"):
         worst = max(worst, BUDGET if t is None else t)
     check(worst < BOUND, f"control {fam}: 10 unverified atoms, judge worst {worst:.3f} s")
 
-# ---- the proposed W1 fix is the same function as _lazy
+# ---- the proposed W1 fix is the same function as _forced
 import redteam_logic_oracle as O                       # noqa: E402
 rnd = random.Random("lazy-fix:20260927")
 diff = 0
@@ -168,8 +168,8 @@ for _ in range(20000):
     ats = [f"p{j}" for j in range(rnd.randint(1, 6))]
     phi = O.random_formula(rnd, rnd.randint(0, 7), ats)
     m = {a: rnd.choice("TFZ") for a in ats if rnd.random() < 0.7}
-    diff += W._LAZY_ORIG(phi, m) != W.lazy_fixed(phi, m)
-check(diff == 0, f"the proposed _lazy fix differs from _lazy on {diff} of 20000 formulas")
+    diff += W._FORCED_ORIG(phi, m) != W.forced_fixed(phi, m)
+check(diff == 0, f"the proposed _forced fix differs from _forced on {diff} of 20000 formulas")
 
 if FAILS:
     print(f"JUDGE WORST RED: {len(FAILS)} of {CHECKS} checks fail — see above")

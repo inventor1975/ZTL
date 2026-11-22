@@ -2,7 +2,7 @@
 """How many grounds must be filled TOGETHER before anything moves?"""
 import os, sys, itertools, random
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-from ztljudge import judge, _show, _lazy
+from ztljudge import judge, _show, _forced
 from ztl import T, F, Z, ev
 from ztime import depth2_pool
 
@@ -92,5 +92,5 @@ phi = chain(3)
 atoms = ("p0", "p1", "p2")
 m = {a: Z for a in atoms}
 print(f"    {_show(phi)} all unverified: width {width(phi, m, atoms)}, "
-      f"label {sorted(_lazy(phi, m)[1])}")
+      f"label {sorted(_forced(phi, m)[1])}")
 print("    the label names every ground and cannot say how many are needed at once.")

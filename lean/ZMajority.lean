@@ -17,8 +17,8 @@ Proved here, on the empty axiom list:
    voices: the triple says `T` exactly when the formula is a hereditary T (`ZTopology.earned`: T now and
    under every refinement), `F` exactly when it is a hereditary F (`ZTopology.refuted`), `Z` otherwise
    (`ZTopology`'s definitions matched ztljudge as it was then on 5 400 of 5 400 markings — measured there,
-   not proved). By `maj3_kleene` the table is also the strong Kleene value, i.e. the judge's EARNED /
-   REFUTED in its vocabulary since 2026-10-29: on this negation-free formula the two coincide. NOT its value: ZTL connectives are
+   not proved). By `maj3_forcedT` / `maj3_forcedF` the table is also the forced reading (T / F under every
+   reading of every occurrence), i.e. the judge's EARNED / REFUTED: on this negation-free formula the two coincide. NOT its value: ZTL connectives are
    two-valued, and the formula's value is `F` on every undecided triple (measured:
    13 of 27 cells differ) — the kit reads the disposition, and so does this file.
 2. `lie_needs` — a tree of depth `d` says `F` only if at least `2^d` of its
@@ -94,9 +94,12 @@ def mark (a b c : V) : Nat → V
   | 1 => b
   | _ => c
 
-/-- The triple table is strong Kleene on the majority formula. -/
-theorem maj3_kleene : ∀ a b c : V, kevalF (mark a b c) majF = maj3 a b c := by
-  intro a b c; cases a <;> cases b <;> cases c <;> rfl
+/-- The triple table is the forced reading of the majority formula: `T` exactly when no reading of the
+occurrences makes it false, `F` exactly when none makes it true (ZRead; no Kleene table). -/
+theorem maj3_forcedT : ∀ a b c : V, maj3 a b c = T → V.earnedR (mark a b c) majF := by
+  intro a b c; cases a <;> cases b <;> cases c <;> intro h <;> first | rfl | (cases h; done)
+theorem maj3_forcedF : ∀ a b c : V, maj3 a b c = F → V.refutedR (mark a b c) majF := by
+  intro a b c; cases a <;> cases b <;> cases c <;> intro h <;> first | rfl | (cases h; done)
 
 /-- Every unknown made false / made true: a refinement. -/
 def toF : V → V
@@ -110,7 +113,7 @@ theorem le_toT : ∀ x : V, leqb x (toT x) = true := by decide
 theorem triple_T_iff_earned (a b c : V) : maj3 a b c = T ↔ earned majF (mark a b c) := by
   constructor
   · intro h
-    exact kleene_sub_earned ((maj3_kleene a b c).trans h)
+    exact forced_sub_earned (maj3_forcedT a b c h)
   · intro h
     have hw := h (fun n => toF (mark a b c n)) (fun n => le_toF (mark a b c n))
     revert hw
@@ -119,7 +122,7 @@ theorem triple_T_iff_earned (a b c : V) : maj3 a b c = T ↔ earned majF (mark a
 theorem triple_F_iff_refuted (a b c : V) : maj3 a b c = F ↔ refuted majF (mark a b c) := by
   constructor
   · intro h
-    exact kleene_sub_refuted ((maj3_kleene a b c).trans h)
+    exact forced_sub_refuted (maj3_forcedF a b c h)
   · intro h
     have hw := h (fun n => toT (mark a b c n)) (fun n => le_toT (mark a b c n))
     revert hw
@@ -291,7 +294,8 @@ theorem depth4 : pow2 4 = 16 ∧ pow3 4 = 81 ∧ (capture 4).fold = F ∧
 
 end ZMajority
 
-#print axioms ZMajority.maj3_kleene
+#print axioms ZMajority.maj3_forcedT
+#print axioms ZMajority.maj3_forcedF
 #print axioms ZMajority.triple_T_iff_earned
 #print axioms ZMajority.triple_F_iff_refuted
 #print axioms ZMajority.capture_full

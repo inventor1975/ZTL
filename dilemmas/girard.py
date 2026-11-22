@@ -66,6 +66,7 @@ sys.path.insert(0, _ROOT)
 
 from ztl import T, F, Z                                      # noqa: E402
 from ztljudge import judge                                   # noqa: E402
+from zread import N  # noqa: E402
 from zpassport import passports                              # noqa: E402
 from zredeem import stamp, ceiling                           # noqa: E402
 
@@ -92,10 +93,10 @@ def sec1_the_crisis_has_no_culprit():
     print("1. THE SYMMETRIC CRISIS HAS NO FORCED CULPRIT")
     for n in range(2, 7):
         lfp, reports, kind = passports(crisis(people(n)))
-        assert all(v == Z for v in lfp.values())
+        assert all(v == N for v in lfp.values())          # pure branch: undetermined = phase N
         assert len(reports) == 1 and reports[0][1] == "UNDERDETERMINED"
         assert kind["g1"] == ("UNDERDETERMINED", n)
-        print(f"   N = {n}: least fixed point all Z; {reports[0][1]} — {reports[0][2]}")
+        print(f"   N = {n}: least fixed point all N; {reports[0][1]} — {reports[0][2]}")
     # CONTROL — the same instrument CAN find a culprit: one person with a grounded case against him (g1 := T as a
     # finding, not a pick) and the rest defined as before -> grounded, one culprit, nothing owed
     ctrl = {**crisis(people(4)), "g1": "e1", "e1": "T"}
@@ -228,7 +229,7 @@ def sec7_the_necessary_is_only_the_chosen(n=4):
     lfp_only, rep_only, _ = passports(only)
     assert rep_only == [] and lfp_only["g1"] == T          # forced by the evidence, no stipulation needed
     lfp, _r, _k = passports(crisis(names))
-    assert all(v == Z for v in lfp.values())               # the unsettled reading is consistent
+    assert all(v == N for v in lfp.values())               # the unsettled reading is consistent (phase N)
     print(f"   N = {n}: victims without whom no settled outcome exists: {sum(necessary)} of {n}")
     print("   control: clear the others by evidence and g1 comes out T by itself — necessary, and not chosen")
     print("   and the all-Z reading (no victim, crisis endured) is itself a fixed point: not even 'some")

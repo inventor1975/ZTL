@@ -623,7 +623,7 @@ def judge_sheet_claim(formula, quantities, marks, fixed=None):
                       + [c for c in next_check if not any(c.split(" ", 1)[-1] in numeric[n]["used"] for n in no_subject)])
     return {"formula": formula, "core_formula": core_formula.strip(),
             "numeric_atoms": numeric, "core": core,
-            "lazy": core["lazy"],
+            "forced": core["forced"],
             "pending": [_say(a) for a in core["pending"]],
             "disposition": disposition, "polarity": polarity,
             "credit_quantities": credit_quantities,
@@ -811,7 +811,7 @@ if __name__ == "__main__":
                           ("a=1 earned:doc, b=5 earned:doc, ok=Z", "a <= b | ok")):
         q, m = parse_quantities(data)
         r = judge_sheet_claim(formula, q, m)
-        print(f"   {formula:14} {r['disposition']:8} lazy={r['lazy']} "
+        print(f"   {formula:14} {r['disposition']:8} forced={r['forced']} "
               f"pending={r['pending']}")
     q, m = parse_quantities("a=[0,10] credit, b=5 earned:doc, ok=Z")
     assert judge_sheet_claim("a <= b & ok", q, m)["pending"] == ["a <= b", "ok"]

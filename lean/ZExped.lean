@@ -21,7 +21,7 @@ E10 (modal): atom verdicts are the □/◇ thresholds over completions;
 the ¬¬-cell separates the local ladder from global supervaluation.
 
 E11 (Russell): with the constants ⊤/⊥ now in the certified language,
-the grounding half is kernel-COMPUTED — the lazy lfp of the nine-fact
+the grounding half is kernel-COMPUTED — the stable lfp (ZGround, pure branch) of the nine-fact
 membership system grounds 8 of 9 facts and quarantines exactly R∈R.
 -/
 
@@ -266,6 +266,9 @@ Atom indices: 0 a∈a, 1 a∈b, 2 a∈R, 3 b∈a, 4 b∈b, 5 b∈R,
 6 R∈a, 7 R∈b, 8 R∈R. Definitions: x∈a := ⊥ (a = ∅), x∈b := ⊤ iff
 x = b, x∈R := ¬(x∈x) (Russell). -/
 
+-- the stable step enumerates the 2^k completions of the undetermined names: deeper kernel recursion
+set_option maxRecDepth 200000
+
 def RUSSELL : Sys :=
   [.bot, .bot, .neg (.atom 0),
    .bot, .top, .neg (.atom 4),
@@ -275,13 +278,13 @@ def RUSSELL : Sys :=
 one cell R∈R stays in quarantine — computed by the certified lfp of
 ZGround, checked by the kernel. -/
 theorem russell_grounded :
-    lfp RUSSELL = [F, F, T, F, T, F, F, F, Z] := by rfl
+    lfp RUSSELL = [.f, .f, .t, .f, .t, .f, .f, .f, .n] := by rfl
 
 /-- Russell works as a set for everyone except himself:
 a∈R earned T, b∈R earned F, R∈R not earned. -/
 theorem russell_verdicts :
-    getZ (lfp RUSSELL) 2 = T ∧ getZ (lfp RUSSELL) 5 = F ∧
-    getZ (lfp RUSSELL) 8 = Z := ⟨rfl, rfl, rfl⟩
+    getP (lfp RUSSELL) 2 = .t ∧ getP (lfp RUSSELL) 5 = .f ∧
+    getP (lfp RUSSELL) 8 = .n := ⟨rfl, rfl, rfl⟩
 
 -- the constants behave in the certified engine: ⊢ ⊤, ⊥ ⊢ anything, ⊬ ⊥
 example : tproves [] (.top : Fm) = true := rfl

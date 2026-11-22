@@ -1,4 +1,5 @@
 import ZTopology
+import ZRead
 /-!
 # ZRuntimeGate — a runtime gate that checks admissibility in linear time, without enumerating worlds
 
@@ -9,9 +10,9 @@ admissibility of a composition at runtime without enumerating all possible world
   linear in general — in `ZHeredTaut.lean` the hereditary grade is
   shown equivalent to tautology (`hereditary_iff_taut`), a coNP-hard question. No gate can decide it exactly
   in linear time unless P = NP.
-* A SOUND gate is linear: evaluate once in the lazy (strong Kleene) register; pass iff the value is T.
-  A pass is exactly the judge's EARNED (the strong Kleene T, the judge's vocabulary since 2026-10-29), and
-  `ZTopology.kleene_sub_earned` already proves that a pass is a hereditary T. This file adds:
+* A SOUND gate is linear: compute once the dirty reading `ZRead.rd` (which classical values the readings of
+  the occurrences reach), pass iff no reading is false. A pass is exactly the judge's EARNED (forced T), and
+  `ZTopology.forced_sub_earned` proves that a pass is a hereditary T. No Kleene table (pure branch). This file adds:
 
   1. `gate_sound`        — a pass is a hereditary T (no false pass);
   2. `gateC_steps`       — the gate's cost is exactly the formula's size: one step per node, the same for every
@@ -19,7 +20,7 @@ admissibility of a composition at runtime without enumerating all possible world
   3. `gate_incomplete`   — the price: ¬(a ∧ ¬a) on no data is a hereditary T (the judge: EARNED IF STABLE)
                            and the gate does not pass it; such cases
                            go to a hold / to a human, never to a false pass;
-  4. `kevalF_frozen`     — after one atom changes, every subformula that does not mention it keeps its value;
+  4. `rd_frozen`     — after one atom changes, every subformula that does not mention it keeps its value;
   5. `reval_correct`, `reval_cost` — the incremental re-check: with the previous evaluation cached node by
                            node, re-checking after a change of atom `a` rebuilds only the nodes that mention `a`
                            (cost = `touched a φ` ≤ size φ) and gives exactly the full re-evaluation.
@@ -38,21 +39,31 @@ open ZTopology
 
 /-! ## The gate and its cost -/
 
-def isT : V → Bool
-  | T => true
-  | F => false
-  | Z => false
+/-- A node's value is the set of classical values its readings reach (ZRead.rd): (can be true, can be false).
+No third value, no Kleene table (pure branch, 2026-11-22). -/
+abbrev PV := Bool × Bool
+def atomP (x : V) : PV := ((subs x).contains true, (subs x).contains false)
+def pneg (p : PV) : PV := (p.2, p.1)
+def pand (p q : PV) : PV := comb (fun a b => a && b) p q
+def por (p q : PV) : PV := comb (fun a b => a || b) p q
+def pimp (p q : PV) : PV := comb (fun a b => !a || b) p q
+def pxor (p q : PV) : PV := comb (fun a b => a != b) p q
+def pxnor (p q : PV) : PV := comb (fun a b => a == b) p q
 
-/-- THE GATE: one pass in the lazy register; pass iff T. -/
-def gate (v : Nat → V) (φ : Fm) : Bool := isT (kevalF v φ)
+/-- pass iff no reading of the occurrences is false (the judge's EARNED) -/
+def isT (p : PV) : Bool := !p.2
+
+/-- THE GATE: one pass of the dirty reading; pass iff no reading is false. -/
+def gate (v : Nat → V) (φ : Fm) : Bool := isT (rd v φ)
 
 /-- 1. **No false pass**: what the gate passes is a hereditary T (T now and after any further data). -/
 theorem gate_sound {v : Nat → V} {φ : Fm} (h : gate v φ = true) : earned φ v := by
-  unfold gate at h
-  cases hk : kevalF v φ with
-  | T => exact kleene_sub_earned hk
-  | F => rw [hk] at h; exact Bool.noConfusion h
-  | Z => rw [hk] at h; exact Bool.noConfusion h
+  unfold gate isT at h
+  apply forced_sub_earned
+  show (rd v φ).2 = false
+  revert h; cases (rd v φ).2 <;> intro h
+  · rfl
+  · exact Bool.noConfusion h
 
 /-- The size of a formula: its number of nodes. -/
 def size : Fm → Nat
@@ -66,53 +77,53 @@ def size : Fm → Nat
   | .xor φ ψ  => size φ + size ψ + 1
   | .xnor φ ψ => size φ + size ψ + 1
 
-/-- The lazy evaluation with an explicit step counter: one step per node. -/
-def kevalC (v : Nat → V) : Fm → V × Nat
-  | .atom n   => (v n, 1)
-  | .top      => (T, 1)
-  | .bot      => (F, 1)
-  | .neg φ    => (knot (kevalC v φ).1, (kevalC v φ).2 + 1)
-  | .conj φ ψ => (kand (kevalC v φ).1 (kevalC v ψ).1, (kevalC v φ).2 + (kevalC v ψ).2 + 1)
-  | .disj φ ψ => (kor (kevalC v φ).1 (kevalC v ψ).1, (kevalC v φ).2 + (kevalC v ψ).2 + 1)
-  | .imp φ ψ  => (kimp (kevalC v φ).1 (kevalC v ψ).1, (kevalC v φ).2 + (kevalC v ψ).2 + 1)
-  | .xor φ ψ  => (kxor (kevalC v φ).1 (kevalC v ψ).1, (kevalC v φ).2 + (kevalC v ψ).2 + 1)
-  | .xnor φ ψ => (kxnor (kevalC v φ).1 (kevalC v ψ).1, (kevalC v φ).2 + (kevalC v ψ).2 + 1)
+/-- The dirty reading with an explicit step counter: one step per node. -/
+def rdC (v : Nat → V) : Fm → PV × Nat
+  | .atom n   => (atomP (v n), 1)
+  | .top      => ((true, false), 1)
+  | .bot      => ((false, true), 1)
+  | .neg φ    => (pneg (rdC v φ).1, (rdC v φ).2 + 1)
+  | .conj φ ψ => (pand (rdC v φ).1 (rdC v ψ).1, (rdC v φ).2 + (rdC v ψ).2 + 1)
+  | .disj φ ψ => (por (rdC v φ).1 (rdC v ψ).1, (rdC v φ).2 + (rdC v ψ).2 + 1)
+  | .imp φ ψ  => (pimp (rdC v φ).1 (rdC v ψ).1, (rdC v φ).2 + (rdC v ψ).2 + 1)
+  | .xor φ ψ  => (pxor (rdC v φ).1 (rdC v ψ).1, (rdC v φ).2 + (rdC v ψ).2 + 1)
+  | .xnor φ ψ => (pxnor (rdC v φ).1 (rdC v ψ).1, (rdC v φ).2 + (rdC v ψ).2 + 1)
 
-theorem kevalC_value (v : Nat → V) : ∀ φ, (kevalC v φ).1 = kevalF v φ := by
+theorem rdC_value (v : Nat → V) : ∀ φ, (rdC v φ).1 = rd v φ := by
   intro φ
   induction φ with
   | atom n => rfl
   | top => rfl
   | bot => rfl
-  | neg φ ih => show knot (kevalC v φ).1 = knot (kevalF v φ); rw [ih]
-  | conj φ ψ ih1 ih2 => show kand (kevalC v φ).1 (kevalC v ψ).1 = kand (kevalF v φ) (kevalF v ψ); rw [ih1, ih2]
-  | disj φ ψ ih1 ih2 => show kor (kevalC v φ).1 (kevalC v ψ).1 = kor (kevalF v φ) (kevalF v ψ); rw [ih1, ih2]
-  | imp φ ψ ih1 ih2 => show kimp (kevalC v φ).1 (kevalC v ψ).1 = kimp (kevalF v φ) (kevalF v ψ); rw [ih1, ih2]
-  | xor φ ψ ih1 ih2 => show kxor (kevalC v φ).1 (kevalC v ψ).1 = kxor (kevalF v φ) (kevalF v ψ); rw [ih1, ih2]
-  | xnor φ ψ ih1 ih2 => show kxnor (kevalC v φ).1 (kevalC v ψ).1 = kxnor (kevalF v φ) (kevalF v ψ); rw [ih1, ih2]
+  | neg φ ih => show pneg (rdC v φ).1 = pneg (rd v φ); rw [ih]
+  | conj φ ψ ih1 ih2 => show pand (rdC v φ).1 (rdC v ψ).1 = pand (rd v φ) (rd v ψ); rw [ih1, ih2]
+  | disj φ ψ ih1 ih2 => show por (rdC v φ).1 (rdC v ψ).1 = por (rd v φ) (rd v ψ); rw [ih1, ih2]
+  | imp φ ψ ih1 ih2 => show pimp (rdC v φ).1 (rdC v ψ).1 = pimp (rd v φ) (rd v ψ); rw [ih1, ih2]
+  | xor φ ψ ih1 ih2 => show pxor (rdC v φ).1 (rdC v ψ).1 = pxor (rd v φ) (rd v ψ); rw [ih1, ih2]
+  | xnor φ ψ ih1 ih2 => show pxnor (rdC v φ).1 (rdC v ψ).1 = pxnor (rd v φ) (rd v ψ); rw [ih1, ih2]
 
 /-- The step count is exactly the size — whatever the marking. -/
-theorem kevalC_steps (v : Nat → V) : ∀ φ, (kevalC v φ).2 = size φ := by
+theorem rdC_steps (v : Nat → V) : ∀ φ, (rdC v φ).2 = size φ := by
   intro φ
   induction φ with
   | atom n => rfl
   | top => rfl
   | bot => rfl
-  | neg φ ih => show (kevalC v φ).2 + 1 = size φ + 1; rw [ih]
-  | conj φ ψ ih1 ih2 => show (kevalC v φ).2 + (kevalC v ψ).2 + 1 = size φ + size ψ + 1; rw [ih1, ih2]
-  | disj φ ψ ih1 ih2 => show (kevalC v φ).2 + (kevalC v ψ).2 + 1 = size φ + size ψ + 1; rw [ih1, ih2]
-  | imp φ ψ ih1 ih2 => show (kevalC v φ).2 + (kevalC v ψ).2 + 1 = size φ + size ψ + 1; rw [ih1, ih2]
-  | xor φ ψ ih1 ih2 => show (kevalC v φ).2 + (kevalC v ψ).2 + 1 = size φ + size ψ + 1; rw [ih1, ih2]
-  | xnor φ ψ ih1 ih2 => show (kevalC v φ).2 + (kevalC v ψ).2 + 1 = size φ + size ψ + 1; rw [ih1, ih2]
+  | neg φ ih => show (rdC v φ).2 + 1 = size φ + 1; rw [ih]
+  | conj φ ψ ih1 ih2 => show (rdC v φ).2 + (rdC v ψ).2 + 1 = size φ + size ψ + 1; rw [ih1, ih2]
+  | disj φ ψ ih1 ih2 => show (rdC v φ).2 + (rdC v ψ).2 + 1 = size φ + size ψ + 1; rw [ih1, ih2]
+  | imp φ ψ ih1 ih2 => show (rdC v φ).2 + (rdC v ψ).2 + 1 = size φ + size ψ + 1; rw [ih1, ih2]
+  | xor φ ψ ih1 ih2 => show (rdC v φ).2 + (rdC v ψ).2 + 1 = size φ + size ψ + 1; rw [ih1, ih2]
+  | xnor φ ψ ih1 ih2 => show (rdC v φ).2 + (rdC v ψ).2 + 1 = size φ + size ψ + 1; rw [ih1, ih2]
 
 /-- The gate with its cost. -/
-def gateC (v : Nat → V) (φ : Fm) : Bool × Nat := (isT (kevalC v φ).1, (kevalC v φ).2)
+def gateC (v : Nat → V) (φ : Fm) : Bool × Nat := (isT (rdC v φ).1, (rdC v φ).2)
 
 /-- 2. **Linear, no enumeration**: the gate's answer is the gate, and its cost is the formula's size — the same
 for every marking, however many atoms are dirty. -/
 theorem gateC_steps (v : Nat → V) (φ : Fm) : gateC v φ = (gate v φ, size φ) := by
-  show (isT (kevalC v φ).1, (kevalC v φ).2) = (isT (kevalF v φ), size φ)
-  rw [kevalC_value, kevalC_steps]
+  show (isT (rdC v φ).1, (rdC v φ).2) = (isT (rd v φ), size φ)
+  rw [rdC_value, rdC_steps]
 
 /-- 3. **The price, stated**: ¬(a ∧ ¬a) on no data is a hereditary T (the judge: EARNED IF STABLE), and the
 gate does not pass it. Incomplete, never unsound: what it cannot certify goes to a hold, not to a false pass. -/
@@ -148,50 +159,52 @@ theorem or_false_right {x y : Bool} (h : (x || y) = false) : y = false := by
   · exact h
   · exact Bool.noConfusion h
 
-/-- 4. **Frozen**: if `v` and `w` differ only at atom `a`, every subformula not mentioning `a` has the same lazy
+/-- 4. **Frozen**: if `v` and `w` differ only at atom `a`, every subformula not mentioning `a` has the same reading
 value under both — its cached value stays valid. -/
-theorem kevalF_frozen (a : Nat) (v w : Nat → V) (h : ∀ n, n ≠ a → v n = w n) :
-    ∀ φ, occ a φ = false → kevalF v φ = kevalF w φ := by
+theorem rd_frozen (a : Nat) (v w : Nat → V) (h : ∀ n, n ≠ a → v n = w n) :
+    ∀ φ, occ a φ = false → rd v φ = rd w φ := by
   intro φ
   induction φ with
   | atom n =>
       intro ho
-      show v n = w n
-      apply h n
-      intro e
-      rw [e] at ho
-      exact Bool.noConfusion (ho.symm.trans (beq_self a))
+      show atomP (v n) = atomP (w n)
+      have e : v n = w n := by
+        apply h n
+        intro e
+        rw [e] at ho
+        exact Bool.noConfusion (ho.symm.trans (beq_self a))
+      rw [e]
   | top => intro _; rfl
   | bot => intro _; rfl
-  | neg φ ih => intro ho; show knot (kevalF v φ) = knot (kevalF w φ); rw [ih ho]
+  | neg φ ih => intro ho; show pneg (rd v φ) = pneg (rd w φ); rw [ih ho]
   | conj φ ψ ih1 ih2 =>
       intro ho
-      show kand (kevalF v φ) (kevalF v ψ) = kand (kevalF w φ) (kevalF w ψ)
+      show pand (rd v φ) (rd v ψ) = pand (rd w φ) (rd w ψ)
       rw [ih1 (or_false_left ho), ih2 (or_false_right ho)]
   | disj φ ψ ih1 ih2 =>
       intro ho
-      show kor (kevalF v φ) (kevalF v ψ) = kor (kevalF w φ) (kevalF w ψ)
+      show por (rd v φ) (rd v ψ) = por (rd w φ) (rd w ψ)
       rw [ih1 (or_false_left ho), ih2 (or_false_right ho)]
   | imp φ ψ ih1 ih2 =>
       intro ho
-      show kimp (kevalF v φ) (kevalF v ψ) = kimp (kevalF w φ) (kevalF w ψ)
+      show pimp (rd v φ) (rd v ψ) = pimp (rd w φ) (rd w ψ)
       rw [ih1 (or_false_left ho), ih2 (or_false_right ho)]
   | xor φ ψ ih1 ih2 =>
       intro ho
-      show kxor (kevalF v φ) (kevalF v ψ) = kxor (kevalF w φ) (kevalF w ψ)
+      show pxor (rd v φ) (rd v ψ) = pxor (rd w φ) (rd w ψ)
       rw [ih1 (or_false_left ho), ih2 (or_false_right ho)]
   | xnor φ ψ ih1 ih2 =>
       intro ho
-      show kxnor (kevalF v φ) (kevalF v ψ) = kxnor (kevalF w φ) (kevalF w ψ)
+      show pxnor (rd v φ) (rd v ψ) = pxnor (rd w φ) (rd w ψ)
       rw [ih1 (or_false_left ho), ih2 (or_false_right ho)]
 
-/-- A cached evaluation: the formula's tree with the lazy value stored at every node. -/
+/-- A cached evaluation: the formula's tree with the reading value stored at every node. -/
 inductive CT where
-  | leaf : V → CT
-  | un   : V → CT → CT
-  | bin  : V → CT → CT → CT
+  | leaf : PV → CT
+  | un   : PV → CT → CT
+  | bin  : PV → CT → CT → CT
 
-def CT.val : CT → V
+def CT.val : CT → PV
   | .leaf x    => x
   | .un x _    => x
   | .bin x _ _ => x
@@ -208,28 +221,28 @@ def CT.right : CT → CT
 
 /-- Build the cache from scratch: every node evaluated once. -/
 def build (v : Nat → V) : Fm → CT
-  | .atom n   => .leaf (v n)
-  | .top      => .leaf T
-  | .bot      => .leaf F
-  | .neg φ    => .un (knot (build v φ).val) (build v φ)
-  | .conj φ ψ => .bin (kand (build v φ).val (build v ψ).val) (build v φ) (build v ψ)
-  | .disj φ ψ => .bin (kor (build v φ).val (build v ψ).val) (build v φ) (build v ψ)
-  | .imp φ ψ  => .bin (kimp (build v φ).val (build v ψ).val) (build v φ) (build v ψ)
-  | .xor φ ψ  => .bin (kxor (build v φ).val (build v ψ).val) (build v φ) (build v ψ)
-  | .xnor φ ψ => .bin (kxnor (build v φ).val (build v ψ).val) (build v φ) (build v ψ)
+  | .atom n   => .leaf (atomP (v n))
+  | .top      => .leaf (true, false)
+  | .bot      => .leaf (false, true)
+  | .neg φ    => .un (pneg (build v φ).val) (build v φ)
+  | .conj φ ψ => .bin (pand (build v φ).val (build v ψ).val) (build v φ) (build v ψ)
+  | .disj φ ψ => .bin (por (build v φ).val (build v ψ).val) (build v φ) (build v ψ)
+  | .imp φ ψ  => .bin (pimp (build v φ).val (build v ψ).val) (build v φ) (build v ψ)
+  | .xor φ ψ  => .bin (pxor (build v φ).val (build v ψ).val) (build v φ) (build v ψ)
+  | .xnor φ ψ => .bin (pxnor (build v φ).val (build v ψ).val) (build v φ) (build v ψ)
 
-theorem build_val (v : Nat → V) : ∀ φ, (build v φ).val = kevalF v φ := by
+theorem build_val (v : Nat → V) : ∀ φ, (build v φ).val = rd v φ := by
   intro φ
   induction φ with
   | atom n => rfl
   | top => rfl
   | bot => rfl
-  | neg φ ih => show knot (build v φ).val = knot (kevalF v φ); rw [ih]
-  | conj φ ψ ih1 ih2 => show kand (build v φ).val (build v ψ).val = kand (kevalF v φ) (kevalF v ψ); rw [ih1, ih2]
-  | disj φ ψ ih1 ih2 => show kor (build v φ).val (build v ψ).val = kor (kevalF v φ) (kevalF v ψ); rw [ih1, ih2]
-  | imp φ ψ ih1 ih2 => show kimp (build v φ).val (build v ψ).val = kimp (kevalF v φ) (kevalF v ψ); rw [ih1, ih2]
-  | xor φ ψ ih1 ih2 => show kxor (build v φ).val (build v ψ).val = kxor (kevalF v φ) (kevalF v ψ); rw [ih1, ih2]
-  | xnor φ ψ ih1 ih2 => show kxnor (build v φ).val (build v ψ).val = kxnor (kevalF v φ) (kevalF v ψ); rw [ih1, ih2]
+  | neg φ ih => show pneg (build v φ).val = pneg (rd v φ); rw [ih]
+  | conj φ ψ ih1 ih2 => show pand (build v φ).val (build v ψ).val = pand (rd v φ) (rd v ψ); rw [ih1, ih2]
+  | disj φ ψ ih1 ih2 => show por (build v φ).val (build v ψ).val = por (rd v φ) (rd v ψ); rw [ih1, ih2]
+  | imp φ ψ ih1 ih2 => show pimp (build v φ).val (build v ψ).val = pimp (rd v φ) (rd v ψ); rw [ih1, ih2]
+  | xor φ ψ ih1 ih2 => show pxor (build v φ).val (build v ψ).val = pxor (rd v φ) (rd v ψ); rw [ih1, ih2]
+  | xnor φ ψ ih1 ih2 => show pxnor (build v φ).val (build v ψ).val = pxnor (rd v φ) (rd v ψ); rw [ih1, ih2]
 
 /-- The number of nodes that mention atom `a` — what an incremental re-check must touch. -/
 def touched (a : Nat) : Fm → Nat
@@ -246,31 +259,31 @@ def touched (a : Nat) : Fm → Nat
 /-- THE INCREMENTAL RE-CHECK after atom `a` changed (new marking `w`): a node not mentioning `a` is reused from
 the cache at no cost; a node mentioning `a` is recomputed from its (recursively re-checked) children, cost 1. -/
 def reval (a : Nat) (w : Nat → V) : Fm → CT → CT × Nat
-  | .atom n, c   => if Nat.beq n a then (.leaf (w n), 1) else (c, 0)
+  | .atom n, c   => if Nat.beq n a then (.leaf (atomP (w n)), 1) else (c, 0)
   | .top, c      => (c, 0)
   | .bot, c      => (c, 0)
   | .neg φ, c    =>
       if occ a φ then
-        (.un (knot (reval a w φ c.left).1.val) (reval a w φ c.left).1, (reval a w φ c.left).2 + 1)
+        (.un (pneg (reval a w φ c.left).1.val) (reval a w φ c.left).1, (reval a w φ c.left).2 + 1)
       else (c, 0)
   | .conj φ ψ, c => if occ a φ || occ a ψ then
-        (.bin (kand (reval a w φ c.left).1.val (reval a w ψ c.right).1.val)
+        (.bin (pand (reval a w φ c.left).1.val (reval a w ψ c.right).1.val)
               (reval a w φ c.left).1 (reval a w ψ c.right).1,
          (reval a w φ c.left).2 + (reval a w ψ c.right).2 + 1) else (c, 0)
   | .disj φ ψ, c => if occ a φ || occ a ψ then
-        (.bin (kor (reval a w φ c.left).1.val (reval a w ψ c.right).1.val)
+        (.bin (por (reval a w φ c.left).1.val (reval a w ψ c.right).1.val)
               (reval a w φ c.left).1 (reval a w ψ c.right).1,
          (reval a w φ c.left).2 + (reval a w ψ c.right).2 + 1) else (c, 0)
   | .imp φ ψ, c  => if occ a φ || occ a ψ then
-        (.bin (kimp (reval a w φ c.left).1.val (reval a w ψ c.right).1.val)
+        (.bin (pimp (reval a w φ c.left).1.val (reval a w ψ c.right).1.val)
               (reval a w φ c.left).1 (reval a w ψ c.right).1,
          (reval a w φ c.left).2 + (reval a w ψ c.right).2 + 1) else (c, 0)
   | .xor φ ψ, c  => if occ a φ || occ a ψ then
-        (.bin (kxor (reval a w φ c.left).1.val (reval a w ψ c.right).1.val)
+        (.bin (pxor (reval a w φ c.left).1.val (reval a w ψ c.right).1.val)
               (reval a w φ c.left).1 (reval a w ψ c.right).1,
          (reval a w φ c.left).2 + (reval a w ψ c.right).2 + 1) else (c, 0)
   | .xnor φ ψ, c => if occ a φ || occ a ψ then
-        (.bin (kxnor (reval a w φ c.left).1.val (reval a w ψ c.right).1.val)
+        (.bin (pxnor (reval a w φ c.left).1.val (reval a w ψ c.right).1.val)
               (reval a w φ c.left).1 (reval a w ψ c.right).1,
          (reval a w φ c.left).2 + (reval a w ψ c.right).2 + 1) else (c, 0)
 
@@ -281,7 +294,7 @@ theorem build_frozen (a : Nat) (v w : Nat → V) (h : ∀ n, n ≠ a → v n = w
   induction φ with
   | atom n =>
       intro ho
-      show CT.leaf (v n) = CT.leaf (w n)
+      show CT.leaf (atomP (v n)) = CT.leaf (atomP (w n))
       have hn : n ≠ a := by
         intro e; rw [e] at ho; exact Bool.noConfusion (ho.symm.trans (beq_self a))
       rw [h n hn]
@@ -316,12 +329,12 @@ theorem reval_correct (a : Nat) (v w : Nat → V) (h : ∀ n, n ≠ a → v n = 
   intro φ
   induction φ with
   | atom n =>
-      show (if Nat.beq n a then (CT.leaf (w n), 1) else (CT.leaf (v n), 0)).1 = CT.leaf (w n)
+      show (if Nat.beq n a then (CT.leaf (atomP (w n)), 1) else (CT.leaf (atomP (v n)), 0)).1 = CT.leaf (atomP (w n))
       cases hb : Nat.beq n a with
       | true => rfl
       | false =>
           have hn : n ≠ a := by intro e; rw [e, beq_self] at hb; exact Bool.noConfusion hb
-          show CT.leaf (v n) = CT.leaf (w n)
+          show CT.leaf (atomP (v n)) = CT.leaf (atomP (w n))
           rw [h n hn]
   | top => rfl
   | bot => rfl
@@ -329,14 +342,14 @@ theorem reval_correct (a : Nat) (v w : Nat → V) (h : ∀ n, n ≠ a → v n = 
       show (if occ a φ then _ else (build v (.neg φ), 0)).1 = build w (.neg φ)
       cases ho : occ a φ with
       | true =>
-          show CT.un (knot (reval a w φ (build v φ)).1.val) (reval a w φ (build v φ)).1 = build w (.neg φ)
+          show CT.un (pneg (reval a w φ (build v φ)).1.val) (reval a w φ (build v φ)).1 = build w (.neg φ)
           rw [ih]; rfl
       | false => exact build_frozen a v w h (.neg φ) ho
   | conj φ ψ ih1 ih2 =>
       show (if occ a φ || occ a ψ then _ else (build v (.conj φ ψ), 0)).1 = build w (.conj φ ψ)
       cases ho : (occ a φ || occ a ψ) with
       | true =>
-          show CT.bin (kand (reval a w φ (build v φ)).1.val (reval a w ψ (build v ψ)).1.val)
+          show CT.bin (pand (reval a w φ (build v φ)).1.val (reval a w ψ (build v ψ)).1.val)
             (reval a w φ (build v φ)).1 (reval a w ψ (build v ψ)).1 = build w (.conj φ ψ)
           rw [ih1, ih2]; rfl
       | false => exact build_frozen a v w h (.conj φ ψ) ho
@@ -344,7 +357,7 @@ theorem reval_correct (a : Nat) (v w : Nat → V) (h : ∀ n, n ≠ a → v n = 
       show (if occ a φ || occ a ψ then _ else (build v (.disj φ ψ), 0)).1 = build w (.disj φ ψ)
       cases ho : (occ a φ || occ a ψ) with
       | true =>
-          show CT.bin (kor (reval a w φ (build v φ)).1.val (reval a w ψ (build v ψ)).1.val)
+          show CT.bin (por (reval a w φ (build v φ)).1.val (reval a w ψ (build v ψ)).1.val)
             (reval a w φ (build v φ)).1 (reval a w ψ (build v ψ)).1 = build w (.disj φ ψ)
           rw [ih1, ih2]; rfl
       | false => exact build_frozen a v w h (.disj φ ψ) ho
@@ -352,7 +365,7 @@ theorem reval_correct (a : Nat) (v w : Nat → V) (h : ∀ n, n ≠ a → v n = 
       show (if occ a φ || occ a ψ then _ else (build v (.imp φ ψ), 0)).1 = build w (.imp φ ψ)
       cases ho : (occ a φ || occ a ψ) with
       | true =>
-          show CT.bin (kimp (reval a w φ (build v φ)).1.val (reval a w ψ (build v ψ)).1.val)
+          show CT.bin (pimp (reval a w φ (build v φ)).1.val (reval a w ψ (build v ψ)).1.val)
             (reval a w φ (build v φ)).1 (reval a w ψ (build v ψ)).1 = build w (.imp φ ψ)
           rw [ih1, ih2]; rfl
       | false => exact build_frozen a v w h (.imp φ ψ) ho
@@ -360,7 +373,7 @@ theorem reval_correct (a : Nat) (v w : Nat → V) (h : ∀ n, n ≠ a → v n = 
       show (if occ a φ || occ a ψ then _ else (build v (.xor φ ψ), 0)).1 = build w (.xor φ ψ)
       cases ho : (occ a φ || occ a ψ) with
       | true =>
-          show CT.bin (kxor (reval a w φ (build v φ)).1.val (reval a w ψ (build v ψ)).1.val)
+          show CT.bin (pxor (reval a w φ (build v φ)).1.val (reval a w ψ (build v ψ)).1.val)
             (reval a w φ (build v φ)).1 (reval a w ψ (build v ψ)).1 = build w (.xor φ ψ)
           rw [ih1, ih2]; rfl
       | false => exact build_frozen a v w h (.xor φ ψ) ho
@@ -368,7 +381,7 @@ theorem reval_correct (a : Nat) (v w : Nat → V) (h : ∀ n, n ≠ a → v n = 
       show (if occ a φ || occ a ψ then _ else (build v (.xnor φ ψ), 0)).1 = build w (.xnor φ ψ)
       cases ho : (occ a φ || occ a ψ) with
       | true =>
-          show CT.bin (kxnor (reval a w φ (build v φ)).1.val (reval a w ψ (build v ψ)).1.val)
+          show CT.bin (pxnor (reval a w φ (build v φ)).1.val (reval a w ψ (build v ψ)).1.val)
             (reval a w φ (build v φ)).1 (reval a w ψ (build v ψ)).1 = build w (.xnor φ ψ)
           rw [ih1, ih2]; rfl
       | false => exact build_frozen a v w h (.xnor φ ψ) ho
@@ -380,7 +393,7 @@ theorem reval_cost (a : Nat) (w : Nat → V) : ∀ φ c, (reval a w φ c).2 = to
   induction φ with
   | atom n =>
       intro c
-      show (if Nat.beq n a then (CT.leaf (w n), 1) else (c, 0)).2 = (if Nat.beq n a then 1 else 0)
+      show (if Nat.beq n a then (CT.leaf (atomP (w n)), 1) else (c, 0)).2 = (if Nat.beq n a then 1 else 0)
       cases Nat.beq n a <;> rfl
   | top => intro c; rfl
   | bot => intro c; rfl
@@ -476,11 +489,11 @@ theorem gate_after_change (a : Nat) (v w : Nat → V) (h : ∀ n, n ≠ a → v 
 end ZRuntimeGate
 
 #print axioms ZRuntimeGate.gate_sound
-#print axioms ZRuntimeGate.kevalC_value
-#print axioms ZRuntimeGate.kevalC_steps
+#print axioms ZRuntimeGate.rdC_value
+#print axioms ZRuntimeGate.rdC_steps
 #print axioms ZRuntimeGate.gateC_steps
 #print axioms ZRuntimeGate.gate_incomplete
-#print axioms ZRuntimeGate.kevalF_frozen
+#print axioms ZRuntimeGate.rd_frozen
 #print axioms ZRuntimeGate.build_val
 #print axioms ZRuntimeGate.build_frozen
 #print axioms ZRuntimeGate.reval_correct

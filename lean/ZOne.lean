@@ -55,10 +55,10 @@ how the logic reads it. `ZOrigin` showed Z, F, T born from ONE atom (¬p = F, ¬
      (`Trivalent.Formula.eval_strongKleene_eq_supervaluation`); the two-versus-three count (4 patterns vs 2^n) is
      elementary. What is ZTL's own here is the comparison with the decisive table ((p ∧ p) → p). Reading a formula's occurrences left
      to right (`rval`), the values it takes over all lists of reads are exactly its dirty readings (`reads_exact`,
-     against `ZDirty.rd`). Hence under pure doubt "true at every list of reads" is exactly the strong Kleene T
-     (`model_is_kleene`) — the whole-formula adversary of `ZGames` — and implies the decisive table's T
+     against `ZRead.rd`). Hence under pure doubt "true at every list of reads" is exactly EARNED, the forced T
+     (`model_is_forced`) — the whole-formula adversary of `ZGames` — and implies the decisive table's T
      (`model_implies_decisive`), not conversely: (p ∧ p) → p holds at every same-value and every flipping list of
-     three reads, fails at (T, T, F), is not Kleene-T, and the decisive table grants it (`three_reads_in_ztl`):
+     three reads, fails at (T, T, F), is not forced T, and the decisive table grants it (`three_reads_in_ztl`):
      the table records p ∧ p as checked-false and then grants F → p.
 
 READING, not proved: classical logic never has to choose between the two readings — its values are clean, and on
@@ -372,8 +372,8 @@ theorem liar_no_fixed : (∀ a : Bool, (!a) ≠ a) ∧ (∀ a : Bool, (fun v : B
 
 Section 5 counts reads in a model: a list of T/F, a claim as a test on it. Here the model is tied to ZTL's own
 evaluation. A formula's occurrences are read left to right (`rval`: the first `occ φ` reads go to φ, the rest to
-ψ). Under pure doubt, "true at every list of reads" is exactly the strong Kleene value T (`model_is_kleene`) — the
-cautious register, ZTL's whole-formula adversary (`ZGames.formula_scope_is_kleene`) — and it implies the decisive
+ψ). Under pure doubt, "true at every list of reads" is exactly the forced T, EARNED (`model_is_forced`) — the
+cautious register, ZTL's whole-formula adversary (`ZGames.formula_scope_is_forced`) — and it implies the decisive
 table's T (`model_implies_decisive`), not conversely: (p ∧ p) → p holds at every same-value and every flipping list
 of three reads, fails at (T, T, F), and the decisive table grants it (`three_reads_in_ztl`). -/
 
@@ -537,31 +537,25 @@ theorem reads_exact (v : Nat → V) (hz : ZOrigin.AllZ v) :
       show ok b (comb _ (rd v φ) (rd v ψ)) = true ↔ _
       exact (comb_ok _ _ _ b).trans (bin_reads _ φ ψ _ _ (reads_exact v hz φ) (reads_exact v hz ψ) b)
 
-theorem enc_T : ∀ x : V, enc x = (true, false) → x = T := by decide
-
-/-- **The model of reads is the cautious register.** Under pure doubt, φ is true at every list of reads exactly
-when its strong Kleene value is T. -/
-theorem model_is_kleene (v : Nat → V) (hz : ZOrigin.AllZ v) (φ : Fm) :
-    kev v φ = T ↔ DirtyN (occ φ) (rval φ) := by
+/-- **The model of reads is the forced reading.** Under pure doubt, φ is true at every list of reads exactly
+when it is EARNED — no reading of its occurrences is false (ZRead; pure branch — no Kleene table). -/
+theorem model_is_forced (v : Nat → V) (hz : ZOrigin.AllZ v) (φ : Fm) :
+    earnedR v φ ↔ DirtyN (occ φ) (rval φ) := by
   have hr := reads_exact v hz φ
-  have k := rd_is_kleene v φ
   constructor
   · intro h s l
     cases e : rval φ s
     · have w := (hr false).2 ⟨s, l, e⟩
-      rw [k, h] at w; exact Bool.noConfusion w
+      have w' : (rd v φ).2 = true := w
+      unfold earnedR at h; rw [h] at w'; exact Bool.noConfusion w'
     · rfl
   · intro hd
-    apply enc_T
-    rw [← k]
-    have h1 : ok true (rd v φ) = true := (hr true).2 ⟨rep (occ φ) true, rep_length _ _, hd _ (rep_length _ _)⟩
-    have h2 : ok false (rd v φ) = false := by
-      cases e : ok false (rd v φ)
-      · rfl
-      · obtain ⟨s, l, hs⟩ := (hr false).1 e
-        rw [hd s l] at hs; exact Bool.noConfusion hs
-    revert h1 h2; cases rd v φ with
-    | mk t f => intro h1 h2; have h1' : t = true := h1; have h2' : f = false := h2; rw [h1', h2']
+    show (rd v φ).2 = false
+    cases e : (rd v φ).2
+    · rfl
+    · have e' : ok false (rd v φ) = true := e
+      obtain ⟨s, l, hs⟩ := (hr false).1 e'
+      rw [hd s l] at hs; exact Bool.noConfusion hs
 
 /-- True at every list of reads ⇒ the decisive table grants T. -/
 theorem model_implies_decisive (v : Nat → V) (hz : ZOrigin.AllZ v) (φ : Fm) (h : DirtyN (occ φ) (rval φ)) :
@@ -573,14 +567,14 @@ theorem model_implies_decisive (v : Nat → V) (hz : ZOrigin.AllZ v) (φ : Fm) (
     obtain ⟨s, l, hs⟩ := (reads_exact v hz φ false).1 e'
     rw [h s l] at hs; exact Bool.noConfusion hs
 
-/-- (p ∧ p) → p: three reads; true at every same-value and every flipping list, false at (T, T, F); its strong
-Kleene value is not T; the decisive table grants it. -/
+/-- (p ∧ p) → p: three reads; true at every same-value and every flipping list, false at (T, T, F); it is not
+forced T; the decisive table grants it. -/
 def p3 : Fm := .imp (.conj (.atom 0) (.atom 0)) (.atom 0)
 
 theorem three_reads_in_ztl :
     occ p3 = 3 ∧ StableN 3 (rval p3) ∧ FlipN 3 (rval p3) ∧ rval p3 [true, true, false] = false ∧
-    kev (fun _ => Z) p3 ≠ T ∧ evalF (fun _ => Z) p3 = T := by
-  refine ⟨rfl, fun a => ?_, fun a => ?_, rfl, by decide, by decide⟩
+    ¬ earnedR (fun _ => Z) p3 ∧ evalF (fun _ => Z) p3 = T := by
+  refine ⟨rfl, fun a => ?_, fun a => ?_, rfl, by unfold earnedR; decide, by decide⟩
   · cases a <;> rfl
   · cases a <;> rfl
 
@@ -622,7 +616,6 @@ end ZOne
 #print axioms ZOne.comb_false
 #print axioms ZOne.comb_ok
 #print axioms ZOne.reads_exact
-#print axioms ZOne.enc_T
-#print axioms ZOne.model_is_kleene
+#print axioms ZOne.model_is_forced
 #print axioms ZOne.model_implies_decisive
 #print axioms ZOne.three_reads_in_ztl

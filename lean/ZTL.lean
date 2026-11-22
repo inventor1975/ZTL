@@ -14,7 +14,8 @@ corpus must stand on the empty axiom list (pure enumeration, `decide`).
 The mark family, as we see it, ACROSS the tiers (only T/F/Z are core
 truth-values below; the rest live above and are NOT part of `V`):
   * T, F, Z  — verification core (this file): earned / honest-false / on credit.
-  * N        — Z read in the LAZY (strong-Kleene) register (`ZGround`).
+  * N        — the solver's phase "not yet computed" (`ZGround.Ph.n`, pure branch): only under
+               self-reference, never a truth value; no Kleene register.
   * E        — the JUDGE's verdict when a declared world admits nothing
                to read (boundary tier; "смерть суждения").
   * S = СОБЛАЗН / Seduction — the ETHICS tier: a claim that is TRUE yet
@@ -194,38 +195,14 @@ p⊨p is trivial). -/
 
 theorem no_gluts : ∀ p, ¬(p = T ∧ znot p = T) := by decide
 
-/-! ### The lazy register (strong Kleene) and the information order
+/-! ### The information order
 
-The symbol Z is reused positionally here: inside the lazy iteration it
-plays the solver's phase N ("not yet computed" — preprint §10), not
-the input mark. The role differs, not the alphabet; the greedy
-register is what forbids the status from becoming a value of
-assertions. -/
-
-def knot : V → V
-  | T => F | F => T | Z => Z
-
--- Non-overlapping matches: an overlapping wildcard row pulls propext
--- in through the compiled matcher (measured; same pitfall as eqAtom).
-def kand : V → V → V
-  | T, T => T | T, F => F | T, Z => Z
-  | F, T => F | F, F => F | F, Z => F
-  | Z, T => Z | Z, F => F | Z, Z => Z
-
-def kor : V → V → V
-  | T, T => T | T, F => T | T, Z => T
-  | F, T => T | F, F => F | F, Z => Z
-  | Z, T => T | Z, F => Z | Z, Z => Z
+Z ⊑ everything, T and F incomparable. Kept: it is an order on ZTL's own values,
+not a table. The strong Kleene register that used to stand here was removed in the
+pure branch (curator 2026-11-22: only ZTL). -/
 
 /-- The information order: Z ⊑ everything, T and F incomparable. -/
 def leqb (a b : V) : Bool := a == b || a == Z
-
-theorem kleene_not_monotone : ∀ a b, leqb a b = true →
-    leqb (knot a) (knot b) = true := by decide
-theorem kleene_and_monotone : ∀ a b c d, leqb a c = true → leqb b d = true →
-    leqb (kand a b) (kand c d) = true := by decide
-theorem kleene_or_monotone : ∀ a b c d, leqb a c = true → leqb b d = true →
-    leqb (kor a b) (kor c d) = true := by decide
 
 /-- The greedy register is non-monotone — the Knaster–Tarski argument does not apply. -/
 theorem eager_and_not_monotone : ¬ ∀ a b c d, leqb a c = true →
@@ -235,15 +212,9 @@ theorem eager_not_not_monotone : ¬ ∀ a b, leqb a b = true →
 
 /-! ### The liar, the carousel, the avenger — fixed points -/
 
-/-- The liar finds a home in the lazy register... -/
-theorem liar_kleene_home : knot Z = Z := rfl
-
-/-- ...while Jourdain's carousel has no greedy model at any values:
+/-- Jourdain's carousel has no greedy model at any values:
 the demand v(A)=v(B) and v(B)=v(¬A) is unsatisfiable (all 9 pairs). -/
 theorem carousel_no_model : ∀ a b : V, ¬(a = b ∧ b = znot a) := by decide
-
-/-- Lazy grounding of the carousel: (Z,Z) is a fixed point. -/
-theorem carousel_kleene_fp : (Z : V) = Z ∧ knot Z = Z := ⟨rfl, rfl⟩
 
 /-- The avenger's bullet, computed: the content μ = ¬Tr(μ) ∨ isZ(μ) at
 grounded μ=Z greedily gives T — while the sentence is denied truth. -/
@@ -342,8 +313,6 @@ theorem equiv_not_identical :
   refine ⟨?_, by decide, by decide⟩
   decide
 
-#print axioms kand
-#print axioms kor
 #print axioms modus_ponens
 #print axioms lem_needs_ground
 #print axioms liar_homeless

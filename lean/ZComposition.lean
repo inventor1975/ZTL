@@ -14,7 +14,7 @@
     in `R`. A HOLE is an atom that is Z now and outside the repertoire: it stays Z in every reachable future.
     SETTLED at `m'` (the identifier `Earned`) = verdict T and hereditary (no further refinement revokes it):
     the HEREDITARY T. Vocabulary (2026-10-30): this is not the judge's EARNED of 2026-10-29, which is the
-    strong Kleene T and implies the hereditary T; so "settled in no reachable future" below also means
+    forced T and implies the hereditary T; so "settled in no reachable future" below also means
     "EARNED, in the judge's sense, in no reachable future".
 
   THE THEOREM (`no_promotion_without_witness`). Suppose that, however the checkable atoms come out
@@ -101,7 +101,7 @@ def Refines (m' m : Marking) : Prop :=
 def Hereditary (φ : Fm) (m : Marking) : Prop :=
   ∀ m', Refines m' m → evalF m' φ = evalF m φ
 
-/-- Settled (the hereditary T): true, and no refinement revokes it. Not the judge's EARNED (the strong Kleene T);
+/-- Settled (the hereditary T): true, and no refinement revokes it. Not the judge's EARNED (the forced T);
 see the header. -/
 def Earned (φ : Fm) (m : Marking) : Prop :=
   evalF m φ = V.T ∧ Hereditary φ m

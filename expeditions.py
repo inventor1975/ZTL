@@ -2,7 +2,7 @@
 """
 Expeditions into the open ocean: Curry, the parity theorem, Yablo.
 
-Instruments — from fixedpoint.py (greedy/lazy jumps, fixed points).
+Instruments — from fixedpoint.py (greedy jump / stable step, fixed points).
 
 E1. CURRY: c = (Tr(c) → ⊥). Explodes without negation — breaks many
     paraconsistent approaches. Question: does our quarantine extinguish
@@ -19,7 +19,7 @@ E3. YABLO: sᵢ = "all subsequent ones are false" (without a single
 from itertools import product
 
 from ztl import T, F, Z, VALUES
-from fixedpoint import (EAGER, LAZY, fixed_points, iterate, least_fp_lazy,
+from fixedpoint import (EAGER, N, hardened, fixed_points, iterate, least_fp_stable,
                         jump, ev_reg, fmt_v)
 
 
@@ -27,17 +27,15 @@ def expedition_curry():
     print("### E1. CURRY: c = (Tr(c) → ⊥)")
     system = {"c": ("imp", "c", "F")}
     fe = fixed_points(system, EAGER)
-    fl = fixed_points(system, LAZY)
     print(f"  greedy fixed points: {', '.join(map(fmt_v, fe)) or 'NONE'}")
-    print(f"  lazy fixed points: {', '.join(map(fmt_v, fl)) or 'NONE'}")
     trace, loop = iterate(system, EAGER)
     period = len(trace) - loop if loop is not None else None
     cyc = " → ".join(fmt_v(v) for v in trace[loop:]) if period and period > 1 else ""
     print(f"  greedy iteration from Z: {'CYCLE of period ' + str(period) + ': ' + cyc if period and period > 1 else 'converged'}")
-    lfp = least_fp_lazy(system)
-    print(f"  lazy grounding: {fmt_v(lfp)} — quarantine: "
-          f"{[k for k, v in lfp.items() if v == Z] or 'empty'}")
-    content = ev_reg(system["c"], lfp, EAGER)
+    lfp = least_fp_stable(system)
+    print(f"  stable grounding: {fmt_v(lfp)} — quarantine: "
+          f"{[k for k, v in lfp.items() if v in (Z, N)] or 'empty'}")
+    content = ev_reg(system["c"], hardened(lfp), EAGER)
     print(f"  greedy verdict on the content of c: {content}")
     print("  Conclusion: Curry is homeless greedily and grounded lazily — the SAME")
     print("  mechanics as the liar, though it contains no negation: quarantine")
@@ -96,8 +94,8 @@ def expedition_yablo(max_n=6):
     print("\n### E3. YABLO (truncations): s_i = \"all subsequent ones are false\"")
     for n in range(2, max_n + 1):
         system = yablo_system(n)
-        lfp = least_fp_lazy(system)
-        quarantined = [k for k, v in lfp.items() if v == Z]
+        lfp = least_fp_stable(system)
+        quarantined = [k for k, v in lfp.items() if v in (Z, N)]
         fe = fixed_points(system, EAGER)
         vals = "".join(lfp[f"s{i}"] for i in range(n))
         print(f"  n={n}: grounding {vals} (s0 leftmost), quarantine "

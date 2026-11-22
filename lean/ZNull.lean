@@ -1,5 +1,12 @@
 /-
   ZNull.lean — E50: SQL's NULL — THE LAZY REGISTER INSIDE, THE FOUR SIGNS AT
+
+  PURE BRANCH (curator 2026-11-22: only ZTL, burn everything else, totally). Items 1 and 5 below — SQL's
+  three-valued expression layer as the LAZY (strong Kleene) register, and WHERE agreeing with it — are
+  REMOVED (`toV_not/and/or`, `where_agrees_nnf`, `where_departs_double_negation`,
+  `check_departs_on_conjunction`). What stays relates SQL to ZTL's own atoms and signs only: the comparison
+  with NULL is the mark atom, the boundaries are the four signs, the two equalities. The text that follows is
+  the original header and describes the removed items too.
   THE BOUNDARY.
 
   THE TRADITION. SQL (1986; here as ISO/IEC 9075-2, SQL/Foundation): a
@@ -91,10 +98,6 @@ def toV : Tv → V
   | Tv.tt => T | Tv.ff => F | Tv.un => Z
 
 /-! ### 1. The expression layer is the lazy register -/
-
-theorem toV_not : ∀ p, toV (sqlNot p) = knot (toV p) := by decide
-theorem toV_and : ∀ p q, toV (sqlAnd p q) = kand (toV p) (toV q) := by decide
-theorem toV_or  : ∀ p q, toV (sqlOr p q) = kor (toV p) (toV q) := by decide
 
 /-- …and not the greedy one: the signature cell. -/
 theorem not_the_greedy_register :
@@ -218,13 +221,6 @@ inductive Cond where
   | and  : Cond → Cond → Cond
   | or   : Cond → Cond → Cond
 
-/-- SQL's reading: the lazy register. -/
-def evalK : Cond → V
-  | Cond.lit a  => a
-  | Cond.nlit a => knot a
-  | Cond.and c d => kand (evalK c) (evalK d)
-  | Cond.or c d  => kor (evalK c) (evalK d)
-
 /-- ZTL's reading: the greedy register. -/
 def evalG : Cond → V
   | Cond.lit a  => a
@@ -232,38 +228,8 @@ def evalG : Cond → V
   | Cond.and c d => zand (evalG c) (evalG d)
   | Cond.or c d  => zor (evalG c) (evalG d)
 
-theorem signT_znot_knot : ∀ a, SignT (znot a) = SignT (knot a) := by decide
 theorem signT_zand : ∀ a b, SignT (zand a b) = (SignT a && SignT b) := by decide
-theorem signT_kand : ∀ a b, SignT (kand a b) = (SignT a && SignT b) := by decide
 theorem signT_zor  : ∀ a b, SignT (zor a b)  = (SignT a || SignT b) := by decide
-theorem signT_kor  : ∀ a b, SignT (kor a b)  = (SignT a || SignT b) := by decide
-
-/-- **AT THE WHERE BOUNDARY, SQL AND ZTL AGREE ON EVERY NEGATION-NORMAL
-SEARCH CONDITION.** The two registers have the same T-cells at every
-connective; they differ only in what the non-T cells are (F against Z), and
-a negation over a compound is the only thing that can see that. -/
-theorem where_agrees_nnf : ∀ c : Cond, SignT (evalG c) = SignT (evalK c)
-  | Cond.lit _ => rfl
-  | Cond.nlit a => signT_znot_knot a
-  | Cond.and c d => by
-      show SignT (zand (evalG c) (evalG d)) = SignT (kand (evalK c) (evalK d))
-      rw [signT_zand, signT_kand, where_agrees_nnf c, where_agrees_nnf d]
-  | Cond.or c d => by
-      show SignT (zor (evalG c) (evalG d)) = SignT (kor (evalK c) (evalK d))
-      rw [signT_zor, signT_kor, where_agrees_nnf c, where_agrees_nnf d]
-
-/-- **AND PART EXACTLY WHERE A NEGATION STANDS OVER A COMPOUND**: `¬¬Z`, the
-signature cell — kept by ZTL's verdict, dropped by SQL's WHERE. -/
-theorem where_departs_double_negation :
-    SignT (znot (znot Z)) = true ∧ SignT (knot (knot Z)) = false := by decide
-
-/-- At the CHECK boundary they part already on `TRUE AND NULL`: ZTL's F fails
-the constraint, SQL's UNKNOWN passes it. -/
-theorem check_departs_on_conjunction :
-    SignP (zand T Z) = false ∧ SignP (kand T Z) = true := by decide
-
-/-! ### 6. SQL's two equalities, ZTL's one -/
-
 /-- `IS NOT DISTINCT FROM`: "two null values are not distinct" — the rule
 DISTINCT and GROUP BY run on. -/
 def sqlNotDistinct : Dv → Dv → Tv
@@ -290,9 +256,6 @@ theorem equalities_agree_off_null (a b : Int) :
 
 end ZNull
 
-#print axioms ZNull.toV_not
-#print axioms ZNull.toV_and
-#print axioms ZNull.toV_or
 #print axioms ZNull.not_the_greedy_register
 #print axioms ZNull.eq_atom
 #print axioms ZNull.lt_atom
@@ -303,8 +266,5 @@ end ZNull
 #print axioms ZNull.where_both_polarities
 #print axioms ZNull.check_both_polarities
 #print axioms ZNull.collapse_is_where
-#print axioms ZNull.where_agrees_nnf
-#print axioms ZNull.where_departs_double_negation
-#print axioms ZNull.check_departs_on_conjunction
 #print axioms ZNull.two_equalities
 #print axioms ZNull.equalities_agree_off_null

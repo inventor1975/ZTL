@@ -33,6 +33,7 @@ import sys
 _HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, _HERE)
 
+from zread import N, _comb, _G, outcome, ph_not, stable as zread_stable
 from ztl import T, F, Z, VALUES, NOT, AND, OR, IMP, XOR, XNOR, ev  # noqa: E402
 from zverify import grade                                          # noqa: E402
 
@@ -199,14 +200,16 @@ def _grade_marking(m):
     return {a: ("M" if v in (Z, E) else v) for a, v in m.items()}
 
 
-def _lazy(phi, m):
-    """The LAZY register, and a label saying who is responsible.
+def _forced(phi, m):
+    """The FORCED outcome (pure branch, curator 2026-11-22: only ZTL), and a label saying who is responsible.
 
-    Returns (value, atoms). The greedy register decides — it burns the
-    mark and answers now. This one waits: Kleene's tables, where an
-    unchecked atom survives negation (~Z is Z, not F) and is ABSORBED by a
-    decisive partner (Z & F is F, Z | T is T). That absorption is the
-    useful part: it means a hole only keeps the answer pending while it is
+    Returns (value, atoms), value T / F / N. The greedy register decides — it burns the mark and answers now.
+    This one asks ZTL's own question of the whole claim: is it T (F) under EVERY reading of every occurrence of
+    the dirty atoms (`zread.reach`, Lean `ZRead.rd`)? If neither, it is N — "not forced", the solver's phase,
+    never the mark Z. No Kleene table: the value of a compound is the outcome of the product of its parts'
+    readings, and the per-connective rules are DERIVED (Lean `ZForced.fo_conj` …, `foC_eq_fo`). A dirty atom is
+    not forced either way, stays not forced under negation, and is ABSORBED by a decisive partner (n & F is F,
+    n | T is T). That absorption is the useful part: it means a hole only keeps the answer pending while it is
     LOAD-BEARING, so the responsible atoms fall out of one evaluation
     instead of n probes.
 
@@ -225,8 +228,8 @@ def _lazy(phi, m):
     same guarantee there — a dirty atom off the label cannot move
     `ev` either. That was measured before it was proved and I had
     predicted the opposite: the greedy register is non-monotone, so a
-    branch Kleene calls decisive looked like where the receipt would
-    leak. It does not, because whenever the lazy register commits the
+    branch the forced outcome calls decisive looked like where the receipt would
+    leak. It does not, because whenever the forced outcome commits the
     greedy one agrees with it (`greedy_agrees_when_decided`), and the
     greedy tables absorb exactly where the label drops a branch.
 
@@ -278,43 +281,43 @@ def _lazy(phi, m):
     cannot say who decided. The field was removed rather than renamed.)"""
     if isinstance(phi, str):
         if phi in (T, F, Z):
-            # A CONSTANT IS NOT AN ATOM (2026-09-27, the cloud red team, PR #3):
-            # it is never in the marking, so it used to read as Z and land on the
-            # receipt as a pending ground — `T | p` answered EARNED with lazy Z,
-            # waiting on `T`. Its value is itself, and there is nothing to verify.
-            return phi, set()
+            # A CONSTANT IS NOT AN ATOM (2026-09-27, the cloud red team, PR #3): it is never in the marking, so
+            # it used to read as dirty and land on the receipt as a pending ground. Its value is itself
+            # (a constant Z is read both ways: not forced), and there is nothing to verify.
+            return (N if phi == Z else phi), set()
         v = m.get(phi, Z)
-        return (v, {phi}) if v == Z else (v, set())
+        return (N, {phi}) if v == Z else (v, set())
     op = phi[0]
     if op == "not":
-        v, lab = _lazy(phi[1], m)
-        return ({T: F, F: T, Z: Z}[v], lab)
-    (a, la), (b, lb) = _lazy(phi[1], m), _lazy(phi[2], m)
+        v, lab = _forced(phi[1], m)
+        return (ph_not(v), lab)
+    (a, la), (b, lb) = _forced(phi[1], m), _forced(phi[2], m)
+    # the value of the compound is the outcome of the PRODUCT of the parts' readings (zread, one pass)
+    val = outcome(_comb(_G[op], _pair(a), _pair(b)))
     if op == "imp":
-        # FROM THE VALUES IN HAND (2026-09-27, the cloud's worst-case search, PR #4):
-        # this used to re-read the node as ~a | b and evaluate both children AGAIN,
-        # so every nested `->` doubled the work beneath it — 22 levels over one
-        # atom, 155 characters, cost 63.7 s through zfl.run. ~a keeps a's label.
-        a = {T: F, F: T, Z: Z}[a]
+        # FROM THE VALUES IN HAND (2026-09-27, PR #4): ~a keeps a's label.
+        a = ph_not(a)
         op = "or"
     if op == "and":
         if a == F:
-            return F, la
+            return val, la
         if b == F:
-            return F, lb
-        return (T, set()) if a == b == T else (Z, la | lb)
+            return val, lb
+        return val, (set() if val == T else la | lb)
     if op == "or":
         if a == T:
-            return T, la
+            return val, la
         if b == T:
-            return T, lb
-        return (F, set()) if a == b == F else (Z, la | lb)
+            return val, lb
+        return val, (set() if val == F else la | lb)
     if op in ("xnor", "xor"):
-        if Z in (a, b):
-            return Z, la | lb
-        same = (a == b)
-        return (T if (same if op == "xnor" else not same) else F), set()
+        return val, (la | lb if N in (a, b) else set())
     raise ValueError(op)
+
+
+def _pair(x):
+    """the reached readings of a part whose outcome is x"""
+    return (x != F, x != T)
 
 
 def _happened(phi, m, budget=None):
@@ -332,7 +335,7 @@ def _happened(phi, m, budget=None):
     g = grade(phi, _grade_marking(m), budget)
     unver = sorted(a for a in _atoms(phi) if m.get(a, Z) == Z)
     gone = sorted(a for a in _atoms(phi) if m.get(a) == E)
-    lv, lab = _lazy(phi, k)
+    lv, lab = _forced(phi, k)
     return {"formula": _show(phi), "verdict": v, "grade": g,
             "marking": {a: m[a] for a in sorted(_atoms(phi))},
             # Z is a DIRTY parameter (2026-10-25): not ours, free to change between two reads; "dirty" is the name
@@ -344,11 +347,10 @@ def _happened(phi, m, budget=None):
             # point: a dirty atom is an open question, an absent one is
             # no question at all. Nothing may be ASKED of the atoms named here.
             "absent": gone,
-            # the second register, as a COLUMN beside the verdict and
-            # never in place of it: greedy says whether to sign, lazy says
-            # whether the matter is still running
-            "lazy": lv,
-            "pending": sorted(lab) if lv == Z else []}
+            # the second register, as a COLUMN beside the verdict and never in place of it: greedy says
+            # whether to sign, the forced outcome says whether the matter is still running (N = not forced)
+            "forced": lv,
+            "pending": sorted(lab) if lv == N else []}
 
 
 def check(text, marking=None, budget=None):
@@ -537,8 +539,8 @@ def judge(text, marking=None, budget=None):
     cannot tell 'earned' from 'true-on-credit', nor 'refuted' from 'not yet
     established' — the warranty GRADE does, and it names the weak link.
 
-      EARNED    T under every read of every occurrence (the lazy register,
-                strong Kleene, says T) — grounded outright.
+      EARNED    T under every read of every occurrence (the forced outcome
+                is T) — grounded outright.
       REFUTED   F under every read of every occurrence — false regardless of
                 the marks.
       EARNED IF STABLE
@@ -602,23 +604,23 @@ def judge(text, marking=None, budget=None):
         if gone:
             why += f"; {gone} is not on that list — it has no subject"
     # IF STABLE, by completions (2026-10-29, evening; the curator's decision after two cloud reviews). A claim whose
-    # strong Kleene value is undecided (the lazy register: every occurrence read on its own) may still be settled
+    # forced outcome is undecided (every occurrence read on its own) may still be settled
     # under the STABLE reading, where each atom reads the same at all its occurrences, i.e. in every completion of the
     # dirty atoms by T or F. True in every completion: EARNED IF STABLE; false in every completion: REFUTED IF STABLE.
     # The first definition (afternoon) used the grade's refinements, which keep Z among their values, and so tied the
     # label to ZTL's own verdicts on dirty atoms: p -> p was OPEN while ~(p & ~p) was EARNED IF STABLE, though both are
     # true in every completion. MEASURED on the regression pool (14,530 dirty cells): EARNED IF STABLE 950 -> 2,440,
-    # REFUTED IF STABLE 1,014 -> 1,470; EARNED (2,450) and REFUTED (1,274) are strong Kleene T and F, unchanged.
+    # REFUTED IF STABLE 1,014 -> 1,470; EARNED (2,450) and REFUTED (1,274) are the forced T and F, unchanged.
     # Cost: only REPEATED dirty atoms are enumerated. With them fixed, every other dirty atom occurs once, and on a
-    # formula where each atom occurs once strong Kleene is exact (the reads of an atom that occurs once are its
-    # completions), so one lazy pass per assignment of the repeated atoms decides the rest: 2^r passes, r = repeated.
+    # formula where each atom occurs once the forced outcome is exact (the reads of an atom that occurs once are its
+    # completions), so one forced pass per assignment of the repeated atoms decides the rest: 2^r passes, r = repeated.
     phi = formalize(text)
     k = _kernel(_full(phi, marking))
     occ = {}
     _occurrences(phi, occ)
     dirty = [a for a in unv + gone if a in occ]
     repeated = sorted(a for a in dirty if occ[a] > 1)
-    lv = r["lazy"]
+    lv = r["forced"]
     if_stable, stable = [], None
     if lv == T:
         disp = "EARNED"
@@ -629,13 +631,8 @@ def judge(text, marking=None, budget=None):
         why = (f"false under every read of every occurrence, whatever {_besides(unv, gone)} turn out to be"
                if unv or gone else "grounded false")
     elif len(repeated) <= _STABLE_CAP:
-        seen = set()
-        for bits in itertools.product((T, F), repeat=len(repeated)):
-            k2 = dict(k); k2.update(zip(repeated, bits))
-            seen.add(_lazy(phi, k2)[0])
-            if Z in seen or len(seen) > 1:
-                break
-        stable = seen.pop() if len(seen) == 1 else None
+        # classics first, decided in ONE place (zread.stable): one value per atom, every completion
+        stable = zread_stable(phi, k)
         if stable in (T, F):
             if_stable = repeated
             what = "true" if stable == T else "false"
@@ -652,7 +649,7 @@ def judge(text, marking=None, budget=None):
             disp += " IF STABLE"
         why += (f"; stability not searched: {len(repeated)} repeated dirty atoms exceed the cap of {_STABLE_CAP} "
                 f"(2^{len(repeated)} passes)" + ("; settled by the warranty grade instead" if if_stable else ""))
-    # EARNED and REFUTED are strong Kleene T and F, nothing else: a hereditary grade without them (only with a
+    # EARNED and REFUTED are the forced T and F, nothing else: a hereditary grade without them (only with a
     # constant Z, which no refinement touches) is not a settlement.
     if disp in ("EARNED", "REFUTED") and lv != (T if disp == "EARNED" else F):
         if v == T:
@@ -676,7 +673,7 @@ def _has_const_z(phi):
     return phi == Z if isinstance(phi, str) else any(_has_const_z(c) for c in phi[1:])
 
 
-_STABLE_CAP = 16   # repeated dirty atoms enumerated for IF STABLE: 2^16 lazy passes at most
+_STABLE_CAP = 16   # repeated dirty atoms enumerated for IF STABLE: 2^16 forced passes at most
 
 
 def _occurrences(phi, acc):
@@ -1000,7 +997,7 @@ if __name__ == "__main__":
     print(f"    and the declaration is billed: {_r['forgone'][0]['would_have']}"
           f" — while on standing grounds it costs {_stands['forgone']}")
     # ---- the second register, measured against an honest probe
-    print("\n  THE LAZY COLUMN — pause told from denial, and which holes "
+    print("\n  THE FORCED COLUMN — pause told from denial, and which holes "
           "matter")
     from ztime import depth2_pool
     cells = covered = extra = 0
@@ -1008,8 +1005,8 @@ if __name__ == "__main__":
         for va in (T, F, Z):
             for vb in (T, F, Z):
                 m = {"p": va, "q": vb}
-                lv, lab = _lazy(phi, m)
-                if lv != Z:
+                lv, lab = _forced(phi, m)
+                if lv != N:
                     continue
                 probe = set()
                 for a in ("p", "q"):
@@ -1018,7 +1015,7 @@ if __name__ == "__main__":
                     for val in (T, F):
                         m2 = dict(m)
                         m2[a] = val
-                        if _lazy(phi, m2)[0] != lv:
+                        if _forced(phi, m2)[0] != lv:
                             probe.add(a)
                             break
                 cells += 1
@@ -1039,7 +1036,7 @@ if __name__ == "__main__":
                 if Z not in (va, vb):
                     continue
                 gv = ev(phi, m)
-                lab = _lazy(phi, m)[1]
+                lab = _forced(phi, m)[1]
                 for a in ("p", "q"):
                     if m[a] != Z:
                         continue
@@ -1054,7 +1051,7 @@ if __name__ == "__main__":
               {"paid": T, "delivered": Z, "refunded": F},
               {"paid": F, "delivered": Z, "refunded": F}):
         r = judge("(paid & delivered) | refunded", m)
-        print(f"    {str(m):50} {r['disposition']:8} lazy={r['lazy']} "
+        print(f"    {str(m):50} {r['disposition']:8} forced={r['forced']} "
               f"unverified={r['unverified']} pending={r['pending']}")
     assert judge("(paid & delivered) | refunded",
                  {"paid": T, "delivered": Z, "refunded": T})["pending"] == []

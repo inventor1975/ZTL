@@ -45,6 +45,7 @@ sys.path.insert(0, _ROOT)
 
 from zpassport import (passports, component_models, deps,         # noqa: E402
                        oscillation_period, stipulation_theorem)
+from fixedpoint import hardened                                    # noqa: E402
 
 STORE = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                      "passport_table.json")
@@ -75,7 +76,8 @@ def read(system):
             env_names = set()
             for s in comp:
                 env_names |= deps(system[s]) - set(comp)
-            env = {n: lfp[n] for n in env_names}
+            # the culprits' never-resolved phase N is read as the quarantine mark Z it hardens into (SPEC §N)
+            env = hardened({n: lfp[n] for n in env_names})
             models = len(list(component_models(comp, system, env)))
             period = oscillation_period(comp, system, env)
             rows.append((tuple(comp), kind, models, period))

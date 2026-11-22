@@ -168,7 +168,7 @@ def verdict(formula, data):
         # the cure KINDS, not their arguments: `measure x` and `measure y`
         # are the same shape of answer and should not split a cell
         cures = sorted({c.split()[0] for c in (r.get("next_check") or [])})
-        return (r["disposition"], str(r.get("lazy")), ",".join(cures) or "-")
+        return (r["disposition"], str(r.get("forced")), ",".join(cures) or "-")
     except Exception as exc:                     # a corner that stops parsing
         return ("!" + type(exc).__name__, "-", 0)
 

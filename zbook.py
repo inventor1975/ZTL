@@ -95,7 +95,7 @@ def fingerprint():
         try:
             q, m = parse_quantities(data)
             r = judge_sheet_claim(formula, q, m)
-            parts.append(f"{label}:{r['disposition']}:{r.get('lazy')}")
+            parts.append(f"{label}:{r['disposition']}:{r.get('forced')}")
         except Exception as exc:                    # a battery entry that
             parts.append(f"{label}:!{type(exc).__name__}")   # stops parsing
     return hashlib.sha256("|".join(parts).encode()).hexdigest()[:12]
@@ -468,7 +468,7 @@ def judge_book(claims, strict=False):
             "formula": formula,
             "disposition": ("CIRCULAR" if cid in in_cycle
                             else r["disposition"]),
-            "lazy": r.get("lazy"),
+            "forced": r.get("forced"),
             "next_check": r.get("next_check", []),
             "why": r.get("why"),
             "cites": cites,
@@ -486,7 +486,7 @@ def judge_book(claims, strict=False):
         }
     for cid, _f, _d in book:                 # cycles never reach `order`
         out.setdefault(cid, {"formula": by_id[cid][0],
-                             "disposition": "CIRCULAR", "lazy": None,
+                             "disposition": "CIRCULAR", "forced": None,
                              "next_check": [], "why": "circular support",
                              "cites": deps[cid], "weakened_by": [],
                              "carried_by": [], "declared": [],
@@ -730,7 +730,7 @@ def trust_interval(book):
 def snapshot(results):
     return {"judge": fingerprint(),
             "claims": {k: {"disposition": v["disposition"],
-                           "lazy": v["lazy"]} for k, v in results.items()}}
+                           "forced": v["forced"]} for k, v in results.items()}}
 
 
 def diff(old, new_results):
@@ -810,7 +810,7 @@ def sec1_the_book_reads_itself():
     results = judge_book(BOOK)
     for cid, v in results.items():
         cure = f"  cure {v['next_check']}" if v["next_check"] else ""
-        print(f"   {cid}  {v['disposition']:9} lazy={v['lazy']}{cure}")
+        print(f"   {cid}  {v['disposition']:9} forced={v['forced']}{cure}")
     print(f"   census: {census(results)}")
     assert census(results)["EARNED"] == 3
     assert results["c4"]["disposition"] == "OPEN"

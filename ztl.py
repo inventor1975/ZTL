@@ -43,8 +43,15 @@ CLASSICAL = (T, F)
 
 
 def _subs(x):
-    """Classical readings of a value: Z reads both as T and as F."""
-    return CLASSICAL if x == Z else (x,)
+    """Classical readings of a value: Z reads both as T and as F.
+
+    Only T, F and Z enter ZTL's tables (pure branch, 2026-11-22): the solver's phase N or any other symbol is
+    refused here, loudly, instead of being read as a value."""
+    if x == Z:
+        return CLASSICAL
+    if x not in CLASSICAL:
+        raise ValueError(f"not a ZTL value: {x!r} (only T, F, Z enter the tables)")
+    return (x,)
 
 
 def lift1(f):

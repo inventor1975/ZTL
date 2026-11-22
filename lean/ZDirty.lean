@@ -1,138 +1,30 @@
 import ZTL
+import ZRead
 import ZClone
 import NoGift
-/-! # ZDirty — the dirty reading, strong Kleene, and the dominance of the hereditary verdict. Zero axioms.
+/-! # ZDirty — the hereditary verdict against classical substitutions; the lifts of the negated connectives.
+Zero axioms.
 
-Z is a dirty parameter: not ours, its owner may change it between two reads, so each occurrence
-is read on its own. What is proved here (2026-10-28):
-  * `rd_is_kleene`     — the dirty reading, taken as a semantics, IS strong Kleene logic;
-                          PRIOR ART (found 2026-11-06 through an outside reviewer, checked): the same equivalence —
-                          strong Kleene = supervaluation over the variants that read each occurrence of an atom
-                          independently — is in B. Spector, Proc. Sinn und Bedeutung 29 (2025), §5, and formalized in
-                          Lean 4 in Linglib (`Trivalent.Formula.eval_strongKleene_eq_supervaluation`). Not new here;
-  * `*_is_up_kleene`   — each ZTL connective is strong Kleene followed by the assertion ↑;
-  * `covers_rd`, `refusal_witnessed`, `never_stricter` — every F of ZTL is witnessed by a reading;
+Pure branch (curator 2026-11-22: "only ZTL, burn everything else, totally"). Removed here: every strong Kleene
+table and every theorem stated through one (`k1`/`k2`/`kev`, `*_is_up_kleene`, `rd_is_kleene`,
+`strict_*_iff_kleene`, `kleene_cannot_*`, …). The dirty reading itself (`rd`, `covers_rd`, `never_stricter`)
+moved to ZRead.lean, where EARNED / REFUTED / IF STABLE are defined by the readings. What stays:
   * `nand_lift` …      — the lifts of the negated connectives are the argument-side De Morgan forms
                           (the tables ¬(a∘b) are compositions, not lifts — the v2.1.4 correction);
-  * `earned_of_kleene`, `substitution_of_earned`, `strict_any` — the hereditary verdict `Earned`
-    (T under every refinement; the judge's EARNED of 2.1.5 — since 2026-10-29 the judge's EARNED is the
-    strong Kleene T, `strict_earned_iff_kleene`) strictly dominates every classical substitution of the dirty
-    atoms, uniform or atom by atom, under the criterion "a grant is right iff the dirty reading
-    earns it"; `judge_can_err` — it can still be wrong (¬(p ∧ ¬p), which the judge now reports
-    as EARNED IF STABLE), and then so is every substitution.
-The matrix ALONE does not dominate (¬¬p); the stable criterion gives no dominance (p ∨ ¬p).
-
-The original header of the working file follows.
-The dirty reading: each occurrence of a dirty atom is read on its own. `rd v φ = (t, f)`: under some reading
-of its occurrences φ is true (t), resp. false (f). Occurrences in different subformulas are different reads,
-so the readings of a compound are the products of the readings of its parts. -/
+  * `substitution_of_earned`, `default_of_earned` — the hereditary verdict `Earned` (T under every refinement)
+    survives every classical substitution of the dirty atoms, uniform or atom by atom;
+  * Bochvar's external connectives as the classical default "dirty := false", and the characterisation of the
+    ZTL connective as the only decisive, sound and maximal table.
+-/
 namespace V
 
-/-- is the classical value a among the reachable ones? -/
-def ok (a : Bool) (p : Bool × Bool) : Bool := if a then p.1 else p.2
+-- `ok`, `comb`, `rd`, `covers`, `covers_rd`, `refusal_witnessed`, `never_stricter`, `over_grant` moved to
+-- ZRead.lean (pure branch, 2026-11-22).
 
-def comb (g : Bool → Bool → Bool) (p q : Bool × Bool) : Bool × Bool :=
-  ([true, false].any (fun a => [true, false].any (fun c => ok a p && ok c q && g a c)),
-   [true, false].any (fun a => [true, false].any (fun c => ok a p && ok c q && !(g a c))))
 
-def rd (v : Nat → V) : Fm → Bool × Bool
-  | .atom n    => ((subs (v n)).contains true, (subs (v n)).contains false)
-  | .top       => (true, false)
-  | .bot       => (false, true)
-  | .neg φ     => ((rd v φ).2, (rd v φ).1)
-  | .conj φ ψ  => comb (fun a b => a && b) (rd v φ) (rd v ψ)
-  | .disj φ ψ  => comb (fun a b => a || b) (rd v φ) (rd v ψ)
-  | .imp φ ψ   => comb (fun a b => !a || b) (rd v φ) (rd v ψ)
-  | .xor φ ψ   => comb (fun a b => a != b) (rd v φ) (rd v ψ)
-  | .xnor φ ψ  => comb (fun a b => a == b) (rd v φ) (rd v ψ)
-
-/-- every classical reading of the value x is reachable -/
-def covers (x : V) (p : Bool × Bool) : Bool := (subs x).all (fun a => ok a p)
-
-theorem stepNot : ∀ (x : V) (a b : Bool), covers x (a, b) = true → covers (znot x) (b, a) = true := by
-  intro x a b; cases x <;> cases a <;> cases b <;> decide
-
-theorem stepBin (g : Bool → Bool → Bool)
-    (hg : ∀ (x y : V) (a b c d : Bool), covers x (a, b) = true → covers y (c, d) = true →
-      covers (lift2 g x y) (comb g (a, b) (c, d)) = true)
-    (x y : V) (p q : Bool × Bool) (hx : covers x p = true) (hy : covers y q = true) :
-    covers (lift2 g x y) (comb g p q) = true := by
-  cases p; cases q; exact hg _ _ _ _ _ _ hx hy
-
-theorem hAnd : ∀ (x y : V) (a b c d : Bool), covers x (a, b) = true → covers y (c, d) = true →
-    covers (lift2 (fun a b => a && b) x y) (comb (fun a b => a && b) (a, b) (c, d)) = true := by
-  intro x y a b c d; cases x <;> cases y <;> cases a <;> cases b <;> cases c <;> cases d <;> decide
-theorem hOr : ∀ (x y : V) (a b c d : Bool), covers x (a, b) = true → covers y (c, d) = true →
-    covers (lift2 (fun a b => a || b) x y) (comb (fun a b => a || b) (a, b) (c, d)) = true := by
-  intro x y a b c d; cases x <;> cases y <;> cases a <;> cases b <;> cases c <;> cases d <;> decide
-theorem hImp : ∀ (x y : V) (a b c d : Bool), covers x (a, b) = true → covers y (c, d) = true →
-    covers (lift2 (fun a b => !a || b) x y) (comb (fun a b => !a || b) (a, b) (c, d)) = true := by
-  intro x y a b c d; cases x <;> cases y <;> cases a <;> cases b <;> cases c <;> cases d <;> decide
-theorem hXor : ∀ (x y : V) (a b c d : Bool), covers x (a, b) = true → covers y (c, d) = true →
-    covers (lift2 (fun a b => a != b) x y) (comb (fun a b => a != b) (a, b) (c, d)) = true := by
-  intro x y a b c d; cases x <;> cases y <;> cases a <;> cases b <;> cases c <;> cases d <;> decide
-theorem hXnor : ∀ (x y : V) (a b c d : Bool), covers x (a, b) = true → covers y (c, d) = true →
-    covers (lift2 (fun a b => a == b) x y) (comb (fun a b => a == b) (a, b) (c, d)) = true := by
-  intro x y a b c d; cases x <;> cases y <;> cases a <;> cases b <;> cases c <;> cases d <;> decide
-
-/-- Every classical reading of the ZTL value is reached by some reading of the occurrences. -/
-theorem covers_rd (v : Nat → V) : ∀ φ : Fm, covers (evalF v φ) (rd v φ) = true
-  | .atom n => by
-      show covers (v n) ((subs (v n)).contains true, (subs (v n)).contains false) = true
-      cases v n <;> decide
-  | .top => rfl
-  | .bot => rfl
-  | .neg φ => by
-      have h := covers_rd v φ
-      show covers (znot (evalF v φ)) ((rd v φ).2, (rd v φ).1) = true
-      revert h; cases rd v φ; exact stepNot _ _ _
-  | .conj φ ψ => stepBin _ hAnd _ _ _ _ (covers_rd v φ) (covers_rd v ψ)
-  | .disj φ ψ => stepBin _ hOr _ _ _ _ (covers_rd v φ) (covers_rd v ψ)
-  | .imp φ ψ  => stepBin _ hImp _ _ _ _ (covers_rd v φ) (covers_rd v ψ)
-  | .xor φ ψ  => stepBin _ hXor _ _ _ _ (covers_rd v φ) (covers_rd v ψ)
-  | .xnor φ ψ => stepBin _ hXnor _ _ _ _ (covers_rd v φ) (covers_rd v ψ)
-
-/-- Every refusal is witnessed by a dirty reading: if ZTL says F, some reading of the occurrences is false. -/
-theorem refusal_witnessed (v : Nat → V) (φ : Fm) (h : evalF v φ = F) : (rd v φ).2 = true := by
-  have c := covers_rd v φ
-  rw [h] at c
-  revert c; cases rd v φ with
-  | mk t f => cases t <;> cases f <;> decide
-
-/-- Never stricter than the dirty reading: true under every reading of the occurrences ⇒ ZTL grants T. -/
-theorem never_stricter (v : Nat → V) (φ : Fm) (h : (rd v φ).2 = false) : evalF v φ = T := by
-  have c := covers_rd v φ
-  revert c; cases e : evalF v φ with
-  | T => intro _; rfl
-  | F => intro c; have w := refusal_witnessed v φ e; rw [h] at w; exact absurd w (by decide)
-  | Z => revert h; cases rd v φ with
-    | mk t f => cases t <;> cases f <;> decide
-
-/-- The converse fails: ¬¬p is granted on a dirty p, though a reading of its one occurrence is false. -/
-theorem over_grant : evalF (fun _ => Z) (.neg (.neg (.atom 0))) = T ∧
-    (rd (fun _ => Z) (.neg (.neg (.atom 0)))).2 = true := by decide
-
-/-! Strong Kleene followed by the assertion collapse ↑ (u ↦ F), at every connective. -/
-/-- strong Kleene as the exact lift: T if every reading is 1, F if every reading is 0, else Z -/
-def k1 (f : Bool → Bool) (x : V) : V :=
-  if (subs x).all (fun a => f a) then T else if (subs x).all (fun a => !f a) then F else Z
-def k2 (f : Bool → Bool → Bool) (x y : V) : V :=
-  if (subs x).all (fun a => (subs y).all (fun b => f a b)) then T
-  else if (subs x).all (fun a => (subs y).all (fun b => !f a b)) then F else Z
 /-- the assertion operator: T stays T, everything else is F -/
 def up (x : V) : V := if x = T then T else F
 
-theorem not_is_up_kleene  : ∀ x, znot x = up (k1 (fun a => !a) x) := by decide
-theorem and_is_up_kleene  : ∀ x y, zand x y = up (k2 (fun a b => a && b) x y) := by decide
-theorem or_is_up_kleene   : ∀ x y, zor x y = up (k2 (fun a b => a || b) x y) := by decide
-theorem imp_is_up_kleene  : ∀ x y, zimp x y = up (k2 (fun a b => !a || b) x y) := by decide
-theorem xor_is_up_kleene  : ∀ x y, zxor x y = up (k2 (fun a b => a != b) x y) := by decide
-theorem xnor_is_up_kleene : ∀ x y, zxnor x y = up (k2 (fun a b => a == b) x y) := by decide
-/-- k1/k2 are strong Kleene: on ¬, ∧, ∨ they agree with the core's Kleene tables -/
-theorem k_matches_core : (∀ x, k1 (fun a => !a) x = knot x) ∧
-    (∀ x y, k2 (fun a b => a && b) x y = kand x y) ∧ (∀ x y, k2 (fun a b => a || b) x y = kor x y) := by decide
-
-/-! The lift of a negated classical connective is the argument-negated (De Morgan) form, not the negated verdict. -/
 theorem nand_lift : ∀ a b, znand a b = zor (znot a) (znot b) := by decide
 theorem nor_lift  : ∀ a b, znor a b = zand (znot a) (znot b) := by decide
 theorem nimp_lift : ∀ a b, znimp a b = zand a (znot b) := by decide
@@ -142,103 +34,9 @@ theorem nxor_lift : ∀ a b, lift2 (fun a b => !(a != b)) a b = zxnor a b := by 
 theorem lift_id_is_up : ∀ x, lift1 (fun a => a) x = up x := by decide
 theorem and_self_is_up : ∀ x, zand x x = up x := by decide
 
-/-! The dirty reading IS strong Kleene logic: the set of classical values of φ over all readings of its
-occurrences is the strong Kleene value of φ (T ↦ {1}, F ↦ {0}, Z ↦ {1,0}). -/
-def enc : V → Bool × Bool
-  | T => (true, false)
-  | F => (false, true)
-  | Z => (true, true)
-
-/-- strong Kleene evaluation (the lazy register), built from the exact lifts k1/k2 -/
-def kev (v : Nat → V) : Fm → V
-  | .atom n    => v n
-  | .top       => T
-  | .bot       => F
-  | .neg φ     => k1 (fun a => !a) (kev v φ)
-  | .conj φ ψ  => k2 (fun a b => a && b) (kev v φ) (kev v ψ)
-  | .disj φ ψ  => k2 (fun a b => a || b) (kev v φ) (kev v ψ)
-  | .imp φ ψ   => k2 (fun a b => !a || b) (kev v φ) (kev v ψ)
-  | .xor φ ψ   => k2 (fun a b => a != b) (kev v φ) (kev v ψ)
-  | .xnor φ ψ  => k2 (fun a b => a == b) (kev v φ) (kev v ψ)
-
-theorem kNot : ∀ x, enc (k1 (fun a => !a) x) = ((enc x).2, (enc x).1) := by decide
-theorem kAnd : ∀ x y, enc (k2 (fun a b => a && b) x y) = comb (fun a b => a && b) (enc x) (enc y) := by decide
-theorem kOr : ∀ x y, enc (k2 (fun a b => a || b) x y) = comb (fun a b => a || b) (enc x) (enc y) := by decide
-theorem kImp : ∀ x y, enc (k2 (fun a b => !a || b) x y) = comb (fun a b => !a || b) (enc x) (enc y) := by decide
-theorem kXor : ∀ x y, enc (k2 (fun a b => a != b) x y) = comb (fun a b => a != b) (enc x) (enc y) := by decide
-theorem kXnor : ∀ x y, enc (k2 (fun a b => a == b) x y) = comb (fun a b => a == b) (enc x) (enc y) := by decide
-theorem kAtom : ∀ x, enc x = ((subs x).contains true, (subs x).contains false) := by decide
-
-/-- **The dirty reading is strong Kleene.** -/
-theorem rd_is_kleene (v : Nat → V) : ∀ φ : Fm, rd v φ = enc (kev v φ)
-  | .atom n => (kAtom (v n)).symm
-  | .top => rfl
-  | .bot => rfl
-  | .neg φ => by
-      show ((rd v φ).2, (rd v φ).1) = enc (k1 (fun a => !a) (kev v φ))
-      rw [rd_is_kleene v φ, kNot]
-  | .conj φ ψ => by
-      show comb _ (rd v φ) (rd v ψ) = enc (k2 _ (kev v φ) (kev v ψ))
-      rw [rd_is_kleene v φ, rd_is_kleene v ψ, kAnd]
-  | .disj φ ψ => by
-      show comb _ (rd v φ) (rd v ψ) = enc (k2 _ (kev v φ) (kev v ψ))
-      rw [rd_is_kleene v φ, rd_is_kleene v ψ, kOr]
-  | .imp φ ψ => by
-      show comb _ (rd v φ) (rd v ψ) = enc (k2 _ (kev v φ) (kev v ψ))
-      rw [rd_is_kleene v φ, rd_is_kleene v ψ, kImp]
-  | .xor φ ψ => by
-      show comb _ (rd v φ) (rd v ψ) = enc (k2 _ (kev v φ) (kev v ψ))
-      rw [rd_is_kleene v φ, rd_is_kleene v ψ, kXor]
-  | .xnor φ ψ => by
-      show comb _ (rd v φ) (rd v ψ) = enc (k2 _ (kev v φ) (kev v ψ))
-      rw [rd_is_kleene v φ, rd_is_kleene v ψ, kXnor]
-
-/-- Hence earned on the dirty reading ⟺ strong Kleene value T. -/
-theorem earned_iff_kleene_T (v : Nat → V) (φ : Fm) : (rd v φ).2 = false ↔ kev v φ = T := by
-  rw [rd_is_kleene]; cases kev v φ <;> decide
-
-/-! The hereditary grade dominates every uniform classical default (criterion: a grant is right iff the dirty
-reading earns it, i.e. strong Kleene T). `Earned` is the hereditary grade: T now and under every refinement —
-the judge's EARNED of 2.1.5, not the judge's EARNED since 2026-10-29 (the strong Kleene T, `StrictEarned`). -/
-def kle (x y : V) : Bool := x == Z || x == y          -- information order: Z below everything
-
-theorem kmono1 : ∀ x x' : V, kle x x' = true → kle (k1 (fun a => !a) x) (k1 (fun a => !a) x') = true := by decide
-theorem kmonoAnd : ∀ x x' y y' : V, kle x x' = true → kle y y' = true →
-    kle (k2 (fun a b => a && b) x y) (k2 (fun a b => a && b) x' y') = true := by decide
-theorem kmonoOr : ∀ x x' y y' : V, kle x x' = true → kle y y' = true →
-    kle (k2 (fun a b => a || b) x y) (k2 (fun a b => a || b) x' y') = true := by decide
-theorem kmonoImp : ∀ x x' y y' : V, kle x x' = true → kle y y' = true →
-    kle (k2 (fun a b => !a || b) x y) (k2 (fun a b => !a || b) x' y') = true := by decide
-theorem kmonoXor : ∀ x x' y y' : V, kle x x' = true → kle y y' = true →
-    kle (k2 (fun a b => a != b) x y) (k2 (fun a b => a != b) x' y') = true := by decide
-theorem kmonoXnor : ∀ x x' y y' : V, kle x x' = true → kle y y' = true →
-    kle (k2 (fun a b => a == b) x y) (k2 (fun a b => a == b) x' y') = true := by decide
-theorem kle_of_refines (a b : V) (h : a ≠ Z → b = a) : kle a b = true := by
-  cases a <;> cases b <;> first | rfl | (exact absurd (h (by decide)) (by decide))
-
-/-- Strong Kleene is monotone under refinement. -/
-theorem kev_mono (v w : Nat → V) (hr : refines v w) : ∀ φ : Fm, kle (kev v φ) (kev w φ) = true
-  | .atom n => kle_of_refines (v n) (w n) (hr n)
-  | .top => rfl
-  | .bot => rfl
-  | .neg φ => kmono1 _ _ (kev_mono v w hr φ)
-  | .conj φ ψ => kmonoAnd _ _ _ _ (kev_mono v w hr φ) (kev_mono v w hr ψ)
-  | .disj φ ψ => kmonoOr _ _ _ _ (kev_mono v w hr φ) (kev_mono v w hr ψ)
-  | .imp φ ψ => kmonoImp _ _ _ _ (kev_mono v w hr φ) (kev_mono v w hr ψ)
-  | .xor φ ψ => kmonoXor _ _ _ _ (kev_mono v w hr φ) (kev_mono v w hr ψ)
-  | .xnor φ ψ => kmonoXnor _ _ _ _ (kev_mono v w hr φ) (kev_mono v w hr ψ)
-
-theorem kle_T (y : V) (h : kle T y = true) : y = T := by cases y <;> first | rfl | exact absurd h (by decide)
-
 /-- The hereditary grade: T now and under every refinement of the marks (the judge's EARNED of 2.1.5; since
-2026-10-29 the judge's EARNED is `StrictEarned`, the strong Kleene T). -/
+2026-10-29 the judge's EARNED is the forced T of ZRead, which implies it). -/
 def Earned (v : Nat → V) (φ : Fm) : Prop := ∀ w, refines v w → evalF w φ = T
-
-/-- (1) What the dirty reading earns, the hereditary grade grants. -/
-theorem earned_of_kleene (v : Nat → V) (φ : Fm) (h : kev v φ = T) : Earned v φ := by
-  intro w hr
-  have hw : kev w φ = T := kle_T _ (by have m := kev_mono v w hr φ; rw [h] at m; exact m)
-  exact never_stricter w φ ((earned_iff_kleene_T w φ).mpr hw)
 
 /-- A uniform default: every dirty atom set to d. -/
 def subst (v : Nat → V) (d : V) : Nat → V := fun n => if v n = Z then d else v n
@@ -250,35 +48,11 @@ theorem subst_refines (v : Nat → V) (d : V) : refines v (subst v d) := by
 theorem default_of_earned (v : Nat → V) (φ : Fm) (d : V) (h : Earned v φ) : evalF (subst v d) φ = T :=
   h _ (subst_refines v d)
 
-/-- Strictness, both defaults: ¬p and p with p dirty are not earned, the judge refuses them, a default grants. -/
-theorem strict_false : kev (fun _ => Z) (.neg (.atom 0)) ≠ T ∧ evalF (fun _ => Z) (.neg (.atom 0)) ≠ T ∧
-    evalF (subst (fun _ => Z) F) (.neg (.atom 0)) = T := by decide
-theorem strict_true : kev (fun _ => Z) (.atom 0) ≠ T ∧ evalF (fun _ => Z) (.atom 0) ≠ T ∧
-    evalF (subst (fun _ => Z) T) (.atom 0) = T := by decide
-
 /-- (2') The same against ANY classical substitution of the dirty atoms, uniform or chosen per atom:
 a substitution is a total refinement, so what the hereditary grade grants, it grants. -/
 theorem substitution_of_earned (v w : Nat → V) (φ : Fm) (hr : refines v w) (h : Earned v φ) :
     evalF w φ = T := h w hr
 
-/-- Strictness against every substitution: whatever value a substitution gives a dirty p,
-one of p, ¬p is granted by it and refused by the judge, and neither is earned on the dirty reading. -/
-theorem strict_any (w : Nat → V) (hw : w 0 = T ∨ w 0 = F) :
-    (evalF w (.atom 0) = T ∧ evalF (fun _ => Z) (.atom 0) ≠ T ∧ kev (fun _ => Z) (.atom 0) ≠ T) ∨
-    (evalF w (.neg (.atom 0)) = T ∧ evalF (fun _ => Z) (.neg (.atom 0)) ≠ T ∧
-      kev (fun _ => Z) (.neg (.atom 0)) ≠ T) := by
-  cases hw with
-  | inl h => exact Or.inl ⟨h, by decide, by decide⟩
-  | inr h => exact Or.inr ⟨by show znot (w 0) = T; rw [h]; rfl, by decide, by decide⟩
-
-/-- The hereditary verdict is not always right: strong Kleene does not give ¬(p ∧ ¬p) T on a dirty p. That the
-formula is a hereditary T there is `ZSpeaks.lnc_earned`; that every substitution grants it, so the judge (since
-2026-10-29) says EARNED IF STABLE, not EARNED, is `ZSpeaks.lnc_if_stable`. -/
-theorem judge_can_err : kev (fun _ => Z) (.neg (.conj (.atom 0) (.neg (.atom 0)))) ≠ T := by decide
-
-/-! Bochvar's external connectives are the classical default "dirty := false" (2026-10-29).
-Each external connective of Bochvar (Karpenko–Tomova convention: external negation reads "not true")
-applies the assertion J₂ (x ↦ x = T) to its arguments and then the classical connective. -/
 def bj (x : V) : Bool := x == T
 def bof (b : Bool) : V := if b then T else F
 
@@ -351,57 +125,10 @@ theorem refines_refl (v : Nat → V) : refines v v := fun _ _ => rfl
 Bochvar grants ¬p, which the hereditary grade (and the judge) refuses and the dirty reading does not earn. -/
 theorem earned_dominates_bochvar (v : Nat → V) (φ : Fm) (h : Earned v φ) : bev v φ = T :=
   bj_T _ (by rw [bochvar_is_default_false]; have e := default_of_earned v φ F h; rw [e]; rfl)
-theorem bochvar_strict : bev (fun _ => Z) (.neg (.atom 0)) = T ∧ ¬ Earned (fun _ => Z) (.neg (.atom 0)) ∧
-    kev (fun _ => Z) (.neg (.atom 0)) ≠ T :=
-  ⟨by decide, fun h => absurd (h _ (refines_refl _)) (by decide), by decide⟩
-
-/-! Classical logic with enumeration: grant iff the formula is classically true in every completion
-(a total refinement; on total valuations ZTL is classical, `evalF_agrees`). Under the criterion of this
-module (a grant is right iff the dirty reading earns it, i.e. strong Kleene T) the hereditary grade has the same
-right grants and its wrong grants are among enumeration's. -/
 def total (w : Nat → V) : Prop := ∀ n, w n ≠ Z
 def Enum (v : Nat → V) (φ : Fm) : Prop := ∀ w, refines v w → total w → evalF w φ = T
 
 theorem enum_of_earned (v : Nat → V) (φ : Fm) (h : Earned v φ) : Enum v φ := fun w hr _ => h w hr
-
-/-- **The hereditary grade dominates enumeration under the dirty reading.** (The judge's EARNED of 2.1.5; since
-2.1.6 the judge's grant IS enumeration, `ZSpeaks.grant_iff_enum`, and the grade is returned beside it.) Right grants coincide (both are
-exactly the strong Kleene T), and every wrong grant of the hereditary grade is a wrong grant of enumeration. -/
-theorem earned_dominates_enum (v : Nat → V) (φ : Fm) :
-    ((Earned v φ ∧ kev v φ = T) ↔ (Enum v φ ∧ kev v φ = T)) ∧
-    ((Earned v φ ∧ kev v φ ≠ T) → (Enum v φ ∧ kev v φ ≠ T)) :=
-  ⟨⟨fun ⟨h, k⟩ => ⟨enum_of_earned v φ h, k⟩, fun ⟨_, k⟩ => ⟨earned_of_kleene v φ k, k⟩⟩,
-   fun ⟨h, k⟩ => ⟨enum_of_earned v φ h, k⟩⟩
-
-/-- Strictly: on a dirty p, enumeration grants p → p, which the hereditary grade refuses and the dirty reading
-does not earn (two reads may give 1 and 0); the judge since 2.1.6 grants it as EARNED IF STABLE. -/
-theorem enum_strict : Enum (fun _ => Z) (.imp (.atom 0) (.atom 0)) ∧
-    ¬ Earned (fun _ => Z) (.imp (.atom 0) (.atom 0)) ∧ kev (fun _ => Z) (.imp (.atom 0) (.atom 0)) ≠ T := by
-  refine ⟨fun w _ ht => ?_, fun h => absurd (h _ (refines_refl _)) (by decide), by decide⟩
-  have h0 := ht 0
-  show zimp (w 0) (w 0) = T
-  revert h0
-  cases w 0 <;> decide
-
-/-! Kleene with one verdict at the end, and ZTL (2026-10-29). Kleene followed by the assertion ↑ once,
-for the whole formula, is a verdict for every formula, but not a compositional one: the verdict of ¬φ is
-not a function of the verdict of φ. Conversely, any compositional (truth-functional) semantics that gives
-Kleene's verdict on every single connective applied to atoms is ZTL, on every formula. -/
-
-/-- **Kleene's end verdict is not compositional.** No table m gives the verdict of ¬φ from the verdict
-of φ: p false and ¬p with p dirty both have verdict F, yet ¬p has verdict T and ¬¬p has verdict F. -/
-theorem kleene_end_verdict_not_compositional :
-    ¬ ∃ m : V → V, ∀ (v : Nat → V) (φ : Fm), up (kev v (.neg φ)) = m (up (kev v φ)) := by
-  intro ⟨m, h⟩
-  have h1 := h (fun _ => F) (.atom 0)
-  have h2 := h (fun _ => Z) (.neg (.atom 0))
-  have e1 : up (kev (fun _ => F) (.neg (.atom 0))) = T := by decide
-  have e2 : up (kev (fun _ => F) (.atom 0)) = F := by decide
-  have e3 : up (kev (fun _ => Z) (.neg (.neg (.atom 0)))) = F := by decide
-  have e4 : up (kev (fun _ => Z) (.neg (.atom 0))) = F := by decide
-  rw [e1, e2] at h1
-  rw [e3, e4, ← h1] at h2
-  exact absurd h2 (by decide)
 
 /-- A compositional semantics: one table per connective, applied at every node. -/
 def mev (n : V → V) (c d i x e : V → V → V) (v : Nat → V) : Fm → V
@@ -418,114 +145,12 @@ def mev (n : V → V) (c d i x e : V → V → V) (v : Nat → V) : Fm → V
 /-- the valuation p ↦ a, every other atom ↦ b -/
 def two (a b : V) : Nat → V := fun k => match k with | 0 => a | _ => b
 
-/-- **ZTL is the unique compositional extension of Kleene's verdict on one connective.** If a
-compositional semantics agrees with Kleene-then-↑ on every connective applied to atoms (¬p and p∘q,
-at every valuation), it agrees with ZTL on every formula at every valuation. -/
-theorem ztl_unique_compositional (n : V → V) (c d i x e : V → V → V)
-    (hn : ∀ v, mev n c d i x e v (.neg (.atom 0)) = up (kev v (.neg (.atom 0))))
-    (hc : ∀ v, mev n c d i x e v (.conj (.atom 0) (.atom 1)) = up (kev v (.conj (.atom 0) (.atom 1))))
-    (hd : ∀ v, mev n c d i x e v (.disj (.atom 0) (.atom 1)) = up (kev v (.disj (.atom 0) (.atom 1))))
-    (hi : ∀ v, mev n c d i x e v (.imp (.atom 0) (.atom 1)) = up (kev v (.imp (.atom 0) (.atom 1))))
-    (hx : ∀ v, mev n c d i x e v (.xor (.atom 0) (.atom 1)) = up (kev v (.xor (.atom 0) (.atom 1))))
-    (he : ∀ v, mev n c d i x e v (.xnor (.atom 0) (.atom 1)) = up (kev v (.xnor (.atom 0) (.atom 1)))) :
-    ∀ (v : Nat → V) (φ : Fm), mev n c d i x e v φ = evalF v φ := by
-  have tn : ∀ a, n a = znot a := fun a => (hn (fun _ => a)).trans (not_is_up_kleene a).symm
-  have tc : ∀ a b, c a b = zand a b := fun a b => (hc (two a b)).trans (and_is_up_kleene a b).symm
-  have td : ∀ a b, d a b = zor a b := fun a b => (hd (two a b)).trans (or_is_up_kleene a b).symm
-  have ti : ∀ a b, i a b = zimp a b := fun a b => (hi (two a b)).trans (imp_is_up_kleene a b).symm
-  have tx : ∀ a b, x a b = zxor a b := fun a b => (hx (two a b)).trans (xor_is_up_kleene a b).symm
-  have te : ∀ a b, e a b = zxnor a b := fun a b => (he (two a b)).trans (xnor_is_up_kleene a b).symm
-  intro v φ
-  induction φ with
-  | atom k => rfl
-  | top => rfl
-  | bot => rfl
-  | neg φ ih => show n _ = znot _; rw [tn, ih]
-  | conj φ ψ ih1 ih2 => show c _ _ = zand _ _; rw [tc, ih1, ih2]
-  | disj φ ψ ih1 ih2 => show d _ _ = zor _ _; rw [td, ih1, ih2]
-  | imp φ ψ ih1 ih2 => show i _ _ = zimp _ _; rw [ti, ih1, ih2]
-  | xor φ ψ ih1 ih2 => show x _ _ = zxor _ _; rw [tx, ih1, ih2]
-  | xnor φ ψ ih1 ih2 => show e _ _ = zxnor _ _; rw [te, ih1, ih2]
-
-/-- And ZTL itself is such a semantics, so the hypotheses are not empty. -/
-theorem ztl_is_compositional_kleene_verdict (v : Nat → V) :
-    evalF v (.neg (.atom 0)) = up (kev v (.neg (.atom 0))) ∧
-    evalF v (.conj (.atom 0) (.atom 1)) = up (kev v (.conj (.atom 0) (.atom 1))) :=
-  ⟨not_is_up_kleene (v 0), and_is_up_kleene (v 0) (v 1)⟩
-
-/-- **A verdict at every connective excludes De Morgan.** No compositional semantics that gives
-Kleene's verdict on every single connective satisfies ¬(p ∧ q) = ¬p ∨ ¬q: by uniqueness it is ZTL, and
-at p dirty, q true the two sides are T and F. -/
-theorem verdict_everywhere_excludes_de_morgan (n : V → V) (c d i x e : V → V → V)
-    (hn : ∀ v, mev n c d i x e v (.neg (.atom 0)) = up (kev v (.neg (.atom 0))))
-    (hc : ∀ v, mev n c d i x e v (.conj (.atom 0) (.atom 1)) = up (kev v (.conj (.atom 0) (.atom 1))))
-    (hd : ∀ v, mev n c d i x e v (.disj (.atom 0) (.atom 1)) = up (kev v (.disj (.atom 0) (.atom 1))))
-    (hi : ∀ v, mev n c d i x e v (.imp (.atom 0) (.atom 1)) = up (kev v (.imp (.atom 0) (.atom 1))))
-    (hx : ∀ v, mev n c d i x e v (.xor (.atom 0) (.atom 1)) = up (kev v (.xor (.atom 0) (.atom 1))))
-    (he : ∀ v, mev n c d i x e v (.xnor (.atom 0) (.atom 1)) = up (kev v (.xnor (.atom 0) (.atom 1)))) :
-    ¬ ∀ v, mev n c d i x e v (.neg (.conj (.atom 0) (.atom 1))) =
-      mev n c d i x e v (.disj (.neg (.atom 0)) (.neg (.atom 1))) := by
-  intro h
-  have u := ztl_unique_compositional n c d i x e hn hc hd hi hx he
-  have w := h (two Z T)
-  rw [u, u] at w
-  exact absurd w (by decide)
-
-/-! The judge's strict dispositions are strong Kleene (2026-10-29). Since the IF STABLE split, EARNED means
-T under every refinement AND T under every read of every occurrence; REFUTED the same for F. Both are exactly
-the strong Kleene value: the whole-formula question is answered by the judge as Kleene answers it, no more and
-no less; everything Kleene leaves at U is marked by the other dispositions. -/
-def StrictEarned (v : Nat → V) (φ : Fm) : Prop := Earned v φ ∧ kev v φ = T
 def Refuted (v : Nat → V) (φ : Fm) : Prop := ∀ w, refines v w → evalF w φ = F
-def StrictRefuted (v : Nat → V) (φ : Fm) : Prop := Refuted v φ ∧ kev v φ = F
-
-/-- **Strict EARNED is strong Kleene T.** -/
-theorem strict_earned_iff_kleene (v : Nat → V) (φ : Fm) : StrictEarned v φ ↔ kev v φ = T :=
-  ⟨fun h => h.2, fun h => ⟨earned_of_kleene v φ h, h⟩⟩
-
 theorem covers_false_only : ∀ x : V, covers x (false, true) = true → x = F := by decide
-theorem kle_F (y : V) (h : kle F y = true) : y = F := by cases y <;> first | rfl | exact absurd h (by decide)
-
-/-- What strong Kleene refutes, ZTL refutes: false under every reading ⇒ the verdict is F. -/
-theorem never_laxer (v : Nat → V) (φ : Fm) (h : kev v φ = F) : evalF v φ = F := by
-  have c := covers_rd v φ
-  rw [rd_is_kleene, h] at c
-  exact covers_false_only _ c
-
-/-- **Strict REFUTED is strong Kleene F.** -/
-theorem strict_refuted_iff_kleene (v : Nat → V) (φ : Fm) : StrictRefuted v φ ↔ kev v φ = F := by
-  refine ⟨fun h => h.2, fun h => ⟨fun w hr => ?_, h⟩⟩
-  have hw : kev w φ = F := kle_F _ (by have m := kev_mono v w hr φ; rw [h] at m; exact m)
-  exact never_laxer w φ hw
-
-/-! Kleene cannot say what is established; ZTL can (2026-10-29). Every strong Kleene formula is monotone under
-refinement (`kev_mono`): a refined input never makes the output jump. A statement about the state of evidence —
-"x is established true", "x is established", "x is not established" — jumps (Z ↦ F, T ↦ T), so no Kleene formula,
-over any number of atoms, expresses it. ZTL expresses all three with its own connectives. The non-monotone
-cells that cost ZTL laws at the tables (¬Z = F, ¬¬Z = T) are what let it speak about evidence. -/
-
 theorem refines_from_Z (w : Nat → V) : refines (fun _ => Z) w := fun _ h => absurd rfl h
-
-/-- **No Kleene formula defines a function that jumps on refinement.** If g decides at Z (g Z ≠ Z) and
-changes from Z to T (g Z ≠ g T), no strong Kleene formula computes g on the valuations "every atom = x". -/
-theorem kleene_cannot_jump (g : V → V) (hz : g Z ≠ Z) (hzt : g Z ≠ g T) :
-    ¬ ∃ φ : Fm, ∀ x : V, kev (fun _ => x) φ = g x := by
-  intro ⟨φ, h⟩
-  have m := kev_mono (fun _ => Z) (fun _ => T) (refines_from_Z _) φ
-  rw [h Z, h T] at m
-  revert m hz hzt
-  cases g Z <;> cases g T <;> decide
 
 def established (x : V) : V := if x = Z then F else T
 def isMark (x : V) : V := if x = Z then T else F
-
-/-- Kleene cannot say "x is established true" (its own end verdict ↑), "x is established", "x is not established". -/
-theorem kleene_cannot_assert : ¬ ∃ φ : Fm, ∀ x : V, kev (fun _ => x) φ = up x :=
-  kleene_cannot_jump up (by decide) (by decide)
-theorem kleene_cannot_say_established : ¬ ∃ φ : Fm, ∀ x : V, kev (fun _ => x) φ = established x :=
-  kleene_cannot_jump established (by decide) (by decide)
-theorem kleene_cannot_say_mark : ¬ ∃ φ : Fm, ∀ x : V, kev (fun _ => x) φ = isMark x :=
-  kleene_cannot_jump isMark (by decide) (by decide)
 
 /-- **ZTL says all three with its own connectives:** p ∧ p, p ∨ ¬p, ¬(p ↔ p). -/
 theorem ztl_says_evidence :
@@ -537,8 +162,8 @@ theorem ztl_says_evidence :
 /-! The primitives, not the clone (2026-10-29). A table for a classical connective g is DECISIVE if it
 never answers Z, SOUND if its T is forced by every reading of its arguments, MAXIMAL if it answers T
 whenever every reading forces it. The ZTL connective is the only table with all three. Bochvar's
-external connectives are decisive but not sound (¬Z = T, Z → F = T); strong Kleene's are sound and
-maximal but not decisive (¬Z = Z). The judge and the stand rest on all three. -/
+external connectives are decisive but not sound (¬Z = T, Z → F = T). The judge and the stand rest on all
+three. -/
 def forced1 (g : Bool → Bool) (x : V) : Bool := (subs x).all (fun a => g a)
 def forced2 (g : Bool → Bool → Bool) (x y : V) : Bool := (subs x).all (fun a => (subs y).all (fun b => g a b))
 
@@ -593,19 +218,6 @@ theorem lift2_characterized (g : Bool → Bool → Bool) (t : V → V → V) :
       revert ht; cases forced2 g x y <;> decide
     · rw [h, lift2_eq, hf]; rfl
 
-/-- Strong Kleene is sound and maximal at every connective, but not decisive: ¬Z = Z. -/
-theorem kleene_sound_maximal2 (g : Bool → Bool → Bool) : Sound2 g (k2 g) ∧ Maximal2 g (k2 g) := by
-  refine ⟨fun x y ht => ?_, fun x y hf => ?_⟩
-  · revert ht
-    show (if forced2 g x y = true then T else if (subs x).all (fun a => (subs y).all (fun b => !g a b)) then F else Z) = T → _
-    cases forced2 g x y with
-    | true => intro _; rfl
-    | false => cases (subs x).all (fun a => (subs y).all (fun b => !g a b)) <;> decide
-  · show (if forced2 g x y = true then T else _) = T
-    rw [hf]; rfl
-theorem kleene_not_decisive : ¬ Decisive1 (k1 (fun a => !a)) ∧ ¬ Decisive2 (k2 (fun a b => !a || b)) :=
-  ⟨fun h => h Z (by decide), fun h => h Z Z (by decide)⟩
-
 /-- Bochvar's external negation and implication are decisive but not sound: ¬Z = T and Z → F = T,
 though a reading of Z as true makes each false. The implication fails under either convention for
 external negation, since it does not use it. -/
@@ -616,46 +228,16 @@ theorem bochvar_not_sound :
 
 end V
 
-#print axioms V.covers_rd
-#print axioms V.refusal_witnessed
-#print axioms V.never_stricter
-#print axioms V.over_grant
-#print axioms V.imp_is_up_kleene
-#print axioms V.xnor_is_up_kleene
-#print axioms V.k_matches_core
 #print axioms V.nor_lift
 #print axioms V.nxor_lift
 #print axioms V.lift_id_is_up
 #print axioms V.and_self_is_up
-#print axioms V.rd_is_kleene
-#print axioms V.earned_iff_kleene_T
-#print axioms V.earned_of_kleene
 #print axioms V.default_of_earned
-#print axioms V.strict_false
-#print axioms V.strict_true
 #print axioms V.substitution_of_earned
-#print axioms V.strict_any
-#print axioms V.judge_can_err
 #print axioms V.bochvar_is_default_false
 #print axioms V.earned_dominates_bochvar
-#print axioms V.bochvar_strict
 #print axioms V.enum_of_earned
-#print axioms V.earned_dominates_enum
-#print axioms V.enum_strict
-#print axioms V.kleene_end_verdict_not_compositional
-#print axioms V.ztl_unique_compositional
-#print axioms V.ztl_is_compositional_kleene_verdict
 #print axioms V.lift1_characterized
 #print axioms V.lift2_characterized
-#print axioms V.kleene_sound_maximal2
-#print axioms V.kleene_not_decisive
 #print axioms V.bochvar_not_sound
-#print axioms V.verdict_everywhere_excludes_de_morgan
-#print axioms V.strict_earned_iff_kleene
-#print axioms V.never_laxer
-#print axioms V.strict_refuted_iff_kleene
-#print axioms V.kleene_cannot_jump
-#print axioms V.kleene_cannot_assert
-#print axioms V.kleene_cannot_say_established
-#print axioms V.kleene_cannot_say_mark
 #print axioms V.ztl_says_evidence

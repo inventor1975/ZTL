@@ -23,18 +23,18 @@ act).
 
 What happens: every cell "a∈S" becomes a sentence of a fixedpoint system (an
 abs set's cell is its property instantiated at a, constants folded in); the
-LAZY least fixed point grounds the cells (Kripke); the E18 passport office
+STABLE least fixed point (pure branch, Lean ZGround) grounds the cells; the E18 passport office
 (zpassport) gives every quarantined cell its kind — PARADOX (no stipulation
 can repair it), UNDERDETERMINED (a stipulation is owed; it is consistent),
 INTRINSIC, INPUT (verify the given cell), DOWNSTREAM (inherits a quarantine).
-A CLAIM is a closed formula: its lazy value gives EARNED / REFUTED; otherwise
+A CLAIM is a closed formula: its forced outcome gives EARNED / REFUTED; otherwise
 its dirty cells are completed every way (each cell one value), giving
 EARNED IF STABLE / REFUTED IF STABLE / OPEN — the ztljudge rule — and the
 cells it rests on are listed WITH their passports. For a universal claim the
 residue (the instances left undecided) is named.
 
 This is the finite, executable twin of VR/SetsNaive (Lean, all on []): the
-same lazy fixed point (Ground), the same passport (Passport), the same
+same stable fixed point (Ground), the same passport (Passport), the same
 completions (Judge) and residue (Residue). Two boundaries carried over:
 completions are free at dirty cells, so a claim's disposition depends on how
 it is spelled (atom vs definition — SetsNaive N8); and identity by extension
@@ -53,12 +53,13 @@ import json
 import sys
 
 from ztl import T, F, Z, VALUES
-from fixedpoint import LAZY, ev_reg, least_fp_lazy, jump
+from fixedpoint import N, ev_reg, least_fp_stable, jump, jump_stable
+from zread import forced
 from zpassport import passports, sccs, deps
 
 CAP_COMPONENT = 16   # a quarantined component larger than this is not searched
 CAP_STABLE = 12      # at most 2^12 completions per claim; over it the claim stays OPEN WITH THE NOTE "stability not
-                     # searched" (as ztljudge's _STABLE_CAP) — OPEN is then the lazy reading only, never "not stable"
+                     # searched" (as ztljudge's _STABLE_CAP) — OPEN is then the forced reading only, never "not stable"
 # THE DOOR's limits (check(): the studio, the API, the Engineer — a public 2-core server). Refusals by the FORM of the
 # request, before any work, never by time. Grounding unfolds every quantifier over every name: the cost is read off
 # the formula's shape (size()). MEASURED 2026-11-05: 8 names, six nested quantifiers -> 64 cells x 8^6 nodes, 41 s of
@@ -219,7 +220,7 @@ class Universe:
 
 # -------------------------------------------------------------------- analysis
 def analyse(spec):
-    """Ground the universe, compute the lazy least fixed point and passports.
+    """Ground the universe, compute the stable least fixed point and passports.
     Returns (universe, system, lfp, kind) with kind[cell] a passport word."""
     u = Universe(spec)
     sysm = u.system()
@@ -242,9 +243,9 @@ def judge_claim(analysis, claim):
     and — for a universal claim — its residue."""
     u, _sysm, lfp, kind = analysis
     g = u.ground(claim, {})
-    lv = ev_reg(g, lfp, LAZY) if g not in VALUES else g
+    lv = forced(g, lfp) if g not in VALUES else (N if g == Z else g)
     note = None
-    dirty = sorted(d for d in deps(g) if lfp.get(d) == Z) if g not in VALUES else []
+    dirty = sorted(d for d in deps(g) if lfp.get(d) in (Z, N)) if g not in VALUES else []
     bearing = {d: kind[d] for d in dirty}
     if lv == T:
         disp = "EARNED"
@@ -253,12 +254,12 @@ def judge_claim(analysis, claim):
     elif len(dirty) > CAP_STABLE:
         disp = "OPEN"
         note = (f"stability not searched: {len(dirty)} dirty cells exceed the cap of {CAP_STABLE} "
-                f"(2^{len(dirty)} completions) — OPEN here is the lazy reading only")
+                f"(2^{len(dirty)} completions) — OPEN here is the forced reading only")
     else:
         seen = set()
         for bits in itertools.product((T, F), repeat=len(dirty)):
             v = {**lfp, **dict(zip(dirty, bits))}
-            seen.add(ev_reg(g, v, LAZY))
+            seen.add(forced(g, v))
             if len(seen) > 1:
                 break
         only = seen.pop() if len(seen) == 1 else None
@@ -268,10 +269,10 @@ def judge_claim(analysis, claim):
         residue = []
         for n in u.names:
             gi = u.ground(claim[2], {claim[1]: n})
-            vi = gi if gi in VALUES else ev_reg(gi, lfp, LAZY)
-            if vi == Z:
+            vi = gi if gi in VALUES else forced(gi, lfp)
+            if vi in (Z, N):
                 residue.append(n)
-    out = {"lazy": lv, "disposition": disp, "rests_on": bearing, "residue": residue}
+    out = {"forced": lv, "disposition": disp, "rests_on": bearing, "residue": residue}
     if note:
         out["note"] = note
     return out
@@ -316,14 +317,14 @@ def check(spec):
                                             f"{DOOR_NODES} (the public limit): fewer names or fewer nested quantifiers"}
         u0 = Universe(spec)
         sysm0 = u0.system()
-        lfp0 = least_fp_lazy(sysm0)
+        lfp0 = least_fp_stable(sysm0)
         search = 0
         for comp in sccs(sysm0):
-            if len(comp) <= CAP_COMPONENT and any(lfp0[c_] == Z for c_ in comp):
+            if len(comp) <= CAP_COMPONENT and any(lfp0[c_] in (Z, N) for c_ in comp):
                 search += 2 ** len(comp) * sum(_nodes(sysm0[c_]) for c_ in comp)
         for c in claims:
             g = u0.ground(c, {})
-            k = sum(1 for d in deps(g) if lfp0.get(d) == Z) if g not in VALUES else 0
+            k = sum(1 for d in deps(g) if lfp0.get(d) in (Z, N)) if g not in VALUES else 0
             search += 2 ** min(k, CAP_STABLE) * _nodes(g)
         if search > DOOR_SEARCH:
             return {"ok": False, "refused": f"the quarantined cells need about {search:.2e} formula evaluations "
@@ -337,7 +338,7 @@ def check(spec):
                              "in": [a for a in u.names if lfp[cell(a, s_)] == T],
                              "out": [a for a in u.names if lfp[cell(a, s_)] == F],
                              "quarantined": [{"member": a, "passport": kind[cell(a, s_)]}
-                                             for a in u.names if lfp[cell(a, s_)] == Z]})
+                                             for a in u.names if lfp[cell(a, s_)] in (Z, N)]})
         out_claims = []
         for c in claims:
             r = judge_claim(an, c)
@@ -363,7 +364,7 @@ def report(spec):
     for s in u.names:
         ins = [a for a in u.names if lfp[cell(a, s)] == T]
         outs = [a for a in u.names if lfp[cell(a, s)] == F]
-        dirty = [f"{a} ({kind[cell(a, s)]})" for a in u.names if lfp[cell(a, s)] == Z]
+        dirty = [f"{a} ({kind[cell(a, s)]})" for a in u.names if lfp[cell(a, s)] in (Z, N)]
         lines.append(f"{s}: in {ins}; out {outs}" + (f"; quarantined {dirty}" if dirty else ""))
     for i, claim in enumerate(spec.get("claims", [])):
         r = judge_claim(analysis, claim)
@@ -378,8 +379,8 @@ def closed_world(sysm, lfp):
     """The sabotage the self-test must catch: read every quarantined cell as F
     (closed-world / negation-as-failure without stratification). Returns the
     cells whose own definition then disagrees with the value assigned."""
-    cwa = {c: (F if v == Z else v) for c, v in lfp.items()}
-    j = jump(sysm, cwa, LAZY)
+    cwa = {c: (F if v in (Z, N) else v) for c, v in lfp.items()}
+    j = {c: (Z if sysm[c] == Z else forced(sysm[c], cwa)) for c in sysm}
     return sorted(c for c in sysm if j[c] != cwa[c])
 
 
@@ -414,13 +415,13 @@ def _rand_universe(rng):
 def full_models(sysm, lfp, cap=10):
     """Every classical (two-valued) valuation that is a fixed point of the system, with the
     unverified inputs (cells given as Z) read freely. None if too many free cells."""
-    free = sorted(c for c, v in lfp.items() if v == Z)
+    free = sorted(c for c, v in lfp.items() if v in (Z, N))
     if len(free) > cap:
         return None
     models = []
     for bits in itertools.product((T, F), repeat=len(free)):
         v = {**lfp, **dict(zip(free, bits))}
-        if all((sysm[c] == Z) or ev_reg(sysm[c], v, LAZY) == v[c] for c in sysm):
+        if all((sysm[c] == Z) or forced(sysm[c], v) == v[c] for c in sysm):
             models.append(v)
     return models
 
@@ -436,7 +437,7 @@ def oracle_check(trials=300, seed=20261105):
         except UniverseError:
             continue
         u, sysm, lfp, kind = a
-        assert jump(sysm, lfp, LAZY) == lfp, "I1: the lfp is a fixed point"
+        assert jump_stable(sysm, lfp) == lfp, "I1: the lfp is a fixed point"
         models = full_models(sysm, lfp)
         if models is None:
             continue
@@ -452,7 +453,7 @@ def oracle_check(trials=300, seed=20261105):
         r = judge_claim(a, claim)
         g = u.ground(claim, {})
         for m in models:
-            val = g if g in VALUES else ev_reg(g, m, LAZY)
+            val = g if g in VALUES else forced(g, m)
             if r["disposition"] in ("EARNED", "EARNED IF STABLE"):
                 assert val == T, ("I4: EARNED but false in a full model", claim, r)
             if r["disposition"] in ("REFUTED", "REFUTED IF STABLE"):
@@ -532,9 +533,9 @@ def _selftest():
     # Russell / truth-teller
     u, sysm, lfp, kind = analyse(RUSSELL)
     assert lfp["a∈R"] == T and lfp["b∈R"] == F, "Russell works as a set for everyone else"
-    assert lfp["R∈R"] == Z and kind["R∈R"] == "PARADOX", kind["R∈R"]
-    assert lfp["S∈S"] == Z and kind["S∈S"] == "UNDERDETERMINED", kind["S∈S"]
-    assert jump(sysm, lfp, LAZY) == lfp, "the lfp is a fixed point"
+    assert lfp["R∈R"] == N and kind["R∈R"] == "PARADOX", kind["R∈R"]
+    assert lfp["S∈S"] == N and kind["S∈S"] == "UNDERDETERMINED", kind["S∈S"]
+    assert jump_stable(sysm, lfp) == lfp, "the lfp is a fixed point"
     caught = closed_world(sysm, lfp)
     assert "R∈R" in caught, "the closed-world mutant must contradict Russell's own definition"
     print("  Russell: a∈R T, b∈R F, R∈R PARADOX, S∈S UNDERDETERMINED; "
@@ -561,7 +562,7 @@ def _selftest():
         assert lfp[f"{k}∈Trusted"] == T, k
     assert lfp["carol∈Trusted"] == F, "an unsigned key is earned untrusted"
     for k in ("mallory1", "mallory2"):
-        assert lfp[f"{k}∈Trusted"] == Z and kind[f"{k}∈Trusted"] == "UNDERDETERMINED", kind[f"{k}∈Trusted"]
+        assert lfp[f"{k}∈Trusted"] == N and kind[f"{k}∈Trusted"] == "UNDERDETERMINED", kind[f"{k}∈Trusted"]
     r0 = judge_claim(a, TRUST["claims"][0])
     assert r0["disposition"] == "EARNED", r0
     r1 = judge_claim(a, TRUST["claims"][1])
@@ -631,7 +632,9 @@ def _selftest():
     assert kind_t["root∈Trusted"] == "GROUNDED" and kind_t["carol∈Trusted"] == "GROUNDED"
 
     # the independent oracle: brute-force classical models of random universes
-    checked, paradox_seen, stable_seen = oracle_check()
+    # pure branch (2026-11-22): the stable step grounds more cells, so fewer random claims rest on dirty ones —
+    # MEASURED at 300 trials: IF STABLE seen 4 (was >= 5 under the Kleene register); 600 trials keep the teeth.
+    checked, paradox_seen, stable_seen = oracle_check(trials=600)
     assert checked >= 150 and paradox_seen >= 10 and stable_seen >= 5, (checked, paradox_seen, stable_seen)
     print(f"  oracle: {checked} random universes checked against brute-force classical models "
           f"(lfp fixed; grounded cells absolute; PARADOX ⇒ no model, seen {paradox_seen}; "

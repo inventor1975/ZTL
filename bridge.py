@@ -4,7 +4,8 @@ The Python ↔ Lean stitch (seam #6): one questionnaire, two engines.
 
 Generates a Lean file of #eval queries (truth tables of both registers,
 J-operators, E and Δ, certified-engine verdicts on a shared battery —
-propositional and quantified — and lazy lfp of the constant-free zoo),
+propositional and quantified — and the stable lfp of the constant-free zoo; pure branch 2026-11-22:
+the second register is the FORCED outcome t/f/n, its tables derived in Python from the readings),
 runs it through `lake env lean` against the compiled corpus, and
 compares every kernel-computed answer with the Python stands' answers.
 Any divergence is a red light: the two implementations of ZTL must be
@@ -16,10 +17,11 @@ import sys
 import os
 
 from ztl import T, F, Z, VALUES, NOT, OPS2
-from fixedpoint import LAZY, least_fp_lazy
+from fixedpoint import least_fp_stable, N
+from zread import _comb, _G, outcome
 from zalgebra import jT, jF, jZ, dEq
 from tableau import prove
-from ztljudge import _lazy
+from ztljudge import _forced
 
 LEAN_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "lean")
 GEN = os.path.join(LEAN_DIR, "BridgeGen.lean")
@@ -78,6 +80,9 @@ BATTERY = [
 ]
 
 ZOO = [
+    ("curry, bot = s and not s", {"s0": ("imp", "s0", "s1"), "s1": ("and", "s2", ("not", "s2")), "s2": "s2"},
+     "[.imp (.atom 0) (.atom 1), .conj (.atom 2) (.neg (.atom 2)), .atom 2]"),
+    ("strong liar", {"s0": ("and", ("not", "s0"), "s0")}, "[.conj (.neg (.atom 0)) (.atom 0)]"),
     ("liar", {"s0": ("not", "s0")}, "[.neg (.atom 0)]"),
     ("truth-teller", {"s0": "s0"}, "[.atom 0]"),
     ("carousel", {"s0": "s1", "s1": ("not", "s0")},
@@ -94,12 +99,22 @@ ZOO = [
      "[.top, .atom 0, .disj (.neg (.atom 1)) (.atom 0)]"),
 ]
 
-K_PY = {"not": LAZY["not"], "and": LAZY["and"], "or": LAZY["or"],
-        "imp": LAZY["imp"], "xor": LAZY["xor"], "xnor": LAZY["xnor"]}
+PH_NAMES = {T: "V.Ph.t", F: "V.Ph.f", N: "V.Ph.n"}
+
+
+def _pair(x):
+    return (x != F, x != T)
+
+
+def ph_py(opn, x, y=None):
+    """the forced outcome of a connective, derived from the READINGS (not from a table)"""
+    if opn == "not":
+        return {T: F, F: T, N: N}[x]
+    return outcome(_comb(_G[opn], _pair(x), _pair(y)))
 Z_LEAN = {"not": "V.znot", "and": "V.zand", "or": "V.zor",
           "imp": "V.zimp", "xor": "V.zxor", "xnor": "V.zxnor"}
-K_LEAN = {"not": "V.knot", "and": "V.kand", "or": "V.kor",
-          "imp": "V.kimp", "xor": "V.kxor", "xnor": "V.kxnor"}
+PH_LEAN = {"not": "V.phNot", "and": "V.phAnd", "or": "V.phOr",
+           "imp": "V.phImp", "xor": "V.phXor", "xnor": "V.phXnor"}
 
 
 def _label_pool():
@@ -127,17 +142,20 @@ def build_items():
             for x in VALUES:
                 items.append((f"greedy ¬{x}", f"{Z_LEAN[opn]} {VNAMES[x]}",
                               VNAMES[NOT(x)]))
-                items.append((f"lazy ¬{x}", f"{K_LEAN[opn]} {VNAMES[x]}",
-                              VNAMES[K_PY[opn](x)]))
+            for x in (T, F, N):
+                items.append((f"forced ¬{x}", f"{PH_LEAN[opn]} {PH_NAMES[x]}",
+                              PH_NAMES[ph_py(opn, x)]))
         else:
             for x in VALUES:
                 for y in VALUES:
                     items.append((f"greedy {opn}({x},{y})",
                                   f"{Z_LEAN[opn]} {VNAMES[x]} {VNAMES[y]}",
                                   VNAMES[OPS2[opn](x, y)]))
-                    items.append((f"lazy {opn}({x},{y})",
-                                  f"{K_LEAN[opn]} {VNAMES[x]} {VNAMES[y]}",
-                                  VNAMES[K_PY[opn](x, y)]))
+            for x in (T, F, N):
+                for y in (T, F, N):
+                    items.append((f"forced {opn}({x},{y})",
+                                  f"{PH_LEAN[opn]} {PH_NAMES[x]} {PH_NAMES[y]}",
+                                  PH_NAMES[ph_py(opn, x, y)]))
     # J-operators and the algebraic witnesses
     for x in VALUES:
         items.append((f"jT {x}", f"V.jT {VNAMES[x]}", VNAMES[jT(x)]))
@@ -165,7 +183,7 @@ def build_items():
         for va in VALUES:
             for vb in VALUES:
                 m = {"p": va, "q": vb}
-                lab = _lazy(phi, m)[1]
+                lab = _forced(phi, m)[1]
                 lean_v = (f"(fun n => if n = 0 then {VNAMES[va]} "
                           f"else {VNAMES[vb]})")
                 for atom, name in ((0, "p"), (1, "q")):
@@ -173,11 +191,11 @@ def build_items():
                         (f"label {phi} {m} @{name}",
                          f"V.labF {lean_v} {to_lean_fm(phi)} {atom}",
                          "true" if name in lab else "false"))
-    # lazy lfp of the constant-free zoo (ZGround.iter vs fixedpoint)
+    # stable lfp of the zoo (ZGround.lfp vs fixedpoint.least_fp_stable)
     for name, system, lean_sys in ZOO:
-        lfp = least_fp_lazy(system)
+        lfp = least_fp_stable(system)
         expected = "[" + ", ".join(
-            VNAMES[lfp[f"s{i}"]] for i in range(len(system))) + "]"
+            PH_NAMES[lfp[f"s{i}"]] for i in range(len(system))) + "]"
         items.append((f"lfp {name}", f"V.lfp {lean_sys}", expected))
     return items
 
@@ -185,7 +203,7 @@ def build_items():
 def main():
     items = build_items()
     lines = ["import ZTL", "import TableauCert", "import ZAlgebra",
-             "import ZGround", "import Receipt", ""]
+             "import ZGround", "import ZForced", "import Receipt", ""]
     for _, expr, _ in items:
         lines.append(f"#eval {expr}")
     with open(GEN, "w") as f:

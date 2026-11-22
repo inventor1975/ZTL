@@ -14,7 +14,7 @@ the facts x∈x. Questions: models? oscillation? grounding? verdicts?
 """
 
 from ztl import T, F, Z, NOT, OPS2
-from fixedpoint import EAGER, LAZY, fixed_points, iterate, least_fp_lazy, \
+from fixedpoint import EAGER, N, hardened, fixed_points, iterate, least_fp_stable, \
     ev_reg, fmt_v
 
 # The universe: a=∅, b={b}, R={x: x∉x}, S={x: x∈x}
@@ -45,12 +45,12 @@ if __name__ == "__main__":
         print(f"  only these oscillate: {diffs} — the whole storm in two cells")
 
     print("\n### Lazy grounding: the universe stands, quarantine is pointwise")
-    lfp = least_fp_lazy(system)
-    q = sorted(k for k, v in lfp.items() if v == Z)
-    g = sorted(k for k, v in lfp.items() if v != Z)
+    lfp = least_fp_stable(system)
+    q = sorted(k for k, v in lfp.items() if v in (Z, N))
+    g = sorted(k for k, v in lfp.items() if v not in (Z, N))
     print("  facts grounded: %d of %d" % (len(g), len(lfp)))
     for k in sorted(lfp):
-        mark = "  ← QUARANTINE" if lfp[k] == Z else ""
+        mark = "  ← QUARANTINE" if lfp[k] in (Z, N) else ""
         print(f"    {k} = {lfp[k]}{mark}")
 
     print("\n### Membership in R for ordinary residents — grounded and honest")
@@ -59,7 +59,7 @@ if __name__ == "__main__":
     print("  Russell WORKS as a set for everyone except himself.")
 
     print("\n### Customs verdicts on the sore questions")
-    v_notin = ev_reg(("not", "R∈R"), lfp, EAGER)
+    v_notin = ev_reg(("not", "R∈R"), hardened(lfp), EAGER)
     print(f"  \"R ∈ R?\" — the atom is quarantined ({lfp['R∈R']}): not earned → refusal")
     print(f"  \"R ∉ R?\" — the greedy reading of ¬(R∈R): {v_notin} → also refusal")
     print("  Both questions get a refusal — the NaN signature on sets:")
@@ -67,9 +67,9 @@ if __name__ == "__main__":
 
     print("\n### The twin S = {x : x ∈ x} — the truth-teller of set theory")
     fpS = fixed_points(sysS, EAGER)
-    lfpS = least_fp_lazy(sysS)
+    lfpS = least_fp_stable(sysS)
     print(f"  S∈S: greedy models {len(fpS)} ({', '.join(fmt_v(v) for v in fpS)}),")
-    print(f"  lazy grounding: {fmt_v(lfpS)} — underdetermination (the ID loop):")
+    print(f"  stable grounding: {fmt_v(lfpS)} — underdetermination (the ID loop):")
     print("  classical solutions: TWO (admit/reject itself — both honest),")
     print("  for R∈R — ZERO. Even and odd, now in sets.")
 

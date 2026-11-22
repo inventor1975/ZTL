@@ -17,7 +17,7 @@ exact receipt is NP-hard (membership in NP is argued in prose, not proved, so
 "NP-complete" is not claimed), and `labF`'s cheap candidate list is the forced
 cut, as `joint` is for the width (E58).
 
-Measured here with the judge's own `_lazy` and `pivotal` read LITERALLY — the
+Measured here with the judge's own `_forced` and `pivotal` read LITERALLY — the
 other marks range over {T, F, Z}, not {T, F}. That literal reading is what the
 first attempt got wrong: against definite readings `a ∧ ψ` looked like a
 reduction; against the kernel's definition it is pivotal for EVERY ψ (T-side Z,
@@ -26,20 +26,21 @@ F-side F), which is the negative control below (`conj_always_pivotal`).
 import itertools
 import random
 from ztl import T, F, Z, ev
-from ztljudge import _lazy
+from zread import N
+from ztljudge import _forced
 
 OPS = ("and", "or", "imp", "xor", "xnor")
 
 
 def pivotal(phi, m, a, atoms):
     """LabelExact.pivotal, literally: some reading of the OTHER dirty atoms
-    (each may stay Z) under which a := T and a := F give different lazy verdicts."""
+    (each may stay Z) under which a := T and a := F give different forced outcomes."""
     others = [x for x in atoms if x != a and m[x] == Z]
     for vals in itertools.product((T, F, Z), repeat=len(others)):
         w = dict(m); w.update(zip(others, vals))
         w1 = dict(w); w1[a] = T
         w2 = dict(w); w2[a] = F
-        if _lazy(phi, w1)[0] != _lazy(phi, w2)[0]:
+        if _forced(phi, w1)[0] != _forced(phi, w2)[0]:
             return True
     return False
 
@@ -72,12 +73,12 @@ def check_pool(pool, xs, label):
     div = 0
     for psi in pool:
         phi = witness(a, psi)
-        lv, lab = _lazy(phi, allZ)
-        named += (lv == Z and a in lab)
+        lv, lab = _forced(phi, allZ)
+        named += (lv == N and a in lab)
         p, s = pivotal(phi, allZ, a, atoms), sat(psi, xs)
         agree += (p == s)
         ctrl += pivotal(("and", a, psi), allZ, a, atoms)
-        if p != s or not (lv == Z and a in lab):
+        if p != s or not (lv == N and a in lab):
             div += 1
             print(f"  ✗ DIVERGENCE {psi}: named {a in lab}, pivotal {p}, satisfiable {s}")
     n = len(pool)

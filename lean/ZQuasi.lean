@@ -10,12 +10,12 @@ The case. A detector clicks twice. `c1`, `c2` — the two clicks, each witnessed
 `same` — "the two clicks came from one and the same thing": nothing witnessed it (Z).
 
 Vocabulary (2026-10-30). `earned` / `refuted` are `ZTopology`'s: T / F now and under every refinement — the
-HEREDITARY T / F. The judge's words since 2026-10-29 differ: EARNED / REFUTED = the strong Kleene T / F (which
+HEREDITARY T / F. The judge's words since 2026-10-29 differ: EARNED / REFUTED = the forced T / F, every reading of every occurrence (which
 implies hereditary), EARNED IF STABLE = T in every cleaning. Each item says where the two agree.
 
 Proved here, on the empty axiom list:
-1. `occurrences_earned` — "there were two occurrences" (c1 ∧ c2) is a hereditary T, proved through its strong
-   Kleene T: the judge's EARNED as well.
+1. `occurrences_earned` — "there were two occurrences" (c1 ∧ c2) is a hereditary T, proved through its forced
+   T: the judge's EARNED as well.
 2. `two_objects_open`, `one_object_open` — "two distinct things" (c1 ∧ c2 ∧ ¬same) and
    "one thing" (c1 ∧ c2 ∧ same) are each neither a hereditary T nor a hereditary F: further data
    could settle either way (the judge: OPEN).
@@ -23,7 +23,7 @@ Proved here, on the empty axiom list:
    excluded middle on an unwitnessed identity is not granted (`ZTopology.excluded_middle_not_earned`). It is T in
    every cleaning, so the judge says EARNED IF STABLE.
 4. `count_follows_identity` — once identity is witnessed (same = F), "two things" is a hereditary T, proved
-   through its strong Kleene T (the judge's EARNED):
+   through its forced T (the judge's EARNED):
    the number of objects is earned exactly by witnessing identity; nothing else is needed.
 
 So in ZTL a quasi-set is a count of WITNESSING ACTS whose bearers' identity is Z, and the
@@ -79,9 +79,9 @@ theorem refines_sameF : refines clicks sameF := by
   | 1 => rfl
   | _ + 2 => rfl
 
-/-- 1. Two occurrences: a hereditary T (through the strong Kleene T, so also the judge's EARNED). -/
+/-- 1. Two occurrences: a hereditary T (through the forced T — every reading of every occurrence — so also the judge's EARNED). -/
 theorem occurrences_earned : earned twoOccurrences clicks :=
-  kleene_sub_earned rfl
+  forced_sub_earned rfl
 
 /-- 2a. "Two distinct things": not a hereditary T (identity might turn out T) ... -/
 theorem two_objects_not_earned : ¬ earned twoObjects clicks := by
@@ -119,10 +119,10 @@ theorem one_or_two_not_earned : ¬ earned oneOrTwo clicks := by
   have h2 : evalF clicks oneOrTwo = F := rfl
   exact V.noConfusion (h2.symm.trans h1)
 
-/-- 4. Witness the identity and the number of objects is a hereditary T (through the strong Kleene T, so also
+/-- 4. Witness the identity and the number of objects is a hereditary T (through the forced T, so also
 the judge's EARNED). -/
 theorem count_follows_identity : earned twoObjects sameF :=
-  kleene_sub_earned rfl
+  forced_sub_earned rfl
 
 end ZQuasi
 

@@ -10,17 +10,18 @@ the strong form (`label_exact_linear_definite`, empty axiom list), as a layer
 over the partial theorem: drive the Z side with `drivable`, keep the definite
 side by monotonicity, fill the rest.
 
-Measured here with the judge's own `_lazy`: every pending LINEAR cell of the
+Measured here with the judge's own `_forced`: every pending LINEAR cell of the
 exhaustive depth ≤ 2 pool over three atoms, all 27 markings; for every named
 atom, is there a DEFINITE reading of the other dirty atoms (each T or F,
-never Z) under which a := T and a := F give different lazy verdicts? And the
+never Z) under which a := T and a := F give different forced outcomes? And the
 negative control: OUTSIDE the linear class the same census must find named
 atoms that are not — `p ∧ ¬p` first among them — or the linearity hypothesis
 would be decoration.
 """
 import itertools
 from ztl import T, F, Z
-from ztljudge import _lazy
+from zread import N
+from ztljudge import _forced
 
 OPS = ("and", "or", "imp", "xor", "xnor")
 A = ("p", "q", "r")
@@ -32,7 +33,7 @@ def pivotal_definite(phi, m, a, atoms):
         w = dict(m); w.update(zip(others, vals))
         w1 = dict(w); w1[a] = T
         w2 = dict(w); w2[a] = F
-        if _lazy(phi, w1)[0] != _lazy(phi, w2)[0]:
+        if _forced(phi, w1)[0] != _forced(phi, w2)[0]:
             return True
     return False
 
@@ -66,8 +67,8 @@ def main():
     for phi in P:
         for combo in itertools.product((T, F, Z), repeat=3):
             m = dict(zip(A, combo))
-            lv, lab = _lazy(phi, m)
-            if lv != Z:
+            lv, lab = _forced(phi, m)
+            if lv != N:
                 continue
             linear = all(occ(phi, a) <= 1 for a in A if m[a] == Z)
             if linear:
@@ -91,8 +92,8 @@ def main():
           f" ({100 * non_fail // non_named if non_named else 0}%)")
     clash = ("and", "p", ("not", "p"))
     mZ = {"p": Z, "q": Z, "r": Z}
-    lv, lab = _lazy(clash, mZ)
-    clash_ok = (lv == Z and "p" in lab and not pivotal_definite(clash, mZ, "p", A))
+    lv, lab = _forced(clash, mZ)
+    clash_ok = (lv == N and "p" in lab and not pivotal_definite(clash, mZ, "p", A))
     print(f"  control p ∧ ¬p at all-Z: named {'p' in lab}, definite-pivotal {not clash_ok} — "
           f"{'the hypothesis is load-bearing' if clash_ok else 'CONTROL FAILED'}")
     ok = lin_fail == 0 and lin_cells > 0 and non_fail > 0 and clash_ok

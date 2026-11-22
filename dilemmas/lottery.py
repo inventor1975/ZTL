@@ -104,7 +104,7 @@ def sec2_the_stamp_and_where_it_breaks():
         r = judge(rule, marking)
         state = r["disposition"]
         print(f"   {stamped} losses believed: 'some ticket wins' -> "
-              f"{state:8} (lazy {r['lazy']}, pending {len(r['pending'])})")
+              f"{state:8} (lazy {r['forced']}, pending {len(r['pending'])})")
         if state == "REFUTED" and first_break is None:
             first_break = stamped
     assert first_break == n

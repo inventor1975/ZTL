@@ -14,7 +14,7 @@ the facts x∈x. Questions: models? oscillation? grounding? verdicts?
 """
 
 from ztl import T, F, Z, NOT, OPS2
-from fixedpoint import EAGER, LAZY, fixed_points, iterate, least_fp_stable, \
+from fixedpoint import EAGER, N, fixed_points, iterate, least_fp_stable, \
     ev_reg, fmt_v
 
 # The universe: a=∅, b={b}, R={x: x∉x}, S={x: x∈x}
@@ -46,11 +46,11 @@ if __name__ == "__main__":
 
     print("\n### Lazy grounding: the universe stands, quarantine is pointwise")
     lfp = least_fp_stable(system)
-    q = sorted(k for k, v in lfp.items() if v == Z)
-    g = sorted(k for k, v in lfp.items() if v != Z)
+    q = sorted(k for k, v in lfp.items() if v in (Z, N))
+    g = sorted(k for k, v in lfp.items() if v not in (Z, N))
     print("  facts grounded: %d of %d" % (len(g), len(lfp)))
     for k in sorted(lfp):
-        mark = "  ← QUARANTINE" if lfp[k] == Z else ""
+        mark = "  ← QUARANTINE" if lfp[k] in (Z, N) else ""
         print(f"    {k} = {lfp[k]}{mark}")
 
     print("\n### Membership in R for ordinary residents — grounded and honest")
@@ -69,7 +69,7 @@ if __name__ == "__main__":
     fpS = fixed_points(sysS, EAGER)
     lfpS = least_fp_stable(sysS)
     print(f"  S∈S: greedy models {len(fpS)} ({', '.join(fmt_v(v) for v in fpS)}),")
-    print(f"  lazy grounding: {fmt_v(lfpS)} — underdetermination (the ID loop):")
+    print(f"  stable grounding: {fmt_v(lfpS)} — underdetermination (the ID loop):")
     print("  classical solutions: TWO (admit/reject itself — both honest),")
     print("  for R∈R — ZERO. Even and odd, now in sets.")
 

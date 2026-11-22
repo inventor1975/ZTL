@@ -23,7 +23,8 @@ sys.path.insert(0, _ROOT)
 sys.path.insert(0, os.path.join(_ROOT, "zhunt"))
 
 from ztl import T, F, Z, ev
-from fixedpoint import ev_reg, LAZY
+from fixedpoint import ev_reg
+from zread import forced, N
 from zchoice import stage, greedy, LAWLESS
 from zhunt import judge
 
@@ -67,9 +68,9 @@ def law_dne():
     dnr = ("not", ("not", "a0"))                  # a0 = the repayment, still open
     g = greedy(dnr, ())                           # greedy register at stage 0
     s = stage(dnr, (), LAWLESS)                   # the stage court
-    lz = ev_reg(dnr, {"a0": Z}, LAZY)
-    print(f"  ¬¬(repaid), future open: greedy {g} · stage court {s} · lazy {lz}")
-    assert g == T and s == Z and lz == Z
+    fz = forced(dnr, {"a0": Z})
+    print(f"  ¬¬(repaid), future open: greedy {g} · stage court {s} · forced {fz}")
+    assert g == T and s == Z and fz == N
     dne = judge(("imp", ("not", ("not", "p")), "p"), {"p": "M"})
     print(f"  DNE ¬¬p→p on the unverified → {dne[0]}, {dne[1]}")
     assert dne[:2] == ("F", "until-verification")

@@ -7,7 +7,7 @@ Atoms:  j = the world repays by deeds   (the theory — dirty)
 
 The friends' machine, run cell by cell: the inference is honest, the fuel
 is credit, and the guilty verdict is a STIPULATION that saves a dying
-theory — not an observation. Job vs the friends = the lazy register vs
+theory — not an observation. Job vs the friends = the forced outcome vs
 the greedy one. Modern name of the machine: the just-world fallacy /
 victim-blaming. The book's own ending grades the parties (42:7).
 """
@@ -20,7 +20,8 @@ sys.path.insert(0, _ROOT)
 sys.path.insert(0, os.path.join(_ROOT, "zhunt"))
 
 from ztl import T, F, Z, ev
-from fixedpoint import ev_reg, LAZY
+from fixedpoint import ev_reg
+from zread import forced, N
 from zhunt import judge
 
 INF = ("imp", ("and", ("imp", "j", ("imp", "s", "g")),
@@ -48,12 +49,12 @@ def skeleton():
 def stamp():
     print("THE STAMP — how guilt is manufactured\n")
     dying = ev(THEORY, {"s": T, "g": Z})          # greedy court on the honest mark
-    lazyv = ev_reg(THEORY, {"s": T, "g": Z}, LAZY)
+    forcedv = forced(THEORY, {"s": T, "g": Z})
     alive_T = ev(THEORY, {"s": T, "g": T})
     alive_F = ev(THEORY, {"s": T, "g": F})
-    print(f"  theory s↔g, fact s=T, g honestly unverified: greedy {dying}, lazy {lazyv}")
+    print(f"  theory s↔g, fact s=T, g honestly unverified: greedy {dying}, forced {forcedv}")
     print(f"  stipulate g:=T → theory {alive_T};  g:=F → theory {alive_F}")
-    assert dying == F and lazyv == Z and alive_T == T and alive_F == F
+    assert dying == F and forcedv == N and alive_T == T and alive_F == F
     print("\n  on the honest mark the theory is DYING (greedy F); the only")
     print("  stipulation that saves it is g:=T — the verdict serves the theory.")
 
@@ -61,11 +62,11 @@ def stamp():
 def registers():
     print("TWO REGISTERS — the friends vs Job, on his guilt g=Z\n")
     print(f"  greedy ¬g = {ev(('not', 'g'), {'g': Z})}   (a verdict minted from ignorance)")
-    print(f"  lazy   ¬g = {ev_reg(('not', 'g'), {'g': Z}, LAZY)}   (withholds under pressure)")
+    print(f"  forced ¬g = {forced(('not', 'g'), {'g': Z})}   (withholds under pressure)")
     assert ev(("not", "g"), {"g": Z}) == F
-    assert ev_reg(("not", "g"), {"g": Z}, LAZY) == Z
+    assert forced(("not", "g"), {"g": Z}) == N
     print("\n  the friends run the greedy register (a verdict NOW); Job runs the")
-    print("  lazy one (Z until ground). The demanded confession is unearned")
+    print("  forced one (N until ground). The demanded confession is unearned")
     print("  either way — any bivalent answer about an unverified g is credit.")
 
 

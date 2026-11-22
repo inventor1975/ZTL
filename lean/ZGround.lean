@@ -1,109 +1,77 @@
 import TableauCert
 
 /-!
-# The general Knaster–Tarski theorem for the lazy jump. Zero axioms.
+# ZGround — the passport's grounding, from ZTL alone (pure branch, 2026-11-22). Zero axioms.
 
-The two-register architecture (§9) rested on per-instance measurements:
-this module proves it once and for all finite systems. A system is a
-list of defining formulas (sentence i defined by the i-th formula, over
-atoms Tr(0), Tr(1), …). The lazy (strong Kleene) evaluation is monotone
-in the information order over the WHOLE language; hence the lazy jump
-is monotone, the iteration from ⊥ (all-Z: here Z plays the solver's
-phase N of the §10 passport, reused positionally) ascends and
-stabilizes within n+1 steps at THE least fixed point; and the grounded
-part is identical in every fixed point — quarantine is well-defined:
-the phase that never resolves hardens into the quarantine mark. The greedy register's
-non-monotonicity (ZTL.lean, Part II) completes the necessity of two
-registers. No omega, no by_contra, no List membership — hand-rolled
-Nat arithmetic and boolean list predicates throughout.
+A system is a list of defining formulas (sentence i defined by the i-th formula, over atoms Tr(0), Tr(1), …).
+Which sentences have a definite value? Kripke's construction (1975): start knowing nothing, re-evaluate every
+definition, keep what has become determined, repeat until nothing changes — the least fixed point; the names
+that never settle are the quarantine. The FRAME (iterate to a fixed point) is Kripke's; the existence of the
+fixed point is the Knaster–Tarski theorem, proved below for every finite system. The STEP — "has this name
+become determined?" — is ZTL's own rule (curator, 2026-11-22), not a borrowed table:
+
+  * an OWN name (a sentence of the system) not yet determined is in the solver's phase `Ph.n` ("not yet
+    computed", SPEC §N: present only under self-reference, never a truth value). It is ours: one value at all
+    its occurrences. A name becomes determined T (F) when its definition is T (F) under EVERY classical value
+    of the still-undetermined names (`comps`: every completion) — the stable test, the judge's IF STABLE;
+  * a FOREIGN input (an atom outside the system) is the mark Z, and is read by ZTL's own tables (`evalF`).
+
+No strong Kleene table, no ¬Z = Z (the lazy register of 2026-07-10 is removed). The phase is a separate type
+`Ph` so that `n` can never be confused with the mark Z. Monotone (`evalS_mono`): more determined names only
+narrow the completions, so a determined value is never revoked — which is all Knaster–Tarski needs.
 -/
 
 namespace V
 
-/-! ## The lazy register over the whole language -/
+/-! ## The solver's phase -/
 
-def kimp (a b : V) : V := kor (knot a) b
+inductive Ph where
+  | n   -- not yet computed (the solver's phase N)
+  | t
+  | f
+deriving DecidableEq, Repr
 
-def kxor : V → V → V
-  | T, T => F | T, F => T | T, Z => Z
-  | F, T => T | F, F => F | F, Z => Z
-  | Z, T => Z | Z, F => Z | Z, Z => Z
+instance (p : Ph → Prop) [DecidablePred p] : Decidable (∀ x : Ph, p x) :=
+  decidable_of_iff (p .n ∧ p .t ∧ p .f)
+    ⟨fun ⟨hn, ht, hf⟩ x => by cases x <;> assumption,
+     fun h => ⟨h .n, h .t, h .f⟩⟩
 
-def kxnor : V → V → V
-  | T, T => T | T, F => F | T, Z => Z
-  | F, T => F | F, F => T | F, Z => Z
-  | Z, T => Z | Z, F => Z | Z, Z => Z
+/-- The information order: n below t and f, t and f incomparable. -/
+-- Non-overlapping rows: an overlapping wildcard row pulls propext in through the compiled matcher
+-- (measured here, as in ZTL.lean).
+def phLeq : Ph → Ph → Bool
+  | .n, .n => true | .n, .t => true | .n, .f => true
+  | .t, .n => false | .t, .t => true | .t, .f => false
+  | .f, .n => false | .f, .t => false | .f, .f => true
 
-theorem kimp_monotone : ∀ a b c d, leqb a c = true → leqb b d = true →
-    leqb (kimp a b) (kimp c d) = true := by decide
-theorem kxor_monotone : ∀ a b c d, leqb a c = true → leqb b d = true →
-    leqb (kxor a b) (kxor c d) = true := by decide
-theorem kxnor_monotone : ∀ a b c d, leqb a c = true → leqb b d = true →
-    leqb (kxnor a b) (kxnor c d) = true := by decide
-theorem leqb_refl : ∀ a : V, leqb a a = true := by decide
+theorem phLeq_refl : ∀ a : Ph, phLeq a a = true := by decide
+theorem leqN : ∀ b : Ph, phLeq .n b = true := by decide
+theorem vbeq : ∀ a b : Ph, (a == b) = true ↔ a = b := by decide
+theorem leq_ne_n : ∀ a b : Ph, phLeq a b = true → ¬(a = b) → (a = .n ∧ ¬(b = .n)) := by decide
+theorem leq_nn : ∀ a b : Ph, phLeq a b = true → ¬(a = .n) → b = a := by decide
 
-/-- Lazy (strong Kleene) evaluation of the full language. -/
-def evalK (v : Nat → V) : Fm → V
-  | .atom n   => v n
-  | .top      => T
-  | .bot      => F
-  | .neg φ    => knot (evalK v φ)
-  | .conj φ ψ => kand (evalK v φ) (evalK v ψ)
-  | .disj φ ψ => kor (evalK v φ) (evalK v ψ)
-  | .imp φ ψ  => kimp (evalK v φ) (evalK v ψ)
-  | .xor φ ψ  => kxor (evalK v φ) (evalK v ψ)
-  | .xnor φ ψ => kxnor (evalK v φ) (evalK v ψ)
-
-/-- Monotonicity of lazy evaluation over the whole language. -/
-theorem evalK_mono {v w : Nat → V} (h : ∀ n, leqb (v n) (w n) = true) :
-    ∀ φ : Fm, leqb (evalK v φ) (evalK w φ) = true := by
-  intro φ
-  induction φ with
-  | atom n => exact h n
-  | top => exact leqb_refl T
-  | bot => exact leqb_refl F
-  | neg φ ih => exact kleene_not_monotone _ _ ih
-  | conj φ ψ ih1 ih2 => exact kleene_and_monotone _ _ _ _ ih1 ih2
-  | disj φ ψ ih1 ih2 => exact kleene_or_monotone _ _ _ _ ih1 ih2
-  | imp φ ψ ih1 ih2 => exact kimp_monotone _ _ _ _ ih1 ih2
-  | xor φ ψ ih1 ih2 => exact kxor_monotone _ _ _ _ ih1 ih2
-  | xnor φ ψ ih1 ih2 => exact kxnor_monotone _ _ _ _ ih1 ih2
-
-/-! ## Finite systems, valuations, the jump -/
-
-abbrev Val := List V
+abbrev PVal := List Ph
 abbrev Sys := List Fm
 
-/-- Read a valuation list (off the end = Z: nothing is granted). -/
-def getZ : Val → Nat → V
-  | [], _ => Z
+/-- Read a phase list (off the end = n). -/
+def getP : PVal → Nat → Ph
+  | [], _ => .n
   | a :: _, 0 => a
-  | _ :: v, n + 1 => getZ v n
+  | _ :: v, n + 1 => getP v n
 
-/-- The lazy jump: re-evaluate every definition. -/
-def jumpL (d : Sys) (v : Val) : Val := d.map (fun φ => evalK (getZ v) φ)
-
-/-- Pointwise information order on valuations. -/
-def valLeq : Val → Val → Bool
+def pvLeq : PVal → PVal → Bool
   | [], [] => true
   | [], _ :: _ => false
   | _ :: _, [] => false
-  | a :: v, b :: w => leqb a b && valLeq v w
+  | a :: v, b :: w => phLeq a b && pvLeq v w
 
-/-- Boolean equality of valuations (avoiding decidable-instance leaks). -/
-def valEq : Val → Val → Bool
+def pvEq : PVal → PVal → Bool
   | [], [] => true
   | [], _ :: _ => false
   | _ :: _, [] => false
-  | a :: v, b :: w => (a == b) && valEq v w
+  | a :: v, b :: w => (a == b) && pvEq v w
 
-theorem vbeq : ∀ a b : V, (a == b) = true ↔ a = b := by decide
-theorem leqZ : ∀ b : V, leqb Z b = true := by decide
-theorem leq_ne_z : ∀ a b : V, leqb a b = true → ¬(a = b) →
-    (a = Z ∧ ¬(b = Z)) := by decide
-theorem leq_nz : ∀ a b : V, leqb a b = true → ¬(a = Z) → b = a := by decide
-
-theorem valEq_iff : ∀ v w : Val, valEq v w = true ↔ v = w := by
+theorem pvEq_iff : ∀ v w : PVal, pvEq v w = true ↔ v = w := by
   intro v
   induction v with
   | nil =>
@@ -121,14 +89,14 @@ theorem valEq_iff : ∀ v w : Val, valEq v w = true ↔ v = w := by
       · rintro ⟨rfl, rfl⟩; rfl
       · intro h; cases h; exact ⟨rfl, rfl⟩
 
-theorem getZ_mono : ∀ v w : Val, valLeq v w = true →
-    ∀ n, leqb (getZ v n) (getZ w n) = true := by
+theorem getP_mono : ∀ v w : PVal, pvLeq v w = true →
+    ∀ n, phLeq (getP v n) (getP w n) = true := by
   intro v
   induction v with
   | nil =>
     intro w h n
     cases w with
-    | nil => exact leqZ _
+    | nil => exact leqN _
     | cons b w => exact nomatch h
   | cons a v ih =>
     intro w h n
@@ -140,37 +108,179 @@ theorem getZ_mono : ∀ v w : Val, valLeq v w = true →
       | zero => exact hp.1
       | succ n => exact ih w hp.2 n
 
-theorem jumpL_mono (d : Sys) {v w : Val} (h : valLeq v w = true) :
-    valLeq (jumpL d v) (jumpL d w) = true := by
+/-! ## Completions: every classical value of the undetermined own names -/
+
+def comps : PVal → List (List Bool)
+  | [] => [[]]
+  | .n :: v => (comps v).map (List.cons true) ++ (comps v).map (List.cons false)
+  | .t :: v => (comps v).map (List.cons true)
+  | .f :: v => (comps v).map (List.cons false)
+
+/-- hand-rolled `all` (the library's lemmas about `List.all` carry propext) -/
+def allB : List (List Bool) → (List Bool → Bool) → Bool
+  | [], _ => true
+  | c :: cs, p => p c && allB cs p
+
+theorem and_true_iff2 : ∀ a b : Bool, (a && b) = true → a = true ∧ b = true := by decide
+theorem and_mk : ∀ a b : Bool, a = true → b = true → (a && b) = true := by decide
+
+theorem allB_append : ∀ (xs ys : List (List Bool)) (p : List Bool → Bool),
+    allB (xs ++ ys) p = true → allB xs p = true ∧ allB ys p = true := by
+  intro xs; induction xs with
+  | nil => intro ys p h; exact ⟨rfl, h⟩
+  | cons x xs ih =>
+    intro ys p h
+    have h2 := and_true_iff2 _ _ h
+    have h3 := ih ys p h2.2
+    exact ⟨and_mk _ _ h2.1 h3.1, h3.2⟩
+
+theorem allB_append_mk : ∀ (xs ys : List (List Bool)) (p : List Bool → Bool),
+    allB xs p = true → allB ys p = true → allB (xs ++ ys) p = true := by
+  intro xs; induction xs with
+  | nil => intro ys p _ h; exact h
+  | cons x xs ih =>
+    intro ys p hx hy
+    have h2 := and_true_iff2 _ _ hx
+    exact and_mk _ _ h2.1 (ih ys p h2.2 hy)
+
+theorem allB_map : ∀ (xs : List (List Bool)) (b : Bool) (p : List Bool → Bool),
+    allB (xs.map (List.cons b)) p = allB xs (fun c => p (b :: c)) := by
+  intro xs; induction xs with
+  | nil => intro _ _; rfl
+  | cons x xs ih => intro b p; show (p (b :: x) && allB (xs.map (List.cons b)) p) = _; rw [ih]; rfl
+
+/-- more determined ⇒ fewer completions: what holds on all completions of `v` holds on all of `w` -/
+theorem comps_mono : ∀ v w : PVal, pvLeq v w = true →
+    ∀ p, allB (comps v) p = true → allB (comps w) p = true := by
+  intro v
+  induction v with
+  | nil =>
+    intro w h p hp
+    cases w with
+    | nil => exact hp
+    | cons b w => exact nomatch h
+  | cons a v ih =>
+    intro w h p hp
+    cases w with
+    | nil => exact nomatch h
+    | cons b w =>
+      have hl := (andEqTrue _ _).mp h
+      cases a with
+      | n =>
+        have hs := allB_append _ _ p hp
+        rw [allB_map, allB_map] at hs
+        have hT := ih w hl.2 _ hs.1
+        have hF := ih w hl.2 _ hs.2
+        cases b with
+        | n => exact allB_append_mk _ _ p (by rw [allB_map]; exact hT) (by rw [allB_map]; exact hF)
+        | t => show allB ((comps w).map (List.cons true)) p = true; rw [allB_map]; exact hT
+        | f => show allB ((comps w).map (List.cons false)) p = true; rw [allB_map]; exact hF
+      | t =>
+        cases b with
+        | t =>
+          show allB ((comps w).map (List.cons true)) p = true
+          have hp' : allB ((comps v).map (List.cons true)) p = true := hp
+          rw [allB_map] at hp' ⊢; exact ih w hl.2 _ hp'
+        | n => exact nomatch hl.1
+        | f => exact nomatch hl.1
+      | f =>
+        cases b with
+        | f =>
+          show allB ((comps w).map (List.cons false)) p = true
+          have hp' : allB ((comps v).map (List.cons false)) p = true := hp
+          rw [allB_map] at hp' ⊢; exact ih w hl.2 _ hp'
+        | n => exact nomatch hl.1
+        | t => exact nomatch hl.1
+
+/-- one completion always exists: the first -/
+def firstC : PVal → List Bool
+  | [] => []
+  | .n :: v => true :: firstC v
+  | .t :: v => true :: firstC v
+  | .f :: v => false :: firstC v
+
+theorem allB_first : ∀ (v : PVal) (p : List Bool → Bool), allB (comps v) p = true → p (firstC v) = true := by
+  intro v
+  induction v with
+  | nil => intro p h; exact (and_true_iff2 _ _ h).1
+  | cons a v ih =>
+    intro p h
+    cases a with
+    | n =>
+      have hs := (allB_append _ _ p h).1
+      rw [allB_map] at hs; exact ih (fun c => p (true :: c)) hs
+    | t =>
+      have hs : allB ((comps v).map (List.cons true)) p = true := h
+      rw [allB_map] at hs; exact ih (fun c => p (true :: c)) hs
+    | f =>
+      have hs : allB ((comps v).map (List.cons false)) p = true := h
+      rw [allB_map] at hs; exact ih (fun c => p (false :: c)) hs
+
+/-! ## The stable step -/
+
+/-- A completion as a ZTL marking: own names classical, foreign atoms (off the system) the mark Z. -/
+def envOf : List Bool → Nat → V
+  | [], _ => Z
+  | b :: _, 0 => if b then T else F
+  | _ :: c, n + 1 => envOf c n
+
+/-- The STEP: t (f) if the definition is T (F) — by ZTL's tables, foreign inputs read as Z — under every
+completion of the undetermined own names; otherwise still n. -/
+def evalS (v : PVal) (φ : Fm) : Ph :=
+  if allB (comps v) (fun c => evalF (envOf c) φ == T) = true then .t
+  else if allB (comps v) (fun c => evalF (envOf c) φ == F) = true then .f
+  else .n
+
+theorem vT_ne_vF (x : V) (h1 : (x == T) = true) (h2 : (x == F) = true) : False := by
+  revert h1 h2; cases x <;> decide
+
+theorem evalS_mono {v w : PVal} (h : pvLeq v w = true) (φ : Fm) :
+    phLeq (evalS v φ) (evalS w φ) = true := by
+  unfold evalS
+  by_cases hT : allB (comps v) (fun c => evalF (envOf c) φ == T) = true
+  · rw [if_pos hT, if_pos (comps_mono v w h _ hT)]; rfl
+  · rw [if_neg hT]
+    by_cases hF : allB (comps v) (fun c => evalF (envOf c) φ == F) = true
+    · rw [if_pos hF]
+      have hFw := comps_mono v w h _ hF
+      have hTw : ¬ allB (comps w) (fun c => evalF (envOf c) φ == T) = true := fun hTw =>
+        vT_ne_vF _ (allB_first w _ hTw) (allB_first w _ hFw)
+      rw [if_neg hTw, if_pos hFw]; rfl
+    · rw [if_neg hF]; exact leqN _
+
+/-- The stable jump: re-evaluate every definition. -/
+def jumpS (d : Sys) (v : PVal) : PVal := d.map (fun φ => evalS v φ)
+
+theorem jumpS_mono (d : Sys) {v w : PVal} (h : pvLeq v w = true) :
+    pvLeq (jumpS d v) (jumpS d w) = true := by
   induction d with
   | nil => rfl
-  | cons φ d ih =>
-    exact (andEqTrue _ _).mpr ⟨evalK_mono (getZ_mono v w h) φ, ih⟩
+  | cons φ d ih => exact (andEqTrue _ _).mpr ⟨evalS_mono h φ, ih⟩
 
 /-! ## The ascending iteration from ⊥ -/
 
-def bot (n : Nat) : Val := List.replicate n Z
+def bot (n : Nat) : PVal := List.replicate n Ph.n
 
-def iter (d : Sys) : Nat → Val
+def iter (d : Sys) : Nat → PVal
   | 0 => bot d.length
-  | k + 1 => jumpL d (iter d k)
+  | k + 1 => jumpS d (iter d k)
 
-theorem replicate_leq : ∀ w : Val, valLeq (List.replicate w.length Z) w = true := by
+theorem replicate_leq : ∀ w : PVal, pvLeq (List.replicate w.length Ph.n) w = true := by
   intro w
   induction w with
   | nil => rfl
-  | cons b w ih => exact (andEqTrue _ _).mpr ⟨leqZ b, ih⟩
+  | cons b w ih => exact (andEqTrue _ _).mpr ⟨leqN b, ih⟩
 
 -- Core's List.length_map/length_replicate carry propext (simp-proved);
 -- hand-rolled replacements keep the ledger empty.
-theorem jumpL_length (d : Sys) (v : Val) :
-    (jumpL d v).length = d.length := by
+theorem jumpS_length (d : Sys) (v : PVal) :
+    (jumpS d v).length = d.length := by
   induction d with
   | nil => rfl
   | cons φ d ih => exact congrArg Nat.succ ih
 
-theorem bot_leq {w : Val} {n : Nat} (hw : w.length = n) :
-    valLeq (bot n) w = true := by
+theorem bot_leq {w : PVal} {n : Nat} (hw : w.length = n) :
+    pvLeq (bot n) w = true := by
   have h := replicate_leq w
   rw [hw] at h
   exact h
@@ -179,32 +289,32 @@ theorem iter_length (d : Sys) : ∀ k, (iter d k).length = d.length := by
   intro k
   cases k with
   | zero =>
-    show (List.replicate d.length Z).length = d.length
+    show (List.replicate d.length Ph.n).length = d.length
     induction d.length with
     | zero => rfl
     | succ n ih => exact congrArg Nat.succ ih
-  | succ k => exact jumpL_length d _
+  | succ k => exact jumpS_length d _
 
 /-- The iteration is an ascending chain. -/
-theorem chain (d : Sys) : ∀ k, valLeq (iter d k) (iter d (k + 1)) = true := by
+theorem chain (d : Sys) : ∀ k, pvLeq (iter d k) (iter d (k + 1)) = true := by
   intro k
   induction k with
   | zero => exact bot_leq (iter_length d 1)
-  | succ k ih => exact jumpL_mono d ih
+  | succ k ih => exact jumpS_mono d ih
 
 /-! ## The information measure and stabilization -/
 
 /-- How many coordinates have earned a classical value. -/
-def info : Val → Nat
+def info : PVal → Nat
   | [] => 0
-  | a :: v => (if a = Z then 0 else 1) + info v
+  | a :: v => (if a = Ph.n then 0 else 1) + info v
 
-theorem info_le_length : ∀ v : Val, info v ≤ v.length := by
+theorem info_le_length : ∀ v : PVal, info v ≤ v.length := by
   intro v
   induction v with
   | nil => exact Nat.le_refl 0
   | cons a v ih =>
-    by_cases h : a = Z
+    by_cases h : a = Ph.n
     · rw [show info (a :: v) = 0 + info v from by rw [info, if_pos h]]
       rw [Nat.zero_add]
       exact Nat.le_trans ih (Nat.le_succ _)
@@ -212,7 +322,7 @@ theorem info_le_length : ∀ v : Val, info v ≤ v.length := by
       rw [Nat.add_comm]
       exact Nat.succ_le_succ ih
 
-theorem info_mono : ∀ v w : Val, valLeq v w = true → info v ≤ info w := by
+theorem info_mono : ∀ v w : PVal, pvLeq v w = true → info v ≤ info w := by
   intro v
   induction v with
   | nil =>
@@ -227,17 +337,17 @@ theorem info_mono : ∀ v w : Val, valLeq v w = true → info v ≤ info w := by
     | cons b w =>
       have hp := (andEqTrue _ _).mp h
       have ihw := ih w hp.2
-      by_cases ha : a = Z
+      by_cases ha : a = Ph.n
       · rw [show info (a :: v) = 0 + info v from by rw [info, if_pos ha],
             Nat.zero_add]
         exact Nat.le_trans ihw (Nat.le_add_left _ _)
-      · have hb : b = a := leq_nz a b hp.1 ha
-        have hbz : ¬(b = Z) := fun hz => ha (hb ▸ hz : a = Z)
+      · have hb : b = a := leq_nn a b hp.1 ha
+        have hbz : ¬(b = Ph.n) := fun hz => ha (hb ▸ hz : a = Ph.n)
         rw [show info (a :: v) = 1 + info v from by rw [info, if_neg ha],
             show info (b :: w) = 1 + info w from by rw [info, if_neg hbz]]
         exact Nat.add_le_add_left ihw 1
 
-theorem info_strict : ∀ v w : Val, valLeq v w = true → ¬(v = w) →
+theorem info_strict : ∀ v w : PVal, pvLeq v w = true → ¬(v = w) →
     info v < info w := by
   intro v
   induction v with
@@ -256,7 +366,7 @@ theorem info_strict : ∀ v w : Val, valLeq v w = true → ¬(v = w) →
       · have hvw : ¬(v = w) := fun ht => hne (hab ▸ ht ▸ rfl)
         have hlt := ih w hp.2 hvw
         subst hab
-        by_cases ha : a = Z
+        by_cases ha : a = Ph.n
         · rw [show info (a :: v) = 0 + info v from by rw [info, if_pos ha],
               show info (a :: w) = 0 + info w from by rw [info, if_pos ha],
               Nat.zero_add, Nat.zero_add]
@@ -264,7 +374,7 @@ theorem info_strict : ∀ v w : Val, valLeq v w = true → ¬(v = w) →
         · rw [show info (a :: v) = 1 + info v from by rw [info, if_neg ha],
               show info (a :: w) = 1 + info w from by rw [info, if_neg ha]]
           exact Nat.add_lt_add_left hlt 1
-      · have ⟨haz, hbz⟩ := leq_ne_z a b hp.1 hab
+      · have ⟨haz, hbz⟩ := leq_ne_n a b hp.1 hab
         rw [show info (a :: v) = 0 + info v from by rw [info, if_pos haz],
             show info (b :: w) = 1 + info w from by rw [info, if_neg hbz],
             Nat.zero_add, Nat.add_comm]
@@ -272,7 +382,7 @@ theorem info_strict : ∀ v w : Val, valLeq v w = true → ¬(v = w) →
 
 /-- One fixed step stays fixed. -/
 theorem persist (d : Sys) {m : Nat} (h : iter d m = iter d (m + 1)) :
-    iter d (m + 1) = iter d (m + 2) := congrArg (jumpL d) h
+    iter d (m + 1) = iter d (m + 2) := congrArg (jumpS d) h
 
 /-- Either the iteration has stabilized at m, or it has earned ≥ m
 classical coordinates. -/
@@ -282,11 +392,11 @@ theorem fix_or_grow (d : Sys) : ∀ m : Nat,
   induction m with
   | zero => exact Or.inr (Nat.zero_le _)
   | succ m ih =>
-    cases hb : valEq (iter d m) (iter d (m + 1)) with
-    | true => exact Or.inl (persist d ((valEq_iff _ _).mp hb))
+    cases hb : pvEq (iter d m) (iter d (m + 1)) with
+    | true => exact Or.inl (persist d ((pvEq_iff _ _).mp hb))
     | false =>
       have hne : ¬(iter d m = iter d (m + 1)) := fun he => by
-        rw [(valEq_iff _ _).mpr he] at hb
+        rw [(pvEq_iff _ _).mpr he] at hb
         exact nomatch hb
       cases ih with
       | inl hfix => exact absurd hfix hne
@@ -295,10 +405,10 @@ theorem fix_or_grow (d : Sys) : ∀ m : Nat,
           (info_strict _ _ (chain d m) hne)))
 
 /-- THE LEAST FIXED POINT: the iteration stabilizes within n+1 steps. -/
-def lfp (d : Sys) : Val := iter d (d.length + 1)
+def lfp (d : Sys) : PVal := iter d (d.length + 1)
 
-/-- Knaster–Tarski, existence: lfp is a fixed point of the lazy jump. -/
-theorem kt_fixed (d : Sys) : jumpL d (lfp d) = lfp d := by
+/-- Knaster–Tarski, existence: lfp is a fixed point of the stable jump. -/
+theorem kt_fixed (d : Sys) : jumpS d (lfp d) = lfp d := by
   cases fix_or_grow d (d.length + 1) with
   | inl h => exact h.symm
   | inr h =>
@@ -307,29 +417,51 @@ theorem kt_fixed (d : Sys) : jumpL d (lfp d) = lfp d := by
       (Nat.not_succ_le_self d.length)
 
 /-- Knaster–Tarski, minimality: lfp lies below every fixed point. -/
-theorem kt_least (d : Sys) (w : Val) (hw : w.length = d.length)
-    (hfix : jumpL d w = w) : valLeq (lfp d) w = true := by
-  have key : ∀ k, valLeq (iter d k) w = true := by
+theorem kt_least (d : Sys) (w : PVal) (hw : w.length = d.length)
+    (hfix : jumpS d w = w) : pvLeq (lfp d) w = true := by
+  have key : ∀ k, pvLeq (iter d k) w = true := by
     intro k
     induction k with
     | zero => exact bot_leq hw
     | succ k ih =>
-      have h := jumpL_mono d ih
+      have h := jumpS_mono d ih
       rw [hfix] at h
       exact h
   exact key (d.length + 1)
 
-/-- Quarantine is well-defined: a coordinate grounded in the least
-fixed point carries the SAME classical value in every fixed point. -/
-theorem grounded_absolute (d : Sys) (w : Val) (hw : w.length = d.length)
-    (hfix : jumpL d w = w) (n : Nat) (hg : ¬(getZ (lfp d) n = Z)) :
-    getZ w n = getZ (lfp d) n :=
-  leq_nz _ _ (getZ_mono _ _ (kt_least d w hw hfix) n) hg
+/-- Quarantine is well-defined: a name grounded in the least fixed point carries the SAME classical
+value in every fixed point. -/
+theorem grounded_absolute (d : Sys) (w : PVal) (hw : w.length = d.length)
+    (hfix : jumpS d w = w) (n : Nat) (hg : ¬(getP (lfp d) n = Ph.n)) :
+    getP w n = getP (lfp d) n :=
+  leq_nn _ _ (getP_mono _ _ (kt_least d w hw hfix) n) hg
 
-#print axioms evalK_mono
-#print axioms jumpL_mono
+
+/-! ## The cases, computed by the kernel -/
+
+/-- The liar L ≡ ¬L: never determined — quarantine. -/
+theorem liar_lfp : lfp [.neg (.atom 0)] = [.n] := rfl
+/-- The truth-teller τ ≡ τ: never determined (two classical solutions; a blank for a decree). -/
+theorem truthteller_lfp : lfp [.atom 0] = [.n] := rfl
+/-- Curry with ⊥ ≡ s ∧ ¬s (γ = 0, ⊥ = 1, s = 2): ⊥ IS determined, F, under every value of s — the hole the
+lazy register left (it called γ's refusal "conditional") is closed: γ ≡ γ → F is the liar in a costume. -/
+theorem curry_lfp : lfp [.imp (.atom 0) (.atom 1), .conj (.atom 2) (.neg (.atom 2)), .atom 2] = [.n, .f, .n] := rfl
+/-- A foreign input (atom 5, outside the system) is the mark Z and is read by ZTL's tables:
+S ≡ ¬J is F now (curator 2026-11-22: "S ≡ ¬J, J only Z, is F"). -/
+theorem foreign_input_lfp : lfp [.neg (.atom 5)] = [.f] := rfl
+/-- The strong liar σ ≡ ¬σ ∧ σ: F under every value of σ — determined by its form. -/
+theorem strong_liar_lfp : lfp [.conj (.neg (.atom 0)) (.atom 0)] = [.f] := rfl
+
+#print axioms comps_mono
+#print axioms evalS_mono
+#print axioms jumpS_mono
 #print axioms kt_fixed
 #print axioms kt_least
 #print axioms grounded_absolute
+#print axioms liar_lfp
+#print axioms truthteller_lfp
+#print axioms curry_lfp
+#print axioms foreign_input_lfp
+#print axioms strong_liar_lfp
 
 end V

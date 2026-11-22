@@ -14,7 +14,8 @@ corpus must stand on the empty axiom list (pure enumeration, `decide`).
 The mark family, as we see it, ACROSS the tiers (only T/F/Z are core
 truth-values below; the rest live above and are NOT part of `V`):
   * T, F, Z  — verification core (this file): earned / honest-false / on credit.
-  * N        — Z read in the LAZY (strong-Kleene) register (`ZGround`).
+  * N        — the solver's phase "not yet computed" (`ZGround.Ph.n`, pure branch): only under
+               self-reference, never a truth value; no Kleene register.
   * E        — the JUDGE's verdict when a declared world admits nothing
                to read (boundary tier; "смерть суждения").
   * S = СОБЛАЗН / Seduction — the ETHICS tier: a claim that is TRUE yet

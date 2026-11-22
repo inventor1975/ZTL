@@ -1,11 +1,11 @@
 {
  "zfl_sidecar": 1,
  "file": "paradox-docket-EN-draft.md",
- "sha256": "739d93af9ce81547b12cbab9d8b1b07bcaf759c3a09e0f4de4a72d44d60d0600",
+ "sha256": "e271c4c04f9e7be979265bb4d73dd9830acb04cef486e91157fe441dda588b01",
  "decision": {
   "status": "waived",
-  "why": "Only the Zenodo-reserved version DOI stamped into the header / sheet (draft opened today; read back from Zenodo), and the Gettier sheet's version string; the rest of the text was reviewed earlier today (Sonnet prose-reviewer, findings acted on).",
-  "at": "2026-10-26T10:42:13+00:00",
+  "why": "v1.2.1 corrections; Sonnet reader's findings on the changed passages applied (conditional refutation stated as conditional, 'provided' throughout, 6-of-9 scoped to the form with the rule, sorites condition marked as the argument's own premise, re-run scope named); findings on unchanged text (lottery, Berry, 'eighth verdict') left for v1.3; table GREEN",
+  "at": "2026-10-31T14:25:41+00:00",
   "operator": "undeclared"
  }
 }

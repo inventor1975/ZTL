@@ -1,0 +1,11 @@
+{
+ "zfl_sidecar": 1,
+ "file": "ONBOARDING.md",
+ "sha256": "52cc205b0cc354b925c94791bfebe6b30afb7a82d4b9e4d6fd1d8c55ed870139",
+ "decision": {
+  "status": "waived",
+  "why": "the only change is the new Degrees section; it was reviewed as a separate numbered file by two Sonnet skeptic rounds (16 + 23 findings), substantive ones fixed, the rest accepted with reasons — record: scratchpad/degrees_reviews_both.txt. Still local: the push to public ZTL waits for the curator's word.",
+  "at": "2026-11-05T21:21:08+00:00",
+  "operator": "undeclared"
+ }
+}

@@ -1,0 +1,11 @@
+{
+ "zfl_sidecar": 1,
+ "file": "ROADMAP-v1.3.md",
+ "sha256": "d5a7c6d0b8575e74e1b75d116fd2ddf1430f75d63427b6b01a65043d9806808b",
+ "decision": {
+  "status": "waived",
+  "why": "WORKING DRAFT (not published; v1.3 goes out once, by the curator). New §5.2 reviewed by a Sonnet skeptic (28 findings), rewritten: the judged claim named in every table row, four genres (ground added), verdicts called the judge's output on stated or cited marks, Banach–Tarski ZFC vs ZF+DC and Solovay with its inaccessible, the free-group LP stated as what is computed and the transfer to space as cited, Burali-Forti illustrated for k <= 5 with the rank argument cited and the naive form called a simplification, Matiyasevich restated, Sleeping Beauty credence left open, Simpson/St. Petersburg/Galileo/Hilbert/Perron attributions corrected, 0.999 the value of the whole expansion, Monty Hall's four hosts. No second round.",
+  "at": "2026-11-06T09:40:09+00:00",
+  "operator": "undeclared"
+ }
+}

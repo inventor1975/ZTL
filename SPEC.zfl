@@ -1,0 +1,11 @@
+{
+ "zfl_sidecar": 1,
+ "file": "SPEC.md",
+ "sha256": "fd8a51dafe732501eef520b16aff43082cc96a7cc1a93a8329929b64ce993908",
+ "decision": {
+  "status": "waived",
+  "why": "the Hilbert epsilon passages reviewed by a Sonnet skeptic (14 findings): fixed — the history (epsilon early 1920s; Ackermann, von Neumann; the epsilon theorems in Grundlagen II 1939) and the theorems' conditions, 'axiom' not 'rule', 'close' not 'exact' ancestor, the computable-property and non-empty conditions, the critical axiom bringing the excluded middle for non-computable P, the claim restricted to P(eps), the Lean statements called ordinary-logic ones with the ZTL reading not formalised, the substitution method and the identification of epsilon-terms acknowledged instead of 'he did not need'. No second round.",
+  "at": "2026-11-06T10:17:42+00:00",
+  "operator": "undeclared"
+ }
+}

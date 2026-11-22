@@ -1,0 +1,11 @@
+{
+ "zfl_sidecar": 1,
+ "file": "JUDGE-API.md",
+ "sha256": "9778a81e13702ec096fbd0960fcdf51a225c2158c89d562ec092926ea0cd2c32",
+ "decision": {
+  "status": "waived",
+  "why": "address change only (move to ztljudge.com, 2026-10-30): ztl/api/engineer.vitalyreznik.com -> studio/api/engineer.ztljudge.com; no claim changed",
+  "at": "2026-10-29T22:57:04+00:00",
+  "operator": "undeclared"
+ }
+}

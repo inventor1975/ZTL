@@ -1,11 +1,11 @@
 {
  "zfl_sidecar": 1,
  "file": "ZENODO-DOCKET.md",
- "sha256": "455fcfd3cf0a3d3559808d1f3eaced853663429774000810dce4c886d1dcb89d",
+ "sha256": "2702c04f7e084a38224a2e7ecb0165a9fab1d8eda7110e6e236a4ad7ef53aba2",
  "decision": {
   "status": "waived",
-  "why": "Status line only: PREPARED -> PUBLISHED with the API verification of the live record.",
-  "at": "2026-10-26T10:50:06+00:00",
+  "why": "upload sheet: publication status read back from the Zenodo API",
+  "at": "2026-10-31T14:39:02+00:00",
   "operator": "undeclared"
  }
 }

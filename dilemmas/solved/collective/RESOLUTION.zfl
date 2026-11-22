@@ -1,0 +1,11 @@
+{
+ "zfl_sidecar": 1,
+ "file": "RESOLUTION.md",
+ "sha256": "b2a38edf16f8efca2bbd06608c9b989b3e407295a271e27538c1cb842b32849b",
+ "decision": {
+  "status": "waived",
+  "why": "Final bytes reviewed by me: the curator's dirty-Z terminology rule (DIRTY-RULE.md) applied by an agent, terminology only — Z glossed as 'dirty' (canonical wording where Z is defined), API docs say the list is returned as 'dirty' and, for compatibility, 'unverified'; no claim changed; quotes, dated records and published papers left as they were.",
+  "at": "2026-10-25T18:06:01+00:00",
+  "operator": "undeclared"
+ }
+}

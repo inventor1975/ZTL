@@ -1,0 +1,11 @@
+{
+ "zfl_sidecar": 1,
+ "file": "KNOWN-LIMITS.md",
+ "sha256": "87b7a80d0f587193129feb38baaf7f52526a2db70aa754c992974e2b189d5a61",
+ "decision": {
+  "status": "waived",
+  "why": "premise paragraph updated: any-order Cholesky proved (tree_err, cholesky_entry_tree; audit 2884 clean); the remaining premise is only the machine's rounding model — checked this session",
+  "at": "2026-11-01T00:20:18+00:00",
+  "operator": "undeclared"
+ }
+}

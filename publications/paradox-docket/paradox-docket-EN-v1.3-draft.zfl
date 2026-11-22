@@ -1,0 +1,11 @@
+{
+ "zfl_sidecar": 1,
+ "file": "paradox-docket-EN-v1.3-draft.md",
+ "sha256": "958fea234ed6b0e11dab6e29548f9bec03dacb0ffaa307fbd2ffa2e17240d373",
+ "decision": {
+  "status": "waived",
+  "why": "WORKING DRAFT (not published; v1.3 goes out once, by the curator). New §5.2 reviewed by a Sonnet skeptic (28 findings), rewritten: the judged claim named in every table row, four genres (ground added), verdicts called the judge's output on stated or cited marks, Banach–Tarski ZFC vs ZF+DC and Solovay with its inaccessible, the free-group LP stated as what is computed and the transfer to space as cited, Burali-Forti illustrated for k <= 5 with the rank argument cited and the naive form called a simplification, Matiyasevich restated, Sleeping Beauty credence left open, Simpson/St. Petersburg/Galileo/Hilbert/Perron attributions corrected, 0.999 the value of the whole expansion, Monty Hall's four hosts. No second round.",
+  "at": "2026-11-06T09:40:09+00:00",
+  "operator": "undeclared"
+ }
+}

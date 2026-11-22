@@ -1,0 +1,11 @@
+{
+ "zfl_sidecar": 1,
+ "file": "ZTL-CONNECTOR-SPEC-v0.1.md",
+ "sha256": "bf70d2213abd696901853b9f08e1ed50aa349ad090a20e8aa03e72cd2f348cab",
+ "decision": {
+  "status": "waived",
+  "why": "Final bytes reviewed by me: the curator's dirty-Z terminology rule (DIRTY-RULE.md) applied by an agent, terminology only — Z glossed as 'dirty' (canonical wording where Z is defined), API docs say the list is returned as 'dirty' and, for compatibility, 'unverified'; no claim changed; quotes, dated records and published papers left as they were.",
+  "at": "2026-10-25T18:06:01+00:00",
+  "operator": "undeclared"
+ }
+}

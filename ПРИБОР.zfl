@@ -1,0 +1,11 @@
+{
+ "zfl_sidecar": 1,
+ "file": "ПРИБОР.md",
+ "sha256": "80d8b980edafda1f51eae3e82e60726447803e77cc7a6c9b93bbda786f07039f",
+ "decision": {
+  "status": "waived",
+  "why": "path-only edit for the 2026-10-25 move to publications/<work>/ (curator's decision): file paths rewritten and, in the READMEs, one pointer sentence to publications/README.md; no claim, number or argument changed",
+  "at": "2026-10-25T19:18:41+00:00",
+  "operator": "undeclared"
+ }
+}

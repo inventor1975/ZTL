@@ -62,55 +62,55 @@ def timed(fn, budget):
         signal.setitimer(signal.ITIMER_VIRTUAL, 0)
 
 
-# ------------------------------------------------ the proposed `_lazy` fix
+# ------------------------------------------------ the proposed `_forced` fix (historical W1; pure branch)
 # NOT a change to the core: an in-process stand-in used only when `--fix-lazy`
 # is given, to measure what the caps would be once `ztljudge._lazy` stops
 # evaluating an implication's children twice (line 292 evaluates both
 # children of every binary node; the `imp` branch then re-reads the node as
 # `~a | b` and evaluates both again, so each nested `->` doubles the work).
 # The same computation, from the values already in hand.
-T_, F_, Z_ = "T", "F", "Z"
+T_, F_, Z_, N_ = "T", "F", "Z", "N"
 
 
-def lazy_fixed(phi, m):
+def forced_fixed(phi, m):
     if isinstance(phi, str):
         if phi in (T_, F_, Z_):
-            return phi, set()
+            return (N_ if phi == Z_ else phi), set()
         v = m.get(phi, Z_)
-        return (v, {phi}) if v == Z_ else (v, set())
+        return (N_, {phi}) if v == Z_ else (v, set())
     op = phi[0]
     if op == "not":
-        v, lab = lazy_fixed(phi[1], m)
-        return ({T_: F_, F_: T_, Z_: Z_}[v], lab)
-    (a, la), (b, lb) = lazy_fixed(phi[1], m), lazy_fixed(phi[2], m)
+        v, lab = forced_fixed(phi[1], m)
+        return ({T_: F_, F_: T_, N_: N_}[v], lab)
+    (a, la), (b, lb) = forced_fixed(phi[1], m), forced_fixed(phi[2], m)
     if op == "imp":
-        a = {T_: F_, F_: T_, Z_: Z_}[a]          # ~a, label unchanged
+        a = {T_: F_, F_: T_, N_: N_}[a]          # ~a, label unchanged
         op = "or"
     if op == "and":
         if a == F_:
             return F_, la
         if b == F_:
             return F_, lb
-        return (T_, set()) if a == b == T_ else (Z_, la | lb)
+        return (T_, set()) if a == b == T_ else (N_, la | lb)
     if op == "or":
         if a == T_:
             return T_, la
         if b == T_:
             return T_, lb
-        return (F_, set()) if a == b == F_ else (Z_, la | lb)
+        return (F_, set()) if a == b == F_ else (N_, la | lb)
     if op in ("xnor", "xor"):
-        if Z_ in (a, b):
-            return Z_, la | lb
+        if N_ in (a, b):
+            return N_, la | lb
         same = (a == b)
         return (T_ if (same if op == "xnor" else not same) else F_), set()
     raise ValueError(op)
 
 
-_LAZY_ORIG = ztljudge._lazy
+_FORCED_ORIG = ztljudge._forced
 
 
 def use_fixed_lazy(on):
-    ztljudge._lazy = lazy_fixed if on else _LAZY_ORIG
+    ztljudge._forced = forced_fixed if on else _FORCED_ORIG
 
 
 # ------------------------------------------------------------ the documents

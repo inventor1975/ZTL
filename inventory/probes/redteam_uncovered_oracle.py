@@ -348,28 +348,30 @@ def families(phi, marking, target, by_disposition=True, grounds=None):
 
 
 # ----------------------------------------------------------- 3. epochs
-def kleene(phi, m):
-    """The LAZY register (ztljudge._lazy's docstring: "Kleene's tables ...
-    an unchecked atom survives negation (~Z is Z) and is ABSORBED by a
-    decisive partner"); -> read as ~a | b; xor/xnor wait on any Z. zfl's
-    `resolved_marking` gives a DEFINED row the value its sentence takes in
-    the least fixed point of this jump; for a sentence over plain rows only
-    (no self-reference) that is this evaluation, once."""
-    if isinstance(phi, str):
-        return phi if phi in CONSTS else m.get(phi, Z)
-    if phi[0] == "not":
-        return {T: F, F: T, Z: Z}[kleene(phi[1], m)]
-    a, b = kleene(phi[1], m), kleene(phi[2], m)
-    op = phi[0]
-    if op == "imp":
-        a, op = {T: F, F: T, Z: Z}[a], "or"
-    if op == "and":
-        return F if F in (a, b) else T if a == b == T else Z
-    if op == "or":
-        return T if T in (a, b) else F if a == b == F else Z
-    if Z in (a, b):
-        return Z
-    return T if (a == b) == (op == "xnor") else F
+def defined_value(phi, m):
+    """What zfl's `resolved_marking` gives a DEFINED row over plain rows only (pure branch, 2026-11-22):
+    the stable step — classics first — once: T (F) if the sentence is classically true (false) under every
+    classical value of every open atom (one value per atom), else not determined, handed on as the quarantine
+    mark Z. Brute force, independent of zread."""
+    names = sorted(atoms(phi))
+    opn = [a for a in names if m.get(a, Z) == Z]
+    def cl(p, b):
+        if isinstance(p, str):
+            if p in CONSTS:
+                return {True} if p == T else {False} if p == F else {True, False}
+            return {b[p]}
+        if p[0] == "not":
+            return {not x for x in cl(p[1], b)}
+        A, B = cl(p[1], b), cl(p[2], b)
+        g = {"and": lambda x, y: x and y, "or": lambda x, y: x or y, "imp": lambda x, y: (not x) or y,
+             "xor": lambda x, y: x != y, "xnor": lambda x, y: x == y}[p[0]]
+        return {g(x, y) for x in A for y in B}
+    from itertools import product as _pr
+    outs = set()
+    fixed = {a: (m.get(a) == T) for a in names if m.get(a, Z) in (T, F)}
+    for bits in _pr((True, False), repeat=len(opn)):
+        outs |= cl(phi, {**fixed, **dict(zip(opn, bits))})
+    return T if outs == {True} else F if outs == {False} else Z
 
 
 def reach_all(phi, m0):

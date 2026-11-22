@@ -380,7 +380,7 @@ def s_epoch(seed, n):
             out = dict(pm)
             for a, v in marking.items():
                 if isinstance(v, tuple):
-                    out[a] = O.kleene(v[1], pm)
+                    out[a] = O.defined_value(v[1], pm)
             return {a: out[a] for a in sorted(O.atoms(phi))}
         m_b = resolve(plain)
         vb, gb = O.ev(phi, m_b), O.grade(phi, m_b)

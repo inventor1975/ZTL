@@ -55,9 +55,6 @@ theorem carousel_period4 : ∀ a b : V, (a = T ∨ a = F) → (b = T ∨ b = F) 
 /-- Curry c = (Tr c → ⊥): greedily homeless — without any negation. -/
 theorem curry_homeless : ∀ v : V, zimp v F ≠ v := by decide
 
-/-- Curry finds a home in the lazy register: kimp Z ⊥ = Z. -/
-theorem curry_kleene_home : kor (knot Z) F = Z := rfl
-
 /-- Parity, cycle 3 with one inversion: no models. -/
 theorem odd3_no_model : ∀ a b c : V, ¬(a = b ∧ b = c ∧ c = znot a) := by
   decide

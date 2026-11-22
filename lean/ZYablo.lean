@@ -18,11 +18,12 @@
        (`yablo_greedy_homeless`). This is the infinite instrument the caveat
        asked for, and it is one theorem rather than a procedure.
 
-    3. The infinite system IS satisfiable in the LAZY register: everything
-       dirty is admissible (`yablo_lazy_home`). So Yablo receives the
-       same diagnosis as the liar and Curry — homeless where signatures are
-       issued, housed where they are withheld — except that for Yablo this
-       could not be seen at any finite stage.
+    3. The infinite system is NEVER DETERMINED by the stable step
+       (`yablo_never_determined`, pure branch: one classical value per sentence,
+       no Kleene register): every sentence has two completions on which its
+       definition differs. So Yablo receives the same diagnosis as the liar —
+       homeless where signatures are issued, never settled where the solver
+       grounds — except that for Yablo this could not be seen at any finite stage.
 
   AND THE CLASSICAL STEP IS AVOIDED, WHICH IS WHY THIS IS HERE AT ALL. The
   textbook argument goes: `v i = T` forces every later sentence false, so
@@ -101,30 +102,28 @@ theorem yablo_greedy_homeless : ¬ ∃ v : Nat → V, GreedyAdmissible v := by
     | inr hF => exact hF
   exact hnoT 0 ((h 0).2.mpr hallF)
 
-/-! ### 2. …and housed in the lazy register -/
+/-! ### 2. …and never determined by the stable step (pure branch, 2026-11-22) -/
 
-/-- Admissibility in the LAZY register: T exactly when every later denial is
-earned, F exactly when some later denial is refuted, and Z in the gap. -/
-def LazyAdmissible (v : Nat → V) : Prop :=
-  ∀ i, (v i = T ↔ ∀ j, i < j → knot (v j) = T)
-     ∧ (v i = F ↔ ∃ j, i < j ∧ knot (v j) = F)
+/-- Sentence i's definition under a completion `c` (one classical value per sentence, the stable test of
+`ZGround`): every later sentence is false. -/
+def yabloVal (c : Nat → Bool) (i : Nat) : Prop := ∀ j, i < j → c j = false
 
-/-- **AND YABLO HAS A HOME.** Everything dirty is admissible: no later
-denial is earned, none is refused, so nothing forces a verdict. The same
-shape as `liar_kleene_home` and `curry_kleene_home` — reached here for a
-system no finite stage could diagnose. -/
-theorem yablo_lazy_home : LazyAdmissible (fun _ => Z) := by
-  intro i
-  constructor
-  · constructor
-    · intro h; exact V.noConfusion h
-    · intro h
-      have := h (i + 1) (Nat.lt_succ_self i)
-      exact absurd this (fun hz => V.noConfusion hz)
-  · constructor
-    · intro h; exact V.noConfusion h
-    · intro ⟨_, _, hz⟩
-      exact absurd hz (fun h => V.noConfusion h)
+/-- `Nat.beq n n = true`, hand-rolled (the library's lemma pulls propext). -/
+theorem beq_self : ∀ n : Nat, Nat.beq n n = true
+  | 0 => rfl
+  | n + 1 => beq_self n
+
+/-- **YABLO STAYS IN THE SOLVER'S PHASE.** For every sentence there are two completions of the undetermined
+sentences on which its definition takes different values — all later sentences false (true), or the next one
+true (false) — so the stable step never determines it: the all-undetermined state is where Yablo rests. The
+same diagnosis as the liar, reached for a system no finite stage could diagnose. No Kleene table. -/
+theorem yablo_never_determined (i : Nat) :
+    yabloVal (fun _ => false) i ∧ ¬ yabloVal (fun j => Nat.beq j (i + 1)) i := by
+  refine ⟨fun _ _ => rfl, ?_⟩
+  intro h
+  have hh : Nat.beq (i + 1) (i + 1) = false := h (i + 1) (Nat.lt_succ_self i)
+  rw [beq_self] at hh
+  exact Bool.noConfusion hh
 
 /-! ### 3. Every finite truncation is grounded — for every n -/
 
@@ -188,5 +187,5 @@ end ZYablo
 
 #print axioms ZYablo.no_true_sentence
 #print axioms ZYablo.yablo_greedy_homeless
-#print axioms ZYablo.yablo_lazy_home
+#print axioms ZYablo.yablo_never_determined
 #print axioms ZYablo.trunc_unique

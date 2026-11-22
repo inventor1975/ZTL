@@ -18,7 +18,7 @@ constant, put
     R_ψ := (a ∨ (ψ ∧ ¬ψ)) ∧ ψ
 
 `ψ ∧ ¬ψ` is the false that keeps the mark: F wherever ψ is settled, Z
-wherever ψ still waits (`kand Z Z = Z`). At the all-marked start everything
+wherever ψ still waits (`phAnd Z Z = .n`). At the all-marked start everything
 is Z, the claim is pending, and the receipt names `a` (`named`) — by its own
 rule, since neither branch of the outer conjunction is settled.
 
@@ -28,11 +28,11 @@ other dirty grounds — possibly partial — under which `a := T` and
 point. With `a := T` the claim reads `ψ`; with `a := F` it reads `ψ ∧ ¬ψ`,
 which is Z where ψ is Z and F where ψ is settled; the two differ precisely
 where ψ reads T (`sides_ne`). A partial reading on which ψ reads T lies
-below a classical one, and the lazy register is monotone (`evalK_mono`), so
+below a classical one, and the forced outcome is monotone (`foC_t_mono`), so
 the classical point reads T as well.
 
     named            :  labF allZ R_ψ a = true
-    pivotal_iff_sat  :  pivotal allZ R_ψ a  ↔  ∃ c classical, evalK c ψ = T
+    pivotal_iff_sat  :  pivotal allZ R_ψ a  ↔  ∃ c classical, foC c ψ = .t
 
 (Only `named` needs ψ constant-free — the receipt names `a` only while the
 claim is pending; the equivalence itself needs just that `a` is not read by ψ.)
@@ -100,7 +100,7 @@ theorem and_true_right {a b : Bool} (h : (a && b) = true) : b = true := by
   | false => exact Bool.noConfusion h
 
 /-- A constant-free claim waits while every ground waits. -/
-theorem evalK_allZ : ∀ φ : Fm, constFree φ = true → evalK allZ φ = Z := by
+theorem evalK_allZ : ∀ φ : Fm, constFree φ = true → foC allZ φ = .n := by
   intro φ
   induction φ with
   | atom n => intro _; rfl
@@ -108,27 +108,27 @@ theorem evalK_allZ : ∀ φ : Fm, constFree φ = true → evalK allZ φ = Z := b
   | bot => intro h; exact Bool.noConfusion h
   | neg φ ih =>
       intro h
-      show knot (evalK allZ φ) = Z
+      show phNot (foC allZ φ) = .n
       rw [ih h]; rfl
   | conj φ ψ ihφ ihψ =>
       intro h
-      show kand (evalK allZ φ) (evalK allZ ψ) = Z
+      show phAnd (foC allZ φ) (foC allZ ψ) = .n
       rw [ihφ (and_true_left h), ihψ (and_true_right h)]; rfl
   | disj φ ψ ihφ ihψ =>
       intro h
-      show kor (evalK allZ φ) (evalK allZ ψ) = Z
+      show phOr (foC allZ φ) (foC allZ ψ) = .n
       rw [ihφ (and_true_left h), ihψ (and_true_right h)]; rfl
   | imp φ ψ ihφ ihψ =>
       intro h
-      show kimp (evalK allZ φ) (evalK allZ ψ) = Z
+      show phImp (foC allZ φ) (foC allZ ψ) = .n
       rw [ihφ (and_true_left h), ihψ (and_true_right h)]; rfl
   | xor φ ψ ihφ ihψ =>
       intro h
-      show kxor (evalK allZ φ) (evalK allZ ψ) = Z
+      show phXor (foC allZ φ) (foC allZ ψ) = .n
       rw [ihφ (and_true_left h), ihψ (and_true_right h)]; rfl
   | xnor φ ψ ihφ ihψ =>
       intro h
-      show kxnor (evalK allZ φ) (evalK allZ ψ) = Z
+      show phXnor (foC allZ φ) (foC allZ ψ) = .n
       rw [ihφ (and_true_left h), ihψ (and_true_right h)]; rfl
 
 /-! ## The witness -/
@@ -141,36 +141,36 @@ def witnessR (a : Nat) (ψ : Fm) : Fm := Fm.conj (Fm.disj (Fm.atom a) (zfalse ψ
 
 /-- With `a := T` the witness reads ψ; with `a := F` it reads `ψ ∧ ¬ψ`; the two
 differ exactly where ψ reads T. -/
-theorem sides_ne : ∀ x : V,
-    kand (kor T (kand x (knot x))) x ≠ kand (kor F (kand x (knot x))) x → x = T := by
+theorem sides_ne : ∀ x : Ph,
+    phAnd (phOr .t (phAnd x (phNot x))) x ≠ phAnd (phOr .f (phAnd x (phNot x))) x → x = .t := by
   intro x h
   cases x with
-  | T => rfl
-  | F => exact absurd (by decide) h
-  | Z => exact absurd (by decide) h
+  | t => rfl
+  | f => exact absurd (by decide) h
+  | n => exact absurd (by decide) h
 
 /-- At the all-marked start the receipt names `a`. -/
 theorem named (a : Nat) (ψ : Fm) (hc : constFree ψ = true) :
     labF allZ (witnessR a ψ) a = true := by
-  have hψ : evalK allZ ψ = Z := evalK_allZ ψ hc
-  have hz : evalK allZ (zfalse ψ) = Z := by
-    show kand (evalK allZ ψ) (knot (evalK allZ ψ)) = Z
+  have hψ : foC allZ ψ = .n := evalK_allZ ψ hc
+  have hz : foC allZ (zfalse ψ) = .n := by
+    show phAnd (foC allZ ψ) (phNot (foC allZ ψ)) = .n
     rw [hψ]; rfl
-  have hd : evalK allZ (Fm.disj (Fm.atom a) (zfalse ψ)) = Z := by
-    show kor (evalK allZ (Fm.atom a)) (evalK allZ (zfalse ψ)) = Z
+  have hd : foC allZ (Fm.disj (Fm.atom a) (zfalse ψ)) = .n := by
+    show phOr (foC allZ (Fm.atom a)) (foC allZ (zfalse ψ)) = .n
     rw [hz]; rfl
   have ha : labF allZ (Fm.atom a) a = true := by
     show decide (a = a) = true
     exact decide_eq_true rfl
   have hl : labF allZ (Fm.disj (Fm.atom a) (zfalse ψ)) a = true := by
-    show disjL (evalK allZ (Fm.atom a)) (evalK allZ (zfalse ψ))
+    show disjL (foC allZ (Fm.atom a)) (foC allZ (zfalse ψ))
            (labF allZ (Fm.atom a) a) (labF allZ (zfalse ψ) a) = true
     rw [hz, ha]
-    show disjL Z Z true (labF allZ (zfalse ψ) a) = true
+    show disjL .n .n true (labF allZ (zfalse ψ) a) = true
     cases hb : labF allZ (zfalse ψ) a with
     | true => rfl
     | false => rfl
-  show conjL (evalK allZ (Fm.disj (Fm.atom a) (zfalse ψ))) (evalK allZ ψ)
+  show conjL (foC allZ (Fm.disj (Fm.atom a) (zfalse ψ))) (foC allZ ψ)
          (labF allZ (Fm.disj (Fm.atom a) (zfalse ψ)) a) (labF allZ ψ a) = true
   rw [hd, hψ, hl]
   show (true || labF allZ ψ a) = true
@@ -221,21 +221,19 @@ theorem leqb_T_eq : ∀ y : V, leqb T y = true → y = T := by
 /-! ## The theorem: a named atom is worth naming exactly when ψ is satisfiable -/
 
 theorem pivotal_iff_sat (a : Nat) (ψ : Fm) (hocc : occurs a ψ = false) :
-    pivotal allZ (witnessR a ψ) a ↔ ∃ c : Nat → V, (∀ n, c n ≠ Z) ∧ evalK c ψ = T := by
+    pivotal allZ (witnessR a ψ) a ↔ ∃ c : Nat → V, (∀ n, c n ≠ Z) ∧ foC c ψ = .t := by
   constructor
   · intro hp
     obtain ⟨w1, w2, _, _, ha1, ha2, hd, hne⟩ := hp
-    have hx : evalK w1 ψ = evalK w2 ψ :=
+    have hx : foC w1 ψ = foC w2 ψ :=
       evalK_congr w1 w2 ψ (fun n hn => hd n (fun he => by
         rw [he, hocc] at hn; exact Bool.noConfusion hn))
-    have hne' : kand (kor (w1 a) (kand (evalK w1 ψ) (knot (evalK w1 ψ)))) (evalK w1 ψ)
-              ≠ kand (kor (w2 a) (kand (evalK w2 ψ) (knot (evalK w2 ψ)))) (evalK w2 ψ) := hne
+    have hne' : phAnd (phOr (phAtom (w1 a)) (phAnd (foC w1 ψ) (phNot (foC w1 ψ)))) (foC w1 ψ)
+              ≠ phAnd (phOr (phAtom (w2 a)) (phAnd (foC w2 ψ) (phNot (foC w2 ψ)))) (foC w2 ψ) := hne
     rw [ha1, ha2, ← hx] at hne'
-    have hT : evalK w1 ψ = T := sides_ne (evalK w1 ψ) hne'
+    have hT : foC w1 ψ = .t := sides_ne (foC w1 ψ) hne'
     refine ⟨fillT w1, fillT_ne_Z w1, ?_⟩
-    have hm := evalK_mono (leqb_fillT w1) ψ
-    rw [hT] at hm
-    exact leqb_T_eq _ hm
+    exact foC_t_mono (leqb_fillT w1) hT
   · intro hs
     obtain ⟨c, _, hcT⟩ := hs
     have hfill : ∀ x : V, fills allZ (setA a x (restrict ψ c)) (witnessR a ψ) := by
@@ -257,7 +255,7 @@ theorem pivotal_iff_sat (a : Nat) (ψ : Fm) (hocc : occurs a ψ = false) :
           | false =>
               rw [setA_other x (restrict ψ c) (fun he => of_decide_eq_false hna he.symm)]
               exact restrict_nocc ψ c n hψ
-    have hagree : ∀ x : V, evalK (setA a x (restrict ψ c)) ψ = T := by
+    have hagree : ∀ x : V, foC (setA a x (restrict ψ c)) ψ = .t := by
       intro x
       have hag : ∀ n, occurs n ψ = true → setA a x (restrict ψ c) n = c n := by
         intro n hn
@@ -271,14 +269,14 @@ theorem pivotal_iff_sat (a : Nat) (ψ : Fm) (hocc : occurs a ψ = false) :
       rw [setA_other T (restrict ψ c) hn, setA_other F (restrict ψ c) hn]
     · have e1 := hagree T
       have e2 := hagree F
-      show kand (kor (setA a T (restrict ψ c) a)
-                     (kand (evalK (setA a T (restrict ψ c)) ψ)
-                           (knot (evalK (setA a T (restrict ψ c)) ψ))))
-                (evalK (setA a T (restrict ψ c)) ψ)
-         ≠ kand (kor (setA a F (restrict ψ c) a)
-                     (kand (evalK (setA a F (restrict ψ c)) ψ)
-                           (knot (evalK (setA a F (restrict ψ c)) ψ))))
-                (evalK (setA a F (restrict ψ c)) ψ)
+      show phAnd (phOr (phAtom (setA a T (restrict ψ c) a))
+                     (phAnd (foC (setA a T (restrict ψ c)) ψ)
+                           (phNot (foC (setA a T (restrict ψ c)) ψ))))
+                (foC (setA a T (restrict ψ c)) ψ)
+         ≠ phAnd (phOr (phAtom (setA a F (restrict ψ c) a))
+                     (phAnd (foC (setA a F (restrict ψ c)) ψ)
+                           (phNot (foC (setA a F (restrict ψ c)) ψ))))
+                (foC (setA a F (restrict ψ c)) ψ)
       rw [setA_self, setA_self, e1, e2]
       decide
 
@@ -300,7 +298,7 @@ theorem conj_always_pivotal (a : Nat) (ψ : Fm) (hc : constFree ψ = true)
         have h2 : true = false := ho'
         exact Bool.noConfusion h2
     | false => exact setA_other x allZ (fun he => of_decide_eq_false hna he.symm)
-  have hZ : ∀ x : V, evalK (setA a x allZ) ψ = Z := by
+  have hZ : ∀ x : V, foC (setA a x allZ) ψ = .n := by
     intro x
     rw [evalK_congr (setA a x allZ) allZ ψ (fun n hn =>
           setA_other x allZ (fun he => by rw [he, hocc] at hn; exact Bool.noConfusion hn))]
@@ -309,8 +307,8 @@ theorem conj_always_pivotal (a : Nat) (ψ : Fm) (hc : constFree ψ = true)
           setA_self a T allZ, setA_self a F allZ, ?_, ?_⟩
   · intro n hn
     rw [setA_other T allZ hn, setA_other F allZ hn]
-  · show kand (setA a T allZ a) (evalK (setA a T allZ) ψ)
-         ≠ kand (setA a F allZ a) (evalK (setA a F allZ) ψ)
+  · show phAnd (phAtom (setA a T allZ a)) (foC (setA a T allZ) ψ)
+         ≠ phAnd (phAtom (setA a F allZ a)) (foC (setA a F allZ) ψ)
     rw [setA_self, setA_self, hZ T, hZ F]
     decide
 

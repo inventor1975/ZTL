@@ -38,6 +38,8 @@ not, `p ∧ ¬p` first among them.
 
 namespace V
 
+theorem leqb_refl : ∀ a : V, leqb a a = true := by decide
+
 /-- Definite on the atoms the claim reads. -/
 def definiteOn (w : Nat → V) (φ : Fm) : Prop :=
   ∀ n, occurs n φ = true → w n ≠ Z
@@ -47,7 +49,7 @@ def pivotalD (v : Nat → V) (φ : Fm) (a : Nat) : Prop :=
   ∃ w1 w2 : Nat → V, fills v w1 φ ∧ fills v w2 φ ∧
     definiteOn w1 φ ∧ definiteOn w2 φ ∧
     w1 a = T ∧ w2 a = F ∧
-    (∀ n, n ≠ a → w1 n = w2 n) ∧ evalK w1 φ ≠ evalK w2 φ
+    (∀ n, n ≠ a → w1 n = w2 n) ∧ foC w1 φ ≠ foC w2 φ
 
 theorem pivotalD_pivotal (v : Nat → V) (φ : Fm) (a : Nat) (h : pivotalD v φ a) :
     pivotal v φ a := by
@@ -195,8 +197,8 @@ theorem pivotalD_of_pair (v : Nat → V) (φ : Fm) (a : Nat) (u1 u2 : Nat → V)
     (ho : occurs a φ = true)
     (hf1 : fills v u1 φ) (hf2 : fills v u2 φ) (ha1 : u1 a = T) (ha2 : u2 a = F)
     (hd : ∀ n, n ≠ a → u1 n = u2 n)
-    (x y : V) (hx : x ≠ Z) (hy : y ≠ Z) (hxy : x ≠ y)
-    (h1 : evalK u1 φ = x) (h2 : evalK u2 φ = y) : pivotalD v φ a := by
+    (x y : Ph) (hx : x ≠ .n) (hy : y ≠ .n) (hxy : x ≠ y)
+    (h1 : foC u1 φ = x) (h2 : foC u2 φ = y) : pivotalD v φ a := by
   refine ⟨fillOn φ u1, fillOn φ u2,
           fills_trans v u1 _ φ hf1 (fills_fillOn u1 φ),
           fills_trans v u2 _ φ hf2 (fills_fillOn u2 φ),
@@ -204,14 +206,10 @@ theorem pivotalD_of_pair (v : Nat → V) (φ : Fm) (a : Nat) (u1 u2 : Nat → V)
           fillOn_at φ u1 a T ho (by decide) ha1,
           fillOn_at φ u2 a F ho (by decide) ha2,
           fillOn_agree φ u1 u2 a hd, ?_⟩
-  have e1 : evalK (fillOn φ u1) φ = x := by
-    have hm := evalK_mono (leqb_of_fills u1 (fillOn φ u1) φ (fills_fillOn u1 φ)) φ
-    rw [h1] at hm
-    exact def_of_leqb x _ hx hm
-  have e2 : evalK (fillOn φ u2) φ = y := by
-    have hm := evalK_mono (leqb_of_fills u2 (fillOn φ u2) φ (fills_fillOn u2 φ)) φ
-    rw [h2] at hm
-    exact def_of_leqb y _ hy hm
+  have e1 : foC (fillOn φ u1) φ = x :=
+    foC_def_mono (leqb_of_fills u1 (fillOn φ u1) φ (fills_fillOn u1 φ)) hx h1
+  have e2 : foC (fillOn φ u2) φ = y :=
+    foC_def_mono (leqb_of_fills u2 (fillOn φ u2) φ (fills_fillOn u2 φ)) hy h2
   rw [e1, e2]; exact hxy
 
 /-! ## The theorem -/
@@ -237,72 +235,68 @@ theorem label_exact_linear_definite (v : Nat → V) (a : Nat) :
   have hlin2 : linMarks w2 φ := linMarks_of_fills v w2 φ hlin hf2
   have hvu1 : ∀ u, fills w1 u φ → fills v u φ := fun u hu => fills_trans v w1 u φ hf1 hu
   have hvu2 : ∀ u, fills w2 u φ → fills v u φ := fun u hu => fills_trans v w2 u φ hf2 hu
-  cases h1 : evalK w1 φ with
-  | T =>
-      cases h2 : evalK w2 φ with
-      | T => exact absurd (h1.trans h2.symm) hne
-      | F => exact pivotalD_of_pair v φ a w1 w2 ho hf1 hf2 ha1 ha2 hd T F
+  cases h1 : foC w1 φ with
+  | t =>
+      cases h2 : foC w2 φ with
+      | t => exact absurd (h1.trans h2.symm) hne
+      | f => exact pivotalD_of_pair v φ a w1 w2 ho hf1 hf2 ha1 ha2 hd .t .f
                (by decide) (by decide) (by decide) h1 h2
-      | Z =>
+      | n =>
           -- drive w2 to F; re-point a to T on the other side
           obtain ⟨u, hfu, hu⟩ := (drivable w2 φ hlin2 h2).2
           have hua : u a = F := by rw [hfu.1 a (by rw [ha2]; decide)]; exact ha2
           have hoff : ∀ n, n ≠ a → leqb (w1 n) (u n) = true :=
             fun n hn => by rw [hd n hn]; exact leqb_of_fills w2 u φ hfu n
-          have hT : evalK (setA a T u) φ = T := by
-            have hm := evalK_mono (leqb_setA_of w1 u a T ha1 hoff) φ
-            rw [h1] at hm; exact leqb_T_eq _ hm
+          have hT : foC (setA a T u) φ = .t := by
+            exact foC_t_mono (leqb_setA_of w1 u a T ha1 hoff) h1
           exact pivotalD_of_pair v φ a (setA a T u) u ho
             (fills_setA v u φ a T hva ho (hvu2 u hfu)) (hvu2 u hfu)
             (setA_self a T u) hua (fun n hn => setA_other T u hn)
-            T F (by decide) (by decide) (by decide) hT hu
-  | F =>
-      cases h2 : evalK w2 φ with
-      | T => exact pivotalD_of_pair v φ a w1 w2 ho hf1 hf2 ha1 ha2 hd F T
+            .t .f (by decide) (by decide) (by decide) hT hu
+  | f =>
+      cases h2 : foC w2 φ with
+      | t => exact pivotalD_of_pair v φ a w1 w2 ho hf1 hf2 ha1 ha2 hd .f .t
                (by decide) (by decide) (by decide) h1 h2
-      | F => exact absurd (h1.trans h2.symm) hne
-      | Z =>
+      | f => exact absurd (h1.trans h2.symm) hne
+      | n =>
           -- drive w2 to T; the other side stays F
           obtain ⟨u, hfu, hu⟩ := (drivable w2 φ hlin2 h2).1
           have hua : u a = F := by rw [hfu.1 a (by rw [ha2]; decide)]; exact ha2
           have hoff : ∀ n, n ≠ a → leqb (w1 n) (u n) = true :=
             fun n hn => by rw [hd n hn]; exact leqb_of_fills w2 u φ hfu n
-          have hF : evalK (setA a T u) φ = F := by
-            have hm := evalK_mono (leqb_setA_of w1 u a T ha1 hoff) φ
-            rw [h1] at hm; exact leqb_F_eq _ hm
+          have hF : foC (setA a T u) φ = .f := by
+            exact foC_f_mono (leqb_setA_of w1 u a T ha1 hoff) h1
           exact pivotalD_of_pair v φ a (setA a T u) u ho
             (fills_setA v u φ a T hva ho (hvu2 u hfu)) (hvu2 u hfu)
             (setA_self a T u) hua (fun n hn => setA_other T u hn)
-            F T (by decide) (by decide) (by decide) hF hu
-  | Z =>
-      cases h2 : evalK w2 φ with
-      | T =>
+            .f .t (by decide) (by decide) (by decide) hF hu
+  | n =>
+      cases h2 : foC w2 φ with
+      | t =>
           -- drive w1 to F; the other side stays T
           obtain ⟨u, hfu, hu⟩ := (drivable w1 φ hlin1 h1).2
           have hua : u a = T := by rw [hfu.1 a (by rw [ha1]; decide)]; exact ha1
           have hoff : ∀ n, n ≠ a → leqb (w2 n) (u n) = true :=
             fun n hn => by rw [← hd n hn]; exact leqb_of_fills w1 u φ hfu n
-          have hT : evalK (setA a F u) φ = T := by
-            have hm := evalK_mono (leqb_setA_of w2 u a F ha2 hoff) φ
-            rw [h2] at hm; exact leqb_T_eq _ hm
+          have hT : foC (setA a F u) φ = .t := by
+            exact foC_t_mono (leqb_setA_of w2 u a F ha2 hoff) h2
           exact pivotalD_of_pair v φ a u (setA a F u) ho
             (hvu1 u hfu) (fills_setA v u φ a F hva ho (hvu1 u hfu))
             hua (setA_self a F u) (fun n hn => (setA_other F u hn).symm)
-            F T (by decide) (by decide) (by decide) hu hT
-      | F =>
+            .f .t (by decide) (by decide) (by decide) hu hT
+      | f =>
           -- drive w1 to T; the other side stays F
           obtain ⟨u, hfu, hu⟩ := (drivable w1 φ hlin1 h1).1
           have hua : u a = T := by rw [hfu.1 a (by rw [ha1]; decide)]; exact ha1
           have hoff : ∀ n, n ≠ a → leqb (w2 n) (u n) = true :=
             fun n hn => by rw [← hd n hn]; exact leqb_of_fills w1 u φ hfu n
-          have hF : evalK (setA a F u) φ = F := by
-            have hm := evalK_mono (leqb_setA_of w2 u a F ha2 hoff) φ
-            rw [h2] at hm; exact leqb_F_eq _ hm
+          have hF : foC (setA a F u) φ = .f := by
+            exact foC_f_mono (leqb_setA_of w2 u a F ha2 hoff) h2
           exact pivotalD_of_pair v φ a u (setA a F u) ho
             (hvu1 u hfu) (fills_setA v u φ a F hva ho (hvu1 u hfu))
             hua (setA_self a F u) (fun n hn => (setA_other F u hn).symm)
-            T F (by decide) (by decide) (by decide) hu hF
-      | Z => exact absurd (h1.trans h2.symm) hne
+            .t .f (by decide) (by decide) (by decide) hu hF
+      | n => exact absurd (h1.trans h2.symm) hne
 
 #print axioms fills_trans
 #print axioms linMarks_of_fills

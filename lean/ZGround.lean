@@ -26,9 +26,9 @@ namespace V
 /-! ## The solver's phase -/
 
 inductive Ph where
-  | n   -- not yet computed (the solver's phase N)
   | t
   | f
+  | n   -- not yet computed (the solver's phase N)
 deriving DecidableEq, Repr
 
 instance (p : Ph → Prop) [DecidablePred p] : Decidable (∀ x : Ph, p x) :=

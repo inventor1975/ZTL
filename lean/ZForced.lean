@@ -151,6 +151,32 @@ theorem foC_eq_fo (v : Nat → V) : ∀ φ : Fm, foC v φ = fo v φ
 def phVal : Ph → V
   | .t => T | .f => F | .n => F
 
+/-! ## More data never revokes a forced outcome -/
+
+theorem leqb_to_refinesR : ∀ a b : V, leqb a b = true → a ≠ Z → b = a := by decide
+
+/-- forced T stays forced T under refinement (the information order, pointwise) -/
+theorem foC_t_mono {v w : Nat → V} (h : ∀ n, leqb (v n) (w n) = true) {φ : Fm}
+    (hv : foC v φ = .t) : foC w φ = .t := by
+  have r : refinesR v w := fun n hn => leqb_to_refinesR (v n) (w n) (h n) hn
+  rw [foC_eq_fo] at hv ⊢
+  exact (earnedR_iff_t w φ).mp (earnedR_open r ((earnedR_iff_t v φ).mpr hv))
+
+/-- forced F stays forced F under refinement -/
+theorem foC_f_mono {v w : Nat → V} (h : ∀ n, leqb (v n) (w n) = true) {φ : Fm}
+    (hv : foC v φ = .f) : foC w φ = .f := by
+  have r : refinesR v w := fun n hn => leqb_to_refinesR (v n) (w n) (h n) hn
+  rw [foC_eq_fo] at hv ⊢
+  exact (refutedR_iff_f w φ).mp (refutedR_open r ((refutedR_iff_f v φ).mpr hv))
+
+/-- a decided outcome stays the same under refinement -/
+theorem foC_def_mono {v w : Nat → V} (h : ∀ n, leqb (v n) (w n) = true) {φ : Fm} {x : Ph}
+    (hx : x ≠ .n) (hv : foC v φ = x) : foC w φ = x := by
+  cases x with
+  | t => exact foC_t_mono h hv
+  | f => exact foC_f_mono h hv
+  | n => exact absurd rfl hx
+
 end V
 
 #print axioms V.rd_nonempty
@@ -164,3 +190,6 @@ end V
 #print axioms V.earnedR_iff_t
 #print axioms V.refutedR_iff_f
 #print axioms V.foC_eq_fo
+#print axioms V.foC_t_mono
+#print axioms V.foC_f_mono
+#print axioms V.foC_def_mono

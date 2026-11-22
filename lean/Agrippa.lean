@@ -808,7 +808,7 @@ def skeptic (j k ra rb rc : V) : V :=
     (znot k)
 
 /-- F1: T at every marking — every refinement of every marking included: a hereditary T. (Not by itself the
-judge's EARNED of 2026-10-29, which is the strong Kleene T.) -/
+judge's EARNED of 2026-10-29, which is the forced T.) -/
 theorem skeptic_earned (j k ra rb rc : V) : skeptic j k ra rb rc = T := by
   cases j <;> cases k <;> cases ra <;> cases rb <;> cases rc <;> rfl
 

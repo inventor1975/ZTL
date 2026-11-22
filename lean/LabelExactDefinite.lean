@@ -17,7 +17,7 @@ linear cells, no failure. This file proves it.
 
 NOT A REWRITE. The partial pair (w₁, w₂) that `label_exact_linear` gives is the
 start. If both verdicts are definite, filling every remaining mark inside φ to
-T (`fillOn`) keeps them: the lazy register is monotone (`evalK_mono`), and a
+T (`fillOn`) keeps them: the forced outcome is monotone (`ZForced.foC_def_mono`), and a
 definite value has nothing above it. If one side reads Z, that side is a
 pending LINEAR claim at a marking of its own — a refinement only loses marks
 (`linMarks_of_fills`) — so `drivable` pushes it to the value the other side
@@ -29,7 +29,7 @@ The one fact needed about `a` itself — that `v` has it dirty — is not a
 lemma about `labF`; it is read off the pair: `w₁ a = T ≠ F = w₂ a`, while both
 agree with `v` wherever `v` is verified.
 
-MEASURED FIRST (`zlabelexactdef.py`, the judge's own lazy evaluator): on all
+MEASURED FIRST (`zlabelexactdef.py`, with the judge's Kleene evaluator of the time — before the pure branch): on all
 formulas of depth ≤ 2 over three atoms under all 27 markings, every named atom
 of every pending linear cell is pivotal under a DEFINITE reading of the others
 — and outside the linear class the same census finds named atoms that are

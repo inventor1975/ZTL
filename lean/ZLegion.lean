@@ -6,7 +6,7 @@ Asked 2026-10-05 by the curator for Arkady (DARPA LEGION/ERIS), items 1 and 2 of
 `ZComposition.lean` (holes, composition witness, `no_promotion_without_witness`).
 
 Vocabulary (2026-10-30): `earned` in the identifiers below is `ZComposition.Earned` — T and hereditary, which
-the prose calls SETTLED (the hereditary T). It is not the judge's EARNED of 2026-10-29 (the strong Kleene T, which implies it); a
+the prose calls SETTLED (the hereditary T). It is not the judge's EARNED of 2026-10-29 (the forced T, which implies it); a
 conclusion settled in no reachable future is a fortiori never EARNED in the judge's sense.
 
 1. TIME AND REVOCATION. A checked ground carries an expiry; past it (or revoked) it reads Z again.

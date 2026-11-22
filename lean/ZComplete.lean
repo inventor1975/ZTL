@@ -7,8 +7,7 @@ import NoGift
 Here it is for any finite list of atoms (2026-10-29): a function `g` of a valuation that depends only on the
 atoms `xs` and answers T or F is the value of the J-DNF built over `xs`. Hence every judgement the judge makes
 about a fixed formula — "is it earned", "does it survive every verification", "is it settled" — is itself the
-value of a ZTL formula: the judge is not code over ZTL but ZTL speaking about itself. Strong Kleene cannot do
-this even for one atom (`ZDirty.kleene_cannot_jump`). Expressible is not cheap: the J-DNF has 3^|xs| leaves.
+value of a ZTL formula: the judge is not code over ZTL but ZTL speaking about itself. Expressible is not cheap: the J-DNF has 3^|xs| leaves.
 -/
 
 namespace V

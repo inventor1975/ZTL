@@ -21,7 +21,7 @@
        propagation rule of §6.2.3 for `+ − ×`. Their Boolean layer is
        classical: `pNE r = !pEQ r` for every relation, by `decide`.
 
-    2. INFECTION IS THE LAZY REGISTER. On the mark-carrying integers `ZQ`
+    2. INFECTION IS THE MARK FLOWING. On the mark-carrying integers `ZQ`
        (§15's arithmetic with marks in its bare mode: a mark with no bounds)
        the embedding `emb` is a HOMOMORPHISM for `+` and `−`: a mark flows
        exactly as a NaN does.
@@ -215,7 +215,7 @@ def zgt : ZQ → ZQ → V
   | ZQ.mark,  ZQ.val _ => Z
   | ZQ.mark,  ZQ.mark  => Z
 
-/-- The mark flows through `+` and `−` (the lazy register). -/
+/-- The mark flows through `+` and `−` (an arithmetic with a mark of its own; no Kleene table). -/
 def zadd : ZQ → ZQ → ZQ
   | ZQ.val a, ZQ.val b => ZQ.val (a + b)
   | ZQ.val _, ZQ.mark  => ZQ.mark
@@ -242,7 +242,7 @@ def zmul : ZQ → ZQ → ZQ
       | false => ZQ.mark
   | ZQ.mark,  ZQ.mark  => ZQ.mark
 
-/-! ### 2. Infection is the lazy register -/
+/-! ### 2. Infection is the mark flowing -/
 
 /-- **`+` IS A HOMOMORPHISM**: a mark flows exactly as a NaN does. -/
 theorem emb_add : ∀ x y : ZQ, emb (zadd x y) = fadd (emb x) (emb y)

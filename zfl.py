@@ -2510,7 +2510,7 @@ def run(doc, ground_registry=None):
             # it F/until-verification — a FALSE NEGATIVE it had been
             # reporting all along. Two chapters of eighteen move, both from
             # not-earned to earned. This is the architecture the draft
-            # already states: quarantine is the Z-set of the lazy jump's
+            # already states: quarantine is the Z-set of the stable step's
             # least fixed point, and ZTL is the greedy reading ON TOP of it.
             r = judge(claim, resolved_marking(rows))
         except Exception as exc:

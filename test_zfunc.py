@@ -148,7 +148,16 @@ def raises(f, *a):
 
 check("ln of [-1, -1/2]: no readings", raises(Z.iv_ln, (F(-1), F(-1, 2))))
 check("ln of [0, 1]: a mark (None), not a value", Z.iv_ln((F(0), F(1))) is None)
-check("tan of [1.6, 2]: no readings; of [1, 1.6]: a mark", raises(Z.iv_tan, (F(8, 5), F(2))) and Z.iv_tan((F(1), F(8, 5))) is None)
+# 2026-11-24 (FloorLimit + tan's period): tan IS defined on [1.6, 2] (-34.2 .. -2.18) — this line used to assert "no
+# readings" there, the floor's limit written down as the function's domain. Now: near the pole a mark, past it a value.
+check("tan of [1.6, 2]: readings exist — a mark near the pole, never E; of [1, 1.6]: a mark (the pole inside)",
+      not raises(Z.iv_tan, (F(8, 5), F(2))) and Z.iv_tan((F(8, 5), F(2))) is None and Z.iv_tan((F(1), F(8, 5))) is None)
+_t = Z.iv_tan((F(19, 10), F(2)))
+check("tan of [1.9, 2]: a value, by the period (tan 1.9 = -2.92710, tan 2 = -2.18504), both ends inside the bracket",
+      _t is not None and mpmath.tan(mpmath.mpf(19) / 10) - mpmath.mpf(10) ** -6
+      <= mpmath.mpf(_t[0].numerator) / _t[0].denominator <= mpmath.tan(mpmath.mpf(19) / 10)
+      and mpmath.tan(mpmath.mpf(2)) <= mpmath.mpf(_t[1].numerator) / _t[1].denominator
+      <= mpmath.tan(mpmath.mpf(2)) + mpmath.mpf(10) ** -6)   # mpmath, not math.tan: the double 1.9 is not 19/10
 check("pow of a never-positive base to a non-integer power: refused", raises(Z.iv_pow, (F(-2), F(-1)), (F(1, 2), F(1, 2))))
 
 print("4. the reader")

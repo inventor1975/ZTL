@@ -434,7 +434,18 @@ def _integral_scale(I, qs2, hull):
 
 
 def _ev_integral(args, quantities):
-    """∫_a^b f dx over the sheet's readings: the kernel-checked enclosure for EVERY value of f's parameters and of the
+    """∫ inside a claim: the judge's limit slot is set aside for the search, and restored."""
+    saved, _LIMITS[0] = _LIMITS[0], None
+    try:
+        return _ev_integral_inner(args, quantities)
+    finally:
+        _LIMITS[0] = saved
+
+
+def _ev_integral_inner(args, quantities):
+    """The certificate search inside it reads its integrand OUTSIDE the judge's limit marks (zfunc.FloorLimit): a piece
+    the floor cannot read stops that piece, as everywhere in the certificate line — never an endless split.
+    ∫_a^b f dx over the sheet's readings: the kernel-checked enclosure for EVERY value of f's parameters and of the
     limits (moving limits by zintegral.check_limits), or None (undecided) when no certificate was found. Units: f's
     unit times the limits' unit. A reversed pair of point limits is the negated integral."""
     import zintegral as _ZI                  # zintegral imports zcertify imports znum: read lazily
@@ -1567,6 +1578,7 @@ class _ThreadSlot:
 
 
 _MEMO = _ThreadSlot()   # {node: result} while ONE reading runs (zcertify._reading_one), else None — per thread
+_LIMITS = _ThreadSlot()   # the floor limits met while ONE comparison is read (per thread); compare() reports them
 
 
 def _ev(expr, quantities):
@@ -1676,6 +1688,15 @@ def _ev_tree(expr, quantities):
                 iv = _zf.UNARY[op](evs[0][0])
             else:
                 iv = _zf.BINARY[op](evs[0][0], evs[1][0])
+        except _zf.FloorLimit as why:
+            # the floor cannot read it: for the JUDGE a mark with its reason, never E (zfunc.FloorLimit, 2026-11-24).
+            # Only inside compare() (the slot is set): a certificate search outside it stops on the piece as before —
+            # read as a mark there, zintegral's search for exp(tan x) near pi/2 split the unreadable piece without end
+            # (MEASURED: test_redteam_taylor timed out at 900 s; green in seconds before).
+            if _LIMITS[0] is None:
+                raise _NoReadings(str(why))
+            _LIMITS[0].append(f"{op}: {why}")
+            return None, ped, used, None, unit
         except _zf.NoReadings as why:
             raise _NoReadings(str(why))
         return iv, ped, used, None, unit
@@ -1762,7 +1783,17 @@ ZERO_DIV_AS_Z = [False]   # TEST-ONLY sabotage: the pre-2026-11-05 reading (an e
 def compare(kind, e1, e2, quantities):
     """A numeric atom. Verdict by the generating principle over intervals:
     T if forced under every reading, F if the negation is forced, else Z.
-    Returns (verdict, credit_pedigree, quantities_read)."""
+    Returns (verdict, credit_pedigree, quantities_read, why). A Z that rests on a floor limit says so in `why`
+    ("FLOOR LIMIT: ..."), so the order issued is not "measure" (2026-11-24)."""
+    _LIMITS[0] = []
+    v, ped, used, why = _compare(kind, e1, e2, quantities)
+    lim, _LIMITS[0] = _LIMITS[0], None
+    if v == "Z" and why is None and lim:
+        why = "FLOOR LIMIT: " + "; ".join(sorted(set(lim)))
+    return v, ped, used, why
+
+
+def _compare(kind, e1, e2, quantities):
     try:
         r1, p1, u1, s1, un1 = _ev(e1, quantities)
         r2, p2, u2, s2, un2 = _ev(e2, quantities)

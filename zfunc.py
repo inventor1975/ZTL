@@ -36,6 +36,14 @@ class NoReadings(Exception):
     pass
 
 
+class FloorLimit(NoReadings):
+    """THE FLOOR CANNOT READ IT — not "there is nothing to read" (2026-11-24, the curator's "1+2 делаем"). Until then
+    every limit of these series (exp past 50000, tan past 1.5, a failed sin/cos reduction) was raised as NoReadings and
+    the judge answered E, "no subject, repair the claim", for tan(46) and exp(60000), which exist (MEASURED: tan(46) >
+    -100 -> E). A SUBCLASS on purpose: the certificate checkers that stop on NoReadings stop on this too (they cannot
+    read it either); only the judge (znum) tells the two apart — a limit is a mark with its reason, never E."""
+
+
 # ---------------------------------------------------------------- rounding outward
 def _down(x: Fraction, bits=BITS) -> Fraction:
     """The largest dyadic m/2^k <= x, k chosen from x's size (keeps fractions small)."""
@@ -164,7 +172,7 @@ def exp_pt(x: Fraction):
     """[lo, hi] around e^x. Reduce: x = t·2^m with |t| <= 1/4, Taylor on t, then square m times."""
     x = Fraction(x)
     if abs(x) > 50_000:
-        raise NoReadings("exp of an argument past 50000: outside any physical range")
+        raise FloorLimit("exp of an argument past 50000 is not read by the floor")
     m = 0
     t = x
     while abs(t) > Fraction(1, 4):
@@ -228,7 +236,7 @@ def sincos_pt(x: Fraction):
     """([sin lo, hi], [cos lo, hi]) for |x| <= 2 by Taylor; the remainder is below the next term."""
     x = Fraction(x)
     if abs(x) > 2:
-        raise NoReadings("sin/cos outside |x| <= 2 not supported here")
+        raise FloorLimit("sin/cos outside |x| <= 2 not supported here")
     return _sc_series(x)
 
 
@@ -249,7 +257,7 @@ def _sc_series(x: Fraction):
     gcd per term. MEASURED: Fraction's gcd was ~60% of a ZFL system with cos (cProfile, 9.7 s of 11.8)."""
     x = Fraction(x)
     if abs(x) > 4:
-        raise NoReadings("sin/cos series only for |x| <= 4")
+        raise FloorLimit("sin/cos series only for |x| <= 4")
     n, d = x.numerator, x.denominator
     npow = [1] * 82
     for j in range(1, 82):
@@ -273,7 +281,7 @@ def _sc_series_fr(x: Fraction):
     """The reference: `_sc_series` in Fractions (the version before 2026-11-08)."""
     x = Fraction(x)
     if abs(x) > 4:
-        raise NoReadings("sin/cos series only for |x| <= 4")
+        raise FloorLimit("sin/cos series only for |x| <= 4")
     s, c = Fraction(0), Fraction(0)
     term_s, term_c = x, Fraction(1)
     for n in range(40):
@@ -303,7 +311,7 @@ def _sc_pt(x: Fraction, which: int):
     1-Lipschitz, so the reduction's own width (from pi's bracket) widens the bracket by exactly that width."""
     r1, r2 = _reduced(x)
     if abs(r1) > 4 or abs(r2) > 4:
-        raise NoReadings("sin/cos: argument reduction failed")
+        raise FloorLimit("sin/cos: argument reduction failed")
     w = r2 - r1
     lo, hi = _sc_series(r1)[which]
     return _down(max(Fraction(-1), lo - w)), _up(min(Fraction(1), hi + w))
@@ -320,7 +328,7 @@ def cos_pt(x: Fraction):
 def tan_pt(x: Fraction):
     (slo, shi), (clo, chi) = sincos_pt(x)
     if clo <= 0:
-        raise NoReadings("tan near or past pi/2")
+        raise FloorLimit("tan near pi/2 is not read by the floor")
     cands = [a / b for a in (slo, shi) for b in (clo, chi)]
     return _down(min(cands)), _up(max(cands))
 
@@ -467,8 +475,16 @@ TAN_EDGE = Fraction(3, 2)        # below pi/2 = 1.5707...: tan is read only on |
 def iv_tan(a):
     if _inf(a[0]) or _inf(a[1]):
         return None
+    # TAN'S PERIOD (2026-11-24, with FloorLimit): tan(x) = tan(x - k pi), k = round(mid / pi), the shift taken with pi's
+    # own bracket (the reduced interval is wider by k times its width). Until then tan was read on |x| <= 1.5 only and
+    # tan(46) was E. The period is a Python reading; the Lean witnesses below cover tan on the REDUCED interval.
+    k = round(float((Fraction(a[0]) + Fraction(a[1])) / 2) / math.pi)
+    if k:
+        a = (a[0] - k * PI[1], a[1] - k * PI[0]) if k > 0 else (a[0] - k * PI[0], a[1] - k * PI[1])
+    if a[1] - a[0] >= PI[0]:
+        return None                       # a whole period inside: a pole is a reading, undefined there — a mark
     if a[0] > TAN_EDGE or a[1] < -TAN_EDGE:
-        raise NoReadings("tan read only on |x| <= 1.5 (below pi/2)")
+        raise FloorLimit("tan is read only at a distance >= pi/2 - 1.5 from its poles")
     if a[0] < -TAN_EDGE or a[1] > TAN_EDGE:
         return None
     r = _iv_mono(tan_pt, a)

@@ -521,6 +521,8 @@ def judge_sheet_claim(formula, quantities, marks, fixed=None):
                          "pedigree": sorted(ped), "used": sorted(used)}
         if v == "Z" and isinstance(why, str) and why.startswith("ZERO-DIVISOR: "):
             numeric[name]["no_subject"] = why[len("ZERO-DIVISOR: "):]
+        if v == "Z" and isinstance(why, str) and why.startswith("FLOOR LIMIT: "):
+            numeric[name]["floor_limit"] = why[len("FLOOR LIMIT: "):]
     core = judge(core_formula, marking)
     # A DIVISOR 0 IN EVERY READING (2026-11-05; ZTL 2.1 §25 on the numeric floor): the atom's value stays Z — no
     # verdict changes — but where the claim's outcome RESTS on it (pinning the atom to T or F would change the
@@ -657,6 +659,12 @@ def judge_sheet_claim(formula, quantities, marks, fixed=None):
     # into the comparisons a reader of the sheet actually wrote
     def _say(a):
         return natoms[a][3] if a in natoms else a
+    # A FLOOR LIMIT (zfunc.FloorLimit, 2026-11-24): the atom is a mark because the floor cannot read a value that
+    # exists; the order says that, first — measuring cannot cure it, a wider floor can
+    limits = [f"the floor cannot read {numeric[n]['comparison']}: {numeric[n]['floor_limit']}"
+              for n in natoms if numeric.get(n, {}).get("floor_limit")]
+    if limits:
+        next_check = limits + next_check
     if no_subject:
         disposition, polarity = "E", None
         next_check = ([f"repair the claim: {numeric[n]['comparison']}: {numeric[n]['no_subject']}" for n in no_subject]

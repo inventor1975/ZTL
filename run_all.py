@@ -86,6 +86,7 @@ STANDS = [
     ("test_zsummation.py", ["SUMMATION GREEN — "]),   # 2026-11-25: the summation method as a dirty parameter
     ("test_zsummation_finite.py", ["test_zsummation_finite: "]),   # 2026-11-25: finite sums, closed forms vs direct
     ("test_poly_identity.py", ["test_poly_identity: "]),   # 2026-11-25: an exact polynomial identity decides ==
+    ("test_intwords_more.py", ["INTWORDS MORE GREEN — "]),   # 2026-11-25: gcd lcm fib totient isprime floor ceil
     ("test_redteam_uncovered.py", ["GREEN: nothing found"]),
     # Поставлен 2026-09-19: CLASSIC-VS-ZTL.md год носила число «1263 из 2924»
     # без определения и без прогона, и оно занижало результат на двадцать

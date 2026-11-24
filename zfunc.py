@@ -787,5 +787,102 @@ def iv_choose(n, k):
     return _enum(_choose_pt, n, k)
 
 
-INTFUNCS = {"idiv": iv_idiv, "mod": iv_mod, "dvd": iv_dvd, "fact": iv_fact, "choose": iv_choose}
+# MORE INTEGER WORDS (2026-11-25, the curator's "делаем": lean2zfl's Lean Workbook statements use Nat.gcd, lcm, fib,
+# totient, Prime). A Python reading: VR's Division twin covers idiv mod dvd fact choose only. On the integer lattice,
+# read point by point (_enum) over a small range, else a mark — except fib, monotone on the naturals.
+#   gcd(a, b), lcm(a, b) by magnitudes; gcd(0, 0) = 0, lcm(a, 0) = 0 (the divisibility lattice's own meet and join)
+#   fib(0) = 0, fib(1) = 1;  totient(n) = #{1 <= k <= n : gcd(k, n) = 1} (0 at n = 0: the empty count)
+#   isprime(n) = 1 when n has exactly two divisors in N, else 0
+FIB_CAP = 20000
+
+
+def _fib_pt(n):
+    a, b = 0, 1
+    for _ in range(n):
+        a, b = b, a + b
+    return a
+
+
+def _totient_pt(n):
+    if n <= 0:
+        return 0
+    out, m, p = n, n, 2
+    while p * p <= m:
+        if m % p == 0:
+            while m % p == 0:
+                m //= p
+            out -= out // p
+        p += 1
+    if m > 1:
+        out -= out // m
+    return out
+
+
+def _isprime_pt(n):
+    if n < 2:
+        return 0
+    p = 2
+    while p * p <= n:
+        if n % p == 0:
+            return 0
+        p += 1
+    return 1
+
+
+def iv_gcd(a, b):
+    return _enum(lambda x, y: math.gcd(abs(x), abs(y)), a, b)
+
+
+def iv_lcm(a, b):
+    return _enum(lambda x, y: abs(x * y) // math.gcd(abs(x), abs(y)) if x and y else 0, a, b)
+
+
+def iv_fib(n):
+    if not _nat_args("fib", n):
+        return None
+    if not _inf(n[1]) and n[1] > FIB_CAP:
+        raise FloorLimit(f"fib of n > {FIB_CAP} is not read by the floor")
+    lo = Fraction(_fib_pt(int(math.ceil(n[0]))))
+    return lo, (INF if _inf(n[1]) else Fraction(_fib_pt(int(math.floor(n[1])))))
+
+
+def iv_totient(n):
+    if not _nat_args("totient", n):
+        return None
+    if not _inf(n[1]) and n[1] > 10 ** 12:
+        raise FloorLimit("totient past 10^12 is not read by the floor")
+    return _enum(_totient_pt, n)
+
+
+def iv_isprime(n):
+    if not _inf(n[1]) and n[1] > 10 ** 12:
+        raise FloorLimit("isprime past 10^12 is not read by the floor")
+    r = _enum(_isprime_pt, n)
+    return r if r is not None else (Fraction(0), Fraction(1))
+
+
+INTWORDS.update({"gcd": 2, "lcm": 2, "fib": 1, "totient": 1, "isprime": 1})
+INTFUNCS = {"idiv": iv_idiv, "mod": iv_mod, "dvd": iv_dvd, "fact": iv_fact, "choose": iv_choose,
+            "gcd": iv_gcd, "lcm": iv_lcm, "fib": iv_fib, "totient": iv_totient, "isprime": iv_isprime}
+
+
+# ⌊x⌋, ⌈x⌉ of a REAL (2026-11-25): monotone, so the ends' floors bound it (an excluded end read closed: a superset)
+def iv_floor(x):
+    import zgap
+    hi = x[1] if _inf(x[1]) else Fraction(math.floor(x[1]))
+    if zgap.is_gap(x[1]) and Fraction(x[1]).denominator == 1:
+        hi = hi - 1                                      # [2, 3): every reading is below 3, so its floor is <= 2
+    return (x[0] if _inf(x[0]) else Fraction(math.floor(x[0])), hi)
+
+
+def iv_ceil(x):
+    import zgap
+    lo = x[0] if _inf(x[0]) else Fraction(math.ceil(x[0]))
+    if zgap.is_gap(x[0]) and Fraction(x[0]).denominator == 1:
+        lo = lo + 1                                      # (2, 3]: every reading is above 2, so its ceiling is >= 3
+    return (lo, x[1] if _inf(x[1]) else Fraction(math.ceil(x[1])))
+
+
+UNARY["floor"] = iv_floor
+UNARY["ceil"] = iv_ceil
 FUNC_OPS = set(UNARY) | set(BINARY) | set(TERNARY) | set(INTWORDS)

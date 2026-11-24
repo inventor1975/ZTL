@@ -78,7 +78,7 @@ STANDS = [
     # 2026-11-23: was outside the gate, and its denominator went to 0 at 8ec20e9 (2026-11-09) unseen for two weeks.
     # The count of checks is in the marker so a test that silently drops out is also caught.
     ("test_guard_split.py", ["СТОРОЖ ЗЕЛЁНЫЙ — 8 проверок"]),
-    ("test_zfl_inline_definitions.py", ["INLINE DEFINITIONS GREEN — 18 checks"]),   # 2026-11-24: a defined row does not identify occurrences
+    ("test_zfl_inline_definitions.py", ["INLINE DEFINITIONS GREEN — 25 checks"]),   # 2026-11-24: a defined row does not identify occurrences
     ("test_redteam_uncovered.py", ["GREEN: nothing found"]),
     # Поставлен 2026-09-19: CLASSIC-VS-ZTL.md год носила число «1263 из 2924»
     # без определения и без прогона, и оно занижало результат на двадцать

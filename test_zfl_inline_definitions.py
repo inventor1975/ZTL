@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-"""test_zfl_inline_definitions — a defined row must not identify the occurrences of a dirty atom (2026-11-24).
+"""test_zfl_inline_definitions — a defined row (or a cycle of them) must not identify the occurrences of a dirty atom
+(2026-11-24).
 
 Before the fix, zfl.run handed the judge a defined row as the passport's stable-step value, so `safe := ~ok | ok` with
 `ok` unverified came back EARNED "grounded outright"; the same formula as the claim is EARNED IF STABLE. Each check
@@ -52,7 +53,18 @@ check("verified definitions unchanged", disp(rows, "d1 & ~d2"), "EARNED")
 r = zfl.run({"rows": [ok, {"name": "safe", "status": "defined", "ground": "~ok | ok", "means": "m"}], "claim": "safe"})
 check("claim_inlined reported", r["report"]["judge"].get("claim_inlined"), "(~ok | ok)")
 
+# cycles (2026-11-24, second step): a dirty input repeated inside a self-referential system
+D = lambda n, g: {"name": n, "status": "defined", "ground": g, "means": "m"}
+check("cycle A := (ok | ~ok) | A", disp([ok, D("A", "(ok | ~ok) | A")], "A"), "EARNED IF STABLE")
+check("cycle A := ok | B; B := ~ok | A", disp([ok, D("A", "ok | B"), D("B", "~ok | A")], "A"), "EARNED IF STABLE")
+check("cycle A := (ok & ~ok) & A", disp([ok, D("A", "(ok & ~ok) & A")], "A"), "REFUTED IF STABLE")
+check("cycle A := (ok & ~ok) | A (a truth-teller remains)", disp([ok, D("A", "(ok & ~ok) | A")], "A"), "OPEN")
+check("cycle, one occurrence: unchanged", disp([ok, D("A", "ok & A")], "A"), "OPEN")
+# self-reference with no dirty input: the passport's own business, unchanged
+check("truth-teller unchanged", disp([D("T1", "T1")], "T1"), "OPEN")
+check("strong liar unchanged", disp([D("S", "~S & S")], "S"), "REFUTED")
+
 if fails:
     print("RED:", *fails, sep="\n  ")
     raise SystemExit(1)
-print("INLINE DEFINITIONS GREEN — 18 checks")
+print("INLINE DEFINITIONS GREEN — 25 checks")

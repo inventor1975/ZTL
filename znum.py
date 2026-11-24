@@ -709,6 +709,111 @@ def _poly(expr, quantities, counter, seen=None):
     raise _NotLinear()
 
 
+# A POLYNOMIAL IDENTITY IS READ EXACTLY (2026-11-25, the curator's "расширяем": lean2zfl's finite sums). The parabola
+# reading stops at degree 2 per name and never multiplies different names, so Σ_{i=1}^{n} i² = n(n+1)(2n+1)/6 — a
+# cubic — came back OPEN (MEASURED that day), as did even x**3 == x*(x*x). Here the DIFFERENCE of the sides is expanded
+# as a polynomial with rational coefficients in the box's names (+ − ×, ÷ by a non-zero constant, integer powers): when
+# it is the ZERO polynomial, the sides agree at EVERY reading — exact algebra, no bracket. Only that case decides; a
+# non-zero difference falls through to the interval paths unchanged. A `sample` (one number per occurrence), a unit,
+# or any other operation gives up. A Python reading: no Lean twin (ring normalisation is Mathlib's `ring`).
+_MPOLY_TERMS = 4000
+
+
+def _mpoly(expr, quantities):
+    """expr as {monomial: Fraction}, a monomial a sorted tuple of (name, exponent); raises _NotLinear outside"""
+    if isinstance(expr, (int, Fraction)) and not isinstance(expr, bool):
+        return {(): Fraction(expr)} if expr != 0 else {}
+    if isinstance(expr, str):
+        q = quantities[expr]
+        if q.get("no_readings"):
+            raise _NoReadings(f"{expr}: {q['no_readings']}")
+        if q.get("sample") or q.get("unit"):
+            raise _NotLinear()
+        if q["lo"] == q["hi"] and not isinstance(q["lo"], float):
+            return {(): Fraction(q["lo"])} if q["lo"] != 0 else {}
+        return {((expr, 1),): Fraction(1)}
+    if not isinstance(expr, tuple):
+        raise _NotLinear()
+    op, *args = expr
+
+    def add(a, b, sign=1):
+        out = dict(a)
+        for m, c in b.items():
+            v = out.get(m, 0) + sign * c
+            if v:
+                out[m] = v
+            else:
+                out.pop(m, None)
+        return out
+
+    def mul(a, b):
+        out = {}
+        for m1, c1 in a.items():
+            for m2, c2 in b.items():
+                d = dict(m1)
+                for n, e in m2:
+                    d[n] = d.get(n, 0) + e
+                m = tuple(sorted(d.items()))
+                v = out.get(m, 0) + c1 * c2
+                if v:
+                    out[m] = v
+                else:
+                    out.pop(m, None)
+        if len(out) > _MPOLY_TERMS:
+            raise _NotLinear()
+        return out
+    if op == "sum":
+        out = {}
+        for a in args[0]:
+            out = add(out, _mpoly(a, quantities))
+        return out
+    if op in ("add", "sub"):
+        return add(_mpoly(args[0], quantities), _mpoly(args[1], quantities), 1 if op == "add" else -1)
+    if op == "mul":
+        return mul(_mpoly(args[0], quantities), _mpoly(args[1], quantities))
+    if op == "div":
+        b = _mpoly(args[1], quantities)
+        if set(b) != {()}:
+            raise _NotLinear()                           # ÷ 0 or ÷ a variable: not a polynomial
+        return {m: c / b[()] for m, c in _mpoly(args[0], quantities).items()}
+    if op == "pow" and isinstance(args[1], (int, Fraction)) and Fraction(args[1]).denominator == 1 \
+            and 0 <= args[1] <= 64:
+        base, out = _mpoly(args[0], quantities), {(): Fraction(1)}
+        for _ in range(int(args[1])):
+            out = mul(out, base)
+        return out
+    if op == "pow":
+        # c^(Σ a_k n_k + b), c a POSITIVE rational, the exponent linear: c^b · Π (c^n_k)^a_k, each c^n_k one more
+        # atom (a key "c^n_k" no ZFL name can spell). c^x > 0 is defined at every real x, and c^(x+y) = c^x c^y — so a
+        # zero difference in these atoms is a zero difference at every reading. Any other base or exponent gives up.
+        base, ex = _mpoly(args[0], quantities), _mpoly(args[1], quantities)
+        if set(base) != {()} or base[()] <= 0:
+            raise _NotLinear()
+        c = base[()]
+        b = ex.get((), Fraction(0))
+        if b.denominator != 1 or abs(b) > 64:
+            raise _NotLinear()
+        mono = []
+        for m, a in ex.items():
+            if m == ():
+                continue
+            if len(m) != 1 or m[0][1] != 1 or "^" in m[0][0]:
+                raise _NotLinear()
+            mono.append((f"{c}^{m[0][0]}", a))
+        if c == 1:
+            return {(): Fraction(1)}
+        return {tuple(sorted(mono)): c ** int(b)}
+    raise _NotLinear()
+
+
+def _poly_identity(e1, e2, quantities):
+    """True when e1 − e2 is the zero polynomial; None when that is not read (or the difference is not zero)"""
+    try:
+        return True if not _mpoly(("sub", e1, e2), quantities) else None
+    except (_NotLinear, _NoReadings, KeyError, ZeroDivisionError, TypeError):
+        return None
+
+
 def _at(p, q, x):
     """p·x + q·x² at a point; at an infinite end, the leading term decides."""
     if x == INF or x == -INF:
@@ -1869,6 +1974,8 @@ def _compare(kind, e1, e2, quantities):
             return ("T" if sg == 0 else "F"), ped, used, None
     if r1 is None or r2 is None:
         return "Z", ped, used, None       # undefined subterm: mark, not verdict
+    if _poly_identity(e1, e2, quantities):  # the sides are ONE polynomial: equal at every reading (see _mpoly)
+        return ("F" if kind == "lt" else "T"), ped, used, None
     # A NAME IS ONE NUMBER ACROSS THE WHOLE CLAIM (the curator's word,
     # 2026-09-24, in two steps): (1) for numbers m - m = 0, and m - m != 0
     # only for a `sample`, where each occurrence is a separate act of

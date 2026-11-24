@@ -151,3 +151,70 @@ def closed_text(p, rt):
             a = " + ".join(f"({v} * ({rt})**{m})" for m, v in eulerian(k).items())
             terms.append(f"(({cs} * {rt} * ({a})) / (1 - {rt})**{k + 1})")
     return "(" + " + ".join(terms) + ")" if terms else "0"
+
+
+# ------------------------------------------------ FINITE SUMS: Σ_{i=lo}^{hi} P(i) r^i (2026-11-25, Lean's Finset.sum)
+# No method here: a finite sum is ordinary mathematics; an empty interval (hi < lo) sums to 0. Closed forms, EXACT:
+#   r = 1:  F(m) = Σ_{i=0}^{m} P(i) is a polynomial of degree deg P + 1 (Faulhaber) with F(−1) = 0, and
+#           Σ_{i=lo}^{hi} P(i) = F(hi) − F(lo − 1)            for every hi ≥ lo − 1 (hi = lo − 1: the empty sum).
+#   r ≠ 1:  Q with Q(i) − r Q(i+1) = P(i) (deg Q = deg P, solved from the top coefficient down: the factor is 1 − r)
+#           telescopes:  Σ_{i=lo}^{hi} P(i) r^i = Q(lo) r^lo − Q(hi+1) r^(hi+1)   for every hi ≥ lo − 1.
+# Below hi = lo − 1 neither form is the empty sum: the caller must decide hi ≥ lo − 1 (or say it cannot).
+def _peval(p, x):
+    return sum((Fraction(c) * Fraction(x) ** k for k, c in p.items()), Fraction(0))
+
+
+def faulhaber(p):
+    """F with F(m) = Σ_{i=0}^{m} P(i), as {degree: Fraction} (Newton's forward differences at 0, 1, …, deg + 1)"""
+    p = _trim(p)
+    d = (max(p) if p else 0) + 1
+    vals, acc = [], Fraction(0)
+    for m in range(d + 1):
+        acc += _peval(p, m)
+        vals.append(acc)
+    out, row, fact = {}, vals, 1
+    for j in range(d + 1):                               # F(m) = Σ_j Δ^j F(0) · m(m−1)…(m−j+1) / j!
+        if j:
+            fact *= j
+        coef = row[0] / fact
+        falling = {0: Fraction(1)}
+        for t in range(j):                               # multiply by (m − t)
+            nxt = {}
+            for k, c in falling.items():
+                nxt[k + 1] = nxt.get(k + 1, 0) + c
+                nxt[k] = nxt.get(k, 0) - t * c
+            falling = nxt
+        for k, c in falling.items():
+            out[k] = out.get(k, 0) + coef * c
+        row = [row[i + 1] - row[i] for i in range(len(row) - 1)]
+    return _trim(out)
+
+
+def geo_q(p, r):
+    """Q with Q(i) − r Q(i+1) = P(i), as {degree: Fraction}; r a rational ≠ 1"""
+    r = Fraction(r)
+    if r == 1:
+        raise ValueError("r = 1: use faulhaber")
+    p = _trim(p)
+    d = max(p) if p else 0
+    q = {}
+    for k in range(d, -1, -1):                           # i^k: q_k − r Σ_{j ≥ k} q_j C(j, k) = p_k
+        s = sum((q[j] * comb(j, k) for j in q if j > k), Fraction(0))
+        q[k] = (p.get(k, Fraction(0)) + r * s) / (1 - r)
+    return _trim(q)
+
+
+def finite_value(p, r, lo, hi):
+    """Σ_{i=lo}^{hi} P(i) r^i for integer bounds, from the closed forms (0 on an empty interval)"""
+    r, lo, hi = Fraction(r), int(lo), int(hi)
+    if hi < lo:
+        return Fraction(0)
+    if r == 1:
+        f = faulhaber(p)
+        return _peval(f, hi) - _peval(f, lo - 1)
+    if r == 0:                                           # 0^0 = 1: only the i = 0 term, when 0 is in the interval
+        if lo < 0:
+            raise ValueError("0^i at i < 0 has no value")
+        return Fraction(_trim(p).get(0, 0)) if lo <= 0 <= hi else Fraction(0)
+    q = geo_q(p, r)
+    return _peval(q, lo) * r ** lo - _peval(q, hi + 1) * r ** (hi + 1)

@@ -12,6 +12,7 @@
 import random
 import sys
 from fractions import Fraction
+from fractions import Fraction as F
 
 import zfl
 from znumjudge import _parse_arith, parse_quantities
@@ -153,6 +154,31 @@ check(sheet_disp("a=[0,1] earned:h", "pow(a, -1/2) >= 0") == "OPEN", "a ** (-1/2
 check(sheet_disp("a=[-1,0) earned:h", "pow(a, 1/2) >= 0") == "E", "a non-integer power of a negative base: none")
 check(sheet_disp("a=1/4 earned:p, b=1/4 earned:p, c=1/4 earned:p", "pow(a,7/8)+pow(b,7/8)+pow(c,7/8) >= 3") == "REFUTED",
       "lean_workbook_29168's mathematics is false at a = b = c = 1/4")
+
+# 5. a power over an integer range of exponents (2026-11-24, step 2: `x ^ n`, n a natural variable) ------------------
+for sh, c, want in [
+        ("x=(1,inf) earned:a, n=[0,inf] earned:a int", "pow(x, n) >= 1", "EARNED"),
+        ("x=[0,1] earned:a, n=[1,inf] earned:a int", "pow(x, n) <= 1", "EARNED"),
+        ("x=[0,1) earned:a, n=[0,inf] earned:a int", "pow(x, n) <= 1", "EARNED"),
+        ("x=[2,3] earned:a, n=[0,5] earned:a int", "pow(x, n) <= 243", "EARNED"),
+        ("x=[2,3] earned:a, n=[0,5] earned:a int", "pow(x, n) <= 242", "OPEN"),
+        ("x=[2,3] earned:a, n=[0,5] earned:a int", "pow(x, n) > 243", "REFUTED"),
+        ("x=[-2,1] earned:a, n=[0,3] earned:a int", "pow(x, n) <= 8", "EARNED"),
+        ("x=[-2,1] earned:a, n=[0,3] earned:a int", "pow(x, n) >= 0", "OPEN"),
+        ("n=[1,inf] earned:a int", "pow(2, n) >= 2", "EARNED"),
+        ("n=[0,inf] earned:a int", "pow(2, n) >= n + 2", "OPEN"),
+        ("x=[0,0] earned:a, n=[0,3] earned:a int", "pow(x, n) <= 1", "EARNED")]:
+    check(sheet_disp(sh, c) == want, f"integer-range power: {c} over {sh} -> {want}")
+# the other side, brute force: every forced verdict over a small box holds at every lattice point
+import itertools  # noqa: E402
+for xs, ns in [((F(-2), F(1)), (0, 3)), ((F(1, 2), F(3)), (0, 4)), ((F(0), F(2)), (1, 4))]:
+    for bound in (F(-3), F(0), F(1), F(8), F(81)):
+        sh = f"x=[{xs[0]},{xs[1]}] earned:a, n=[{ns[0]},{ns[1]}] earned:a int"
+        d = sheet_disp(sh, f"pow(x, n) <= {bound}")
+        if d in ("EARNED", "REFUTED"):
+            pts = [xs[0] + (xs[1] - xs[0]) * F(k, 12) for k in range(13)]
+            vals = [x ** n for x, n in itertools.product(pts, range(ns[0], ns[1] + 1))]
+            check(all((v <= bound) == (d == "EARNED") for v in vals), f"integer-range power soundness: pow <= {bound} over {sh} is {d}")
 
 print(f"STRICT BOUND GREEN — {N[0]} checks" if not FAILS else f"test_znum_gap: {len(FAILS)} failures of {N[0]}")
 sys.exit(1 if FAILS else 0)

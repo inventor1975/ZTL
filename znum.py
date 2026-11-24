@@ -1686,6 +1686,10 @@ def _ev_tree(expr, quantities):
         try:
             if op in _zf.UNARY:
                 iv = _zf.UNARY[op](evs[0][0])
+            elif op == "pow" and evs[1][3] == 1 and evs[1][0][0] != evs[1][0][1]:
+                # an exponent ON THE INTEGER LATTICE with a range (a natural variable, 2026-11-24): the power over
+                # every integer of the range, not exp(n ln x) — which needs x > 0 and would read x^n at x = 0 as a mark
+                iv = _zf.iv_pow_intrange(evs[0][0], evs[1][0])
             else:
                 iv = _zf.BINARY[op](evs[0][0], evs[1][0])
         except _zf.FloorLimit as why:

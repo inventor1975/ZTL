@@ -596,6 +596,46 @@ def iv_pow(a, b):
     return iv_exp((min(cands), max(cands)))     # -inf * y (y > 0) -> exp reads 0 at -inf: the 0 of a closed base
 
 
+def iv_pow_intrange(a, n):
+    """a^n for EVERY integer n in [n0, n1] (2026-11-24, step 2 of the Lean reading: `x ^ n` with n a natural variable;
+    VR's vpow is repeated multiplication). n0 >= 0 only (a negative range is a mark here). A Python reading: no Lean twin.
+      base >= 0: x^n is monotone in x and in n, so the extremes sit at the corners; with n1 = inf the top is inf for a
+                 base above 1 and the bottom runs down to 0 for a base below 1 (0 is kept as a closed end: wider, sound);
+                 0 ** 0 = 1, as in Lean and in algebra;
+      a base that may be negative: the sign follows n's parity, which an interval does not carry — [-M, M] by the
+                 magnitude M = max |x|^n, never a guess of the parity."""
+    n0, n1 = n
+    if n0 == -INF or n0 < 0:
+        return None
+    n0 = int(math.ceil(n0))
+    n1 = INF if _inf(n1) else int(math.floor(n1))
+    if n1 != INF and n1 < n0:
+        raise NoReadings("an empty range of integer exponents")
+    if any(_inf(x) for x in a) and not (a[1] == INF and a[0] >= 0):
+        return None
+    if a[0] >= 0:
+        a0, a1 = Fraction(a[0]), a[1]
+        if n1 == INF:
+            # the bottom: a0^n0 when the smallest base is >= 1 (x^n grows with n); below 1, x^n runs down to 0
+            lo = a0 ** n0 if a0 >= 1 else Fraction(0)
+            # the top: unbounded above 1; exactly 1 at a top base of 1; below 1 the largest is at n0 (x^n falls with n)
+            if a1 == INF or a1 > 1:
+                hi = INF
+            elif a1 == 1:
+                hi = Fraction(1)
+            else:
+                hi = Fraction(a1) ** n0              # n0 = 0 gives 1 (0 ** 0 = 1 too)
+            return lo, hi
+        ends = [a0 ** n0, a0 ** n1] + ([INF] if a1 == INF else [Fraction(a1) ** n0, Fraction(a1) ** n1])
+        fin = [e for e in ends if not _inf(e)]
+        return min(fin), (INF if a1 == INF and n1 > 0 else max(fin))
+    if n1 == INF:
+        return None
+    m = max(abs(Fraction(a[0])), abs(Fraction(a[1])))
+    mag = max(m ** n0, m ** n1)
+    return -mag, mag
+
+
 def iv_min(a, b):
     return min(a[0], b[0]), min(a[1], b[1])
 

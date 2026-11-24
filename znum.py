@@ -36,6 +36,7 @@ sys.path.insert(0, _HERE)
 
 from ztljudge import judge                              # noqa: E402
 from zgap import gap, is_gap, mark                     # noqa: E402  (a strict bound: zgap.py)
+import zlogexact as _zl                                # noqa: E402  (exact logarithms of rationals)
 
 INF = math.inf
 EARNED, CREDIT = "earned", "credit"
@@ -1842,6 +1843,20 @@ def _compare(kind, e1, e2, quantities):
             return ("T" if sg == 0 else "F"), ped, used, None
         except (_NotLinear, ZeroDivisionError, KeyError):
             pass                            # something is still a box: as before
+    # EXACT LOGARITHMS OF RATIONALS (zlogexact, 2026-11-24): at a point where every name is pinned, a difference built
+    # from ln/log10 of rationals is c + Σ r_p ln p, exactly — an EQUALITY like log_8 64 = 2 is decided, which a bracket
+    # never does. Anything it cannot read exactly falls through to the interval path below, unchanged.
+    if _zl.has_log(e1) or _zl.has_log(e2):
+        try:
+            sg = _zl.ev(("sub", e1, e2), quantities).sign()
+        except (_zl.NotExact, ZeroDivisionError, KeyError):
+            sg = None
+        if sg is not None:
+            if kind == "le":
+                return ("T" if sg <= 0 else "F"), ped, used, None
+            if kind == "lt":
+                return ("T" if sg < 0 else "F"), ped, used, None
+            return ("T" if sg == 0 else "F"), ped, used, None
     if r1 is None or r2 is None:
         return "Z", ped, used, None       # undefined subterm: mark, not verdict
     # A NAME IS ONE NUMBER ACROSS THE WHOLE CLAIM (the curator's word,

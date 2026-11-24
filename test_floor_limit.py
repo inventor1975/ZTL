@@ -46,5 +46,10 @@ check(disp("tan(1) > 1")["disposition"] == "EARNED", "tan(1) still read as befor
 check(disp("tan(x) > -100", "x=[1,2] earned:a")["disposition"] == "OPEN", "a pole inside [1,2]: OPEN")
 check(disp("sin(1000) <= 1")["disposition"] == "EARNED", "sin keeps its reduction")
 
+# an UNDECIDED branch with no readings is a MARK, never E (2026-11-25): the other branch's readings exist
+check(disp("ifpos(x, 1, sqrt(0 - 1)) == 1", "x=[-1,1] earned:a")["disposition"] == "OPEN", "undecided ifpos, a no-value branch: OPEN")
+check(disp("ifpos(x, 1, sqrt(0 - 1)) == 1", "x=[1,2] earned:a")["disposition"] == "EARNED", "decided ifpos reads its branch only")
+check(disp("ifpos(x, 1, sqrt(0 - 1)) == 1", "x=[-2,-1] earned:a")["disposition"] == "E", "decided into the no-value branch: E")
+
 print(f"FLOOR LIMIT GREEN — {N[0]} checks" if not FAILS else f"test_floor_limit: {len(FAILS)} failures of {N[0]}")
 sys.exit(1 if FAILS else 0)

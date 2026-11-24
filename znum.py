@@ -1643,7 +1643,17 @@ def _ev_tree(expr, quantities):
         rx, px, ux, _, _ = _ev(args[0], quantities)
         side = _zf._side(rx) if rx is not None and not any(isinstance(v, float) for v in rx) else 0
         want = [1] if side == 1 else ([2] if side == -1 else [1, 2])
-        evs = {i: _ev(args[i], quantities) for i in want}
+        evs = {}
+        for i in want:
+            try:
+                evs[i] = _ev(args[i], quantities)
+            except _NoReadings:
+                if len(want) == 1:
+                    raise
+                # AN UNDECIDED BRANCH WITH NO READINGS (2026-11-25): where the condition is not decided, a branch that
+                # has no value is undefined at PART of the readings — a mark, as at the edge of a domain, never E
+                # ("no readings at all"): the other branch's readings exist.
+                return None, set(), names_in(args[0]) & set(quantities), None, None
         ped = px.union(*[e[1] for e in evs.values()])
         used = ux.union(*[e[2] for e in evs.values()])
         units = [e[4] for e in evs.values()]

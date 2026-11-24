@@ -59,5 +59,20 @@ c = F(3)
 parts = [c * (1 if n % 2 == 0 else 0) for n in range(4000)]   # partial sums of 3 − 3 + 3 − …: 3, 0, 3, 0, …
 check(abs(sum(parts) / len(parts) - S.value({0: c}, True, "cesaro")) < F(1, 100), "Cesàro of 3 − 3 + 3 − …")
 
+# 4. GEOMETRIC: Σ P(n) r^n (Lean Workbook's series) — against mpmath where it converges; Euler's 1 + 2 + 4 + … = −1
+for p, r in [({0: 1}, F(1, 2)), ({1: 1}, F(1, 2)), ({1: 1}, F(1, 3)), ({2: 1}, F(1, 2)), ({0: 1, 1: 1}, F(1, 10)),
+             ({0: 3, 2: -1}, F(-2, 5)), ({3: 1}, F(1, 4))]:
+    v = S.value_geo(p, r, "limit")
+    true = mpmath.nsum(lambda n: sum(float(c) * n ** k for k, c in p.items()) * mpmath.mpf(r.numerator) / r.denominator ** 1
+                       * 0 + sum(float(c) * n ** k for k, c in p.items()) * (mpmath.mpf(r.numerator) / r.denominator) ** n,
+                       [0, mpmath.inf])
+    check(abs(mpmath.mpf(v.numerator) / v.denominator - true) < 1e-15, f"Σ {p} ({r})^n = {v} vs {true}")
+    check(all(S.value_geo(p, r, m) == v for m in S.METHODS), f"|r| < 1: every method agrees on {p}, {r}")
+T = {m: S.value_geo({0: 1}, 2, m) for m in S.METHODS}
+check(T == {"limit": None, "mathlib": 0, "abel": None, "cesaro": None, "zeta": -1}, f"1 + 2 + 4 + …: {T}")
+check(S.value_geo({0: 1}, -1, "abel") == F(1, 2) and S.value_geo({0: 1, 1: 1}, 1, "zeta") == F(-1, 12),
+      "r = ±1 falls back to the power-series case")
+check(S.value_geo({0: 5}, 0, "limit") == 5, "r = 0: only the n = 0 term (0^0 = 1)")
+
 print(f"SUMMATION GREEN — {N[0]} checks" if not FAILS else f"test_zsummation: {len(FAILS)} failures of {N[0]}")
 sys.exit(1 if FAILS else 0)

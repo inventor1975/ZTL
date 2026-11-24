@@ -295,7 +295,7 @@ def _parse_arith(s, quantities):
         if "_pi" not in quantities:
             quantities["_pi"] = qty(_zfunc.PI[0], _zfunc.PI[1], EARNED, "zfunc.PI: a proved bracket of pi")
         return "_pi"
-    m = re.match(r"^(exp|ln|log10|atan|tan|sin|cos|pow|min|max|ifpos_d|ifpos|besselj0|besselj1|berp|beip|ber|bei)\(", s)
+    m = re.match(r"^(exp|ln|log10|atan|tan|sin|cos|pow|min|max|ifpos_d|ifpos|besselj0|besselj1|berp|beip|ber|bei|idiv|mod|dvd|fact|choose)\(", s)
     if m and s.endswith(")") and _closes_last(s, len(m.group(1))):
         inner = s[len(m.group(1)) + 1:-1]
         parts, depth, start = [], 0, 0
@@ -308,7 +308,7 @@ def _parse_arith(s, quantities):
                 parts.append(inner[start:i])
                 start = i + 1
         parts.append(inner[start:])
-        want = 2 if m.group(1) in ("pow", "min", "max") else (3 if m.group(1).startswith("ifpos") else 1)
+        want = 2 if m.group(1) in ("pow", "min", "max", "idiv", "mod", "dvd", "choose") else (3 if m.group(1).startswith("ifpos") else 1)
         if len(parts) != want:
             raise ValueError(f"{m.group(1)} takes {want} argument(s), got {len(parts)}: {s!r}")
         return (m.group(1), *[_parse_arith(x, quantities) for x in parts])

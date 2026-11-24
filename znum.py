@@ -1684,6 +1684,17 @@ def _ev_tree(expr, quantities):
         if any(e[0] is None for e in evs):
             return None, ped, used, None, unit
         try:
+            if op in _zf.INTWORDS:
+                # THE INTEGER WORDS (VR/Numbers/Division.lean's twin): on the integer lattice only. A point that is not
+                # an integer has no reading (VR has no such operation on it); a continuous range is a mark.
+                for e in evs:
+                    lo_, hi_ = e[0]
+                    if lo_ == hi_ and not isinstance(lo_, float) and Fraction(lo_).denominator != 1:
+                        raise _NoReadings(f"{op} of a non-integer {fmt(lo_)}: the integer words read integers only")
+                    if e[3] != 1 and lo_ != hi_:
+                        return None, ped, used, None, unit
+                iv = _zf.INTFUNCS[op](*[e[0] for e in evs])
+                return iv, ped, used, (1 if iv is not None else None), unit
             if op in _zf.UNARY:
                 iv = _zf.UNARY[op](evs[0][0])
             elif op == "pow" and evs[1][3] == 1 and evs[1][0][0] != evs[1][0][1]:

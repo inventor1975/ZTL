@@ -596,7 +596,8 @@ OPERATOR_WORDS = ("not", "and", "or", "imp", "xor", "xnor",
 # proved bracket of rationals, never a rounding; `pi` is the constant's proved bracket; `integral(f, x, a, b)` the
 # kernel-checked enclosure of a definite integral. Taken here for the same reason as the connectives: a row called
 # `sin` or `pi` would never be bound — the formula reads the function.
-FUNCTION_WORDS = ("exp", "ln", "log10", "sin", "cos", "tan", "atan", "pow", "integral", "pi")
+FUNCTION_WORDS = ("exp", "ln", "log10", "sin", "cos", "tan", "atan", "pow", "integral", "pi",
+                  "idiv", "mod", "dvd", "fact", "choose")   # the integer words, 2026-11-24 (VR/Numbers/Division.lean)
 _SERVICE_WORDS = set(RESERVED_NAMES) | set(OPERATOR_WORDS) | set(FUNCTION_WORDS)
 
 # status -> what the core's two floors each call it

@@ -686,4 +686,106 @@ for _b in _ZS.FAMILIES:
         UNARY[_nm] = _ZS.unary(_nm)
 for _a in _ZS.ALIASES:
     UNARY[_a] = _ZS.unary(_a)
-FUNC_OPS = set(UNARY) | set(BINARY) | set(TERNARY)
+# THE INTEGER WORDS (2026-11-24, step 3: the twin of VR/Numbers/Division.lean, every object there on []):
+# idiv, mod (Euclidean, divisor >= 1), dvd (1 when a | b: some k with a*k = b, else 0), fact, choose. Read on the
+# INTEGER LATTICE only (znum checks it); no convention value: a divisor 0 is not a value that was chosen — VR cannot
+# even write it (the divisor is succ d by construction) — so idiv/mod by a pinned 0 has NO reading (E). 0 | 0 holds and
+# 0 | b (b != 0) fails BY THE DEFINITION (a witness k), and choose(n, k) = 0 for k > n is the count of k-subsets
+# (proved in VR: vchoose_eq_base_of_lt). VR's words are on the naturals: a negative argument of idiv/mod/fact/choose
+# exists in Z but is not read by this twin (FloorLimit, a mark); dvd reads Z by magnitudes (a | b iff |a| | |b|).
+INTWORDS = {"idiv": 2, "mod": 2, "dvd": 2, "fact": 1, "choose": 2}
+INT_ENUM_CAP = 4096          # a range of integer arguments is read point by point up to this many points
+FACT_CAP = 2000              # n! past this n is not read by the floor (FloorLimit): it exists, it is just huge
+
+
+def _ipts(a):
+    """the integers of an interval [a0, a1] (finite ends), as a range"""
+    return range(int(math.ceil(a[0])), int(math.floor(a[1])) + 1)
+
+
+def _enum(f, *ivs):
+    """min/max of f over every integer point of the boxes, when there are few enough; else None (a mark)"""
+    if any(_inf(x) for iv in ivs for x in iv):
+        return None
+    n = 1
+    for iv in ivs:
+        n *= max(0, int(math.floor(iv[1])) - int(math.ceil(iv[0])) + 1)
+    if n == 0:
+        raise NoReadings("no integer reading in the range")
+    if n > INT_ENUM_CAP:
+        return None
+    import itertools
+    vals = [f(*pt) for pt in itertools.product(*[_ipts(iv) for iv in ivs])]
+    return Fraction(min(vals)), Fraction(max(vals))
+
+
+def _nat_args(name, *ivs):
+    for iv in ivs:
+        if iv[1] < 0:
+            raise FloorLimit(f"{name} of a negative integer: it exists in Z, the VR twin reads the naturals")
+        if iv[0] < 0:
+            return False
+    return True
+
+
+def iv_idiv(a, b):
+    if b[0] == 0 and b[1] == 0:
+        raise NoReadings("idiv by 0: no value (VR's divisor is succ d — the division cannot be written)")
+    if not _nat_args("idiv", a, b):
+        return None
+    if b[0] == 0:
+        return None                                          # 0 is a reading of the divisor: undefined there — a mark
+    lo = Fraction(0) if _inf(b[1]) else Fraction(int(math.floor(a[0])) // int(math.floor(b[1])))
+    hi = INF if _inf(a[1]) else Fraction(int(math.floor(a[1])) // int(math.ceil(b[0])))
+    return lo, hi                                            # monotone: up in a, down in b (a >= 0, b >= 1)
+
+
+def iv_mod(a, b):
+    if b[0] == 0 and b[1] == 0:
+        raise NoReadings("mod by 0: no value (VR's divisor is succ d — the division cannot be written)")
+    if not _nat_args("mod", a, b):
+        return None
+    if b[0] == 0:
+        return None
+    r = _enum(lambda x, y: x % y, a, b)
+    if r is not None:
+        return r
+    top = (b[1] - 1) if not _inf(b[1]) else INF
+    top = a[1] if (_inf(top) or (not _inf(a[1]) and a[1] < top)) else top
+    return Fraction(0), (top if _inf(top) else Fraction(int(math.floor(top))))
+
+
+def _dvd_pt(x, y):
+    x, y = abs(x), abs(y)
+    return 1 if (y == 0 if x == 0 else y % x == 0) else 0
+
+
+def iv_dvd(a, b):
+    r = _enum(_dvd_pt, a, b)
+    return r if r is not None else (Fraction(0), Fraction(1))
+
+
+def iv_fact(n):
+    if not _nat_args("fact", n):
+        return None
+    if _inf(n[1]):
+        return Fraction(math.factorial(int(math.ceil(n[0])))), INF
+    if n[1] > FACT_CAP:
+        raise FloorLimit(f"fact of n > {FACT_CAP} is not read by the floor")
+    return (Fraction(math.factorial(int(math.ceil(n[0])))), Fraction(math.factorial(int(math.floor(n[1])))))
+
+
+def _choose_pt(n, k):
+    return math.comb(n, k) if 0 <= k <= n else 0
+
+
+def iv_choose(n, k):
+    if not _nat_args("choose", n, k):
+        return None
+    if not _inf(n[1]) and n[1] > FACT_CAP:
+        raise FloorLimit(f"choose of n > {FACT_CAP} is not read by the floor")
+    return _enum(_choose_pt, n, k)
+
+
+INTFUNCS = {"idiv": iv_idiv, "mod": iv_mod, "dvd": iv_dvd, "fact": iv_fact, "choose": iv_choose}
+FUNC_OPS = set(UNARY) | set(BINARY) | set(TERNARY) | set(INTWORDS)

@@ -2224,6 +2224,56 @@ def _system_answer(claim, q, unknowns, regions=None, budget=6000, search_budget=
     return answer([(cert, how)], False, how)
 
 
+
+def inline_definitions(claim, rows, max_len=20000):
+    """The claim with every `defined` row it reaches written out in place — or None, when that cannot be done
+    faithfully (then the judge reads the passport's values, as before).
+
+    WHY (2026-11-24, measured). Handing the judge a defined row as the passport's VALUE identifies the occurrences of
+    the dirty atoms inside it: the stable step reads each name once. So `safe := ~ok | ok` with `ok` unverified came
+    back EARNED "grounded outright", while the same formula as the claim is EARNED IF STABLE; `ok & ~ok` came back
+    REFUTED for REFUTED IF STABLE, and `~~ok` OPEN for ON CREDIT. An identification ZTL requires to be earned was
+    made by the document layer. Written out, each occurrence is read on its own and the judge decides.
+
+    Only where it is faithful: an acyclic chain of definitions (a self-referential system is the passport's own
+    business — the stable step is the point there), no `Tr(...)` in a reached ground (the claim language has no Tr:
+    it reads Z as F at each occurrence, so it is per-occurrence already), no comparison/numeric or integral row.
+    Measured on 11,448 ZFL documents on 2026-11-24: 1 verdict changed - the book's chapter 02, the three laws over
+    an unverified atom (identity & excluded_middle & noncontradiction), EARNED -> EARNED IF STABLE, which is what the
+    same formulas give as a claim (chapter 07)."""
+    by = {r.get("name"): r for r in rows if r.get("name")}
+    cmp_names = set(compare_rows(rows))
+    defs = {n: (r.get("ground") or "") for n, r in by.items() if r.get("status") == "defined"}
+    if not defs or not (names_in(claim) & set(defs)):
+        return None
+    seen, stack = set(), []
+
+    def ok(n):
+        if n in stack:
+            return False                               # a cycle: the passport's case
+        if n in seen:
+            return True
+        g = defs[n]
+        if not g.strip() or n in cmp_names or re.search(r"\bTr\s*\(", g) or _INTEGRAL_RE.search(g) \
+                or re.search(r"(<=|>=|==|<|>)", g.replace("<->", " ").replace("->", " ")):   # arrows are not comparisons
+            return False
+        stack.append(n)
+        good = all(ok(m) for m in names_in(g) & set(defs))
+        stack.pop()
+        seen.add(n)
+        return good
+
+    if not all(ok(n) for n in names_in(claim) & set(defs)):
+        return None
+    s = claim
+    while names_in(s) & set(defs):
+        for n in names_in(s) & set(defs):
+            s = re.sub(r"(?<![\wА-Яа-яЁё])" + re.escape(n) + r"(?![\wА-Яа-яЁё])", "(" + defs[n] + ")", s)
+        if len(s) > max_len:
+            return None
+    return s
+
+
 def run(doc, ground_registry=None):
     """Validate, then ask whichever instruments apply.
 
@@ -2512,7 +2562,9 @@ def run(doc, ground_registry=None):
             # not-earned to earned. This is the architecture the draft
             # already states: quarantine is the Z-set of the stable step's
             # least fixed point, and ZTL is the greedy reading ON TOP of it.
-            r = judge(claim, resolved_marking(rows))
+            # WRITTEN OUT, where that is faithful (2026-11-24): see inline_definitions.
+            inlined = inline_definitions(claim, rows)
+            r = judge(inlined or claim, resolved_marking(rows))
         except Exception as exc:
             issues.append(_issue("error", "E_UNREADABLE", "claim",
                                  f"the instruments could not read this "
@@ -2523,7 +2575,8 @@ def run(doc, ground_registry=None):
                            "grade": r["grade"],
                            "dirty": sorted(r["unverified"]),
                            "unverified": sorted(r["unverified"]),   # the older name; see STATUS_ALIASES
-                           "why": r.get("why")}
+                           "why": r.get("why"),
+                           **({"claim_inlined": inlined} if inlined else {})}
         # A DEFINED ROW CANNOT BE VERIFIED (29.09, blind cloud test): "verify
         # ['may_sign']" sent a reader to check a formula, and "verify ['L']"
         # sent one to check a paradox whose refusal is permanent. The list of

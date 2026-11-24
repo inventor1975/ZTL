@@ -83,6 +83,7 @@ STANDS = [
     ("test_floor_limit.py", ["FLOOR LIMIT GREEN — "]),   # 2026-11-24: a floor limit is a mark with its reason, never E
     ("test_intwords.py", ["INTWORDS GREEN — "]),   # 2026-11-24: idiv mod dvd fact choose, the twin of VR/Numbers/Division.lean
     ("test_zlogexact.py", ["LOGEXACT GREEN — "]),   # 2026-11-24: exact logarithms of rationals at pinned points
+    ("test_zsummation.py", ["SUMMATION GREEN — "]),   # 2026-11-25: the summation method as a dirty parameter
     ("test_redteam_uncovered.py", ["GREEN: nothing found"]),
     # Поставлен 2026-09-19: CLASSIC-VS-ZTL.md год носила число «1263 из 2924»
     # без определения и без прогона, и оно занижало результат на двадцать

@@ -24,7 +24,7 @@ work is a fixed number of series terms for it, and the answer is always a sound 
 """
 
 from fractions import Fraction
-from zgap import is_gap
+from zgap import gap, is_gap
 import functools
 import math
 
@@ -564,13 +564,20 @@ def iv_pow(a, b):
         if n % 2 == 0 and a[0] < 0 < a[1]:
             return Fraction(0), max(ends)
         return min(ends), max(ends)
+    # 0 ** y = 0 FOR y > 0 (2026-11-24, found by lean2zfl's reading of a^(7/8) at a = 0): until then a base that may
+    # be 0 was a mark and a base pinned at 0 had no readings, though 0 ** (7/8) is 0. For y <= 0 it stays undefined.
+    zero_ok = b[0] > 0
     if a[1] <= 0:
+        if zero_ok and a[0] == 0 and a[1] == 0 and not is_gap(a[1]):
+            return Fraction(0), Fraction(0)
         raise NoReadings("a non-integer power of a quantity that is never positive")
     if a[0] <= 0:
-        return None
+        if not (a[0] == 0 and (is_gap(a[0]) or zero_ok)):
+            return None
+        a = (gap(0), a[1])                # the positive part; a closed 0 adds the value 0, the low end below
     l = iv_ln(a)
     cands = [x * y for x in l for y in b]
-    return iv_exp((min(cands), max(cands)))
+    return iv_exp((min(cands), max(cands)))     # -inf * y (y > 0) -> exp reads 0 at -inf: the 0 of a closed base
 
 
 def iv_min(a, b):

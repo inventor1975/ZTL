@@ -136,5 +136,23 @@ except ValueError:
 check(verdict("[1,inf]", "x != 0") == "EARNED" and verdict("[0,inf]", "x != 0") == "OPEN", "!= both sides")
 check(verdict("[1,inf]", "x ≠ 0") == "EARNED", "≠ spelled out")
 
+# 4. two floor gaps found by reading Lean statements (2026-11-24) -----------------------------------------------------
+from znumjudge import judge_sheet_claim  # noqa: E402
+
+
+def sheet_disp(sh, claim):
+    q, m = parse_quantities(sh)
+    return judge_sheet_claim(claim, q, m)["disposition"]
+
+
+check(sheet_disp("x=(0,inf) earned:h", "sqrt(x) >= 0") == "EARNED", "sqrt over an unbounded box reads (was a crash)")
+check(sheet_disp("a=[0,0] earned:h", "pow(a, 7/8) == 0") == "EARNED", "0 ** (7/8) is 0")
+check(sheet_disp("a=[0,1] earned:h", "pow(a, 7/8) >= 0") == "EARNED", "a ** (7/8) >= 0 with a closed 0 in the base")
+check(sheet_disp("a=[0,0] earned:h", "pow(a, -1/2) >= 0") == "E", "0 ** (-1/2) still has no reading")
+check(sheet_disp("a=[0,1] earned:h", "pow(a, -1/2) >= 0") == "OPEN", "a ** (-1/2) with 0 a reading: a mark")
+check(sheet_disp("a=[-1,0) earned:h", "pow(a, 1/2) >= 0") == "E", "a non-integer power of a negative base: none")
+check(sheet_disp("a=1/4 earned:p, b=1/4 earned:p, c=1/4 earned:p", "pow(a,7/8)+pow(b,7/8)+pow(c,7/8) >= 3") == "REFUTED",
+      "lean_workbook_29168's mathematics is false at a = b = c = 1/4")
+
 print(f"STRICT BOUND GREEN — {N[0]} checks" if not FAILS else f"test_znum_gap: {len(FAILS)} failures of {N[0]}")
 sys.exit(1 if FAILS else 0)

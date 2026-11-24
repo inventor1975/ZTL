@@ -290,7 +290,10 @@ def _iv_sqrt(a, k=None):
         raise _NoReadings("sqrt of a strictly negative quantity")
     if a[0] < 0:
         return None
-    lo, hi = _rat_sqrt(a[0], k), _rat_sqrt(a[1], k)
+    # AN UNBOUNDED TOP (2026-11-24, found by lean2zfl's reading of `x ^ (1/2 : ℝ) = √x` over (0, inf)): the root of
+    # inf is inf. Until then `_rat_sqrt(inf)` raised AttributeError ('float' has no numerator) out of the evaluator.
+    lo = _rat_sqrt(a[0], k)
+    hi = (INF, INF) if a[1] == INF else _rat_sqrt(a[1], k)
     # an excluded end stays excluded only where the root is exact (a bracket's side is not a reading anyway)
     return (mark(lo[0], is_gap(a[0]) and lo[0] == lo[1]), mark(hi[1], is_gap(a[1]) and hi[0] == hi[1]))
 

@@ -142,10 +142,6 @@ CODE_HELP = {
                    "имя, которое утверждение читает как число, без "
                    "величины — дайте число, интервал или ?, если его "
                    "и ищут"),
-    "E_OPEN_INTERVAL": ("an open bound like (0,10) — put the strictness in "
-                        "the claim instead",
-                        "открытая граница вроде (0,10) — строгость пишется "
-                        "в утверждении"),
     "E_VALUE_SET": ("a choice between values, {0,10} — that is two rows, "
                     "not one quantity",
                     "выбор между величинами, {0,10} — это две строки, "

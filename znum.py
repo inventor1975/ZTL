@@ -35,6 +35,7 @@ _HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, _HERE)
 
 from ztljudge import judge                              # noqa: E402
+from zgap import gap, is_gap, mark                     # noqa: E402  (a strict bound: zgap.py)
 
 INF = math.inf
 EARNED, CREDIT = "earned", "credit"
@@ -116,7 +117,7 @@ def qty(lo, hi, provenance=CREDIT, witness=None, discrete=None, unit=None,
     was a choice, and the default was the wrong way round."""
     lo, hi = num(lo), num(hi)
     assert provenance in (EARNED, CREDIT)
-    if lo > hi:
+    if lo > hi or (lo == hi and (is_gap(lo) or is_gap(hi))):
         # An INVERTED interval is the purest empty reading set there is,
         # and until 2026-08-12 it was an `assert` — the same mistake as the
         # lattice case, caught the same day by the curator's Vasya/Petya
@@ -130,6 +131,12 @@ def qty(lo, hi, provenance=CREDIT, witness=None, discrete=None, unit=None,
     if step is not None:
         tlo = lo if lo == -INF else Fraction(math.ceil(lo / step)) * step
         thi = hi if hi == INF else Fraction(math.floor(hi / step)) * step
+        # A STRICT BOUND ON A LATTICE (zgap, 2026-11-24): an excluded end that is itself a lattice point gives way to
+        # the next one — an int x with 0 < x reads from 1. The witnessed gap is one step.
+        if is_gap(lo) and tlo == lo:
+            tlo = tlo + step
+        if is_gap(hi) and thi == hi:
+            thi = thi - step
         if tlo > thi:
             # no lattice point inside the bounds: the reading set is EMPTY.
             # Not an exception any more — a status the floor computes and
@@ -190,8 +197,12 @@ def bare(x):
 
 
 # ------------------------------------------- the lift: interval arithmetic
-def _iv_add(a, b): return (a[0] + b[0], a[1] + b[1])
-def _iv_sub(a, b): return (a[0] - b[1], a[1] - b[0])
+# EXCLUDED ENDS (zgap, 2026-11-24). For independent readings an end of a sum is attained iff both ends that make it
+# are, so it is excluded iff either is; a product's extreme is excluded iff EVERY corner reaching it uses an excluded end
+# (a closed 0 factor attains 0 whatever the other factor is). Decorrelated readings only widen the set, so the marks stay
+# sound wherever these operations are used; an operation that does not keep them reads the end as closed (wider, sound).
+def _iv_add(a, b): return (mark(a[0] + b[0], is_gap(a[0]) or is_gap(b[0])), mark(a[1] + b[1], is_gap(a[1]) or is_gap(b[1])))
+def _iv_sub(a, b): return (mark(a[0] - b[1], is_gap(a[0]) or is_gap(b[1])), mark(a[1] - b[0], is_gap(a[1]) or is_gap(b[0])))
 
 
 def _iv_mul(a, b):
@@ -202,19 +213,33 @@ def _iv_mul(a, b):
     # a*b <= 0 was Z where it is T, and [0,0]·[-inf,inf] was (nan, nan). No
     # verdict was ever false (nan made every comparison Z), but forced ones
     # were lost.
-    ps = [Fraction(0) if (x == 0 or y == 0) else x * y for x in a for y in b]
-    return (min(ps), max(ps))
+    ps = []
+    for x in a:
+        for y in b:
+            v = Fraction(0) if (x == 0 or y == 0) else x * y
+            ex = ((is_gap(x) and not (y == 0 and not is_gap(y)))
+                  or (is_gap(y) and not (x == 0 and not is_gap(x))))
+            ps.append((v, ex))
+    lo, hi = min(v for v, _ in ps), max(v for v, _ in ps)
+    return (mark(lo, all(ex for v, ex in ps if v == lo)), mark(hi, all(ex for v, ex in ps if v == hi)))
 
 
 def _iv_div(a, b):
-    if b[0] <= 0 <= b[1]:
+    if b[0] <= 0 <= b[1] and not (b[0] == 0 and is_gap(b[0])) and not (b[1] == 0 and is_gap(b[1])):
         return None                       # divisor may be 0: undefined (§25 echo)
+    # A DIVISOR APART FROM 0 (zgap, 2026-11-24): (0, h] has no 0 reading, its reciprocals run [1/h, inf).
+    # An INFINITE end is a limit, never a reading, so its reciprocal 0 is an excluded end too: 1/x over (0, inf) is
+    # (0, inf), not [0, inf).
+    if b[0] == 0:                         # an excluded 0 at the low end
+        return _iv_mul(a, (mark(1 / b[1], is_gap(b[1])) if b[1] not in (INF, -INF) else gap(0), INF))
+    if b[1] == 0:                         # ... at the high end
+        return _iv_mul(a, (-INF, mark(1 / b[0], is_gap(b[0])) if b[0] not in (INF, -INF) else gap(0)))
     # 1/±inf is an EXACT zero, not the float 0.0. A finite float passed for
     # an infinity downstream — `fmt` printed it as -∞ and `_on_lattice` put
     # it off every lattice — and the live service refuted `k == 0/d` for an
     # int k that can be 0: a false verdict, found 2026-09-24 in the audit.
-    inv = (Fraction(0) if b[1] in (INF, -INF) else 1 / b[1],
-           Fraction(0) if b[0] in (INF, -INF) else 1 / b[0])
+    inv = (gap(0) if b[1] in (INF, -INF) else mark(1 / b[1], is_gap(b[1])),
+           gap(0) if b[0] in (INF, -INF) else mark(1 / b[0], is_gap(b[0])))
     return _iv_mul(a, inv)
 
 
@@ -261,12 +286,13 @@ def _iv_sqrt(a, k=None):
                                а не вердикт — ровно как деление на возможный ноль
         интервал >= 0       -> зажим [sqrt(lo), sqrt(hi)]
     """
-    if a[1] < 0:
+    if a[1] < 0 or (a[1] == 0 and is_gap(a[1])):
         raise _NoReadings("sqrt of a strictly negative quantity")
     if a[0] < 0:
         return None
     lo, hi = _rat_sqrt(a[0], k), _rat_sqrt(a[1], k)
-    return (lo[0], hi[1])
+    # an excluded end stays excluded only where the root is exact (a bracket's side is not a reading anyway)
+    return (mark(lo[0], is_gap(a[0]) and lo[0] == lo[1]), mark(hi[1], is_gap(a[1]) and hi[0] == hi[1]))
 
 
 def _unit_sqrt(u):
@@ -562,6 +588,7 @@ def _ev_linear(expr, quantities):
     except (_NotLinear, KeyError):
         return None
     lo = hi = c
+    lo_ex = hi_ex = False                 # an end of the form is excluded iff a term's end making it is (zgap)
     used = set(seen)
     ped = {n for n in seen if quantities[n]["prov"] == CREDIT}
     for _, (coef, name) in terms.items():
@@ -577,7 +604,9 @@ def _ev_linear(expr, quantities):
                       or (x == INF and 1) or 0) if isinstance(a, float) \
             or isinstance(b, float) else sorted((coef * a, coef * b))
         lo, hi = lo + ends[0], hi + ends[1]
-    return (lo, hi), ped, used, step, unit
+        lo_ex = lo_ex or is_gap(a if coef > 0 else b)
+        hi_ex = hi_ex or is_gap(b if coef > 0 else a)
+    return (mark(lo, lo_ex), mark(hi, hi_ex)), ped, used, step, unit
 
 
 # ---------------------------------- the quadratic fragment, read coherently
@@ -1811,21 +1840,37 @@ def compare(kind, e1, e2, quantities):
         # against an unlimited capacity came back OPEN instead of REFUTED.
         # The difference is undefined there; the separate bounds still decide.
         joint = None
+    # AN EXCLUDED END DECIDES (zgap, 2026-11-24): d < 0 holds when d's top is 0 but excluded — every reading stands
+    # a witnessed gap below 0 (VR's rlt) — and d == 0 fails when 0 is an excluded end (apartness, VR's rapart).
+    def _pos(x):                           # every reading of an end-x side is > 0
+        return x > 0 or (x == 0 and is_gap(x))
+
+    def _neg(x):
+        return x < 0 or (x == 0 and is_gap(x))
+
+    def _zero(d):
+        return d[0] == 0 and d[1] == 0 and not is_gap(d[0]) and not is_gap(d[1])
+    v = "Z"
     if joint is not None:
         d = joint[0]
         if kind == "le":
-            v = "T" if d[1] <= 0 else ("F" if d[0] > 0 else "Z")
+            v = "T" if d[1] <= 0 else ("F" if _pos(d[0]) else "Z")
         elif kind == "lt":
-            v = "T" if d[1] < 0 else ("F" if d[0] >= 0 else "Z")
+            v = "T" if _neg(d[1]) else ("F" if d[0] >= 0 else "Z")
         else:
-            v = "T" if d == (0, 0) else ("F" if d[0] > 0 or d[1] < 0 else "Z")
-    elif kind == "le":
-        v = "T" if r1[1] <= r2[0] else ("F" if r1[0] > r2[1] else "Z")
-    elif kind == "lt":
-        v = "T" if r1[1] < r2[0] else ("F" if r1[0] >= r2[1] else "Z")
-    else:                                  # equality within exactness (§13:
-        d = _iv_sub(r1, r2)                # only forced equality is earned)
-        v = "T" if d == (0, 0) else ("F" if d[0] > 0 or d[1] < 0 else "Z")
+            v = "T" if _zero(d) else ("F" if _pos(d[0]) or _neg(d[1]) else "Z")
+    if joint is None or v == "Z":
+        # THE SEPARATE BOUNDS ALSO SPEAK when the joint reading leaves the atom open (2026-11-24): both readings are
+        # supersets of the true one, so a verdict either forces is sound — and only the separate path keeps the
+        # excluded ends of products and quotients (x*x > 0 over (0, inf): the joint parabola reads 0 as reached).
+        if kind == "le":
+            v2 = "T" if r1[1] <= r2[0] else ("F" if _pos(_iv_sub(r1, r2)[0]) else "Z")
+        elif kind == "lt":
+            v2 = "T" if _neg(_iv_sub(r1, r2)[1]) else ("F" if r1[0] >= r2[1] else "Z")
+        else:                              # equality within exactness (§13:
+            d = _iv_sub(r1, r2)            # only forced equality is earned)
+            v2 = "T" if _zero(d) else ("F" if _pos(d[0]) or _neg(d[1]) else "Z")
+        v = v2 if joint is None else (v2 if v2 != "Z" else v)
     if kind == "eq" and v == "Z":          # lattice miss: an int-typed side
         for sa, rb in ((s1, r2), (s2, r1)):   # can never equal a point
             if sa is not None and rb[0] == rb[1] \

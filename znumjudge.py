@@ -90,10 +90,14 @@ _VAL = r"-?\d+(?:\.\d+)?(?:/\d+)?"      # 5, 0.75, 8/3 — read exactly
 # `inf` is admissible as a bound on either side and as a point value: an
 # unlimited capacity is a legitimate declaration, not a syntax error
 # (needed the moment a sheet had to say "lifts any weight whatsoever").
+# A STRICT BOUND (zgap, 2026-11-24): `(` or `)` excludes that end — `x=(0,inf]` reads x > 0, a witnessed gap.
 _QTY = re.compile(
-    rf"^(?P<name>\w+)=(?:\[(?P<lo>{_VAL}|-inf|inf),(?P<hi>{_VAL}|inf|-inf)\]"
+    rf"^(?P<name>\w+)=(?:(?P<lb>[\[(])(?P<lo>{_VAL}|-inf|inf),(?P<hi>{_VAL}|inf|-inf)(?P<rb>[\])])"
     rf"|(?P<point>{_VAL}|-inf|inf)|(?P<unk>\?))$")
-_CMP = re.compile(r"(<=|>=|==|<|>)")
+_CMP = re.compile(r"(<=|>=|==|!=|<|>)")
+
+
+from zgap import gap as _gap               # noqa: E402
 
 
 def _num(s):
@@ -112,9 +116,9 @@ def parse_quantities(text):
     quantities, marks = {}, {}
     parts, depth, cur = [], 0, ""
     for c in text:                       # split on commas outside brackets
-        if c == "[":
+        if c in "[(":
             depth += 1
-        elif c == "]":
+        elif c in "])":
             depth -= 1
         if c == "," and depth == 0:
             parts.append(cur); cur = ""
@@ -130,6 +134,10 @@ def parse_quantities(text):
                 lo = hi = _num(m.group("point"))
             else:
                 lo, hi = _num(m.group("lo")), _num(m.group("hi"))
+                if m.group("lb") == "(":
+                    lo = _gap(lo)
+                if m.group("rb") == ")":
+                    hi = _gap(hi)
             # trailing tokens: discreteness | provenance | unit (free order)
             prov, wit, discrete, unit, sample = CREDIT, None, None, None, False
             convention = False
@@ -228,7 +236,8 @@ def _parse_arith(s, quantities):
                 depth += 1
             elif c in "([":
                 depth -= 1
-            elif c in level and depth == 0:
+            elif c in level and depth == 0 and not (c == "*" and "*" in (s[i - 1], s[i + 1:i + 2])):
+                # (a `*` of `**` is not a product: the power is read below, after the sign)
                 # A SIGN, NOT AN OPERATOR: a `+`/`-` right after another operator or an opening paren is the sign of
                 # its operand (`x0 - -19`, `a * -b`, as Python's ast.unparse writes them). Splitting there left an
                 # empty side — "malformed arithmetic: ''" (found 2026-10-13 by the ztl-stand soundness audit, seven
@@ -303,6 +312,33 @@ def _parse_arith(s, quantities):
         if len(parts) != want:
             raise ValueError(f"{m.group(1)} takes {want} argument(s), got {len(parts)}: {s!r}")
         return (m.group(1), *[_parse_arith(x, quantities) for x in parts])
+    # AN INTEGER POWER, `x**n` (2026-11-24, with the strict bound; `^` stays the core's XOR): n a literal integer,
+    # read as the product it abbreviates — VR's vpow is repeated multiplication — so x**2 - 2*x + 1 is the polynomial
+    # the exact readers already hold (one name, one number) and not exp(2 ln x). n = 0 is 1, n < 0 is 1 / x**|n|.
+    # Split at the FIRST top-level `**`; the exponent must be a literal (2**3**2 is refused, not guessed). Read BEFORE the parentheses are stripped —
+    # `(x)**(2)` starts and ends with one — and AFTER a leading sign, which the unary rule below takes first.
+    depth = 0
+    for i in range(len(s) - 1 if not s.startswith(("-", "+")) else 0):   # a leading sign first: -x**2 = -(x²)
+        c = s[i]
+        if c in "([":
+            depth += 1
+        elif c in ")]":
+            depth -= 1
+        elif depth == 0 and s[i:i + 2] == "**":
+            base, ex = s[:i], s[i + 2:].strip()
+            ex = ex[1:-1].strip() if ex.startswith("(") and ex.endswith(")") and _closes_last(ex, 0) else ex
+            if not re.match(r"^-?\d+$", ex):
+                raise ValueError(f"a power x**n takes a literal integer n (got {ex!r}); a real exponent is pow(x, y)")
+            n = int(ex)
+            if abs(n) > POW_MAX_EXPONENT:
+                raise ValueError(f"x**{n}: the exponent is capped at {POW_MAX_EXPONENT} (the product is written out)")
+            b = _parse_arith(base, quantities)
+            if n == 0:
+                return _num("1")
+            e = b
+            for _ in range(abs(n) - 1):
+                e = ("mul", e, b)
+            return e if n > 0 else ("div", _num("1"), e)
     if s.startswith("(") and s.endswith(")"):
         return _parse_arith(s[1:-1], quantities)
     # UNARY SIGN. The binary split above starts at index 1, so a leading
@@ -337,7 +373,9 @@ def _parse_arith(s, quantities):
     raise ValueError(f"unknown quantity or malformed arithmetic: {s!r}")
 
 
-_KINDMAP = {"<=": ("le", False), "<": ("lt", False), "==": ("eq", False),
+POW_MAX_EXPONENT = 64
+
+_KINDMAP = {"<=": ("le", False), "<": ("lt", False), "==": ("eq", False), "!=": ("eq", False),
             ">=": ("le", True), ">": ("lt", True)}
 
 
@@ -389,14 +427,16 @@ def extract_comparisons(formula, quantities, parse=True):
     # the implication arrow contains '>', which is NOT a comparison:
     # normalize '->' to the core's unicode arrow before extraction
     # (bug found by the curator's question "if 4 > 3 then 5 > 3?")
-    atoms, out, i = {}, formula.replace("->", "→"), 0
+    # `a != b` / `a ≠ b` (2026-11-24): NOT (a == b) — on exact readings, apart from (VR's rapart). Read as the core's
+    # negation of the `==` atom, the path `~(a == b)` already took (it does not narrow, it only asks).
+    atoms, out, i = {}, formula.replace("->", "→").replace("≠", "!="), 0
     # a comparison = maximal operator-free chunk containing a _CMP sign
     # `[` `]` belong to the comparison too: `x == [3,4]` is lawful (the
     # interval is a spec-blessed value and `to_book` emits it), but the
     # old class cut the chunk at `[`, handing `_parse_arith` an empty
     # right side — the '' crash of 2026-08-27.
     pattern = re.compile(
-        r"[\w.+\-*/\s(),\[\]]+?(?:<=|>=|==|<|>)[\w.+\-*/\s(),\[\]]+")
+        r"[\w.+\-*/\s(),\[\]]+?(?:<=|>=|==|!=|<|>)[\w.+\-*/\s(),\[\]]+")
     while True:
         m = pattern.search(out)
         if not m:
@@ -432,7 +472,7 @@ def extract_comparisons(formula, quantities, parse=True):
         i += 1
         name = f"nc{i}"
         atoms[name] = (kind, e1, e2, chunk)
-        out = out[:lo] + f" {name} " + out[hi:]
+        out = out[:lo] + (f" (~{name}) " if sign == "!=" else f" {name} ") + out[hi:]
 
 
 # ----------------------------------------------------------------- judging

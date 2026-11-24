@@ -1063,14 +1063,11 @@ def validate(doc):
         # "cannot parse sheet entry: 'x=(0'" is not an answer to anybody.
         val = (r.get("value") or "").strip()
         if val:
-            if re.match(r"^[(\[]\s*[-\d.]+\s*,\s*[-\d.]+\s*[)\]]$", val) \
-                    and not re.match(r"^\[[^,]+,[^,]+\]$", val):
-                issues.append(_issue(
-                    "error", "E_OPEN_INTERVAL", f"{at} / value",
-                    "an open bound is not part of a value here: write the "
-                    "closed interval [0,10], or put the strictness in the "
-                    "claim — `x > 0 & x < 10`"))
-            elif val.startswith("{"):
+            # AN OPEN BOUND IS NOW A VALUE (2026-11-24, the curator's "Да. Делаем."; zgap.py): `(0,10]` excludes 0 — every
+            # reading stands at a witnessed gap from it (VR's strict order). Until that day this cell refused it
+            # (E_OPEN_INTERVAL) and sent the strictness to the claim, where `x > 0 & ln(x) <= x` never reached the ln atom
+            # (MEASURED: OPEN). A malformed one still gets the cell's own answer below.
+            if val.startswith("{"):
                 issues.append(_issue(
                     "error", "E_VALUE_SET", f"{at} / value",
                     "a choice between separate values is not a quantity: "
@@ -1080,11 +1077,11 @@ def validate(doc):
                 issues.append(_issue(
                     "error", "E_VALUE_FORM", f"{at} / value",
                     f"a search region is `? in [a, b]` with two numbers, a < b — '{val}' is not one"))
-            elif not is_question(val) and not re.match(r"^(\?|\[[^\]]+\]|[-\d][\d.,/eE+-]*)$", val):
+            elif not is_question(val) and not re.match(r"^(\?|[\[(][^\])(\[]+[\])]|[-\d][\d.,/eE+-]*)$", val):
                 issues.append(_issue(
                     "error", "E_VALUE_FORM", f"{at} / value",
-                    "a value is a number, an interval [0,10], ?, or ? in [a, b] — "
-                    f"'{val}' is none of them"))
+                    "a value is a number, an interval [0,10] (a round bracket excludes that end: (0,10]), ?, or "
+                    f"? in [a, b] — '{val}' is none of them"))
         # an unreadable unit is an answer at the cell, not an exception
         # thrown from three modules down
         unit = (r.get("unit") or "").strip()
@@ -1529,7 +1526,7 @@ def _formula(text, _names):
     t = re.sub(r"\bTr\s*\(\s*([^)]+?)\s*\)", r"\1", _spell(text))
     for pat, sym in _WORDS:
         t = re.sub(pat, sym, t)
-    if re.search(r"(<=|>=|==|<|>)", t):
+    if re.search(r"(<=|>=|==|!=|≠|<|>)", t):       # != / ≠: NOT (a == b) on the floor (2026-11-24)
         return ("comparison", t)          # the sheet judge parses these
     return formalize(t)
 
@@ -1687,7 +1684,11 @@ def to_book(rows):
         prov = (f"earned:{_witness(r)}"
                 if (r.get("status") == "verified" and r.get("ground"))
                 else "credit")
-        book.append((r["name"], f"{r['name']} == {r['value'].strip()}",
+        # an open bound (zgap) enters the CLAIM as its closed hull: an interval row's `x == [a,b]` compares x with a
+        # separate literal quantity and stays OPEN either way, and the claim reader has no round-bracket literal
+        # (`(0,inf]` there is a parenthesis). The sheet part keeps the bound as written.
+        hull = re.sub(r"^\((.*)$", r"[\1", re.sub(r"^(.*)\)$", r"\1]", r['value'].strip()))
+        book.append((r["name"], f"{r['name']} == {hull}",
                      f"{r['name']}={r['value'].strip()} {prov}"))
     return book
 

@@ -24,6 +24,7 @@ work is a fixed number of series terms for it, and the answer is always a sound 
 """
 
 from fractions import Fraction
+from zgap import is_gap
 import functools
 import math
 
@@ -393,6 +394,11 @@ def iv_ln(a):
     if a[1] <= 0:
         raise NoReadings("ln of a quantity that is never positive")
     if a[0] <= 0:
+        # AN EXCLUDED 0 (zgap.py, 2026-11-24): every reading is positive, ln runs down to -inf. A closed or negative
+        # low end keeps the old answer: some readings undefined, a mark.
+        if a[0] == 0 and is_gap(a[0]):
+            a = (-INF, a[1])
+            return _cert_ln(a, _iv_mono(ln_pt, a, -INF, INF))
         return None
     return _cert_ln(a, _iv_mono(ln_pt, a, -INF, INF))
 

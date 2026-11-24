@@ -20,8 +20,10 @@ an EARNED was due), never produce a false verdict. Arithmetic on Fractions retur
 Only the places that are taught keep it: the interval operations, the linear reading, sqrt, ln, and the comparisons,
 where an excluded end decides `0 < x` (T) and `x != 0` (T) and puts ln / division inside their domains.
 
-LEAN. The floor's closed-box theorems (lean/ZNum.lean) cover the closure; the gap rules themselves have no Lean twin
-yet — a Python reading, tested both ways in test_znum_gap.py.
+LEAN. The floor's closed-box theorems (lean/ZNum.lean) cover the closure. The gap rules for sums, differences, the
+reciprocal and the comparisons are proved over any linear ordered field in inventor1975/ztl-classical,
+ZClassical/Gap.lean (2026-11-24; classical tier). The PRODUCT's corner rule is measured, not proved: an exhaustive grid
+in test_znum_gap.py §6.
 """
 from fractions import Fraction
 

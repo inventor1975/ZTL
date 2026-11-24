@@ -180,5 +180,32 @@ for xs, ns in [((F(-2), F(1)), (0, 3)), ((F(1, 2), F(3)), (0, 4)), ((F(0), F(2))
             vals = [x ** n for x, n in itertools.product(pts, range(ns[0], ns[1] + 1))]
             check(all((v <= bound) == (d == "EARNED") for v in vals), f"integer-range power soundness: pow <= {bound} over {sh} is {d}")
 
+# 6. the PRODUCT's exclusion rule, measured exhaustively (not proved in Lean: ztl-classical ZClassical/Gap.lean proves
+# sums, differences, the reciprocal and the comparisons). For every pair of small intervals with every flag pattern:
+# every product of readings lies inside the result, and an end marked excluded is never reached by a product.
+from znum import _iv_mul  # noqa: E402
+from zgap import gap as _g, is_gap as _isg  # noqa: E402
+_ends = [F(-2), F(-1), F(0), F(1), F(3, 2)]
+_bad = 0
+for a0, a1, b0, b1 in itertools.product(_ends, repeat=4):
+    if a0 > a1 or b0 > b1:
+        continue
+    for ea0, ea1, eb0, eb1 in itertools.product([False, True], repeat=4):
+        if (a0 == a1 and (ea0 or ea1)) or (b0 == b1 and (eb0 or eb1)):
+            continue                                   # an empty interval: no readings
+        A = (_g(a0) if ea0 else a0, _g(a1) if ea1 else a1)
+        B = (_g(b0) if eb0 else b0, _g(b1) if eb1 else b1)
+        lo, hi = _iv_mul(A, B)
+
+        def pts(x0, x1, e0, e1):
+            grid = [x0 + (x1 - x0) * F(k, 8) for k in range(9)]
+            return [x for x in grid if not ((x == x0 and e0) or (x == x1 and e1))]
+        for x in pts(a0, a1, ea0, ea1):
+            for y in pts(b0, b1, eb0, eb1):
+                v = x * y
+                if not (lo <= v <= hi) or (v == lo and _isg(lo)) or (v == hi and _isg(hi)):
+                    _bad += 1
+check(_bad == 0, f"product exclusion rule: {_bad} grid products outside the result or on an excluded end")
+
 print(f"STRICT BOUND GREEN — {N[0]} checks" if not FAILS else f"test_znum_gap: {len(FAILS)} failures of {N[0]}")
 sys.exit(1 if FAILS else 0)

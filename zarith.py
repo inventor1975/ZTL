@@ -102,7 +102,7 @@ if __name__ == "__main__":
     five = V_(5)
     zero = V_(0)
 
-    print("\n### Interval flow (the lazy register)")
+    print("\n### Interval flow (the forced reading: what holds on every narrowing)")
     s1 = add(five, m)
     print(f"  5 + m∈[0,9] = {name(s1)}")
     s2 = add(five, w)
@@ -133,7 +133,7 @@ if __name__ == "__main__":
         note = {T: "T earned", F: "falsehood earned", Z: "not yet forced"}[atom]
         print(f"  m∈[{lo},{hi}]:  atom \"4 < m\" = {atom}  ({note})")
     print("  Narrowing never revokes what is earned — the monotonicity of")
-    print("  the lazy register, now in numbers.")
+    print("  the forced reading (earned on every refinement), now in numbers.")
 
     print("\n### Laws: price-list inheritance — for SAMPLES (each occurrence its own act of measurement)")
     print("  For NUMBERS a name is one value across the claim, and both equations below")
@@ -151,7 +151,7 @@ if __name__ == "__main__":
     print("  ZTL arithmetic = interval arithmetic (the solver) + verdicts of")
     print("  the generating principle (customs). All inherited, nothing")
     print("  postulated. Twin #4 — abstract interpretation (Cousot): interval")
-    print("  value analysis + assertion checking = our lazy register + greedy")
+    print("  value analysis + assertion checking = our forced reading + greedy")
     print("  verdicts. Addendum to E6: apartness of numbers is earned by")
     print("  intervals — as apartness of reals by prefixes. For two ACTS of")
     print("  measurement identity is earned only by full verification ([x,x]);")

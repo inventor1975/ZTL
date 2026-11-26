@@ -1,12 +1,6 @@
 /-
-  ZNull.lean — E50: SQL's NULL — THE LAZY REGISTER INSIDE, THE FOUR SIGNS AT
+  ZNull.lean — E50: SQL's NULL — THE MARK ATOM INSIDE, THE FOUR SIGNS AT THE BOUNDARY
 
-  PURE BRANCH (curator 2026-11-22: only ZTL, burn everything else, totally). Items 1 and 5 below — SQL's
-  three-valued expression layer as the lazy register, and WHERE agreeing with it — are
-  REMOVED (`toV_not/and/or`, `where_agrees_nnf`, `where_departs_double_negation`,
-  `check_departs_on_conjunction`). What stays relates SQL to ZTL's own atoms and signs only: the comparison
-  with NULL is the mark atom, the boundaries are the four signs, the two equalities. The text that follows is
-  the original header and describes the removed items too.
   THE BOUNDARY.
 
   THE TRADITION. SQL (1986; here as ISO/IEC 9075-2, SQL/Foundation): a
@@ -23,10 +17,9 @@
 
   WHAT IS PROVED (empty axiom list).
 
-    1. THE EXPRESSION LAYER IS THE LAZY REGISTER. `toV` sends TRUE/FALSE/
-       UNKNOWN to T/F/Z and is a homomorphism from SQL's three tables onto
-       `knot`, `kand`, `kor` — cell for cell, by `decide`. And it is NOT the
-       greedy register: `NOT NOT UNKNOWN` is UNKNOWN, `¬¬Z` is T.
+    1. SQL'S EXPRESSION LAYER IS NOT ZTL'S REGISTER. `toV` sends TRUE/FALSE/
+       UNKNOWN to T/F/Z, and at the signature cell the two part:
+       `NOT NOT UNKNOWN` is UNKNOWN, `¬¬Z` is T (`not_the_greedy_register`).
 
     2. THE COMPARISON WITH NULL IS THE MARK ATOM — the SAME atom IEEE's
        `==` landed on in `ZNaN`: `toV (sqlEq x y) = zeq (embD x) (embD y)`.
@@ -43,11 +36,10 @@
        in both polarities", §4) — and both PASS a CHECK. ZTL's collapse is
        WHERE's: the mark falls to F, never to T.
 
-    5. WHERE AGREES WITH ZTL'S GREEDY VERDICT ON EVERY NEGATION-NORMAL
-       SEARCH CONDITION — `SignT (greedy c) = SignT (lazy c)` when negation
-       stands only on atoms — AND PARTS EXACTLY WHERE A NEGATION STANDS OVER
-       A COMPOUND: `¬¬Z`, the signature cell (T greedily, Z lazily). At the
-       CHECK boundary they part already on `TRUE AND NULL`.
+    5. SIGNS OVER NEGATION-NORMAL CONDITIONS. On search conditions whose
+       negations stand on atoms only (`Cond`), the sign T of a conjunction or a
+       disjunction is the conjunction or disjunction of the signs
+       (`signT_zand`, `signT_zor`).
 
     6. SQL'S TWO EQUALITIES. `NULL = NULL` is UNKNOWN, yet `NULL IS NOT
        DISTINCT FROM NULL` is TRUE ("two null values are not distinct" —
@@ -97,7 +89,7 @@ def sqlOr : Tv → Tv → Tv
 def toV : Tv → V
   | Tv.tt => T | Tv.ff => F | Tv.un => Z
 
-/-! ### 1. The expression layer is the lazy register -/
+/-! ### 1. SQL's expression layer is not ZTL's register -/
 
 /-- …and not the greedy one: the signature cell. -/
 theorem not_the_greedy_register :
@@ -211,7 +203,7 @@ theorem collapse_is_where :
     SignT (znot Z) = false ∧ SignT (zand T Z) = false ∧ SignT (zor F Z) = false
   ∧ SignP (zand T Z) = false := by decide
 
-/-! ### 5. WHERE agrees with the greedy verdict on negation-normal conditions -/
+/-! ### 5. Signs over negation-normal conditions -/
 
 /-- A search condition in negation normal form over atom values: negation
 stands on atoms only. -/

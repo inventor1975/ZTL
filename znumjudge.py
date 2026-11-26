@@ -851,10 +851,10 @@ if __name__ == "__main__":
     assert by["remont_estimate"]["next_check"] == ["document budget"]
     assert by["parens_xor"]["disposition"] == "EARNED"
     assert by["nested_parens"]["disposition"] == "EARNED"
-    # ---- the second register on the sheet
+    # ---- what is still undecided on the sheet
     print()
     print("-" * 72)
-    print("THE LAZY COLUMN ON A SHEET — which part is still running")
+    print("THE PENDING LIST ON A SHEET — which part is still undecided")
     for data, formula in (("a=[0,10] credit, b=5 earned:doc, ok=Z", "a <= b & ok"),
                           ("a=1 earned:doc, b=5 earned:doc, ok=Z", "a <= b | ok")):
         q, m = parse_quantities(data)

@@ -356,18 +356,18 @@ mean. SPEC.md, "Reading the text: precedence".
 `ztljudge` reports more than a verdict, and three of its fields carry proved or
 measured guarantees. Read this before trusting — or changing — any of them.
 
-**`pending` — the receipt, and it provably never misses.** The lazy register
-returns a value plus a label of the dirty atoms still holding the answer
+**`pending` — the receipt, and it provably never misses.** The forced outcome
+(`foC`, phases t/f/n) returns a value plus a label of the dirty atoms still holding the answer
 up. `lean/Receipt.lean` proves, on the empty axiom list, that a dirty
-ground the label OMITS cannot change the answer — first for `evalK`
+ground the label OMITS cannot change the answer — first for the forced outcome `foC`
 (`receipt_complete`), then for `evalF`, the register that actually issues
 verdicts (`receipt_complete_greedy`). Read the other way: **an atom that could
 change the answer is always on the receipt.** A refusal here never withholds a
 verdict for a reason it failed to name.
 
 The crossing into the greedy register was predicted to FAIL and did not; it
-holds because `greedy_agrees_when_decided` — whenever the lazy register commits,
-the greedy one agrees — and because the greedy tables absorb exactly where the
+holds because `greedy_agrees_when_decided` — whenever the forced outcome is decided,
+the greedy register agrees — and because the greedy tables absorb exactly where the
 label drops a branch. The Lean `labF` is the judge's own function, asked of both
 engines rather than argued (`bridge.py`, 609 questions, zero divergences).
 

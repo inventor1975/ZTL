@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-E22 — choice sequences as the lazy register (VR Part II, step (б)).
+E22 — choice sequences as the forced reading over growing prefixes (VR Part II, step (б)).
 
 Brouwer's continuum runs on sequences-in-growth: at any moment only a
 finite prefix exists; what may be ASSERTED at a stage is what the
@@ -35,7 +35,7 @@ MEASURED here:
   3. HEREDITY RESTORED AT THE STAGE COURT: stage verdicts never die
      under growth of the prefix (Kripke persistence, 0 violations) —
      the property greedy verdicts lack (E12/E21) is native to the
-     lazy register.
+     forced reading.
   4. STREAM IDENTITY AT A STAGE (E6 recast): equality of sequences is
      never earned at a finite stage (T requires forcing ALL futures);
      apartness is earned at the first disagreement and persists;

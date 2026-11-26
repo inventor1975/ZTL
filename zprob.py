@@ -13,7 +13,7 @@ Three measurements:
      uncertainty is zero-trust rationality.
 
 Twin #5: imprecise probabilities (Walley 1991, lower/upper previsions)
-— the lazy register of probabilities.
+— the forced reading of probabilities.
 """
 
 from fractions import Fraction
@@ -102,7 +102,7 @@ if __name__ == "__main__":
     print("  marks instead of equality of values), and it is punishable")
     print("  (reparametrization gives contradicting answers). The honest")
     print("  architecture is two-registered: ignorance lives in mass intervals")
-    print("  (the lazy register: Dempster–Shafer, Walley's imprecise")
+    print("  (the forced reading: Dempster–Shafer, Walley's imprecise")
     print("  probabilities — TWIN #5), decisions are made by forcedness")
     print("  verdicts (the greedy register). Bayes stays honest on VERIFIED")
     print("  probabilities — that is his C-extension; only minting numbers")

@@ -12,7 +12,7 @@ Two registers, two very different answers (this is the point):
     tracer marks each atom that is Z and the exact operator where that Z
     collapses (⚡).
 
-  * GROUNDING (the solver / lazy register, fixedpoint.least_fp_stable). Here Z is
+  * GROUNDING (the solver's phase n, fixedpoint.least_fp_stable). Here Z is
     where a self-referential sentence LANDS when its grounding fixed point does
     not resolve — the Liar and friends. The tracer runs the solver and flags
     which sentences reach quarantine.

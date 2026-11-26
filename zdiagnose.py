@@ -72,8 +72,18 @@ def _formula(conflicts):
 
 def diagnose(expr, premises, measured, law_relaxed=(0.5, 2)):
     """premises: {name: ((stated_lo, stated_hi), (relaxed_lo, relaxed_hi))}; measured: (lo, hi).
-    -> {"conflicts": [...], "diagnoses": [...], "consistent_as_stated": bool, "check": "..."}"""
+    -> {"conflicts": [...], "diagnoses": [...], "consistent_as_stated": bool, "check": "..."}; when the measurement is
+    refuted even with every premise relaxed: conflicts [()], diagnoses [], "unreachable": True."""
     names = list(premises) + [LAW]
+    if _conflict(expr, premises, set(), measured, law_relaxed):
+        # 2026-11-26 (neutrino ordering vs DESI's effective mass): with EVERY premise relaxed the measurement is still
+        # refuted. Before, the search started at size 1, so every single premise came out as a "conflict" and the
+        # report offered "relax them all" as a diagnosis — which cures nothing. Now: no diagnosis among the premises.
+        return {"conflicts": [()], "consistent_as_stated": False, "diagnoses": [],
+                "unreachable": True,
+                "check": "no diagnosis among the listed premises: even with all of them relaxed (and the law) the "
+                         "measurement is refuted — the suspect is the measurement itself, a premise not listed, or a "
+                         "relaxed range drawn too narrow"}
     conflicts = []
     for k in range(1, len(names) + 1):
         for S in itertools.combinations(names, k):

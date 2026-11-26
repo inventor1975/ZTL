@@ -41,6 +41,17 @@ singles = [x for x in r["diagnoses"] if len(x) == 1]
 check(singles == [("law",)] and r["check"].startswith("zbackward =="),
       "disc B (thin plate 7 % above the measurement): the only single-premise diagnosis is the LAW")
 
+# 2026-11-26: a measurement no relaxation can reach (a sum of non-negative masses against a negative effective sum,
+# DESI DR2 in LCDM, 2 sigma). Before: four one-premise "conflicts" and the diagnosis "relax all four", which cures nothing.
+nu = "ml + sqrt(ml*ml + d21) + sqrt(ml*ml + d31)"
+PN = {"d21": ((69.2, 80.5), (0, 322)), "d31": ((2451, 2578), (0, 10312)), "ml": ((0, 450), (0, 450))}
+r = D.diagnose(nu, PN, (-213, -7))
+check(r.get("unreachable") and r["conflicts"] == [()] and r["diagnoses"] == [],
+      "unreachable measurement (negative effective neutrino sum): no diagnosis among the premises, none offered")
+r = D.diagnose(nu, PN, (-213, 30))
+check(not r.get("unreachable") and r["diagnoses"] and all(len(x) >= 1 for x in r["diagnoses"]),
+      "the other side: the same sum against [-213, 30] meV is reachable by relaxing — diagnoses offered")
+
 print(f"\n{ok} ok, {fail} fail")
 print("ZDIAGNOSE GREEN" if fail == 0 else "ZDIAGNOSE RED")
 sys.exit(1 if fail else 0)

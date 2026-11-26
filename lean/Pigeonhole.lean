@@ -30,7 +30,7 @@ PROVED HERE:
 3. The judge's disposition of the pigeonhole itself: REFUTED IF STABLE, not REFUTED (`pigeonhole_stable`,
    `pigeonhole_not_refuted`). It fails only if each particle is in one box at every place it is mentioned.
 
-NOT CLAIMED: new physics. That ABL must not be applied counterfactually is known (Sharp & Shanks 1993; Kastner 1999,
+NOT CLAIMED: new physics. That ABL should not be applied counterfactually has been argued before (Sharp & Shanks 1993; Kastner 1999,
 on the three-box paradox).
 -/
 

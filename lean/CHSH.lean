@@ -28,9 +28,13 @@ WHAT THIS ADDS to `dilemmas/bell.py` (2026-10-02). Its B4 recorded a limit: "(PI
 because the kernel sees PI, OI, MI as independent atoms. With the ANSWERS as atoms instead of the premises, the kernel
 does see the bound. bell.py's 2√2 was a Monte-Carlo float; here it is exact.
 
-LIMIT. The two readings bracket the game. Stable allows at most 3/4; occurrence by occurrence allows 4/4, the level of a
-Popescu–Rohrlich box (1994). Quantum, (2+√2)/4, lies strictly between, and neither reading locates it: the 2√2
-(Tsirelson 1980) comes from the Hilbert-space arithmetic, not from the logic.
+WHERE THE QUANTUM VALUE IS FOUND. The two PROPOSITIONAL readings bracket the game. Stable allows at most 3/4; occurrence
+by occurrence allows 4/4, the level of a Popescu–Rohrlich box (1994). Quantum, (2+√2)/4, lies strictly between, and neither
+propositional reading locates it. The judge's NUMERIC FLOOR does (measured 2026-11-26, VR-ZTL research/chsh/): with
+E = cos(α−β), at the CHSH angles "2.8284 ≤ S ≤ 2.8285" is EARNED (zfl.run); over all angles S ≤ 2.83 is checked by the
+certificate kernel `zcertify` (rule: `ZCertify.lean`), 2 767 237 pieces, all True. S ≤ 2√2 exactly cannot close by
+bisection, since the bound is attained. Scope: one state (Φ⁺) and coplanar measurements, not Tsirelson's theorem for every
+state and observable; a0 = 0 by rotation invariance is an argument the kernel does not check.
 
 NOT CLAIMED: new physics. Every physical number here is textbook.
 -/

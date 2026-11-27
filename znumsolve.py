@@ -65,7 +65,11 @@ def _hull(kind, form_c, terms, name, quantities):
 
     `form_c + Σ k·x  ⋈  0` with ⋈ from the comparison. Isolate the
     variable, evaluate the rest over its current box, and keep exactly the
-    values for which SOME choice of the rest satisfies the constraint."""
+    values for which SOME choice of the rest satisfies the constraint.
+
+    PROVED (2026-11-27, lean/ZHull.lean, zero axioms): sound for le/eq, and exact for le (the sign-picked corner
+    satisfies it); the bounds this function returns are the kernel's (inventory/zhull_lean_bridge.py, 300 cases).
+    Not proved: the strict `lt` side and the division by k (exact Fraction arithmetic, run)."""
     k = sum(coef for key, (coef, nm) in terms.items() if nm == name)
     if k == 0:
         return None

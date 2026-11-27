@@ -24,7 +24,11 @@ WHEN IS IT ZERO — decided exactly:
 The SIGN of a non-zero value is read from the floor's own proved brackets of ln p (zfunc.ln_pt); a bracket that
 straddles 0 leaves the sign undecided (None), never guessed.
 
-A Python reading: the factorisation and the zero test have no Lean twin.
+SOUNDNESS, 2026-11-27: Hermite–Lindemann is used by no verdict — sign() is 0 only for the formal zero and otherwise
+reads the proved brackets (straddling 0: no verdict). What every verdict DOES use is ln(xy) = ln x + ln y: PROVED on
+VR's continuum, lean/ZLnMul.lean `rln_mul` (from exp's addition law, lean/ZExpAdd5.lean `rexpR_add`), zero axioms;
+the factorisations are checked by the kernel in inventory/zlogexact_lean_bridge.py. Primality and the uniqueness of
+the factorisation matter only for completeness (the zero test), not for soundness.
 """
 from fractions import Fraction
 

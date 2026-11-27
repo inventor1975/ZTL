@@ -8,7 +8,7 @@ the logic: verdicts stay T/F, the tables and greediness are intact —
 the passport is solver-side metadata about the quarantine set, computed
 per strongly connected component of the dependency graph:
 
-  GROUNDED         lazy lfp gives a classical value — no passport needed.
+  GROUNDED         the stable lfp gives a classical value — no passport needed.
   PARADOX          the component has NO classical model consistent with
                    its grounded environment (odd cycles): the refusal is
                    PERMANENT — no act can ever lift it; the greedy
@@ -24,7 +24,8 @@ per strongly connected component of the dependency graph:
                    but it reads quarantined sentences below; culprits
                    are listed — the provenance of refusal (E7 again).
 
-Operational meaning (the stipulation theorem, MEASURED):
+Operational meaning (the stipulation theorem — MEASURED here on the zoos; PROVED for every finite system in
+lean/ZStipulate.lean, `V.stipulation`, zero axioms, 2026-11-27; tied by inventory/zpassport_lean_bridge.py):
 UNDERDETERMINED ⟺ stipulating any of its classical models grounds the
 component and disturbs nothing already grounded; PARADOX ⟺ every
 stipulation contradicts the component's own definitions. The E12 pair

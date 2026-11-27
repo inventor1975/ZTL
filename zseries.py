@@ -26,8 +26,11 @@ ratio is below 1/2 and decreasing, is at most the last term); then f([a]) ⊂ f(
 own reading keeps one sign: f is monotone there and the ends' brackets bound it. J0 and J1 are also clamped to [−1, 1]
 (|J_n(x)| ≤ 1 for real x).
 
-SAID, NOT HIDDEN: the alternating-series bound and the ratio's monotonicity are the premises (classical, checked here
-numerically for every k used); there are no Lean witnesses for these functions yet (exp, ln, sin, cos, atan have them).
+SAID, NOT HIDDEN: the alternating-series bound and the ratio's monotonicity are the premises. The point bracket is
+PROVED (2026-11-27, lean/ZAltSeries.lean `alt_bracket` / `limit_in_bracket` / `ratio_decreasing`, zero axioms) and
+tied by inventory/zseries_bridge.py; the INTERVAL path's Taylor bound is PROVED for every partial sum (lean/ZPowTaylor.lean
+`taylor_sum`, `tail_halving`; inventory/zseries_interval_bridge.py). Still premises: the monotone branch (mean value
+theorem) and |J_n| <= 1.
 """
 from fractions import Fraction
 import math

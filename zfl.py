@@ -2293,6 +2293,11 @@ def cyclic_stable(claim, rows):
     The passport itself is NOT changed (the paradox kinds are about the defined names' own self-reference, which IS
     their definition, not an unearned identification); only the values the judge receives are.
 
+    PROVED (2026-11-27, lean/ZInputSubst.lean `V.lfp_subst_mono`, zero axioms): substituting a system's inputs, own
+    names kept, never revokes a grounding — so what the per-occurrence reading grounds, identification and every
+    completion ground the same way, and returning a settled per-occurrence verdict first is sound
+    (inventory/zinputsubst_lean_bridge.py ties fixedpoint's lfp to the kernel's on 150 systems).
+
     The same rule as the judge's own: each occurrence of a dirty input read on its own decides EARNED / REFUTED;
     otherwise every completion of the repeated dirty inputs (each fixed to one value) decides EARNED IF STABLE /
     REFUTED IF STABLE; otherwise the per-occurrence verdict stands."""

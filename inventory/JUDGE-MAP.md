@@ -51,7 +51,7 @@ The judge's closure: the 38 Python modules imported from `ztljudge`, `zfl`, `znu
 | solver: rank-many (Cramer + Sturm on the parameter) | `znumsolve._solve_rank_many` | per-instance: `zbound_lean_bridge.py` (Bareiss) | stands | B |
 | exact logarithms | `zlogexact.py` | **`ZExpAdd`…`ZExpAdd5` + `ZLnMul` (27.11)**: exp(x + y) = exp x · exp y on VR's reals (the law `ZExpLaw` had left open as 'the hardest'), hence ln(xy) = ln x + ln y, ln 1 = 0. Hermite–Lindemann is NOT used by any verdict (`sign()` reads proved brackets otherwise) | **`zlogexact_lean_bridge.py`** — 309 factorisations (kernel product), 200 quotient splits | A |
 | power series (Bessel, Kelvin), at a point | `zseries.point` | **`ZAltSeries.lean` (27.11)**: an alternating series with non-growing terms — every later partial sum and the limit lie between S_k and S_{k+1} (`alt_bracket`, `limit_in_bracket`); terms do not grow once ρ_k ≤ 1 and ρ non-increasing (`ratio_decreasing`) | **`zseries_bridge.py`** — 144 points × 12 functions (premises at k, 300 later sums inside) | B |
-| power series over an INTERVAL (Taylor with the D2 bound) | `zseries._taylor2`, `_abs_series_bound` | **`ZPowTaylor.lean` (27.11)**: Taylor for a monomial (`taylor_mono`, no calculus), for every partial sum (`taylor_sum`), the halving tail (`tail_halving`); the monotone branch: **`ZMonoTaylor.lean`** `mono_up`(`_right`) — a derivative floor m > 0 and the Taylor bound give f(a) ≤ f(x) ≤ f(b), no mean value theorem. PREMISE named: the clamp \|J_n\| ≤ 1 | **`zseries_interval_bridge.py`** — 48 intervals × 6 functions | B (1 premise) |
+| power series over an INTERVAL (Taylor with the D2 bound) | `zseries._taylor2`, `_abs_series_bound` | **`ZPowTaylor.lean` (27.11)**: Taylor for a monomial (`taylor_mono`, no calculus), for every partial sum (`taylor_sum`), the halving tail (`tail_halving`); the monotone branch: **`ZMonoTaylor.lean`** `mono_up`(`_right`) — a derivative floor m > 0 and the Taylor bound give f(a) ≤ f(x) ≤ f(b), no mean value theorem. The clamp \|J_n\| ≤ 1 REMOVED (27.11, curator): not proved, so not used | **`zseries_interval_bridge.py`** — 48 intervals × 6 functions | B |
 | Leibniz rule for limits | `zleibcert.py` | `ZLeibniz.lean` (`leibniz_low/high`; zleibcert checks its premises) | via `test_zintegral.py` | B |
 | modal layer (completions, □/◇) | `zmodal.py` (used by `zverify`) | `ZGround.evalS` — the same three-way reading | **`zmodal_lean_bridge.py`** — 400 | A |
 | naive sets | `znaive.py` | the grounding is `ZGround.lfp` (and the passport, `ZStipulate`); the translation spec → system is checked by its independent oracle (`znaive.oracle_check`) | **`znaive_lean_bridge.py`** — 120 universes, 698 cells, Python lfp = kernel lfp; `test_znaive_hinnion.py` | A (grounding) + oracle (translation) |
@@ -70,9 +70,10 @@ cyclic_stable's first return), one was untied (inline vs `evalF_subst`), one unt
 
 ## Where the work is
 
-Nothing on the judge's path is measured-only any more. Named premises left (each a theorem of analysis, not of ZTL):
-1. `zseries`: |J_n(x)| ≤ 1, the clamp of J0 and J1 (Bessel's integral or Neumann's addition theorem);
-2. `_solve_rank_many`: per instance only (Bareiss certificates in `zbound_lean_bridge.py`), no general theorem;
+Nothing on the judge's path is measured-only any more. Named premise left (a theorem of analysis, not of ZTL):
+1. `_solve_rank_many`: per instance only (Bareiss certificates in `zbound_lean_bridge.py`), no general theorem.
+(The former premise |J_n(x)| ≤ 1 of `zseries` is gone: the clamp was removed on 27.11 — the reading is the proved
+enclosure alone; run_all ALL GREEN after it.)
 
 ## Agda (VR-ZTL, 2026-11-27, the curator: «после всего леан ещё и в Агда»)
 

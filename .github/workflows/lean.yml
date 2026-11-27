@@ -35,8 +35,8 @@ jobs:
           dirty=$(grep -c "depends on axioms" build.log || true)
           echo "zero-axiom checks: $clean; dirty: $dirty"
           test "$dirty" -eq 0
-          test "$clean" -ge 2325
-      # The hand-placed prints cover 2325 names (2026-11-27: +6, ZPlan (the cheapest plan of checks); +3, ZRootFactor; +5, ZMonoTaylor; +8, ZPowTaylor; +5, ZAltSeries; +46, ZExpAdd1–5 + ZLnMul (exp addition law, ln product); +3, ZElim; +14, ZQuad; +12, ZHull; +19, ZInputSubst; +12, ZStipulate; +10, ZDiagnose; +19, ZBackward; +7, Emergence; 2026-11-26: +18, CHSH; +17, Pigeonhole; 2026-11-25: +10, ZChiral; +12, ZCard; +8, ZReplace; +11, ZExt; pure branch 2026-11-22: the Kleene objects removed); the rest are
+          test "$clean" -ge 2335
+      # The hand-placed prints cover 2335 names (2026-11-27: +10, ZRankMany (the rank-one corners of _solve_rank_many); +6, ZPlan (the cheapest plan of checks); +3, ZRootFactor; +5, ZMonoTaylor; +8, ZPowTaylor; +5, ZAltSeries; +46, ZExpAdd1–5 + ZLnMul (exp addition law, ln product); +3, ZElim; +14, ZQuad; +12, ZHull; +19, ZInputSubst; +12, ZStipulate; +10, ZDiagnose; +19, ZBackward; +7, Emergence; 2026-11-26: +18, CHSH; +17, Pigeonhole; 2026-11-25: +10, ZChiral; +12, ZCard; +8, ZReplace; +11, ZExt; pure branch 2026-11-22: the Kleene objects removed); the rest are
       # covered transitively, which is an ARGUMENT. This audits every
       # theorem individually, and fails on an orphan module that no
       # target builds.

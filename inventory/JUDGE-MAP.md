@@ -4,7 +4,7 @@ The curator: «Мы всегда делали ZTL судью так, что ка
 дорабатывали ZTL и могло что-то измениться». This map replaces, for the JUDGE, the tiers of `THEOREM_INVENTORY.md`
 (last edited 2026-09-24, before the pure branch, zcertify's later tranches, zdiagnose and the zfl layer of 2026-11-24).
 
-The judge's closure: the 38 Python modules imported from `ztljudge`, `zfl`, `znumjudge`, `zbackward`, `zdiagnose`,
+The judge's closure: the 39 Python modules (38 + `zplan`, imported by `zfl` since 27.11) imported from `ztljudge`, `zfl`, `znumjudge`, `zbackward`, `zdiagnose`,
 `zcertify`. Searched for a twin: module names AND concept words in all `lean/*.lean` (233 files) and VR-ZTL's
 `ZTL/*.agda` (85 files), plus every module's own references. "Not found" below means not found there.
 
@@ -48,7 +48,8 @@ The judge's closure: the 38 Python modules imported from `ztljudge`, `zfl`, `znu
 | solver: a disjunction of equalities of one unknown | `znumsolve._disjunction_pieces` | **`ZElim.union_sound`** + the alternatives' own rules (`ZQuad`, `_exact_eq`) | `test_*` | B |
 | solver: `name == E`, E exact (a Fraction or p + q√d) | `znumsolve._exact_eq`, `znum.QSqrt` | **`ZQuad.qsqrt_sign_pos`** (the sign of p + q√d, opposite signs) | its stand | B |
 | solver: degree ≥ 3, Sturm root isolation | `znumsolve._upoly_roots` → `znum._real_roots` | Sturm's theorem not proved; per INSTANCE: every gap between the brackets is root-free by a `ZNone.chk` certificate (overlapping bisection, Horner interval leaves), `chk_sound` (zero axioms) | **`zsturm_lean_bridge.py`** — 60 polynomials, 89 gap theorems by `decide +kernel`; a forged leaf refused; RATIONAL roots: 15 polynomials, the identity p = Π(x − r)^m·q by `identX` + q's gaps, 50 theorems, closed by **`ZRootFactor.root_factor`** | A (per instance) |
-| solver: rank-many (Cramer + Sturm on the parameter) | `znumsolve._solve_rank_many` | per-instance: `zbound_lean_bridge.py` (Bareiss) | stands | B |
+| solver: rank-many (Cramer + Sturm on the parameter) | `znumsolve._solve_rank_many` | **`ZRankMany.lean` (27.11)**: the rank-ONE parameters read at their corners — `rank_one_monotone` (rank one along a line + a unique solution on the box ⇒ every unknown monotone, no determinants), `corners`, `rank_one_corners` (every value lies between two corner values). PREMISE named: the rank-MANY parameter's direction (extremes of N/D at the ends and the real roots of N′D − ND′, Sturm); Bareiss per instance in `zbound_lean_bridge.py` | stands (`test_param_system.py`) | B (1 premise) |
+| the cheapest plan of checks, by cost | `zplan.plan`, `zfl.check_plan` | **`ZPlan.lean` (27.11, Logik1)**: the worst-case-optimal adaptive plan (opt ≤ every plan's worst cost, attained) | **`zplan_lean_bridge.py`** — 400 cases; `test_zfl.py` §26 | A |
 | exact logarithms | `zlogexact.py` | **`ZExpAdd`…`ZExpAdd5` + `ZLnMul` (27.11)**: exp(x + y) = exp x · exp y on VR's reals (the law `ZExpLaw` had left open as 'the hardest'), hence ln(xy) = ln x + ln y, ln 1 = 0. Hermite–Lindemann is NOT used by any verdict (`sign()` reads proved brackets otherwise) | **`zlogexact_lean_bridge.py`** — 309 factorisations (kernel product), 200 quotient splits | A |
 | power series (Bessel, Kelvin), at a point | `zseries.point` | **`ZAltSeries.lean` (27.11)**: an alternating series with non-growing terms — every later partial sum and the limit lie between S_k and S_{k+1} (`alt_bracket`, `limit_in_bracket`); terms do not grow once ρ_k ≤ 1 and ρ non-increasing (`ratio_decreasing`) | **`zseries_bridge.py`** — 144 points × 12 functions (premises at k, 300 later sums inside) | B |
 | power series over an INTERVAL (Taylor with the D2 bound) | `zseries._taylor2`, `_abs_series_bound` | **`ZPowTaylor.lean` (27.11)**: Taylor for a monomial (`taylor_mono`, no calculus), for every partial sum (`taylor_sum`), the halving tail (`tail_halving`); the monotone branch: **`ZMonoTaylor.lean`** `mono_up`(`_right`) — a derivative floor m > 0 and the Taylor bound give f(a) ≤ f(x) ≤ f(b), no mean value theorem. The clamp \|J_n\| ≤ 1 REMOVED (27.11, curator): not proved, so not used | **`zseries_interval_bridge.py`** — 48 intervals × 6 functions | B |
@@ -71,7 +72,8 @@ cyclic_stable's first return), one was untied (inline vs `evalF_subst`), one unt
 ## Where the work is
 
 Nothing on the judge's path is measured-only any more. Named premise left (a theorem of analysis, not of ZTL):
-1. `_solve_rank_many`: per instance only (Bareiss certificates in `zbound_lean_bridge.py`), no general theorem.
+1. `_solve_rank_many`, the rank-MANY parameter's direction only: the extremes of N(p)/D(p) on its interval at the ends and
+   the real roots of N′D − ND′ (Sturm). The rank-ONE parameters' corners are PROVED (`ZRankMany.rank_one_corners`, 27.11).
 (The former premise |J_n(x)| ≤ 1 of `zseries` is gone: the clamp was removed on 27.11 — the reading is the proved
 enclosure alone; run_all ALL GREEN after it.)
 

@@ -60,9 +60,11 @@ def _setup(claim, marking, costs, hold, cap):
     dirty = [a for a in atoms if m[a] == Z]
     ask = [a for a in dirty if a not in set(hold)]
     c = {}
+    missing = [a for a in ask if a not in (costs or {}) or str(costs[a]).strip() == ""]
+    if missing:
+        return phi, m, dirty, ask, None, {"refused": f"no cost stated for {missing}: a plan by cost needs the cost of "
+                                                     f"every ground it may check", "no_cost": missing}
     for a in ask:
-        if a not in (costs or {}) or str(costs[a]).strip() == "":
-            return phi, m, dirty, ask, None, {"refused": f"no cost stated for {a!r}: a plan by cost needs the cost of every ground it may check"}
         try:
             c[a] = Fr(str(costs[a]))
         except Exception:

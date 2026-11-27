@@ -95,6 +95,8 @@ CODE_HELP = {
                         "поэтому утверждение через срок не прочитано"),
     "E_DEGREE": ("a degree that is not a point or interval inside [0, 1], or on a refuted, defined or valued row",
                  "степень вне [0, 1] или не число/интервал, либо на опровергнутой, определённой строке или строке-величине"),
+    "E_CHECK_COST": ("a cost of checking that is not a non-negative number, or on a defined row",
+                     "цена проверки — не неотрицательное число, либо стоит на определённой строке"),
     "E_NEED": ("a threshold that is not a degree inside [0, 1]", "порог — не степень внутри [0, 1]"),
     "W_SEARCH_NOT_PROOF": ("a verified row whose ground is a search that found nothing: it proves no 'none' and no "
                            "'for all', so the row is read as not verified — prove it, or ground the bound the search "

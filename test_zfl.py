@@ -1073,6 +1073,93 @@ def sec21_a_system_in_a_search_region_is_answered_completely():
     print("   sabotage: with the exclusion off the region is never exhausted — no complete answer")
 
 
+def sec26_the_cheapest_order_of_checks():
+    """(2026-11-27) The cost of checking in the language: a row's `check_cost`, and the report's `check_plan` (zplan.py;
+    the optimum is lean/ZPlan.lean). Both sides: a document with no cost gets no section and keeps the rest of its
+    report to the letter; with costs the plan is the judge's own, re-walked here; a missing cost, a bad one, a cost on
+    a defined row and too many statements are refusals; a chance row is never asked; with equal costs the cheapest set
+    is one of the reverse pass's own guaranteed sets; two sabotages are seen."""
+    print("-" * 72)
+    print("§26 the cheapest order of checks: a row's cost of checking")
+    import copy
+    import zplan
+    U = lambda n, c="", **k: dict({"name": n, "status": "unverified", "ground": "", "means": n, "check_cost": c}, **k)
+    C = "(a & b) | (~a & c)"
+    def rep(doc):
+        r = zfl.run(doc)
+        assert r["ok"], r.get("issues")
+        return r["report"]
+    # no cost -> no section; and the rest of the report is what it was without the column
+    plain = rep({"rows": [U("a"), U("b"), U("c")], "claim": C})
+    assert "check_plan" not in plain
+    priced = rep({"rows": [U("a", "1"), U("b", "5"), U("c", "2")], "claim": C})
+    rest = copy.deepcopy(priced); cp = rest.pop("check_plan")
+    assert rest == plain, "a cost of checking moved something besides its own section"
+    # the plan: a first (cost 1), then b or c; the dearest branch is a + b = 6; the set way costs 8
+    assert cp["worst_case"]["cost"] == "6" and cp["worst_case"]["plan"]["check"] == "a" and cp["cheapest_set"]["cost"] == "8", cp
+    assert cp["best_case"]["EARNED"] == {"cost": "3", "if": [["a", "F"], ["c", "T"]]}, cp["best_case"]
+    assert "check a (cost 1)" in cp["worst_case"]["read_as"] and "lean/ZPlan.lean" in cp["proved"]
+    ck = zplan.check(C, {x: "Z" for x in "abc"}, {"a": 1, "b": 5, "c": 2}, cp["worst_case"]["plan"])
+    assert ck == {"ok": True, "worst": "6", "why": None}, ck
+    # the cost as a JSON number, and a fraction
+    cp2 = rep({"rows": [U("a", 1), U("b", "1/2")], "claim": "a & b"})["check_plan"]
+    assert cp2["worst_case"]["cost"] == "3/2" and cp2["worst_case"]["plan"]["check"] == "b", cp2
+    # a verified row keeps its cost and is not asked; the plan is over the unverified ones
+    V = dict(U("a", "100"), status="verified", ground="doc")
+    cp3 = rep({"rows": [V, U("b", "5"), U("c", "2")], "claim": C})["check_plan"]
+    # (a = T: the claim is now b; c is still unverified but no branch needs it - the plan asks b alone)
+    assert cp3["dirty"] == ["b", "c"] and cp3["worst_case"]["cost"] == "5" and cp3["worst_case"]["plan"]["check"] == "b" \
+        and cp3["worst_case"]["checks_at_most"] == 1, cp3
+    # REFUSALS. One cost missing: named, no guess. Bad costs, a cost on a defined row: the document is refused.
+    miss = rep({"rows": [U("a", "1"), U("b"), U("c")], "claim": C})["check_plan"]
+    assert miss.get("no_cost") == ["b", "c"] and "worst_case" not in miss, miss
+    for bad in ("-1", "much", "1/0"):
+        r = zfl.run({"rows": [U("a", bad), U("b", "1")], "claim": "a & b"})
+        assert not r["ok"] and any(i["code"] == "E_CHECK_COST" for i in r["issues"]), (bad, r.get("issues"))
+    r = zfl.run({"rows": [U("a", "1"), U("b", "1"), {"name": "d", "status": "defined", "ground": "a & b", "check_cost": "3"}],
+                 "claim": "d"})
+    assert not r["ok"] and any(i["code"] == "E_CHECK_COST" for i in r["issues"]), r.get("issues")
+    many = [U(f"g{i}", "1") for i in range(zfl.CHECK_PLAN_CAP + 1)]
+    big = rep({"rows": many, "claim": " | ".join(x["name"] for x in many)})["check_plan"]
+    assert "refused" in big and "worst_case" not in big, big
+    edge = [U(f"g{i}", "1") for i in range(zfl.CHECK_PLAN_CAP)]
+    assert rep({"rows": edge, "claim": " | ".join(x["name"] for x in edge)})["check_plan"]["worst_case"]["cost"] == str(zfl.CHECK_PLAN_CAP)
+    # CHANCE: a row with a degree is never asked; where the claim rests on it no plan settles the matter, and that is said
+    A = {"name": "a", "status": "verified", "ground": "m", "degree": "0.3", "means": "a"}
+    ch = rep({"rows": [A, U("c", "2")], "claim": "a | c"})["check_plan"]
+    assert ch["held"] == ["a"] and "worst_case" not in ch and "no plan" in ch["no_plan"] \
+        and ch["best_case"]["EARNED"] == {"cost": "2", "if": [["c", "T"]]}, ch
+    # WITH EQUAL COSTS THE CHEAPEST SET IS ONE OF THE REVERSE PASS'S OWN GUARANTEED SETS (two routes, one answer)
+    n_same = 0
+    for claim in (C, "a & b", "a | b", "(a -> b) & c", "a ^ b", "(a | b) & (a | c)", "a <-> (b & c)"):
+        names = sorted(zfl.names_in(claim))
+        j = rep({"rows": [U(x, "1") for x in names], "claim": claim})
+        fam = sorted(sorted(x) for x in j["what_to_check"]["SETTLED"]["guaranteed"])
+        cs = j["check_plan"]["cheapest_set"]
+        assert sorted(cs["check_together"]) in fam and int(cs["cost"]) == min(len(x) for x in fam), (claim, cs, fam)
+        assert int(j["check_plan"]["worst_case"]["cost"]) <= int(cs["cost"]), claim
+        n_same += 1
+    # SABOTAGE 1: the wiring loses `hold` - the chance row gets asked
+    real_plan = zplan.plan
+    zplan.plan = lambda claim, m, costs, hold=(), cap=10: real_plan(claim, m, dict(costs, a=1), hold=(), cap=cap)
+    try:
+        bad = rep({"rows": [A, U("c", "2")], "claim": "a | c"})["check_plan"]
+        assert bad.get("held") != ["a"] and "worst_case" in bad
+    finally:
+        zplan.plan = real_plan
+    # SABOTAGE 2: the better branch taken for the worse - the price claimed is not the plan's own worst cost
+    zplan.MUTANT["best_branch"] = True
+    try:
+        mut = rep({"rows": [U("a", "1"), U("b", "5")], "claim": "a | b"})["check_plan"]["worst_case"]
+    finally:
+        zplan.MUTANT.clear()
+    assert mut["cost"] == "1" and zplan.check("a | b", {"a": "Z", "b": "Z"}, {"a": 1, "b": 5}, mut["plan"])["worst"] == "6"
+    assert rep({"rows": [U("a", "1"), U("b", "5")], "claim": "a | b"})["check_plan"]["worst_case"]["cost"] == "6"
+    print("   no cost -> no section, the rest of the report untouched; with costs: a first, 6 in the worst case (the set: 8)")
+    print("   a missing cost named, bad costs and a cost on a defined row refused, beyond the cap refused; a chance row")
+    print(f"   never asked; equal costs: the cheapest set is the reverse pass's own on {n_same} claims; two sabotages seen")
+
+
 if __name__ == "__main__":
     print("=" * 72)
     print("ZFL v2 — the table, headless")
@@ -1099,6 +1186,7 @@ if __name__ == "__main__":
     sec23_one_unknown_in_a_search_region()
     sec24_an_implicit_law_with_parameters_and_scientific_numbers()
     sec25_the_red_team_on_regions()
+    sec26_the_cheapest_order_of_checks()
     sec4b_every_example_runs_and_json_types_are_taken_as_they_come()
     sec5_the_spec_can_build_the_form_and_the_page()
     print("=" * 72)

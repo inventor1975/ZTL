@@ -392,6 +392,30 @@ COLUMNS = [
         "he": ("דרגה", "ההסתברות שהטענה נכונה: 0.3, או מרווח [0.2, 0.4]"),
         "eg": ["0.3", "[0.2, 0.4]", "1/3"],
     },
+    {
+        # The cost of checking (2026-11-27, the curator: "для судьи нужно делать оптимально, так как мы только теоремы
+        # там принимаем"; "столбец цены в ZFL — сделай"). What it costs to check THIS statement, a number in one unit
+        # of the author's own. With a cost on every unverified statement the claim rests on, the report adds
+        # `check_plan`: the order of checks with the least worst-case cost (zplan.py; lean/ZPlan.lean proves it is the
+        # least over all plans). No cost anywhere -> no section, and nothing else in the report moves.
+        "key": "check_cost", "type": "text", "required": False, "advanced": True,
+        "en": ("cost of checking", "what it costs to check this statement: a number in one unit of your own (hours, "
+                                   "money) — 3, 0.5, 1/2. With a cost on every unverified statement the report adds "
+                                   "the cheapest order of checks"),
+        "ru": ("цена проверки", "сколько стоит проверить это утверждение: число в одной вашей единице (часы, деньги) "
+                                "— 3, 0.5, 1/2. Когда цена стоит на каждом непроверенном утверждении, отчёт добавляет "
+                                "самый дешёвый порядок проверок"),
+        "de": ("Prüfkosten", "was es kostet, diese Aussage zu prüfen: eine Zahl in einer eigenen Einheit (Stunden, "
+                             "Geld) — 3, 0.5, 1/2"),
+        "fr": ("coût de vérification", "ce que coûte la vérification de cet énoncé : un nombre dans une unité à vous "
+                                       "(heures, argent) — 3, 0.5, 1/2"),
+        "es": ("coste de comprobación", "lo que cuesta comprobar este enunciado: un número en una unidad propia "
+                                        "(horas, dinero) — 3, 0.5, 1/2"),
+        "uk": ("ціна перевірки", "скільки коштує перевірити це твердження: число в одній вашій одиниці (години, "
+                                 "гроші) — 3, 0.5, 1/2"),
+        "he": ("עלות בדיקה", "כמה עולה לבדוק את הטענה: מספר ביחידה אחת משלכם (שעות, כסף) — 3, 0.5, 1/2"),
+        "eg": ["3", "0.5", "1/2"],
+    },
 ]
 
 DOC_FIELDS = [
@@ -559,6 +583,7 @@ import zpassport                                                 # noqa: E402
 import znaive                                                    # noqa: E402 (naive sets, 2026-11-05)
 import zbook                                                     # noqa: E402
 import zbackward                                                 # noqa: E402
+import zplan                                                     # noqa: E402 (the plan of checks by cost, 2026-11-27)
 
 NAME_RE = re.compile(r"^[A-Za-zА-Яа-яЁё_][\w А-Яа-яЁё-]*$")
 
@@ -1042,6 +1067,14 @@ def validate(doc):
                     raise ValueError("a row with a value is a quantity; a degree belongs to a statement")
             except ValueError as exc:
                 issues.append(_issue("error", "E_DEGREE", f"{at} / degree", str(exc)))
+        if (r.get("check_cost") or "").strip():
+            try:
+                parse_cost(r["check_cost"])
+                if status == "defined":
+                    raise ValueError("a defined row is computed from other rows, it is not checked itself: put the "
+                                     "cost on the rows it is computed from")
+            except ValueError as exc:
+                issues.append(_issue("error", "E_CHECK_COST", f"{at} / cost of checking", str(exc)))
         if status == "defined" and r.get("name") in _cmp_rows:
             if expand_compares(r.get("name") or "", rows)[1]:
                 issues.append(_issue("error", "E_COMPARE_ROW", f"{at} / ground",
@@ -2046,6 +2079,46 @@ def what_to_check(claim, marking, unverified, hold=()):
     return out
 
 
+# MEASURED 2026-11-27 (zplan.plan, every ground dirty; a 60-100 character claim / a 1900-character one):
+# 4 grounds 0.01 / 0.36 s; 5: 0.04 / 1.05 s; 6: 0.12 / 2.83 s; 7: 0.40 / 7.85 s; 8: 1.39 / 22.19 s (3^n whole judges).
+# The plan is asked for only by a document that states costs, so 6 is paid by those who want it; beyond 6 it refuses.
+CHECK_PLAN_CAP = 6
+
+
+def parse_cost(text):
+    """'3' | '0.5' | '1/2' -> a non-negative Fraction, or raise ValueError with the reason"""
+    from fractions import Fraction as _Fr
+    t = re.sub(r"\s+", "", str(text or ""))
+    try:
+        c = _Fr(t)
+    except (ValueError, ZeroDivisionError):
+        raise ValueError(f"'{text}' is not a cost: write one number in your own unit — 3, 0.5 or 1/2")
+    if c < 0:
+        raise ValueError(f"a cost of checking is not negative: got {text}")
+    return c
+
+
+def check_plan(claim, marking, checkable, rows, hold=()):
+    """THE CHEAPEST ORDER OF CHECKS (zplan.py; the optimum is a theorem, lean/ZPlan.lean). Asked for by the document:
+    with no `check_cost` on any unverified input of the claim there is no section (None). Otherwise the plan needs a
+    cost on EVERY one of them - a missing one is a refusal that names it, never a guess. `hold`: inputs no check can
+    settle (chance rows); with every other dirty input the claim has outside `checkable` they are never asked."""
+    phi = formalize(claim)
+    atoms = _formula_atoms(phi)
+    own = sorted(a for a in checkable if a in atoms)
+    by = {r.get("name"): r for r in rows}
+    costs = {a: by[a]["check_cost"] for a in own if a in by and (by[a].get("check_cost") or "").strip()}
+    if not costs:
+        return None
+    m = {a: marking.get(a, "Z") for a in atoms}
+    held = sorted(a for a in atoms if m[a] == "Z" and a not in own)
+    p = zplan.plan(phi, m, costs, hold=tuple(sorted(set(held) | (set(hold) & set(atoms)))), cap=CHECK_PLAN_CAP)
+    if "worst_case" in p:
+        p["worst_case"]["read_as"] = zplan.show(p["worst_case"]["plan"])
+    p["unit"] = "the document's own: the costs are summed as written"
+    return p
+
+
 def _formula_atoms(phi):
     if isinstance(phi, str):
         return {phi}
@@ -2750,6 +2823,9 @@ def run(doc, ground_registry=None):
             report["judge"]["why"] = _w.replace(f"check {sorted(r['unverified'])} (", f"check {_checkable} (")
         if _checkable:
             report["what_to_check"] = what_to_check(claim, resolved_marking(rows), _checkable, hold=_chance)
+            _cp = check_plan(claim, resolved_marking(rows), _checkable, rows, hold=_chance)
+            if _cp is not None:
+                report["check_plan"] = _cp
         # The grade stands as the core computed it; what the marking could
         # not say is added beside it rather than folded into it.
         touched = sorted(dead & names_in(claim))

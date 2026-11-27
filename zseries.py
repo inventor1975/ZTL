@@ -23,14 +23,16 @@ outward onto the floor's 2^-BITS grid.
 AN INTERVAL [a0, a1]: a dyadic point m inside, radius r = max(m − a0, a1 − m), the second-derivative bound
 D2 = sum_k |c_k| e_k (e_k − 1) R^(e_k − 2), R = max |a| (a series of positive terms, increasing in R — its tail, once the
 ratio is below 1/2 and decreasing, is at most the last term); then f([a]) ⊂ f(m) ± |f'(m)|·r + D2·r²/2 (Taylor). Sharper where the derivative's
-own reading keeps one sign: f is monotone there and the ends' brackets bound it. J0 and J1 are also clamped to [−1, 1]
-(|J_n(x)| ≤ 1 for real x).
+own reading keeps one sign: f is monotone there and the ends' brackets bound it. NO clamp to [−1, 1] (2026-11-27, curator:
+"убрать зажим"): |J_n(x)| ≤ 1 is true on the reals but not proved here, so it is not used — the reading stays the proved
+enclosure, and an unbounded argument has no reading. MEASURED before removing: test_zseries, test_trigcert and
+inventory/zseries_interval_bridge.py green without it; no stand relied on it.
 
 SAID, NOT HIDDEN: the alternating-series bound and the ratio's monotonicity are the premises. The point bracket is
 PROVED (2026-11-27, lean/ZAltSeries.lean `alt_bracket` / `limit_in_bracket` / `ratio_decreasing`, zero axioms) and
 tied by inventory/zseries_bridge.py; the INTERVAL path's Taylor bound is PROVED for every partial sum (lean/ZPowTaylor.lean
-`taylor_sum`, `tail_halving`; inventory/zseries_interval_bridge.py). Still premises: the monotone branch (mean value
-theorem) and |J_n| <= 1.
+`taylor_sum`, `tail_halving`; inventory/zseries_interval_bridge.py); the monotone branch is PROVED from that bound alone,
+no mean value theorem (lean/ZMonoTaylor.lean `mono_up`, `mono_up_right`).
 """
 from fractions import Fraction
 import math
@@ -51,7 +53,6 @@ FAMILIES = {
     "ber": (0, 4, lambda k: Fraction(1, 2 ** (4 * k) * math.factorial(2 * k) ** 2)),
     "bei": (2, 4, lambda k: Fraction(1, 2 ** (4 * k + 2) * math.factorial(2 * k + 1) ** 2)),
 }
-BOUNDED = {"besselj0", "besselj1"}            # |J_n| <= 1 on the reals
 ALIASES = {"berp": "ber_d1", "beip": "bei_d1"}
 MAX_TERMS = 4000
 
@@ -158,8 +159,6 @@ def interval(name, a):
     """A proved enclosure of f over [a0, a1]."""
     base, n = split(name)
     if ZF._inf(a[0]) or ZF._inf(a[1]):
-        if base in BOUNDED and n == 0:
-            return Fraction(-1), Fraction(1)
         return None
     a0, a1 = Fraction(a[0]), Fraction(a[1])
     if a0 == a1:
@@ -171,8 +170,6 @@ def interval(name, a):
             p0, p1 = point(name, a0), point(name, a1)
             mono = (min(p0[0], p1[0]), max(p0[1], p1[1]))
             out = (max(out[0], mono[0]), min(out[1], mono[1]))
-    if base in BOUNDED and n == 0:
-        out = (max(out[0], Fraction(-1)), min(out[1], Fraction(1)))
     return out
 
 

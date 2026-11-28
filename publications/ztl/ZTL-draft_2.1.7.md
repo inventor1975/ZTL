@@ -156,8 +156,8 @@ formalized in Lean 4 **with an empty axiom list, definitions
 included**: 1194 theorems, each one audited individually rather than by
 sample (`inventory/axiom_audit.py`, re-run on every push). Those are the
 counts this text was first written against (v1.4); the repository has grown since —
-2547 theorems across 142 modules at v2.1.3, 2,809 across 149 at v2.1.6, and 5,007 across
-267 at this draft (the theorem inventory of 2026-11-28, `ZTL-theorems.txt`; §8), every
+2547 theorems across 142 modules at v2.1.3, 2,809 across 149 at v2.1.6, and 5,101 across
+268 at this draft (the theorem inventory of 2026-11-28, `ZTL-theorems.txt`; §8), every
 one on the empty axiom list. As of this
 revision no numbered section rests on measurement alone (the scouting
 subsection §3.7 still does): every one of the nineteen numbered sections that carry the MEASURED tag also names kernel-checked theorems behind its
@@ -1349,8 +1349,8 @@ formula under a marking; the all-verified layer is classical logic (`law_all_iff
 every law implies the classical one (`law_implies_classical`), the layer of unverified atoms
 is neither empty nor a copy (`lnc_none`, `layers_differ`) — §10. `ZRead.lean` and `ZForced.lean`
 (v2.1.7, 2026-11-22): the dirty reading and the forced outcome, with the connective rules derived (§2, §19); and
-`ZGround.lean` rewritten for grounding by classics first (§9). The corpus at this draft: 5,007 theorems across
-267 modules, every one on the empty axiom list (the theorem inventory of 2026-11-28, `ZTL-theorems.txt`; of the
+`ZGround.lean` rewritten for grounding by classics first (§9). The corpus at this draft: 5,101 theorems across
+268 modules, every one on the empty axiom list (the theorem inventory of 2026-11-28, `ZTL-theorems.txt`; of the
 modules added since v2.1.6 this paper uses `ZStrength.lean`, `ZRead.lean` and `ZForced.lean`).
 
 **The temporal modules** (v1.2): `ZTime.lean` — the verification tree,
@@ -3865,8 +3865,8 @@ reading (`ZRead`, `ZForced`, the one-pass count proved, `foC_eq_fo`); the judge'
 (N for not forced); the dispositions unchanged on 48,384 cells; three Docket cases grounded by form, Curry 7-bis a
 paradox, the 1068 cautious one-sentence nets gone; Kleene-stated theorems removed (`liar_kleene_home`,
 `curry_kleene_home`, `yablo_lazy_home`, `rd_is_kleene`, `strict_*_iff_kleene`, `where_agrees_nnf`, the semiring
-embedding of `ZProv`, among others). Changed text: §2, §8, §9, §10, §11, §15–19, §27. Corpus (re-measured 2026-11-28): 5,007 theorems
-across 267 modules, all on the empty axiom list; Python and Lean asked the same 611 questions, zero divergences.
+embedding of `ZProv`, among others). Changed text: §2, §8, §9, §10, §11, §15–19, §27. Corpus (re-measured 2026-11-28): 5,101 theorems
+across 268 modules, all on the empty axiom list; Python and Lean asked the same 611 questions, zero divergences.
 The same draft, 2026-11-28 (Claude Opus 5.5): a correction pass over a referee's findings — the strength theorem's
 domain named wherever a passage seemed to contradict it (laws of the matrix against the judge's warranty, §§3.1, 7,
 10); non-contradiction on a dirty atom said to be a law of the matrix and EARNED IF STABLE, not forced (§3.1); the

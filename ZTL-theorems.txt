@@ -1,7 +1,7 @@
 ZTL — the theorem inventory
 ============================================================
 
-5007 theorems across 267 modules, all on the empty axiom list.
+5101 theorems across 268 modules, all on the empty axiom list.
 
 Every theorem below is machine-checked by the Lean 4 kernel
 on the EMPTY axiom list (no Classical.choice, no Quot.sound,
@@ -5575,4 +5575,100 @@ inventory/axiom_audit.py, which re-checks every line in CI.
     QZCtxKS18C.e30
     QZCtxKS18C.no_comm
     QZCtxKS18C.ks18_no_split
+
+## QZ18.lean  (94)
+    QZ18.join_cert
+    QZ18.meet_cert
+    QZ18.mul_comb
+    QZ18.allFixed_fsts
+    QZ18.fixedFst_of
+    QZ18.projOf_cert
+    QZ18.pauli_cert
+    QZ18.is_atom
+    QZ18.is_top
+    QZ18.is_neg
+    QZ18.is_join
+    QZ18.is_meet
+    QZ18.verdict_le
+    QZ18.verdict_not_le
+    QZ18.r1
+    QZ18.r2
+    QZ18.r3a
+    QZ18.r3b
+    QZ18.r3c
+    QZ18.r3d
+    QZ18.r4
+    QZ18.r5
+    QZ18.r6
+    QZ18.r7
+    QZ18.r8a
+    QZ18.r8b
+    QZ18.r10
+    QZ18.i1
+    QZ18.i2
+    QZ18.i3a
+    QZ18.i3b
+    QZ18.i3c
+    QZ18.i3d
+    QZ18.i4
+    QZ18.i5
+    QZ18.i6
+    QZ18.i7
+    QZ18.i8a
+    QZ18.i8b
+    QZ18.i10
+    QZ18.nat_add
+    QZ18.nat_mul
+    QZ18.zero_le_one
+    QZ18.nat_nonneg
+    QZ18.nat_succ_ne
+    QZ18.nat_ne_zero
+    QZ18.add_one_cancel
+    QZ18.nat_inj
+    QZ18.zi_zero
+    QZ18.zi_add
+    QZ18.zi_sub
+    QZ18.zi_mul
+    QZ18.zi_sc
+    QZ18.zi_congr
+    QZ18.zi_inj
+    QZ18.zi_S
+    QZ18.sc_mul
+    QZ18.mul_lit
+    QZ18.lit2_eq
+    QZ18.lit_mul_eq
+    QZ18.lit_wit
+    QZ18.lit_congr
+    QZ18.zi_d0
+    QZ18.sc_zone
+    QZ18.zi_zone1
+    QZ18.lit_ng
+    QZ18.lit_one
+    QZ18.allB_complete
+    QZ18.zeqB_sound
+    QZ18.zeqB_complete
+    QZ18.zchk_sound
+    QZ18.zchk_complete
+    QZ18.band3
+    QZ18.band4
+    QZ18.good_z
+    QZ18.le_z
+    QZ18.not_le_z
+    QZ18.is_zatom
+    QZ18.is_ztop
+    QZ18.is_zneg
+    QZ18.is_zjoin
+    QZ18.is_zmeet
+    QZ18.verdict_z
+    QZ18.verdict_not_z
+    QZ18.pauli_z
+    QZ18.fsts_zpairs
+    QZ18.comb_z
+    QZ18.lit_mv
+    QZ18.fixed_z
+    QZ18.span_z
+    QZ18.bnot_and
+    QZ18.bor_false
+    QZ18.memB_false
+    QZ18.ndB_sound
 

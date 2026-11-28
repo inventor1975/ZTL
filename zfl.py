@@ -726,6 +726,17 @@ def expand_sets(field, own_rows, claim):
     return rows, None
 
 
+# THE DOCUMENT'S FIELDS THE KERNEL READS - an allow-list (2026-11-28, the curator: "Да, добавь"). `coerce` builds a new
+# dictionary from these and nothing else, so a field of any other name was dropped at the door IN SILENCE: twice the
+# kernel's own field was lost that way (`grounds`, then the degrees' two - the comments in `coerce`), and a field
+# meant for another reader - the QZ judge's `functional` - passed without a word, as its `observable` did on rows
+# until W_QZ_FIELD. A second patch of one rule means the rule had the wrong form: not "warn of this field and that",
+# but "say every field that is not read" (W_UNREAD_FIELD). The verdict never depended on such a field and does not now.
+TOP_FIELDS = ("rows", "claim", "grounds", "ask", "need", "independent", "sets")
+_TOP_CARRIED = ("sets_refused", "_unread")       # written by coerce itself; coerce runs more than once
+FOREIGN_FIELDS = {"functional": "it is the QZ judge's: an inequality between averages (qz_judge.py, functional.py)"}
+
+
 def coerce(doc):
     """A document arriving as JSON has JSON's types, not ours: a model that
     writes `"value": 3000` is not wrong, and neither is a caller who does.
@@ -744,6 +755,10 @@ def coerce(doc):
     out = {"claim": _plain_numbers(str(doc.get("claim") or "")),        # 4.5e-05 -> 0.000045, at the door (08.11)
            "grounds": str(doc.get("grounds") or ""),
            "ask": doc.get("ask") or [], "rows": []}
+    # what is NOT read is carried as a list of names, to be said by validate (W_UNREAD_FIELD) - never the content
+    _un = {str(k)[:60] for k in doc if k not in TOP_FIELDS and k not in _TOP_CARRIED}
+    if isinstance(doc.get("_unread"), list): _un |= {str(k)[:60] for k in doc["_unread"]}
+    if _un: out["_unread"] = sorted(_un)
     # The degrees' two document fields pass the door here, or they are lost in it (the `grounds` lesson above)
     if doc.get("need") not in (None, ""):
         out["need"] = str(doc.get("need")).strip()
@@ -832,6 +847,12 @@ def validate(doc):
     _cmp_rows = compare_rows(rows)            # ONCE: per row it was O(rows^2) (the robustness check F5 caught it)
     if doc.get("sets_refused"):
         issues.append(_issue("error", "E_SETS", "sets", doc["sets_refused"]))
+    for _k in doc.get("_unread") or []:
+        issues.append(_issue(
+            "warn", "W_UNREAD_FIELD", f"document / {_k}",
+            f"the kernel does not read the document's field {_k!r}: the verdict does not depend on it"
+            + (f" - {FOREIGN_FIELDS[_k]}" if _k in FOREIGN_FIELDS else
+               f"; if it was meant for the kernel, it is not a name the kernel knows (it reads: {', '.join(TOP_FIELDS)})")))
     if not rows:
         issues.append(_issue("error", "E_EMPTY", "table",
                              "the table has no rows"))

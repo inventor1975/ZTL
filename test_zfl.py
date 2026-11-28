@@ -1179,6 +1179,31 @@ def sec27_a_quantum_question_is_said_not_dropped():
     print("   observable / subspace: one warning each, the verdict as without the field; no field or a blank one: silent")
 
 
+def sec28_a_field_that_is_not_read_is_said():
+    """(2026-11-28) `coerce` carries an allow-list of the document's fields and drops the rest. Until today in
+    silence: now each dropped field is NAMED (W_UNREAD_FIELD), the verdict is as without it, a field the kernel
+    reads is never named, and running the door twice changes nothing."""
+    print("-" * 72)
+    print("§28 a field of the document that the kernel does not read: said, not dropped in silence")
+    rows = [{"name": "up", "status": "verified", "ground": "run-1", "means": "up"},
+            {"name": "x1", "status": "unverified", "means": "x1"}]
+    plain = zfl.run({"rows": rows, "claim": "up | x1"})
+    un = lambda r: [i for i in r["issues"] if i["code"] == "W_UNREAD_FIELD"]
+    assert plain["ok"] and not un(plain)
+    r = zfl.run({"rows": rows, "claim": "up | x1", "functional": "up - 1/2 x1"})
+    assert r["ok"] and len(un(r)) == 1 and un(r)[0]["level"] == "warn" and un(r)[0]["where"] == "document / functional", r["issues"]
+    assert "QZ judge" in un(r)[0]["hint"] and r["report"]["judge"]["disposition"] == plain["report"]["judge"]["disposition"]
+    r = zfl.run({"rows": rows, "claim": "up | x1", "gruonds": "run-1", "note": 7})          # a misspelt field, and a stranger
+    assert r["ok"] and sorted(i["where"] for i in un(r)) == ["document / gruonds", "document / note"], r["issues"]
+    assert all("it reads: rows, claim, grounds" in i["hint"] for i in un(r))
+    full = {"rows": rows, "claim": "up | x1", "grounds": "run-1", "ask": [], "need": "0.5", "independent": False, "sets": ""}
+    assert not un(zfl.run(full)), "a field the kernel reads is never named"
+    twice = zfl.coerce(zfl.coerce({"rows": rows, "claim": "up", "functional": "up"}))        # the door, passed twice
+    assert twice["_unread"] == ["functional"] and len(un({"issues": zfl.validate(twice)})) == 1
+    assert len(un({"issues": zfl.validate({"rows": rows, "claim": "up", "x" * 500: 1})})[0]["where"]) < 80, "a long name is cut"
+    print("   functional (the QZ judge's), a misspelt name, a stranger: one warning each, the verdict unchanged; known fields: silent")
+
+
 if __name__ == "__main__":
     print("=" * 72)
     print("ZFL v2 — the table, headless")
@@ -1207,6 +1232,7 @@ if __name__ == "__main__":
     sec25_the_red_team_on_regions()
     sec26_the_cheapest_order_of_checks()
     sec27_a_quantum_question_is_said_not_dropped()
+    sec28_a_field_that_is_not_read_is_said()
     sec4b_every_example_runs_and_json_types_are_taken_as_they_come()
     sec5_the_spec_can_build_the_form_and_the_page()
     print("=" * 72)

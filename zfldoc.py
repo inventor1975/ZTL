@@ -99,6 +99,10 @@ CODE_HELP = {
                    "the lattice reading is the QZ judge's",
                    "строка называет квантовый вопрос (observable / subspace): ядро судит её только по статусу; "
                    "чтение в решётке — у судьи QZ"),
+    "W_UNREAD_FIELD": ("a field of the document that the kernel does not read (another reader's, like the QZ judge's "
+                       "`functional`, or a misspelt name): said, not dropped in silence; the verdict does not depend on it",
+                       "поле документа, которое ядро не читает (чужое, как `functional` судьи QZ, или имя с опечаткой): "
+                       "сказано, а не молча отброшено; вердикт от него не зависит"),
     "E_CHECK_COST": ("a cost of checking that is not a non-negative number, or on a defined row",
                      "цена проверки — не неотрицательное число, либо стоит на определённой строке"),
     "E_NEED": ("a threshold that is not a degree inside [0, 1]", "порог — не степень внутри [0, 1]"),

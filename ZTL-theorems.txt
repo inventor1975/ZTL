@@ -1,7 +1,7 @@
 ZTL — the theorem inventory
 ============================================================
 
-5101 theorems across 268 modules, all on the empty axiom list.
+5222 theorems across 270 modules, all on the empty axiom list.
 
 Every theorem below is machine-checked by the Lean 4 kernel
 on the EMPTY axiom list (no Classical.choice, no Quot.sound,
@@ -5671,4 +5671,129 @@ inventory/axiom_audit.py, which re-checks every line in CI.
     QZ18.bor_false
     QZ18.memB_false
     QZ18.ndB_sound
+
+## Sqrt3.lean  (17)
+    Sqrt3.add3_nx
+    Sqrt3.mul3_nx
+    Sqrt3.add3_z
+    Sqrt3.mul3_z
+    Sqrt3.sq3
+    Sqrt3.r3_add
+    Sqrt3.r3_mul
+    Sqrt3.r3_three
+    Sqrt3.thirds
+    Sqrt3.root3
+    Sqrt3.massoc
+    Sqrt3.sq_three
+    Sqrt3.three_cancel
+    Sqrt3.lt_three
+    Sqrt3.desc3
+    Sqrt3.qN_three
+    Sqrt3.no_sqrt3
+
+## QZ19.lean  (104)
+    QZ19.ext2
+    QZ19.add_comm_a
+    QZ19.add_comm_b
+    QZ19.add_assoc_a
+    QZ19.add_assoc_b
+    QZ19.add_zero_a
+    QZ19.add_zero_b
+    QZ19.add_neg_a
+    QZ19.add_neg_b
+    QZ19.mul_comm_a
+    QZ19.mul_comm_b
+    QZ19.mul_assoc_a
+    QZ19.mul_assoc_b
+    QZ19.mul_one_a
+    QZ19.mul_one_b
+    QZ19.mul_zero_a
+    QZ19.mul_zero_b
+    QZ19.mul_add_a
+    QZ19.mul_add_b
+    QZ19.neg_mul_a
+    QZ19.neg_mul_b
+    QZ19.neg_neg_a
+    QZ19.neg_neg_b
+    QZ19.nrm_mul
+    QZ19.nrm_neg
+    QZ19.nrm_add
+    QZ19.nrm_add_neg
+    QZ19.nrm_double
+    QZ19.dsq
+    QZ19.negsq
+    QZ19.idA
+    QZ19.idB
+    QZ19.cancel_a
+    QZ19.cancel_b
+    QZ19.cancel2_a
+    QZ19.cancel2_b
+    QZ19.idE
+    QZ19.negneg
+    QZ19.nrm_zero
+    QZ19.i_sub0
+    QZ19.i_0sub
+    QZ19.i_trans
+    QZ19.i_addle
+    QZ19.i_mulle
+    QZ19.i_flip
+    QZ19.i_mulneg
+    QZ19.i_negnegmul
+    QZ19.i_abs2
+    QZ19.i_aa
+    QZ19.i_nn0
+    QZ19.idK
+    QZ19.idL
+    QZ19.invA
+    QZ19.invB
+    QZ19.le_of_eq'
+    QZ19.zero_le_one
+    QZ19.nn_add
+    QZ19.d_nonneg
+    QZ19.two_nonneg
+    QZ19.neg_nn
+    QZ19.neg_np
+    QZ19.np_of_neg_nn
+    QZ19.nn_of_neg_np
+    QZ19.zero_of_sum
+    QZ19.mul_mono
+    QZ19.le_of_sq_le
+    QZ19.nn_add_of_sq
+    QZ19.nn_sub_of_sq
+    QZ19.sqA
+    QZ19.sqB
+    QZ19.d_sq_nonneg
+    QZ19.posA_add
+    QZ19.posB_add
+    QZ19.sq_zero
+    QZ19.sq_zero_of_two
+    QZ19.pos_antisymm
+    QZ19.posAB_add
+    QZ19.pos_add
+    QZ19.posAA_mul
+    QZ19.le_of_d_mul
+    QZ19.posAB_mul
+    QZ19.posBB_mul
+    QZ19.pos_mul
+    QZ19.eqE
+    QZ19.pos_zero
+    QZ19.pos_congr
+    QZ19.pos_of_zero_le
+    QZ19.zero_le_of_pos
+    QZ19.negpos_of_le_zero
+    QZ19.pos_total
+    QZ19.half_nn
+    QZ19.half_np
+    QZ19.pos_half
+    QZ19.zero_of_nrm_zero
+    QZ19.emul_eq_zero
+    QZ19.eabs_pos
+    QZ19.eabs_npos
+    QZ19.eneg_zero_of
+    QZ19.eabs_negpos
+    QZ19.pos_eabs
+    QZ19.pos_negneg
+    QZ19.le_eabs
+    QZ19.neg_le_eabs
+    QZ19.emul_inv
 

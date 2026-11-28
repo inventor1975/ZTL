@@ -1,7 +1,7 @@
 ZTL — the theorem inventory
 ============================================================
 
-5224 theorems across 271 modules, all on the empty axiom list.
+5252 theorems across 272 modules, all on the empty axiom list.
 
 Every theorem below is machine-checked by the Lean 4 kernel
 on the EMPTY axiom list (no Classical.choice, no Quot.sound,
@@ -5800,4 +5800,34 @@ inventory/axiom_audit.py, which re-checks every line in CI.
 ## QZ19Q3.lean  (2)
     QZ19Q3.nr3
     QZ19Q3.sq3
+
+## QZ20.lean  (28)
+    QZ20.zleB_sound
+    QZ20.odd_congr
+    QZ20.bor_true
+    QZ20.bool_cases
+    QZ20.memB_true
+    QZ20.fval_congr
+    QZ20.setv_same
+    QZ20.setv_other
+    QZ20.allS_sound
+    QZ20.sweep
+    QZ20.classical_bound
+    QZ20.classical_floor
+    QZ20.mul_left_comm
+    QZ20.qf_ip
+    QZ20.qf_congr
+    QZ20.ip_smul_r
+    QZ20.mv_smul
+    QZ20.scalar_on
+    QZ20.lit_obs
+    QZ20.lit_add
+    QZ20.lit_smul
+    QZ20.prod_nil
+    QZ20.prod_z
+    QZ20.op_nil
+    QZ20.op_z
+    QZ20.scalar_z
+    QZ20.mv_one
+    QZ20.held_all
 

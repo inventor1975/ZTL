@@ -95,6 +95,10 @@ CODE_HELP = {
                         "поэтому утверждение через срок не прочитано"),
     "E_DEGREE": ("a degree that is not a point or interval inside [0, 1], or on a refuted, defined or valued row",
                  "степень вне [0, 1] или не число/интервал, либо на опровергнутой, определённой строке или строке-величине"),
+    "W_QZ_FIELD": ("a row names a quantum question (observable / subspace): the kernel judges it by its status alone; "
+                   "the lattice reading is the QZ judge's",
+                   "строка называет квантовый вопрос (observable / subspace): ядро судит её только по статусу; "
+                   "чтение в решётке — у судьи QZ"),
     "E_CHECK_COST": ("a cost of checking that is not a non-negative number, or on a defined row",
                      "цена проверки — не неотрицательное число, либо стоит на определённой строке"),
     "E_NEED": ("a threshold that is not a degree inside [0, 1]", "порог — не степень внутри [0, 1]"),

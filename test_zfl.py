@@ -1160,6 +1160,25 @@ def sec26_the_cheapest_order_of_checks():
     print(f"   never asked; equal costs: the cheapest set is the reverse pass's own on {n_same} claims; two sabotages seen")
 
 
+def sec27_a_quantum_question_is_said_not_dropped():
+    """(2026-11-28) A row carrying `observable` or `subspace` is a valid ZFL row that the kernel does not read as a
+    question: it says so (W_QZ_FIELD), judges as before, and stays silent where no such field stands."""
+    print("-" * 72)
+    print("§27 a quantum question on a row: said, not dropped in silence")
+    base = [{"name": "up", "status": "verified", "ground": "run-1", "means": "up"},
+            {"name": "x1", "status": "unverified", "means": "x1"}]
+    plain = zfl.run({"rows": base, "claim": "up | x1"})
+    for field, val in (("observable", "Z"), ("subspace", "1 0")):
+        rows = [dict(base[0], **{field: val}), base[1]]
+        r = zfl.run({"rows": rows, "claim": "up | x1"})
+        hits = [i for i in r["issues"] if i["code"] == "W_QZ_FIELD"]
+        assert r["ok"] and len(hits) == 1 and hits[0]["level"] == "warn", r["issues"]
+        assert r["report"]["judge"]["disposition"] == plain["report"]["judge"]["disposition"]
+    assert plain["ok"] and not [i for i in plain["issues"] if i["code"] == "W_QZ_FIELD"]
+    assert not [i for i in zfl.run({"rows": [dict(base[0], observable="  "), base[1]], "claim": "up"})["issues"] if i["code"] == "W_QZ_FIELD"]
+    print("   observable / subspace: one warning each, the verdict as without the field; no field or a blank one: silent")
+
+
 if __name__ == "__main__":
     print("=" * 72)
     print("ZFL v2 — the table, headless")
@@ -1187,6 +1206,7 @@ if __name__ == "__main__":
     sec24_an_implicit_law_with_parameters_and_scientific_numbers()
     sec25_the_red_team_on_regions()
     sec26_the_cheapest_order_of_checks()
+    sec27_a_quantum_question_is_said_not_dropped()
     sec4b_every_example_runs_and_json_types_are_taken_as_they_come()
     sec5_the_spec_can_build_the_form_and_the_page()
     print("=" * 72)

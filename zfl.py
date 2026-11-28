@@ -1067,6 +1067,14 @@ def validate(doc):
                     raise ValueError("a row with a value is a quantity; a degree belongs to a statement")
             except ValueError as exc:
                 issues.append(_issue("error", "E_DEGREE", f"{at} / degree", str(exc)))
+        # A QUANTUM QUESTION ON A ROW IS NOT READ HERE (2026-11-28, MEASURED: rows carrying "observable" / "subspace" passed
+        # with zero issues and the kernel judged them by status alone - the quantum part dropped in silence). Said, not
+        # refused: the document is a valid ZFL document; the lattice reading is the QZ judge's (qz_judge.py).
+        if str(r.get("observable") or "").strip() or str(r.get("subspace") or "").strip():
+            issues.append(_issue(
+                "warn", "W_QZ_FIELD", f"{at} / observable",
+                "this row names a quantum question (observable / subspace): the kernel does not read it and judges the "
+                "row by its status alone; the lattice reading is the QZ judge's (qz_judge.py)"))
         if (r.get("check_cost") or "").strip():
             try:
                 parse_cost(r["check_cost"])

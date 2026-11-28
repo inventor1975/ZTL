@@ -2613,6 +2613,14 @@ def run(doc, ground_registry=None):
                                  "next_check": r.get("next_check", []),
                                  "solved": solved, "claim": claim,
                                  "sheet": sheet}
+            # A ROOT THAT IS NOT AN ANSWER AND IS NOT REFUTED IS SAID (2026-11-27, znumsolve.solve_claim): the answer
+            # kept is the root under which the claim's value is T; a root whose value is F only because a ground is
+            # dirty is not lost - the reader sees it and what it turns on, so "x = 2" is never read as "x is 2 alone"
+            _left = {n_: [t_ for t_ in ts_ if t_["answer"] not in ("now", "no")]
+                     for n_, ts_ in (r.get("roots_standing") or {}).items()}
+            _left = {n_: ts_ for n_, ts_ in _left.items() if ts_}
+            if _left:
+                report["numeric"]["roots_left"] = _left
             # THE ANSWER TRAVELS WITH ITS DISPOSITION. The numeric floor has
             # always known the two-valued answer (the core's verdict under
             # it) and, on credit, the side it leans to; this report kept

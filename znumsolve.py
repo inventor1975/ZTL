@@ -1642,6 +1642,31 @@ def _dependence_fixed(formula, quantities):
     return fixed
 
 
+def _root_value(w):
+    """the claim's VALUE (the kernel's verdict, T or F) in the world of one root; None where no judge was asked"""
+    return (w.get("core") or {}).get("verdict") or w.get("verdict")
+
+
+def _root_standing(rq, w, some_root_holds):
+    """What one root of an unknown is, as an answer to the claim: -> {"root", "verdict", "disposition", "answer"}.
+    answer: "now" (the claim's value is T under it), "no" (refuted), or a sentence for a root that is neither."""
+    d, v = w["disposition"], _root_value(w)
+    exact = rq.get("exact")
+    root = str(exact) if exact is not None else (fmt(rq["lo"]) if rq["lo"] == rq["hi"] else f"[{fmt(rq['lo'])}, {fmt(rq['hi'])}]")
+    if d == "REFUTED":
+        answer = "no"
+    elif v == "T":
+        answer = "now"
+    elif d == "REFUTED IF STABLE":
+        answer = "not an answer if the dirty grounds are stable (false in every cleaning)"
+    elif d == "EARNED IF STABLE":
+        answer = "an answer if the dirty grounds are stable (true in every cleaning), not read by read"
+    else:
+        turns = [c for c in (w.get("next_check") or []) if not c.split(" ", 1)[-1].startswith("_lit")]
+        answer = "not settled: it turns on " + (", ".join(turns) if turns else "grounds that are not verified")
+    return {"root": root, "verdict": v, "disposition": d, "answer": answer}
+
+
 def solve_claim(formula, quantities, marks):
     """Narrow first, then judge on the narrowed ledger — and say, for every
     answer the narrowing produced, what it is worth and what would fix it.
@@ -1662,7 +1687,7 @@ def solve_claim(formula, quantities, marks):
     # once per root: a root that makes it false is not an answer and goes;
     # if none is left the claim is refuted; the disposition of the rest is
     # the weakest of theirs, so EARNED means earned for every root kept.
-    kept_roots = {}
+    kept_roots, standing = {}, {}
     multi = [n for n, q in qs.items() if len(q.get("roots") or []) > 1]
     if len(multi) == 1:
         name = multi[0]
@@ -1680,11 +1705,29 @@ def solve_claim(formula, quantities, marks):
             worlds.append((rq, judge_sheet_claim(formula, _verdict_ledger(qs1, sheet), marks,
                                                  fixed=dependence), qs1))
         alive_w = [w3 for w3 in worlds if w3[1]["disposition"] != "REFUTED"]
-        alive = [(rq, w) for rq, w, _ in alive_w]
-        if not alive:
+        if not alive_w:
             log.append(f"{name}: no root makes the whole claim true")
             return {"disposition": "REFUTED", "narrowed": qs, "log": log,
                     "empty": [name], "next_check": [], "solved": {}}
+        # A ROOT IS AN ANSWER WHERE THE CLAIM'S VALUE IS T UNDER IT (2026-11-27, the curator, on
+        # (x*x == 4) & ((x > 0) | p) with p dirty: «при −2, это (T) ∧ (F ∨ p) — отсюда (T) ∧ (F) — и получаем F»;
+        # «p грязное — стремит значение к F»). Until then every root that was not REFUTED was kept and the
+        # disposition was "the weakest", with REFUTED IF STABLE outside the scale: `odd[0]` gave the whole claim the
+        # verdict of ONE root - MEASURED: (x*x == 4) & ((x > 0) | (p & ~p)) came back REFUTED IF STABLE although
+        # x = 2 earns it read by read; and the same claim with `| p` came back OPEN.
+        # Now: the roots under which the value is T are the answers, and the disposition is the weakest of THEIRS.
+        # A root whose value is F and that is not refuted is NOT an answer and is NOT lost: `roots_standing` says
+        # what it is (not now - it turns on a dirty ground; not if stable; an answer if stable). Only when no root
+        # holds now does the disposition speak of the others: OPEN if one of them is open, else EARNED IF STABLE if
+        # one would hold in every cleaning, else (all of them false in every cleaning) REFUTED IF STABLE.
+        holds_w = [w3 for w3 in alive_w if _root_value(w3[1]) == "T"]
+        kept_w = holds_w or alive_w
+        standing = {name: [_root_standing(rq, w, bool(holds_w)) for rq, w, _ in worlds]}
+        for st_ in standing[name]:
+            if st_["answer"] not in ("now", "no"):
+                log.append(f"{name}: the root {st_['root']} is not an answer now ({st_['disposition']}): {st_['answer']}")
+        alive_w = kept_w
+        alive = [(rq, w) for rq, w, _ in alive_w]
         if len(alive) == 1:
             qs[name] = alive[0][0]
             for other, q1 in alive_w[0][2].items():
@@ -1714,14 +1757,17 @@ def solve_claim(formula, quantities, marks):
             # judge gained it 2026-10-29). REFUTED IF STABLE is left out on
             # purpose: a root that is false-if-stable beside a root that is true
             # is not "weaker" on one scale — it stays with `odd`, as before
+            # (the roots kept: those that hold now - EARNED, ON CREDIT - or, when none does, the ones not refuted;
+            # a REFUTED IF STABLE root beside a ranked one is gone if stable and does not weigh on the ranked one)
             rank = {"EARNED": 4, "EARNED IF STABLE": 3, "ON CREDIT": 2, "OPEN": 1}
-            odd = [w for _, w in alive if w["disposition"] not in rank]
-            r = odd[0] if odd else min(
-                (w for _, w in alive), key=lambda w: rank[w["disposition"]])
+            ranked = [w for _, w in alive if w["disposition"] in rank]
+            r = min(ranked, key=lambda w: rank[w["disposition"]]) if ranked else alive[0][1]
             kept_roots[name] = [rq for rq, _ in alive]
     if not kept_roots:
         r = judge_sheet_claim(formula, _verdict_ledger(qs, sheet), marks, fixed=dependence)
     r["narrowed"], r["log"] = qs, log
+    if standing:
+        r["roots_standing"] = standing
     solved, cures = {}, list(r["next_check"])
     # a literal of the claim (`_lit`, which the judge's own reading may add
     # again as `_lit2`) is not an answer: until 2026-09-24 looking it up here

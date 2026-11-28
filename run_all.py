@@ -37,6 +37,7 @@ STANDS = [
     ("inventory/zbound_lean_bridge.py", ["ZBOUND LEAN BRIDGE GREEN", "the kernel refuses"]),
     ("inventory/zbackward_lean_bridge.py", ["ZBACKWARD LEAN BRIDGE GREEN", "caught"]),
     ("test_zplan.py", ["ZPLAN GREEN", "plans compared with the independent listing: 94 of 94"]),
+    ("test_root_answers.py", ["ROOT ANSWERS GREEN", "37 checks, 0 failed"]),
     ("inventory/zplan_lean_bridge.py", ["ZPLAN LEAN BRIDGE GREEN", "caught", "the kernel refuses"]),
     ("inventory/zdiagnose_lean_bridge.py", ["ZDIAGNOSE LEAN BRIDGE GREEN", "caught"]),
     ("inventory/zpassport_lean_bridge.py", ["ZPASSPORT LEAN BRIDGE GREEN", "caught"]),

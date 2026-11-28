@@ -182,9 +182,34 @@ theorem trunc_unique (n : Nat) (v : Nat → V) (h : TruncAdmissible (n + 1) v) :
       have hin : i = n := Nat.le_antisymm (Nat.le_of_lt_succ hi) hge
       rw [hin, hlast, truncModel_last n]
 
+/-- **THE MODEL EXISTS, AT EVERY n** — the half `trunc_unique` leaves open: the last sentence true, every
+earlier one false, is admissible. (For i = n the right side is vacuous; for i < n the sentence j = n is true.) -/
+theorem trunc_exists (n : Nat) : TruncAdmissible (n + 1) (truncModel (n + 1)) := by
+  intro i hi
+  cases Nat.lt_or_ge i n with
+  | inl hlt =>
+      have hF : truncModel (n + 1) i = F := truncModel_earlier (n + 1) i (Nat.succ_lt_succ hlt)
+      refine ⟨Or.inr hF, ⟨fun hT => ?_, fun hall => ?_⟩⟩
+      · rw [hF] at hT; exact V.noConfusion hT
+      · have := hall n hlt (Nat.lt_succ_self n)
+        rw [truncModel_last n] at this; exact V.noConfusion this
+  | inr hge =>
+      have hin : i = n := Nat.le_antisymm (Nat.le_of_lt_succ hi) hge
+      rw [hin, truncModel_last n]
+      refine ⟨Or.inl rfl, ⟨fun _ j hj hjn => ?_, fun _ => rfl⟩⟩
+      exact absurd (Nat.lt_of_lt_of_le hj (Nat.le_of_lt_succ hjn)) (Nat.lt_irrefl n)
+
+/-- **EVERY FINITE TRUNCATION IS GROUNDED, WITH EXACTLY ONE MODEL**: existence and uniqueness together. -/
+theorem trunc_grounded (n : Nat) :
+    TruncAdmissible (n + 1) (truncModel (n + 1)) ∧
+    ∀ v, TruncAdmissible (n + 1) v → ∀ i, i < n + 1 → v i = truncModel (n + 1) i :=
+  ⟨trunc_exists n, trunc_unique n⟩
+
 end ZYablo
 
 #print axioms ZYablo.no_true_sentence
 #print axioms ZYablo.yablo_greedy_homeless
 #print axioms ZYablo.yablo_never_determined
 #print axioms ZYablo.trunc_unique
+#print axioms ZYablo.trunc_exists
+#print axioms ZYablo.trunc_grounded

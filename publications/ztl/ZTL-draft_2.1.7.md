@@ -1541,9 +1541,8 @@ the datum (INPUT — lifted by verification), **hardened** out of a solver phase
 provably terminates within n+1 steps (§8, `ZGround`), so the phase N always dies — the liar is never "still
 computing"; what is eternal is not the process but the refusal. The parity theorem of §11 re-derives through the
 passport, and Russell (§18) reads, unchanged: R∈R — PARADOX, permanent; the twin S∈S — UNDERDETERMINED; eight facts
-grounded. Yablo (§11): every finite truncation has at most one model, and it is the model F…FT, at every n
-(`ZYablo.trunc_unique` proves the uniqueness; that this model is admissible is not stated as a theorem for every n,
-only measured, and proved at n = 3 by `Facts.yablo3_unique`), the infinite system
+grounded. Yablo (§11): every finite truncation has exactly one model, and it is the model F…FT, at every n
+(`ZYablo.trunc_grounded`: existence `trunc_exists` and uniqueness `trunc_unique`), the infinite system
 admits no verdict assignment (`yablo_greedy_homeless`), and the stable step never determines any of its sentences
 (`yablo_never_determined`).
 
@@ -2031,11 +2030,10 @@ truncation at n = 3 has exactly the model F, F, T, existence and uniqueness both
 systems, the crocodile's period four as such, and the 9015-net census above.
 
 **Yablo at the limit** (`ZYablo.lean`, empty axiom list). Three theorems
-replace the single truncation check. EVERY finite truncation has at most one
+replace the single truncation check. EVERY finite truncation has exactly one
 model, for every n, and it is `truncModel` — the last sentence true and all
-earlier ones false (`trunc_unique`; the uniqueness is proved, while that
-`truncModel` is admissible is not stated as a theorem for every n — it is
-measured, and proved at n = 3 by `yablo3_unique`) — so the finite instrument is
+earlier ones false (`trunc_grounded`: `trunc_exists` shows `truncModel` is
+admissible, `trunc_unique` that no other model is; at n = 3 also `yablo3_unique`) — so the finite instrument is
 not too weak to see a paradox; there is nothing at any finite stage to see. The INFINITE system
 admits no verdict assignment whatever (`yablo_greedy_homeless`). And the stable step never determines any of
 its sentences: each has two completions of the others on which its definition differs (`yablo_never_determined`)
@@ -2058,10 +2056,9 @@ parameter tableaux, the one part of that port §27 still lists as open; and the 
 when every later sentence is F" is the strict universal of §6 with the greedy
 denial inside it. The truncation results are the positive control: an
 impossibility result is worthless if its definition is unsatisfiable by
-construction. The control is proved in part — the same shape restricted to any
-finite n has at most one model, and at n = 3 it has one — and measured for the
-existence at other n; a theorem that `truncModel` is admissible at every n would
-complete it.
+construction. The control is proved: the same shape restricted to any
+finite n has exactly one model (`trunc_grounded`), so the definition is satisfiable
+wherever the quantifier is bounded, and the impossibility lives at the limit only.
 
 ## 12. Sets with dirty elements (MEASURED + Lean)
 

@@ -1,7 +1,7 @@
 ZTL — the theorem inventory
 ============================================================
 
-3943 theorems across 218 modules, all on the empty axiom list.
+5007 theorems across 267 modules, all on the empty axiom list.
 
 Every theorem below is machine-checked by the Lean 4 kernel
 on the EMPTY axiom list (no Classical.choice, no Quot.sound,
@@ -611,7 +611,7 @@ inventory/axiom_audit.py, which re-checks every line in CI.
     ZDempster.pl_zero_iff
     ZDempster.verdict_is_threshold
 
-## ZYablo.lean  (9)
+## ZYablo.lean  (11)
     ZYablo.no_true_sentence
     ZYablo.yablo_greedy_homeless
     ZYablo.beq_self
@@ -621,6 +621,8 @@ inventory/axiom_audit.py, which re-checks every line in CI.
     ZYablo.natBeq_false_of_ne
     ZYablo.truncModel_earlier
     ZYablo.trunc_unique
+    ZYablo.trunc_exists
+    ZYablo.trunc_grounded
 
 ## ZAbsInt.lean  (13)
     ZAbsInt.le_of_ble
@@ -4413,4 +4415,1164 @@ inventory/axiom_audit.py, which re-checks every line in CI.
     V.layers_differ
     V.proper_conservative_extension
     V.strictly_more_laws
+
+## ZExt.lean  (22)
+    ZExt.v_not_T
+    ZExt.v_and_T
+    ZExt.v_or_T
+    ZExt.pt_gap
+    ZExt.pt_clean
+    ZExt.pt_strong
+    ZExt.compl_ext_fails_dirty
+    ZExt.not_compl_ext
+    ZExt.coext_gap
+    ZExt.same_coext
+    ZExt.same_compl
+    ZExt.same_inter
+    ZExt.same_union
+    ZExt.coext_clean_same
+    ZExt.compl_ext_clean
+    ZExt.scoext_iff_same
+    ZExt.compl_ext_strong
+    ZExt.inter_ext_strong
+    ZExt.union_ext_strong
+    ZExt.inter_coext
+    ZExt.union_coext
+    ZExt.compl_members
+
+## ZReplace.lean  (10)
+    ZReplace.compound_ne_Z
+    ZReplace.verdict_eq
+    ZReplace.evalF_congr
+    ZReplace.replace_compound
+    ZReplace.replace_atom_fails
+    ZReplace.p_and_p
+    ZReplace.atom_compound_not_interchangeable
+    ZReplace.atom_or_compound
+    ZReplace.atoms_equiv_same
+    ZReplace.replace_iff
+
+## ZCard.lean  (24)
+    ZCard.ndist_nodup
+    ZCard.ndist_cons_ge
+    ZCard.ndist_cons_le
+    ZCard.one_le_of_mem
+    ZCard.one_le_cons
+    ZCard.ndist_append_ge
+    ZCard.ndist_append_le
+    ZCard.min_succ_one
+    ZCard.card_sound
+    ZCard.length_down
+    ZCard.length_fresh
+    ZCard.fresh_down
+    ZCard.memB_down_ge
+    ZCard.nodup_down
+    ZCard.memB_zero_down
+    ZCard.length_rep
+    ZCard.ndist_rep
+    ZCard.append_assoc'
+    ZCard.length_append'
+    ZCard.card_tight
+    ZCard.card_hi_attained
+    ZCard.card_lo_attained
+    ZCard.single_mark
+    ZCard.two_marks
+
+## ZChiral.lean  (10)
+    ZChiral.differs_append
+    ZChiral.sharpen_F
+    ZChiral.sharpen_T
+    ZChiral.sharpen_Z_not_T
+    ZChiral.enantiomers_same_distances
+    ZChiral.enantiomers_Z_achiral
+    ZChiral.enantiomers_F_chiral
+    ZChiral.collinear_Z_chiral
+    ZChiral.mirror_twice_T
+    ZChiral.mirror_mirror
+
+## Pigeonhole.lean  (17)
+    Pigeonhole.post_possible
+    Pigeonhole.pair12_alone
+    Pigeonhole.pair23_alone
+    Pigeonhole.pair13_alone
+    Pigeonhole.pigeonhole
+    Pigeonhole.all_differ_never
+    Pigeonhole.joint_12_23
+    Pigeonhole.every_record_refutes
+    Pigeonhole.asked_pair_earned
+    Pigeonhole.ref_TFF
+    Pigeonhole.ref_TTT
+    Pigeonhole.asked_all_open
+    Pigeonhole.commuting_earns_the_impossible
+    Pigeonhole.three
+    Pigeonhole.pigeonhole_stable
+    Pigeonhole.pigeonhole_not_refuted
+    Pigeonhole.pigeonhole_verdict
+
+## CHSH.lean  (18)
+    CHSH.wins_odd
+    CHSH.wins_le_three
+    CHSH.three_reached
+    CHSH.wins_le
+    CHSH.mixture_le
+    CHSH.norm_phi
+    CHSH.B0'_sq
+    CHSH.B1'_sq
+    CHSH.correlators
+    CHSH.S'_eq
+    CHSH.tsirelson
+    CHSH.marginals
+    CHSH.four
+    CHSH.chsh_stable
+    CHSH.chsh_bound_stable
+    CHSH.chsh_not_refuted
+    CHSH.round_earned
+    CHSH.chsh_verdict
+
+## Emergence.lean  (7)
+    Emergence.evalF_congr'
+    Emergence.one_case_fits_T
+    Emergence.one_case_fits_F
+    Emergence.twin_refutes_all
+    Emergence.zombie_on_credit
+    Emergence.emergence_relative
+    Emergence.emergence_verdict
+
+## ZBackward.lean  (29)
+    ZBackward.and_split
+    ZBackward.any_exists
+    ZBackward.any_of_mem
+    ZBackward.all_of_mem
+    ZBackward.mem_filter_l
+    ZBackward.mem_filter_p
+    ZBackward.filter_of_mem
+    ZBackward.mem_append_l
+    ZBackward.mem_append_r
+    ZBackward.mem_map_of
+    ZBackward.mem_map_inv
+    ZBackward.mem_append_inv
+    ZBackward.add_cancel
+    ZBackward.sub_refl
+    ZBackward.sub_trans
+    ZBackward.sub_pop_le
+    ZBackward.sub_pop_eq
+    ZBackward.psub_iff
+    ZBackward.fam_sound
+    ZBackward.fam_antichain
+    ZBackward.exists_minimal
+    ZBackward.fam_empty_none
+    ZBackward.fills_nonempty
+    ZBackward.guaranteed_possible
+    ZBackward.guaranteed_has_possible
+    ZBackward.zeros_mem
+    ZBackward.pop_zeros
+    ZBackward.zeros_sub
+    ZBackward.already_iff
+
+## ZDiagnose.lean  (10)
+    ZDiagnose.allF_mem
+    ZDiagnose.or_split
+    ZDiagnose.meets_hasF
+    ZDiagnose.hasF_meets
+    ZDiagnose.all_true
+    ZDiagnose.possible_iff_hits
+    ZDiagnose.filter_congr
+    ZDiagnose.any_congr
+    ZDiagnose.fam_congr
+    ZDiagnose.diagnoses_are_hitting_sets
+
+## ZStipulate.lean  (12)
+    V.stip_length
+    V.getF_stip_none
+    V.getF_stip_some
+    V.getP_jumpS
+    V.getP_ge
+    V.pvLeq_of_getP
+    V.phLeq_trans
+    V.pvLeq_trans
+    V.allB_const
+    V.evalS_const
+    V.iter_le_lfp
+    V.stipulation
+
+## ZInputSubst.lean  (31)
+    V.clEval_subst
+    V.le_max_l
+    V.le_max_r
+    V.add_sub_of_le'
+    V.clEval_congr
+    V.mem_comps
+    V.comps_of_cons
+    V.allB_mem
+    V.allB_of
+    V.consOk_pos
+    V.consOk_of_pos
+    V.tab_length
+    V.bget_tab
+    V.getP_append_l
+    V.getP_replicate
+    V.getP_append_r
+    V.getP_pad_own
+    V.getP_pad_input
+    V.length_append'
+    V.length_replicate'
+    V.pad_length_ge
+    V.pad_length_own
+    V.consts_ok
+    V.evalS_subst_mono
+    V.getP_jumpS'
+    V.getF'_map
+    V.length_map'
+    V.getP_ge'
+    V.pvLeq_of_getP'
+    V.phLeq_trans'
+    V.lfp_subst_mono
+
+## ZHull.lean  (12)
+    ZHull.zero_add
+    ZHull.le_neg_of_add_le
+    ZHull.add_le_of_le_neg
+    ZHull.neg_le_of_le_add
+    ZHull.le_add_of_neg_le
+    ZHull.hull_le_sound
+    ZHull.hull_le_exact
+    ZHull.hull_ge_sound
+    ZHull.hull_ge_exact
+    ZHull.hull_eq_sound
+    ZHull.mem_map_inv'
+    ZHull.corner_in_box
+
+## ZQuad.lean  (14)
+    ZQuad.four_nonneg
+    ZQuad.completed_square
+    ZQuad.four_q_f_nonpos
+    ZQuad.four_q_f_nonneg
+    ZQuad.add_le_self
+    ZQuad.self_le_add
+    ZQuad.quad_le_pos
+    ZQuad.quad_le_neg
+    ZQuad.quad_eq
+    ZQuad.neg_nonneg_of_nonpos
+    ZQuad.nonpos_of_neg_nonneg
+    ZQuad.abs_le_of_sq_le
+    ZQuad.quad_piece_pos
+    ZQuad.qsqrt_sign_pos
+
+## ZElim.lean  (3)
+    ZElim.row_comb_zero
+    ZElim.refutation_sound
+    ZElim.union_sound
+
+## ZExpAdd.lean  (8)
+    ZExpAdd.diag_congr
+    ZExpAdd.diag_add
+    ZExpAdd.diag_smul
+    ZExpAdd.diag_right
+    ZExpAdd.diag_weight
+    ZExpAdd.conv_step
+    ZExpAdd.cancel
+    ZExpAdd.conv_tm
+
+## ZExpAdd2.lean  (16)
+    ZExpAdd2.qadd_le_add
+    ZExpAdd2.sumTo_le
+    ZExpAdd2.sumTo_nonneg
+    ZExpAdd2.sumTo_respects
+    ZExpAdd2.sumTo_extend
+    ZExpAdd2.sumTo_mono_len
+    ZExpAdd2.sumTo_first
+    ZExpAdd2.sumTo_add
+    ZExpAdd2.sumTo_smul
+    ZExpAdd2.succ_sub_of_le
+    ZExpAdd2.le_double_sub
+    ZExpAdd2.diag_eq_sum
+    ZExpAdd2.tri_rows
+    ZExpAdd2.row_mono
+    ZExpAdd2.tri_le_sq
+    ZExpAdd2.sq_le_tri
+
+## ZExpAdd3.lean  (6)
+    ZExpAdd3.S_sumTo
+    ZExpAdd3.square_is_product
+    ZExpAdd3.triangle_is_S
+    ZExpAdd3.squeeze
+    ZExpAdd3.close_of_squeeze
+    ZExpAdd3.rexp_add_nonneg
+
+## ZExpAdd4.lean  (8)
+    ZExpAdd4.rexp_respects
+    ZExpAdd4.rexp_recip
+    ZExpAdd4.law_L1
+    ZExpAdd4.law_L2
+    ZExpAdd4.law_L3
+    ZExpAdd4.neg_nonneg_of_not_le
+    ZExpAdd4.mixed
+    ZExpAdd4.rexp_add
+
+## ZExpAdd5.lean  (5)
+    ZExpAdd5.close_add_bound
+    ZExpAdd5.close_widen
+    ZExpAdd5.E_bound
+    ZExpAdd5.uniform_law
+    ZExpAdd5.rexpR_add
+
+## ZLnMul.lean  (4)
+    ZLnMul.rexpR_inj
+    ZLnMul.rln_mul
+    ZLnMul.rln_respects
+    ZLnMul.rln_one
+
+## ZAltSeries.lean  (5)
+    ZAltSeries.nest
+    ZAltSeries.btw_self
+    ZAltSeries.alt_bracket
+    ZAltSeries.limit_in_bracket
+    ZAltSeries.ratio_decreasing
+
+## ZPowTaylor.lean  (8)
+    ZPowTaylor.m_Dm
+    ZPowTaylor.T_succ
+    ZPowTaylor.close_zero_self
+    ZPowTaylor.pw_bound
+    ZPowTaylor.Dm_bound
+    ZPowTaylor.taylor_mono
+    ZPowTaylor.taylor_sum
+    ZPowTaylor.tail_halving
+
+## ZMonoTaylor.lean  (5)
+    ZMonoTaylor.step_up
+    ZMonoTaylor.chain_up
+    ZMonoTaylor.exists_step
+    ZMonoTaylor.mono_up
+    ZMonoTaylor.mono_up_right
+
+## ZRootFactor.lean  (3)
+    ZRootFactor.ap_mul2
+    ZRootFactor.ap_pow
+    ZRootFactor.root_factor
+
+## ZPlan.lean  (34)
+    ZPlan.upd_same
+    ZPlan.upd_other
+    ZPlan.decided_earned
+    ZPlan.decided_refuted
+    ZPlan.or_not_cases
+    ZPlan.decided_means
+    ZPlan.le_mx_l
+    ZPlan.le_mx_r
+    ZPlan.mx_le
+    ZPlan.mx_mono
+    ZPlan.in_rem
+    ZPlan.rem_in
+    ZPlan.rem_len_le
+    ZPlan.rem_len_lt
+    ZPlan.least_le
+    ZPlan.least_attained
+    ZPlan.opt_settled
+    ZPlan.opt_open
+    ZPlan.opt_le
+    ZPlan.atom_def
+    ZPlan.n_neg
+    ZPlan.n_and
+    ZPlan.n_or
+    ZPlan.n_imp
+    ZPlan.n_xor
+    ZPlan.n_xnor
+    ZPlan.definite
+    ZPlan.dec_of_def
+    ZPlan.settled_when_clean
+    ZPlan.opt_attained
+    ZPlan.optimal
+    ZPlan.ex_plan
+    ZPlan.ex_set_needs_three
+    ZPlan.ex_opt
+
+## ZRankMany.lean  (35)
+    ZRankMany.lsum_congr
+    ZRankMany.lsum_add
+    ZRankMany.lsum_smul
+    ZRankMany.lsum_neg
+    ZRankMany.lin_congr
+    ZRankMany.res_shift
+    ZRankMany.lin_comb
+    ZRankMany.lin_diff
+    ZRankMany.kernel_zero
+    ZRankMany.ne_zero_of_pos
+    ZRankMany.mul_ne_zero
+    ZRankMany.cancel_left
+    ZRankMany.nonneg_of_pos_mul
+    ZRankMany.lsum_comb
+    ZRankMany.lin_two
+    ZRankMany.eq_of_sub_zero
+    ZRankMany.root_between
+    ZRankMany.res_ql
+    ZRankMany.two_point
+    ZRankMany.two_point_s
+    ZRankMany.s_e
+    ZRankMany.s_ne
+    ZRankMany.e_ne
+    ZRankMany.e_prod_pos
+    ZRankMany.main_identity
+    ZRankMany.const_of_solves
+    ZRankMany.rank_one_monotone
+    ZRankMany.beq_self
+    ZRankMany.setc_self
+    ZRankMany.setc_other
+    ZRankMany.setc_same
+    ZRankMany.inB_setc
+    ZRankMany.corners
+    ZRankMany.solves_congr
+    ZRankMany.rank_one_corners
+
+## QZ1.lean  (18)
+    QZ1.meet_glb
+    QZ1.neg_meet_l
+    QZ1.neg_meet_r
+    QZ1.join_ub_l
+    QZ1.join_ub_r
+    QZ1.neg_join
+    QZ1.neg_neg
+    QZ1.kneg_T
+    QZ1.kneg_F
+    QZ1.kand_T
+    QZ1.kand_F
+    QZ1.kor_T
+    QZ1.kor_F
+    QZ1.strict_sound
+    QZ1.run_a_yes
+    QZ1.converse_fails
+    QZ1.stable_is_not_lattice
+    QZ1.stable_refuted_by_lattice
+
+## QZ2.lean  (8)
+    QZ2.kneg_T
+    QZ2.kneg_F
+    QZ2.kand_T
+    QZ2.kand_F
+    QZ2.kor_T
+    QZ2.kor_F
+    QZ2.neg_join
+    QZ2.strict_sound
+
+## QZ3.lean  (31)
+    QZ3.neg_bot_above
+    QZ3.neg_join
+    QZ3.neg_meet_l
+    QZ3.neg_meet_r
+    QZ3.nn
+    QZ3.and_E
+    QZ3.and_R
+    QZ3.or_E
+    QZ3.or_R
+    QZ3.imp_E
+    QZ3.imp_R
+    QZ3.xor_E
+    QZ3.xor_R
+    QZ3.xnor_E
+    QZ3.xnor_R
+    QZ3.and_ne
+    QZ3.or_ne
+    QZ3.imp_ne
+    QZ3.xor_ne
+    QZ3.xnor_ne
+    QZ3.or_swap
+    QZ3.atom_ne
+    QZ3.atom_E
+    QZ3.atom_R
+    QZ3.agrees_on_of
+    QZ3.inv_on
+    QZ3.inv
+    QZ3.earned_sound_on
+    QZ3.refuted_sound_on
+    QZ3.earned_sound
+    QZ3.refuted_sound
+
+## QZ4.lean  (36)
+    QZ4.set_same
+    QZ4.set_other
+    QZ4.c_and
+    QZ4.c_or
+    QZ4.c_imp
+    QZ4.c_xor
+    QZ4.c_xnor
+    QZ4.c_neg
+    QZ4.cl_cleans
+    QZ4.atom_def
+    QZ4.clean_of_nil
+    QZ4.dirty_set
+    QZ4.dirty_skip
+    QZ4.definite
+    QZ4.not_true_false
+    QZ4.earned_of_stable
+    QZ4.refuted_of_stable
+    QZ4.subs_Z_all
+    QZ4.cleans_set
+    QZ4.on_down
+    QZ4.on_setT
+    QZ4.on_setF
+    QZ4.by_cells
+    QZ4.stable_sound_on
+    QZ4.stableF_sound_on
+    QZ4.stable_sound
+    QZ4.stableF_sound
+    QZ4.stable_sound_under
+    QZ4.stableF_sound_under
+    QZ4.splits_of_distrib
+    QZ4.mo2_no_split
+    QZ4.mo2_split
+    QZ4.only_true
+    QZ4.taut
+    QZ4.distributed_stable
+    QZ4.split_is_exact
+
+## QZ5.lean  (5)
+    QZ5.range_sound
+    QZ5.earned_prob_one
+    QZ5.refuted_prob_zero
+    QZ5.born_mono
+    QZ5.frechet_fails_across
+
+## QZ6.lean  (8)
+    QZ6.neg_of_true
+    QZ6.cancel
+    QZ6.cells
+    QZ6.count_is_classical
+    QZ6.twice_mono
+    QZ6.twice_super
+    QZ6.twice_split
+    QZ6.no_joint_across
+
+## QZ7.lean  (41)
+    QZ7.ng_mul
+    QZ7.isP_ng
+    QZ7.orth_ng
+    QZ7.add_ng
+    QZ7.isP_add
+    QZ7.sub_mul_part
+    QZ7.isP_sub
+    QZ7.orth_sub
+    QZ7.orth_of_le_ng
+    QZ7.add_le
+    QZ7.le_add_l
+    QZ7.le_add_r
+    QZ7.le_antisymm
+    QZ7.le_congr
+    QZ7.cells_orth
+    QZ7.split_sum
+    QZ7.nwt_mono
+    QZ7.wt_mono
+    QZ7.wt_ng
+    QZ7.wt_split
+    QZ7.m_mul_add
+    QZ7.m_add_mul
+    QZ7.m_mul_one
+    QZ7.m_one_mul
+    QZ7.m_add_zero
+    QZ7.m_zero_add
+    QZ7.m_sub_self
+    QZ7.m_add_sub
+    QZ7.m_sub_eq_self
+    QZ7.emb_not_commuting
+    QZ7.emb_isP
+    QZ7.emb_le_to
+    QZ7.emb_le_of
+    QZ7.emb_neg
+    QZ7.emb_sum
+    QZ7.cnt_additive
+    QZ7.cnt_is_twice
+    QZ7.co_le4
+    QZ7.le_co4
+    QZ7.wgt_additive
+    QZ7.wgt_is_born
+
+## QZ8.lean  (10)
+    QZ8.S_all_zero
+    QZ8.S_delta
+    QZ8.S_delta_l
+    QZ8.add_eq_self
+    QZ8.sym_proj_rtr
+    QZ8.born_nonneg
+    QZ8.born_zero
+    QZ8.neg_le_neg
+    QZ8.co_of_sum
+    QZ8.born_split
+
+## QZ9.lean  (26)
+    QZ9.comm_symm
+    QZ9.comm_congr
+    QZ9.comm_ng
+    QZ9.comm_mul
+    QZ9.mul_absorb_r
+    QZ9.mul_absorb_l
+    QZ9.mul_le_l
+    QZ9.mul_le_r
+    QZ9.le_mul
+    QZ9.split_id
+    QZ9.meet_of_comm
+    QZ9.comm_split
+    QZ9.split_comm
+    QZ9.commAll_congr
+    QZ9.commAll_mul
+    QZ9.commAll_ng
+    QZ9.comm_Splits
+    QZ9.stable_sound_commuting
+    QZ9.stableF_sound_commuting
+    QZ9.mat_assoc
+    QZ9.m_assoc
+    QZ9.f2_assoc
+    QZ9.emb_prod
+    QZ9.qubit_closed
+    QZ9.qubit_splits
+    QZ9.qubit_no_split
+
+## QZ10.lean  (17)
+    QZ10.ip_comm
+    QZ10.ray_sym
+    QZ10.ray_mul
+    QZ10.ray_isP
+    QZ10.ray_orth
+    QZ10.born_ray
+    QZ10.born_ray_nonneg
+    QZ10.frame2_isP
+    QZ10.born_frame2
+    QZ10.zero_isP
+    QZ10.orth_zero
+    QZ10.orth_add_r
+    QZ10.ray_orth_frame
+    QZ10.frame_isP
+    QZ10.frame_sym
+    QZ10.born_frame
+    QZ10.born_frame_nonneg
+
+## QOF.lean  (57)
+    QSearch.some_inj
+    QSearch.none_ne_some
+    QSearch.tryK_sound
+    QSearch.scanK_sound
+    QSearch.scanD_sound
+    QSearch.search_sound
+    QSearch.tryK_some
+    QSearch.le_cases
+    QSearch.scanK_some
+    QSearch.scanD_some
+    QSearch.search_some
+    QSearch.search_succ
+    QSearch.search_mono
+    QSearch.tryK_congr
+    QSearch.scanK_congr
+    QSearch.scanD_congr
+    QSearch.search_congr
+    QSearch.first_hit_unique
+    QOF.O_inv_vadd
+    QOF.den_pos_of
+    QOF.qEq_parts
+    QOF.le4a
+    QOF.le4b
+    QOF.le4c
+    QOF.hit_exists
+    QOF.search_hits
+    QOF.norm_eq
+    QOF.hit_congr
+    QOF.norm_canon
+    QOF.norm_idem
+    QOF.norm_is
+    QOF.valC
+    QOF.eqC
+    QOF.ceq
+    QOF.selfC
+    QOF.valE
+    QOF.rep
+    QOF.qabs_pos
+    QOF.qabs_neg'
+    QOF.nonpos_of_not
+    QOF.qabs_nonneg
+    QOF.le_qabs
+    QOF.neg_le_qabs
+    QOF.qabs_cases
+    QOF.qabs_eq_of
+    QOF.qabs_respects
+    QOF.qabs_neg_eq
+    QOF.qabs_mul
+    QOF.zle
+    QOF.lez
+    QOF.qOF_nontrivial
+    QOF.cmul_inv
+    QOF.le_mn
+    QOF.mx_le
+    ex_add
+    ex_ne
+    ex_inv
+
+## Sqrt2.lean  (27)
+    Sqrt2.b_eq_true
+    Sqrt2.b_not_beq
+    Sqrt2.b_or_true
+    Sqrt2.b_or_beq
+    Sqrt2.b_or_self
+    Sqrt2.b_not_true
+    Sqrt2.b_not_false
+    Sqrt2.b_beq_self
+    Sqrt2.ev_add
+    Sqrt2.ev_mul
+    Sqrt2.ev_sq
+    Sqrt2.half
+    Sqrt2.dbl_inj
+    Sqrt2.sqd
+    Sqrt2.desc
+    Sqrt2.nI_add
+    Sqrt2.nI_mul
+    Sqrt2.nI_inj
+    Sqrt2.qofInt_inj
+    Sqrt2.qN_mul
+    Sqrt2.qN_add
+    Sqrt2.qN_one
+    Sqrt2.qN_inj
+    Sqrt2.sgq_sq
+    Sqrt2.toQ_cross
+    Sqrt2.mul_succ_zero
+    Sqrt2.no_sqrt2
+
+## QZ11.lean  (24)
+    QZ11.nd2
+    QZ11.mem0
+    QZ11.mem1
+    QZ11.of4
+    QZ11.to4
+    QZ11.emb_isP
+    QZ11.emb_le_to
+    QZ11.emb_le_of
+    QZ11.emb_neg
+    QZ11.emb_top
+    QZ11.emb_bot
+    QZ11.emb_sum
+    QZ11.emb_sym01
+    QZ11.emb_sym
+    QZ11.born_values
+    QZ11.tilted_one
+    QZ11.tilted_a
+    QZ11.tilted_b
+    QZ11.emb_prod
+    QZ11.real_closed
+    QZ11.ab_do_not_commute
+    QZ11.real_splits
+    QZ11.real_no_split
+    QZ11.b_is_ray
+
+## QZ12.lean  (49)
+    QZ12.mv_congr
+    QZ12.ip_congr
+    QZ12.ip_zero_l
+    QZ12.ip_add_r
+    QZ12.ip_mv_sym
+    QZ12.mv_mul
+    QZ12.mv_add_mat
+    QZ12.mv_vsub
+    QZ12.mv_ray
+    QZ12.mat_ray
+    QZ12.ray_mat
+    QZ12.zero_of_sum
+    QZ12.zero_of_ip_self
+    QZ12.step_zero
+    QZ12.step_pos
+    QZ12.J_resid
+    QZ12.resid_orth
+    QZ12.inv_unit
+    QZ12.good_step
+    QZ12.le_step
+    QZ12.step_fixes
+    QZ12.step_keeps
+    QZ12.step_least
+    QZ12.le_refl_good
+    QZ12.le_trans_alg
+    QZ12.gs_good
+    QZ12.gs_le
+    QZ12.gs_keeps
+    QZ12.gs_fixes
+    QZ12.gs_least
+    QZ12.allFixed_cols
+    QZ12.cols_allFixed
+    QZ12.le_of_cols
+    QZ12.cols_of_le
+    QZ12.join_good
+    QZ12.le_join_l
+    QZ12.le_join_r
+    QZ12.join_le
+    QZ12.ng_anti
+    QZ12.le_one_alg
+    QZ12.mat_ng_ng
+    QZ12.one_sym
+    QZ12.good_one
+    QZ12.good_zero
+    QZ12.good_ng
+    QZ12.good_add
+    QZ12.good_mul
+    QZ12.proj_closed
+    QZ12.splits_iff_comm
+
+## QZ13.lean  (4)
+    QZ13.qSplits
+    QZ13.join_ab
+    QZ13.join_aa
+    QZ13.join_3
+
+## QZ14.lean  (20)
+    QZ14.projOf_good
+    QZ14.projOf_fixes
+    QZ14.zero_le
+    QZ14.projOf_least
+    QZ14.fixed_of_le
+    QZ14.allFixed_of_le
+    QZ14.le_iff_fixed
+    QZ14.allFixed_append
+    QZ14.allFixed_left
+    QZ14.allFixed_right
+    QZ14.projOf_append
+    QZ14.own_cols
+    QZ14.projOf_cols
+    QZ14.projOf_compl
+    QZ14.ip_zero_r
+    QZ14.ip_vsub_l
+    QZ14.step_kills
+    QZ14.gs_kills
+    QZ14.orth_of_kills
+    QZ14.kills_iff_orth
+
+## QZ15.lean  (103)
+    QZ15.ext2
+    QZ15.add_comm_a
+    QZ15.add_comm_b
+    QZ15.add_assoc_a
+    QZ15.add_assoc_b
+    QZ15.add_zero_a
+    QZ15.add_zero_b
+    QZ15.add_neg_a
+    QZ15.add_neg_b
+    QZ15.mul_comm_a
+    QZ15.mul_comm_b
+    QZ15.mul_assoc_a
+    QZ15.mul_assoc_b
+    QZ15.mul_one_a
+    QZ15.mul_one_b
+    QZ15.mul_zero_a
+    QZ15.mul_zero_b
+    QZ15.mul_add_a
+    QZ15.mul_add_b
+    QZ15.neg_mul_a
+    QZ15.neg_mul_b
+    QZ15.neg_neg_a
+    QZ15.neg_neg_b
+    QZ15.nrm_mul
+    QZ15.nrm_neg
+    QZ15.nrm_add
+    QZ15.nrm_add_neg
+    QZ15.nrm_double
+    QZ15.dsq
+    QZ15.negsq
+    QZ15.idA
+    QZ15.idB
+    QZ15.cancel_a
+    QZ15.cancel_b
+    QZ15.cancel2_a
+    QZ15.cancel2_b
+    QZ15.idD
+    QZ15.idE
+    QZ15.negneg
+    QZ15.nrm_zero
+    QZ15.i_sub0
+    QZ15.i_0sub
+    QZ15.i_trans
+    QZ15.i_addle
+    QZ15.i_mulle
+    QZ15.i_flip
+    QZ15.i_mulneg
+    QZ15.i_negnegmul
+    QZ15.i_abs2
+    QZ15.i_aa
+    QZ15.i_nn0
+    QZ15.idK
+    QZ15.idL
+    QZ15.invA
+    QZ15.invB
+    QZ15.le_of_eq'
+    QZ15.zero_le_one
+    QZ15.nn_add
+    QZ15.two_nonneg
+    QZ15.neg_nn
+    QZ15.neg_np
+    QZ15.np_of_neg_nn
+    QZ15.nn_of_neg_np
+    QZ15.zero_of_sum
+    QZ15.mul_mono
+    QZ15.le_of_sq_le
+    QZ15.nn_add_of_sq
+    QZ15.nn_sub_of_sq
+    QZ15.sqA
+    QZ15.sqB
+    QZ15.two_sq_nonneg
+    QZ15.posA_add
+    QZ15.posB_add
+    QZ15.sq_zero
+    QZ15.sq_zero_of_two
+    QZ15.pos_antisymm
+    QZ15.posAB_add
+    QZ15.pos_add
+    QZ15.posAA_mul
+    QZ15.posAB_mul
+    QZ15.posBB_mul
+    QZ15.pos_mul
+    QZ15.eqE
+    QZ15.pos_zero
+    QZ15.pos_congr
+    QZ15.pos_of_zero_le
+    QZ15.zero_le_of_pos
+    QZ15.negpos_of_le_zero
+    QZ15.pos_total
+    QZ15.half_nn
+    QZ15.half_np
+    QZ15.pos_half
+    QZ15.zero_of_nrm_zero
+    QZ15.emul_eq_zero
+    QZ15.eabs_pos
+    QZ15.eabs_npos
+    QZ15.eneg_zero_of
+    QZ15.eabs_negpos
+    QZ15.pos_eabs
+    QZ15.pos_negneg
+    QZ15.le_eabs
+    QZ15.neg_le_eabs
+    QZ15.emul_inv
+
+## QZ16.lean  (17)
+    QZ16.nrQ
+    QZ16.r2_nontrivial
+    QZ16.sq2
+    QZ16.chsh_norm
+    QZ16.chsh_ab
+    QZ16.chsh_ab'
+    QZ16.chsh_a'b
+    QZ16.chsh_a'b'
+    QZ16.mem_cons_inv
+    QZ16.not_mem_nil
+    QZ16.not_mem_cons
+    QZ16.nd4
+    QZ16.chsh_units
+    QZ16.chsh_orth
+    QZ16.chsh_proj
+    QZ16.chsh_S
+    QZ16.chsh_above
+
+## QZ17.lean  (30)
+    QZ17.cj_congr
+    QZ17.cancel_l
+    QZ17.cj_isP
+    QZ17.mid
+    QZ17.cj_le
+    QZ17.cj_fix
+    QZ17.comm_of_fix
+    QZ17.cj_back
+    QZ17.tr_mul
+    QZ17.tr_of_sym
+    QZ17.sym_of_tr
+    QZ17.good_cj
+    QZ17.cx_join
+    QZ17.cx_ng
+    QZ17.cx_one
+    QZ17.cx_zero
+    QZ17.cx_add
+    QZ17.cx_closed
+    QZ17.cx_splits_iff_comm
+    QZ17.C2.band
+    QZ17.C2.allB_sound
+    QZ17.C2.chk_sound
+    QZ17.C2.mem_cons_inv
+    QZ17.C2.not_mem_nil
+    QZ17.C2.not_mem_cons
+    QZ17.C2.nd4
+    QZ17.C2.PY_good
+    QZ17.C2.PY_complex
+    QZ17.C2.PY_born
+    QZ17.C2.real_ray_not_complex
+
+## QZCtx.lean  (156)
+    QZCtx.absorb
+    QZCtx.one_of
+    QZCtx.bigOr_eval
+    QZCtx.allNot_eval
+    QZCtx.excl_eval
+    QZCtx.exOne_eval
+    QZCtx.ctx_eval
+    QZCtx.cleans_all
+    QZCtx.stableF_ctx_iff
+    QZCtx.rd_atom
+    QZCtx.comb_and_fst
+    QZCtx.rd_negpair
+    QZCtx.allNot_fst
+    QZCtx.excl_fst
+    QZCtx.bigOr_some
+    QZCtx.bigOr_fst
+    QZCtx.ctx_fst
+    QZCtx.ctx_not_refuted
+    QZCtx.app_nil
+    QZCtx.app_assoc
+    QZCtx.and_l
+    QZCtx.and_r
+    QZCtx.not_t
+    QZCtx.go_step
+    QZCtx.go_sound
+    QZCtx.go_of
+    QZCtx.g_111111
+    QZCtx.g_111110
+    QZCtx.g_111101
+    QZCtx.g_111100
+    QZCtx.g_111011
+    QZCtx.g_111010
+    QZCtx.g_111001
+    QZCtx.g_111000
+    QZCtx.g_110111
+    QZCtx.g_110110
+    QZCtx.g_110101
+    QZCtx.g_110100
+    QZCtx.g_110011
+    QZCtx.g_110010
+    QZCtx.g_110001
+    QZCtx.g_110000
+    QZCtx.g_101111
+    QZCtx.g_101110
+    QZCtx.g_101101
+    QZCtx.g_101100
+    QZCtx.g_101011
+    QZCtx.g_101010
+    QZCtx.g_101001
+    QZCtx.g_101000
+    QZCtx.g_100111
+    QZCtx.g_100110
+    QZCtx.g_100101
+    QZCtx.g_100100
+    QZCtx.g_100011
+    QZCtx.g_100010
+    QZCtx.g_100001
+    QZCtx.g_100000
+    QZCtx.g_011111
+    QZCtx.g_011110
+    QZCtx.g_011101
+    QZCtx.g_011100
+    QZCtx.g_011011
+    QZCtx.g_011010
+    QZCtx.g_011001
+    QZCtx.g_011000
+    QZCtx.g_010111
+    QZCtx.g_010110
+    QZCtx.g_010101
+    QZCtx.g_010100
+    QZCtx.g_010011
+    QZCtx.g_010010
+    QZCtx.g_010001
+    QZCtx.g_010000
+    QZCtx.g_001111
+    QZCtx.g_001110
+    QZCtx.g_001101
+    QZCtx.g_001100
+    QZCtx.g_001011
+    QZCtx.g_001010
+    QZCtx.g_001001
+    QZCtx.g_001000
+    QZCtx.g_000111
+    QZCtx.g_000110
+    QZCtx.g_000101
+    QZCtx.g_000100
+    QZCtx.g_000011
+    QZCtx.g_000010
+    QZCtx.g_000001
+    QZCtx.g_000000
+    QZCtx.g_11111
+    QZCtx.g_11110
+    QZCtx.g_11101
+    QZCtx.g_11100
+    QZCtx.g_11011
+    QZCtx.g_11010
+    QZCtx.g_11001
+    QZCtx.g_11000
+    QZCtx.g_10111
+    QZCtx.g_10110
+    QZCtx.g_10101
+    QZCtx.g_10100
+    QZCtx.g_10011
+    QZCtx.g_10010
+    QZCtx.g_10001
+    QZCtx.g_10000
+    QZCtx.g_01111
+    QZCtx.g_01110
+    QZCtx.g_01101
+    QZCtx.g_01100
+    QZCtx.g_01011
+    QZCtx.g_01010
+    QZCtx.g_01001
+    QZCtx.g_01000
+    QZCtx.g_00111
+    QZCtx.g_00110
+    QZCtx.g_00101
+    QZCtx.g_00100
+    QZCtx.g_00011
+    QZCtx.g_00010
+    QZCtx.g_00001
+    QZCtx.g_00000
+    QZCtx.g_1111
+    QZCtx.g_1110
+    QZCtx.g_1101
+    QZCtx.g_1100
+    QZCtx.g_1011
+    QZCtx.g_1010
+    QZCtx.g_1001
+    QZCtx.g_1000
+    QZCtx.g_0111
+    QZCtx.g_0110
+    QZCtx.g_0101
+    QZCtx.g_0100
+    QZCtx.g_0011
+    QZCtx.g_0010
+    QZCtx.g_0001
+    QZCtx.g_0000
+    QZCtx.g_111
+    QZCtx.g_110
+    QZCtx.g_101
+    QZCtx.g_100
+    QZCtx.g_011
+    QZCtx.g_010
+    QZCtx.g_001
+    QZCtx.g_000
+    QZCtx.g_11
+    QZCtx.g_10
+    QZCtx.g_01
+    QZCtx.g_00
+    QZCtx.g_1
+    QZCtx.g_0
+    QZCtx.g_root
+    QZCtx.go18
+    QZCtx.ks18_uncolourable
+    QZCtx.ks18_refuted_if_stable
+
+## QZCtxL.lean  (5)
+    QZCtxL.excl_pair_top
+    QZCtxL.allNot_top
+    QZCtxL.excl_top
+    QZCtxL.ctx_true_in_lattice
+    QZCtxL.splits_pair
+
+## QZCtxS.lean  (5)
+    QZCtxS.cm_add
+    QZCtxS.splits_comm_all
+    QZCtxS.top_meet
+    QZCtxS.first_commutes
+    QZCtxS.no_split_of'
+
+## QZCtxKS18C.lean  (9)
+    QZCtxKS18C.mem_cons_inv
+    QZCtxKS18C.not_mem_nil
+    QZCtxKS18C.not_mem_cons
+    QZCtxKS18C.nd4
+    QZCtxKS18C.u0
+    QZCtxKS18C.u17
+    QZCtxKS18C.e30
+    QZCtxKS18C.no_comm
+    QZCtxKS18C.ks18_no_split
 
